@@ -16,6 +16,22 @@ function AdminPage() {
   )
 }
 
+function DebugPage() {
+  return (
+    <div className="p-8 space-y-4">
+      <h1 className="text-xl font-bold">Debug Tools</h1>
+      <button
+        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        onClick={() => {
+          throw new Error('This is your first error!')
+        }}
+      >
+        Break the world
+      </button>
+    </div>
+  )
+}
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -33,6 +49,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/debug" element={<DebugPage />} />
 
           <Route
             path="/dashboard"

@@ -1,8 +1,26 @@
+import os
+
+import sentry_sdk
+import structlog
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth import get_current_user, require_admin
 from .config import settings  # noqa: F401  — validates env on startup
+from .logging_config import configure_logging
+from .middleware import CorrelationIdMiddleware
+
+load_dotenv()
+configure_logging(log_level=os.getenv("LOG_LEVEL", "INFO"))
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN") or None,
+    environment=os.getenv("APP_ENV", "development"),
+    traces_sample_rate=1.0,
+)
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 app = FastAPI(
     title="MCU API",
@@ -10,6 +28,7 @@ app = FastAPI(
     version="0.0.1",
 )
 
+app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -21,6 +40,7 @@ app.add_middleware(
 
 @app.get("/api/v1/health")
 async def health() -> dict[str, str]:
+    logger.info("health_check")
     return {"status": "ok"}
 
 
@@ -32,3 +52,10 @@ async def me(user: dict = Depends(get_current_user)) -> dict:  # type: ignore[ty
 @app.get("/api/admin/ping")
 async def admin_ping(user: dict = Depends(require_admin)) -> dict:  # type: ignore[type-arg]
     return {"status": "ok", "user": user}
+
+
+@app.get("/debug/error")
+async def debug_error() -> None:
+    """Endpoint used to verify Sentry captures errors and logs include correlation IDs."""
+    logger.info("triggering_test_error")
+    raise ValueError("Test error for Sentry verification")
