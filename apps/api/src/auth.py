@@ -34,20 +34,19 @@ async def get_current_user(
 ) -> dict:  # type: ignore[type-arg]
     try:
         response = supabase.auth.get_user(credentials.credentials)
-        if response.user is None:
+        if response is None or response.user is None:
             raise _UNAUTHORIZED
         return {"id": response.user.id, "email": response.user.email}
     except Exception:
-        raise _UNAUTHORIZED
+        raise _UNAUTHORIZED from None
 
 
 async def require_admin(
     user: dict = Depends(get_current_user),  # type: ignore[type-arg]
     supabase: Client = Depends(get_supabase),
 ) -> dict:  # type: ignore[type-arg]
-    result = (
-        supabase.table("profiles").select("role").eq("id", user["id"]).single().execute()
-    )
-    if not result.data or result.data.get("role") != "admin":
+    result = supabase.table("profiles").select("role").eq("id", user["id"]).single().execute()
+    data = result.data
+    if not isinstance(data, dict) or data.get("role") != "admin":
         raise _FORBIDDEN
     return user

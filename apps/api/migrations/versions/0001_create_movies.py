@@ -5,8 +5,8 @@ Revises:
 Create Date: 2026-04-25
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
 
 revision = "0001"

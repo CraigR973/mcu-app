@@ -5,8 +5,8 @@ Revises: 0001
 Create Date: 2026-04-25
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0002"
 down_revision = "0001"
@@ -60,7 +60,5 @@ def downgrade() -> None:
     op.drop_index("idx_movie_credits_movie_type_order", table_name="movie_credits")
     op.drop_index("idx_movie_credits_person_id", table_name="movie_credits")
     op.drop_index("idx_movie_credits_movie_id", table_name="movie_credits")
-    op.drop_constraint(
-        "ck_movie_credits_credit_type", "movie_credits", type_="check"
-    )
+    op.drop_constraint("ck_movie_credits_credit_type", "movie_credits", type_="check")
     op.drop_table("movie_credits")
