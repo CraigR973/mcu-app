@@ -51,7 +51,8 @@ def upgrade() -> None:
     op.create_check_constraint(
         "ck_wanted_list_format",
         "wanted_list",
-        "format IS NULL OR format IN ('4k_bluray', 'bluray', 'dvd', 'digital', 'laserdisc', 'vhs', 'hddvd')",
+        "format IS NULL OR format IN "
+        "('4k_bluray', 'bluray', 'dvd', 'digital', 'laserdisc', 'vhs', 'hddvd')",
     )
 
     op.create_index("idx_wanted_list_movie_id", "wanted_list", ["movie_id"])
