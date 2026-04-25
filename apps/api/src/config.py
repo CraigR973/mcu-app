@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
     supabase_jwt_secret: str = ""
 
+    # Database (direct Supabase PostgreSQL connection for Alembic / SQLAlchemy)
+    database_url: str = ""
+
     # TMDB
     tmdb_api_key: str = ""
     tmdb_read_token: str = ""
