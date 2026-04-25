@@ -105,12 +105,8 @@ def upgrade() -> None:
         "collection_items",
         ["is_for_sale", "deleted_at"],
     )
-    op.create_index(
-        "idx_collection_items_deleted_at", "collection_items", ["deleted_at"]
-    )
-    op.create_index(
-        "idx_collection_items_format", "collection_items", ["format"]
-    )
+    op.create_index("idx_collection_items_deleted_at", "collection_items", ["deleted_at"])
+    op.create_index("idx_collection_items_format", "collection_items", ["format"])
 
     op.execute("""
         CREATE TRIGGER collection_items_set_updated_at

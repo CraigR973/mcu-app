@@ -24,7 +24,7 @@ def upgrade() -> None:
             sa.ForeignKey("movies.id", ondelete="RESTRICT"),
             nullable=False,
         ),
-        sa.Column("format", sa.Text()),           # NULL = any format acceptable
+        sa.Column("format", sa.Text()),  # NULL = any format acceptable
         sa.Column("max_price", sa.Numeric(10, 2)),
         sa.Column("priority", sa.SmallInteger(), nullable=False, server_default="3"),
         sa.Column("notes", sa.Text()),
@@ -89,7 +89,7 @@ def upgrade() -> None:
             sa.ForeignKey("wanted_list.id", ondelete="SET NULL"),
         ),
         sa.Column("format", sa.Text(), nullable=False),
-        sa.Column("source", sa.Text(), nullable=False),   # 'ebay', 'amazon', 'mercari', …
+        sa.Column("source", sa.Text(), nullable=False),  # 'ebay', 'amazon', 'mercari', …
         sa.Column("condition", sa.Text()),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
         sa.Column("url", sa.Text()),
@@ -163,9 +163,7 @@ def upgrade() -> None:
         "price_history_daily",
         ["movie_id", "date"],
     )
-    op.create_index(
-        "idx_price_history_daily_date", "price_history_daily", ["date"]
-    )
+    op.create_index("idx_price_history_daily_date", "price_history_daily", ["date"])
 
 
 def downgrade() -> None:
