@@ -138,30 +138,34 @@ async def match_and_enrich(
             matched_rows.append(ImportRow(candidate=cand, match=result))
             stats.matched += 1
         elif top and top.confidence >= LOW_CONFIDENCE:
-            review_rows.append({
-                "row": cand.row_number,
-                "title": cand.title,
-                "query": result.query,
-                "query_year": result.year or "",
-                "top_tmdb_id": top.tmdb_id,
-                "top_title": top.title,
-                "top_year": top.year or "",
-                "confidence": f"{top.confidence:.3f}",
-                "reason": "low_confidence",
-            })
+            review_rows.append(
+                {
+                    "row": cand.row_number,
+                    "title": cand.title,
+                    "query": result.query,
+                    "query_year": result.year or "",
+                    "top_tmdb_id": top.tmdb_id,
+                    "top_title": top.title,
+                    "top_year": top.year or "",
+                    "confidence": f"{top.confidence:.3f}",
+                    "reason": "low_confidence",
+                }
+            )
             stats.review += 1
         else:
-            review_rows.append({
-                "row": cand.row_number,
-                "title": cand.title,
-                "query": result.query,
-                "query_year": result.year or "",
-                "top_tmdb_id": top.tmdb_id if top else "",
-                "top_title": top.title if top else "",
-                "top_year": top.year or "" if top else "",
-                "confidence": f"{top.confidence:.3f}" if top else "",
-                "reason": "no_results" if not top else "below_threshold",
-            })
+            review_rows.append(
+                {
+                    "row": cand.row_number,
+                    "title": cand.title,
+                    "query": result.query,
+                    "query_year": result.year or "",
+                    "top_tmdb_id": top.tmdb_id if top else "",
+                    "top_title": top.title if top else "",
+                    "top_year": top.year or "" if top else "",
+                    "confidence": f"{top.confidence:.3f}" if top else "",
+                    "reason": "no_results" if not top else "below_threshold",
+                }
+            )
             stats.no_match += 1
 
     print(
@@ -255,18 +259,36 @@ def insert_credits(conn: Any, movie: Movie) -> None:
         rows: list[tuple[Any, ...]] = []
 
         for member in (movie.credits.cast or [])[:50]:
-            rows.append((
-                movie.id, member.id, member.name, "cast",
-                member.character, None, None, member.order, member.profile_path,
-            ))
+            rows.append(
+                (
+                    movie.id,
+                    member.id,
+                    member.name,
+                    "cast",
+                    member.character,
+                    None,
+                    None,
+                    member.order,
+                    member.profile_path,
+                )
+            )
 
         key_jobs = {"Director", "Producer", "Screenplay", "Writer", "Story"}
-        for member in (movie.credits.crew or []):
+        for member in movie.credits.crew or []:
             if member.job in key_jobs:
-                rows.append((
-                    movie.id, member.id, member.name, "crew",
-                    None, member.department, member.job, None, member.profile_path,
-                ))
+                rows.append(
+                    (
+                        movie.id,
+                        member.id,
+                        member.name,
+                        "crew",
+                        None,
+                        member.department,
+                        member.job,
+                        None,
+                        member.profile_path,
+                    )
+                )
 
         if rows:
             psycopg2.extras.execute_values(

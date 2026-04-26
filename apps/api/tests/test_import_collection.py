@@ -252,8 +252,12 @@ def test_insert_credits_skipped_when_already_exist() -> None:
         credits=Credits(
             cast=[
                 CastMember(
-                    id=1, name="Brad Pitt", character="Tyler Durden",
-                    order=0, profile_path=None, credit_id="abc",
+                    id=1,
+                    name="Brad Pitt",
+                    character="Tyler Durden",
+                    order=0,
+                    profile_path=None,
+                    credit_id="abc",
                 )
             ],
             crew=[],
@@ -270,14 +274,22 @@ def test_insert_credits_inserts_when_none_exist() -> None:
         credits=Credits(
             cast=[
                 CastMember(
-                    id=819, name="Edward Norton", character="The Narrator",
-                    order=0, profile_path=None, credit_id="xyz",
+                    id=819,
+                    name="Edward Norton",
+                    character="The Narrator",
+                    order=0,
+                    profile_path=None,
+                    credit_id="xyz",
                 )
             ],
             crew=[
                 CrewMember(
-                    id=7467, name="David Fincher", job="Director",
-                    department="Directing", profile_path=None, credit_id="def",
+                    id=7467,
+                    name="David Fincher",
+                    job="Director",
+                    department="Directing",
+                    profile_path=None,
+                    credit_id="def",
                 )
             ],
         )
@@ -305,12 +317,30 @@ def test_insert_credits_filters_key_jobs_only() -> None:
         credits=Credits(
             cast=[],
             crew=[
-                CrewMember(id=1, name="Joe A", job="Director", department="Directing",
-                           profile_path=None, credit_id="a"),
-                CrewMember(id=2, name="Joe B", job="Gaffer", department="Lighting",
-                           profile_path=None, credit_id="b"),
-                CrewMember(id=3, name="Joe C", job="Screenplay", department="Writing",
-                           profile_path=None, credit_id="c"),
+                CrewMember(
+                    id=1,
+                    name="Joe A",
+                    job="Director",
+                    department="Directing",
+                    profile_path=None,
+                    credit_id="a",
+                ),
+                CrewMember(
+                    id=2,
+                    name="Joe B",
+                    job="Gaffer",
+                    department="Lighting",
+                    profile_path=None,
+                    credit_id="b",
+                ),
+                CrewMember(
+                    id=3,
+                    name="Joe C",
+                    job="Screenplay",
+                    department="Writing",
+                    profile_path=None,
+                    credit_id="c",
+                ),
             ],
         )
     )
