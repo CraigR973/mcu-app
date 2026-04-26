@@ -6,7 +6,7 @@ import csv
 import sys
 from datetime import date
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -19,8 +19,6 @@ sys.path.insert(0, str(SCRIPTS))
 from import_collection import (  # noqa: E402
     DEFAULT_CONDITION,
     REVIEW_FIELDNAMES,
-    ImportStats,
-    ImportRow,
     insert_collection_item,
     insert_credits,
     insert_movie,
@@ -28,10 +26,9 @@ from import_collection import (  # noqa: E402
     parse_release_date,
     write_review_file,
 )
-from src.matching.models import MatchCandidate, MatchResult  # noqa: E402
+
 from src.spreadsheet.models import ImportCandidate  # noqa: E402
 from src.tmdb.models import CastMember, Credits, CrewMember, Genre, Movie  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 # map_format

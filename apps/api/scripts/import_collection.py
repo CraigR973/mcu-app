@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.config import settings  # noqa: E402
-from src.matching import HIGH_CONFIDENCE, LOW_CONFIDENCE, MatchingEngine, MatchResult  # noqa: E402
+from src.matching import LOW_CONFIDENCE, MatchingEngine, MatchResult  # noqa: E402
 from src.spreadsheet import ImportCandidate, parse_xlsx  # noqa: E402
 from src.tmdb import TMDBClient  # noqa: E402
 from src.tmdb.models import Movie  # noqa: E402
@@ -374,7 +374,8 @@ async def run(
                     db_fmt = map_format(parser_fmt)
                     if db_fmt is None:
                         stats.errors.append(
-                            f"row {row.candidate.row_number}: unknown format '{parser_fmt}' — skipped"
+                            f"row {row.candidate.row_number}: "
+                            f"unknown format '{parser_fmt}' — skipped"
                         )
                         continue
                     if insert_collection_item(conn, row.movie.id, row.candidate, db_fmt):
