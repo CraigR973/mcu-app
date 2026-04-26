@@ -119,9 +119,7 @@ def test_normalise_title(raw: str, expected: str) -> None:
 # parse_row
 # ---------------------------------------------------------------------------
 
-HEADER_MAP = _build_header_map(
-    ("Title", "Format", "Location", "Category", "Sub Category", "Type")
-)
+HEADER_MAP = _build_header_map(("Title", "Format", "Location", "Category", "Sub Category", "Type"))
 
 
 def test_parse_row_basic() -> None:

@@ -239,8 +239,7 @@ def parse_xlsx(path: Path) -> list[ImportCandidate]:
     header_map = _build_header_map(tuple(rows[0]))
     if _COL_TITLE not in header_map:
         raise ValueError(
-            f"Spreadsheet {path} has no 'Title' column. "
-            f"Found columns: {list(header_map.keys())}"
+            f"Spreadsheet {path} has no 'Title' column. Found columns: {list(header_map.keys())}"
         )
 
     candidates: list[ImportCandidate] = []
