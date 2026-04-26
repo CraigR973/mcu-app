@@ -81,6 +81,41 @@ class WatchProviders(BaseModel):
     results: dict[str, WatchProviderCountry] = Field(default_factory=dict)
 
 
+class SearchResult(BaseModel):
+    """A single result row from ``/search/movie``."""
+
+    id: int
+    title: str
+    original_title: str
+    overview: str = ""
+    release_date: str | None = None
+    popularity: float = 0.0
+    vote_average: float = 0.0
+    vote_count: int = 0
+    poster_path: str | None = None
+    backdrop_path: str | None = None
+    adult: bool = False
+    video: bool = False
+    genre_ids: list[int] = Field(default_factory=list)
+    original_language: str | None = None
+
+    @property
+    def year(self) -> int | None:
+        if not self.release_date:
+            return None
+        try:
+            return int(self.release_date.split("-", 1)[0])
+        except (ValueError, IndexError):
+            return None
+
+
+class SearchResults(BaseModel):
+    page: int = 1
+    results: list[SearchResult] = Field(default_factory=list)
+    total_pages: int = 0
+    total_results: int = 0
+
+
 class Movie(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 

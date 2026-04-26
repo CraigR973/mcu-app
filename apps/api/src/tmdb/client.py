@@ -8,7 +8,7 @@ import httpx
 import structlog
 
 from ..config import settings
-from .models import Movie
+from .models import Movie, SearchResults
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
@@ -133,3 +133,23 @@ class TMDBClient:
             append_to_response=["credits", "videos", "watch/providers"],
             language=language,
         )
+
+    async def search_movie(
+        self,
+        query: str,
+        year: int | None = None,
+        page: int = 1,
+        language: str = "en-US",
+        include_adult: bool = False,
+    ) -> SearchResults:
+        """Search the TMDB movie index by title (and optional release year)."""
+        params: dict[str, Any] = {
+            "query": query,
+            "page": page,
+            "language": language,
+            "include_adult": str(include_adult).lower(),
+        }
+        if year is not None:
+            params["year"] = year
+        data = await self._get("/search/movie", params=params)
+        return SearchResults.model_validate(data)
