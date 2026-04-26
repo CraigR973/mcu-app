@@ -13,8 +13,31 @@ HIGH_CONFIDENCE = 0.85
 LOW_CONFIDENCE = 0.6
 
 _YEAR_RE = re.compile(r"\s*\((\d{4})\)\s*$")
+_APOS_RE = re.compile(r"[\u2019']")  # straight + curly apostrophe
 _PUNCT_RE = re.compile(r"[^\w\s]")
 _WHITESPACE_RE = re.compile(r"\s+")
+_BRACKET_RE = re.compile(r"\s*[\[(][^\[\]()]*[\])]\s*")
+_TRAILING_ARTICLE_RE = re.compile(r"^(.+?),?\s+(the|a|an)\s*$", re.IGNORECASE)
+
+# Trailing edition / cut markers that are not part of the canonical TMDB title.
+_EDITION_SUFFIXES = [
+    r"director'?s cut",
+    r"the final cut",
+    r"final cut",
+    r"extended edition",
+    r"extended cut",
+    r"extended",
+    r"special edition",
+    r"theatrical cut",
+    r"unrated(?: edition| cut)?",
+    r"uncut",
+    r"remastered",
+    r"anniversary edition",
+]
+_EDITION_RE = re.compile(
+    r"(?:\s*[:\-\u2013]\s*|\s+)(?:" + "|".join(_EDITION_SUFFIXES) + r")\s*$",
+    re.IGNORECASE,
+)
 
 
 def extract_year(title: str) -> tuple[str, int | None]:
@@ -27,14 +50,57 @@ def extract_year(title: str) -> tuple[str, int | None]:
     return cleaned, int(m.group(1))
 
 
+def strip_annotations(title: str) -> str:
+    """Remove ``[...]`` and ``(...)`` annotations such as edition or box-set tags."""
+    cleaned = _BRACKET_RE.sub(" ", title)
+    return _WHITESPACE_RE.sub(" ", cleaned).strip()
+
+
+def rotate_trailing_article(title: str) -> str:
+    """Rewrite library-card titles like 'Eiger Sanction, The' as 'The Eiger Sanction'."""
+    m = _TRAILING_ARTICLE_RE.match(title)
+    if not m:
+        return title
+    body = m.group(1).rstrip(",").strip()
+    article = m.group(2).capitalize()
+    return f"{article} {body}"
+
+
+def strip_edition_suffix(title: str) -> str:
+    """Drop trailing edition / cut markers (e.g. 'The Final Cut', 'Director's Cut')."""
+    return _EDITION_RE.sub("", title).strip()
+
+
+def normalise_query(raw_title: str) -> tuple[str, int | None]:
+    """Apply year extraction, annotation stripping, edition stripping, and article rotation."""
+    cleaned, year = extract_year(raw_title)
+    cleaned = strip_annotations(cleaned)
+    cleaned = strip_edition_suffix(cleaned)
+    cleaned = rotate_trailing_article(cleaned)
+    return cleaned, year
+
+
 def _canonicalise(title: str) -> str:
-    no_punct = _PUNCT_RE.sub(" ", title.lower())
+    # Drop apostrophes outright so "Lampoon's" canonicalises identically to "Lampoons".
+    no_apos = _APOS_RE.sub("", title.lower())
+    no_punct = _PUNCT_RE.sub(" ", no_apos)
     return _WHITESPACE_RE.sub(" ", no_punct).strip()
 
 
 def title_similarity(a: str, b: str) -> float:
-    """Return a similarity score in [0, 1] for two titles, ignoring case and punctuation."""
-    return SequenceMatcher(None, _canonicalise(a), _canonicalise(b)).ratio()
+    """Return a similarity score in [0, 1] for two titles, ignoring case and punctuation.
+
+    When one canonical title is a strict substring of the other (e.g. a query
+    matches the trailing portion of a longer subtitle-style result), the score
+    is floored at 0.9 — high enough to clear the matched-flag threshold but
+    not so high as to claim an exact match.
+    """
+    canon_a = _canonicalise(a)
+    canon_b = _canonicalise(b)
+    ratio = SequenceMatcher(None, canon_a, canon_b).ratio()
+    if canon_a and canon_b and (canon_a in canon_b or canon_b in canon_a):
+        return max(ratio, 0.9)
+    return ratio
 
 
 def score(
@@ -84,7 +150,7 @@ class MatchingEngine:
         return len(self._cache)
 
     async def match(self, raw_title: str) -> MatchResult:
-        clean_title, year = extract_year(raw_title)
+        clean_title, year = normalise_query(raw_title)
         cache_key = (_canonicalise(clean_title), year)
         cached = self._cache.get(cache_key)
         if cached is not None:

@@ -8,7 +8,11 @@ from src.matching import (
     HIGH_CONFIDENCE,
     MatchingEngine,
     extract_year,
+    normalise_query,
+    rotate_trailing_article,
     score,
+    strip_annotations,
+    strip_edition_suffix,
     title_similarity,
 )
 from src.tmdb.client import TMDBClient
@@ -81,6 +85,116 @@ def test_extract_year_handles_extra_spaces_before_parens() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Annotation stripping
+# ---------------------------------------------------------------------------
+
+
+def test_strip_annotations_square_brackets() -> None:
+    raw = "Champagne Charlie [Ealing Classics Collection]"
+    assert strip_annotations(raw) == "Champagne Charlie"
+
+
+def test_strip_annotations_parentheses() -> None:
+    assert strip_annotations("Alfie (Boxset with The Italian Job)") == "Alfie"
+
+
+def test_strip_annotations_foreign_title() -> None:
+    assert strip_annotations("Witness (Unico Testigo)") == "Witness"
+
+
+def test_strip_annotations_keeps_clean_title() -> None:
+    assert strip_annotations("Avengers: Infinity War") == "Avengers: Infinity War"
+
+
+def test_strip_annotations_collapses_internal_whitespace() -> None:
+    assert strip_annotations("Foo [tag] Bar") == "Foo Bar"
+
+
+# ---------------------------------------------------------------------------
+# Trailing-article rotation
+# ---------------------------------------------------------------------------
+
+
+def test_rotate_trailing_article_with_comma() -> None:
+    assert rotate_trailing_article("Eiger Sanction, The") == "The Eiger Sanction"
+
+
+def test_rotate_trailing_article_without_comma() -> None:
+    assert rotate_trailing_article("Hitman's Bodyguard The") == "The Hitman's Bodyguard"
+
+
+def test_rotate_trailing_article_lowercase() -> None:
+    assert rotate_trailing_article("Meg the") == "The Meg"
+
+
+def test_rotate_trailing_article_handles_a_and_an() -> None:
+    assert rotate_trailing_article("Star is Born, A") == "A Star is Born"
+    assert rotate_trailing_article("Officer and a Gentleman, An") == "An Officer and a Gentleman"
+
+
+def test_rotate_trailing_article_leaves_normal_titles_alone() -> None:
+    # Trailing word is not an article
+    assert rotate_trailing_article("Star Wars: The Last Jedi") == "Star Wars: The Last Jedi"
+    assert rotate_trailing_article("The Matrix") == "The Matrix"
+    assert rotate_trailing_article("I Am Legend") == "I Am Legend"
+
+
+# ---------------------------------------------------------------------------
+# Edition suffix stripping
+# ---------------------------------------------------------------------------
+
+
+def test_strip_edition_suffix_final_cut() -> None:
+    assert strip_edition_suffix("Blade Runner The Final Cut") == "Blade Runner"
+
+
+def test_strip_edition_suffix_directors_cut() -> None:
+    assert strip_edition_suffix("Apocalypse Now Director's Cut") == "Apocalypse Now"
+
+
+def test_strip_edition_suffix_extended_edition() -> None:
+    assert strip_edition_suffix("Lord of the Rings - Extended Edition") == "Lord of the Rings"
+
+
+def test_strip_edition_suffix_remastered() -> None:
+    assert strip_edition_suffix("Star Wars: Remastered") == "Star Wars"
+
+
+def test_strip_edition_suffix_no_match() -> None:
+    assert strip_edition_suffix("Cut") == "Cut"
+    assert strip_edition_suffix("The Director") == "The Director"
+
+
+# ---------------------------------------------------------------------------
+# normalise_query — combines extract_year, strip_annotations, rotate_trailing_article
+# ---------------------------------------------------------------------------
+
+
+def test_normalise_query_strips_year_then_brackets() -> None:
+    q, y = normalise_query("Champagne Charlie [Ealing Classics Collection]")
+    assert q == "Champagne Charlie"
+    assert y is None
+
+
+def test_normalise_query_year_then_rotates_article() -> None:
+    q, y = normalise_query("Hill, The (1965)")
+    assert q == "The Hill"
+    assert y == 1965
+
+
+def test_normalise_query_handles_all_three() -> None:
+    q, y = normalise_query("Eiger Sanction, The (Special Edition) (1975)")
+    assert q == "The Eiger Sanction"
+    assert y == 1975
+
+
+def test_normalise_query_strips_edition_then_rotates() -> None:
+    q, y = normalise_query("Blade Runner The Final Cut")
+    assert q == "Blade Runner"
+    assert y is None
+
+
+# ---------------------------------------------------------------------------
 # Title similarity
 # ---------------------------------------------------------------------------
 
@@ -99,6 +213,24 @@ def test_title_similarity_punctuation_ignored() -> None:
 
 def test_title_similarity_low_for_unrelated() -> None:
     assert title_similarity("Dune", "Toy Story") < 0.4
+
+
+def test_title_similarity_apostrophe_collapsed() -> None:
+    # Spreadsheet often drops apostrophes — match should still be exact
+    a = "National Lampoons Animal House"
+    b = "National Lampoon's Animal House"
+    assert title_similarity(a, b) == 1.0
+
+
+def test_title_similarity_substring_floor() -> None:
+    # Query fully contained in result subtitle should clear the matched threshold
+    sim = title_similarity("Vampire's Assistant", "Cirque du Freak: The Vampire's Assistant")
+    assert sim >= 0.9
+
+
+def test_title_similarity_no_substring_floor_when_unrelated() -> None:
+    # Sanity: floor only applies when substring relation actually holds
+    assert title_similarity("Dune", "Toy Story") < 0.5
 
 
 # ---------------------------------------------------------------------------
