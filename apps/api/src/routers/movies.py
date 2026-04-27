@@ -51,9 +51,11 @@ def list_movies(
         q = q.where(Movie.best_format_owned == format)
 
     total: int = db.scalar(select(func.count()).select_from(q.subquery())) or 0
-    rows = db.execute(
-        q.order_by(ordered, Movie.id).offset((page - 1) * per_page).limit(per_page)
-    ).scalars().all()
+    rows = (
+        db.execute(q.order_by(ordered, Movie.id).offset((page - 1) * per_page).limit(per_page))
+        .scalars()
+        .all()
+    )
 
     pages = (total + per_page - 1) // per_page if total else 0
 

@@ -110,15 +110,11 @@ async def test_list_movies_filter_by_format(app):
     conn = psycopg2.connect(DATABASE_URL)
     conn.autocommit = True
     with conn.cursor() as cur:
-        cur.execute(
-            "UPDATE movies SET best_format_owned = '4k_bluray' WHERE id = 9900101"
-        )
+        cur.execute("UPDATE movies SET best_format_owned = '4k_bluray' WHERE id = 9900101")
     conn.close()
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.get(
-            "/api/v1/movies", params={"format": "4k_bluray", "per_page": 100}
-        )
+        resp = await client.get("/api/v1/movies", params={"format": "4k_bluray", "per_page": 100})
     assert resp.status_code == 200
     ids = {m["id"] for m in resp.json()["data"]}
     assert 9_900_101 in ids
@@ -153,10 +149,20 @@ async def test_list_movies_response_fields(app):
     assert resp.status_code == 200
     movie = next(m for m in resp.json()["data"] if m["id"] == 9_900_101)
     expected_fields = {
-        "id", "title", "original_title", "release_date", "runtime",
-        "popularity", "vote_average", "vote_count",
-        "poster_path", "backdrop_path", "genre_ids",
-        "best_format_owned", "best_hdr_owned", "best_audio_owned",
+        "id",
+        "title",
+        "original_title",
+        "release_date",
+        "runtime",
+        "popularity",
+        "vote_average",
+        "vote_count",
+        "poster_path",
+        "backdrop_path",
+        "genre_ids",
+        "best_format_owned",
+        "best_hdr_owned",
+        "best_audio_owned",
     }
     assert expected_fields <= movie.keys()
     assert movie["title"] == "Alpha Film"
@@ -233,11 +239,28 @@ async def test_get_movie_detail_fields(app):
     assert resp.status_code == 200
     detail = resp.json()["data"]
     full_fields = {
-        "id", "title", "original_title", "overview", "tagline",
-        "release_date", "runtime", "popularity", "vote_average", "vote_count",
-        "poster_path", "backdrop_path", "genre_ids", "status",
-        "budget", "revenue", "imdb_id", "homepage",
-        "best_format_owned", "best_hdr_owned", "best_audio_owned",
-        "cast", "crew",
+        "id",
+        "title",
+        "original_title",
+        "overview",
+        "tagline",
+        "release_date",
+        "runtime",
+        "popularity",
+        "vote_average",
+        "vote_count",
+        "poster_path",
+        "backdrop_path",
+        "genre_ids",
+        "status",
+        "budget",
+        "revenue",
+        "imdb_id",
+        "homepage",
+        "best_format_owned",
+        "best_hdr_owned",
+        "best_audio_owned",
+        "cast",
+        "crew",
     }
     assert full_fields <= detail.keys()

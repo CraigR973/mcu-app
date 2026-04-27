@@ -8,9 +8,9 @@ from .config import settings
 _url = settings.database_url
 # Supabase / Heroku-style URLs use "postgres://" — SQLAlchemy 2.x requires "postgresql+psycopg2://"
 if _url.startswith("postgres://"):
-    _url = "postgresql+psycopg2://" + _url[len("postgres://"):]
+    _url = "postgresql+psycopg2://" + _url[len("postgres://") :]
 elif _url.startswith("postgresql://") and "+psycopg2" not in _url:
-    _url = "postgresql+psycopg2://" + _url[len("postgresql://"):]
+    _url = "postgresql+psycopg2://" + _url[len("postgresql://") :]
 
 _engine = create_engine(_url, pool_pre_ping=True) if _url else None
 _SessionLocal: type[Session] | None = (
