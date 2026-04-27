@@ -2030,7 +2030,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Progress reporting
 - Idempotent (safe to re-run)
 - Generates a review file for low-confidence matches
-- **Acceptance:** Real spreadsheet committed to live DB (no `--dry-run`); row counts in `movies`, `collection_items`, and `movie_credits` verified > 0; review file lists ambiguous matches. Phases that produce a *tool* must have an explicit "and run it" acceptance step — a green dry-run is not sufficient.
+- **Acceptance:** Real spreadsheet committed to live DB (no `--dry-run`); row counts in `movies`, `collection_items`, and `movie_credits` verified > 0; review file lists ambiguous matches. (See Rule 6 in §Phase Count & Guidance — tools must be exercised, not just built.)
 
 **Phase 1.8: Derived Field Triggers** 🔴 Opus ✅ 2026-04-26
 - Postgres trigger to update `movies.best_format_owned`, `best_hdr_owned`, `best_audio_owned` on collection_item changes
@@ -2136,7 +2136,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Handle multiple editions (prompt admin to pick)
 - Cache URL for future re-syncs
 - Unit tests with mocked Blu-ray.com HTML
-- **Acceptance:** For 10 known discs, scraper extracts correct specs
+- **Acceptance:** Scraper run against 10 known **live** Blu-ray.com URLs persists correct specs to the matching `collection_items` rows; row counts verified — not just unit tests against fixture HTML.
 
 **Phase 3.8: Spec Display & Quality Badges** 🟢 Sonnet 4.6
 - Badge components for resolution, HDR, audio
@@ -2210,7 +2210,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Generic CSS scraper that uses retailer config
 - Built-in scrapers for HMV, Amazon UK, Blu-ray.com, Zavvi, Arrow, CEX
 - Error handling with retry and auto-disable after 3 fails
-- **Acceptance:** Running a scrape on a seeded retailer returns real prices for wanted items
+- **Acceptance:** Each built-in scraper runs against the **live** retailer and persists ≥ 1 `price_checks` row per scraper for a real wanted item; total `price_checks` rows after the run verified > 0.
 
 **Phase 5.4: Test Scraper Tool** 🟢 Sonnet 4.6
 - "Test scraper" button in retailer UI
@@ -2221,7 +2221,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - APScheduler job running daily
 - Iterates through active wanted items × enabled retailers
 - Inserts price_checks rows
-- **Acceptance:** Overnight run populates price_checks for all wanted items
+- **Acceptance:** First overnight run completes; same-day `price_checks` row count ≈ (active wanted items × enabled retailers) within ≤ 10% failure margin; failures logged with retailer + reason.
 
 **Phase 5.6: Price Drop Trigger & Push Notification** 🔴 Opus
 - Postgres trigger after price_check insert: if price ≤ max_price and not notified, queue push
@@ -2232,7 +2232,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 **Phase 5.7: Price History Charts** 🟢 Sonnet 4.6
 - Chart per wanted item showing price over time across retailers
 - Recharts line chart
-- **Acceptance:** After 7+ days of scrapes, chart renders with multi-retailer data
+- **Acceptance:** After 7+ days of **real scheduled scrapes** (not back-dated fixtures), chart renders multi-retailer time-series for ≥ 3 wanted items.
 
 **Phase 5.8: Daily Aggregation Job** 🟢 Sonnet 4.6
 - Nightly job rolls price_checks > 90 days old into price_history_daily
@@ -2242,7 +2242,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Scrape retailer deals pages (not just wanted items)
 - Match to TMDB, store in `deals` table
 - Skip already-owned
-- **Acceptance:** Deals page shows real deals from 3+ retailers with posters
+- **Acceptance:** Deals scraper run against live retailer pages populates the `deals` table with ≥ 20 rows from ≥ 3 retailers; UI renders them with posters; "skip already-owned" verified against the real `collection_items` table.
 
 **Phase 5.10: Deal Filtering & Actions** 🟢 Sonnet 4.6
 - Filters: genre, discount %, retailer, format
@@ -2309,7 +2309,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 **Phase 7.3: Release Calendar Data Source** 🟢 Sonnet 4.6
 - Populate release_calendar from TMDB upcoming + curated sources
 - Filter by genres of interest
-- **Acceptance:** Calendar page shows upcoming releases for the next 3 months
+- **Acceptance:** Live ingestion run populates `release_calendar` with ≥ 30 rows spanning the next 3 months (not seeded data); Calendar page renders them.
 
 **Phase 7.4: Calendar UI & iCal Feed** 🟢 Sonnet 4.6
 - Monthly calendar view
@@ -2410,7 +2410,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 **Phase 10.5: Retailer Email Parsers** 🟢 Sonnet 4.6
 - Templates for eBay, Amazon, HMV, Zavvi order confirmations
 - Extract title, price, date
-- **Acceptance:** Sample emails parsed correctly for each retailer
+- **Acceptance:** Each parser passes against (a) a fixture sample email in unit tests AND (b) at least one **real received email** from the admin's connected mailbox, both producing correct structured output.
 
 **Phase 10.6: LLM Fallback Parser** 🔴 Opus
 - Claude API call to extract order fields from unfamiliar email templates
@@ -2434,7 +2434,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 **Phase 11.1: Completion Sets Data & Refresh** 🔴 Opus
 - Seed director, franchise, award sets
 - Weekly refresh job from TMDB collections
-- **Acceptance:** Hitchcock set exists with all his films; updates when TMDB changes
+- **Acceptance:** Refresh job runs live against TMDB and populates `completion_sets` with ≥ 20 sets (directors, franchises, awards); Hitchcock set lists every Hitchcock film TMDB returns; re-running after a TMDB change updates the affected rows.
 
 **Phase 11.2: Completion Insights UI** 🟢 Sonnet 4.6
 - Progress bars per set
@@ -2575,6 +2575,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 3. **Keep branches small** — one phase per PR, easier to review and roll back
 4. **Document as you go** — if a phase changes design, update the architecture doc in the same PR
 5. **If a phase starts feeling too big mid-session, split it** — it's better to land 0.3a today and 0.3b tomorrow than to leave a half-done phase overnight
+6. **Tools must be exercised, not just built** — any phase whose deliverable is a tool, scraper, scheduled job, integration, migration, or data pipeline must include an explicit "run it for real" acceptance step with verifiable persisted state (row counts > 0, real network response logged, real device received notification, real email parsed). A green dry-run, mocked unit test, or fixture-driven pass is **not sufficient** to mark the phase complete. Origin: Phase 1.7 was closed out on a `--dry-run` only — the actual import was deferred without anyone flagging it, leaving Phase 1.8 to backfill an empty table.
 
 ---
 
