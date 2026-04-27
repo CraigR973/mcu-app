@@ -507,3 +507,50 @@ Added migration `0015_derived_field_triggers.py` with:
 Initial run had two failures from naive lexeme assertions (`fury`/`replacement`) — Postgres' English stemmer normalises to `furi`/`replac`. Fixed by asserting on the full position-tagged form (`'furi':3A`, `'replac':1A`).
 
 **Migration applied to live Supabase DB:** alembic 0014 → 0015. 156 tests passing (143 prior + 13 new).
+
+## Phase 2.1 Session Log
+Date: 2026-04-27 | Model: Sonnet 4.6 | Commits: dccc163, 7bd415a — CI green on second poll (ruff format fix)
+
+New files:
+- apps/api/src/database.py — SQLAlchemy engine (psycopg2), get_db FastAPI dependency; handles postgres:// → postgresql+psycopg2:// URL normalisation
+- apps/api/src/models.py — DeclarativeBase ORM models: Movie (maps migrations 0001/0015 columns incl. derived fields) and MovieCredit (migration 0002)
+- apps/api/src/schemas/movies.py — Pydantic response models: MovieListItem, MovieDetail (extends list item with overview/tagline/budget/revenue + cast/crew), CreditOut, PaginationMeta, MovieListResponse, MovieDetailResponse
+- apps/api/src/routers/movies.py — GET /api/v1/movies (pagination, sort, genre/year/format filters) + GET /api/v1/movies/{id} (full detail + credits)
+- apps/api/src/routers/__init__.py, apps/api/src/schemas/__init__.py — package init files
+- apps/api/tests/test_movies_api.py — 12 live-DB integration tests (auto-skip when DATABASE_URL unset); test IDs in 9_900_1xx range
+
+Updated:
+- apps/api/src/main.py — added movies_router via include_router()
+
+Key design decisions:
+- Sync FastAPI route handlers (FastAPI auto-runs in thread pool) to avoid asyncpg dependency
+- genre_id filter uses `literal(genre_id).op("= ANY")(Movie.genre_ids)` for safe parameterised ARRAY containment check
+- Secondary sort by id ensures stable pagination
+- 143 unit tests green; 12 new integration tests skip locally (Supabase DNS not reachable locally), run in CI where network resolves
+
+---
+## Phase 1.7 follow-up — Real import committed
+**Date:** 2026-04-27
+**Model:** Opus 4.7
+
+Phase 1.7 closed out 2026-04-26 with a `--dry-run` only. The actual import was deferred without anyone flagging it. Running it now gave us live data to verify the Phase 1.8 triggers against at scale.
+
+**Run:** `import_collection.py --xlsx "Film Catalogue ... .xlsx"` (no --dry-run)
+
+**Result:**
+- 1857 rows parsed; 1720 high-confidence (92.6%, identical to dry-run baseline)
+- 1697 unique movies inserted (some titles owned in multiple formats)
+- 1830 collection_items inserted, 10 skipped (already in DB from prior partial runs)
+- 69,421 movie_credits enriched from TMDB
+- 18 rows written to `import_review.csv`; 119 no-match
+
+**Phase 1.8 triggers verified at scale:**
+- `best_format_owned` populated for 1697/1697 movies
+- `search_vector` populated for 1697/1697 movies
+- `best_hdr_owned` / `best_audio_owned` correctly NULL (spreadsheet has no AV-spec columns yet)
+- Multi-format spot-check: "The Mummy" (4k_bluray + bluray) → best_format = 4k_bluray ✓
+- Distribution: bluray 827, digital 389, 4k_bluray 306, dvd 175
+
+**Process fix:** Amended Phase 1.7 acceptance criteria in `MCU_Architecture_v2.1_FINAL.md` to require a real DB write, not just a dry-run. Added a general rule: phases that produce a tool must have an explicit "and run it" acceptance step.
+
+**Connectivity gotcha:** Direct Supabase DB hostname is now AAAA-only (IPv6). On corporate networks that resolve A-only, psycopg2 fails with "could not translate host name". For Phase 2.x onward consider switching `DATABASE_URL` to the Supavisor pooler (IPv4-friendly) so dev works on any network.

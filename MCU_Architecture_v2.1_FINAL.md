@@ -2025,12 +2025,12 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Cache results to avoid re-querying
 - **Acceptance:** On 100 sample titles, ≥90% match the correct film; unmatched flagged clearly
 
-**Phase 1.7: Bulk Import Script** 🟢 Sonnet 4.6 ✅ 2026-04-26
+**Phase 1.7: Bulk Import Script** 🟢 Sonnet 4.6 ✅ 2026-04-26 (real import committed 2026-04-27)
 - CLI tool that runs end-to-end import: parse → match → enrich → insert
 - Progress reporting
 - Idempotent (safe to re-run)
 - Generates a review file for low-confidence matches
-- **Acceptance:** Full import of real spreadsheet completes successfully; review file lists ambiguous matches
+- **Acceptance:** Real spreadsheet committed to live DB (no `--dry-run`); row counts in `movies`, `collection_items`, and `movie_credits` verified > 0; review file lists ambiguous matches. Phases that produce a *tool* must have an explicit "and run it" acceptance step — a green dry-run is not sufficient.
 
 **Phase 1.8: Derived Field Triggers** 🔴 Opus ✅ 2026-04-26
 - Postgres trigger to update `movies.best_format_owned`, `best_hdr_owned`, `best_audio_owned` on collection_item changes
@@ -2041,7 +2041,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 
 ### Stage 2 — Basic UI
 
-**Phase 2.1: API — List & Detail Movies** 🟢 Sonnet 4.6
+**Phase 2.1: API — List & Detail Movies** 🟢 Sonnet 4.6 ✅ 2026-04-27
 - `GET /api/v1/movies` with pagination, sort, basic filters
 - `GET /api/v1/movies/{id}` with full metadata
 - Response envelope format
