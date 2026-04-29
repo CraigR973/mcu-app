@@ -3,9 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchMovies, type MovieFilters } from '@/lib/api'
 import { FilterBar } from '@/components/movies/FilterBar'
 import { MovieGrid } from '@/components/movies/MovieGrid'
+import { MovieListView } from '@/components/movies/MovieListView'
+import { MovieCompactView } from '@/components/movies/MovieCompactView'
+import { ViewToggle } from '@/components/movies/ViewToggle'
+import { useViewPreference } from '@/hooks/useViewPreference'
 
 export default function MoviesPage() {
   const [filters, setFilters] = useState<MovieFilters>({})
+  const { viewMode, setViewMode, enabledColumns, toggleColumn } = useViewPreference()
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['movies', filters],
@@ -20,6 +25,9 @@ export default function MoviesPage() {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-4 px-4 py-3 border-b border-border">
         <h1 className="text-lg font-semibold text-foreground shrink-0">Movies</h1>
+        <div className="ml-auto">
+          <ViewToggle value={viewMode} onChange={setViewMode} />
+        </div>
       </div>
 
       <FilterBar
@@ -34,8 +42,21 @@ export default function MoviesPage() {
         </div>
       )}
 
-      {!isError && (
+      {!isError && viewMode === 'grid' && (
         <MovieGrid movies={movies} isLoading={isLoading} />
+      )}
+
+      {!isError && viewMode === 'list' && (
+        <MovieListView
+          movies={movies}
+          isLoading={isLoading}
+          enabledColumns={enabledColumns}
+          toggleColumn={toggleColumn}
+        />
+      )}
+
+      {!isError && viewMode === 'compact' && (
+        <MovieCompactView movies={movies} isLoading={isLoading} />
       )}
     </div>
   )
