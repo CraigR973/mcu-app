@@ -30,7 +30,7 @@ SortField = Literal["title", "release_date", "popularity", "vote_average"]
 @router.get("", response_model=MovieListResponse)
 def list_movies(
     page: Annotated[int, Query(ge=1)] = 1,
-    per_page: Annotated[int, Query(ge=1, le=100)] = 20,
+    per_page: Annotated[int, Query(ge=1, le=2000)] = 20,
     sort: SortField = "popularity",
     order: Literal["asc", "desc"] = "desc",
     genre_id: int | None = None,
