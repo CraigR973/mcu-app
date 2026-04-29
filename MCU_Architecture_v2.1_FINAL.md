@@ -2061,13 +2061,13 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Basic filter bar (genre, format, year)
 - **Acceptance:** Grid renders 1,866 items smoothly (60fps scroll); filters update results instantly
 
-**Phase 2.4: Collection Grid (List & Compact Views)** 🟢 Sonnet 4.6
+**Phase 2.4: Collection Grid (List & Compact Views)** 🟢 Sonnet 4.6 ✅ 2026-04-29
 - View mode toggle (grid / list / compact)
 - List view with configurable columns
 - Persistence of user's view preference
 - **Acceptance:** Toggling views is instant; user's choice remembered across sessions
 
-**Phase 2.5: Full-Text Search** 🟢 Sonnet 4.6
+**Phase 2.5: Full-Text Search** 🟢 Sonnet 4.6 ✅ 2026-04-29
 - `GET /api/v1/search` using tsvector
 - Search bar in header, `/` shortcut to focus
 - Debounced input, result highlighting
