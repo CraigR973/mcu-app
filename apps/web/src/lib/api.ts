@@ -52,6 +52,29 @@ export async function fetchMovies(filters: MovieFilters = {}): Promise<MovieList
   return res.json() as Promise<MovieListResponse>
 }
 
+export interface SearchResultItem {
+  id: number
+  title: string
+  original_title: string | null
+  poster_path: string | null
+  release_date: string | null
+  vote_average: number | null
+  best_format_owned: string | null
+}
+
+export interface SearchResponse {
+  data: SearchResultItem[]
+  query: string
+  total: number
+}
+
+export async function fetchSearch(q: string, limit = 20): Promise<SearchResponse> {
+  const params = new URLSearchParams({ q, limit: String(limit) })
+  const res = await fetch(`${BASE}/search?${params}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<SearchResponse>
+}
+
 export function posterUrl(path: string | null, size = 'w342'): string {
   if (!path) return '/placeholder-poster.svg'
   return `https://image.tmdb.org/t/p/${size}${path}`
