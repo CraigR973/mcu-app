@@ -30,7 +30,6 @@ function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query:
       <div className="min-w-0 flex-1">
         <p
           className="truncate text-sm font-medium text-foreground"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: titleHtml }}
         />
         <p className="text-xs text-muted-foreground">
