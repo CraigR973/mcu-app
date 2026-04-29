@@ -13,7 +13,7 @@ export const ALL_COLUMNS = [
 
 export type ColumnKey = typeof ALL_COLUMNS[number]['key']
 
-const DEFAULT_COLUMNS: ColumnKey[] = ['year', 'format', 'hdr', 'runtime', 'rating']
+const DEFAULT_COLUMNS: ColumnKey[] = ['year', 'format', 'rating']
 
 const STORAGE_KEYS = {
   viewMode: 'mcu:view-mode',

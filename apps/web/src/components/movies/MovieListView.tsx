@@ -1,14 +1,8 @@
 import { useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Settings2 } from 'lucide-react'
-import { MovieListItem, posterUrl } from '../../lib/api'
+import { MovieListItem, posterUrl, FORMAT_COLORS, formatLabel } from '../../lib/api'
 import { ALL_COLUMNS, ColumnKey } from '../../hooks/useViewPreference'
-
-const FORMAT_COLORS: Record<string, string> = {
-  '4K UHD': 'bg-blue-900 text-blue-200',
-  'Blu-ray': 'bg-indigo-900 text-indigo-200',
-  'DVD':     'bg-slate-700 text-slate-300',
-}
 
 function formatRuntime(mins: number | null) {
   if (!mins) return '—'
@@ -44,7 +38,7 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
         if (!fmt) return <span className="text-zinc-600">—</span>
         return (
           <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${FORMAT_COLORS[fmt] ?? 'bg-zinc-700 text-zinc-300'}`}>
-            {fmt}
+            {formatLabel(fmt)}
           </span>
         )
       }
@@ -68,7 +62,7 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
         <div className="w-8 shrink-0" />
         <div className="flex-1 min-w-0">Title</div>
         {colDefs.map(c => (
-          <div key={c.key} className="w-24 shrink-0 text-right">{c.label}</div>
+          <div key={c.key} className="w-16 shrink-0 text-right">{c.label}</div>
         ))}
         <div className="relative ml-auto shrink-0">
           <button

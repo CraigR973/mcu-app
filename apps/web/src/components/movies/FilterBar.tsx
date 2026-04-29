@@ -49,8 +49,8 @@ export function FilterBar({ filters, total, onChange }: Props) {
       >
         <option value="">All formats</option>
         {FORMATS.map((f) => (
-          <option key={f} value={f}>
-            {f}
+          <option key={f.value} value={f.value}>
+            {f.label}
           </option>
         ))}
       </select>

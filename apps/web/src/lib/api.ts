@@ -78,4 +78,19 @@ export const TMDB_GENRES: { id: number; name: string }[] = [
   { id: 37, name: 'Western' },
 ]
 
-export const FORMATS = ['4K UHD', 'Blu-ray', 'DVD'] as const
+export const FORMATS = [
+  { value: '4k_bluray', label: '4K UHD' },
+  { value: 'bluray',    label: 'Blu-ray' },
+  { value: 'dvd',       label: 'DVD' },
+] as const
+
+export const FORMAT_COLORS: Record<string, string> = {
+  '4k_bluray': 'bg-blue-900 text-blue-200',
+  'bluray':    'bg-indigo-900 text-indigo-200',
+  'dvd':       'bg-slate-700 text-slate-300',
+}
+
+export function formatLabel(value: string | null): string | null {
+  if (!value) return null
+  return FORMATS.find(f => f.value === value)?.label ?? value
+}

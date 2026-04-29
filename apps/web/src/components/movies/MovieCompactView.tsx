@@ -1,12 +1,6 @@
 import { useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { MovieListItem } from '../../lib/api'
-
-const FORMAT_COLORS: Record<string, string> = {
-  '4K UHD': 'bg-blue-900 text-blue-200',
-  'Blu-ray': 'bg-indigo-900 text-indigo-200',
-  'DVD':     'bg-slate-700 text-slate-300',
-}
+import { MovieListItem, FORMAT_COLORS, formatLabel } from '../../lib/api'
 
 interface Props {
   movies: MovieListItem[]
@@ -59,7 +53,7 @@ export function MovieCompactView({ movies, isLoading }: Props) {
               </span>
               {fmt ? (
                 <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${FORMAT_COLORS[fmt] ?? 'bg-zinc-700 text-zinc-300'}`}>
-                  {fmt}
+                  {formatLabel(fmt)}
                 </span>
               ) : (
                 <span className="w-14 shrink-0" />
