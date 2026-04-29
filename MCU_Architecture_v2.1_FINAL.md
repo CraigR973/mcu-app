@@ -2048,13 +2048,13 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Integration tests
 - **Acceptance:** Endpoints return correct paginated data; filter by genre, year, format works
 
-**Phase 2.2: Frontend Shell & Routing** 🟢 Sonnet 4.6
+**Phase 2.2: Frontend Shell & Routing** 🟢 Sonnet 4.6 ✅ 2026-04-29
 - App layout with sidebar nav
 - Protected route component
 - 404 and error boundaries
 - **Acceptance:** All defined routes reachable; nav works; auth state persists on refresh
 
-**Phase 2.3: Collection Grid (Grid View)** 🟢 Sonnet 4.6
+**Phase 2.3: Collection Grid (Grid View)** 🟢 Sonnet 4.6 ✅ 2026-04-29
 - Virtualised grid (react-window or TanStack Virtual) for 2000+ items
 - Skeleton loader during fetch
 - Empty state

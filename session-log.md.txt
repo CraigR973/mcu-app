@@ -554,3 +554,46 @@ Phase 1.7 closed out 2026-04-26 with a `--dry-run` only. The actual import was d
 **Process fix:** Amended Phase 1.7 acceptance criteria in `MCU_Architecture_v2.1_FINAL.md` to require a real DB write, not just a dry-run. Added a general rule: phases that produce a tool must have an explicit "and run it" acceptance step.
 
 **Connectivity gotcha:** Direct Supabase DB hostname is now AAAA-only (IPv6). On corporate networks that resolve A-only, psycopg2 fails with "could not translate host name". For Phase 2.x onward consider switching `DATABASE_URL` to the Supavisor pooler (IPv4-friendly) so dev works on any network.
+
+## Phase 2.2 Session Log
+Date: 2026-04-29 | Model: Sonnet 4.6 | Commit: 1520b8e — CI green first run
+
+New components:
+- components/layouts/AppLayout.tsx — flex shell: fixed sidebar (lg) + hamburger toggle (mobile), ErrorBoundary inside main
+- components/layouts/Sidebar.tsx — NavLink nav (Movies, Watchlist, Dashboard, admin-conditional), theme toggle, sign-out footer
+- components/ErrorBoundary.tsx — React class component with reset; wraps app root (Sentry) and AppLayout content
+- pages/NotFoundPage.tsx — 404 with gold numerals; catch-all `*` route in App.tsx
+- pages/MoviesPage.tsx / WatchlistPage.tsx — stubs for Phase 2.3
+
+Route table (App.tsx):
+- Public: / /login /signup /unauthorized /debug
+- Protected (AppShell = ProtectedRoute + AppLayout): /movies /watchlist /dashboard
+- Protected admin: /admin
+- 404 catch-all: *
+
+Bug fixed: supabase.ts threw on init because .env.local used VITE_SUPABASE_PUBLISHABLE_KEY (new Supabase naming) while code read VITE_SUPABASE_ANON_KEY. Now accepts either.
+
+Auth persists on refresh via Supabase getSession() in AuthProvider useEffect.
+
+---
+## Phase 2.3 — Collection Grid (Grid View)
+**Date:** 2026-04-29
+**Model:** Sonnet 4.6
+**Commit:** 3f92459 — CI green first run
+
+New files:
+- `apps/web/src/lib/api.ts` — typed fetchMovies(), posterUrl(), TMDB_GENRES, FORMATS constants
+- `apps/web/public/placeholder-poster.svg` — dark grey fallback poster
+- `apps/web/src/components/movies/MovieCard.tsx` — lazy poster img, format badge (4K/Blu-ray/DVD), title/year
+- `apps/web/src/components/movies/SkeletonCard.tsx` — animate-pulse skeleton matching card dimensions
+- `apps/web/src/components/movies/FilterBar.tsx` — genre/format/year native selects + clear + count badge
+- `apps/web/src/components/movies/MovieGrid.tsx` — @tanstack/react-virtual row virtualizer; ResizeObserver for responsive columns; empty state with Film icon
+
+Key decisions:
+- @tanstack/react-virtual (not react-window) — consistent with TanStack Query already in stack
+- Fetch entire collection in one request (per_page=2000 — API limit raised from 100); client-side filter; no infinite scroll complexity
+- Row virtualisation: items grouped into rows of N columns; each row measured via measureElement; re-measure called on column change
+- Column count: Math.floor((containerWidth - 32 + 12) / 172), min 2; driven by ResizeObserver not CSS breakpoints
+- estimateSize computes row height from container width × aspect ratio (2:3) + 52px info
+
+Acceptance status: grid renders 1,866 items; filters update instantly (client-side); skeleton on first load; empty state on zero results.
