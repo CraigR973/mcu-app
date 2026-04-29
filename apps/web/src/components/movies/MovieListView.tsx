@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Settings2 } from 'lucide-react'
 import { MovieListItem, posterUrl, FORMAT_COLORS, formatLabel } from '../../lib/api'
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn }: Props) {
+  const navigate = useNavigate()
   const parentRef = useRef<HTMLDivElement>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
 
@@ -116,7 +118,8 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
               <div
                 key={movie.id}
                 style={{ position: 'absolute', top: vRow.start, left: 0, right: 0, height: 52 }}
-                className="flex items-center gap-2 px-3 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
+                className="flex items-center gap-2 px-3 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                onClick={() => navigate(`/movies/${movie.id}`)}
               >
                 <div className="w-8 h-10 shrink-0 rounded overflow-hidden bg-zinc-800">
                   {movie.poster_path && (

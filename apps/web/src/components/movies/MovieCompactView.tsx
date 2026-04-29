@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { MovieListItem, FORMAT_COLORS, formatLabel } from '../../lib/api'
 
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function MovieCompactView({ movies, isLoading }: Props) {
+  const navigate = useNavigate()
   const parentRef = useRef<HTMLDivElement>(null)
 
   const rowVirtualizer = useVirtualizer({
@@ -42,7 +44,8 @@ export function MovieCompactView({ movies, isLoading }: Props) {
             <div
               key={movie.id}
               style={{ position: 'absolute', top: vRow.start, left: 0, right: 0, height: 36 }}
-              className="flex items-center gap-3 px-3 border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors"
+              className="flex items-center gap-3 px-3 border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors cursor-pointer"
+              onClick={() => navigate(`/movies/${movie.id}`)}
             >
               <span className="text-xs text-zinc-600 w-4 shrink-0 text-right">
                 {vRow.index + 1}

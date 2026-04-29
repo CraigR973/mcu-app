@@ -11,6 +11,7 @@ const SignupPage = lazy(() => import('./pages/SignupPage'))
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
+const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 
 function AdminPage() {
@@ -78,6 +79,10 @@ export default function App() {
             <Route
               path="/movies"
               element={<AppShell><MoviesPage /></AppShell>}
+            />
+            <Route
+              path="/movies/:id"
+              element={<AppShell><MovieDetailPage /></AppShell>}
             />
             <Route
               path="/watchlist"

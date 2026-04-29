@@ -52,6 +52,44 @@ export async function fetchMovies(filters: MovieFilters = {}): Promise<MovieList
   return res.json() as Promise<MovieListResponse>
 }
 
+export interface CreditOut {
+  person_id: number | null
+  person_name: string | null
+  credit_type: string
+  character: string | null
+  department: string | null
+  job: string | null
+  credit_order: number | null
+  profile_path: string | null
+}
+
+export interface MovieDetail extends MovieListItem {
+  overview: string | null
+  tagline: string | null
+  status: string | null
+  budget: number | null
+  revenue: number | null
+  imdb_id: string | null
+  homepage: string | null
+  cast: CreditOut[]
+  crew: CreditOut[]
+}
+
+export interface MovieDetailResponse {
+  data: MovieDetail
+}
+
+export async function fetchMovie(id: number): Promise<MovieDetailResponse> {
+  const res = await fetch(`${BASE}/movies/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<MovieDetailResponse>
+}
+
+export function backdropUrl(path: string | null, size = 'w1280'): string {
+  if (!path) return ''
+  return `https://image.tmdb.org/t/p/${size}${path}`
+}
+
 export interface SearchResultItem {
   id: number
   title: string

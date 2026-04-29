@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, X } from 'lucide-react'
 import { fetchSearch, posterUrl, formatLabel, FORMAT_COLORS, type SearchResultItem } from '@/lib/api'
@@ -9,7 +10,7 @@ function highlight(text: string, query: string): string {
   return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="bg-yellow-400/30 text-inherit rounded-sm">$1</mark>')
 }
 
-function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query: string; onSelect: () => void }) {
+function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query: string; onSelect: (id: number) => void }) {
   const year = item.release_date ? new Date(item.release_date).getFullYear() : null
   const fmtColor = item.best_format_owned ? FORMAT_COLORS[item.best_format_owned] ?? '' : ''
   const fmtLabel = formatLabel(item.best_format_owned)
@@ -19,7 +20,7 @@ function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query:
     <button
       className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent focus:bg-accent focus:outline-none"
       onMouseDown={(e) => e.preventDefault()}
-      onClick={onSelect}
+      onClick={() => onSelect(item.id)}
     >
       <img
         src={posterUrl(item.poster_path, 'w92')}
@@ -46,6 +47,7 @@ function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query:
 }
 
 export default function SearchBar() {
+  const navigate = useNavigate()
   const [inputValue, setInputValue] = useState('')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -76,10 +78,13 @@ export default function SearchBar() {
     inputRef.current?.focus()
   }, [])
 
-  const handleSelect = useCallback(() => {
+  const handleSelect = useCallback((id: number) => {
     setOpen(false)
+    setInputValue('')
+    setQuery('')
     inputRef.current?.blur()
-  }, [])
+    navigate(`/movies/${id}`)
+  }, [navigate])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { posterUrl, type MovieListItem } from '@/lib/api'
 
 const FORMAT_BADGE: Record<string, string> = {
@@ -17,7 +18,7 @@ export function MovieCard({ movie }: Props) {
     : null
 
   return (
-    <div className="group cursor-pointer rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors duration-200">
+    <Link to={`/movies/${movie.id}`} className="group cursor-pointer rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors duration-200 block">
       <div className="aspect-[2/3] relative overflow-hidden bg-muted">
         <img
           src={posterUrl(movie.poster_path)}
@@ -41,6 +42,6 @@ export function MovieCard({ movie }: Props) {
         <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug">{movie.title}</p>
         {year && <p className="text-[10px] text-muted-foreground mt-0.5">{year}</p>}
       </div>
-    </div>
+    </Link>
   )
 }
