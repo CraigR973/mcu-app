@@ -12,6 +12,7 @@ from .logging_config import configure_logging
 from .middleware import CorrelationIdMiddleware
 from .routers.movies import router as movies_router
 from .routers.search import router as search_router
+from .routers.users import router as users_router
 
 load_dotenv()
 configure_logging(log_level=os.getenv("LOG_LEVEL", "INFO"))
@@ -33,6 +34,7 @@ app = FastAPI(
 app.add_middleware(CorrelationIdMiddleware)
 app.include_router(movies_router)
 app.include_router(search_router)
+app.include_router(users_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

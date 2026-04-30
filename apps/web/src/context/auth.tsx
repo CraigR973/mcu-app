@@ -9,6 +9,7 @@ interface Profile {
   role: Role
   username: string | null
   created_at: string
+  onboarding_completed: boolean
 }
 
 interface AuthContextValue {
@@ -19,6 +20,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  completeOnboarding: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -67,8 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  async function completeOnboarding() {
+    const userId = session?.user?.id
+    if (!userId) return
+    await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', userId)
+    setProfile((p) => p ? { ...p, onboarding_completed: true } : p)
+  }
+
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, profile, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, profile, isLoading, signIn, signUp, signOut, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )

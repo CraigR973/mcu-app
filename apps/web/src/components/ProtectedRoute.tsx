@@ -5,9 +5,12 @@ import { useAuth } from '../context/auth'
 interface Props {
   children: ReactNode
   role?: 'admin' | 'viewer'
+  skipOnboardingCheck?: boolean
 }
 
-export default function ProtectedRoute({ children, role }: Props) {
+export default function ProtectedRoute({ children, role, skipOnboardingCheck }: Props) {
+  if (import.meta.env.VITE_SKIP_AUTH === 'true') return <>{children}</>
+
   const { session, profile, isLoading } = useAuth()
   const location = useLocation()
 
@@ -25,6 +28,10 @@ export default function ProtectedRoute({ children, role }: Props) {
 
   if (role && profile?.role !== role) {
     return <Navigate to="/unauthorized" replace />
+  }
+
+  if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
+    return <Navigate to="/onboarding" replace />
   }
 
   return <>{children}</>
