@@ -27,9 +27,10 @@ def _fetch_profile(supabase: Client, user_id: str) -> ProfileOut:
         .single()
         .execute()
     )
-    if not result.data or not isinstance(result.data, dict):
+    data = result.data
+    if not data or not isinstance(data, dict):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
-    return ProfileOut(**result.data)  # type: ignore[arg-type]
+    return ProfileOut.model_validate(data)
 
 
 @router.get("/me", response_model=ProfileOut)
