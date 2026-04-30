@@ -670,3 +670,77 @@ Key facts for next phase:
 - SearchBar: lives in AppLayout header, always visible desktop+mobile
 - Highlight function in SearchBar.tsx wraps query matches in <mark> tags
   using dangerouslySetInnerHTML (safe — titles come from TMDB, not user)
+
+## Phase 2.6 Session Log
+Date: 2026-04-29 | Model: Sonnet 4.6 | Commit: 7b3ee49 — CI green
+
+New files:
+- apps/web/src/pages/MovieDetailPage.tsx — full detail page: hero backdrop with
+  gradient overlay, poster sidebar (sm+), tagline, title h1, metadata row
+  (year · runtime · star rating · format badge), IMDb + Letterboxd external link
+  buttons, Overview section, scrollable Cast row (top 12 with profile photos,
+  name, character)
+
+Modified files:
+- apps/web/src/lib/api.ts — CreditOut, MovieDetail, MovieDetailResponse types;
+  fetchMovie(id) → GET /api/v1/movies/{id}; backdropUrl(path, size='w1280')
+- apps/web/src/App.tsx — lazy /movies/:id route inside AppShell (ProtectedRoute
+  + AppLayout)
+- apps/web/src/components/movies/MovieCard.tsx — outer div replaced with React
+  Router <Link to="/movies/{id}"> for grid navigation
+- apps/web/src/components/SearchBar.tsx — handleSelect(id) now calls
+  navigate(`/movies/${id}`) and clears input; MovieResult.onSelect signature
+  updated to pass item.id
+- apps/web/src/components/movies/MovieListView.tsx — row div gets cursor-pointer
+  + onClick(() => navigate(`/movies/${id}`))
+- apps/web/src/components/movies/MovieCompactView.tsx — same cursor-pointer +
+  onClick navigate pattern as list view
+
+Key facts for next phase:
+- Detail page route: /movies/:id — lazy-loaded, inside AppShell
+- MovieDetail has cast[] + crew[] arrays from /api/v1/movies/{id}
+- posterUrl() already handles null (returns /placeholder-poster.svg)
+- backdropUrl() returns '' for null — hero div stays bg-zinc-900 as fallback
+- All three view modes (grid/list/compact) now navigate to detail page on click
+
+---
+## Phase 2.7 Session Log
+Date: 2026-04-30 | Model: Sonnet 4.6 | Commit: cdc2cf0 — CI green
+
+New files: none
+
+Modified files:
+- apps/api/src/models.py — added CollectionItem SQLAlchemy ORM model
+- apps/api/src/schemas/movies.py — added CollectionItemOut Pydantic schema
+- apps/api/src/routers/movies.py — added GET /api/v1/movies/{id}/copies endpoint (filters deleted_at IS NULL)
+- apps/web/src/lib/api.ts — added CollectionItemOut interface + fetchCopies() function
+- apps/web/src/pages/MovieDetailPage.tsx — restructured with tabbed UI: Overview (overview text + cast carousel), Crew (photo + name + job grid), Your Copies (CopyCard grid)
+
+Key facts:
+- Tab bar: Overview / Crew {count} / Your Copies {count} with orange active underline
+- CopyCard shows: format badge, edition badge, condition, region, HDR, resolution, audio, purchase info, notes, for-sale badge
+- Your Copies tab shows empty-state (Package icon) when no copies exist
+- collection_items has no "location" field — notes column used for shelf/location info
+- Uvicorn must be started with .env.local vars: env $(grep -v '^#' apps/api/.env.local | xargs) python3.12 -m uvicorn ...
+
+---
+## Phase 2.8 — Onboarding Flow
+**Date:** 2026-04-30
+**Model:** Sonnet 4.6
+**Commit:** 2142687 — CI green
+
+### Modified files
+- `apps/api/migrations/versions/0017_add_onboarding_completed.py` — Alembic migration: ADD COLUMN onboarding_completed BOOLEAN DEFAULT FALSE to profiles
+- `apps/api/src/routers/users.py` — new router: GET /api/v1/users/me, PATCH /api/v1/users/me/onboarding
+- `apps/api/src/main.py` — registered users_router
+- `apps/web/src/context/auth.tsx` — added onboarding_completed to Profile type; added completeOnboarding() that updates Supabase + local profile state
+- `apps/web/src/components/ProtectedRoute.tsx` — added skipOnboardingCheck prop; redirects to /onboarding if profile.onboarding_completed is false; moved hooks before early return (rules-of-hooks)
+- `apps/web/src/pages/OnboardingPage.tsx` — 8-step wizard: welcome → import → email connect → install PWA → notifications → theme → tour → done
+- `apps/web/src/App.tsx` — added /onboarding route (ProtectedRoute with skipOnboardingCheck)
+
+### Key facts
+- Resumability via localStorage key `mcu:onboarding-step` (cleared on finish)
+- Each step has Skip + Next; final step has "Go to my library →" which calls completeOnboarding()
+- ProtectedRoute hooks must be called before any early return (react-hooks/rules-of-hooks)
+- Supabase Python client: update() doesn't chain .select() — do separate fetch after update
+- mypy on CI uses warn_unused_ignores — prefer model_validate() over **spread with type:ignore

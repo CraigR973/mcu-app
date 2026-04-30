@@ -2073,20 +2073,20 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Debounced input, result highlighting
 - **Acceptance:** Searching "Kubrick" returns all Kubrick films in < 150ms
 
-**Phase 2.6: Movie Detail Page — Layout** 🟢 Sonnet 4.6
+**Phase 2.6: Movie Detail Page — Layout** 🟢 Sonnet 4.6 ✅ 2026-04-29
 - Hero backdrop with gradient overlay
 - Title, year, runtime, rating metadata row
 - Overview tab content
 - External link buttons (IMDB, Letterboxd)
 - **Acceptance:** Detail page displays cleanly on mobile and desktop; external links open correct URLs
 
-**Phase 2.7: Movie Detail — Cast, Crew, Your Copies Tabs** 🟢 Sonnet 4.6
+**Phase 2.7: Movie Detail — Cast, Crew, Your Copies Tabs** 🟢 Sonnet 4.6 ✅ 2026-04-30
 - Cast carousel with photos
 - Crew list
 - "Your Copies" tab showing all collection_items for this movie with locations and formats
 - **Acceptance:** Movie with multiple owned formats shows all copies clearly
 
-**Phase 2.8: Onboarding Flow** 🟢 Sonnet 4.6
+**Phase 2.8: Onboarding Flow** 🟢 Sonnet 4.6 ✅ 2026-04-30
 - 8-step wizard (welcome → import → email connect → install PWA → notifications → theme → tour → done)
 - Skippable, resumable
 - **Acceptance:** First-time admin completes all 8 steps; skipping still lands on a usable dashboard
