@@ -46,5 +46,10 @@ async def patch_onboarding(
     user: dict[str, str] = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ) -> ProfileOut:
-    supabase.table("profiles").update({"onboarding_completed": body.completed}).eq("id", user["id"]).execute()
+    (
+        supabase.table("profiles")
+        .update({"onboarding_completed": body.completed})
+        .eq("id", user["id"])
+        .execute()
+    )
     return _fetch_profile(supabase, user["id"])
