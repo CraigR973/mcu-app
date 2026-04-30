@@ -9,10 +9,10 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, role, skipOnboardingCheck }: Props) {
-  if (import.meta.env.VITE_SKIP_AUTH === 'true') return <>{children}</>
-
   const { session, profile, isLoading } = useAuth()
   const location = useLocation()
+
+  if (import.meta.env.VITE_SKIP_AUTH === 'true') return <>{children}</>
 
   if (isLoading) {
     return (
