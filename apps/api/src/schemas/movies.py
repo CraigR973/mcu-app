@@ -1,6 +1,25 @@
 from datetime import date
+from decimal import Decimal
 
 from pydantic import BaseModel
+
+
+class CollectionItemOut(BaseModel):
+    id: int
+    format: str
+    edition: str | None = None
+    condition: str
+    region: str | None = None
+    purchase_price: Decimal | None = None
+    purchase_date: date | None = None
+    purchase_source: str | None = None
+    notes: str | None = None
+    resolution: str | None = None
+    hdr_format: str | None = None
+    audio_formats: list[str] | None = None
+    is_for_sale: bool = False
+
+    model_config = {"from_attributes": True}
 
 
 class CreditOut(BaseModel):

@@ -1,15 +1,105 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Star, Clock, ExternalLink } from 'lucide-react'
-import { fetchMovie, backdropUrl, posterUrl, formatLabel, FORMAT_COLORS } from '@/lib/api'
+import { ArrowLeft, Star, Clock, ExternalLink, Disc3, Package } from 'lucide-react'
+import {
+  fetchMovie,
+  fetchCopies,
+  backdropUrl,
+  posterUrl,
+  formatLabel,
+  FORMAT_COLORS,
+  CollectionItemOut,
+} from '@/lib/api'
+
+type Tab = 'overview' | 'crew' | 'copies'
+
+const CONDITION_LABELS: Record<string, string> = {
+  sealed: 'Sealed',
+  mint: 'Mint',
+  very_good: 'Very Good',
+  good: 'Good',
+  fair: 'Fair',
+  poor: 'Poor',
+}
+
+function CopyCard({ item }: { item: CollectionItemOut }) {
+  const fmtLabel = formatLabel(item.format)
+  const fmtColor = FORMAT_COLORS[item.format] ?? 'bg-slate-700 text-slate-300'
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-xs px-2 py-0.5 rounded font-medium ${fmtColor}`}>
+            {fmtLabel ?? item.format}
+          </span>
+          {item.edition && (
+            <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+              {item.edition}
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-muted-foreground shrink-0">
+          {CONDITION_LABELS[item.condition] ?? item.condition}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {item.region && (
+          <span><span className="text-foreground/60">Region</span> {item.region}</span>
+        )}
+        {item.hdr_format && (
+          <span><span className="text-foreground/60">HDR</span> {item.hdr_format}</span>
+        )}
+        {item.resolution && (
+          <span><span className="text-foreground/60">Res</span> {item.resolution}</span>
+        )}
+        {item.audio_formats && item.audio_formats.length > 0 && (
+          <span className="col-span-2">
+            <span className="text-foreground/60">Audio</span> {item.audio_formats.join(', ')}
+          </span>
+        )}
+        {item.purchase_source && (
+          <span><span className="text-foreground/60">From</span> {item.purchase_source}</span>
+        )}
+        {item.purchase_date && (
+          <span><span className="text-foreground/60">Date</span> {item.purchase_date}</span>
+        )}
+        {item.purchase_price && (
+          <span><span className="text-foreground/60">Paid</span> £{item.purchase_price}</span>
+        )}
+      </div>
+
+      {item.notes && (
+        <p className="text-xs text-muted-foreground italic border-t border-border pt-2">
+          {item.notes}
+        </p>
+      )}
+
+      {item.is_for_sale && (
+        <span className="inline-block text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">
+          For sale
+        </span>
+      )}
+    </div>
+  )
+}
 
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>()
   const movieId = Number(id)
+  const [tab, setTab] = useState<Tab>('overview')
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['movie', movieId],
     queryFn: () => fetchMovie(movieId),
+    enabled: !isNaN(movieId),
+  })
+
+  const { data: copies = [] } = useQuery({
+    queryKey: ['movie-copies', movieId],
+    queryFn: () => fetchCopies(movieId),
     enabled: !isNaN(movieId),
   })
 
@@ -43,6 +133,12 @@ export default function MovieDetailPage() {
   const backdrop = backdropUrl(movie.backdrop_path)
   const imdbUrl = movie.imdb_id ? `https://www.imdb.com/title/${movie.imdb_id}/` : null
   const letterboxdUrl = `https://letterboxd.com/search/${encodeURIComponent(movie.title)}/`
+
+  const TABS: { key: Tab; label: string; count?: number }[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'crew', label: 'Crew', count: movie.crew.length },
+    { key: 'copies', label: 'Your Copies', count: copies.length },
+  ]
 
   return (
     <div className="min-h-full">
@@ -135,44 +231,132 @@ export default function MovieDetailPage() {
           </div>
         </div>
 
-        {/* Overview */}
-        {movie.overview && (
-          <div className="mt-8 max-w-3xl">
-            <h2 className="text-base font-semibold text-foreground mb-2">Overview</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">{movie.overview}</p>
+        {/* Tab bar */}
+        <div className="mt-8 flex gap-1 border-b border-border">
+          {TABS.map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                tab === key
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {label}
+              {count !== undefined && count > 0 && (
+                <span className="ml-1.5 text-xs rounded-full bg-muted px-1.5 py-0.5">
+                  {count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab: Overview */}
+        {tab === 'overview' && (
+          <div className="mt-6 space-y-8">
+            {movie.overview && (
+              <div className="max-w-3xl">
+                <p className="text-sm text-muted-foreground leading-relaxed">{movie.overview}</p>
+              </div>
+            )}
+
+            {movie.cast.length > 0 && (
+              <div>
+                <h2 className="text-base font-semibold text-foreground mb-3">Cast</h2>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {movie.cast.map((c, i) => (
+                    <div key={i} className="shrink-0 w-20 text-center">
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-muted mx-auto">
+                        {c.profile_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
+                            alt={c.person_name ?? ''}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xl font-medium text-muted-foreground">
+                            {c.person_name?.charAt(0) ?? '?'}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-medium text-foreground mt-1.5 leading-tight line-clamp-2">
+                        {c.person_name}
+                      </p>
+                      {c.character && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{c.character}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Cast */}
-        {movie.cast.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-base font-semibold text-foreground mb-3">Cast</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {movie.cast.slice(0, 12).map((c, i) => (
-                <div key={i} className="shrink-0 w-20 text-center">
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-muted mx-auto">
-                    {c.profile_path ? (
-                      <img
-                        src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
-                        alt={c.person_name ?? ''}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl font-medium text-muted-foreground">
-                        {c.person_name?.charAt(0) ?? '?'}
-                      </div>
-                    )}
+        {/* Tab: Crew */}
+        {tab === 'crew' && (
+          <div className="mt-6">
+            {movie.crew.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No crew data available.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-w-3xl">
+                {movie.crew.map((c, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-muted shrink-0">
+                      {c.profile_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
+                          alt={c.person_name ?? ''}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-sm font-medium text-muted-foreground">
+                          {c.person_name?.charAt(0) ?? '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-tight truncate">
+                        {c.person_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {c.job ?? c.department}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs font-medium text-foreground mt-1.5 leading-tight line-clamp-2">
-                    {c.person_name}
-                  </p>
-                  {c.character && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{c.character}</p>
-                  )}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Your Copies */}
+        {tab === 'copies' && (
+          <div className="mt-6">
+            {copies.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                <Package className="h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No copies in your collection.</p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Disc3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {copies.length} {copies.length === 1 ? 'copy' : 'copies'}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-w-3xl">
+                  {copies.map((item) => (
+                    <CopyCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

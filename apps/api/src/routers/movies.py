@@ -5,8 +5,9 @@ from sqlalchemy import Integer, func, literal, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Movie, MovieCredit
+from ..models import CollectionItem, Movie, MovieCredit
 from ..schemas.movies import (
+    CollectionItemOut,
     CreditOut,
     MovieDetail,
     MovieDetailResponse,
@@ -86,3 +87,21 @@ def get_movie(movie_id: int, db: Session = Depends(get_db)) -> MovieDetailRespon
     detail.crew = [CreditOut.model_validate(c) for c in credits if c.credit_type == "crew"]
 
     return MovieDetailResponse(data=detail)
+
+
+@router.get("/{movie_id}/copies", response_model=list[CollectionItemOut])
+def get_copies(movie_id: int, db: Session = Depends(get_db)) -> list[CollectionItemOut]:
+    if db.get(Movie, movie_id) is None:
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    rows = (
+        db.execute(
+            select(CollectionItem)
+            .where(CollectionItem.movie_id == movie_id)
+            .where(CollectionItem.deleted_at.is_(None))
+            .order_by(CollectionItem.created_at)
+        )
+        .scalars()
+        .all()
+    )
+    return [CollectionItemOut.model_validate(r) for r in rows]

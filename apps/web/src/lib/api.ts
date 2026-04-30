@@ -85,6 +85,28 @@ export async function fetchMovie(id: number): Promise<MovieDetailResponse> {
   return res.json() as Promise<MovieDetailResponse>
 }
 
+export interface CollectionItemOut {
+  id: number
+  format: string
+  edition: string | null
+  condition: string
+  region: string | null
+  purchase_price: string | null
+  purchase_date: string | null
+  purchase_source: string | null
+  notes: string | null
+  resolution: string | null
+  hdr_format: string | null
+  audio_formats: string[] | null
+  is_for_sale: boolean
+}
+
+export async function fetchCopies(movieId: number): Promise<CollectionItemOut[]> {
+  const res = await fetch(`${BASE}/movies/${movieId}/copies`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<CollectionItemOut[]>
+}
+
 export function backdropUrl(path: string | null, size = 'w1280'): string {
   if (!path) return ''
   return `https://image.tmdb.org/t/p/${size}${path}`
