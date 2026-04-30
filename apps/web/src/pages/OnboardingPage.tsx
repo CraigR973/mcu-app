@@ -4,45 +4,100 @@ import { useAuth } from '@/context/auth'
 import { useTheme } from '@/context/theme'
 
 const STEP_KEY = 'mcu:onboarding-step'
-const TOTAL_STEPS = 8
 
-function readStep(): number {
+function readStep(total: number): number {
   const v = localStorage.getItem(STEP_KEY)
   const n = parseInt(v ?? '0', 10)
-  return isNaN(n) || n < 0 || n >= TOTAL_STEPS ? 0 : n
+  return isNaN(n) || n < 0 || n >= total ? 0 : n
 }
 
-// ── Step shells ──────────────────────────────────────────────────────────────
+// ── Viewer steps (3) ──────────────────────────────────────────────────────────
 
-function StepWelcome() {
+function StepViewerWelcome() {
+  return (
+    <div className="space-y-4 text-center">
+      <div className="text-6xl">🎬</div>
+      <h2 className="text-2xl font-bold text-foreground">Welcome to The Real MCU</h2>
+      <p className="text-muted-foreground max-w-sm mx-auto">
+        Browse Mark's physical-media library — every disc he owns, searchable and filterable.
+        Add films to your watchlist and see what's available to borrow.
+      </p>
+      <div className="grid grid-cols-3 gap-3 pt-2 text-center">
+        {[
+          { icon: '🔍', label: 'Browse' },
+          { icon: '⭐', label: 'Watchlist' },
+          { icon: '📀', label: 'Collection' },
+        ].map(({ icon, label }) => (
+          <div key={label} className="rounded-lg border border-border bg-card p-3">
+            <div className="text-2xl">{icon}</div>
+            <p className="text-xs font-medium text-foreground mt-1">{label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Admin steps (7) ───────────────────────────────────────────────────────────
+
+function StepAdminWelcome() {
   return (
     <div className="space-y-4 text-center">
       <div className="text-6xl">🎬</div>
       <h2 className="text-2xl font-bold text-foreground">Welcome to The Real MCU</h2>
       <p className="text-muted-foreground max-w-sm mx-auto">
         Mark's Cinematic Universe — your personal physical-media library. Track every disc,
-        build your watchlist, and never lose a film again.
+        manage your collection, and share it with the world.
       </p>
     </div>
   )
 }
 
-function StepImport() {
+function StepCatalog() {
+  const [total, setTotal] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch('/api/v1/movies?per_page=1')
+      .then((r) => r.json())
+      .then((d) => setTotal(d?.meta?.total ?? null))
+      .catch(() => null)
+  }, [])
+
+  const today = new Date().toLocaleDateString('en-AU', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
+
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-foreground">Import your collection</h2>
-      <p className="text-muted-foreground">
-        Already have a catalogue? Import it now or add films one by one later — your choice.
+      <h2 className="text-2xl font-bold text-foreground">Your collection</h2>
+      <p className="text-muted-foreground text-sm">
+        Your catalogue is already loaded. You can re-upload your spreadsheet or add individual
+        films at any time.
       </p>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-2">
+
+      <div className="rounded-lg border border-border bg-card p-4 flex items-center gap-4">
+        <span className="text-3xl">📀</span>
+        <div>
+          {total !== null ? (
+            <p className="text-2xl font-bold text-foreground">{total.toLocaleString()}</p>
+          ) : (
+            <div className="h-7 w-16 rounded bg-muted animate-pulse" />
+          )}
+          <p className="text-xs text-muted-foreground">
+            titles in your library · last updated {today}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-4 space-y-1">
-          <p className="font-semibold text-foreground text-sm">CSV / spreadsheet</p>
-          <p className="text-xs text-muted-foreground">Upload a .csv file with your existing data.</p>
-          <p className="text-xs text-muted-foreground italic">Coming soon — skip for now.</p>
+          <p className="font-semibold text-foreground text-sm">Re-upload spreadsheet</p>
+          <p className="text-xs text-muted-foreground">Replace the catalogue with a new CSV export.</p>
+          <p className="text-xs text-muted-foreground italic">Coming soon — available from Admin.</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4 space-y-1">
-          <p className="font-semibold text-foreground text-sm">Add manually</p>
-          <p className="text-xs text-muted-foreground">Search and add films from your library anytime via the Movies page.</p>
+          <p className="font-semibold text-foreground text-sm">Add individually</p>
+          <p className="text-xs text-muted-foreground">Search and add films one at a time from the Movies page.</p>
         </div>
       </div>
     </div>
@@ -53,16 +108,15 @@ function StepEmailConnect({ email }: { email: string | undefined }) {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-foreground">Your email</h2>
-      <p className="text-muted-foreground">
-        Deal alerts and loan reminders will be sent here. You can manage notification
-        preferences in the next step.
+      <p className="text-muted-foreground text-sm">
+        Deal alerts and loan reminders will be sent here. Manage preferences in the next step.
       </p>
       <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
         <span className="text-lg">✉️</span>
         <span className="text-foreground font-medium">{email ?? '—'}</span>
       </div>
       <p className="text-xs text-muted-foreground">
-        To change your email, update it in your account settings after setup.
+        Change your email via account settings after setup.
       </p>
     </div>
   )
@@ -73,18 +127,15 @@ function StepInstallPWA() {
 
   function handleInstall() {
     setPrompted(true)
-    // Trigger browser PWA install prompt if available (stored by beforeinstallprompt)
     const ev = (window as unknown as { __pwaInstallPrompt?: { prompt: () => void } }).__pwaInstallPrompt
-    if (ev) {
-      ev.prompt()
-    }
+    if (ev) ev.prompt()
   }
 
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-foreground">Install as an app</h2>
-      <p className="text-muted-foreground">
-        Add The Real MCU to your home screen for quick access — no browser chrome, full-screen experience.
+      <p className="text-muted-foreground text-sm">
+        Add The Real MCU to your home screen for quick, full-screen access.
       </p>
       <div className="rounded-lg border border-border bg-card p-4 space-y-3">
         <div className="flex items-start gap-3">
@@ -131,7 +182,9 @@ const NOTIF_LABELS: { key: keyof NotifPrefs; label: string; desc: string }[] = [
   { key: 'on_this_day', label: 'On this day', desc: 'Fun facts about films on their anniversaries.' },
 ]
 
-function StepNotifications({ prefs, onChange }: { prefs: NotifPrefs; onChange: (p: NotifPrefs) => void }) {
+function StepNotifications({
+  prefs, onChange,
+}: { prefs: NotifPrefs; onChange: (p: NotifPrefs) => void }) {
   function toggle(key: keyof NotifPrefs) {
     onChange({ ...prefs, [key]: !prefs[key] })
   }
@@ -139,7 +192,7 @@ function StepNotifications({ prefs, onChange }: { prefs: NotifPrefs; onChange: (
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
-      <p className="text-muted-foreground text-sm">Choose what you'd like to hear about. You can adjust these any time.</p>
+      <p className="text-muted-foreground text-sm">Choose what you'd like to hear about. Adjust any time.</p>
       <div className="space-y-2">
         {NOTIF_LABELS.map(({ key, label, desc }) => (
           <label
@@ -169,53 +222,30 @@ function StepTheme() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-foreground">Choose your theme</h2>
-      <p className="text-muted-foreground text-sm">Pick what looks best to you. Toggle any time from the sidebar.</p>
+      <p className="text-muted-foreground text-sm">Toggle any time from the sidebar.</p>
       <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => theme !== 'dark' && toggleTheme()}
-          className={`rounded-lg border-2 p-4 flex flex-col items-center gap-2 transition-colors ${
-            theme === 'dark'
-              ? 'border-primary bg-primary/10'
-              : 'border-border bg-card hover:bg-accent/10'
-          }`}
-        >
-          <span className="text-2xl">🌙</span>
-          <span className="text-sm font-medium text-foreground">Dark</span>
-          {theme === 'dark' && <span className="text-xs text-primary">Selected</span>}
-        </button>
-        <button
-          onClick={() => theme !== 'light' && toggleTheme()}
-          className={`rounded-lg border-2 p-4 flex flex-col items-center gap-2 transition-colors ${
-            theme === 'light'
-              ? 'border-primary bg-primary/10'
-              : 'border-border bg-card hover:bg-accent/10'
-          }`}
-        >
-          <span className="text-2xl">☀️</span>
-          <span className="text-sm font-medium text-foreground">Light</span>
-          {theme === 'light' && <span className="text-xs text-primary">Selected</span>}
-        </button>
+        {([['dark', '🌙'], ['light', '☀️']] as const).map(([t, icon]) => (
+          <button
+            key={t}
+            onClick={() => theme !== t && toggleTheme()}
+            className={`rounded-lg border-2 p-4 flex flex-col items-center gap-2 transition-colors ${
+              theme === t ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-accent/10'
+            }`}
+          >
+            <span className="text-2xl">{icon}</span>
+            <span className="text-sm font-medium text-foreground capitalize">{t}</span>
+            {theme === t && <span className="text-xs text-primary">Selected</span>}
+          </button>
+        ))}
       </div>
     </div>
   )
 }
 
 const TOUR_ITEMS = [
-  {
-    icon: '🎬',
-    title: 'Movies',
-    desc: 'Browse and filter your full physical-media library. Grid, list, or compact view — your call.',
-  },
-  {
-    icon: '⭐',
-    title: 'Watchlist',
-    desc: 'Queue up what you want to watch next. One click to move it to your collection.',
-  },
-  {
-    icon: '📊',
-    title: 'Dashboard',
-    desc: 'Stats at a glance — total discs, formats breakdown, recent purchases, and more.',
-  },
+  { icon: '🎬', title: 'Movies', desc: 'Browse and filter the full physical-media library. Grid, list, or compact view.' },
+  { icon: '⭐', title: 'Watchlist', desc: 'Queue up what you want to watch next.' },
+  { icon: '📊', title: 'Dashboard', desc: 'Stats at a glance — total discs, formats, recent purchases.' },
 ]
 
 function StepTour() {
@@ -238,38 +268,31 @@ function StepTour() {
   )
 }
 
-function StepDone() {
+function StepDone({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="space-y-4 text-center">
       <div className="text-6xl">🍿</div>
       <h2 className="text-2xl font-bold text-foreground">You're all set!</h2>
       <p className="text-muted-foreground max-w-sm mx-auto">
-        Your library awaits. Start browsing, add your first disc, or explore the dashboard.
+        {isAdmin
+          ? 'Your library awaits. Browse, manage your collection, or explore the admin tools.'
+          : 'Dive in. Browse the collection, build a watchlist, or see what Mark recommends.'}
       </p>
     </div>
   )
 }
 
-// ── Step metadata ─────────────────────────────────────────────────────────────
+// ── Step definitions ──────────────────────────────────────────────────────────
 
-const STEP_TITLES = [
-  'Welcome',
-  'Import',
-  'Email',
-  'Install',
-  'Notifications',
-  'Theme',
-  'Tour',
-  'Done',
-]
+type StepDef = { id: string; label: string; node: React.ReactNode }
 
 // ── Main wizard ───────────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
   const { user, profile, completeOnboarding } = useAuth()
   const navigate = useNavigate()
-  const [step, setStep] = useState(readStep)
-  const [saving, setSaving] = useState(false)
+  const isAdmin = profile?.role === 'admin'
+
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>({
     price_drops: true,
     deals: true,
@@ -279,29 +302,39 @@ export default function OnboardingPage() {
     on_this_day: true,
   })
 
-  // If already completed, skip to app
+  const steps: StepDef[] = isAdmin
+    ? [
+        { id: 'welcome',       label: 'Welcome',       node: <StepAdminWelcome /> },
+        { id: 'catalog',       label: 'Catalogue',     node: <StepCatalog /> },
+        { id: 'email',         label: 'Email',         node: <StepEmailConnect email={user?.email} /> },
+        { id: 'install',       label: 'Install',       node: <StepInstallPWA /> },
+        { id: 'notifications', label: 'Notifications', node: <StepNotifications prefs={notifPrefs} onChange={setNotifPrefs} /> },
+        { id: 'theme',         label: 'Theme',         node: <StepTheme /> },
+        { id: 'tour',          label: 'Tour',          node: <StepTour /> },
+        { id: 'done',          label: 'Done',          node: <StepDone isAdmin /> },
+      ]
+    : [
+        { id: 'welcome', label: 'Welcome', node: <StepViewerWelcome /> },
+        { id: 'theme',   label: 'Theme',   node: <StepTheme /> },
+        { id: 'done',    label: 'Done',    node: <StepDone isAdmin={false} /> },
+      ]
+
+  const total = steps.length
+  const [step, setStep] = useState(() => readStep(total))
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
-    if (profile?.onboarding_completed) {
-      navigate('/movies', { replace: true })
-    }
+    if (profile?.onboarding_completed) navigate('/movies', { replace: true })
   }, [profile, navigate])
 
-  // Persist step to localStorage for resumability
   useEffect(() => {
     localStorage.setItem(STEP_KEY, String(step))
   }, [step])
 
-  function advance() {
-    if (step < TOTAL_STEPS - 1) {
-      setStep((s) => s + 1)
-    }
-  }
+  const isLastStep = step === total - 1
 
-  function skip() {
-    if (step < TOTAL_STEPS - 1) {
-      setStep((s) => s + 1)
-    }
-  }
+  function advance() { if (step < total - 1) setStep((s) => s + 1) }
+  function skip()    { if (step < total - 1) setStep((s) => s + 1) }
 
   async function finish() {
     setSaving(true)
@@ -314,16 +347,16 @@ export default function OnboardingPage() {
     }
   }
 
-  const isLastStep = step === TOTAL_STEPS - 1
+  const currentStep = steps[step]
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        {/* Progress bar */}
+        {/* Progress */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-muted-foreground">
-              Step {step + 1} of {TOTAL_STEPS} — {STEP_TITLES[step]}
+              Step {step + 1} of {total} — {currentStep.label}
             </span>
             {!isLastStep && (
               <button
@@ -337,23 +370,15 @@ export default function OnboardingPage() {
           <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
+              style={{ width: `${((step + 1) / total) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Card */}
         <div className="rounded-xl border border-border bg-card shadow-lg p-6 sm:p-8">
-          {step === 0 && <StepWelcome />}
-          {step === 1 && <StepImport />}
-          {step === 2 && <StepEmailConnect email={user?.email} />}
-          {step === 3 && <StepInstallPWA />}
-          {step === 4 && <StepNotifications prefs={notifPrefs} onChange={setNotifPrefs} />}
-          {step === 5 && <StepTheme />}
-          {step === 6 && <StepTour />}
-          {step === 7 && <StepDone />}
+          {currentStep.node}
 
-          {/* Actions */}
           <div className="mt-6 flex gap-3">
             {!isLastStep ? (
               <button
@@ -368,7 +393,7 @@ export default function OnboardingPage() {
                 disabled={saving}
                 className="flex-1 rounded-md bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
-                {saving ? 'Saving…' : 'Go to my library →'}
+                {saving ? 'Saving…' : 'Go to the library →'}
               </button>
             )}
           </div>
@@ -376,15 +401,11 @@ export default function OnboardingPage() {
 
         {/* Step dots */}
         <div className="flex justify-center gap-1.5 mt-4">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+          {steps.map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step
-                  ? 'w-4 bg-primary'
-                  : i < step
-                  ? 'w-1.5 bg-primary/50'
-                  : 'w-1.5 bg-border'
+                i === step ? 'w-4 bg-primary' : i < step ? 'w-1.5 bg-primary/50' : 'w-1.5 bg-border'
               }`}
             />
           ))}
