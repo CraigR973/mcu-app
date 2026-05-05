@@ -18,9 +18,7 @@ from ..tmdb.client import TMDBClient
 
 router = APIRouter(tags=["collection"])
 
-_VALID_FORMATS = frozenset(
-    {"4k_bluray", "bluray", "dvd", "digital", "laserdisc", "vhs", "hddvd"}
-)
+_VALID_FORMATS = frozenset({"4k_bluray", "bluray", "dvd", "digital", "laserdisc", "vhs", "hddvd"})
 _VALID_CONDITIONS = frozenset({"sealed", "mint", "very_good", "good", "fair", "poor"})
 
 
