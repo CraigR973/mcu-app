@@ -1,4 +1,19 @@
+import { supabase } from './supabase'
+
 const BASE = '/api/v1'
+
+async function authedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers as Record<string, string> ?? {}),
+    },
+  })
+}
 
 export interface MovieListItem {
   id: number
@@ -177,3 +192,79 @@ export function formatLabel(value: string | null): string | null {
   if (!value) return null
   return FORMATS.find(f => f.value === value)?.label ?? value
 }
+
+// ---------- TMDB search (admin only) ----------
+
+export interface TMDBSearchResult {
+  id: number
+  title: string
+  release_date: string | null
+  poster_path: string | null
+  overview: string | null
+  vote_average: number | null
+}
+
+export interface TMDBSearchResponse {
+  results: TMDBSearchResult[]
+  total_results: number
+  page: number
+}
+
+export async function tmdbSearch(q: string, year?: number): Promise<TMDBSearchResponse> {
+  const params = new URLSearchParams({ q })
+  if (year) params.set('year', String(year))
+  const res = await authedFetch(`${BASE}/tmdb/search?${params}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<TMDBSearchResponse>
+}
+
+// ---------- Add to collection (admin only) ----------
+
+export interface CollectionItemCreate {
+  tmdb_id: number
+  format: string
+  condition: string
+  edition?: string
+  purchase_price?: string
+  purchase_date?: string
+  purchase_source?: string
+  notes?: string
+}
+
+export interface AddToCollectionResponse {
+  data: CollectionItemOut
+  movie_id: number
+  duplicate_warning: boolean
+  existing_formats: string[]
+}
+
+export async function addToCollection(body: CollectionItemCreate): Promise<AddToCollectionResponse> {
+  const res = await authedFetch(`${BASE}/collection`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { detail?: string }
+    throw new Error(err.detail ?? `HTTP ${res.status}`)
+  }
+  return res.json() as Promise<AddToCollectionResponse>
+}
+
+export const ALL_FORMATS = [
+  { value: '4k_bluray', label: '4K UHD Blu-ray' },
+  { value: 'bluray',    label: 'Blu-ray' },
+  { value: 'dvd',       label: 'DVD' },
+  { value: 'digital',   label: 'Digital' },
+  { value: 'laserdisc', label: 'Laserdisc' },
+  { value: 'vhs',       label: 'VHS' },
+  { value: 'hddvd',     label: 'HD DVD' },
+] as const
+
+export const CONDITIONS = [
+  { value: 'sealed',    label: 'Sealed' },
+  { value: 'mint',      label: 'Mint' },
+  { value: 'very_good', label: 'Very Good' },
+  { value: 'good',      label: 'Good' },
+  { value: 'fair',      label: 'Fair' },
+  { value: 'poor',      label: 'Poor' },
+] as const

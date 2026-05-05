@@ -10,6 +10,7 @@ from .auth import get_current_user, require_admin
 from .config import settings  # noqa: F401  — validates env on startup
 from .logging_config import configure_logging
 from .middleware import CorrelationIdMiddleware
+from .routers.collection import router as collection_router
 from .routers.movies import router as movies_router
 from .routers.search import router as search_router
 from .routers.users import router as users_router
@@ -32,6 +33,7 @@ app = FastAPI(
 )
 
 app.add_middleware(CorrelationIdMiddleware)
+app.include_router(collection_router)
 app.include_router(movies_router)
 app.include_router(search_router)
 app.include_router(users_router)
