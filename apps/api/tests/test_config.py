@@ -3,11 +3,14 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from src.config import Environment, Settings, docs_urls
+
+API_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _build_settings(**overrides: object) -> Settings:
@@ -50,7 +53,7 @@ def test_module_refuses_to_boot_with_empty_production_secret() -> None:
 
     result = subprocess.run(
         [sys.executable, "-c", "import src.config"],
-        cwd="apps/api",
+        cwd=API_ROOT,
         env=environment,
         capture_output=True,
         text=True,
