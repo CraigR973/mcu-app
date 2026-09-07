@@ -183,3 +183,31 @@ contemporaneous.
     baseline would repeat Decision #4's failure and contradict the bottom-up sequence in
     #10. The 13 legacy derived-trigger tests remain present and automatically resume once
     Batch 4's tables exist.
+
+### 2026-09-07 — Batch 2 close-out
+
+20. **The Railway service domain targets the port Railway injects (`8080`), not the
+    Dockerfile's `EXPOSE 8000`.** *Why:* Railway sets `PORT` in the container and the
+    Dockerfile honours it (`--port ${PORT:-8000}`), so uvicorn binds 8080 in production and
+    the `EXPOSE`d 8000 is only the local fallback. Creating the domain with
+    `railway domain --port 8000` produced a public **502 "Application failed to respond"
+    while the container was entirely healthy** — the internal healthcheck on
+    `/api/v1/health/ready` returned 200 throughout. The symptom points at the app and the
+    cause is the edge routing, which is why it is written down. Verify a new domain with
+    `railway domain list` and confirm the port matches the `Uvicorn running on` line in
+    `railway logs -d`.
+
+21. **Vercel deploys from the connected GitHub repository, not from `vercel deploy`
+    uploads.** *Why:* a CLI deploy uploads the working tree, which on this repo routinely
+    holds untracked working files — the source spreadsheet and the `import_review` /
+    `matching_eval` CSVs. Git-connected deploys build exactly what is on `main`, match how
+    Railway is wired (`github()` in `.railway/railway.ts`), and give both hosts one trigger.
+
+22. **The production web app is deployed with `VITE_API_URL` only and does not boot until
+    Batch 3.** *Why:* `main.tsx` mounts `AuthProvider`, which imports `lib/supabase.ts`,
+    which throws at module load without `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
+    Supplying the legacy Supabase keys would bind a brand-new production deployment to the
+    project #17 moved off and Batch 3 deletes, so the deliberate outcome is a served bundle
+    that white-screens. Batch 2's acceptance is the API serving its commit SHA; the web
+    half is proving the build/host pipeline only. **Batch 3 must set the auth env vars as
+    part of its own close-out** — a green Vercel build is not evidence the app runs.

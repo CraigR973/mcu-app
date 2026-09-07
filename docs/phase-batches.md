@@ -14,7 +14,7 @@ Strike the row through and set status on close-out.
 | # | Batch | Tier | Status | Covers phases from `MCU_Architecture_v2.1_FINAL.md` §16 | Result |
 |---|---|---|---|---|---|
 | ~~1~~ | ~~New spine foundations~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.1, 0.2, 0.3**; carries **0.6**~~ | PR #1 · `0910428`, `15ed148` |
-| 2 | Deploy spine + CI gate | 🟡 | planned | re-lands **0.5**; **implements §15, which was never a phase** | |
+| ~~2~~ | ~~Deploy spine + CI gate~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.5**; **implements §15, which was never a phase**~~ | `d4190ac` · API live, `/health` serves the SHA |
 | 3 | Auth — PIN + JWT | 🟡 | planned | **supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11 | |
 | 4 | Domain layer + re-import | 🔴 | planned | re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted** | |
 | 5 | Read surface | 🟡 | planned | re-lands **2.1–2.7** | |

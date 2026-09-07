@@ -27,13 +27,14 @@ in these in-repo docs so Codex and future sessions can see it.
 ## Current state — read STATUS.md, but in one line
 
 The app is mid-**re-scaffold** onto the in-house `app-starter` template (Decision #5).
-It has never been deployed. Do not build new features onto the old spine.
+The API is deployed and serving its commit SHA; the web app is built and hosted but does
+not boot until Batch 3 restores auth. Do not build new features onto the old spine.
 
 ## Stack
 
-FastAPI + SQLAlchemy + Postgres (Supabase) + Alembic / React 18 + Vite + Tailwind +
+FastAPI + SQLAlchemy + Postgres (Neon) + Alembic / React 18 + Vite + Tailwind +
 shadcn/ui. Auth: display name + PIN + JWT, no public sign-up.
-Hosting target: Supabase + Railway (API) + Vercel (web).
+Hosting: Neon (Postgres) + Railway (API) + Vercel (web) — live since Batch 2.
 
 ## Bash discipline
 
@@ -43,7 +44,7 @@ Hosting target: Supabase + Railway (API) + Vercel (web).
 - **Python is 3.12.** The system python is 3.7 — always use `apps/api/.venv/bin/python3.12`.
 - **Node 20 via nvm.** The system node is v14. Prefix with
   `PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"`.
-- `DATABASE_URL` lives in `apps/api/.env.local` (gitignored) — the live Supabase connection.
+- `DATABASE_URL` lives in `apps/api/.env.local` (gitignored) — the live Neon connection.
 
 ## Conventions
 

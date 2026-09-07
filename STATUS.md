@@ -2,32 +2,42 @@
 
 ## Now
 
-**Batch 1 — New spine foundations shipped 2026-09-07. The app remains undeployed.**
+**Batch 2 — Deploy spine + CI gate is shipped. The MCU app is deployed for the first
+time.** `main` is at `d4190ac`, pushed, CI green (run `34152808801`).
 
-The backend now runs on the new foundation: async SQLAlchemy + asyncpg with the house
-pool settings, fail-closed non-development config, a `models/` package with UUID and
-naive-UTC mixins, a shared async test harness, and health-only routing. Structlog
-correlation IDs, security headers and Sentry PII scrubbing carry forward Phase 0.6.
+The production API is live at **`https://api-production-a8fe.up.railway.app`** and proves
+the batch's acceptance criterion directly:
 
-The old sync route layer and per-request Supabase Auth implementation are gone. The
-framework-independent TMDB client, matching engine, spreadsheet parser and import script
-remain for Batch 4. `packages/shared` now runs its own Vitest suite and owns the health
-response Zod schema. The frontend was deliberately unchanged in Batch 1 and still
-contains the old feature UI; it will not have a matching API again until the auth/domain/
-read surfaces re-land in Batches 3–5.
+```
+/api/v1/health        200  {"status":"ok","commitSha":"d4190ac22e576d1e63e156029bc2b27d0bb09059"}
+/api/v1/health/ready  200  {"status":"ready","db":"ok"}
+```
 
-PR #1 passed both CI jobs after one location-dependent config-test failure was fixed in
-`15ed148`. Implementation commits: `0910428`, `15ed148`.
+That SHA is `main` HEAD — production is provably serving the commit we think it is.
+Migrate-on-boot applied Alembic `001` to Neon on first container start, and the
+database-aware readiness probe confirms the Neon connection from inside Railway.
+
+Railway (`mcu-app` / `production` / `api`, region `ams`) deploys `main` from
+`CraigR973/mcu-app` through the root `Dockerfile`, with all five IaC variables applied and
+both JWT secrets sealed for Batch 3. Vercel (`mcu-app`) is git-connected to the same repo
+and takes its first production build from this close-out commit.
+
+**The deployed web app does not boot, by design** — `main.tsx` mounts `AuthProvider`,
+which imports `lib/supabase.ts`, which throws without `VITE_SUPABASE_*`. Only
+`VITE_API_URL` is set. Batch 2's remit is the API's SHA proof and the hosting pipeline;
+Batch 3 replaces Supabase auth outright. See `DECISIONS.md` #22 — **a green Vercel build
+is not evidence the app runs.**
 
 ## Next
 
-**Owner checkpoint: provision the new Supabase, Railway and Vercel projects.** This is the
-explicit gate before Batch 2 in `docs/phase-batches.md`. Once the projects and credentials
-exist, run `/batch-start 2` — Deploy spine + CI gate.
+**Batch 3 — Auth (PIN + JWT).** It now carries a hosting obligation as well as an
+application one: its close-out must set the web auth env vars in Vercel and verify the
+deployed app actually renders, not merely that the build went green.
 
-Two other owner actions remain outstanding:
+Three owner actions remain outstanding:
 1. **Revoke the April PAT at GitHub.** Redacted from the working tree; still in history at commits `4768da8` and `0bfb672`. Whether to rewrite history is a separate call.
-2. **Check for manual edits to the live Supabase data since April.** Batch 2 provisions a fresh project and Batch 4 re-imports from the spreadsheet; anything hand-edited since would not survive. If nothing was, the old project can be decommissioned once the new deployment verifies.
+2. **Check for manual edits to the live Supabase data since April.** Batch 4 re-imports from the spreadsheet; anything hand-edited since would not survive. The old Supabase project can be decommissioned once Batch 3 removes the web app's last dependency on it.
+3. **`VITE_API_URL` is set for Production only.** The Vercel CLI would not accept the Preview scope non-interactively; add it in the dashboard if preview deploys are wanted.
 
 ## Gotchas
 
@@ -46,9 +56,15 @@ Two other owner actions remain outstanding:
 
    **Net: 1,866 discs across five physical locations, and the app cannot answer "where is this disc?" — the one question a physical-media catalogue exists to answer.** Adding the three columns, backfilling from the parser's existing output, and exposing them as filters is small work and unowned by any phase. It should be the first item after the deploy spine.
 
-1. **A green CI run does not cover the derived-field triggers.** `test_derived_field_triggers.py` (13 tests) skips without `DATABASE_URL`, and `.github/workflows/ci.yml` has **zero** Postgres references. The Phase 1.8 triggers — the most complex component in the app — are verified by nothing automated. Set `DATABASE_URL` and run pytest locally before trusting any change near migration `0015`.
+1. **The 13 derived-field trigger tests intentionally remain skipped until Batch 4.** CI
+   now provides Postgres 17 and a separate connectivity test, so a missing database can no
+   longer pass silently. The trigger tests automatically resume once Batch 4 creates
+   `movies` and `collection_items` and must then run, not skip.
 
-2. **The migration chain has never been proven to apply or reverse.** 17 revisions, 25 tables, no `alembic upgrade head` / `downgrade base` job in CI.
+2. **The new migration chain starts with an intentionally empty `001`.** It has been
+   proven to apply and reverse against disposable Postgres, and CI repeats both commands.
+   Batch 3 owns the auth schema and Batch 4 owns the domain schema; do not put future
+   tables into the baseline.
 
 3. **`cd` is actively dangerous here.** autoenv sources `apps/api/.env` on entry and raises an interactive allow/deny prompt. Use absolute paths.
 
@@ -73,8 +89,31 @@ Two other owner actions remain outstanding:
 
 11. **A GitHub PAT was committed in April and remains in git history** (commits `4768da8`, `0bfb672`). It is dead (401) and now redacted from the working tree, but **it has not been revoked at GitHub and history has not been rewritten.** Both are outstanding owner decisions.
 
+12. **A Railway 502 does not mean the app is down.** The public domain must target
+    Railway's injected `PORT` (8080), not the Dockerfile's `EXPOSE 8000`. Pointing it at
+    8000 returned a public 502 while the container was healthy and its internal
+    healthcheck returned 200 throughout. `DECISIONS.md` #20; `.railway/README.md`.
+
+13. **Run the Railway CLI on Node 22+.** Its IaC engine uses Node's type-stripping flag,
+    which Node 20 rejects, so `railway config plan` fails before touching infrastructure.
+    The app's own build stays on Node 20.
+
 ## Log
 
+- **2026-09-07** — **Batch 2 shipped — the app is deployed for the first time.**
+  `main` `d4190ac` pushed, CI green. Railway `api` live on the root Dockerfile; migrate-on-boot
+  applied `001` to Neon; `/api/v1/health` returns the merged commit SHA and `/ready` reports
+  `db: ok`. Public API `api-production-a8fe.up.railway.app`. Two failures on the way: the
+  first deploy built `0419cb2` and failed on a missing Dockerfile because `main` had been
+  merged locally but never pushed; the generated domain then returned 502 until repointed
+  from port 8000 to Railway's injected 8080. Vercel git-connected; web ships without auth
+  env vars and white-screens until Batch 3 (`DECISIONS.md` #20–#22).
+- **2026-09-07** — Batch 2 implementation prepared for review on
+  `feat/2-deploy-spine-ci`: dedicated Neon Postgres connection verified; migrate-on-boot
+  Dockerfile, Railway IaC, Vercel configuration, reversible `001`, commit/readiness health
+  checks, Postgres-backed CI and hashed dependency gates added. Fresh-lock and disposable-
+  Postgres verification green. No commit, project creation or deployment yet; those wait
+  for explicit `/phase-closeout 2`.
 - **2026-09-07** — Batch 1 New spine foundations shipped via PR #1 (`0910428`, `15ed148`). Async SQLAlchemy/asyncpg, fail-closed config, `models/` mixins, health-only API, async pytest harness and the first shared Zod response schema are on `main`. CI green after fixing a test that assumed pytest always started at the repo root.
 - **2026-09-07** — Cross-project review complete, Parts A–E. Merged to `main` as `9084ec6`, CI green (API + Web). 38 batches in 11 groups defined; owner reinstated all Part D drops except 9.6 (`DECISIONS.md` #16). Repo confirmed **private**, which lowers the urgency on the PAT still in history.
 - **2026-05-05** — Phase 3.1 Add to Collection (manual). Commits `13d5f6b`, `fe7e895`. CI green. Close-out docs were written but never committed until today.
