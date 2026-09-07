@@ -2,31 +2,30 @@
 
 ## Now
 
-**The review is complete. The app is pre-re-scaffold and has never been deployed.**
+**Batch 1 — New spine foundations shipped 2026-09-07. The app remains undeployed.**
 
-Phase 3.1 shipped 2026-05-05 and is CI-green; the repo then sat for four months. A
-cross-project review against `garmin-coach`, `the-coupon`, `wc_2026_predictor` and
-`app-starter` ran on 2026-09-07 and produced five deliverables:
+The backend now runs on the new foundation: async SQLAlchemy + asyncpg with the house
+pool settings, fail-closed non-development config, a `models/` package with UUID and
+naive-UTC mixins, a shared async test harness, and health-only routing. Structlog
+correlation IDs, security headers and Sentry PII scrubbing carry forward Phase 0.6.
 
-| Part | Output |
-|---|---|
-| A — house standard | `docs/house-standard.md` ✅ |
-| B — code audit + fork decision | `docs/part-b-audit.md` ✅ |
-| C — process retrofit | `AGENTS.md`, this file, `DECISIONS.md`, `docs/agent-commands/`, `.claude/` ✅ |
-| D — roadmap critique, all 76 phases | `docs/part-d-roadmap.md` ✅ |
-| E — migration plan + batch ledger | `docs/part-e-migration.md`, `docs/phase-batches.md` ✅ |
+The old sync route layer and per-request Supabase Auth implementation are gone. The
+framework-independent TMDB client, matching engine, spreadsheet parser and import script
+remain for Batch 4. `packages/shared` now runs its own Vitest suite and owns the health
+response Zod schema. The frontend was deliberately unchanged in Batch 1 and still
+contains the old feature UI; it will not have a matching API again until the auth/domain/
+read surfaces re-land in Batches 3–5.
 
-**Decision:** re-scaffold onto `app-starter` in this repo, on a branch, bottom-up
-(`DECISIONS.md` #10). Of 76 remaining phases: 26 keep, 28 re-scope, 5 defer, **17 drop**.
-
-Nothing has been rebuilt yet. The current code still runs on the old spine — sync
-SQLAlchemy, flat `models.py`, per-request Supabase auth calls, no PWA, no deploy config.
+PR #1 passed both CI jobs after one location-dependent config-test failure was fixed in
+`15ed148`. Implementation commits: `0910428`, `15ed148`.
 
 ## Next
 
-**Batch 1 — New spine foundations** (`docs/phase-batches.md`). Run `/batch-start 1`.
+**Owner checkpoint: provision the new Supabase, Railway and Vercel projects.** This is the
+explicit gate before Batch 2 in `docs/phase-batches.md`. Once the projects and credentials
+exist, run `/batch-start 2` — Deploy spine + CI gate.
 
-Two owner actions outstanding, neither blocking Batch 1:
+Two other owner actions remain outstanding:
 1. **Revoke the April PAT at GitHub.** Redacted from the working tree; still in history at commits `4768da8` and `0bfb672`. Whether to rewrite history is a separate call.
 2. **Check for manual edits to the live Supabase data since April.** Batch 2 provisions a fresh project and Batch 4 re-imports from the spreadsheet; anything hand-edited since would not survive. If nothing was, the old project can be decommissioned once the new deployment verifies.
 
@@ -37,7 +36,9 @@ Two owner actions outstanding, neither blocking Batch 1:
 0b. **The location data is extracted at import and then discarded. This is the most consequential defect found in the review.** The chain, each link verified:
    - `MCU_Architecture_v2.1_FINAL.md` §3.4 (`:164-180`) **designs** `location`, `section` and `shelf` as first-class columns on `collection_items`.
    - `apps/api/src/spreadsheet/parser.py:194-198` **implements** the extraction — `parse_location()` yields `section` (Front | Back | Lounge | Garage | Digital) and `shelf` ("1st", "2nd", …).
-   - `apps/api/migrations/versions/0003_create_collection_items.py` and `apps/api/src/models.py:56-81` **omit all three columns**.
+   - The legacy `apps/api/migrations/versions/0003_create_collection_items.py` and
+     pre-re-scaffold `apps/api/src/models.py:56-81` **omit all three columns**. Batch 1
+     removed the flat model; the live legacy schema remains unchanged until Batch 4.
    - `apps/api/scripts/import_collection.py:324` therefore falls back to `notes = candidate.location_raw` — the **raw** string survives for all 1,866 rows, the parsed `section`/`shelf` structure is discarded. A knock-on: `notes` now holds location for imported rows and real notes for anything added via the Phase 3.1 form, with nothing distinguishing them.
    - `0015_derived_field_triggers.py:31-60` builds `search_vector` from `movies.title/original_title/tagline/overview` only — **zero** references to `notes`. So the "put it in notes" workaround recorded in the session log would not make location searchable even if the import did it.
    - `0012_create_gift_links_and_shelf_qr.py:75-92` creates `shelf_qr_codes` with `section`/`shelf` columns and a unique constraint on the pair — **an orphaned table with nothing to join against.**
@@ -60,9 +61,9 @@ Two owner actions outstanding, neither blocking Batch 1:
 
    Two are fixed by the re-scaffold, which brings a real service worker and push stack. The third should be pruned from the wizard when Stage 10 is settled.
 
-6. **`config.py` has no fail-closed validation.** Every secret defaults to `""`. The app boots in production with an empty service-role key and fails at first use.
-
-7. **`packages/shared` is types-only and imported nowhere.** 0 imports from `apps/web`, 0 `.parse()` calls. Decision #6 commits to using it properly; until then it is dead weight.
+7. **`packages/shared` now validates the health response, but the old web app still imports
+   no shared schemas.** That is expected during the bottom-up re-scaffold; Batch 5 ships
+   shared schemas with every read endpoint and makes the web app `.parse()` each response.
 
 8. **`pnpm -r test`, not `--filter @mcu/web test`** — the filtered form never runs `packages/shared`.
 
@@ -74,6 +75,7 @@ Two owner actions outstanding, neither blocking Batch 1:
 
 ## Log
 
+- **2026-09-07** — Batch 1 New spine foundations shipped via PR #1 (`0910428`, `15ed148`). Async SQLAlchemy/asyncpg, fail-closed config, `models/` mixins, health-only API, async pytest harness and the first shared Zod response schema are on `main`. CI green after fixing a test that assumed pytest always started at the repo root.
 - **2026-09-07** — Cross-project review complete, Parts A–E. Merged to `main` as `9084ec6`, CI green (API + Web). 38 batches in 11 groups defined; owner reinstated all Part D drops except 9.6 (`DECISIONS.md` #16). Repo confirmed **private**, which lowers the urgency on the PAT still in history.
 - **2026-05-05** — Phase 3.1 Add to Collection (manual). Commits `13d5f6b`, `fe7e895`. CI green. Close-out docs were written but never committed until today.
 - **2026-04-30** — Phases 2.7, 2.8 (movie detail tabs; onboarding wizard).

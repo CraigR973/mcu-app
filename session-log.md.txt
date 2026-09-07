@@ -761,3 +761,42 @@ Date: 2026-05-05 | Model: Sonnet 4.6 | Commits: 13d5f6b, fe7e895 — CI green
 - Optimistic update: queryClient.invalidateQueries(['movies']) on success — immediate refresh without reload
 - ruff format (not just check) needed for CI — run `ruff format` before committing Python files
 - authedFetch in api.ts uses supabase.auth.getSession() to inject Bearer token for admin endpoints
+
+---
+## Batch 1 — New Spine Foundations
+Date: 2026-09-07 | Commits: 0910428, 15ed148 | PR: #1 — CI green
+
+Modified foundation:
+- `apps/api/src/config.py` — `Environment` StrEnum; hosted-Postgres URL normalisation;
+  fail-closed validation for empty, placeholder, short or identical JWT secrets outside
+  development; production docs disabled
+- `apps/api/src/database.py` — async SQLAlchemy + asyncpg; pool size 10, overflow 10,
+  pre-ping, 30-minute recycle and prepared-statement cache disabled
+- `apps/api/src/models/` — UUID primary-key and naive-UTC timestamp mixins replace the
+  old flat `models.py`
+- `apps/api/src/main.py`, `middleware.py`, `logging_config.py` — health-only API,
+  correlation IDs, security headers, JSON logs and Sentry PII scrubbing
+- `apps/api/tests/conftest.py` — live-Postgres skip discipline and per-test rollback
+- `packages/shared/src/schemas.ts` — first shared Zod response schema, with its own
+  Vitest suite
+
+Removed from the running API pending their scheduled re-land:
+- old Supabase Auth implementation and sync collection/movie/search/user routers
+- old movie DTOs and live-DB route tests
+
+Verification:
+- Local: ruff, ruff format, strict mypy, 158 pytest passed / 13 known live-DB skips,
+  6 Vitest tests, web lint/typecheck/build, and a live Uvicorn health smoke test
+- CI run 34143847370: API and Web jobs green
+
+Failure fixed during close-out:
+- CI run 34143666348 failed because the config subprocess test used `cwd="apps/api"`
+  while CI already ran from that directory. `15ed148` derives the path from `__file__`;
+  the test then passed from both invocation locations.
+
+Key facts for Batch 2:
+- API exposes only `/api/v1/health`; SHA reporting and DB readiness belong to Batch 2
+- legacy migrations remain under `apps/api/migrations`; Batch 2 replaces them with the
+  root Alembic baseline and proves upgrade/downgrade in CI
+- the frontend remains the old feature UI and intentionally has no matching feature API
+  during the bottom-up re-scaffold
