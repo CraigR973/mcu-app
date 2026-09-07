@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(apps/api/.venv/bin/ruff check *)",
+      "Bash(apps/api/.venv/bin/ruff format --check *)",
+      "Bash(PYTHONPATH=apps/api apps/api/.venv/bin/mypy *)",
+      "Bash(git -C /Users/craigrobinson/mcu_app status --porcelain)",
+      "Bash(git -C /Users/craigrobinson/mcu_app diff *)",
+      "Bash(git -C /Users/craigrobinson/mcu_app log *)",
+      "Bash(git fetch *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/craigrobinson/mcu_app 2>/dev/null && B=$(git rev-parse --abbrev-ref HEAD) && [ \"$B\" != \"main\" ] && [ -z \"$(git status --porcelain)\" ] && [ -z \"$(git log @{u}.. 2>/dev/null)\" ] && echo 'Branch clean and pushed - run /phase-closeout <id> only when the user asks' || true"
+          }
+        ]
+      }
+    ]
+  }
+}

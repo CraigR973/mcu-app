@@ -2095,7 +2095,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 
 ### Stage 3 — Collection Management
 
-**Phase 3.1: Add to Collection (Manual)** 🟢 Sonnet 4.6
+**Phase 3.1: Add to Collection (Manual)** 🟢 Sonnet 4.6 ✅ 2026-05-05
 - Admin-only form with movie search, format picker, location, purchase fields
 - Duplicate warning before saving
 - Optimistic UI

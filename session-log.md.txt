@@ -339,7 +339,7 @@ Or just open the Launch Preview panel which handles it via `dev.sh`.
 
 **SSH key setup** — Remote was HTTPS-only with no stored credentials. Generated `~/.ssh/github` (ed25519), added to GitHub, updated `~/.ssh/config`, switched remote to `git@github.com:CraigR973/mcu-app.git`.
 
-**GitHub API token** — `gh` CLI not installed; used a PAT (`ghp_3g...`) for all CI polling via the GitHub REST API. Token stored in session only.
+**GitHub API token** — `gh` CLI not installed; used a PAT (`<redacted>...`) for all CI polling via the GitHub REST API. Token stored in session only.
 
 **Three pre-existing CI failures fixed** — CI had never passed on this repo. All three failures predated Phase 1.1: the pnpm version conflict, the stale lockfile, and the auth.py lint/type errors.
 
@@ -383,7 +383,7 @@ Or just open the Launch Preview panel which handles it via `dev.sh`.
 
 **CI failures fixed** — Two ruff failures post-push: `E501` (line too long in CHECK string, wrapped with implicit string concatenation) and `ruff format --check` (whitespace normalization). Three commits total to reach green.
 
-**GitHub token** — PAT `ghp_3g…` used for CI polling via GitHub REST API. `gh` CLI not installed on this machine.
+**GitHub token** — PAT `<redacted>…` used for CI polling via GitHub REST API. `gh` CLI not installed on this machine.
 
 ### Acceptance Criteria
 
@@ -744,3 +744,20 @@ Key facts:
 - ProtectedRoute hooks must be called before any early return (react-hooks/rules-of-hooks)
 - Supabase Python client: update() doesn't chain .select() — do separate fetch after update
 - mypy on CI uses warn_unused_ignores — prefer model_validate() over **spread with type:ignore
+
+## Phase 3.1 Session Log
+Date: 2026-05-05 | Model: Sonnet 4.6 | Commits: 13d5f6b, fe7e895 — CI green
+
+### Modified files
+- apps/api/src/routers/collection.py (new) — GET /api/v1/tmdb/search + POST /api/v1/collection (both admin-only)
+- apps/api/src/main.py — registered collection_router
+- apps/web/src/lib/api.ts — authedFetch helper, tmdbSearch(), addToCollection(), ALL_FORMATS, CONDITIONS
+- apps/web/src/components/AddToCollectionDialog.tsx (new) — 2-step modal: TMDB search → details form
+- apps/web/src/pages/MoviesPage.tsx — admin "Add Movie" button
+
+### Key facts
+- POST /api/v1/collection auto-upserts movie + credits from TMDB if not in DB (db.merge + flush)
+- duplicate_warning returned in response; frontend also pre-checks via GET /api/v1/movies/{id}/copies before form submit
+- Optimistic update: queryClient.invalidateQueries(['movies']) on success — immediate refresh without reload
+- ruff format (not just check) needed for CI — run `ruff format` before committing Python files
+- authedFetch in api.ts uses supabase.auth.getSession() to inject Bearer token for admin endpoints

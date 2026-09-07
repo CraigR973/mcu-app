@@ -45,3 +45,10 @@ pnpm-debug.log*
 # Supabase local
 supabase/.branches/
 supabase/.temp/
+
+# Agent runtime artifacts (settings.json and commands/ stay tracked)
+.claude/worktrees/
+.claire/
+
+# Build artifacts
+apps/web/tsconfig.tsbuildinfo
