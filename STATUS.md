@@ -36,10 +36,26 @@ is not evidence the app runs.**
 application one: its close-out must set the web auth env vars in Vercel and verify the
 deployed app actually renders, not merely that the build went green.
 
-Three owner actions remain outstanding:
-1. **Revoke the April PAT at GitHub.** Redacted from the working tree; still in history at commits `4768da8` and `0bfb672`. Whether to rewrite history is a separate call.
-2. **Check for manual edits to the live Supabase data since April.** Batch 4 re-imports from the spreadsheet; anything hand-edited since would not survive. The old Supabase project can be decommissioned once Batch 3 removes the web app's last dependency on it.
-3. **`VITE_API_URL` is set for Production only.** The Vercel CLI would not accept the Preview scope non-interactively; add it in the dashboard if preview deploys are wanted.
+**Close-out is now automatic** after a green gate (`DECISIONS.md` #24, superseding #13,
+owner decision 2026-09-07). Because pushing `main` deploys, a batch now ships to production
+without a second confirmation. Hosting/credential changes and destructive data or history
+operations still stop and wait.
+
+**Note the interaction: Batch 3 will not auto-close-out.** Setting the web auth env vars in
+Vercel is a hosting change, so its close-out stops and reports by design. Expect to approve
+that step by hand.
+
+Two owner actions remain outstanding:
+1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in full
+   in `0bfb672` (2026-04-25, `CLAUDE.md`) and referenced truncated in `4768da8`. Redacted
+   from the working tree and dead (401), but never revoked at github.com/settings/tokens.
+   History rewrite is a separate call and is **not** recommended — the repo is private and
+   the token is already invalid.
+2. **`VITE_API_URL` is set for Production only.** The Vercel CLI would not accept the Preview
+   scope non-interactively; add it in the dashboard if preview deploys are wanted.
+
+*Closed 2026-09-07:* checking the live Supabase data for manual edits since April — the
+owner will re-import the spreadsheet before go-live regardless, so any hand edits are moot.
 
 ## Gotchas
 

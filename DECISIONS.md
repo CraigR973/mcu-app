@@ -221,3 +221,42 @@ contemporaneous.
     health. Verify with `vercel inspect <deployment>` and a preflight against the live API,
     not by assuming the project name is the domain. Any future custom domain replaces this
     value; `vercel.json`'s CSP `connect-src` already covers the API via `*.up.railway.app`.
+
+### 2026-09-07 — Close-out becomes automatic
+
+24. **Close-out on this project is now automatic after a green gate. Supersedes #13.**
+    Owner decision, 2026-09-07, taken once Batch 2 delivered the three things #13 named as
+    missing: a deploy pipeline, a migration check in CI, and DB-backed tests that actually
+    run there. MCU now behaves like `the-coupon` and `garmin-coach`.
+
+    **Automatic close-out fires only when all of these hold.** Any one of them failing
+    stops the close-out and is reported instead:
+    - every `batch-verify.md` command green locally, from a clean tree;
+    - every acceptance criterion for the batch demonstrably met, criterion by criterion;
+    - the working tree holds nothing beyond this batch;
+    - `main` was green before the batch began — a pre-existing red is still fixed on its
+      own `fix/` branch first, never folded in;
+    - after the merge, production `/api/v1/health` reports the **merged commit SHA** and
+      `/api/v1/health/ready` reports `db: ok`.
+
+    **This means a batch now deploys to production without a second confirmation**, because
+    pushing `main` is what deploys. That is the intended consequence, matching the other two
+    projects.
+
+    **These stay explicit and are never auto-run:**
+    - **hosting or credential changes** — Railway variables and domains, Vercel env and
+      domains, Neon, or anything that would appear in `.railway/railway.ts`;
+    - **destructive data or history operations** — history rewrite, force push, dropping or
+      rewriting columns and tables that hold real rows, or re-running the collection import
+      over live data;
+    - **a red `main`**, per above.
+
+    *Why the exceptions:* the gate proves the code, not the infrastructure around it. It
+    cannot catch a wrong `FRONTEND_ORIGIN`, a domain on the wrong port, or an import that
+    overwrites 1,866 rows — all three of which are real events from this repo's history,
+    the first two from Batch 2's own close-out.
+
+    **Known limits of the gate, carried deliberately.** It does not build the Docker image
+    (Railway does) and it does not run the web bundle it builds — the deployed app can
+    white-screen on a green gate, which it does today. The post-merge SHA and readiness
+    check is what stands between those blind spots and a silent bad deploy.

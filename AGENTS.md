@@ -103,20 +103,37 @@ time. (3) CI builds the web bundle but never runs it — the deployed app curren
 white-screens on a missing Supabase env var and the build is still green. **A green web job
 is not evidence the app runs.**
 
-## Close-out protocol — **explicit on this project**
+## Close-out protocol — **automatic after a green gate**
 
-Close-out is triggered by `/phase-closeout <ids>`. **Do not auto-run it — wait for the
-slash command so the work can be reviewed first.** This follows the global default in
-`~/.claude/CLAUDE.md` rather than overriding it, unlike `the-coupon` and `garmin-coach`.
+**This project overrides the global default in `~/.claude/CLAUDE.md`**, as `the-coupon` and
+`garmin-coach` do. Since 2026-09-07 (`DECISIONS.md` #24, superseding #13) a batch closes
+out automatically once the gate is green — no slash command needed. `/phase-closeout <ids>`
+still works and runs the same procedure.
 
-*Why:* automatic close-out is bought by a gate worth trusting. When this was written the
-repo had none — no deploy pipeline, no migration check in CI, and DB-backed tests that
-never ran there.
+**Because pushing `main` is what deploys, an automatic close-out deploys to production
+without a second confirmation.** That is intended.
 
-**Batch 2 met all three of those conditions**, so the "revisit" trigger in `DECISIONS.md`
-#13 has now arrived. The policy is unchanged until the owner says otherwise — **this is
-Craig's call, not an agent's** — and the three caveats directly above are the argument
-against flipping it yet.
+Fire only when **all** of these hold; if any fails, stop and report rather than close out:
+
+1. Every `batch-verify.md` command green locally, from a clean tree.
+2. Every acceptance criterion for the batch demonstrably met, criterion by criterion.
+3. The working tree holds nothing beyond this batch.
+4. `main` was green before the batch began. A pre-existing red is fixed on its own `fix/`
+   branch and closed out first — never folded into the batch.
+5. **After the merge**, production `/api/v1/health` reports the **merged commit SHA** and
+   `/api/v1/health/ready` reports `db: ok`.
+
+**Still explicit — never auto-run:**
+
+- **Hosting or credential changes.** Railway variables and domains, Vercel env and domains,
+  Neon, anything that would land in `.railway/railway.ts`.
+- **Destructive data or history operations.** History rewrite, force push, dropping or
+  rewriting columns and tables holding real rows, or re-running the collection import over
+  live data.
+
+*Why those two stay manual:* the gate proves the code, not the infrastructure around it. It
+cannot catch a wrong `FRONTEND_ORIGIN`, a domain on the wrong port, or an import that
+overwrites 1,866 rows — the first two are real events from Batch 2's own close-out.
 
 ## CI
 
