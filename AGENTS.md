@@ -88,10 +88,20 @@ PYTHONPATH=apps/api apps/api/.venv/bin/alembic --config apps/api/alembic.ini <cm
 
 ### What a green run currently proves — and does not
 
-`test_derived_field_triggers.py` (13 tests) skips when `DATABASE_URL` is unset, and CI
-provides no Postgres service. **Those tests have never run in CI.** A green CI run does
-not cover the derived-field triggers. Run pytest with `DATABASE_URL` set before trusting
-any change near migration `0015`. Fixing this is tracked in STATUS.
+Batch 2 replaced the old gate. CI is now five jobs — API lint/typecheck, API pytest
+**against a real Postgres 17 service**, `upgrade head` → `downgrade base` migration
+reversal, web lint/typecheck/test/build, and a Python + pnpm dependency audit. A green run
+proves the API boots, migrates, reverses cleanly, and that a database was genuinely
+reachable while the tests ran.
+
+**It still does not prove three things.** (1) `test_derived_field_triggers.py` (13 tests)
+continues to skip — no longer because the database is missing, but because Batch 4 has not
+created `movies` and `collection_items`. Those tests must **resume, not skip**, once Batch 4
+lands; a green run that still skips them afterwards is a failure being hidden. (2) The
+Docker image is built by Railway, not by CI, so a Dockerfile regression surfaces at deploy
+time. (3) CI builds the web bundle but never runs it — the deployed app currently
+white-screens on a missing Supabase env var and the build is still green. **A green web job
+is not evidence the app runs.**
 
 ## Close-out protocol — **explicit on this project**
 
@@ -99,9 +109,14 @@ Close-out is triggered by `/phase-closeout <ids>`. **Do not auto-run it — wait
 slash command so the work can be reviewed first.** This follows the global default in
 `~/.claude/CLAUDE.md` rather than overriding it, unlike `the-coupon` and `garmin-coach`.
 
-*Why:* automatic close-out is bought by a gate worth trusting, and this repo does not yet
-have one — no deploy pipeline, no migration check in CI, and the DB-backed tests never
-run there. **Revisit once the re-scaffold has landed a real gate.**
+*Why:* automatic close-out is bought by a gate worth trusting. When this was written the
+repo had none — no deploy pipeline, no migration check in CI, and DB-backed tests that
+never ran there.
+
+**Batch 2 met all three of those conditions**, so the "revisit" trigger in `DECISIONS.md`
+#13 has now arrived. The policy is unchanged until the owner says otherwise — **this is
+Craig's call, not an agent's** — and the three caveats directly above are the argument
+against flipping it yet.
 
 ## CI
 
