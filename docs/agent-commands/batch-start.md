@@ -16,7 +16,11 @@ Start an implementation batch. Arguments: the phase or batch id(s).
 6. Ship tests with the change.
 7. Run the gate (`batch-verify.md`). Report every failure and fix, including ones fixed
    on the first attempt.
-8. **Stop before promotion. Do not run `/phase-closeout` unless the user explicitly asks.**
+8. **Close out.** `phase-closeout.md` now runs **automatically** once the gate is green
+   (`DECISIONS.md` #24, superseding #13) — and because pushing `main` deploys, that ships to
+   production. **Stop and report instead** when the gate is red, when `main` was already red,
+   or when the batch touched **hosting/credentials** or performed a **destructive data or
+   history operation**.
 
 Guardrails: never `cd` (autoenv will prompt). Don't touch hosting configuration unless
 the batch requires it. When integrating an external data source, work from real sample
