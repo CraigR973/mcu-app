@@ -2,37 +2,64 @@
 
 ## Now
 
-**Batch 3 — Auth (PIN + JWT) is shipped and live.** `main` is at `e89a9c6`, CI green on
-all five jobs, production serving that SHA. **The deployed web app renders for the first
-time** — the Supabase import that was white-screening it is gone.
+**Batch 4 — Domain layer + re-import is built and green, but the import has NOT been run.
+Nothing is merged and nothing is deployed.** Branch `feat/4-domain-layer-reimport`,
+commits `e2ebc18` and `700847c`, CI green on all five jobs (run `34162647232`).
 
-Verified against production, not merely in CI:
+Two of the four acceptance criteria are demonstrably met; two cannot be met until a
+matching-engine defect is settled. **Gotcha 1b is the blocker** — the engine picks the film
+by TMDB popularity whenever candidates tie, and 652 of the 1,857 rows tie with no year to
+separate them. Running the import today would write a confidently-wrong film for an
+unknown fraction of those, along with its poster, cast, genres and search vector.
 
-```
-/api/docs, /api/openapi.json      404   docs off in production
-/api/v1/auth/signup               404   no public sign-up route exists
-login as an unknown name          401   {"detail":"Invalid display name or PIN"}
-login as Craig                    403   {"detail":"No PIN has been set for this profile yet."}
-```
+| # | Criterion | State |
+|---|---|---|
+| 1 | row count = 1,857 | **not met** — needs the live import |
+| 2 | `section` non-trivial and in {Front, Back, Lounge, Garage, Digital} | **not met in the DB** — proved over the parser: 1,733 / 1,857, all five values present |
+| 3 | `--dry-run` diffed against `matching_eval.csv` before the live run | **met** — and this is what found the blocker |
+| 4 | the 13 derived-field trigger tests run in CI, not skipped | **met** — 14 ran, zero skips |
 
-That last one was driven from a browser on `https://mcu-app-fawn.vercel.app`, so it also
-proves the cross-origin path end to end: Vercel → CORS → Railway → Neon → back to a
-rendered error. The whole stack works. Only the PIN is missing.
+What did land, all of it proved rather than asserted:
 
-**The durable lockout is proved on Postgres in CI** — 9 tests in
-`tests/test_auth_lockout.py`, all of which dispose the engine entirely between writes,
-which is the closest thing to a restart available in-process. An in-memory limiter hands
-back a fresh window there; that is the defect `app-starter` ships and the reason the
-criterion is worded the way it is. The lock is durable in two independent places:
-`profiles.failed_login_count` / `locked_until_utc`, and a Postgres-backed rate-limit
-counter charged on a session of its own so an attempt counts even when the handler's
-transaction rolls back.
+- **Migration `003`** creates `movies`, `movie_credits` and `collection_items` per roadmap
+  §3.2–3.4, with `location`/`section`/`shelf` as real columns — the gotcha 0b fix. It
+  applies and reverses cleanly against Postgres 17; CI's `upgrade head → downgrade base`
+  job is green.
+- **The derived-field triggers are rewritten for the JSONB shapes** and keep 0015's
+  behaviour: 14 tests exercise them against a real database inside rolled-back
+  transactions.
+- **The importer is rewritten** for §3.4 and moved under `src/` so mypy covers it. It
+  writes location as columns and leaves `notes` alone, treats a combo pack as one row with
+  a `formats` array, and **catalogues every owned item whether or not TMDB identifies it** —
+  April inserted nothing at all for its 137 unmatched rows, so discs genuinely on the shelf
+  were simply absent.
+- **`parse_location` gained `E:\\Movies` → `Digital`**, without which all 413 digital rows
+  landed unsectioned.
+- **The collection is 1,857 items, not 1,866** (gotcha 0). Corrected across the roadmap and
+  the batch ledger.
 
 ## Next
 
-**Set your PINs. Nobody can log in until you do** — both profiles are seeded with
-`pin_hash = NULL`, which means *no credential*, not a blank one. From the repo root, with
-the Neon URL in the environment:
+**Decide how the importer should handle an ambiguous match** (gotcha 1b). Three options,
+in the order I would take them:
+
+1. **Fix the 10 clear bugs, route the rest to review.** Prefer an exact `title` hit over an
+   `original_title`-only one, then send every remaining ambiguous tie to `import_review.csv`
+   instead of guessing. Import the ~1,205 unambiguous rows plus the reviewed ones. Safe,
+   and it matches how the roadmap already treats the barcode phase ("confirmation UI is
+   mandatory, not optional"). Costs a review pass over ~650 rows.
+2. **Import everything now, correct later.** Accept popularity's pick, get all 1,857 rows in
+   with their location data, and treat wrong films as a known backlog. Fastest to a browsable
+   catalogue; leaves an unknown number of wrong posters and casts in front of Mark.
+3. **Add a disambiguation heuristic** — e.g. prefer the candidate with the most TMDB votes,
+   or the oldest, rather than the most popular. Cheap to try, but it is still a guess and
+   would need its own eval before it could be trusted.
+
+This is a genuine judgement call about the collection, not a technical one, which is why it
+is stopping here rather than being decided in code.
+
+Then: **set your PINs. Nobody can log in until you do** — both profiles are seeded with
+`pin_hash = NULL`, which means *no credential*, not a blank one:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
@@ -40,14 +67,7 @@ DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
 ```
 
 It prompts twice, hidden, so the PIN never reaches `ps`, your shell history, or a log.
-Repeat for `Mark`. Then sign in at `https://mcu-app-fawn.vercel.app/login`. After that,
-either of you can change your own PIN in the app; this script is only needed for the
-first one (`DECISIONS.md` #25).
-
-**Then Batch 4 — Domain layer + re-import.** It is the 🔴 XL one, it re-lands 1.1 and
-1.3–1.8, and it owns the location-columns defect in gotcha 0b. It also re-enables the 13
-derived-field trigger tests, which must **resume, not skip**, once `movies` and
-`collection_items` exist.
+Repeat for `Mark`, then sign in at `https://mcu-app-fawn.vercel.app/login` (`DECISIONS.md` #25).
 
 Two owner actions remain outstanding:
 1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
@@ -59,25 +79,110 @@ Two owner actions remain outstanding:
 
 ## Gotchas
 
-0. **The collection is 1,866 items, not ~140.** The source spreadsheet has 1,867 rows and the roadmap states 1,866 in five places (`:19`, `:580`, `:903`, `:1412`, `:1676`). `import_review.csv` (137 rows) is a *review-queue* artifact from the April import, not the collection. This was mis-read during the 2026-09-07 review and briefed into every Part D cluster agent; affected verdicts are being re-run. Anything that scales with catalogue size — location tracking, shelf QR codes, smart collections, saved filters, export, natural-language search — must be judged at 1,866.
+0. **The collection is 1,857 items, not ~140 and not 1,866.** Measured by running the
+   real parser over the real spreadsheet on 2026-09-07. The sheet has 1,867 rows = 1
+   header + 1,866 data rows, but **9 of those data rows are entirely blank** (all nine
+   columns `None`, at sheet-rows 1857–1863, 1865, 1866). The parser correctly drops them
+   and returns 1,857 candidates → 1,847 distinct titles, 10 of them repeated.
 
-0b. **The location data is extracted at import and then discarded. This is the most consequential defect found in the review.** The chain, each link verified:
-   - `MCU_Architecture_v2.1_FINAL.md` §3.4 (`:164-180`) **designs** `location`, `section` and `shelf` as first-class columns on `collection_items`.
-   - `apps/api/src/spreadsheet/parser.py:194-198` **implements** the extraction — `parse_location()` yields `section` (Front | Back | Lounge | Garage | Digital) and `shelf` ("1st", "2nd", …).
-   - The legacy `apps/api/migrations/versions/0003_create_collection_items.py` and
-     pre-re-scaffold `apps/api/src/models.py:56-81` **omit all three columns**. Batch 1
-     removed the flat model; the live legacy schema remains unchanged until Batch 4.
-   - `apps/api/scripts/import_collection.py:324` therefore falls back to `notes = candidate.location_raw` — the **raw** string survives for all 1,866 rows, the parsed `section`/`shelf` structure is discarded. A knock-on: `notes` now holds location for imported rows and real notes for anything added via the Phase 3.1 form, with nothing distinguishing them.
-   - `0015_derived_field_triggers.py:31-60` builds `search_vector` from `movies.title/original_title/tagline/overview` only — **zero** references to `notes`. So the "put it in notes" workaround recorded in the session log would not make location searchable even if the import did it.
-   - `0012_create_gift_links_and_shelf_qr.py:75-92` creates `shelf_qr_codes` with `section`/`shelf` columns and a unique constraint on the pair — **an orphaned table with nothing to join against.**
-   - §6.2 (`:917`) promises *"show me everything on the Front 2nd shelf"*; Phase 3.1's form bullet names a "location" field. Neither is implementable as built.
+   **1,866 was a trailing-blank-row artifact and was wrong everywhere it appeared** — the
+   roadmap's mentions, this gotcha, and Batch 4's own acceptance criterion. Phase 1.5's
+   acceptance ("parser produces 1,866 structured entries with no data loss") was therefore
+   unsatisfiable as written and always had been; there is no data loss, the count was just
+   wrong. Corrected in `MCU_Architecture_v2.1_FINAL.md` and `docs/phase-batches.md`
+   (`DECISIONS.md` #29). **`docs/part-b-audit.md` and `docs/part-d-roadmap.md` still say
+   1,866** — they are dated analysis records and are left as written per `DECISIONS.md` #16.
 
-   **Net: 1,866 discs across five physical locations, and the app cannot answer "where is this disc?" — the one question a physical-media catalogue exists to answer.** Adding the three columns, backfilling from the parser's existing output, and exposing them as filters is small work and unowned by any phase. It should be the first item after the deploy spine.
+   `import_review.csv` (137 rows) is a *review-queue* artifact from the April import, not
+   the collection. Anything that scales with catalogue size — location tracking, shelf QR
+   codes, smart collections, saved filters, export, natural-language search — must be
+   judged at 1,857.
 
-1. **The 13 derived-field trigger tests intentionally remain skipped until Batch 4.** CI
-   now provides Postgres 17 and a separate connectivity test, so a missing database can no
-   longer pass silently. The trigger tests automatically resume once Batch 4 creates
-   `movies` and `collection_items` and must then run, not skip.
+0b. **FIXED IN BATCH 4 (schema half). The location data was extracted at import and then
+   discarded** — the most consequential defect the 2026-09-07 review found. Kept here
+   because the *data* is not fixed until the import is re-run, which is still outstanding.
+
+   What was wrong, each link verified in April and re-verified 2026-09-07:
+   - `MCU_Architecture_v2.1_FINAL.md` §3.4 **designs** `location`, `section` and `shelf`
+     as first-class columns on `collection_items`.
+   - `apps/api/src/spreadsheet/parser.py` **implements** the extraction — `parse_location()`
+     yields `section` and `shelf`.
+   - The legacy `0003_create_collection_items.py` and the pre-re-scaffold flat
+     `models.py` **omitted all three columns**.
+   - The importer therefore fell back to `notes = candidate.location_raw` — the **raw**
+     string survived, the parsed structure was thrown away, and `notes` then held location
+     for imported rows and real notes for hand-added ones with nothing to tell them apart.
+   - `0015`'s `search_vector` never referenced `notes`, so the "put it in notes" workaround
+     would not have made location searchable even if it had been deliberate.
+   - §6.2 promises *"show me everything on the Front 2nd shelf"*. Not implementable as built.
+
+   **What Batch 4 changed.** Migration `003` creates `location`, `section` and `shelf` as
+   real columns with a CHECK constraint pinning `section` to the five §3.4 values, and a
+   partial composite index on `(section, shelf) WHERE deleted_at IS NULL` — the index
+   Batch 6's "Front 2nd shelf" query needs. The importer writes all three and leaves
+   `notes` alone. `parse_location` also gained `E:\\Movies` → `Digital`: the digital
+   library is only ever recorded as its filesystem path, so without it all 413 digital rows
+   landed with `section IS NULL` and the vocabulary never produced the value §3.4 names.
+
+   **Coverage over the real sheet: 1,733 of 1,857 rows get a section** (Front 550, Back 575,
+   Digital 413, Lounge 160, Garage 35). The remaining 124 are cabinets — "Top Big Cabinet",
+   "Left Hand Side Small Cabinet Fish Room", "Black Box next to cabinet" — which have no
+   §3.4 section. They keep their exact text in `location`, so nothing is lost; only the
+   normalised columns are null. Whether the section vocabulary should grow to cover them is
+   a Batch 6 question.
+
+1. **RESOLVED. The derived-field trigger tests now run in CI — 14 of them, zero skips.**
+   Proved on run `34162647232`: `tests/test_derived_field_triggers.py ..............`
+   against the Postgres 17 service, no `s` characters in that line.
+
+   They were **re-authored, not resumed.** They could not be resumed: every one of them was
+   written against the April schema — `movies.id` as an INTEGER TMDB id, a scalar `format`
+   column, scalar `hdr_format` and `audio_formats[]` — and all three are gone under §3.4.
+   All 13 original behaviours are preserved one-for-one; the 14th covers a combo pack whose
+   single row holds several formats, which the old scalar column could not express.
+   This was an owner decision taken at the start of Batch 4 (`DECISIONS.md` #28) precisely
+   because rewriting a test to match new code is otherwise forbidden as a route to green.
+
+1b. **BLOCKER FOR THE BATCH 4 IMPORT. The matching engine picks the film by TMDB
+   popularity whenever candidates tie, and 652 of the 1,857 rows tie with no year to
+   separate them.** Found by Batch 4's own `--dry-run`-against-`matching_eval.csv`
+   criterion, which is exactly what that criterion exists for. Nothing has been written to
+   the database.
+
+   The mechanism, both links verified:
+   - `apps/api/src/matching/engine.py:113-114` scores `original_title` as well as `title`
+     and takes the **max**, so a film whose *original* title matches scores identically to
+     one whose displayed title matches.
+   - `apps/api/src/matching/engine.py:181` sorts by
+     `(confidence, popularity)` — so when several candidates tie on confidence, **current
+     TMDB popularity decides**, and that ordering is not stable over time.
+
+   Measured over all 1,857 titles on 2026-09-07 (full scan, 0 errors):
+
+   | | rows |
+   |---|---|
+   | matched at ≥0.85 | 1,721 |
+   | unmatched | 136 |
+   | **matched rows with ≥2 candidates tied at the top confidence** | **687 (39.9%)** |
+   | of those, tied at a perfect 1.000 | 635 |
+   | ambiguous ties **with no year in the source title** | **652 — 35.1% of the collection** |
+
+   Popularity is often a *good* tiebreak — it correctly picks `Batman` (1989),
+   `Ben-Hur` (1959), `Sleepy Hollow` (1999). It fails whenever a recent release shares the
+   title, and 2025/2026 releases now dominate popularity:
+   `Frankenstein` → **2025**, not the 1931 Karloff · `Lolita` → **1997**, not Kubrick's
+   1962 · `Sinners` → **2025** · `Amistad` → **`Friendship` (2023)**, whose original title
+   is "Amistad".
+
+   **Only 10 rows are fixable by code with confidence** — the class where the winner is not
+   an exact title match but a tied candidate is (Amistad, Home Alone, Joan of Arc, The
+   Train …). Preferring an exact `title` hit over an `original_title`-only hit repairs
+   those outright. The other 652 are genuinely undecidable from the spreadsheet: it gives a
+   bare title and no year, so nothing in the data says which *Frankenstein* is on the shelf.
+
+   **This is out of Batch 4's scope** — the batch says port `matching/` *unchanged*, and
+   changing the ranking is Phase 1.6's work with its own acceptance criterion. Awaiting an
+   owner decision on approach; see the end of the Log entry below.
 
 2. **The new migration chain starts with an intentionally empty `001`.** It has been
    proven to apply and reverse against disposable Postgres, and CI repeats both commands.
@@ -133,6 +238,26 @@ Two owner actions remain outstanding:
 
 ## Log
 
+- **2026-09-07** — **Batch 4 built and green; the import is held on an owner decision.**
+  `feat/4-domain-layer-reimport` at `700847c`, CI green on all five jobs. Migration `003`
+  lands the §3.4 domain schema with `location`/`section`/`shelf` — the gotcha 0b fix — and
+  the derived-field triggers rewritten for JSONB. **The 14 trigger tests run in CI with zero
+  skips**, the criterion Batches 2 and 3 could only defer. Two decisions were taken with the
+  owner before any code: §3.4's schema over the April one, which forced the trigger tests to
+  be re-authored rather than resumed (#28); and the collection is **1,857 items, not 1,866**
+  — nine trailing spreadsheet rows are entirely blank, so the number was wrong everywhere it
+  appeared, Phase 1.5's acceptance included (#29).
+  The importer was rewritten and now catalogues every owned item whether or not TMDB
+  identifies it; April silently dropped its 137 unmatched rows.
+  **Then criterion 3 did its job and stopped the batch.** Diffing a fresh matching run
+  against `matching_eval.csv` surfaced `Amistad` → `Friendship (2023)` at full confidence; a
+  full scan of all 1,857 titles showed the cause is structural — `engine.py:181` breaks
+  confidence ties by TMDB popularity, and **652 rows (35.1%) tie with no year to separate
+  them**. Popularity now favours 2025/2026 releases, so `Frankenstein` resolves to 2025 and
+  `Lolita` to 1997. Only 10 rows are fixable by code with confidence. Fixing the ranking is
+  Phase 1.6's work and outside this batch's "port `matching/` unchanged" scope, so nothing
+  was written to the database and nothing was merged. Gotcha 1b holds the evidence; the
+  three options are in **Next**.
 - **2026-09-07** — **Batch 3 shipped — Craig and Mark can log in; nobody else can.**
   `main` `e89a9c6`, CI green, production serving that SHA and the deployed web app rendering
   for the first time. bcrypt PINs, HS256 access/refresh on separate secrets, rotated

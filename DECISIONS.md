@@ -295,3 +295,57 @@ contemporaneous.
     blocklist would refuse without buying anything. The list is kept deliberately short
     for the same reason it exists: a long one starts refusing PINs people chose for real
     reasons and pushes them toward writing it down.
+
+### 2026-09-07 — Batch 4 domain layer
+
+28. **The §3.4 schema is built as designed, and the 13 derived-field trigger tests are
+    re-authored rather than resumed.** Owner decision, 2026-09-07, taken before any code
+    was written, because the two halves of Batch 4's own definition contradicted each
+    other and neither could be quietly dropped.
+
+    Batch 4 said both "new models per roadmap §3.4" and "port `0015`'s trigger blocks" with
+    "the 13 trigger tests **run**, not skip". Those are mutually exclusive. The April schema
+    had drifted from §3.2–3.4 in four ways the tests hard-code: `movies.id` was the TMDB
+    integer id rather than a UUID with a separate `tmdb_id`; `collection_items.format` was a
+    scalar where §3.4 specifies a `formats` array; `hdr_format` and `audio_formats[]` were
+    scalars where §3.4 specifies `video_specs`/`audio_specs` JSONB; and the format
+    vocabulary was `4k_bluray|bluray|hddvd|…` where §3.2 and the spreadsheet parser both use
+    `4k_uhd|blu_ray|dvd|download`, with the importer translating between them.
+
+    *Why §3.4 wins:* the alternative recreates a schema the review had already found
+    defective — it is the schema that omitted `location`, `section` and `shelf` — and Batches
+    5, 6 and 7 would then build their DTOs, facets and write surface on top of it. That is
+    Decision #4's failure repeated in a new place.
+
+    *Why this needed a decision rather than a judgement call:* `AGENTS.md` forbids changing
+    a test's expectations as a route to green, and says explicitly that doing so is "a
+    decision to report, not to take". All 13 original behaviours are preserved one-for-one
+    against the new shape; a 14th was added for a combo pack whose single row holds several
+    formats, which the old scalar column could not express. The 14 run in CI against
+    Postgres 17 with zero skips (run `34162647232`).
+
+29. **The collection is 1,857 items. 1,866 was wrong everywhere it appeared.**
+    Owner decision to correct it, 2026-09-07. The spreadsheet has 1,867 rows = 1 header +
+    1,866 data rows, but nine of those data rows are entirely blank — every one of nine
+    columns `None`, at sheet-rows 1857–1863, 1865 and 1866. The parser correctly skips them
+    and returns 1,857 candidates.
+
+    *Why it matters beyond tidiness:* Phase 1.5's acceptance criterion reads "parser produces
+    1,866 structured entries **with no data loss**", which made it unsatisfiable by a correct
+    parser and satisfiable only by a broken one. Batch 4's "row count = 1,866" had the same
+    problem. Corrected in `MCU_Architecture_v2.1_FINAL.md` and `docs/phase-batches.md`.
+    `docs/part-b-audit.md` and `docs/part-d-roadmap.md` still say 1,866 and are deliberately
+    left alone — they are dated analysis records, and #16 already establishes that the
+    analysis stands as recorded.
+
+30. **Every owned item is catalogued, whether or not TMDB identifies it.** Changed from the
+    April importer's behaviour. A row TMDB cannot match now gets a title-only `movies` row
+    with `tmdb_id = NULL`, plus its `collection_items` row; the review CSV becomes a queue of
+    rows needing enrichment rather than a list of rows that were dropped.
+    *Why:* April inserted nothing at all for its 137 unmatched rows, so a disc genuinely on
+    the shelf was absent from the catalogue of that shelf, with only an untracked CSV to say
+    so. A collection app's first duty is to know what is in the collection; TMDB metadata is
+    an enrichment, not a precondition for existing. This is also what makes a row-count
+    acceptance criterion meaningful — under the old behaviour it could never reach the
+    number of items owned. `movies.tmdb_id` is nullable and uniquely indexed to support it,
+    and Postgres treats each NULL as distinct so many such rows coexist.
