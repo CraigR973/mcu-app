@@ -8,13 +8,15 @@ dependencies = [
     "uvicorn[standard]>=0.30.6",
     "httpx>=0.27.2",
     "python-dotenv>=1.0.1",
-    "supabase>=2.7.4",
     "pydantic>=2.9.2",
     "pydantic-settings>=2.5.2",
     "structlog>=24.4.0",
     "sentry-sdk[fastapi]>=2.14.0",
     "alembic>=1.13.0",
-    "sqlalchemy>=2.0.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.29.0",
+    # Retained until Batch 4 ports the existing import and trigger-test assets
+    # from their legacy psycopg2 connections to the new baseline.
     "psycopg2-binary>=2.9.9",
     "openpyxl>=3.1.0",
 ]
@@ -53,10 +55,8 @@ python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
 
-[[tool.mypy.overrides]]
-module = ["supabase.*", "gotrue.*", "postgrest.*", "realtime.*", "storage3.*"]
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]

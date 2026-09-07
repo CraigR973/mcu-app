@@ -1,13 +1,5 @@
-// Shared domain types — expanded in later phases
+import { z } from 'zod'
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  per_page: number
-}
+import { healthResponseSchema } from './schemas'
 
-export interface ApiError {
-  message: string
-  code?: string
-}
+export type HealthResponse = z.infer<typeof healthResponseSchema>

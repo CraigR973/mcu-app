@@ -1,13 +1,13 @@
 # MCU — Mark's Cinematic Universe
 
-A personal movie-tracking app built with FastAPI + React 18 + Supabase.
+A private physical-film catalogue built with FastAPI, React 18, and Supabase Postgres.
 
 ## Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 18, Vite, Tailwind CSS, shadcn/ui |
-| Backend | Python 3.12, FastAPI, Uvicorn |
+| Backend | Python 3.12, FastAPI, async SQLAlchemy, Uvicorn |
 | Database | Supabase (PostgreSQL) |
 | State | TanStack Query v5 |
 | Router | React Router v6 |
@@ -20,8 +20,8 @@ mcu_app/
 │   ├── api/          # FastAPI backend (Python 3.12)
 │   └── web/          # React 18 frontend
 ├── packages/
-│   └── shared/       # Shared TypeScript types
-├── migrations/       # Supabase SQL migrations
+│   └── shared/       # Shared zod schemas and inferred TypeScript types
+├── migrations/       # Alembic baseline (lands in Batch 2)
 └── docs/             # Project documentation
 ```
 
@@ -31,28 +31,22 @@ mcu_app/
 - Python 3.12.3+ (see `.python-version`)
 - pnpm 9+
 
-```bash
-npm install -g pnpm
-```
-
 ## Getting Started
 
 ### Frontend
 
 ```bash
-pnpm install
-pnpm --filter @mcu/web dev
+PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm install
+PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web dev
 ```
 
 ### Backend
 
 ```bash
-cd apps/api
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-cp .env.example .env   # fill in your keys
-uvicorn src.main:app --reload
+python3.12 -m venv apps/api/.venv
+apps/api/.venv/bin/python3.12 -m pip install -e "apps/api[dev]"
+# Copy apps/api/.env.example to apps/api/.env and fill in local values.
+apps/api/.venv/bin/uvicorn src.main:app --app-dir apps/api --reload
 ```
 
 ## Environment Variables

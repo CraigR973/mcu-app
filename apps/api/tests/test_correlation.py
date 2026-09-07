@@ -8,7 +8,7 @@ from src.main import app
 async def test_correlation_id_generated() -> None:
     """Server generates a correlation ID when none is provided."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.get("/health")
+        response = await client.get("/api/v1/health")
     assert "x-correlation-id" in response.headers
     correlation_id = response.headers["x-correlation-id"]
     assert len(correlation_id) == 36  # UUID4 format
@@ -19,16 +19,16 @@ async def test_correlation_id_forwarded() -> None:
     """Server echoes back a caller-supplied correlation ID."""
     supplied_id = "test-correlation-id-abc123"
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.get("/health", headers={"X-Correlation-ID": supplied_id})
+        response = await client.get("/api/v1/health", headers={"X-Correlation-ID": supplied_id})
     assert response.headers["x-correlation-id"] == supplied_id
 
 
 @pytest.mark.asyncio
-async def test_debug_error_returns_500() -> None:
-    """The /debug/error endpoint raises and returns a 500."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app, raise_app_exceptions=False),
-        base_url="http://test",
-    ) as client:
-        response = await client.get("/debug/error")
-    assert response.status_code == 500
+async def test_security_headers_are_present() -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/health")
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert (
+        response.headers["content-security-policy"] == "default-src 'none'; frame-ancestors 'none'"
+    )
