@@ -1,83 +1,137 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { profileResponseSchema, tokenPairSchema, type ProfileResponse } from '@mcu/shared'
 
-type Role = 'admin' | 'viewer'
-
-interface Profile {
-  id: string
-  role: Role
-  username: string | null
-  created_at: string
-  onboarding_completed: boolean
-}
+import {
+  API_BASE,
+  authFetch,
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  storeTokens,
+} from '../lib/auth-tokens'
 
 interface AuthContextValue {
-  session: Session | null
-  user: User | null
-  profile: Profile | null
+  profile: ProfileResponse | null
   isLoading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>
+  isAuthenticated: boolean
+  signIn: (displayName: string, pin: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
-  completeOnboarding: () => Promise<void>
+  setPin: (newPin: string, currentPin?: string) => Promise<{ error: string | null }>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+/** Pull a human-readable message out of whatever shape the API refused with. */
+async function errorMessage(response: Response, fallback: string): Promise<string> {
+  try {
+    const body = (await response.json()) as { detail?: string; error?: string }
+    // A durably rate-limited login answers `{ error: "Rate limit exceeded: ..." }`,
+    // not `{ detail: ... }` — reading only `detail` would turn a 429 into "your
+    // details are wrong" and invite the retry the limit just refused.
+    return body.error ?? body.detail ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<ProfileResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data as Profile | null)
-  }
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) fetchProfile(session.user.id).finally(() => setIsLoading(false))
-      else setIsLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      if (session?.user) fetchProfile(session.user.id)
-      else setProfile(null)
-    })
-
-    return () => subscription.unsubscribe()
+  const loadProfile = useCallback(async () => {
+    if (!getAccessToken() && !getRefreshToken()) {
+      setProfile(null)
+      setIsLoading(false)
+      return
+    }
+    try {
+      const response = await authFetch('/auth/me')
+      if (!response.ok) {
+        clearTokens()
+        setProfile(null)
+        return
+      }
+      const parsed = profileResponseSchema.safeParse(await response.json())
+      setProfile(parsed.success ? parsed.data : null)
+    } catch {
+      setProfile(null)
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
 
-  async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
-  }
+  useEffect(() => {
+    void loadProfile()
+  }, [loadProfile])
 
-  async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password })
-    return { error: error?.message ?? null }
-  }
+  const signIn = useCallback(
+    async (displayName: string, pin: string): Promise<{ error: string | null }> => {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName, pin }),
+      })
+      if (!response.ok) {
+        return { error: await errorMessage(response, 'Sign in failed') }
+      }
+      const parsed = tokenPairSchema.safeParse(await response.json())
+      if (!parsed.success) {
+        return { error: 'Unexpected response from the server' }
+      }
+      storeTokens(parsed.data.accessToken, parsed.data.refreshToken)
+      await loadProfile()
+      return { error: null }
+    },
+    [loadProfile],
+  )
 
-  async function signOut() {
-    await supabase.auth.signOut()
-  }
+  const signOut = useCallback(async () => {
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      // Best effort: the local session ends either way, but telling the API lets it
+      // revoke the row so a copied refresh token cannot outlive the sign-out.
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        })
+      } catch {
+        /* offline — the token is cleared locally regardless */
+      }
+    }
+    clearTokens()
+    setProfile(null)
+  }, [])
 
-  async function completeOnboarding() {
-    const userId = session?.user?.id
-    if (!userId) return
-    await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', userId)
-    setProfile((p) => p ? { ...p, onboarding_completed: true } : p)
-  }
+  const setPin = useCallback(
+    async (newPin: string, currentPin?: string): Promise<{ error: string | null }> => {
+      const response = await authFetch('/auth/pin', {
+        method: 'POST',
+        body: JSON.stringify({ newPin, currentPin: currentPin ?? null }),
+      })
+      if (!response.ok) {
+        return { error: await errorMessage(response, 'Could not set PIN') }
+      }
+      // Changing a PIN revokes every refresh row, this session's included.
+      clearTokens()
+      setProfile(null)
+      return { error: null }
+    },
+    [],
+  )
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, profile, isLoading, signIn, signUp, signOut, completeOnboarding }}>
+    <AuthContext.Provider
+      value={{
+        profile,
+        isLoading,
+        isAuthenticated: profile !== null,
+        signIn,
+        signOut,
+        setPin,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

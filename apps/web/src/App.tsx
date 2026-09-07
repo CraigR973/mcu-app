@@ -7,13 +7,11 @@ import ErrorBoundary from './components/ErrorBoundary'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
-const SignupPage = lazy(() => import('./pages/SignupPage'))
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
-const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
 
 function AdminPage() {
   return (
@@ -72,19 +70,8 @@ export default function App() {
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/debug" element={<DebugPage />} />
-
-            {/* Onboarding — protected (needs auth) but skips the onboarding redirect */}
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute skipOnboardingCheck>
-                  <OnboardingPage />
-                </ProtectedRoute>
-              }
-            />
 
             {/* Protected routes — all wrapped in AppLayout sidebar */}
             <Route

@@ -17,7 +17,7 @@ const navItems = [
 ]
 
 export default function Sidebar({ open, onClose }: Props) {
-  const { user, profile, signOut } = useAuth()
+  const { profile, signOut } = useAuth()
 
   return (
     <>
@@ -88,7 +88,7 @@ export default function Sidebar({ open, onClose }: Props) {
         {/* Footer */}
         <div className="border-t border-border px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground truncate max-w-[140px]">{user?.email}</span>
+            <span className="text-xs text-muted-foreground truncate max-w-[140px]">{profile?.displayName}</span>
             <ThemeToggle />
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={signOut}>

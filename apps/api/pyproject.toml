@@ -19,6 +19,12 @@ dependencies = [
     # from their legacy psycopg2 connections to the new baseline.
     "psycopg2-binary>=2.9.9",
     "openpyxl>=3.1.0",
+    # Batch 3 — auth. bcrypt for PIN hashing, PyJWT for HS256 access/refresh
+    # tokens, slowapi for the in-process limits that sit in front of the durable
+    # Postgres counters.
+    "bcrypt>=4.1.3",
+    "pyjwt>=2.9.0",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

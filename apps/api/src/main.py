@@ -1,16 +1,19 @@
 from typing import Any
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.types import Event, Hint
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.config import Environment, docs_urls, settings
 from src.logging_config import configure_logging
 from src.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
-from src.routers import health
+from src.rate_limit import limiter
+from src.routers import auth, health
 
 configure_logging(settings.log_level)
 
@@ -45,6 +48,27 @@ app = FastAPI(
     openapi_url=_docs["openapi_url"],
 )
 
+# slowapi reads the limiter off app.state, and its handler reads
+# request.state.view_rate_limit — which src.rate_limit.enforce_durable_limit sets by
+# hand so a durably-refused login answers with the same body a decorated route would.
+app.state.limiter = limiter
+
+
+def _rate_limit_handler(request: Request, exc: Exception) -> Response:
+    """Adapter around slowapi's handler.
+
+    slowapi types its handler as taking ``RateLimitExceeded``; Starlette's registry is
+    typed as taking ``Exception``. Narrowing here rather than silencing the mismatch with
+    an ignore keeps the check real — and the ``raise`` is not dead defensiveness, it is
+    what makes the narrowing sound if the handler is ever registered for another type.
+    """
+    if not isinstance(exc, RateLimitExceeded):  # pragma: no cover - registered for one type
+        raise exc
+    return _rate_limit_exceeded_handler(request, exc)
+
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
@@ -56,3 +80,4 @@ app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(health.router)
+app.include_router(auth.router)

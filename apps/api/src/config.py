@@ -46,6 +46,11 @@ class Settings(BaseSettings):
 
     # App
     frontend_origin: str = "http://localhost:5173"
+    #: How many proxy hops in front of the app are ours. Exactly one on Railway, which
+    #: is the default. Used to read ``X-Forwarded-For`` from the right-hand end — see
+    #: :func:`src.rate_limit.client_address`, where reading the leftmost entry would let
+    #: any caller forge a fresh rate-limit bucket per request.
+    trusted_proxy_count: int = 1
     sentry_dsn_backend: str = ""
     log_level: str = "INFO"
     environment: Environment = Environment.development

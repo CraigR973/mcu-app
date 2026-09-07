@@ -59,6 +59,20 @@ async def test_readiness_returns_503_when_database_is_unreachable() -> None:
     assert response.json() == {"status": "not_ready", "db": "unreachable"}
 
 
-def test_health_is_the_only_application_route() -> None:
-    application_paths = set(app.openapi()["paths"])
-    assert application_paths == {"/api/v1/health", "/api/v1/health/ready"}
+def test_application_route_surface_is_exactly_as_intended() -> None:
+    """Every reachable route, enumerated.
+
+    Batch 2 asserted health was the *only* route, because nothing was meant to be
+    reachable yet. Batch 3 adds authentication, so that assertion could not survive
+    unchanged — it is replaced here by the stronger one rather than deleted: the full
+    surface is pinned, so a route added by accident still fails this test.
+    """
+    assert set(app.openapi()["paths"]) == {
+        "/api/v1/health",
+        "/api/v1/health/ready",
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh",
+        "/api/v1/auth/logout",
+        "/api/v1/auth/me",
+        "/api/v1/auth/pin",
+    }

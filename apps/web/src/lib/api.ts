@@ -1,20 +1,10 @@
-import { supabase } from './supabase'
+import { API_BASE, authFetch } from './auth-tokens'
 
-const apiOrigin = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
-const BASE = `${apiOrigin}/api/v1`
+const BASE = API_BASE
 
-async function authedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token
-  return fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers as Record<string, string> ?? {}),
-    },
-  })
-}
+// Batch 3 replaced Supabase sessions with PIN + JWT. `authFetch` attaches the bearer
+// token and retries once through a refresh, so callers here are unchanged.
+const authedFetch = authFetch
 
 export interface MovieListItem {
   id: number

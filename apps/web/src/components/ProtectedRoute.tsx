@@ -5,14 +5,17 @@ import { useAuth } from '../context/auth'
 interface Props {
   children: ReactNode
   role?: 'admin' | 'viewer'
-  skipOnboardingCheck?: boolean
 }
 
-export default function ProtectedRoute({ children, role, skipOnboardingCheck }: Props) {
-  const { session, profile, isLoading } = useAuth()
+export default function ProtectedRoute({ children, role }: Props) {
+  const { profile, isLoading, isAuthenticated } = useAuth()
   const location = useLocation()
 
-  if (import.meta.env.VITE_SKIP_AUTH === 'true') return <>{children}</>
+  // Development only. This used to be reachable in any build, which meant a stray
+  // VITE_SKIP_AUTH on a deployment would have opened the whole collection — `import
+  // .meta.env.DEV` is compiled to `false` in a production build, so the branch is
+  // removed by the bundler rather than merely unreached.
+  if (import.meta.env.DEV && import.meta.env.VITE_SKIP_AUTH === 'true') return <>{children}</>
 
   if (isLoading) {
     return (
@@ -22,7 +25,7 @@ export default function ProtectedRoute({ children, role, skipOnboardingCheck }: 
     )
   }
 
-  if (!session) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />
   }
 
@@ -30,9 +33,8 @@ export default function ProtectedRoute({ children, role, skipOnboardingCheck }: 
     return <Navigate to="/unauthorized" replace />
   }
 
-  if (!skipOnboardingCheck && profile && !profile.onboarding_completed) {
-    return <Navigate to="/onboarding" replace />
-  }
-
+  // The onboarding gate that used to live here belonged to the Supabase profile and
+  // redirected into a wizard three of whose nine steps point at nothing (`STATUS.md`
+  // gotcha 5). Batch 9 repairs the wizard and owns re-introducing this.
   return <>{children}</>
 }

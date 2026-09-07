@@ -3,7 +3,7 @@ import { useAuth } from '../context/auth'
 import { Button } from '../components/ui/button'
 
 export default function HomePage() {
-  const { user, profile, signOut } = useAuth()
+  const { profile, isAuthenticated, signOut } = useAuth()
   const navigate = useNavigate()
 
   return (
@@ -11,9 +11,9 @@ export default function HomePage() {
       <header className="border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold">MCU — Mark's Cinematic Universe</h1>
         <div className="flex items-center gap-3">
-          {user ? (
+          {isAuthenticated ? (
             <>
-              <span className="text-sm text-muted-foreground">{user.email}</span>
+              <span className="text-sm text-muted-foreground">{profile?.displayName}</span>
               {profile?.role === 'admin' && (
                 <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
                   Admin
@@ -41,7 +41,7 @@ export default function HomePage() {
         <p className="text-muted-foreground max-w-md">
           Track every movie you've watched, rate them, and build your watchlist.
         </p>
-        {!user && (
+        {!isAuthenticated && (
           <Button size="lg" onClick={() => navigate('/signup')}>
             Get started
           </Button>
