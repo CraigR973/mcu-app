@@ -74,7 +74,7 @@ Two owner actions outstanding, neither blocking Batch 1:
 
 ## Log
 
-- **2026-09-07** — Cross-project review. Part A (house standard) and Part B (code audit) complete; re-scaffold decided; `AGENTS.md`/`STATUS.md`/`DECISIONS.md` created; `CLAUDE.md` symlinked; PAT redacted from the working tree. Part D's first launch failed on a rate limit.
+- **2026-09-07** — Cross-project review complete, Parts A–E. Merged to `main` as `9084ec6`, CI green (API + Web). 38 batches in 11 groups defined; owner reinstated all Part D drops except 9.6 (`DECISIONS.md` #16). Repo confirmed **private**, which lowers the urgency on the PAT still in history.
 - **2026-05-05** — Phase 3.1 Add to Collection (manual). Commits `13d5f6b`, `fe7e895`. CI green. Close-out docs were written but never committed until today.
 - **2026-04-30** — Phases 2.7, 2.8 (movie detail tabs; onboarding wizard).
 - **2026-04-29** — Phases 2.2–2.6 (frontend shell, collection grid, view toggle, search, detail page).
