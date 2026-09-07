@@ -260,3 +260,38 @@ contemporaneous.
     (Railway does) and it does not run the web bundle it builds — the deployed app can
     white-screen on a green gate, which it does today. The post-merge SHA and readiness
     check is what stands between those blind spots and a silent bad deploy.
+
+### 2026-09-07 — Batch 3 auth
+
+25. **The first PIN is set by a command-line script, not an HTTP route.**
+    `src/scripts/set_pin.py`, run against the target database with the PIN read from a
+    hidden prompt. *Why:* migration `002` seeds both profiles with `pin_hash = NULL` so
+    that no PIN is ever written into a migration, a seed file, or git history — but that
+    deadlocks the bootstrap, because `POST /api/v1/auth/pin` needs an access token, a
+    token needs a login, and a login needs a PIN. A route that set a first PIN without
+    authentication would be a sign-up route wearing a different name, which
+    `DECISIONS.md` #11 forbids. Requiring database access to issue someone's first
+    credential is the correct bar. The PIN is never a command-line argument, so it does
+    not reach `ps`, shell history, or a CI log.
+
+26. **`VITE_SKIP_AUTH` is honoured only in a development build.** *Why:* it was read in
+    any build, so a stray environment variable on a deployment would have exposed the
+    whole collection to anyone with the URL. It is now behind `import.meta.env.DEV`,
+    which the bundler compiles to `false` and eliminates — the branch is absent from a
+    production bundle rather than merely unreached. It mattered little while no routes
+    existed; it matters now that there is something to protect.
+
+27. **The onboarding wizard and the sign-up page are removed, not ported.** *Why:*
+    sign-up is forbidden outright by #11 and by Batch 3's acceptance. Onboarding
+    persisted completion to a Supabase `profiles` column that no longer exists, and three
+    of its nine steps already pointed at nothing (`STATUS.md` gotcha 5). Carrying it
+    forward would have meant a wizard that appears to work and saves nothing. **Batch 9
+    owns reinstating it** against the new schema, and must add its own completion column.
+
+28. **A PIN is 4–8 digits; the weak-PIN blocklist covers four-digit values only.**
+    *Why:* the published distribution of leaked four-digit PINs is extremely
+    concentrated — roughly a quarter of choices fall in about twenty values — so a short
+    blocklist there buys a great deal. Beyond four digits the distribution flattens and a
+    blocklist would refuse without buying anything. The list is kept deliberately short
+    for the same reason it exists: a long one starts refusing PINs people chose for real
+    reasons and pushes them toward writing it down.

@@ -2,60 +2,60 @@
 
 ## Now
 
-**Batch 2 — Deploy spine + CI gate is shipped. The MCU app is deployed for the first
-time.** `main` is at `d4190ac`, pushed, CI green (run `34152808801`).
+**Batch 3 — Auth (PIN + JWT) is shipped and live.** `main` is at `e89a9c6`, CI green on
+all five jobs, production serving that SHA. **The deployed web app renders for the first
+time** — the Supabase import that was white-screening it is gone.
 
-The production API is live at **`https://api-production-a8fe.up.railway.app`** and proves
-the batch's acceptance criterion directly:
+Verified against production, not merely in CI:
 
 ```
-/api/v1/health        200  {"status":"ok","commitSha":"d4190ac22e576d1e63e156029bc2b27d0bb09059"}
-/api/v1/health/ready  200  {"status":"ready","db":"ok"}
+/api/docs, /api/openapi.json      404   docs off in production
+/api/v1/auth/signup               404   no public sign-up route exists
+login as an unknown name          401   {"detail":"Invalid display name or PIN"}
+login as Craig                    403   {"detail":"No PIN has been set for this profile yet."}
 ```
 
-That SHA is `main` HEAD — production is provably serving the commit we think it is.
-Migrate-on-boot applied Alembic `001` to Neon on first container start, and the
-database-aware readiness probe confirms the Neon connection from inside Railway.
+That last one was driven from a browser on `https://mcu-app-fawn.vercel.app`, so it also
+proves the cross-origin path end to end: Vercel → CORS → Railway → Neon → back to a
+rendered error. The whole stack works. Only the PIN is missing.
 
-Railway (`mcu-app` / `production` / `api`, region `ams`) deploys `main` from
-`CraigR973/mcu-app` through the root `Dockerfile`, with all five IaC variables applied and
-both JWT secrets sealed for Batch 3. Vercel (`mcu-app`) is git-connected to the same repo
-and its production build is live at **`https://mcu-app-fawn.vercel.app`**, serving the
-bundle with `vercel.json`'s CSP and `X-Frame-Options` headers applied — the hosting
-pipeline is proven on both halves.
-
-**The deployed web app does not boot, by design** — `main.tsx` mounts `AuthProvider`,
-which imports `lib/supabase.ts`, which throws without `VITE_SUPABASE_*`. Only
-`VITE_API_URL` is set. Batch 2's remit is the API's SHA proof and the hosting pipeline;
-Batch 3 replaces Supabase auth outright. See `DECISIONS.md` #22 — **a green Vercel build
-is not evidence the app runs.**
+**The durable lockout is proved on Postgres in CI** — 9 tests in
+`tests/test_auth_lockout.py`, all of which dispose the engine entirely between writes,
+which is the closest thing to a restart available in-process. An in-memory limiter hands
+back a fresh window there; that is the defect `app-starter` ships and the reason the
+criterion is worded the way it is. The lock is durable in two independent places:
+`profiles.failed_login_count` / `locked_until_utc`, and a Postgres-backed rate-limit
+counter charged on a session of its own so an attempt counts even when the handler's
+transaction rolls back.
 
 ## Next
 
-**Batch 3 — Auth (PIN + JWT).** It now carries a hosting obligation as well as an
-application one: its close-out must set the web auth env vars in Vercel and verify the
-deployed app actually renders, not merely that the build went green.
+**Set your PINs. Nobody can log in until you do** — both profiles are seeded with
+`pin_hash = NULL`, which means *no credential*, not a blank one. From the repo root, with
+the Neon URL in the environment:
 
-**Close-out is now automatic** after a green gate (`DECISIONS.md` #24, superseding #13,
-owner decision 2026-09-07). Because pushing `main` deploys, a batch now ships to production
-without a second confirmation. Hosting/credential changes and destructive data or history
-operations still stop and wait.
+```
+DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
+  apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Craig
+```
 
-**Note the interaction: Batch 3 will not auto-close-out.** Setting the web auth env vars in
-Vercel is a hosting change, so its close-out stops and reports by design. Expect to approve
-that step by hand.
+It prompts twice, hidden, so the PIN never reaches `ps`, your shell history, or a log.
+Repeat for `Mark`. Then sign in at `https://mcu-app-fawn.vercel.app/login`. After that,
+either of you can change your own PIN in the app; this script is only needed for the
+first one (`DECISIONS.md` #25).
+
+**Then Batch 4 — Domain layer + re-import.** It is the 🔴 XL one, it re-lands 1.1 and
+1.3–1.8, and it owns the location-columns defect in gotcha 0b. It also re-enables the 13
+derived-field trigger tests, which must **resume, not skip**, once `movies` and
+`collection_items` exist.
 
 Two owner actions remain outstanding:
-1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in full
-   in `0bfb672` (2026-04-25, `CLAUDE.md`) and referenced truncated in `4768da8`. Redacted
-   from the working tree and dead (401), but never revoked at github.com/settings/tokens.
-   History rewrite is a separate call and is **not** recommended — the repo is private and
-   the token is already invalid.
-2. **`VITE_API_URL` is set for Production only.** The Vercel CLI would not accept the Preview
-   scope non-interactively; add it in the dashboard if preview deploys are wanted.
-
-*Closed 2026-09-07:* checking the live Supabase data for manual edits since April — the
-owner will re-import the spreadsheet before go-live regardless, so any hand edits are moot.
+1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
+   full in `0bfb672` (2026-04-25, `CLAUDE.md`) and referenced truncated in `4768da8`.
+   Dead (401) but never revoked at github.com/settings/tokens. History rewrite is **not**
+   recommended — the repo is private and the token is already invalid.
+2. **`VITE_API_URL` is set for Production only.** The Vercel CLI would not accept the
+   Preview scope non-interactively; add it in the dashboard if preview deploys are wanted.
 
 ## Gotchas
 
@@ -93,7 +93,11 @@ owner will re-import the spreadsheet before go-live regardless, so any hand edit
    - `StepNotifications` (`:185`) offers to enable push. The web app has **zero** occurrences of `vapid`, `pushManager` or `serviceWorker` — there is no push infrastructure at all.
    - `StepEmailConnect` (`:107`) connects a mailbox for Stage 10 purchase detection, which Part D recommends dropping (7 of its 8 phases).
 
-   Two are fixed by the re-scaffold, which brings a real service worker and push stack. The third should be pruned from the wizard when Stage 10 is settled.
+   **Batch 3 removed the wizard entirely** — its completion flag was a Supabase column
+   that no longer exists, so porting it would have shipped a wizard that appears to work
+   and saves nothing (`DECISIONS.md` #27). Batch 9 rebuilds it against the new schema and
+   must add its own completion column. Two of the three dead steps are fixed by the
+   re-scaffold's service worker and push stack; the third goes when Stage 10 is settled.
 
 7. **`packages/shared` now validates the health response, but the old web app still imports
    no shared schemas.** That is expected during the bottom-up re-scaffold; Batch 5 ships
@@ -122,8 +126,23 @@ owner will re-import the spreadsheet before go-live regardless, so any hand edit
     our own front end. Corrected at close-out. **Read the alias list from
     `vercel inspect`; never assume the project name is the domain.** `DECISIONS.md` #23.
 
+15. **There is no local Postgres and no Docker on this machine.** Migration changes and
+    the DB-backed lockout tests cannot be run here at all — they skip locally and only
+    execute in CI. Both of Batch 3's CI failures were migration defects invisible to a
+    green local gate. **Treat a green local run as silent about anything touching SQL.**
+
 ## Log
 
+- **2026-09-07** — **Batch 3 shipped — Craig and Mark can log in; nobody else can.**
+  `main` `e89a9c6`, CI green, production serving that SHA and the deployed web app rendering
+  for the first time. bcrypt PINs, HS256 access/refresh on separate secrets, rotated
+  SHA-256-hashed refresh rows, durable Postgres lockout proved by 9 CI tests that dispose the
+  engine between writes. Migration `002` seeds both profiles with `pin_hash = NULL`; the first
+  PIN is set by `src/scripts/set_pin.py` from a hidden prompt (`DECISIONS.md` #25). Removed
+  the sign-up page outright and the onboarding wizard with it (#27), and closed a hole where
+  `VITE_SKIP_AUTH` was honoured in production builds (#26). Two CI failures on the way, both
+  migration defects a green local gate could not see: the `user_role` enum created twice, then
+  the seeded role sent as varchar to an enum column.
 - **2026-09-07** — **Batch 2 shipped — the app is deployed for the first time.**
   `main` `d4190ac` pushed, CI green. Railway `api` live on the root Dockerfile; migrate-on-boot
   applied `001` to Neon; `/api/v1/health` returns the merged commit SHA and `/ready` reports
