@@ -20,7 +20,9 @@ database-aware readiness probe confirms the Neon connection from inside Railway.
 Railway (`mcu-app` / `production` / `api`, region `ams`) deploys `main` from
 `CraigR973/mcu-app` through the root `Dockerfile`, with all five IaC variables applied and
 both JWT secrets sealed for Batch 3. Vercel (`mcu-app`) is git-connected to the same repo
-and takes its first production build from this close-out commit.
+and its production build is live at **`https://mcu-app-fawn.vercel.app`**, serving the
+bundle with `vercel.json`'s CSP and `X-Frame-Options` headers applied — the hosting
+pipeline is proven on both halves.
 
 **The deployed web app does not boot, by design** — `main.tsx` mounts `AuthProvider`,
 which imports `lib/supabase.ts`, which throws without `VITE_SUPABASE_*`. Only
@@ -98,6 +100,12 @@ Three owner actions remain outstanding:
     which Node 20 rejects, so `railway config plan` fails before touching infrastructure.
     The app's own build stays on Node 20.
 
+14. **`mcu-app.vercel.app` is somebody else's app.** The bare name was taken, so Vercel
+    assigned us `mcu-app-fawn.vercel.app`. `FRONTEND_ORIGIN` was initially set to the bare
+    name, which pointed the API's CORS allowlist at a stranger's deployment while excluding
+    our own front end. Corrected at close-out. **Read the alias list from
+    `vercel inspect`; never assume the project name is the domain.** `DECISIONS.md` #23.
+
 ## Log
 
 - **2026-09-07** — **Batch 2 shipped — the app is deployed for the first time.**
@@ -107,7 +115,11 @@ Three owner actions remain outstanding:
   first deploy built `0419cb2` and failed on a missing Dockerfile because `main` had been
   merged locally but never pushed; the generated domain then returned 502 until repointed
   from port 8000 to Railway's injected 8080. Vercel git-connected; web ships without auth
-  env vars and white-screens until Batch 3 (`DECISIONS.md` #20–#22).
+  env vars and white-screens until Batch 3 — verified in a browser, the console throws the
+  expected `Missing VITE_SUPABASE_URL` and nothing else. A third failure found during
+  verification: `FRONTEND_ORIGIN` pointed at `mcu-app.vercel.app`, an unrelated third
+  party's app, because Vercel had actually assigned `mcu-app-fawn.vercel.app`. CORS now
+  allows the real origin and returns 400 to the stranger (`DECISIONS.md` #20–#23).
 - **2026-09-07** — Batch 2 implementation prepared for review on
   `feat/2-deploy-spine-ci`: dedicated Neon Postgres connection verified; migrate-on-boot
   Dockerfile, Railway IaC, Vercel configuration, reversible `001`, commit/readiness health

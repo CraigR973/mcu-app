@@ -211,3 +211,13 @@ contemporaneous.
     that white-screens. Batch 2's acceptance is the API serving its commit SHA; the web
     half is proving the build/host pipeline only. **Batch 3 must set the auth env vars as
     part of its own close-out** — a green Vercel build is not evidence the app runs.
+
+23. **The production front end is `https://mcu-app-fawn.vercel.app`, and that exact origin
+    is what `FRONTEND_ORIGIN` must hold.** *Why:* `mcu-app.vercel.app` was already taken by
+    an unrelated app ("Marvel Cinematic Unisearch"), so Vercel assigned a suffixed domain.
+    Setting `FRONTEND_ORIGIN` to the guessed bare name put a third party's origin on the
+    API's CORS allowlist and left our own front end off it — the failure is silent until a
+    browser makes a cross-origin call, which nothing did yet because no routes exist beyond
+    health. Verify with `vercel inspect <deployment>` and a preflight against the live API,
+    not by assuming the project name is the domain. Any future custom domain replaces this
+    value; `vercel.json`'s CSP `connect-src` already covers the API via `*.up.railway.app`.
