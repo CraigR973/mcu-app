@@ -1,6 +1,6 @@
 # MCU — Mark's Cinematic Universe
 
-A private physical-film catalogue built with FastAPI, React 18, and Supabase Postgres.
+A private physical-film catalogue built with FastAPI, React 18, and Neon Postgres.
 
 ## Stack
 
@@ -8,7 +8,7 @@ A private physical-film catalogue built with FastAPI, React 18, and Supabase Pos
 |-------|-----------|
 | Frontend | React 18, Vite, Tailwind CSS, shadcn/ui |
 | Backend | Python 3.12, FastAPI, async SQLAlchemy, Uvicorn |
-| Database | Supabase (PostgreSQL) |
+| Database | Neon (PostgreSQL) |
 | State | TanStack Query v5 |
 | Router | React Router v6 |
 
@@ -17,11 +17,10 @@ A private physical-film catalogue built with FastAPI, React 18, and Supabase Pos
 ```
 mcu_app/
 ├── apps/
-│   ├── api/          # FastAPI backend (Python 3.12)
+│   ├── api/          # FastAPI backend (Python 3.12) + Alembic migrations
 │   └── web/          # React 18 frontend
 ├── packages/
 │   └── shared/       # Shared zod schemas and inferred TypeScript types
-├── migrations/       # Alembic baseline (lands in Batch 2)
 └── docs/             # Project documentation
 ```
 

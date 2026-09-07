@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 
-const BASE = '/api/v1'
+const apiOrigin = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+const BASE = `${apiOrigin}/api/v1`
 
 async function authedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const { data: { session } } = await supabase.auth.getSession()

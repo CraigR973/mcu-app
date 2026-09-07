@@ -20,15 +20,23 @@ migration of legacy rows, no separate phase.
 That is the single best argument that re-scaffolding was the right call: the app's central
 defect is repaired as a side effect of the thing we were doing anyway.
 
-## Database strategy — a fresh Supabase project
+## Database strategy — a fresh Neon project
 
-Provision a **new** Supabase project rather than migrating the existing one.
+Provision a **new** Neon project rather than migrating the existing shared Supabase
+database. Neon provides Postgres only for this app; Batch 3 retains the custom PIN + JWT
+auth decision rather than enabling Neon Auth.
 
-*Why:* the current project carries a 17-revision chain and 25 tables, ~22 of them
-speculative, with `profiles` sitting outside Alembic in raw SQL. The new baseline should
-contain only what Part D kept. A fresh project also means **the old one stays intact as a
-fallback** until the new deployment is verified — and the house standard already says each
-app gets its own project.
+*Why:* the shared Supabase project was already at 457,026,707 bytes (91.4% of its
+500,000,000-byte free database limit), almost all of it Garmin Coach timeseries data. The
+old MCU schema also carries a 17-revision chain and 25 tables, ~22 of them speculative,
+with `profiles` sitting outside Alembic in raw SQL. A fresh project means **the old one
+stays intact as a fallback** until the new deployment is verified and gives each app its
+own database capacity.
+
+The new `001` revision is an empty re-scaffold marker. Authentication tables land with
+Batch 3, the domain schema and derived-field triggers land with Batch 4, and future tables
+land with their owning feature batches. This keeps the migration chain reversible without
+recreating unused roadmap tables.
 
 The old data is not migrated. It is re-derived from
 `Film Catalogue - 4k Blu Ray DVD v 1.0 bit 02.02.26.xlsx`, which is the actual source of truth.
@@ -77,6 +85,6 @@ rather than being half-done here. Filed as B10.
 | Risk | Mitigation |
 |---|---|
 | Re-import produces different TMDB matches than April | The matching engine is unchanged and has 44 tests. Run `--dry-run` first and diff against `matching_eval.csv` before committing |
-| A fresh Supabase project loses manual edits made since April | Check whether any exist before decommissioning the old project. If they do, they are the one thing worth migrating by hand |
+| A fresh Neon project loses manual edits made since April | Check whether any exist before decommissioning the old Supabase schema. If they do, they are the one thing worth migrating by hand |
 | Batch 2 exposes the app publicly before auth lands in B3 | B2 deploys with no routes except `/api/v1/health`. Nothing to reach |
 | Scope creep back into dropped phases | The ledger is the record. Adding a dropped phase back is a `DECISIONS.md` entry, not a quiet edit |

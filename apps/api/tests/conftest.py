@@ -9,6 +9,8 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
+from src.config import Settings
+
 
 def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
     """Keep unit tests in the development validation profile by default."""
@@ -16,11 +18,7 @@ def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
 
 
 def _async_database_url(value: str) -> str:
-    if value.startswith("postgres://"):
-        return "postgresql+asyncpg://" + value.removeprefix("postgres://")
-    if value.startswith("postgresql://"):
-        return "postgresql+asyncpg://" + value.removeprefix("postgresql://")
-    return value
+    return Settings(database_url=value).database_url
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL")

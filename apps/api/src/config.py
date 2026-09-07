@@ -1,4 +1,5 @@
 from enum import StrEnum
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,6 +11,11 @@ _PLACEHOLDER_SECRETS = {
     "change-me-to-another-random-secret-at-least-32-chars",
 }
 _MIN_SECRET_LENGTH = 32
+
+
+def alembic_config_url(database_url: str) -> str:
+    """Escape ConfigParser interpolation tokens in an Alembic database URL."""
+    return database_url.replace("%", "%%")
 
 
 class Environment(StrEnum):
@@ -43,18 +49,44 @@ class Settings(BaseSettings):
     sentry_dsn_backend: str = ""
     log_level: str = "INFO"
     environment: Environment = Environment.development
+    # Railway injects this for Git-backed deployments. The health endpoint
+    # exposes it so deployment verification can prove which commit is running.
+    railway_git_commit_sha: str | None = None
 
     @field_validator("database_url", mode="before")
     @classmethod
     def _use_asyncpg_driver(cls, value: object) -> object:
-        """Accept common hosted-Postgres URLs but always select the async driver."""
+        """Normalise hosted Postgres URLs for SQLAlchemy's asyncpg dialect.
+
+        Neon emits libpq-style ``sslmode`` and ``channel_binding`` query
+        parameters. asyncpg calls the first option ``ssl`` and does not support
+        the second, so passing Neon's URL through unchanged raises ``TypeError``
+        before a connection is attempted.
+        """
         if not isinstance(value, str):
             return value
-        if value.startswith("postgres://"):
-            return "postgresql+asyncpg://" + value.removeprefix("postgres://")
-        if value.startswith("postgresql://"):
-            return "postgresql+asyncpg://" + value.removeprefix("postgresql://")
-        return value
+
+        parts = urlsplit(value)
+        scheme = parts.scheme
+        if scheme in {"postgres", "postgresql"}:
+            scheme = "postgresql+asyncpg"
+
+        sslmode: str | None = None
+        has_asyncpg_ssl = False
+        query: list[tuple[str, str]] = []
+        for key, query_value in parse_qsl(parts.query, keep_blank_values=True):
+            if key == "sslmode":
+                sslmode = query_value
+            elif key == "channel_binding":
+                continue
+            else:
+                query.append((key, query_value))
+                has_asyncpg_ssl = has_asyncpg_ssl or key == "ssl"
+
+        if sslmode and not has_asyncpg_ssl:
+            query.append(("ssl", sslmode))
+
+        return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
     @model_validator(mode="after")
     def _reject_weak_secrets_outside_development(self) -> "Settings":

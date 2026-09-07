@@ -4,4 +4,5 @@ import { z } from 'zod'
 // application endpoint; domain schemas arrive with the read surface in Batch 5.
 export const healthResponseSchema = z.object({
   status: z.literal('ok'),
+  commitSha: z.string().min(1),
 })

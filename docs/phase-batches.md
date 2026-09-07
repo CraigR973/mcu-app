@@ -37,9 +37,10 @@ async `database.py` + asyncpg with the house pool settings; `models/` package;
 
 ### Batch 2 — Deploy spine + CI gate
 **Goal:** the app is deployed and provably serving the commit we think it is.
-Dockerfile (migrate-on-boot, exit on failure), `railway.toml`, `vercel.json` **with both
-header fixes**. New Supabase project. New Alembic baseline `001` covering only what Part D
-kept. CI: lint · typecheck · pytest against a Postgres service · **migration check
+Dockerfile (migrate-on-boot, exit on failure), current Railway IaC
+(`.railway/railway.ts`), `vercel.json` **with both header fixes**. New Neon project
+(database only; no Neon Auth). New Alembic baseline `001`; schemas land with their owning
+batches rather than reviving speculative tables. CI: lint · typecheck · pytest against a Postgres service · **migration check
 (`upgrade head` then `downgrade base`)** · web build/test · dependency audit.
 **Acceptance:** `/api/v1/health` returns the **expected commit SHA**, not merely 200. `/api/v1/health/ready` returns 503 when the DB is unreachable. CI's migration job proves the baseline reverses. No routes exist beyond health — nothing is publicly reachable yet.
 
@@ -138,7 +139,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | Group | Ordered batches and checkpoints | Why it is a group |
 |---|---|---|
 | — | 1 · solo | Foundation; everything downstream depends on it being right |
-| — | **checkpoint: provision Supabase + Railway + Vercel** → 2 | Hosting/credential change; first deployment deserves eyes |
+| — | **checkpoint: provision Neon + Railway + Vercel** → 2 | Hosting/credential change; first deployment deserves eyes |
 | — | 3 · solo | Auth is security-critical |
 | — | 4 · solo | 🔴 XL, and a 1,866-row data operation |
 | **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |

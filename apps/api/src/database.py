@@ -12,8 +12,6 @@ engine = create_async_engine(
     pool_pre_ping=True,
     pool_recycle=1800,
     echo=False,
-    # Supabase's pooler does not support asyncpg's prepared-statement cache.
-    connect_args={"prepared_statement_cache_size": 0},
 )
 
 AsyncSessionLocal = async_sessionmaker(

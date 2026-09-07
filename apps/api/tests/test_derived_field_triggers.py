@@ -1,11 +1,12 @@
 """Integration tests for migration 0015 — derived field triggers.
 
-These tests exercise the live Supabase Postgres database. Each test runs
+These tests exercise a live Postgres database after Batch 4 has restored the domain
+schema. Each test runs
 inside a transaction that is rolled back at teardown, so nothing persists.
 
-Skipped automatically when ``DATABASE_URL`` is not set (e.g. local dev
-without `.env.local`, or CI runs that haven't been wired with Supabase
-secrets).
+Skipped automatically when ``DATABASE_URL`` is not set or the Batch 4 ``movies`` and
+``collection_items`` tables do not exist. Batch 2 deliberately removes the legacy
+domain schema before its replacement lands.
 """
 
 from __future__ import annotations
@@ -17,9 +18,26 @@ import pytest
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
+
+def _domain_schema_exists() -> bool:
+    if not DATABASE_URL:
+        return False
+    try:
+        with (
+            psycopg2.connect(DATABASE_URL) as connection,
+            connection.cursor() as cursor,
+        ):
+            cursor.execute(
+                "SELECT to_regclass('public.movies'), to_regclass('public.collection_items')"
+            )
+            return cursor.fetchone() == ("movies", "collection_items")
+    except psycopg2.Error:
+        return False
+
+
 pytestmark = pytest.mark.skipif(
-    not DATABASE_URL,
-    reason="DATABASE_URL not set — skipping live-DB trigger tests",
+    not _domain_schema_exists(),
+    reason="Batch 4 domain schema is not available — skipping derived-field tests",
 )
 
 

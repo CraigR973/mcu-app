@@ -158,3 +158,28 @@ contemporaneous.
     scraper maintenance and ToS exposure (5.3/5.4/5.5); storage of two people's live
     mailbox credentials on an app whose perimeter is only hardened in Batch 3 (10.1);
     and per-scan LLM spend (10.6).
+
+### 2026-09-07 — Batch 2 deployment spine
+
+17. **MCU uses a dedicated Neon project for Postgres and does not use Neon Auth.**
+    Supersedes the Supabase database part of #1; the rest of the stack is unchanged.
+    *Why:* the old Supabase project is shared with Garmin Coach and is already
+    457,026,707 bytes — 91.4% of its 500,000,000-byte free database limit — with Garmin
+    timeseries accounting for most of the space. Neon gives MCU its own free Postgres
+    capacity without displacing Garmin. Batch 3's display-name + PIN + JWT design remains
+    the settled auth model, so Neon Auth would duplicate it. Storage and Realtime remain
+    separate future integration decisions; choosing Neon for Postgres does not silently
+    choose their replacements.
+
+18. **Railway infrastructure is defined with `.railway/railway.ts`, not
+    `railway.toml`.** *Why:* Railway deprecated Config as Code, prevents new services from
+    opting into it, and stops reading legacy files on 2026-12-01. The replacement IaC
+    format manages the project/service graph and supports a read-only plan before apply.
+
+19. **Schema migrations land with the batch that owns the schema.** Batch 2's `001` is
+    an intentionally empty, reversible re-scaffold marker; Batch 3 adds authentication,
+    Batch 4 adds movies/credits/collection items and their triggers, and later features
+    add their own tables. *Why:* recreating the old app's speculative 25-table schema in a
+    baseline would repeat Decision #4's failure and contradict the bottom-up sequence in
+    #10. The 13 legacy derived-trigger tests remain present and automatically resume once
+    Batch 4's tables exist.

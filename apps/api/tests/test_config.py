@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from src.config import Environment, Settings, docs_urls
+from src.config import Environment, Settings, alembic_config_url, docs_urls
 
 API_ROOT = Path(__file__).resolve().parents[1]
 
@@ -95,10 +95,23 @@ def test_development_allows_empty_secrets() -> None:
             "postgresql://user:password@host/db",
             "postgresql+asyncpg://user:password@host/db",
         ),
+        (
+            "postgresql://user:password@host/db?sslmode=require&channel_binding=require",
+            "postgresql+asyncpg://user:password@host/db?ssl=require",
+        ),
+        (
+            "postgresql+asyncpg://user:password@host/db?application_name=mcu&ssl=require",
+            "postgresql+asyncpg://user:password@host/db?application_name=mcu&ssl=require",
+        ),
     ],
 )
 def test_database_url_uses_asyncpg(raw: str, expected: str) -> None:
     assert _build_settings(database_url=raw).database_url == expected
+
+
+def test_alembic_url_escapes_config_parser_interpolation() -> None:
+    url = "postgresql+asyncpg://postgres@/db?host=%2Ftmp%2Fpostgres"
+    assert alembic_config_url(url) == ("postgresql+asyncpg://postgres@/db?host=%%2Ftmp%%2Fpostgres")
 
 
 def test_unknown_environment_is_rejected() -> None:

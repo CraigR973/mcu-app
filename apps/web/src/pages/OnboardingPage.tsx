@@ -57,7 +57,8 @@ function StepCatalog() {
   const [total, setTotal] = useState<number | null>(null)
 
   useEffect(() => {
-    fetch('/api/v1/movies?per_page=1')
+    const apiOrigin = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+    fetch(`${apiOrigin}/api/v1/movies?per_page=1`)
       .then((r) => r.json())
       .then((d) => setTotal(d?.meta?.total ?? null))
       .catch(() => null)

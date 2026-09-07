@@ -42,6 +42,9 @@ pnpm-debug.log*
 # Vite
 *.local
 
+# Hosting CLI link state
+.vercel/
+
 # Supabase local
 supabase/.branches/
 supabase/.temp/

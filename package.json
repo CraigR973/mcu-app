@@ -14,7 +14,13 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck"
   },
+  "pnpm": {
+    "overrides": {
+      "ws": "8.21.0"
+    }
+  },
   "devDependencies": {
+    "railway": "3.11.0",
     "typescript": "^5.5.4"
   }
 }
