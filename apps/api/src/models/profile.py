@@ -51,7 +51,8 @@ class Profile(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     pin_hash: Mapped[str | None] = mapped_column(String(BCRYPT_HASH_LENGTH), nullable=True)
 
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="user_role"),
+        # `create_type=False`: migration 002 owns this type's lifecycle, not the model.
+        Enum(UserRole, name="user_role", create_type=False),
         nullable=False,
         server_default=UserRole.viewer.value,
     )

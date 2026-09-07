@@ -14,6 +14,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "002"
 down_revision: str | None = "001"
@@ -30,12 +31,15 @@ _SEED_PROFILES = (
 
 
 def upgrade() -> None:
-    user_role = sa.Enum("admin", "viewer", name="user_role")
-    user_role.create(op.get_bind(), checkfirst=True)
+    # Created explicitly, then referenced with `create_type=False` below. Without that
+    # flag `create_table` emits its own CREATE TYPE for the column and the migration
+    # dies on `type "user_role" already exists`.
+    sa.Enum("admin", "viewer", name="user_role").create(op.get_bind(), checkfirst=True)
+    user_role = postgresql.ENUM("admin", "viewer", name="user_role", create_type=False)
 
     op.create_table(
         "profiles",
-        sa.Column("id", sa.dialects.postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("display_name", sa.String(100), nullable=False),
         sa.Column("pin_hash", sa.String(60), nullable=True),
         sa.Column("role", user_role, nullable=False, server_default="viewer"),
@@ -64,10 +68,10 @@ def upgrade() -> None:
 
     op.create_table(
         "refresh_tokens",
-        sa.Column("id", sa.dialects.postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column(
             "user_id",
-            sa.dialects.postgresql.UUID(as_uuid=True),
+            postgresql.UUID(as_uuid=True),
             sa.ForeignKey("profiles.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -93,7 +97,7 @@ def upgrade() -> None:
 
     profiles = sa.table(
         "profiles",
-        sa.column("id", sa.dialects.postgresql.UUID(as_uuid=True)),
+        sa.column("id", postgresql.UUID(as_uuid=True)),
         sa.column("display_name", sa.String),
         sa.column("role", sa.String),
     )
