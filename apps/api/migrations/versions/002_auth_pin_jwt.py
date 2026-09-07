@@ -99,7 +99,10 @@ def upgrade() -> None:
         "profiles",
         sa.column("id", postgresql.UUID(as_uuid=True)),
         sa.column("display_name", sa.String),
-        sa.column("role", sa.String),
+        # Typed as the enum, not sa.String: Postgres will not implicitly cast varchar
+        # to user_role, so a String column here sends the seed as text and the insert
+        # fails with a DatatypeMismatchError.
+        sa.column("role", postgresql.ENUM("admin", "viewer", name="user_role", create_type=False)),
     )
     op.bulk_insert(
         profiles,
