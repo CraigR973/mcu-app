@@ -2,79 +2,42 @@
 
 ## Now
 
-**Batch 4 — Domain layer + re-import is shipped. The collection is in the database, with
-structured location, for the first time.** All four acceptance criteria met and proved
-against the live database, not merely in CI.
+**Batch 5 — Read surface + identify flow is shipped.** The collection is browsable and
+searchable, and every one of the 757 films TMDB could not settle can now be identified from
+its own detail page instead of from a CSV. Production serves the merged SHA
+`a731b8ce36f6772ef5e0832fc26be8dacc9e9371` with `db: ok`, at migration **005**.
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | row count = 1,857 | **1,857** `collection_items`, 1,857 distinct `import_source_row`, 0 skipped, 0 errors |
-| 2 | `section` non-trivial, values in {Front, Back, Lounge, Garage, Digital} | **1,733 of 1,857**, all five values present, **0 outside the vocabulary** (a CHECK constraint enforces it) |
-| 3 | `--dry-run` diffed against `matching_eval.csv` before the live run | done — and it found the defect that stopped the batch for a day |
-| 4 | the 13 derived-field trigger tests run in CI, not skipped | **14 ran, 0 skipped** |
+| 1 | 1,857 items render at 60fps; a search returns in <150ms | **search median 20 ms**, list page 23 ms — measured against live Neon with network included, so the real figure is lower. All three views virtualised (`@tanstack/react-virtual`). **Frame rate not measured in production** — see the gap below |
+| 2 | every consumed response parsed through `packages/shared`; zero `as Promise<T>` casts | **zero casts**, 7 `.parse()` call sites, schemas shipped with their endpoints |
+| 3 | no film renders an empty detail page — an unidentified one shows the picker | `GET /movies/{id}/candidates` and `POST /movies/{id}/identify` ship. The unidentified set is exactly the **757** movies with `tmdb_id IS NULL`, and **all 757 still carry the spreadsheet title** the matcher searches on |
+| 4 | identifying populates poster, overview, cast and `search_vector`; the film is then findable by a metadata-only term | **proved on live data: "Kubrick" returns 8 films and appears in zero titles** — the match can only come from fetched credits. Genres index too: 13 `Documentary` hits whose titles lack the word |
+| 5 | correcting an already-identified film works by the same route | the same picker, opened from an identified film; the wrong-sibling rows are in the database and correctable (gotcha 1b) |
 
-In the database now: **1,857 collection items · 1,843 movies · 45,144 credits.** Sections:
-Back 575, Front 550, Digital 413, Lounge 160, Garage 35, unsectioned 124. Triggers fired
-over real data — `search_vector` on all 1,843 movies, `best_format_owned` on 1,842
-(blu_ray 880, download 412, 4k_uhd 346, dvd 203).
+In the database now: **1,857 collection items · 1,843 movies · 45,144 credits · zero
+missing `search_vector`** (0 of 1,843). **1,086 films identified, 757 not** — those 757
+carry 764 items. Sections unchanged: Back 575, Front 550, Digital 413, Lounge 160,
+Garage 35, unsectioned 124.
 
-**764 rows are catalogued but not yet identified** — 628 ambiguous, 100 with no TMDB
-results, 19 below threshold, 17 low confidence. Every one of those discs is in the
-catalogue *with its location*; only the TMDB metadata waits. The review CSV carries an
-`alternatives` column listing every tied candidate, so a row can be settled from the file.
+**Migration `005` completes the search document.** `003` indexed title, original title,
+tagline and overview; `005` adds credited names and genres, and re-fires when credits change
+so an in-app identification becomes searchable at once. That is what makes criterion 4
+measurable rather than asserted — "Kubrick" is in no title in the collection, so a hit
+proves the credits were fetched and indexed.
 
-Four defects were found and fixed on the way, **three of them invisible to a green gate**:
-
-1. **The matcher let TMDB popularity decide which film was on the shelf** — 652 rows
-   (35%) tied with no year to separate them. `Frankenstein` resolved to 2025, `Lolita` to
-   1997, `Amistad` to `Friendship (2023)`. Fixed and, where undecidable, deferred to
-   review (`DECISIONS.md` #31, gotcha 1b).
-2. **The importer could not connect to any hosted database.** `Settings` normalises
-   `DATABASE_URL` for asyncpg; the importer is sync psycopg2 and was handed that value
-   directly. Its tests mock the connection, so nothing caught it (#32).
-3. **`character_name` at `VARCHAR(255)` was too narrow** — a 300-character role list
-   rolled back a whole item, so *The Simpsons Movie* was absent over a cast-list field (#32).
-4. **Idempotency keyed on the item's contents collapsed distinct discs** — "French
-   Connection" and "French Connection 2" became one row. Now keyed on the spreadsheet
-   line (#32).
+**One gap, and it is not code.** The deployed app boots and renders its login page cleanly,
+with no console errors — the white-screen is gone. But **both profiles still have
+`pin_hash = NULL`, so nobody can log in**, and every read route requires `CurrentUser`. The
+browse grid, the detail page and the picker are therefore proved by CI integration tests and
+by direct measurement against the production database, **not** by driving the production UI.
+Setting the PINs closes that last step.
 
 ## Next
 
-**Batch 5 — Read surface + identify flow** (now 🔴, `DECISIONS.md` #33). Mark can browse
-the collection on his phone: list, detail, copies, tsvector search, with camelCase DTOs and
-shared zod schemas the web app actually `.parse()`s. There are now 1,857 real rows to render
-and a populated `search_vector` to search, so its acceptance can be measured rather than
-estimated.
-
-**It now also owns identifying the 757 unidentified films in the app**, rather than by
-working the review CSV. Opening a film with no `tmdb_id` shows the matcher's top five with
-posters, years and overviews; picking one enriches the row and it never asks again. This
-needs **no schema change** — the unidentified set is exactly `movies.tmdb_id IS NULL`, those
-rows already hold the spreadsheet title to search on, and they have no poster or overview so
-the detail page renders conspicuously empty by itself. Either user can identify a film, not
-admins only.
-
-**That also retires two follow-ups.** The review CSV becomes a fallback rather than the
-plan, and the four wrong-sibling matches below are corrected through the same picker opened
-from an already-identified film — so no third change to the matching ranking is needed:
-
-| sheet row | as written | chose |
-|---|---|---|
-| 550 | French Connection | French Connection **II** (1975) |
-| 1789 | X-Men 2 | X-MEN 2 - **Wolverine's story** |
-| 1831 | 11.22.63 | 11-22-63: **The Day the Nation Cried** |
-| 1254 | Planet Earth II | Planet Earth II: **A World of Wonder** |
-
-Cause, recorded so it is not rediscovered: `title_similarity` floors a substring match at
-0.9, but a near-miss that appends a numeral can beat it — "french connection" scores 0.919
-against *French Connection II* and 0.900 against the correct *The French Connection*,
-because a leading article costs more than an appended "II". 11 of the 1,093 settled rows are
-in this class and about four look wrong. Fixing the ranking again would need its own
-measurement pass over all 1,857 titles and risks regressing matches that are currently
-right; the picker is the cheaper and safer route.
-
-Then: **set your PINs. Nobody can log in until you do** — both profiles are seeded with
-`pin_hash = NULL`, which means *no credential*, not a blank one:
+**Set your PINs. Nobody can log in until you do** — and until you do, Batch 5's UI stays
+unverified in production. Both profiles are seeded with `pin_hash = NULL`, which means
+*no credential*, not a blank one:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
@@ -83,6 +46,23 @@ DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
 
 It prompts twice, hidden, so the PIN never reaches `ps`, your shell history, or a log.
 Repeat for `Mark`, then sign in at `https://mcu-app-fawn.vercel.app/login` (`DECISIONS.md` #25).
+
+**Then Batch 6 — Location + facets** (🟢). `section`/`shelf` filter params and UI, plus the
+facet set `FilterBar` lacks — decade range, watched status, rating. Its acceptance is §6.2's
+oldest unkept promise: *"show me everything on the Front 2nd shelf"*, end to end. The
+groundwork is already in place — Batch 4 created the columns and the partial composite index
+on `(section, shelf) WHERE deleted_at IS NULL`, and 1,733 of 1,857 items carry a section, so
+the query has real data to answer with.
+
+**The 124 unsectioned rows are the open question Batch 6 must settle.** They are cabinets —
+"Top Big Cabinet", "Left Hand Side Small Cabinet Fish Room", "Black Box next to cabinet" —
+with no §3.4 section. Either the vocabulary grows to cover them, or they stay findable only
+by their `location` text. Nothing is lost either way; the choice is whether they get facets.
+
+**Identifying films is now ordinary use, not a batch.** The 757 unidentified films need no
+scheduled sitting — the picker asks the question when someone opens the disc they care
+about, which is exactly when the answer is easiest. The four known wrong-sibling matches are
+corrected by the same route (gotcha 1b).
 
 Two owner actions remain outstanding:
 1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
@@ -181,13 +161,24 @@ Two owner actions remain outstanding:
    Ambiguous rows are **catalogued with their location** and only their identification is
    deferred to review. After the fix: 1,093 settled, 628 ambiguous, 136 unmatched.
 
-   **Still open, narrowly.** `title_similarity` floors a substring match at 0.9, but a
-   near-miss that appends a numeral can beat it: "french connection" scores 0.919 against
-   "French Connection II" and only 0.900 against the correct "The French Connection",
-   because a leading article costs more than an appended "II". **11 of the 1,093 settled
-   rows are in this class and about four look wrong** — see **Next** for the list. Not
-   fixed here: another ranking change needs its own measurement pass over all 1,857
-   titles.
+   **The ranking is still imperfect, but Batch 5 gave it a route out.**
+   `title_similarity` floors a substring match at 0.9, and a near-miss that appends a
+   numeral can beat it: "french connection" scores 0.919 against "French Connection II"
+   and only 0.900 against the correct "The French Connection", because a leading article
+   costs more than an appended "II". **11 of the 1,093 settled rows are in this class and
+   about four look wrong:**
+
+   | sheet row | as written | chose |
+   |---|---|---|
+   | 550 | French Connection | French Connection **II** (1975) |
+   | 1789 | X-Men 2 | X-MEN 2 - **Wolverine's story** |
+   | 1831 | 11.22.63 | 11-22-63: **The Day the Nation Cried** |
+   | 1254 | Planet Earth II | Planet Earth II: **A World of Wonder** |
+
+   **These are now corrected in the app, not in the engine.** The identify picker, opened
+   from an already-identified film, replaces any of them in a click (`DECISIONS.md` #33).
+   A third change to the matching ranking would have cost its own measurement pass over
+   all 1,857 titles and risked regressing matches that are currently right.
 
 2. **The new migration chain starts with an intentionally empty `001`.** It has been
    proven to apply and reverse against disposable Postgres, and CI repeats both commands.
@@ -209,9 +200,13 @@ Two owner actions remain outstanding:
    must add its own completion column. Two of the three dead steps are fixed by the
    re-scaffold's service worker and push stack; the third goes when Stage 10 is settled.
 
-7. **`packages/shared` now validates the health response, but the old web app still imports
-   no shared schemas.** That is expected during the bottom-up re-scaffold; Batch 5 ships
-   shared schemas with every read endpoint and makes the web app `.parse()` each response.
+7. **RESOLVED IN BATCH 5. The web app now parses every API response through
+   `packages/shared`.** It previously imported no shared schemas at all — expected during
+   the bottom-up re-scaffold, but only true because there were no read endpoints yet.
+   Batch 5 shipped the schemas with their endpoints, as `DECISIONS.md` #6 requires: 7
+   `.parse()` call sites and **zero `as Promise<T>` casts** on an API response. The rule
+   that made this hold is that a schema ships *with* its endpoint — one added later never
+   gets added.
 
 8. **`pnpm -r test`, not `--filter @mcu/web test`** — the filtered form never runs `packages/shared`.
 
@@ -252,6 +247,45 @@ Two owner actions remain outstanding:
     success lines (`DECISIONS.md` #32).
 
 ## Log
+
+- **2026-09-08** — **Batch 5 shipped — the collection is browsable, searchable, and every
+  unidentified film can be settled from its own page.** List, detail, copies and tsvector
+  search ship with camelCase DTOs and shared zod schemas the web app genuinely `.parse()`s
+  — zero `as Promise<T>` casts. Migration `005` completes the search document that `003`
+  deliberately left half-built, adding credited names and genres and re-firing when credits
+  change, so a film identified in the app becomes searchable immediately.
+
+  **The identify flow replaces the review CSV** (#33). `GET /movies/{id}/candidates` runs
+  the existing `MatchingEngine` live against the stored spreadsheet title and returns the
+  top five with posters, years and overviews; `POST /movies/{id}/identify` fills the §3.2
+  columns and the credits. It needed no schema change — the unidentified set is exactly the
+  757 movies with `tmdb_id IS NULL`, and all 757 still carry the title to search on. Either
+  user can identify a film, and the same picker corrects the four wrong-sibling matches, so
+  the matching ranking was left alone.
+
+  **Measured against production, not asserted.** Search median **20 ms** and a 60-item list
+  page **23 ms** against live Neon with network included — the <150 ms budget was never
+  close. Zero of 1,843 movies are missing a `search_vector`. The metadata-only criterion was
+  proved with **"Kubrick": 8 films returned, and the word appears in no title in the
+  collection**, so the hit can only come from fetched credits; genres index too. Production
+  serves the merged SHA with `db: ok` at migration 005.
+
+  **Two failures on the way.** CI went red on run `34227781888` — the `search_vector`
+  trigger could not expand `genres` when SQLAlchemy had serialised Python `None` as the
+  JSON scalar `null`, which is not SQL NULL and cannot be treated as an array; `005` now
+  guards on `jsonb_typeof(...) = 'array'`. Run `34228015029` was then green with 269 API
+  tests and no skips, including the 16 derived-trigger tests. During close-out the local
+  verification script also failed twice on its own errors — a `release_date` column that
+  does not exist (it is `year`) and psycopg2 reading `%` in an `ILIKE` pattern as a
+  parameter placeholder. Neither touched the app.
+
+  **One acceptance criterion is proved indirectly, and it is worth naming.** Both profiles
+  still have `pin_hash = NULL`, so nobody can log in and every read route requires
+  `CurrentUser`. The deployed app boots and renders its login page with no console errors,
+  but the browse grid, detail page and picker were verified by CI integration tests and by
+  direct database measurement — **not** by driving the production UI. The 60fps figure in
+  particular rests on all three views being virtualised with `@tanstack/react-virtual`,
+  not on a frame-rate measurement. Setting the PINs closes it.
 
 - **2026-09-08** — **Batch 4 shipped — 1,857 discs are in the database, with structured
   location, for the first time.** Migration `003` lands the §3.4 domain schema and `004`

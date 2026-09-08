@@ -17,7 +17,7 @@ Strike the row through and set status on close-out.
 | ~~2~~ | ~~Deploy spine + CI gate~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.5**; **implements §15, which was never a phase**~~ | `d4190ac` · API live, `/health` serves the SHA |
 | ~~3~~ | ~~Auth — PIN + JWT~~ | ~~🟡~~ | **shipped** | ~~**supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11~~ | `e89a9c6` · lockout proved on Postgres in CI |
 | ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
-| 5 | Read surface **+ identify flow** | 🔴 | planned | re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33) | |
+| ~~5~~ | ~~Read surface **+ identify flow**~~ | ~~🔴~~ | **shipped** | ~~re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33)~~ | `a731b8c` · 1,857 items browsable; search median 20 ms; 757 films identifiable in-app |
 | 6 | Location + facets | 🟢 | planned | **3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise | |
 | 7 | Write surface | 🟡 | planned | re-lands **3.1**; adds **3.2, 3.5, 3.11** | |
 | 8 | PWA + offline | 🟢 | planned | **13.8, 6.5, 13.9** pulled forward | |
@@ -60,7 +60,7 @@ Port `tmdb/`, `matching/`, `spreadsheet/` unchanged. New models — `Movie`, `Mo
 Re-run the importer.
 **Acceptance:** row count = 1,857. `SELECT count(*) WHERE section IS NOT NULL` is non-trivial and `section` values fall in {Front, Back, Lounge, Garage, Digital}. `--dry-run` diffed against `matching_eval.csv` before the live run. The 13 derived-field trigger tests **run in CI** against the Postgres service — not skipped.
 
-### Batch 5 — Read surface + identify flow 🔴
+### ~~Batch 5 — Read surface + identify flow~~ 🔴 **shipped**
 **Goal:** Mark can browse the collection on his phone, and every film shows something —
 either its metadata or the way to supply it.
 List (paginated), detail, copies, tsvector search. **camelCase DTOs and shared zod schemas
