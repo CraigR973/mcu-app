@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Annotated
 
-from pydantic import PlainSerializer
+from pydantic import AfterValidator, PlainSerializer
 
 
 def _as_utc_iso(value: datetime) -> str:
@@ -36,3 +36,26 @@ def _as_utc_iso(value: datetime) -> str:
 #: A domain timestamp, serialised with an explicit ``Z``. Use this rather than a bare
 #: ``datetime`` on anything a client will render.
 UtcDatetime = Annotated[datetime, PlainSerializer(_as_utc_iso, return_type=str)]
+
+
+def _to_naive_utc(value: datetime) -> datetime:
+    """Normalise an inbound timestamp to the naive UTC the columns hold.
+
+    The mirror of :data:`UtcDatetime`. A client sends back a value this app serialised,
+    so it arrives with the ``Z`` stamped on the way out and pydantic parses it into an
+    *aware* datetime — which cannot be compared with a naive column value at all: Python
+    raises ``TypeError`` rather than answering wrongly. Converting here means a comparison
+    against ``updated_at`` is written once and reads like an ordinary one.
+    """
+    if value.tzinfo is None:
+        # Already naive. Trusted as UTC, because that is what every column here holds
+        # and what this app has ever put on the wire.
+        return value
+    return value.astimezone(UTC).replace(tzinfo=None)
+
+
+#: An inbound domain timestamp, converted to naive UTC for comparison with a column.
+#: Serialises back out through the same rule as :data:`UtcDatetime`.
+UtcDatetimeIn = Annotated[
+    datetime, AfterValidator(_to_naive_utc), PlainSerializer(_as_utc_iso, return_type=str)
+]

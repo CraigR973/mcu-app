@@ -14,7 +14,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from src.models.collection_item import CONDITIONS, FORMAT_RANK
-from src.schemas.wire import UtcDatetime
+from src.schemas.wire import UtcDatetime, UtcDatetimeIn
 
 #: A disc has at least one format and, realistically, at most a handful. The cap is
 #: there so a malformed client cannot write an array the derived-field trigger then has
@@ -122,6 +122,19 @@ class CollectionItemUpdateRequest(CollectionItemFieldsMixin):
     being indistinguishable from "the client is an older build that never knew about it".
     """
 
+    #: The ``updatedAt`` the edit was made against, if the caller knows it.
+    #:
+    #: This is what makes Batch 8's acceptance criterion — *"an edit made offline lands
+    #: once reconnected **without overwriting a newer change**"* — mean anything. An
+    #: offline edit can sit in the queue for hours; flushing it blind is last-write-wins,
+    #: and last-write-wins is precisely the thing that criterion forbids. Phase 13.9 says
+    #: "last-write-wins" and the batch's own acceptance contradicts it; the acceptance is
+    #: newer and is what this implements (`DECISIONS.md` #42).
+    #:
+    #: Optional, because an online edit that has just read the row does not need it and a
+    #: client that never goes offline should not have to care.
+    baseUpdatedAt: UtcDatetimeIn | None = None
+
 
 class CollectionItemResponse(BaseModel):
     """One disc, as the write endpoints return it.
@@ -149,6 +162,9 @@ class CollectionItemResponse(BaseModel):
     purchaseSource: str | None = None
     purchaseDate: date | None = None
     listingStatus: str
+    #: The value a later edit sends back as ``baseUpdatedAt``. Without it on the way out
+    #: there is nothing for the offline queue to have based itself on.
+    updatedAt: UtcDatetime
     deletedAt: UtcDatetime | None = None
 
 

@@ -874,3 +874,103 @@ async def test_tmdb_search_flags_films_the_catalogue_already_has(
     result = again.json()["results"][0]
     assert result["inCollection"] is True
     assert result["movieId"] == str(known.id)
+
+
+# ---------------------------------------------------------------------------
+# Batch 8 — an offline edit must not overwrite a newer change
+# ---------------------------------------------------------------------------
+
+
+async def test_a_stale_edit_is_refused_and_shows_what_it_would_have_overwritten(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The criterion phase 13.9's "last-write-wins" would have failed.
+
+    An edit queued offline carries the ``updatedAt`` it was based on. If the disc has
+    moved on since — someone else edited it, or the same person did from another device —
+    flushing the queue must not silently win.
+    """
+    movie = await _a_film(api_session, title="Edited Twice", tmdb_id=930080)
+    item = await _a_disc(api_session, movie, section="Front", shelf="2nd")
+
+    original = (await client.get(f"/api/v1/movies/{movie.id}/copies")).json()[0]
+    stale_base = original["updatedAt"]
+
+    # Someone else moves the disc while our edit sits in the queue.
+    moved = await client.put(f"/api/v1/collection/{item.id}", json=_body(location="Back 6th shelf"))
+    assert moved.status_code == 200, moved.text
+
+    late = await client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(location="Lounge", baseUpdatedAt=stale_base),
+    )
+
+    assert late.status_code == 409
+    detail = late.json()["detail"]
+    assert detail["code"] == "STALE_EDIT"
+    # The response carries the row it refused to clobber, so the client can say what
+    # the newer change actually was rather than only that the flush failed.
+    assert detail["current"]["section"] == "Back"
+
+    still = (await client.get(f"/api/v1/movies/{movie.id}/copies")).json()[0]
+    assert still["section"] == "Back"
+
+
+async def test_an_edit_based_on_the_current_version_is_accepted(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The queue's happy path: nothing else touched the disc, so the edit lands."""
+    movie = await _a_film(api_session, title="Edited Once", tmdb_id=930081)
+    item = await _a_disc(api_session, movie)
+
+    current = (await client.get(f"/api/v1/movies/{movie.id}/copies")).json()[0]
+
+    response = await client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(
+            location="Lounge", section="Lounge", shelf=None, baseUpdatedAt=current["updatedAt"]
+        ),
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["section"] == "Lounge"
+    # And the version moved, so replaying the same queued edit would now be refused.
+    assert response.json()["updatedAt"] != current["updatedAt"]
+
+
+async def test_an_edit_with_no_base_version_still_works(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """``baseUpdatedAt`` is optional — an online edit that just read the row needs no guard."""
+    movie = await _a_film(api_session, title="No Base", tmdb_id=930082)
+    item = await _a_disc(api_session, movie)
+
+    response = await client.put(f"/api/v1/collection/{item.id}", json=_body(notes="Fine"))
+
+    assert response.status_code == 200, response.text
+    assert response.json()["notes"] == "Fine"
+
+
+async def test_the_wire_timestamp_round_trips_exactly(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Microseconds included.
+
+    The conflict check compares an inbound string against a Postgres timestamp. If the
+    serialisation lost precision, an edit based on the current version would read as
+    stale — or worse, a genuinely stale one would read as current.
+    """
+    movie = await _a_film(api_session, title="Precise", tmdb_id=930083)
+    item = await _a_disc(api_session, movie)
+
+    seen = (await client.get(f"/api/v1/movies/{movie.id}/copies")).json()[0]["updatedAt"]
+    assert seen.endswith("Z")
+
+    accepted = await client.put(
+        f"/api/v1/collection/{item.id}", json=_body(notes="Round trip", baseUpdatedAt=seen)
+    )
+    assert accepted.status_code == 200, accepted.text

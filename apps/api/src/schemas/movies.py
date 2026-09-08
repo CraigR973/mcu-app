@@ -8,6 +8,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.schemas.wire import UtcDatetime
+
 
 class GenreResponse(BaseModel):
     id: int
@@ -105,6 +107,9 @@ class CollectionCopyResponse(BaseModel):
     regionCode: str | None = None
     releaseLabel: str | None = None
     listingStatus: str
+    #: Carried so an edit started from this view — which is where every edit starts — can
+    #: say which version it was based on when it is finally sent (Batch 8).
+    updatedAt: UtcDatetime
 
 
 class SearchResponse(BaseModel):

@@ -125,6 +125,7 @@ def _item_response(item: CollectionItem, movie_title: str) -> CollectionItemResp
         purchaseSource=item.purchase_source,
         purchaseDate=item.purchase_date,
         listingStatus=item.listing_status,
+        updatedAt=item.updated_at,
         deletedAt=item.deleted_at,
     )
 
@@ -389,6 +390,23 @@ async def update_collection_item(
     for it would be a second place for the condition timestamp to be forgotten.
     """
     item, movie = await _get_item(db, item_id)
+
+    if payload.baseUpdatedAt is not None and item.updated_at > payload.baseUpdatedAt:
+        # Batch 8's acceptance criterion, enforced where it can actually be enforced.
+        # An edit queued offline may be hours old; flushing it blind is last-write-wins,
+        # and last-write-wins is exactly what "without overwriting a newer change"
+        # forbids. The current row rides along in the 409 so the client can show what it
+        # would have clobbered rather than only reporting that it failed
+        # (`DECISIONS.md` #42).
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "STALE_EDIT",
+                "message": "This disc changed after your edit was made.",
+                "current": _item_response(item, movie.title).model_dump(mode="json"),
+            },
+        )
+
     before = item_snapshot(item)
     _apply_fields(item, payload)
     await db.flush()

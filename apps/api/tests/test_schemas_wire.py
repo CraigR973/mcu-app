@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta, timezone
 from pydantic import BaseModel
 
 from src.schemas.collection import AuditEntryResponse, CollectionItemResponse
-from src.schemas.wire import UtcDatetime
+from src.schemas.wire import UtcDatetime, UtcDatetimeIn
 
 
 class _Model(BaseModel):
@@ -60,11 +60,15 @@ def test_the_response_models_that_carry_timestamps_use_it() -> None:
         conditionUpdatedAt=datetime(2026, 9, 8, 14, 0, 0),
         hasPlaybackIssues=False,
         listingStatus="in_collection",
+        updatedAt=datetime(2026, 9, 8, 15, 0, 0, 123456),
         deletedAt=datetime(2026, 9, 8, 15, 30, 0),
     )
     dumped = item.model_dump(mode="json")
     assert dumped["conditionUpdatedAt"] == "2026-09-08T14:00:00Z"
     assert dumped["deletedAt"] == "2026-09-08T15:30:00Z"
+    # Microseconds survive: Batch 8's stale-edit check compares this value back against
+    # the column, so a truncated one would make a current edit read as stale.
+    assert dumped["updatedAt"] == "2026-09-08T15:00:00.123456Z"
 
     entry = AuditEntryResponse(
         id=uuid.uuid4(),
@@ -74,3 +78,26 @@ def test_the_response_models_that_carry_timestamps_use_it() -> None:
         createdAt=datetime(2026, 9, 8, 14, 0, 0),
     )
     assert entry.model_dump(mode="json")["createdAt"] == "2026-09-08T14:00:00Z"
+
+
+def test_an_inbound_timestamp_is_normalised_for_comparison_with_a_column() -> None:
+    """``UtcDatetimeIn`` is the half that makes the stale-edit check possible.
+
+    A client sends back exactly what was serialised, so it arrives *aware*. Comparing an
+    aware datetime with the naive column value raises ``TypeError`` rather than answering
+    wrongly — which is better than a silent mistake, but still a 500.
+    """
+
+    class _In(BaseModel):
+        at: UtcDatetimeIn | None = None
+
+    parsed = _In(at="2026-09-08T15:00:00.123456Z")  # type: ignore[arg-type]
+    assert parsed.at == datetime(2026, 9, 8, 15, 0, 0, 123456)
+    assert parsed.at.tzinfo is None
+
+    # An offset other than Z is converted, not merely stripped.
+    shifted = _In(at="2026-09-08T16:00:00+01:00")  # type: ignore[arg-type]
+    assert shifted.at == datetime(2026, 9, 8, 15, 0, 0)
+
+    # And it serialises back out through the same rule, so a value can round-trip.
+    assert parsed.model_dump(mode="json")["at"] == "2026-09-08T15:00:00.123456Z"

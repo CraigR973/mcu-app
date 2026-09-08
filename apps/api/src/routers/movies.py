@@ -573,6 +573,7 @@ async def get_movie_copies(
             regionCode=copy.region_code,
             releaseLabel=copy.release_label,
             listingStatus=copy.listing_status,
+            updatedAt=copy.updated_at,
         )
         for copy in copies
     ]
