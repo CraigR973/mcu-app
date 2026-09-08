@@ -2,7 +2,7 @@
 
 The single batch source of record. Each batch is a small, shippable unit driven by
 `docs/agent-commands/` (`batch-start` → `batch-verify` → `phase-closeout`).
-Close-out is **explicit on this project** (`DECISIONS.md` #13).
+Close-out is **automatic after a green gate** (`DECISIONS.md` #24, superseding #13).
 
 **Tier:** 🟢 Mid · 🟡 Large · 🔴 XL · **Status:** planned · in-progress · shipped
 Strike the row through and set status on close-out.
@@ -16,7 +16,7 @@ Strike the row through and set status on close-out.
 | ~~1~~ | ~~New spine foundations~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.1, 0.2, 0.3**; carries **0.6**~~ | PR #1 · `0910428`, `15ed148` |
 | ~~2~~ | ~~Deploy spine + CI gate~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.5**; **implements §15, which was never a phase**~~ | `d4190ac` · API live, `/health` serves the SHA |
 | ~~3~~ | ~~Auth — PIN + JWT~~ | ~~🟡~~ | **shipped** | ~~**supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11~~ | `e89a9c6` · lockout proved on Postgres in CI |
-| 4 | Domain layer + re-import | 🔴 | planned | re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted** | |
+| ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
 | 5 | Read surface | 🟡 | planned | re-lands **2.1–2.7** | |
 | 6 | Location + facets | 🟢 | planned | **3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise | |
 | 7 | Write surface | 🟡 | planned | re-lands **3.1**; adds **3.2, 3.5, 3.11** | |
@@ -52,20 +52,20 @@ session**, the short weak-PIN blocklist, `pin_hash IS NULL` = *no credential*. s
 limits per endpoint. Seed two profiles. Web `AuthContext` + `ProtectedRoute`.
 **Acceptance:** 5 failed PINs lock the account for 15 minutes, and the lock **survives a process restart** — the defect app-starter ships. No public sign-up route exists. Docs/OpenAPI are off in production.
 
-### Batch 4 — Domain layer + re-import 🔴
-**Goal:** all 1,866 items are in the new database **with structured location**.
+### ~~Batch 4 — Domain layer + re-import~~ 🔴 **shipped**
+**Goal:** all 1,857 items are in the new database **with structured location**.
 Port `tmdb/`, `matching/`, `spreadsheet/` unchanged. New models — `Movie`, `MovieCredit`,
 `CollectionItem` **with `location`, `section`, `shelf`** per roadmap §3.4. Port `0015`'s
 12 `op.execute` trigger blocks onto the new baseline, plus the `soft_delete()` trigger.
 Re-run the importer.
-**Acceptance:** row count = 1,866. `SELECT count(*) WHERE section IS NOT NULL` is non-trivial and `section` values fall in {Front, Back, Lounge, Garage, Digital}. `--dry-run` diffed against `matching_eval.csv` before the live run. The 13 derived-field trigger tests **run in CI** against the Postgres service — not skipped.
+**Acceptance:** row count = 1,857. `SELECT count(*) WHERE section IS NOT NULL` is non-trivial and `section` values fall in {Front, Back, Lounge, Garage, Digital}. `--dry-run` diffed against `matching_eval.csv` before the live run. The 13 derived-field trigger tests **run in CI** against the Postgres service — not skipped.
 
 ### Batch 5 — Read surface
 **Goal:** Mark can browse the collection on his phone.
 List (paginated), detail, copies, tsvector search. **camelCase DTOs and shared zod schemas
 that the web app actually `.parse()`s** (`DECISIONS.md` #12) — schemas ship with the
 endpoint. Web shell, grid, detail page, search.
-**Acceptance:** the deployed app renders 1,866 items at 60fps and a search returns in <150ms. Every response the web app consumes is parsed through `packages/shared`; zero `as Promise<T>` casts on API responses.
+**Acceptance:** the deployed app renders 1,857 items at 60fps and a search returns in <150ms. Every response the web app consumes is parsed through `packages/shared`; zero `as Promise<T>` casts on API responses.
 
 ### Batch 6 — Location + facets
 **Goal:** the app answers "where is this disc?"
@@ -141,7 +141,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 1 · solo | Foundation; everything downstream depends on it being right |
 | — | **checkpoint: provision Neon + Railway + Vercel** → 2 | Hosting/credential change; first deployment deserves eyes |
 | — | 3 · solo | Auth is security-critical |
-| — | 4 · solo | 🔴 XL, and a 1,866-row data operation |
+| — | ~~4 · solo~~ | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
 | **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
 | **B** | 7 → 8 → 9 | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | 10 · solo | Large mechanical restructure of a 2,639-line doc |

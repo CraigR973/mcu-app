@@ -16,7 +16,7 @@ Mark's Cinematic Universe is a personal web application that consolidates movie 
 
 ### 1.1 Core Objectives
 
-- Import and manage a physical media catalog (1,866+ Blu-rays, DVDs, 4K UHDs, Downloads) with storage location tracking
+- Import and manage a physical media catalog (1,857+ Blu-rays, DVDs, 4K UHDs, Downloads) with storage location tracking
 - Enrich catalog entries with movie metadata from TMDB (posters, cast, crew, ratings, trailers, genres, runtime)
 - Provide fast search and filtering by title, genre, format, runtime, location, actor, director, AV specs, and more
 - Barcode scanning for quick addition of new purchases
@@ -577,7 +577,7 @@ The backend exposes a versioned RESTful API. All endpoints are prefixed with **`
 ```json
 {
   "data": { ... },
-  "meta": { "page": 1, "per_page": 20, "total": 1866 },
+  "meta": { "page": 1, "per_page": 20, "total": 1857 },
   "errors": null
 }
 ```
@@ -900,7 +900,7 @@ Blu-ray.com maintains detailed technical specs for every physical disc release. 
 
 ### 6.1 Spreadsheet Import
 
-The initial import reads the existing Excel spreadsheet (1,866 entries) and performs the following steps:
+The initial import reads the existing Excel spreadsheet (1,857 entries) and performs the following steps:
 
 1. Parse the spreadsheet columns: Title, Format, Location, Category, Sub Category, Type
 2. Normalise inconsistent data (casing, format names, location strings)
@@ -1409,7 +1409,7 @@ Though the app is English-only initially, data is handled properly from day one:
 - All timestamps stored in **UTC**, rendered in the user's **local timezone**
 - Dates formatted via `Intl.DateTimeFormat` (e.g. `en-GB` → "16/04/2026")
 - Currencies formatted via `Intl.NumberFormat` with the correct symbol (£1,299.00)
-- Numbers formatted with correct separators (1,866 not 1866)
+- Numbers formatted with correct separators (1,857 not 1857)
 - Strings wrapped in an `i18n()` helper using `react-intl`, even if only one locale exists — makes future translation trivial
 
 ### 7.10 Pages & Routes
@@ -1673,7 +1673,7 @@ Targets that define "good enough" for the app to feel premium.
 
 ### 10.5 Usability
 
-- First-run to first-successful-search: < 5 minutes including import of 1866 items
+- First-run to first-successful-search: < 5 minutes including import of 1857 items
 - Add-to-collection via barcode scan: < 10 seconds end-to-end
 - Onboarding completion rate: target 90%+ (admin) given motivation
 
@@ -1709,7 +1709,7 @@ Targets that define "good enough" for the app to feel premium.
 
 ## 12. Cost Estimate
 
-Monthly operating costs at steady-state (2 users, 1,866-item collection, moderate usage).
+Monthly operating costs at steady-state (2 users, 1,857-item collection, moderate usage).
 
 | Service | Tier | Est. Monthly Cost (GBP) |
 |---------|------|-------------------------|
@@ -1763,7 +1763,7 @@ Consistency is non-negotiable. All contributors follow these.
 
 **Success (list):**
 ```json
-{ "data": [...], "meta": { "page": 1, "per_page": 20, "total": 1866 }, "errors": null }
+{ "data": [...], "meta": { "page": 1, "per_page": 20, "total": 1857 }, "errors": null }
 ```
 
 **Error:**
@@ -2017,7 +2017,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Extract section/shelf from location text
 - Output a structured list of import candidates
 - Unit tests with sample spreadsheet rows
-- **Acceptance:** Given the real spreadsheet, parser produces 1,866 structured entries with no data loss
+- **Acceptance:** Given the real spreadsheet, parser produces 1,857 structured entries with no data loss
 
 **Phase 1.6: TMDB Matching Engine** 🔴 Opus ✅ 2026-04-26
 - For each parsed title, search TMDB and return top N matches with confidence scores
@@ -2059,7 +2059,7 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Skeleton loader during fetch
 - Empty state
 - Basic filter bar (genre, format, year)
-- **Acceptance:** Grid renders 1,866 items smoothly (60fps scroll); filters update results instantly
+- **Acceptance:** Grid renders 1,857 items smoothly (60fps scroll); filters update results instantly
 
 **Phase 2.4: Collection Grid (List & Compact Views)** 🟢 Sonnet 4.6 ✅ 2026-04-29
 - View mode toggle (grid / list / compact)

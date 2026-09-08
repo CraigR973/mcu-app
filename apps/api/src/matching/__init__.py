@@ -1,13 +1,17 @@
 from .engine import (
+    AMBIGUOUS_YEAR_SPREAD,
     HIGH_CONFIDENCE,
     LOW_CONFIDENCE,
     MatchingEngine,
     extract_year,
+    is_ambiguous,
+    leading_tie,
     normalise_query,
     rotate_trailing_article,
     score,
     strip_annotations,
     strip_edition_suffix,
+    title_is_exact,
     title_similarity,
 )
 from .models import MatchCandidate, MatchResult
@@ -21,8 +25,12 @@ __all__ = [
     "rotate_trailing_article",
     "strip_annotations",
     "strip_edition_suffix",
+    "title_is_exact",
     "title_similarity",
     "score",
+    "is_ambiguous",
+    "leading_tie",
+    "AMBIGUOUS_YEAR_SPREAD",
     "HIGH_CONFIDENCE",
     "LOW_CONFIDENCE",
 ]

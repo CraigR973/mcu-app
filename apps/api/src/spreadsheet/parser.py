@@ -51,8 +51,23 @@ def normalise_formats(raw: str) -> list[str]:
 # Location normalisation
 # ---------------------------------------------------------------------------
 
-# Known section keywords (case-insensitive prefix match)
-_SECTIONS: list[str] = ["Front", "Back", "Lounge", "Garage", "Digital"]
+# Known sections and the case-insensitive prefixes that identify them.
+#
+# The prefix is matched against the *start* of the location cell, so a row that names
+# a physical spot first keeps that spot: "Front 2nd shelf & E:\Movies" is Front, not
+# Digital — the disc is on the shelf and the download is a second copy of it.
+#
+# ``e:\movies`` earns its place because the digital library is only ever recorded as
+# its filesystem path, never as the word "Digital": 413 of the 1,857 real rows. Without
+# it the whole digital collection lands with ``section IS NULL``.
+_SECTION_PREFIXES: list[tuple[str, str]] = [
+    ("Front", "front"),
+    ("Back", "back"),
+    ("Lounge", "lounge"),
+    ("Garage", "garage"),
+    ("Digital", "digital"),
+    ("Digital", "e:\\movies"),
+]
 
 _ORDINAL_RE = re.compile(
     r"\b(\d+(?:st|nd|rd|th)?)\b",
@@ -70,15 +85,22 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
         "front 1st shelf"  → ("Front", "1st")
         "Lounge"           → ("Lounge", None)
         "Digital"          → ("Digital", None)
+        "E:\\Movies"        → ("Digital", None)
         ""                 → (None, None)
+
+    A location the section list does not recognise — "Top Big Cabinet", "Black Box
+    next to cabinet" — returns ``None``. That is not data loss: the cell is kept
+    verbatim in ``ImportCandidate.location_raw`` and stored in
+    ``collection_items.location``, which is what roadmap §3.4 designs that column for.
     """
     stripped = raw.strip()
     if not stripped:
         return None, None
 
+    lowered = stripped.lower()
     section: str | None = None
-    for name in _SECTIONS:
-        if stripped.lower().startswith(name.lower()):
+    for name, prefix in _SECTION_PREFIXES:
+        if lowered.startswith(prefix):
             section = name
             break
 

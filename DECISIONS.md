@@ -295,3 +295,129 @@ contemporaneous.
     blocklist would refuse without buying anything. The list is kept deliberately short
     for the same reason it exists: a long one starts refusing PINs people chose for real
     reasons and pushes them toward writing it down.
+
+### 2026-09-07 — Batch 4 domain layer
+
+28. **The §3.4 schema is built as designed, and the 13 derived-field trigger tests are
+    re-authored rather than resumed.** Owner decision, 2026-09-07, taken before any code
+    was written, because the two halves of Batch 4's own definition contradicted each
+    other and neither could be quietly dropped.
+
+    Batch 4 said both "new models per roadmap §3.4" and "port `0015`'s trigger blocks" with
+    "the 13 trigger tests **run**, not skip". Those are mutually exclusive. The April schema
+    had drifted from §3.2–3.4 in four ways the tests hard-code: `movies.id` was the TMDB
+    integer id rather than a UUID with a separate `tmdb_id`; `collection_items.format` was a
+    scalar where §3.4 specifies a `formats` array; `hdr_format` and `audio_formats[]` were
+    scalars where §3.4 specifies `video_specs`/`audio_specs` JSONB; and the format
+    vocabulary was `4k_bluray|bluray|hddvd|…` where §3.2 and the spreadsheet parser both use
+    `4k_uhd|blu_ray|dvd|download`, with the importer translating between them.
+
+    *Why §3.4 wins:* the alternative recreates a schema the review had already found
+    defective — it is the schema that omitted `location`, `section` and `shelf` — and Batches
+    5, 6 and 7 would then build their DTOs, facets and write surface on top of it. That is
+    Decision #4's failure repeated in a new place.
+
+    *Why this needed a decision rather than a judgement call:* `AGENTS.md` forbids changing
+    a test's expectations as a route to green, and says explicitly that doing so is "a
+    decision to report, not to take". All 13 original behaviours are preserved one-for-one
+    against the new shape; a 14th was added for a combo pack whose single row holds several
+    formats, which the old scalar column could not express. The 14 run in CI against
+    Postgres 17 with zero skips (run `34162647232`).
+
+29. **The collection is 1,857 items. 1,866 was wrong everywhere it appeared.**
+    Owner decision to correct it, 2026-09-07. The spreadsheet has 1,867 rows = 1 header +
+    1,866 data rows, but nine of those data rows are entirely blank — every one of nine
+    columns `None`, at sheet-rows 1857–1863, 1865 and 1866. The parser correctly skips them
+    and returns 1,857 candidates.
+
+    *Why it matters beyond tidiness:* Phase 1.5's acceptance criterion reads "parser produces
+    1,866 structured entries **with no data loss**", which made it unsatisfiable by a correct
+    parser and satisfiable only by a broken one. Batch 4's "row count = 1,866" had the same
+    problem. Corrected in `MCU_Architecture_v2.1_FINAL.md` and `docs/phase-batches.md`.
+    `docs/part-b-audit.md` and `docs/part-d-roadmap.md` still say 1,866 and are deliberately
+    left alone — they are dated analysis records, and #16 already establishes that the
+    analysis stands as recorded.
+
+30. **Every owned item is catalogued, whether or not TMDB identifies it.** Changed from the
+    April importer's behaviour. A row TMDB cannot match now gets a title-only `movies` row
+    with `tmdb_id = NULL`, plus its `collection_items` row; the review CSV becomes a queue of
+    rows needing enrichment rather than a list of rows that were dropped.
+    *Why:* April inserted nothing at all for its 137 unmatched rows, so a disc genuinely on
+    the shelf was absent from the catalogue of that shelf, with only an untracked CSV to say
+    so. A collection app's first duty is to know what is in the collection; TMDB metadata is
+    an enrichment, not a precondition for existing. This is also what makes a row-count
+    acceptance criterion meaningful — under the old behaviour it could never reach the
+    number of items owned. `movies.tmdb_id` is nullable and uniquely indexed to support it,
+    and Postgres treats each NULL as distinct so many such rows coexist.
+
+31. **An ambiguous match is catalogued but not enriched.** Owner decision, 2026-09-07,
+    choosing this over importing everything on the matcher's current guess. It is also an
+    explicit override of Batch 4's own instruction to port `matching/` **unchanged** — the
+    ranking is changed, which is Phase 1.6's territory.
+
+    *What was wrong.* `engine.py` scored a result's `original_title` as well as its `title`
+    and took the max, then broke confidence ties by TMDB popularity. Measured across all
+    1,857 titles on 2026-09-07: **687 matched rows (39.9%) had two or more candidates tied
+    at the top confidence, and 652 of those had no year in the source title** — so for 35%
+    of the collection the film was chosen by TMDB's current popularity ranking, which is
+    not stable over time and now favours 2025/2026 releases. `Frankenstein` resolved to
+    2025 rather than the 1931 Karloff, `Lolita` to 1997 rather than Kubrick's 1962, and
+    `Amistad` to `Friendship` (2023), whose original title is "Amistad".
+
+    *The two changes.* `title_is_exact` promotes a candidate whose **displayed** title
+    canonically equals the query above one that only matched on `original_title`; it is a
+    tiebreak and never moves a confidence. Then `is_ambiguous` marks a match whose leader is
+    tied with candidates that are not plausibly the same film — different titles, or the
+    same title more than `AMBIGUOUS_YEAR_SPREAD` (3) years apart. A re-release a year later
+    is deliberately *not* ambiguous; flagging that would send half the catalogue to review.
+
+    *Why not simply pick better.* Only 10 of the 1,857 rows are fixable by code with
+    confidence — the class where the winner is not an exact title match but a tied candidate
+    is. The rest are undecidable from the source: the spreadsheet gives a bare title and no
+    year, so nothing in the data says which *Frankenstein* is on the shelf. A heuristic —
+    prefer the oldest, prefer the most-voted — would replace one guess with another and
+    would still be wrong silently.
+
+    *Why the disc is still catalogued.* Deferring the *identification* must not defer the
+    *item*. An ambiguous row gets its title-only `movies` row and its `collection_items` row
+    with location intact, so the collection is complete and the review queue is about
+    metadata, not about missing discs. This is #30 applied to a second case.
+
+    *Cost, accepted:* a review pass over the ambiguous rows before their posters, cast and
+    search vectors are correct. The review CSV carries an `alternatives` column listing
+    every tied candidate so a row can be settled from the file itself.
+
+32. **Import idempotency is keyed on the spreadsheet line, not on the item's contents,
+    and `movie_credits.character_name` is `TEXT`.** Owner decision, 2026-09-07, after the
+    first live import surfaced both. Migration `004`.
+
+    *The collapse.* Keying re-run safety on `(movie_id, location, formats)` looked
+    sufficient and was not: two spreadsheet rows resolving to the same TMDB film, on the
+    same shelf, in the same format, became one item. Three pairs did it in the real sheet.
+    Two were genuine duplicate entries — but the third was "French Connection" and "French
+    Connection 2", which the matcher put on the same film, so **a disc that exists went
+    missing and nothing reported it**. `import_source_row` makes two different lines two
+    items whatever TMDB says, keeps a line the owner really did write twice as two items —
+    which is what the sheet asserts — and gives the review queue the provenance to trace an
+    item back to its source line. Nullable and unique-where-present, because an item added
+    by hand in Batch 7 has no source row.
+
+    *The width.* §3.3 sizes `character_name` at `VARCHAR(255)`. TMDB exceeds it whenever
+    one performer voices many parts: Dan Castellaneta's credit on *The Simpsons Movie* is
+    300 characters, Hank Azaria's 270. Because the importer writes each item in a single
+    transaction, the overflow rolled back the film, its credits **and its collection item** —
+    the disc disappeared from the catalogue over a cast-list field, reported as one line in
+    a summary. `TEXT`, because no fixed width is safe for a slash-separated role list and
+    Postgres treats the two types identically.
+
+    *Why a clean re-import rather than a patch.* Both fixes change what a correct import
+    produces, and the imported data was an hour old and fully reproducible from the
+    spreadsheet — the parser and matching engine **are** the pipeline (`DECISIONS.md` #10).
+    `TRUNCATE`, not `DELETE`: `DELETE` fires `collection_items_soft_delete` and would have
+    left 1,853 soft-deleted rows behind rather than an empty table.
+
+    *General lesson, worth more than either fix:* both defects were invisible to a green
+    gate and to a `--dry-run`. The importer's unit tests mock the database, so no test
+    could have hit a column width or a unique constraint, and the dry run never writes. The
+    first real write against real data is its own test stage, and this batch should be
+    remembered as evidence for that rather than for either individual bug.

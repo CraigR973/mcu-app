@@ -72,6 +72,18 @@ def test_normalise_formats(raw: str, expected: list[str]) -> None:
         ("Lounge", "Lounge", None),
         ("Garage", "Garage", None),
         ("Digital", "Digital", None),
+        # The digital library is only ever written as its filesystem path.
+        ("E:\\Movies", "Digital", None),
+        ("e:\\movies", "Digital", None),
+        # A physical spot named first wins: the disc is on the shelf and the
+        # download is a second copy of it, so the section is where the disc is.
+        ("Front 2nd shelf & E:\\Movies", "Front", "2nd"),
+        ("Back 4th Shelf & E:\\Movies", "Back", "4th"),
+        # A cabinet is a real location with no §3.4 section. It stays unsectioned
+        # rather than being forced into one; `location` keeps the raw text.
+        ("Top Big Cabinet", None, None),
+        ("Top Small Cabinet & E:\\Movies", None, None),
+        ("Black Box next to cabinet", None, None),
         # bare number normalised to ordinal
         ("Front 2 shelf", "Front", "2nd"),
         ("Back 1 shelf", "Back", "1st"),

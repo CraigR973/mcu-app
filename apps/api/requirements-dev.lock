@@ -1096,6 +1096,10 @@ types-openpyxl==3.1.5.20260827 \
     --hash=sha256:94e176d871d12e3cbc34f8fb03dc14db2a4245a6690791daf16fc7b08fd67869 \
     --hash=sha256:be8b605fb99cfd7d5f5576d4a508e8ec44be2dd15b85157c559080de6384be34
     # via mcu-api (apps/api/pyproject.toml)
+types-psycopg2==2.9.21.20260724 \
+    --hash=sha256:4f87890dd06cea99e3bb0536330ffc2a7320e69059dc1ee0e2c884ef2718f2b4 \
+    --hash=sha256:db31031c37de823a2b21c787cb84832174fdda2a99a8b1af648206f19cc32f8c
+    # via mcu-api (apps/api/pyproject.toml)
 typing-extensions==4.16.0 \
     --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5

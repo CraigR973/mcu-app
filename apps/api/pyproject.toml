@@ -34,6 +34,7 @@ dev = [
     "ruff>=0.6.9",
     "mypy>=1.11.2",
     "types-openpyxl>=3.1.0",
+    "types-psycopg2>=2.9.21",
 ]
 
 [build-system]
