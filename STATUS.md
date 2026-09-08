@@ -2,66 +2,66 @@
 
 ## Now
 
-**Batch 6 — Location + facets + watch log is shipped.** The app answers "where is this
-disc?" — §6.2's promise, written in April and unimplementable until now. Production serves
-the merged SHA `1067a725295beee2314b7848e3651f7d526cfd37` with `db: ok`, at migration
-**007**.
+**Batch 7 — Write surface is shipped.** The collection is no longer read-only: Craig can
+add a disc, edit it, throw it away and get it back, and every one of those is written down.
+Production serves the merged SHA `c808964ba9c1d0a615d4e2085cf059b55c7264bb` with `db: ok`,
+at migration **008**.
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | "show me everything on the Front 2nd shelf" works end to end | **the API answers in 20 ms** against live Neon with network included — 0.4 ms execution, planned onto `ix_collection_items_section_shelf_live`, the index Batch 4 built for this and nothing had used. 119 films. Proved in CI against Postgres 17. **The production UI half is unverified — see the gap below** |
-| 2 | `section`/`shelf` filter params and UI | shipped, and the pickers are built from `GET /collection/facets` rather than a hard-coded list, so they cannot offer a shelf that holds nothing or miss one a new disc creates |
-| 3 | decade range | shipped. The old year `<select>` ran 1970→now, so **517 of the 1,085 dated films (47.6%) could not be selected at all** |
-| 4 | watched status | shipped — and it needed `watch_log`, which **no phase in the roadmap ever created** (`DECISIONS.md` #35) |
-| 5 | rating | shipped as a minimum-TMDB-rating filter. An unrated film is excluded rather than treated as zero |
+| 1 | changes persist | **proved by re-reading, not by trusting the echo** — the test edits through `PUT /collection/{id}` and then re-fetches `GET /movies/{id}/copies` |
+| 2 | deleted items appear in trash | shipped, with restore. **No permanent delete** — §13.5 keeps the one irreversible action (`DECISIONS.md` #39) |
+| 3 | the audit log records actor, action and target | shipped. `admin_actions` **did not exist on the new spine** and was created by migration `008` |
+| 4 | ...and survives deletion of the target row | **proved by destroying the row.** The test disables `collection_items_soft_delete`, hard-deletes the item, and shows the audit entry still readable through the API. `target_id` is TEXT with no FK (`DECISIONS.md` #5/#38), against §3.20's UUID column |
 
-In the database now: **1,857 collection items · 1,843 movies · 45,144 credits**, unchanged
-by this batch. **1,855 of 1,857 items now carry a section, up from 1,733.** Back 575,
-Front 550, Digital 413, Lounge 160, Top Big Cabinet 38, Top Small Cabinet 38, Garage 35,
-Fish Room Cabinet 26, Black Box 20 — and 2 unsectioned, which is correct for both of them.
+In the database now: **1,857 collection items · 1,843 movies · 45,144 credits · 0 audit
+rows** — unchanged by this batch, which adds a table and touches no existing row.
 
-**The 124 unsectioned rows are settled** (`DECISIONS.md` #34). 122 were four named
-cabinets; migration `007` widened the CHECK constraint and backfilled them from
-`location`, which is never modified. The two that remain are `(In with The Killing)`,
-which names another disc rather than a place, and one row with no location at all.
+**CI runs 331 tests with zero skips.** The 84 that skip locally are the Postgres-backed
+ones; there is no local Postgres and no Docker (gotcha 15), and `admin_actions` did not
+exist on Neon until this deploy, so **none of this batch's 30 API tests could run on the
+development machine at all.** They ran in CI against Postgres 17.
 
-**A parser bug was found and fixed on the way.** `_ORDINAL_RE` matched any bare digit, so
-`Top small cabinet (Arrow 4 Film Noir Classics Vol 2)` parsed to shelf **"4th"** — four
-live discs that this batch's own shelf filter would have wrongly returned. The same trap
-sits inside `Back 6th Shelf (Arrow 4 Film Noir Classics Vol 1)`, which produced the right
-answer only because `re.search` returns the leftmost match. Both fixed; the four rows are
-corrected in the database (`DECISIONS.md` #36).
+**Two defects a green build could not have shown, both fixed here.**
 
-**One gap, and it is the same shape as Batch 5's.** The browse UI is proved by 296 CI
-tests against real Postgres, by direct measurement against the production database, and by
-booting the built bundle with zero console errors — **but not by driving the production
-UI**, because doing so needs a PIN and an agent must not type one. Craig's PIN is set;
-**Mark's is still `NULL`**. Signing in and filtering to Front 2nd shelf is a one-minute
-owner check that would close it.
+1. **A create body naming no film returned 500, not 422.** The check was a
+   `field_validator` on `tmdbId`, and pydantic does not run field validators for a field
+   the request omits — so a body with neither id passed validation untouched and reached a
+   router with nothing to look the film up by. Caught in CI by this batch's own test. Now
+   a `model_validator(mode="after")`, which always runs.
+2. **Every list page claimed to be empty when its request had merely paused.** See
+   gotcha 19 — this is the one worth reading before Batch 8.
+
+**The production-UI gap from Batches 5 and 6 is now partly closed.** The new pages were
+driven in a real browser — that is how defect 2 was found — but against a dev server with
+no API behind it, because signing in needs a PIN and an agent must not type one. So the
+pages are proved to mount, render and handle failure honestly; they are **not** proved to
+round-trip a real disc against production. **Mark's PIN is still `NULL`.**
 
 ## Next
 
-**Verify Batch 6 in the browser, and set Mark's PIN.** Sign in at
-`https://mcu-app-fawn.vercel.app/login`, choose Front → 2nd shelf, and confirm 119 films
-render with "Front 2nd" on the cards. Then:
+**Batch 8 — PWA + offline** (🟢), the next batch in Group B. Port `sw.ts` with the iOS
+deadlock fix, the manifest, `useOnlineStatus` and `OfflineBanner`; optimistic UI via
+the-coupon's queued/unconfirmed reconciliation (**not** optimistic-with-rollback); an
+offline write queue over the endpoints Batch 7 just built. Its acceptance is that the app
+installs to a phone home screen, browses cached data with the network off, and an edit made
+offline lands on reconnect without overwriting a newer change.
+
+**Start from `listState()`** (`DECISIONS.md` #41). Batch 8's offline banner should be built
+on top of it, not around it: the paused-query state it names is exactly the state the
+banner exists to explain.
+
+**Then Batch 9 — Onboarding repair** (🟢), which needs Batch 8's service worker and push
+stack before two of its three dead steps mean anything (gotcha 5).
+
+An owner check that would close the remaining production gap, unchanged in shape from
+Batch 6's: sign in at `https://mcu-app-fawn.vercel.app/login`, add a disc from
+**Add a disc** in the sidebar, edit it, delete it, and restore it from **Trash**. Then:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
   apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
 ```
-
-**Then Batch 7 — Write surface** (🟡). Add / edit / soft-delete collection items,
-duplicate detection, condition tracking, with `admin_actions` audit writes. Its acceptance
-is that changes persist, deleted items appear in trash, and the audit log records actor,
-action and target and survives deletion of the target row (`DECISIONS.md` #5).
-
-**Batch 7 also unblocks Phase 3.6 properly.** Batch 6 shipped location *filtering*; 3.6's
-actual acceptance is a shelf *suggestion* — "adding a Kubrick film suggests the shelf where
-other Kubrick films live" — which needs the Add form Batch 7 builds. The roadmap heading is
-annotated rather than ticked, so this is not lost.
-
-**Batch 37 is no longer blocked on a missing table.** `watch_log` exists and has its
-endpoints; on-this-day and rewatch memories now wait only on real history accumulating.
 
 Two owner actions remain outstanding, unchanged:
 1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
@@ -266,7 +266,69 @@ Two owner actions remain outstanding, unchanged:
     post-deploy counts matched exactly. Do that for any future migration that writes data,
     and see gotcha 16 for why.
 
+19. **A green build, green types and green tests can all coexist with a page that lies.**
+    TanStack Query **pauses** a retry when it believes the app is offline: the query sits
+    at `status: 'pending'`, `fetchStatus: 'paused'`, `isError: false`, with no data, and
+    stays there. The usual `isLoading → isError → items.length === 0` ladder therefore
+    falls through to the **empty state** — so `/trash` rendered "Nothing has been removed."
+    while its request had never come back, indefinitely and confidently.
+
+    Found by opening the page in a browser during Batch 7, with nothing failing anywhere
+    else. `listState()` in `apps/web/src/lib/query-state.ts` names the fourth state so a
+    list can say "waiting for the network" instead (`DECISIONS.md` #41). **Any new list
+    must use it**, and Batch 8's offline banner should build on it rather than around it.
+
+20. **A pydantic `field_validator` does not run for a field the request omits.** Batch 7's
+    create body used one on `tmdbId` to enforce "exactly one of `movieId`/`tmdbId`", which
+    correctly rejected a body naming *both* and silently accepted one naming **neither** —
+    a 500 where a 422 belonged. Use `model_validator(mode="after")` for any rule that spans
+    fields or must hold when a field is absent.
+
+21. **`mypy` is unpinned (`>=1.11.2`), so local and CI disagree about unused ignores.**
+    A `# type: ignore[arg-type]` that this machine's mypy 2.3.1 considered *necessary* was
+    reported as *unused* by CI's, and `warn_unused_ignores` made that a red gate. The fix
+    is to write code that needs no ignore — narrow in a loop rather than assert in a
+    comprehension. **Pinning mypy is an open suggestion, not a decision taken.**
+
 ## Log
+
+- **2026-09-08** — **Batch 7 shipped — the collection stops being read-only.** Add, edit,
+  soft-delete and restore, with duplicate detection and condition tracking, and an
+  `admin_actions` row written in the same transaction as every change. Migration `008`
+  creates the audit table, which **did not exist on the new spine** — gotcha 4's
+  speculative-table warning running the other way.
+
+  **The batch's headline criterion is proved by destroying a row.** "The audit log
+  survives deletion of the target" cannot be shown by a soft delete, and
+  `collection_items_soft_delete` rewrites every `DELETE` into one — so the test disables
+  the trigger, genuinely deletes the item, and shows the entry still readable through
+  `GET /admin/audit`. `target_id` is TEXT with no foreign key (`DECISIONS.md` #5, #38),
+  which is where §3.20's schema table is wrong and the decision is right.
+
+  **Three scope calls, all recorded** (`DECISIONS.md` #37–39): writes are admin-only, as
+  §3.1's own acceptance criterion requires; optimistic UI is Batch 8's phase 6.5, not
+  this batch's, because building rollback here would mean building what Batch 8 explicitly
+  rejects; and the trash ships without permanent delete, leaving the one irreversible
+  action with §13.5.
+
+  **`UtcDatetime` was written for real** (#40). `AGENTS.md` has specified it since the
+  re-scaffold and nothing implemented it — #14's warning found inside our own conventions
+  file. It went unnoticed because Batch 7 is the **first batch to put an instant on the
+  wire**: Batch 6's `watchedAt` is a `DATE`, which has no offset to get wrong.
+
+  **Two defects that a green gate could not have caught, and how each surfaced.** A
+  `field_validator` that never ran for an absent field turned a malformed body into a 500
+  — caught in CI by this batch's own test, which is what those tests are for. And every
+  list page claiming to be *empty* when its request had merely been paused — caught only
+  by opening the pages in a browser, with the build, the types and 34 web tests all green
+  (gotcha 19). The second is fixed app-wide and matters most for Batch 8.
+
+  Also fixed on the way: two test clients sharing one actor, because
+  `app.dependency_overrides` is global to the app and the admin and viewer fixtures
+  overwrote each other — which would have made §3.1's "viewer immediately sees it" look
+  tested without being tested.
+
+  331 tests in CI, zero skips. 1,857 collection items untouched.
 
 - **2026-09-08** — **Batch 6 shipped — the app finally answers "where is this disc?"**
   §6.2's promise has been in the architecture doc since April and unimplementable until

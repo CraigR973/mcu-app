@@ -2095,17 +2095,24 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 
 ### Stage 3 — Collection Management
 
-**Phase 3.1: Add to Collection (Manual)** 🟢 Sonnet 4.6 ✅ 2026-05-05
+**Phase 3.1: Add to Collection (Manual)** 🟢 Sonnet 4.6 ✅ 2026-05-05 — 🔁 **re-landed on the new spine in Batch 7, 2026-09-08**
 - Admin-only form with movie search, format picker, location, purchase fields
 - Duplicate warning before saving
-- Optimistic UI
+- Optimistic UI — **not Batch 7's.** Phase 6.5 belongs to Batch 8, whose definition calls
+  for the-coupon's queued/unconfirmed reconciliation and explicitly *not* naive
+  optimistic-with-rollback. Batch 7 ships plain mutations with query invalidation.
 - **Acceptance:** Admin adds a movie; viewer immediately sees it; duplicate warning fires on re-add
 
-**Phase 3.2: Edit & Delete Collection Items** 🟢 Sonnet 4.6
+**Phase 3.2: Edit & Delete Collection Items** 🟢 Sonnet 4.6 ✅ 2026-09-08
 - Edit form (location, format, notes, condition, price)
 - Soft delete (move to trash)
-- admin_actions audit log entry
+- admin_actions audit log entry — the table itself did not exist on the new spine and was
+  created here by migration `008`. `target_id` is TEXT with no foreign key per
+  `DECISIONS.md` #5, not §3.20's UUID column, so the log outlives what it describes.
 - **Acceptance:** Changes persist; deleted items appear in Trash UI; audit log shows the change
+- **The trash Batch 7 shipped is collection_items only, with no permanent delete.**
+  §13.5 still owns widening it across tables and owns the one action in this area that
+  cannot be undone.
 
 **Phase 3.3: Barcode Scanner UI** 🟢 Sonnet 4.6
 - Camera access via `getUserMedia`
@@ -2119,11 +2126,15 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Confirmation UI before adding
 - **Acceptance:** Scanning a common Blu-ray returns the correct movie; unknown UPCs prompt manual search
 
-**Phase 3.5: Duplicate Detection** 🟢 Sonnet 4.6
+**Phase 3.5: Duplicate Detection** 🟢 Sonnet 4.6 ✅ 2026-09-08
 - When adding, check for same movie_id in collection
 - Show existing formats and locations
-- Admin confirms "add another copy" or "this is an upgrade"
+- Admin confirms "add another copy" or "this is an upgrade" — and the choice is stored in
+  the audit row, which is the input phase 4.2's sale tracking will want
 - **Acceptance:** Adding a 4K when Blu-ray exists triggers the upgrade prompt
+- **Enforced at the endpoint, not only offered in the UI.** `POST /collection` refuses an
+  unconfirmed duplicate with 409 and the existing copies in the body, so the confirmation
+  holds for a client that skipped `GET /collection/duplicate-check`.
 
 **Phase 3.6: Storage Location Suggestions** 🔴 Opus — 🔄 **re-scoped 2026-09-08, partly shipped in Batch 6**
 - Algorithm: analyse existing items by genre, director, format to suggest a shelf
@@ -2159,11 +2170,13 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Gallery display on detail page
 - **Acceptance:** Upload succeeds; photos appear in gallery; deletion works
 
-**Phase 3.11: Condition Tracking** 🟢 Sonnet 4.6
+**Phase 3.11: Condition Tracking** 🟢 Sonnet 4.6 ✅ 2026-09-08
 - Condition field on edit form
 - "Mark as damaged" quick action
 - Playback issues notes
-- Condition history visible on detail page
+- Condition history visible on detail page — served from `admin_actions` rather than a
+  second history table, and scoped by film so it covers every disc of it, **including
+  ones since thrown away**. Admin-only, because `GET /admin/audit` is.
 - **Acceptance:** Marking a disc as damaged updates UI and logs the change
 
 ---

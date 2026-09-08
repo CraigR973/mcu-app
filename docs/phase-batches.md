@@ -19,7 +19,7 @@ Strike the row through and set status on close-out.
 | ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
 | ~~5~~ | ~~Read surface **+ identify flow**~~ | ~~🔴~~ | **shipped** | ~~re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33)~~ | `a731b8c` · 1,857 items browsable; search median 20 ms; 757 films identifiable in-app |
 | ~~6~~ | ~~Location + facets **+ watch log**~~ | ~~🟡~~ | **shipped** | ~~**3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise; **adds §3.7's `watch_log`, which no phase owned**~~ | `1067a72` · Front 2nd shelf answers in 20 ms; 1,855 of 1,857 items sectioned |
-| 7 | Write surface | 🟡 | planned | re-lands **3.1**; adds **3.2, 3.5, 3.11** | |
+| ~~7~~ | ~~Write surface~~ | ~~🟡~~ | **shipped** | ~~re-lands **3.1**; adds **3.2, 3.5, 3.11**~~ | `c808964` · 1,857 items untouched; audit log survives a hard delete of its target; 331 CI tests, zero skips |
 | 8 | PWA + offline | 🟢 | planned | **13.8, 6.5, 13.9** pulled forward | |
 | 9 | Onboarding repair | 🟢 | planned | repairs **2.8** | |
 
@@ -101,10 +101,26 @@ cabinets, now in the section vocabulary and backfilled; the remaining two are
 "(In with The Killing)", which names a disc rather than a place, and one row with no
 location. 1,855 of 1,857 items now carry a section, up from 1,733.
 
-### Batch 7 — Write surface
+### ~~Batch 7 — Write surface~~ 🟡 **shipped**
 Add / edit / soft-delete collection items, duplicate detection, condition tracking, with
 `admin_actions` audit writes.
 **Acceptance:** changes persist; deleted items appear in trash; the audit log records actor, action and target and survives deletion of the target row (`DECISIONS.md` #5).
+
+**`admin_actions` did not exist on the new spine** — gotcha 4's speculative-table warning
+in reverse. Created by migration `008` with `target_id` as TEXT and no foreign key
+(`DECISIONS.md` #5, which supersedes §3.20's UUID column). The criterion is proved by a
+test that disables the soft-delete trigger and genuinely destroys the row.
+
+**Three scope calls, all recorded in `DECISIONS.md` #37–39.** Writes are admin-only, as
+§3.1's own acceptance criterion requires. Optimistic UI is Batch 8's phase 6.5, not this
+batch's — building rollback here would mean building what Batch 8 explicitly rejects. The
+trash is one table with no permanent delete; §13.5 keeps the destructive half.
+
+**Two defects found that a green build could not have shown.** The first create-body
+validator never ran when the field was absent, so a body naming no film 500'd instead of
+422'ing — caught in CI by this batch's own test. And driving the pages in a browser found
+every list claiming to be *empty* when its request had merely been paused; that one is
+fixed app-wide and matters most for Batch 8.
 
 ### Batch 8 — PWA + offline
 Port `sw.ts` (with the iOS deadlock fix), manifest, `useOnlineStatus`, `OfflineBanner`,
@@ -171,7 +187,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 3 · solo | Auth is security-critical |
 | — | ~~4 · solo~~ | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
 | **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
-| **B** | 7 → 8 → 9 | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
+| **B** | ~~7~~ → 8 → 9 | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | 10 · solo | Large mechanical restructure of a 2,639-line doc |
 | **C** | 12 → 13 | Same domain (sets/collections); 13 reuses 12's UI patterns |
 | **D** | 14 → 15 | Both admin-facing read surfaces, same verification shape |

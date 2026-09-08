@@ -543,3 +543,53 @@ contemporaneous.
     otherwise forbids. They asserted that a cabinet has no section — precisely the
     behaviour #34 decided to change — so this is the decision being carried out, not a
     failing assertion being edited to pass.
+
+### 2026-09-08 — Batch 7 write surface
+
+37. **Collection writes are admin-only.** Craig can add, edit and delete discs; Mark
+    cannot. *Why:* §3.1 specifies "admin-only form", and its acceptance criterion depends
+    on the distinction — *"Admin adds a movie; **viewer** immediately sees it"* is not
+    testable if both roles write. #33's "either user can identify a film" was scoped to
+    identification, where admin-only contradicted Batch 5's own goal; nothing here
+    contradicts Batch 7's. *Revisit if* Mark starts buying discs — this is a one-line
+    change from `AdminUser` to `CurrentUser`, and the audit log already records who acted.
+
+38. **`admin_actions.target_id` is TEXT with no foreign key, over §3.20's UUID column.**
+    Reaffirms #5 against the schema table that contradicts it. *Why:* the acceptance
+    criterion is that the log survives deletion of the row it describes, which a foreign
+    key defeats in both directions — it either blocks the delete or cascades the evidence
+    away. TEXT rather than a bare UUID so a future non-UUID target (a spreadsheet row for
+    `bulk_import`, a composite key) still has somewhere to go. `user_id` is `SET NULL` for
+    the same reason applied to the actor. *Proved by a test that disables the soft-delete
+    trigger and genuinely destroys the row*, since the trigger otherwise makes a hard
+    delete impossible and the criterion untestable.
+
+39. **Optimistic UI stays in Batch 8; Batch 7 ships plain mutations with invalidation.**
+    *Why:* §3.1 lists "Optimistic UI" as a bullet, but the ledger assigns phase 6.5 to
+    Batch 8, whose definition calls for the-coupon's queued/unconfirmed reconciliation and
+    explicitly **not** naive optimistic-with-rollback. Building rollback here would mean
+    building the thing the next batch rejects and then deleting it. The same reasoning
+    splits the trash: Batch 7 ships list-and-restore for `collection_items`, and §13.5
+    keeps permanent delete — the one irreversible action in the area — with the batch that
+    specifies it.
+
+40. **`UtcDatetime` now exists, because Batch 7 is the first batch to put an instant on
+    the wire.** `AGENTS.md` has always specified "correct at the wire with a `UtcDatetime`
+    annotation, not at each call site", and nothing implemented it — #14's warning about
+    conventions asserted in prose, found in our own file. It was harmless until now:
+    Batch 6's `watchedAt` is a `DATE`, which carries no offset to get wrong. *Why it
+    matters:* every domain timestamp is stored `DateTime(timezone=False)` holding UTC, so
+    a plain serialisation emits `2026-09-08T14:00:00`, which `new Date()` reads as **local**
+    time and renders at the wrong hour — silently, with nothing erroring.
+
+41. **A list must not render its empty state until data has actually arrived.**
+    `listState()` in `apps/web/src/lib/query-state.ts`; applied to the trash, the TMDB
+    search and the history panel. *Why:* TanStack Query **pauses** a retry when it believes
+    the app is offline — `status: 'pending'`, `fetchStatus: 'paused'`, `isError: false`, no
+    data, indefinitely. The usual `isLoading → isError → items.length === 0` ladder falls
+    straight through to the empty state and asserts something false about the user's
+    collection: the trash page said "Nothing has been removed" while the request had never
+    come back. *Found by opening the pages in a browser*, not by any green check — the
+    build, the types and the tests were all passing. `MovieDetailPage` had avoided it by
+    treating `isError || !data` as failure; this states the rule once. **Batch 8 is the
+    offline batch and should build its banner on top of this, not around it.**
