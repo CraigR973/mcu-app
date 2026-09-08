@@ -954,6 +954,27 @@ async def test_an_edit_with_no_base_version_still_works(
     assert response.json()["notes"] == "Fine"
 
 
+async def test_an_edit_advances_the_version_within_one_transaction(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The property the stale-edit guard rests on.
+
+    ``NOW()`` is the *transaction* start time in Postgres, so the trigger used to stamp
+    an identical ``updated_at`` however many times a row was updated — and a concurrency
+    token that does not advance cannot detect anything. Migration ``009`` moves it to
+    ``clock_timestamp()``. This test is written deliberately inside one transaction,
+    because that is where the old behaviour was indistinguishable from working.
+    """
+    movie = await _a_film(api_session, title="Versioned", tmdb_id=930084)
+    item = await _a_disc(api_session, movie)
+
+    first = await client.put(f"/api/v1/collection/{item.id}", json=_body(notes="One"))
+    second = await client.put(f"/api/v1/collection/{item.id}", json=_body(notes="Two"))
+
+    assert first.json()["updatedAt"] < second.json()["updatedAt"]
+
+
 async def test_the_wire_timestamp_round_trips_exactly(
     client: AsyncClient,
     api_session: AsyncSession,
