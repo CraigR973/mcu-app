@@ -9,49 +9,75 @@ Strike the row through and set status on close-out.
 
 ## Model and effort
 
-Named by **what the batch needs**, not by which model provides it. The need is stable;
-model names change every few months, and the roadmap already carries 98 phase annotations
-naming a model that no longer exists under that name. Keeping the need in the table and
-the mapping in one place is what stops this going stale the same way.
+Named by **what the batch needs**, then mapped to each tool. The need is stable; model
+names are not — the roadmap still carries 98 phase annotations naming "Sonnet 4.6", a model
+that no longer exists under that name, which is the decay this split exists to avoid.
+`docs/house-standard.md` already says model choice belongs in "small external tables"
+rather than in the master doc, so this is where it lives.
 
 | Need | When | Claude Code | Codex |
 |---|---|---|---|
-| **Deep** | Silent failure modes, irreversible actions, credentials, a public surface, or a spec you expect to be wrong | Opus 5 | its strongest reasoning model |
-| **Standard** | Ordinary feature work against a clear spec, caught by tests when wrong | Sonnet 5 | its mid model |
-| **Light** | Mechanical, well-specified, small blast radius | Haiku 4.5 | its fast model |
+| **Deep** | Silent failure modes, irreversible actions, credentials, a public surface, or a spec you expect to be wrong | Opus 5 | GPT-5.6 Sol |
+| **Standard** | Ordinary feature work against a clear spec, caught by tests when wrong | Sonnet 5 | GPT-5.6 Terra |
+| **Light** | Mechanical, well-specified, small blast radius | Haiku 4.5 | GPT-5.6 Luna |
 
-*Claude names are current as of 2026-09-08. **Codex model names are deliberately not
-written here** — confirm the current lineup in Codex and pick by the "When" column, which
-is the part that does not expire.*
+*Lineups current as of 2026-09-08. On Codex, **GPT-5.5** is the legacy fallback if 5.6 is
+unavailable — it is built for multi-step agentic work, so treat it as Terra-equivalent and
+raise the effort a step to compensate.*
 
-**Effort** — `high` · `medium` · `low` — is the thinking budget, set separately.
+**No batch below is Light.** These are all real features on live data; the row is kept for
+mechanical follow-ups and for sub-tasks inside a batch, not because anything here qualifies.
+
+### Effort
+
+Both tools run the same five-step ladder: `low` → `medium` → `high` → `xhigh` → `max`.
+
+**`high` is the baseline here, not the exception.** Claude's own guidance calls it "the
+standard default for many models and agentic workflows ... complex coding and multi-step
+reasoning", and Codex describes its High the same way. So an ordinary feature batch is
+`high`; `medium` is for work that is genuinely closer to drafting than to engineering; and
+`xhigh`/`max` are reserved for the batches below that earn them.
+
+| Effort | Used here for |
+|---|---|
+| `medium` | Doc restructuring, charts over data already collected, small independent UI |
+| `high` | **The default.** Ordinary feature work — most batches |
+| `xhigh` | Irreversible actions, credentials, a public surface, or a known-bad spec |
+| `max` | Silent wrong data at scale, or net-new security-critical infrastructure — **three batches only** |
+
+*Codex additionally offers **Ultra**, which is not a depth setting but automated delegation
+across parallel subagents. It is worth reaching for where the work genuinely splits:
+**Batch 19** is six independent retailer scrapers, and **34** is four independent mailbox
+parsers. It buys nothing on a batch whose parts are sequential.*
 
 ### Effort tracks risk, not size
 
-The two are routinely different, and this batch list has already proved it. **Batch 8 was
-tiered 🟢 Mid — the smallest of the three shipped on 2026-09-08 — and was by far the most
+The two are routinely different, and this list has already proved it. **Batch 8 was tiered
+🟢 Mid — the smallest of the three shipped on 2026-09-08 — and was by far the most
 dangerous**: four defects, every one of which passed the build, the types and 46 tests.
-Batch 7, tiered 🟡 Large, went almost clean. Size predicted how *long* they took; it
-predicted nothing about how much care they needed.
+Batch 7, tiered 🟡 Large, went almost clean. Size predicted how long they took and nothing
+about the care they needed.
 
-What actually predicted difficulty was: **a failure that does not announce itself** (a
-paused query looks like a hang, not an error), **a spec that contradicts itself** (13.9's
-last-write-wins against Batch 8's own acceptance criterion), and **a third-party default
-doing something reasonable for other apps and wrong for this one**.
+What did predict difficulty: **a failure that does not announce itself** (a paused query
+looks like a hang, not an error), **a spec that contradicts itself** (13.9's last-write-wins
+against Batch 8's own acceptance criterion), and **a third-party default that is reasonable
+for other apps and wrong for this one**.
 
-So the column below is set from blast radius and silence, not from the tier. Where the two
-disagree, the disagreement is the point:
+So the column is set from blast radius and silence. Where it disagrees with the tier, the
+disagreement is the point:
 
-- **11** 🟢 → Deep · high — VAPID credentials, and a push that never arrives looks like no news
-- **15** 🟢 → Deep · high — permanent delete, irreversible, on 1,857 live rows
-- **17** 🟡 → Deep · high — a secret-token `.ics` URL is an unauthenticated public surface
-- **19 / 20 / 23** → Deep — the scraper risk note says a layout change *"does not error — it
-  selects the wrong node and persists a plausible wrong number"*
-- **24** 🟡 → Deep · high — a wrong-edition barcode match is wrong data that looks right
-- **27** 🟡 → Deep · high — the app's only public surface; the ledger already says it needs
+- **11** 🟢 → Deep · xhigh — VAPID credentials, and a push that never arrives looks like no news
+- **15** 🟢 → Deep · xhigh — permanent delete, irreversible, on 1,857 live rows
+- **17** 🟡 → Deep · xhigh — a secret-token `.ics` URL is an unauthenticated public surface
+- **19** 🔴 → Deep · **max** — the risk note says a layout change *"does not error — it selects
+  the wrong node and persists a plausible wrong number"*, and that number then feeds alerts
+- **24** 🟡 → Deep · xhigh — a wrong-edition barcode match is wrong data that looks right
+- **27** 🟡 → Deep · xhigh — the app's only public surface; the ledger already says it needs
   its own security review
-- **33** 🔴 → Deep · high — stores two people's live mailbox tokens, with encryption at rest
-  that is net-new to this repo
+- **31** 🔴 → Deep · **max** — tool definitions calling this API, and the second consumer that
+  `DECISIONS.md` #12 says would reopen the envelope question
+- **33** 🔴 → Deep · **max** — two people's live mailbox tokens, with encryption at rest that is
+  net-new to this repo
 
 **A group runs at the highest model and effort any of its batches asks for**, so the column
 lives per batch here and is not repeated in the group manifest.
@@ -221,34 +247,34 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | # | Batch | Tier | Model · Effort | Status | Phases |
 |---|---|---|---|---|---|
 | 10 | Architecture doc split + §17 reconciliation | 🟢 | Standard · medium | planned | Part C deferred half |
-| 11 | Notifications + push | 🟢 | **Deep · high** | planned | 6.1, 6.2, 5.11 |
-| 12 | Box sets + smart collections | 🟢 | Standard · medium | planned | 11.3, 11.4, 11.5 |
-| 13 | Completion sets | 🟡 | Standard · medium | planned | 11.1, **11.2** |
-| 14 | Stats + export | 🟢 | Standard · medium | planned | 13.1, 13.2, 13.3, 13.4 |
-| 15 | Trash, audit UI, lending | 🟢 | **Deep · high** | planned | 13.5, 13.6, 12.5 |
-| 16 | Watch providers + recommendations | 🟢 | Standard · medium | planned | 7.1, 7.2 |
-| 17 | Release calendar + iCal | 🟡 | **Deep · high** | planned | 7.3, 7.4 — secret-token `.ics` URL |
-| 18 | Wanted list + retailers | 🟢 | Standard · medium | planned | 5.1, 5.2 (full scope) |
-| 19 | **Scraper framework** | 🔴 | **Deep · high** | planned | **5.3, 5.4** — see risk note below |
-| 20 | Price scraping + drop alerts | 🟡 | **Deep · high** | planned | 5.5, 5.6, 5.8 |
-| 21 | Price history charts | 🟢 | Standard · low | planned | **5.7** — needs 7 real days of data after B20 |
-| 22 | Deals feed | 🟡 | Standard · medium | planned | 5.9, 5.10 — RSS **and** scraped sources |
-| 23 | Specs — scraper + display | 🟡 | Deep · medium | planned | 3.7, 3.8, 3.9 |
-| 24 | Barcode — scan + lookup | 🟡 | **Deep · high** | planned | 3.3, **3.4** — confirmation UI mandatory |
-| 25 | Photo uploads | 🟢 | Standard · medium | planned | 3.10 — needs the `vercel.json` CSP fix |
-| 26 | Shelf QR | 🟢 | Standard · low | planned | 12.3, 12.4 |
-| 27 | Gift links | 🟡 | **Deep · high** | planned | 12.1, 12.2 — high-entropy slug, rate limiter, `noindex` |
-| 28 | **eBay integration** | 🔴 | **Deep · high** | planned | **4.1, 4.3** — active listings, not sold comps |
-| 29 | Format upgrade + sale tracking | 🟢 | Standard · medium | planned | 4.2, 4.4 |
-| 30 | AI assistant — client + caps | 🟡 | Deep · medium | planned | 9.1 + **9.7 together** |
-| 31 | AI assistant — tools + chat | 🔴 | **Deep · high** | planned | 9.2, 9.3, 9.4 |
-| 32 | Voice input | 🟢 | Standard · low | planned | **9.5** |
-| 33 | **Email — accounts + OAuth** | 🔴 | **Deep · high** | planned | **10.1, 10.2, 10.3, 10.4** |
-| 34 | **Email — parsers + scanning** | 🔴 | **Deep · high** | planned | **10.5, 10.6, 10.7, 10.8** |
-| 35 | Movie night | 🔴 | **Deep · high** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
-| 36 | Command palette + shortcuts | 🟢 | Standard · medium | planned | **6.3, 6.4** |
-| 37 | On-this-day + rewatch | 🟢 | Standard · low | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
-| 38 | E2E suite | 🟢 | Standard · medium | planned | 13.10 — written alongside features, formalised here |
+| 11 | Notifications + push | 🟢 | **Deep · xhigh** | planned | 6.1, 6.2, 5.11 |
+| 12 | Box sets + smart collections | 🟢 | Standard · high | planned | 11.3, 11.4, 11.5 |
+| 13 | Completion sets | 🟡 | Standard · high | planned | 11.1, **11.2** |
+| 14 | Stats + export | 🟢 | Standard · high | planned | 13.1, 13.2, 13.3, 13.4 |
+| 15 | Trash, audit UI, lending | 🟢 | **Deep · xhigh** | planned | 13.5, 13.6, 12.5 |
+| 16 | Watch providers + recommendations | 🟢 | Standard · high | planned | 7.1, 7.2 |
+| 17 | Release calendar + iCal | 🟡 | **Deep · xhigh** | planned | 7.3, 7.4 — secret-token `.ics` URL |
+| 18 | Wanted list + retailers | 🟢 | Standard · high | planned | 5.1, 5.2 (full scope) |
+| 19 | **Scraper framework** | 🔴 | **Deep · max** | planned | **5.3, 5.4** — see risk note below |
+| 20 | Price scraping + drop alerts | 🟡 | **Deep · xhigh** | planned | 5.5, 5.6, 5.8 |
+| 21 | Price history charts | 🟢 | Standard · medium | planned | **5.7** — needs 7 real days of data after B20 |
+| 22 | Deals feed | 🟡 | Standard · high | planned | 5.9, 5.10 — RSS **and** scraped sources |
+| 23 | Specs — scraper + display | 🟡 | Deep · high | planned | 3.7, 3.8, 3.9 |
+| 24 | Barcode — scan + lookup | 🟡 | **Deep · xhigh** | planned | 3.3, **3.4** — confirmation UI mandatory |
+| 25 | Photo uploads | 🟢 | Standard · high | planned | 3.10 — needs the `vercel.json` CSP fix |
+| 26 | Shelf QR | 🟢 | Standard · medium | planned | 12.3, 12.4 |
+| 27 | Gift links | 🟡 | **Deep · xhigh** | planned | 12.1, 12.2 — high-entropy slug, rate limiter, `noindex` |
+| 28 | **eBay integration** | 🔴 | **Deep · xhigh** | planned | **4.1, 4.3** — active listings, not sold comps |
+| 29 | Format upgrade + sale tracking | 🟢 | Standard · high | planned | 4.2, 4.4 |
+| 30 | AI assistant — client + caps | 🟡 | Deep · high | planned | 9.1 + **9.7 together** |
+| 31 | AI assistant — tools + chat | 🔴 | **Deep · max** | planned | 9.2, 9.3, 9.4 |
+| 32 | Voice input | 🟢 | Standard · medium | planned | **9.5** |
+| 33 | **Email — accounts + OAuth** | 🔴 | **Deep · max** | planned | **10.1, 10.2, 10.3, 10.4** |
+| 34 | **Email — parsers + scanning** | 🔴 | **Deep · xhigh** | planned | **10.5, 10.6, 10.7, 10.8** |
+| 35 | Movie night | 🔴 | **Deep · xhigh** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
+| 36 | Command palette + shortcuts | 🟢 | Standard · high | planned | **6.3, 6.4** |
+| 37 | On-this-day + rewatch | 🟢 | Standard · medium | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
+| 38 | E2E suite | 🟢 | Standard · high | planned | 13.10 — written alongside features, formalised here |
 
 ## Batch groups
 
