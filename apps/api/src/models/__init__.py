@@ -1,3 +1,8 @@
+from src.models.admin_action import (
+    ACTION_TYPES,
+    COLLECTION_ITEMS_TABLE,
+    AdminAction,
+)
 from src.models.base import (
     Base,
     TimestampMixin,
@@ -18,7 +23,10 @@ from src.models.rate_limit import RateLimitCounter
 from src.models.watch_log import RATING_MAX, RATING_MIN, WatchLog
 
 __all__ = [
+    "ACTION_TYPES",
+    "AdminAction",
     "Base",
+    "COLLECTION_ITEMS_TABLE",
     "CONDITIONS",
     "CollectionItem",
     "FORMAT_RANK",

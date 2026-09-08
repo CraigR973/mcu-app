@@ -84,4 +84,12 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/movies/{movie_id}/candidates",
         "/api/v1/movies/{movie_id}/identify",
         "/api/v1/search",
+        # Batch 7's write surface. Admin-only, every one of them.
+        "/api/v1/collection",
+        "/api/v1/collection/duplicate-check",
+        "/api/v1/collection/{item_id}",
+        "/api/v1/trash",
+        "/api/v1/trash/{table}/{item_id}/restore",
+        "/api/v1/admin/audit",
+        "/api/v1/tmdb/search",
     }
