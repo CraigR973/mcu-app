@@ -2086,10 +2086,21 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - "Your Copies" tab showing all collection_items for this movie with locations and formats
 - **Acceptance:** Movie with multiple owned formats shows all copies clearly
 
-**Phase 2.8: Onboarding Flow** 🟢 Sonnet 4.6 ✅ 2026-04-30
-- 8-step wizard (welcome → import → email connect → install PWA → notifications → theme → tour → done)
-- Skippable, resumable
-- **Acceptance:** First-time admin completes all 8 steps; skipping still lands on a usable dashboard
+**Phase 2.8: Onboarding Flow** 🟢 Sonnet 4.6 ✅ 2026-04-30 — 🔁 **rebuilt in Batch 9, 2026-09-08**
+- ~~8-step wizard (welcome → import → **email connect** → install PWA → **notifications** →
+  theme → tour → done)~~ — **six steps for an admin, five for a viewer.** Three were
+  removed because they could not do what they said (`DECISIONS.md` #50):
+  **email connect** (Stage 10 dropped, and this app has no email addresses at all — sign-in
+  is a display name and a PIN); **notifications** (no VAPID key, no subscription, no
+  endpoint, no `push_subscription` column — push is Batch 11 — and it offered toggles for
+  six features that do not exist yet); and **import** (a CLI script the owner runs, not
+  something anyone does in a wizard).
+- Skippable, resumable — the position is kept in `localStorage`, per `DECISIONS.md` #8's
+  reasoning: it is a per-device place in a flow, not user data.
+- **Acceptance:** ~~First-time admin completes all 8 steps~~ — **all six**; skipping still lands on a usable dashboard
+- **Completion is a real column now.** Batch 3 removed this wizard because its flag was a
+  Supabase field that no longer exists (`DECISIONS.md` #27); migration `010` adds
+  `profiles.onboarding_completed_at_utc`, and `ProtectedRoute` gates on it again.
 
 ---
 

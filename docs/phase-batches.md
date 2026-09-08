@@ -21,7 +21,7 @@ Strike the row through and set status on close-out.
 | ~~6~~ | ~~Location + facets **+ watch log**~~ | ~~🟡~~ | **shipped** | ~~**3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise; **adds §3.7's `watch_log`, which no phase owned**~~ | `1067a72` · Front 2nd shelf answers in 20 ms; 1,855 of 1,857 items sectioned |
 | ~~7~~ | ~~Write surface~~ | ~~🟡~~ | **shipped** | ~~re-lands **3.1**; adds **3.2, 3.5, 3.11**~~ | `c808964` · 1,857 items untouched; audit log survives a hard delete of its target; 331 CI tests, zero skips |
 | ~~8~~ | ~~PWA + offline~~ | ~~🟢~~ | **shipped** | ~~**13.8, 6.5, 13.9** pulled forward~~ | `c310d0f` · installable, collection cached, offline edits land on reconnect; **four defects found only by driving it with the network off** |
-| 9 | Onboarding repair | 🟢 | planned | repairs **2.8** | |
+| ~~9~~ | ~~Onboarding repair~~ | ~~🟢~~ | **shipped** | ~~repairs **2.8**~~ | `4de32c3` · six honest steps; **the notifications step was dropped, not fixed — it still has nothing behind it** |
 
 > **All 23 shipped phases are accounted for above.** Their ✅ marks in §16 now mean
 > "specified and shipped on the old spine" — not "present in the running app". Re-tick
@@ -143,10 +143,25 @@ queued writes were made under. And `updated_at` used `NOW()`, which is *transact
 time, so the new concurrency token never advanced and the guard passed anything. All four
 were found by running the built app against a stub API that could be switched off.
 
-### Batch 9 — Onboarding repair
+### ~~Batch 9 — Onboarding repair~~ 🟢 **shipped**
 Prune `StepEmailConnect` (Stage 10 dropped). `StepInstallPWA` and `StepNotifications` now
 have real infrastructure behind them.
 **Acceptance:** every step of the wizard does what it says. No step reads a property nothing sets.
+
+**Half of that second sentence was wrong.** `StepInstallPWA` does now have infrastructure —
+Batch 8's manifest and service worker let `beforeinstallprompt` fire. **`StepNotifications`
+does not**: there is no VAPID key, no subscription, no endpoint to store one and no
+`push_subscription` column, and push is Batch 11. It also offered toggles for six features
+that do not exist yet. Dropped rather than ported, because keeping it would have broken
+this batch's own acceptance criterion (`DECISIONS.md` #50).
+
+**A fourth dead step that gotcha 5 never listed:** the catalogue step read `d?.meta?.total`
+— the `{data, meta, errors}` envelope `DECISIONS.md` #6 removed — so it rendered a loading
+skeleton for ever.
+
+Result: **six steps for an admin, five for a viewer**, every one of them backed. Completion
+is `profiles.onboarding_completed_at_utc` (migration `010`), the column Batch 3 removed the
+wizard for the lack of.
 
 ---
 
@@ -202,7 +217,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 3 · solo | Auth is security-critical |
 | — | ~~4 · solo~~ | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
 | **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
-| **B** | ~~7~~ → ~~8~~ → 9 | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
+| **B** | ~~7~~ → ~~8~~ → ~~9~~ | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | 10 · solo | Large mechanical restructure of a 2,639-line doc |
 | **C** | 12 → 13 | Same domain (sets/collections); 13 reuses 12's UI patterns |
 | **D** | 14 → 15 | Both admin-facing read surfaces, same verification shape |

@@ -2,74 +2,62 @@
 
 ## Now
 
-**Batch 8 — PWA + offline is shipped.** The app installs to a home screen, keeps the
-collection readable with the network off, and holds a write made offline until it can be
-sent. Production serves the merged SHA `c310d0f52fe760a42b96385fd6587b65f22f08f4` with
-`db: ok`, at migration **009**.
+**Batch 9 — Onboarding repair is shipped, and Group B is complete.** Batches 7, 8 and 9 all
+landed today. Production serves the merged SHA `4de32c35af1d7e4edd9ea2e3fe03a9b2d4a1164c`
+with `db: ok`, at migration **010**.
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | installs to a phone home screen | manifest, five icons, `apple-touch-icon` and the iOS meta tags all serve from production. **Not verified on an actual phone** — see the gap below |
-| 2 | browses cached collection data with the network off | the worker ships with network-first for `/api/v1/` reads and cache-first for posters. **Not verified with a live worker** — service-worker registration is blocked in the only browser available here |
-| 3 | an edit made offline lands on reconnect **without overwriting a newer change** | **proved end to end in a browser.** The built app was driven against a stub API that could be switched off: the edit queued, the banner showed it, and on reconnect the server received exactly `formats: ["blu_ray","4k_uhd"]` with `baseUpdatedAt` attached. The "without overwriting" half is proved by a Postgres test that refuses a stale edit with 409 |
+| 1 | every step of the wizard does what it says | **six steps for an admin, five for a viewer, every one backed.** Walked end to end in a browser against the production bundle: welcome → catalogue → install → theme → tour → done |
+| 2 | no step reads a property nothing sets | **four dead reads removed, one more than gotcha 5 listed.** The catalogue step read `d?.meta?.total` — the envelope `DECISIONS.md` #6 deleted — so it rendered a loading skeleton for ever. It now reads the real shape and shows the real count |
+| 3 | (§2.8) skippable, resumable | proved in the browser: advancing two steps and reloading resumed at step 3; "Skip setup" landed on a usable `/movies` |
 
-**Phase 13.9's "last-write-wins" contradicted this batch's own acceptance criterion and
-lost** (`DECISIONS.md` #42). A queued edit flushed on reconnect *is* written last, so
-last-write-wins is exactly what "without overwriting a newer change" forbids. Phase 6.5's
-acceptance names the wanted list, which is Batch 18 and does not exist.
+**The batch definition was half wrong and that changed what got built.**
+`StepInstallPWA` genuinely does have infrastructure now — Batch 8's manifest and service
+worker let `beforeinstallprompt` fire, and `usePwaInstall` catches it. **`StepNotifications`
+does not**: no VAPID key, no subscription, no endpoint, no `push_subscription` column, and
+it offered toggles for six features that do not exist yet. **Dropped rather than ported**
+(`DECISIONS.md` #50) — Batch 11 owns re-introducing it, infrastructure first.
 
-**Four defects, and not one of them was visible to a green gate.** The build, the types
-and 46 tests were passing throughout; every one of these was found by running the built
-app against an API that could be switched off.
+**The wizard is rebuilt, not repaired**, because Batch 3 had removed it entirely: its
+completion flag was a Supabase column that no longer exists (`DECISIONS.md` #27). Migration
+`010` adds `profiles.onboarding_completed_at_utc`, and `ProtectedRoute` gates on it again —
+the TODO it has carried since Batch 3.
 
-1. **React Query paused every write, so the offline queue was never reached.** A paused
-   mutation does not run `mutationFn`, and the queue lives inside it — an edit made
-   offline sat behind a spinner that could not stop and was saved nowhere. The same pause
-   stops a *query* issuing the fetch the service worker exists to answer. Gotcha 19's
-   empty-state lie in Batch 7 was this same root cause seen from the other end.
-2. **A 5xx on a write was treated as a refusal and discarded.** `fetch` resolves for a
-   503, so a write that never reached the application looked like an answer.
-3. **A 5xx on the profile load signed the person out** and destroyed the session the
-   queued writes were made under.
-4. **`updated_at` used `NOW()`, which is transaction time**, so the new concurrency token
-   never advanced and the guard passed anything. Caught by this batch's own tests in CI —
-   failing *open*, which is the direction worth catching.
-
-In the database now: **1,857 collection items · 0 audit rows**, unchanged. Migration
-`009` replaces a function and rewrites no data.
-
-**The verification gap is narrower than Batch 7's but not closed.** Criterion 3 was driven
-in a real browser through the real UI. Criteria 1 and 2 cannot be: the browser pane here
-refuses to register a service worker, and no Chrome is connected. Both need a phone, and
-criterion 1 needs one by definition.
+In the database now: **1,857 collection items · 0 audit rows · both profiles un-onboarded**,
+so Craig and Mark will each see the wizard once on next sign-in. Migration `010` adds a
+nullable column and rewrites nothing.
 
 ## Next
 
-**Batch 9 — Onboarding repair** (🟢), the last batch in Group B. Prune `StepEmailConnect`
-(Stage 10 dropped); `StepInstallPWA` and `StepNotifications` are supposed to have real
-infrastructure behind them now.
+**Group B is done. Batches 1–9 have all shipped**, which completes the "build to first
+deployment" half of the ledger. Everything remaining is post-launch and sequenced rather
+than scheduled.
 
-**Check that premise before building.** Batch 8 shipped the service worker and manifest,
-so `StepInstallPWA` has something real to talk to — `beforeinstallprompt` can now fire.
-**`StepNotifications` still has nothing**: there is no VAPID key, no `pushManager`
-subscription, no endpoint to store one, and push is Batch 11 (6.1, 6.2, 5.11). Gotcha 5
-says two of the three dead steps are fixed by the re-scaffold's "service worker and push
-stack", and only the service-worker half exists. Batch 9 must either drop that step or
-stop short of pretending it works.
+**Batch 10 — Architecture doc split + §17 reconciliation** (🟢, solo) is next in the ledger:
+the deferred half of Part C, a large mechanical restructure of a 2,639-line document. It is
+solo because it touches almost every heading.
 
-**Batch 3 removed the wizard entirely** (`DECISIONS.md` #27) because its completion flag
-was a Supabase column that no longer exists, so Batch 9 is rebuilding rather than
-repairing, and **must add its own completion column** — a migration, on a batch tiered 🟢.
+**Three things the next agent should know before picking a batch.**
 
-An owner check that would close what remains, on a phone:
-add `https://mcu-app-fawn.vercel.app` to the home screen, open it, turn off wi-fi and mobile
-data, and confirm the collection still browses; then edit a disc offline, turn the network
-back on, and watch the banner clear. Craig's PIN is set; **Mark's is still `NULL`**:
+1. **Batch 11 inherits an obligation.** Batch 9 dropped the notifications step rather than
+   ship one that lies; Batch 11 owns bringing it back, and must build the push
+   infrastructure *before* re-adding the UI. That is a credential change (VAPID keys) and
+   therefore stops for the owner.
+2. **The production-UI gap is now narrow but real.** Batches 7 and 9 were driven end to end
+   in a browser against a stub API, and Batch 8's write queue was too. What still cannot be
+   verified here is anything needing a live service worker or a phone — gotcha 25.
+3. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
   apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
 ```
+
+An owner pass that would close everything outstanding, on a phone: sign in, walk the
+wizard, add `https://mcu-app-fawn.vercel.app` to the home screen, turn the network off and
+confirm the collection still browses, then edit a disc offline and watch it sync when the
+signal returns.
 
 Two owner actions remain outstanding, unchanged:
 1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
@@ -199,16 +187,24 @@ Two owner actions remain outstanding, unchanged:
 
 4. **~22 of the 25 tables are speculative** — created in April for roadmap stages 4–11 that were never built. Do not assume a table's existence means its feature exists. Part D decides which survive onto the new baseline.
 
-5. **Three of the onboarding wizard's nine steps point at nothing.** All shipped in Phase 2.8 marked ✅.
-   - `StepInstallPWA` (`OnboardingPage.tsx:125`) reads `window.__pwaInstallPrompt`; nothing sets it, and `beforeinstallprompt` cannot fire — there is no manifest and no service worker.
-   - `StepNotifications` (`:185`) offers to enable push. The web app has **zero** occurrences of `vapid`, `pushManager` or `serviceWorker` — there is no push infrastructure at all.
-   - `StepEmailConnect` (`:107`) connects a mailbox for Stage 10 purchase detection, which Part D recommends dropping (7 of its 8 phases).
+5. **RESOLVED IN BATCH 9 — and there were four dead steps, not three.** The wizard is
+   rebuilt against a real completion column (migration `010`), and every remaining step is
+   backed by something that exists.
 
-   **Batch 3 removed the wizard entirely** — its completion flag was a Supabase column
-   that no longer exists, so porting it would have shipped a wizard that appears to work
-   and saves nothing (`DECISIONS.md` #27). Batch 9 rebuilds it against the new schema and
-   must add its own completion column. Two of the three dead steps are fixed by the
-   re-scaffold's service worker and push stack; the third goes when Stage 10 is settled.
+   - `StepInstallPWA` read `window.__pwaInstallPrompt`, which nothing set and nothing
+     could have — there was no manifest and no service worker for `beforeinstallprompt` to
+     fire against. **Batch 8 supplied both**; `usePwaInstall` now captures the event, and
+     falls back to instructions on iOS, which never fires it.
+   - `StepNotifications` offered to enable push against **zero** infrastructure, and still
+     does: no VAPID key, no subscription, no endpoint, no `push_subscription` column.
+     **Dropped, not fixed** (`DECISIONS.md` #50) — the batch definition's claim that it
+     "now has real infrastructure behind it" was wrong. **Batch 11 owns bringing it back.**
+   - `StepEmailConnect` was doubly dead: Stage 10 is dropped *and* this app has no email
+     addresses at all, since sign-in is a display name and a PIN.
+   - **The fourth, which this gotcha never listed:** the catalogue step read
+     `d?.meta?.total` — the `{data, meta, errors}` envelope `DECISIONS.md` #6 removed — so
+     it rendered a loading skeleton for ever. A dead read can hide behind a plausible
+     loading state indefinitely.
 
 7. **RESOLVED IN BATCH 5. The web app now parses every API response through
    `packages/shared`.** It previously imported no shared schemas at all — expected during
@@ -331,6 +327,35 @@ Two owner actions remain outstanding, unchanged:
     "it installs to a home screen" can only be confirmed on a real device.**
 
 ## Log
+
+- **2026-09-08** — **Batch 9 shipped, and Group B is complete.** Batches 7, 8 and 9 all
+  landed today, which finishes the "build to first deployment" half of the ledger: the
+  collection can be written to, it works with the network off, and a first-time user is
+  shown a setup flow whose every step does something.
+
+  **The wizard is rebuilt, not repaired.** Batch 3 had removed it because its completion
+  flag was a Supabase column that no longer exists (`DECISIONS.md` #27), so there was
+  nothing to repair — migration `010` gives it a real one and `ProtectedRoute` gates on it
+  again, closing a TODO it has carried since Batch 3.
+
+  **Half the batch definition's premise was wrong.** It says `StepInstallPWA` and
+  `StepNotifications` "now have real infrastructure behind them". The install step does —
+  Batch 8's manifest and service worker let `beforeinstallprompt` fire, and the new
+  `usePwaInstall` catches it, preventing the default because Chromium gives no second
+  chance. **The notifications step does not**: no VAPID key, no subscription, no endpoint,
+  no `push_subscription` column, and six toggles for features that do not exist yet.
+  Dropped rather than ported (`DECISIONS.md` #50); Batch 11 owns bringing it back with
+  infrastructure first.
+
+  **A fourth dead step that gotcha 5 never listed** — the catalogue step read
+  `d?.meta?.total`, the envelope `DECISIONS.md` #6 deleted, so it rendered a loading
+  skeleton for ever. A dead read can hide behind a plausible loading state indefinitely,
+  which is why "no step reads a property nothing sets" was worth checking by grep rather
+  than by looking.
+
+  Verified by walking the production bundle in a browser: six steps for an admin, resuming
+  at step 3 after a reload, and "Skip setup" landing on a usable `/movies`. 249 API tests
+  and 83 web/shared tests, zero skips.
 
 - **2026-09-08** — **Batch 8 shipped — the app works with the network off.** Service
   worker, manifest and icon set, an offline banner, and a durable IndexedDB write queue

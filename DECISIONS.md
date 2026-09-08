@@ -664,3 +664,26 @@ contemporaneous.
     import began rather than when each row was written. Caught by this batch's own tests
     in CI, where the guard failed *open*. The `AT TIME ZONE 'utc'` wrapper stays, for the
     reason migration `003` added it.
+
+### 2026-09-08 — Batch 9 onboarding
+
+50. **The notifications step is dropped, not repaired.** The batch definition states that
+    `StepInstallPWA` and `StepNotifications` "now have real infrastructure behind them".
+    Only the first is true. *Why:* there is no VAPID key, no `pushManager` subscription,
+    no endpoint to store one and no `push_subscription` column anywhere on the new spine —
+    push is Batch 11 (6.1, 6.2, 5.11). The step also never requested notification
+    permission; it was a preferences form offering toggles for **six features that do not
+    exist yet** (price drops → B20, deals → B22, new releases → B17, loan reminders → B15,
+    purchase suggestions → B18, on-this-day → B37). Keeping it would have broken this
+    batch's own acceptance criterion — *"every step of the wizard does what it says"* — so
+    the honest options were to drop it or to build push, and building push is another
+    batch. **Batch 11 owns re-introducing it**, with infrastructure first.
+
+51. **Onboarding completion is a nullable timestamp, and the flow is skippable to the
+    end.** *Why the timestamp:* it answers "finished?" and "when?" in one column, matches
+    the `*_utc` convention, and cannot reach the "true but we do not know when" state a
+    boolean plus a later audit question would. *Why skipping completes it:* nothing in the
+    wizard has to be done — it installs an app, picks a theme and points at three pages —
+    so there is no half-finished state worth representing, and a person who skipped should
+    not be asked again every time they open the app. §2.8 asks for skippable and
+    resumable; the resume position is per-device `localStorage`, following #8.
