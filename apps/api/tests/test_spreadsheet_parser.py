@@ -79,15 +79,31 @@ def test_normalise_formats(raw: str, expected: list[str]) -> None:
         # download is a second copy of it, so the section is where the disc is.
         ("Front 2nd shelf & E:\\Movies", "Front", "2nd"),
         ("Back 4th Shelf & E:\\Movies", "Back", "4th"),
-        # A cabinet is a real location with no §3.4 section. It stays unsectioned
-        # rather than being forced into one; `location` keeps the raw text.
-        ("Top Big Cabinet", None, None),
-        ("Top Small Cabinet & E:\\Movies", None, None),
-        ("Black Box next to cabinet", None, None),
-        # bare number normalised to ordinal
+        # The four cabinets became sections in Batch 6 (`DECISIONS.md` #34). These
+        # three cases previously expected ``(None, None)`` and are changed here
+        # because the *behaviour* was deliberately changed by owner decision — not to
+        # make a failing assertion pass. Before the change these locations covered 122
+        # real discs that no section filter could reach.
+        ("Top Big Cabinet", "Top Big Cabinet", None),
+        ("Top Small Cabinet & E:\\Movies", "Top Small Cabinet", None),
+        ("Black Box next to cabinet", "Black Box", None),
+        # Both spellings the spreadsheet actually uses, and the full Fish Room string.
+        ("Top small cabinet", "Top Small Cabinet", None),
+        ("Left Hand Side Small Cabinet Fish Room", "Fish Room Cabinet", None),
+        # A cabinet has no shelves, and the digit inside a *title* is not one. This
+        # string is real and had been parsed as shelf "4th" for four live discs.
+        ("Top small cabinet (Arrow 4 Film Noir Classics Vol 2)", "Top Small Cabinet", None),
+        # The same trap inside a string that does have a shelf: the shelf must come
+        # from "6th", not from the "4" in the box-set title. This one passed before
+        # only because the leftmost match happened to be the right one.
+        ("Back 6th Shelf (Arrow 4 Film Noir Classics Vol 1)", "Back", "6th"),
+        # A bare digit is still a shelf when the word "shelf" follows it, so a
+        # hand-typed location keeps working.
         ("Front 2 shelf", "Front", "2nd"),
         ("Back 1 shelf", "Back", "1st"),
         ("Lounge 4th shelf", "Lounge", "4th"),
+        # ... but a bare digit on its own is not a shelf any more.
+        ("Front Hellboy 4 case", "Front", None),
         # no location
         ("", None, None),
         ("   ", None, None),

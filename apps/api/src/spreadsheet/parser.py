@@ -60,6 +60,16 @@ def normalise_formats(raw: str) -> list[str]:
 # ``e:\movies`` earns its place because the digital library is only ever recorded as
 # its filesystem path, never as the word "Digital": 413 of the 1,857 real rows. Without
 # it the whole digital collection lands with ``section IS NULL``.
+#
+# The four cabinets were added in Batch 6 (`DECISIONS.md` #34). Before them, every
+# cabinet row fell through to ``section IS NULL`` — 124 of 1,857, which is 122 discs the
+# section filter could not reach. Each prefix below is taken from the real spreadsheet
+# text, including the two spellings of "Top Small Cabinet"/"Top small cabinet"; matching
+# is case-insensitive, so one entry covers both.
+#
+# Order matters within the cabinets exactly as it does elsewhere: nothing here is a
+# prefix of anything else, but keeping the list ordered longest-context-first is what
+# stops a future addition from silently shadowing an existing one.
 _SECTION_PREFIXES: list[tuple[str, str]] = [
     ("Front", "front"),
     ("Back", "back"),
@@ -67,10 +77,22 @@ _SECTION_PREFIXES: list[tuple[str, str]] = [
     ("Garage", "garage"),
     ("Digital", "digital"),
     ("Digital", "e:\\movies"),
+    ("Top Big Cabinet", "top big cabinet"),
+    ("Top Small Cabinet", "top small cabinet"),
+    ("Fish Room Cabinet", "left hand side small cabinet fish room"),
+    ("Black Box", "black box next to cabinet"),
 ]
 
+# A shelf is an ordinal — "2nd" — or a bare digit that is *followed by the word shelf*.
+#
+# It used to be any bare digit anywhere in the string, and that read the "4" out of
+# "Top small cabinet (Arrow 4 Film Noir Classics Vol 2)" as shelf "4th" for four live
+# rows. The same trap sits inside "Back 6th Shelf (Arrow 4 Film Noir Classics Vol 1)",
+# which only survived because ``search`` returns the leftmost match and "6th" comes
+# first — a correct answer for the wrong reason. Requiring either the suffix or the
+# following word removes both cases and still accepts a hand-typed "Front 2 shelf".
 _ORDINAL_RE = re.compile(
-    r"\b(\d+(?:st|nd|rd|th)?)\b",
+    r"\b(\d+)(?:st|nd|rd|th)\b|\b(\d+)\s+shelf\b",
     re.IGNORECASE,
 )
 
@@ -80,18 +102,20 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
     Extract (section, shelf) from a free-text location string.
 
     Examples:
-        "Front 2nd shelf"  → ("Front", "2nd")
-        "Back 3rd"         → ("Back", "3rd")
-        "front 1st shelf"  → ("Front", "1st")
-        "Lounge"           → ("Lounge", None)
-        "Digital"          → ("Digital", None)
-        "E:\\Movies"        → ("Digital", None)
-        ""                 → (None, None)
+        "Front 2nd shelf"       → ("Front", "2nd")
+        "Back 3rd"              → ("Back", "3rd")
+        "front 1st shelf"       → ("Front", "1st")
+        "Lounge"                → ("Lounge", None)
+        "Digital"               → ("Digital", None)
+        "E:\\Movies"             → ("Digital", None)
+        "Top Big Cabinet"       → ("Top Big Cabinet", None)
+        "Black Box next to cabinet" → ("Black Box", None)
+        ""                      → (None, None)
 
-    A location the section list does not recognise — "Top Big Cabinet", "Black Box
-    next to cabinet" — returns ``None``. That is not data loss: the cell is kept
-    verbatim in ``ImportCandidate.location_raw`` and stored in
-    ``collection_items.location``, which is what roadmap §3.4 designs that column for.
+    A location that still matches nothing — "(In with The Killing)" — returns ``None``.
+    That is not data loss: the cell is kept verbatim in
+    ``ImportCandidate.location_raw`` and stored in ``collection_items.location``, which
+    is what roadmap §3.4 designs that column for.
     """
     stripped = raw.strip()
     if not stripped:
@@ -107,10 +131,14 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
     shelf: str | None = None
     m = _ORDINAL_RE.search(stripped)
     if m:
-        shelf = m.group(1).lower()
-        # Normalise bare digits: "2" → "2nd" etc.
-        if shelf.isdigit():
-            shelf = _add_ordinal_suffix(int(shelf))
+        # Group 1 is the ordinal form ("2nd"), group 2 the bare "2 shelf" form. Only
+        # one can match, and both are normalised to the ordinal.
+        ordinal, bare = m.group(1), m.group(2)
+        shelf = (
+            _add_ordinal_suffix(int(ordinal))
+            if ordinal is not None
+            else _add_ordinal_suffix(int(bare))
+        )
 
     return section, shelf
 

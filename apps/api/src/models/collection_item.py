@@ -32,11 +32,31 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
 
-#: The five areas the collection is stored in (§3.4). A location the parser does not
-#: recognise — "Top Big Cabinet", "Black Box next to cabinet" — keeps its raw text in
+#: The areas the collection is stored in. §3.4 named five; Batch 6 added the four
+#: cabinets, which between them held 122 of the 124 rows that §3.4's vocabulary could
+#: not classify (`DECISIONS.md` #34).
+#:
+#: The five §3.4 values come first and keep their exact spellings — the CHECK
+#: constraint, the import and every existing row depend on them. A location that still
+#: matches nothing — "(In with The Killing)" — keeps its raw text in
 #: :attr:`CollectionItem.location` and leaves ``section`` NULL rather than being forced
 #: into a bucket it does not belong to.
-SECTIONS = ("Front", "Back", "Lounge", "Garage", "Digital")
+SECTIONS = (
+    "Front",
+    "Back",
+    "Lounge",
+    "Garage",
+    "Digital",
+    "Top Big Cabinet",
+    "Top Small Cabinet",
+    "Fish Room Cabinet",
+    "Black Box",
+)
+
+#: The subset of :data:`SECTIONS` that has numbered shelves. The rest — Digital, the
+#: cabinets — are a single undivided space, so a shelf filter offers nothing there and
+#: the UI can say so instead of showing an empty select.
+SHELVED_SECTIONS = ("Front", "Back")
 
 #: Format codes, best to worst. This ordering is duplicated in the
 #: ``recalculate_movie_derived_fields`` trigger, which is where it is enforced; the
@@ -74,8 +94,8 @@ class CollectionItem(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: the two normalised columns below cannot classify it.
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    #: One of :data:`SECTIONS`, or NULL when the location names somewhere the five
-    #: sections do not cover.
+    #: One of :data:`SECTIONS`, or NULL when the location names somewhere the
+    #: vocabulary does not cover.
     section: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
     #: Normalised shelf within the section — "1st", "2nd", … NULL for a section that has
