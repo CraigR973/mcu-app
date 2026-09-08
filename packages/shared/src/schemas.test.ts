@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  auditEntrySchema,
+  auditFieldChangeSchema,
   candidateListSchema,
   collectionCopiesSchema,
   collectionFacetsSchema,
+  collectionItemSchema,
+  duplicateCheckSchema,
   healthResponseSchema,
   movieDetailSchema,
   moviePageSchema,
   profileResponseSchema,
+  tmdbSearchResponseSchema,
   tokenPairSchema,
+  trashPageSchema,
   watchLogPageSchema,
 } from './schemas'
 
@@ -236,5 +242,162 @@ describe('Batch 6 location and watch-log schemas', () => {
         pages: 1,
       }),
     ).toThrow()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Write surface (Batch 7)
+// ---------------------------------------------------------------------------
+
+const collectionItem = {
+  id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+  movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+  movieTitle: 'Heat',
+  formats: ['4k_uhd'],
+  location: 'Front 2nd shelf',
+  section: 'Front',
+  shelf: '2nd',
+  locationLabel: 'Front 2nd',
+  subCategory: null,
+  notes: null,
+  condition: 'good',
+  conditionUpdatedAt: '2026-09-08T14:00:00Z',
+  hasPlaybackIssues: false,
+  playbackNotes: null,
+  purchasePrice: '19.99',
+  purchaseSource: 'Fopp',
+  purchaseDate: '2026-09-01',
+  listingStatus: 'in_collection',
+  deletedAt: null,
+}
+
+describe('collectionItemSchema', () => {
+  it('parses a written item', () => {
+    expect(collectionItemSchema.parse(collectionItem)).toEqual(collectionItem)
+  })
+
+  it('keeps the price a string so money never round-trips through a float', () => {
+    expect(() =>
+      collectionItemSchema.parse({ ...collectionItem, purchasePrice: 19.99 }),
+    ).toThrow()
+  })
+
+  it('rejects wire-shape drift', () => {
+    const { locationLabel: _dropped, ...missing } = collectionItem
+    expect(() => collectionItemSchema.parse(missing)).toThrow()
+  })
+})
+
+describe('duplicateCheckSchema', () => {
+  it('parses the upgrade prompt the API decides on', () => {
+    const parsed = duplicateCheckSchema.parse({
+      movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+      movieTitle: 'Heat',
+      isDuplicate: true,
+      existingCopies: [
+        {
+          id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+          formats: ['blu_ray'],
+          locationLabel: 'Back 6th',
+          condition: 'good',
+        },
+      ],
+      isUpgrade: true,
+      bestFormatOwned: 'blu_ray',
+    })
+    expect(parsed.isUpgrade).toBe(true)
+    expect(parsed.existingCopies[0].locationLabel).toBe('Back 6th')
+  })
+
+  it('parses the "never heard of it" answer, where the film ids are null', () => {
+    const parsed = duplicateCheckSchema.parse({
+      movieId: null,
+      movieTitle: null,
+      isDuplicate: false,
+      existingCopies: [],
+      isUpgrade: false,
+      bestFormatOwned: null,
+    })
+    expect(parsed.isDuplicate).toBe(false)
+  })
+})
+
+describe('auditEntrySchema', () => {
+  const entry = {
+    id: '3f2504e0-4f89-11d3-9a0c-0305e82c3304',
+    actorId: '3f2504e0-4f89-11d3-9a0c-0305e82c3305',
+    actorName: 'Craig',
+    actionType: 'update' as const,
+    targetTable: 'collection_items',
+    targetId: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    changes: { condition: { from: 'good', to: 'damaged' } },
+    createdAt: '2026-09-08T14:00:00Z',
+  }
+
+  it('parses a diff entry', () => {
+    expect(auditEntrySchema.parse(entry).changes).toEqual({
+      condition: { from: 'good', to: 'damaged' },
+    })
+  })
+
+  it('parses an entry whose actor is gone — the row outlives the profile', () => {
+    const orphan = auditEntrySchema.parse({ ...entry, actorId: null, actorName: null })
+    expect(orphan.actorName).toBeNull()
+    expect(orphan.targetId).toBe(entry.targetId)
+  })
+
+  it('rejects an action type outside the §3.20 vocabulary', () => {
+    expect(() => auditEntrySchema.parse({ ...entry, actionType: 'tweaked' })).toThrow()
+  })
+})
+
+describe('auditFieldChangeSchema', () => {
+  it('narrows a diff value and passes over a snapshot scalar', () => {
+    expect(auditFieldChangeSchema.safeParse({ from: null, to: 'damaged' }).success).toBe(true)
+    expect(auditFieldChangeSchema.safeParse('another_copy').success).toBe(false)
+  })
+})
+
+describe('trashPageSchema', () => {
+  it('parses a page of removed discs', () => {
+    const parsed = trashPageSchema.parse({
+      items: [
+        {
+          id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+          targetTable: 'collection_items',
+          movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+          movieTitle: 'Heat',
+          posterPath: null,
+          formats: ['dvd'],
+          locationLabel: 'Unfiled',
+          deletedAt: '2026-09-08T14:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      perPage: 200,
+      pages: 1,
+    })
+    expect(parsed.items[0].locationLabel).toBe('Unfiled')
+  })
+})
+
+describe('tmdbSearchResponseSchema', () => {
+  it('flags a result the catalogue already has', () => {
+    const parsed = tmdbSearchResponseSchema.parse({
+      query: 'heat',
+      results: [
+        {
+          tmdbId: 949,
+          title: 'Heat',
+          year: 1995,
+          overview: 'A crew and the detective chasing it.',
+          posterPath: '/heat.jpg',
+          inCollection: true,
+          movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+        },
+      ],
+    })
+    expect(parsed.results[0].inCollection).toBe(true)
   })
 })

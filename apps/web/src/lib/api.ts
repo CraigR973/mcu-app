@@ -1,32 +1,52 @@
 import {
   apiErrorSchema,
+  auditPageSchema,
   candidateListSchema,
   collectionCopiesSchema,
   collectionFacetsSchema,
+  collectionItemSchema,
+  duplicateCheckSchema,
   movieDetailSchema,
   moviePageSchema,
   searchResponseSchema,
+  tmdbSearchResponseSchema,
+  trashPageSchema,
   watchLogEntrySchema,
   watchLogPageSchema,
+  type AuditPage,
   type CandidateList,
   type CollectionCopy,
   type CollectionFacets,
+  type CollectionItem,
+  type Condition,
+  type DuplicateCheck,
+  type DuplicateReason,
   type MovieDetail,
   type MoviePage,
   type SearchResponse,
+  type TmdbSearchResponse,
+  type TrashPage,
   type WatchLogEntry,
   type WatchLogPage,
 } from '@mcu/shared'
-import type { ZodType } from 'zod'
+import { z, type ZodType } from 'zod'
 
 import { authFetch } from './auth-tokens'
 
 export type {
+  AuditEntry,
+  AuditPage,
   Candidate,
   CandidateList,
   CollectionCopy,
   CollectionFacets,
+  CollectionItem,
+  Condition,
   DecadeFacet,
+  DuplicateCheck,
+  DuplicateReason,
+  ExistingCopy,
+  FormatCode,
   MovieDetail,
   MovieListItem,
   MovieLocation,
@@ -34,6 +54,9 @@ export type {
   SearchResponse,
   SectionFacet,
   ShelfFacet,
+  TmdbSearchResult,
+  TrashItem,
+  TrashPage,
   WatchLogEntry,
   WatchLogPage,
 } from '@mcu/shared'
@@ -211,4 +234,127 @@ export const FORMAT_COLORS: Record<string, string> = {
 export function formatLabel(value: string | null): string | null {
   if (!value) return null
   return FORMATS.find((format) => format.value === value)?.label ?? value.replaceAll('_', ' ')
+}
+
+// ---------------------------------------------------------------------------
+// Write surface (Batch 7) — §3.1, §3.2, §3.5, §3.11
+//
+// Admin-only. Every response is parsed through `@mcu/shared` like the read surface;
+// nothing here casts.
+// ---------------------------------------------------------------------------
+
+/** The condition vocabulary, in the order a disc degrades. */
+export const CONDITIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'like_new', label: 'Like new' },
+  { value: 'good', label: 'Good' },
+  { value: 'acceptable', label: 'Acceptable' },
+  { value: 'damaged', label: 'Damaged' },
+] as const
+
+export function conditionLabel(value: string | null): string | null {
+  if (!value) return null
+  return CONDITIONS.find((entry) => entry.value === value)?.label ?? value.replaceAll('_', ' ')
+}
+
+/** The editable field set, exactly as `PUT`/`POST` accept it. Kept as one interface so
+ *  the add form and the edit form cannot drift into sending different shapes. */
+export interface CollectionItemFields {
+  formats: string[]
+  location?: string | null
+  section?: string | null
+  shelf?: string | null
+  subCategory?: string | null
+  notes?: string | null
+  condition?: Condition | null
+  hasPlaybackIssues: boolean
+  playbackNotes?: string | null
+  purchasePrice?: string | null
+  purchaseSource?: string | null
+  purchaseDate?: string | null
+}
+
+/** Thrown when the API refuses an unconfirmed duplicate, carrying what the §3.5 prompt
+ *  needs. A plain `Error` would reduce the 409 body to a string and lose the copies. */
+export class DuplicateItemError extends Error {
+  constructor(readonly duplicate: DuplicateCheck) {
+    super('This film is already in the collection')
+    this.name = 'DuplicateItemError'
+  }
+}
+
+export async function checkDuplicate(
+  film: { movieId: string } | { tmdbId: number },
+  formats: string[],
+): Promise<DuplicateCheck> {
+  const params = new URLSearchParams()
+  if ('movieId' in film) params.set('movieId', film.movieId)
+  else params.set('tmdbId', String(film.tmdbId))
+  for (const format of formats) params.append('format', format)
+  return parseResponse(await authFetch(`/collection/duplicate-check?${params}`), duplicateCheckSchema)
+}
+
+export async function addCollectionItem(
+  input: CollectionItemFields & {
+    movieId?: string
+    tmdbId?: number
+    confirmDuplicate?: DuplicateReason
+  },
+): Promise<CollectionItem> {
+  const response = await authFetch('/collection', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+  if (response.status === 409) {
+    const body: unknown = await response.json()
+    const parsed = z.object({ detail: duplicateCheckSchema }).safeParse(body)
+    if (parsed.success) throw new DuplicateItemError(parsed.data.detail)
+    throw new Error('This film is already in the collection')
+  }
+  return parseResponse(response, collectionItemSchema)
+}
+
+export async function updateCollectionItem(
+  itemId: string,
+  input: CollectionItemFields,
+): Promise<CollectionItem> {
+  return parseResponse(
+    await authFetch(`/collection/${itemId}`, { method: 'PUT', body: JSON.stringify(input) }),
+    collectionItemSchema,
+  )
+}
+
+export async function deleteCollectionItem(itemId: string): Promise<CollectionItem> {
+  return parseResponse(
+    await authFetch(`/collection/${itemId}`, { method: 'DELETE' }),
+    collectionItemSchema,
+  )
+}
+
+export async function fetchTrash(): Promise<TrashPage> {
+  return parseResponse(await authFetch('/trash?perPage=200'), trashPageSchema)
+}
+
+export async function restoreCollectionItem(itemId: string): Promise<CollectionItem> {
+  return parseResponse(
+    await authFetch(`/trash/collection_items/${itemId}/restore`, { method: 'POST' }),
+    collectionItemSchema,
+  )
+}
+
+/** The audit log. `movieId` is what the detail page's history panel passes — it resolves
+ *  to every one of that film's discs, deleted ones included. */
+export async function fetchAudit(
+  filter: { movieId?: string; targetId?: string } = {},
+  perPage = 50,
+): Promise<AuditPage> {
+  const params = new URLSearchParams({ perPage: String(perPage) })
+  if (filter.movieId) params.set('movieId', filter.movieId)
+  if (filter.targetId) params.set('targetId', filter.targetId)
+  return parseResponse(await authFetch(`/admin/audit?${params}`), auditPageSchema)
+}
+
+export async function searchTmdb(q: string): Promise<TmdbSearchResponse> {
+  const params = new URLSearchParams({ q })
+  return parseResponse(await authFetch(`/tmdb/search?${params}`), tmdbSearchResponseSchema)
 }

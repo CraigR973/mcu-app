@@ -1,7 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ZodError } from 'zod'
 
-import { fetchCandidates, fetchFacets, fetchMovies, formatLabel, logWatch } from './api'
+import {
+  addCollectionItem,
+  checkDuplicate,
+  DuplicateItemError,
+  fetchAudit,
+  fetchCandidates,
+  fetchFacets,
+  fetchMovies,
+  formatLabel,
+  logWatch,
+  restoreCollectionItem,
+  updateCollectionItem,
+} from './api'
 
 const movie = {
   id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
@@ -152,3 +164,151 @@ describe('formatLabel', () => {
   })
 })
 
+
+// ---------------------------------------------------------------------------
+// Write surface (Batch 7)
+// ---------------------------------------------------------------------------
+
+const writtenItem = {
+  id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+  movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+  movieTitle: 'Heat',
+  formats: ['4k_uhd'],
+  location: 'Front 2nd shelf',
+  section: 'Front',
+  shelf: '2nd',
+  locationLabel: 'Front 2nd',
+  subCategory: null,
+  notes: null,
+  condition: 'good',
+  conditionUpdatedAt: '2026-09-08T14:00:00Z',
+  hasPlaybackIssues: false,
+  playbackNotes: null,
+  purchasePrice: '19.99',
+  purchaseSource: null,
+  purchaseDate: null,
+  listingStatus: 'in_collection',
+  deletedAt: null,
+}
+
+const duplicate = {
+  movieId: writtenItem.movieId,
+  movieTitle: 'Heat',
+  isDuplicate: true,
+  existingCopies: [
+    {
+      id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+      formats: ['blu_ray'],
+      locationLabel: 'Back 6th',
+      condition: 'good',
+    },
+  ],
+  isUpgrade: true,
+  bestFormatOwned: 'blu_ray',
+}
+
+const newCopy = { formats: ['4k_uhd'], hasPlaybackIssues: false }
+
+describe('write surface', () => {
+  it('adds a disc and parses the item back through the shared schema', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(writtenItem), { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await addCollectionItem({ ...newCopy, movieId: writtenItem.movieId })
+
+    expect(result.locationLabel).toBe('Front 2nd')
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(String(init.body))).toMatchObject({ movieId: writtenItem.movieId })
+  })
+
+  it('turns the 409 into a typed error carrying the §3.5 prompt', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: duplicate }), { status: 409 }),
+      ),
+    )
+
+    // A plain Error would flatten the body to a string and lose the existing copies,
+    // which are exactly what the prompt has to show.
+    const error = await addCollectionItem({ ...newCopy, movieId: writtenItem.movieId }).catch(
+      (caught: unknown) => caught,
+    )
+
+    expect(error).toBeInstanceOf(DuplicateItemError)
+    expect((error as DuplicateItemError).duplicate.isUpgrade).toBe(true)
+    expect((error as DuplicateItemError).duplicate.existingCopies[0].locationLabel).toBe(
+      'Back 6th',
+    )
+  })
+
+  it('asks the duplicate check about every format being added', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(duplicate)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await checkDuplicate({ movieId: writtenItem.movieId }, ['4k_uhd', 'download'])
+
+    expect(result.bestFormatOwned).toBe('blu_ray')
+    expect(fetchMock.mock.calls[0][0]).toContain('format=4k_uhd&format=download')
+  })
+
+  it('sends the whole editable field set on an edit', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(writtenItem)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await updateCollectionItem(writtenItem.id, {
+      formats: ['4k_uhd'],
+      condition: 'damaged',
+      hasPlaybackIssues: true,
+      playbackNotes: 'Freezes an hour in',
+    })
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain(`/api/v1/collection/${writtenItem.id}`)
+    expect(init.method).toBe('PUT')
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      condition: 'damaged',
+      hasPlaybackIssues: true,
+    })
+  })
+
+  it('restores from the trash by table and id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(writtenItem)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await restoreCollectionItem(writtenItem.id)
+
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      `/api/v1/trash/collection_items/${writtenItem.id}/restore`,
+    )
+  })
+
+  it('asks the audit log for a whole film, not one disc', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ items: [], total: 0, page: 1, perPage: 50, pages: 0 })),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchAudit({ movieId: writtenItem.movieId })
+
+    expect(fetchMock.mock.calls[0][0]).toContain(`movieId=${writtenItem.movieId}`)
+  })
+
+  it('rejects a written item whose wire shape drifted', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ...writtenItem, locationLabel: undefined }), {
+          status: 201,
+        }),
+      ),
+    )
+
+    await expect(
+      addCollectionItem({ ...newCopy, movieId: writtenItem.movieId }),
+    ).rejects.toBeInstanceOf(ZodError)
+  })
+})

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Film, Bookmark, LayoutDashboard, ShieldCheck, X } from 'lucide-react'
+import { Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/context/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,13 @@ const navItems = [
   { label: 'Movies', path: '/movies', icon: Film },
   { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+]
+
+/** Batch 7's write surface. Admin-only, matching the routes and the API. */
+const adminNavItems = [
+  { label: 'Add a disc', path: '/collection/add', icon: Plus },
+  { label: 'Trash', path: '/trash', icon: Trash2 },
+  { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 
 export default function Sidebar({ open, onClose }: Props) {
@@ -66,23 +73,25 @@ export default function Sidebar({ open, onClose }: Props) {
             </NavLink>
           ))}
 
-          {profile?.role === 'admin' && (
-            <NavLink
-              to="/admin"
-              onClick={onClose}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )
-              }
-            >
-              <ShieldCheck size={16} />
-              Admin
-            </NavLink>
-          )}
+          {profile?.role === 'admin' &&
+            adminNavItems.map(({ label, path, icon: Icon }) => (
+              <NavLink
+                key={path}
+                to={path}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )
+                }
+              >
+                <Icon size={16} />
+                {label}
+              </NavLink>
+            ))}
         </nav>
 
         {/* Footer */}

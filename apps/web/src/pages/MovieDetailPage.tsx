@@ -1,41 +1,70 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   Clock,
   Disc3,
   ExternalLink,
+  Loader2,
   MapPin,
   Package,
+  Pencil,
+  Plus,
   RefreshCcw,
+  ShieldAlert,
   Star,
 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
+import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
+import { useAuth } from '@/context/auth'
 import {
   backdropUrl,
+  conditionLabel,
   fetchCopies,
   fetchMovie,
   FORMAT_COLORS,
   formatLabel,
   posterUrl,
+  updateCollectionItem,
   type CollectionCopy,
   type MovieDetail,
 } from '@/lib/api'
 
 type Tab = 'overview' | 'crew' | 'copies'
 
-const CONDITION_LABELS: Record<string, string> = {
-  new: 'New',
-  like_new: 'Like new',
-  good: 'Good',
-  acceptable: 'Acceptable',
-  damaged: 'Damaged',
-}
+function CopyCard({
+  item,
+  movieId,
+  canEdit,
+  onEdit,
+}: {
+  item: CollectionCopy
+  movieId: string
+  canEdit: boolean
+  onEdit: (copy: CollectionCopy) => void
+}) {
+  const queryClient = useQueryClient()
 
-function CopyCard({ item }: { item: CollectionCopy }) {
+  // §3.11's "mark as damaged" quick action. It is the ordinary update with one field
+  // changed — the client already holds the whole copy — so there is only one path that
+  // has to remember to stamp `conditionUpdatedAt` and write the audit row.
+  const markDamaged = useMutation({
+    mutationFn: () =>
+      updateCollectionItem(item.id, {
+        ...fieldsFrom(item),
+        condition: 'damaged',
+        hasPlaybackIssues: true,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
+      void queryClient.invalidateQueries({ queryKey: ['item-history', movieId] })
+    },
+  })
+
   return (
     <article className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -50,9 +79,7 @@ function CopyCard({ item }: { item: CollectionCopy }) {
           ))}
         </div>
         {item.condition && (
-          <span className="text-xs text-muted-foreground">
-            {CONDITION_LABELS[item.condition] ?? item.condition}
-          </span>
+          <span className="text-xs text-muted-foreground">{conditionLabel(item.condition)}</span>
         )}
       </div>
 
@@ -84,6 +111,40 @@ function CopyCard({ item }: { item: CollectionCopy }) {
           Playback issue{item.playbackNotes ? `: ${item.playbackNotes}` : ''}
         </p>
       )}
+
+      {canEdit && (
+        <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => onEdit(item)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground"
+          >
+            <Pencil className="h-3 w-3" /> Edit
+          </button>
+          {item.condition !== 'damaged' && (
+            <button
+              type="button"
+              onClick={() => markDamaged.mutate()}
+              disabled={markDamaged.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+            >
+              {markDamaged.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <ShieldAlert className="h-3 w-3" />
+              )}
+              Mark damaged
+            </button>
+          )}
+        </div>
+      )}
+      {markDamaged.isError && (
+        <p className="text-xs text-destructive">
+          {markDamaged.error instanceof Error
+            ? markDamaged.error.message
+            : 'Could not update this disc.'}
+        </p>
+      )}
     </article>
   )
 }
@@ -94,6 +155,9 @@ export default function MovieDetailPage() {
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<Tab>('overview')
   const [correcting, setCorrecting] = useState(false)
+  const [editing, setEditing] = useState<CollectionCopy | null>(null)
+  const { profile } = useAuth()
+  const canEdit = profile?.role === 'admin'
   const movieId = id ?? ''
 
   const movieQuery = useQuery({
@@ -219,8 +283,10 @@ export default function MovieDetailPage() {
           </div>
         )}
 
-        <div className="mt-8">
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
           <WatchPanel movieId={movie.id} />
+          {/* Admin-only: `GET /admin/audit` is, so a viewer would only watch it fail. */}
+          {canEdit && <ItemHistory movieId={movie.id} />}
         </div>
 
         <div className="mt-8 flex gap-1 overflow-x-auto border-b border-border">
@@ -282,7 +348,15 @@ export default function MovieDetailPage() {
         )}
 
         {tab === 'copies' && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-4">
+            {canEdit && (
+              <Link
+                to="/collection/add"
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+              >
+                <Plus className="h-3 w-3" /> Add a copy
+              </Link>
+            )}
             {copiesQuery.isLoading ? (
               <p className="text-sm text-muted-foreground">Loading copies…</p>
             ) : copies.length === 0 ? (
@@ -292,12 +366,24 @@ export default function MovieDetailPage() {
               </div>
             ) : (
               <div className="grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {copies.map((copy) => <CopyCard key={copy.id} item={copy} />)}
+                {copies.map((copy) => (
+                  <CopyCard
+                    key={copy.id}
+                    item={copy}
+                    movieId={movie.id}
+                    canEdit={canEdit}
+                    onEdit={setEditing}
+                  />
+                ))}
               </div>
             )}
           </div>
         )}
       </div>
+
+      {editing && (
+        <CopyEditor movieId={movie.id} copy={editing} onClose={() => setEditing(null)} />
+      )}
     </div>
   )
 }

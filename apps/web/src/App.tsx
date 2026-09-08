@@ -12,6 +12,8 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
+const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
+const TrashPage = lazy(() => import('./pages/TrashPage'))
 
 function AdminPage() {
   return (
@@ -61,6 +63,16 @@ function AppShell({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** Batch 7's write surface is admin-only end to end — the API refuses a viewer with a
+ *  403, and routing them away is how they find that out without hitting an error page. */
+function AdminShell({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute role="admin">
+      <AppLayout>{children}</AppLayout>
+    </ProtectedRoute>
+  )
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -91,12 +103,16 @@ export default function App() {
               element={<AppShell><DashboardPage /></AppShell>}
             />
             <Route
+              path="/collection/add"
+              element={<AdminShell><AddToCollectionPage /></AdminShell>}
+            />
+            <Route
+              path="/trash"
+              element={<AdminShell><TrashPage /></AdminShell>}
+            />
+            <Route
               path="/admin"
-              element={
-                <ProtectedRoute role="admin">
-                  <AppLayout><AdminPage /></AppLayout>
-                </ProtectedRoute>
-              }
+              element={<AdminShell><AdminPage /></AdminShell>}
             />
 
             {/* 404 */}

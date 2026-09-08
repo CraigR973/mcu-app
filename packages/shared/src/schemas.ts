@@ -221,3 +221,137 @@ export type DecadeFacet = z.infer<typeof decadeFacetSchema>
 export type CollectionFacets = z.infer<typeof collectionFacetsSchema>
 export type WatchLogEntry = z.infer<typeof watchLogEntrySchema>
 export type WatchLogPage = z.infer<typeof watchLogPageSchema>
+
+// ---------------------------------------------------------------------------
+// Write surface (Batch 7) — §3.1, §3.2, §3.5, §3.11
+//
+// Admin-only, every one of them. Schemas ship with their endpoint, so the add
+// form, the trash and the audit log are all parsed rather than cast.
+// ---------------------------------------------------------------------------
+
+/** The vocabularies the API enforces. Mirrored here so a form cannot offer a value a
+ *  CHECK constraint would then reject. */
+export const conditionSchema = z.enum(['new', 'like_new', 'good', 'acceptable', 'damaged'])
+export const formatCodeSchema = z.enum(['4k_uhd', 'blu_ray', 'dvd', 'download'])
+export const duplicateReasonSchema = z.enum(['another_copy', 'upgrade'])
+export const auditActionSchema = z.enum(['create', 'update', 'delete', 'restore', 'bulk_import'])
+
+export const collectionItemSchema = z.object({
+  id: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  formats: z.array(z.string()),
+  location: z.string().nullable(),
+  section: z.string().nullable(),
+  shelf: z.string().nullable(),
+  // Composed server-side, like `locationSchema.label`, so every surface says it identically.
+  locationLabel: z.string().min(1),
+  subCategory: z.string().nullable(),
+  notes: z.string().nullable(),
+  condition: z.string().nullable(),
+  conditionUpdatedAt: z.string().nullable(),
+  hasPlaybackIssues: z.boolean(),
+  playbackNotes: z.string().nullable(),
+  // A string, not a number: a price is money and must not round-trip through a float.
+  purchasePrice: z.string().nullable(),
+  purchaseSource: z.string().nullable(),
+  purchaseDate: z.string().nullable(),
+  listingStatus: z.string(),
+  deletedAt: z.string().nullable(),
+})
+
+export const existingCopySchema = z.object({
+  id: z.string().uuid(),
+  formats: z.array(z.string()),
+  locationLabel: z.string().min(1),
+  condition: z.string().nullable(),
+})
+
+export const duplicateCheckSchema = z.object({
+  movieId: z.string().uuid().nullable(),
+  movieTitle: z.string().nullable(),
+  isDuplicate: z.boolean(),
+  existingCopies: z.array(existingCopySchema),
+  // Decided by the API against the same format ranking the database enforces, rather
+  // than re-derived here where it could disagree with `bestFormatOwned`.
+  isUpgrade: z.boolean(),
+  bestFormatOwned: z.string().nullable(),
+})
+
+export const tmdbSearchResultSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  overview: z.string(),
+  posterPath: z.string().nullable(),
+  inCollection: z.boolean(),
+  movieId: z.string().uuid().nullable(),
+})
+
+export const tmdbSearchResponseSchema = z.object({
+  query: z.string(),
+  results: z.array(tmdbSearchResultSchema),
+})
+
+export const trashItemSchema = z.object({
+  id: z.string().uuid(),
+  targetTable: z.string().min(1),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  formats: z.array(z.string()),
+  locationLabel: z.string().min(1),
+  deletedAt: z.string(),
+})
+
+export const trashPageSchema = z.object({
+  items: z.array(trashItemSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  perPage: z.number().int().positive(),
+  pages: z.number().int().nonnegative(),
+})
+
+/** One field's movement, as `diff_snapshots` writes it. The values are deliberately
+ *  `unknown`: a diff spans booleans, strings, arrays and nulls, and pretending
+ *  otherwise would make the schema reject a correct row. */
+export const auditFieldChangeSchema = z.object({
+  from: z.unknown(),
+  to: z.unknown(),
+})
+
+export const auditEntrySchema = z.object({
+  id: z.string().uuid(),
+  actorId: z.string().uuid().nullable(),
+  // Null when the profile is gone. The row outlives it (`DECISIONS.md` #5), so the log
+  // still says what happened even when it can no longer say who.
+  actorName: z.string().nullable(),
+  actionType: auditActionSchema,
+  targetTable: z.string().min(1),
+  targetId: z.string().min(1),
+  changes: z.record(z.unknown()).nullable(),
+  createdAt: z.string(),
+})
+
+export const auditPageSchema = z.object({
+  items: z.array(auditEntrySchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  perPage: z.number().int().positive(),
+  pages: z.number().int().nonnegative(),
+})
+
+export type Condition = z.infer<typeof conditionSchema>
+export type FormatCode = z.infer<typeof formatCodeSchema>
+export type DuplicateReason = z.infer<typeof duplicateReasonSchema>
+export type AuditAction = z.infer<typeof auditActionSchema>
+export type CollectionItem = z.infer<typeof collectionItemSchema>
+export type ExistingCopy = z.infer<typeof existingCopySchema>
+export type DuplicateCheck = z.infer<typeof duplicateCheckSchema>
+export type TmdbSearchResult = z.infer<typeof tmdbSearchResultSchema>
+export type TmdbSearchResponse = z.infer<typeof tmdbSearchResponseSchema>
+export type TrashItem = z.infer<typeof trashItemSchema>
+export type TrashPage = z.infer<typeof trashPageSchema>
+export type AuditFieldChange = z.infer<typeof auditFieldChangeSchema>
+export type AuditEntry = z.infer<typeof auditEntrySchema>
+export type AuditPage = z.infer<typeof auditPageSchema>
