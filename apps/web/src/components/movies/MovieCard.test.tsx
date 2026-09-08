@@ -22,6 +22,8 @@ describe('MovieCard', () => {
           bestAudioOwned: null,
           identified: false,
           copyCount: 2,
+          locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
+          watched: true,
         }} />
       </StaticRouter>,
     )
@@ -30,5 +32,8 @@ describe('MovieCard', () => {
     expect(markup).toContain('Identify')
     expect(markup).toContain('2 copies')
     expect(markup).toContain('Blu-ray')
+    // Batch 6: where it is, and that it has been seen.
+    expect(markup).toContain('Front 2nd')
+    expect(markup).toContain('Watched')
   })
 })

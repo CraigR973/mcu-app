@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Link } from 'react-router-dom'
-import { CircleHelp, Copy } from 'lucide-react'
+import { CircleHelp, Copy, Eye, MapPin } from 'lucide-react'
 
 import { FORMAT_COLORS, formatLabel, posterUrl, type MovieListItem } from '@/lib/api'
 
@@ -38,6 +38,15 @@ export const MovieCard = memo(function MovieCard({ movie }: Props) {
             <CircleHelp className="h-3 w-3" /> Identify
           </span>
         )}
+        {movie.watched && (
+          <span
+            className="absolute top-1.5 left-1.5 inline-flex items-center rounded bg-emerald-700/90 p-1 text-white shadow"
+            aria-label="Watched"
+            title="Watched"
+          >
+            <Eye className="h-3 w-3" />
+          </span>
+        )}
       </div>
       <div className="p-2">
         <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug">{movie.title}</p>
@@ -49,6 +58,16 @@ export const MovieCard = memo(function MovieCard({ movie }: Props) {
             </span>
           )}
         </div>
+        {/* §6.2: a result is meant to tell you where the disc actually is. */}
+        {movie.locations.length > 0 && (
+          <p
+            className="mt-0.5 flex items-center gap-0.5 text-[10px] text-muted-foreground truncate"
+            title={movie.locations.map((l) => l.label).join(' · ')}
+          >
+            <MapPin className="h-2.5 w-2.5 shrink-0" />
+            {movie.locations.map((l) => l.label).join(' · ')}
+          </p>
+        )}
       </div>
     </Link>
   )

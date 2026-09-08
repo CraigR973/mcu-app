@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ZodError } from 'zod'
 
-import { fetchCandidates, fetchMovies, formatLabel } from './api'
+import { fetchCandidates, fetchFacets, fetchMovies, formatLabel, logWatch } from './api'
 
 const movie = {
   id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
@@ -17,6 +17,8 @@ const movie = {
   bestAudioOwned: null,
   identified: true,
   copyCount: 1,
+  locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
+  watched: false,
 }
 
 afterEach(() => {
@@ -73,6 +75,72 @@ describe('collection API parsing', () => {
     const result = await fetchCandidates(movie.id, 'The French Connection')
 
     expect(result.candidates[0]).toMatchObject({ tmdbId: 1051, year: 1971 })
+  })
+})
+
+describe('Batch 6 location, facet and watch-log calls', () => {
+  it('sends every location and facet filter as a camel-case query param', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      items: [movie],
+      totalMovies: 1,
+      totalItems: 1,
+      page: 1,
+      perPage: 60,
+      pages: 1,
+    })))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchMovies({
+      section: 'Front',
+      shelf: '2nd',
+      decadeFrom: 1940,
+      decadeTo: 1950,
+      minRating: 7,
+      watched: false,
+    })
+
+    const url = String(fetchMock.mock.calls[0][0])
+    expect(url).toContain('section=Front')
+    expect(url).toContain('shelf=2nd')
+    expect(url).toContain('decadeFrom=1940')
+    expect(url).toContain('decadeTo=1950')
+    expect(url).toContain('minRating=7')
+    // `watched=false` is a real filter — "what have I not seen?" — and a truthiness
+    // check would drop it silently.
+    expect(url).toContain('watched=false')
+  })
+
+  it('parses the facet vocabulary the pickers are built from', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      sections: [
+        { section: 'Front', movieCount: 550, itemCount: 550, shelves: [
+          { shelf: '2nd', movieCount: 119, itemCount: 119 },
+        ] },
+      ],
+      unsectionedItemCount: 2,
+      decades: [{ decade: 1940, movieCount: 203 }],
+      undatedMovieCount: 757,
+    }))))
+
+    const facets = await fetchFacets()
+
+    expect(facets.sections[0].shelves[0].shelf).toBe('2nd')
+    expect(facets.decades[0].decade).toBe(1940)
+  })
+
+  it('rejects a watch-log response whose rating left the half-star scale', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      id: '5c9a1f7e-1f5e-4a7b-9a1e-0c2b3d4e5f60',
+      movieId: movie.id,
+      movieTitle: movie.title,
+      posterPath: null,
+      watchedAt: '2026-09-08',
+      isRewatch: false,
+      personalRating: 8,
+      review: null,
+    }))))
+
+    await expect(logWatch({ movieId: movie.id })).rejects.toBeInstanceOf(ZodError)
   })
 })
 

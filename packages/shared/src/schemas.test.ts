@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest'
 import {
   candidateListSchema,
   collectionCopiesSchema,
+  collectionFacetsSchema,
   healthResponseSchema,
   movieDetailSchema,
   moviePageSchema,
   profileResponseSchema,
   tokenPairSchema,
+  watchLogPageSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -92,6 +94,8 @@ const movieListItem = {
   bestAudioOwned: 'Dolby Atmos',
   identified: true,
   copyCount: 2,
+  locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
+  watched: false,
 }
 
 describe('Batch 5 collection schemas', () => {
@@ -175,5 +179,62 @@ describe('Batch 5 collection schemas', () => {
       perPage: 60,
       pages: 1,
     })).toThrow()
+  })
+})
+
+describe('Batch 6 location and watch-log schemas', () => {
+  it('parses the facet vocabulary the filter bar is built from', () => {
+    const facets = {
+      sections: [
+        {
+          section: 'Front',
+          movieCount: 550,
+          itemCount: 550,
+          shelves: [{ shelf: '2nd', movieCount: 119, itemCount: 119 }],
+        },
+        // A cabinet is a section with no shelves — the picker must be able to say so.
+        { section: 'Top Big Cabinet', movieCount: 38, itemCount: 38, shelves: [] },
+      ],
+      unsectionedItemCount: 2,
+      decades: [{ decade: 1940, movieCount: 203 }],
+      undatedMovieCount: 757,
+    }
+    expect(collectionFacetsSchema.parse(facets)).toEqual(facets)
+  })
+
+  it('holds the API to the half-star scale', () => {
+    const entry = {
+      id: '5c9a1f7e-1f5e-4a7b-9a1e-0c2b3d4e5f60',
+      movieId: movieListItem.id,
+      movieTitle: '2001: A Space Odyssey',
+      posterPath: '/poster.jpg',
+      watchedAt: '2026-09-08',
+      isRewatch: true,
+      personalRating: 4.5,
+      review: null,
+    }
+    const page = { items: [entry], total: 1, page: 1, perPage: 50, pages: 1 }
+    expect(watchLogPageSchema.parse(page)).toEqual(page)
+
+    // A rating outside §3.7's scale is wire drift, not a value to render.
+    expect(() =>
+      watchLogPageSchema.parse({ ...page, items: [{ ...entry, personalRating: 9 }] }),
+    ).toThrow()
+  })
+
+  it('requires the location and watched fields the grid reads', () => {
+    // Both shipped with their endpoint. A response missing them is a deploy-skew
+    // signal, not something to paper over with a default.
+    const { locations: _locations, ...withoutLocations } = movieListItem
+    expect(() =>
+      moviePageSchema.parse({
+        items: [withoutLocations],
+        totalMovies: 1,
+        totalItems: 1,
+        page: 1,
+        perPage: 60,
+        pages: 1,
+      }),
+    ).toThrow()
   })
 })

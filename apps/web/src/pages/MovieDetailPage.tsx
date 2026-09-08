@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
+import WatchPanel from '@/components/movies/WatchPanel'
 import {
   backdropUrl,
   fetchCopies,
@@ -217,6 +218,10 @@ export default function MovieDetailPage() {
             <IdentifyPanel movieId={movie.id} storedTitle={movie.title} onIdentified={identified} />
           </div>
         )}
+
+        <div className="mt-8">
+          <WatchPanel movieId={movie.id} />
+        </div>
 
         <div className="mt-8 flex gap-1 overflow-x-auto border-b border-border">
           {tabs.map(({ key, label, count }) => (

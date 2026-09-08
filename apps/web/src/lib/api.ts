@@ -2,14 +2,20 @@ import {
   apiErrorSchema,
   candidateListSchema,
   collectionCopiesSchema,
+  collectionFacetsSchema,
   movieDetailSchema,
   moviePageSchema,
   searchResponseSchema,
+  watchLogEntrySchema,
+  watchLogPageSchema,
   type CandidateList,
   type CollectionCopy,
+  type CollectionFacets,
   type MovieDetail,
   type MoviePage,
   type SearchResponse,
+  type WatchLogEntry,
+  type WatchLogPage,
 } from '@mcu/shared'
 import type { ZodType } from 'zod'
 
@@ -19,10 +25,17 @@ export type {
   Candidate,
   CandidateList,
   CollectionCopy,
+  CollectionFacets,
+  DecadeFacet,
   MovieDetail,
   MovieListItem,
+  MovieLocation,
   MoviePage,
   SearchResponse,
+  SectionFacet,
+  ShelfFacet,
+  WatchLogEntry,
+  WatchLogPage,
 } from '@mcu/shared'
 
 async function errorMessage(response: Response): Promise<string> {
@@ -46,6 +59,14 @@ export interface MovieFilters {
   genreId?: number
   year?: number
   format?: string
+  section?: string
+  shelf?: string
+  /** First year of the earliest decade to include — 1940 means "1940s or later". */
+  decadeFrom?: number
+  /** First year of the latest decade to include — 1940 means "up to and including 1949". */
+  decadeTo?: number
+  minRating?: number
+  watched?: boolean
   sort?: 'title' | 'year' | 'rating'
   order?: 'asc' | 'desc'
 }
@@ -59,11 +80,55 @@ export async function fetchMovies(
   if (filters.genreId) params.set('genreId', String(filters.genreId))
   if (filters.year) params.set('year', String(filters.year))
   if (filters.format) params.set('format', filters.format)
+  if (filters.section) params.set('section', filters.section)
+  if (filters.shelf) params.set('shelf', filters.shelf)
+  if (filters.decadeFrom) params.set('decadeFrom', String(filters.decadeFrom))
+  if (filters.decadeTo) params.set('decadeTo', String(filters.decadeTo))
+  // `!= null` rather than truthiness: a minimum rating of 0 and `watched: false` are
+  // both meaningful filters that a truthiness check would silently drop.
+  if (filters.minRating != null) params.set('minRating', String(filters.minRating))
+  if (filters.watched != null) params.set('watched', String(filters.watched))
   if (filters.sort) params.set('sort', filters.sort)
   if (filters.order) params.set('order', filters.order)
 
   return parseResponse(await authFetch(`/movies?${params}`), moviePageSchema)
 }
+
+export async function fetchFacets(): Promise<CollectionFacets> {
+  return parseResponse(await authFetch('/collection/facets'), collectionFacetsSchema)
+}
+
+export interface LogWatchInput {
+  movieId: string
+  watchedAt?: string
+  isRewatch?: boolean
+  personalRating?: number | null
+  review?: string | null
+}
+
+export async function logWatch(input: LogWatchInput): Promise<WatchLogEntry> {
+  return parseResponse(
+    await authFetch('/watch-log', { method: 'POST', body: JSON.stringify(input) }),
+    watchLogEntrySchema,
+  )
+}
+
+export async function fetchWatches(movieId?: string, perPage = 50): Promise<WatchLogPage> {
+  const params = new URLSearchParams({ perPage: String(perPage) })
+  if (movieId) params.set('movieId', movieId)
+  return parseResponse(await authFetch(`/watch-log?${params}`), watchLogPageSchema)
+}
+
+export async function deleteWatch(entryId: string): Promise<void> {
+  const response = await authFetch(`/watch-log/${entryId}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/** §3.7's half-star scale, for a star control that must not invent its own steps. */
+export const RATING_STEPS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const
+
+/** The TMDB-rating thresholds the filter bar offers. */
+export const MIN_RATING_OPTIONS = [9, 8, 7, 6, 5] as const
 
 export async function fetchMovie(id: string): Promise<MovieDetail> {
   return parseResponse(await authFetch(`/movies/${id}`), movieDetailSchema)

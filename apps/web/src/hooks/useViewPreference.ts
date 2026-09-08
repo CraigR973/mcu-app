@@ -5,19 +5,23 @@ export type ViewMode = 'grid' | 'list' | 'compact'
 export const ALL_COLUMNS = [
   { key: 'year',       label: 'Year' },
   { key: 'format',     label: 'Format' },
+  { key: 'location',   label: 'Location' },
   { key: 'hdr',        label: 'HDR' },
   { key: 'audio',      label: 'Audio' },
   { key: 'runtime',    label: 'Runtime' },
   { key: 'rating',     label: 'Rating' },
+  { key: 'watched',    label: 'Watched' },
 ] as const
 
 export type ColumnKey = typeof ALL_COLUMNS[number]['key']
 
-const DEFAULT_COLUMNS: ColumnKey[] = ['year', 'format', 'rating']
+// Location is on by default. "Where is this disc?" is the question the collection
+// exists to answer, and it was unanswerable in the app until Batch 6.
+const DEFAULT_COLUMNS: ColumnKey[] = ['year', 'format', 'location', 'rating']
 
 const STORAGE_KEYS = {
   viewMode: 'mcu:view-mode:v1',
-  columns:  'mcu:list-columns:v1',
+  columns:  'mcu:list-columns:v2',
 } as const
 
 function read<T>(key: string, fallback: T): T {

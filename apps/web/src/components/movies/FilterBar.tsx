@@ -1,5 +1,12 @@
 import { X } from 'lucide-react'
-import { FORMATS, TMDB_GENRES, type MovieFilters } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import {
+  fetchFacets,
+  FORMATS,
+  MIN_RATING_OPTIONS,
+  TMDB_GENRES,
+  type MovieFilters,
+} from '@/lib/api'
 
 interface Props {
   filters: MovieFilters
@@ -10,12 +17,36 @@ interface Props {
 const SELECT_CLS =
   'h-8 rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
 
-const currentYear = new Date().getFullYear()
-const YEARS: number[] = []
-for (let y = currentYear; y >= 1970; y--) YEARS.push(y)
+function decadeLabel(decade: number): string {
+  return `${decade}s`
+}
 
 export function FilterBar({ filters, total, onChange }: Props) {
-  const hasFilters = !!(filters.genreId || filters.year || filters.format)
+  // The section, shelf and decade vocabularies come from the collection itself. A
+  // hard-coded year list is what hid 47% of this collection before Batch 6: it started
+  // at 1970, and 517 of the 1,085 dated films are older than that.
+  const { data: facets } = useQuery({
+    queryKey: ['collection-facets'],
+    queryFn: fetchFacets,
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const sections = facets?.sections ?? []
+  const decades = facets?.decades ?? []
+  const selectedSection = sections.find((s) => s.section === filters.section)
+  const shelves = selectedSection?.shelves ?? []
+
+  const hasFilters = !!(
+    filters.genreId ||
+    filters.year ||
+    filters.format ||
+    filters.section ||
+    filters.shelf ||
+    filters.decadeFrom ||
+    filters.decadeTo ||
+    filters.minRating != null ||
+    filters.watched != null
+  )
 
   function clear() {
     onChange({})
@@ -23,6 +54,43 @@ export function FilterBar({ filters, total, onChange }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-border bg-background/80 backdrop-blur-sm">
+      {/* Section */}
+      <select
+        className={SELECT_CLS}
+        value={filters.section ?? ''}
+        onChange={(e) =>
+          // Changing section clears the shelf: "Front 2nd" then "Digital" would
+          // otherwise ask for a shelf the digital library does not have and return
+          // nothing, which reads as a bug rather than an impossible question.
+          onChange({ ...filters, section: e.target.value || undefined, shelf: undefined })
+        }
+        aria-label="Filter by section"
+      >
+        <option value="">Anywhere</option>
+        {sections.map((section) => (
+          <option key={section.section} value={section.section}>
+            {section.section} ({section.itemCount})
+          </option>
+        ))}
+      </select>
+
+      {/* Shelf — only offered for a section that has shelves */}
+      {shelves.length > 0 && (
+        <select
+          className={SELECT_CLS}
+          value={filters.shelf ?? ''}
+          onChange={(e) => onChange({ ...filters, shelf: e.target.value || undefined })}
+          aria-label="Filter by shelf"
+        >
+          <option value="">All shelves</option>
+          {shelves.map((shelf) => (
+            <option key={shelf.shelf} value={shelf.shelf}>
+              {shelf.shelf} shelf ({shelf.itemCount})
+            </option>
+          ))}
+        </select>
+      )}
+
       {/* Genre */}
       <select
         className={SELECT_CLS}
@@ -40,6 +108,100 @@ export function FilterBar({ filters, total, onChange }: Props) {
         ))}
       </select>
 
+      {/* Format */}
+      <select
+        className={SELECT_CLS}
+        value={filters.format ?? ''}
+        onChange={(e) => onChange({ ...filters, format: e.target.value || undefined })}
+        aria-label="Filter by format"
+      >
+        <option value="">All formats</option>
+        {FORMATS.map((f) => (
+          <option key={f.value} value={f.value}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+
+      {/* Decade range */}
+      <div className="flex items-center gap-1">
+        <select
+          className={SELECT_CLS}
+          value={filters.decadeFrom ?? ''}
+          onChange={(e) =>
+            onChange({
+              ...filters,
+              decadeFrom: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
+          aria-label="Earliest decade"
+        >
+          <option value="">Any decade</option>
+          {decades.map((d) => (
+            <option key={d.decade} value={d.decade}>
+              {decadeLabel(d.decade)} ({d.movieCount})
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-muted-foreground">to</span>
+        <select
+          className={SELECT_CLS}
+          value={filters.decadeTo ?? ''}
+          onChange={(e) =>
+            onChange({
+              ...filters,
+              decadeTo: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
+          aria-label="Latest decade"
+        >
+          <option value="">Now</option>
+          {decades.map((d) => (
+            <option key={d.decade} value={d.decade}>
+              {decadeLabel(d.decade)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Rating */}
+      <select
+        className={SELECT_CLS}
+        value={filters.minRating ?? ''}
+        onChange={(e) =>
+          onChange({
+            ...filters,
+            minRating: e.target.value ? Number(e.target.value) : undefined,
+          })
+        }
+        aria-label="Minimum TMDB rating"
+      >
+        <option value="">Any rating</option>
+        {MIN_RATING_OPTIONS.map((rating) => (
+          <option key={rating} value={rating}>
+            {rating}+
+          </option>
+        ))}
+      </select>
+
+      {/* Watched */}
+      <select
+        className={SELECT_CLS}
+        value={filters.watched === undefined ? '' : String(filters.watched)}
+        onChange={(e) =>
+          onChange({
+            ...filters,
+            watched: e.target.value === '' ? undefined : e.target.value === 'true',
+          })
+        }
+        aria-label="Filter by watched status"
+      >
+        <option value="">Watched or not</option>
+        <option value="true">Watched</option>
+        <option value="false">Not watched</option>
+      </select>
+
+      {/* Sort */}
       <select
         className={SELECT_CLS}
         value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
@@ -57,38 +219,6 @@ export function FilterBar({ filters, total, onChange }: Props) {
         <option value="year:desc">Newest first</option>
         <option value="year:asc">Oldest first</option>
         <option value="rating:desc">Highest rated</option>
-      </select>
-
-      {/* Format */}
-      <select
-        className={SELECT_CLS}
-        value={filters.format ?? ''}
-        onChange={(e) => onChange({ ...filters, format: e.target.value || undefined })}
-        aria-label="Filter by format"
-      >
-        <option value="">All formats</option>
-        {FORMATS.map((f) => (
-          <option key={f.value} value={f.value}>
-            {f.label}
-          </option>
-        ))}
-      </select>
-
-      {/* Year */}
-      <select
-        className={SELECT_CLS}
-        value={filters.year ?? ''}
-        onChange={(e) =>
-          onChange({ ...filters, year: e.target.value ? Number(e.target.value) : undefined })
-        }
-        aria-label="Filter by year"
-      >
-        <option value="">All years</option>
-        {YEARS.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
-        ))}
       </select>
 
       {/* Clear */}

@@ -51,6 +51,14 @@ export function MovieCompactView({ movies, isLoading }: Props) {
                 {vRow.index + 1}
               </span>
               <p className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{movie.title}</p>
+              {/* The densest view still answers "where is it?" — that is the point of
+                  the batch, and the compact row is the one people scan on a phone. */}
+              <span
+                className="hidden sm:block text-xs text-zinc-500 shrink-0 w-28 truncate text-right"
+                title={movie.locations.map(l => l.label).join(' · ')}
+              >
+                {movie.locations.map(l => l.label).join(' · ')}
+              </span>
               <span className="text-xs text-zinc-500 shrink-0 w-8 text-right">
                 {movie.year ?? ''}
               </span>

@@ -59,6 +59,13 @@ export const crewMemberSchema = z.object({
   role: z.enum(['director', 'writer', 'producer', 'composer']),
 })
 
+export const locationSchema = z.object({
+  section: z.string().nullable(),
+  shelf: z.string().nullable(),
+  // Composed by the API so all three collection views say "Front 2nd" identically.
+  label: z.string().min(1),
+})
+
 export const movieListItemSchema = z.object({
   id: z.string().uuid(),
   title: z.string().min(1),
@@ -73,6 +80,8 @@ export const movieListItemSchema = z.object({
   bestAudioOwned: z.string().nullable(),
   identified: z.boolean(),
   copyCount: z.number().int().positive(),
+  locations: z.array(locationSchema),
+  watched: z.boolean(),
 })
 
 export const moviePageSchema = z.object({
@@ -143,6 +152,55 @@ export const candidateListSchema = z.object({
   candidates: z.array(candidateSchema).max(5),
 })
 
+// ---------------------------------------------------------------------------
+// Location facets and watch log (Batch 6)
+// ---------------------------------------------------------------------------
+
+export const shelfFacetSchema = z.object({
+  shelf: z.string().min(1),
+  movieCount: z.number().int().nonnegative(),
+  itemCount: z.number().int().nonnegative(),
+})
+
+export const sectionFacetSchema = z.object({
+  section: z.string().min(1),
+  movieCount: z.number().int().nonnegative(),
+  itemCount: z.number().int().nonnegative(),
+  shelves: z.array(shelfFacetSchema),
+})
+
+export const decadeFacetSchema = z.object({
+  decade: z.number().int(),
+  movieCount: z.number().int().nonnegative(),
+})
+
+export const collectionFacetsSchema = z.object({
+  sections: z.array(sectionFacetSchema),
+  unsectionedItemCount: z.number().int().nonnegative(),
+  decades: z.array(decadeFacetSchema),
+  undatedMovieCount: z.number().int().nonnegative(),
+})
+
+export const watchLogEntrySchema = z.object({
+  id: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  watchedAt: z.string(),
+  isRewatch: z.boolean(),
+  // §3.7's half-star scale, deliberately not TMDB's 0–10.
+  personalRating: z.number().min(0.5).max(5).nullable(),
+  review: z.string().nullable(),
+})
+
+export const watchLogPageSchema = z.object({
+  items: z.array(watchLogEntrySchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  perPage: z.number().int().positive(),
+  pages: z.number().int().nonnegative(),
+})
+
 export type UserRole = z.infer<typeof userRoleSchema>
 export type TokenPair = z.infer<typeof tokenPairSchema>
 export type ProfileResponse = z.infer<typeof profileResponseSchema>
@@ -156,3 +214,10 @@ export type CollectionCopy = z.infer<typeof collectionCopySchema>
 export type SearchResponse = z.infer<typeof searchResponseSchema>
 export type Candidate = z.infer<typeof candidateSchema>
 export type CandidateList = z.infer<typeof candidateListSchema>
+export type MovieLocation = z.infer<typeof locationSchema>
+export type ShelfFacet = z.infer<typeof shelfFacetSchema>
+export type SectionFacet = z.infer<typeof sectionFacetSchema>
+export type DecadeFacet = z.infer<typeof decadeFacetSchema>
+export type CollectionFacets = z.infer<typeof collectionFacetsSchema>
+export type WatchLogEntry = z.infer<typeof watchLogEntrySchema>
+export type WatchLogPage = z.infer<typeof watchLogPageSchema>

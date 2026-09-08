@@ -54,6 +54,19 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
         return movie.tmdbRating
           ? <span className="text-amber-500 font-medium">{movie.tmdbRating.toFixed(1)}</span>
           : <span className="text-muted-foreground">—</span>
+      case 'location': {
+        if (movie.locations.length === 0) return <span className="text-muted-foreground">—</span>
+        const labels = movie.locations.map(l => l.label).join(' · ')
+        return (
+          <span className="text-muted-foreground text-xs truncate block" title={labels}>
+            {labels}
+          </span>
+        )
+      }
+      case 'watched':
+        return movie.watched
+          ? <span className="text-emerald-500 text-xs font-medium">Watched</span>
+          : <span className="text-muted-foreground">—</span>
     }
   }
 
