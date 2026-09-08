@@ -14,6 +14,7 @@ const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
 const TrashPage = lazy(() => import('./pages/TrashPage'))
+const OfflinePage = lazy(() => import('./pages/OfflinePage'))
 
 function AdminPage() {
   return (
@@ -84,6 +85,9 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/debug" element={<DebugPage />} />
+            {/* Public: it has to render when the API is unreachable, and requiring a
+                session check would be the one thing guaranteed to fail offline. */}
+            <Route path="/offline" element={<OfflinePage />} />
 
             {/* Protected routes — all wrapped in AppLayout sidebar */}
             <Route
