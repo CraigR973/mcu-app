@@ -16,21 +16,17 @@ const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
 const TrashPage = lazy(() => import('./pages/TrashPage'))
 const OfflinePage = lazy(() => import('./pages/OfflinePage'))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
+const BoxSetsPage = lazy(() => import('./pages/BoxSetsPage'))
+const BoxSetDetailPage = lazy(() => import('./pages/BoxSetDetailPage'))
+const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
+const CollectionResultsPage = lazy(() => import('./pages/CollectionResultsPage'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 
 function AdminPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-foreground">Admin</h1>
       <p className="text-muted-foreground mt-1">Admin dashboard — coming soon.</p>
-    </div>
-  )
-}
-
-function DashboardPage() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-      <p className="text-muted-foreground mt-1">Your stats at a glance — coming soon.</p>
     </div>
   )
 }
@@ -108,6 +104,26 @@ export default function App() {
             <Route
               path="/watchlist"
               element={<AppShell><WatchlistPage /></AppShell>}
+            />
+            {/* Batch 12. Box sets are readable by either person and written by an
+                admin, so the route is the ordinary shell and the page hides its own
+                write controls — matching what the API enforces. Smart collections are
+                private to whoever made them, so there is nothing role-shaped here. */}
+            <Route
+              path="/box-sets"
+              element={<AppShell><BoxSetsPage /></AppShell>}
+            />
+            <Route
+              path="/box-sets/:id"
+              element={<AppShell><BoxSetDetailPage /></AppShell>}
+            />
+            <Route
+              path="/collections"
+              element={<AppShell><CollectionsPage /></AppShell>}
+            />
+            <Route
+              path="/collections/:id"
+              element={<AppShell><CollectionResultsPage /></AppShell>}
             />
             <Route
               path="/dashboard"

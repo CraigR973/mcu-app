@@ -1,5 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, Trash2, X } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Boxes, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react'
+import { COLLECTION_ICONS } from '@/components/collections/icons'
+import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
@@ -12,9 +15,14 @@ interface Props {
 
 const navItems = [
   { label: 'Movies', path: '/movies', icon: Film },
+  { label: 'Box sets', path: '/box-sets', icon: Boxes },
+  { label: 'Collections', path: '/collections', icon: Sparkles },
   { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
 ]
+
+const LINK_CLS =
+  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors'
 
 /** Batch 7's write surface. Admin-only, matching the routes and the API. */
 const adminNavItems = [
@@ -25,6 +33,16 @@ const adminNavItems = [
 
 export default function Sidebar({ open, onClose }: Props) {
   const { profile, signOut } = useAuth()
+
+  // §6.31: "Smart collections appear in the sidebar with custom icons." Failing quietly
+  // is right here — the sidebar is navigation, and a network problem should not cost
+  // the person the links that do work.
+  const { data: collections } = useQuery({
+    queryKey: ['smart-collections'],
+    queryFn: () => fetchSmartCollections(),
+    staleTime: 5 * 60 * 1000,
+  })
+  const saved = collections?.items ?? []
 
   return (
     <>
@@ -92,6 +110,35 @@ export default function Sidebar({ open, onClose }: Props) {
                 {label}
               </NavLink>
             ))}
+
+          {saved.length > 0 && (
+            <>
+              <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Collections
+              </p>
+              {saved.map((collection) => {
+                const Icon = COLLECTION_ICONS[collection.icon]
+                return (
+                  <NavLink
+                    key={collection.id}
+                    to={`/collections/${collection.id}`}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      cn(
+                        LINK_CLS,
+                        isActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )
+                    }
+                  >
+                    <Icon size={16} />
+                    <span className="truncate">{collection.name}</span>
+                  </NavLink>
+                )
+              })}
+            </>
+          )}
         </nav>
 
         {/* Footer */}

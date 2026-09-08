@@ -285,6 +285,42 @@ added; this section supplies them before work starts.
 This batch touches no hosting/credentials and performs no destructive data operation, so
 automatic close-out applies once the gate is green.
 
+### Batch 12 — Box sets + smart collections
+**Covers phases 11.3, 11.4, 11.5.** Their goals and acceptance criteria, recovered
+**verbatim** from `MCU_Architecture_v2.1_FINAL.md` §16 at `d94a6b8~1` — Batch 10 removed
+§16 and the ledger did not carry the criteria forward, so `batch-start.md` step 2's
+"restate them verbatim" had nothing to read (`DECISIONS.md` #54).
+
+> **Phase 11.3: Box Set CRUD**
+> - Admin creates a box set, adds collection_items
+> - Series linking
+> - **Acceptance:** Admin creates "Columbia Noir Vol 4" with 4 items
+>
+> **Phase 11.4: Box Set Display & Completion**
+> - Box set grid view
+> - Per-set completion ("3 of 4")
+> - **Acceptance:** Browsing box sets shows all with status
+>
+> **Phase 11.5: Smart Collections**
+> - Create/edit/delete smart collections
+> - Dynamic filter evaluation
+> - Pin to dashboard
+> - **Acceptance:** Creating "Unwatched 4Ks from 2010s" lists correct films and updates live
+
+Schema per §3.23 (`smart_collections`), §3.24 (`box_sets`) and §3.25 (`box_set_items`);
+endpoints per §6.5's own table. Two shapes differ from the tables as drawn and both are
+recorded in migration `011`'s docstring: `box_sets` gains `deleted_at` (house convention;
+the row groups real discs), and both new parents gain `updated_at` with `009`'s trigger.
+
+**`sub_category` is neither read nor rewritten.** 627 live items carry one across 106
+distinct values, and it is tempting to seed box sets from the ~30 matching /box|vol|set/.
+It would be wrong: the same column holds "Clint Eastwood" (64 items) and "Hitchcock" (30),
+which are groupings of a person's work rather than boxes. §11.3's acceptance is
+*"Admin creates …"* precisely because the judgement is a person's.
+
+This batch touches no hosting/credentials and performs no destructive data operation, so
+automatic close-out applies once the gate is green.
+
 ---
 
 ## Post-launch — sequenced, not scheduled

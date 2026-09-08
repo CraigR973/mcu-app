@@ -1,6 +1,8 @@
 import {
   apiErrorSchema,
   auditPageSchema,
+  boxSetDetailSchema,
+  boxSetListSchema,
   candidateListSchema,
   collectionCopiesSchema,
   collectionFacetsSchema,
@@ -10,11 +12,16 @@ import {
   moviePageSchema,
   profileResponseSchema,
   searchResponseSchema,
+  smartCollectionListSchema,
+  smartCollectionResultsSchema,
+  smartCollectionSchema,
   tmdbSearchResponseSchema,
   trashPageSchema,
   watchLogEntrySchema,
   watchLogPageSchema,
   type AuditPage,
+  type BoxSetDetail,
+  type BoxSetList,
   type CandidateList,
   type CollectionCopy,
   type CollectionFacets,
@@ -26,6 +33,10 @@ import {
   type MoviePage,
   type ProfileResponse,
   type SearchResponse,
+  type SmartCollection,
+  type SmartCollectionFilters,
+  type SmartCollectionList,
+  type SmartCollectionResults,
   type TmdbSearchResponse,
   type TrashPage,
   type WatchLogEntry,
@@ -38,6 +49,10 @@ import { authFetch } from './auth-tokens'
 export type {
   AuditEntry,
   AuditPage,
+  BoxSet,
+  BoxSetDetail,
+  BoxSetList,
+  BoxSetMember,
   Candidate,
   CandidateList,
   CollectionCopy,
@@ -56,6 +71,11 @@ export type {
   SearchResponse,
   SectionFacet,
   ShelfFacet,
+  SmartCollection,
+  SmartCollectionFilters,
+  SmartCollectionIcon,
+  SmartCollectionList,
+  SmartCollectionResults,
   TmdbSearchResult,
   TrashItem,
   TrashPage,
@@ -484,4 +504,180 @@ export async function completeOnboarding(): Promise<ProfileResponse> {
 export async function searchTmdb(q: string): Promise<TmdbSearchResponse> {
   const params = new URLSearchParams({ q })
   return parseResponse(await authFetch(`/tmdb/search?${params}`), tmdbSearchResponseSchema)
+}
+
+// ---------------------------------------------------------------------------
+// Box sets and smart collections (Batch 12) — §11.3, §11.4, §11.5
+// ---------------------------------------------------------------------------
+
+export async function fetchBoxSets(): Promise<BoxSetList> {
+  return parseResponse(await authFetch('/box-sets'), boxSetListSchema)
+}
+
+export async function fetchBoxSet(id: string): Promise<BoxSetDetail> {
+  return parseResponse(await authFetch(`/box-sets/${id}`), boxSetDetailSchema)
+}
+
+export interface BoxSetInput {
+  name: string
+  label?: string | null
+  volumeNumber?: number | null
+  seriesId?: string | null
+  expectedCount?: number | null
+  posterUrl?: string | null
+  notes?: string | null
+}
+
+export async function createBoxSet(
+  input: BoxSetInput & { itemIds?: string[] },
+): Promise<BoxSetDetail> {
+  return parseOrThrowApiError(
+    await authFetch('/box-sets', { method: 'POST', body: JSON.stringify(input) }),
+    boxSetDetailSchema,
+  )
+}
+
+export async function updateBoxSet(id: string, input: BoxSetInput): Promise<BoxSetDetail> {
+  return parseOrThrowApiError(
+    await authFetch(`/box-sets/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
+    boxSetDetailSchema,
+  )
+}
+
+export async function deleteBoxSet(id: string): Promise<void> {
+  const response = await authFetch(`/box-sets/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+export async function addBoxSetItem(
+  id: string,
+  collectionItemId: string,
+  discNumber?: number | null,
+): Promise<BoxSetDetail> {
+  return parseOrThrowApiError(
+    await authFetch(`/box-sets/${id}/items`, {
+      method: 'POST',
+      body: JSON.stringify({ collectionItemId, discNumber: discNumber ?? null }),
+    }),
+    boxSetDetailSchema,
+  )
+}
+
+export async function removeBoxSetItem(
+  id: string,
+  collectionItemId: string,
+): Promise<BoxSetDetail> {
+  return parseOrThrowApiError(
+    await authFetch(`/box-sets/${id}/items/${collectionItemId}`, { method: 'DELETE' }),
+    boxSetDetailSchema,
+  )
+}
+
+/**
+ * How a box set reads in one line — §11.4's "3 of 4".
+ *
+ * Three-valued on purpose. A set whose expected size nobody recorded is *unmeasured*,
+ * not incomplete, and saying "3 of 0" or "incomplete" would put a permanent red mark
+ * against every set an admin never filled in.
+ */
+export function completionLabel(set: { ownedCount: number; expectedCount: number | null }): string {
+  if (set.expectedCount === null) {
+    return `${set.ownedCount} ${set.ownedCount === 1 ? 'disc' : 'discs'}`
+  }
+  return `${set.ownedCount} of ${set.expectedCount}`
+}
+
+export async function fetchSmartCollections(pinned?: boolean): Promise<SmartCollectionList> {
+  const suffix = pinned === undefined ? '' : `?pinned=${String(pinned)}`
+  return parseResponse(await authFetch(`/smart-collections${suffix}`), smartCollectionListSchema)
+}
+
+export interface SmartCollectionInput {
+  name: string
+  icon: SmartCollection['icon']
+  /** Partial: the API fills every unstated field with `null` and stores only what is
+   *  constrained, so a form need not send nine keys to save one. */
+  filters: Partial<Record<keyof SmartCollectionFilters, unknown>>
+  sortBy: SmartCollection['sortBy']
+  sortOrder: SmartCollection['sortOrder']
+  isPinned: boolean
+  displayOrder?: number
+}
+
+export async function createSmartCollection(
+  input: SmartCollectionInput,
+): Promise<SmartCollection> {
+  return parseOrThrowApiError(
+    await authFetch('/smart-collections', { method: 'POST', body: JSON.stringify(input) }),
+    smartCollectionSchema,
+  )
+}
+
+export async function updateSmartCollection(
+  id: string,
+  input: SmartCollectionInput,
+): Promise<SmartCollection> {
+  return parseOrThrowApiError(
+    await authFetch(`/smart-collections/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
+    smartCollectionSchema,
+  )
+}
+
+export async function deleteSmartCollection(id: string): Promise<void> {
+  const response = await authFetch(`/smart-collections/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+export async function fetchSmartCollectionResults(
+  id: string,
+  perPage = 2000,
+): Promise<SmartCollectionResults> {
+  return parseResponse(
+    await authFetch(`/smart-collections/${id}/results?perPage=${String(perPage)}`),
+    smartCollectionResultsSchema,
+  )
+}
+
+/**
+ * A saved collection's filters as the `MovieFilters` the filter bar speaks.
+ *
+ * The two vocabularies are deliberately the same, so this is a null-stripping cast
+ * rather than a translation — and it is what lets a collection's own results page reuse
+ * the collection grid instead of describing the same films a second way.
+ */
+export function filtersToMovieFilters(filters: SmartCollectionFilters): MovieFilters {
+  const out: MovieFilters = {}
+  if (filters.genreId !== null) out.genreId = filters.genreId
+  if (filters.year !== null) out.year = filters.year
+  if (filters.format !== null) out.format = filters.format
+  if (filters.section !== null) out.section = filters.section
+  if (filters.shelf !== null) out.shelf = filters.shelf
+  if (filters.decadeFrom !== null) out.decadeFrom = filters.decadeFrom
+  if (filters.decadeTo !== null) out.decadeTo = filters.decadeTo
+  if (filters.minRating !== null) out.minRating = filters.minRating
+  if (filters.watched !== null) out.watched = filters.watched
+  return out
+}
+
+/** A human sentence for what a saved collection selects, for the sidebar and the cards. */
+export function describeFilters(filters: SmartCollectionFilters): string {
+  const parts: string[] = []
+  if (filters.watched !== null) parts.push(filters.watched ? 'watched' : 'unwatched')
+  if (filters.format !== null) parts.push(formatLabel(filters.format) ?? filters.format)
+  if (filters.genreId !== null) {
+    parts.push(TMDB_GENRES.find((g) => g.id === filters.genreId)?.name ?? 'a genre')
+  }
+  if (filters.decadeFrom !== null || filters.decadeTo !== null) {
+    const from = filters.decadeFrom
+    const to = filters.decadeTo
+    if (from !== null && to !== null && from === to) parts.push(`${String(from)}s`)
+    else if (from !== null && to !== null) parts.push(`${String(from)}s–${String(to)}s`)
+    else if (from !== null) parts.push(`${String(from)}s onwards`)
+    else if (to !== null) parts.push(`up to the ${String(to)}s`)
+  }
+  if (filters.year !== null) parts.push(String(filters.year))
+  if (filters.minRating !== null) parts.push(`rated ${String(filters.minRating)}+`)
+  if (filters.section !== null) parts.push(filters.shelf !== null ? `${filters.section} ${filters.shelf}` : filters.section)
+  else if (filters.shelf !== null) parts.push(`${filters.shelf} shelf`)
+  return parts.length === 0 ? 'Everything in the collection' : parts.join(' · ')
 }

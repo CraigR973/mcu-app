@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import uuid
 from collections.abc import AsyncIterator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Annotated, Literal, cast
 
 import httpx
@@ -55,13 +55,17 @@ Database = Annotated[AsyncSession, Depends(get_db)]
 
 
 @dataclass(frozen=True)
-class _Filters:
+class MovieFilters:
     """Every way the collection can be narrowed, in one object.
 
     It exists because the list endpoint asks the same question twice — once for the
     film count and once for the disc count — and Batch 5 spelled the predicates out
     separately in each. That was survivable with three filters and would be a standing
     invitation to drift with nine.
+
+    Public since Batch 12: a smart collection's stored filter blob is turned into one of
+    these and evaluated by :func:`movie_page`, so the saved query and the filter bar
+    cannot mean different things.
     """
 
     genre_id: int | None = None
@@ -76,7 +80,7 @@ class _Filters:
     user_id: uuid.UUID | None = None
 
 
-def _item_predicates(filters: _Filters) -> list[ColumnElement[bool]]:
+def _item_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     """Conditions on the disc itself — format and where it is kept."""
     predicates: list[ColumnElement[bool]] = [CollectionItem.deleted_at.is_(None)]
     if filters.format_code is not None:
@@ -98,7 +102,7 @@ def _watched_exists(user_id: uuid.UUID) -> ColumnElement[bool]:
     )
 
 
-def _movie_predicates(filters: _Filters) -> list[ColumnElement[bool]]:
+def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     """Conditions on the film — genre, when it came out, how it scored, seen or not."""
     predicates: list[ColumnElement[bool]] = [Movie.deleted_at.is_(None)]
     if filters.genre_id is not None:
@@ -121,7 +125,7 @@ def _movie_predicates(filters: _Filters) -> list[ColumnElement[bool]]:
     return predicates
 
 
-def _live_copy_exists(filters: _Filters) -> ColumnElement[bool]:
+def _live_copy_exists(filters: MovieFilters) -> ColumnElement[bool]:
     return exists(
         select(CollectionItem.id).where(
             CollectionItem.movie_id == Movie.id,
@@ -130,7 +134,7 @@ def _live_copy_exists(filters: _Filters) -> ColumnElement[bool]:
     )
 
 
-def _all_predicates(filters: _Filters) -> list[ColumnElement[bool]]:
+def _all_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     """The film-level WHERE: the film matches, and it has a disc that matches."""
     return [*_movie_predicates(filters), _live_copy_exists(filters)]
 
@@ -346,52 +350,30 @@ def _validate_decade(value: int | None, name: str) -> int | None:
     return value
 
 
-@router.get("/movies", response_model=MoviePageResponse)
-async def list_movies(
-    user: CurrentUser,
-    db: Database,
-    page: Annotated[int, Query(ge=1)] = 1,
-    # The virtualised collection views request the complete ~2,000-film catalogue so
-    # their scroll range represents every owned film, while callers that want ordinary
-    # pagination can still choose a smaller page size.
-    per_page: Annotated[int, Query(alias="perPage", ge=1, le=2000)] = 60,
-    genre_id: Annotated[int | None, Query(alias="genreId", gt=0)] = None,
-    year: Annotated[int | None, Query(ge=1870, le=2200)] = None,
-    format_code: Annotated[str | None, Query(alias="format", min_length=1, max_length=50)] = None,
-    section: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
-    shelf: Annotated[str | None, Query(min_length=1, max_length=50)] = None,
-    decade_from: Annotated[int | None, Query(alias="decadeFrom", ge=1870, le=2200)] = None,
-    decade_to: Annotated[int | None, Query(alias="decadeTo", ge=1870, le=2200)] = None,
-    min_rating: Annotated[float | None, Query(alias="minRating", ge=0, le=10)] = None,
-    watched: Annotated[bool | None, Query()] = None,
-    sort_by: Annotated[Literal["title", "year", "rating"], Query(alias="sort")] = "title",
+async def movie_page(
+    db: AsyncSession,
+    *,
+    viewer_id: uuid.UUID,
+    filters: MovieFilters,
+    sort_by: Literal["title", "year", "rating"] = "title",
     order: Literal["asc", "desc"] = "asc",
+    page: int = 1,
+    per_page: int = 60,
 ) -> MoviePageResponse:
-    if section is not None and section not in SECTIONS:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Unknown section. Expected one of: {', '.join(SECTIONS)}",
-        )
-    decade_from = _validate_decade(decade_from, "decadeFrom")
-    decade_to = _validate_decade(decade_to, "decadeTo")
-    if decade_from is not None and decade_to is not None and decade_from > decade_to:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="decadeFrom must not be later than decadeTo",
-        )
+    """One page of the collection under one set of filters.
 
-    filters = _Filters(
-        genre_id=genre_id,
-        year=year,
-        format_code=format_code,
-        section=section,
-        shelf=shelf,
-        decade_from=decade_from,
-        decade_to=decade_to,
-        min_rating=min_rating,
-        watched=watched,
-        user_id=user.id,
-    )
+    Extracted from :func:`list_movies` in Batch 12 so a smart collection evaluates
+    through the *same* code path as the filter bar. §3.23 stores a saved collection as a
+    JSONB filter blob; if that blob were turned into predicates anywhere but here, a
+    saved "Unwatched 4Ks from the 2010s" could quietly stop agreeing with the same
+    filters typed by hand, and nothing would report it. There is one predicate builder,
+    so there is nothing to drift.
+
+    ``viewer_id`` overrides whatever the caller put in ``filters`` — the watched facet
+    and the per-row ``watched`` flag must be about the same person, and the one way to
+    guarantee that is to not let them be supplied separately.
+    """
+    filters = replace(filters, user_id=viewer_id)
     predicates = _all_predicates(filters)
 
     total_movies = int(
@@ -429,12 +411,69 @@ async def list_movies(
     ).all()
 
     return MoviePageResponse(
-        items=await _enrich_list_items(db, user.id, [(m, int(c)) for m, c in rows]),
+        items=await _enrich_list_items(db, viewer_id, [(m, int(c)) for m, c in rows]),
         totalMovies=total_movies,
         totalItems=total_items,
         page=page,
         perPage=per_page,
         pages=math.ceil(total_movies / per_page),
+    )
+
+
+@router.get("/movies", response_model=MoviePageResponse)
+async def list_movies(
+    user: CurrentUser,
+    db: Database,
+    page: Annotated[int, Query(ge=1)] = 1,
+    # The virtualised collection views request the complete ~2,000-film catalogue so
+    # their scroll range represents every owned film, while callers that want ordinary
+    # pagination can still choose a smaller page size.
+    per_page: Annotated[int, Query(alias="perPage", ge=1, le=2000)] = 60,
+    genre_id: Annotated[int | None, Query(alias="genreId", gt=0)] = None,
+    year: Annotated[int | None, Query(ge=1870, le=2200)] = None,
+    format_code: Annotated[str | None, Query(alias="format", min_length=1, max_length=50)] = None,
+    section: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
+    shelf: Annotated[str | None, Query(min_length=1, max_length=50)] = None,
+    decade_from: Annotated[int | None, Query(alias="decadeFrom", ge=1870, le=2200)] = None,
+    decade_to: Annotated[int | None, Query(alias="decadeTo", ge=1870, le=2200)] = None,
+    min_rating: Annotated[float | None, Query(alias="minRating", ge=0, le=10)] = None,
+    watched: Annotated[bool | None, Query()] = None,
+    sort_by: Annotated[Literal["title", "year", "rating"], Query(alias="sort")] = "title",
+    order: Literal["asc", "desc"] = "asc",
+) -> MoviePageResponse:
+    if section is not None and section not in SECTIONS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unknown section. Expected one of: {', '.join(SECTIONS)}",
+        )
+    decade_from = _validate_decade(decade_from, "decadeFrom")
+    decade_to = _validate_decade(decade_to, "decadeTo")
+    if decade_from is not None and decade_to is not None and decade_from > decade_to:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="decadeFrom must not be later than decadeTo",
+        )
+
+    filters = MovieFilters(
+        genre_id=genre_id,
+        year=year,
+        format_code=format_code,
+        section=section,
+        shelf=shelf,
+        decade_from=decade_from,
+        decade_to=decade_to,
+        min_rating=min_rating,
+        watched=watched,
+        user_id=user.id,
+    )
+    return await movie_page(
+        db,
+        viewer_id=user.id,
+        filters=filters,
+        sort_by=sort_by,
+        order=order,
+        page=page,
+        per_page=per_page,
     )
 
 
@@ -496,7 +535,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
             .where(
                 Movie.deleted_at.is_(None),
                 Movie.year.is_not(None),
-                _live_copy_exists(_Filters()),
+                _live_copy_exists(MovieFilters()),
             )
             .group_by(decade)
             .order_by(decade)
@@ -509,7 +548,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
                 select(func.count(Movie.id)).where(
                     Movie.deleted_at.is_(None),
                     Movie.year.is_(None),
-                    _live_copy_exists(_Filters()),
+                    _live_copy_exists(MovieFilters()),
                 )
             )
         ).scalar_one()
@@ -596,7 +635,7 @@ async def search_movies(
     tsquery = func.websearch_to_tsquery("english", query)
     filters = [
         Movie.deleted_at.is_(None),
-        _live_copy_exists(_Filters()),
+        _live_copy_exists(MovieFilters()),
         Movie.search_vector.op("@@")(tsquery),
     ]
     rank = func.ts_rank_cd(Movie.search_vector, tsquery).label("rank")

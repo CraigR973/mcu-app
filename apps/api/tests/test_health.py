@@ -93,4 +93,13 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/trash/{table}/{item_id}/restore",
         "/api/v1/admin/audit",
         "/api/v1/tmdb/search",
+        # Batch 12. Box sets read by either person and written by an admin; smart
+        # collections read and written by their owner and nobody else.
+        "/api/v1/box-sets",
+        "/api/v1/box-sets/{box_set_id}",
+        "/api/v1/box-sets/{box_set_id}/items",
+        "/api/v1/box-sets/{box_set_id}/items/{collection_item_id}",
+        "/api/v1/smart-collections",
+        "/api/v1/smart-collections/{collection_id}",
+        "/api/v1/smart-collections/{collection_id}/results",
     }

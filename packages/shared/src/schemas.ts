@@ -362,3 +362,121 @@ export type TrashPage = z.infer<typeof trashPageSchema>
 export type AuditFieldChange = z.infer<typeof auditFieldChangeSchema>
 export type AuditEntry = z.infer<typeof auditEntrySchema>
 export type AuditPage = z.infer<typeof auditPageSchema>
+
+// ---------------------------------------------------------------------------
+// Box sets and smart collections (Batch 12) — §11.3, §11.4, §11.5
+//
+// Schemas ship with their endpoint (`DECISIONS.md` #6). The filter vocabulary below
+// is the one place the web app, the API's `SmartCollectionFilters` and `GET /movies`
+// all have to agree; keeping it a real schema rather than `z.record(z.unknown())` is
+// what makes a typo in a saved filter a parse error instead of a silently ignored key.
+// ---------------------------------------------------------------------------
+
+export const smartCollectionIconSchema = z.enum([
+  'sparkles',
+  'star',
+  'heart',
+  'clapperboard',
+  'disc',
+  'eye',
+  'flame',
+  'bookmark',
+  'layers',
+])
+
+export const collectionSortSchema = z.enum(['title', 'year', 'rating'])
+export const collectionSortOrderSchema = z.enum(['asc', 'desc'])
+
+export const smartCollectionFiltersSchema = z.object({
+  genreId: z.number().int().positive().nullable(),
+  year: z.number().int().nullable(),
+  format: z.string().nullable(),
+  section: z.string().nullable(),
+  shelf: z.string().nullable(),
+  decadeFrom: z.number().int().nullable(),
+  decadeTo: z.number().int().nullable(),
+  minRating: z.number().min(0).max(10).nullable(),
+  watched: z.boolean().nullable(),
+})
+
+export const smartCollectionSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  icon: smartCollectionIconSchema,
+  filters: smartCollectionFiltersSchema,
+  sortBy: collectionSortSchema,
+  sortOrder: collectionSortOrderSchema,
+  isPinned: z.boolean(),
+  displayOrder: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export const smartCollectionListSchema = z.object({
+  items: z.array(smartCollectionSchema),
+  total: z.number().int().nonnegative(),
+})
+
+/** The same `items` shape as `moviePageSchema`, so the results page reuses the grid
+ *  rather than growing a second card that renders the same film differently. */
+export const smartCollectionResultsSchema = z.object({
+  collection: smartCollectionSchema,
+  items: z.array(movieListItemSchema),
+  totalMovies: z.number().int().nonnegative(),
+  totalItems: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  perPage: z.number().int().positive(),
+  pages: z.number().int().nonnegative(),
+})
+
+export const boxSetSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  label: z.string().nullable(),
+  volumeNumber: z.number().int().positive().nullable(),
+  seriesId: z.string().uuid().nullable(),
+  seriesName: z.string().nullable(),
+  expectedCount: z.number().int().positive().nullable(),
+  posterUrl: z.string().nullable(),
+  notes: z.string().nullable(),
+  ownedCount: z.number().int().nonnegative(),
+  /** Deliberately three-valued. `null` means nobody recorded how big the box is — not
+   *  that it is incomplete, which would put a permanent red mark against every set an
+   *  admin never filled in. */
+  isComplete: z.boolean().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export const boxSetMemberSchema = z.object({
+  collectionItemId: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  year: z.number().int().nullable(),
+  formats: z.array(z.string()),
+  locationLabel: z.string().min(1),
+  discNumber: z.number().int().positive().nullable(),
+})
+
+export const boxSetDetailSchema = boxSetSchema.extend({
+  items: z.array(boxSetMemberSchema),
+  volumes: z.array(boxSetSchema),
+})
+
+export const boxSetListSchema = z.object({
+  items: z.array(boxSetSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export type SmartCollectionIcon = z.infer<typeof smartCollectionIconSchema>
+export type CollectionSort = z.infer<typeof collectionSortSchema>
+export type CollectionSortOrder = z.infer<typeof collectionSortOrderSchema>
+export type SmartCollectionFilters = z.infer<typeof smartCollectionFiltersSchema>
+export type SmartCollection = z.infer<typeof smartCollectionSchema>
+export type SmartCollectionList = z.infer<typeof smartCollectionListSchema>
+export type SmartCollectionResults = z.infer<typeof smartCollectionResultsSchema>
+export type BoxSet = z.infer<typeof boxSetSchema>
+export type BoxSetMember = z.infer<typeof boxSetMemberSchema>
+export type BoxSetDetail = z.infer<typeof boxSetDetailSchema>
+export type BoxSetList = z.infer<typeof boxSetListSchema>

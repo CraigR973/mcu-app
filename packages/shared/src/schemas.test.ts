@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   auditEntrySchema,
   auditFieldChangeSchema,
+  boxSetDetailSchema,
+  boxSetSchema,
   candidateListSchema,
   collectionCopiesSchema,
   collectionFacetsSchema,
@@ -12,6 +14,9 @@ import {
   movieDetailSchema,
   moviePageSchema,
   profileResponseSchema,
+  smartCollectionFiltersSchema,
+  smartCollectionResultsSchema,
+  smartCollectionSchema,
   tmdbSearchResponseSchema,
   tokenPairSchema,
   trashPageSchema,
@@ -415,5 +420,186 @@ describe('tmdbSearchResponseSchema', () => {
       ],
     })
     expect(parsed.results[0].inCollection).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Batch 12 — box sets and smart collections
+// ---------------------------------------------------------------------------
+
+const UUID_A = '3f2504e0-4f89-11d3-9a0c-0305e82c3311'
+const UUID_B = '3f2504e0-4f89-11d3-9a0c-0305e82c3312'
+
+describe('boxSetSchema', () => {
+  const base = {
+    id: UUID_A,
+    name: 'Columbia Noir Vol 4',
+    label: 'Indicator',
+    volumeNumber: 4,
+    seriesId: null,
+    seriesName: null,
+    expectedCount: 4,
+    posterUrl: null,
+    notes: null,
+    ownedCount: 3,
+    isComplete: false,
+    createdAt: '2026-09-09T00:00:00Z',
+    updatedAt: '2026-09-09T00:00:00Z',
+  }
+
+  it('parses a partly-owned set', () => {
+    const parsed = boxSetSchema.parse(base)
+    expect(parsed.ownedCount).toBe(3)
+    expect(parsed.isComplete).toBe(false)
+  })
+
+  it('keeps `isComplete` three-valued', () => {
+    // A set whose size nobody recorded is unmeasured, not incomplete. Collapsing this
+    // to a boolean in the schema would put a red mark against every unfilled set.
+    const parsed = boxSetSchema.parse({ ...base, expectedCount: null, isComplete: null })
+    expect(parsed.isComplete).toBeNull()
+  })
+
+  it('rejects an expected count of zero', () => {
+    expect(boxSetSchema.safeParse({ ...base, expectedCount: 0 }).success).toBe(false)
+  })
+})
+
+describe('boxSetDetailSchema', () => {
+  it('carries members and sibling volumes', () => {
+    const parsed = boxSetDetailSchema.parse({
+      id: UUID_A,
+      name: 'Columbia Noir',
+      label: null,
+      volumeNumber: null,
+      seriesId: null,
+      seriesName: null,
+      expectedCount: null,
+      posterUrl: null,
+      notes: null,
+      ownedCount: 0,
+      isComplete: null,
+      createdAt: '2026-09-09T00:00:00Z',
+      updatedAt: '2026-09-09T00:00:00Z',
+      items: [
+        {
+          collectionItemId: UUID_B,
+          movieId: UUID_A,
+          movieTitle: 'The Brothers Rico',
+          posterPath: null,
+          year: 1957,
+          formats: ['blu_ray'],
+          locationLabel: 'Top Small Cabinet',
+          discNumber: 1,
+        },
+      ],
+      volumes: [],
+    })
+    expect(parsed.items[0].discNumber).toBe(1)
+    expect(parsed.volumes).toEqual([])
+  })
+})
+
+describe('smartCollectionSchema', () => {
+  const base = {
+    id: UUID_A,
+    name: 'Unwatched 4Ks from the 2010s',
+    icon: 'sparkles',
+    filters: {
+      genreId: null,
+      year: null,
+      format: '4k_uhd',
+      section: null,
+      shelf: null,
+      decadeFrom: 2010,
+      decadeTo: 2010,
+      minRating: null,
+      watched: false,
+    },
+    sortBy: 'title',
+    sortOrder: 'asc',
+    isPinned: true,
+    displayOrder: 0,
+    createdAt: '2026-09-09T00:00:00Z',
+    updatedAt: '2026-09-09T00:00:00Z',
+  }
+
+  it('parses the acceptance criterion’s own collection', () => {
+    const parsed = smartCollectionSchema.parse(base)
+    expect(parsed.filters.format).toBe('4k_uhd')
+    expect(parsed.filters.watched).toBe(false)
+  })
+
+  it('refuses an icon outside the closed set', () => {
+    // The value is rendered as a component name. An open vocabulary would mean either a
+    // dynamic import of a server-supplied name or a silently blank icon.
+    expect(smartCollectionSchema.safeParse({ ...base, icon: 'skull' }).success).toBe(false)
+  })
+
+  it('refuses a filter key the API cannot evaluate', () => {
+    // Not `z.record(z.unknown())`: a key that parses here and is dropped server-side
+    // would produce a collection listing the wrong films with total confidence.
+    const parsed = smartCollectionFiltersSchema.safeParse({
+      ...base.filters,
+      orderBy: 'title; drop table movies',
+    })
+    // zod strips unknown keys rather than failing, so assert the key does not survive
+    // into the parsed value — which is what stops it reaching a request body.
+    expect(parsed.success).toBe(true)
+    expect(parsed.success && 'orderBy' in parsed.data).toBe(false)
+  })
+})
+
+describe('smartCollectionResultsSchema', () => {
+  it('reuses the movie list item shape', () => {
+    const parsed = smartCollectionResultsSchema.parse({
+      collection: {
+        id: UUID_A,
+        name: 'Everything',
+        icon: 'layers',
+        filters: {
+          genreId: null,
+          year: null,
+          format: null,
+          section: null,
+          shelf: null,
+          decadeFrom: null,
+          decadeTo: null,
+          minRating: null,
+          watched: null,
+        },
+        sortBy: 'title',
+        sortOrder: 'asc',
+        isPinned: false,
+        displayOrder: 0,
+        createdAt: '2026-09-09T00:00:00Z',
+        updatedAt: '2026-09-09T00:00:00Z',
+      },
+      items: [
+        {
+          id: UUID_B,
+          title: 'Heat',
+          originalTitle: 'Heat',
+          year: 1995,
+          posterPath: null,
+          backdropPath: null,
+          tmdbRating: 8.3,
+          runtimeMinutes: 170,
+          bestFormatOwned: '4k_uhd',
+          bestHdrOwned: null,
+          bestAudioOwned: null,
+          identified: true,
+          copyCount: 1,
+          locations: [],
+          watched: false,
+        },
+      ],
+      totalMovies: 1,
+      totalItems: 1,
+      page: 1,
+      perPage: 60,
+      pages: 1,
+    })
+    expect(parsed.items[0].title).toBe('Heat')
   })
 })
