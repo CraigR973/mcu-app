@@ -14,9 +14,12 @@ Skipped when ``DATABASE_URL`` is unset. CI always sets it and applies migrations
 
 from __future__ import annotations
 
+import importlib.util
 import uuid
 from collections.abc import AsyncIterator
 from datetime import timedelta
+from pathlib import Path
+from types import ModuleType
 
 import pytest
 import pytest_asyncio
@@ -32,6 +35,25 @@ from src.routers.auth import _record_failed_attempt
 from tests.conftest import DATABASE_URL
 
 pytestmark = pytest.mark.asyncio
+
+
+def _load_migration(revision_prefix: str) -> ModuleType:
+    """Load a migration module by its revision-numbered filename.
+
+    ``002_auth_pin_jwt.py`` isn't a valid dotted import path — module names can't
+    start with a digit — so this loads it directly off disk the way `alembic` itself
+    locates version files, rather than executing the migration.
+    """
+    versions_dir = Path(__file__).resolve().parents[1] / "migrations" / "versions"
+    (path,) = versions_dir.glob(f"{revision_prefix}_*.py")
+    spec = importlib.util.spec_from_file_location(path.stem, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+migration_002 = _load_migration("002")
 
 
 def _fresh_engine() -> AsyncEngine:
@@ -261,21 +283,25 @@ async def test_separate_keys_do_not_share_a_bucket(bucket_key: str) -> None:
 
 
 async def test_migration_seeds_two_profiles_with_no_credential() -> None:
-    """`pin_hash IS NULL` — no PIN is ever written into a migration or into git."""
-    if not DATABASE_URL:
-        pytest.skip("DATABASE_URL not set — Postgres-backed tests skipped")
+    """`pin_hash IS NULL` — no PIN is ever written into a migration or into git.
 
-    engine = _fresh_engine()
-    try:
-        async with async_sessionmaker(engine, expire_on_commit=False)() as session:
-            result = await session.execute(
-                select(Profile).where(Profile.display_name.in_(("Craig", "Mark")))
-            )
-            seeded = {p.display_name: p for p in result.scalars()}
-    finally:
-        await engine.dispose()
-
+    This is a property of migration `002` itself, not of any particular database's
+    current state — Craig and Mark are each expected to have a real `pin_hash` the
+    moment they set one (`src/scripts/set_pin.py`), which is the system working as
+    designed. Querying a live database for this would start failing the moment either
+    PIN is set — which is correct behaviour, not a regression — and would give a
+    permanently red local result against Neon from then on. Statically checking the
+    migration's own seed columns tests the actual claim in this test's name, in every
+    environment, without ever touching a database.
+    """
+    seeded = dict(migration_002.SEED_PROFILES)
     assert set(seeded) == {"Craig", "Mark"}
-    assert seeded["Craig"].role == UserRole.admin
-    assert seeded["Mark"].role == UserRole.viewer
-    assert all(p.pin_hash is None for p in seeded.values())
+    assert seeded["Craig"] == "admin"
+    assert seeded["Mark"] == "viewer"
+
+    # The seed table `002` bulk-inserts into is declared with exactly these three
+    # columns (`id`, `display_name`, `role`) — structurally, not merely by omission
+    # from a dict literal, so this fails loudly if a future edit ever adds `pin_hash`
+    # to the seeded columns.
+    assert migration_002.SEEDED_PROFILE_COLUMNS == ("id", "display_name", "role")
+    assert "pin_hash" not in migration_002.SEEDED_PROFILE_COLUMNS

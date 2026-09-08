@@ -24,10 +24,18 @@ depends_on: str | Sequence[str] | None = None
 #: The two people. Roles per `DECISIONS.md` #11 — Craig administers, Mark views.
 #: Seeded here rather than by a script so a fresh database is immediately usable and
 #: the row ids are stable across environments.
-_SEED_PROFILES = (
+SEED_PROFILES = (
     ("Craig", "admin"),
     ("Mark", "viewer"),
 )
+
+#: The columns the seed insert actually writes — deliberately excludes `pin_hash`, so
+#: no PIN is ever written into a migration or into git history. `upgrade()` builds its
+#: `sa.table()` from this so the two can't drift apart; `tests/test_auth_lockout.py`
+#: imports it directly rather than querying a live database for the same guarantee,
+#: since a real PIN being set later (as intended, via `src/scripts/set_pin.py`) would
+#: otherwise make that test permanently fail against any database that's seen real use.
+SEEDED_PROFILE_COLUMNS = ("id", "display_name", "role")
 
 
 def upgrade() -> None:
@@ -104,9 +112,10 @@ def upgrade() -> None:
         # fails with a DatatypeMismatchError.
         sa.column("role", postgresql.ENUM("admin", "viewer", name="user_role", create_type=False)),
     )
+    assert tuple(profiles.columns.keys()) == SEEDED_PROFILE_COLUMNS
     op.bulk_insert(
         profiles,
-        [{"id": uuid.uuid4(), "display_name": name, "role": role} for name, role in _SEED_PROFILES],
+        [{"id": uuid.uuid4(), "display_name": name, "role": role} for name, role in SEED_PROFILES],
     )
 
 

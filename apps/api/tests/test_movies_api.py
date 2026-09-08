@@ -451,18 +451,26 @@ async def test_a_cabinet_is_a_section_a_filter_can_reach(
     client: AsyncClient,
     api_session: AsyncSession,
 ) -> None:
-    """The 122 cabinet discs Batch 6 brought into the vocabulary (`DECISIONS.md` #34)."""
+    """The 122 cabinet discs Batch 6 brought into the vocabulary (`DECISIONS.md` #34).
+
+    ``year`` is deliberately implausible and included in the request alongside
+    ``section``: this suite runs against live Neon as well as CI's disposable
+    Postgres (`AGENTS.md` Bash discipline), and the real collection genuinely has
+    real items in "Top Big Cabinet" (`STATUS.md` gotcha 0b) that a section filter
+    alone would return alongside this fixture's own row.
+    """
     await _add_owned_movie(
         api_session,
         title="In The Big Cabinet",
         tmdb_id=920010,
+        year=1901,
         section="Top Big Cabinet",
         shelf=None,
         location="Top Big Cabinet",
     )
 
     response = await client.get(
-        "/api/v1/movies", params={"section": "Top Big Cabinet", "perPage": 200}
+        "/api/v1/movies", params={"section": "Top Big Cabinet", "year": 1901, "perPage": 200}
     )
 
     assert response.status_code == 200
@@ -486,10 +494,15 @@ async def test_a_film_kept_in_two_places_reports_both(
     client: AsyncClient,
     api_session: AsyncSession,
 ) -> None:
+    """413 real items live in "Digital" (`STATUS.md` gotcha 0b): a bare section filter
+    at ``perPage=200`` can miss this fixture's own row entirely once real data is
+    present, which is what an unfiltered run against live Neon actually did. ``year``
+    scopes the query down regardless of how much real data shares the section."""
     movie, _ = await _add_owned_movie(
         api_session,
         title="Owned On Disc And Digitally",
         tmdb_id=920020,
+        year=1901,
         section="Front",
         shelf="3rd",
         location="Front 3rd Shelf & E:\\Movies",
@@ -506,7 +519,9 @@ async def test_a_film_kept_in_two_places_reports_both(
     )
     await api_session.flush()
 
-    response = await client.get("/api/v1/movies", params={"section": "Digital", "perPage": 200})
+    response = await client.get(
+        "/api/v1/movies", params={"section": "Digital", "year": 1901, "perPage": 200}
+    )
 
     assert response.status_code == 200
     match = next(item for item in response.json()["items"] if item["id"] == str(movie.id))
@@ -571,8 +586,12 @@ async def test_watched_status_is_per_user(
     api_session: AsyncSession,
     viewer: Profile,
 ) -> None:
-    seen, _ = await _add_owned_movie(api_session, title="Already Seen", tmdb_id=920050)
-    unseen, _ = await _add_owned_movie(api_session, title="Not Yet Seen", tmdb_id=920051)
+    # Both profiles currently have no real watch history (`STATUS.md` gotcha, "0 audit
+    # rows"), so the unwatched set is effectively the whole 1,843-film catalogue against
+    # live Neon — "Not Yet Seen" sorts past `perPage=500` alphabetically before it's
+    # reached. A shared, implausible `year` scopes both queries down to just this pair.
+    seen, _ = await _add_owned_movie(api_session, title="Already Seen", tmdb_id=920050, year=1901)
+    unseen, _ = await _add_owned_movie(api_session, title="Not Yet Seen", tmdb_id=920051, year=1901)
 
     other = Profile(
         id=uuid.uuid4(),
@@ -602,8 +621,12 @@ async def test_watched_status_is_per_user(
     )
     await api_session.flush()
 
-    watched = await client.get("/api/v1/movies", params={"watched": True, "perPage": 500})
-    unwatched = await client.get("/api/v1/movies", params={"watched": False, "perPage": 500})
+    watched = await client.get(
+        "/api/v1/movies", params={"watched": True, "year": 1901, "perPage": 500}
+    )
+    unwatched = await client.get(
+        "/api/v1/movies", params={"watched": False, "year": 1901, "perPage": 500}
+    )
 
     assert watched.status_code == 200
     watched_titles = [item["title"] for item in watched.json()["items"]]
