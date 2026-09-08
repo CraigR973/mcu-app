@@ -126,3 +126,64 @@ def test_docs_are_disabled_only_in_production() -> None:
         "openapi_url": None,
     }
     assert docs_urls(Environment.staging)["docs_url"] == "/api/docs"
+
+
+# ---------------------------------------------------------------------------
+# psycopg2_dsn — one settings value, two drivers
+# ---------------------------------------------------------------------------
+
+
+def test_psycopg2_dsn_restores_libpq_scheme_and_sslmode() -> None:
+    """The exact Neon URL shape that broke the Batch 4 import.
+
+    `Settings` normalises for asyncpg on load, so what reaches a sync caller is
+    `postgresql+asyncpg://…?ssl=require`. psycopg2 rejects both the scheme and the
+    parameter name.
+    """
+    from src.config import psycopg2_dsn
+
+    dsn = psycopg2_dsn("postgresql+asyncpg://u:p@host.neon.tech/neondb?ssl=require")
+    assert dsn == "postgresql://u:p@host.neon.tech/neondb?sslmode=require"
+
+
+def test_psycopg2_dsn_is_accepted_by_psycopg2() -> None:
+    """Parse it with psycopg2 itself rather than asserting on a string we wrote.
+
+    The original failure was psycopg2 refusing to parse the DSN, so the test that would
+    have caught it has to be the parser, not an equality check.
+    """
+    import psycopg2.extensions
+
+    from src.config import psycopg2_dsn
+
+    parsed = psycopg2.extensions.parse_dsn(
+        psycopg2_dsn("postgresql+asyncpg://u:p@host.neon.tech/neondb?ssl=require")
+    )
+    assert parsed["host"] == "host.neon.tech"
+    assert parsed["dbname"] == "neondb"
+    assert parsed["sslmode"] == "require"
+
+
+def test_psycopg2_dsn_leaves_a_plain_url_alone() -> None:
+    from src.config import psycopg2_dsn
+
+    assert (
+        psycopg2_dsn("postgresql://postgres:postgres@localhost:5432/mcu_test")
+        == "postgresql://postgres:postgres@localhost:5432/mcu_test"
+    )
+
+
+def test_psycopg2_dsn_round_trips_the_settings_normaliser() -> None:
+    """Whatever `Settings` does to a hosted URL, this must undo for psycopg2."""
+    import psycopg2.extensions
+
+    from src.config import Settings, psycopg2_dsn
+
+    settings = Settings(
+        database_url="postgresql://u:p@host.neon.tech/neondb?sslmode=require&channel_binding=require",
+        jwt_access_secret="a" * 32,
+        jwt_refresh_secret="b" * 32,
+    )
+    assert settings.database_url.startswith("postgresql+asyncpg://")
+    parsed = psycopg2.extensions.parse_dsn(psycopg2_dsn(settings.database_url))
+    assert parsed["sslmode"] == "require"

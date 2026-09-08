@@ -49,7 +49,7 @@ from typing import Any
 import psycopg2
 import psycopg2.extras
 
-from src.config import settings
+from src.config import psycopg2_dsn, settings
 from src.matching import LOW_CONFIDENCE, MatchingEngine, MatchResult
 from src.spreadsheet import ImportCandidate, parse_xlsx
 from src.tmdb import TMDBClient
@@ -464,6 +464,13 @@ async def run(xlsx_path: Path, dry_run: bool, review_out: Path) -> ImportStats:
     stats.total = len(candidates)
     print(f"Parsed {stats.total} rows")
 
+    # Prove the database is reachable *before* the TMDB pass. Matching and enriching
+    # 1,857 titles takes roughly three quarters of an hour at the client's rate limit,
+    # and connecting only afterwards means a bad DSN costs all of it.
+    if not dry_run:
+        psycopg2.connect(psycopg2_dsn(settings.database_url)).close()
+        print("Database reachable")
+
     async with TMDBClient() as tmdb:
         rows, review_rows = await match_and_enrich(candidates, tmdb, stats)
 
@@ -475,7 +482,7 @@ async def run(xlsx_path: Path, dry_run: bool, review_out: Path) -> ImportStats:
         return stats
 
     print("Writing to database…")
-    conn = psycopg2.connect(settings.database_url)
+    conn = psycopg2.connect(psycopg2_dsn(settings.database_url))
     try:
         for i, row in enumerate(rows, 1):
             if i % 50 == 0 or i == len(rows):

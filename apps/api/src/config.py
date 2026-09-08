@@ -18,6 +18,31 @@ def alembic_config_url(database_url: str) -> str:
     return database_url.replace("%", "%%")
 
 
+def psycopg2_dsn(database_url: str) -> str:
+    """Convert the app's SQLAlchemy URL into a libpq DSN psycopg2 can parse.
+
+    :attr:`Settings.database_url` is normalised for asyncpg at load time — the scheme
+    becomes ``postgresql+asyncpg`` and libpq's ``sslmode`` is renamed to asyncpg's
+    ``ssl``. psycopg2 speaks libpq and rejects both, with an error naming the whole URL as
+    an "invalid connection option", which reads like a malformed URL rather than the
+    driver mismatch it is.
+
+    This matters because the batch importer is sync psycopg2 while the API is async
+    asyncpg, so one settings value has to serve two drivers. Handing
+    ``settings.database_url`` straight to ``psycopg2.connect`` fails against every hosted
+    database and succeeds against a bare local one, which is exactly the shape of bug that
+    reaches production.
+    """
+    parts = urlsplit(database_url)
+    scheme = "postgresql" if parts.scheme.startswith("postgresql") else parts.scheme
+
+    query: list[tuple[str, str]] = []
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        query.append(("sslmode", value) if key == "ssl" else (key, value))
+
+    return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
 class Environment(StrEnum):
     development = "development"
     staging = "staging"
