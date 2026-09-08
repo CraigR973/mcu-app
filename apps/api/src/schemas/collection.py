@@ -13,6 +13,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from src.clock import latest_plausible_today
 from src.models.collection_item import CONDITIONS, FORMAT_RANK
 from src.schemas.wire import UtcDatetime, UtcDatetimeIn
 
@@ -78,7 +79,7 @@ class CollectionItemFieldsMixin(BaseModel):
     @field_validator("purchaseDate")
     @classmethod
     def _not_in_the_future(cls, value: date | None) -> date | None:
-        if value is not None and value > date.today():
+        if value is not None and value > latest_plausible_today():
             raise ValueError("purchaseDate cannot be in the future")
         return value
 

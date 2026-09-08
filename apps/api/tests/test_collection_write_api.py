@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import AsyncIterator
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -995,3 +995,25 @@ async def test_the_wire_timestamp_round_trips_exactly(
         f"/api/v1/collection/{item.id}", json=_body(notes="Round trip", baseUpdatedAt=seen)
     )
     assert accepted.status_code == 200, accepted.text
+
+
+async def test_a_purchase_date_of_today_is_accepted_from_a_timezone_ahead_of_utc(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """The same local-timezone defect the watch log carried, on the same day's fix.
+
+    Both guards asked ``date.today()``, which reads the server's timezone. A disc bought
+    this evening and catalogued just after midnight in London is dated the 9th while UTC
+    still says the 8th; refusing it would be the app arguing with the person's calendar.
+    """
+    movie = await _a_film(api_session, title="A Disc Bought Tonight", tmdb_id=930_777)
+
+    response = await client.post(
+        "/api/v1/collection",
+        json=_body(
+            movieId=str(movie.id),
+            purchaseDate=(datetime.now(UTC).date() + timedelta(days=1)).isoformat(),
+        ),
+    )
+
+    assert response.status_code == 201, response.text

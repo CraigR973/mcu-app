@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import AsyncIterator
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -108,13 +108,21 @@ async def test_logging_a_watch_returns_it_and_defaults_to_today(
 ) -> None:
     movie = await _owned_movie(api_session, "A Film Watched Tonight")
 
+    before = datetime.now(UTC).date()
     response = await client.post("/api/v1/watch-log", json={"movieId": str(movie.id)})
 
     assert response.status_code == 201
     body = response.json()
     assert body["movieId"] == str(movie.id)
     assert body["movieTitle"] == "A Film Watched Tonight"
-    assert body["watchedAt"] == date.today().isoformat()
+    # The UTC date, not ``date.today()``. The endpoint computes its default in UTC, so
+    # comparing against the *server's local* date asserted that the machine running the
+    # test happened to be on UTC — which this one is not, and which is why this line
+    # failed for the hour after midnight BST and passed in CI all day.
+    #
+    # Bracketing the call removes the last of the flake: if the clock crosses UTC
+    # midnight mid-request, both answers are correct and both are accepted.
+    assert body["watchedAt"] in {before.isoformat(), datetime.now(UTC).date().isoformat()}
     assert body["isRewatch"] is False
     assert body["personalRating"] is None
     # snake_case must not leak onto the wire (`DECISIONS.md` #6).
@@ -304,3 +312,45 @@ async def test_deleting_someone_elses_entry_is_a_404(
     assert response.status_code == 404
     await api_session.refresh(entry)
     assert entry.deleted_at is None
+
+
+async def test_todays_date_is_accepted_from_a_timezone_ahead_of_utc(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The defect the local-timezone guard hid.
+
+    At 00:30 in London the calendar on the wall says the 9th and UTC still says the 8th.
+    A guard comparing against UTC *today* would tell someone logging tonight's film that
+    tonight is in the future. The ceiling is therefore the latest date that is today
+    anywhere on Earth — UTC+14 — which is UTC today plus one.
+    """
+    movie = await _owned_movie(api_session, "A Film Watched Just After Midnight")
+
+    response = await client.post(
+        "/api/v1/watch-log",
+        json={
+            "movieId": str(movie.id),
+            "watchedAt": (datetime.now(UTC).date() + timedelta(days=1)).isoformat(),
+        },
+    )
+
+    assert response.status_code == 201, response.text
+
+
+async def test_the_day_after_that_is_still_refused(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The ceiling is one day of slack, not an open door — no timezone is UTC+38."""
+    movie = await _owned_movie(api_session, "A Film Not Watched The Day After Tomorrow")
+
+    response = await client.post(
+        "/api/v1/watch-log",
+        json={
+            "movieId": str(movie.id),
+            "watchedAt": (datetime.now(UTC).date() + timedelta(days=2)).isoformat(),
+        },
+    )
+
+    assert response.status_code == 422

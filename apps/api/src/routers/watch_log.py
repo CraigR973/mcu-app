@@ -10,13 +10,14 @@ from __future__ import annotations
 
 import math
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, select
 
 from src.auth import CurrentUser
+from src.clock import latest_plausible_today, utc_today
 from src.models.movie import Movie
 from src.models.watch_log import WatchLog
 from src.routers.movies import Database
@@ -62,8 +63,10 @@ async def log_watch(
     if movie is None or movie.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    watched_at = payload.watchedAt or _utcnow().date()
-    if watched_at > date.today():
+    watched_at = payload.watchedAt or utc_today()
+    # Not ``date.today()``: that reads the *server's* timezone, so the default computed
+    # one line above could be refused by the guard below on any host not running UTC.
+    if watched_at > latest_plausible_today():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="watchedAt cannot be in the future",
