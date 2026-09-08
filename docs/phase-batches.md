@@ -18,7 +18,7 @@ Strike the row through and set status on close-out.
 | ~~3~~ | ~~Auth — PIN + JWT~~ | ~~🟡~~ | **shipped** | ~~**supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11~~ | `e89a9c6` · lockout proved on Postgres in CI |
 | ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
 | ~~5~~ | ~~Read surface **+ identify flow**~~ | ~~🔴~~ | **shipped** | ~~re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33)~~ | `a731b8c` · 1,857 items browsable; search median 20 ms; 757 films identifiable in-app |
-| 6 | Location + facets | 🟢 | planned | **3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise | |
+| ~~6~~ | ~~Location + facets **+ watch log**~~ | ~~🟡~~ | **shipped** | ~~**3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise; **adds §3.7's `watch_log`, which no phase owned**~~ | `1067a72` · Front 2nd shelf answers in 20 ms; 1,855 of 1,857 items sectioned |
 | 7 | Write surface | 🟡 | planned | re-lands **3.1**; adds **3.2, 3.5, 3.11** | |
 | 8 | PWA + offline | 🟢 | planned | **13.8, 6.5, 13.9** pulled forward | |
 | 9 | Onboarding repair | 🟢 | planned | repairs **2.8** | |
@@ -84,11 +84,22 @@ contradicts this batch's own goal. They need no flag column: they are exactly
 
 **Acceptance:** the deployed app renders 1,857 items at 60fps and a search returns in <150ms. Every response the web app consumes is parsed through `packages/shared`; zero `as Promise<T>` casts on API responses. **No film renders an empty detail page** — an unidentified one shows the picker. Identifying a film from the UI populates its poster, overview, cast and `search_vector`, and it is then findable by a search term that only appears in the fetched metadata. Correcting an already-identified film works by the same route.
 
-### Batch 6 — Location + facets
+### ~~Batch 6 — Location + facets~~ 🟡 **shipped**
 **Goal:** the app answers "where is this disc?"
 `section`/`shelf` filter params and UI. Complete the facet set `FilterBar` lacks — decade
 range, watched status, rating. (Phase 8.1 re-scoped; the LLM version stays dropped.)
 **Acceptance:** "show me everything on the Front 2nd shelf" works end to end — the §6.2 promise, unimplementable since April.
+
+**Tier moved 🟢 → 🟡 before any code was written, because "watched status" had nothing
+behind it.** §3.7 designs `watch_log` and §6.5 lists its endpoints, but **no phase in §16
+creates it** — checked against all 96 phase headings — while Batch 37 is defined as "inert
+until `watch_log` has ~a year of history". The facet was a missing feature, not a facet.
+Owner decision to build it here (`DECISIONS.md` #35), which also unblocks Batch 37.
+
+**The 124 unsectioned rows are settled** (`DECISIONS.md` #34). 122 of them are four named
+cabinets, now in the section vocabulary and backfilled; the remaining two are
+"(In with The Killing)", which names a disc rather than a place, and one row with no
+location. 1,855 of 1,857 items now carry a section, up from 1,733.
 
 ### Batch 7 — Write surface
 Add / edit / soft-delete collection items, duplicate detection, condition tracking, with
@@ -141,7 +152,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 34 | **Email — parsers + scanning** | 🔴 | planned | **10.5, 10.6, 10.7, 10.8** |
 | 35 | Movie night | 🔴 | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
 | 36 | Command palette + shortcuts | 🟢 | planned | **6.3, 6.4** |
-| 37 | On-this-day + rewatch | 🟢 | planned | **11.6** — inert until `watch_log` has ~a year of history |
+| 37 | On-this-day + rewatch | 🟢 | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
 | 38 | E2E suite | 🟢 | planned | 13.10 — written alongside features, formalised here |
 
 ## Batch groups
@@ -177,7 +188,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **K** | **checkpoint: Google + Microsoft OAuth app registration** → 33 → 34 | 34 consumes 33; credential setup gates the group |
 | — | 35 · solo | 🔴, needs Supabase Realtime — net new integration |
 | — | 36 · solo | Already two phases in one batch |
-| — | 37 · solo | Inert until `watch_log` has ~a year of history |
+| — | 37 · solo | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Formalises work written across earlier batches |
 
 **Net: 38 batches → 24 sessions.** Eleven groups absorb 25 batches; 13 stay solo.

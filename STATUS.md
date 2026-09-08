@@ -2,69 +2,68 @@
 
 ## Now
 
-**Batch 5 — Read surface + identify flow is shipped.** The collection is browsable and
-searchable, and every one of the 757 films TMDB could not settle can now be identified from
-its own detail page instead of from a CSV. Production serves the merged SHA
-`a731b8ce36f6772ef5e0832fc26be8dacc9e9371` with `db: ok`, at migration **005**.
+**Batch 6 — Location + facets + watch log is shipped.** The app answers "where is this
+disc?" — §6.2's promise, written in April and unimplementable until now. Production serves
+the merged SHA `1067a725295beee2314b7848e3651f7d526cfd37` with `db: ok`, at migration
+**007**.
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | 1,857 items render at 60fps; a search returns in <150ms | **search median 20 ms**, list page 23 ms — measured against live Neon with network included, so the real figure is lower. All three views virtualised (`@tanstack/react-virtual`). **Frame rate not measured in production** — see the gap below |
-| 2 | every consumed response parsed through `packages/shared`; zero `as Promise<T>` casts | **zero casts**, 7 `.parse()` call sites, schemas shipped with their endpoints |
-| 3 | no film renders an empty detail page — an unidentified one shows the picker | `GET /movies/{id}/candidates` and `POST /movies/{id}/identify` ship. The unidentified set is exactly the **757** movies with `tmdb_id IS NULL`, and **all 757 still carry the spreadsheet title** the matcher searches on |
-| 4 | identifying populates poster, overview, cast and `search_vector`; the film is then findable by a metadata-only term | **proved on live data: "Kubrick" returns 8 films and appears in zero titles** — the match can only come from fetched credits. Genres index too: 13 `Documentary` hits whose titles lack the word |
-| 5 | correcting an already-identified film works by the same route | the same picker, opened from an identified film; the wrong-sibling rows are in the database and correctable (gotcha 1b) |
+| 1 | "show me everything on the Front 2nd shelf" works end to end | **the API answers in 20 ms** against live Neon with network included — 0.4 ms execution, planned onto `ix_collection_items_section_shelf_live`, the index Batch 4 built for this and nothing had used. 119 films. Proved in CI against Postgres 17. **The production UI half is unverified — see the gap below** |
+| 2 | `section`/`shelf` filter params and UI | shipped, and the pickers are built from `GET /collection/facets` rather than a hard-coded list, so they cannot offer a shelf that holds nothing or miss one a new disc creates |
+| 3 | decade range | shipped. The old year `<select>` ran 1970→now, so **517 of the 1,085 dated films (47.6%) could not be selected at all** |
+| 4 | watched status | shipped — and it needed `watch_log`, which **no phase in the roadmap ever created** (`DECISIONS.md` #35) |
+| 5 | rating | shipped as a minimum-TMDB-rating filter. An unrated film is excluded rather than treated as zero |
 
-In the database now: **1,857 collection items · 1,843 movies · 45,144 credits · zero
-missing `search_vector`** (0 of 1,843). **1,086 films identified, 757 not** — those 757
-carry 764 items. Sections unchanged: Back 575, Front 550, Digital 413, Lounge 160,
-Garage 35, unsectioned 124.
+In the database now: **1,857 collection items · 1,843 movies · 45,144 credits**, unchanged
+by this batch. **1,855 of 1,857 items now carry a section, up from 1,733.** Back 575,
+Front 550, Digital 413, Lounge 160, Top Big Cabinet 38, Top Small Cabinet 38, Garage 35,
+Fish Room Cabinet 26, Black Box 20 — and 2 unsectioned, which is correct for both of them.
 
-**Migration `005` completes the search document.** `003` indexed title, original title,
-tagline and overview; `005` adds credited names and genres, and re-fires when credits change
-so an in-app identification becomes searchable at once. That is what makes criterion 4
-measurable rather than asserted — "Kubrick" is in no title in the collection, so a hit
-proves the credits were fetched and indexed.
+**The 124 unsectioned rows are settled** (`DECISIONS.md` #34). 122 were four named
+cabinets; migration `007` widened the CHECK constraint and backfilled them from
+`location`, which is never modified. The two that remain are `(In with The Killing)`,
+which names another disc rather than a place, and one row with no location at all.
 
-**One gap, and it is not code.** The deployed app boots and renders its login page cleanly,
-with no console errors — the white-screen is gone. But **both profiles still have
-`pin_hash = NULL`, so nobody can log in**, and every read route requires `CurrentUser`. The
-browse grid, the detail page and the picker are therefore proved by CI integration tests and
-by direct measurement against the production database, **not** by driving the production UI.
-Setting the PINs closes that last step.
+**A parser bug was found and fixed on the way.** `_ORDINAL_RE` matched any bare digit, so
+`Top small cabinet (Arrow 4 Film Noir Classics Vol 2)` parsed to shelf **"4th"** — four
+live discs that this batch's own shelf filter would have wrongly returned. The same trap
+sits inside `Back 6th Shelf (Arrow 4 Film Noir Classics Vol 1)`, which produced the right
+answer only because `re.search` returns the leftmost match. Both fixed; the four rows are
+corrected in the database (`DECISIONS.md` #36).
+
+**One gap, and it is the same shape as Batch 5's.** The browse UI is proved by 296 CI
+tests against real Postgres, by direct measurement against the production database, and by
+booting the built bundle with zero console errors — **but not by driving the production
+UI**, because doing so needs a PIN and an agent must not type one. Craig's PIN is set;
+**Mark's is still `NULL`**. Signing in and filtering to Front 2nd shelf is a one-minute
+owner check that would close it.
 
 ## Next
 
-**Set your PINs. Nobody can log in until you do** — and until you do, Batch 5's UI stays
-unverified in production. Both profiles are seeded with `pin_hash = NULL`, which means
-*no credential*, not a blank one:
+**Verify Batch 6 in the browser, and set Mark's PIN.** Sign in at
+`https://mcu-app-fawn.vercel.app/login`, choose Front → 2nd shelf, and confirm 119 films
+render with "Front 2nd" on the cards. Then:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
-  apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Craig
+  apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
 ```
 
-It prompts twice, hidden, so the PIN never reaches `ps`, your shell history, or a log.
-Repeat for `Mark`, then sign in at `https://mcu-app-fawn.vercel.app/login` (`DECISIONS.md` #25).
+**Then Batch 7 — Write surface** (🟡). Add / edit / soft-delete collection items,
+duplicate detection, condition tracking, with `admin_actions` audit writes. Its acceptance
+is that changes persist, deleted items appear in trash, and the audit log records actor,
+action and target and survives deletion of the target row (`DECISIONS.md` #5).
 
-**Then Batch 6 — Location + facets** (🟢). `section`/`shelf` filter params and UI, plus the
-facet set `FilterBar` lacks — decade range, watched status, rating. Its acceptance is §6.2's
-oldest unkept promise: *"show me everything on the Front 2nd shelf"*, end to end. The
-groundwork is already in place — Batch 4 created the columns and the partial composite index
-on `(section, shelf) WHERE deleted_at IS NULL`, and 1,733 of 1,857 items carry a section, so
-the query has real data to answer with.
+**Batch 7 also unblocks Phase 3.6 properly.** Batch 6 shipped location *filtering*; 3.6's
+actual acceptance is a shelf *suggestion* — "adding a Kubrick film suggests the shelf where
+other Kubrick films live" — which needs the Add form Batch 7 builds. The roadmap heading is
+annotated rather than ticked, so this is not lost.
 
-**The 124 unsectioned rows are the open question Batch 6 must settle.** They are cabinets —
-"Top Big Cabinet", "Left Hand Side Small Cabinet Fish Room", "Black Box next to cabinet" —
-with no §3.4 section. Either the vocabulary grows to cover them, or they stay findable only
-by their `location` text. Nothing is lost either way; the choice is whether they get facets.
+**Batch 37 is no longer blocked on a missing table.** `watch_log` exists and has its
+endpoints; on-this-day and rewatch memories now wait only on real history accumulating.
 
-**Identifying films is now ordinary use, not a batch.** The 757 unidentified films need no
-scheduled sitting — the picker asks the question when someone opens the disc they care
-about, which is exactly when the answer is easiest. The four known wrong-sibling matches are
-corrected by the same route (gotcha 1b).
-
-Two owner actions remain outstanding:
+Two owner actions remain outstanding, unchanged:
 1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
    full in `0bfb672` (2026-04-25, `CLAUDE.md`) and referenced truncated in `4768da8`.
    Dead (401) but never revoked at github.com/settings/tokens. History rewrite is **not**
@@ -93,11 +92,15 @@ Two owner actions remain outstanding:
    codes, smart collections, saved filters, export, natural-language search — must be
    judged at 1,857.
 
-0b. **FIXED AND VERIFIED IN BATCH 4. The location data was extracted at import and then
-   discarded** — the most consequential defect the 2026-09-07 review found. **1,733 of the
-   1,857 items now carry a structured `section`, and all 1,857 carry their `location`
-   text**, in the live database. Kept here as the record of what was wrong and how it was
-   proved fixed.
+0b. **FIXED AND VERIFIED IN BATCH 4, COMPLETED IN BATCH 6. The location data was
+   extracted at import and then discarded** — the most consequential defect the 2026-09-07
+   review found. **1,855 of the 1,857 items now carry a structured `section`, and all 1,857
+   carry their `location` text**, in the live database. Batch 4 got 1,733 of them; Batch 6
+   added the four cabinets to the vocabulary and backfilled the remaining 122
+   (`DECISIONS.md` #34). Only 2 are unsectioned, and correctly so. **Batch 6 also made the
+   data reachable** — until then the columns and the composite index existed and no
+   endpoint queried them. Kept here as the record of what was wrong and how it was proved
+   fixed.
 
    What was wrong, each link verified in April and re-verified 2026-09-07:
    - `MCU_Architecture_v2.1_FINAL.md` §3.4 **designs** `location`, `section` and `shelf`
@@ -121,12 +124,11 @@ Two owner actions remain outstanding:
    library is only ever recorded as its filesystem path, so without it all 413 digital rows
    landed with `section IS NULL` and the vocabulary never produced the value §3.4 names.
 
-   **Coverage over the real sheet: 1,733 of 1,857 rows get a section** (Front 550, Back 575,
-   Digital 413, Lounge 160, Garage 35). The remaining 124 are cabinets — "Top Big Cabinet",
-   "Left Hand Side Small Cabinet Fish Room", "Black Box next to cabinet" — which have no
-   §3.4 section. They keep their exact text in `location`, so nothing is lost; only the
-   normalised columns are null. Whether the section vocabulary should grow to cover them is
-   a Batch 6 question.
+   **Coverage after Batch 4 was 1,733 of 1,857** (Front 550, Back 575, Digital 413,
+   Lounge 160, Garage 35), with 124 cabinets unsectioned. **Batch 6 settled that question
+   by growing the vocabulary**: Top Big Cabinet 38, Top Small Cabinet 38, Fish Room
+   Cabinet 26, Black Box 20 — 122 rows, leaving 2. `location` was never modified, so the
+   backfill is derived and reversible.
 
 1. **RESOLVED. The derived-field trigger tests now run in CI — 14 of them, zero skips.**
    Proved on run `34162647232`: `tests/test_derived_field_triggers.py ..............`
@@ -246,7 +248,70 @@ Two owner actions remain outstanding:
     real write, and read the import summary's error count rather than trusting its
     success lines (`DECISIONS.md` #32).
 
+17. **A bare digit in a location string is not a shelf.** `parse_location`'s ordinal
+    regex used to match any `\d+` anywhere, so `Top small cabinet (Arrow 4 Film Noir
+    Classics Vol 2)` became shelf **"4th"** for four live discs. `Back 6th Shelf (Arrow 4
+    Film Noir Classics Vol 1)` was right only because `re.search` returns the leftmost
+    match — a correct answer for the wrong reason, which is the harder kind to notice.
+    Fixed in Batch 6: a shelf needs its ordinal suffix, or the word "shelf" after the
+    digit. **The general lesson is that the box-set titles in these cells are full of
+    numerals**, so any future parse of `location` must anchor on structure rather than on
+    finding a digit (`DECISIONS.md` #36).
+
+18. **CI's migration job runs against an empty schema, so it cannot prove a backfill.**
+    `upgrade head` → `downgrade base` proves a data migration *applies and reverses*; it
+    says nothing about whether its `WHERE` clauses select the right rows, because there are
+    no rows. Batch 6's `007` was checked by running its own predicates as read-only
+    `SELECT`s against live Neon first — 122 sectioned, 4 shelves cleared, 2 left — and the
+    post-deploy counts matched exactly. Do that for any future migration that writes data,
+    and see gotcha 16 for why.
+
 ## Log
+
+- **2026-09-08** — **Batch 6 shipped — the app finally answers "where is this disc?"**
+  §6.2's promise has been in the architecture doc since April and unimplementable until
+  Batch 4 added the columns; this batch is the first thing to query them. `section`,
+  `shelf`, `decadeFrom`, `decadeTo`, `minRating` and `watched` on `GET /movies`, a
+  facet endpoint serving the vocabularies from the data, and location on all three
+  collection views. **Front 2nd shelf answers in 20 ms** including network — 0.4 ms
+  execution on `ix_collection_items_section_shelf_live`, the index Batch 4 created for
+  exactly this query and which nothing had used until today.
+
+  **Two premises in the batch definition did not survive checking, and both were settled
+  with the owner before any code was written.** "Watched status" was listed as a facet
+  beside decade and rating as though the three cost the same. They did not: §3.7 designs
+  `watch_log` and §6.5 lists its endpoints, but **no phase in §16 creates it** — checked
+  against all 96 phase headings — while Batch 37 sat defined as "inert until `watch_log`
+  has ~a year of history", waiting on a table nothing brought into existence. Built here
+  (#35), which moved the batch 🟢 → 🟡 and unblocked Batch 37 as a side effect. And the
+  124 unsectioned rows, which `STATUS.md` had flagged as this batch's open question,
+  turned out to be four named cabinets covering 122 of them — now in the vocabulary and
+  backfilled (#34), taking sectioned coverage from 1,733 to **1,855 of 1,857**.
+
+  **Two real defects found on the way, neither of them in this batch's own code.** The
+  shelf parser matched any bare digit, so `Top small cabinet (Arrow 4 Film Noir Classics
+  Vol 2)` had been stored as shelf "4th" for four live discs — rows this batch's own
+  shelf filter would have wrongly returned. `Back 6th Shelf (Arrow 4 Film Noir Classics
+  Vol 1)` escaped only because `re.search` returns the leftmost match (#36, gotcha 17).
+  And the year filter in `FilterBar` was generated from 1970 forward, so **517 of the
+  1,085 dated films — 47.6% — could not be selected at all**; the decade range replaces
+  it with bounds taken from the data.
+
+  **The gate was green on the first CI run**, 296 API tests against Postgres 17 with zero
+  skips, all five jobs passing. Because migration `007` writes to 126 live rows, close-out
+  stopped for owner sign-off rather than deploying itself, per the protocol. Before asking,
+  `007`'s own `WHERE` clauses were run as read-only `SELECT`s against live Neon and matched
+  the parser exactly; the post-deploy counts then matched that prediction row for row —
+  38 + 38 + 26 + 20 sectioned, 4 shelves cleared, 2 correctly left alone, 1,857 items and
+  1,843 films unchanged. **CI cannot prove a backfill, because its migration job runs on an
+  empty schema** (gotcha 18).
+
+  **One acceptance criterion is proved indirectly, exactly as in Batch 5, and for a
+  narrower reason.** The browse UI is covered by CI contract tests, by direct measurement
+  against the production database, and by booting the built bundle with zero console
+  errors — but **not by driving the production UI**, because that needs a PIN and an agent
+  must not type one. Craig's PIN is now set, so this is a one-minute owner check; Mark's is
+  still `NULL`.
 
 - **2026-09-08** — **Batch 5 shipped — the collection is browsable, searchable, and every
   unidentified film can be settled from its own page.** List, detail, copies and tsvector

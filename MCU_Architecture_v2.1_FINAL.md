@@ -2125,11 +2125,15 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Admin confirms "add another copy" or "this is an upgrade"
 - **Acceptance:** Adding a 4K when Blu-ray exists triggers the upgrade prompt
 
-**Phase 3.6: Storage Location Suggestions** 🔴 Opus
+**Phase 3.6: Storage Location Suggestions** 🔴 Opus — 🔄 **re-scoped 2026-09-08, partly shipped in Batch 6**
 - Algorithm: analyse existing items by genre, director, format to suggest a shelf
 - Shown as the default in the Add form
 - Admin can override
 - **Acceptance:** Adding a Kubrick film suggests the shelf where other Kubrick films live
+- **What Batch 6 actually shipped:** location *filtering* — `section`/`shelf` query params, a
+  facet-driven picker, and location on every collection view — which is §6.2's promise, not
+  this phase's acceptance. **The suggestion algorithm above is NOT built** and cannot be
+  until Batch 7 adds the Add form it is meant to default. Deliberately not ticked ✅.
 
 **Phase 3.7: Blu-ray.com Specs Scraper** 🔴 Opus
 - Scrape video_specs, audio_specs, special_features, region_code, release_label
@@ -2321,10 +2325,14 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 
 ### Stage 8 — Discovery & Movie Night
 
-**Phase 8.1: Smart Search (Natural Language)** 🔴 Opus
+**Phase 8.1: Smart Search (Natural Language)** 🔴 Opus — 🔄 **re-scoped 2026-09-08, structured half shipped in Batch 6**
 - Keyword extraction for genres, decades, runtime
 - Maps "light-hearted comedy under 90 min" to structured filters
 - **Acceptance:** Test queries like "noir 1940s", "short action" return sensible results
+- **What Batch 6 actually shipped:** the structured filters this phase would have mapped
+  *onto* — decade range, minimum rating, watched status, genre, format, section and shelf.
+  A user composes "noir 1940s" from the controls themselves. **The natural-language layer
+  stays dropped**, so the acceptance above is not met and this is deliberately not ticked ✅.
 
 **Phase 8.2: Feeling Lucky** 🟢 Sonnet 4.6
 - Random film from collection
