@@ -2,43 +2,49 @@
 
 ## Now
 
-**Batch 9 — Onboarding repair is shipped, and Group B is complete.** Batches 7, 8 and 9 all
-landed today. Production serves the merged SHA `4de32c35af1d7e4edd9ea2e3fe03a9b2d4a1164c`
-with `db: ok`, at migration **010**.
+**Batch 10 — Architecture doc split + §17 reconciliation is shipped.** Production serves
+the merged SHA `d94a6b828d5e96879b5794d4d11bb308ac01803c` with `db: ok`. Docs only; no code
+changed, no migration.
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | every step of the wizard does what it says | **six steps for an admin, five for a viewer, every one backed.** Walked end to end in a browser against the production bundle: welcome → catalogue → install → theme → tour → done |
-| 2 | no step reads a property nothing sets | **four dead reads removed, one more than gotcha 5 listed.** The catalogue step read `d?.meta?.total` — the envelope `DECISIONS.md` #6 deleted — so it rendered a loading skeleton for ever. It now reads the real shape and shows the real count |
-| 3 | (§2.8) skippable, resumable | proved in the browser: advancing two steps and reloading resumed at step 3; "Skip setup" landed on a usable `/movies` |
+| 1 | `ARCHITECTURE.md` exists holding the durable design content; the original is removed or reduced to a stub | `ARCHITECTURE.md` created (2,001 lines); `MCU_Architecture_v2.1_FINAL.md` reduced to an 18-line stub pointing at it, kept rather than deleted so `REVIEW_PLAN_2026-09-07.md`, `DECISIONS.md`, this file's own dated log entries, `MCU_Session_Guide_v5.md` and `docs/part-b-audit.md` keep resolving |
+| 2 | every one of §17's 50 rows carries an explicit current-status verdict | done — split into shipped / superseded (cited against `DECISIONS.md` #) / not-yet-built per row, two of them (Sentry, structlog+correlation IDs) corrected by reading the code directly rather than trusting the batch log, which had them wrong as "not confirmed" |
+| 3 | `session-log.md.txt` no longer exists; nothing it uniquely held is lost | removed — its content (Phases 0.1–3.1 on the old, pre-re-scaffold spine) is entirely superseded by the re-scaffold and was already folded into `DECISIONS.md` #1–8 |
+| 4 | `AGENTS.md`/`CLAUDE.md` point at the new doc(s) | `AGENTS.md`'s source-of-truth table now cites `ARCHITECTURE.md`; `CLAUDE.md` is the symlink |
+| 5 | no code changes; standard gate stays green | green except 4 pre-existing `apps/api` pytest failures unrelated to this batch (below) |
 
-**The batch definition was half wrong and that changed what got built.**
-`StepInstallPWA` genuinely does have infrastructure now — Batch 8's manifest and service
-worker let `beforeinstallprompt` fire, and `usePwaInstall` catches it. **`StepNotifications`
-does not**: no VAPID key, no subscription, no endpoint, no `push_subscription` column, and
-it offered toggles for six features that do not exist yet. **Dropped rather than ported**
-(`DECISIONS.md` #50) — Batch 11 owns re-introducing it, infrastructure first.
+**This batch's acceptance criteria did not exist anywhere in the repo when the session
+started** — only the one-line ledger title, unlike every other batch. Written into
+`docs/phase-batches.md` before any doc was touched, with the owner's agreement, from the
+`REVIEW_PLAN_2026-09-07.md` Part C bullet this batch was always meant to close out.
 
-**The wizard is rebuilt, not repaired**, because Batch 3 had removed it entirely: its
-completion flag was a Supabase column that no longer exists (`DECISIONS.md` #27). Migration
-`010` adds `profiles.onboarding_completed_at_utc`, and `ProtectedRoute` gates on it again —
-the TODO it has carried since Batch 3.
-
-In the database now: **1,857 collection items · 0 audit rows · both profiles un-onboarded**,
-so Craig and Mark will each see the wizard once on next sign-in. Migration `010` adds a
-nullable column and rewrites nothing.
+**Four pre-existing `apps/api` pytest failures, confirmed unrelated to this batch.**
+`test_migration_seeds_two_profiles_with_no_credential`, `test_a_cabinet_is_a_section_a_filter_can_reach`,
+`test_a_film_kept_in_two_places_reports_both`, `test_watched_status_is_per_user` all fail
+**locally** when `DATABASE_URL` points at live Neon (per `AGENTS.md`'s own instruction to
+export it from `.env.local`) rather than an ephemeral database — they pick up real
+production rows (Craig's actual PIN, all 1,857 real collection items) that their
+assertions weren't written to tolerate. Confirmed unrelated to Batch 10 two ways: `git diff
+--stat main feat/10-architecture-doc-split -- apps/ packages/` is empty, and this batch's
+own CI run (`34276482624`) — which uses CI's disposable Postgres service, not live Neon —
+was green. Worth a `fix/` batch of its own: either these tests need per-test data isolation
+that survives a live database having real rows in it, or they should assert something
+narrower than "the only rows returned are the ones I just inserted."
 
 ## Next
 
-**Group B is done. Batches 1–9 have all shipped**, which completes the "build to first
-deployment" half of the ledger. Everything remaining is post-launch and sequenced rather
-than scheduled.
+**Group B (Batches 7–9) and now Batch 10 are shipped.** The "build to first deployment"
+half of the ledger has been complete since Batch 9; Batch 10 was the deferred Part C
+paperwork, not a feature.
 
-**Batch 10 — Architecture doc split + §17 reconciliation** (🟢, solo) is next in the ledger:
-the deferred half of Part C, a large mechanical restructure of a 2,639-line document. It is
-solo because it touches almost every heading.
+**Batch 11 — Notifications + push** (🟢, Deep · xhigh) is next, but it opens on a
+**checkpoint: generate VAPID keys + set them in Railway** — a credential change that stops
+for the owner before any code is written. If that checkpoint hasn't happened, **Batch 12 →
+13 (Group C, box sets + smart collections + completion sets)** is next in the ledger with
+no owner action blocking its start.
 
-**Three things the next agent should know before picking a batch.**
+**Four things the next agent should know before picking a batch.**
 
 1. **Batch 11 inherits an obligation.** Batch 9 dropped the notifications step rather than
    ship one that lies; Batch 11 owns bringing it back, and must build the push
@@ -47,7 +53,10 @@ solo because it touches almost every heading.
 2. **The production-UI gap is now narrow but real.** Batches 7 and 9 were driven end to end
    in a browser against a stub API, and Batch 8's write queue was too. What still cannot be
    verified here is anything needing a live service worker or a phone — gotcha 25.
-3. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
+3. **The four `apps/api` pytest failures above are real and worth a `fix/` batch**, but they
+   don't block anything — `main`'s own CI is green, and they only surface locally against
+   live Neon data. Don't mistake a local red for a CI red before starting a batch.
+4. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
@@ -327,6 +336,40 @@ Two owner actions remain outstanding, unchanged:
     "it installs to a home screen" can only be confirmed on a real device.**
 
 ## Log
+
+- **2026-09-08** — **Batch 10 shipped — the architecture doc is split and its decisions
+  table is reconciled.** `MCU_Architecture_v2.1_FINAL.md` (2,639 lines) is now
+  `ARCHITECTURE.md` plus an 18-line stub at the old path pointing to it; `§16 Build Phases`,
+  an 86-phase plan that named a model ("Sonnet 4.6") which no longer exists, is replaced by
+  a pointer to `docs/phase-batches.md` as the roadmap of record. `§17 Resolved Decisions`
+  now carries a status verdict on all 50 rows rather than only its original April
+  resolution — split into shipped, superseded (with the `DECISIONS.md` # that did it), or
+  not yet built. `session-log.md.txt` is retired; its content was entirely superseded by
+  the re-scaffold and already reconstructed into `DECISIONS.md` #1–8.
+
+  **This batch had no written acceptance criteria anywhere in the repo when the session
+  started** — every other batch has a `### Batch N` section in `docs/phase-batches.md`
+  with a `**Goal:**`/`**Acceptance:**`; Batch 10 had only its one-line ledger title. Wrote
+  the criteria into the ledger first, from `REVIEW_PLAN_2026-09-07.md` Part C's own words,
+  with the owner's agreement, before touching any doc.
+
+  **Two rows of the reconciliation were corrected by reading the code rather than trusting
+  the batch log.** The working draft called Sentry, structlog and correlation-ID binding
+  "not confirmed built" because no `STATUS.md`/`DECISIONS.md` entry claims them. All three
+  are actually wired — `sentry_sdk` in `apps/api/src/main.py`, `@sentry/react` in
+  `apps/web/src/instrument.ts`, and `structlog.contextvars` bound to `correlation_id` in
+  `apps/api/src/middleware.py` — found by grepping the source before finalising those two
+  rows. Web Vitals is genuinely absent, and stayed marked as such.
+
+  **Four `apps/api` pytest tests fail locally against live Neon data** — real production
+  rows they weren't written to tolerate (a real PIN where one asserts `None`, 1,857 real
+  movies swamping a section-filter assertion). Confirmed unrelated to this batch: zero diff
+  in `apps/`/`packages/` against `main`, and this batch's own CI run — against CI's
+  disposable Postgres, not live Neon — was green. Left unfixed per the guardrail against
+  folding a pre-existing red into a batch; flagged in "Next" as worth its own `fix/` batch.
+
+  Production serves the merged SHA `d94a6b828d5e96879b5794d4d11bb308ac01803c` with
+  `db: ok`. No migration, no hosting or credential change, nothing destructive.
 
 - **2026-09-08** — **Batch 9 shipped, and Group B is complete.** Batches 7, 8 and 9 all
   landed today, which finishes the "build to first deployment" half of the ledger: the

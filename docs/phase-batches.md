@@ -293,7 +293,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 
 | # | Batch | Tier | Claude Code | Codex | Status | Phases |
 |---|---|---|---|---|---|---|
-| 10 | Architecture doc split + §17 reconciliation | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | Part C deferred half |
+| ~~10~~ | ~~Architecture doc split + §17 reconciliation~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~Part C deferred half~~ | `d94a6b8` · `ARCHITECTURE.md` split off with §16 replaced by a pointer to this ledger; all 50 §17 rows carry a reconciled status; `session-log.md.txt` retired |
 | 11 | Notifications + push | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 6.1, 6.2, 5.11 |
 | 12 | Box sets + smart collections | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.3, 11.4, 11.5 |
 | 13 | Completion sets | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.1, **11.2** |
@@ -340,7 +340,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | ~~4 · solo~~ | — shipped | — shipped | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
 | **A** | 5 → 6 | — shipped | — shipped | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
 | **B** | ~~7~~ → ~~8~~ → ~~9~~ | — shipped | — shipped | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
-| — | 10 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Large mechanical restructure of a 2,639-line doc |
+| — | ~~10 · solo~~ | — shipped | — shipped | Large mechanical restructure of a 2,639-line doc |
 | — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
 | **C** | 12 → 13 | Sonnet 5 · high | GPT-5.6 Terra · High | Same domain (sets/collections); 13 reuses 12's UI patterns |
 | **D** | 14 → 15 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both admin-facing read surfaces, same verification shape |

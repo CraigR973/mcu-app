@@ -687,3 +687,32 @@ contemporaneous.
     so there is no half-finished state worth representing, and a person who skipped should
     not be asked again every time they open the app. §2.8 asks for skippable and
     resumable; the resume position is per-device `localStorage`, following #8.
+
+### 2026-09-08 — Batch 10 architecture doc split
+
+52. **A batch with no written acceptance criteria gets them written into
+    `docs/phase-batches.md` before work starts, not invented silently and not treated as a
+    reason to skip the batch.** Owner decision, 2026-09-08, taken because Batch 10 was the
+    first batch whose ledger row was a bare title — every other batch has a `### Batch N`
+    section with `**Goal:**`/`**Acceptance:**`, and `batch-start.md` step 2 requires
+    restating them verbatim before any code is written, which is impossible when nothing
+    was written down.
+
+    *What was done:* the agent reconstructed a scope from `REVIEW_PLAN_2026-09-07.md` Part
+    C (the source the ledger row's title was drawn from) and `MCU_Architecture_v2.1_FINAL.md`
+    §17 (what "reconciliation" meant concretely), proposed it to the owner, and on
+    agreement wrote it into `docs/phase-batches.md` as a proper `### Batch 10` section
+    before touching any other file — so the batch still has a written gate to be verified
+    against, and the next agent (or the next `git blame`) can see where it came from.
+
+    *Why this over the alternatives considered:* inventing criteria without surfacing them
+    would make `batch-start.md` step 2's "restate verbatim" a fiction — there would be
+    nothing on record the work was actually checked against. Skipping the batch until the
+    owner writes criteria themselves stalls low-risk, docs-only work on a formality. Asking
+    first, as was done, costs one round trip and leaves a durable artifact instead of an
+    agent's private judgement call.
+
+    *Scope, so this doesn't become a loophole:* this is for a batch with **no** acceptance
+    criteria at all, not for treating an existing criterion as negotiable — `AGENTS.md`'s
+    guardrail against weakening the gate to reach green is unaffected. If a future batch
+    has the same gap, do the same thing: propose, get agreement, write it down, then start.
