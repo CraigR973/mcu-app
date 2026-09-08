@@ -219,6 +219,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
 | **B** | ~~7~~ → ~~8~~ → ~~9~~ | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | 10 · solo | Large mechanical restructure of a 2,639-line doc |
+| — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
 | **C** | 12 → 13 | Same domain (sets/collections); 13 reuses 12's UI patterns |
 | **D** | 14 → 15 | Both admin-facing read surfaces, same verification shape |
 | **E** | 16 → 17 | Both TMDB-driven, same client, 17 reuses 16's patterns |
@@ -237,7 +238,13 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 37 · solo | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Formalises work written across earlier batches |
 
-**Net: 38 batches → 24 sessions.** Eleven groups absorb 25 batches; 13 stay solo.
+**Net: 38 batches → 25 sessions.** Eleven groups absorb 24 batches; 14 stay solo.
+
+*Batch 11 had no row here at all until 2026-09-08, and the arithmetic hid it: the old
+line claimed groups absorbed 25 batches when the rows only ever added to 24, so the
+totals reached 38 while one batch was listed nowhere. Found when Batch 9 dropped the
+wizard's notifications step and handed 11 an obligation (`DECISIONS.md` #50) — at which
+point "when does 11 run?" had no answer.*
 
 ## Risk notes carried by owner decision (`DECISIONS.md` #16)
 
