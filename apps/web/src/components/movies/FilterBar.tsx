@@ -15,7 +15,7 @@ const YEARS: number[] = []
 for (let y = currentYear; y >= 1970; y--) YEARS.push(y)
 
 export function FilterBar({ filters, total, onChange }: Props) {
-  const hasFilters = !!(filters.genre_id || filters.year || filters.format)
+  const hasFilters = !!(filters.genreId || filters.year || filters.format)
 
   function clear() {
     onChange({})
@@ -26,9 +26,9 @@ export function FilterBar({ filters, total, onChange }: Props) {
       {/* Genre */}
       <select
         className={SELECT_CLS}
-        value={filters.genre_id ?? ''}
+        value={filters.genreId ?? ''}
         onChange={(e) =>
-          onChange({ ...filters, genre_id: e.target.value ? Number(e.target.value) : undefined })
+          onChange({ ...filters, genreId: e.target.value ? Number(e.target.value) : undefined })
         }
         aria-label="Filter by genre"
       >
@@ -38,6 +38,25 @@ export function FilterBar({ filters, total, onChange }: Props) {
             {g.name}
           </option>
         ))}
+      </select>
+
+      <select
+        className={SELECT_CLS}
+        value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
+        onChange={(e) => {
+          const [sort, order] = e.target.value.split(':') as [
+            NonNullable<MovieFilters['sort']>,
+            NonNullable<MovieFilters['order']>,
+          ]
+          onChange({ ...filters, sort, order })
+        }}
+        aria-label="Sort movies"
+      >
+        <option value="title:asc">Title A–Z</option>
+        <option value="title:desc">Title Z–A</option>
+        <option value="year:desc">Newest first</option>
+        <option value="year:asc">Oldest first</option>
+        <option value="rating:desc">Highest rated</option>
       </select>
 
       {/* Format */}

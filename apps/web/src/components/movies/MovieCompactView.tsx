@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { MovieListItem, FORMAT_COLORS, formatLabel } from '../../lib/api'
+import { FORMAT_COLORS, formatLabel, type MovieListItem } from '../../lib/api'
 
 interface Props {
   movies: MovieListItem[]
@@ -38,7 +38,7 @@ export function MovieCompactView({ movies, isLoading }: Props) {
           }
 
           const movie = movies[vRow.index]
-          const fmt = movie.best_format_owned
+          const fmt = movie.bestFormatOwned
 
           return (
             <div
@@ -52,7 +52,7 @@ export function MovieCompactView({ movies, isLoading }: Props) {
               </span>
               <p className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{movie.title}</p>
               <span className="text-xs text-zinc-500 shrink-0 w-8 text-right">
-                {movie.release_date?.slice(0, 4) ?? ''}
+                {movie.year ?? ''}
               </span>
               {fmt ? (
                 <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${FORMAT_COLORS[fmt] ?? 'bg-zinc-700 text-zinc-300'}`}>
@@ -61,9 +61,9 @@ export function MovieCompactView({ movies, isLoading }: Props) {
               ) : (
                 <span className="w-14 shrink-0" />
               )}
-              {movie.vote_average ? (
+              {movie.tmdbRating ? (
                 <span className="text-xs text-amber-400 w-8 shrink-0 text-right">
-                  {movie.vote_average.toFixed(1)}
+                  {movie.tmdbRating.toFixed(1)}
                 </span>
               ) : (
                 <span className="w-8 shrink-0" />

@@ -1,5 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { profileResponseSchema, tokenPairSchema, type ProfileResponse } from '@mcu/shared'
+import {
+  apiErrorSchema,
+  profileResponseSchema,
+  tokenPairSchema,
+  type ProfileResponse,
+} from '@mcu/shared'
 
 import {
   API_BASE,
@@ -24,11 +29,12 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 /** Pull a human-readable message out of whatever shape the API refused with. */
 async function errorMessage(response: Response, fallback: string): Promise<string> {
   try {
-    const body = (await response.json()) as { detail?: string; error?: string }
+    const body: unknown = await response.json()
+    const parsed = apiErrorSchema.parse(body)
     // A durably rate-limited login answers `{ error: "Rate limit exceeded: ..." }`,
     // not `{ detail: ... }` — reading only `detail` would turn a 429 into "your
     // details are wrong" and invite the retry the limit just refused.
-    return body.error ?? body.detail ?? fallback
+    return parsed.error ?? parsed.detail ?? fallback
   } catch {
     return fallback
   }
@@ -51,8 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null)
         return
       }
-      const parsed = profileResponseSchema.safeParse(await response.json())
-      setProfile(parsed.success ? parsed.data : null)
+      const body: unknown = await response.json()
+      setProfile(profileResponseSchema.parse(body))
     } catch {
       setProfile(null)
     } finally {
@@ -74,11 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         return { error: await errorMessage(response, 'Sign in failed') }
       }
-      const parsed = tokenPairSchema.safeParse(await response.json())
-      if (!parsed.success) {
+      try {
+        const body: unknown = await response.json()
+        const tokens = tokenPairSchema.parse(body)
+        storeTokens(tokens.accessToken, tokens.refreshToken)
+      } catch {
         return { error: 'Unexpected response from the server' }
       }
-      storeTokens(parsed.data.accessToken, parsed.data.refreshToken)
       await loadProfile()
       return { error: null }
     },

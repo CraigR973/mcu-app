@@ -2,8 +2,8 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Settings2 } from 'lucide-react'
-import { MovieListItem, posterUrl, FORMAT_COLORS, formatLabel } from '../../lib/api'
-import { ALL_COLUMNS, ColumnKey } from '../../hooks/useViewPreference'
+import { FORMAT_COLORS, formatLabel, posterUrl, type MovieListItem } from '../../lib/api'
+import { ALL_COLUMNS, type ColumnKey } from '../../hooks/useViewPreference'
 
 function formatRuntime(mins: number | null) {
   if (!mins) return '—'
@@ -34,9 +34,9 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
   const renderCell = (movie: MovieListItem, key: ColumnKey) => {
     switch (key) {
       case 'year':
-        return <span className="text-zinc-400">{movie.release_date?.slice(0, 4) ?? '—'}</span>
+        return <span className="text-muted-foreground">{movie.year ?? '—'}</span>
       case 'format': {
-        const fmt = movie.best_format_owned
+        const fmt = movie.bestFormatOwned
         if (!fmt) return <span className="text-zinc-600">—</span>
         return (
           <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${FORMAT_COLORS[fmt] ?? 'bg-zinc-700 text-zinc-300'}`}>
@@ -45,15 +45,15 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
         )
       }
       case 'hdr':
-        return <span className="text-zinc-400 text-xs">{movie.best_hdr_owned ?? '—'}</span>
+        return <span className="text-muted-foreground text-xs">{movie.bestHdrOwned ?? '—'}</span>
       case 'audio':
-        return <span className="text-zinc-400 text-xs">{movie.best_audio_owned ?? '—'}</span>
+        return <span className="text-muted-foreground text-xs">{movie.bestAudioOwned ?? '—'}</span>
       case 'runtime':
-        return <span className="text-zinc-400">{formatRuntime(movie.runtime)}</span>
+        return <span className="text-muted-foreground">{formatRuntime(movie.runtimeMinutes)}</span>
       case 'rating':
-        return movie.vote_average
-          ? <span className="text-amber-400 font-medium">{movie.vote_average.toFixed(1)}</span>
-          : <span className="text-zinc-600">—</span>
+        return movie.tmdbRating
+          ? <span className="text-amber-500 font-medium">{movie.tmdbRating.toFixed(1)}</span>
+          : <span className="text-muted-foreground">—</span>
     }
   }
 
@@ -122,9 +122,9 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
                 onClick={() => navigate(`/movies/${movie.id}`)}
               >
                 <div className="w-8 h-10 shrink-0 rounded overflow-hidden bg-zinc-800">
-                  {movie.poster_path && (
+                  {movie.posterPath && (
                     <img
-                      src={posterUrl(movie.poster_path, 'w92')}
+                      src={posterUrl(movie.posterPath, 'w92')}
                       alt=""
                       loading="lazy"
                       decoding="async"
@@ -134,6 +134,9 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-zinc-100 truncate">{movie.title}</p>
+                  {!movie.identified && (
+                    <p className="text-[10px] font-medium text-amber-500">Needs identification</p>
+                  )}
                 </div>
                 {colDefs.map(c => (
                   <div key={c.key} className="w-24 shrink-0 text-right text-sm">

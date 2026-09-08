@@ -1,5 +1,5 @@
 import { LayoutGrid, List, AlignJustify } from 'lucide-react'
-import { ViewMode } from '../../hooks/useViewPreference'
+import type { ViewMode } from '../../hooks/useViewPreference'
 
 interface Props {
   value: ViewMode

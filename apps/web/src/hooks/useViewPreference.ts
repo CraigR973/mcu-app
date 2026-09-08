@@ -16,8 +16,8 @@ export type ColumnKey = typeof ALL_COLUMNS[number]['key']
 const DEFAULT_COLUMNS: ColumnKey[] = ['year', 'format', 'rating']
 
 const STORAGE_KEYS = {
-  viewMode: 'mcu:view-mode',
-  columns:  'mcu:list-columns',
+  viewMode: 'mcu:view-mode:v1',
+  columns:  'mcu:list-columns:v1',
 } as const
 
 function read<T>(key: string, fallback: T): T {
@@ -26,6 +26,14 @@ function read<T>(key: string, fallback: T): T {
     return raw ? (JSON.parse(raw) as T) : fallback
   } catch {
     return fallback
+  }
+}
+
+function write(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Preferences are optional; private browsing can refuse local storage.
   }
 }
 
@@ -39,12 +47,12 @@ export function useViewPreference() {
 
   const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode)
-    localStorage.setItem(STORAGE_KEYS.viewMode, JSON.stringify(mode))
+    write(STORAGE_KEYS.viewMode, mode)
   }
 
   const setEnabledColumns = (cols: ColumnKey[]) => {
     setEnabledColumnsState(cols)
-    localStorage.setItem(STORAGE_KEYS.columns, JSON.stringify(cols))
+    write(STORAGE_KEYS.columns, cols)
   }
 
   const toggleColumn = (key: ColumnKey) => {

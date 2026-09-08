@@ -1,20 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, X } from 'lucide-react'
-import { fetchSearch, posterUrl, formatLabel, FORMAT_COLORS, type SearchResultItem } from '@/lib/api'
+import { fetchSearch, posterUrl, formatLabel, FORMAT_COLORS, type MovieListItem } from '@/lib/api'
 
-function highlight(text: string, query: string): string {
+function highlight(text: string, query: string): ReactNode {
   if (!query.trim()) return text
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="bg-yellow-400/30 text-inherit rounded-sm">$1</mark>')
+  const matcher = new RegExp(`(${escaped})`, 'gi')
+  return text.split(matcher).map((part, index) =>
+    index % 2 === 1 ? (
+      <mark key={`${part}-${index}`} className="rounded-sm bg-yellow-400/30 text-inherit">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  )
 }
 
-function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query: string; onSelect: (id: number) => void }) {
-  const year = item.release_date ? new Date(item.release_date).getFullYear() : null
-  const fmtColor = item.best_format_owned ? FORMAT_COLORS[item.best_format_owned] ?? '' : ''
-  const fmtLabel = formatLabel(item.best_format_owned)
-  const titleHtml = highlight(item.title, query)
+function MovieResult({ item, query, onSelect }: { item: MovieListItem; query: string; onSelect: (id: string) => void }) {
+  const fmtColor = item.bestFormatOwned ? FORMAT_COLORS[item.bestFormatOwned] ?? '' : ''
+  const fmtLabel = formatLabel(item.bestFormatOwned)
 
   return (
     <button
@@ -23,18 +31,15 @@ function MovieResult({ item, query, onSelect }: { item: SearchResultItem; query:
       onClick={() => onSelect(item.id)}
     >
       <img
-        src={posterUrl(item.poster_path, 'w92')}
+        src={posterUrl(item.posterPath, 'w92')}
         alt=""
         className="h-10 w-7 shrink-0 rounded object-cover"
         loading="lazy"
       />
       <div className="min-w-0 flex-1">
-        <p
-          className="truncate text-sm font-medium text-foreground"
-          dangerouslySetInnerHTML={{ __html: titleHtml }}
-        />
+        <p className="truncate text-sm font-medium text-foreground">{highlight(item.title, query)}</p>
         <p className="text-xs text-muted-foreground">
-          {year}
+          {item.year}
           {fmtLabel && (
             <span className={`ml-2 rounded px-1 py-0.5 text-[10px] font-medium ${fmtColor}`}>
               {fmtLabel}
@@ -78,7 +83,7 @@ export default function SearchBar() {
     inputRef.current?.focus()
   }, [])
 
-  const handleSelect = useCallback((id: number) => {
+  const handleSelect = useCallback((id: string) => {
     setOpen(false)
     setInputValue('')
     setQuery('')
@@ -102,7 +107,7 @@ export default function SearchBar() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const results = data?.data ?? []
+  const results = data?.items ?? []
   const showDropdown = open && query.length >= 2
 
   return (

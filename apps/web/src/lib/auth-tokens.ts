@@ -7,6 +7,8 @@
  * external script permitted, so there is no third-party script to steal them.
  */
 
+import { tokenPairSchema } from '@mcu/shared'
+
 const ACCESS_KEY = 'mcu.accessToken'
 const REFRESH_KEY = 'mcu.refreshToken'
 
@@ -64,14 +66,15 @@ async function refreshTokens(): Promise<boolean> {
     return false
   }
 
-  const { tokenPairSchema } = await import('@mcu/shared')
-  const parsed = tokenPairSchema.safeParse(await response.json())
-  if (!parsed.success) {
+  try {
+    const body: unknown = await response.json()
+    const tokens = tokenPairSchema.parse(body)
+    storeTokens(tokens.accessToken, tokens.refreshToken)
+    return true
+  } catch {
     clearTokens()
     return false
   }
-  storeTokens(parsed.data.accessToken, parsed.data.refreshToken)
-  return true
 }
 
 /**
