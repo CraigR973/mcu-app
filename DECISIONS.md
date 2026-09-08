@@ -741,3 +741,52 @@ contemporaneous.
     `latest_plausible_today()`. Both guards call the last. Two tests hold the boundary:
     tomorrow-in-UTC is accepted, the day after is refused. The pre-existing `_utcnow()`
     copies in the routers were left alone; they are timestamps and were never wrong.
+
+### 2026-09-09 — Batch 12 box sets + smart collections
+
+54. **Batch 10 removed §16 and with it every planned batch's acceptance criteria.** The
+    criteria are recovered **verbatim** from git (`d94a6b8~1:MCU_Architecture_v2.1_FINAL.md`)
+    and written into the batch's own `docs/phase-batches.md` section as it is started —
+    the same treatment #52 gave Batch 10.
+
+    *What was wrong:* `batch-start.md` step 1 says to read "the phase's own entry in the
+    roadmap doc" and grep for the `**Phase X.Y:` heading; step 2 says to restate its goal
+    and acceptance criteria verbatim before writing code. After Batch 10 that grep returns
+    nothing — §16 is a pointer to `docs/phase-batches.md`, and the ledger carries
+    `### Batch N` sections with `**Acceptance:**` only for batches 1–10. Every batch from
+    11 to 38 has a one-line title and nothing to verify against.
+
+    *Why recovery rather than re-authoring:* the text is not lost, only unreachable — it is
+    intact in git history, and copying it verbatim keeps #52's guarantee that the batch was
+    checked against something written down rather than against an agent's private reading.
+    Re-authoring criteria would quietly replace the owner's spec with the agent's.
+
+    *Why not restore §16 wholesale:* Batch 10 removed it deliberately, because 86 phases of
+    decayed model annotations are exactly the rot the ledger exists to stop. Restoring the
+    acceptance criteria **per batch, into the ledger section that already has the right
+    shape** keeps the roadmap of record singular.
+
+    *Scope:* batches not yet started still have the gap. Whoever runs one does this first.
+
+55. **A saved smart collection and the filter bar evaluate through the same function.**
+    `list_movies`' body was extracted into `movie_page()`; `GET /movies` and
+    `GET /smart-collections/{id}/results` both call it, and a test asserts the two return
+    byte-identical pages for the same filters.
+
+    *Why:* §3.23 stores a collection as a JSONB filter blob. Two dangers, and only one of
+    them announces itself. The loud one is injection, closed off by validating the blob
+    through `SmartCollectionFilters` (`extra="forbid"`) whose fields *are* the query
+    parameters `GET /movies` accepts. The quiet one is **divergence** — a second predicate
+    builder that gradually stops agreeing with the first, so a saved "Unwatched 4Ks from
+    the 2010s" lists a subtly different set of films from the same filters typed by hand.
+    Nothing errors; both pages look plausible. One function is the only fix that does not
+    depend on someone noticing.
+
+56. **`box_sets.isComplete` is three-valued, and `NULL` means "nobody recorded how big the
+    box is".** Not `false`.
+
+    *Why:* §3.24's `expected_count` is nullable and §11.4 asks for "3 of 4". A set with no
+    expected count has no denominator, so it is *unmeasured*, not incomplete — and
+    defaulting to `false` would put a permanent red mark against every set an admin had not
+    filled in, which reads as a data problem the person cannot fix. The web app renders no
+    progress bar at all in that case and says how many discs it holds instead.

@@ -2,82 +2,91 @@
 
 ## Now
 
-**A pre-existing red on `main` is fixed: the date guards were reading the server's local
-timezone.** Not a scheduled ledger batch — a `fix/` branch closed out on its own, per the
-guardrail against folding a pre-existing red into a batch. Production serves the merged SHA
-`04bfd444bf311243095bee4bc4cf36662d34f873` with `db: ok`.
+**Batch 12 — box sets + smart collections — shipped.** Group C's first half. Production
+serves the merged SHA `881f444f5c04a0037a209acb9ad9fbe6a1774f2f` with `db: ok`, and
+migration `011` applied on boot.
 
-**It was found by the clock, not by a change.** `test_logging_a_watch_returns_it_and_defaults_to_today`
-compared the endpoint's **UTC**-derived default against Python's **local** `date.today()`.
-Those agree on Railway, which runs UTC, and disagree on a British machine for the hour
-after midnight — so the test was green in CI all day and went red at 00:07 BST, in the
-middle of a session, having never been touched.
+| # | Criterion (verbatim) | Result |
+|---|---|---|
+| 11.3 | Admin creates "Columbia Noir Vol 4" with 4 items | done — one call, one transaction. Proved by a test and again in the browser against live Neon |
+| 11.4 | Browsing box sets shows all with status | done — unpaginated grid, "3 of 4" with a progress bar; a soft-deleted disc drops out of the count |
+| 11.5 | Creating "Unwatched 4Ks from 2010s" lists correct films and updates live | done — created in the browser, listed **40 real 4K films from the 2010s**; nothing is materialised, so a newly added disc appears without the collection being touched |
 
-**The test was not the only thing wrong.** `log_watch` defaulted `watched_at` in UTC and
-then validated it against the server's local today; `purchaseDate` carried the same guard.
-Comparing a user-supplied calendar date against *any* single timezone's today is incorrect
-— at 00:30 in London the wall calendar says the 9th while UTC says the 8th, so a UTC-today
-guard would refuse someone logging tonight's film. `apps/api/src/clock.py` now holds
-`utcnow()`, `utc_today()` and `latest_plausible_today()`, and both guards use the last:
-a date is in the future only if it is not today *anywhere on Earth* (UTC+14). Two new tests
-hold that boundary — tomorrow-in-UTC accepted, the day after refused (`DECISIONS.md` #53).
+**Three tables (`box_sets`, `box_set_items`, `smart_collections`), seven endpoints, 38 new
+tests.** 410 `apps/api`, 34 shared and 65 web tests pass.
 
-All 341 `apps/api`, 26 shared and 57 web tests pass locally against live Neon.
+**The dangerous part was the filter blob, and the loud risk was not the important one.**
+A JSONB column that becomes a query invites injection, which is closed off by validating
+every blob through a model whose fields *are* `GET /movies`' own parameters and which
+forbids unknown keys. The quieter risk is **divergence**: a second predicate builder that
+slowly stops agreeing with the first, so a saved collection lists subtly different films
+from the same filters typed into the filter bar — with nothing erroring and both pages
+looking right. `list_movies`' body was extracted into `movie_page()` so there is only one
+builder, and a test asserts the two routes return byte-identical pages (`DECISIONS.md` #55).
+
+**`sub_category` was left alone.** 627 live items carry one across 106 values and ~30 look
+like box sets — but the same column holds "Clint Eastwood" (64 items) and "Hitchcock" (30),
+which are groupings of a person's work, not boxes. No regex separates them, which is why
+§11.3's acceptance says *"Admin creates …"*. Migration `011` creates empty tables and
+backfills nothing.
+
+**Two failures on the way.** A pre-existing red on `main` had to be fixed and shipped
+first, on its own branch (below). And this batch's own CI run failed on a test of mine that
+asserted `totalMovies > 1` — true locally against 1,857 real films, false in CI's empty
+database. That is the *same* environment assumption the previous fix was about, made again
+the same day; the bound now rests on the test's own fixtures.
+
+**What the browser verification left in the live database.** Driving §11.3–11.5 for real
+created and then deleted one box set and one smart collection. End state: `smart_collections`
+0 rows (hard delete, no trace); `box_sets` 1 soft-deleted row and its 1 `box_set_items` row,
+invisible to the app; **3 `admin_actions` rows** recording the create, the disc-add and the
+delete, attributed to Craig's profile because the local dev token was minted for it. They
+are truthful — those actions did happen — and are left rather than deleted, because
+falsifying an audit log is worse than a log that records a verification pass. **No
+`collection_items` row was modified: 0 discs are soft-deleted.**
 
 ---
 
-**Batch 10 — Architecture doc split + §17 reconciliation shipped earlier the same day.**
-Docs only; no code changed, no migration.
+**A pre-existing red on `main` was fixed first: the date guards were reading the server's
+local timezone.** A `fix/` branch closed out on its own, per the guardrail against folding
+a pre-existing red into a batch (`04bfd44`).
 
-| # | Criterion | Result |
-|---|---|---|
-| 1 | `ARCHITECTURE.md` exists holding the durable design content; the original is removed or reduced to a stub | `ARCHITECTURE.md` created (2,001 lines); `MCU_Architecture_v2.1_FINAL.md` reduced to an 18-line stub pointing at it, kept rather than deleted so `REVIEW_PLAN_2026-09-07.md`, `DECISIONS.md`, this file's own dated log entries, `MCU_Session_Guide_v5.md` and `docs/part-b-audit.md` keep resolving |
-| 2 | every one of §17's 50 rows carries an explicit current-status verdict | done — split into shipped / superseded (cited against `DECISIONS.md` #) / not-yet-built per row, two of them (Sentry, structlog+correlation IDs) corrected by reading the code directly rather than trusting the batch log, which had them wrong as "not confirmed" |
-| 3 | `session-log.md.txt` no longer exists; nothing it uniquely held is lost | removed — its content (Phases 0.1–3.1 on the old, pre-re-scaffold spine) is entirely superseded by the re-scaffold and was already folded into `DECISIONS.md` #1–8 |
-| 4 | `AGENTS.md`/`CLAUDE.md` point at the new doc(s) | `AGENTS.md`'s source-of-truth table now cites `ARCHITECTURE.md`; `CLAUDE.md` is the symlink |
-| 5 | no code changes; standard gate stays green | green except 4 pre-existing `apps/api` pytest failures unrelated to this batch (below) |
-
-**This batch's acceptance criteria did not exist anywhere in the repo when the session
-started** — only the one-line ledger title, unlike every other batch. Written into
-`docs/phase-batches.md` before any doc was touched, with the owner's agreement, from the
-`REVIEW_PLAN_2026-09-07.md` Part C bullet this batch was always meant to close out.
-
-**Four pre-existing `apps/api` pytest failures, confirmed unrelated to this batch.**
-`test_migration_seeds_two_profiles_with_no_credential`, `test_a_cabinet_is_a_section_a_filter_can_reach`,
-`test_a_film_kept_in_two_places_reports_both`, `test_watched_status_is_per_user` all fail
-**locally** when `DATABASE_URL` points at live Neon (per `AGENTS.md`'s own instruction to
-export it from `.env.local`) rather than an ephemeral database — they pick up real
-production rows (Craig's actual PIN, all 1,857 real collection items) that their
-assertions weren't written to tolerate. Confirmed unrelated to Batch 10 two ways: `git diff
---stat main feat/10-architecture-doc-split -- apps/ packages/` is empty, and this batch's
-own CI run (`34276482624`) — which uses CI's disposable Postgres service, not live Neon —
-was green. Worth a `fix/` batch of its own: either these tests need per-test data isolation
-that survives a live database having real rows in it, or they should assert something
-narrower than "the only rows returned are the ones I just inserted."
+`test_logging_a_watch_returns_it_and_defaults_to_today` compared the endpoint's **UTC**
+default against Python's **local** `date.today()`. Those agree on Railway, which runs UTC,
+and disagree on a British machine for the hour after midnight — so it was green in CI all
+day and went red at 00:07 BST with nothing changed. `log_watch` and `purchaseDate` both
+carried the same guard. Comparing a person's calendar date against *any* single timezone's
+today is wrong: at 00:30 in London the wall calendar says the 9th while UTC says the 8th.
+`apps/api/src/clock.py` now holds `utcnow()`, `utc_today()` and `latest_plausible_today()`,
+and the ceiling is the latest date that is today anywhere on Earth (`DECISIONS.md` #53,
+gotcha 26).
 
 ## Next
 
-**Group B (Batches 7–9) and now Batch 10 are shipped.** The "build to first deployment"
-half of the ledger has been complete since Batch 9; Batch 10 was the deferred Part C
-paperwork, not a feature.
+**Batch 13 — Completion sets** (🟡, Sonnet 5 · high, phases 11.1 + 11.2) is Group C's
+second half and is next. It reuses Batch 12's UI patterns, which is why the two are a
+group.
 
-**Batch 11 — Notifications + push** (🟢, Deep · xhigh) is next, but it opens on a
-**checkpoint: generate VAPID keys + set them in Railway** — a credential change that stops
-for the owner before any code is written. If that checkpoint hasn't happened, **Batch 12 →
-13 (Group C, box sets + smart collections + completion sets)** is next in the ledger with
-no owner action blocking its start.
+**Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
+on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
+stops for the owner — and it inherits Batch 9's dropped notifications step.
 
-**Four things the next agent should know before picking a batch.**
+**Four things the next agent should know.**
 
-1. **Batch 11 inherits an obligation.** Batch 9 dropped the notifications step rather than
+1. **Every planned batch's acceptance criteria are missing from the working tree.**
+   Batch 10 removed §16, and the ledger carries `### Batch N` sections with
+   `**Acceptance:**` only for batches 1–10. Recover them verbatim from
+   `git show d94a6b8~1:MCU_Architecture_v2.1_FINAL.md`, grep for `**Phase X.Y:`, and write
+   them into the batch's ledger section **before** writing code (`DECISIONS.md` #54).
+   Batch 12's section is the worked example.
+2. **Batch 11 inherits an obligation.** Batch 9 dropped the notifications step rather than
    ship one that lies; Batch 11 owns bringing it back, and must build the push
-   infrastructure *before* re-adding the UI. That is a credential change (VAPID keys) and
-   therefore stops for the owner.
-2. **The production-UI gap is now narrow but real.** Batches 7 and 9 were driven end to end
-   in a browser against a stub API, and Batch 8's write queue was too. What still cannot be
-   verified here is anything needing a live service worker or a phone — gotcha 25.
-3. **The four `apps/api` pytest failures Batch 10 flagged are fixed** (see "Now"). A local
-   run against live Neon is genuinely green again — no known gap between local and CI.
+   infrastructure *before* re-adding the UI. Credential change — stops for the owner.
+3. **A local API against live Neon is a usable browser rig.** `VITE_SKIP_AUTH=true` is
+   already in `apps/web/.env.local`, vite proxies `/api` to `localhost:8000`, and a dev
+   token minted with a throwaway secret via `src.auth.create_access_token` gets past the
+   API's own auth. That is how §11.3–11.5 were driven for real. Remember that writes land
+   in **production data**.
 4. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
 
 ```
@@ -369,6 +378,15 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 12 shipped — box sets + smart collections** (`881f444`). Three
+  tables, seven endpoints, 38 tests. The saved-filter blob is closed off twice: validated
+  through a model whose fields are `GET /movies`' own parameters, and *evaluated* by the
+  same function that serves `GET /movies`, so a saved collection cannot silently drift from
+  the filter bar (`DECISIONS.md` #55). `isComplete` is three-valued — an unrecorded box size
+  means unmeasured, not incomplete (#56). `sub_category` deliberately untouched. Driven in a
+  browser against live Neon: "Unwatched 4Ks from the 2010s" listed 40 real films. CI caught
+  one test of mine that assumed the local catalogue was present.
 
 - **2026-09-09** — **`fix/date-guards-read-the-server-timezone` shipped.** A pre-existing
   red on `main` that no change caused: `date.today()` reads the *server's* timezone, so the

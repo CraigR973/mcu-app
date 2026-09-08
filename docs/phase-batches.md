@@ -285,7 +285,7 @@ added; this section supplies them before work starts.
 This batch touches no hosting/credentials and performs no destructive data operation, so
 automatic close-out applies once the gate is green.
 
-### Batch 12 — Box sets + smart collections
+### ~~Batch 12 — Box sets + smart collections~~ 🟢 **shipped**
 **Covers phases 11.3, 11.4, 11.5.** Their goals and acceptance criteria, recovered
 **verbatim** from `MCU_Architecture_v2.1_FINAL.md` §16 at `d94a6b8~1` — Batch 10 removed
 §16 and the ledger did not carry the criteria forward, so `batch-start.md` step 2's
@@ -331,7 +331,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 |---|---|---|---|---|---|---|
 | ~~10~~ | ~~Architecture doc split + §17 reconciliation~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~Part C deferred half~~ | `d94a6b8` · `ARCHITECTURE.md` split off with §16 replaced by a pointer to this ledger; all 50 §17 rows carry a reconciled status; `session-log.md.txt` retired |
 | 11 | Notifications + push | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 6.1, 6.2, 5.11 |
-| 12 | Box sets + smart collections | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.3, 11.4, 11.5 |
+| ~~12~~ | ~~Box sets + smart collections~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~11.3, 11.4, 11.5~~ | `881f444` · 3 tables, 7 endpoints; a saved collection and the filter bar evaluate through one function; "Unwatched 4Ks from the 2010s" listed 40 real films in the browser |
 | 13 | Completion sets | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.1, **11.2** |
 | 14 | Stats + export | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.1, 13.2, 13.3, 13.4 |
 | 15 | Trash, audit UI, lending | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 13.5, 13.6, 12.5 |
@@ -378,7 +378,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **B** | ~~7~~ → ~~8~~ → ~~9~~ | — shipped | — shipped | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | ~~10 · solo~~ | — shipped | — shipped | Large mechanical restructure of a 2,639-line doc |
 | — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
-| **C** | 12 → 13 | Sonnet 5 · high | GPT-5.6 Terra · High | Same domain (sets/collections); 13 reuses 12's UI patterns |
+| **C** | ~~12~~ → 13 | Sonnet 5 · high | GPT-5.6 Terra · High | Same domain (sets/collections); 13 reuses 12's UI patterns · **12 shipped** |
 | **D** | 14 → 15 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both admin-facing read surfaces, same verification shape |
 | **E** | 16 → 17 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both TMDB-driven, same client, 17 reuses 16's patterns |
 | **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |
