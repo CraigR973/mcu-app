@@ -37,7 +37,15 @@ def upgrade() -> None:
 
             SELECT string_agg(genre ->> 'name', ' ' ORDER BY genre ->> 'name')
               INTO genre_names
-              FROM jsonb_array_elements(coalesce(NEW.genres, '[]'::jsonb)) AS genre;
+              FROM jsonb_array_elements(
+                  CASE
+                      -- SQLAlchemy's JSONB type serialises Python ``None`` as the JSON
+                      -- scalar ``null`` by default. It is non-SQL-NULL, but it still
+                      -- cannot be expanded as an array.
+                      WHEN jsonb_typeof(NEW.genres) = 'array' THEN NEW.genres
+                      ELSE '[]'::jsonb
+                  END
+              ) AS genre;
 
             NEW.search_vector :=
                 setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
