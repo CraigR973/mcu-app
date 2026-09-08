@@ -13,7 +13,7 @@ from src.config import Environment, docs_urls, settings
 from src.logging_config import configure_logging
 from src.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from src.rate_limit import limiter
-from src.routers import auth, health
+from src.routers import auth, health, movies
 
 configure_logging(settings.log_level)
 
@@ -81,3 +81,4 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(movies.router)

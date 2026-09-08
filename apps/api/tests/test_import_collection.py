@@ -20,15 +20,17 @@ import pytest
 from src.scripts.import_collection import (
     DEFAULT_CONDITION,
     REVIEW_FIELDNAMES,
-    build_top_cast_summary,
-    credit_rows,
     insert_collection_item,
     insert_credits,
-    parse_year,
-    pick_trailer_key,
     upsert_movie,
     upsert_unmatched_movie,
     write_review_file,
+)
+from src.services.movie_metadata import (
+    build_top_cast_summary,
+    credit_rows,
+    parse_year,
+    pick_trailer_key,
 )
 from src.spreadsheet.models import ImportCandidate
 from src.tmdb.models import (

@@ -41,7 +41,6 @@ import asyncio
 import csv
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +49,10 @@ import psycopg2.extras
 
 from src.config import psycopg2_dsn, settings
 from src.matching import LOW_CONFIDENCE, MatchingEngine, MatchResult
+from src.services.movie_metadata import (
+    credit_rows,
+    movie_metadata_values,
+)
 from src.spreadsheet import ImportCandidate, parse_xlsx
 from src.tmdb import TMDBClient
 from src.tmdb.models import Movie
@@ -58,23 +61,6 @@ from src.tmdb.models import Movie
 #: in ordinary use, so "good" is the honest default; Batch 7's edit UI lets it be
 #: corrected per item.
 DEFAULT_CONDITION = "good"
-
-#: TMDB crew jobs → §3.3's role vocabulary. Anything not listed is not stored: the
-#: catalogue is searched by the people who define a film, not by its whole crew list.
-CREW_ROLE_BY_JOB: dict[str, str] = {
-    "Director": "director",
-    "Writer": "writer",
-    "Screenplay": "writer",
-    "Story": "writer",
-    "Producer": "producer",
-    "Original Music Composer": "composer",
-    "Music": "composer",
-}
-
-#: How many cast members are stored per film, and how many of those are denormalised
-#: onto ``movies.top_cast_summary`` for the grid.
-MAX_CAST_STORED = 50
-TOP_CAST_SUMMARY_SIZE = 5
 
 REVIEW_FIELDNAMES = [
     "row",
@@ -117,78 +103,6 @@ class ImportStats:
 # ---------------------------------------------------------------------------
 # Pure helpers
 # ---------------------------------------------------------------------------
-
-
-def parse_year(raw: str | None) -> int | None:
-    """Extract the release year from a TMDB ``YYYY-MM-DD`` string."""
-    if not raw:
-        return None
-    try:
-        return int(raw.split("-", 1)[0])
-    except (ValueError, IndexError):
-        return None
-
-
-def pick_trailer_key(movie: Movie) -> str | None:
-    """Return the YouTube key of the film's trailer, preferring the official one."""
-    if movie.videos is None:
-        return None
-    youtube = [v for v in movie.videos.results if v.site == "YouTube" and v.type == "Trailer"]
-    if not youtube:
-        return None
-    for video in youtube:
-        if video.official:
-            return video.key
-    return youtube[0].key
-
-
-def build_top_cast_summary(movie: Movie) -> list[dict[str, Any]] | None:
-    """Top billed cast, denormalised onto the movie row for the collection grid.
-
-    Keys are snake_case because this is a database column; Batch 5's response models
-    are what turn the payload camelCase on the wire (`DECISIONS.md` #12).
-    """
-    if movie.credits is None or not movie.credits.cast:
-        return None
-    ordered = sorted(movie.credits.cast, key=lambda member: member.order)
-    return [
-        {
-            "tmdb_person_id": member.id,
-            "name": member.name,
-            "character_name": member.character,
-            "profile_path": member.profile_path,
-        }
-        for member in ordered[:TOP_CAST_SUMMARY_SIZE]
-    ]
-
-
-def credit_rows(movie_id: uuid.UUID, movie: Movie) -> list[tuple[Any, ...]]:
-    """Flatten TMDB credits into ``movie_credits`` rows in §3.3's shape."""
-    if movie.credits is None:
-        return []
-
-    rows: list[tuple[Any, ...]] = []
-    ordered_cast = sorted(movie.credits.cast or [], key=lambda member: member.order)
-    for member in ordered_cast[:MAX_CAST_STORED]:
-        rows.append(
-            (
-                str(uuid.uuid4()),
-                str(movie_id),
-                member.name,
-                member.id,
-                "cast",
-                member.character,
-                member.order,
-            )
-        )
-
-    for crew in movie.credits.crew or []:
-        role = CREW_ROLE_BY_JOB.get(crew.job)
-        if role is None:
-            continue
-        rows.append((str(uuid.uuid4()), str(movie_id), crew.name, crew.id, role, None, None))
-
-    return rows
 
 
 def review_row(candidate: ImportCandidate, result: MatchResult, reason: str) -> dict[str, Any]:
@@ -312,34 +226,11 @@ def upsert_movie(conn: Any, movie: Movie) -> tuple[uuid.UUID, bool]:
     Returns ``(movie_id, inserted)``. Deduplication is on ``tmdb_id``, which is the
     unique key §3.2 gives the table — not on the primary key, which is ours.
     """
-    genres = [{"id": g.id, "name": g.name} for g in movie.genres] if movie.genres else None
-    payload = {
-        "id": str(uuid.uuid4()),
-        "tmdb_id": movie.id,
-        "imdb_id": movie.imdb_id,
-        "title": movie.title,
-        "original_title": movie.original_title,
-        "year": parse_year(movie.release_date),
-        "runtime_minutes": movie.runtime,
-        "overview": movie.overview or None,
-        "tagline": movie.tagline or None,
-        "poster_path": movie.poster_path,
-        "backdrop_path": movie.backdrop_path,
-        "tmdb_rating": movie.vote_average,
-        "tmdb_vote_count": movie.vote_count,
-        "genres": psycopg2.extras.Json(genres) if genres else None,
-        "genre_ids": [g.id for g in movie.genres] if movie.genres else None,
-        "top_cast_summary": (
-            psycopg2.extras.Json(summary)
-            if (summary := build_top_cast_summary(movie)) is not None
-            else None
-        ),
-        "trailer_key": pick_trailer_key(movie),
-        # Everything the matching engine finds comes from /search/movie, so it is a
-        # film by construction. `is_tv` is set by hand for the box-set series rows.
-        "media_type": "film",
-        "last_tmdb_sync_utc": datetime.now(UTC).replace(tzinfo=None),
-    }
+    payload = {"id": str(uuid.uuid4()), **movie_metadata_values(movie)}
+    if payload["genres"] is not None:
+        payload["genres"] = psycopg2.extras.Json(payload["genres"])
+    if payload["top_cast_summary"] is not None:
+        payload["top_cast_summary"] = psycopg2.extras.Json(payload["top_cast_summary"])
 
     with conn.cursor() as cur:
         columns = ", ".join(payload)

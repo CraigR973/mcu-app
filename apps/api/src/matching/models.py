@@ -17,6 +17,7 @@ class MatchCandidate(BaseModel):
     title_exact: bool = False
     popularity: float = 0.0
     poster_path: str | None = None
+    overview: str = ""
 
 
 class MatchResult(BaseModel):

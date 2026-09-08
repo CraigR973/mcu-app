@@ -232,6 +232,7 @@ class MatchingEngine:
                     title_exact=title_is_exact(clean_title, r),
                     popularity=r.popularity,
                     poster_path=r.poster_path,
+                    overview=r.overview,
                 )
             )
 

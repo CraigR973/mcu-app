@@ -180,6 +180,36 @@ def test_search_vector_includes_overview_and_tagline(db):
     assert "star" in sv
 
 
+def test_search_vector_includes_genres(db):
+    movie_id = _insert_movie(
+        db,
+        title="X",
+        overview=None,
+        tagline=None,
+        genres=psycopg2.extras.Json([{"id": 99, "name": "Documentary"}]),
+    )
+    assert "documentari" in _movie_row(db, movie_id)["search_vector"]
+
+
+def test_search_vector_tracks_credit_insert_and_delete(db):
+    movie_id = _insert_movie(db, title="X", overview=None, tagline=None)
+    credit_id = uuid.uuid4()
+    with db.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO movie_credits
+                (id, movie_id, person_name, role, display_order)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (str(credit_id), str(movie_id), "Stanley Kubrick", "director", 0),
+        )
+    assert "kubrick" in _movie_row(db, movie_id)["search_vector"]
+
+    with db.cursor() as cur:
+        cur.execute("DELETE FROM movie_credits WHERE id = %s", (str(credit_id),))
+    assert "kubrick" not in _movie_row(db, movie_id)["search_vector"]
+
+
 # ---------------------------------------------------------------------------
 # best_format_owned
 # ---------------------------------------------------------------------------

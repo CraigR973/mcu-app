@@ -1,3 +1,3 @@
-from src.routers import health
+from src.routers import auth, health, movies
 
-__all__ = ["health"]
+__all__ = ["auth", "health", "movies"]

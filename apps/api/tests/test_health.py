@@ -75,4 +75,10 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/auth/logout",
         "/api/v1/auth/me",
         "/api/v1/auth/pin",
+        "/api/v1/movies",
+        "/api/v1/movies/{movie_id}",
+        "/api/v1/movies/{movie_id}/copies",
+        "/api/v1/movies/{movie_id}/candidates",
+        "/api/v1/movies/{movie_id}/identify",
+        "/api/v1/search",
     }
