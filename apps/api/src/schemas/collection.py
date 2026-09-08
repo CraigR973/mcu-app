@@ -11,7 +11,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from src.models.collection_item import CONDITIONS, FORMAT_RANK
 from src.schemas.wire import UtcDatetime
@@ -99,13 +99,19 @@ class CollectionItemCreateRequest(CollectionItemFieldsMixin):
     #: §3.5 confirmation holds even for a client that skipped the preflight check.
     confirmDuplicate: Literal["another_copy", "upgrade"] | None = None
 
-    @field_validator("tmdbId")
-    @classmethod
-    def _exactly_one_film_reference(cls, value: int | None, info: Any) -> int | None:
-        movie_id = info.data.get("movieId")
-        if (movie_id is None) == (value is None):
+    @model_validator(mode="after")
+    def _exactly_one_film_reference(self) -> CollectionItemCreateRequest:
+        """Reject a body naming both films, or neither.
+
+        A ``field_validator`` on ``tmdbId`` looked equivalent and was not: pydantic does
+        not run field validators for a field the request omits, so a body with *neither*
+        id passed validation untouched and reached the router, which then had nothing to
+        look the film up by. Caught in CI by this batch's own test — the "neither" case
+        returned a 500 rather than a 422.
+        """
+        if (self.movieId is None) == (self.tmdbId is None):
             raise ValueError("Supply exactly one of movieId or tmdbId")
-        return value
+        return self
 
 
 class CollectionItemUpdateRequest(CollectionItemFieldsMixin):

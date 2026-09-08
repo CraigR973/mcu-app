@@ -312,9 +312,13 @@ async def add_collection_item(
     """
     if payload.movieId is not None:
         movie = await _get_live_movie(db, payload.movieId)
-    else:
-        assert payload.tmdbId is not None  # guaranteed by the request validator
+    elif payload.tmdbId is not None:
         movie = await _movie_from_tmdb(db, tmdb, payload.tmdbId)
+    else:  # pragma: no cover - the model validator rejects this body first
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Supply exactly one of movieId or tmdbId",
+        )
 
     duplicate = await _duplicate_state(db, movie, payload.formats)
     if duplicate.isDuplicate and payload.confirmDuplicate is None:
@@ -473,8 +477,16 @@ async def list_trash(
         )
     ).all()
 
-    return TrashPageResponse(
-        items=[
+    # Built in a loop rather than a comprehension so `deleted_at` narrows on its own.
+    # The WHERE clause already guarantees it is non-null, and a `type: ignore` saying so
+    # is the kind of claim `warn_unused_ignores` exists to keep honest — it read as
+    # unused on CI's mypy and as necessary on this machine's.
+    trash: list[TrashItemResponse] = []
+    for item, movie in rows:
+        deleted_at = item.deleted_at
+        if deleted_at is None:  # pragma: no cover - excluded by the query
+            continue
+        trash.append(
             TrashItemResponse(
                 id=item.id,
                 targetTable=COLLECTION_ITEMS_TABLE,
@@ -483,12 +495,12 @@ async def list_trash(
                 posterPath=movie.poster_path,
                 formats=item.formats,
                 locationLabel=location_label(item.section, item.shelf),
-                # Non-null by the WHERE clause; asserted so the response model does not
-                # need an optional field the endpoint can never actually return.
-                deletedAt=item.deleted_at,  # type: ignore[arg-type]
+                deletedAt=deleted_at,
             )
-            for item, movie in rows
-        ],
+        )
+
+    return TrashPageResponse(
+        items=trash,
         total=total,
         page=page,
         perPage=per_page,

@@ -18,6 +18,7 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
@@ -153,12 +154,23 @@ async def viewer(api_session: AsyncSession) -> Profile:
     return await _profile(api_session, UserRole.viewer)
 
 
-def _client_for(api_session: AsyncSession, profile: Profile) -> AsyncClient:
+#: Which profile a request is acting as. A header rather than a per-client override
+#: because ``app.dependency_overrides`` is global to the application: two clients
+#: installing their own ``get_current_user`` meant whichever fixture was built last
+#: silently decided the actor for *both*, and the admin's writes came back 403. Found
+#: in CI, and it would have made the "viewer sees it immediately" criterion untestable.
+ACTOR_HEADER = "x-test-actor"
+
+
+@pytest_asyncio.fixture
+async def overrides(
+    api_session: AsyncSession, admin: Profile, viewer: Profile
+) -> AsyncIterator[None]:
     async def override_db() -> AsyncIterator[AsyncSession]:
         yield api_session
 
-    async def override_user() -> Profile:
-        return profile
+    async def override_user(request: Request) -> Profile:
+        return admin if request.headers.get(ACTOR_HEADER) == "admin" else viewer
 
     async def override_tmdb() -> AsyncIterator[FakeTmdbClient]:
         yield FakeTmdbClient()
@@ -166,26 +178,34 @@ def _client_for(api_session: AsyncSession, profile: Profile) -> AsyncClient:
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_current_user] = override_user
     app.dependency_overrides[get_tmdb_client] = override_tmdb
-    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+    try:
+        yield
+    finally:
+        app.dependency_overrides.clear()
+
+
+def _client_as(actor: str) -> AsyncClient:
+    return AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        headers={ACTOR_HEADER: actor},
+    )
 
 
 @pytest_asyncio.fixture
-async def client(api_session: AsyncSession, admin: Profile) -> AsyncIterator[AsyncClient]:
+async def client(overrides: None) -> AsyncIterator[AsyncClient]:
     """An admin's client — the only role this surface accepts."""
-    try:
-        async with _client_for(api_session, admin) as http_client:
-            yield http_client
-    finally:
-        app.dependency_overrides.clear()
+    del overrides
+    async with _client_as("admin") as http_client:
+        yield http_client
 
 
 @pytest_asyncio.fixture
-async def viewer_client(api_session: AsyncSession, viewer: Profile) -> AsyncIterator[AsyncClient]:
-    try:
-        async with _client_for(api_session, viewer) as http_client:
-            yield http_client
-    finally:
-        app.dependency_overrides.clear()
+async def viewer_client(overrides: None) -> AsyncIterator[AsyncClient]:
+    """Mark's client. Reads everything; writes nothing."""
+    del overrides
+    async with _client_as("viewer") as http_client:
+        yield http_client
 
 
 async def _a_film(
