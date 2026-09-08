@@ -25,30 +25,43 @@ rather than in the master doc, so this is where it lives.
 unavailable — it is built for multi-step agentic work, so treat it as Terra-equivalent and
 raise the effort a step to compensate.*
 
-**No batch below is Light.** These are all real features on live data; the row is kept for
+**No batch is Light.** These are all real features on live data; the row is kept for
 mechanical follow-ups and for sub-tasks inside a batch, not because anything here qualifies.
 
 ### Effort
 
-Both tools run the same five-step ladder: `low` → `medium` → `high` → `xhigh` → `max`.
+Both tools run the same five-step ladder. Claude writes the fourth step `xhigh`; Codex
+writes it `Extra High`. The tables below use each tool's own spelling, so a cell can be
+copied straight into the setting.
 
-**`high` is the baseline here, not the exception.** Claude's own guidance calls it "the
-standard default for many models and agentic workflows ... complex coding and multi-step
-reasoning", and Codex describes its High the same way. So an ordinary feature batch is
-`high`; `medium` is for work that is genuinely closer to drafting than to engineering; and
-`xhigh`/`max` are reserved for the batches below that earn them.
+| Claude Code | Codex | Used here for |
+|---|---|---|
+| `medium` | Medium | Doc restructuring, charts over data already collected, small independent UI |
+| `high` | High | **The default.** Ordinary feature work — most batches |
+| `xhigh` | Extra High | Irreversible actions, credentials, a public surface, or a known-bad spec |
+| `max` | Max | Silent wrong data at scale, or net-new security-critical infrastructure — **three batches** |
 
-| Effort | Used here for |
-|---|---|
-| `medium` | Doc restructuring, charts over data already collected, small independent UI |
-| `high` | **The default.** Ordinary feature work — most batches |
-| `xhigh` | Irreversible actions, credentials, a public surface, or a known-bad spec |
-| `max` | Silent wrong data at scale, or net-new security-critical infrastructure — **three batches only** |
+**`high` is the baseline, not the exception.** Claude's guidance calls it "the standard
+default for many models and agentic workflows ... complex coding and multi-step reasoning",
+and Codex describes its High the same way. So an ordinary feature batch is `high`; `medium`
+is for work genuinely closer to drafting than to engineering.
 
-*Codex additionally offers **Ultra**, which is not a depth setting but automated delegation
-across parallel subagents. It is worth reaching for where the work genuinely splits:
-**Batch 19** is six independent retailer scrapers, and **34** is four independent mailbox
-parsers. It buys nothing on a batch whose parts are sequential.*
+*Codex additionally offers **Ultra**, which is not a rung on this ladder — it is automated
+delegation across parallel subagents. Reach for it **inside** a batch whose work genuinely
+splits, once the shape is settled: **19** is six independent retailer scrapers and **34** is
+four independent mailbox parsers. Do not start there — both batches are `Max`/`Extra High`
+in the table because the framework each one hangs off has to be right first, and delegating
+that is how six scrapers end up with six different silent bugs.*
+
+### How the group rows are set
+
+**A group runs at the strictest setting any of its batches asks for.** The values in the
+group manifest are *derived from* the batch rows, not typed independently — so Group F
+reads `Opus 5 · max` because Batch 19 does, and Group D reads `Opus 5 · xhigh` because
+Batch 15 does even though Batch 14 is `Sonnet 5 · high`.
+
+If you change a batch's setting, re-derive its group's. They are two views of one fact and
+the batch row is the one that governs.
 
 ### Effort tracks risk, not size
 
@@ -86,17 +99,17 @@ lives per batch here and is not repeated in the group manifest.
 
 ## Build to first deployment
 
-| # | Batch | Tier | Status | Covers phases from `MCU_Architecture_v2.1_FINAL.md` §16 | Result |
-|---|---|---|---|---|---|
-| ~~1~~ | ~~New spine foundations~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.1, 0.2, 0.3**; carries **0.6**~~ | PR #1 · `0910428`, `15ed148` |
-| ~~2~~ | ~~Deploy spine + CI gate~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.5**; **implements §15, which was never a phase**~~ | `d4190ac` · API live, `/health` serves the SHA |
-| ~~3~~ | ~~Auth — PIN + JWT~~ | ~~🟡~~ | **shipped** | ~~**supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11~~ | `e89a9c6` · lockout proved on Postgres in CI |
-| ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
-| ~~5~~ | ~~Read surface **+ identify flow**~~ | ~~🔴~~ | **shipped** | ~~re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33)~~ | `a731b8c` · 1,857 items browsable; search median 20 ms; 757 films identifiable in-app |
-| ~~6~~ | ~~Location + facets **+ watch log**~~ | ~~🟡~~ | **shipped** | ~~**3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise; **adds §3.7's `watch_log`, which no phase owned**~~ | `1067a72` · Front 2nd shelf answers in 20 ms; 1,855 of 1,857 items sectioned |
-| ~~7~~ | ~~Write surface~~ | ~~🟡~~ | **shipped** | ~~re-lands **3.1**; adds **3.2, 3.5, 3.11**~~ | `c808964` · 1,857 items untouched; audit log survives a hard delete of its target; 331 CI tests, zero skips |
-| ~~8~~ | ~~PWA + offline~~ | ~~🟢~~ | **shipped** | ~~**13.8, 6.5, 13.9** pulled forward~~ | `c310d0f` · installable, collection cached, offline edits land on reconnect; **four defects found only by driving it with the network off** |
-| ~~9~~ | ~~Onboarding repair~~ | ~~🟢~~ | **shipped** | ~~repairs **2.8**~~ | `4de32c3` · six honest steps; **the notifications step was dropped, not fixed — it still has nothing behind it** |
+| # | Batch | Tier | Claude Code | Codex | Status | Covers phases from `MCU_Architecture_v2.1_FINAL.md` §16 | Result |
+|---|---|---|---|---|---|---|---|
+| ~~1~~ | ~~New spine foundations~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~re-lands **0.1, 0.2, 0.3**; carries **0.6**~~ | PR #1 · `0910428`, `15ed148` |
+| ~~2~~ | ~~Deploy spine + CI gate~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~re-lands **0.5**; **implements §15, which was never a phase**~~ | `d4190ac` · API live, `/health` serves the SHA |
+| ~~3~~ | ~~Auth — PIN + JWT~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~**supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11~~ | `e89a9c6` · lockout proved on Postgres in CI |
+| ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | — shipped | — shipped | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
+| ~~5~~ | ~~Read surface **+ identify flow**~~ | ~~🔴~~ | — shipped | — shipped | **shipped** | ~~re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33)~~ | `a731b8c` · 1,857 items browsable; search median 20 ms; 757 films identifiable in-app |
+| ~~6~~ | ~~Location + facets **+ watch log**~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~**3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise; **adds §3.7's `watch_log`, which no phase owned**~~ | `1067a72` · Front 2nd shelf answers in 20 ms; 1,855 of 1,857 items sectioned |
+| ~~7~~ | ~~Write surface~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~re-lands **3.1**; adds **3.2, 3.5, 3.11**~~ | `c808964` · 1,857 items untouched; audit log survives a hard delete of its target; 331 CI tests, zero skips |
+| ~~8~~ | ~~PWA + offline~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~**13.8, 6.5, 13.9** pulled forward~~ | `c310d0f` · installable, collection cached, offline edits land on reconnect; **four defects found only by driving it with the network off** |
+| ~~9~~ | ~~Onboarding repair~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~repairs **2.8**~~ | `4de32c3` · six honest steps; **the notifications step was dropped, not fixed — it still has nothing behind it** |
 
 > **All 23 shipped phases are accounted for above.** Their ✅ marks in §16 now mean
 > "specified and shipped on the old spine" — not "present in the running app". Re-tick
@@ -244,37 +257,37 @@ wizard for the lack of.
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
 
-| # | Batch | Tier | Model · Effort | Status | Phases |
-|---|---|---|---|---|---|
-| 10 | Architecture doc split + §17 reconciliation | 🟢 | Standard · medium | planned | Part C deferred half |
-| 11 | Notifications + push | 🟢 | **Deep · xhigh** | planned | 6.1, 6.2, 5.11 |
-| 12 | Box sets + smart collections | 🟢 | Standard · high | planned | 11.3, 11.4, 11.5 |
-| 13 | Completion sets | 🟡 | Standard · high | planned | 11.1, **11.2** |
-| 14 | Stats + export | 🟢 | Standard · high | planned | 13.1, 13.2, 13.3, 13.4 |
-| 15 | Trash, audit UI, lending | 🟢 | **Deep · xhigh** | planned | 13.5, 13.6, 12.5 |
-| 16 | Watch providers + recommendations | 🟢 | Standard · high | planned | 7.1, 7.2 |
-| 17 | Release calendar + iCal | 🟡 | **Deep · xhigh** | planned | 7.3, 7.4 — secret-token `.ics` URL |
-| 18 | Wanted list + retailers | 🟢 | Standard · high | planned | 5.1, 5.2 (full scope) |
-| 19 | **Scraper framework** | 🔴 | **Deep · max** | planned | **5.3, 5.4** — see risk note below |
-| 20 | Price scraping + drop alerts | 🟡 | **Deep · xhigh** | planned | 5.5, 5.6, 5.8 |
-| 21 | Price history charts | 🟢 | Standard · medium | planned | **5.7** — needs 7 real days of data after B20 |
-| 22 | Deals feed | 🟡 | Standard · high | planned | 5.9, 5.10 — RSS **and** scraped sources |
-| 23 | Specs — scraper + display | 🟡 | Deep · high | planned | 3.7, 3.8, 3.9 |
-| 24 | Barcode — scan + lookup | 🟡 | **Deep · xhigh** | planned | 3.3, **3.4** — confirmation UI mandatory |
-| 25 | Photo uploads | 🟢 | Standard · high | planned | 3.10 — needs the `vercel.json` CSP fix |
-| 26 | Shelf QR | 🟢 | Standard · medium | planned | 12.3, 12.4 |
-| 27 | Gift links | 🟡 | **Deep · xhigh** | planned | 12.1, 12.2 — high-entropy slug, rate limiter, `noindex` |
-| 28 | **eBay integration** | 🔴 | **Deep · xhigh** | planned | **4.1, 4.3** — active listings, not sold comps |
-| 29 | Format upgrade + sale tracking | 🟢 | Standard · high | planned | 4.2, 4.4 |
-| 30 | AI assistant — client + caps | 🟡 | Deep · high | planned | 9.1 + **9.7 together** |
-| 31 | AI assistant — tools + chat | 🔴 | **Deep · max** | planned | 9.2, 9.3, 9.4 |
-| 32 | Voice input | 🟢 | Standard · medium | planned | **9.5** |
-| 33 | **Email — accounts + OAuth** | 🔴 | **Deep · max** | planned | **10.1, 10.2, 10.3, 10.4** |
-| 34 | **Email — parsers + scanning** | 🔴 | **Deep · xhigh** | planned | **10.5, 10.6, 10.7, 10.8** |
-| 35 | Movie night | 🔴 | **Deep · xhigh** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
-| 36 | Command palette + shortcuts | 🟢 | Standard · high | planned | **6.3, 6.4** |
-| 37 | On-this-day + rewatch | 🟢 | Standard · medium | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
-| 38 | E2E suite | 🟢 | Standard · high | planned | 13.10 — written alongside features, formalised here |
+| # | Batch | Tier | Claude Code | Codex | Status | Phases |
+|---|---|---|---|---|---|---|
+| 10 | Architecture doc split + §17 reconciliation | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | Part C deferred half |
+| 11 | Notifications + push | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 6.1, 6.2, 5.11 |
+| 12 | Box sets + smart collections | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.3, 11.4, 11.5 |
+| 13 | Completion sets | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.1, **11.2** |
+| 14 | Stats + export | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.1, 13.2, 13.3, 13.4 |
+| 15 | Trash, audit UI, lending | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 13.5, 13.6, 12.5 |
+| 16 | Watch providers + recommendations | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 7.1, 7.2 |
+| 17 | Release calendar + iCal | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 7.3, 7.4 — secret-token `.ics` URL |
+| 18 | Wanted list + retailers | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.1, 5.2 (full scope) |
+| 19 | **Scraper framework** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **5.3, 5.4** — see risk note below |
+| 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
+| 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
+| 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
+| 23 | Specs — scraper + display | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 3.7, 3.8, 3.9 |
+| 24 | Barcode — scan + lookup | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 3.3, **3.4** — confirmation UI mandatory |
+| 25 | Photo uploads | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 3.10 — needs the `vercel.json` CSP fix |
+| 26 | Shelf QR | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | 12.3, 12.4 |
+| 27 | Gift links | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 12.1, 12.2 — high-entropy slug, rate limiter, `noindex` |
+| 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **4.1, 4.3** — active listings, not sold comps |
+| 29 | Format upgrade + sale tracking | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 4.2, 4.4 |
+| 30 | AI assistant — client + caps | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 9.1 + **9.7 together** |
+| 31 | AI assistant — tools + chat | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | 9.2, 9.3, 9.4 |
+| 32 | Voice input | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **9.5** |
+| 33 | **Email — accounts + OAuth** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **10.1, 10.2, 10.3, 10.4** |
+| 34 | **Email — parsers + scanning** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **10.5, 10.6, 10.7, 10.8** |
+| 35 | Movie night | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
+| 36 | Command palette + shortcuts | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | **6.3, 6.4** |
+| 37 | On-this-day + rewatch | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
+| 38 | E2E suite | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.10 — written alongside features, formalised here |
 
 ## Batch groups
 
@@ -285,34 +298,33 @@ batches back to back — it is **not** permission to merge them together.
 
 Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stops for.
 
-| Group | Ordered batches and checkpoints | Why it is a group |
-|---|---|---|
-| — | 1 · solo | Foundation; everything downstream depends on it being right |
-| — | **checkpoint: provision Neon + Railway + Vercel** → 2 | Hosting/credential change; first deployment deserves eyes |
-| — | 3 · solo | Auth is security-critical |
-| — | ~~4 · solo~~ | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
-| **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
-| **B** | ~~7~~ → ~~8~~ → ~~9~~ | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
-| — | 10 · solo | Large mechanical restructure of a 2,639-line doc |
-| — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
-| **C** | 12 → 13 | Same domain (sets/collections); 13 reuses 12's UI patterns |
-| **D** | 14 → 15 | Both admin-facing read surfaces, same verification shape |
-| **E** | 16 → 17 | Both TMDB-driven, same client, 17 reuses 16's patterns |
-| **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |
-| — | 21 · solo | Hard 7-day wall-clock gate after Batch 20 |
-| **G** | 22 → 23 | Both consume the scraper framework from 19 |
-| **H** | 24 → 25 | **Both blocked on the same two `vercel.json` fixes** — camera Permissions-Policy and CSP `connect-src` |
-| — | 26 · solo | Conditional on Batch 6 proving insufficient |
-| — | 27 · solo | The app's only public surface; needs its own security review |
-| **I** | **checkpoint: eBay production API application** → 28 → 29 | 29 consumes 28; API access gates the group |
-| **J** | 30 → 31 | Strong dependency, same files; caps must exist before tools |
-| — | 32 · solo | Small and independent |
-| **K** | **checkpoint: Google + Microsoft OAuth app registration** → 33 → 34 | 34 consumes 33; credential setup gates the group |
-| — | 35 · solo | 🔴, needs Supabase Realtime — net new integration |
-| — | 36 · solo | Already two phases in one batch |
-| — | 37 · solo | Table exists since Batch 6; inert until it has ~a year of history |
-| — | 38 · solo | Formalises work written across earlier batches |
-
+| Group | Ordered batches and checkpoints | Claude Code | Codex | Why it is a group |
+|---|---|---|---|---|
+| — | 1 · solo | — shipped | — shipped | Foundation; everything downstream depends on it being right |
+| — | **checkpoint: provision Neon + Railway + Vercel** → 2 | — shipped | — shipped | Hosting/credential change; first deployment deserves eyes |
+| — | 3 · solo | — shipped | — shipped | Auth is security-critical |
+| — | ~~4 · solo~~ | — shipped | — shipped | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
+| **A** | 5 → 6 | — shipped | — shipped | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
+| **B** | ~~7~~ → ~~8~~ → ~~9~~ | — shipped | — shipped | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
+| — | 10 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Large mechanical restructure of a 2,639-line doc |
+| — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
+| **C** | 12 → 13 | Sonnet 5 · high | GPT-5.6 Terra · High | Same domain (sets/collections); 13 reuses 12's UI patterns |
+| **D** | 14 → 15 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both admin-facing read surfaces, same verification shape |
+| **E** | 16 → 17 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both TMDB-driven, same client, 17 reuses 16's patterns |
+| **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |
+| — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |
+| **G** | 22 → 23 | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19 |
+| **H** | 24 → 25 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Both blocked on the same two `vercel.json` fixes** — camera Permissions-Policy and CSP `connect-src` |
+| — | 26 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Conditional on Batch 6 proving insufficient |
+| — | 27 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The app's only public surface; needs its own security review |
+| **I** | **checkpoint: eBay production API application** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28; API access gates the group |
+| **J** | 30 → 31 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Strong dependency, same files; caps must exist before tools |
+| — | 32 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Small and independent |
+| **K** | **checkpoint: Google + Microsoft OAuth app registration** → 33 → 34 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | 34 consumes 33; credential setup gates the group |
+| — | 35 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 🔴, needs Supabase Realtime — net new integration |
+| — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
+| — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
+| — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
 **Net: 38 batches → 25 sessions.** Eleven groups absorb 24 batches; 14 stay solo.
 
 *Batch 11 had no row here at all until 2026-09-08, and the arithmetic hid it: the old
