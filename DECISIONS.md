@@ -349,3 +349,40 @@ contemporaneous.
     acceptance criterion meaningful — under the old behaviour it could never reach the
     number of items owned. `movies.tmdb_id` is nullable and uniquely indexed to support it,
     and Postgres treats each NULL as distinct so many such rows coexist.
+
+31. **An ambiguous match is catalogued but not enriched.** Owner decision, 2026-09-07,
+    choosing this over importing everything on the matcher's current guess. It is also an
+    explicit override of Batch 4's own instruction to port `matching/` **unchanged** — the
+    ranking is changed, which is Phase 1.6's territory.
+
+    *What was wrong.* `engine.py` scored a result's `original_title` as well as its `title`
+    and took the max, then broke confidence ties by TMDB popularity. Measured across all
+    1,857 titles on 2026-09-07: **687 matched rows (39.9%) had two or more candidates tied
+    at the top confidence, and 652 of those had no year in the source title** — so for 35%
+    of the collection the film was chosen by TMDB's current popularity ranking, which is
+    not stable over time and now favours 2025/2026 releases. `Frankenstein` resolved to
+    2025 rather than the 1931 Karloff, `Lolita` to 1997 rather than Kubrick's 1962, and
+    `Amistad` to `Friendship` (2023), whose original title is "Amistad".
+
+    *The two changes.* `title_is_exact` promotes a candidate whose **displayed** title
+    canonically equals the query above one that only matched on `original_title`; it is a
+    tiebreak and never moves a confidence. Then `is_ambiguous` marks a match whose leader is
+    tied with candidates that are not plausibly the same film — different titles, or the
+    same title more than `AMBIGUOUS_YEAR_SPREAD` (3) years apart. A re-release a year later
+    is deliberately *not* ambiguous; flagging that would send half the catalogue to review.
+
+    *Why not simply pick better.* Only 10 of the 1,857 rows are fixable by code with
+    confidence — the class where the winner is not an exact title match but a tied candidate
+    is. The rest are undecidable from the source: the spreadsheet gives a bare title and no
+    year, so nothing in the data says which *Frankenstein* is on the shelf. A heuristic —
+    prefer the oldest, prefer the most-voted — would replace one guess with another and
+    would still be wrong silently.
+
+    *Why the disc is still catalogued.* Deferring the *identification* must not defer the
+    *item*. An ambiguous row gets its title-only `movies` row and its `collection_items` row
+    with location intact, so the collection is complete and the review queue is about
+    metadata, not about missing discs. This is #30 applied to a second case.
+
+    *Cost, accepted:* a review pass over the ambiguous rows before their posters, cast and
+    search vectors are correct. The review CSV carries an `alternatives` column listing
+    every tied candidate so a row can be settled from the file itself.

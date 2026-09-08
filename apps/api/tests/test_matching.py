@@ -415,3 +415,146 @@ async def test_engine_retries_without_year_when_year_filter_empty() -> None:
     # The fallback hit, but the year mismatched so confidence drops
     assert result.candidates
     assert result.candidates[0].year_match == "mismatch"
+
+
+# ---------------------------------------------------------------------------
+# title_exact tiebreak and ambiguity detection (Batch 4, DECISIONS #31)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_engine_prefers_exact_title_over_original_title_match() -> None:
+    """The Amistad case, verified live against TMDB on 2026-09-07.
+
+    TMDB returns "Friendship" (2023) — whose *original* title is "Amistad" — alongside
+    the real "Amistad", and it is the most popular of the three. `score` takes the max of
+    the title and original-title similarities, so all three tie at 1.000, and before this
+    the tiebreak was popularity alone.
+    """
+    async with TMDBClient() as tmdb:
+        tmdb.search_movie = AsyncMock(  # type: ignore[method-assign]
+            return_value=_results(
+                _result(1164273, "Friendship", 2023, original_title="Amistad", pop=1.4423),
+                _result(11831, "Amistad", 1997, pop=1.2689),
+            )
+        )
+        engine = MatchingEngine(tmdb)
+        result = await engine.match("Amistad")
+
+    assert result.candidates[0].confidence == pytest.approx(1.0)
+    assert result.candidates[0].tmdb_id == 11831
+    assert result.candidates[0].title_exact is True
+
+
+@pytest.mark.asyncio
+async def test_engine_flags_same_title_decades_apart_as_ambiguous() -> None:
+    """ "Frankenstein" ties at 1.000 across 1910, 1931 and 2025. Nothing in a spreadsheet
+    row reading only "Frankenstein" says which one is on the shelf."""
+    async with TMDBClient() as tmdb:
+        tmdb.search_movie = AsyncMock(  # type: ignore[method-assign]
+            return_value=_results(
+                _result(1, "Frankenstein", 2025, pop=90.0),
+                _result(2, "Frankenstein", 1931, pop=20.0),
+                _result(3, "Frankenstein", 1910, pop=2.0),
+            )
+        )
+        engine = MatchingEngine(tmdb)
+        result = await engine.match("Frankenstein")
+
+    assert result.matched is True
+    assert result.ambiguous is True
+
+
+@pytest.mark.asyncio
+async def test_engine_flags_different_titles_tied_at_the_top_as_ambiguous() -> None:
+    async with TMDBClient() as tmdb:
+        tmdb.search_movie = AsyncMock(  # type: ignore[method-assign]
+            return_value=_results(
+                _result(1, "The Avengers", 2012, pop=90.0),
+                _result(2, "Avengers: Endgame", 2019, pop=80.0),
+            )
+        )
+        engine = MatchingEngine(tmdb)
+        result = await engine.match("Avengers")
+
+    assert result.matched is True
+    assert result.ambiguous is True
+
+
+@pytest.mark.asyncio
+async def test_engine_does_not_flag_a_clear_winner_as_ambiguous() -> None:
+    """An exact title hit outranks the near-misses, so the leader stands alone."""
+    async with TMDBClient() as tmdb:
+        tmdb.search_movie = AsyncMock(  # type: ignore[method-assign]
+            return_value=_results(
+                _result(1, "Batman", 1989, pop=50.0),
+                _result(2, "Holy Batmania", 1989, pop=1.0),
+            )
+        )
+        engine = MatchingEngine(tmdb)
+        result = await engine.match("Batman (1989)")
+
+    assert result.candidates[0].tmdb_id == 1
+    assert result.ambiguous is False
+
+
+@pytest.mark.asyncio
+async def test_engine_tolerates_a_re_release_a_year_apart() -> None:
+    """Same title, one year apart — a re-release or disagreeing metadata, not a
+    different film. Flagging this would send half the catalogue to review."""
+    async with TMDBClient() as tmdb:
+        tmdb.search_movie = AsyncMock(  # type: ignore[method-assign]
+            return_value=_results(
+                _result(1, "Solaris", 1972, pop=20.0),
+                _result(2, "Solaris", 1973, pop=5.0),
+            )
+        )
+        engine = MatchingEngine(tmdb)
+        result = await engine.match("Solaris")
+
+    assert result.ambiguous is False
+
+
+@pytest.mark.asyncio
+async def test_engine_never_flags_an_unmatched_row_as_ambiguous() -> None:
+    """`ambiguous` qualifies a confident match. A row that did not match is already
+    heading for review under its own reason and must not be double-counted."""
+    async with TMDBClient() as tmdb:
+        tmdb.search_movie = AsyncMock(  # type: ignore[method-assign]
+            return_value=_results(
+                _result(1, "Something Else Entirely", 2000, pop=9.0),
+                _result(2, "Another Unrelated Film", 2001, pop=8.0),
+            )
+        )
+        engine = MatchingEngine(tmdb)
+        result = await engine.match("Zzzz Nonexistent Qqq")
+
+    assert result.matched is False
+    assert result.ambiguous is False
+
+
+def test_leading_tie_excludes_lower_confidence_candidates() -> None:
+    from src.matching import MatchCandidate, leading_tie
+
+    def _c(id_: int, conf: float, exact: bool) -> MatchCandidate:
+        return MatchCandidate(
+            tmdb_id=id_,
+            title=f"T{id_}",
+            confidence=conf,
+            title_similarity=conf,
+            year_match="unknown",
+            title_exact=exact,
+        )
+
+    tied = leading_tie([_c(1, 1.0, True), _c(2, 1.0, True), _c(3, 1.0, False), _c(4, 0.9, True)])
+    assert [c.tmdb_id for c in tied] == [1, 2]
+
+
+def test_is_ambiguous_ignores_a_single_candidate() -> None:
+    from src.matching import MatchCandidate, is_ambiguous
+
+    only = MatchCandidate(
+        tmdb_id=1, title="Solo", confidence=1.0, title_similarity=1.0, year_match="unknown"
+    )
+    assert is_ambiguous([only]) is False
+    assert is_ambiguous([]) is False

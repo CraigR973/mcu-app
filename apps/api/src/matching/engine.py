@@ -12,6 +12,11 @@ HIGH_CONFIDENCE = 0.85
 # Below this threshold the candidate should be flagged for human review.
 LOW_CONFIDENCE = 0.6
 
+#: Two candidates sharing a title are treated as the same film if their release years are
+#: within this many years of each other — re-releases and disagreeing metadata — and as
+#: genuinely different films beyond it, which makes the match ambiguous.
+AMBIGUOUS_YEAR_SPREAD = 3
+
 _YEAR_RE = re.compile(r"\s*\((\d{4})\)\s*$")
 _APOS_RE = re.compile(r"[\u2019']")  # straight + curly apostrophe
 _PUNCT_RE = re.compile(r"[^\w\s]")
@@ -131,6 +136,57 @@ def score(
     return confidence, sim, year_label
 
 
+def title_is_exact(query: str, result: SearchResult) -> bool:
+    """True when the result's **displayed** title canonically equals the query.
+
+    Deliberately not part of :func:`score`. ``score`` takes the *max* of the title and
+    original-title similarities, which is right — a film should be findable by either —
+    but it makes a film whose *original* title matches score identically to one whose
+    displayed title matches. This is the signal that separates them, and it is used only
+    to break a tie, never to raise or lower a confidence.
+
+    The case that forced it: TMDB returns "Friendship" (2023, original title "Amistad")
+    alongside the real "Amistad" (1997) for the query "Amistad". Both scored 1.000, and
+    the tiebreak below was popularity, which now favours recent releases.
+    """
+    return _canonicalise(result.title) == _canonicalise(query)
+
+
+def leading_tie(candidates: list[MatchCandidate]) -> list[MatchCandidate]:
+    """The candidates indistinguishable from the leader on everything except popularity.
+
+    Ordering already prefers higher confidence, then an exact title hit. Anything level
+    with the leader on **both** is a film the matcher has no principled reason to rank
+    below it, so the leader's position among them is decided by TMDB's popularity — which
+    is not a property of the disc on the shelf.
+    """
+    if not candidates:
+        return []
+    lead = candidates[0]
+    return [
+        c
+        for c in candidates
+        if abs(c.confidence - lead.confidence) < 1e-9 and c.title_exact == lead.title_exact
+    ]
+
+
+def is_ambiguous(tied: list[MatchCandidate]) -> bool:
+    """True when a tie is between films that are not plausibly the same film.
+
+    A tie is harmless when it is the same film listed twice — a re-release, or two
+    editions a year apart. It is not harmless when the tied candidates are different
+    titles, or the same title separated by decades: "Frankenstein" ties at 1.000 across
+    1910, 1931 and 2025, and nothing in a spreadsheet row that reads only "Frankenstein"
+    says which one is on the shelf.
+    """
+    if len(tied) < 2:
+        return False
+    if len({_canonicalise(c.title) for c in tied}) > 1:
+        return True
+    years = [c.year for c in tied if c.year is not None]
+    return bool(years) and (max(years) - min(years)) > AMBIGUOUS_YEAR_SPREAD
+
+
 class MatchingEngine:
     """Find the most likely TMDB movies for a parsed spreadsheet title."""
 
@@ -173,12 +229,18 @@ class MatchingEngine:
                     confidence=conf,
                     title_similarity=sim,
                     year_match=year_label,
+                    title_exact=title_is_exact(clean_title, r),
                     popularity=r.popularity,
                     poster_path=r.poster_path,
                 )
             )
 
-        scored.sort(key=lambda c: (c.confidence, c.popularity), reverse=True)
+        # `title_exact` sits between confidence and popularity: it never changes which
+        # candidates are plausible, only which of two equally-confident ones leads.
+        scored.sort(key=lambda c: (c.confidence, c.title_exact, c.popularity), reverse=True)
+        # Computed over the whole result set, not the truncated top N — a tie that runs
+        # past the fifth candidate is still a tie.
+        tied = leading_tie(scored)
         top = scored[: self._top_n]
         matched = bool(top) and top[0].confidence >= self._threshold
 
@@ -188,6 +250,7 @@ class MatchingEngine:
             year=year,
             candidates=top,
             matched=matched,
+            ambiguous=matched and is_ambiguous(tied),
         )
         self._cache[cache_key] = result
         return result

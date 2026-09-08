@@ -509,3 +509,60 @@ def test_write_review_file_empty(tmp_path: Path) -> None:
         reader = csv.DictReader(fh)
         assert reader.fieldnames == REVIEW_FIELDNAMES
         assert list(reader) == []
+
+
+# ---------------------------------------------------------------------------
+# review_row — the ambiguous queue has to be answerable from the file
+# ---------------------------------------------------------------------------
+
+
+def test_review_row_lists_the_tied_alternatives() -> None:
+    from src.matching import MatchCandidate, MatchResult
+    from src.scripts.import_collection import review_row
+
+    def _cand(id_: int, title: str, year: int | None) -> MatchCandidate:
+        return MatchCandidate(
+            tmdb_id=id_,
+            title=title,
+            year=year,
+            confidence=1.0,
+            title_similarity=1.0,
+            year_match="unknown",
+            title_exact=True,
+        )
+
+    result = MatchResult(
+        raw_query="Frankenstein",
+        query="Frankenstein",
+        candidates=[_cand(1, "Frankenstein", 2025), _cand(2, "Frankenstein", 1931)],
+        matched=True,
+        ambiguous=True,
+    )
+    row = review_row(_make_candidate(title="Frankenstein"), result, "ambiguous_match")
+
+    assert row["reason"] == "ambiguous_match"
+    assert "1:Frankenstein (2025)" in row["alternatives"]
+    assert "2:Frankenstein (1931)" in row["alternatives"]
+
+
+def test_review_row_renders_a_missing_year_rather_than_omitting_it() -> None:
+    from src.matching import MatchCandidate, MatchResult
+    from src.scripts.import_collection import review_row
+
+    result = MatchResult(
+        raw_query="Scapegoat",
+        query="Scapegoat",
+        candidates=[
+            MatchCandidate(
+                tmdb_id=9,
+                title="Scapegoat",
+                year=None,
+                confidence=1.0,
+                title_similarity=1.0,
+                year_match="unknown",
+            )
+        ],
+        matched=True,
+    )
+    row = review_row(_make_candidate(title="Scapegoat"), result, "ambiguous_match")
+    assert row["alternatives"] == "9:Scapegoat (?)"

@@ -14,11 +14,18 @@ Usage (from the repo root):
 
 Two behaviours are worth knowing before running it.
 
-**Every owned item is catalogued, matched or not.** A row TMDB cannot identify still
-gets a ``movies`` row — title only, ``tmdb_id`` NULL — and its ``collection_items`` row.
-The April importer inserted nothing at all for those 137 rows, so a disc that was
-genuinely on the shelf was absent from the catalogue with only a CSV to say so. The
-review file is a queue of rows needing enrichment, not a list of rows that were dropped.
+**Every owned item is catalogued, matched or not.** A row TMDB cannot identify — or
+identifies ambiguously — still gets a ``movies`` row (title only, ``tmdb_id`` NULL) and
+its ``collection_items`` row, location included. The April importer inserted nothing at
+all for those rows, so a disc genuinely on the shelf was absent from the catalogue with
+only a CSV to say so. The review file is a queue of rows needing identification, not a
+list of rows that were dropped.
+
+**A confident match is not enriched if it is ambiguous.** The matcher reports
+``ambiguous`` when the leading candidate is tied with films that are not plausibly the
+same film — "Frankenstein" ties at 1.000 across 1910, 1931 and 2025 — in which case its
+position came from TMDB popularity rather than from anything in the spreadsheet row.
+Those go to review with their alternatives listed (`DECISIONS.md` #31).
 
 **Re-running is safe.** Movies deduplicate on ``tmdb_id`` (or on title for unmatched
 rows) and items on ``(movie_id, location, formats)``, so a second run inserts nothing.
@@ -80,6 +87,10 @@ REVIEW_FIELDNAMES = [
     "top_year",
     "confidence",
     "reason",
+    # Every candidate the matcher could not rank below the leader on merit. Present so an
+    # `ambiguous_match` row can actually be settled from this file — without the
+    # alternatives listed, "ambiguous" is a complaint rather than a question.
+    "alternatives",
 ]
 
 
@@ -99,6 +110,7 @@ class ImportStats:
     items_inserted: int = 0
     items_skipped: int = 0
     review: int = 0
+    ambiguous: int = 0
     no_match: int = 0
     errors: list[str] = field(default_factory=list)
 
@@ -192,6 +204,9 @@ def review_row(candidate: ImportCandidate, result: MatchResult, reason: str) -> 
         "top_year": (top.year or "") if top else "",
         "confidence": f"{top.confidence:.3f}" if top else "",
         "reason": reason,
+        "alternatives": " | ".join(
+            f"{c.tmdb_id}:{c.title} ({c.year or '?'})" for c in result.candidates
+        ),
     }
 
 
@@ -238,9 +253,19 @@ async def match_and_enrich(
 
         top = result.candidates[0] if result.candidates else None
 
-        if result.matched:
+        if result.matched and not result.ambiguous:
             rows.append(ImportRow(candidate=cand, match=result))
             stats.matched += 1
+            continue
+
+        if result.ambiguous:
+            # Confident but tied between films that are not plausibly the same one. The
+            # disc is still catalogued with its location; only the identification waits
+            # for a person. Guessing here writes a wrong poster, cast and search vector
+            # that nothing downstream would flag as wrong (`DECISIONS.md` #31).
+            review_rows.append(review_row(cand, result, "ambiguous_match"))
+            stats.ambiguous += 1
+            rows.append(ImportRow(candidate=cand))
             continue
 
         if top and top.confidence >= LOW_CONFIDENCE:
@@ -254,8 +279,8 @@ async def match_and_enrich(
         rows.append(ImportRow(candidate=cand))
 
     print(
-        f"Matching done — {stats.matched} high-confidence, "
-        f"{stats.review} for review, {stats.no_match} no-match"
+        f"Matching done — {stats.matched} settled, {stats.ambiguous} ambiguous, "
+        f"{stats.review} low-confidence, {stats.no_match} no-match"
     )
 
     to_enrich = [row for row in rows if row.match is not None]
@@ -513,7 +538,8 @@ def main() -> None:
     print(f"  Movies inserted   : {stats.movies_inserted}")
     print(f"  Items inserted    : {stats.items_inserted}")
     print(f"  Items skipped     : {stats.items_skipped}  (already in DB)")
-    print(f"  For review        : {stats.review}  → {args.review_out}")
+    print(f"  Ambiguous         : {stats.ambiguous}  (catalogued, identification deferred)")
+    print(f"  Low confidence    : {stats.review}  → {args.review_out}")
     print(f"  No match          : {stats.no_match}")
     if stats.errors:
         print(f"  Errors            : {len(stats.errors)}")
