@@ -187,7 +187,10 @@ async def list_movies(
     _user: CurrentUser,
     db: Database,
     page: Annotated[int, Query(ge=1)] = 1,
-    per_page: Annotated[int, Query(alias="perPage", ge=1, le=100)] = 60,
+    # The virtualised collection views request the complete ~2,000-film catalogue so
+    # their scroll range represents every owned film, while callers that want ordinary
+    # pagination can still choose a smaller page size.
+    per_page: Annotated[int, Query(alias="perPage", ge=1, le=2000)] = 60,
     genre_id: Annotated[int | None, Query(alias="genreId", gt=0)] = None,
     year: Annotated[int | None, Query(ge=1870, le=2200)] = None,
     format_code: Annotated[str | None, Query(alias="format", min_length=1, max_length=50)] = None,
@@ -318,21 +321,21 @@ async def search_movies(
         _live_copy_exists(),
         Movie.search_vector.op("@@")(tsquery),
     ]
-    total = int((await db.execute(select(func.count(Movie.id)).where(*filters))).scalar_one())
     rank = func.ts_rank_cd(Movie.search_vector, tsquery).label("rank")
     copy_count = _copy_count().label("copy_count")
+    total_matches = func.count(Movie.id).over().label("total_matches")
     rows = (
         await db.execute(
-            select(Movie, copy_count, rank)
+            select(Movie, copy_count, rank, total_matches)
             .where(*filters)
             .order_by(desc(rank), asc(func.lower(Movie.title)))
             .limit(limit)
         )
     ).all()
     return SearchResponse(
-        items=[_movie_list_item(movie, int(copies)) for movie, copies, _rank in rows],
+        items=[_movie_list_item(movie, int(copies)) for movie, copies, _rank, _total in rows],
         query=query,
-        total=total,
+        total=int(rows[0].total_matches) if rows else 0,
     )
 
 
