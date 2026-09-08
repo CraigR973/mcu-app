@@ -2,61 +2,72 @@
 
 ## Now
 
-**Batch 4 — Domain layer + re-import is built and green, but the import has NOT been run.
-Nothing is merged and nothing is deployed.** Branch `feat/4-domain-layer-reimport`,
-commits `e2ebc18` and `700847c`, CI green on all five jobs (run `34162647232`).
+**Batch 4 — Domain layer + re-import is shipped. The collection is in the database, with
+structured location, for the first time.** All four acceptance criteria met and proved
+against the live database, not merely in CI.
 
-Two of the four acceptance criteria are demonstrably met; two cannot be met until a
-matching-engine defect is settled. **Gotcha 1b is the blocker** — the engine picks the film
-by TMDB popularity whenever candidates tie, and 652 of the 1,857 rows tie with no year to
-separate them. Running the import today would write a confidently-wrong film for an
-unknown fraction of those, along with its poster, cast, genres and search vector.
-
-| # | Criterion | State |
+| # | Criterion | Result |
 |---|---|---|
-| 1 | row count = 1,857 | **not met** — needs the live import |
-| 2 | `section` non-trivial and in {Front, Back, Lounge, Garage, Digital} | **not met in the DB** — proved over the parser: 1,733 / 1,857, all five values present |
-| 3 | `--dry-run` diffed against `matching_eval.csv` before the live run | **met** — and this is what found the blocker |
-| 4 | the 13 derived-field trigger tests run in CI, not skipped | **met** — 14 ran, zero skips |
+| 1 | row count = 1,857 | **1,857** `collection_items`, 1,857 distinct `import_source_row`, 0 skipped, 0 errors |
+| 2 | `section` non-trivial, values in {Front, Back, Lounge, Garage, Digital} | **1,733 of 1,857**, all five values present, **0 outside the vocabulary** (a CHECK constraint enforces it) |
+| 3 | `--dry-run` diffed against `matching_eval.csv` before the live run | done — and it found the defect that stopped the batch for a day |
+| 4 | the 13 derived-field trigger tests run in CI, not skipped | **14 ran, 0 skipped** |
 
-What did land, all of it proved rather than asserted:
+In the database now: **1,857 collection items · 1,843 movies · 45,144 credits.** Sections:
+Back 575, Front 550, Digital 413, Lounge 160, Garage 35, unsectioned 124. Triggers fired
+over real data — `search_vector` on all 1,843 movies, `best_format_owned` on 1,842
+(blu_ray 880, download 412, 4k_uhd 346, dvd 203).
 
-- **Migration `003`** creates `movies`, `movie_credits` and `collection_items` per roadmap
-  §3.2–3.4, with `location`/`section`/`shelf` as real columns — the gotcha 0b fix. It
-  applies and reverses cleanly against Postgres 17; CI's `upgrade head → downgrade base`
-  job is green.
-- **The derived-field triggers are rewritten for the JSONB shapes** and keep 0015's
-  behaviour: 14 tests exercise them against a real database inside rolled-back
-  transactions.
-- **The importer is rewritten** for §3.4 and moved under `src/` so mypy covers it. It
-  writes location as columns and leaves `notes` alone, treats a combo pack as one row with
-  a `formats` array, and **catalogues every owned item whether or not TMDB identifies it** —
-  April inserted nothing at all for its 137 unmatched rows, so discs genuinely on the shelf
-  were simply absent.
-- **`parse_location` gained `E:\\Movies` → `Digital`**, without which all 413 digital rows
-  landed unsectioned.
-- **The collection is 1,857 items, not 1,866** (gotcha 0). Corrected across the roadmap and
-  the batch ledger.
+**764 rows are catalogued but not yet identified** — 628 ambiguous, 100 with no TMDB
+results, 19 below threshold, 17 low confidence. Every one of those discs is in the
+catalogue *with its location*; only the TMDB metadata waits. The review CSV carries an
+`alternatives` column listing every tied candidate, so a row can be settled from the file.
+
+Four defects were found and fixed on the way, **three of them invisible to a green gate**:
+
+1. **The matcher let TMDB popularity decide which film was on the shelf** — 652 rows
+   (35%) tied with no year to separate them. `Frankenstein` resolved to 2025, `Lolita` to
+   1997, `Amistad` to `Friendship (2023)`. Fixed and, where undecidable, deferred to
+   review (`DECISIONS.md` #31, gotcha 1b).
+2. **The importer could not connect to any hosted database.** `Settings` normalises
+   `DATABASE_URL` for asyncpg; the importer is sync psycopg2 and was handed that value
+   directly. Its tests mock the connection, so nothing caught it (#32).
+3. **`character_name` at `VARCHAR(255)` was too narrow** — a 300-character role list
+   rolled back a whole item, so *The Simpsons Movie* was absent over a cast-list field (#32).
+4. **Idempotency keyed on the item's contents collapsed distinct discs** — "French
+   Connection" and "French Connection 2" became one row. Now keyed on the spreadsheet
+   line (#32).
 
 ## Next
 
-**Decide how the importer should handle an ambiguous match** (gotcha 1b). Three options,
-in the order I would take them:
+**Batch 5 — Read surface.** Mark can browse the collection on his phone: list, detail,
+copies, tsvector search, with camelCase DTOs and shared zod schemas the web app actually
+`.parse()`s. There are now 1,857 real rows to render and a populated `search_vector` to
+search, so its acceptance criteria can be measured rather than estimated.
 
-1. **Fix the 10 clear bugs, route the rest to review.** Prefer an exact `title` hit over an
-   `original_title`-only one, then send every remaining ambiguous tie to `import_review.csv`
-   instead of guessing. Import the ~1,205 unambiguous rows plus the reviewed ones. Safe,
-   and it matches how the roadmap already treats the barcode phase ("confirmation UI is
-   mandatory, not optional"). Costs a review pass over ~650 rows.
-2. **Import everything now, correct later.** Accept popularity's pick, get all 1,857 rows in
-   with their location data, and treat wrong films as a known backlog. Fastest to a browsable
-   catalogue; leaves an unknown number of wrong posters and casts in front of Mark.
-3. **Add a disambiguation heuristic** — e.g. prefer the candidate with the most TMDB votes,
-   or the oldest, rather than the most popular. Cheap to try, but it is still a guess and
-   would need its own eval before it could be trusted.
+**Before or alongside it, two pieces of collection hygiene:**
 
-This is a genuine judgement call about the collection, not a technical one, which is why it
-is stopping here rather than being decided in code.
+1. **Work the 764-row review queue** (attached to the session as `import_review_final.csv`,
+   regenerable by re-running the importer). Settling a row means picking the right
+   `tmdb_id` from `alternatives`; each item is already catalogued, so this only improves
+   metadata. `import_source_row` traces every item back to its spreadsheet line.
+2. **Eleven "settled" rows chose a film that appends text to the title as written** —
+   the class the French Connection case is in. Most are right (typo and subtitle fixes);
+   these four look wrong and are worth a minute each:
+
+   | sheet row | as written | chose |
+   |---|---|---|
+   | 550 | French Connection | French Connection **II** (1975) |
+   | 1789 | X-Men 2 | X-MEN 2 - **Wolverine's story** |
+   | 1831 | 11.22.63 | 11-22-63: **The Day the Nation Cried** |
+   | 1254 | Planet Earth II | Planet Earth II: **A World of Wonder** |
+
+   Cause: `title_similarity` floors a substring match at 0.9, but a near-miss that appends
+   a numeral can score higher — "french connection" vs "french connection ii" ratios 0.919
+   against the correct "the french connection" at the 0.900 floor. A leading article costs
+   the right film more than an appended "II" costs the wrong one. Narrow (11 of 1,093
+   settled rows) and **not** fixed in this batch: another ranking change needs its own
+   measurement pass over all 1,857 titles, which is 45 minutes of TMDB calls.
 
 Then: **set your PINs. Nobody can log in until you do** — both profiles are seeded with
 `pin_hash = NULL`, which means *no credential*, not a blank one:
@@ -98,9 +109,11 @@ Two owner actions remain outstanding:
    codes, smart collections, saved filters, export, natural-language search — must be
    judged at 1,857.
 
-0b. **FIXED IN BATCH 4 (schema half). The location data was extracted at import and then
-   discarded** — the most consequential defect the 2026-09-07 review found. Kept here
-   because the *data* is not fixed until the import is re-run, which is still outstanding.
+0b. **FIXED AND VERIFIED IN BATCH 4. The location data was extracted at import and then
+   discarded** — the most consequential defect the 2026-09-07 review found. **1,733 of the
+   1,857 items now carry a structured `section`, and all 1,857 carry their `location`
+   text**, in the live database. Kept here as the record of what was wrong and how it was
+   proved fixed.
 
    What was wrong, each link verified in April and re-verified 2026-09-07:
    - `MCU_Architecture_v2.1_FINAL.md` §3.4 **designs** `location`, `section` and `shelf`
@@ -143,46 +156,34 @@ Two owner actions remain outstanding:
    This was an owner decision taken at the start of Batch 4 (`DECISIONS.md` #28) precisely
    because rewriting a test to match new code is otherwise forbidden as a route to green.
 
-1b. **BLOCKER FOR THE BATCH 4 IMPORT. The matching engine picks the film by TMDB
-   popularity whenever candidates tie, and 652 of the 1,857 rows tie with no year to
-   separate them.** Found by Batch 4's own `--dry-run`-against-`matching_eval.csv`
-   criterion, which is exactly what that criterion exists for. Nothing has been written to
-   the database.
+1b. **RESOLVED. The matching engine used to let TMDB popularity decide which film was on
+   the shelf.** Found by Batch 4's own `--dry-run`-against-`matching_eval.csv` criterion,
+   which is exactly what that criterion exists for.
 
-   The mechanism, both links verified:
-   - `apps/api/src/matching/engine.py:113-114` scores `original_title` as well as `title`
-     and takes the **max**, so a film whose *original* title matches scores identically to
-     one whose displayed title matches.
-   - `apps/api/src/matching/engine.py:181` sorts by
-     `(confidence, popularity)` — so when several candidates tie on confidence, **current
-     TMDB popularity decides**, and that ordering is not stable over time.
+   The mechanism, both links verified: `engine.py` scored `original_title` as well as
+   `title` and took the **max**, so a film whose *original* title matched scored
+   identically to one whose displayed title did; then it sorted by
+   `(confidence, popularity)`, so ties were broken by a ranking that is not stable over
+   time and now favours 2025/2026 releases.
 
-   Measured over all 1,857 titles on 2026-09-07 (full scan, 0 errors):
+   Measured over all 1,857 titles before the fix: **687 matched rows (39.9%) had ≥2
+   candidates tied at the top confidence, 652 of them with no year in the source title —
+   35.1% of the collection.** `Frankenstein` → 2025 rather than the 1931 Karloff,
+   `Lolita` → 1997 rather than Kubrick's 1962, `Amistad` → `Friendship (2023)`.
 
-   | | rows |
-   |---|---|
-   | matched at ≥0.85 | 1,721 |
-   | unmatched | 136 |
-   | **matched rows with ≥2 candidates tied at the top confidence** | **687 (39.9%)** |
-   | of those, tied at a perfect 1.000 | 635 |
-   | ambiguous ties **with no year in the source title** | **652 — 35.1% of the collection** |
+   **The fix** (`DECISIONS.md` #31): `title_is_exact` promotes a displayed-title match
+   over an `original_title`-only one — a tiebreak that never moves a confidence — and
+   `is_ambiguous` marks a leader tied with films that are not plausibly the same one.
+   Ambiguous rows are **catalogued with their location** and only their identification is
+   deferred to review. After the fix: 1,093 settled, 628 ambiguous, 136 unmatched.
 
-   Popularity is often a *good* tiebreak — it correctly picks `Batman` (1989),
-   `Ben-Hur` (1959), `Sleepy Hollow` (1999). It fails whenever a recent release shares the
-   title, and 2025/2026 releases now dominate popularity:
-   `Frankenstein` → **2025**, not the 1931 Karloff · `Lolita` → **1997**, not Kubrick's
-   1962 · `Sinners` → **2025** · `Amistad` → **`Friendship` (2023)**, whose original title
-   is "Amistad".
-
-   **Only 10 rows are fixable by code with confidence** — the class where the winner is not
-   an exact title match but a tied candidate is (Amistad, Home Alone, Joan of Arc, The
-   Train …). Preferring an exact `title` hit over an `original_title`-only hit repairs
-   those outright. The other 652 are genuinely undecidable from the spreadsheet: it gives a
-   bare title and no year, so nothing in the data says which *Frankenstein* is on the shelf.
-
-   **This is out of Batch 4's scope** — the batch says port `matching/` *unchanged*, and
-   changing the ranking is Phase 1.6's work with its own acceptance criterion. Awaiting an
-   owner decision on approach; see the end of the Log entry below.
+   **Still open, narrowly.** `title_similarity` floors a substring match at 0.9, but a
+   near-miss that appends a numeral can beat it: "french connection" scores 0.919 against
+   "French Connection II" and only 0.900 against the correct "The French Connection",
+   because a leading article costs more than an appended "II". **11 of the 1,093 settled
+   rows are in this class and about four look wrong** — see **Next** for the list. Not
+   fixed here: another ranking change needs its own measurement pass over all 1,857
+   titles.
 
 2. **The new migration chain starts with an intentionally empty `001`.** It has been
    proven to apply and reverse against disposable Postgres, and CI repeats both commands.
@@ -236,28 +237,45 @@ Two owner actions remain outstanding:
     execute in CI. Both of Batch 3's CI failures were migration defects invisible to a
     green local gate. **Treat a green local run as silent about anything touching SQL.**
 
+16. **The first real write against real data is its own test stage.** Batch 4's gate was
+    green, its `--dry-run` was clean, and the live import still hit three separate
+    defects: the importer could not connect to any hosted database (its tests mock the
+    connection), a 300-character `character_name` overflowed `VARCHAR(255)` and rolled
+    back a whole item, and an idempotency key on the item's contents collapsed two
+    distinct discs into one. **No test could have caught any of them** — mocks do not
+    enforce column widths or unique constraints, and a dry run never writes. Budget for a
+    real write, and read the import summary's error count rather than trusting its
+    success lines (`DECISIONS.md` #32).
+
 ## Log
 
-- **2026-09-07** — **Batch 4 built and green; the import is held on an owner decision.**
-  `feat/4-domain-layer-reimport` at `700847c`, CI green on all five jobs. Migration `003`
-  lands the §3.4 domain schema with `location`/`section`/`shelf` — the gotcha 0b fix — and
-  the derived-field triggers rewritten for JSONB. **The 14 trigger tests run in CI with zero
-  skips**, the criterion Batches 2 and 3 could only defer. Two decisions were taken with the
-  owner before any code: §3.4's schema over the April one, which forced the trigger tests to
-  be re-authored rather than resumed (#28); and the collection is **1,857 items, not 1,866**
-  — nine trailing spreadsheet rows are entirely blank, so the number was wrong everywhere it
-  appeared, Phase 1.5's acceptance included (#29).
-  The importer was rewritten and now catalogues every owned item whether or not TMDB
-  identifies it; April silently dropped its 137 unmatched rows.
-  **Then criterion 3 did its job and stopped the batch.** Diffing a fresh matching run
-  against `matching_eval.csv` surfaced `Amistad` → `Friendship (2023)` at full confidence; a
-  full scan of all 1,857 titles showed the cause is structural — `engine.py:181` breaks
-  confidence ties by TMDB popularity, and **652 rows (35.1%) tie with no year to separate
-  them**. Popularity now favours 2025/2026 releases, so `Frankenstein` resolves to 2025 and
-  `Lolita` to 1997. Only 10 rows are fixable by code with confidence. Fixing the ranking is
-  Phase 1.6's work and outside this batch's "port `matching/` unchanged" scope, so nothing
-  was written to the database and nothing was merged. Gotcha 1b holds the evidence; the
-  three options are in **Next**.
+- **2026-09-08** — **Batch 4 shipped — 1,857 discs are in the database, with structured
+  location, for the first time.** Migration `003` lands the §3.4 domain schema and `004`
+  two fixes the live import forced. All four acceptance criteria proved against the live
+  database: 1,857 `collection_items` with 1,857 distinct `import_source_row` and zero
+  errors; 1,733 sectioned with zero values outside the §3.4 vocabulary; the dry run
+  diffed against `matching_eval.csv`; and **14 derived-field trigger tests running in CI
+  with zero skips** — the criterion Batches 2 and 3 could only defer. 1,843 movies and
+  45,144 credits alongside, with `search_vector` and `best_format_owned` populated by
+  trigger over real rows. 764 rows are catalogued but not yet identified and sit in a
+  review queue that lists every tied candidate.
+
+  Three decisions were taken with the owner before or during the work: §3.4's schema over
+  the April one, which forced the trigger tests to be re-authored rather than resumed
+  (#28); the collection is **1,857 items, not 1,866** — nine trailing spreadsheet rows are
+  blank, so the number was wrong everywhere it appeared, Phase 1.5's acceptance included
+  (#29); and an ambiguous match is catalogued but not enriched, which meant changing the
+  matching engine against this batch's own "port `matching/` unchanged" instruction (#31).
+
+  **Four defects, three of them invisible to a green gate.** Criterion 3 stopped the batch
+  for a day when a fresh matching run against `matching_eval.csv` showed `Amistad`
+  resolving to `Friendship (2023)`; a full scan found 652 rows (35%) whose film was chosen
+  by TMDB popularity alone. Then the live write found three more that no test could have
+  caught: the importer could not connect to any hosted database, a 300-character
+  `character_name` overflowed its column and rolled back a whole item, and an idempotency
+  key on item contents collapsed "French Connection" and "French Connection 2" into one
+  disc. Gotcha 16 records the general lesson; #32 records the fixes.
+
 - **2026-09-07** — **Batch 3 shipped — Craig and Mark can log in; nobody else can.**
   `main` `e89a9c6`, CI green, production serving that SHA and the deployed web app rendering
   for the first time. bcrypt PINs, HS256 access/refresh on separate secrets, rotated
