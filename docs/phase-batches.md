@@ -20,7 +20,7 @@ Strike the row through and set status on close-out.
 | ~~5~~ | ~~Read surface **+ identify flow**~~ | ~~🔴~~ | **shipped** | ~~re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33)~~ | `a731b8c` · 1,857 items browsable; search median 20 ms; 757 films identifiable in-app |
 | ~~6~~ | ~~Location + facets **+ watch log**~~ | ~~🟡~~ | **shipped** | ~~**3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise; **adds §3.7's `watch_log`, which no phase owned**~~ | `1067a72` · Front 2nd shelf answers in 20 ms; 1,855 of 1,857 items sectioned |
 | ~~7~~ | ~~Write surface~~ | ~~🟡~~ | **shipped** | ~~re-lands **3.1**; adds **3.2, 3.5, 3.11**~~ | `c808964` · 1,857 items untouched; audit log survives a hard delete of its target; 331 CI tests, zero skips |
-| 8 | PWA + offline | 🟢 | planned | **13.8, 6.5, 13.9** pulled forward | |
+| ~~8~~ | ~~PWA + offline~~ | ~~🟢~~ | **shipped** | ~~**13.8, 6.5, 13.9** pulled forward~~ | `c310d0f` · installable, collection cached, offline edits land on reconnect; **four defects found only by driving it with the network off** |
 | 9 | Onboarding repair | 🟢 | planned | repairs **2.8** | |
 
 > **All 23 shipped phases are accounted for above.** Their ✅ marks in §16 now mean
@@ -122,11 +122,26 @@ validator never ran when the field was absent, so a body naming no film 500'd in
 every list claiming to be *empty* when its request had merely been paused; that one is
 fixed app-wide and matters most for Batch 8.
 
-### Batch 8 — PWA + offline
+### ~~Batch 8 — PWA + offline~~ 🟢 **shipped**
 Port `sw.ts` (with the iOS deadlock fix), manifest, `useOnlineStatus`, `OfflineBanner`,
 `/offline`. Optimistic UI via the-coupon's queued/unconfirmed reconciliation — **not**
 naive optimistic-with-rollback. Offline write queue adapted to multiple entity types.
 **Acceptance:** the app installs to a phone home screen, browses cached collection data with the network off, and an edit made offline lands once reconnected without overwriting a newer change.
+
+**Phase 13.9's "last-write-wins" contradicted this batch's own acceptance criterion** and
+lost. A queued edit flushed on reconnect *is* written last, so last-write-wins is exactly
+what "without overwriting a newer change" forbids. Replaced by an optimistic-concurrency
+check (`DECISIONS.md` #42). Phase 6.5's acceptance names the wanted list, which is Batch
+18 and does not exist; re-scoped to the collection writes Batch 7 built.
+
+**Four defects, none of which a green gate could show.** React Query *pauses* mutations
+when it believes the app is offline, so `mutationFn` never ran and the queue — which
+lives inside it — was never reached; the same pause stops a query issuing the fetch the
+service worker exists to answer. A 5xx on a write was treated as a refusal and the write
+discarded. A 5xx on the profile load signed the person out and destroyed the session the
+queued writes were made under. And `updated_at` used `NOW()`, which is *transaction*
+time, so the new concurrency token never advanced and the guard passed anything. All four
+were found by running the built app against a stub API that could be switched off.
 
 ### Batch 9 — Onboarding repair
 Prune `StepEmailConnect` (Stage 10 dropped). `StepInstallPWA` and `StepNotifications` now
@@ -187,7 +202,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 3 · solo | Auth is security-critical |
 | — | ~~4 · solo~~ | ~~🔴 XL, and a 1,857-row data operation~~ · **shipped** |
 | **A** | 5 → 6 | Same files (`routers/movies.py`, `FilterBar.tsx`, shared schemas); 6 depends on 5 |
-| **B** | ~~7~~ → 8 → 9 | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
+| **B** | ~~7~~ → ~~8~~ → 9 | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | 10 · solo | Large mechanical restructure of a 2,639-line doc |
 | **C** | 12 → 13 | Same domain (sets/collections); 13 reuses 12's UI patterns |
 | **D** | 14 → 15 | Both admin-facing read surfaces, same verification shape |

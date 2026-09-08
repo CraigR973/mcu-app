@@ -2,61 +2,69 @@
 
 ## Now
 
-**Batch 7 — Write surface is shipped.** The collection is no longer read-only: Craig can
-add a disc, edit it, throw it away and get it back, and every one of those is written down.
-Production serves the merged SHA `c808964ba9c1d0a615d4e2085cf059b55c7264bb` with `db: ok`,
-at migration **008**.
+**Batch 8 — PWA + offline is shipped.** The app installs to a home screen, keeps the
+collection readable with the network off, and holds a write made offline until it can be
+sent. Production serves the merged SHA `c310d0f52fe760a42b96385fd6587b65f22f08f4` with
+`db: ok`, at migration **009**.
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | changes persist | **proved by re-reading, not by trusting the echo** — the test edits through `PUT /collection/{id}` and then re-fetches `GET /movies/{id}/copies` |
-| 2 | deleted items appear in trash | shipped, with restore. **No permanent delete** — §13.5 keeps the one irreversible action (`DECISIONS.md` #39) |
-| 3 | the audit log records actor, action and target | shipped. `admin_actions` **did not exist on the new spine** and was created by migration `008` |
-| 4 | ...and survives deletion of the target row | **proved by destroying the row.** The test disables `collection_items_soft_delete`, hard-deletes the item, and shows the audit entry still readable through the API. `target_id` is TEXT with no FK (`DECISIONS.md` #5/#38), against §3.20's UUID column |
+| 1 | installs to a phone home screen | manifest, five icons, `apple-touch-icon` and the iOS meta tags all serve from production. **Not verified on an actual phone** — see the gap below |
+| 2 | browses cached collection data with the network off | the worker ships with network-first for `/api/v1/` reads and cache-first for posters. **Not verified with a live worker** — service-worker registration is blocked in the only browser available here |
+| 3 | an edit made offline lands on reconnect **without overwriting a newer change** | **proved end to end in a browser.** The built app was driven against a stub API that could be switched off: the edit queued, the banner showed it, and on reconnect the server received exactly `formats: ["blu_ray","4k_uhd"]` with `baseUpdatedAt` attached. The "without overwriting" half is proved by a Postgres test that refuses a stale edit with 409 |
 
-In the database now: **1,857 collection items · 1,843 movies · 45,144 credits · 0 audit
-rows** — unchanged by this batch, which adds a table and touches no existing row.
+**Phase 13.9's "last-write-wins" contradicted this batch's own acceptance criterion and
+lost** (`DECISIONS.md` #42). A queued edit flushed on reconnect *is* written last, so
+last-write-wins is exactly what "without overwriting a newer change" forbids. Phase 6.5's
+acceptance names the wanted list, which is Batch 18 and does not exist.
 
-**CI runs 331 tests with zero skips.** The 84 that skip locally are the Postgres-backed
-ones; there is no local Postgres and no Docker (gotcha 15), and `admin_actions` did not
-exist on Neon until this deploy, so **none of this batch's 30 API tests could run on the
-development machine at all.** They ran in CI against Postgres 17.
+**Four defects, and not one of them was visible to a green gate.** The build, the types
+and 46 tests were passing throughout; every one of these was found by running the built
+app against an API that could be switched off.
 
-**Two defects a green build could not have shown, both fixed here.**
+1. **React Query paused every write, so the offline queue was never reached.** A paused
+   mutation does not run `mutationFn`, and the queue lives inside it — an edit made
+   offline sat behind a spinner that could not stop and was saved nowhere. The same pause
+   stops a *query* issuing the fetch the service worker exists to answer. Gotcha 19's
+   empty-state lie in Batch 7 was this same root cause seen from the other end.
+2. **A 5xx on a write was treated as a refusal and discarded.** `fetch` resolves for a
+   503, so a write that never reached the application looked like an answer.
+3. **A 5xx on the profile load signed the person out** and destroyed the session the
+   queued writes were made under.
+4. **`updated_at` used `NOW()`, which is transaction time**, so the new concurrency token
+   never advanced and the guard passed anything. Caught by this batch's own tests in CI —
+   failing *open*, which is the direction worth catching.
 
-1. **A create body naming no film returned 500, not 422.** The check was a
-   `field_validator` on `tmdbId`, and pydantic does not run field validators for a field
-   the request omits — so a body with neither id passed validation untouched and reached a
-   router with nothing to look the film up by. Caught in CI by this batch's own test. Now
-   a `model_validator(mode="after")`, which always runs.
-2. **Every list page claimed to be empty when its request had merely paused.** See
-   gotcha 19 — this is the one worth reading before Batch 8.
+In the database now: **1,857 collection items · 0 audit rows**, unchanged. Migration
+`009` replaces a function and rewrites no data.
 
-**The production-UI gap from Batches 5 and 6 is now partly closed.** The new pages were
-driven in a real browser — that is how defect 2 was found — but against a dev server with
-no API behind it, because signing in needs a PIN and an agent must not type one. So the
-pages are proved to mount, render and handle failure honestly; they are **not** proved to
-round-trip a real disc against production. **Mark's PIN is still `NULL`.**
+**The verification gap is narrower than Batch 7's but not closed.** Criterion 3 was driven
+in a real browser through the real UI. Criteria 1 and 2 cannot be: the browser pane here
+refuses to register a service worker, and no Chrome is connected. Both need a phone, and
+criterion 1 needs one by definition.
 
 ## Next
 
-**Batch 8 — PWA + offline** (🟢), the next batch in Group B. Port `sw.ts` with the iOS
-deadlock fix, the manifest, `useOnlineStatus` and `OfflineBanner`; optimistic UI via
-the-coupon's queued/unconfirmed reconciliation (**not** optimistic-with-rollback); an
-offline write queue over the endpoints Batch 7 just built. Its acceptance is that the app
-installs to a phone home screen, browses cached data with the network off, and an edit made
-offline lands on reconnect without overwriting a newer change.
+**Batch 9 — Onboarding repair** (🟢), the last batch in Group B. Prune `StepEmailConnect`
+(Stage 10 dropped); `StepInstallPWA` and `StepNotifications` are supposed to have real
+infrastructure behind them now.
 
-**Start from `listState()`** (`DECISIONS.md` #41). Batch 8's offline banner should be built
-on top of it, not around it: the paused-query state it names is exactly the state the
-banner exists to explain.
+**Check that premise before building.** Batch 8 shipped the service worker and manifest,
+so `StepInstallPWA` has something real to talk to — `beforeinstallprompt` can now fire.
+**`StepNotifications` still has nothing**: there is no VAPID key, no `pushManager`
+subscription, no endpoint to store one, and push is Batch 11 (6.1, 6.2, 5.11). Gotcha 5
+says two of the three dead steps are fixed by the re-scaffold's "service worker and push
+stack", and only the service-worker half exists. Batch 9 must either drop that step or
+stop short of pretending it works.
 
-**Then Batch 9 — Onboarding repair** (🟢), which needs Batch 8's service worker and push
-stack before two of its three dead steps mean anything (gotcha 5).
+**Batch 3 removed the wizard entirely** (`DECISIONS.md` #27) because its completion flag
+was a Supabase column that no longer exists, so Batch 9 is rebuilding rather than
+repairing, and **must add its own completion column** — a migration, on a batch tiered 🟢.
 
-An owner check that would close the remaining production gap, unchanged in shape from
-Batch 6's: sign in at `https://mcu-app-fawn.vercel.app/login`, add a disc from
-**Add a disc** in the sidebar, edit it, delete it, and restore it from **Trash**. Then:
+An owner check that would close what remains, on a phone:
+add `https://mcu-app-fawn.vercel.app` to the home screen, open it, turn off wi-fi and mobile
+data, and confirm the collection still browses; then edit a disc offline, turn the network
+back on, and watch the banner clear. Craig's PIN is set; **Mark's is still `NULL`**:
 
 ```
 DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
@@ -290,7 +298,70 @@ Two owner actions remain outstanding, unchanged:
     is to write code that needs no ignore — narrow in a loop rather than assert in a
     comprehension. **Pinning mypy is an open suggestion, not a decision taken.**
 
+22. **A green build, green types and green tests prove nothing about behaviour with the
+    network away.** Batch 8's four defects were all found by driving the built app against
+    a stub API that could be switched off, with everything else passing. The most
+    important: **React Query pauses queries and mutations when it thinks you are offline**
+    (`networkMode` defaults to `'online'`), which silently disables both halves of an
+    offline story — the mutation never runs `mutationFn`, so an offline write queue inside
+    it is unreachable, and the query never issues the fetch a service worker exists to
+    answer. `apps/web/src/lib/query-client.ts` sets `'always'`, and
+    `query-client.test.ts` hangs if that is reverted. **Any new QueryClient must keep it.**
+
+23. **`fetch` resolves for a 5xx, so "the server answered" and "the write was applied" are
+    different questions.** A 503 comes from a gateway, a proxy, a captive portal or a
+    container that is still booting as readily as from the application. Treating one as a
+    refusal discards the write; treating it as certain failure and retrying duplicates it.
+    It is the *unknown* case — see `DECISIONS.md` #43 — and the same reasoning is why
+    only a 401 or 403 may end a session (#48).
+
+24. **`NOW()` in Postgres is the transaction start time.** Every row written by one
+    transaction gets the same value, and two updates inside one transaction are
+    indistinguishable. That is fine for "created at" and wrong for "modified at" — and
+    once `updated_at` became Batch 8's concurrency token it was a guard that could not
+    detect anything. Migration `009` moves `set_updated_at` to `clock_timestamp()`.
+    **The test harness runs each test in one transaction**, so anything that depends on
+    time advancing must use `clock_timestamp()` or it will pass for the wrong reason.
+
+25. **A service worker cannot be registered from the tooling available here.** The
+    in-app browser pane refuses with "An unknown error occurred when fetching the script"
+    even though the file serves correctly, and no Chrome extension is connected.
+    Everything else about the PWA is verifiable — the manifest, the icons, the generated
+    worker's contents, the queue end to end — but **"it caches the collection offline" and
+    "it installs to a home screen" can only be confirmed on a real device.**
+
 ## Log
+
+- **2026-09-08** — **Batch 8 shipped — the app works with the network off.** Service
+  worker, manifest and icon set, an offline banner, and a durable IndexedDB write queue
+  with the two states that make it safe: a write the browser never sent is re-sent
+  automatically, and one that left without an answer is *read back*, never re-sent.
+  Ported from `the-coupon`'s `usePickEditor` — its reasoning transfers even though its
+  storage does not, and `DECISIONS.md` #44 records why this one persists where that one
+  deliberately does not.
+
+  **Two spec facts did not survive checking.** Phase 13.9 specifies last-write-wins, which
+  is the exact opposite of this batch's own acceptance criterion — a queued edit flushed
+  on reconnect *is* written last. Replaced by an optimistic-concurrency check (#42).
+  Phase 6.5's acceptance names the wanted list, which is Batch 18 and does not exist.
+
+  **Four defects, none visible to any green check, all found by driving the built app
+  against an API that could be switched off.** React Query *pauses* mutations when it
+  believes the app is offline, so `mutationFn` never ran and the queue inside it was
+  unreachable — the offline write path was dead on arrival, behind a spinner that could
+  not stop. The same pause stops a query issuing the fetch a service worker exists to
+  answer, which is gotcha 19's empty-state lie seen from the other end. A 5xx on a write
+  was treated as a refusal and the write discarded. A 5xx on the profile load signed the
+  person out and destroyed the session the queued writes were made under. And
+  `updated_at` used `NOW()` — transaction time — so the new concurrency token never
+  advanced and the guard passed anything, which this batch's own CI tests caught failing
+  *open*.
+
+  **Criterion 3 is proved end to end in a browser**: the edit queued while offline, and on
+  reconnect the server received exactly the queued body with its `baseUpdatedAt` attached.
+  Criteria 1 and 2 need a phone — see gotcha 25.
+
+  337 API tests and 77 web/shared tests in CI, zero skips. 1,857 items untouched.
 
 - **2026-09-08** — **Batch 7 shipped — the collection stops being read-only.** Add, edit,
   soft-delete and restore, with duplicate detection and condition tracking, and an

@@ -2296,10 +2296,18 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Help modal listing all shortcuts (triggered with ?)
 - **Acceptance:** All documented shortcuts work; help modal shows all
 
-**Phase 6.5: Optimistic UI** 🟢 Sonnet 4.6
+**Phase 6.5: Optimistic UI** 🟢 Sonnet 4.6 ✅ 2026-09-08 — 🔄 **re-scoped in Batch 8**
 - TanStack Query optimistic updates on add/edit/delete
-- Rollback on error with toast
-- **Acceptance:** Adding to wanted list shows instantly; network failure rolls back with error toast
+- ~~Rollback on error with toast~~ — **replaced by the queued/unconfirmed queue.**
+  Optimistic-with-rollback has two outcomes and must guess which one silence means; it
+  cannot express "sent, no answer", which is the case that duplicates discs and reverts
+  edits when guessed wrong (`DECISIONS.md` #39).
+- **Acceptance:** ~~Adding to wanted list shows instantly~~ — **the wanted list does not
+  exist**: phases 5.1/5.2 are Batch 18. Re-scoped to the collection add/edit/delete
+  Batch 7 built, which is the only write surface there is.
+- **What Batch 8 shipped:** a write made offline is held durably and settled on
+  reconnect, with `networkMode: 'always'` so react-query cannot pause the mutation the
+  queue lives inside (`DECISIONS.md` #47).
 
 **Phase 6.6: Mobile Gestures & Haptics** 🟢 Sonnet 4.6
 - Swipe actions on cards
@@ -2559,17 +2567,29 @@ Default to **Sonnet 4.6**. Switch to **Opus** only for phases tagged 🔴 or whe
 - Weekly automated backup to Supabase Storage
 - **Acceptance:** Admin backs up, nukes test data, restores, state matches
 
-**Phase 13.8: Service Worker — Offline Caching** 🔴 Opus
-- Cache collection data in IndexedDB
-- Cache poster images
+**Phase 13.8: Service Worker — Offline Caching** 🔴 Opus ✅ 2026-09-08
+- Cache collection data ~~in IndexedDB~~ — **in the Cache Storage API**, which is what a
+  service worker's network-first strategy writes to. IndexedDB holds the *write queue*
+  (§13.9), where structured, queryable, durable records are genuinely needed.
+- Cache poster images — cache-first, since a TMDB poster at a given path is immutable
 - Offline indicator
 - **Acceptance:** Turning off network still allows browsing and searching the collection
+- **Carries the iOS deadlock fix** from `the-coupon`: the worker calls `skipWaiting()` on
+  install rather than waiting for a refresh prompt an overlay could cover.
 
-**Phase 13.9: Offline Write Queue** 🔴 Opus
+**Phase 13.9: Offline Write Queue** 🔴 Opus ✅ 2026-09-08 — 🔄 **conflict rule corrected**
 - Queue add/edit/delete in IndexedDB when offline
 - Sync on reconnect
-- Conflict resolution (last-write-wins)
+- ~~Conflict resolution (last-write-wins)~~ — **contradicted by Batch 8's own acceptance**,
+  which requires an offline edit to land *without overwriting a newer change*. A queued
+  edit flushed on reconnect **is** written last, so last-write-wins is exactly the
+  behaviour that criterion forbids. Replaced by an optimistic-concurrency check: the edit
+  carries the `updatedAt` it was based on and the server refuses it with 409 if the row
+  moved on (`DECISIONS.md` #42).
 - **Acceptance:** Adding offline syncs to server when back online
+- **Two states, not one queue.** A write the browser never sent is re-sent automatically;
+  one that left without an answer is *read back*, never re-sent — a blind retry of an add
+  that landed makes a second disc.
 
 **Phase 13.10: Playwright E2E Tests** 🟢 Sonnet 4.6
 - Critical flows: login, import, search, add via scan, price alert, chat session, movie night match

@@ -593,3 +593,74 @@ contemporaneous.
     build, the types and the tests were all passing. `MovieDetailPage` had avoided it by
     treating `isError || !data` as failure; this states the rule once. **Batch 8 is the
     offline batch and should build its banner on top of this, not around it.**
+
+### 2026-09-08 — Batch 8 PWA and offline
+
+42. **An offline edit carries the version it was based on, and the server refuses it if
+    the row moved on.** Supersedes phase 13.9's "conflict resolution (last-write-wins)".
+    *Why:* the two cannot both hold. A queued edit flushed on reconnect **is** written
+    last, so last-write-wins is precisely what this batch's own acceptance criterion —
+    *"an edit made offline lands once reconnected **without overwriting a newer
+    change**"* — forbids. `PUT /collection/{id}` takes an optional `baseUpdatedAt` and
+    answers 409 with the current row, so the client can say what it would have clobbered.
+    Optional, because an online edit that has just read the row needs no guard.
+
+43. **`NetworkError.mayHaveLanded` decides everything, and only one case is certain.**
+    *Why:* the browser is authoritative about exactly one thing — that it did not attempt
+    a request while reporting itself offline. Everything else, including a connection
+    that dropped a millisecond after the bytes went out, might have been applied. Guessing
+    "never landed" and re-sending duplicates discs and reverts newer edits; guessing the
+    other way costs one cheap read. **A 5xx or a 408 counts as unknown, not as a
+    refusal** — a gateway, a proxy, a captive portal and a container still booting all
+    produce one and none of them is the application answering.
+
+44. **The queue is persisted in IndexedDB, and sign-out empties it.** Diverges from
+    `the-coupon`, which keeps its queue in memory on purpose. *Why the divergence:* its
+    queue is a single slot (one pick per member per round), its data is other members',
+    and it has no phase asking for durability. Here §13.9 names IndexedDB, the queue holds
+    several entity types at once, the data is the owner's own, and the case that matters —
+    cataloguing a shelf in a garage with no signal, then closing the tab — is the one a
+    memory queue loses. *Why sign-out clears it:* the objection that kept `the-coupon`'s
+    queue in memory is real — an unsent write outliving its session would fire under
+    whoever signs in next — and it is answered directly rather than by giving up
+    persistence.
+
+45. **A response is not an answer unless the application sent it.** See #43. Recorded
+    separately because it was a live defect rather than a design choice: `fetch` *resolves*
+    for a 503, so a write that never reached the application was being classified as a
+    refusal and thrown away. An edit made behind a captive portal vanished silently.
+
+46. **The IndexedDB connection fails fast and is never cached as a failure.** *Why:*
+    IndexedDB has no timeout of its own — an upgrade blocked by another tab holding an
+    older version open simply never resolves — and the connection promise was cached, so
+    one blocked moment made **every** later write hang for the life of the page, behind a
+    spinner that could not stop and with nothing thrown or logged. Two tabs open across a
+    schema change is enough to reproduce it.
+
+47. **React Query runs with `networkMode: 'always'` for both queries and mutations.**
+    *Why:* the default pauses work when it believes the app is offline, and both pauses
+    are silent and indistinguishable from a hang. A paused **mutation** never runs
+    `mutationFn`, so the offline queue — which lives inside it — is never reached and the
+    edit is saved nowhere. A paused **query** never issues its fetch, so the service
+    worker, whose entire job is to answer that fetch from cache, is never consulted;
+    "browse the collection with the network off" cannot work while the request is not
+    made. This is also the root cause of #41's empty-state lie in Batch 7.
+    **Neither is catchable by unit-testing the queue**, which never goes through
+    react-query at all — both were found by driving the built app with its API switched
+    off, with the build, the types and 46 tests all green.
+
+48. **Only a 401 or 403 ends a session.** *Why:* `loadProfile` cleared the tokens for any
+    non-ok response, so the first time the app was opened without signal it signed the
+    person out — and destroyed the session the queued offline writes had been made under.
+    A 5xx, a 408 or anything from a gateway means nobody looked at the credentials. An app
+    whose purpose is to work on a phone in a garage cannot log you out for being in the
+    garage.
+
+49. **`set_updated_at` uses `clock_timestamp()`, not `NOW()`.** *Why:* `NOW()` is the
+    **transaction** start time in Postgres. Batch 8 made `updated_at` a concurrency token,
+    and a token that does not advance when the row changes cannot detect that the row
+    changed — two updates in one transaction produced identical values and #42's guard
+    passed anything. It also made the import stamp all 1,857 rows with the moment the
+    import began rather than when each row was written. Caught by this batch's own tests
+    in CI, where the guard failed *open*. The `AT TIME ZONE 'utc'` wrapper stays, for the
+    reason migration `003` added it.
