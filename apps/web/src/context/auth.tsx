@@ -14,6 +14,8 @@ import {
   getRefreshToken,
   storeTokens,
 } from '../lib/auth-tokens'
+import { clearQueue } from '../lib/offline-queue'
+import { shouldEndSession } from '../lib/session'
 
 interface AuthContextValue {
   profile: ProfileResponse | null
@@ -53,13 +55,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authFetch('/auth/me')
       if (!response.ok) {
-        clearTokens()
+        // **Only a rejection ends the session.** A 401 or 403 means the credentials were
+        // examined and refused; anything else — a 503 from a restarting container, a
+        // gateway, a captive portal — means nobody looked at them.
+        //
+        // This used to clear the tokens for *any* non-ok response, so the first time the
+        // app was opened without signal it signed the person out and destroyed the
+        // session that the offline queue was made under. An app whose whole point is to
+        // work on a phone in a garage cannot log you out for being in the garage
+        // (`DECISIONS.md` #48).
+        if (shouldEndSession(response.status)) clearTokens()
         setProfile(null)
         return
       }
       const body: unknown = await response.json()
       setProfile(profileResponseSchema.parse(body))
     } catch {
+      // Network failure. The session is intact; we simply cannot confirm it right now.
       setProfile(null)
     } finally {
       setIsLoading(false)
@@ -109,6 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     clearTokens()
+    // An unsent write must not outlive the session it was made in — it would fire under
+    // whoever signs in next. This is the objection that kept `the-coupon`'s queue in
+    // memory; persisting the queue is only defensible with this line here
+    // (`DECISIONS.md` #44).
+    await clearQueue()
     setProfile(null)
   }, [])
 
