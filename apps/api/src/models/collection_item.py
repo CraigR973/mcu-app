@@ -22,6 +22,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text,
@@ -141,6 +142,16 @@ class CollectionItem(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
         nullable=True,
     )
     added_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+
+    #: Which spreadsheet line this item was imported from, or NULL for one added by
+    #: hand. This is what the importer keys re-run safety on.
+    #:
+    #: Keying on ``(movie_id, location, formats)`` instead looked sufficient and was not:
+    #: two different source rows resolving to the same TMDB film, on the same shelf, in
+    #: the same format, collapsed into one item. "French Connection" and "French
+    #: Connection 2" did exactly that, and a disc went missing over it. A source row is
+    #: the one thing that genuinely distinguishes two entries the owner wrote down twice.
+    import_source_row: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     #: Set by the ``collection_items_soft_delete`` trigger, which turns a DELETE into an
     #: UPDATE of this column. That is also what lets the derived-field recalculation see

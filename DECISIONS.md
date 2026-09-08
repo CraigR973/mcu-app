@@ -386,3 +386,38 @@ contemporaneous.
     *Cost, accepted:* a review pass over the ambiguous rows before their posters, cast and
     search vectors are correct. The review CSV carries an `alternatives` column listing
     every tied candidate so a row can be settled from the file itself.
+
+32. **Import idempotency is keyed on the spreadsheet line, not on the item's contents,
+    and `movie_credits.character_name` is `TEXT`.** Owner decision, 2026-09-07, after the
+    first live import surfaced both. Migration `004`.
+
+    *The collapse.* Keying re-run safety on `(movie_id, location, formats)` looked
+    sufficient and was not: two spreadsheet rows resolving to the same TMDB film, on the
+    same shelf, in the same format, became one item. Three pairs did it in the real sheet.
+    Two were genuine duplicate entries — but the third was "French Connection" and "French
+    Connection 2", which the matcher put on the same film, so **a disc that exists went
+    missing and nothing reported it**. `import_source_row` makes two different lines two
+    items whatever TMDB says, keeps a line the owner really did write twice as two items —
+    which is what the sheet asserts — and gives the review queue the provenance to trace an
+    item back to its source line. Nullable and unique-where-present, because an item added
+    by hand in Batch 7 has no source row.
+
+    *The width.* §3.3 sizes `character_name` at `VARCHAR(255)`. TMDB exceeds it whenever
+    one performer voices many parts: Dan Castellaneta's credit on *The Simpsons Movie* is
+    300 characters, Hank Azaria's 270. Because the importer writes each item in a single
+    transaction, the overflow rolled back the film, its credits **and its collection item** —
+    the disc disappeared from the catalogue over a cast-list field, reported as one line in
+    a summary. `TEXT`, because no fixed width is safe for a slash-separated role list and
+    Postgres treats the two types identically.
+
+    *Why a clean re-import rather than a patch.* Both fixes change what a correct import
+    produces, and the imported data was an hour old and fully reproducible from the
+    spreadsheet — the parser and matching engine **are** the pipeline (`DECISIONS.md` #10).
+    `TRUNCATE`, not `DELETE`: `DELETE` fires `collection_items_soft_delete` and would have
+    left 1,853 soft-deleted rows behind rather than an empty table.
+
+    *General lesson, worth more than either fix:* both defects were invisible to a green
+    gate and to a `--dry-run`. The importer's unit tests mock the database, so no test
+    could have hit a column width or a unique constraint, and the dry run never writes. The
+    first real write against real data is its own test stage, and this batch should be
+    remembered as evidence for that rather than for either individual bug.

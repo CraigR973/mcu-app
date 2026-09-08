@@ -28,11 +28,10 @@ position came from TMDB popularity rather than from anything in the spreadsheet 
 Those go to review with their alternatives listed (`DECISIONS.md` #31).
 
 **Re-running is safe.** Movies deduplicate on ``tmdb_id`` (or on title for unmatched
-rows) and items on ``(movie_id, location, formats)``, so a second run inserts nothing.
-The one cost of that key is that a spreadsheet row duplicated *exactly* — same title,
-same location, same formats — is imported once. There is exactly one such pair in the
-real sheet ("On Approval (1944)", rows 1184 and 1185), which is a data-entry duplicate
-rather than a second copy.
+rows) and items on ``import_source_row`` — the spreadsheet line the item came from — so a
+second run inserts nothing. Keying on the line rather than on the item's contents means
+two rows the owner wrote down separately stay two items even when TMDB collapses them
+onto one film (`DECISIONS.md` #32).
 """
 
 from __future__ import annotations
@@ -418,15 +417,12 @@ def insert_collection_item(conn: Any, movie_id: uuid.UUID, candidate: ImportCand
     location = candidate.location_raw or None
 
     with conn.cursor() as cur:
+        # Keyed on the spreadsheet line, not on the item's contents. Two source rows that
+        # resolve to the same film, shelf and format are still two discs; keying on
+        # contents collapsed "French Connection" and "French Connection 2" into one.
         cur.execute(
-            """
-            SELECT 1 FROM collection_items
-            WHERE movie_id = %s
-              AND location IS NOT DISTINCT FROM %s
-              AND formats = %s
-              AND deleted_at IS NULL
-            """,
-            (str(movie_id), location, formats),
+            "SELECT 1 FROM collection_items WHERE import_source_row = %s",
+            (candidate.row_number,),
         )
         if cur.fetchone() is not None:
             return False
@@ -434,8 +430,9 @@ def insert_collection_item(conn: Any, movie_id: uuid.UUID, candidate: ImportCand
         cur.execute(
             """
             INSERT INTO collection_items
-                (id, movie_id, formats, location, section, shelf, sub_category, condition)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (id, movie_id, formats, location, section, shelf, sub_category, condition,
+                 import_source_row)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 str(uuid.uuid4()),
@@ -446,6 +443,7 @@ def insert_collection_item(conn: Any, movie_id: uuid.UUID, candidate: ImportCand
                 candidate.shelf,
                 candidate.sub_category,
                 DEFAULT_CONDITION,
+                candidate.row_number,
             ),
         )
         return True

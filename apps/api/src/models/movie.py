@@ -114,7 +114,11 @@ class MovieCredit(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     #: "films directed by X" a two-column query; §3.3's shape makes it one.
     role: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    character_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    #: ``Text``, not §3.3's ``VARCHAR(255)``. A performer voicing many parts gets a
+    #: slash-separated role list that runs past it — 300 characters for Dan
+    #: Castellaneta on *The Simpsons Movie* — and the overflow rolled back the whole
+    #: item, not just the credit. See migration 004.
+    character_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     display_order: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

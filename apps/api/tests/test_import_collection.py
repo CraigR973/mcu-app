@@ -448,12 +448,39 @@ def test_insert_collection_item_skips_an_exact_duplicate() -> None:
     assert cur.execute.call_count == 1
 
 
-def test_insert_collection_item_duplicate_check_matches_null_location() -> None:
-    """`IS NOT DISTINCT FROM`, not `=` — a NULL location must match a NULL location,
-    or a re-run would insert a second copy of every location-less row."""
+def test_insert_collection_item_keys_re_runs_on_the_spreadsheet_line() -> None:
+    """Not on the item's contents. Two source rows resolving to the same film, shelf and
+    format are still two discs — keying on contents collapsed "French Connection" and
+    "French Connection 2" into one and lost a disc (`DECISIONS.md` #32)."""
     conn, cur = _make_conn([None])
-    insert_collection_item(conn, uuid.uuid4(), _make_candidate(location_raw=""))
-    assert "IS NOT DISTINCT FROM" in cur.execute.call_args_list[0][0][0]
+    insert_collection_item(conn, uuid.uuid4(), _make_candidate(row_number=1430))
+
+    check_sql, check_params = cur.execute.call_args_list[0][0]
+    assert "import_source_row = %s" in check_sql
+    assert check_params == (1430,)
+    assert "formats" not in check_sql
+    assert "location" not in check_sql
+
+
+def test_insert_collection_item_records_its_source_row() -> None:
+    conn, cur = _make_conn([None])
+    insert_collection_item(conn, uuid.uuid4(), _make_candidate(row_number=550))
+    assert _item_params(cur)[8] == 550
+
+
+def test_insert_collection_item_does_not_collapse_two_titles_on_one_film() -> None:
+    """The French Connection case: same movie_id, same shelf, same format, two lines."""
+    movie_id = uuid.uuid4()
+    first, cur_first = _make_conn([None])
+    second, cur_second = _make_conn([None])
+
+    a = _make_candidate(row_number=550, title="French Connection")
+    b = _make_candidate(row_number=551, title="French Connection 2")
+    assert insert_collection_item(first, movie_id, a) is True
+    assert insert_collection_item(second, movie_id, b) is True
+
+    assert _item_params(cur_first)[8] == 550
+    assert _item_params(cur_second)[8] == 551
 
 
 # ---------------------------------------------------------------------------
