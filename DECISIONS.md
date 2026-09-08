@@ -716,3 +716,28 @@ contemporaneous.
     criteria at all, not for treating an existing criterion as negotiable — `AGENTS.md`'s
     guardrail against weakening the gate to reach green is unaffected. If a future batch
     has the same gap, do the same thing: propose, get agreement, write it down, then start.
+
+### 2026-09-09 — date guards read the server's timezone
+
+53. **A user-supplied calendar date is "in the future" only if it is not today anywhere on
+    Earth.** The ceiling is UTC today plus one day (UTC+14, Kiritimati), not any single
+    timezone's today. Taken while fixing a pre-existing red on `main`.
+
+    *What was wrong:* `log_watch` defaulted `watched_at` to the **UTC** date and then
+    validated it against `date.today()`, which reads the **server's local** timezone.
+    `purchaseDate` carried the same guard. On Railway the two agree, because it runs UTC;
+    on a British machine they disagree for the hour after midnight, which is why
+    `test_logging_a_watch_returns_it_and_defaults_to_today` was green in CI all day and red
+    locally at 00:07 BST. `AGENTS.md` says "UTC everywhere" and it was true of timestamps
+    and untrue of dates.
+
+    *Why not simply compare against UTC today:* that is stricter **and wrong**. At 00:30 in
+    London the wall calendar says the 9th while UTC says the 8th, so a UTC-today guard
+    would tell someone logging tonight's film that tonight is in the future. The guard
+    exists to catch a typed year of 2126, not to arbitrate timezones, and it has no way to
+    know the caller's.
+
+    *Where it lives:* `apps/api/src/clock.py` — `utcnow()`, `utc_today()` and
+    `latest_plausible_today()`. Both guards call the last. Two tests hold the boundary:
+    tomorrow-in-UTC is accepted, the day after is refused. The pre-existing `_utcnow()`
+    copies in the routers were left alone; they are timestamps and were never wrong.

@@ -2,32 +2,27 @@
 
 ## Now
 
-**The 4 pytest failures Batch 10 flagged are fixed.** Not a scheduled ledger batch — a
-`fix/` branch closed out on its own, per the guardrail against folding a pre-existing red
-into a batch. Production serves the merged SHA
-`959b1ca85058daee7b5c2bde5283cbe99d227423` with `db: ok`.
+**A pre-existing red on `main` is fixed: the date guards were reading the server's local
+timezone.** Not a scheduled ledger batch — a `fix/` branch closed out on its own, per the
+guardrail against folding a pre-existing red into a batch. Production serves the merged SHA
+`04bfd444bf311243095bee4bc4cf36662d34f873` with `db: ok`.
 
-**Root causes, not symptoms — none of the four were testing what they claimed to.**
-- `test_migration_seeds_two_profiles_with_no_credential` queried live `profiles` rows to
-  check `pin_hash IS NULL`, which is a claim about what migration `002` seeds, not about
-  current runtime state. It was destined to fail permanently the moment either PIN was
-  set — which is the system working as designed
-  (`src/scripts/set_pin.py`) — not a regression. Rewritten to load migration `002` by file
-  path and check its seed columns statically; the migration now exposes
-  `SEEDED_PROFILE_COLUMNS` with a runtime assertion tying its actual `sa.table()`
-  declaration to that constant, so a future edit that adds `pin_hash` to the seed fails
-  loudly everywhere, not just in this one test.
-- `test_a_cabinet_is_a_section_a_filter_can_reach`, `test_a_film_kept_in_two_places_reports_both`
-  and `test_watched_status_is_per_user` all filtered on a column real production data also
-  populates — 38 real items in "Top Big Cabinet", 413 in "Digital", and effectively the
-  whole 1,843-film catalogue counting as unwatched — so a `perPage` sized for an empty
-  table missed each fixture's own row once real rows were present. Each now gives its
-  fixture movie(s) a shared, implausible `year` and adds it to the request, following the
-  narrow-filter-combination convention `test_list_is_paginated_camel_case_and_counts_copies`
-  already used in the same file, rather than assuming the table starts empty.
+**It was found by the clock, not by a change.** `test_logging_a_watch_returns_it_and_defaults_to_today`
+compared the endpoint's **UTC**-derived default against Python's **local** `date.today()`.
+Those agree on Railway, which runs UTC, and disagree on a British machine for the hour
+after midnight — so the test was green in CI all day and went red at 00:07 BST, in the
+middle of a session, having never been touched.
 
-All 338 `apps/api`, 26 shared and 57 web tests pass locally against live Neon after this
-fix — a genuinely green local gate for the first time since these four tests were written.
+**The test was not the only thing wrong.** `log_watch` defaulted `watched_at` in UTC and
+then validated it against the server's local today; `purchaseDate` carried the same guard.
+Comparing a user-supplied calendar date against *any* single timezone's today is incorrect
+— at 00:30 in London the wall calendar says the 9th while UTC says the 8th, so a UTC-today
+guard would refuse someone logging tonight's film. `apps/api/src/clock.py` now holds
+`utcnow()`, `utc_today()` and `latest_plausible_today()`, and both guards use the last:
+a date is in the future only if it is not today *anywhere on Earth* (UTC+14). Two new tests
+hold that boundary — tomorrow-in-UTC accepted, the day after refused (`DECISIONS.md` #53).
+
+All 341 `apps/api`, 26 shared and 57 web tests pass locally against live Neon.
 
 ---
 
@@ -363,6 +358,15 @@ Two owner actions remain outstanding, unchanged:
     "it installs to a home screen" can only be confirmed on a real device.**
 
 ## Log
+
+- **2026-09-09** — **`fix/date-guards-read-the-server-timezone` shipped.** A pre-existing
+  red on `main` that no change caused: `date.today()` reads the *server's* timezone, so the
+  watch-log default (computed in UTC) and its own future-guard (compared in local time)
+  disagreed for the hour after midnight BST. Green in CI all day, red at 00:07 locally.
+  Fixed at the root rather than in the assertion — `purchaseDate` carried the same guard,
+  and comparing a person's calendar date against any single timezone's "today" is wrong in
+  both directions. New `apps/api/src/clock.py`; the ceiling is now the latest date that is
+  today anywhere on Earth (`DECISIONS.md` #53). `04bfd44`.
 
 - **2026-09-08** — **`fix/pytest-local-live-data-collisions` shipped — the 4 pytest
   failures Batch 10 flagged are fixed, not just flagged.** Not a scheduled ledger batch;
