@@ -463,3 +463,83 @@ contemporaneous.
     restricted. *Considered and not taken:* Mark's picks as suggestions pending Craig's
     approval, which is net-new state and net-new UI for a two-person app, guarding against
     a mistake that is trivially reversible.
+
+### 2026-09-08 — Batch 6 location and facets
+
+34. **The section vocabulary grows by the four cabinets, and 122 live rows are
+    backfilled.** Owner decision, 2026-09-08, taken before any code was written because
+    `STATUS.md` had recorded it as the open question Batch 6 must settle.
+
+    §3.4 named five sections. 124 of the 1,857 imported rows named somewhere else and
+    were left at `section IS NULL`, so no location filter could reach them — which is
+    the whole point of this batch. They are not scattered: **122 of the 124 are four
+    named cabinets**, "Top Big Cabinet" (38), "Top Small Cabinet" (38, two spellings),
+    "Left Hand Side Small Cabinet Fish Room" (26) and "Black Box next to cabinet" (20).
+
+    *Why grow it rather than leave them searchable by `location` text alone:* a section
+    the filter cannot offer is a part of the house the app cannot answer questions
+    about, and 122 discs is 6.6% of the collection. The alternative considered was one
+    combined "Cabinet" section, rejected because the four are four different pieces of
+    furniture in three different rooms and merging them answers "which cabinet?" with
+    "a cabinet".
+
+    *What stays unsectioned, correctly:* two rows. `(In with The Killing)` names another
+    disc rather than a place, and one row has no location at all. Forcing either into a
+    bucket would be inventing data.
+
+    *Cost, accepted:* migration `007` writes to live rows, which is why this batch's
+    close-out stops for sign-off instead of deploying itself. The write is derived
+    entirely from `location`, which is never modified, so it is reproducible and
+    reversible.
+
+35. **`watch_log` is built in Batch 6, because no phase in the roadmap ever built it.**
+    Owner decision, 2026-09-08, taken before any code was written.
+
+    Batch 6's definition asked for a "watched status" facet alongside decade and rating,
+    as though the three were equivalent-cost additions. They were not. §3.7 designs the
+    `watch_log` table and §6.5 lists `POST`/`GET /api/v1/watch-log`, but **no phase in
+    §16 creates either** — checked against all 96 phase headings. The ledger's Batch 37
+    is defined as *"inert until `watch_log` has ~a year of history"*, waiting on a table
+    nothing brings into existence. The facet was not a facet; it was a missing feature.
+
+    *Why build it here rather than defer the facet:* deferring would have shipped Batch 6
+    two-thirds done and left Batch 37 permanently blocked on an unowned gap. Building it
+    moves the batch 🟢 Mid → 🟡 Large, which is the honest tier.
+
+    *Two shapes differ from §3.7 deliberately.* `deleted_at`, because §13.5 sends deleted
+    watch logs to Trash and a hard delete cannot support that — and because the realistic
+    failure is a mis-tap on a phone. And `movie_id ON DELETE RESTRICT` rather than the
+    `CASCADE` used for `movie_credits`: a credit is a fact *about* a film and dies with
+    it, but a watch is something a person did. The app's one hard-delete path for a movie
+    is the identify flow's merge, which now repoints watch rows exactly as it already
+    repoints `collection_items`.
+
+    *Watched status is per-user, and every route is scoped to the caller.* In a
+    two-person app "have I seen it" and "has he seen it" are different questions, and the
+    facet exists so Mark can find what *he* has not seen. A shared flag would answer
+    neither.
+
+    *An unrated film is excluded by `minRating` rather than treated as zero.* All 757
+    unrated films are unidentified, so "rated 7+" quietly meaning "identified and rated
+    7+" is the only reading that does not overstate what is known.
+
+36. **The shelf parser requires an ordinal suffix, or the word "shelf" after a digit.**
+    Found while building this batch, fixed with it, because Batch 6 owns shelf filtering.
+
+    `_ORDINAL_RE` matched any bare digit anywhere in the location string, so
+    `Top small cabinet (Arrow 4 Film Noir Classics Vol 2)` parsed to shelf **"4th"** —
+    four live discs that a "4th shelf" filter would have wrongly returned. The same trap
+    sits inside `Back 6th Shelf (Arrow 4 Film Noir Classics Vol 1)`, which produced the
+    right answer only because `re.search` returns the leftmost match and "6th" happens to
+    come first. A correct result for the wrong reason is not a working parser.
+
+    *Why not just require the suffix:* `Front 2 shelf` is a plausible hand-typed location
+    and the old behaviour accepted it, so the bare-digit form is kept where the word
+    "shelf" follows it. Verified against all 72 distinct location strings in the live
+    database: 1,734 rows unchanged, 122 newly sectioned, 4 shelves cleared, and nothing
+    produced outside the vocabulary.
+
+    *Three `parse_location` test cases changed their expected values*, which `AGENTS.md`
+    otherwise forbids. They asserted that a cabinet has no section — precisely the
+    behaviour #34 decided to change — so this is the decision being carried out, not a
+    failing assertion being edited to pass.
