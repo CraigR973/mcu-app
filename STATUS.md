@@ -357,6 +357,17 @@ Two owner actions remain outstanding, unchanged:
     worker's contents, the queue end to end — but **"it caches the collection offline" and
     "it installs to a home screen" can only be confirmed on a real device.**
 
+26. **`date.today()` reads the *server's* timezone, and this codebase is UTC everywhere
+    else.** A test can therefore go red from the clock alone, with nothing changed: the
+    watch-log default was computed in UTC and validated against local today, which agree on
+    Railway and disagree on a British machine for the hour after midnight. Green in CI all
+    day, red at 00:07 BST.
+
+    Use `src/clock.py` — `utcnow()`, `utc_today()`, `latest_plausible_today()` — never
+    `date.today()`. And for a date a *person* supplied, "in the future" means "not today
+    anywhere on Earth" (UTC+14), not "later than today here": a guard on UTC today refuses
+    someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
+
 ## Log
 
 - **2026-09-09** — **`fix/date-guards-read-the-server-timezone` shipped.** A pre-existing
