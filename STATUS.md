@@ -2,9 +2,37 @@
 
 ## Now
 
-**Batch 10 — Architecture doc split + §17 reconciliation is shipped.** Production serves
-the merged SHA `d94a6b828d5e96879b5794d4d11bb308ac01803c` with `db: ok`. Docs only; no code
-changed, no migration.
+**The 4 pytest failures Batch 10 flagged are fixed.** Not a scheduled ledger batch — a
+`fix/` branch closed out on its own, per the guardrail against folding a pre-existing red
+into a batch. Production serves the merged SHA
+`959b1ca85058daee7b5c2bde5283cbe99d227423` with `db: ok`.
+
+**Root causes, not symptoms — none of the four were testing what they claimed to.**
+- `test_migration_seeds_two_profiles_with_no_credential` queried live `profiles` rows to
+  check `pin_hash IS NULL`, which is a claim about what migration `002` seeds, not about
+  current runtime state. It was destined to fail permanently the moment either PIN was
+  set — which is the system working as designed
+  (`src/scripts/set_pin.py`) — not a regression. Rewritten to load migration `002` by file
+  path and check its seed columns statically; the migration now exposes
+  `SEEDED_PROFILE_COLUMNS` with a runtime assertion tying its actual `sa.table()`
+  declaration to that constant, so a future edit that adds `pin_hash` to the seed fails
+  loudly everywhere, not just in this one test.
+- `test_a_cabinet_is_a_section_a_filter_can_reach`, `test_a_film_kept_in_two_places_reports_both`
+  and `test_watched_status_is_per_user` all filtered on a column real production data also
+  populates — 38 real items in "Top Big Cabinet", 413 in "Digital", and effectively the
+  whole 1,843-film catalogue counting as unwatched — so a `perPage` sized for an empty
+  table missed each fixture's own row once real rows were present. Each now gives its
+  fixture movie(s) a shared, implausible `year` and adds it to the request, following the
+  narrow-filter-combination convention `test_list_is_paginated_camel_case_and_counts_copies`
+  already used in the same file, rather than assuming the table starts empty.
+
+All 338 `apps/api`, 26 shared and 57 web tests pass locally against live Neon after this
+fix — a genuinely green local gate for the first time since these four tests were written.
+
+---
+
+**Batch 10 — Architecture doc split + §17 reconciliation shipped earlier the same day.**
+Docs only; no code changed, no migration.
 
 | # | Criterion | Result |
 |---|---|---|
@@ -53,9 +81,8 @@ no owner action blocking its start.
 2. **The production-UI gap is now narrow but real.** Batches 7 and 9 were driven end to end
    in a browser against a stub API, and Batch 8's write queue was too. What still cannot be
    verified here is anything needing a live service worker or a phone — gotcha 25.
-3. **The four `apps/api` pytest failures above are real and worth a `fix/` batch**, but they
-   don't block anything — `main`'s own CI is green, and they only surface locally against
-   live Neon data. Don't mistake a local red for a CI red before starting a batch.
+3. **The four `apps/api` pytest failures Batch 10 flagged are fixed** (see "Now"). A local
+   run against live Neon is genuinely green again — no known gap between local and CI.
 4. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
 
 ```
@@ -336,6 +363,29 @@ Two owner actions remain outstanding, unchanged:
     "it installs to a home screen" can only be confirmed on a real device.**
 
 ## Log
+
+- **2026-09-08** — **`fix/pytest-local-live-data-collisions` shipped — the 4 pytest
+  failures Batch 10 flagged are fixed, not just flagged.** Not a scheduled ledger batch;
+  closed out on its own branch per the guardrail against folding a pre-existing red into a
+  batch. All four were testing the wrong thing rather than merely lacking test isolation:
+  one asserted current runtime state (`pin_hash IS NULL`) for a claim that's actually about
+  a migration's static seed data, and was destined to fail forever the instant a real PIN
+  was set — which happened, correctly, before this fix existed. Rewritten to check
+  migration `002`'s seed columns directly, with the migration now exposing
+  `SEEDED_PROFILE_COLUMNS` and asserting its `sa.table()` declaration matches it, so a
+  future edit adding `pin_hash` to the seed fails loudly rather than silently. The other
+  three assumed an empty `movies`/`collection_items` table when filtering by `section` or
+  `watched`, and collided with real production rows (38 in "Top Big Cabinet", 413 in
+  "Digital", ~1,843 counting as unwatched) the moment they ran against live Neon rather
+  than CI's disposable Postgres. Fixed by giving each fixture a shared, implausible `year`
+  and filtering on it too — the same narrow-filter-combination convention an existing,
+  passing test in the same file already used, not a new pattern invented for the fix.
+
+  All 338 `apps/api`, 26 `packages/shared` and 57 `apps/web` tests now pass locally against
+  live Neon — the first time that's been true since these four tests were written. No
+  schema change; migration `002` gained a runtime assertion and a renamed constant only.
+  Production serves the merged SHA `959b1ca85058daee7b5c2bde5283cbe99d227423` with
+  `db: ok`.
 
 - **2026-09-08** — **Batch 10 shipped — the architecture doc is split and its decisions
   table is reconciled.** `MCU_Architecture_v2.1_FINAL.md` (2,639 lines) is now
