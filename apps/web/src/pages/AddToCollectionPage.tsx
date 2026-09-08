@@ -8,7 +8,6 @@ import DuplicatePrompt from '@/components/collection/DuplicatePrompt'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  addCollectionItem,
   checkDuplicate,
   DuplicateItemError,
   posterUrl,
@@ -19,6 +18,7 @@ import {
   type TmdbSearchResult,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { addOrQueue } from '@/lib/sync'
 
 /** The film this disc is a copy of, however it was found. */
 interface ChosenFilm {
@@ -76,21 +76,38 @@ export default function AddToCollectionPage() {
     }
   }
 
+  // The film's local id at the moment the mutation is defined, so `onSuccess` does not
+  // have to narrow a nullable piece of state it cannot prove is still set.
+  const chosenMovieId = film?.movieId ?? null
+
   const add = useMutation({
     mutationFn: (confirmDuplicate?: DuplicateReason) => {
       if (!film) throw new Error('Choose a film first')
-      return addCollectionItem({
+      return addOrQueue({
         ...fields,
         ...(film.movieId ? { movieId: film.movieId } : { tmdbId: film.tmdbId ?? 0 }),
         confirmDuplicate,
       })
     },
-    onSuccess: (item) => {
+    onSuccess: ({ item, queued }) => {
       void queryClient.invalidateQueries({ queryKey: ['movies'] })
       void queryClient.invalidateQueries({ queryKey: ['search'] })
       void queryClient.invalidateQueries({ queryKey: ['facets'] })
-      void queryClient.invalidateQueries({ queryKey: ['movie-copies', item.movieId] })
-      navigate(`/movies/${item.movieId}`)
+      if (item !== null) {
+        void queryClient.invalidateQueries({ queryKey: ['movie-copies', item.movieId] })
+        navigate(`/movies/${item.movieId}`)
+        return
+      }
+      // Queued. A film added by TMDB id has no local row yet, so there is nothing to
+      // navigate to — the banner is where this disc lives until it syncs. `film` is
+      // captured here rather than read from state, which the mutation may outlive.
+      const known = chosenMovieId
+      if (queued && known !== null) {
+        void queryClient.invalidateQueries({ queryKey: ['movie-copies', known] })
+        navigate(`/movies/${known}`)
+        return
+      }
+      navigate('/movies')
     },
     onError: (error) => {
       // The 409 is not a failure to report — it is §3.5's prompt arriving the other way

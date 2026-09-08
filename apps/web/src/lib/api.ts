@@ -61,6 +61,82 @@ export type {
   WatchLogPage,
 } from '@mcu/shared'
 
+/**
+ * The server answered, and the answer was no.
+ *
+ * Distinguished from {@link NetworkError} because the two demand opposite handling: a
+ * refusal is a fact the person can act on, while silence is a question that has to be
+ * resolved before anything is reported.
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly detail?: unknown,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+/**
+ * The request did not produce an answer.
+ *
+ * `mayHaveLanded` is the field the whole offline queue turns on. Only a request the
+ * browser refused to make while reporting itself offline *definitely* never reached the
+ * server; anything else — a connection that dropped a millisecond after the bytes went
+ * out — might have been applied. Guessing "it never landed" and re-sending creates
+ * duplicate discs and silently reverts newer edits, so the unknown case is never
+ * retried on its own (`DECISIONS.md` #43).
+ */
+export class NetworkError extends Error {
+  constructor(
+    message: string,
+    readonly mayHaveLanded: boolean,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options)
+    this.name = 'NetworkError'
+  }
+}
+
+/**
+ * `authFetch`, with a transport failure turned into a {@link NetworkError}.
+ *
+ * `fetch` rejects with a bare `TypeError` for everything from "you are on a train" to
+ * "DNS is broken", and a `TypeError` reaching a mutation's `onError` is indistinguishable
+ * from a bug in our own code. Classifying it here is what lets every write path decide
+ * correctly without repeating the reasoning.
+ */
+export async function send(path: string, options: RequestInit = {}): Promise<Response> {
+  let response: Response
+  try {
+    response = await authFetch(path, options)
+  } catch (cause) {
+    // `navigator.onLine === false` is the one case the browser is authoritative about:
+    // it did not attempt the request, so the server cannot hold it.
+    const offline = typeof navigator !== 'undefined' && !navigator.onLine
+    throw new NetworkError(
+      offline ? 'You are offline.' : 'Could not reach the server.',
+      !offline,
+      { cause },
+    )
+  }
+
+  // A 5xx or a 408 is **not** the application answering. A gateway, a proxy, a captive
+  // portal and a container that is still booting all produce one, and none of them can
+  // say whether the write was applied — which is the definition of the unknown case.
+  //
+  // Found by driving the app with its API switched off: `fetch` *resolves* for a 503, so
+  // a write that never reached the application was being classified as a refusal and
+  // thrown away. An edit made on a train behind a captive portal would have vanished
+  // silently (`DECISIONS.md` #45).
+  if (response.status >= 500 || response.status === 408) {
+    throw new NetworkError('The server did not answer.', true)
+  }
+  return response
+}
+
 async function errorMessage(response: Response): Promise<string> {
   try {
     const body: unknown = await response.json()
@@ -74,6 +150,21 @@ async function errorMessage(response: Response): Promise<string> {
 
 async function parseResponse<T>(response: Response, schema: ZodType<T>): Promise<T> {
   if (!response.ok) throw new Error(await errorMessage(response))
+  const body: unknown = await response.json()
+  return schema.parse(body)
+}
+
+/** As `parseResponse`, but a refused request raises a typed {@link ApiError}. */
+async function parseOrThrowApiError<T>(response: Response, schema: ZodType<T>): Promise<T> {
+  if (!response.ok) {
+    let detail: unknown
+    try {
+      detail = ((await response.clone().json()) as { detail?: unknown }).detail
+    } catch {
+      /* not JSON — the status is still the answer */
+    }
+    throw new ApiError(await errorMessage(response), response.status, detail)
+  }
   const body: unknown = await response.json()
   return schema.parse(body)
 }
@@ -294,39 +385,65 @@ export async function checkDuplicate(
   return parseResponse(await authFetch(`/collection/duplicate-check?${params}`), duplicateCheckSchema)
 }
 
+export type AddCollectionItemInput = CollectionItemFields & {
+  movieId?: string
+  tmdbId?: number
+  confirmDuplicate?: DuplicateReason
+}
+
 export async function addCollectionItem(
-  input: CollectionItemFields & {
-    movieId?: string
-    tmdbId?: number
-    confirmDuplicate?: DuplicateReason
-  },
+  input: AddCollectionItemInput,
 ): Promise<CollectionItem> {
-  const response = await authFetch('/collection', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  })
+  const response = await send('/collection', { method: 'POST', body: JSON.stringify(input) })
   if (response.status === 409) {
     const body: unknown = await response.json()
     const parsed = z.object({ detail: duplicateCheckSchema }).safeParse(body)
     if (parsed.success) throw new DuplicateItemError(parsed.data.detail)
     throw new Error('This film is already in the collection')
   }
-  return parseResponse(response, collectionItemSchema)
+  return parseOrThrowApiError(response, collectionItemSchema)
+}
+
+/** Thrown when a queued edit is refused because the disc changed after it was made. */
+export class StaleEditError extends Error {
+  constructor(readonly current: CollectionItem) {
+    super('This disc changed after your edit was made.')
+    this.name = 'StaleEditError'
+  }
+}
+
+export type UpdateCollectionItemInput = CollectionItemFields & {
+  /**
+   * The `updatedAt` this edit was made against.
+   *
+   * Sent by anything that may have been composed a while ago — which offline is
+   * everything. Without it the server has no way to refuse a stale write, and a queued
+   * edit flushed after someone else moved the disc would silently win.
+   */
+  baseUpdatedAt?: string
 }
 
 export async function updateCollectionItem(
   itemId: string,
-  input: CollectionItemFields,
+  input: UpdateCollectionItemInput,
 ): Promise<CollectionItem> {
-  return parseResponse(
-    await authFetch(`/collection/${itemId}`, { method: 'PUT', body: JSON.stringify(input) }),
-    collectionItemSchema,
-  )
+  const response = await send(`/collection/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+  if (response.status === 409) {
+    const body: unknown = await response.json()
+    const parsed = z
+      .object({ detail: z.object({ code: z.literal('STALE_EDIT'), current: collectionItemSchema }) })
+      .safeParse(body)
+    if (parsed.success) throw new StaleEditError(parsed.data.detail.current)
+  }
+  return parseOrThrowApiError(response, collectionItemSchema)
 }
 
 export async function deleteCollectionItem(itemId: string): Promise<CollectionItem> {
-  return parseResponse(
-    await authFetch(`/collection/${itemId}`, { method: 'DELETE' }),
+  return parseOrThrowApiError(
+    await send(`/collection/${itemId}`, { method: 'DELETE' }),
     collectionItemSchema,
   )
 }

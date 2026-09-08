@@ -5,12 +5,12 @@ import { Loader2, Save, Trash2, X } from 'lucide-react'
 import CopyForm from '@/components/collection/CopyForm'
 import { Button } from '@/components/ui/button'
 import {
-  deleteCollectionItem,
-  updateCollectionItem,
+  StaleEditError,
   type CollectionCopy,
   type CollectionItemFields,
   type Condition,
 } from '@/lib/api'
+import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 
 interface Props {
   movieId: string
@@ -64,7 +64,11 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
   }
 
   const save = useMutation({
-    mutationFn: () => updateCollectionItem(copy.id, fields),
+    mutationFn: () =>
+      // `baseUpdatedAt` is what stops this edit overwriting a newer one if it ends up
+      // waiting in the queue. Sent even when online: an online save can still race a
+      // change made on the other person's phone a second earlier.
+      updateOrQueue(copy.id, movieId, { ...fields, baseUpdatedAt: copy.updatedAt }),
     onSuccess: () => {
       refresh()
       onClose()
@@ -72,7 +76,7 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
   })
 
   const remove = useMutation({
-    mutationFn: () => deleteCollectionItem(copy.id),
+    mutationFn: () => deleteOrQueue(copy.id, movieId),
     onSuccess: () => {
       refresh()
       onClose()
@@ -111,7 +115,11 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
 
         {error && (
           <p className="text-sm text-destructive">
-            {error instanceof Error ? error.message : 'That change could not be saved.'}
+            {error instanceof StaleEditError
+              ? 'This disc was changed somewhere else while you were editing. Close and reopen it to see the current version.'
+              : error instanceof Error
+                ? error.message
+                : 'That change could not be saved.'}
           </p>
         )}
 

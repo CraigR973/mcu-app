@@ -125,6 +125,9 @@ export const collectionCopySchema = z.object({
   regionCode: z.string().nullable(),
   releaseLabel: z.string().nullable(),
   listingStatus: z.string(),
+  // Batch 8: the version an edit is based on. Sent back as `baseUpdatedAt` so a queued
+  // offline edit cannot overwrite a change made after it.
+  updatedAt: z.string(),
 })
 
 export const collectionCopiesSchema = z.array(collectionCopySchema)
@@ -257,6 +260,7 @@ export const collectionItemSchema = z.object({
   purchaseSource: z.string().nullable(),
   purchaseDate: z.string().nullable(),
   listingStatus: z.string(),
+  updatedAt: z.string(),
   deletedAt: z.string().nullable(),
 })
 

@@ -153,6 +153,7 @@ describe('Batch 5 collection schemas', () => {
       regionCode: null,
       releaseLabel: null,
       listingStatus: 'in_collection',
+      updatedAt: '2026-09-08T14:00:00Z',
     }]
     expect(collectionCopiesSchema.parse(copies)).toEqual(copies)
   })
@@ -268,6 +269,7 @@ const collectionItem = {
   purchaseSource: 'Fopp',
   purchaseDate: '2026-09-01',
   listingStatus: 'in_collection',
+  updatedAt: '2026-09-08T15:00:00.123456Z',
   deletedAt: null,
 }
 

@@ -1,0 +1,297 @@
+import 'fake-indexeddb/auto'
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { clearQueue, listQueue, resetQueueConnection } from './offline-queue'
+import { addOrQueue, deleteOrQueue, flushQueue, updateOrQueue } from './sync'
+
+/**
+ * The offline queue, tested at the level the acceptance criteria are written at.
+ *
+ * The distinction these cases exist to protect is `queued` vs `unconfirmed`: a write the
+ * browser never sent is safe to send again, and one that left without an answer is not.
+ * Getting that backwards duplicates discs and silently reverts edits, and neither failure
+ * announces itself.
+ */
+
+const copy = {
+  id: 'aaaaaaaa-4f89-11d3-9a0c-0305e82c3301',
+  formats: ['blu_ray'],
+  location: 'Front 2nd shelf',
+  section: 'Front',
+  shelf: '2nd',
+  subCategory: null,
+  notes: null,
+  purchasePrice: null,
+  purchaseSource: null,
+  purchaseDate: null,
+  condition: 'good',
+  hasPlaybackIssues: false,
+  playbackNotes: null,
+  videoSpecs: null,
+  audioSpecs: null,
+  specialFeatures: null,
+  regionCode: null,
+  releaseLabel: null,
+  listingStatus: 'in_collection',
+  updatedAt: '2026-09-08T14:00:00Z',
+}
+
+const MOVIE_ID = 'bbbbbbbb-4f89-11d3-9a0c-0305e82c3302'
+
+/** What a write endpoint returns — a superset of the copy shape, and parsed as one. */
+const writtenItem = {
+  ...copy,
+  movieId: MOVIE_ID,
+  movieTitle: 'Heat',
+  locationLabel: 'Front 2nd',
+  conditionUpdatedAt: null,
+  deletedAt: null,
+}
+
+function itemResponse(status = 200) {
+  return new Response(JSON.stringify(writtenItem), { status })
+}
+
+function setOnline(value: boolean) {
+  vi.stubGlobal('navigator', { onLine: value })
+}
+
+/** A fetch that fails the way a browser fails when the device has no connection. */
+function offlineFetch() {
+  return vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+}
+
+/** A fetch that fails *after* the request went out — the unknown case. */
+function droppedFetch() {
+  return vi.fn().mockRejectedValue(new TypeError('network error'))
+}
+
+beforeEach(async () => {
+  resetQueueConnection()
+  await clearQueue()
+  setOnline(true)
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('queueing a write', () => {
+  it('marks a write the browser never sent as queued', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+
+    const result = await updateOrQueue(copy.id, MOVIE_ID, {
+      formats: ['blu_ray'],
+      hasPlaybackIssues: false,
+    })
+
+    expect(result.queued).toBe(true)
+    const [entry] = await listQueue()
+    // `navigator.onLine === false` is the one case the browser is authoritative about:
+    // it did not attempt the request, so the server cannot be holding it.
+    expect(entry.state).toBe('queued')
+    expect(entry.operation).toBe('update')
+  })
+
+  it('marks a write that left without an answer as unconfirmed', async () => {
+    setOnline(true)
+    vi.stubGlobal('fetch', droppedFetch())
+
+    await updateOrQueue(copy.id, MOVIE_ID, { formats: ['dvd'], hasPlaybackIssues: false })
+
+    const [entry] = await listQueue()
+    // The bytes may have reached the server. Assuming otherwise is what reverts a
+    // newer edit, so the unknown case is never treated as a plain failure.
+    expect(entry.state).toBe('unconfirmed')
+  })
+
+  it('queues an add and a delete the same way', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['4k_uhd'], hasPlaybackIssues: false })
+    await deleteOrQueue(copy.id, MOVIE_ID)
+
+    const entries = await listQueue()
+    expect(entries.map((entry) => entry.operation)).toEqual(['create', 'delete'])
+    expect(entries.every((entry) => entry.state === 'queued')).toBe(true)
+  })
+})
+
+describe('flushing on reconnect', () => {
+  it('sends a queued write and clears it — §13.9’s acceptance', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['4k_uhd'], hasPlaybackIssues: false })
+    expect(await listQueue()).toHaveLength(1)
+
+    setOnline(true)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(itemResponse(201)),
+    )
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(1)
+    expect(await listQueue()).toHaveLength(0)
+  })
+
+  it('never re-sends an unconfirmed write — it reads the row back instead', async () => {
+    setOnline(true)
+    vi.stubGlobal('fetch', droppedFetch())
+    await updateOrQueue(copy.id, MOVIE_ID, {
+      formats: ['dvd'],
+      location: 'Back 6th shelf',
+      hasPlaybackIssues: false,
+    })
+
+    // The read shows the edit *did* land, so there is nothing left to do.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify([{ ...copy, formats: ['dvd'], location: 'Back 6th shelf' }])),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(1)
+    expect(await listQueue()).toHaveLength(0)
+    // One call, and it was the read. A PUT here would be the bug this whole design exists
+    // to prevent.
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit | undefined]
+    expect(init?.method ?? 'GET').toBe('GET')
+  })
+
+  it('drops an unconfirmed write back to queued when the read proves it never landed', async () => {
+    setOnline(true)
+    vi.stubGlobal('fetch', droppedFetch())
+    await updateOrQueue(copy.id, MOVIE_ID, {
+      formats: ['dvd'],
+      location: 'Back 6th shelf',
+      hasPlaybackIssues: false,
+    })
+
+    // The row still holds the old values, so the server demonstrably does not have the
+    // edit — which makes sending it again safe for the first time.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([copy])))
+      .mockResolvedValueOnce(itemResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(1)
+    expect(await listQueue()).toHaveLength(0)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect((fetchMock.mock.calls[1][1] as RequestInit).method).toBe('PUT')
+  })
+
+  it('stops and records the reason when the server refuses a queued edit', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await updateOrQueue(copy.id, MOVIE_ID, {
+      formats: ['dvd'],
+      hasPlaybackIssues: false,
+      baseUpdatedAt: copy.updatedAt,
+    })
+
+    setOnline(true)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            detail: { code: 'STALE_EDIT', current: writtenItem },
+          }),
+          { status: 409 },
+        ),
+      ),
+    )
+
+    const result = await flushQueue()
+
+    // The batch's own acceptance criterion: the offline edit does *not* win.
+    expect(result.sent).toBe(0)
+    const [entry] = await listQueue()
+    expect(entry.error).toContain('changed while your edit was waiting')
+  })
+
+  it('leaves the queue alone and reports still-offline when there is no connection', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await updateOrQueue(copy.id, MOVIE_ID, { formats: ['dvd'], hasPlaybackIssues: false })
+
+    const result = await flushQueue()
+
+    expect(result.stillOffline).toBe(true)
+    expect(result.sent).toBe(0)
+    expect((await listQueue())[0].state).toBe('queued')
+  })
+
+  it('replays in the order the writes were made', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['dvd'], hasPlaybackIssues: false })
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['4k_uhd'], hasPlaybackIssues: false })
+
+    setOnline(true)
+    const fetchMock = vi.fn().mockResolvedValue(itemResponse(201))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await flushQueue()
+
+    const bodies = fetchMock.mock.calls.map(
+      (call) => JSON.parse(String((call[1] as RequestInit).body)) as { formats: string[] },
+    )
+    // An edit that overtook the create it depends on would address an id the server has
+    // never seen, so order is not cosmetic.
+    expect(bodies.map((body) => body.formats[0])).toEqual(['dvd', '4k_uhd'])
+  })
+})
+
+describe('a server that answers without being the application', () => {
+  it('treats a 5xx on a write as unknown, not as a refusal', async () => {
+    // `fetch` *resolves* for a 503, so this looked like an answer and the write was
+    // being discarded. A gateway, a proxy or a container still booting all produce one,
+    // and none of them can say whether the write was applied.
+    setOnline(true)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 503 })))
+
+    await updateOrQueue(copy.id, MOVIE_ID, { formats: ['dvd'], hasPlaybackIssues: false })
+
+    const [entry] = await listQueue()
+    expect(entry).toBeDefined()
+    expect(entry.state).toBe('unconfirmed')
+  })
+
+  it('still treats a 4xx as the application refusing', async () => {
+    setOnline(true)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'nope' }), { status: 422 })),
+    )
+
+    // A refusal is a fact, not a thing to hold on to and replay later.
+    await expect(
+      updateOrQueue(copy.id, MOVIE_ID, { formats: ['dvd'], hasPlaybackIssues: false }),
+    ).rejects.toThrow()
+    expect(await listQueue()).toHaveLength(0)
+  })
+})
+
+describe('signing out', () => {
+  it('empties the queue, so an unsent write cannot fire under the next person', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await deleteOrQueue(copy.id, MOVIE_ID)
+    expect(await listQueue()).toHaveLength(1)
+
+    await clearQueue()
+
+    expect(await listQueue()).toHaveLength(0)
+  })
+})

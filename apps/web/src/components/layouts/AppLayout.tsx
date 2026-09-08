@@ -1,8 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import OfflineBanner from '@/components/OfflineBanner'
 import SearchBar from '@/components/SearchBar'
+import { startAutoFlush } from '@/lib/sync'
 
 interface Props {
   children: ReactNode
@@ -10,6 +13,22 @@ interface Props {
 
 export default function AppLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  // Reconnecting is the moment the queue can move, and the only one the app gets for
+  // free. Registered on the shell rather than on a page so a queued edit is not stranded
+  // by the person navigating away from wherever they made it.
+  useEffect(
+    () =>
+      startAutoFlush((result) => {
+        if (result.sent === 0) return
+        void queryClient.invalidateQueries({ queryKey: ['movies'] })
+        void queryClient.invalidateQueries({ queryKey: ['search'] })
+        void queryClient.invalidateQueries({ queryKey: ['facets'] })
+        void queryClient.invalidateQueries({ queryKey: ['movie-copies'] })
+      }),
+    [queryClient],
+  )
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -29,6 +48,8 @@ export default function AppLayout({ children }: Props) {
             <SearchBar />
           </div>
         </header>
+
+        <OfflineBanner />
 
         <main className="flex-1 overflow-y-auto">
           <ErrorBoundary>
