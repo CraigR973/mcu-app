@@ -77,6 +77,16 @@ class Profile(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
         DateTime(timezone=False), nullable=True
     )
 
+    #: When this person finished the setup wizard, or ``NULL`` if they have not.
+    #:
+    #: A timestamp rather than a boolean so "have they finished?" and "when?" cost one
+    #: column between them. The wizard's April version stored this in a Supabase column
+    #: that no longer exists, which is why Batch 3 removed the wizard rather than ship one
+    #: whose completion saved nowhere (`DECISIONS.md` #27).
+    onboarding_completed_at_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
+
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

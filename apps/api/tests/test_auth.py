@@ -1,6 +1,7 @@
 """Unit tests for the auth primitives. No database — see test_auth_lockout.py for that."""
 
 import uuid
+from collections.abc import AsyncIterator
 
 import jwt
 import pytest
@@ -14,14 +15,16 @@ from src.auth import (
     create_access_token,
     create_refresh_token,
     generate_opaque_token,
+    get_current_user,
     hash_pin,
     hash_token,
     is_weak_pin,
     verify_pin,
 )
 from src.config import Environment, docs_urls
+from src.database import get_db
 from src.main import app
-from src.models.profile import UserRole
+from src.models.profile import Profile, UserRole
 from src.models.rate_limit import BUCKET_KEY_MAX_LENGTH
 from src.rate_limit import LOGIN_LIMIT, durable_bucket_key
 
@@ -273,3 +276,59 @@ def test_set_pin_script_never_takes_the_pin_as_an_argument() -> None:
     parser_source = inspect.getsource(module)
     assert '"pin"' not in parser_source.split("add_argument")[1].split(")")[0]
     assert "getpass" in inspect.getsource(module._read_pin)
+
+
+# ---------------------------------------------------------------------------
+# Onboarding completion (Batch 9)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_onboarding_starts_incomplete_and_completes_once() -> None:
+    """The flag Batch 3 removed the wizard for the lack of (`DECISIONS.md` #27).
+
+    Completion is idempotent and **keeps the first timestamp**: re-running the wizard
+    from settings later must not rewrite when this person was actually set up.
+    """
+    profile = Profile(
+        id=uuid.uuid4(),
+        display_name="Onboarding Tester",
+        pin_hash=None,
+        role=UserRole.viewer,
+    )
+
+    async def override_user() -> Profile:
+        return profile
+
+    committed: list[str] = []
+
+    class _Session:
+        async def commit(self) -> None:
+            committed.append("commit")
+
+        async def refresh(self, _obj: object) -> None:
+            return None
+
+    async def override_db() -> AsyncIterator[_Session]:
+        yield _Session()
+
+    app.dependency_overrides[get_current_user] = override_user
+    app.dependency_overrides[get_db] = override_db
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            before = await client.get("/api/v1/auth/me")
+            assert before.json()["onboardingCompleted"] is False
+
+            first = await client.post("/api/v1/auth/onboarding/complete")
+            assert first.status_code == 200
+            assert first.json()["onboardingCompleted"] is True
+            stamped = profile.onboarding_completed_at_utc
+            assert stamped is not None
+
+            second = await client.post("/api/v1/auth/onboarding/complete")
+            assert second.json()["onboardingCompleted"] is True
+            # Unchanged, and no second write.
+            assert profile.onboarding_completed_at_utc == stamped
+            assert committed == ["commit"]
+    finally:
+        app.dependency_overrides.clear()

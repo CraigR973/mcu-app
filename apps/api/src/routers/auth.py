@@ -6,6 +6,7 @@ own PIN through ``POST /api/v1/auth/pin``, which is the only path that writes a 
 """
 
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 import structlog
@@ -89,6 +90,10 @@ class ProfileResponse(BaseModel):
     displayName: str
     role: UserRole
     hasPin: bool
+    #: Whether this person has finished the setup wizard. A boolean on the wire even
+    #: though the column is a timestamp: the client's only question is whether to show
+    #: the wizard, and the timestamp is for us.
+    onboardingCompleted: bool = False
 
 
 class SetPinRequest(BaseModel):
@@ -259,14 +264,39 @@ async def logout(
         await db.commit()
 
 
-@router.get("/me", response_model=ProfileResponse)
-async def me(user: CurrentUser) -> ProfileResponse:
+def _profile_response(user: Profile) -> ProfileResponse:
     return ProfileResponse(
         id=user.id,
         displayName=user.display_name,
         role=user.role,
         hasPin=user.pin_hash is not None,
+        onboardingCompleted=user.onboarding_completed_at_utc is not None,
     )
+
+
+@router.get("/me", response_model=ProfileResponse)
+async def me(user: CurrentUser) -> ProfileResponse:
+    return _profile_response(user)
+
+
+@router.post("/onboarding/complete", response_model=ProfileResponse)
+async def complete_onboarding(
+    user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ProfileResponse:
+    """Mark the setup wizard finished.
+
+    Idempotent, and deliberately **keeps the first timestamp**: re-running the wizard
+    from settings later should not rewrite when this person actually got set up. Phase
+    2.8 asks for the flow to be skippable, and skipping to the end is still finishing —
+    the wizard offers nothing that has to be done, so there is no half-complete state to
+    represent.
+    """
+    if user.onboarding_completed_at_utc is None:
+        user.onboarding_completed_at_utc = datetime.now(UTC).replace(tzinfo=None)
+        await db.commit()
+        await db.refresh(user)
+    return _profile_response(user)
 
 
 @router.post("/pin", status_code=status.HTTP_204_NO_CONTENT)
