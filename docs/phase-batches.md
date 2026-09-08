@@ -251,6 +251,40 @@ Result: **six steps for an admin, five for a viewer**, every one of them backed.
 is `profiles.onboarding_completed_at_utc` (migration `010`), the column Batch 3 removed the
 wizard for the lack of.
 
+### Batch 10 — Architecture doc split + §17 reconciliation
+**Goal:** `MCU_Architecture_v2.1_FINAL.md` stops being the place anyone has to go to find
+out what's actually true. It is the deferred half of `REVIEW_PLAN_2026-09-07.md` Part C,
+which specifies: *"Convert `MCU_Architecture_v2.1_FINAL.md` (2,639 lines) into
+`ARCHITECTURE.md` + a roadmap doc; retire `session-log.md.txt` into the STATUS/DECISIONS
+pattern."* No acceptance criteria were ever written for this batch when the ledger row was
+added; this section supplies them before work starts.
+
+- **Split.** Extract the durable design/reference material (stack choices, schema
+  rationale, non-batch-specific spec) out of `MCU_Architecture_v2.1_FINAL.md` into a new
+  `ARCHITECTURE.md`. `docs/phase-batches.md` already *is* the roadmap doc the review plan
+  asked for — this batch confirms that rather than authoring a second one.
+- **§17 reconciliation.** The "Resolved Decisions" table (50 rows, April) gets a verdict
+  per row: still current as designed / superseded (cite the `DECISIONS.md` # or batch that
+  overrode it) / not yet built. No row is deleted outright — the table becomes a dated
+  record with each entry's current status attached, the same treatment gotcha 0 already
+  gives `docs/part-b-audit.md` and `docs/part-d-roadmap.md`.
+- **Retire `session-log.md.txt`.** `DECISIONS.md` already says entries 1–8 were
+  reconstructed from it on 2026-09-07. Confirm nothing else in it is un-migrated, then
+  remove it from the working tree (git history keeps it).
+- **Fix cross-references.** `AGENTS.md`/`CLAUDE.md` currently point at
+  `MCU_Architecture_v2.1_FINAL.md` as one of the "read these first" docs and instruct
+  "never read it whole." Update those pointers to the new split.
+
+**Acceptance:**
+1. `ARCHITECTURE.md` exists and holds the durable design content; `MCU_Architecture_v2.1_FINAL.md` is either removed or reduced to a superseded stub pointing at its replacement.
+2. Every one of §17's 50 rows carries an explicit current-status verdict, not just its original April resolution.
+3. `session-log.md.txt` no longer exists in the working tree, and nothing it uniquely held is lost — verified by confirming its content is covered by `DECISIONS.md`/`STATUS.md` before deletion.
+4. `AGENTS.md` and `CLAUDE.md`'s "Source of truth" table point at the new doc(s), not the retired one.
+5. No code changes; the standard CI gate (lint/typecheck/test/build) stays green because nothing it exercises changed.
+
+This batch touches no hosting/credentials and performs no destructive data operation, so
+automatic close-out applies once the gate is green.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
