@@ -17,7 +17,7 @@ Strike the row through and set status on close-out.
 | ~~2~~ | ~~Deploy spine + CI gate~~ | ~~🟡~~ | **shipped** | ~~re-lands **0.5**; **implements §15, which was never a phase**~~ | `d4190ac` · API live, `/health` serves the SHA |
 | ~~3~~ | ~~Auth — PIN + JWT~~ | ~~🟡~~ | **shipped** | ~~**supersedes 0.4** (Supabase Auth) per `DECISIONS.md` #11~~ | `e89a9c6` · lockout proved on Postgres in CI |
 | ~~4~~ | ~~Domain layer + re-import~~ | ~~🔴~~ | **shipped** | ~~re-lands **1.1, 1.3–1.8**; **fixes the §3.4 location columns 1.2/1.3 omitted**~~ | 1,857 items imported, 1,733 sectioned; 14 trigger tests running in CI |
-| 5 | Read surface | 🟡 | planned | re-lands **2.1–2.7** | |
+| 5 | Read surface **+ identify flow** | 🔴 | planned | re-lands **2.1–2.7**; **adds the in-app film picker** (`DECISIONS.md` #33) | |
 | 6 | Location + facets | 🟢 | planned | **3.6** (re-scoped), **8.1** (re-scoped); delivers §6.2's unkept promise | |
 | 7 | Write surface | 🟡 | planned | re-lands **3.1**; adds **3.2, 3.5, 3.11** | |
 | 8 | PWA + offline | 🟢 | planned | **13.8, 6.5, 13.9** pulled forward | |
@@ -60,12 +60,29 @@ Port `tmdb/`, `matching/`, `spreadsheet/` unchanged. New models — `Movie`, `Mo
 Re-run the importer.
 **Acceptance:** row count = 1,857. `SELECT count(*) WHERE section IS NOT NULL` is non-trivial and `section` values fall in {Front, Back, Lounge, Garage, Digital}. `--dry-run` diffed against `matching_eval.csv` before the live run. The 13 derived-field trigger tests **run in CI** against the Postgres service — not skipped.
 
-### Batch 5 — Read surface
-**Goal:** Mark can browse the collection on his phone.
+### Batch 5 — Read surface + identify flow 🔴
+**Goal:** Mark can browse the collection on his phone, and every film shows something —
+either its metadata or the way to supply it.
 List (paginated), detail, copies, tsvector search. **camelCase DTOs and shared zod schemas
 that the web app actually `.parse()`s** (`DECISIONS.md` #12) — schemas ship with the
 endpoint. Web shell, grid, detail page, search.
-**Acceptance:** the deployed app renders 1,857 items at 60fps and a search returns in <150ms. Every response the web app consumes is parsed through `packages/shared`; zero `as Promise<T>` casts on API responses.
+
+**The identify flow** (`DECISIONS.md` #33). Batch 4 left **757 films unidentified, carrying
+764 items** — 41% of the catalogue would otherwise render as blank detail pages, which
+contradicts this batch's own goal. They need no flag column: they are exactly
+`movies.tmdb_id IS NULL`, and their `title` is the spreadsheet title to search with.
+- `GET /api/v1/movies/{id}/candidates` — runs the existing `MatchingEngine` against the
+  stored title, live, returning the top five **with poster, year and overview**, plus a
+  free-text query parameter for "none of these" (which is the only route for the 136 rows
+  TMDB returned nothing for).
+- `POST /api/v1/movies/{id}/identify` — takes the chosen `tmdb_id`, calls `get_movie_full`,
+  fills every §3.2 column and the credits, sets `tmdb_id`. The `search_vector` trigger fires
+  on its own from the title/overview update.
+- The same picker, reachable from an **already-identified** film, is what fixes the
+  wrong-sibling matches (`STATUS.md` gotcha 1b) without a third change to the ranking.
+- **Either user can identify a film**, not admins only (#33).
+
+**Acceptance:** the deployed app renders 1,857 items at 60fps and a search returns in <150ms. Every response the web app consumes is parsed through `packages/shared`; zero `as Promise<T>` casts on API responses. **No film renders an empty detail page** — an unidentified one shows the picker. Identifying a film from the UI populates its poster, overview, cast and `search_vector`, and it is then findable by a search term that only appears in the fetched metadata. Correcting an already-identified film works by the same route.
 
 ### Batch 6 — Location + facets
 **Goal:** the app answers "where is this disc?"

@@ -421,3 +421,45 @@ contemporaneous.
     could have hit a column width or a unique constraint, and the dry run never writes. The
     first real write against real data is its own test stage, and this batch should be
     remembered as evidence for that rather than for either individual bug.
+
+### 2026-09-08 — Identifying films in the app
+
+33. **The 764 unidentified items are resolved in the app, on the detail page, not by
+    working a CSV.** Owner decision, 2026-09-08. Folded into Batch 5, which moves 🟡 → 🔴.
+
+    Batch 4 deliberately catalogued every disc and deferred the *identification* of 757 of
+    them (#31). The queue it produced was a CSV with an `alternatives` column. Resolving it
+    in the UI instead: opening a film that has no `tmdb_id` shows the matcher's top five
+    **with posters, years and overviews**, and picking one enriches the row.
+
+    *Why:* judging *French Connection II* against *The French Connection* takes a second
+    from two posters and is genuinely hard from `1051:The French Connection (1971) |
+    10711:French Connection II (1975)` in a spreadsheet cell. It also spreads the work
+    across normal use — the question gets asked exactly when someone cares about that disc
+    — instead of demanding one 764-row sitting, and there is no parallel artefact to keep
+    in step with the database.
+
+    *Why it costs no schema:* the unidentified set is exactly `movies.tmdb_id IS NULL`, so
+    no flag column is needed, and those rows already hold the spreadsheet title, which is
+    what the matcher searches on. They also have no overview and no poster, so the detail
+    page renders conspicuously empty on its own — the prompt to identify is free.
+
+    *Why inside Batch 5 rather than after it:* 41% of the catalogue would otherwise render
+    as blank detail pages, which contradicts Batch 5's own goal of Mark being able to
+    browse the collection. Shipping the page 41% empty and returning later means designing
+    its empty state twice.
+
+    *Second thing it buys:* the same picker, opened from an already-identified film, is how
+    the wrong-sibling matches get corrected — French Connection II, X-Men 2, 11.22.63,
+    Planet Earth II (`STATUS.md` gotcha 1b). That removes the need for a third change to
+    the matching ranking, which would otherwise cost a 45-minute measurement pass over all
+    1,857 titles and risk regressing matches that are currently right.
+
+    **Either user can identify a film; it is not restricted to admin.** A narrow exception
+    to §3.1's "Admin = full catalog CRUD; Viewer = read-only". *Why:* Mark browsing on his
+    phone is the person most likely to open a blank film, and a queue only the admin can
+    move is a queue that stays at 757. The choice is one click to undo, and Batch 7's
+    `admin_actions` audit records who identified what — attributable without being
+    restricted. *Considered and not taken:* Mark's picks as suggestions pending Craig's
+    approval, which is net-new state and net-new UI for a two-person app, guarding against
+    a mistake that is trivially reversible.

@@ -40,34 +40,38 @@ Four defects were found and fixed on the way, **three of them invisible to a gre
 
 ## Next
 
-**Batch 5 — Read surface.** Mark can browse the collection on his phone: list, detail,
-copies, tsvector search, with camelCase DTOs and shared zod schemas the web app actually
-`.parse()`s. There are now 1,857 real rows to render and a populated `search_vector` to
-search, so its acceptance criteria can be measured rather than estimated.
+**Batch 5 — Read surface + identify flow** (now 🔴, `DECISIONS.md` #33). Mark can browse
+the collection on his phone: list, detail, copies, tsvector search, with camelCase DTOs and
+shared zod schemas the web app actually `.parse()`s. There are now 1,857 real rows to render
+and a populated `search_vector` to search, so its acceptance can be measured rather than
+estimated.
 
-**Before or alongside it, two pieces of collection hygiene:**
+**It now also owns identifying the 757 unidentified films in the app**, rather than by
+working the review CSV. Opening a film with no `tmdb_id` shows the matcher's top five with
+posters, years and overviews; picking one enriches the row and it never asks again. This
+needs **no schema change** — the unidentified set is exactly `movies.tmdb_id IS NULL`, those
+rows already hold the spreadsheet title to search on, and they have no poster or overview so
+the detail page renders conspicuously empty by itself. Either user can identify a film, not
+admins only.
 
-1. **Work the 764-row review queue** (attached to the session as `import_review_final.csv`,
-   regenerable by re-running the importer). Settling a row means picking the right
-   `tmdb_id` from `alternatives`; each item is already catalogued, so this only improves
-   metadata. `import_source_row` traces every item back to its spreadsheet line.
-2. **Eleven "settled" rows chose a film that appends text to the title as written** —
-   the class the French Connection case is in. Most are right (typo and subtitle fixes);
-   these four look wrong and are worth a minute each:
+**That also retires two follow-ups.** The review CSV becomes a fallback rather than the
+plan, and the four wrong-sibling matches below are corrected through the same picker opened
+from an already-identified film — so no third change to the matching ranking is needed:
 
-   | sheet row | as written | chose |
-   |---|---|---|
-   | 550 | French Connection | French Connection **II** (1975) |
-   | 1789 | X-Men 2 | X-MEN 2 - **Wolverine's story** |
-   | 1831 | 11.22.63 | 11-22-63: **The Day the Nation Cried** |
-   | 1254 | Planet Earth II | Planet Earth II: **A World of Wonder** |
+| sheet row | as written | chose |
+|---|---|---|
+| 550 | French Connection | French Connection **II** (1975) |
+| 1789 | X-Men 2 | X-MEN 2 - **Wolverine's story** |
+| 1831 | 11.22.63 | 11-22-63: **The Day the Nation Cried** |
+| 1254 | Planet Earth II | Planet Earth II: **A World of Wonder** |
 
-   Cause: `title_similarity` floors a substring match at 0.9, but a near-miss that appends
-   a numeral can score higher — "french connection" vs "french connection ii" ratios 0.919
-   against the correct "the french connection" at the 0.900 floor. A leading article costs
-   the right film more than an appended "II" costs the wrong one. Narrow (11 of 1,093
-   settled rows) and **not** fixed in this batch: another ranking change needs its own
-   measurement pass over all 1,857 titles, which is 45 minutes of TMDB calls.
+Cause, recorded so it is not rediscovered: `title_similarity` floors a substring match at
+0.9, but a near-miss that appends a numeral can beat it — "french connection" scores 0.919
+against *French Connection II* and 0.900 against the correct *The French Connection*,
+because a leading article costs more than an appended "II". 11 of the 1,093 settled rows are
+in this class and about four look wrong. Fixing the ranking again would need its own
+measurement pass over all 1,857 titles and risks regressing matches that are currently
+right; the picker is the cheaper and safer route.
 
 Then: **set your PINs. Nobody can log in until you do** — both profiles are seeded with
 `pin_hash = NULL`, which means *no credential*, not a blank one:
