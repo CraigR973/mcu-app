@@ -33,8 +33,13 @@ export default function ProtectedRoute({ children, role }: Props) {
     return <Navigate to="/unauthorized" replace />
   }
 
-  // The onboarding gate that used to live here belonged to the Supabase profile and
-  // redirected into a wizard three of whose nine steps point at nothing (`STATUS.md`
-  // gotcha 5). Batch 9 repairs the wizard and owns re-introducing this.
+  // The onboarding gate, re-introduced by Batch 9 against a real column. It was removed
+  // in Batch 3 because it read a Supabase field that no longer exists, and the wizard it
+  // led to had three steps pointing at nothing (`STATUS.md` gotcha 5). Both are fixed:
+  // migration `010` owns the flag, and every remaining step does what it says.
+  if (profile !== null && !profile.onboardingCompleted && location.pathname !== '/welcome') {
+    return <Navigate to="/welcome" replace />
+  }
+
   return <>{children}</>
 }

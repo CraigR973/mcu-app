@@ -60,8 +60,22 @@ describe('profileResponseSchema', () => {
       displayName: 'Craig',
       role: 'admin' as const,
       hasPin: true,
+      onboardingCompleted: false,
     }
     expect(profileResponseSchema.parse(profile)).toEqual(profile)
+  })
+
+  it('requires the onboarding flag rather than defaulting it', () => {
+    // Defaulting it would mean an older API silently reads as "already onboarded",
+    // which is the wizard never appearing for the person who needs it.
+    expect(() =>
+      profileResponseSchema.parse({
+        id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+        displayName: 'Craig',
+        role: 'admin',
+        hasPin: true,
+      }),
+    ).toThrow()
   })
 
   it('rejects an unknown role', () => {

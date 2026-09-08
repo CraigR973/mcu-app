@@ -15,6 +15,7 @@ const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
 const TrashPage = lazy(() => import('./pages/TrashPage'))
 const OfflinePage = lazy(() => import('./pages/OfflinePage'))
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
 
 function AdminPage() {
   return (
@@ -90,6 +91,12 @@ export default function App() {
             <Route path="/offline" element={<OfflinePage />} />
 
             {/* Protected routes — all wrapped in AppLayout sidebar */}
+            {/* Protected, but outside AppShell: the wizard is the full screen, and it
+                must not be gated by the very flag it exists to set. */}
+            <Route
+              path="/welcome"
+              element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>}
+            />
             <Route
               path="/movies"
               element={<AppShell><MoviesPage /></AppShell>}

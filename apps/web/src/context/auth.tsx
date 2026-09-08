@@ -23,6 +23,8 @@ interface AuthContextValue {
   isAuthenticated: boolean
   signIn: (displayName: string, pin: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  /** Re-read the profile. The wizard calls it so the route gate sees the new state. */
+  refresh: () => Promise<void>
   setPin: (newPin: string, currentPin?: string) => Promise<{ error: string | null }>
 }
 
@@ -155,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         setPin,
+        refresh: loadProfile,
       }}
     >
       {children}

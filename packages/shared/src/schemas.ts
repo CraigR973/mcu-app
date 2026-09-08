@@ -30,6 +30,9 @@ export const profileResponseSchema = z.object({
   // False for a profile seeded with `pin_hash = NULL` — no credential yet, which is
   // not the same as a blank one.
   hasPin: z.boolean(),
+  // Batch 9. A boolean on the wire though the column is a timestamp: the client's only
+  // question is whether to show the wizard.
+  onboardingCompleted: z.boolean(),
 })
 
 export const apiErrorSchema = z.object({

@@ -8,6 +8,7 @@ import {
   duplicateCheckSchema,
   movieDetailSchema,
   moviePageSchema,
+  profileResponseSchema,
   searchResponseSchema,
   tmdbSearchResponseSchema,
   trashPageSchema,
@@ -23,6 +24,7 @@ import {
   type DuplicateReason,
   type MovieDetail,
   type MoviePage,
+  type ProfileResponse,
   type SearchResponse,
   type TmdbSearchResponse,
   type TrashPage,
@@ -469,6 +471,14 @@ export async function fetchAudit(
   if (filter.movieId) params.set('movieId', filter.movieId)
   if (filter.targetId) params.set('targetId', filter.targetId)
   return parseResponse(await authFetch(`/admin/audit?${params}`), auditPageSchema)
+}
+
+/** Mark the setup wizard finished. Idempotent; the API keeps the first timestamp. */
+export async function completeOnboarding(): Promise<ProfileResponse> {
+  return parseResponse(
+    await authFetch('/auth/onboarding/complete', { method: 'POST' }),
+    profileResponseSchema,
+  )
 }
 
 export async function searchTmdb(q: string): Promise<TmdbSearchResponse> {
