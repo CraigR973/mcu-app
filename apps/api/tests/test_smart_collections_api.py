@@ -466,11 +466,20 @@ async def test_deleting_removes_it(client: AsyncClient) -> None:
 async def test_an_empty_filter_set_is_the_whole_collection(
     client: AsyncClient, api_session: AsyncSession
 ) -> None:
-    """ "Everything" is a legitimate saved collection, and it must not mean "nothing"."""
+    """ "Everything" is a legitimate saved collection, and it must not mean "nothing".
+
+    Two fixture films rather than one, and a lower bound of 2 rather than "more than
+    one". The first version asserted ``> 1`` on the strength of the 1,857 real rows a
+    local run sees — exactly the environment assumption `STATUS.md`'s Now block was
+    written about. It passed locally and failed in CI, whose database holds only what the
+    test put in it. The bound now rests on this test's own fixtures rather than on which
+    database it happens to be pointed at.
+    """
     await _film(api_session, "Any Film At All", year=FIXTURE_DECADE + 1, formats=["dvd"])
+    await _film(api_session, "Another Film Entirely", year=FIXTURE_DECADE + 2, formats=["dvd"])
     collection = await _create(client, name="Everything", filters={})
 
     results = await client.get(f"/api/v1/smart-collections/{collection['id']}/results")
     everything = await client.get("/api/v1/movies?perPage=1")
     assert results.json()["totalMovies"] == everything.json()["totalMovies"]
-    assert results.json()["totalMovies"] > 1
+    assert results.json()["totalMovies"] >= 2
