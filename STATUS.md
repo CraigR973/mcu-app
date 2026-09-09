@@ -6,6 +6,11 @@
 
 Production serves the scraper film-filtering fix with `db: ok`.
 
+**Batch 23's Blu-ray.com boundary is now explicit.** The site's Legal Notices prohibit the
+planned automated reuse; `robots.txt` never granted permission, so Decision #108's final
+claim was wrong. The owner accepts the stated risk, including a one-time 1,857-item
+backfill, within strict no-search/no-evasion/stop-on-block controls (`DECISIONS.md` #110).
+
 | Batch | Result |
 |---|---|
 | — | `fix/date-guards-read-the-server-timezone` — a pre-existing red on `main`, fixed first (`04bfd44`) |
@@ -437,6 +442,15 @@ something on it, including two the ledger describes as "solo".
     ```
 
 ## Log
+
+- **2026-09-09** — **Batch 23's Blu-ray.com risk was accepted explicitly, not explained
+  away by `robots.txt`.** The site's Legal Notices prohibit automated reuse even for
+  private/internal calculations, which supersedes #108's claim that exact release-page
+  fetching is allowed. The owner accepts the practical risk, including the one-time
+  1,857-item backfill; #110 keeps exact public release URLs, no site search or authentication,
+  sequential rate limiting, indefinite caching, provenance for reversible cleanup, and a
+  hard stop on `403`, `429`, an objection or a hosting complaint. Written permission is
+  preferable but no longer blocks Batch 23.
 
 - **2026-09-09** — **A want can now name an edition, not just a format.** Arrow sells *Deep
   Red* on 4K three times — plain £25, Limited Edition £25, Arte Originale slipcover £35 —
