@@ -656,7 +656,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 34 | **Email — parsers + scanning** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **10.5, 10.6, 10.7, 10.8** |
 | 35 | Movie night | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
 | ~~36~~ | ~~Command palette + shortcuts~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~6.3, 6.4~~ | `1425f91` · Ctrl/Cmd+K palette (pages, admin actions, films via Batch 5's search, recent items) + centralized shortcuts hook; `.` and the AI-conversations index dropped — Batch 31 isn't built |
-| 37 | On-this-day + rewatch | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
+| ~~37~~ | ~~On-this-day + rewatch~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~**11.6**~~ | `50a4828` · caller-scoped anniversary memories and high-rated, not-recently-watched suggestions; date-controlled Postgres test proves a watch from a year ago appears on the dashboard |
 | 38 | E2E suite | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.10 — written alongside features, formalised here |
 
 ## Batch groups

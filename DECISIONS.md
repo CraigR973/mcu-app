@@ -1180,3 +1180,15 @@ contemporaneous.
     documented shortcuts work" acceptance criterion the same way Batch 9 found a
     notifications wizard step offering toggles with nothing behind them. Batch 31 owns
     bringing both back once the assistant exists — the same way Batch 11 owns push.
+
+### 2026-09-09 — Batch 37 on-this-day + rewatch
+
+89. **Rewatch suggestions require a personal rating of at least 4/5 and a latest watch at
+    least six calendar months ago.** The endpoint accepts bounded `minRating` and `months`
+    query parameters, but these are its defaults.
+
+    *Why:* a rewatch prompt should be a remembered favourite, not every film that happens to
+    be absent from the recent log. Four stars is an intelligible "loved it" threshold on
+    §3.7's half-star 0.5–5 scale, while calendar months avoid calling a 28-day February the
+    same amount of time as a 31-day month. The query uses the caller's own latest live watch,
+    so another person's viewing and a soft-deleted mistake cannot suppress a suggestion.

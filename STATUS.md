@@ -2,9 +2,9 @@
 
 ## Now
 
-**Ten batches shipped, all merged and deployed.**
+**Eleven batches shipped, all merged and deployed.**
 
-Production serves `1425f912871604b10169555c67fcb02ed61c8014` (Batch 36) with `db: ok`.
+Production serves `50a48289272cdda5c133724a590078fff9e12881` (Batch 37) with `db: ok`.
 
 | Batch | Result |
 |---|---|
@@ -19,6 +19,7 @@ Production serves `1425f912871604b10169555c67fcb02ed61c8014` (Batch 36) with `db
 | 19 | Scraper framework (`bf1b4d5`) — **acceptance deferred to the owner** |
 | 27 | Gift links (`888dae7`) — **security review ran; four defects found and fixed** |
 | 36 | Command palette + keyboard shortcuts (`1425f91`) — `.` and the AI-conversations index dropped, Batch 31 isn't built |
+| 37 | On-this-day + rewatch (`50a4828`) — date-controlled Postgres test proves a one-year anniversary surfaces on the dashboard |
 
 ### What Batch 27's security review actually found
 
@@ -106,12 +107,10 @@ also want **Batch 11's push**, which is still blocked on its own VAPID credentia
 
 ### Unblocked work that does not need this checkpoint
 
-**Batch 36 shipped** (command palette + keyboard shortcuts, `1425f91`) — see the ledger row
-above. Its `?` and `/` shortcuts, and "typing 'blade' surfaces Blade Runner films", were not
-independently browser-verified: the browser automation tool cannot synthesize a real
-`key: '?'`/`key: '/'` keydown, and no local API/Postgres was running to search against.
-Both rest on the 27 new unit/integration tests instead — worth a real browser check next
-time either surface is touched.
+**Batch 37 shipped** (on-this-day + rewatch, `50a4828`). It adds caller-scoped memory and
+rewatch endpoints plus dashboard sections. CI ran the date-controlled Postgres test proving a
+watch from a year ago appears; the production dashboard remains honestly empty until people
+log watches. The optional daily push remains Batch 11 work, behind its VAPID-key checkpoint.
 
 **Three batches that look unblocked are not**, and two of them are labelled "solo" in the
 ledger, which describes file overlap rather than whether the feature can work:
@@ -127,8 +126,8 @@ ledger, which describes file overlap rather than whether the feature can work:
 
 ### Four things the next agent should know
 
-1. **Every planned batch's acceptance criteria are missing from the working tree.** Batch 10
-   removed §16. Recover them verbatim from
+1. **Planned batches whose criteria have not yet been recovered need them written into the
+   ledger before implementation.** Batch 10 removed §16. Recover them verbatim from
    `git show d94a6b8~1:MCU_Architecture_v2.1_FINAL.md`, grep for `**Phase X.Y:`, and write
    them into the batch's ledger section **before** writing code (`DECISIONS.md` #54).
 2. **Adding a Python dependency means regenerating both locks.** CI installs with
@@ -433,6 +432,21 @@ something on it, including two the ledger describes as "solo".
     ```
 
 ## Log
+
+- **2026-09-09** — **Batch 37 shipped — on-this-day + rewatch** (`50a4828`). Phase 11.6:
+  caller-scoped anniversary memories and high-rated, not-recently-watched suggestions are
+  parsed through shared schemas and rendered on the dashboard. The acceptance is proved by a
+  date-controlled Postgres test: a watch logged exactly one year earlier appears today; CI
+  ran it against Postgres 17. `watch_log` remains empty in production, so the dashboard says
+  why it has no memories yet rather than rendering a misleading empty card. The optional
+  daily push is still Batch 11's VAPID-key-gated work.
+
+  The first full local gate failed only because `test_health.py` deliberately pins every
+  public route and needed the two new endpoints named; fixed without weakening it. The final
+  local gate: 301 passed, 250 skipped (no local database URL); CI's five jobs passed,
+  including Postgres-backed pytest. No hosting, credential or destructive operation. API
+  production health reports the merged SHA with `db: ok`. Dashboard browser automation could
+  not run: `agent-browser` is unavailable in this environment.
 
 - **2026-09-09** — **Batch 36 shipped — command palette + keyboard shortcuts** (`1425f91`).
   Phases 6.3/6.4. A Cmd/Ctrl+K modal indexing every page, the admin-only write action, and
