@@ -1283,10 +1283,15 @@ export async function applyBuiltInScrapers(): Promise<BuiltInScraperList> {
  * anything automatic.
  */
 export async function testScraper(input: {
+  /** The retailer's search **template**, sent verbatim — `{query}` and `{format}` are
+   *  substituted by the server, using the same function a real run uses. Replacing them
+   *  here is what sent Zavvi the literal string `{format}` (`DECISIONS.md` #99). */
   url: string
   scraperConfig: Record<string, unknown>
   expectedTitle?: string | null
   expectedCurrency?: string
+  preferredFormat?: string | null
+  expectedHost?: string | null
 }): Promise<ScraperTest> {
   return parseOrThrowApiError(
     await authFetch('/scrapers/test', {

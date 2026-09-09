@@ -1315,3 +1315,32 @@ contemporaneous.
     *Why "Blu-ray" when no format is wanted:* it is not a guess at what the owner wants.
     It is the term that makes THG return its disc categories, and its results include 4K
     editions — verified against both shops on 2026-09-09.
+
+### 2026-09-09 — one place fills a search template
+
+99. **The browser must never build a scraper's URL.** §5.4's test tool constructed its own
+    search URL and knew only about `{query}`, so the moment #98 added a `{format}`
+    placeholder the tool sent Zavvi the literal text — `?q=Jaws%20{format}` — which matched
+    *The Sheriff of Fractured Jaw (Dual **Format** Edition)* on the word "format" and
+    offered it as the price of *Jaws*. `apply_search_template` is now the only function
+    that knows what a placeholder means, and both the runner and the test endpoint call it.
+
+    *Why this is the fix rather than teaching the component about `{format}`:* the tool's
+    entire purpose is to prove a scraper works before a retailer is enabled. It cannot do
+    that while building its request differently from the thing it is proving — a second
+    implementation would drift again at the next placeholder. The client now sends the
+    **template**, verbatim, and the server fills it.
+
+    *And a placeholder is worse than a wrong URL.* An unfilled `{format}` is not a 404: it
+    is extra search terms that a shop cheerfully matches against real products, so the
+    failure arrives looking like a successful result.
+
+100. **The test tool applies every rule a real run applies.** It was calling `extract`
+     without an expected title, so it priced whichever card came first rather than the card
+     that is the film, and calling `check_shape` without a host, so the same-site rule
+     never ran. It now passes the expected title, the preferred format and the retailer's
+     host, and resolves a relative listing URL the way the runner does.
+
+     *Why it matters more here than anywhere:* this is the tool whose green tick is the
+     evidence a retailer gets enabled on. A test that is more permissive than the run it
+     stands for will pass scrapers the run then rejects — or worse, the reverse.

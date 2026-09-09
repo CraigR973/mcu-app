@@ -10,7 +10,9 @@ So these endpoints exist, are tested against fixtures, and are invoked by a pers
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Annotated
+from urllib.parse import urljoin
 
 from fastapi import APIRouter, Query, status
 from sqlalchemy import select
@@ -29,7 +31,7 @@ from src.schemas.wanted import (
 from src.services.scraping.builtins import BUILT_IN_SCRAPERS, unverified_names
 from src.services.scraping.extract import check_shape, extract
 from src.services.scraping.fetcher import FetchError, UnsafeUrlError, fetch_page
-from src.services.scraping.runner import run_scrape
+from src.services.scraping.runner import apply_search_template, run_scrape
 
 router = APIRouter(prefix="/api/v1", tags=["scraping"])
 
@@ -70,8 +72,11 @@ async def test_scraper(payload: ScraperTestRequest, _user: AdminUser) -> Scraper
     This is the one endpoint in the app that fetches a URL a person typed. See
     `services/scraping/fetcher.py` for why that is checked per redirect hop.
     """
+    # Placeholders are filled here, never in the browser: the test tool has to build its
+    # request exactly the way the runner does or it is not testing the runner.
+    url = apply_search_template(payload.url, payload.expectedTitle or "", payload.preferredFormat)
     try:
-        page = await fetch_page(payload.url)
+        page = await fetch_page(url)
     except UnsafeUrlError as exc:
         return ScraperTestResponse(
             fetched=False,
@@ -99,11 +104,19 @@ async def test_scraper(payload: ScraperTestRequest, _user: AdminUser) -> Scraper
             error=str(exc),
         )
 
-    candidate = extract(page.html, payload.scraperConfig)
+    candidate = extract(
+        page.html,
+        payload.scraperConfig,
+        expected_title=payload.expectedTitle,
+        preferred_format=payload.preferredFormat,
+    )
+    if candidate.url:
+        candidate = replace(candidate, url=urljoin(page.final_url, candidate.url))
     verdict = check_shape(
         candidate,
         expected_title=payload.expectedTitle,
         expected_currency=payload.expectedCurrency,
+        retailer_host=payload.expectedHost,
     )
     return ScraperTestResponse(
         fetched=True,

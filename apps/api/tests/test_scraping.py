@@ -35,6 +35,7 @@ from src.services.scraping.fetcher import UnsafeUrlError, assert_fetchable, fetc
 from src.services.scraping.runner import (
     _record_failure,
     _record_success,
+    apply_search_template,
     scrape_one,
     search_url_for,
 )
@@ -886,6 +887,33 @@ def test_the_search_names_the_format_because_a_bare_title_returns_merchandise() 
     # term that makes the shop return its disc categories — 4K editions included.
     assert search_url_for(retailer, "Jaws") == "https://shop.test/s?q=Jaws%20Blu-ray"
     assert search_url_for(retailer, "Jaws", "download") == "https://shop.test/s?q=Jaws%20Blu-ray"
+
+
+def test_an_unfilled_placeholder_is_never_sent_to_a_shop() -> None:
+    """The reported defect, and the reason template substitution has exactly one home.
+
+    The browser built the test URL itself and knew only about ``{query}``, so the day
+    ``{format}`` was added it sent Zavvi ``?q=Jaws%20{format}`` — which matched *The Sheriff
+    of Fractured Jaw (**Dual Format Edition**)* on the word "format" and reported it as the
+    price of *Jaws*.
+    """
+    filled = apply_search_template(
+        "https://www.zavvi.com/search?q={query}%20{format}", "Jaws", "4k_uhd"
+    )
+
+    assert filled == "https://www.zavvi.com/search?q=Jaws%204K"
+    assert "{" not in filled and "}" not in filled
+
+
+def test_the_test_tool_and_the_runner_fill_a_template_identically() -> None:
+    """§5.4's tool exists to prove a scraper works. It cannot do that while building its
+    request differently from the thing it is proving."""
+    template = "https://www.zavvi.com/search?q={query}%20{format}"
+    retailer = _retailer(search_url_template=template)
+
+    assert search_url_for(retailer, "Jaws", "blu_ray") == apply_search_template(
+        template, "Jaws", "blu_ray"
+    )
 
 
 def test_a_template_without_the_format_placeholder_is_untouched() -> None:

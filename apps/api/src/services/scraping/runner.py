@@ -97,6 +97,23 @@ class ScrapeRunResult:
         return sum(1 for outcome in self.outcomes if not outcome.ok)
 
 
+def apply_search_template(template: str, title: str, preferred_format: str | None = None) -> str:
+    """Fill a search template's placeholders. **The only place that knows what they mean.**
+
+    Both the scheduled run and §5.4's test tool go through here. They used not to: the test
+    tool built its URL in the browser and replaced ``{query}`` alone, so the day a
+    ``{format}`` placeholder was added it sent Zavvi the literal string ``{format}`` — which
+    matched *The Sheriff of Fractured Jaw (Dual **Format** Edition)* and reported it as the
+    price of *Jaws*. A tool whose job is to prove a scraper works has to build its request
+    the same way the scraper does (`DECISIONS.md` #99).
+    """
+    filled = template.replace("{query}", quote(title))
+    if "{format}" in filled:
+        term = FORMAT_SEARCH_TERMS.get(preferred_format or "", DEFAULT_FORMAT_SEARCH_TERM)
+        filled = filled.replace("{format}", quote(term))
+    return filled
+
+
 def search_url_for(
     retailer: Retailer, title: str, preferred_format: str | None = None
 ) -> str | None:
@@ -115,10 +132,7 @@ def search_url_for(
     template = retailer.search_url_template
     if not template or "{query}" not in template:
         return None
-    if "{format}" in template:
-        term = FORMAT_SEARCH_TERMS.get(preferred_format or "", DEFAULT_FORMAT_SEARCH_TERM)
-        template = template.replace("{format}", quote(term))
-    return template.replace("{query}", quote(title))
+    return apply_search_template(template, title, preferred_format)
 
 
 async def scrape_one(
