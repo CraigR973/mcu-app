@@ -41,7 +41,9 @@ async def test_readiness_returns_ok_when_database_responds() -> None:
             response = await client.get("/api/v1/health/ready")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ready", "db": "ok"}
+    # `push` is "not_configured" here because the test environment holds no VAPID key,
+    # which is the honest answer for it — see the dedicated tests below.
+    assert response.json() == {"status": "ready", "db": "ok", "push": "not_configured"}
     session.execute.assert_awaited_once()
 
 
@@ -56,7 +58,11 @@ async def test_readiness_returns_503_when_database_is_unreachable() -> None:
             response = await client.get("/api/v1/health/ready")
 
     assert response.status_code == 503
-    assert response.json() == {"status": "not_ready", "db": "unreachable"}
+    assert response.json() == {
+        "status": "not_ready",
+        "db": "unreachable",
+        "push": "not_configured",
+    }
 
 
 def test_application_route_surface_is_exactly_as_intended() -> None:
@@ -168,3 +174,59 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/notifications/seed-sale-seasons",
         "/api/v1/notifications/deliver",
     }
+
+
+@pytest.mark.asyncio
+async def test_readiness_reports_push_as_configured_when_a_key_loads() -> None:
+    """**The check the TMDB outage should have had.**
+
+    `TMDB_READ_TOKEN` was absent from Railway for an unknown length of time behind a fully
+    green gate, because nothing in the code could observe a hosting variable's absence.
+    Push has the same shape, so readiness reports it.
+    """
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    from src.config import settings as live_settings
+    from src.services.webpush import b64url_encode
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    raw = key.private_numbers().private_value.to_bytes(32, "big")
+
+    session = AsyncMock()
+    session.__aenter__ = AsyncMock(return_value=session)
+    session.__aexit__ = AsyncMock(return_value=False)
+
+    with (
+        patch.object(live_settings, "vapid_private_key", b64url_encode(raw)),
+        patch.object(live_settings, "vapid_subject", "mailto:owner@example.com"),
+        patch("src.routers.health.AsyncSessionLocal", return_value=session),
+    ):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/v1/health/ready")
+
+    assert response.json()["push"] == "configured"
+
+
+@pytest.mark.asyncio
+async def test_readiness_distinguishes_an_unreadable_key_from_a_missing_one() -> None:
+    """A malformed key passes "is the variable set?" and then fails at the first send.
+
+    Reporting it as `invalid` rather than `configured` is the whole point: the two have
+    different fixes, and only one of them is "go and set the variable".
+    """
+    from src.config import settings as live_settings
+
+    session = AsyncMock()
+    session.__aenter__ = AsyncMock(return_value=session)
+    session.__aexit__ = AsyncMock(return_value=False)
+
+    with (
+        patch.object(live_settings, "vapid_private_key", "this-is-not-a-p256-scalar"),
+        patch.object(live_settings, "vapid_subject", "mailto:owner@example.com"),
+        patch("src.routers.health.AsyncSessionLocal", return_value=session),
+    ):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/v1/health/ready")
+
+    assert response.json()["push"] == "invalid"
+    assert response.status_code == 200, "a missing notification key is not an unhealthy API"
