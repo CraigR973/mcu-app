@@ -1437,3 +1437,42 @@ contemporaneous.
      asked, answered properly, and said no. It is reported as `notStocked` rather than
      folded into `skipped` precisely because the question was put: a run that checked five
      shops and found the film at one should read as four honest noes, not four blanks.
+
+### 2026-09-09 — the spec source, and dropping shelf QR
+
+108. **Batch 23 scrapes Blu-ray.com from a URL supplied per film, and never from its
+     search.** `robots.txt` disallows `/search/` and `/movies/search.php` — the same reason
+     HMV and CEX are permanently unverified (#91) — but a film's own page is not
+     disallowed. So discovery is a person pasting a link, and the scraper only ever fetches
+     what it was given.
+
+     *Measured on 2026-09-09* against
+     `blu-ray.com/movies/Back-to-the-Future-The-Ultimate-Trilogy-4K-Blu-ray/327607/`, which
+     returned every field §3.7 asks for: `Codec: HEVC / H.265`, `Resolution: Native 4K
+     (2160p)`, `HDR: Dolby Vision, HDR10+`, `English: Dolby Atmos`, `Dolby TrueHD 7.1
+     (48kHz, 24-bit)`, `Seven-disc set (3 BD-100, 4 BD-50)`, `4K Blu-ray: Region free`,
+     `2K Blu-ray: Region B`, and `Universal Studios`. The page is UK-specific, which is the
+     region this collection is in.
+
+     *Three things the implementation has to know.* The page **also carries prices** — a
+     list price and an Amazon price — and #91 ruled those out as third-party numbers nobody
+     can pay. A spec scrape must not touch them, because the temptation is right there in
+     the same document. The audio and subtitle blocks are behind `(more)`/`(less)` toggles
+     and appear **twice** in the flattened text, so extraction has to target the DOM node
+     rather than the page's text. And `Special Features` was **absent** from this page
+     despite being one of §3.7's five fields, so it is nullable rather than assumed.
+
+     *Why not enter specs by hand instead:* the alternative was typing a twenty-field table
+     per disc. Pasting one URL and scraping the lot is less work and less error-prone, and
+     it stays inside what the site allows.
+
+109. **Batch 26 (phases 12.3 and 12.4, shelf QR codes) is dropped.** Owner decision,
+     2026-09-09. Part D re-scoped it from DROP on the condition *"fix 3.1b first —
+     search-by-location may solve retrieval without printed codes"*. Batch 6 did exactly
+     that: "everything on the Front 2nd shelf" answers in 20 ms and 1,855 of 1,857 items
+     carry a section, so the retrieval problem QR existed to solve is solved. What remained
+     was a physical shortcut, and it is not wanted.
+
+     *Recorded here rather than edited quietly into the ledger*, per that file's own rule
+     about dropped phases. The `deleted_at`-style reversal is cheap: nothing was built, so
+     reinstating it is another entry here and a row in the ledger.

@@ -646,10 +646,10 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
 | 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
-| 23 | Specs — scraper + display | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 3.7, 3.8, 3.9 |
+| 23 | Specs — scraper + display | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 3.7, 3.8, 3.9 — Blu-ray.com, **URL supplied per film, never its search** (#108) |
 | 24 | Barcode — scan + lookup | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 3.3, **3.4** — confirmation UI mandatory |
 | 25 | Photo uploads | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 3.10 — needs the `vercel.json` CSP fix |
-| 26 | Shelf QR | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | 12.3, 12.4 |
+| ~~26~~ | ~~Shelf QR~~ | ~~🟢~~ | — dropped | — dropped | **dropped** | ~~12.3, 12.4~~ — Batch 6's location filter solved the retrieval problem it existed for (`DECISIONS.md` #109) |
 | ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | `888dae7` · 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |
 | 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **4.1, 4.3** — active listings, not sold comps |
 | 29 | Format upgrade + sale tracking | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 4.2, 4.4 |
@@ -689,7 +689,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |
 | **G** | 22 → 23 | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19 |
 | **H** | 24 → 25 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Both blocked on the same two `vercel.json` fixes** — camera Permissions-Policy and CSP `connect-src` |
-| — | 26 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Conditional on Batch 6 proving insufficient |
+| — | ~~26 · solo~~ | — dropped | — dropped | ~~Conditional on Batch 6 proving insufficient~~ — **Batch 6 proved sufficient; dropped** (`DECISIONS.md` #109) |
 | — | ~~27 · solo~~ | — shipped | — shipped | ~~The app's only public surface; needs its own security review~~ · **shipped; reviewed, four defects found and fixed.** (It is in fact the *second* public surface; Batch 17's `.ics` feed came first) |
 | **I** | **checkpoint: eBay production API application** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28; API access gates the group |
 | **J** | 30 → 31 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Strong dependency, same files; caps must exist before tools |
@@ -699,7 +699,8 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-**Net: 38 batches → 25 sessions.** Eleven groups absorb 24 batches; 14 stay solo.
+**Net: 37 batches → 24 sessions.** Eleven groups absorb 24 batches; 13 stay solo.
+*Was 38 → 25 until Batch 26 was dropped on 2026-09-09 (`DECISIONS.md` #109).*
 
 *Batch 11 had no row here at all until 2026-09-08, and the arithmetic hid it: the old
 line claimed groups absorbed 25 batches when the rows only ever added to 24, so the
@@ -716,7 +717,8 @@ point "when does 11 run?" had no answer.*
 
 ## Dropped — not scheduled
 
-**9.6 Voice Output (TTS)** only, per `DECISIONS.md` #16.
+**9.6 Voice Output (TTS)**, per `DECISIONS.md` #16, and **12.3 / 12.4 Shelf QR**, per #109 —
+Batch 6's `section`/`shelf` filter answers the retrieval question printed codes were for.
 
 13.11 remains folded into every UI batch's definition of done rather than existing as a
 phase — the work happens, the phase does not.
