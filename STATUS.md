@@ -28,6 +28,18 @@ must not go missing.*
 against the live site. Phase 5.3's criterion is still unmet (it wants ≥ 1 row per working
 scraper, and only 2 rows exist), but the machine demonstrably works end to end.
 
+**Group F's checkpoint is cleared.** The scraper acceptance run completed at 21:55 on
+2026-09-09: all five shops `success`, zero failures, six new `price_checks` rows — Zavvi
+*Don't Look Now* £11.99 and *Cross Of Iron* £12.99, Arrow *Deep Red* £15.00, 101 Films
+*Castle Freak* £17.00, Powerhouse *Romper Stomper* £27.99, Second Sight *Dead Man's Shoes*
+£39.99 (`DECISIONS.md` #111). **Batch 20 is open**, with 5.5's criterion corrected first
+(#112) because the run disproved it.
+
+*What finally worked was not code.* Two earlier attempts failed for reasons worth
+remembering: the first asked three boutique labels for films they do not carry, and the
+second was a **dry run**, which saves nothing by design. The titles that worked were read
+off each shop's live catalogue rather than guessed.
+
 ### ⛔ What is waiting for you
 
 **`OWNER-ACTIONS.md` is the list**, and it shrank from nine items to seven. VAPID keys, the
@@ -45,40 +57,48 @@ enabled and five deliberately not. Both profiles now carry a `pin_hash`.
 
 ## Next
 
-**⛔ Group F is still stopped at its checkpoint, but for a different reason than before.**
-The framework works. What it lacks is a wanted list that gives every shop something it might
-actually sell.
+**The overnight run of 2026-09-09 — eight batches, in this order.** The order is
+dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 32 needs 31.
 
-### What the checkpoint still needs
+| # | Batch | Closes fully? |
+|---|---|---|
+| 1 | **11** Notifications + push (6.1, 6.2, 5.11) | ❌ 6.2 needs two real devices |
+| 2 | **20** Price scraping + drop alerts (5.5, 5.6, 5.8) | ❌ cron is hosting; 5.6 needs a device |
+| 3 | **30** AI assistant — client + caps (9.1, 9.7) | ✅ |
+| 4 | **31** AI assistant — tools + chat (9.2, 9.3, 9.4) | ✅ |
+| 5 | **32** Voice input (9.5) | ❌ needs a human speaking |
+| 6 | **35** Movie night (8.3, 8.4) | ⚠️ 8.4's notification may need a device |
+| 7 | **25** Photo uploads (3.10) | ✅ |
+| 8 | **23** Specs — scraper + display (3.7, 3.8, 3.9) | ✅ |
 
-Steps 1 to 3 are done — selectors applied, Arrow corrected to its UK storefront, films on the
-list, a real run saved real rows. What remains:
+**Every batch's criteria are already in `docs/phase-batches.md`** under "Criteria recovered
+for the 2026-09-09 overnight run", each with what the April spec no longer knows. Read that
+section rather than re-deriving from §16.
 
-1. **Add a title each boutique label actually sells.** *Deep Red* for Arrow, *Don't Look Now*
-   or *Near Dark* for Second Sight, *Sorcerer* or a Columbia Noir for Powerhouse, something
-   from 101's Black Label. Without this the criterion is unreachable: a Stephen King
-   adaptation and a Universal blockbuster give three of the five shops nothing to find.
-2. **One unhurried run.** Zavvi succeeded at 17:06 and failed at 17:08 having worked minutes
-   earlier — that is throttling. It still carries **2 of the 3 strikes** that disable a shop.
-3. **Read the report, not just the count.** A "not stocked" row is now a distinct state and
-   renders as an answer rather than an error.
+**Three hosting steps stop and wait for the owner**, per the close-out protocol:
 
-**Then Batch 20** (5.5, 5.6, 5.8) can start — and its push notifications are no longer
-blocked, because VAPID landed on 2026-09-09.
+1. `VITE_VAPID_PUBLIC_KEY` on Vercel — Batch 11 leaves the value ready. Push does not reach a
+   browser without it.
+2. A Railway cron for the nightly scrape — Batch 20. `#60` explains why an in-process
+   scheduler is worse than nothing.
+3. Nothing for Batch 35: `LISTEN`/`NOTIFY` + SSE needs no new service (`#113`).
 
-### What is genuinely unblocked now
+**Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
+a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
+spoken query) · 8.4's "notification to both", depending on how the match is signalled.
 
-- **Batch 11 (notifications + push)** — VAPID keys are set and verified. It must read
-  `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`; those names are now fixed by
-  what is in Railway. It also owes the notifications Batches 15 and 19 both deferred to it.
-- **Group J (30 → 31)** — `ANTHROPIC_API_KEY` is set. Batch 32 (voice input) still needs
-  Batch 31's chat input to exist before its acceptance means anything.
-- **Batch 25 (photo uploads)** — storage is settled as Neon, so photo bytes live in Postgres.
-  The per-photo size cap is an open question in `OWNER-ACTIONS.md`; the spec's raw 5 MB × 5 ×
-  1,857 ≈ 46 GB is not sensible against a 35 MB database.
-- **Batch 24 is *not* unblocked**, despite the camera fix being live since Batch 2.
-  `DECISIONS.md` #16 fixes its UPC→title chain as *cached mapping → eBay Browse → manual
-  fallback*, so it waits on the same eBay approval as Group I.
+**Settled inputs, so no batch has to ask again:** the AI daily cap is **50 messages per person**
+(`#112`'s neighbour, recorded in the ledger); photos are capped at **~300 KB** after
+server-side resize and stored in Postgres, not an object store; Batch 23 gathers its ten
+Blu-ray.com URLs from browse pages under `#110`'s bounds and extracts no prices.
+
+### Verify against the live system, not only the suite
+
+Three times on 2026-09-09 a green gate coexisted with a broken feature: CI was green while
+production had no TMDB token; the scraper "test" button showed results while saving nothing;
+and phase 5.5 carried a criterion no correctly working system could satisfy. For each batch,
+run the gate **and then exercise the real thing** — live API, real database, the browser where
+it renders — and report what was observed rather than what passed.
 
 ### Four things the next agent should know
 

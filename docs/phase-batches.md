@@ -494,7 +494,7 @@ says why.
 inspectable — a migration that inserts rows makes `downgrade` ambiguous and CI cannot prove
 either direction.
 
-### ~~Batch 19 — Scraper framework~~ 🔴 **shipped, acceptance deferred to the owner**
+### ~~Batch 19 — Scraper framework~~ 🔴 **shipped; acceptance met 2026-09-09 (`DECISIONS.md` #111)**
 **Covers phases 5.3 and 5.4**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
 
 > **Phase 5.3: Scraper Framework** — Generic CSS scraper that uses retailer config · Built-in scrapers for HMV, Amazon UK, Blu-ray.com, Zavvi, Arrow, CEX · Error handling with retry and auto-disable after 3 fails. **Acceptance:** Each built-in scraper runs against the **live** retailer and persists ≥ 1 `price_checks` row per scraper for a real wanted item; total `price_checks` rows after the run verified > 0.
@@ -824,8 +824,8 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~16~~ | ~~Watch providers + recommendations~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~7.1, 7.2~~ | live: *North by Northwest* shows HBO Max + 6 rent + 6 buy in GB; **20 recommendations, 7 already on the shelf**; **"wanted" dropped — Batch 18 owns it** |
 | ~~17~~ | ~~Release calendar + iCal~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~7.3, 7.4 — secret-token `.ics` URL~~ | live ingestion put **32 rows** in `release_calendar`, re-run idempotent; feed serves unauthenticated with hashed rotating tokens. **A security review found and closed a URL content-injection hole.** Apple Calendar check is an owner action |
 | ~~18~~ | ~~Wanted list + retailers~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~5.1, 5.2 (full scope)~~ | §3.5 and §3.16 built; **four debts from Batches 13, 15, 16 and 17 paid**; 6 default retailers seeded, **0 configured — selectors are Batch 19's** |
-| ~~19~~ | ~~**Scraper framework**~~ | ~~🔴~~ | — shipped | — shipped | **shipped — acceptance deferred** | ~~**5.3, 5.4**~~ | framework, nine built-ins, retry + auto-disable, SSRF-guarded fetcher, fixture tests. Page-shape checks (2026-09-09) verified **5 shops** and ruled out 4 permanently (#91); the runner's relative-URL and `written`-count defects were fixed then (#94). **Both acceptance criteria still need the owner's live `dryRun=false` run** (Group F's checkpoint) |
-| 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
+| ~~19~~ | ~~**Scraper framework**~~ | ~~🔴~~ | — shipped | — shipped | **shipped** | ~~**5.3, 5.4**~~ | framework, nine built-ins, retry + auto-disable, SSRF-guarded fetcher, fixture tests. Page-shape checks (2026-09-09) verified **5 shops** and ruled out 4 permanently (#91); the runner's relative-URL and `written`-count defects were fixed then (#94). **Acceptance met 2026-09-09** (`DECISIONS.md` #111): all five shops `success`, zero failures, one or more `price_checks` rows each |
+| 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 — **5.5's criterion corrected by #112**; the schedule is a hosting change and 5.6 needs a device |
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
 | 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
 | 23 | Specs — scraper + display | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 3.7, 3.8, 3.9 — Blu-ray.com, **exact release URLs, never its search; owner accepts the stated access-policy risk including one-time backfill** (#108, #110) |
@@ -867,7 +867,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | ~~**C**~~ | ~~12~~ → ~~13~~ | — shipped | — shipped | ~~Same domain (sets/collections); 13 reuses 12's UI patterns~~ · **shipped** |
 | ~~**D**~~ | ~~14~~ → ~~15~~ | — shipped | — shipped | ~~Both admin-facing read surfaces, same verification shape~~ · **shipped** |
 | ~~**E**~~ | ~~16~~ → ~~17~~ | — shipped | — shipped | ~~Both TMDB-driven, same client, 17 reuses 16's patterns~~ · **shipped** |
-| **F** | ~~18~~ → ~~19~~ → **⛔ checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those. **18 and 19 shipped; stopped at the checkpoint** |
+| **F** | ~~18~~ → ~~19~~ → ~~**checkpoint: live scraper acceptance runs**~~ **met 2026-09-09** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those. **18 and 19 shipped; the checkpoint cleared 2026-09-09 (#111) — 20 is open** |
 | — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |
 | **G** | 22 → 23 | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19 |
 | **H** | 24 → 25 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Both blocked on the same two `vercel.json` fixes** — camera Permissions-Policy and CSP `connect-src` |
