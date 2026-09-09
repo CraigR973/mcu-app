@@ -569,3 +569,34 @@ async def test_a_run_of_only_digital_wants_does_not_switch_every_shop_off(
     assert result.disabled == []
     assert retailer.enabled is True
     assert retailer.consecutive_failures == 0
+
+
+async def test_a_wanted_edition_round_trips_through_the_api(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Free text, stored and returned. A want that names no edition stays null rather than
+    acquiring an empty string, because "" and "no preference" must not both mean the same
+    thing to `edition_matches`."""
+    movie = await _film(api_session, "Deep Red")
+
+    created = await client.post(
+        "/api/v1/wanted",
+        json={
+            "movieId": str(movie.id),
+            "preferredFormat": "4k_uhd",
+            "preferredEdition": "Arte Originale Slipcover",
+        },
+    )
+    assert created.status_code == 201, created.json()
+    assert created.json()["preferredEdition"] == "Arte Originale Slipcover"
+
+    listed = await client.get("/api/v1/wanted")
+    row = next(i for i in listed.json()["items"] if i["id"] == created.json()["id"])
+    assert row["preferredEdition"] == "Arte Originale Slipcover"
+
+    cleared = await client.put(
+        f"/api/v1/wanted/{created.json()['id']}",
+        json={"preferredFormat": "4k_uhd", "isActive": True},
+    )
+    assert cleared.status_code == 200, cleared.json()
+    assert cleared.json()["preferredEdition"] is None

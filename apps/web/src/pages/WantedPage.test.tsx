@@ -56,6 +56,7 @@ describe('WantedPage', () => {
           year: 2024,
           posterPath: '/fall-guy.jpg',
           preferredFormat: '4k_uhd',
+          preferredEdition: 'Steelbook',
           maxPrice: '20',
           currency: 'GBP',
           isActive: true,
@@ -78,6 +79,9 @@ describe('WantedPage', () => {
     fireEvent.change(screen.getByLabelText('Preferred format'), {
       target: { value: '4k_uhd' },
     })
+    fireEvent.change(screen.getByLabelText('Preferred edition'), {
+      target: { value: 'Steelbook' },
+    })
     fireEvent.change(screen.getByLabelText('Maximum price in pounds'), {
       target: { value: '20' },
     })
@@ -89,6 +93,7 @@ describe('WantedPage', () => {
       expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({
         tmdbId: 746036,
         preferredFormat: '4k_uhd',
+        preferredEdition: 'Steelbook',
         maxPrice: '20',
       })
     })

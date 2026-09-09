@@ -1143,6 +1143,8 @@ export interface WantedInput {
   movieId?: string
   tmdbId?: number
   preferredFormat?: string | null
+  /** Which edition within that format — free text, e.g. "Arte Originale Slipcover". */
+  preferredEdition?: string | null
   maxPrice?: string | null
   currency?: string
   notes?: string | null
@@ -1160,7 +1162,13 @@ export async function addWanted(input: WantedInput): Promise<WantedItem> {
 
 export async function updateWanted(
   id: string,
-  input: { preferredFormat?: string | null; maxPrice?: string | null; isActive: boolean; notes?: string | null },
+  input: {
+    preferredFormat?: string | null
+    preferredEdition?: string | null
+    maxPrice?: string | null
+    isActive: boolean
+    notes?: string | null
+  },
 ): Promise<WantedItem> {
   return parseOrThrowApiError(
     await authFetch(`/wanted/${id}`, {

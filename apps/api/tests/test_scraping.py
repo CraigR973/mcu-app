@@ -27,6 +27,7 @@ from src.services.scraping.extract import (
     MAX_PLAUSIBLE,
     ScrapeCandidate,
     check_shape,
+    edition_matches,
     extract,
     looks_like_physical_media,
     parse_price,
@@ -666,6 +667,109 @@ async def test_a_digital_want_is_skipped_without_asking_a_disc_shop() -> None:
     assert candidate is None
     assert outcome.skipped and not outcome.ok
     assert "digital" in (outcome.error or "")
+
+
+# ---------------------------------------------------------------------------
+# Which edition, within a format
+# ---------------------------------------------------------------------------
+
+#: Arrow's real 4K shelf for Deep Red: the same film, the same format, three prices.
+ARROW_DEEP_RED = "".join(
+    [
+        _zavvi_card("/p/deep-red-4k/1/", "Deep Red 4K UHD", "£25.00"),
+        _zavvi_card("/p/deep-red-le-4k/2/", "Deep Red Limited Edition 4K UHD", "£25.00"),
+        _zavvi_card(
+            "/p/deep-red-arte-4k/3/",
+            "Deep Red | Arte Originale Slipcover | Limited Edition 4K UHD",
+            "£35.00",
+        ),
+    ]
+)
+
+
+def test_the_wanted_edition_stops_being_read_as_a_different_film() -> None:
+    """Without the want, *arte* and *originale* are extra words that name another film —
+    correctly, since nothing said otherwise. Naming the edition is what makes them
+    expected rather than suspicious."""
+    title = "Deep Red | Arte Originale Slipcover | Limited Edition 4K UHD"
+
+    unasked = check_shape(_candidate(title=title), expected_title="Deep Red")
+    asked = check_shape(
+        _candidate(title=title),
+        expected_title="Deep Red",
+        preferred_edition="Arte Originale Slipcover",
+    )
+
+    assert not unasked.ok
+    assert asked.ok, asked.reasons
+
+
+def test_an_edition_must_match_on_every_word() -> None:
+    """A partial match is how the £35 disc and the £25 one get confused."""
+    slipcover = "Deep Red | Arte Originale Slipcover | Limited Edition 4K UHD"
+
+    assert edition_matches(slipcover, None, "Arte Originale Slipcover")
+    assert edition_matches("Deep Red Limited Edition 4K UHD", None, "Limited Edition")
+    assert not edition_matches("Deep Red Limited Edition 4K UHD", None, "Arte Originale Slipcover")
+    # No edition wanted: every listing qualifies.
+    assert edition_matches("Deep Red 4K UHD", None, None)
+
+
+@pytest.mark.parametrize(
+    ("edition", "expected_price"),
+    [
+        (None, Decimal("25.00")),
+        ("Arte Originale Slipcover", Decimal("35.00")),
+        ("Limited Edition", Decimal("25.00")),
+    ],
+)
+def test_the_wanted_edition_decides_which_listing_is_priced(
+    edition: str | None, expected_price: Decimal
+) -> None:
+    """Three editions of one film in one format. Page order used to decide, which meant a
+    `max_price` alert was about whichever disc the shop happened to rank first."""
+    candidate = extract(
+        ARROW_DEEP_RED,
+        BUILT_IN_SCRAPERS["Zavvi"]["config"],
+        expected_title="Deep Red",
+        preferred_format="4k_uhd",
+        preferred_edition=edition,
+    )
+
+    assert candidate.price == expected_price
+
+
+def test_the_format_wins_when_only_one_of_the_two_can_be_had() -> None:
+    """A Steelbook in the wrong format is a disc you cannot play; a plain edition in the
+    right one is usable. So format outranks edition when the shelf forces a choice."""
+    html = ARROW_DEEP_RED + _zavvi_card(
+        "/p/deep-red-steel-bd/4/", "Deep Red Steelbook Blu-ray", "£20.00"
+    )
+    candidate = extract(
+        html,
+        BUILT_IN_SCRAPERS["Zavvi"]["config"],
+        expected_title="Deep Red",
+        preferred_format="4k_uhd",
+        preferred_edition="Steelbook",
+    )
+
+    assert candidate.title == "Deep Red 4K UHD"
+
+
+async def test_an_edition_substitution_is_reported_rather_than_passed_off() -> None:
+    """Arrow has no Deep Red Steelbook. Pricing the plain 4K instead is allowed — the shop
+    plainly sells the film — but a `max_price` alert compares against whatever was priced,
+    so the report has to say the edition was not the one asked for."""
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=RUNNER_PAGE))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        _c, missing = await scrape_one(
+            _retailer(), "Heat", preferred_edition="Arte Originale", client=client
+        )
+        _c2, unasked = await scrape_one(_retailer(), "Heat", client=client)
+
+    assert missing.ok and missing.edition_matched is False
+    # No edition wanted, so there is nothing to report either way.
+    assert unasked.ok and unasked.edition_matched is None
 
 
 def test_a_format_that_is_out_of_stock_falls_back_rather_than_reporting_nothing() -> None:

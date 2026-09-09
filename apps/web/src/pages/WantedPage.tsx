@@ -25,6 +25,7 @@ function AddWantedPanel() {
   const [query, setQuery] = useState('')
   const [submitted, setSubmitted] = useState('')
   const [preferredFormat, setPreferredFormat] = useState('')
+  const [preferredEdition, setPreferredEdition] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
 
   const searchQuery = useQuery({
@@ -37,6 +38,7 @@ function AddWantedPanel() {
       addWanted({
         ...(result.movieId ? { movieId: result.movieId } : { tmdbId: result.tmdbId }),
         preferredFormat: preferredFormat || null,
+        preferredEdition: preferredEdition.trim() || null,
         maxPrice: maxPrice || null,
       }),
     onSuccess: () => {
@@ -54,7 +56,8 @@ function AddWantedPanel() {
       <div>
         <h2 className="text-sm font-semibold text-foreground">Add a film</h2>
         <p className="text-xs text-muted-foreground">
-          Search by title, then optionally set the format and maximum price you want.
+          Search by title, then optionally set the format, edition and maximum price. The
+          edition is free text — it picks between listings, it does not narrow the search.
         </p>
       </div>
       <form
@@ -96,6 +99,13 @@ function AddWantedPanel() {
             ))}
           </select>
         </label>
+        <Input
+          value={preferredEdition}
+          onChange={(event) => setPreferredEdition(event.target.value)}
+          placeholder="Edition, e.g. Steelbook (optional)"
+          aria-label="Preferred edition"
+          className="max-w-56"
+        />
         <Input
           value={maxPrice}
           onChange={(event) => setMaxPrice(event.target.value)}
@@ -207,6 +217,7 @@ function Card({ item }: { item: WantedItem }) {
           {[
             item.year ? String(item.year) : null,
             formatLabel(item.preferredFormat) ?? null,
+            item.preferredEdition,
             item.maxPrice ? `under £${item.maxPrice}` : null,
           ]
             .filter(Boolean)

@@ -45,6 +45,8 @@ from src.services.scraping.extract import (
     FORMAT_SEARCH_TERMS,
     ScrapeCandidate,
     check_shape,
+    edition_matches,
+    edition_words,
     extract,
     primary_format,
 )
@@ -77,6 +79,10 @@ class ScrapeOutcome:
     #: The currency the price was *read in*, never converted (`DECISIONS.md` #79). Carried
     #: so a report can render a price as money rather than as a bare number.
     currency: str | None = None
+    #: False only when a wanted **edition** was not on the shelf and a different one was
+    #: priced instead; None when the want named no edition. Same reasoning as
+    #: `substituted_format`: a `max_price` alert compares against whatever was priced.
+    edition_matched: bool | None = None
     #: Set only when the wanted format was not on the shelf and a different one was priced
     #: instead. A fallback is allowed, but it is never silent: `max_price` alerts compare
     #: against whatever was priced, so the reader has to be able to see it was a substitute.
@@ -154,6 +160,7 @@ async def scrape_one(
     title: str,
     *,
     preferred_format: str | None = None,
+    preferred_edition: str | None = None,
     client: httpx.AsyncClient | None = None,
 ) -> tuple[ScrapeCandidate | None, ScrapeOutcome]:
     """Fetch and extract one film's price at one shop. **Makes a live request.**
@@ -202,6 +209,7 @@ async def scrape_one(
         retailer.scraper_config,
         expected_title=title,
         preferred_format=preferred_format,
+        preferred_edition=preferred_edition,
     )
     # Retailer pages overwhelmingly use relative product links. Persisting one as-is made
     # `_write_check` silently return without a row, even though `written` was incremented.
@@ -214,6 +222,7 @@ async def scrape_one(
         expected_title=title,
         expected_currency=retailer.currency,
         retailer_host=urlparse(retailer.base_url).hostname,
+        preferred_edition=preferred_edition,
     )
     outcome.price = candidate.price
     outcome.currency = candidate.currency or retailer.currency
@@ -224,6 +233,8 @@ async def scrape_one(
         priced = primary_format(candidate.title, candidate.url)
         if priced != preferred_format:
             outcome.substituted_format = priced
+    if verdict.ok and edition_words(preferred_edition):
+        outcome.edition_matched = edition_matches(candidate.title, candidate.url, preferred_edition)
     return (candidate if verdict.ok else None), outcome
 
 
@@ -292,6 +303,7 @@ async def run_scrape(
                 retailer,
                 movie.title,
                 preferred_format=wanted.preferred_format,
+                preferred_edition=wanted.preferred_edition,
                 client=client,
             )
             result.outcomes.append(outcome)

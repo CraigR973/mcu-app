@@ -180,7 +180,28 @@ TITLE_NOISE = frozenset(
 YEAR_PATTERN = re.compile(r"^(?:19|20)\d{2}$")
 
 
-def _meaningful_extras(found_title: str, expected_title: str) -> set[str]:
+def edition_words(preferred_edition: str | None) -> set[str]:
+    """The significant words of a wanted edition, as `_normalise` would see them."""
+    return _normalise(preferred_edition) if preferred_edition else set()
+
+
+def edition_matches(title: str | None, url: str | None, preferred_edition: str | None) -> bool:
+    """Whether a listing is the edition asked for. **Every word has to be there.**
+
+    A partial match is how the £35 disc and the £25 one get confused: "Arte Originale
+    Slipcover" must not be satisfied by Arrow's plain "Deep Red Limited Edition 4K UHD",
+    which is exactly the confusion this exists to prevent.
+    """
+    words = edition_words(preferred_edition)
+    if not words:
+        return True
+    haystack = " ".join(part for part in (title, url) if part)
+    return words <= _normalise(haystack)
+
+
+def _meaningful_extras(
+    found_title: str, expected_title: str, allowed: set[str] | None = None
+) -> set[str]:
     """Words in a listing's title that name a *different film*.
 
     The generous one-word-in-common rule catches a page about something else entirely, but
@@ -191,11 +212,16 @@ def _meaningful_extras(found_title: str, expected_title: str) -> set[str]:
     So the extra words are what matter, once the ones a shop legitimately adds are removed:
     format, edition, packaging and the release year. "Deep Red Blu-ray" adds nothing to
     "Deep Red"; "Heat and Dust" adds *dust*, and is a different film.
+
+    ``allowed`` carries the words of a **wanted edition**. Without it the rule rejects the
+    very listing the want names: "Deep Red | Arte Originale Slipcover | Limited Edition 4K
+    UHD" reads *arte* and *originale* as another film (`DECISIONS.md` #104).
     """
     wanted = _normalise(expected_title)
     found = _normalise(found_title)
+    permitted = TITLE_NOISE | (allowed or set())
     return {
-        word for word in found - wanted if word not in TITLE_NOISE and not YEAR_PATTERN.match(word)
+        word for word in found - wanted if word not in permitted and not YEAR_PATTERN.match(word)
     }
 
 
@@ -311,7 +337,9 @@ def _candidate_from(scope: BeautifulSoup | Tag, config: dict[str, object]) -> Sc
     )
 
 
-def _matches_title(title: str | None, expected_title: str | None) -> bool:
+def _matches_title(
+    title: str | None, expected_title: str | None, preferred_edition: str | None = None
+) -> bool:
     """The same title test `check_shape` applies, so a card it would reject never wins."""
     if not expected_title:
         return True
@@ -322,7 +350,7 @@ def _matches_title(title: str | None, expected_title: str | None) -> bool:
         return True
     if not wanted_words & _normalise(title):
         return False
-    return not _meaningful_extras(title, expected_title)
+    return not _meaningful_extras(title, expected_title, edition_words(preferred_edition))
 
 
 def extract(
@@ -331,6 +359,7 @@ def extract(
     *,
     expected_title: str | None = None,
     preferred_format: str | None = None,
+    preferred_edition: str | None = None,
 ) -> ScrapeCandidate:
     """Run a retailer's configured selectors over a page and pick the best listing on it.
 
@@ -350,6 +379,11 @@ def extract(
     - Searching 101 Films for "Bad Lieutenant" returns the 4K, the Blu-ray and a limited
       edition of both. ``preferred_format`` is the wanted item's own answer to which of
       those to price, and it was previously unused.
+
+    ``preferred_edition`` picks between editions *within* a format. Arrow sells Deep Red on
+    4K three times over — plain, Limited Edition, and an "Arte Originale Slipcover" at more
+    than twice the price — and without it page order decided which one a `max_price` alert
+    was about.
 
     When no card qualifies, the **first** card is returned rather than nothing, so
     `check_shape` reports why the page was rejected — "names no disc format" — instead of
@@ -384,16 +418,40 @@ def extract(
         candidate
         for candidate in candidates
         if candidate.price is not None
-        and _matches_title(candidate.title, expected_title)
+        and _matches_title(candidate.title, expected_title, preferred_edition)
         and looks_like_physical_media(candidate.title, candidate.url)
     ]
     if not qualifying:
         return candidates[0]
 
-    if preferred_format in DISC_FORMATS:
-        for candidate in qualifying:
-            if primary_format(candidate.title, candidate.url) == preferred_format:
-                return candidate
+    # Both constraints, then format, then edition, then the shop's own order. Format wins
+    # over edition when only one can be had: a Steelbook is still a disc you cannot play
+    # if it is the wrong format, whereas a plain edition of the right format is usable.
+    wants_format = preferred_format in DISC_FORMATS
+    wants_edition = bool(edition_words(preferred_edition))
+    if wants_format or wants_edition:
+
+        def ranked(candidate: ScrapeCandidate) -> tuple[bool, bool]:
+            format_ok = (
+                primary_format(candidate.title, candidate.url) == preferred_format
+                if wants_format
+                else False
+            )
+            edition_ok = (
+                edition_matches(candidate.title, candidate.url, preferred_edition)
+                if wants_edition
+                else False
+            )
+            return (format_ok, edition_ok)
+
+        for want in ((True, True), (True, False), (False, True)):
+            if want[0] and not wants_format:
+                continue
+            if want[1] and not wants_edition:
+                continue
+            for candidate in qualifying:
+                if ranked(candidate) == want:
+                    return candidate
     return qualifying[0]
 
 
@@ -411,6 +469,7 @@ def check_shape(
     expected_title: str | None = None,
     expected_currency: str = "GBP",
     retailer_host: str | None = None,
+    preferred_edition: str | None = None,
 ) -> ShapeVerdict:
     """The "last known good shape" assertion the ledger's risk note asks for.
 
@@ -469,7 +528,9 @@ def check_shape(
                     f"page title {candidate.title!r} has nothing in common with {expected_title!r}"
                 )
             else:
-                extras = _meaningful_extras(candidate.title, expected_title)
+                extras = _meaningful_extras(
+                    candidate.title, expected_title, edition_words(preferred_edition)
+                )
                 if extras:
                     verdict.fail(
                         f"page title {candidate.title!r} names a different film from "

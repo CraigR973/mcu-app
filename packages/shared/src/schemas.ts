@@ -892,6 +892,9 @@ export const wantedItemSchema = z.object({
   year: z.number().int().nullable(),
   posterPath: z.string().nullable(),
   preferredFormat: z.string().nullable(),
+  /** Which edition within that format — "Arte Originale Slipcover", "Steelbook". Free
+   *  text, because boutique edition names are invented per release. */
+  preferredEdition: z.string().nullable(),
   /** A string, not a number: money must not round-trip through a float, and this is the
    *  threshold Batch 20's price alerts compare against. */
   maxPrice: z.string().nullable(),
@@ -1004,6 +1007,9 @@ export const scrapeOutcomeSchema = z.object({
   /** The format actually priced, set only when it is not the one wanted. A fallback is
    *  allowed but never silent: a `maxPrice` alert compares against whatever was priced. */
   substitutedFormat: z.string().nullable(),
+  /** False only when the wanted edition was not on the shelf and a different one was
+   *  priced; null when the want named no edition. */
+  editionMatched: z.boolean().nullable(),
   /** Nothing was attempted — these shops sell discs and the want is for a digital copy.
    *  Neither a success nor a failure, and not counted towards auto-disable. */
   skipped: z.boolean(),

@@ -60,6 +60,10 @@ class WantedCreateRequest(BaseModel):
     movieId: uuid.UUID | None = None
     tmdbId: Annotated[int | None, Field(gt=0)] = None
     preferredFormat: FormatCode | None = None
+    #: Which edition within that format — "Arte Originale Slipcover", "Steelbook". Free
+    #: text: boutique edition names are invented per release (`DECISIONS.md` #104). It
+    #: never narrows the search, only which listing on the page gets priced.
+    preferredEdition: Annotated[str | None, Field(max_length=100)] = None
     #: A string on the wire, like `purchasePrice`. Money must not round-trip through a
     #: float — this value is the threshold Batch 20's alerts compare against, and a float
     #: compares wrongly at exactly the boundary someone cared about.
@@ -77,6 +81,10 @@ class WantedUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     preferredFormat: FormatCode | None = None
+    #: Which edition within that format — "Arte Originale Slipcover", "Steelbook". Free
+    #: text: boutique edition names are invented per release (`DECISIONS.md` #104). It
+    #: never narrows the search, only which listing on the page gets priced.
+    preferredEdition: Annotated[str | None, Field(max_length=100)] = None
     maxPrice: Annotated[str | None, Field(max_length=12)] = None
     currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")] = "GBP"
     isActive: bool = True
@@ -95,6 +103,7 @@ class WantedItemResponse(BaseModel):
     year: int | None
     posterPath: str | None
     preferredFormat: str | None
+    preferredEdition: str | None
     maxPrice: str | None
     currency: str
     isActive: bool
@@ -258,6 +267,9 @@ class ScrapeOutcomeResponse(BaseModel):
     #: The currency `price` was read in. Never converted, so a report showing the number
     #: must show this beside it rather than assuming pounds.
     currency: str | None
+    #: False only when the wanted **edition** was not on the shelf and a different one was
+    #: priced; null when the want named no edition. Same reasoning as `substitutedFormat`.
+    editionMatched: bool | None
     #: The format actually priced, set **only** when it is not the one wanted. A fallback
     #: is allowed but never silent: a `max_price` alert compares against whatever was
     #: priced, so a Blu-ray want answered with a 4K disc has to say so.
