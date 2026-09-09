@@ -61,11 +61,11 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "A database rather than a shop — prices are third-party and may be absent.",
     },
     "Zavvi": {
-        "search": "https://www.zavvi.com/search/{query}.list",
+        "search": "https://www.zavvi.com/search?q={query}",
         "config": {
-            "title": ".productBlock_productName, h3 a",
-            "price": ".productBlock_priceValue, .price",
-            "url": ".productBlock_link, h3 a",
+            "title": "[data-testid='product-title']",
+            "price": "[data-testid='product-price'] .product-variant-price",
+            "url": "[data-testid='product-title']",
         },
         "verified": False,
     },

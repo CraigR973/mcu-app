@@ -302,6 +302,31 @@ def test_every_built_in_has_a_search_template_with_a_query_placeholder() -> None
         assert entry["config"].get("price"), name
 
 
+def test_zavvi_built_in_matches_its_current_search_result_markup() -> None:
+    """The live site moved from ``/search/{query}.list`` and renamed every product class.
+
+    Keep a representative result here so the repaired built-in cannot quietly drift back
+    to selectors that match nothing.
+    """
+    html = """
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/blu-ray/heat-and-dust/12044695/"
+         data-testid="product-title">Heat and Dust</a>
+      <div data-testid="product-price">
+        <span class="product-variant-price" content="£20.99">£20.99</span>
+      </div>
+    </div>
+    """
+    entry = BUILT_IN_SCRAPERS["Zavvi"]
+    candidate = extract(html, entry["config"])
+
+    assert entry["search"] == "https://www.zavvi.com/search?q={query}"
+    assert candidate.title == "Heat and Dust"
+    assert candidate.price == Decimal("20.99")
+    assert candidate.currency == "GBP"
+    assert candidate.url == "/p/blu-ray/heat-and-dust/12044695/"
+
+
 # ---------------------------------------------------------------------------
 # The runner: retry, auto-disable, and what gets written
 # ---------------------------------------------------------------------------
