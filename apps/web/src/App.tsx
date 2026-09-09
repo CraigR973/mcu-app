@@ -26,6 +26,7 @@ const StatsPage = lazy(() => import('./pages/StatsPage'))
 const LoansPage = lazy(() => import('./pages/LoansPage'))
 const AuditPage = lazy(() => import('./pages/AuditPage'))
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
+const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 
 function AdminPage() {
   return (
@@ -133,6 +134,10 @@ export default function App() {
             <Route
               path="/insights"
               element={<AppShell><InsightsPage /></AppShell>}
+            />
+            <Route
+              path="/calendar"
+              element={<AppShell><CalendarPage /></AppShell>}
             />
             <Route
               path="/discover"

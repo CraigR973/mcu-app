@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
+import { Boxes, CalendarDays, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Collections', path: '/collections', icon: Sparkles },
   { label: 'Insights', path: '/insights', icon: Target },
   { label: 'Coming soon', path: '/discover', icon: Sparkle },
+  { label: 'Calendar', path: '/calendar', icon: CalendarDays },
   { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Stats', path: '/stats', icon: TrendingUp },

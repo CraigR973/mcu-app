@@ -438,6 +438,34 @@ accident.
 answer with a confident face. Contrast `completion_sets`, which caches precisely because a
 filmography barely changes.
 
+### ~~Batch 17 — Release calendar + iCal~~ 🟡 **shipped**
+**Covers phases 7.3 and 7.4**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 7.3: Release Calendar Data Source** — Populate release_calendar from TMDB upcoming + curated sources · Filter by genres of interest. **Acceptance:** Live ingestion run populates `release_calendar` with ≥ 30 rows spanning the next 3 months (not seeded data); Calendar page renders them.
+>
+> **Phase 7.4: Calendar UI & iCal Feed** — Monthly calendar view · `/api/v1/calendar.ics` endpoint · Subscribe button with copy-link. **Acceptance:** Subscribing in Apple Calendar successfully displays events
+
+**7.4's acceptance cannot be verified from here** — it needs a real calendar app on a real
+device. What *was* verified: the feed serves 200 with no `Authorization` header, 32 events,
+correct escaping and 75-octet folding, and the document is well-formed RFC 5545. **Owner
+action: subscribe in Apple Calendar and confirm the events appear.**
+
+**"Curated sources" is two things, not four.** §6.33 names Criterion and boutique-label
+announcements, award ceremonies and sale events. Only the last has a source this app can
+reach without a scraper, so sale events are a small dated list in `services/calendar.py`
+and **boutique-label announcements are left to Batch 19's scraper framework** — not
+half-built here.
+
+**The `.ics` URL is the app's first unauthenticated surface**, and is treated as a
+credential: 256 bits of entropy, stored SHA-256-hashed like a refresh token, one live token
+per person enforced by a partial unique index, rotated on every subscribe, `noindex` and
+`no-store`, and a revoked token answering identically to a never-existent one. The feed
+carries no personal data at all — a test asserts it.
+
+**A security review of this batch found a real content-injection hole in the serialiser**
+(`DECISIONS.md` #73). Nothing writes `release_calendar.url` yet; **Batch 19's scrapers are
+what would have armed it.**
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -453,7 +481,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~14~~ | ~~Stats + export~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.1, 13.2, 13.3, 13.4~~ | stats **344 ms median** against live Neon (criterion: <1s); CSV/JSON/HTML export all 1,857 discs; **2 of 5 charts have no data and say so** |
 | ~~15~~ | ~~Trash, audit UI, lending~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.5, 13.6, 12.5~~ | permanent delete proved on live data — row gone, cascade fired, **audit trail outlived its subject**, 1,857 discs untouched; **"overdue triggers a push" not met — Batch 11 owns push** |
 | ~~16~~ | ~~Watch providers + recommendations~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~7.1, 7.2~~ | live: *North by Northwest* shows HBO Max + 6 rent + 6 buy in GB; **20 recommendations, 7 already on the shelf**; **"wanted" dropped — Batch 18 owns it** |
-| 17 | Release calendar + iCal | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 7.3, 7.4 — secret-token `.ics` URL |
+| ~~17~~ | ~~Release calendar + iCal~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~7.3, 7.4 — secret-token `.ics` URL~~ | live ingestion put **32 rows** in `release_calendar`, re-run idempotent; feed serves unauthenticated with hashed rotating tokens. **A security review found and closed a URL content-injection hole.** Apple Calendar check is an owner action |
 | 18 | Wanted list + retailers | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.1, 5.2 (full scope) |
 | 19 | **Scraper framework** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **5.3, 5.4** — see risk note below |
 | 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
@@ -497,7 +525,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
 | ~~**C**~~ | ~~12~~ → ~~13~~ | — shipped | — shipped | ~~Same domain (sets/collections); 13 reuses 12's UI patterns~~ · **shipped** |
 | ~~**D**~~ | ~~14~~ → ~~15~~ | — shipped | — shipped | ~~Both admin-facing read surfaces, same verification shape~~ · **shipped** |
-| **E** | 16 → 17 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both TMDB-driven, same client, 17 reuses 16's patterns |
+| ~~**E**~~ | ~~16~~ → ~~17~~ | — shipped | — shipped | ~~Both TMDB-driven, same client, 17 reuses 16's patterns~~ · **shipped** |
 | **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |
 | — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |
 | **G** | 22 → 23 | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19 |

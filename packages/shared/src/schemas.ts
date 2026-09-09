@@ -775,3 +775,68 @@ export type Recommendation = z.infer<typeof recommendationSchema>
 export type RecommendationList = z.infer<typeof recommendationListSchema>
 export type NewRelease = z.infer<typeof newReleaseSchema>
 export type NewReleaseList = z.infer<typeof newReleaseListSchema>
+
+// ---------------------------------------------------------------------------
+// Release calendar and iCal feed (Batch 17) — §3.26, §7.3, §7.4
+// ---------------------------------------------------------------------------
+
+export const releaseTypeSchema = z.enum([
+  '4k_uhd_release',
+  'blu_ray_release',
+  'streaming_release',
+  'theatrical',
+  'award_ceremony',
+  'sale_event',
+])
+
+export const calendarEntrySchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1),
+  releaseType: releaseTypeSchema,
+  typeLabel: z.string().min(1),
+  releaseDate: z.string(),
+  label: z.string().nullable(),
+  region: z.string().length(2),
+  url: z.string().nullable(),
+  posterPath: z.string().nullable(),
+  overview: z.string().nullable(),
+  movieId: z.string().uuid().nullable(),
+})
+
+/** Bucketed by day server-side, so the grid is a rendering problem and an empty month is
+ *  an explicit empty map rather than something the client infers. */
+export const calendarMonthSchema = z.object({
+  month: z.string(),
+  days: z.record(z.array(calendarEntrySchema)),
+  total: z.number().int().nonnegative(),
+})
+
+export const calendarListSchema = z.object({
+  items: z.array(calendarEntrySchema),
+  total: z.number().int().nonnegative(),
+})
+
+/** A path, not a URL: the API cannot know its own public origin without trusting the
+ *  `Host` header, so the web app composes the absolute URL from `VITE_API_URL`. */
+export const calendarSubscriptionSchema = z.object({
+  path: z.string().min(1),
+  createdAt: z.string(),
+  replacedPrevious: z.boolean(),
+})
+
+export const calendarIngestSchema = z.object({
+  created: z.number().int().nonnegative(),
+  updated: z.number().int().nonnegative(),
+  unchanged: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  errors: z.array(z.string()),
+  dryRun: z.boolean(),
+})
+
+export type ReleaseType = z.infer<typeof releaseTypeSchema>
+export type CalendarEntry = z.infer<typeof calendarEntrySchema>
+export type CalendarMonth = z.infer<typeof calendarMonthSchema>
+export type CalendarListing = z.infer<typeof calendarListSchema>
+export type CalendarSubscription = z.infer<typeof calendarSubscriptionSchema>
+export type CalendarIngest = z.infer<typeof calendarIngestSchema>

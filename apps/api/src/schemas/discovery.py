@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel
+
+from src.schemas.wire import UtcDatetime
 
 #: How a film can be watched somewhere. TMDB's own three buckets, kept apart because
 #: "included in your subscription" and "£13.99 to buy" are not the same answer to
@@ -83,3 +86,81 @@ class NewReleaseListResponse(BaseModel):
     items: list[NewReleaseResponse]
     #: The genres the feed was filtered by — this collection's most-collected ones.
     basedOnGenres: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Release calendar and iCal feed (Batch 17) — §3.26, §7.3, §7.4
+# ---------------------------------------------------------------------------
+
+ReleaseType = Literal[
+    "4k_uhd_release",
+    "blu_ray_release",
+    "streaming_release",
+    "theatrical",
+    "award_ceremony",
+    "sale_event",
+]
+
+
+class CalendarEntryResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    releaseType: ReleaseType
+    typeLabel: str
+    releaseDate: date
+    label: str | None
+    region: str
+    url: str | None
+    posterPath: str | None
+    overview: str | None
+    #: Set when the film is already in the collection, so a row can link to it.
+    movieId: uuid.UUID | None
+
+
+class CalendarMonthResponse(BaseModel):
+    """One month's entries, grouped by day — §7.4's "monthly calendar view".
+
+    Grouped server-side so the grid does not have to bucket dates in the browser, and so
+    a month with nothing in it is an explicit empty list rather than a gap the client
+    infers.
+    """
+
+    month: str
+    days: dict[str, list[CalendarEntryResponse]]
+    total: int
+
+
+class CalendarListResponse(BaseModel):
+    items: list[CalendarEntryResponse]
+    total: int
+
+
+class CalendarSubscriptionResponse(BaseModel):
+    """The feed path, returned **once**.
+
+    The token is hashed at rest and never retrievable again — so this response is the only
+    time it exists in plaintext, and asking again rotates it. That is what makes an
+    accidentally-pasted link recoverable.
+
+    **A path, not an absolute URL.** The API does not know its own public origin: deriving
+    it from the request's ``Host`` header would reflect an attacker-controlled value into a
+    link, and configuring it would mean a new Railway variable — a hosting change this
+    project keeps explicit. The web app already holds the origin in ``VITE_API_URL`` and
+    composes the URL there, which is the one place it is known for certain.
+    """
+
+    path: str
+    createdAt: UtcDatetime
+    #: True when this call revoked a previous link, so the UI can say the old one stopped
+    #: working rather than leaving someone with two URLs they believe both work.
+    replacedPrevious: bool
+
+
+class CalendarIngestResponse(BaseModel):
+    created: int
+    updated: int
+    unchanged: int
+    skipped: int
+    total: int
+    errors: list[str]
+    dryRun: bool

@@ -16,6 +16,7 @@ from src.rate_limit import limiter
 from src.routers import (
     auth,
     box_sets,
+    calendar,
     collection,
     discovery,
     export,
@@ -104,3 +105,4 @@ app.include_router(stats.router)
 app.include_router(export.router)
 app.include_router(trash.router)
 app.include_router(discovery.router)
+app.include_router(calendar.router)

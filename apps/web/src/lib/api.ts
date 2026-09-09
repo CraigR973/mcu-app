@@ -3,6 +3,10 @@ import {
   apiErrorSchema,
   auditPageSchema,
   boxSetDetailSchema,
+  calendarIngestSchema,
+  calendarListSchema,
+  calendarMonthSchema,
+  calendarSubscriptionSchema,
   boxSetListSchema,
   candidateListSchema,
   collectionCopiesSchema,
@@ -35,6 +39,10 @@ import {
   type AuditPage,
   type BoxSetDetail,
   type BoxSetList,
+  type CalendarIngest,
+  type CalendarListing,
+  type CalendarMonth,
+  type CalendarSubscription,
   type CandidateList,
   type CollectionCopy,
   type CollectionFacets,
@@ -83,7 +91,13 @@ export type {
   BoxSetDetail,
   BoxSetList,
   BoxSetMember,
+  CalendarEntry,
+  CalendarIngest,
+  CalendarListing,
+  CalendarMonth,
+  CalendarSubscription,
   Candidate,
+  ReleaseType,
   CandidateList,
   CollectionCopy,
   CollectionFacets,
@@ -999,4 +1013,53 @@ export const OFFER_KIND_LABELS: Record<OfferKind, string> = {
 export function providerLogoUrl(path: string | null, size = 'w45'): string {
   if (!path) return '/placeholder-poster.svg'
   return `https://image.tmdb.org/t/p/${size}${path}`
+}
+
+// ---------------------------------------------------------------------------
+// Release calendar and iCal feed (Batch 17) — §7.3, §7.4
+// ---------------------------------------------------------------------------
+
+export async function fetchCalendar(days = 120): Promise<CalendarListing> {
+  return parseResponse(await authFetch(`/calendar?days=${String(days)}`), calendarListSchema)
+}
+
+export async function fetchCalendarMonth(month: string): Promise<CalendarMonth> {
+  return parseResponse(
+    await authFetch(`/calendar/month?month=${encodeURIComponent(month)}`),
+    calendarMonthSchema,
+  )
+}
+
+export async function subscribeToCalendar(): Promise<CalendarSubscription> {
+  return parseOrThrowApiError(
+    await authFetch('/calendar/subscribe', { method: 'POST' }),
+    calendarSubscriptionSchema,
+  )
+}
+
+export async function ingestCalendar(dryRun = false): Promise<CalendarIngest> {
+  return parseOrThrowApiError(
+    await authFetch(`/calendar/ingest?dryRun=${String(dryRun)}`, { method: 'POST' }),
+    calendarIngestSchema,
+  )
+}
+
+/**
+ * The absolute feed URL, composed here rather than server-side.
+ *
+ * The API deliberately returns a path: deriving an origin from the request's `Host`
+ * header would reflect an attacker-controlled value into a subscription link, and
+ * configuring one would be a new Railway variable. `VITE_API_URL` is the one place the
+ * origin is known for certain — it is what every other request already goes to.
+ */
+export function calendarFeedUrl(path: string): string {
+  const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
+  if (base) return `${base}${path}`
+  // Dev, where the app is served from the same origin the vite proxy forwards.
+  return `${window.location.origin}${path}`
+}
+
+/** A webcal: link, which Apple Calendar and most desktop clients open directly. */
+export function webcalUrl(httpUrl: string): string {
+  return httpUrl.replace(/^https?:/, 'webcal:')
 }

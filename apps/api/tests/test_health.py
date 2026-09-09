@@ -127,4 +127,11 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/movies/{movie_id}/streaming",
         "/api/v1/movies/{movie_id}/recommendations",
         "/api/v1/discover/new-releases",
+        # Batch 17. `/calendar.ics` is the **only** route in this application that answers
+        # without a bearer token — the URL is its own credential, hashed at rest.
+        "/api/v1/calendar",
+        "/api/v1/calendar/month",
+        "/api/v1/calendar/subscribe",
+        "/api/v1/calendar.ics",
+        "/api/v1/calendar/ingest",
     }

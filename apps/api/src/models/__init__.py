@@ -28,6 +28,12 @@ from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile, RefreshToken, UserRole
 from src.models.rate_limit import RateLimitCounter
+from src.models.release_calendar import (
+    RELEASE_TYPE_LABELS,
+    RELEASE_TYPES,
+    CalendarFeedToken,
+    ReleaseCalendarEntry,
+)
 from src.models.smart_collection import (
     SMART_COLLECTION_ICONS,
     SMART_COLLECTION_ORDERS,
@@ -59,7 +65,11 @@ __all__ = [
     "Profile",
     "RATING_MAX",
     "RATING_MIN",
+    "RELEASE_TYPES",
+    "RELEASE_TYPE_LABELS",
+    "CalendarFeedToken",
     "RateLimitCounter",
+    "ReleaseCalendarEntry",
     "RefreshToken",
     "SMART_COLLECTION_ICONS",
     "SMART_COLLECTION_ORDERS",
