@@ -25,9 +25,16 @@ or performed a **destructive data or history operation**. Those stay explicit.
    the **merged commit SHA** and `/api/v1/health/ready` reports `db: ok`. Not merely HTTP
    200. If the SHA does not match, that is a failure to report, not to retry silently.
 9. Strike the batch's row in `docs/phase-batches.md` — strike the cells through, set status
-   to **shipped**, and fill the Result column. Tick the phase line in the roadmap doc: grep
-   for the `**Phase X.Y: ...**` heading and append ` ✅ YYYY-MM-DD`. Skip if already ticked;
-   don't double-tick. **Do not read the roadmap doc whole.**
+   to **shipped**, and fill the Result column **including the merge SHA**. Then update the
+   batch's rows in `ARCHITECTURE.md`'s **§17 reconciliation table**: grep for
+   `^| <n> | <decision name>` and rewrite the Status cell, naming what shipped and, just as
+   importantly, **which acceptance criteria are still unmet and who owns them**. Bump the
+   table's `Status, YYYY-MM-DD` header. **Do not read `ARCHITECTURE.md` whole.**
+
+   *This step used to say "tick the `**Phase X.Y: ...**` heading in the roadmap doc". Those
+   headings stopped existing when Batch 10 removed §16, so the step became a silent no-op
+   and eight consecutive close-outs skipped it — leaving nine §17 rows reading "Not yet
+   built" for work that had shipped. §17 is now the thing to update.*
 10. Update `STATUS.md` — overwrite the "Now" block, prepend a dated line to the "Log".
     Append to `DECISIONS.md` only if a durable decision was made.
 11. Commit the docs, push `main`.

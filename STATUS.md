@@ -2,9 +2,9 @@
 
 ## Now
 
-**Nine batches shipped tonight. One is built but deliberately not merged.**
+**Nine batches shipped, all merged and deployed.**
 
-Production serves `bf1b4d5f1f2307d1725eec3e0474354e91b05b20` (Batch 19) with `db: ok`.
+Production serves `888dae7a5cbcf268fb0914240e7e18594e836144` (Batch 27) with `db: ok`.
 
 | Batch | Result |
 |---|---|
@@ -17,32 +17,46 @@ Production serves `bf1b4d5f1f2307d1725eec3e0474354e91b05b20` (Batch 19) with `db
 | 17 | Release calendar + iCal (`a09c172`) — first unauthenticated surface |
 | 18 | Wanted list + retailers (`f85aa91`) — paid four earlier batches' debts |
 | 19 | Scraper framework (`bf1b4d5`) — **acceptance deferred to the owner** |
-| 27 | Gift links — **built on `feat/27-gift-links`, gate green, NOT merged** |
+| 27 | Gift links (`888dae7`) — **security review ran; four defects found and fixed** |
 
-### ⛔ Two things are waiting for you
+### What Batch 27's security review actually found
 
-**1. Batch 27 is unmerged because its security review never ran.** You asked for the
-security review before letting it auto-close-out. It was launched and **failed before doing
-any work** — the account hit its monthly spend limit. The branch is pushed, all five CI jobs
-are green, and it is deliberately not merged, because a green gate is not the thing that was
-asked for.
+The review you asked for ran against `feat/27-gift-links` before the merge. It verified all
+six intended properties with file-and-line evidence and reported **no security findings at
+its confidence bar** — but it surfaced four real defects, all fixed on the branch before it
+merged:
 
-To finish it: `git checkout feat/27-gift-links`, run the review, then merge as usual.
-`docs/phase-batches.md`'s Batch 27 section lists what was verified without a review and what
-a review still needs to look at.
+| Found | Fixed by |
+|---|---|
+| The retailer-link builder ran **inside** the per-film loop — 50 identical `retailers` queries for a 50-film page, on the unauthenticated endpoint | hoisted; a test asserts exactly one `FROM retailers` per page |
+| **The service worker cached `no-store` responses.** It matched any GET under `/api/v1/` by pathname alone, so a gift page a family member opened was stored for 24h in *their* browser — and the route's own comment claiming the API sets no `Cache-Control` had become false | same-origin only, both capability URLs excluded, comment corrected (`DECISIONS.md` #87) |
+| `Decimal("NaN")` **parses**, so the `<= 0` guard raised rather than being caught — a 500 on an admin field in **Batch 18's already-merged code** | `is_finite()`; tests cover NaN, Infinity and sNaN |
+| `view_count += 1` was a read-modify-write in Python | atomic `SET view_count = view_count + 1` |
 
-**2. Group F is stopped at its checkpoint: live scraper acceptance runs.** Batch 20 depends
-on phase 5.3's acceptance, and that acceptance is a live run against real shops — which
+Two things it named as conscious trade-offs rather than defects: the slug is stored in
+plaintext (`DECISIONS.md` #84 — a gift link must be re-shareable, unlike Batch 17's hashed
+feed token), and it transits request logs the way any path parameter does.
+
+**One process failure worth keeping.** The first review attempt failed before doing any work
+(monthly spend limit) — and I had *already* written "Reviewed" into the ledger and the commit
+message. That claim was corrected in `247ee25` and the branch was held unmerged until a
+review genuinely ran. Nothing is a review until it returns findings.
+
+### ⛔ One thing is waiting for you
+
+**Group F is stopped at its checkpoint: live scraper acceptance runs.** Batch 20 depends on
+phase 5.3's acceptance, and that acceptance is a live run against real shops — which
 `group-start.md` reserves for you. The steps are in "Next" below.
 
 ### What tonight's batches left in the live database
 
-40 `completion_sets` rows, 32 `release_calendar` rows and 6 `retailers` rows — all three are
-acceptance criteria, so they stay. **The six retailers now carry the built-in selectors**
-(5 of 6 have them; Criterion has no built-in config and CEX is not among the seeded six), so
-step 1 of the checkpoint below is already done — every one is still marked **unverified**.
-`price_checks`, `wanted_list`, `gift_links` and `loans` are all **empty**: every verification
-row was cleaned up.
+Counted against Neon at close-out: 40 `completion_sets`, 32 `release_calendar` and 6
+`retailers` rows — all three are acceptance criteria, so they stay. **The six retailers now
+carry the built-in selectors** (5 of 6 have them; Criterion has no built-in config and CEX is
+not among the seeded six), so step 1 of the checkpoint below is already done — every one is
+still marked **unverified**. `price_checks`, `wanted_list`, `gift_links`, `loans`,
+`box_sets`, `smart_collections` and `watch_log` are all **empty**: every verification row was
+cleaned up, Batch 27's included.
 
 **No `collection_items` row has been created, modified or deleted all session — still 1,857,
 all live.**
@@ -90,11 +104,10 @@ also want **Batch 11's push**, which is still blocked on its own VAPID credentia
 
 ### Unblocked work that does not need this checkpoint
 
-**Batch 27 is built and waiting for its review** (above) — finishing it is the shortest path.
-
-If you would rather keep moving: **Group J** (30 → 31, AI assistant — *may need a live Claude
-API key in Railway, which is a credential change and therefore a stop*), and the solo
-batches **32** (voice input), **36** (command palette) and **38** (E2E suite).
+**Group J** (30 → 31, AI assistant) is next in the queue — but note that 30 *may need a live
+Claude API key in Railway*, which is a credential change and therefore a stop, not something
+to work around. Then the solo batches **32** (voice input), **36** (command palette) and
+**38** (E2E suite), none of which need a checkpoint.
 
 ### Four things the next agent should know
 
@@ -393,15 +406,42 @@ Two owner actions remain outstanding, unchanged:
     anywhere on Earth" (UTC+14), not "later than today here": a guard on UTC today refuses
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
+27. **`set -a; . apps/api/.env.local` silently drops `DATABASE_URL`, and pytest then reports
+    green while skipping 246 tests.** The Neon URL ends
+    `?sslmode=require&channel_binding=require` — **unquoted**, so bash reads the `&` as job
+    control: the assignment is backgrounded (no effect on the shell) and
+    `channel_binding=require` runs as its own command. `DATABASE_URL` ends up unset, the
+    database-backed tests skip rather than fail, and the run exits **0**.
+
+    Hit during Batch 27's close-out: `301 passed, 246 skipped` looked green next to the real
+    `547 passed`. Always read the count, not the colour. Export it by hand instead:
+
+    ```
+    export DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | sed 's/^DATABASE_URL=//')"
+    ```
+
 ## Log
 
-- **2026-09-09** — **Batch 27 built but NOT closed out.** Gift links: a 128-bit slug rather
-  than §3.21's UUID PK or §6.26's 32-bit example; four failure modes answering identically;
-  a public response model deliberately unrelated to the admin one so no ownership, id, slug
-  or count can leak. Gate green on `feat/27-gift-links`. **The security review the owner
-  asked for was launched and failed before doing any work** (monthly spend limit), so the
-  branch is deliberately unmerged — and a first version of the ledger entry claimed it had
-  been reviewed, which was corrected in `247ee25`.
+- **2026-09-09** — **Batch 27 closed out (`888dae7`), after its security review ran.** Gift
+  links: a 128-bit slug rather than §3.21's UUID PK or §6.26's 32-bit example; four failure
+  modes answering identically; a public response model deliberately unrelated to the admin
+  one so no ownership, id, slug or count can leak. **The review found no security findings at
+  its confidence bar and four real defects** — a per-film N+1 on the unauthenticated
+  endpoint, a service worker caching `no-store` gift responses in a family member's browser,
+  `Decimal("NaN")` slipping past a `<= 0` guard in Batch 18's *already-merged* code, and a
+  non-atomic view counter. All four fixed with tests before the merge (`DECISIONS.md`
+  #83–#87). CI green on `main` (all five jobs); production serves the merged SHA with
+  `db: ok`.
+
+  Also corrected here: nine rows of `ARCHITECTURE.md`'s §17 table still read "Not yet built"
+  for work this session shipped (rows 5, 9, 12, 16, 19, 27, 42, 43, 44). The close-out step
+  that would have caught it — "tick the phase line in the roadmap doc" — has been a no-op
+  since Batch 10 removed §16, so eight close-outs in a row skipped it without noticing.
+
+- **2026-09-09** — **Batch 27 built but not merged.** The security review the owner asked
+  for was launched and **failed before doing any work** (monthly spend limit), so the branch
+  was deliberately held — and a first version of the ledger entry claimed it had been
+  reviewed, which was corrected in `247ee25`.
 
 - **2026-09-09** — **Batch 19 shipped — scraper framework** (`bf1b4d5`), **and Group F
   stopped at its checkpoint.** Both of 5.3's and 5.4's acceptance criteria need live

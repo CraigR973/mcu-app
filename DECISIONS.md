@@ -1124,3 +1124,47 @@ contemporaneous.
     just rudeness. Auto-disable **resets** on any success rather than decrementing, because
     §5.3 asks for three failures *in a row*: a shop that fails on Monday and works on
     Tuesday has not accumulated anything.
+### 2026-09-09 — Batch 27 gift links
+
+83. **The public slug is its own 128-bit column — not the UUID primary key, and not
+    §6.26's eight hex characters.**
+
+    *Why:* §3.21 says *"id | UUID (PK) | Public slug used in the URL"* and §6.26's worked
+    example is `/gift/a8f3b2c1` — **32 bits**. That is enumerable, and what enumeration
+    would find is a named person's wish list. A separate column also means the URL is not
+    the row's identity: a slug can be rotated without rewriting foreign keys, which is what
+    makes "revoke this link" possible at all.
+
+84. **The gift slug is stored in plaintext, unlike Batch 17's feed token, which is hashed.**
+
+    *Why:* the two capability URLs have opposite lifecycles. A calendar token is issued once
+    into a subscription and never needs showing again, so it can be hashed at rest. A gift
+    link exists **to be re-shared** — copied into a second message, shown on the admin page
+    a week later — and hashing makes re-displaying it impossible. The mitigation is
+    different rather than absent: 128 bits, `noindex, nofollow`, `no-store`, and revocation.
+
+85. **The public gift model shares no base class with the admin model, deliberately.**
+
+    *Why:* the realistic failure of this feature is not an exotic attack, it is one admin
+    field reaching a public page because two models shared a parent and someone added a
+    column to the parent. Duplication is the cheaper mistake. In particular the public page
+    never says **what the recipient already owns** — a film can be wanted *and* owned (a
+    DVD-to-4K upgrade), Batch 18 shows that to the admin, and it has no business on a page
+    shown to family.
+
+86. **Missing, expired, deactivated and revoked all answer with one identical 404.**
+
+    *Why:* any difference between them — a distinct status code, a different body, even a
+    different response time — tells a visitor who guessed a slug whether that slug was ever
+    real. "This link has expired" is a helpful message to the intended recipient and a
+    confirmation of existence to everyone else, and only one of those two is worth serving.
+
+87. **The service worker never caches a capability URL, and matches same-origin only.**
+
+    *Why:* found by Batch 27's security review. The `NetworkFirst` route matched any GET
+    under `/api/v1/` **by pathname alone**, so a gift page opened by a family member was
+    stored for 24 hours in *their* browser, against the `no-store` the endpoint explicitly
+    sends — and the route's own comment, claiming the API sets no `Cache-Control`, had
+    quietly become false. Pathname-only matching would also have caught a same-path URL on
+    another origin. The standing rule: an unauthenticated capability URL is excluded from
+    the cache by name, and the exclusion list grows with each one added.

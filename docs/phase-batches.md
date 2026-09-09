@@ -536,9 +536,9 @@ into an internal address (#81).
 **§3.21's slug design was not followed, deliberately.** It says *"id | UUID (PK) | Public
 slug used in the URL"*, and §6.26's worked example is `/gift/a8f3b2c1` — **eight hex
 characters, 32 bits**. That is enumerable, and what would be enumerated is a named person's
-wish list. The slug is its own column holding 128 bits (`DECISIONS.md` #82).
+wish list. The slug is its own column holding 128 bits (`DECISIONS.md` #83).
 
-**The public response model is deliberately unrelated to the admin one** (#84). It could
+**The public response model is deliberately unrelated to the admin one** (#85). It could
 share a base and must not: the risk of this feature is one admin field reaching the public
 page because a model was reused. In particular the page never says **what the recipient
 already owns** — a film can be wanted *and* owned (a DVD-to-4K upgrade), Batch 18 shows that
@@ -546,9 +546,9 @@ to the admin, and it has no business on a page shown to family.
 
 **Every reason a link does not work answers identically** — missing, expired, deactivated
 and revoked are one 404 with one body, so a visitor cannot learn whether a guessed slug was
-ever real (#85).
+ever real (#86).
 
-**The slug is stored in plaintext, unlike Batch 17's feed token** (#83). That is a reasoned
+**The slug is stored in plaintext, unlike Batch 17's feed token** (#84). That is a reasoned
 difference, not an inconsistency: a gift link exists to be re-shared and re-shown, which
 hashing would make impossible.
 
@@ -566,7 +566,7 @@ here:
 | `view_count += 1` was a read-modify-write in Python | correctness | atomic `SET view_count = view_count + 1`; a test asserts the SQL |
 
 Two things the review named as conscious trade-offs rather than defects: the slug is stored
-in plaintext (`DECISIONS.md` #83 — a gift link must be re-shareable, unlike Batch 17's feed
+in plaintext (`DECISIONS.md` #84 — a gift link must be re-shareable, unlike Batch 17's feed
 token), and it transits request logs the way any path parameter does.
 
 ---
@@ -594,7 +594,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 24 | Barcode — scan + lookup | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 3.3, **3.4** — confirmation UI mandatory |
 | 25 | Photo uploads | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 3.10 — needs the `vercel.json` CSP fix |
 | 26 | Shelf QR | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | 12.3, 12.4 |
-| ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |
+| ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | `888dae7` · 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |
 | 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **4.1, 4.3** — active listings, not sold comps |
 | 29 | Format upgrade + sale tracking | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 4.2, 4.4 |
 | 30 | AI assistant — client + caps | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 9.1 + **9.7 together** |
