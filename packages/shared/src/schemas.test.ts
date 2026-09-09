@@ -1011,9 +1011,9 @@ describe('scraperTestSchema', () => {
 })
 
 describe('builtInScraperListSchema', () => {
-  it('carries the unverified list, which is all six today', () => {
-    // §5.3's acceptance is a live run against each retailer — an owner action. A selector
-    // nobody has run is a guess, and the schema makes the app say so.
+  it('carries the unverified list — the sources that cannot be scraped from here', () => {
+    // A selector nobody has run against a live page is a guess, and the schema makes the
+    // app say so. HMV, CEX, Amazon and Blu-ray.com stay unverified permanently.
     const parsed = builtInScraperListSchema.parse({
       items: [
         {

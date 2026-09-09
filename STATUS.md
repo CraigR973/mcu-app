@@ -54,10 +54,10 @@ which `group-start.md` reserves for you. The steps are in "Next" below and in th
 ### What tonight's batches left in the live database
 
 Counted against Neon at close-out: 40 `completion_sets`, 32 `release_calendar` and 6
-`retailers` rows — all three are acceptance criteria, so they stay. **The six retailers now
-carry the built-in selectors** (5 of 6 have them; Criterion has no built-in config and CEX is
-not among the seeded six), so step 1 of the checkpoint below is already done — every one is
-still marked **unverified**. `price_checks`, `wanted_list`, `gift_links`, `loans`,
+`retailers` rows — all three are acceptance criteria, so they stay. **Three more retailers
+are now seeded but not yet in the live database**: press *Add missing defaults*, then *Apply
+these selectors*, on the Retailers page. Five shops are verified against live markup and
+four are permanently unverified with the reason (`DECISIONS.md` #91). `price_checks`, `wanted_list`, `gift_links`, `loans`,
 `box_sets`, `smart_collections` and `watch_log` are all **empty**: every verification row was
 cleaned up, Batch 27's included.
 
@@ -85,22 +85,27 @@ against real shops. That is yours to perform.
 
 ### What the checkpoint actually needs
 
-The framework is deployed and the endpoints are admin-only. For each of the six shops:
+The framework is deployed, the endpoints are admin-only, and **every step below is now a
+button on the Retailers page.** For the **five supported shops** — Zavvi, Arrow (UK), 101
+Films, Second Sight and Powerhouse:
 
-1. **Apply the built-in selectors** — *Retailers → "Apply these selectors to the matching
-   retailers"*, or `POST /api/v1/scrapers/apply-built-ins`.
-2. **Test one at a time before enabling** — the *Test* button on each retailer row, or
-   `POST /api/v1/scrapers/test`. A green tick means "this looks like a real price for this
-   film", not "the page loaded". **Expect several to fail**: every selector is a guess.
-3. **Fix the selectors that fail.** The tool prints the node it read and why the result was
-   rejected, which is usually enough to correct the CSS in *Retailers → edit*.
-4. **Put at least one real film on the wanted list**, or the run has nothing to look for.
-5. **Run it for real** — `POST /api/v1/scrapers/run?dryRun=false`. 5.3's acceptance is
-   ≥ 1 `price_checks` row per scraper and a total above zero.
+1. **Add missing defaults**, then **Apply these selectors** — this seeds the three new UK
+   labels and corrects Arrow's URL to its UK storefront.
+2. **Test one at a time before enabling** — the *Test* button on each retailer row. A green
+   tick means "this looks like a real price for this film", not "the page loaded". A
+   selector can still fail on a layout change.
+3. **Fix any that fail.** The tool prints the node it read and why the result was rejected,
+   which is usually enough to correct the CSS in *Retailers → edit*.
+4. **Put at least one real film on the wanted list** — the *Add a film* panel on Wanted does
+   this — or the run has nothing to look for.
+5. **Preview live run**, then **Run and save prices**. 5.3's acceptance is ≥ 1
+   `price_checks` row per working scraper and a total above zero.
 
-**Amazon may not be viable at all** — it varies its markup per client and blocks scrapers;
-its built-in entry says so. Blu-ray.com is a database rather than a shop, so its prices are
-third-party and may be absent. Neither is a defect in the framework.
+**Four shops are permanently unverified and should not be tested.** HMV and CEX disallow the
+search routes this job needs; Amazon UK blocks automated access and its official API is
+unsuitable for a private app this size; Blu-ray.com is a catalogue whose prices are
+third-party. They stay listed with the reason so nobody re-derives it (`DECISIONS.md` #91).
+**eBay takes the general-market role** once its pending application is approved.
 
 **Then Batch 20** (5.5, 5.6, 5.8 — daily job and price-drop alerts) can start. Note it will
 also want **Batch 11's push**, which is still blocked on its own VAPID credential checkpoint.
@@ -433,6 +438,30 @@ something on it, including two the ledger describes as "solo".
 
 ## Log
 
+- **2026-09-09** — **Supported retailer paths.** Live page-shape checks settled which of
+  §5.3's shops can actually be scraped: **five pass** — Zavvi, Arrow (on `arrowfilms.com`,
+  its UK storefront; the seeded `arrowvideo.com` is the US site and returned USD, which the
+  shape guard correctly rejected), plus three UK boutique labels added as supported
+  replacements — 101 Films, Second Sight and Powerhouse/Indicator. **Four are permanently
+  unverified and stay listed with the reason**: HMV and CEX disallow the search routes,
+  Amazon blocks automated access, Blu-ray.com is a catalogue (`DECISIONS.md` #91, #92).
+
+  **Three real defects were found and fixed on the way, none of which a green gate would
+  have caught.** (1) `_same_site` compared the last two labels, so **every `.co.uk` host was
+  one shop** — a listing link off `secondsightfilms.co.uk` to any other `.co.uk` site passed
+  the guard. Latent since Batch 19 because no `.co.uk` retailer had working selectors; the
+  two new UK labels are the first to arm it (#93). (2) Retailer pages return **relative**
+  product links, which failed `_write_check`'s `http(s)://` test — so it returned without a
+  row while `written` was incremented anyway, and the same-site guard was skipped entirely
+  because a relative URL has no hostname (#94). (3) A **dry run** claimed to have saved
+  prices, because `written` was incremented outside the `if not dry_run` guard.
+
+  The Retailers page now carries the whole owner checkpoint as buttons — *Add missing
+  defaults*, *Apply these selectors*, *Preview live run*, *Run and save prices* — and Wanted
+  gained an *Add a film* panel, because step 4 of the checkpoint previously had no UI at all.
+  **The checkpoint itself is still open**: no live `dryRun=false` run has happened, and
+  `price_checks` is still empty.
+
 - **2026-09-09** — **External calendar subscription deprioritised.** The in-app release
   calendar remains primary; its RFC 5545 feed remains available as optional convenience, but
   Apple/Google device verification is no longer a current owner action (Decision #90).
@@ -510,7 +539,8 @@ something on it, including two the ledger describes as "solo".
   is built and fixture-tested (33 tests) and the runs are handed over. The batch is shaped by
   its own risk note: `check_shape` asserts five properties of every result and discards
   anything that fails, because a wrong selector fetches fine and returns a plausible wrong
-  number (`DECISIONS.md` #79). All six built-ins report `verified: false` (#80). The fetcher
+  number (`DECISIONS.md` #79). Every built-in reported `verified: false` at the time (#80;
+  see #91 for what the live checks later settled). The fetcher
   refuses non-public addresses at every redirect hop — the app's first person-supplied URL
   (#81). CI went red because dependencies are locked with `--require-hashes` and
   `pyproject.toml` alone is not enough.

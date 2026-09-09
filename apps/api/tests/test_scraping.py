@@ -203,6 +203,29 @@ def test_a_subdomain_of_the_same_shop_is_fine() -> None:
     assert verdict.ok, verdict.reasons
 
 
+def test_a_listing_on_an_unrelated_co_uk_domain_is_refused() -> None:
+    """Two `.co.uk` shops are not one shop.
+
+    The guard compares registrable domains, so it must not read `co.uk` as the domain and
+    wave through every host on the TLD. Batch 19 had no `.co.uk` retailer whose selectors
+    ran, so this was latent; the supported UK labels are the first that arm it.
+    """
+    verdict = check_shape(
+        _candidate(url="https://someoneelse.co.uk/product/heat"),
+        retailer_host="secondsightfilms.co.uk",
+    )
+    assert not verdict.ok
+    assert any("someoneelse.co.uk" in reason for reason in verdict.reasons)
+
+
+def test_a_subdomain_of_the_same_co_uk_shop_is_still_fine() -> None:
+    verdict = check_shape(
+        _candidate(url="https://shop.powerhousefilms.co.uk/product/heat"),
+        retailer_host="www.powerhousefilms.co.uk",
+    )
+    assert verdict.ok, verdict.reasons
+
+
 def test_every_reason_is_collected_not_just_the_first() -> None:
     """A scraper that has gone wrong is usually wrong in several ways at once, and the
     person reading the report needs all of them."""
@@ -277,13 +300,8 @@ async def test_a_page_is_returned_when_everything_is_fine() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_all_six_built_ins_are_present_and_none_claims_to_be_verified() -> None:
-    """§5.3 names six shops. **None has been run against a live page**, because that is a
-    hard stop the owner performs — so every one says `verified: false`.
-
-    A selector nobody has run is a guess, and the honest state of a guess is unverified.
-    Claiming otherwise is how a plausible wrong number reaches the price alerts.
-    """
+def test_supported_replacements_are_built_in_and_only_live_checked_ones_are_verified() -> None:
+    """Verification records actual live acceptance, not merely a retailer's presence."""
     assert set(BUILT_IN_SCRAPERS) == {
         "HMV",
         "Amazon UK",
@@ -291,8 +309,18 @@ def test_all_six_built_ins_are_present_and_none_claims_to_be_verified() -> None:
         "Zavvi",
         "Arrow Video",
         "CEX",
+        "101 Films",
+        "Second Sight",
+        "Powerhouse Films",
     }
-    assert sorted(unverified_names()) == sorted(BUILT_IN_SCRAPERS)
+    assert {name for name, entry in BUILT_IN_SCRAPERS.items() if entry["verified"]} == {
+        "Arrow Video",
+        "Zavvi",
+        "101 Films",
+        "Second Sight",
+        "Powerhouse Films",
+    }
+    assert set(unverified_names()) == {"HMV", "Amazon UK", "Blu-ray.com", "CEX"}
 
 
 def test_every_built_in_has_a_search_template_with_a_query_placeholder() -> None:
@@ -325,6 +353,74 @@ def test_zavvi_built_in_matches_its_current_search_result_markup() -> None:
     assert candidate.price == Decimal("20.99")
     assert candidate.currency == "GBP"
     assert candidate.url == "/p/blu-ray/heat-and-dust/12044695/"
+
+
+def test_arrow_built_in_uses_the_uk_storefront_and_current_markup() -> None:
+    html = """
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/night-of-the-big-heat-blu-ray/10945421/"
+         data-testid="product-title">Night Of The Big Heat Blu-ray</a>
+      <div data-testid="product-price">
+        <span class="product-variant-price" content="£10.00">£10.00</span>
+      </div>
+    </div>
+    """
+    entry = BUILT_IN_SCRAPERS["Arrow Video"]
+    candidate = extract(html, entry["config"])
+
+    assert entry["base"] == "https://www.arrowfilms.com"
+    assert entry["search"] == "https://www.arrowfilms.com/search?q={query}"
+    assert candidate.title == "Night Of The Big Heat Blu-ray"
+    assert candidate.price == Decimal("10.00")
+    assert candidate.currency == "GBP"
+    assert candidate.url == "/p/night-of-the-big-heat-blu-ray/10945421/"
+
+
+@pytest.mark.parametrize(
+    ("name", "html", "expected_title", "expected_price", "expected_url"),
+    [
+        (
+            "101 Films",
+            '<div class="product-info-inner"><a href="/products/bad-lieutenant">'
+            '<span class="prod-title">Bad Lieutenant (1992) (4K-UHD)</span></a>'
+            '<div class="price"><span class="money">£22.00</span></div></div>',
+            "Bad Lieutenant (1992) (4K-UHD)",
+            Decimal("22.00"),
+            "/products/bad-lieutenant",
+        ),
+        (
+            "Second Sight",
+            '<h3 class="card__heading"><a href="/products/name-of-the-rose">'
+            "The Name of the Rose 4K UHD</a></h3>"
+            '<span class="price-item--regular">£24.99 GBP</span>',
+            "The Name of the Rose 4K UHD",
+            Decimal("24.99"),
+            "/products/name-of-the-rose",
+        ),
+        (
+            "Powerhouse Films",
+            '<a class="list-view-item" href="/products/the-last-detail-bd">'
+            '<div class="list-view-item__title">THE LAST DETAIL - BD</div>'
+            '<span class="product-price__price">£9.99</span></a>',
+            "THE LAST DETAIL - BD",
+            Decimal("9.99"),
+            "/products/the-last-detail-bd",
+        ),
+    ],
+)
+def test_supported_replacement_markup(
+    name: str,
+    html: str,
+    expected_title: str,
+    expected_price: Decimal,
+    expected_url: str,
+) -> None:
+    candidate = extract(html, BUILT_IN_SCRAPERS[name]["config"])
+
+    assert candidate.title == expected_title
+    assert candidate.price == expected_price
+    assert candidate.currency == "GBP"
+    assert candidate.url == expected_url
 
 
 # ---------------------------------------------------------------------------
@@ -407,6 +503,34 @@ async def test_a_transient_failure_is_retried_once(
     assert attempts["n"] == 2
     assert outcome.ok, outcome.reasons
     assert candidate is not None and candidate.price == Decimal("19.99")
+
+
+async def test_an_outcome_carries_the_currency_the_price_was_read_in() -> None:
+    """A bare number is not a price. `check_shape` refuses a currency the retailer is not
+    configured for rather than converting it (#79), so the outcome has to carry the code or
+    the report loses the one fact that makes the number checkable."""
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=RUNNER_PAGE))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        _candidate_out, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+    assert outcome.ok
+    assert outcome.price == Decimal("19.99")
+    assert outcome.currency == "GBP"
+
+
+async def test_a_relative_listing_link_becomes_an_absolute_persistable_url() -> None:
+    page = RUNNER_PAGE.replace(
+        'href="https://93.184.216.34/product/heat-4k"',
+        'href="/product/heat-4k"',
+    )
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=page))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        candidate, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+    assert outcome.ok
+    assert outcome.url == "https://93.184.216.34/product/heat-4k"
+    assert candidate is not None
+    assert candidate.url == "https://93.184.216.34/product/heat-4k"
 
 
 async def test_a_shape_failure_is_not_retried(

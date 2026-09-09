@@ -36,11 +36,13 @@ router = APIRouter(prefix="/api/v1", tags=["scraping"])
 
 @router.get("/scrapers/built-in", response_model=BuiltInScraperListResponse)
 async def list_built_in_scrapers(_user: AdminUser) -> BuiltInScraperListResponse:
-    """The six configurations §5.3 names, and which of them anybody has actually run.
+    """Every built-in configuration, and which of them anybody has actually run.
 
-    ``unverified`` is all six today. Reported so a settings page can say so rather than
-    implying six working scrapers exist — the ledger's risk note for this batch is that a
-    wrong selector does not error, it persists a plausible wrong number.
+    ``unverified`` is the four sources that cannot be scraped from here — HMV and CEX
+    disallow the search routes, Amazon blocks automated access, Blu-ray.com lists
+    third-party prices — reported so the settings page says so rather than implying they
+    work. The ledger's risk note for this batch is that a wrong selector does not error,
+    it persists a plausible wrong number.
     """
     return BuiltInScraperListResponse(
         items=[
@@ -137,6 +139,7 @@ async def run_scrapers(
                 wantedTitle=outcome.wanted_title,
                 ok=outcome.ok,
                 price=str(outcome.price) if outcome.price is not None else None,
+                currency=outcome.currency,
                 url=outcome.url,
                 reasons=outcome.reasons,
                 error=outcome.error,
@@ -164,6 +167,10 @@ async def apply_built_in_configs(user: AdminUser, db: Database) -> BuiltInScrape
         entry = BUILT_IN_SCRAPERS.get(retailer.name)
         if entry is None:
             continue
+        # A built-in may correct an old seed URL (Arrow originally pointed at its US
+        # storefront) or supply the canonical host for a supported replacement.
+        if entry.get("base"):
+            retailer.base_url = str(entry["base"])
         retailer.search_url_template = str(entry["search"])
         retailer.scraper_config = dict(entry["config"])
     await db.commit()

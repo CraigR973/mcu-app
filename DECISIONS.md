@@ -1199,3 +1199,62 @@ contemporaneous.
     *Why:* this is a private, two-person app whose calendar already works in-app. The RFC 5545
     feed remains available for either owner to subscribe to later, but device-level external
     calendar verification is not a present priority and must not hold up other work.
+
+### 2026-09-09 — supported retailer paths
+
+91. **Four of §5.3's six shops cannot be scraped from here, and stay listed as permanently
+    unverified rather than being deleted or left looking pending.** Live checks on
+    2026-09-09 settled each one: **HMV** and **CEX** disallow the search routes this job
+    needs; **Amazon UK** blocks automated access, and its official Product Advertising API
+    is unsuitable for a private two-person app; **Blu-ray.com** is a catalogue whose prices
+    belong to third parties, so a number scraped from it is not a price anyone can pay.
+    Three UK boutique labels that *do* serve usable server-rendered search — **101 Films**,
+    **Second Sight** and **Powerhouse Films** — join Zavvi and Arrow instead, and **eBay
+    takes the general-market role** once the application recorded on 2026-09-09 is approved.
+
+    *Why keep the four rather than delete them:* deleting them makes the app silently
+    narrower and invites the next agent to re-derive the same four answers from scratch. A
+    row that says "unverified, and here is why" is the finding. `verified: false` now means
+    "this will not work", not "nobody has got round to it" — which is what it meant when
+    every built-in carried it (#80, superseded on this point only).
+
+    *Why not scrape them anyway:* a shop's own stated access rules are not a technical
+    obstacle to route around. That reasoning is the same one that keeps the fetcher's SSRF
+    guard on (#81) — the constraint is the point, not the bug.
+
+92. **Arrow's built-in pointed at `arrowvideo.com`, which is the US storefront.** It
+    correctly returns USD, so `check_shape`'s currency rule (#79) rejected every otherwise
+    valid result. The UK shop is `arrowfilms.com`, and `apply-built-ins` now corrects a
+    retailer's `base_url` from the built-in as well as its selectors.
+
+    *Why the endpoint may rewrite `base_url`:* a seeded retailer's URL was described as "a
+    fact" in Batch 18, and this is the case where the fact was wrong. Applying built-ins is
+    already a deliberate, admin-only action distinct from seeding, so it is the right place
+    to correct a host — and without it the only fix is hand-editing a row.
+
+93. **`_same_site` compared the last two labels, so every `.co.uk` host was one shop.**
+    The listing-URL guard — the fifth of #79's five shape rules — read `co.uk` as the
+    registrable domain, meaning a link off `secondsightfilms.co.uk` to any other `.co.uk`
+    site passed. It now reduces both hosts to a registrable domain against an explicit list
+    of multi-label public suffixes, falling back to the old behaviour for suffixes it does
+    not know, so it is never weaker than before and stronger for the UK.
+
+    *Why it matters now:* the defect shipped in Batch 19 and was **latent** — no `.co.uk`
+    retailer had working selectors, so the guard was never asked. Second Sight and
+    Powerhouse are the first, which arms it. This is the same shape as Batch 17's iCal
+    injection, which Batch 19's scrapers would have armed (#73): a rule that is only wrong
+    once something else starts using it.
+
+94. **A dry run reports zero rows written, and `written` counts rows that actually exist.**
+    `run_scrape` incremented `written` outside the `if not dry_run` guard, so a preview
+    claimed to have saved prices it had not, and a real run counted writes that
+    `_write_check` had silently declined. `_write_check` now returns whether a row was
+    inserted or updated, and takes its same-day uniqueness race inside a **savepoint** —
+    rolling back the whole session there would have discarded the valid rows written
+    earlier in the same multi-retailer run.
+
+    *And the reason `_write_check` was declining:* retailer pages return **relative**
+    product links, which fail its `http(s)://` check. `scrape_one` now resolves the link
+    against the page's post-redirect URL, which both makes the stored link usable and lets
+    the same-site guard judge its real host — a relative URL previously had no hostname, so
+    that guard was skipped entirely.

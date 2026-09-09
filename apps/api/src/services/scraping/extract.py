@@ -225,8 +225,59 @@ def check_shape(
     return verdict
 
 
+#: Public suffixes made of more than one label, where the last two labels of a hostname are
+#: a *suffix* rather than a domain. Without these, ``secondsightfilms.co.uk`` and any other
+#: ``.co.uk`` host compare equal and the listing-URL guard passes anything on the whole TLD.
+#:
+#: This is a pragmatic list, not the Public Suffix List: it covers the UK — where every
+#: retailer this app scrapes lives — plus the country suffixes a film shop plausibly uses.
+#: An unlisted multi-part suffix falls back to the last two labels, so the guard is never
+#: weaker than it was before this list existed, only stronger for what it knows.
+MULTI_LABEL_SUFFIXES = frozenset(
+    {
+        "ac.uk",
+        "co.uk",
+        "gov.uk",
+        "ltd.uk",
+        "me.uk",
+        "net.uk",
+        "org.uk",
+        "plc.uk",
+        "sch.uk",
+        "com.au",
+        "net.au",
+        "org.au",
+        "co.nz",
+        "co.jp",
+        "co.za",
+        "co.in",
+        "co.kr",
+        "co.il",
+        "com.br",
+        "com.hk",
+        "com.mx",
+        "com.sg",
+        "com.tr",
+    }
+)
+
+
+def _registrable_domain(host: str) -> str:
+    """The shop-identifying part of a hostname: one label plus its public suffix.
+
+    ``store.hmv.com`` and ``www.hmv.com`` both reduce to ``hmv.com``; ``evil.co.uk`` and
+    ``secondsightfilms.co.uk`` reduce to themselves and so are correctly different shops.
+    """
+    parts = host.lower().strip(".").split(".")
+    if len(parts) >= 3 and ".".join(parts[-2:]) in MULTI_LABEL_SUFFIXES:
+        return ".".join(parts[-3:])
+    return ".".join(parts[-2:])
+
+
 def _same_site(host: str, expected: str) -> bool:
-    """Same registrable-ish domain. ``www.hmv.com`` and ``store.hmv.com`` are one shop."""
-    host_parts = host.lower().split(".")
-    expected_parts = expected.lower().split(".")
-    return host_parts[-2:] == expected_parts[-2:]
+    """Same registrable domain. ``www.hmv.com`` and ``store.hmv.com`` are one shop.
+
+    ``secondsightfilms.co.uk`` and ``someoneelse.co.uk`` are **not**, which is the whole
+    point: a listing URL that leaves the retailer is how a plausible wrong number gets in.
+    """
+    return _registrable_domain(host) == _registrable_domain(expected)

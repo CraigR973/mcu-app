@@ -517,9 +517,13 @@ price-drop alerts and aggregates. Build a per-scraper 'last known good shape' as
 just a success/fail counter."* `services/scraping/extract.py:check_shape` is that
 assertion, and a result failing it is a **failure**, never data (`DECISIONS.md` #79).
 
-**All six built-in configurations report `verified: false`** and the UI says so. A selector
-nobody has run against a live page is a guess, and the honest state of a guess is
-unverified (#80).
+**A built-in reports `verified: false` until a live page-shape check passes**, and the UI
+says so. A selector nobody has run against a live page is a guess, and the honest state of a
+guess is unverified (#80). Those checks ran on 2026-09-09: **five shops passed** — Zavvi,
+Arrow (on its UK domain), 101 Films, Second Sight and Powerhouse — and **four are
+permanently unverified**, because HMV and CEX disallow the search routes, Amazon blocks
+automated access, and Blu-ray.com is a catalogue rather than a shop (#91). They stay listed
+with the reason rather than being deleted. eBay takes the general-market role on approval.
 
 **The framework fetches URLs a person typed, which is a new kind of surface for this app.**
 `services/scraping/fetcher.py` resolves the host and refuses anything not publicly
@@ -638,7 +642,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~16~~ | ~~Watch providers + recommendations~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~7.1, 7.2~~ | live: *North by Northwest* shows HBO Max + 6 rent + 6 buy in GB; **20 recommendations, 7 already on the shelf**; **"wanted" dropped — Batch 18 owns it** |
 | ~~17~~ | ~~Release calendar + iCal~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~7.3, 7.4 — secret-token `.ics` URL~~ | live ingestion put **32 rows** in `release_calendar`, re-run idempotent; feed serves unauthenticated with hashed rotating tokens. **A security review found and closed a URL content-injection hole.** Apple Calendar check is an owner action |
 | ~~18~~ | ~~Wanted list + retailers~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~5.1, 5.2 (full scope)~~ | §3.5 and §3.16 built; **four debts from Batches 13, 15, 16 and 17 paid**; 6 default retailers seeded, **0 configured — selectors are Batch 19's** |
-| ~~19~~ | ~~**Scraper framework**~~ | ~~🔴~~ | — shipped | — shipped | **shipped — acceptance deferred** | ~~**5.3, 5.4**~~ | framework, six built-ins, retry + auto-disable, SSRF-guarded fetcher, 33 fixture tests. **Both acceptance criteria need live retailer runs — the owner performs them** (Group F's checkpoint) |
+| ~~19~~ | ~~**Scraper framework**~~ | ~~🔴~~ | — shipped | — shipped | **shipped — acceptance deferred** | ~~**5.3, 5.4**~~ | framework, nine built-ins, retry + auto-disable, SSRF-guarded fetcher, fixture tests. Page-shape checks (2026-09-09) verified **5 shops** and ruled out 4 permanently (#91); the runner's relative-URL and `written`-count defects were fixed then (#94). **Both acceptance criteria still need the owner's live `dryRun=false` run** (Group F's checkpoint) |
 | 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
 | 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
