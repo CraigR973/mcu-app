@@ -6,6 +6,7 @@ import {
   auditFieldChangeSchema,
   boxSetDetailSchema,
   boxSetSchema,
+  builtInScraperListSchema,
   candidateListSchema,
   collectionCopiesSchema,
   collectionFacetsSchema,
@@ -20,6 +21,7 @@ import {
   ownershipStateSchema,
   profileResponseSchema,
   recommendationSchema,
+  scraperTestSchema,
   smartCollectionFiltersSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
@@ -910,5 +912,65 @@ describe('trashTableSchema', () => {
   it('still refuses a table with no bin', () => {
     // `smart_collections` hard-deletes by design — there is nothing for a trash to hold.
     expect(trashTableSchema.safeParse('smart_collections').success).toBe(false)
+  })
+})
+
+describe('scraperTestSchema', () => {
+  const base = {
+    fetched: true,
+    finalUrl: 'https://store.example/search?q=Heat',
+    title: 'Heat [4K UHD]',
+    rawPriceText: '£19.99',
+    price: '19.99',
+    currency: 'GBP',
+    listingUrl: 'https://store.example/p/heat',
+    ok: true,
+    reasons: [],
+    error: null,
+  }
+
+  it('parses a good test result', () => {
+    expect(scraperTestSchema.parse(base).ok).toBe(true)
+  })
+
+  it('models "fetched fine, but this is not a price" as its own outcome', () => {
+    // The failure this whole batch is built around: the request works, the number parses,
+    // and it is wrong. `ok: false` with `fetched: true` is the shape that says so.
+    const parsed = scraperTestSchema.parse({
+      ...base,
+      ok: false,
+      price: '5.00',
+      rawPriceText: 'Save £5.00',
+      reasons: ['page title has nothing in common with "North by Northwest"'],
+    })
+    expect(parsed.fetched).toBe(true)
+    expect(parsed.ok).toBe(false)
+    expect(parsed.reasons).toHaveLength(1)
+  })
+
+  it('keeps a price as a string', () => {
+    // Money never round-trips through a float, all the way out to the screen.
+    expect(typeof scraperTestSchema.parse(base).price).toBe('string')
+  })
+})
+
+describe('builtInScraperListSchema', () => {
+  it('carries the unverified list, which is all six today', () => {
+    // §5.3's acceptance is a live run against each retailer — an owner action. A selector
+    // nobody has run is a guess, and the schema makes the app say so.
+    const parsed = builtInScraperListSchema.parse({
+      items: [
+        {
+          name: 'HMV',
+          searchUrlTemplate: 'https://store.hmv.com/search?q={query}',
+          scraperConfig: { price: '.price' },
+          verified: false,
+          note: null,
+        },
+      ],
+      unverified: ['HMV'],
+    })
+    expect(parsed.items[0].verified).toBe(false)
+    expect(parsed.unverified).toEqual(['HMV'])
   })
 })

@@ -25,6 +25,12 @@ dependencies = [
     "bcrypt>=4.1.3",
     "pyjwt>=2.9.0",
     "slowapi>=0.1.9",
+    # Batch 19 — the scraper framework's CSS selectors. beautifulsoup4 with Python's own
+    # `html.parser`, deliberately **not** lxml: lxml needs libxml2 and libxslt in the
+    # image, and `AGENTS.md` notes the Docker image is built by Railway and not by CI — so
+    # a missing shared object would fail a deploy rather than a pull request. Batch 14
+    # turned down a PDF renderer for the same reason.
+    "beautifulsoup4>=4.12.3",
 ]
 
 [project.optional-dependencies]

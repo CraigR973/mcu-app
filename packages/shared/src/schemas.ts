@@ -925,3 +925,65 @@ export type ScrapeFrequency = z.infer<typeof scrapeFrequencySchema>
 export type RetailerRow = z.infer<typeof retailerSchema>
 export type RetailerList = z.infer<typeof retailerListSchema>
 export type RetailerSeed = z.infer<typeof retailerSeedSchema>
+
+// ---------------------------------------------------------------------------
+// Scraper framework (Batch 19) — §5.3, §5.4
+// ---------------------------------------------------------------------------
+
+/** What §5.4's "test scraper" found, and whether it looks like a price.
+ *
+ *  `ok` is **not** "the request succeeded" — a page that fetched perfectly and yielded a
+ *  plausible wrong number reports `ok: false` with reasons. That distinction is the whole
+ *  reason the tool exists before a retailer is enabled. */
+export const scraperTestSchema = z.object({
+  fetched: z.boolean(),
+  finalUrl: z.string().nullable(),
+  title: z.string().nullable(),
+  rawPriceText: z.string().nullable(),
+  price: z.string().nullable(),
+  currency: z.string().nullable(),
+  listingUrl: z.string().nullable(),
+  ok: z.boolean(),
+  reasons: z.array(z.string()),
+  error: z.string().nullable(),
+})
+
+export const builtInScraperSchema = z.object({
+  name: z.string().min(1),
+  searchUrlTemplate: z.string().min(1),
+  scraperConfig: z.record(z.unknown()),
+  /** False for all six: §5.3's acceptance is a live run against each retailer, which is an
+   *  owner action. A selector nobody has run is a guess. */
+  verified: z.boolean(),
+  note: z.string().nullable(),
+})
+
+export const builtInScraperListSchema = z.object({
+  items: z.array(builtInScraperSchema),
+  unverified: z.array(z.string()),
+})
+
+export const scrapeOutcomeSchema = z.object({
+  retailer: z.string().min(1),
+  wantedTitle: z.string().min(1),
+  ok: z.boolean(),
+  price: z.string().nullable(),
+  url: z.string().nullable(),
+  reasons: z.array(z.string()),
+  error: z.string().nullable(),
+})
+
+export const scrapeRunSchema = z.object({
+  outcomes: z.array(scrapeOutcomeSchema),
+  succeeded: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  written: z.number().int().nonnegative(),
+  disabled: z.array(z.string()),
+  dryRun: z.boolean(),
+})
+
+export type ScraperTest = z.infer<typeof scraperTestSchema>
+export type BuiltInScraper = z.infer<typeof builtInScraperSchema>
+export type BuiltInScraperList = z.infer<typeof builtInScraperListSchema>
+export type ScrapeOutcome = z.infer<typeof scrapeOutcomeSchema>
+export type ScrapeRun = z.infer<typeof scrapeRunSchema>

@@ -140,4 +140,10 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/retailers",
         "/api/v1/retailers/{retailer_id}",
         "/api/v1/retailers/seed",
+        # Batch 19. None of these runs on a schedule: §5.5 is Batch 20, and §5.3's
+        # acceptance is a live run against real shops, which the owner performs.
+        "/api/v1/scrapers/built-in",
+        "/api/v1/scrapers/test",
+        "/api/v1/scrapers/run",
+        "/api/v1/scrapers/apply-built-ins",
     }

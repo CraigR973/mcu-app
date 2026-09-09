@@ -395,15 +395,25 @@ async def test_seeding_is_idempotent_and_leaves_selectors_empty(
     """
     first = await client.post("/api/v1/retailers/seed")
     assert first.status_code == 200, first.text
-    assert first.json()["created"] >= 6
 
     second = await client.post("/api/v1/retailers/seed")
+    # Idempotent: whatever the first call did, the second adds nothing.
     assert second.json()["created"] == 0
 
+    # Asserted on the resulting **state**, not on how many rows this call happened to
+    # create. Live Neon already holds the six defaults — they were seeded during Batch 18's
+    # own verification and are an acceptance criterion, so they stay — and a test that
+    # counted creations would pass only against an empty database. `STATUS.md`'s Now block
+    # is the standing record of tests that assumed exactly that.
     listed = (await client.get("/api/v1/retailers")).json()
-    seeded = [r for r in listed["items"] if r["name"] in {n for n in first.json()["names"]}]
-    assert seeded, "the seeded rows are not listed"
-    assert all(r["scraperConfig"] == {} for r in seeded)
+    by_name = {r["name"]: r for r in listed["items"]}
+    for expected in ("HMV", "Zavvi", "Amazon UK", "Blu-ray.com", "Arrow Video", "Criterion"):
+        assert expected in by_name, expected
+
+    seeded = [by_name[name] for name in first.json()["names"]] or [
+        by_name[name] for name in ("HMV", "Zavvi")
+    ]
+    assert all(r["scraperConfig"] == {} for r in seeded), seeded
     assert all(r["isConfigured"] is False for r in seeded)
 
 

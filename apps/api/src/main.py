@@ -23,6 +23,7 @@ from src.routers import (
     health,
     insights,
     movies,
+    scraping,
     smart_collections,
     stats,
     trash,
@@ -108,3 +109,4 @@ app.include_router(trash.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)
 app.include_router(wanted.router)
+app.include_router(scraping.router)

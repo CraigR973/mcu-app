@@ -26,6 +26,7 @@ from src.models.completion_set import (
 )
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
+from src.models.price_check import PriceCheck
 from src.models.profile import Profile, RefreshToken, UserRole
 from src.models.rate_limit import RateLimitCounter
 from src.models.release_calendar import (
@@ -72,6 +73,7 @@ __all__ = [
     "Loan",
     "Movie",
     "MovieCredit",
+    "PriceCheck",
     "Profile",
     "RATING_MAX",
     "RATING_MIN",

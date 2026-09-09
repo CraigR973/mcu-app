@@ -179,3 +179,92 @@ class RetailerSeedResponse(BaseModel):
     created: int
     existing: int
     names: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Scraping (Batch 19) — §5.3, §5.4
+# ---------------------------------------------------------------------------
+
+
+class ScraperTestRequest(BaseModel):
+    """§5.4's "test scraper" — run selectors against a page and show what they matched.
+
+    **This makes the server fetch a URL a person typed**, which is why `services/scraping/
+    fetcher.py` resolves the host and refuses anything not publicly routable. Admin-only,
+    but the realistic risk is a paste or a typo reaching the container's own loopback
+    interface, not malice.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    url: Annotated[str, Field(min_length=1, max_length=2000)]
+    scraperConfig: dict[str, Any]
+    #: Optional: when given, the shape check can also say whether the page is about the
+    #: right film, which is the failure that otherwise looks completely normal.
+    expectedTitle: Annotated[str | None, Field(max_length=500)] = None
+    expectedCurrency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")] = "GBP"
+
+    @field_validator("url")
+    @classmethod
+    def _http_only_url(cls, value: str) -> str:
+        candidate = value.strip()
+        if not candidate.lower().startswith(("http://", "https://")):
+            raise ValueError("URLs must start with http:// or https://")
+        return candidate
+
+
+class ScraperTestResponse(BaseModel):
+    """What the selectors matched, and whether it looks like a price.
+
+    ``ok`` is **not** "the request succeeded" — it is "this looks like a real price for
+    this film". A page that fetched perfectly and yielded a plausible-looking wrong number
+    reports ``ok: false`` with the reason, which is the entire point of §5.4 existing
+    before a retailer is enabled.
+    """
+
+    fetched: bool
+    finalUrl: str | None
+    title: str | None
+    rawPriceText: str | None
+    price: str | None
+    currency: str | None
+    listingUrl: str | None
+    ok: bool
+    reasons: list[str]
+    error: str | None
+
+
+class ScrapeOutcomeResponse(BaseModel):
+    retailer: str
+    wantedTitle: str
+    ok: bool
+    price: str | None
+    url: str | None
+    reasons: list[str]
+    error: str | None
+
+
+class ScrapeRunResponse(BaseModel):
+    outcomes: list[ScrapeOutcomeResponse]
+    succeeded: int
+    failed: int
+    written: int
+    #: Retailers switched off by this run, after three consecutive failures.
+    disabled: list[str]
+    dryRun: bool
+
+
+class BuiltInScraperResponse(BaseModel):
+    name: str
+    searchUrlTemplate: str
+    scraperConfig: dict[str, Any]
+    #: **False for all six.** §5.3's acceptance is a live run against each retailer, which
+    #: is an owner action; until then a selector is a guess, and the honest state of a
+    #: guess is "unverified".
+    verified: bool
+    note: str | None
+
+
+class BuiltInScraperListResponse(BaseModel):
+    items: list[BuiltInScraperResponse]
+    unverified: list[str]

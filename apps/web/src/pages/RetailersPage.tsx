@@ -3,10 +3,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Plus, Sprout, Store, Trash2, TriangleAlert } from 'lucide-react'
 import type { RetailerRow } from '@mcu/shared'
 
+import { ScraperTester } from '@/components/ScraperTester'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   addRetailer,
+  applyBuiltInScrapers,
+  fetchBuiltInScrapers,
   fetchRetailers,
   removeRetailer,
   seedRetailers,
@@ -44,7 +47,7 @@ function Row({ retailer }: { retailer: RetailerRow }) {
   return (
     <li
       className={cn(
-        'flex items-center gap-3 rounded-lg border border-border bg-card p-3',
+        'flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3',
         retailer.enabled ? '' : 'opacity-60',
       )}
     >
@@ -87,7 +90,76 @@ function Row({ retailer }: { retailer: RetailerRow }) {
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+      {/* §5.4. A person validates a retailer here *before* enabling it, because the
+          failure this batch is about fetches fine and returns the wrong number. */}
+      <ScraperTester retailer={retailer} />
     </li>
+  )
+}
+
+/**
+ * §5.3's six built-in configurations, and the honest state of each.
+ *
+ * **All six report `verified: false`**, because §5.3's acceptance is a run against the
+ * *live* retailer and that is an owner action, not something an agent may do. Applying them
+ * is a separate, deliberate button from Batch 18's seeding: a seeded retailer is a name and
+ * a URL, which is a fact; a selector is a guess until someone has watched it work.
+ */
+function BuiltInPanel() {
+  const queryClient = useQueryClient()
+  const builtInsQuery = useQuery({
+    queryKey: ['built-in-scrapers'],
+    queryFn: fetchBuiltInScrapers,
+  })
+  const apply = useMutation({
+    mutationFn: applyBuiltInScrapers,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['retailers'] })
+      void queryClient.invalidateQueries({ queryKey: ['built-in-scrapers'] })
+    },
+  })
+
+  const data = builtInsQuery.data
+  if (!data) return null
+
+  return (
+    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+      <p className="text-xs font-semibold text-foreground">
+        Built-in selectors ({data.items.length})
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {data.unverified.length === data.items.length
+          ? 'None of these has been run against a live page yet — every one is a guess until someone watches it work. Use “Test” on a retailer before enabling it.'
+          : `${String(data.unverified.length)} of ${String(data.items.length)} are still unverified.`}
+      </p>
+      <ul className="flex flex-wrap gap-1.5">
+        {data.items.map((entry) => (
+          <li
+            key={entry.name}
+            className={cn(
+              'rounded-md border px-2 py-0.5 text-[11px]',
+              entry.verified
+                ? 'border-primary/40 text-primary'
+                : 'border-amber-500/40 text-amber-500',
+            )}
+            title={entry.note ?? undefined}
+          >
+            {entry.name}
+            {entry.verified ? '' : ' · unverified'}
+          </li>
+        ))}
+      </ul>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={apply.isPending}
+        onClick={() => apply.mutate()}
+      >
+        {apply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        Apply these selectors to the matching retailers
+      </Button>
+    </div>
   )
 }
 
@@ -203,6 +275,8 @@ export default function RetailersPage() {
       </div>
 
       {creating ? <NewRetailerForm onDone={() => setCreating(false)} /> : null}
+
+      <BuiltInPanel />
 
       {items.length > 0 && retailersQuery.data?.configuredCount === 0 ? (
         <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-muted-foreground">

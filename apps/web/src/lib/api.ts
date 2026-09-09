@@ -19,9 +19,12 @@ import {
   movieDetailSchema,
   moviePageSchema,
   newReleaseListSchema,
+  builtInScraperListSchema,
   retailerListSchema,
   retailerSchema,
   retailerSeedSchema,
+  scraperTestSchema,
+  scrapeRunSchema,
   recommendationListSchema,
   streamingSchema,
   profileResponseSchema,
@@ -69,8 +72,11 @@ import {
   type RecommendationList,
   type RetailerList,
   type RetailerRow,
+  type BuiltInScraperList,
   type RetailerSeed,
   type ScrapeFrequency,
+  type ScrapeRun,
+  type ScraperTest,
   type ScraperType,
   type Streaming,
   type ProfileResponse,
@@ -135,9 +141,14 @@ export type {
   OwnershipState,
   Recommendation,
   RecommendationList,
+  BuiltInScraper,
+  BuiltInScraperList,
   RetailerList,
   RetailerRow,
   ScrapeFrequency,
+  ScrapeOutcome,
+  ScrapeRun,
+  ScraperTest,
   ScraperType,
   Streaming,
   StreamingOffer,
@@ -1217,5 +1228,48 @@ export async function seedRetailers(): Promise<RetailerSeed> {
   return parseOrThrowApiError(
     await authFetch('/retailers/seed', { method: 'POST' }),
     retailerSeedSchema,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Scraper framework (Batch 19) — §5.3, §5.4
+// ---------------------------------------------------------------------------
+
+export async function fetchBuiltInScrapers(): Promise<BuiltInScraperList> {
+  return parseResponse(await authFetch('/scrapers/built-in'), builtInScraperListSchema)
+}
+
+export async function applyBuiltInScrapers(): Promise<BuiltInScraperList> {
+  return parseOrThrowApiError(
+    await authFetch('/scrapers/apply-built-ins', { method: 'POST' }),
+    builtInScraperListSchema,
+  )
+}
+
+/**
+ * §5.4's "test scraper". **This makes the server fetch the URL**, so it is slow and it is
+ * a real request to a real shop — which is why it is a button a person presses rather than
+ * anything automatic.
+ */
+export async function testScraper(input: {
+  url: string
+  scraperConfig: Record<string, unknown>
+  expectedTitle?: string | null
+  expectedCurrency?: string
+}): Promise<ScraperTest> {
+  return parseOrThrowApiError(
+    await authFetch('/scrapers/test', {
+      method: 'POST',
+      body: JSON.stringify({ expectedCurrency: 'GBP', ...input }),
+    }),
+    scraperTestSchema,
+  )
+}
+
+/** Dry by default, matching the endpoint — this hits real shops. */
+export async function runScrapers(dryRun = true): Promise<ScrapeRun> {
+  return parseOrThrowApiError(
+    await authFetch(`/scrapers/run?dryRun=${String(dryRun)}`, { method: 'POST' }),
+    scrapeRunSchema,
   )
 }

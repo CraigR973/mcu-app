@@ -494,6 +494,38 @@ says why.
 inspectable — a migration that inserts rows makes `downgrade` ambiguous and CI cannot prove
 either direction.
 
+### ~~Batch 19 — Scraper framework~~ 🔴 **shipped, acceptance deferred to the owner**
+**Covers phases 5.3 and 5.4**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 5.3: Scraper Framework** — Generic CSS scraper that uses retailer config · Built-in scrapers for HMV, Amazon UK, Blu-ray.com, Zavvi, Arrow, CEX · Error handling with retry and auto-disable after 3 fails. **Acceptance:** Each built-in scraper runs against the **live** retailer and persists ≥ 1 `price_checks` row per scraper for a real wanted item; total `price_checks` rows after the run verified > 0.
+>
+> **Phase 5.4: Test Scraper Tool** — "Test scraper" button in retailer UI · Runs selectors against live page, displays sample results. **Acceptance:** Admin validates a new retailer before enabling
+
+**Neither acceptance criterion is met by this batch, by design.** Both require live
+requests to real shops, which `group-start.md` makes a hard stop:
+
+> "A batch whose acceptance requires **live third-party requests** (scraper runs against
+> real retailers, live eBay or mailbox calls) stops before those runs. The owner performs
+> them. Fixture-backed tests may run unattended; live ones may not."
+
+That is Group F's own **checkpoint: live scraper acceptance runs**, which sits between this
+batch and Batch 20. The framework is built and fixture-tested; the runs are the owner's.
+
+**The whole batch is shaped by one sentence in its risk note** — *"a layout change does not
+error — it selects the wrong node and persists a plausible wrong number, which then feeds
+price-drop alerts and aggregates. Build a per-scraper 'last known good shape' assertion, not
+just a success/fail counter."* `services/scraping/extract.py:check_shape` is that
+assertion, and a result failing it is a **failure**, never data (`DECISIONS.md` #79).
+
+**All six built-in configurations report `verified: false`** and the UI says so. A selector
+nobody has run against a live page is a guess, and the honest state of a guess is
+unverified (#80).
+
+**The framework fetches URLs a person typed, which is a new kind of surface for this app.**
+`services/scraping/fetcher.py` resolves the host and refuses anything not publicly
+routable — re-checked at **every redirect hop**, because httpx would otherwise follow a 302
+into an internal address (#81).
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -511,7 +543,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~16~~ | ~~Watch providers + recommendations~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~7.1, 7.2~~ | live: *North by Northwest* shows HBO Max + 6 rent + 6 buy in GB; **20 recommendations, 7 already on the shelf**; **"wanted" dropped — Batch 18 owns it** |
 | ~~17~~ | ~~Release calendar + iCal~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~7.3, 7.4 — secret-token `.ics` URL~~ | live ingestion put **32 rows** in `release_calendar`, re-run idempotent; feed serves unauthenticated with hashed rotating tokens. **A security review found and closed a URL content-injection hole.** Apple Calendar check is an owner action |
 | ~~18~~ | ~~Wanted list + retailers~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~5.1, 5.2 (full scope)~~ | §3.5 and §3.16 built; **four debts from Batches 13, 15, 16 and 17 paid**; 6 default retailers seeded, **0 configured — selectors are Batch 19's** |
-| 19 | **Scraper framework** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **5.3, 5.4** — see risk note below |
+| ~~19~~ | ~~**Scraper framework**~~ | ~~🔴~~ | — shipped | — shipped | **shipped — acceptance deferred** | ~~**5.3, 5.4**~~ | framework, six built-ins, retry + auto-disable, SSRF-guarded fetcher, 33 fixture tests. **Both acceptance criteria need live retailer runs — the owner performs them** (Group F's checkpoint) |
 | 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
 | 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
@@ -554,7 +586,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | ~~**C**~~ | ~~12~~ → ~~13~~ | — shipped | — shipped | ~~Same domain (sets/collections); 13 reuses 12's UI patterns~~ · **shipped** |
 | ~~**D**~~ | ~~14~~ → ~~15~~ | — shipped | — shipped | ~~Both admin-facing read surfaces, same verification shape~~ · **shipped** |
 | ~~**E**~~ | ~~16~~ → ~~17~~ | — shipped | — shipped | ~~Both TMDB-driven, same client, 17 reuses 16's patterns~~ · **shipped** |
-| **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |
+| **F** | ~~18~~ → ~~19~~ → **⛔ checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those. **18 and 19 shipped; stopped at the checkpoint** |
 | — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |
 | **G** | 22 → 23 | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19 |
 | **H** | 24 → 25 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Both blocked on the same two `vercel.json` fixes** — camera Permissions-Policy and CSP `connect-src` |
