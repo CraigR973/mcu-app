@@ -80,6 +80,28 @@ FORMAT_PATTERNS: dict[str, re.Pattern[str]] = {
     "dvd": re.compile(r"\bdvd\b", re.IGNORECASE),
 }
 
+#: Disc formats in descending precedence, mirroring `collection_item.FORMAT_RANK`. A combo
+#: pack naming two formats **is** the higher one: "Jaws - 4K Ultra HD (Includes 2D Blu-ray)"
+#: is a 4K disc that happens to bundle a Blu-ray, not a Blu-ray.
+DISC_FORMATS: tuple[str, ...] = ("4k_uhd", "blu_ray", "dvd")
+
+
+def primary_format(title: str | None, url: str | None = None) -> str | None:
+    """Which format a listing actually **is**, rather than which ones it mentions.
+
+    Matching on mention alone is not enough: every 4K combo pack also says "Blu-ray", so a
+    want for a Blu-ray would be satisfied by a £25 4K disc whenever the combo happened to
+    rank first. The highest format named wins, because that is what is in the box.
+    """
+    haystack = " ".join(part for part in (title, url) if part)
+    if not haystack:
+        return None
+    for code in DISC_FORMATS:
+        if FORMAT_PATTERNS[code].search(haystack):
+            return code
+    return None
+
+
 #: How a retailer writes each format in a **search query**. THG's search returns a franchise
 #: landing page full of merchandise for a bare title, and a disc grid when the query names a
 #: format, so the format is part of finding the film at all rather than a nicety.
@@ -368,11 +390,9 @@ def extract(
     if not qualifying:
         return candidates[0]
 
-    pattern = FORMAT_PATTERNS.get(preferred_format or "")
-    if pattern is not None:
+    if preferred_format in DISC_FORMATS:
         for candidate in qualifying:
-            haystack = " ".join(part for part in (candidate.title, candidate.url) if part)
-            if pattern.search(haystack):
+            if primary_format(candidate.title, candidate.url) == preferred_format:
                 return candidate
     return qualifying[0]
 

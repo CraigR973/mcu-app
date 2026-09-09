@@ -21,6 +21,48 @@ afterEach(() => {
 })
 
 describe('RetailersPage', () => {
+  it('says so when the format priced is not the one wanted', async () => {
+    // A fallback is allowed, but a maxPrice alert compares against whatever was priced —
+    // so a Blu-ray want answered with a 4K disc has to be visible in the report.
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/scrapers/built-in')) {
+        return new Response(JSON.stringify({ items: [], unverified: [] }))
+      }
+      if (url.includes('/scrapers/run')) {
+        return new Response(JSON.stringify({
+          outcomes: [{
+            retailer: 'Zavvi',
+            wantedTitle: 'Jaws',
+            ok: true,
+            price: '19.99',
+            currency: 'GBP',
+            substitutedFormat: '4k_uhd',
+            skipped: false,
+            url: 'https://www.zavvi.com/p/4k/jaws/1/',
+            reasons: [],
+            error: null,
+          }],
+          succeeded: 1,
+          failed: 0,
+          skipped: 0,
+          written: 0,
+          disabled: [],
+          dryRun: true,
+        }))
+      }
+      return new Response(JSON.stringify({
+        items: [], total: 0, enabledCount: 0, configuredCount: 0,
+      }))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Preview live run' }))
+
+    expect(await screen.findByText(/Not the format wanted — priced the 4K UHD/)).not.toBeNull()
+  })
+
   it('runs a live preview and shows the result without claiming a row was saved', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
@@ -35,12 +77,15 @@ describe('RetailersPage', () => {
             ok: true,
             price: '19.99',
             currency: 'GBP',
+            substitutedFormat: null,
+            skipped: false,
             url: 'https://www.zavvi.com/p/the-fall-guy/1/',
             reasons: [],
             error: null,
           }],
           succeeded: 1,
           failed: 0,
+          skipped: 0,
           written: 0,
           disabled: [],
           dryRun: true,

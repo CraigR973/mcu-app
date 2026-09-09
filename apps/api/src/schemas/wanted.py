@@ -258,6 +258,14 @@ class ScrapeOutcomeResponse(BaseModel):
     #: The currency `price` was read in. Never converted, so a report showing the number
     #: must show this beside it rather than assuming pounds.
     currency: str | None
+    #: The format actually priced, set **only** when it is not the one wanted. A fallback
+    #: is allowed but never silent: a `max_price` alert compares against whatever was
+    #: priced, so a Blu-ray want answered with a 4K disc has to say so.
+    substitutedFormat: str | None
+    #: True when nothing was attempted, because these shops cannot serve the want at all —
+    #: a digital copy. Neither a success nor a failure, and not counted towards a
+    #: retailer's auto-disable.
+    skipped: bool
     url: str | None
     reasons: list[str]
     error: str | None
@@ -267,6 +275,8 @@ class ScrapeRunResponse(BaseModel):
     outcomes: list[ScrapeOutcomeResponse]
     succeeded: int
     failed: int
+    #: Wants these shops cannot serve. Reported separately so they never read as failures.
+    skipped: int
     written: int
     #: Retailers switched off by this run, after three consecutive failures.
     disabled: list[str]

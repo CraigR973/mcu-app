@@ -23,6 +23,7 @@ import {
   fetchBuiltInScrapers,
   fetchRetailers,
   removeRetailer,
+  formatLabel,
   runScrapers,
   seedRetailers,
   updateRetailer,
@@ -114,7 +115,9 @@ function RunPanel() {
         <div className="space-y-2 text-xs">
           <p className="font-medium text-foreground">
             {result.dryRun ? 'Preview complete' : 'Run complete'}: {result.succeeded} passed,
-            {' '}{result.failed} failed, {result.written} price rows saved.
+            {' '}{result.failed} failed
+            {result.skipped > 0 ? `, ${String(result.skipped)} skipped` : ''},{' '}
+            {result.written} price rows saved.
           </p>
           {result.outcomes.length === 0 ? (
             <p className="text-muted-foreground">
@@ -128,9 +131,11 @@ function RunPanel() {
                   key={`${outcome.retailer}-${outcome.wantedTitle}-${String(index)}`}
                   className={cn(
                     'rounded-md border px-2 py-1.5',
-                    outcome.ok
-                      ? 'border-primary/30 text-foreground'
-                      : 'border-destructive/30 text-muted-foreground',
+                    outcome.skipped
+                      ? 'border-border text-muted-foreground'
+                      : outcome.ok
+                        ? 'border-primary/30 text-foreground'
+                        : 'border-destructive/30 text-muted-foreground',
                   )}
                 >
                   {outcome.retailer} · {outcome.wantedTitle} ·{' '}
@@ -141,6 +146,12 @@ function RunPanel() {
                           : 'price found'
                       }${result.dryRun ? '' : ' saved'}`
                     : (outcome.error ?? outcome.reasons.join('; ')) || 'no usable result'}
+                  {outcome.substitutedFormat ? (
+                    <span className="mt-0.5 block text-amber-500">
+                      Not the format wanted — priced the{' '}
+                      {formatLabel(outcome.substitutedFormat)}.
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>

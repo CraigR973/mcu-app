@@ -438,6 +438,23 @@ something on it, including two the ledger describes as "solo".
 
 ## Log
 
+- **2026-09-09** — **A want for a format now means that format.** Asked how a want for a
+  specific version of a film would behave. It mostly did — `preferred_format` picks 4K vs
+  Blu-ray vs DVD — but three defects were found underneath it (`DECISIONS.md` #101–#103):
+
+  1. **Every 4K disc also says "Blu-ray"**, and format preference matched on mention, so a
+     £19.99 4K combo satisfied a want for the £9.99 Blu-ray whenever it ranked first. A
+     listing is now the *highest* format it names, because that is what is in the box.
+  2. **A fallback was silent.** When the wanted format was not on the shelf, a different one
+     was priced with nothing said — and `max_price` compares against whatever was priced, so
+     an alert was either missed or wrong with no way to tell which disc it meant. The run
+     now reports the format actually priced and the UI says so.
+  3. **A digital want priced a disc.** `download` had no search term, so it fell back to
+     "Blu-ray". Worse, it counted as a retailer *failure* — and three consecutive failures
+     auto-disables a shop, so a digital-only wanted list would have **switched off every
+     enabled retailer in the app**. Digital wants are now skipped, reported separately, and
+     never counted against a shop that was never asked.
+
 - **2026-09-09** — **The Test button was sending shops an unfilled placeholder.** Reported
   from the app: *Jaws* on Zavvi returned **The Sheriff of Fractured Jaw (Dual Format
   Edition)**. The cause was the previous fix's own doing — `ScraperTester` built its search

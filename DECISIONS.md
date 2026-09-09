@@ -1344,3 +1344,32 @@ contemporaneous.
      *Why it matters more here than anywhere:* this is the tool whose green tick is the
      evidence a retailer gets enabled on. A test that is more permissive than the run it
      stands for will pass scrapers the run then rejects — or worse, the reverse.
+
+### 2026-09-09 — a want for a format means that format
+
+101. **A combo pack is the highest format it contains, not every format it mentions.**
+     Format preference matched on mention, and every 4K disc also says "Blu-ray" — so
+     *Jaws — 4K Ultra HD (Includes 2D Blu-ray)* satisfied a want for a Blu-ray, and a £19.99
+     4K disc was priced whenever it ranked above the £9.99 Blu-ray. `primary_format` now
+     takes the highest of `4k_uhd > blu_ray > dvd` present, because that is what is in the
+     box.
+
+102. **A format fallback is allowed, but never silent.** The shop plainly sells the film, so
+     refusing outright would be unhelpful; the run now reports `substitutedFormat` — the
+     format actually priced — whenever it is not the one wanted, and the UI says *"Not the
+     format wanted — priced the 4K UHD"*.
+
+     *Why it cannot stay silent:* `max_price` compares against whatever was priced. A
+     Blu-ray want with a £12 ceiling, answered by a £25 4K disc, is either a missed alert
+     or a wrong one, and nothing in the report would have said which disc it was about.
+
+103. **A digital want is skipped, not attempted, and never counts against a shop.**
+     `download` is in §3.4's format vocabulary but no disc shop stocks it. It had no search
+     term, so it fell back to "Blu-ray" and priced a disc as though it were the digital
+     copy.
+
+     *And skipping has to be its own state.* Auto-disable switches a retailer off after
+     three consecutive runs with no success (#82). Counting an unaskable want as a failure
+     would have switched off **every enabled shop in the app** after three runs of a wanted
+     list the shops cannot serve — a self-inflicted outage from a want that was never a
+     question anyone asked them. A shop that was never asked has not failed.

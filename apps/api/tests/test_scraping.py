@@ -30,6 +30,7 @@ from src.services.scraping.extract import (
     extract,
     looks_like_physical_media,
     parse_price,
+    primary_format,
 )
 from src.services.scraping.fetcher import UnsafeUrlError, assert_fetchable, fetch_page
 from src.services.scraping.runner import (
@@ -598,6 +599,73 @@ def test_the_wanted_format_decides_which_edition_is_priced() -> None:
     assert uhd.price == Decimal("22.00")
     # No preference stated: the shop's own first result, not an arbitrary one.
     assert unstated.price == Decimal("22.00")
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("Jaws - 4K Ultra HD (Includes 2D Blu-ray)", "4k_uhd"),
+        ("Bad Lieutenant (1992) (Limited Edition) (4K-UHD & Blu-ray)", "4k_uhd"),
+        ("Bad Lieutenant (1992) (Standard Edition) (Blu-ray)", "blu_ray"),
+        ("Deep Red Blu-ray", "blu_ray"),
+        ("Deep Red DVD", "dvd"),
+        ("Jaws Amity Welcome Sign Beach Towel", None),
+    ],
+)
+def test_a_combo_pack_is_the_higher_format_it_contains(title: str, expected: str | None) -> None:
+    """Every 4K combo also says "Blu-ray", so matching on mention alone let a £25 4K disc
+    satisfy a want for a Blu-ray whenever it ranked first. What is in the box decides."""
+    assert primary_format(title) == expected
+
+
+def test_a_blu_ray_want_is_not_answered_with_the_4k_combo_above_it() -> None:
+    html = _zavvi_card(
+        "/p/4k/jaws-4k/1/", "Jaws - 4K Ultra HD (Includes 2D Blu-ray)", "£19.99"
+    ) + _zavvi_card("/p/blu-ray/jaws-bd/2/", "Jaws Blu-ray", "£9.99")
+    config = BUILT_IN_SCRAPERS["Zavvi"]["config"]
+
+    blu_ray = extract(html, config, expected_title="Jaws", preferred_format="blu_ray")
+    uhd = extract(html, config, expected_title="Jaws", preferred_format="4k_uhd")
+
+    assert blu_ray.price == Decimal("9.99")
+    assert uhd.price == Decimal("19.99")
+
+
+async def test_a_format_substitution_is_reported_rather_than_passed_off() -> None:
+    """A fallback is allowed — the shop plainly sells the film — but never silently. A
+    `max_price` alert compares against whatever was priced, so a Blu-ray want answered with
+    a 4K disc has to say which format it actually found."""
+    page = RUNNER_PAGE.replace("Heat [4K UHD]", "Heat 4K Ultra HD (Includes Blu-ray)")
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=page))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        _c, wanted_dvd = await scrape_one(
+            _retailer(), "Heat", preferred_format="dvd", client=client
+        )
+        _c2, wanted_uhd = await scrape_one(
+            _retailer(), "Heat", preferred_format="4k_uhd", client=client
+        )
+
+    assert wanted_dvd.ok
+    assert wanted_dvd.substituted_format == "4k_uhd"
+    # The format asked for was found, so there is nothing to flag.
+    assert wanted_uhd.ok and wanted_uhd.substituted_format is None
+
+
+async def test_a_digital_want_is_skipped_without_asking_a_disc_shop() -> None:
+    """`download` is in the format vocabulary but no disc shop stocks it. Searching anyway
+    used to fall back to "Blu-ray" and price a disc as if it were the digital copy."""
+
+    def explode(request: httpx.Request) -> httpx.Response:  # pragma: no cover
+        raise AssertionError("a digital want must not reach a shop")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(explode)) as client:
+        candidate, outcome = await scrape_one(
+            _retailer(), "Heat", preferred_format="download", client=client
+        )
+
+    assert candidate is None
+    assert outcome.skipped and not outcome.ok
+    assert "digital" in (outcome.error or "")
 
 
 def test_a_format_that_is_out_of_stock_falls_back_rather_than_reporting_nothing() -> None:
