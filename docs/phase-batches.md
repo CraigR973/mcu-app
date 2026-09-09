@@ -569,6 +569,17 @@ Two things the review named as conscious trade-offs rather than defects: the slu
 in plaintext (`DECISIONS.md` #84 — a gift link must be re-shareable, unlike Batch 17's feed
 token), and it transits request logs the way any path parameter does.
 
+### Batch 36 — Command palette + shortcuts
+**Covers phases 6.3 and 6.4**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 6.3: Command Palette (⌘K)** — Modal with fuzzy search · Indexes films, pages,
+> actions, recent items · Keyboard navigation. **Acceptance:** ⌘K opens instantly; typing
+> "blade" surfaces Blade Runner films; Enter navigates
+>
+> **Phase 6.4: Keyboard Shortcuts** — Global shortcuts (g+h, g+c, /, n, ., ?) · Help modal
+> listing all shortcuts (triggered with ?). **Acceptance:** All documented shortcuts work;
+> help modal shows all
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -603,7 +614,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 33 | **Email — accounts + OAuth** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **10.1, 10.2, 10.3, 10.4** |
 | 34 | **Email — parsers + scanning** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **10.5, 10.6, 10.7, 10.8** |
 | 35 | Movie night | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
-| 36 | Command palette + shortcuts | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | **6.3, 6.4** |
+| 36 | Command palette + shortcuts | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | in progress | **6.3, 6.4** |
 | 37 | On-this-day + rewatch | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
 | 38 | E2E suite | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.10 — written alongside features, formalised here |
 
