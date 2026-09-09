@@ -84,6 +84,7 @@ def _wanted_response(item: WantedItem, movie: Movie, *, owned: bool) -> WantedIt
         year=movie.year,
         posterPath=movie.poster_path,
         preferredFormat=item.preferred_format,
+        preferredEdition=item.preferred_edition,
         # A string on the wire. Money never round-trips through a float, and this value is
         # the threshold Batch 20's alerts compare against.
         maxPrice=str(item.max_price) if item.max_price is not None else None,
@@ -199,6 +200,7 @@ async def add_wanted(
         id=uuid.uuid4(),
         movie_id=movie.id,
         preferred_format=payload.preferredFormat,
+        preferred_edition=payload.preferredEdition,
         max_price=Decimal(payload.maxPrice) if payload.maxPrice else None,
         currency=payload.currency,
         notes=payload.notes,
@@ -244,6 +246,7 @@ async def update_wanted(
         "is_active": item.is_active,
     }
     item.preferred_format = payload.preferredFormat
+    item.preferred_edition = payload.preferredEdition
     item.max_price = Decimal(payload.maxPrice) if payload.maxPrice else None
     item.currency = payload.currency
     item.is_active = payload.isActive

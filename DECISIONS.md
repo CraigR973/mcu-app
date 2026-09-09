@@ -1373,3 +1373,36 @@ contemporaneous.
      would have switched off **every enabled shop in the app** after three runs of a wanted
      list the shops cannot serve — a self-inflicted outage from a want that was never a
      question anyone asked them. A shop that was never asked has not failed.
+
+### 2026-09-09 — which edition, not just which format
+
+104. **`wanted_list.preferred_edition` is free text, not a vocabulary.** Boutique edition
+     names are invented per release — "Arte Originale Slipcover", "The Film Vault Range" —
+     so a fixed list of Standard/Limited/Steelbook would fail on exactly the cases that
+     need it. Arrow sells *Deep Red* on 4K three times over: plain at £25, Limited Edition
+     at £25, and the Arte Originale slipcover at £35. Page order decided which one a
+     `max_price` alert was about.
+
+     *And naming the edition is what makes it findable at all.* #96's rule refuses a title
+     carrying meaningful extra words, so *"Deep Red | Arte Originale Slipcover | Limited
+     Edition 4K UHD"* was **rejected** — *arte* and *originale* read as another film.
+     Correctly, while nothing had said otherwise. The wanted edition's words join that
+     item's allowed vocabulary, so the rule stops rejecting the very listing the want
+     names. The stricter the title rule, the more a specific want needs to be sayable.
+
+105. **The edition never narrows the search — only which listing gets priced.** Measured on
+     2026-09-09: adding edition terms to the query promoted Arrow's exact slipcover to
+     first place, but on Zavvi `?q=Alien Steelbook 4K` returned seven steelbooks and **no
+     Alien at all**. A term that helps one shop's relevance destroys another's.
+
+     *So it is a selection input, not a search input.* Arrow's title-only search already
+     returned all five editions on the first page, which is where the choosing happens.
+
+106. **Every word of the wanted edition must be present.** A partial match is precisely how
+     the £35 disc and the £25 one get confused: "Arte Originale Slipcover" must not be
+     satisfied by "Deep Red Limited Edition 4K UHD".
+
+     *Format outranks edition when the shelf forces a choice*, and a missing edition falls
+     back and reports `editionMatched: false` — the same rule as #102, for the same reason.
+     A Steelbook in the wrong format is a disc you cannot play; a plain edition in the
+     right format is usable.

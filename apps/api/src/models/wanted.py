@@ -72,6 +72,11 @@ class WantedItem(Base, UUIDPrimaryKeyMixin):
 
     preferred_format: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
+    #: Which *edition* within that format — "Arte Originale Slipcover", "Steelbook". Free
+    #: text because boutique edition names are invented per release (`DECISIONS.md` #104).
+    #: It never narrows the search, only which listing on the page gets priced.
+    preferred_edition: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     #: ``Numeric``, never a float. The threshold Batch 20's alerts compare against, and a
     #: price that has round-tripped through a float compares wrongly at exactly the
     #: boundary the person cared about.

@@ -154,6 +154,7 @@ async def run_scrapers(
                 price=str(outcome.price) if outcome.price is not None else None,
                 currency=outcome.currency,
                 substitutedFormat=outcome.substituted_format,
+                editionMatched=outcome.edition_matched,
                 skipped=outcome.skipped,
                 url=outcome.url,
                 reasons=outcome.reasons,

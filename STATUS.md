@@ -438,6 +438,22 @@ something on it, including two the ledger describes as "solo".
 
 ## Log
 
+- **2026-09-09** — **A want can now name an edition, not just a format.** Arrow sells *Deep
+  Red* on 4K three times — plain £25, Limited Edition £25, Arte Originale slipcover £35 —
+  and page order decided which a `max_price` alert was about. `wanted_list` gained
+  `preferred_edition` (migration `019`, free text, nullable; the table was empty).
+
+  **Naming the edition is also what makes it findable.** #96's rule refuses a title with
+  meaningful extra words, so the slipcover listing was being *rejected outright* — *arte*
+  and *originale* read as another film. The wanted edition's words now join that item's
+  allowed vocabulary. Verified live against Arrow: no edition → the plain £25 4K; "Arte
+  Originale Slipcover" → the £35 disc; "Limited Edition" → the £25 LE; "Steelbook" (not
+  stocked) → falls back to the plain 4K and reports `editionMatched: false`.
+
+  **The edition never narrows the search.** Measured: edition terms promote Arrow's exact
+  listing, but on Zavvi `?q=Alien Steelbook 4K` returns seven steelbooks and no Alien at
+  all. It is a selection input, not a search input (`DECISIONS.md` #104–#106).
+
 - **2026-09-09** — **A want for a format now means that format.** Asked how a want for a
   specific version of a film would behave. It mostly did — `preferred_format` picks 4K vs
   Blu-ray vs DVD — but three defects were found underneath it (`DECISIONS.md` #101–#103):

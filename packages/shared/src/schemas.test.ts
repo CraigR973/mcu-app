@@ -923,6 +923,7 @@ describe('wantedItemSchema', () => {
     year: 2026,
     posterPath: null,
     preferredFormat: '4k_uhd',
+    preferredEdition: null,
     maxPrice: '19.99',
     currency: 'GBP',
     isActive: true,

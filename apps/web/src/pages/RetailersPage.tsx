@@ -152,6 +152,11 @@ function RunPanel() {
                       {formatLabel(outcome.substitutedFormat)}.
                     </span>
                   ) : null}
+                  {outcome.editionMatched === false ? (
+                    <span className="mt-0.5 block text-amber-500">
+                      Not the edition wanted — priced a different one.
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>
