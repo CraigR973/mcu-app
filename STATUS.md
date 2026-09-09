@@ -2,137 +2,74 @@
 
 ## Now
 
-**Eleven batches shipped, all merged and deployed.**
+**21 of 37 batches shipped, 16 remain.** Production serves `e2fd94e` with `db: ok`.
+*(38 ledger rows: 21 shipped, 16 planned, and Batch 26 dropped on 2026-09-09.)*
 
-Production serves the scraper film-filtering fix with `db: ok`.
+The session that produced this entry did no batch work at all. It audited what was actually
+blocking the queue, and found that three of the things everyone believed were true were not.
 
-**Batch 23's Blu-ray.com boundary is now explicit.** The site's Legal Notices prohibit the
-planned automated reuse; `robots.txt` never granted permission, so Decision #108's final
-claim was wrong. The owner accepts the stated risk, including a one-time 1,857-item
-backfill, within strict no-search/no-evasion/stop-on-block controls (`DECISIONS.md` #110).
-
-| Batch | Result |
+| What was believed | What was true |
 |---|---|
-| — | `fix/date-guards-read-the-server-timezone` — a pre-existing red on `main`, fixed first (`04bfd44`) |
-| 12 | Box sets + smart collections (`881f444`) |
-| 13 | Completion sets (`22680de`) — 40 sets from live TMDB |
-| 14 | Stats + export (`20650b3`) — 344 ms median, all 1,857 discs exportable |
-| 15 | Trash, audit UI, lending (`20d1eff`) — the app's first irreversible operation |
-| 16 | Watch providers + recommendations (`d2218ab`) |
-| 17 | Release calendar + iCal (`a09c172`) — first unauthenticated surface |
-| 18 | Wanted list + retailers (`f85aa91`) — paid four earlier batches' debts |
-| 19 | Scraper framework (`bf1b4d5`) — **acceptance deferred to the owner** |
-| 27 | Gift links (`888dae7`) — **security review ran; four defects found and fixed** |
-| 36 | Command palette + keyboard shortcuts (`1425f91`) — `.` and the AI-conversations index dropped, Batch 31 isn't built |
-| 37 | On-this-day + rewatch (`50a4828`) — date-controlled Postgres test proves a one-year anniversary surfaces on the dashboard |
+| TMDB was having a wobble | **`TMDB_READ_TOKEN` had never been set in Railway.** Every TMDB-backed feature in the deployed app — the identify flow for 757 films, the add form, watch providers, recommendations, calendar refresh — had been returning a 502 saying *"temporarily unavailable"*. Nothing was temporary. Set 2026-09-09 |
+| The scraper checkpoint was done | Setup was done; **`price_checks` was empty**. The acceptance run had never saved a row |
+| Three retailers were broken | They were **working perfectly** and had been auto-disabled for correctly saying "we do not stock this film" |
 
-### What Batch 27's security review actually found
-
-The review you asked for ran against `feat/27-gift-links` before the merge. It verified all
-six intended properties with file-and-line evidence and reported **no security findings at
-its confidence bar** — but it surfaced four real defects, all fixed on the branch before it
-merged:
-
-| Found | Fixed by |
-|---|---|
-| The retailer-link builder ran **inside** the per-film loop — 50 identical `retailers` queries for a 50-film page, on the unauthenticated endpoint | hoisted; a test asserts exactly one `FROM retailers` per page |
-| **The service worker cached `no-store` responses.** It matched any GET under `/api/v1/` by pathname alone, so a gift page a family member opened was stored for 24h in *their* browser — and the route's own comment claiming the API sets no `Cache-Control` had become false | same-origin only, both capability URLs excluded, comment corrected (`DECISIONS.md` #87) |
-| `Decimal("NaN")` **parses**, so the `<= 0` guard raised rather than being caught — a 500 on an admin field in **Batch 18's already-merged code** | `is_finite()`; tests cover NaN, Infinity and sNaN |
-| `view_count += 1` was a read-modify-write in Python | atomic `SET view_count = view_count + 1` |
-
-Two things it named as conscious trade-offs rather than defects: the slug is stored in
-plaintext (`DECISIONS.md` #84 — a gift link must be re-shareable, unlike Batch 17's hashed
-feed token), and it transits request logs the way any path parameter does.
-
-**One process failure worth keeping.** The first review attempt failed before doing any work
-(monthly spend limit) — and I had *already* written "Reviewed" into the ledger and the commit
-message. That claim was corrected in `247ee25` and the branch was held unmerged until a
-review genuinely ran. Nothing is a review until it returns findings.
+**The app now has its first real price.** Arrow Video, *Misery Limited Edition 4K UHD*,
+**£25.00**, an exact 4K match for a 4K want with no substitution — verified independently
+against the live site. Phase 5.3's criterion is still unmet (it wants ≥ 1 row per working
+scraper, and only 2 rows exist), but the machine demonstrably works end to end.
 
 ### ⛔ What is waiting for you
 
-**`OWNER-ACTIONS.md` is the list** — nine items, each with what it unblocks. The one that
-stops a group outright is **Group F's checkpoint: live scraper acceptance runs.** Batch 20
-depends on phase 5.3's acceptance, and that acceptance is a live run against real shops,
-which `group-start.md` reserves for you. The steps are in "Next" below and in that file.
+**`OWNER-ACTIONS.md` is the list**, and it shrank from nine items to seven. VAPID keys, the
+Anthropic API key and Mark's PIN all landed on 2026-09-09; the TMDB token was added to the
+list and closed on the same day. **The only item you can act on now is finishing the scraper
+acceptance run** — everything else is either waiting on eBay or deprioritised.
 
-### What tonight's batches left in the live database
+### What the live database holds
 
-Counted against Neon at close-out: 40 `completion_sets`, 32 `release_calendar` and 6
-`retailers` rows — all three are acceptance criteria, so they stay. **Three more retailers
-are now seeded but not yet in the live database**: press *Add missing defaults*, then *Apply
-these selectors*, on the Retailers page. Five shops are verified against live markup and
-four are permanently unverified with the reason (`DECISIONS.md` #91). `price_checks`, `wanted_list`, `gift_links`, `loans`,
-`box_sets`, `smart_collections` and `watch_log` are all **empty**: every verification row was
-cleaned up, Batch 27's included.
+Counted against Neon at close: **1,857 `collection_items`, untouched all session.** 3
+`wanted_list` rows (*Misery*, *Nope*, *Project Hail Mary*, all wanting 4K), **2
+`price_checks` rows**, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers` — five
+enabled and five deliberately not. Both profiles now carry a `pin_hash`.
 
-**No `collection_items` row has been created, modified or deleted all session — still 1,857,
-all live.**
-
-### Two defects found only by driving the app, both mine
-
-- **Batch 16** returned a 502 when TMDB was unreachable, and `send()` correctly classifies
-  any 5xx as a *network* failure — so the page told the reader to check their connection
-  while the connection was fine. Now a 200 with an `unavailable` flag (`DECISIONS.md` #68).
-- **Batch 17**'s iCal serialiser let a newline in a URL inject arbitrary calendar
-  properties. Not reachable today; **Batch 19's scrapers would have armed it** (#73).
-
-**One unexplained flake, recorded rather than ignored:**
-`test_the_rate_limit_counter_survives_a_process_restart` failed once in a full-suite run and
-passed on the three runs after it. It has not recurred. If it reappears, it is an auth test
-and worth taking seriously.
 
 ## Next
 
-**⛔ Group F is stopped at its checkpoint: live scraper acceptance runs.** Batch 20 (price
-scraping + drop alerts) depends on 5.3's acceptance, and 5.3's acceptance is a live run
-against real shops. That is yours to perform.
+**⛔ Group F is still stopped at its checkpoint, but for a different reason than before.**
+The framework works. What it lacks is a wanted list that gives every shop something it might
+actually sell.
 
-### What the checkpoint actually needs
+### What the checkpoint still needs
 
-The framework is deployed, the endpoints are admin-only, and **every step below is now a
-button on the Retailers page.** For the **five supported shops** — Zavvi, Arrow (UK), 101
-Films, Second Sight and Powerhouse:
+Steps 1 to 3 are done — selectors applied, Arrow corrected to its UK storefront, films on the
+list, a real run saved real rows. What remains:
 
-1. **Add missing defaults**, then **Apply these selectors** — this seeds the three new UK
-   labels and corrects Arrow's URL to its UK storefront.
-2. **Test one at a time before enabling** — the *Test* button on each retailer row. A green
-   tick means "this looks like a real price for this film", not "the page loaded". A
-   selector can still fail on a layout change.
-3. **Fix any that fail.** The tool prints the node it read and why the result was rejected,
-   which is usually enough to correct the CSS in *Retailers → edit*.
-4. **Put at least one real film on the wanted list** — the *Add a film* panel on Wanted does
-   this — or the run has nothing to look for.
-5. **Preview live run**, then **Run and save prices**. 5.3's acceptance is ≥ 1
-   `price_checks` row per working scraper and a total above zero.
+1. **Add a title each boutique label actually sells.** *Deep Red* for Arrow, *Don't Look Now*
+   or *Near Dark* for Second Sight, *Sorcerer* or a Columbia Noir for Powerhouse, something
+   from 101's Black Label. Without this the criterion is unreachable: a Stephen King
+   adaptation and a Universal blockbuster give three of the five shops nothing to find.
+2. **One unhurried run.** Zavvi succeeded at 17:06 and failed at 17:08 having worked minutes
+   earlier — that is throttling. It still carries **2 of the 3 strikes** that disable a shop.
+3. **Read the report, not just the count.** A "not stocked" row is now a distinct state and
+   renders as an answer rather than an error.
 
-**Four shops are permanently unverified and should not be tested.** HMV and CEX disallow the
-search routes this job needs; Amazon UK blocks automated access and its official API is
-unsuitable for a private app this size; Blu-ray.com is a catalogue whose prices are
-third-party. They stay listed with the reason so nobody re-derives it (`DECISIONS.md` #91).
-**eBay takes the general-market role** once its pending application is approved.
+**Then Batch 20** (5.5, 5.6, 5.8) can start — and its push notifications are no longer
+blocked, because VAPID landed on 2026-09-09.
 
-**Then Batch 20** (5.5, 5.6, 5.8 — daily job and price-drop alerts) can start. Note it will
-also want **Batch 11's push**, which is still blocked on its own VAPID credential checkpoint.
+### What is genuinely unblocked now
 
-### Unblocked work that does not need this checkpoint
-
-**Batch 37 shipped** (on-this-day + rewatch, `50a4828`). It adds caller-scoped memory and
-rewatch endpoints plus dashboard sections. CI ran the date-controlled Postgres test proving a
-watch from a year ago appears; the production dashboard remains honestly empty until people
-log watches. The optional daily push remains Batch 11 work, behind its VAPID-key checkpoint.
-
-**Three batches that look unblocked are not**, and two of them are labelled "solo" in the
-ledger, which describes file overlap rather than whether the feature can work:
-
-- **Group J (30 → 31)** needs `ANTHROPIC_API_KEY` in Railway. There is no key in the repo,
-  in `.railway/railway.ts`, or in `apps/api/.env.local`. Credential change → stop.
-- **Batch 32 (voice input)** is phase 9.5, whose acceptance is *"tapping mic, speaking a
-  query, **sends correct transcription**"* — to the chat input, which does not exist until
-  Batch 31. Building it first is a microphone button wired to nothing.
-- **Batch 38 (E2E suite)** is phase 13.10, whose acceptance names seven flows. Four of them
-  test features that do not exist: add-via-scan (24), price alert (20), chat session (31),
-  movie night (35). It can honestly cover three.
+- **Batch 11 (notifications + push)** — VAPID keys are set and verified. It must read
+  `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`; those names are now fixed by
+  what is in Railway. It also owes the notifications Batches 15 and 19 both deferred to it.
+- **Group J (30 → 31)** — `ANTHROPIC_API_KEY` is set. Batch 32 (voice input) still needs
+  Batch 31's chat input to exist before its acceptance means anything.
+- **Batch 25 (photo uploads)** — storage is settled as Neon, so photo bytes live in Postgres.
+  The per-photo size cap is an open question in `OWNER-ACTIONS.md`; the spec's raw 5 MB × 5 ×
+  1,857 ≈ 46 GB is not sensible against a 35 MB database.
+- **Batch 24 is *not* unblocked**, despite the camera fix being live since Batch 2.
+  `DECISIONS.md` #16 fixes its UPC→title chain as *cached mapping → eBay Browse → manual
+  fallback*, so it waits on the same eBay approval as Group I.
 
 ### Four things the next agent should know
 
@@ -143,19 +80,16 @@ ledger, which describes file overlap rather than whether the feature can work:
 2. **Adding a Python dependency means regenerating both locks.** CI installs with
    `pip install --require-hashes -r requirements-dev.lock`; `pyproject.toml` alone is not
    enough. The command is in each lock file's own header.
-3. **Batch 11 is still unstarted and still blocked** on generating VAPID keys and setting
-   them in Railway — a credential change. It also owes the notifications that Batches 15 and
-   19 both deferred to it.
-4. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
+3. **The Postgres-backed tests cannot run on this machine** — no local server, no Docker — so
+   254 of them skip locally and run only in CI. Do **not** point them at production Neon to
+   get local coverage. A test fixture bug on 2026-09-09 used an unresolvable host and was
+   caught only because CI ran it against real Postgres; against Neon it would have passed and
+   shipped hidden behind a green local run.
+4. **Anything that lives only in a Railway variable has no test.** The TMDB token was missing
+   for an unknown length of time behind a fully green gate. `AGENTS.md` already says the gate
+   proves the code and not the infrastructure around it — the TMDB outage is what that
+   sentence looks like in practice.
 
-```
-DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
-  apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
-```
-
-**Everything waiting on the owner now lives in `OWNER-ACTIONS.md`** — nine items, each with
-what it unblocks. Read it before picking up work; three of the queued batches are blocked by
-something on it, including two the ledger describes as "solo".
 
 ## Gotchas
 
@@ -442,6 +376,78 @@ something on it, including two the ledger describes as "solo".
     ```
 
 ## Log
+
+- **2026-09-09** — **An audit session, not a batch session. Three beliefs about what was
+  blocking the queue turned out to be false, and one production outage had been invisible
+  behind a green gate.**
+
+  **`TMDB_READ_TOKEN` had never been set in Railway.** The *Add a film* panel reported "TMDB
+  search is temporarily unavailable"; TMDB was fine, and both credentials in `.env.local`
+  returned 200. `config.py:70` defaults the token to `""`, so the API booted happily and sent
+  `Authorization: Bearer ` on every call, which TMDB answered 401 and the routers converted
+  to a 502 whose wording claimed transience. The blast radius was every TMDB-backed feature in
+  the deployed app. Set the same day, along with VAPID keys and `ANTHROPIC_API_KEY`; Mark's
+  PIN was set too, so both profiles can now sign in.
+
+  **The scraper acceptance run had never saved a row.** The setup steps had been done — Arrow
+  corrected to `arrowfilms.com`, five shops enabled — but `price_checks` and `wanted_list`
+  were both empty, so the criterion everyone believed was met had never been attempted. It has
+  now produced its **first real price**: Arrow Video, *Misery Limited Edition 4K UHD*, £25.00,
+  an exact 4K match with no substitution, verified independently against the live site.
+
+  **A 4K want answered with a Blu-ray turned out to be correct.** Zavvi has no 4K *Nope* at
+  all — searched with and without the format term, the only *Nope* disc on the site is
+  `/p/blu-ray/nope/`. The fallback and its `substitutedFormat` flag behaved exactly as #102
+  specifies. The bare-title search also returned seven Magic: The Gathering and Disney
+  t-shirts, every one correctly refused: the Jaws beach towel case, caught.
+
+  **Three working scrapers had been auto-disabled for telling the truth** (`DECISIONS.md`
+  #107). 101 Films, Powerhouse and Second Sight each returned a real catalogue page for
+  *Misery*, extraction parsed it correctly, and #96's title rule refused every listing because
+  none of them was the film. Three correct refusals read as three failures and switched all
+  three shops off. `ScrapeOutcome.not_stocked` now separates "the shop answered and has not
+  got it" from "the scraper is broken", read from card counts rather than the rejection
+  message — because `check_shape` stops at "no price found" before reaching its title rules,
+  and Zavvi's real answer for `?q=Nope 4K` leads with a priceless *Cujo* that would otherwise
+  have been filed as a broken selector. The three shops were re-enabled with their counters
+  zeroed. **Zavvi still carries 2 strikes** from a genuine throttling failure.
+
+  **Batch 23's source settled and Batch 26 dropped** (#108, #109). Blu-ray.com disallows its
+  search routes, so specs are scraped from a URL supplied per film; a real page was measured
+  and returns every field §3.7 asks for. Three constraints recorded: the page also carries
+  third-party prices the scrape must ignore, `(more)`/`(less)` toggles duplicate the audio and
+  subtitle blocks in the flattened text, and `Special Features` can be absent. Shelf QR is
+  dropped — Batch 6's location filter already answers the question it existed for. Ledger
+  arithmetic re-derived rather than decremented: **37 batches → 24 sessions**.
+
+  *Storage for Batch 25 is settled as Neon* (owner), meaning photo bytes in Postgres. The
+  per-photo cap and Batch 35's realtime provider are both proposed but unconfirmed, and sit in
+  `OWNER-ACTIONS.md` rather than being taken silently.
+
+- **2026-09-09** — **Batch 27's security review: no findings at its bar, four real defects anyway.**
+
+  The review you asked for ran against `feat/27-gift-links` before the merge. It verified all
+  six intended properties with file-and-line evidence and reported **no security findings at
+  its confidence bar** — but it surfaced four real defects, all fixed on the branch before it
+  merged:
+
+  | Found | Fixed by |
+  |---|---|
+  | The retailer-link builder ran **inside** the per-film loop — 50 identical `retailers` queries for a 50-film page, on the unauthenticated endpoint | hoisted; a test asserts exactly one `FROM retailers` per page |
+  | **The service worker cached `no-store` responses.** It matched any GET under `/api/v1/` by pathname alone, so a gift page a family member opened was stored for 24h in *their* browser — and the route's own comment claiming the API sets no `Cache-Control` had become false | same-origin only, both capability URLs excluded, comment corrected (`DECISIONS.md` #87) |
+  | `Decimal("NaN")` **parses**, so the `<= 0` guard raised rather than being caught — a 500 on an admin field in **Batch 18's already-merged code** | `is_finite()`; tests cover NaN, Infinity and sNaN |
+  | `view_count += 1` was a read-modify-write in Python | atomic `SET view_count = view_count + 1` |
+
+  Two things it named as conscious trade-offs rather than defects: the slug is stored in
+  plaintext (`DECISIONS.md` #84 — a gift link must be re-shareable, unlike Batch 17's hashed
+  feed token), and it transits request logs the way any path parameter does.
+
+  **One process failure worth keeping.** The first review attempt failed before doing any work
+  (monthly spend limit) — and I had *already* written "Reviewed" into the ledger and the commit
+  message. That claim was corrected in `247ee25` and the branch was held unmerged until a
+  review genuinely ran. Nothing is a review until it returns findings.
+
+
 
 - **2026-09-09** — **Batch 23's Blu-ray.com risk was accepted explicitly, not explained
   away by `robots.txt`.** The site's Legal Notices prohibit automated reuse even for
