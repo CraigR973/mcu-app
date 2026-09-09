@@ -2,90 +2,100 @@
 
 ## Now
 
-**Batch 18 — wanted list + retailers — shipped.** Group F's first half. Production serves
-`f85aa91e9d34b1dd6fbebd2913931b5f1563f25c` with `db: ok`; migration `016` applied on boot.
+**Batch 19 — scraper framework — shipped, and its acceptance is deferred to you.**
+Production serves `bf1b4d5f1f2307d1725eec3e0474354e91b05b20` with `db: ok`; migration `017`
+applied on boot.
+
+**⛔ This is Group F's checkpoint. Batch 20 has not been started.**
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 5.1 | Adding to wanted list from detail page and listing it works both ways | done — verified end to end, including adding a film **this collection has never seen** by bare `tmdbId`, which is the normal case |
-| 5.2 | Admin adds a new retailer; it's saved and enabled | done — plus the six §3.16 defaults, seeded live: **6 seeded, 6 enabled, 0 configured** |
+| 5.3 | Each built-in scraper runs against the **live** retailer and persists ≥ 1 `price_checks` row per scraper | **not met — owner action.** `group-start.md`: *"a batch whose acceptance requires live third-party requests ... stops before those runs. The owner performs them."* |
+| 5.3 | Generic CSS scraper, six built-ins, retry, auto-disable after 3 fails | built and fixture-tested — 33 tests |
+| 5.4 | Admin validates a new retailer before enabling | the tool is built; validating means one live request, which is yours to make |
 
-**This batch paid four debts** that earlier batches recorded rather than fudged:
+**The whole batch is shaped by its own risk note.** *"A layout change does not error — it
+selects the wrong node and persists a plausible wrong number, which then feeds price-drop
+alerts and aggregates."* A success/fail counter cannot see that, so
+`services/scraping/extract.py:check_shape` asserts five things about every result and
+**discards** anything that fails, with a reason (`DECISIONS.md` #79). A test demonstrates
+the exact failure end to end: a selector pointing at a "Save £5.00" badge, which fetches
+fine, parses fine and is wrong.
 
-| Batch | What it deferred | Now |
-|---|---|---|
-| 13 | §11.2's "bulk add missing to wanted list" — dropped | the button is on a completion set |
-| 15 | the `wanted_list` trash tab — the API **refused** the name | a real tab, with `retailers` beside it |
-| 16 | §7.2's third ownership state — a two-value enum | `owned` / `wanted` / `unowned`, with a badge |
-| 17 | `release_calendar.is_wishlist_match` — created, never written | **still unwritten** — left to whichever batch next touches ingestion |
+**All six built-in configurations report `verified: false`, and the UI renders them amber**
+(#80). They are starting points for your live runs, not working scrapers.
 
-**Two of those debts surfaced as failing tests, which is the point.** A shared-schema test
-asserted `wanted` was a *refused* ownership state; a trash test used `wanted_list` as its
-example of an unimplemented table. Both were correct when written and both now assert the
-opposite (`DECISIONS.md` #78). Encoding a gap as an assertion meant the day the table
-arrived, the suite pointed straight at everything waiting for it.
+**A new kind of surface: the app now fetches URLs a person typed.** Everything else goes to
+TMDB and nowhere else. The fetcher resolves the host and refuses anything not publicly
+routable — re-checked at **every redirect hop**, because httpx would otherwise follow a 302
+into an internal address (#81).
 
-**Seeded retailers have no selectors, and the page says so.** A seeded row is a name and a
-URL, not a working scraper. Inventing CSS nobody has run against a live page would be worse
-than none — Batch 19's own risk note is that a wrong selector *"does not error — it selects
-the wrong node and persists a plausible wrong number"*, and that number feeds price alerts
-(`DECISIONS.md` #77).
-
-**`is_active` and `deleted_at` are kept apart** (#76): "I stopped looking" is a decision
-worth keeping, "I removed it by mistake" is an accident worth undoing. Two buttons.
+**Two failures on the way.** CI went red because it installs from `requirements-dev.lock`
+with `--require-hashes`, not from `pyproject.toml` — adding beautifulsoup4 to one and not
+the other left `bs4` missing and every test module failed to import. Both locks regenerated;
+the diff is exactly two packages. And **`test_the_rate_limit_counter_survives_a_process_restart`
+failed once in a full-suite run and passed on the next two** — a single unexplained flake in
+an auth test, recorded here rather than ignored. It has not recurred.
 
 ---
 
-**Group E shipped earlier the same session.** Batch 16 (`d2218ab`) — live streaming and
-recommendations; a 502 for a TMDB outage made the page blame the reader's connection, now an
-`unavailable` flag (#68). Batch 17 (`a09c172`) — the app's **first unauthenticated surface**,
-whose security review found and closed a real iCal content-injection hole that **Batch 19's
-scrapers would have armed** (#73).
-
-**Groups C and D shipped earlier** — Batches 12 (`881f444`), 13 (`22680de`), 14 (`20650b3`),
-15 (`20d1eff`), plus a pre-existing-red fix (`04bfd44`).
+**Group F's first half — Batch 18 — shipped earlier** (`f85aa91`), paying four debts from
+Batches 13, 15, 16 and 17. **Group E** — Batches 16 (`d2218ab`) and 17 (`a09c172`).
+**Groups C and D** — Batches 12–15. Plus a pre-existing-red fix (`04bfd44`).
 
 **What this session has left in the live database.** 40 `completion_sets` rows, 32
-`release_calendar` rows and **6 `retailers` rows** — all three are acceptance criteria, so
-they stay. Plus `admin_actions` rows recording each browser verification and its clean-up.
-**No `collection_items` row has been created, modified or deleted all session: still 1,857,
-all live.**
+`release_calendar` rows and 6 `retailers` rows — all acceptance criteria, so they stay —
+plus `admin_actions` rows recording each verification pass. `price_checks` is **empty**: the
+run that would fill it is yours. **No `collection_items` row has been created, modified or
+deleted all session: still 1,857, all live.**
 
 ## Next
 
-**Batch 19 — Scraper framework** (phases 5.3, 5.4) is next and closes the unblocked half
-of Group F, at **Opus 5 · max** — the highest setting in the ledger.
+**⛔ Group F is stopped at its checkpoint: live scraper acceptance runs.** Batch 20 (price
+scraping + drop alerts) depends on 5.3's acceptance, and 5.3's acceptance is a live run
+against real shops. That is yours to perform.
 
-**It stops before Batch 20.** Group F's manifest puts a **checkpoint: live scraper
-acceptance runs** between them, and phase 5.3's own acceptance requires each built-in
-scraper to run *against the live retailer*. `group-start.md`'s hard stop is explicit: "a
-batch whose acceptance requires **live third-party requests** ... stops before those runs.
-The owner performs them."
+### What the checkpoint actually needs
 
-So Batch 19 can build and test the framework against fixtures, and **cannot** self-certify
-5.3's acceptance. Expect it to end by handing over a runnable command and a list of what
-each scraper still needs.
+The framework is deployed and the endpoints are admin-only. For each of the six shops:
 
-**Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
-on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
-stops for the owner — and it inherits Batch 9's dropped notifications step.
+1. **Apply the built-in selectors** — *Retailers → "Apply these selectors to the matching
+   retailers"*, or `POST /api/v1/scrapers/apply-built-ins`.
+2. **Test one at a time before enabling** — the *Test* button on each retailer row, or
+   `POST /api/v1/scrapers/test`. A green tick means "this looks like a real price for this
+   film", not "the page loaded". **Expect several to fail**: every selector is a guess.
+3. **Fix the selectors that fail.** The tool prints the node it read and why the result was
+   rejected, which is usually enough to correct the CSS in *Retailers → edit*.
+4. **Put at least one real film on the wanted list**, or the run has nothing to look for.
+5. **Run it for real** — `POST /api/v1/scrapers/run?dryRun=false`. 5.3's acceptance is
+   ≥ 1 `price_checks` row per scraper and a total above zero.
 
-**Four things the next agent should know.**
+**Amazon may not be viable at all** — it varies its markup per client and blocks scrapers;
+its built-in entry says so. Blu-ray.com is a database rather than a shop, so its prices are
+third-party and may be absent. Neither is a defect in the framework.
 
-1. **Every planned batch's acceptance criteria are missing from the working tree.**
-   Batch 10 removed §16, and the ledger carries `### Batch N` sections with
-   `**Acceptance:**` only for batches 1–10. Recover them verbatim from
+**Then Batch 20** (5.5, 5.6, 5.8 — daily job and price-drop alerts) can start. Note it will
+also want **Batch 11's push**, which is still blocked on its own VAPID credential checkpoint.
+
+### Unblocked work that does not need this checkpoint
+
+If you would rather keep moving: **Batch 27** (gift links — the app's other public surface,
+needs its own security review), **Group J** (30 → 31, AI assistant — *may need a live Claude
+API key in Railway, which is a credential change and therefore a stop*), and the solo
+batches **32** (voice input), **36** (command palette) and **38** (E2E suite).
+
+### Four things the next agent should know
+
+1. **Every planned batch's acceptance criteria are missing from the working tree.** Batch 10
+   removed §16. Recover them verbatim from
    `git show d94a6b8~1:MCU_Architecture_v2.1_FINAL.md`, grep for `**Phase X.Y:`, and write
    them into the batch's ledger section **before** writing code (`DECISIONS.md` #54).
-   Batch 12's section is the worked example.
-2. **Batch 11 inherits an obligation.** Batch 9 dropped the notifications step rather than
-   ship one that lies; Batch 11 owns bringing it back, and must build the push
-   infrastructure *before* re-adding the UI. Credential change — stops for the owner.
-3. **A local API against live Neon is a usable browser rig.** `VITE_SKIP_AUTH=true` is
-   already in `apps/web/.env.local`, vite proxies `/api` to `localhost:8000`, and a dev
-   token minted with a throwaway secret via `src.auth.create_access_token` gets past the
-   API's own auth. That is how §11.3–11.5 were driven for real. Remember that writes land
-   in **production data**.
+2. **Adding a Python dependency means regenerating both locks.** CI installs with
+   `pip install --require-hashes -r requirements-dev.lock`; `pyproject.toml` alone is not
+   enough. The command is in each lock file's own header.
+3. **Batch 11 is still unstarted and still blocked** on generating VAPID keys and setting
+   them in Railway — a credential change. It also owes the notifications that Batches 15 and
+   19 both deferred to it.
 4. **Mark's PIN is still `NULL`**, so he cannot sign in at all:
 
 ```
@@ -93,18 +103,13 @@ DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
   apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
 ```
 
-An owner pass that would close everything outstanding, on a phone: sign in, walk the
-wizard, add `https://mcu-app-fawn.vercel.app` to the home screen, turn the network off and
-confirm the collection still browses, then edit a disc offline and watch it sync when the
-signal returns.
-
 Two owner actions remain outstanding, unchanged:
 1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
-   full in `0bfb672` (2026-04-25, `CLAUDE.md`) and referenced truncated in `4768da8`.
-   Dead (401) but never revoked at github.com/settings/tokens. History rewrite is **not**
-   recommended — the repo is private and the token is already invalid.
-2. **`VITE_API_URL` is set for Production only.** The Vercel CLI would not accept the
-   Preview scope non-interactively; add it in the dashboard if preview deploys are wanted.
+   full in `0bfb672` (2026-04-25) and referenced truncated in `4768da8`. Dead (401) but
+   never revoked. History rewrite is **not** recommended — the repo is private and the token
+   is already invalid.
+2. **`VITE_API_URL` is set for Production only.** Add it in the Vercel dashboard if preview
+   deploys are wanted.
 
 ## Gotchas
 
@@ -377,6 +382,17 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 19 shipped — scraper framework** (`bf1b4d5`), **and Group F
+  stopped at its checkpoint.** Both of 5.3's and 5.4's acceptance criteria need live
+  requests to real shops, which `group-start.md` reserves for the owner — so the framework
+  is built and fixture-tested (33 tests) and the runs are handed over. The batch is shaped by
+  its own risk note: `check_shape` asserts five properties of every result and discards
+  anything that fails, because a wrong selector fetches fine and returns a plausible wrong
+  number (`DECISIONS.md` #79). All six built-ins report `verified: false` (#80). The fetcher
+  refuses non-public addresses at every redirect hop — the app's first person-supplied URL
+  (#81). CI went red because dependencies are locked with `--require-hashes` and
+  `pyproject.toml` alone is not enough.
 
 - **2026-09-09** — **Batch 18 shipped — wanted list and retailers** (`f85aa91`). §3.5 and
   §3.16 built, **paying four debts** from Batches 13, 15, 16 and 17. Two of them surfaced as

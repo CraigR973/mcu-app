@@ -1065,3 +1065,62 @@ contemporaneous.
     Encoding the gap as a failing-if-removed assertion meant the day the table arrived, the
     test suite pointed straight at everything that had been waiting for it. The trash test
     moved to `smart_collections`, which genuinely has no bin (#55).
+
+### 2026-09-09 — Batch 19 scraper framework
+
+79. **A scraped result that fails its shape check is a failure, never data.**
+    `services/scraping/extract.py:check_shape` asserts: a currency marker beside the number,
+    a price between 50p and £500, the currency the retailer is configured for, a title with
+    at least one significant word in common with the film asked for, and a listing URL on
+    the retailer's own domain. Any failure discards the result with a stated reason.
+
+    *Why:* this is the ledger's own risk note for the batch — *"a layout change does not
+    error — it selects the wrong node and persists a plausible wrong number, which then
+    feeds price-drop alerts and aggregates"*. A success/fail counter cannot see it. A
+    selector pointing at a "Save £5.00" badge fetches fine, parses fine, inserts fine and is
+    wrong, and every number downstream is then wrong with total confidence.
+
+    *The strongest of the five is the currency marker.* A `.price` node yielding a bare
+    "12" is far more often a rating, a quantity or a running time than a price, and the
+    absence of a symbol is the cheapest way to tell. The second strongest is the title
+    comparison, because it is the only one that catches the *quiet* failure — selectors
+    working perfectly on the wrong page, where every extracted value looks completely
+    normal.
+
+    *And the currency is never converted.* A shop switching to a US storefront is refused,
+    not translated; a scraper that converted currencies would be inventing data.
+
+80. **A selector nobody has run against a live page is a guess, and the app says so.** All
+    six of §5.3's built-in configurations carry `verified: false`, the API reports the
+    unverified list, and the settings page renders each one amber.
+
+    *Why:* §5.3's acceptance is a live run against each retailer, which `group-start.md`
+    reserves for the owner. Shipping six configurations that *look* like working scrapers
+    would be the same defect as a button that does nothing — worse, because this one would
+    quietly write numbers. Applying the built-in selectors to seeded retailers is a
+    deliberate separate action from Batch 18's seeding, for the same reason: a seeded
+    retailer is a fact, a selector is a guess.
+
+81. **The URL fetcher resolves the host and refuses anything not publicly routable, at every
+    redirect hop.**
+
+    *Why:* this is the first thing in the application that fetches a URL a person supplied —
+    everything else goes to TMDB and nowhere else. The realistic risk is not a malicious
+    admin but a paste: `http://localhost:8000/...` is a URL the *server* can reach and a
+    browser cannot, so the server would proxy whatever is bound inside the container.
+
+    *And why per hop:* `follow_redirects` is off and redirects are followed by hand, because
+    httpx would follow a 302 into an internal address without this code seeing it — turning
+    a URL that passed the check into a request that never did. The check is on the
+    **resolved addresses**, not the hostname, and **every** address a name resolves to must
+    be public: a hostname blocklist would never catch a name pointing at 127.0.0.1, and
+    which address gets used is the resolver's choice rather than ours.
+
+82. **Retry once; never retry a shape failure.**
+
+    *Why:* a shop that times out once is usually up, and a scraper that retries hard is how
+    an IP gets blocked — turning a transient failure into a permanent one. A page that
+    parsed into something implausible will parse the same way again, so asking twice is
+    just rudeness. Auto-disable **resets** on any success rather than decrementing, because
+    §5.3 asks for three failures *in a row*: a shop that fails on Monday and works on
+    Tuesday has not accumulated anything.
