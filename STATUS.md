@@ -438,6 +438,25 @@ something on it, including two the ledger describes as "solo".
 
 ## Log
 
+- **2026-09-09** — **The Test button was sending shops an unfilled placeholder.** Reported
+  from the app: *Jaws* on Zavvi returned **The Sheriff of Fractured Jaw (Dual Format
+  Edition)**. The cause was the previous fix's own doing — `ScraperTester` built its search
+  URL in the browser and replaced `{query}` alone, so the new `{format}` placeholder went
+  to Zavvi as literal text and matched a dual-**format** western. An unfilled placeholder
+  is worse than a broken URL: it is extra search terms a shop happily matches, so the
+  failure arrives looking like a result.
+
+  Fixed at the root (`DECISIONS.md` #99, #100): `apply_search_template` is now the only
+  function that knows what a placeholder means, the client sends the **template**
+  verbatim, and the server fills it with the same call the runner makes. The test endpoint
+  also now passes the expected title, the preferred format and the retailer's host into
+  `extract`/`check_shape` — it had been doing none of those, so it priced whichever card
+  came first and never applied the same-site rule. **A test is now exactly as strict as the
+  run it stands for.** The tester gained a format selector to match.
+
+  Re-verified against the live shops through the fixed path: *Jaws* at Zavvi → the 4K disc
+  at £19.99, all five supported shops return the right film, *Heat* still correctly refused.
+
 - **2026-09-09** — **The scrapers now filter on films, not on names.** Reported from the
   app: searching Zavvi for *Jaws* returned **a beach towel**. It passed all five of #79's
   shape rules — the film's name in the title, £17.99, GBP, a zavvi.com URL — so the price

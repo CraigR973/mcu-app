@@ -203,12 +203,22 @@ class ScraperTestRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    #: May be a **search template** rather than a finished URL — ``{query}`` and
+    #: ``{format}`` are substituted server-side, by the same function a real run uses.
+    #: The browser must not do this itself: when it replaced ``{query}`` alone it sent
+    #: Zavvi the literal string ``{format}`` (`DECISIONS.md` #99).
     url: Annotated[str, Field(min_length=1, max_length=2000)]
     scraperConfig: dict[str, Any]
     #: Optional: when given, the shape check can also say whether the page is about the
-    #: right film, which is the failure that otherwise looks completely normal.
+    #: right film, which is the failure that otherwise looks completely normal. It also
+    #: picks which product card on a search page is the one being priced.
     expectedTitle: Annotated[str | None, Field(max_length=500)] = None
     expectedCurrency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")] = "GBP"
+    #: The wanted item's format, so the test prices the same edition a run would.
+    preferredFormat: Annotated[str | None, Field(max_length=50)] = None
+    #: The retailer's own host, so the test applies the same-site rule a run applies.
+    #: Without it the tool was blind to a listing that had left the shop.
+    expectedHost: Annotated[str | None, Field(max_length=253)] = None
 
     @field_validator("url")
     @classmethod

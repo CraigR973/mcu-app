@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import AsyncIterator
+from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
@@ -26,6 +27,7 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.wanted import DEFAULT_RETAILERS, Retailer, WantedItem
 from src.routers.movies import get_tmdb_client
+from src.services.scraping.builtins import BUILT_IN_SCRAPERS
 from src.tmdb.models import Credits, Genre
 from src.tmdb.models import Movie as TmdbMovie
 
@@ -469,3 +471,54 @@ async def test_a_non_finite_price_is_refused_rather_than_raising(
             "/api/v1/wanted", json={"movieId": str(movie.id), "maxPrice": unreal}
         )
         assert response.status_code == 422, unreal
+
+
+async def test_the_test_endpoint_fills_placeholders_and_prices_the_film_asked_for(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """§5.4's tool must build its request the way a real run does, and pick the same card.
+
+    Both halves of the *Sheriff of Fractured Jaw* defect are covered here. The browser used
+    to fill `{query}` alone and send the literal text `{format}` to the shop; and the
+    endpoint used to run `extract` with no expected title, so it priced whichever card came
+    first rather than the one that is actually the film (`DECISIONS.md` #99).
+    """
+    requested: list[str] = []
+
+    async def fake_fetch(url: str, **_kwargs: object) -> SimpleNamespace:
+        requested.append(url)
+        html = """
+        <div data-testid="product-item">
+          <a href="/p/blu-ray/the-sheriff-of-fractured-jaw/1/"
+             data-testid="product-title">The Sheriff of Fractured Jaw (Dual Format Edition)</a>
+          <div data-testid="product-price"><span class="product-variant-price">£18.99</span></div>
+        </div>
+        <div data-testid="product-item">
+          <a href="/p/4k/jaws-4k-ultra-hd/2/"
+             data-testid="product-title">Jaws - 4K Ultra HD (Includes 2D Blu-ray)</a>
+          <div data-testid="product-price"><span class="product-variant-price">£19.99</span></div>
+        </div>
+        """
+        return SimpleNamespace(html=html, final_url=url, status_code=200)
+
+    monkeypatch.setattr("src.routers.scraping.fetch_page", fake_fetch)
+
+    response = await client.post(
+        "/api/v1/scrapers/test",
+        json={
+            "url": "https://www.zavvi.com/search?q={query}%20{format}",
+            "scraperConfig": BUILT_IN_SCRAPERS["Zavvi"]["config"],
+            "expectedTitle": "Jaws",
+            "preferredFormat": "4k_uhd",
+            "expectedHost": "https://www.zavvi.com",
+        },
+    )
+    body = response.json()
+
+    assert response.status_code == 200, body
+    # No placeholder ever reaches the shop.
+    assert requested == ["https://www.zavvi.com/search?q=Jaws%204K"]
+    # And the card priced is the film, not whichever one happened to be first.
+    assert body["title"] == "Jaws - 4K Ultra HD (Includes 2D Blu-ray)"
+    assert body["price"] == "19.99"
+    assert body["ok"] is True, body["reasons"]

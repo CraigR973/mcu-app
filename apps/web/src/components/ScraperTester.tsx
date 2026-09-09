@@ -5,7 +5,7 @@ import type { RetailerRow } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { testScraper } from '@/lib/api'
+import { FORMATS, testScraper } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
@@ -23,24 +23,31 @@ import { cn } from '@/lib/utils'
  * cross-origin fetch, and the selectors have to run where the scraper will run. That is
  * also why `services/scraping/fetcher.py` refuses any URL that resolves somewhere
  * non-public.
+ *
+ * **The search template is sent verbatim and filled server-side.** This component used to
+ * build the URL itself and knew only about `{query}`, so adding a `{format}` placeholder
+ * silently sent Zavvi the literal text — matching *The Sheriff of Fractured Jaw (Dual
+ * Format Edition)* for a search for *Jaws*. A tool that proves a scraper works has to
+ * build its request the way the scraper does (`DECISIONS.md` #99).
  */
 export function ScraperTester({ retailer }: { retailer: RetailerRow }) {
   const [title, setTitle] = useState('Heat')
+  const [preferredFormat, setPreferredFormat] = useState('')
   const [open, setOpen] = useState(false)
 
   const test = useMutation({
-    mutationFn: () => {
-      const template = retailer.searchUrlTemplate
-      const url = template
-        ? template.replace('{query}', encodeURIComponent(title.trim()))
-        : retailer.baseUrl
-      return testScraper({
-        url,
+    mutationFn: () =>
+      testScraper({
+        // The **template**, verbatim. The server substitutes `{query}` and `{format}`
+        // with the same function the runner uses; doing it here is what sent Zavvi the
+        // literal string `{format}` and priced a dual-format western as Jaws.
+        url: retailer.searchUrlTemplate ?? retailer.baseUrl,
         scraperConfig: retailer.scraperConfig,
         expectedTitle: title.trim() || null,
         expectedCurrency: retailer.currency,
-      })
-    },
+        preferredFormat: preferredFormat || null,
+        expectedHost: retailer.baseUrl,
+      }),
   })
 
   if (!open) {
@@ -62,6 +69,19 @@ export function ScraperTester({ retailer }: { retailer: RetailerRow }) {
           aria-label="Test film title"
           className="h-8 max-w-[14rem] text-xs"
         />
+        <select
+          value={preferredFormat}
+          onChange={(event) => setPreferredFormat(event.target.value)}
+          aria-label="Test preferred format"
+          className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+        >
+          <option value="">Any format</option>
+          {FORMATS.map((format) => (
+            <option key={format.value} value={format.value}>
+              {format.label}
+            </option>
+          ))}
+        </select>
         <Button
           type="button"
           size="sm"
