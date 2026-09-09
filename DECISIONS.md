@@ -933,3 +933,36 @@ contemporaneous.
     indistinguishable from one that works and has nothing in it — which is how a missing
     feature passes for a working one for months. The same reasoning Batch 7 used when it
     restricted `TRASH_TABLES` to the one table it had actually built.
+
+### 2026-09-09 — Batch 16 watch providers + recommendations
+
+68. **A third-party outage is an answer with a flag, never a 5xx from this API.**
+    `/movies/{id}/streaming` and `/movies/{id}/recommendations` return **200** with
+    `unavailable: true` when TMDB cannot be reached.
+
+    *Why, and how it was found:* the first version raised 502. Driving the app in a browser
+    — with the local API missing its TMDB token, by accident — showed the page saying
+    **"Waiting for the network"**. That is correct client behaviour: `send()` classifies any
+    5xx as a network failure (#43), because a gateway, a proxy or a booting container all
+    produce one and none of them is the application answering. But it made the app blame the
+    reader's connection for TMDB being down.
+
+    So the endpoint now distinguishes four outcomes, and each reads differently: the film is
+    not identified, TMDB has no offers, TMDB could not be reached, and here they are. The
+    general rule: **when this API is a proxy for someone else's outage, say so in the body.**
+    A status code cannot carry "we are fine, they are not".
+
+69. **Nothing about streaming availability is cached.** Every request is a live TMDB read.
+
+    *Why:* rights move constantly — a film included in a subscription this week is rent-only
+    the next — and there is no signal a cached answer has gone stale, so it becomes a wrong
+    answer with a confident face. The mirror of #59's reasoning for `completion_sets`, which
+    *does* cache because a filmography barely changes. The test of whether to cache is not
+    "is it expensive" but "does it go wrong quietly".
+
+70. **`profiles.streaming_region` is a new column, not `collection_items.region_code`.**
+    Two-letter ISO 3166-1 alpha-2, defaulted to `GB`, CHECK-constrained.
+
+    *Why the CHECK:* TMDB answers an unrecognised region key with an **empty map, not an
+    error**. A lower-cased "gb" or a three-letter "GBR" would make every film in the
+    collection appear to stream nowhere, with nothing anywhere saying why.

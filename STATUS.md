@@ -2,73 +2,71 @@
 
 ## Now
 
-**Batch 15 — trash, audit UI and lending — shipped, closing Group D.** Production serves
-`20d1eff3d1be7b5b47ce449e49d1fbdbeba0a13a` with `db: ok`; migration `013` applied on boot.
+**Batch 16 — watch providers + recommendations — shipped.** Group E's first half.
+Production serves `d2218ab06dea9ac25aeb071bf24cb3c8c028e030` with `db: ok`; migration `014`
+applied on boot.
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 13.5 | Deleted item in Trash; restoring brings it back with full state | done, across four tables — `collection_items`, `watch_log`, `movies`, `box_sets`. A restore clears the tombstone and **nothing else**, so notes, sub-category and shelf all survive |
-| 13.5 | (permanently delete) | done and **proved on live data** — see below |
-| 13.6 | Making 5 test changes shows 5 entries with correct diffs | done — a test makes five condition edits and asserts the five diffs read back in order. The UI also filters by action, actor and date |
-| 12.5 | Lending a disc shows it in Loans | done — lend from the copy, not the film; one open loan per disc |
-| 12.5 | **overdue triggers a push** | **not met, and nothing fake shipped.** See below |
+| 7.1 | For a popular film, UK streaming options shown correctly | done, live — *North by Northwest* in GB: **HBO Max + HBO Max Amazon Channel** on subscription, 6 rent and 6 buy options, with TMDB's own "where to watch" link |
+| 7.2 | Detail page shows 10+ recommendations with correct ownership flags | done, live — **20 recommendations, 7 already on the shelf** |
 
-**The permanent delete was the whole risk of this batch, and the mechanism mattered more
-than the endpoint.** `003`'s `soft_delete` trigger rewrites every `DELETE` into an
-`UPDATE`, so the destroy path has to get past it — and the obvious way,
-`ALTER TABLE ... DISABLE TRIGGER`, is **persistent and global**. A process death between
-disabling and re-enabling would leave every delete in the app permanent while the trash
-kept rendering an empty page. Migration `013` makes the trigger skip on a
-transaction-scoped `SET LOCAL`, turned off again immediately so it covers exactly one
-statement; a test shares one transaction between a permanent delete and an ordinary one and
-asserts the second is still soft (`DECISIONS.md` #64–66).
+**§7.1 assumed a column that did not exist.** "User's streaming_region" had no home: the
+only region column in the schema is `collection_items.region_code`, which is a disc's
+**Blu-ray region**, a different thing. Migration `014` adds `profiles.streaming_region`,
+defaulting to `GB`, with a CHECK on the two-letter shape — because TMDB answers an
+unrecognised key with an **empty map rather than an error**, so a lower-cased "gb" would
+make every film appear to stream nowhere and nothing would say why (`DECISIONS.md` #70).
 
-**Proved on live data, and it cleaned up after Batch 12.** The leftover soft-deleted
-"Columbia Noir Vol 4" was destroyed through the UI. Afterwards: `box_sets` **0 rows** (gone,
-not soft-deleted), `box_set_items` **0** (the CASCADE fired), `admin_actions` **4 rows**
-— create, add-item, delete, permanent-delete — so **the audit trail outlived the row it
-describes**, which is what `DECISIONS.md` #5 designed `target_id` as TEXT for. And
-`collection_items` still holds **1,857 rows, all live**: the disc that was in the box set
-was untouched.
+**"Wanted" was dropped from the ownership flags** — §7.2 lists "owned / wanted / unowned"
+and the wanted list is §3.5, which **Batch 18** builds. The zod enum has exactly two states
+so a third cannot be rendered by accident. That is the third time this session a spec bullet
+has pointed at the wanted list; Batch 18 now owes: this badge, "bulk add missing to wanted
+list" (Batch 13), and its own trash tab (Batch 15).
 
-**§12.5's "overdue triggers a push" is not met.** Push needs VAPID keys, a subscription
-store and an endpoint — **Batch 11**, which stops for an owner credential checkpoint. An
-overdue loan is derived from its due date and today (never stored — a stored flag needs a
-job to keep it true and is wrong between runs), shown in red and counted at the top of the
-page. `loans.reminder_sent` exists for Batch 11 to write and nothing reads it. Shipping a
-reminder that never arrives is what Batch 9 refused to do twice.
+**One defect found only by driving the app, and it was mine** (`DECISIONS.md` #68). The
+first version raised **502** when TMDB was unreachable. The page then said *"Waiting for the
+network"* — correct client behaviour, since `send()` treats any 5xx as a network failure
+(#43), but it blamed the reader's connection for TMDB being down. The endpoint now returns
+200 with an `unavailable` flag, so four outcomes read differently: not identified, no
+offers, TMDB unreachable, and here they are. **When this API is a proxy for someone else's
+outage, it says so in the body** — a status code cannot carry "we are fine, they are not".
 
-**`wanted_list` is refused by the trash, not answered empty** (`DECISIONS.md` #67). §6.30
-names it; Batch 18 builds it.
+**And one red CI gate, from a known trap.** `# type: ignore[arg-type]` was *necessary* for
+this machine's mypy and *unused* for CI's, which `warn_unused_ignores` makes a failure —
+`STATUS.md` gotcha 21 exactly. Fixed as that gotcha prescribes: typed the constant so the
+loop variable is already narrowed and no ignore is needed at all.
+
+**Nothing about availability is cached** (#69). Streaming rights move constantly, so a
+stale answer is a wrong answer with a confident face — the opposite of `completion_sets`,
+which caches because a filmography barely changes. The test is not "is it expensive" but
+"does it go wrong quietly".
 
 ---
 
-**Group D's first half — Batch 14, stats + export — shipped earlier** (`20650b3`). Stats at
-344 ms median against Neon over the internet, so §13.1's "<1s" is comfortable; **two of five
-charts have no data** (`watch_log` empty, no disc carries a price) and say what they are
-waiting for rather than drawing zeros (`DECISIONS.md` #61). CSV/JSON/HTML export all 1,857
-discs; **no server-side PDF renderer**, because every option needs system libraries in an
-image Railway builds and CI does not (#62).
+**Group D shipped earlier the same session.** Batch 14 (`20650b3`) — stats at 344 ms median;
+**two of five charts have no data** and say what they are waiting for (#61); CSV/JSON/HTML
+export of all 1,857 discs with **no server-side PDF renderer** (#62). Batch 15 (`20d1eff`) —
+the app's **first irreversible operation**, proved on live data by destroying Batch 12's
+leftover box set: row gone, cascade fired, audit trail outlived it, 1,857 discs untouched
+(#64–66). **"Overdue triggers a push" is not met** — push is Batch 11.
 
-**Group C shipped earlier the same session.** Batch 12 (`881f444`) — a saved smart
-collection and the filter bar evaluate through one function, so they cannot drift (#55).
-Batch 13 (`22680de`) — 40 completion sets built live from TMDB, Hitchcock 12 of 61, where
-the filters that get from TMDB's 65 director credits to 61 *are* the batch (#58).
+**Group C shipped earlier.** Batch 12 (`881f444`) — a saved collection and the filter bar
+evaluate through one function (#55). Batch 13 (`22680de`) — 40 completion sets from live
+TMDB, Hitchcock 12 of 61 (#58).
 
-**A pre-existing red on `main` was fixed first** (`04bfd44`): `date.today()` reads the
-*server's* timezone (#53, gotcha 26).
+**A pre-existing red on `main` was fixed first** (`04bfd44`) — gotcha 26.
 
-**What this session has left in the live database.** 40 `completion_sets` rows — that is
-11.1's acceptance criterion, so they stay. 4 `admin_actions` rows recording Batch 12's
-browser verification and its clean-up, attributed to Craig because the local dev token was
-minted for that profile; truthful, so left rather than deleted. **No `collection_items` row
-has been created, modified or deleted all session — still 1,857, all live.**
+**What this session has left in the live database.** 40 `completion_sets` rows (11.1's
+acceptance criterion, so they stay) and 4 `admin_actions` rows recording Batch 12's browser
+verification and its clean-up. **No `collection_items` row has been created, modified or
+deleted all session — still 1,857, all live.**
 
 ## Next
 
-**Group E — Batch 16 (Watch providers + recommendations) → Batch 17 (Release calendar +
-iCal)** is next, at **Opus 5 · xhigh** because §17's secret-token `.ics` URL is an
-unauthenticated public surface.
+**Batch 17 — Release calendar + iCal** (phases 7.3, 7.4) closes Group E, at
+**Opus 5 · xhigh** because a secret-token `.ics` URL is an **unauthenticated public
+surface** — the first in this app.
 
 **Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
 on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
@@ -381,6 +379,15 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 16 shipped — watch providers and recommendations** (`d2218ab`).
+  Live: *North by Northwest* shows HBO Max plus 6 rent and 6 buy options in GB; 20
+  recommendations with 7 flagged as already owned. §7.1 assumed a `streaming_region` column
+  that did not exist (#70). **A defect found only in the browser, and it was mine**: a 502
+  for a TMDB outage made the page say "waiting for the network" — the endpoint now answers
+  200 with an `unavailable` flag, because a status code cannot carry "we are fine, they are
+  not" (#68). CI went red on gotcha 21's unpinned-mypy trap and was fixed by needing no
+  ignore.
 
 - **2026-09-09** — **Batch 15 shipped — trash, audit UI and lending, closing Group D**
   (`20d1eff`). The permanent delete is the app's first irreversible operation; it gets past
