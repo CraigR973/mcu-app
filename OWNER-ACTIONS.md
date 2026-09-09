@@ -12,50 +12,25 @@ old ones are noted in brackets so an earlier conversation still maps onto this f
 
 ## ⛔ Blocking the batch queue
 
-### 1. Finish the live scraper acceptance run — Group F's checkpoint *(was 1)*
+### 1. Settle Batch 20's remaining two steps *(was 1 — the scraper run itself is **done**)*
 
-**The setup is done. The proof is not.**
+**The acceptance run is complete.** 2026-09-09, 21:55–21:56: all five shops `success`, zero
+failures, six new `price_checks` rows, one or more per shop (`DECISIONS.md` #111). Group F's
+checkpoint is cleared and Batch 20 is open.
 
-- [x] **Add missing defaults** and **Apply these selectors** — pressed 2026-09-09. Arrow's
-      `base_url` is now the UK `arrowfilms.com`, and exactly the five supported shops are
-      enabled
-- [x] Films on the wanted list — *Misery*, *Nope* and *Project Hail Mary*, all wanting 4K
-- [x] A real run saved real rows — **2 `price_checks` rows exist**
-- [ ] **≥ 1 row per working scraper**, which is what phase 5.3 actually asks for
+Two steps remain, and both are yours because an agent must not take them:
 
-What the run produced, and it is worth reading before repeating it:
+- [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*. A
+      Railway cron is a hosting change (`DECISIONS.md` #60), and an in-process scheduler would
+      be worse than nothing — it runs once per container, so scaling to two would silently
+      double the scraping. Batch 20 leaves the job and its endpoint ready so this is one
+      console action.
+- [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance. Needs Batch 11's
+      push to have shipped and a device subscribed — the same device step as item 3 below.
 
-| Shop | Result |
-|---|---|
-| **Arrow Video** | ✅ *Misery Limited Edition 4K UHD*, **£25.00**, exact 4K match, no substitution |
-| **Zavvi** | ⚠️ *Nope* at £8.99 — the **Blu-ray**, because Zavvi has no 4K *Nope* at all. Correct behaviour under `DECISIONS.md` #102, reported as `substitutedFormat` |
-| 101 Films · Powerhouse · Second Sight | "not stocked" — correct: none of them carries a Stephen King adaptation, a Universal blockbuster or an unreleased 2026 title |
-
-**Add a title each boutique label actually sells before running again**, or the criterion
-cannot be met: *Deep Red* for Arrow, *Don't Look Now* or *Near Dark* for Second Sight,
-*Sorcerer* or a Columbia Noir for Powerhouse, something from 101's Black Label. Then one
-unhurried run gives all five shops a fair test in a single pass.
-
-**Space the runs out.** Zavvi succeeded at 17:06 and failed at 17:08 with "no price found"
-having worked minutes earlier — that is throttling, not a broken selector. **It still carries
-2 of the 3 strikes that auto-disable a shop.**
-
-*A trap that already fired, now fixed.* The first run counted "this shop does not stock this
-film" as a scraper failure and **switched 101 Films, Powerhouse and Second Sight off** after
-three of them. They were re-enabled and the accounting was fixed the same day
-(`DECISIONS.md` #107) — a shop that answers honestly no longer accrues a strike. Zavvi's
-throttling failures still do, correctly.
-
-**Where:** <https://mcu-app-fawn.vercel.app> → Retailers. Or the API directly:
-`POST /api/v1/scrapers/test`, then `POST /api/v1/scrapers/run?dryRun=false`.
-
-**Four shops stay permanently unverified — do not test them.** HMV and CEX disallow the
-search routes this job needs; Amazon UK blocks automated access and its official API is
-unsuitable for a private app this size; Blu-ray.com is a catalogue whose prices belong to
-third parties (`DECISIONS.md` #91). **eBay takes the general-market role** once item 2 lands.
-
-**Unblocks:** Batch 20 (price scraping + drop alerts) → Batch 21 (price history charts, which
-then needs 7 real days of wall-clock data) → Group G (22 deals feed, 23 specs scraper).
+**5.5's criterion was corrected before the batch was built** (`DECISIONS.md` #112). As written
+it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
+pairs, with all 29 gaps correct, because no shop stocks every film.
 
 ### 2. eBay production API application *(was 4)*
 

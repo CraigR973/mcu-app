@@ -28,6 +28,18 @@ must not go missing.*
 against the live site. Phase 5.3's criterion is still unmet (it wants ≥ 1 row per working
 scraper, and only 2 rows exist), but the machine demonstrably works end to end.
 
+**Group F's checkpoint is cleared.** The scraper acceptance run completed at 21:55 on
+2026-09-09: all five shops `success`, zero failures, six new `price_checks` rows — Zavvi
+*Don't Look Now* £11.99 and *Cross Of Iron* £12.99, Arrow *Deep Red* £15.00, 101 Films
+*Castle Freak* £17.00, Powerhouse *Romper Stomper* £27.99, Second Sight *Dead Man's Shoes*
+£39.99 (`DECISIONS.md` #111). **Batch 20 is open**, with 5.5's criterion corrected first
+(#112) because the run disproved it.
+
+*What finally worked was not code.* Two earlier attempts failed for reasons worth
+remembering: the first asked three boutique labels for films they do not carry, and the
+second was a **dry run**, which saves nothing by design. The titles that worked were read
+off each shop's live catalogue rather than guessed.
+
 ### ⛔ What is waiting for you
 
 **`OWNER-ACTIONS.md` is the list**, and it shrank from nine items to seven. VAPID keys, the
