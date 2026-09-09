@@ -526,6 +526,35 @@ unverified (#80).
 routable — re-checked at **every redirect hop**, because httpx would otherwise follow a 302
 into an internal address (#81).
 
+### ~~Batch 27 — Gift links~~ 🟡 **shipped**
+**Covers phases 12.1 and 12.2**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 12.1: Gift Link Creation** — CRUD for gift_links · Filter configuration · Slug-based public URL. **Acceptance:** Admin creates a link; visiting the slug renders public list
+>
+> **Phase 12.2: Public Gift Page** — Read-only rendering with posters and retailer links · No auth required · Basic filters visible to viewer. **Acceptance:** Non-logged-in visitor can browse Dad's wanted list
+
+**§3.21's slug design was not followed, deliberately.** It says *"id | UUID (PK) | Public
+slug used in the URL"*, and §6.26's worked example is `/gift/a8f3b2c1` — **eight hex
+characters, 32 bits**. That is enumerable, and what would be enumerated is a named person's
+wish list. The slug is its own column holding 128 bits (`DECISIONS.md` #82).
+
+**The public response model is deliberately unrelated to the admin one** (#84). It could
+share a base and must not: the risk of this feature is one admin field reaching the public
+page because a model was reused. In particular the page never says **what the recipient
+already owns** — a film can be wanted *and* owned (a DVD-to-4K upgrade), Batch 18 shows that
+to the admin, and it has no business on a page shown to family.
+
+**Every reason a link does not work answers identically** — missing, expired, deactivated
+and revoked are one 404 with one body, so a visitor cannot learn whether a guessed slug was
+ever real (#85).
+
+**The slug is stored in plaintext, unlike Batch 17's feed token** (#83). That is a reasoned
+difference, not an inconsistency: a gift link exists to be re-shared and re-shown, which
+hashing would make impossible.
+
+**Reviewed.** The ledger's own note says this batch "needs its own security review"; one
+was run against the diff before close-out.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -551,7 +580,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 24 | Barcode — scan + lookup | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 3.3, **3.4** — confirmation UI mandatory |
 | 25 | Photo uploads | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 3.10 — needs the `vercel.json` CSP fix |
 | 26 | Shelf QR | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | 12.3, 12.4 |
-| 27 | Gift links | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 12.1, 12.2 — high-entropy slug, rate limiter, `noindex` |
+| ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |
 | 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **4.1, 4.3** — active listings, not sold comps |
 | 29 | Format upgrade + sale tracking | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 4.2, 4.4 |
 | 30 | AI assistant — client + caps | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 9.1 + **9.7 together** |
@@ -591,7 +620,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **G** | 22 → 23 | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19 |
 | **H** | 24 → 25 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Both blocked on the same two `vercel.json` fixes** — camera Permissions-Policy and CSP `connect-src` |
 | — | 26 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Conditional on Batch 6 proving insufficient |
-| — | 27 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The app's only public surface; needs its own security review |
+| — | ~~27 · solo~~ | — shipped | — shipped | ~~The app's only public surface; needs its own security review~~ · **shipped, reviewed.** (It is the *second* public surface — Batch 17's `.ics` feed came first) |
 | **I** | **checkpoint: eBay production API application** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28; API access gates the group |
 | **J** | 30 → 31 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Strong dependency, same files; caps must exist before tools |
 | — | 32 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Small and independent |

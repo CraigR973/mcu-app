@@ -146,10 +146,10 @@ async def test_deleted_rows_from_every_table_appear_in_one_shape(
 ) -> None:
     """§13.5's "list soft-deleted items per table".
 
-    Six tables since **Batch 18**, not the four Batch 15 shipped: `wanted_list` and
-    `retailers` joined when §3.5 and §3.16 were finally built. This assertion was updated
-    because the feature legitimately grew — Batch 15 deliberately left those two names
-    *refused* rather than answering an empty page for tables that did not exist.
+    Seven tables now. Batch 15 shipped four; `wanted_list` and `retailers` joined when
+    Batch 18 built §3.5 and §3.16, and `gift_links` when Batch 27 did. The assertion has
+    been updated twice because the feature legitimately grew — Batch 15 deliberately left
+    those names *refused* rather than answering an empty page for tables that did not exist.
     """
     movie, item = await _disc(api_session, "A Deleted Disc")
     item.deleted_at = datetime(2026, 9, 9)
@@ -175,6 +175,7 @@ async def test_deleted_rows_from_every_table_appear_in_one_shape(
         "box_sets",
         "wanted_list",
         "retailers",
+        "gift_links",
     }
 
     watches = (await client.get("/api/v1/trash/all?table=watch_log")).json()

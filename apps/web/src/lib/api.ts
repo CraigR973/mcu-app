@@ -16,6 +16,9 @@ import {
   completionRefreshSchema,
   completionSetDetailSchema,
   duplicateCheckSchema,
+  giftLinkListSchema,
+  giftLinkSchema,
+  giftPageSchema,
   movieDetailSchema,
   moviePageSchema,
   newReleaseListSchema,
@@ -62,6 +65,9 @@ import {
   type Condition,
   type DuplicateCheck,
   type DuplicateReason,
+  type GiftLink,
+  type GiftLinkList,
+  type GiftPage,
   type Loan,
   type LoanList,
   type PurgePreview,
@@ -131,6 +137,11 @@ export type {
   DuplicateReason,
   ExistingCopy,
   FormatCode,
+  GiftFilm,
+  GiftFilterConfig,
+  GiftLink,
+  GiftLinkList,
+  GiftPage,
   MovieDetail,
   MovieListItem,
   MovieLocation,
@@ -960,6 +971,7 @@ export const TRASH_TABLE_LABELS: Record<TrashTable, string> = {
   box_sets: 'Box sets',
   wanted_list: 'Wanted',
   retailers: 'Retailers',
+  gift_links: 'Gift links',
 }
 
 export async function fetchLoans(openOnly = false): Promise<LoanList> {
@@ -1272,4 +1284,71 @@ export async function runScrapers(dryRun = true): Promise<ScrapeRun> {
     await authFetch(`/scrapers/run?dryRun=${String(dryRun)}`, { method: 'POST' }),
     scrapeRunSchema,
   )
+}
+
+// ---------------------------------------------------------------------------
+// Gift links (Batch 27) — §12.1, §12.2
+// ---------------------------------------------------------------------------
+
+export async function fetchGiftLinks(): Promise<GiftLinkList> {
+  return parseResponse(await authFetch('/gift-links'), giftLinkListSchema)
+}
+
+export interface GiftLinkInput {
+  title: string
+  filterConfig?: { maxPrice?: string | null; formats?: string[] }
+  expiresAt?: string | null
+  isActive?: boolean
+}
+
+export async function createGiftLink(input: GiftLinkInput): Promise<GiftLink> {
+  return parseOrThrowApiError(
+    await authFetch('/gift-links', {
+      method: 'POST',
+      body: JSON.stringify({ isActive: true, filterConfig: {}, ...input }),
+    }),
+    giftLinkSchema,
+  )
+}
+
+export async function updateGiftLink(id: string, input: GiftLinkInput): Promise<GiftLink> {
+  return parseOrThrowApiError(
+    await authFetch(`/gift-links/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ isActive: true, filterConfig: {}, ...input }),
+    }),
+    giftLinkSchema,
+  )
+}
+
+export async function revokeGiftLink(id: string): Promise<void> {
+  const response = await authFetch(`/gift-links/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/**
+ * The public gift page — fetched **without** an Authorization header.
+ *
+ * `authFetch` would attach one and, worse, would try to refresh an expired session and
+ * sign the visitor out. There is no visitor to sign out: this is the one request in the
+ * app made by someone who has never logged in.
+ */
+export async function fetchGiftPage(slug: string): Promise<GiftPage> {
+  const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+  const response = await fetch(`${base}/api/v1/gift/${encodeURIComponent(slug)}`, {
+    headers: { Accept: 'application/json' },
+  })
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
+  const body: unknown = await response.json()
+  return giftPageSchema.parse(body)
+}
+
+/** The absolute URL to share. Composed here for the same reason as the calendar feed:
+ *  the API cannot know its own public origin without trusting the `Host` header. */
+export function giftLinkUrl(path: string): string {
+  const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
+  // The *web* origin, not the API's: `/gift/{slug}` is a page a person opens, and the API
+  // path behind it is an implementation detail.
+  void base
+  return `${window.location.origin}${path}`
 }

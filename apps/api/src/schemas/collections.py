@@ -288,7 +288,13 @@ class CompletionRefreshResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 TrashTable = Literal[
-    "collection_items", "watch_log", "movies", "box_sets", "wanted_list", "retailers"
+    "collection_items",
+    "watch_log",
+    "movies",
+    "box_sets",
+    "wanted_list",
+    "retailers",
+    "gift_links",
 ]
 
 

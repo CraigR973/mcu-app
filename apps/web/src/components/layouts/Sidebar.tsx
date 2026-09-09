@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, CalendarDays, Film, Bookmark, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
+import { Boxes, CalendarDays, Film, Bookmark, Gift, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
@@ -35,6 +35,7 @@ const adminNavItems = [
   { label: 'Trash', path: '/trash', icon: Trash2 },
   { label: 'Audit log', path: '/audit', icon: ScrollText },
   { label: 'Retailers', path: '/retailers', icon: Store },
+  { label: 'Gift links', path: '/gift-links', icon: Gift },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 
