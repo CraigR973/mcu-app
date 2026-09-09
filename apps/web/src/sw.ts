@@ -53,14 +53,33 @@ registerRoute(
  * **This deliberately diverges from `the-coupon`, which drops every API response from the
  * cache** (its `respectNoStore` plugin, for SEC-13). That app's data is other people's;
  * this app's is the owner's own catalogue on the owner's own phone, and the batch's
- * acceptance criterion *is* that it survives the network going away. The API sets no
- * `Cache-Control`, so nothing here is overriding a stated instruction.
+ * acceptance criterion *is* that it survives the network going away.
+ *
+ * **That last sentence used to read "the API sets no `Cache-Control`, so nothing here is
+ * overriding a stated instruction", and it stopped being true.** Batch 17's `.ics` feed and
+ * Batch 27's gift page both answer `Cache-Control: private, no-store`, and this route
+ * matched them on pathname alone — so a public gift page a family member opened was being
+ * stored for 24 hours in *their* browser against the API's explicit instruction. Caught by
+ * Batch 27's security review.
+ *
+ * The route now honours `no-store` and matches only this app's own origin. Both matter:
+ * the first respects what the API asked for, and the second stops a cross-origin response
+ * being cached under a rule written for same-origin catalogue reads.
  *
  * Only `GET` is cached. Writes go through the offline queue in `lib/offline-queue.ts`,
  * which is durable in a way a response cache is not.
  */
 registerRoute(
-  ({ url, request }) => request.method === 'GET' && url.pathname.startsWith('/api/v1/'),
+  ({ url, request }) =>
+    request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    url.pathname.startsWith('/api/v1/') &&
+    // The two capability URLs. Neither is catalogue data, neither is wanted offline, and
+    // both say `no-store` — a rule that reads the API's own instruction rather than
+    // listing paths would be better, but a service worker cannot see response headers
+    // when deciding whether a route *matches*.
+    !url.pathname.startsWith('/api/v1/gift/') &&
+    !url.pathname.startsWith('/api/v1/calendar.ics'),
   new NetworkFirst({
     cacheName: 'mcu-api',
     networkTimeoutSeconds: 3,

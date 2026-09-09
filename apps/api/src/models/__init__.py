@@ -24,6 +24,7 @@ from src.models.completion_set import (
     CompletionSet,
     member_display,
 )
+from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink, new_slug
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
 from src.models.price_check import PriceCheck
@@ -71,6 +72,8 @@ __all__ = [
     "LISTING_STATUSES",
     "LOANS_TABLE",
     "Loan",
+    "GIFT_LINKS_TABLE",
+    "GiftLink",
     "Movie",
     "MovieCredit",
     "PriceCheck",
@@ -94,6 +97,7 @@ __all__ = [
     "UUIDPrimaryKeyMixin",
     "UserRole",
     "WatchLog",
+    "new_slug",
     "DEFAULT_RETAILERS",
     "RETAILERS_TABLE",
     "SCRAPER_TYPES",

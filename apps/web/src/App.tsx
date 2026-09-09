@@ -29,6 +29,8 @@ const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const WantedPage = lazy(() => import('./pages/WantedPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
+const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
+const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
   return (
@@ -93,6 +95,10 @@ export default function App() {
             {/* Public: it has to render when the API is unreachable, and requiring a
                 session check would be the one thing guaranteed to fail offline. */}
             <Route path="/offline" element={<OfflinePage />} />
+            {/* §12.2. Public by design and outside the shell entirely: a visitor here has
+                never logged in, so `ProtectedRoute` would redirect them to a sign-in page
+                and `AppLayout` would show them a sidebar of things they cannot open. */}
+            <Route path="/gift/:slug" element={<GiftPage />} />
 
             {/* Protected routes — all wrapped in AppLayout sidebar */}
             {/* Protected, but outside AppShell: the wizard is the full screen, and it
@@ -178,6 +184,10 @@ export default function App() {
             <Route
               path="/retailers"
               element={<AdminShell><RetailersPage /></AdminShell>}
+            />
+            <Route
+              path="/gift-links"
+              element={<AdminShell><GiftLinksPage /></AdminShell>}
             />
             <Route
               path="/admin"

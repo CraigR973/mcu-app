@@ -20,6 +20,7 @@ from src.routers import (
     collection,
     discovery,
     export,
+    gift,
     health,
     insights,
     movies,
@@ -110,3 +111,4 @@ app.include_router(discovery.router)
 app.include_router(calendar.router)
 app.include_router(wanted.router)
 app.include_router(scraping.router)
+app.include_router(gift.router)

@@ -146,4 +146,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/scrapers/test",
         "/api/v1/scrapers/run",
         "/api/v1/scrapers/apply-built-ins",
+        # Batch 27. `/gift/{slug}` is the **second** unauthenticated route in this
+        # application, after `/calendar.ics`. Both are capability URLs.
+        "/api/v1/gift-links",
+        "/api/v1/gift-links/{link_id}",
+        "/api/v1/gift/{slug}",
     }
