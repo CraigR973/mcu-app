@@ -627,6 +627,188 @@ automatic close-out applies once the gate is green.
 
 ---
 
+## Criteria recovered for the 2026-09-09 overnight run
+
+`DECISIONS.md` #54 requires a planned batch's criteria to be written here **before** any code
+is written. These six were recovered verbatim from §16 at `d94a6b8~1` on 2026-09-09.
+
+### Batch 11 — Notifications + push 🟢
+**Covers Phases 6.1, 6.2 and 5.11:**
+
+> **Phase 6.1: Notification Preferences** 🟢
+> - Per-category toggles
+> - Digest mode and quiet hours
+> - **Acceptance:** Disabling "deals" stops deal pushes; quiet hours suppress evening alerts
+>
+> **Phase 6.2: Multi-Device Push Subscriptions** 🟢
+> - Per-device subscription records
+> - Test notification button
+> - **Acceptance:** Admin connects phone + laptop; both receive pushes; removing one doesn't silence the other
+>
+> **Phase 5.11: Sale Season Calendar Events** 🟢
+> - Seeded data for Prime Day, Black Friday, Boxing Day, Criterion Flash Sale, etc.
+> - Pre-sale push notifications
+> - **Acceptance:** Test date set 2 weeks before a seeded event triggers a reminder
+
+**The credential landed on 2026-09-09 and its names are now fixed by what is in Railway:**
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. The key pair was verified to match.
+`VITE_VAPID_PUBLIC_KEY` is deliberately **not** yet set on Vercel — it is a build-time Vite
+variable, so it does nothing until this batch ships code that reads it. Setting it is a
+hosting change and therefore an owner action at the end of this batch, not during it.
+
+**6.2's acceptance cannot be met by an agent.** "Admin connects phone + laptop; both receive
+pushes" needs two real devices holding real subscriptions. Build the per-device subscription
+records and the test-notification button, prove the send path against a stub push service,
+and **defer the criterion to the owner** — the same shape as Batch 19. Say so plainly in the
+close-out rather than implying it passed.
+
+**6.1 and 5.11 are provable tonight** with a date-controlled fixture, which is Batch 37's
+pattern: quiet hours and "two weeks before a seeded event" are both clock questions.
+
+**This batch owes two debts.** Batch 15 shipped §12.5's "overdue loan triggers a push"
+without the push, and Batch 19 deferred price-drop notifications here. Both land now.
+
+### Batch 30 — AI assistant, client + caps 🟡
+**Covers Phases 9.1 and 9.7:**
+
+> **Phase 9.1: Claude API Client** 🟢
+> - Anthropic SDK integration
+> - System prompt scaffolding
+> - Token + cost logging per message
+> - **Acceptance:** Simple text prompt returns a response; tokens logged
+>
+> **Phase 9.7: Usage Caps** 🟢
+> - Per-user daily message / cost cap
+> - Graceful "limit reached" message
+> - **Acceptance:** Sending over the cap blocks with clear messaging; resets next day
+
+`ANTHROPIC_API_KEY` was set in Railway on 2026-09-09. **The default cap is 50 messages per
+person per day** (owner, 2026-09-09), editable in the app afterwards — a starting value, not
+a commitment.
+
+**Do not guess a model id.** The April spec predates the current lineup by two generations.
+The Claude 5 family is current: `claude-opus-5`, `claude-sonnet-5`, `claude-fable-5-1`, plus
+`claude-haiku-4-5-20251001`. Sonnet 5 is the sensible default for an assistant answering
+questions about a film collection; the id belongs in config, not scattered through the code.
+
+**9.1's acceptance spends real money on the owner's key.** One live call is enough to satisfy
+it — do not loop.
+
+### Batch 31 — AI assistant, tools + chat 🔴
+**Covers Phases 9.2, 9.3 and 9.4:**
+
+> **Phase 9.2: Tool Definitions** 🔴
+> - Tool schemas for major endpoints (search, add_wanted, log_watch, etc.)
+> - Role-aware tool filtering (admin vs viewer)
+> - **Acceptance:** Tool list differs correctly between admin and viewer
+>
+> **Phase 9.3: Chat UI** 🟢
+> - Conversation list and detail
+> - Streaming response display
+> - Floating chat button on every page
+> - **Acceptance:** User sends message, streamed response renders progressively
+>
+> **Phase 9.4: Tool Execution with Confirmation** 🟢
+> - When Claude calls a write tool, UI confirms before executing
+> - **Acceptance:** "Add X to wanted list" prompts confirmation; cancelling aborts
+
+**This is the batch `DECISIONS.md` #12 warned about** — the second consumer that would reopen
+the response-envelope question. It does not: tools call the same endpoints the web app calls,
+through the same schemas. If a tool wants a shape no endpoint returns, that is a finding to
+report, not a reason to add an envelope.
+
+**9.4's confirmation is a safety boundary, not a nicety.** A write tool must not execute
+before the user confirms, and cancelling must leave nothing behind. Batch 36's command
+palette already dropped its AI-conversations index waiting for this batch.
+
+### Batch 32 — Voice input 🟢
+**Covers Phase 9.5:**
+
+> **Phase 9.5: Voice Input** 🟢
+> - Web Speech API integration
+> - Mic button, transcribes to text input
+> - **Acceptance:** Tapping mic, speaking a query, sends correct transcription
+
+**Depends on Batch 31 existing** — the transcription is sent to the chat input, so building it
+first is a microphone button wired to nothing. `microphone=(self)` has been live in
+`vercel.json` since Batch 2, so no hosting change is needed.
+
+**Its acceptance needs a human speaking into a microphone** and is therefore **deferred to the
+owner**, like 6.2.
+
+### Batch 25 — Photo uploads 🟢
+**Covers Phase 3.10:**
+
+> **Phase 3.10: Photo Uploads** 🟢
+> - Upload to Supabase Storage (max 5 per item, 5MB each)
+> - Camera capture or file picker on mobile
+> - Gallery display on detail page
+> - **Acceptance:** Upload succeeds; photos appear in gallery; deletion works
+
+**The storage line in that phase is dead.** There is no Supabase project (`DECISIONS.md` #17)
+and the owner settled storage as **Neon** on 2026-09-09 — photo bytes in Postgres, served
+through the API. That makes three changes to the phase as written:
+
+- **A new `item_photos` table**, not §3.4's `photo_urls` JSONB array of external URLs.
+- **A ~300 KB per-photo cap after server-side resize** (owner, 2026-09-09). The spec's raw
+  5 MB × 5 × 1,857 ≈ 46 GB is not sensible in a database that is 35 MB today; at 300 KB the
+  worst case is ≈ 2.8 GB and the realistic case under 200 MB.
+- **No CSP change is needed.** Images come from the API origin, which `connect-src` already
+  allows — so the second half of Group H's `vercel.json` note is retired. Serve them with a
+  strong `ETag`/`Cache-Control` so Batch 8's service worker caches them; there is no CDN in
+  front of Postgres.
+
+### Batch 23 — Specs scraper + display 🟡
+**Covers Phases 3.7, 3.8 and 3.9:**
+
+> **Phase 3.7: Blu-ray.com Specs Scraper** 🔴
+> - Scrape video_specs, audio_specs, special_features, region_code, release_label
+> - Handle multiple editions (prompt admin to pick)
+> - Cache URL for future re-syncs
+> - Unit tests with mocked Blu-ray.com HTML
+> - **Acceptance:** Scraper run against 10 known **live** Blu-ray.com URLs persists correct specs to the matching `collection_items` rows; row counts verified — not just unit tests against fixture HTML.
+>
+> **Phase 3.8: Spec Display & Quality Badges** 🟢
+> - Badge components for resolution, HDR, audio
+> - Displayed on collection cards and detail page
+> - Hover/tap shows full spec list
+> - **Acceptance:** A 4K disc with Dolby Vision + Atmos shows three distinct coloured badges
+>
+> **Phase 3.9: Spec-Based Filtering** 🟢
+> - Filter panel: "Dolby Atmos only", "Dolby Vision 4K only", "Arrow Video", "Region-free"
+> - URL-encoded so filters are bookmarkable
+> - **Acceptance:** Applying "Dolby Vision" filter reduces list to only DV-capable discs
+
+**Read `DECISIONS.md` #108 and #110 together before writing a line.** #110 is the governing
+one: this is an **owner-accepted risk, not a permitted access**. #108's closing claim that it
+"stays inside what the site allows" was wrong — absence from `robots.txt` is not permission,
+and the site's Legal Notices prohibit automated reuse.
+
+**#110's bounds are the specification here.** Exact release URLs only; never the disallowed
+search routes; no authentication, no images/scripts/advertising, no prices, reviews, ratings
+or member content; no republished dataset, no IP rotation, no CAPTCHA solving, no evasion of
+an access control. Requests sequential and conservatively rate-limited. Successful results
+cached indefinitely rather than refreshed automatically. **Every derived row records its
+source URL and fetch time** so the data can be identified and removed. A `403`, a `429`, an
+explicit objection or a hosting complaint **halts the whole integration**, and resuming needs
+a new owner decision.
+
+**Three extraction facts, measured against a real page on 2026-09-09** (`#108`):
+
+- The page **also carries prices** — a list price and an Amazon price, in the same document.
+  #91 ruled those out as third-party numbers nobody can pay, and #110 forbids extracting
+  them. The temptation is unusually close to hand.
+- **Audio and subtitles appear twice** in the flattened text, behind `(more)`/`(less)`
+  toggles. Extraction must target the DOM node, not the page text.
+- **`Special Features` was absent** from that page despite being one of 3.7's five fields, so
+  it is nullable rather than assumed.
+
+**The ten URLs come from browse pages** (owner, 2026-09-09), which `robots.txt` does not
+disallow — only `/search/` and `/movies/search.php` are. List every URL fetched in the
+close-out report.
+
+---
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
