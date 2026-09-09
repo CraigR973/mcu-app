@@ -14,6 +14,7 @@ are readable in the app and in a test without a push service in the loop.
 from __future__ import annotations
 
 import json
+import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from enum import StrEnum
@@ -281,6 +282,11 @@ async def queue_notification(
     preference = await get_or_create_preferences(db, user_id)
 
     notification = Notification(
+        # **Assigned here, not left to the column default.** A `default=` is applied when
+        # the ORM builds the INSERT, so a constructed-but-unflushed row still reads `None`
+        # — and the deduplicated path below inserts these values by hand, which would put
+        # a NULL in the primary key. The same trap as the preference defaults above.
+        id=uuid.uuid4(),
         user_id=user_id,
         category=category.value,
         title=title,
@@ -318,7 +324,16 @@ async def queue_notification(
                 suppressed_reason=notification.suppressed_reason,
                 created_at_utc=notification.created_at_utc,
             )
-            .on_conflict_do_nothing(index_elements=[Notification.dedupe_key])
+            .on_conflict_do_nothing(
+                index_elements=[Notification.dedupe_key],
+                # **The predicate is required, not decorative.** `ix_notifications_dedupe_key`
+                # is a *partial* unique index, and Postgres will not infer a partial index as
+                # the ON CONFLICT arbiter unless the predicate is repeated here — it fails with
+                # "no unique or exclusion constraint matching the ON CONFLICT specification"
+                # instead. The index is partial so that several notifications without a dedupe
+                # key (a test push) can coexist.
+                index_where=Notification.dedupe_key.is_not(None),
+            )
             .returning(Notification.id)
         )
         if result.scalar_one_or_none() is None:
