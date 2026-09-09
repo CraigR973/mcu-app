@@ -12,26 +12,33 @@ Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-
 
 ### 1. Live scraper acceptance runs — Group F's formal checkpoint
 
-- [ ] Test each of the 6 retailers, one at a time, before enabling any
-- [ ] Fix the selectors that fail
-- [ ] Put at least one real film on the wanted list
-- [ ] Run for real (`dryRun=false`) and confirm ≥ 1 `price_checks` row per working scraper
+- [ ] Press **Add missing defaults** on Retailers, then **Apply these selectors**
+- [ ] Test the 5 supported retailers, one at a time, before enabling any
+- [ ] Put at least one real film on the wanted list — the *Add a film* panel does this now
+- [ ] **Preview live run**, then **Run and save prices**, and confirm ≥ 1 `price_checks` row
+      per working scraper
 
-**Where:** <https://mcu-app-fawn.vercel.app> → Retailers. Or the API directly:
-`POST /api/v1/scrapers/test`, then `POST /api/v1/scrapers/run?dryRun=false`.
+**Where:** <https://mcu-app-fawn.vercel.app> → Retailers. Every step above is now a button on
+that page. Or the API directly: `POST /api/v1/retailers/seed`,
+`POST /api/v1/scrapers/apply-built-ins`, `POST /api/v1/scrapers/test`, then
+`POST /api/v1/scrapers/run?dryRun=false`.
 
-**Already done for you:** the built-in selectors are applied (5 of 6 retailers carry them —
-Criterion has no built-in config, and CEX isn't among the seeded six).
+**Which shops this is now about — five, not six.** Live page-shape checks on 2026-09-09
+settled the rest (`DECISIONS.md` #91):
+
+| Supported — test these | Permanently unverified — do not test |
+|---|---|
+| Zavvi, Arrow (UK), 101 Films, Second Sight, Powerhouse/Indicator | HMV and CEX (search routes disallowed), Amazon UK (blocks automated access; its official API is unsuitable here), Blu-ray.com (a catalogue, third-party prices) |
+
+The four on the right stay listed in the app, marked unverified with the reason, so nobody
+re-derives the same four answers. **eBay takes the general-market role** once item 4's
+application is approved. Arrow's seeded URL was the *US* storefront and returned USD, which
+the shape guard rejected — **Apply these selectors** corrects it to `arrowfilms.com`.
 
 **What "test" means here:** a green tick means *"this looks like a real price for this
-film"*, not *"the page loaded"*. That distinction is the whole reason §5.4 exists. **Expect
-several to fail** — every selector is an unverified guess until it's run, and all six report
-`verified: false` today. The tool prints the node it read and why it rejected the result,
-which is usually enough to correct the CSS in *Retailers → edit*.
-
-**Amazon may not be viable at all** — it varies its markup per client and blocks scrapers;
-its built-in entry says so. Blu-ray.com is a database rather than a shop, so its prices are
-third-party and may be missing. Neither is a defect in the framework.
+film"*, not *"the page loaded"*. That distinction is the whole reason §5.4 exists. A
+selector can still fail on a layout change; the tool prints the node it read and why it
+rejected the result, which is usually enough to correct the CSS in *Retailers → edit*.
 
 **Unblocks:** Batch 20 (price scraping + drop alerts) → Batch 21 (price history charts, which
 then needs 7 real days of wall-clock data) → Group G (22 deals feed, 23 specs scraper).

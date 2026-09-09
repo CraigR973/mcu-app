@@ -245,6 +245,9 @@ class ScrapeOutcomeResponse(BaseModel):
     wantedTitle: str
     ok: bool
     price: str | None
+    #: The currency `price` was read in. Never converted, so a report showing the number
+    #: must show this beside it rather than assuming pounds.
+    currency: str | None
     url: str | None
     reasons: list[str]
     error: str | None
@@ -264,9 +267,8 @@ class BuiltInScraperResponse(BaseModel):
     name: str
     searchUrlTemplate: str
     scraperConfig: dict[str, Any]
-    #: **False for all six.** §5.3's acceptance is a live run against each retailer, which
-    #: is an owner action; until then a selector is a guess, and the honest state of a
-    #: guess is "unverified".
+    #: True only after a permitted live check. Until then a selector is a guess, and the
+    #: honest state of a guess is "unverified".
     verified: bool
     note: str | None
 

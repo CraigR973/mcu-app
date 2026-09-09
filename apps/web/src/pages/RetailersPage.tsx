@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Plus, Sprout, Store, Trash2, TriangleAlert } from 'lucide-react'
+import {
+  Ban,
+  Check,
+  Loader2,
+  Play,
+  Plus,
+  Save,
+  Sprout,
+  Store,
+  Trash2,
+  TriangleAlert,
+} from 'lucide-react'
 import type { RetailerRow } from '@mcu/shared'
 
 import { ScraperTester } from '@/components/ScraperTester'
@@ -12,11 +23,133 @@ import {
   fetchBuiltInScrapers,
   fetchRetailers,
   removeRetailer,
+  runScrapers,
   seedRetailers,
   updateRetailer,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
+
+/**
+ * A scraped price, rendered as money in the currency it was **read in**.
+ *
+ * Never converted — `DECISIONS.md` #79 refuses a result whose currency is not the one the
+ * retailer is configured for rather than translating it, so showing the bare number here
+ * would drop the one fact that makes it checkable.
+ */
+function money(amount: string, currency: string | null) {
+  if (!currency) return amount
+  try {
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(
+      Number(amount),
+    )
+  } catch {
+    // An unknown or malformed code must not blank the report.
+    return `${amount} ${currency}`
+  }
+}
+
+function RunPanel() {
+  const queryClient = useQueryClient()
+  const run = useMutation({
+    mutationFn: (dryRun: boolean) => runScrapers(dryRun),
+    onSuccess: (result) => {
+      if (!result.dryRun) {
+        void queryClient.invalidateQueries({ queryKey: ['retailers'] })
+        void queryClient.invalidateQueries({ queryKey: ['wanted'] })
+      }
+    },
+  })
+
+  const result = run.data
+  return (
+    <section className="space-y-3 rounded-lg border border-border bg-card p-4">
+      <div>
+        <h2 className="text-sm font-semibold text-foreground">Price-check run</h2>
+        <p className="text-xs text-muted-foreground">
+          Checks every enabled retailer for every active wanted film. Preview makes the
+          same live retailer requests but does not save prices.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={run.isPending}
+          onClick={() => run.mutate(true)}
+        >
+          {run.isPending && run.variables ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+          Preview live run
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={run.isPending}
+          onClick={() => {
+            if (window.confirm('Run enabled retailers now and save valid prices?')) {
+              run.mutate(false)
+            }
+          }}
+        >
+          {run.isPending && run.variables === false ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          Run and save prices
+        </Button>
+      </div>
+
+      {run.isError ? (
+        <p className="text-xs text-destructive">
+          {queryErrorMessage(run.error, 'The price-check run failed.')}
+        </p>
+      ) : null}
+      {result ? (
+        <div className="space-y-2 text-xs">
+          <p className="font-medium text-foreground">
+            {result.dryRun ? 'Preview complete' : 'Run complete'}: {result.succeeded} passed,
+            {' '}{result.failed} failed, {result.written} price rows saved.
+          </p>
+          {result.outcomes.length === 0 ? (
+            <p className="text-muted-foreground">
+              Nothing was checked. Add an active wanted film and enable at least one
+              verified retailer.
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {result.outcomes.map((outcome, index) => (
+                <li
+                  key={`${outcome.retailer}-${outcome.wantedTitle}-${String(index)}`}
+                  className={cn(
+                    'rounded-md border px-2 py-1.5',
+                    outcome.ok
+                      ? 'border-primary/30 text-foreground'
+                      : 'border-destructive/30 text-muted-foreground',
+                  )}
+                >
+                  {outcome.retailer} · {outcome.wantedTitle} ·{' '}
+                  {outcome.ok
+                    ? `${
+                        outcome.price
+                          ? money(outcome.price, outcome.currency)
+                          : 'price found'
+                      }${result.dryRun ? '' : ' saved'}`
+                    : (outcome.error ?? outcome.reasons.join('; ')) || 'no usable result'}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </section>
+  )
+}
 
 function Row({ retailer }: { retailer: RetailerRow }) {
   const queryClient = useQueryClient()
@@ -98,12 +231,17 @@ function Row({ retailer }: { retailer: RetailerRow }) {
 }
 
 /**
- * §5.3's six built-in configurations, and the honest state of each.
+ * §5.3's built-in configurations, and the honest state of each.
  *
- * **All six report `verified: false`**, because §5.3's acceptance is a run against the
- * *live* retailer and that is an owner action, not something an agent may do. Applying them
- * is a separate, deliberate button from Batch 18's seeding: a seeded retailer is a name and
- * a URL, which is a fact; a selector is a guess until someone has watched it work.
+ * A built-in reports verified only after a permitted live check. Applying them is a
+ * separate, deliberate button from Batch 18's seeding: a seeded retailer is a name and a
+ * URL, while a selector is a guess until someone has watched it work.
+ *
+ * **The two states are split into two lists, not two chip colours.** When every built-in
+ * was unverified the colour carried no load; now that some are supported and some never
+ * will be, it has to — and `text-primary` and `text-amber-500` are the same colour to the
+ * eye in this theme. The unverified ones also show their *reason* rather than hiding it in
+ * a `title` tooltip: the reason is what tells the reader not to bother testing them.
  */
 function BuiltInPanel() {
   const queryClient = useQueryClient()
@@ -122,33 +260,63 @@ function BuiltInPanel() {
   const data = builtInsQuery.data
   if (!data) return null
 
+  const verified = data.items.filter((entry) => entry.verified)
+  const unverified = data.items.filter((entry) => !entry.verified)
+
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+    <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
       <p className="text-xs font-semibold text-foreground">
         Built-in selectors ({data.items.length})
       </p>
-      <p className="text-xs text-muted-foreground">
-        {data.unverified.length === data.items.length
-          ? 'None of these has been run against a live page yet — every one is a guess until someone watches it work. Use “Test” on a retailer before enabling it.'
-          : `${String(data.unverified.length)} of ${String(data.items.length)} are still unverified.`}
-      </p>
-      <ul className="flex flex-wrap gap-1.5">
-        {data.items.map((entry) => (
-          <li
-            key={entry.name}
-            className={cn(
-              'rounded-md border px-2 py-0.5 text-[11px]',
-              entry.verified
-                ? 'border-primary/40 text-primary'
-                : 'border-amber-500/40 text-amber-500',
-            )}
-            title={entry.note ?? undefined}
-          >
-            {entry.name}
-            {entry.verified ? '' : ' · unverified'}
-          </li>
-        ))}
-      </ul>
+
+      {verified.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          None of these has been run against a live page yet — every one is a guess until
+          someone watches it work. Use “Test” on a retailer before enabling it.
+        </p>
+      ) : (
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">
+            {verified.length} checked against live markup. “Test” one before enabling it —
+            a shop can change its layout at any time.
+          </p>
+          <ul className="flex flex-wrap gap-1.5">
+            {verified.map((entry) => (
+              <li
+                key={entry.name}
+                className="flex items-center gap-1 rounded-md border border-primary/40 px-2 py-0.5 text-[11px] text-primary"
+                title={entry.note ?? undefined}
+              >
+                <Check className="h-3 w-3" aria-hidden />
+                {entry.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {unverified.length > 0 ? (
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">
+            {unverified.length} cannot be checked from here. Don’t test these — the reason
+            won’t change on a retry.
+          </p>
+          <ul className="space-y-1">
+            {unverified.map((entry) => (
+              <li
+                key={entry.name}
+                className="flex items-start gap-1.5 text-[11px] text-muted-foreground"
+              >
+                <Ban className="mt-0.5 h-3 w-3 shrink-0 text-amber-500" aria-hidden />
+                <span>
+                  <span className="font-medium text-foreground">{entry.name}</span>
+                  {entry.note ? ` — ${entry.note}` : ' — unverified'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <Button
         type="button"
         size="sm"
@@ -266,17 +434,35 @@ export default function RetailersPage() {
               : ''}
           </p>
         </div>
-        {!creating ? (
-          <Button type="button" size="sm" onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4" />
-            New
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={seed.isPending}
+            onClick={() => seed.mutate()}
+          >
+            {seed.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sprout className="h-4 w-4" />
+            )}
+            Add missing defaults
           </Button>
-        ) : null}
+          {!creating ? (
+            <Button type="button" size="sm" onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4" />
+              New
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {creating ? <NewRetailerForm onDone={() => setCreating(false)} /> : null}
 
       <BuiltInPanel />
+
+      <RunPanel />
 
       {items.length > 0 && retailersQuery.data?.configuredCount === 0 ? (
         <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-muted-foreground">
@@ -303,19 +489,9 @@ export default function RetailersPage() {
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Store className="h-10 w-10 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">No retailers yet.</p>
-          <Button
-            type="button"
-            size="sm"
-            disabled={seed.isPending}
-            onClick={() => seed.mutate()}
-          >
-            {seed.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sprout className="h-4 w-4" />
-            )}
-            Add the six defaults
-          </Button>
+          <p className="text-xs text-muted-foreground">
+            Use “Add missing defaults” above, or create one manually.
+          </p>
         </div>
       ) : (
         <ul className="space-y-2">

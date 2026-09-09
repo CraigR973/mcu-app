@@ -25,9 +25,9 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, urljoin, urlparse
 
 import httpx
 import structlog
@@ -66,6 +66,9 @@ class ScrapeOutcome:
     wanted_title: str
     ok: bool
     price: Decimal | None = None
+    #: The currency the price was *read in*, never converted (`DECISIONS.md` #79). Carried
+    #: so a report can render a price as money rather than as a bare number.
+    currency: str | None = None
     url: str | None = None
     #: Why a result was rejected. The important field — a scraper that has started
     #: matching the wrong node reports here rather than silently writing a number.
@@ -142,6 +145,12 @@ async def scrape_one(
         return None, outcome
 
     candidate = extract(page.html, retailer.scraper_config)
+    # Retailer pages overwhelmingly use relative product links. Persisting one as-is made
+    # `_write_check` silently return without a row, even though `written` was incremented.
+    # Resolve it against the final page after redirects so the stored link is usable and
+    # the same-site shape guard can judge its real host.
+    if candidate.url:
+        candidate = replace(candidate, url=urljoin(page.final_url, candidate.url))
     verdict = check_shape(
         candidate,
         expected_title=title,
@@ -149,6 +158,7 @@ async def scrape_one(
         retailer_host=urlparse(retailer.base_url).hostname,
     )
     outcome.price = candidate.price
+    outcome.currency = candidate.currency or retailer.currency
     outcome.url = candidate.url or page.final_url
     outcome.reasons = verdict.reasons
     outcome.ok = verdict.ok
@@ -221,8 +231,7 @@ async def run_scrape(
 
             if candidate is not None and candidate.price is not None:
                 any_success = True
-                if not dry_run:
-                    await _write_check(db, retailer, wanted, candidate, outcome)
+                if not dry_run and await _write_check(db, retailer, wanted, candidate, outcome):
                     result.written += 1
 
             if polite_pause:
@@ -251,18 +260,18 @@ async def _write_check(
     wanted: WantedItem,
     candidate: ScrapeCandidate,
     outcome: ScrapeOutcome,
-) -> None:
-    """Persist one price check, tolerating the once-a-day uniqueness rule.
+) -> bool:
+    """Persist one price check and report whether a row was inserted or updated.
 
     A second run on the same day updates the row rather than failing: `uq_price_checks_
     listing_day` exists so an afternoon re-run does not double-count, and hitting it is a
     normal outcome rather than an error.
     """
     if candidate.price is None:  # pragma: no cover - callers check
-        return
+        return False
     url = candidate.url or ""
     if not url.lower().startswith(("http://", "https://")):
-        return
+        return False
 
     existing = (
         await db.execute(
@@ -277,26 +286,30 @@ async def _write_check(
     if existing is not None:
         existing.price = candidate.price
         existing.title_snapshot = candidate.title
-        return
+        return True
 
-    db.add(
-        PriceCheck(
-            id=uuid.uuid4(),
-            wanted_id=wanted.id,
-            retailer_id=retailer.id,
-            # §3.6's own column: the check stays readable after the retailer row is gone.
-            retailer_name_snapshot=retailer.name,
-            price=candidate.price,
-            currency=candidate.currency or retailer.currency,
-            title_snapshot=candidate.title,
-            url=url,
-            checked_at=utcnow(),
-        )
-    )
     try:
-        await db.flush()
+        # Keep a same-day race inside a savepoint. Rolling back the whole session here
+        # would also discard valid rows written earlier in this multi-retailer run.
+        async with db.begin_nested():
+            db.add(
+                PriceCheck(
+                    id=uuid.uuid4(),
+                    wanted_id=wanted.id,
+                    retailer_id=retailer.id,
+                    # §3.6's own column: the check stays readable after deletion.
+                    retailer_name_snapshot=retailer.name,
+                    price=candidate.price,
+                    currency=candidate.currency or retailer.currency,
+                    title_snapshot=candidate.title,
+                    url=url,
+                    checked_at=utcnow(),
+                )
+            )
+            await db.flush()
     except IntegrityError:
         # Lost a race with a concurrent run against the same listing. The row that won
-        # says the same thing, so there is nothing to correct.
-        await db.rollback()
+        # says the same thing, so there is nothing to correct or count as a new write.
         outcome.reasons.append("already recorded today")
+        return False
+    return True

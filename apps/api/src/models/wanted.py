@@ -34,8 +34,8 @@ SCRAPER_TYPES = ("built_in", "generic_css", "custom")
 SCRAPE_FREQUENCIES = ("daily", "weekly", "manual")
 SCRAPE_STATUSES = ("success", "error", "blocked")
 
-#: §3.16's own list: "Seeded with default retailers (HMV, Zavvi, Amazon UK, Blu-ray.com,
-#: Arrow Video, Criterion)."
+#: §3.16's original six plus permitted UK replacements selected after the live Batch 19
+#: acceptance checks (`DECISIONS.md` #91).
 #:
 #: **Seeded with no selectors.** `scraper_config` is deliberately empty for every one of
 #: them: the CSS a retailer's page needs is Batch 19's problem, and inventing selectors
@@ -51,8 +51,11 @@ DEFAULT_RETAILERS: tuple[dict[str, str], ...] = (
     },
     {"name": "Amazon UK", "base_url": "https://www.amazon.co.uk"},
     {"name": "Blu-ray.com", "base_url": "https://www.blu-ray.com"},
-    {"name": "Arrow Video", "base_url": "https://www.arrowvideo.com"},
+    {"name": "Arrow Video", "base_url": "https://www.arrowfilms.com"},
     {"name": "Criterion", "base_url": "https://www.criterion.com"},
+    {"name": "101 Films", "base_url": "https://101-films-store.com"},
+    {"name": "Second Sight", "base_url": "https://secondsightfilms.co.uk"},
+    {"name": "Powerhouse Films", "base_url": "https://www.powerhousefilms.co.uk"},
 )
 
 

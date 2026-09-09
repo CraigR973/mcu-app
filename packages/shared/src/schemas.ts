@@ -983,8 +983,7 @@ export const builtInScraperSchema = z.object({
   name: z.string().min(1),
   searchUrlTemplate: z.string().min(1),
   scraperConfig: z.record(z.unknown()),
-  /** False for all six: §5.3's acceptance is a live run against each retailer, which is an
-   *  owner action. A selector nobody has run is a guess. */
+  /** True only after a permitted live check. A selector nobody has run is a guess. */
   verified: z.boolean(),
   note: z.string().nullable(),
 })
@@ -999,6 +998,9 @@ export const scrapeOutcomeSchema = z.object({
   wantedTitle: z.string().min(1),
   ok: z.boolean(),
   price: z.string().nullable(),
+  /** The currency `price` was read in. Never converted (`DECISIONS.md` #79), so a report
+   *  showing the number must show this beside it rather than assuming pounds. */
+  currency: z.string().nullable(),
   url: z.string().nullable(),
   reasons: z.array(z.string()),
   error: z.string().nullable(),
