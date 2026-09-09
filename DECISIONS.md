@@ -843,3 +843,40 @@ contemporaneous.
     explicit. An in-process scheduler would be worse than nothing: it would run once per
     container, so scaling to two would double the TMDB spend silently. Wiring the schedule
     is one console action against a job that already works, and it is the owner's.
+
+### 2026-09-09 — Batch 14 stats + export
+
+61. **A chart with no data says what it is waiting for; it never renders as zero.**
+    `/collection/stats` returns an empty `mostWatched` and `spendOverTime` **plus**
+    `itemsWithPrice`, and the page prints a sentence in place of the chart.
+
+    *Why:* measured before writing anything — `watch_log` holds 0 rows, and
+    `purchase_price` is NULL on **all 1,857** items because the imported spreadsheet never
+    carried one. A bar chart with no bars and a line at zero both look like a bug in the
+    chart, and a reader cannot tell "nothing bought" from "nothing recorded" without the
+    denominator. This is `STATUS.md` gotcha 19 — a page that lies confidently is worse than
+    one that errors — applied to a dashboard instead of a list.
+
+    *Consequence for the criterion:* §13.1's "all charts populated" is **not** literally
+    met and cannot be until the data exists. Recorded rather than worked around.
+
+62. **No server-side PDF renderer. §13.4's PDF is the browser printing §13.4's HTML.**
+
+    *Why:* WeasyPrint needs cairo and pango; wkhtmltopdf and Playwright need a headless
+    browser. All of them are system libraries in the image — and `AGENTS.md`'s own note on
+    the gate says **the Docker image is built by Railway, not by CI**. A missing shared
+    object would therefore pass every check on a pull request and fail at deploy, which is
+    the exact failure shape this project has already been bitten by twice.
+
+    *Why it is not a narrowing:* §13.4 asks for two things — "printable PDF with posters"
+    and "coffee-table HTML" — and one print-laid-out document is both. The HTML carries
+    real `@page` rules, `page-break-inside: avoid` per card, and `print-color-adjust:
+    exact` so the posters survive the print dialog. Revisit if a *scheduled* PDF is ever
+    wanted, which is the one case a browser cannot serve.
+
+63. **An export download goes through `fetch` into a blob, not through a plain link.**
+
+    *Why:* an `<a href>` cannot carry an `Authorization` header, so making one work means
+    putting the access token in the query string — where it lands in server logs, browser
+    history and any `Referer` the page emits. The whole collection is ~300 KB of CSV, so
+    holding it as a blob costs nothing measurable and keeps the credential in the header.

@@ -2,70 +2,72 @@
 
 ## Now
 
-**Batch 13 — completion sets — shipped, closing Group C.** Production serves the merged SHA
-`22680de737fc80fc4e50613a2c335744302426f1` with `db: ok`; migration `012` applied on boot.
+**Batch 14 — stats + export — shipped.** Group D's first half. Production serves
+`20650b3a86786029270e8dd2e52b7c8078347fc6` with `db: ok`. No migration.
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 11.1 | Refresh job runs live against TMDB and populates `completion_sets` with ≥ 20 sets | **done — 40 sets, 0 errors, 0 skipped**, run live against TMDB after a clean dry run |
-| 11.1 | Hitchcock set lists every Hitchcock film TMDB returns | done — **12 of 61**. TMDB returns 129 crew credits; 65 are `job=Director`; the 4 dropped are two wardrobe tests, Tippi Hedren's screen test and a 2026 documentary *about* him. The set starts at *Always Tell Your Wife* (1923), his real first credit |
-| 11.1 | re-running after a TMDB change updates the affected rows | done — `(set_type, set_key)` is unique, so a second run edits Hitchcock's row rather than adding a second Hitchcock. Tested against two different TMDB answers |
-| 11.2 | Opening Insights shows ≥ 20 sets with owned/missing counts | done — **40 sets** with progress bars, sorted by how close each is to complete. Verified in a browser against live data |
+| 13.1 | Stats page loads in < 1s with **all charts populated** | **partly.** 344 ms median against Neon over the internet, so the speed half is comfortable. **Two of five charts have no data to populate** — see below |
+| 13.2 | Home dashboard shows last 20 events across all users | done for the sources that exist — watches and every admin write. **Price drops (Batch 20) and loans (Batch 15) do not exist yet** |
+| 13.3 | CSV opens cleanly in Excel; JSON is valid | done — 1,857 rows, 18 columns, UTF-8 BOM + CRLF; JSON parses and its `count` matches its `items` |
+| 13.4 | PDF looks presentation-ready; HTML prints well | done as **one** artifact — 1,857 print-laid-out cards with 1,090 posters. There is no server-side PDF renderer, by decision (`DECISIONS.md` #62) |
 
-**Three things in the spec did not hold. None was worked around silently.**
+**The data was measured before any code was written, and it changed what two charts could
+say.** `watch_log` holds **0 rows**; `purchase_price` and `purchase_date` are NULL on **all
+1,857** items, because the imported spreadsheet never carried a price. Formats (blu-ray 890,
+digital 535, 4K 346, DVD 210), genres (Drama 500, Thriller 351, Crime 290…), decades
+(1940s 203, 2010s 188…) and sections all populate fully.
 
-1. **"Bulk add missing to wanted list" was dropped.** The wanted list does not exist — §3.5
-   designs `wanted_list`, **Batch 18** builds it, and `/watchlist` is still a "coming soon"
-   stub. Shipping the button would ship a control that does nothing, which is the defect
-   gotcha 5 catalogues four instances of and the one Batch 9 refused to repeat
-   (`DECISIONS.md` #50). **Batch 18 owns adding it.** 11.2's acceptance does not mention it.
-2. **"Awards" has no source.** TMDB has no awards API; a Best Picture set has to be typed by
-   hand, which is what §3.15's `curated_list` type is for.
-3. **"Franchises" needs a column this app lacks.** `belongs_to_collection` is returned by
-   `get_movie_full` and never stored, so it is a schema change plus a 1,086-call backfill.
+So "most watched" and "spend over time" render a sentence instead of an empty frame — *"No
+purchase prices recorded — the imported spreadsheet never carried one"* — and the response
+carries `itemsWithPrice` so an empty series can distinguish **nothing recorded** from
+**nothing bought** (`DECISIONS.md` #61). An empty chart reads as a broken chart.
 
-**The dangerous part was a denominator that is wrong and looks right** (`DECISIONS.md` #58).
-Without the `job=Director` filter Hitchcock's set would read "12 of 91"; without the vote
-filter, "12 of 65". Both are plausible numbers that nothing in the app would ever flag, so
-each filter has a test rather than a comment.
+**§17 row 33's 5-minute dashboard cache is not needed at this size** — 344 ms median for
+the whole dashboard in one request, measured, from a laptop across the internet; Railway
+sits beside Neon.
 
-**40 rows are now live in `completion_sets`** — that is 11.1's acceptance criterion, not
-verification leftovers, so they stay. Top of the list: Clint Eastwood 26 of 43 as director,
-30 of 148 as actor; Stanley Kubrick 8 of 16; Hitchcock 12 of 61.
-
-**"Weekly" is not scheduled.** A Railway cron is a hosting change and stays explicit
-(`DECISIONS.md` #60). `src/scripts/refresh_completion_sets.py --dry-run` and
-`POST /api/v1/insights/completion/refresh` are what a schedule would call. **Owner action:
-wire one up.**
-
----
-
-**Batch 12 — box sets + smart collections — shipped earlier** (`881f444`). Three tables,
-seven endpoints. A saved collection and the filter bar evaluate through *one* function, so
-they cannot drift (`DECISIONS.md` #55); `isComplete` is three-valued because an unrecorded
-box size means unmeasured, not incomplete (#56). "Unwatched 4Ks from the 2010s" listed 40
-real films in the browser.
-
-**Left in the live database by Batch 12's browser verification:** `smart_collections` 0 rows
-(hard delete, no trace); `box_sets` 1 soft-deleted row plus its 1 `box_set_items` row,
-invisible to the app; **3 `admin_actions` rows** attributed to Craig's profile, because the
-local dev token was minted for it. They are truthful and are left rather than deleted —
-falsifying an audit log is worse than one that records a verification pass. **No
-`collection_items` row was modified.**
+**Three things worth knowing for later.**
+- **`added_at_utc` is NULL on all 1,857 imported rows**, and `created_at` is the import
+  timestamp. The activity feed therefore reads additions from `admin_actions`; ordering by
+  the item table would put 1,857 identical events at the top and bury everything else.
+- **`collection_items.formats` is JSONB, `movies.genre_ids` is a real `INTEGER[]`.** One
+  needs `jsonb_array_elements_text`, the other `unnest`, and `.contains([...])` works
+  identically on both — so the filter code gives no hint which is which. Cost three failed
+  attempts here.
+- **A false claim was caught and corrected.** A comment justified the CSV's BOM with
+  "*Amélie* and *Rashômon* are real titles in this collection". They are not: **all 1,843
+  titles are pure ASCII**, checked against live Neon. The BOM stays — the next hand-added
+  disc may need it — but the reason now says so.
 
 ---
+
+**Batch 13 — completion sets — shipped earlier, closing Group C** (`22680de`). 40 sets built
+live from TMDB, 0 errors. Hitchcock **12 of 61**: TMDB returns 129 crew credits, 65 with
+`job=Director`, and the four dropped are two wardrobe tests, Tippi Hedren's screen test and
+a 2026 documentary about him. Those filters *are* the batch — "12 of 91" and "12 of 65" are
+both plausible wrong numbers nothing would flag (`DECISIONS.md` #58). **"Bulk add missing to
+wanted list" was dropped**: the wanted list does not exist and Batch 18 owns it.
+**"Weekly" is not scheduled** — a Railway cron is a hosting change (#60).
+
+**Batch 12 — box sets + smart collections — shipped earlier** (`881f444`). A saved collection
+and the filter bar evaluate through one function, so they cannot drift (#55).
 
 **A pre-existing red on `main` was fixed first** (`04bfd44`): `date.today()` reads the
-*server's* timezone, so the watch-log default (UTC) and its own future-guard (local)
-disagreed for the hour after midnight BST — green in CI all day, red at 00:07 locally.
-`apps/api/src/clock.py` now owns "today", and the ceiling for a user-supplied date is the
-latest date that is today anywhere on Earth (`DECISIONS.md` #53, gotcha 26).
+*server's* timezone (`DECISIONS.md` #53, gotcha 26).
+
+**Left in the live database by verification:** 40 `completion_sets` rows (that is 11.1's
+acceptance criterion, so they stay); one soft-deleted `box_sets` row and 3 `admin_actions`
+rows from Batch 12's browser pass, attributed to Craig because the local dev token was
+minted for that profile. Truthful, so left rather than deleted. **No `collection_items` row
+has been modified all session.**
 
 ## Next
 
-**Group C is complete.** **Group D — Batch 14 (Stats + export) → Batch 15 (Trash, audit
-UI, lending)** is next, at **Opus 5 · xhigh** because 15 performs a permanent delete on
-1,857 live rows.
+**Batch 15 — Trash, audit UI, lending** (phases 13.5, 13.6, 12.5) is next and closes
+Group D. It is **Opus 5 · xhigh** because §13.5 adds a **permanent delete** — the first
+irreversible operation in the app, against a table holding 1,857 real rows. Build and test
+it; do not execute one against live data.
 
 **Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
 on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
@@ -378,6 +380,15 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 14 shipped — stats, activity feed and export** (`20650b3`).
+  Stats at 344 ms median (criterion <1s). **Two of five charts have no data** — `watch_log`
+  is empty and no disc carries a price — so they say what they are waiting for rather than
+  drawing zeros (`DECISIONS.md` #61). CSV/JSON/HTML export all 1,857 discs; **no
+  server-side PDF renderer**, because every option needs system libraries in an image
+  Railway builds and CI does not (#62). Downloads go through `fetch` into a blob so the
+  token stays out of the URL (#63). Also caught and corrected a false claim in my own
+  comment: the collection has **zero** non-ASCII titles.
 
 - **2026-09-09** — **Batch 13 shipped — completion sets, closing Group C** (`22680de`).
   40 sets built live from TMDB, zero errors. Hitchcock 12 of 61, where TMDB returns 129
