@@ -116,6 +116,7 @@ function RunPanel() {
           <p className="font-medium text-foreground">
             {result.dryRun ? 'Preview complete' : 'Run complete'}: {result.succeeded} passed,
             {' '}{result.failed} failed
+            {result.notStocked > 0 ? `, ${String(result.notStocked)} not stocked` : ''}
             {result.skipped > 0 ? `, ${String(result.skipped)} skipped` : ''},{' '}
             {result.written} price rows saved.
           </p>
@@ -131,7 +132,7 @@ function RunPanel() {
                   key={`${outcome.retailer}-${outcome.wantedTitle}-${String(index)}`}
                   className={cn(
                     'rounded-md border px-2 py-1.5',
-                    outcome.skipped
+                    outcome.skipped || outcome.notStocked
                       ? 'border-border text-muted-foreground'
                       : outcome.ok
                         ? 'border-primary/30 text-foreground'
@@ -145,7 +146,10 @@ function RunPanel() {
                           ? money(outcome.price, outcome.currency)
                           : 'price found'
                       }${result.dryRun ? '' : ' saved'}`
-                    : (outcome.error ?? outcome.reasons.join('; ')) || 'no usable result'}
+                    : outcome.notStocked
+                      ? 'Not stocked here — the shop answered, it just has not got it.'
+                      : (outcome.error ?? outcome.reasons.join('; ')) ||
+                        'no usable result'}
                   {outcome.substitutedFormat ? (
                     <span className="mt-0.5 block text-amber-500">
                       Not the format wanted — priced the{' '}

@@ -670,6 +670,105 @@ async def test_a_digital_want_is_skipped_without_asking_a_disc_shop() -> None:
 
 
 # ---------------------------------------------------------------------------
+# "Not stocked" is an answer, not a breakage
+# ---------------------------------------------------------------------------
+
+#: What Second Sight, Powerhouse and 101 Films really returned for "Misery" on 2026-09-09.
+#: Each is a real, properly parsed listing — the shops answered, they just have not got it.
+NOT_STOCKED_PAGE = "".join(
+    [
+        _zavvi_card(
+            "/p/cold-prey/1/", "Cold Prey Trilogy Limited Edition Blu-ray Boxset", "£45.00"
+        ),
+        _zavvi_card("/p/bruiser/2/", "BRUISER - 4K UHD LE", "£30.00"),
+        _zavvi_card("/p/nemesis/3/", "Nemesis Boxset (Blu-ray)", "£25.00"),
+    ]
+)
+
+CARD_CONFIG = BUILT_IN_SCRAPERS["Zavvi"]["config"]
+
+
+async def test_a_shop_that_answered_and_has_not_got_it_is_not_a_failure() -> None:
+    """The regression that switched off three working scrapers on 2026-09-09.
+
+    A boutique label asked for a film it does not carry returns a real page of real
+    listings and the title guard correctly refuses every one. That is the shop answering,
+    not the scraper breaking, and counting it towards auto-disable took 101 Films,
+    Powerhouse and Second Sight offline after three runs.
+    """
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=NOT_STOCKED_PAGE))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        candidate, outcome = await scrape_one(
+            _retailer(scraper_config=CARD_CONFIG),
+            "Misery",
+            preferred_format="4k_uhd",
+            client=client,
+        )
+
+    assert candidate is None
+    assert not outcome.ok
+    assert outcome.not_stocked
+    # And it is *not* a skip: the question was put to the shop and answered.
+    assert not outcome.skipped
+    assert "does not stock" in (outcome.error or "")
+
+
+async def test_a_priceless_first_card_does_not_hide_a_not_stocked_answer() -> None:
+    """Zavvi's real answer for "Nope 4K" led with an out-of-stock *Cujo* carrying no price.
+
+    `check_shape` stops at "no price found" and never reaches its title rules, so reading
+    the verdict's reasons would have called this a broken selector. The card counts are
+    taken before any price filtering precisely so this case still reads correctly.
+    """
+    page = """
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/4k/cujo/1/" data-testid="product-title">Cujo Limited Edition 4K UHD</a>
+    </div>
+    """
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=page))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        _candidate, outcome = await scrape_one(
+            _retailer(scraper_config=CARD_CONFIG), "Misery", client=client
+        )
+
+    assert not outcome.ok
+    assert outcome.not_stocked
+
+
+async def test_a_selector_that_matched_nothing_is_still_a_failure() -> None:
+    """The distinction has to cut both ways, or auto-disable never fires again. A page that
+    yields no titled listing at all is the redesign case the counter exists to catch."""
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(200, text="<div class='redesigned'>nothing here</div>")
+    )
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        _candidate, outcome = await scrape_one(
+            _retailer(scraper_config=CARD_CONFIG), "Misery", client=client
+        )
+
+    assert not outcome.ok
+    assert not outcome.not_stocked
+
+
+async def test_the_film_being_present_is_never_read_as_not_stocked() -> None:
+    """A page that does name the film is judged on its merits, whatever the verdict."""
+    page = NOT_STOCKED_PAGE + _zavvi_card(
+        "/p/4k/misery/9/", "Misery Limited Edition 4K UHD", "£25.00"
+    )
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=page))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        candidate, outcome = await scrape_one(
+            _retailer(scraper_config=CARD_CONFIG),
+            "Misery",
+            preferred_format="4k_uhd",
+            client=client,
+        )
+
+    assert outcome.ok and not outcome.not_stocked
+    assert candidate is not None and candidate.price == Decimal("25.00")
+
+
+# ---------------------------------------------------------------------------
 # Which edition, within a format
 # ---------------------------------------------------------------------------
 
