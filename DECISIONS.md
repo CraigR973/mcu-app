@@ -880,3 +880,56 @@ contemporaneous.
     putting the access token in the query string — where it lands in server logs, browser
     history and any `Referer` the page emits. The whole collection is ~300 KB of CSV, so
     holding it as a blob costs nothing measurable and keeps the credential in the header.
+
+### 2026-09-09 — Batch 15 trash, audit UI, lending
+
+64. **The permanent delete gets past the `soft_delete` trigger with a transaction-scoped
+    setting, never `ALTER TABLE ... DISABLE TRIGGER`.**
+
+    *The problem:* `003` created a BEFORE DELETE trigger that rewrites every `DELETE` on
+    `collection_items` into `UPDATE ... SET deleted_at`. That is what makes the trash work,
+    and it means §13.5's permanent delete cannot simply issue a `DELETE` — the row would
+    come back soft-deleted and the endpoint would report success having destroyed nothing.
+
+    *Why not DISABLE TRIGGER,* which is what Batch 7's audit test does and is correct there:
+    it is **persistent and global**, not session-scoped. A process death between disabling
+    and re-enabling — a deploy, an OOM, an exception on the row in between — would leave the
+    trigger off for **every session**. Every subsequent delete anywhere in the app would
+    silently become permanent, and the trash would keep rendering an empty page while discs
+    vanished. That failure is invisible until someone goes looking for something they
+    deleted last week.
+
+    *What was done instead:* migration `013` makes `soft_delete()` return early when
+    `current_setting('app.permanent_delete', true) = 'on'`, and the destroy path issues
+    `SET LOCAL` — which Postgres reverts at commit **and** at rollback, with no cleanup step
+    to forget. It is turned off again immediately after the DELETE, because `SET LOCAL`
+    lasts to the end of the transaction and a *released* savepoint does not undo it; a test
+    shares one transaction between a permanent delete and an ordinary one to prove the
+    second is still soft.
+
+65. **A refused permanent delete rolls back a savepoint, not the transaction.**
+
+    *Why:* `db.rollback()` inside the service would discard everything else the caller had
+    staged in that transaction — including the audit row written moments earlier — and hand
+    the endpoint a session whose contents it did not choose. `begin_nested()` undoes the
+    attempt and nothing else, which lets the endpoint turn a foreign-key violation into a
+    409 that says *why* ("still referenced by discs or watch history") rather than surfacing
+    a constraint error.
+
+66. **Only a row already in the trash can be permanently deleted.** Two deliberate steps,
+    never one.
+
+    *Why:* this is the only irreversible control in the application. Requiring a soft delete
+    first means destroying something takes two separate decisions on two separate screens,
+    and the UI adds a third by making the button confirm ("Destroy for ever") rather than
+    act. §6.30's 90-day purge follows the same rule from the other end: `dryRun` defaults to
+    **true**, so the destructive call is the one you have to ask for rather than the one you
+    get by forgetting a parameter.
+
+67. **`wanted_list` is refused by the trash, not answered empty.** §6.30 names four tables;
+    three exist. Batch 18 builds the fourth.
+
+    *Why:* a filter that returns "nothing here" for an unimplemented table is
+    indistinguishable from one that works and has nothing in it — which is how a missing
+    feature passes for a working one for months. The same reasoning Batch 7 used when it
+    restricted `TRASH_TABLES` to the one table it had actually built.

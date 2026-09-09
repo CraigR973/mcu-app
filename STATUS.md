@@ -2,72 +2,73 @@
 
 ## Now
 
-**Batch 14 — stats + export — shipped.** Group D's first half. Production serves
-`20650b3a86786029270e8dd2e52b7c8078347fc6` with `db: ok`. No migration.
+**Batch 15 — trash, audit UI and lending — shipped, closing Group D.** Production serves
+`20d1eff3d1be7b5b47ce449e49d1fbdbeba0a13a` with `db: ok`; migration `013` applied on boot.
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 13.1 | Stats page loads in < 1s with **all charts populated** | **partly.** 344 ms median against Neon over the internet, so the speed half is comfortable. **Two of five charts have no data to populate** — see below |
-| 13.2 | Home dashboard shows last 20 events across all users | done for the sources that exist — watches and every admin write. **Price drops (Batch 20) and loans (Batch 15) do not exist yet** |
-| 13.3 | CSV opens cleanly in Excel; JSON is valid | done — 1,857 rows, 18 columns, UTF-8 BOM + CRLF; JSON parses and its `count` matches its `items` |
-| 13.4 | PDF looks presentation-ready; HTML prints well | done as **one** artifact — 1,857 print-laid-out cards with 1,090 posters. There is no server-side PDF renderer, by decision (`DECISIONS.md` #62) |
+| 13.5 | Deleted item in Trash; restoring brings it back with full state | done, across four tables — `collection_items`, `watch_log`, `movies`, `box_sets`. A restore clears the tombstone and **nothing else**, so notes, sub-category and shelf all survive |
+| 13.5 | (permanently delete) | done and **proved on live data** — see below |
+| 13.6 | Making 5 test changes shows 5 entries with correct diffs | done — a test makes five condition edits and asserts the five diffs read back in order. The UI also filters by action, actor and date |
+| 12.5 | Lending a disc shows it in Loans | done — lend from the copy, not the film; one open loan per disc |
+| 12.5 | **overdue triggers a push** | **not met, and nothing fake shipped.** See below |
 
-**The data was measured before any code was written, and it changed what two charts could
-say.** `watch_log` holds **0 rows**; `purchase_price` and `purchase_date` are NULL on **all
-1,857** items, because the imported spreadsheet never carried a price. Formats (blu-ray 890,
-digital 535, 4K 346, DVD 210), genres (Drama 500, Thriller 351, Crime 290…), decades
-(1940s 203, 2010s 188…) and sections all populate fully.
+**The permanent delete was the whole risk of this batch, and the mechanism mattered more
+than the endpoint.** `003`'s `soft_delete` trigger rewrites every `DELETE` into an
+`UPDATE`, so the destroy path has to get past it — and the obvious way,
+`ALTER TABLE ... DISABLE TRIGGER`, is **persistent and global**. A process death between
+disabling and re-enabling would leave every delete in the app permanent while the trash
+kept rendering an empty page. Migration `013` makes the trigger skip on a
+transaction-scoped `SET LOCAL`, turned off again immediately so it covers exactly one
+statement; a test shares one transaction between a permanent delete and an ordinary one and
+asserts the second is still soft (`DECISIONS.md` #64–66).
 
-So "most watched" and "spend over time" render a sentence instead of an empty frame — *"No
-purchase prices recorded — the imported spreadsheet never carried one"* — and the response
-carries `itemsWithPrice` so an empty series can distinguish **nothing recorded** from
-**nothing bought** (`DECISIONS.md` #61). An empty chart reads as a broken chart.
+**Proved on live data, and it cleaned up after Batch 12.** The leftover soft-deleted
+"Columbia Noir Vol 4" was destroyed through the UI. Afterwards: `box_sets` **0 rows** (gone,
+not soft-deleted), `box_set_items` **0** (the CASCADE fired), `admin_actions` **4 rows**
+— create, add-item, delete, permanent-delete — so **the audit trail outlived the row it
+describes**, which is what `DECISIONS.md` #5 designed `target_id` as TEXT for. And
+`collection_items` still holds **1,857 rows, all live**: the disc that was in the box set
+was untouched.
 
-**§17 row 33's 5-minute dashboard cache is not needed at this size** — 344 ms median for
-the whole dashboard in one request, measured, from a laptop across the internet; Railway
-sits beside Neon.
+**§12.5's "overdue triggers a push" is not met.** Push needs VAPID keys, a subscription
+store and an endpoint — **Batch 11**, which stops for an owner credential checkpoint. An
+overdue loan is derived from its due date and today (never stored — a stored flag needs a
+job to keep it true and is wrong between runs), shown in red and counted at the top of the
+page. `loans.reminder_sent` exists for Batch 11 to write and nothing reads it. Shipping a
+reminder that never arrives is what Batch 9 refused to do twice.
 
-**Three things worth knowing for later.**
-- **`added_at_utc` is NULL on all 1,857 imported rows**, and `created_at` is the import
-  timestamp. The activity feed therefore reads additions from `admin_actions`; ordering by
-  the item table would put 1,857 identical events at the top and bury everything else.
-- **`collection_items.formats` is JSONB, `movies.genre_ids` is a real `INTEGER[]`.** One
-  needs `jsonb_array_elements_text`, the other `unnest`, and `.contains([...])` works
-  identically on both — so the filter code gives no hint which is which. Cost three failed
-  attempts here.
-- **A false claim was caught and corrected.** A comment justified the CSV's BOM with
-  "*Amélie* and *Rashômon* are real titles in this collection". They are not: **all 1,843
-  titles are pure ASCII**, checked against live Neon. The BOM stays — the next hand-added
-  disc may need it — but the reason now says so.
+**`wanted_list` is refused by the trash, not answered empty** (`DECISIONS.md` #67). §6.30
+names it; Batch 18 builds it.
 
 ---
 
-**Batch 13 — completion sets — shipped earlier, closing Group C** (`22680de`). 40 sets built
-live from TMDB, 0 errors. Hitchcock **12 of 61**: TMDB returns 129 crew credits, 65 with
-`job=Director`, and the four dropped are two wardrobe tests, Tippi Hedren's screen test and
-a 2026 documentary about him. Those filters *are* the batch — "12 of 91" and "12 of 65" are
-both plausible wrong numbers nothing would flag (`DECISIONS.md` #58). **"Bulk add missing to
-wanted list" was dropped**: the wanted list does not exist and Batch 18 owns it.
-**"Weekly" is not scheduled** — a Railway cron is a hosting change (#60).
+**Group D's first half — Batch 14, stats + export — shipped earlier** (`20650b3`). Stats at
+344 ms median against Neon over the internet, so §13.1's "<1s" is comfortable; **two of five
+charts have no data** (`watch_log` empty, no disc carries a price) and say what they are
+waiting for rather than drawing zeros (`DECISIONS.md` #61). CSV/JSON/HTML export all 1,857
+discs; **no server-side PDF renderer**, because every option needs system libraries in an
+image Railway builds and CI does not (#62).
 
-**Batch 12 — box sets + smart collections — shipped earlier** (`881f444`). A saved collection
-and the filter bar evaluate through one function, so they cannot drift (#55).
+**Group C shipped earlier the same session.** Batch 12 (`881f444`) — a saved smart
+collection and the filter bar evaluate through one function, so they cannot drift (#55).
+Batch 13 (`22680de`) — 40 completion sets built live from TMDB, Hitchcock 12 of 61, where
+the filters that get from TMDB's 65 director credits to 61 *are* the batch (#58).
 
 **A pre-existing red on `main` was fixed first** (`04bfd44`): `date.today()` reads the
-*server's* timezone (`DECISIONS.md` #53, gotcha 26).
+*server's* timezone (#53, gotcha 26).
 
-**Left in the live database by verification:** 40 `completion_sets` rows (that is 11.1's
-acceptance criterion, so they stay); one soft-deleted `box_sets` row and 3 `admin_actions`
-rows from Batch 12's browser pass, attributed to Craig because the local dev token was
-minted for that profile. Truthful, so left rather than deleted. **No `collection_items` row
-has been modified all session.**
+**What this session has left in the live database.** 40 `completion_sets` rows — that is
+11.1's acceptance criterion, so they stay. 4 `admin_actions` rows recording Batch 12's
+browser verification and its clean-up, attributed to Craig because the local dev token was
+minted for that profile; truthful, so left rather than deleted. **No `collection_items` row
+has been created, modified or deleted all session — still 1,857, all live.**
 
 ## Next
 
-**Batch 15 — Trash, audit UI, lending** (phases 13.5, 13.6, 12.5) is next and closes
-Group D. It is **Opus 5 · xhigh** because §13.5 adds a **permanent delete** — the first
-irreversible operation in the app, against a table holding 1,857 real rows. Build and test
-it; do not execute one against live data.
+**Group E — Batch 16 (Watch providers + recommendations) → Batch 17 (Release calendar +
+iCal)** is next, at **Opus 5 · xhigh** because §17's secret-token `.ics` URL is an
+unauthenticated public surface.
 
 **Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
 on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
@@ -380,6 +381,14 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 15 shipped — trash, audit UI and lending, closing Group D**
+  (`20d1eff`). The permanent delete is the app's first irreversible operation; it gets past
+  `003`'s soft-delete trigger with a transaction-scoped `SET LOCAL`, **not**
+  `DISABLE TRIGGER`, which is global and would make every delete permanent if a process died
+  mid-request (`DECISIONS.md` #64). Proved on live data by destroying Batch 12's leftover box
+  set: row gone, cascade fired, audit trail outlived it, 1,857 discs untouched. **"Overdue
+  triggers a push" is not met** — push is Batch 11 — and no fake toggle was shipped.
 
 - **2026-09-09** — **Batch 14 shipped — stats, activity feed and export** (`20650b3`).
   Stats at 344 ms median (criterion <1s). **Two of five charts have no data** — `watch_log`
