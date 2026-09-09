@@ -630,7 +630,9 @@ automatic close-out applies once the gate is green.
 ## Criteria recovered for the 2026-09-09 overnight run
 
 `DECISIONS.md` #54 requires a planned batch's criteria to be written here **before** any code
-is written. These six were recovered verbatim from §16 at `d94a6b8~1` on 2026-09-09.
+is written. Six were recovered verbatim from §16 at `d94a6b8~1` on 2026-09-09; **Batch 20's and
+Batch 35's were missed and were recovered the same way on 2026-09-10**, when the run reached
+them and `STATUS.md`'s claim that all eight were present turned out to be wrong.
 
 ### Batch 11 — Notifications + push 🟢
 **Covers Phases 6.1, 6.2 and 5.11:**
@@ -757,6 +759,94 @@ through the API. That makes three changes to the phase as written:
   allows — so the second half of Group H's `vercel.json` note is retired. Serve them with a
   strong `ETag`/`Cache-Control` so Batch 8's service worker caches them; there is no CDN in
   front of Postgres.
+
+### Batch 20 — Price scraping + drop alerts 🟡
+**Covers Phases 5.5, 5.6 and 5.8:**
+
+> **Phase 5.5: Daily Price Scraping Job** 🟢
+> - APScheduler job running daily
+> - Iterates through active wanted items × enabled retailers
+> - Inserts price_checks rows
+> - **Acceptance:** First overnight run completes; same-day `price_checks` row count ≈ (active wanted items × enabled retailers) within ≤ 10% failure margin; failures logged with retailer + reason.
+>
+> **Phase 5.6: Price Drop Trigger & Push Notification** 🔴
+> - Postgres trigger after price_check insert: if price ≤ max_price and not notified, queue push
+> - Web Push via pywebpush with VAPID
+> - Service worker shows notification
+> - **Acceptance:** Setting max_price above current price and running scrape triggers a push on test device
+>
+> **Phase 5.8: Daily Aggregation Job** 🟢
+> - Nightly job rolls price_checks > 90 days old into price_history_daily
+> - **Acceptance:** After backdating test data, rows > 90 days are aggregated and raw rows removed
+
+**Recovered late.** `STATUS.md` claimed all eight of the overnight batches had their criteria
+here; only six did. These are verbatim from §16 at `d94a6b8~1`, like the others.
+
+**Four things the April spec no longer knows.**
+
+- **5.5's acceptance is superseded by `DECISIONS.md` #112**, decided before this batch was
+  built and on the evidence of #111's live run. It now reads: *the same-day row count is ≈
+  (attempted pairs − not-stocked pairs) within a ≤ 10% failure margin, with every failure
+  logged with its retailer and reason.* As originally written it assumed every shop stocks
+  every film, which no shop does — 7 wants × 5 shops predicted 35 rows and the correct
+  answer was 6.
+- **"APScheduler job running daily" is dead.** `DECISIONS.md` #60 rules out an in-process
+  scheduler: it runs once per container, so a second instance silently doubles every scrape.
+  The schedule is a Railway cron and therefore an owner action. This batch ships the endpoint
+  and leaves the cron on `OWNER-ACTIONS.md` — which is also why *"first overnight run
+  completes"* cannot be met by an agent.
+- **5.6's "Postgres trigger" cannot work as described.** A trigger runs inside the
+  transaction and cannot make an HTTP request to a push service; at most it could write a
+  queue row. Batch 11 already built that queue — the `notifications` outbox — so the drop
+  detection belongs in the scrape path, writing a `deals`-category notification. "Web Push
+  via pywebpush" is likewise superseded: #115 implements RFC 8291 on `cryptography`, and the
+  service worker already shows the notification.
+- **5.6's acceptance needs a real device** and is **deferred to the owner**, like 6.2. What
+  can be proved here is that a price at or below `max_price` queues exactly one notification,
+  that a second scrape at the same price queues none, and that the payload reaches the send
+  path.
+
+**One category question this batch settles.** §3.19 designs `price_drops` and `deals` as
+*separate* toggles — the first for the wanted list, the second for Batch 22's deals feed.
+Batch 11 shipped a single `deals` category, matching §6.1's own acceptance wording
+("disabling deals stops deal pushes"), and this batch is its sender. **Batch 22 owns adding a
+second category for the feed** if it wants one; it must not quietly reuse this one.
+
+**5.8 needs a table that does not exist.** §3.18 designs `price_history_daily` — `wanted_id`,
+`retailer_id`, `date`, `min_price`, `max_price`, `avg_price`, `check_count` — and nothing has
+created it. Its acceptance ("after backdating test data") is fully provable in CI, unlike the
+other two.
+
+### Batch 35 — Movie night 🔴
+**Covers Phases 8.3 and 8.4:**
+
+> **Phase 8.3: Movie Night Session Start** 🟢
+> - Session creation with filters
+> - Invite URL for second user
+> - **Acceptance:** Session created; second user joins via URL
+>
+> **Phase 8.4: Movie Night Swipe & Match** 🔴
+> - Swipe-like UI (cards, left/right gestures)
+> - Real-time sync via Supabase Realtime
+> - Match detection, notification to both
+> - **Acceptance:** Both users swiping on the same film triggers a match notification
+
+**Recovered late**, with Batch 20's, for the same reason.
+
+**Three things the April spec no longer knows.**
+
+- **"Real-time sync via Supabase Realtime" is superseded by `DECISIONS.md` #113.** There is
+  no Supabase project — #17 moved the database to Neon — and the owner settled this as
+  Postgres `LISTEN`/`NOTIFY` with SSE to the browser. No new service, no new credential, no
+  hosting step. **#113's constraint is the one to respect:** `LISTEN` occupies a connection,
+  so the listener must not borrow from the request pool for the life of a session, or the
+  pool exhausts and the whole app appears to hang.
+- **"Notification to both" now has a transport.** Batch 11 shipped Web Push and a
+  `movie_night` category, so a match can genuinely notify. Whether the *acceptance* is met by
+  an agent depends on how the match is signalled: an in-app match rendered over SSE is
+  provable here; a **push received on a device** is not, and is deferred like 6.2 and 5.6.
+- **"Invite URL for second user" has a second user.** Mark's PIN was set on 2026-09-09, so
+  both profiles can sign in — which is what a two-person acceptance criterion needs.
 
 ### Batch 23 — Specs scraper + display 🟡
 **Covers Phases 3.7, 3.8 and 3.9:**

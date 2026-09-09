@@ -80,9 +80,13 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | 7 | **25** Photo uploads (3.10) | ✅ |
 | 8 | **23** Specs — scraper + display (3.7, 3.8, 3.9) | ✅ |
 
-**Every batch's criteria are already in `docs/phase-batches.md`** under "Criteria recovered
-for the 2026-09-09 overnight run", each with what the April spec no longer knows. Read that
-section rather than re-deriving from §16.
+**Every batch's criteria are in `docs/phase-batches.md`** under "Criteria recovered for the
+2026-09-09 overnight run", each with what the April spec no longer knows. Read that section
+rather than re-deriving from §16.
+
+*This sentence was wrong when it was written and is now true.* It claimed all eight were
+there; **only six were** — Batch 20's and Batch 35's were missing, and were recovered from
+`d94a6b8~1` on 2026-09-10 before either batch was built, as `DECISIONS.md` #54 requires.
 
 **Three hosting steps stop and wait for the owner**, per the close-out protocol:
 
