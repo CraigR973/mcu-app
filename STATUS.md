@@ -14,6 +14,15 @@ blocking the queue, and found that three of the things everyone believed were tr
 | The scraper checkpoint was done | Setup was done; **`price_checks` was empty**. The acceptance run had never saved a row |
 | Three retailers were broken | They were **working perfectly** and had been auto-disabled for correctly saying "we do not stock this film" |
 
+**Batch 23's Blu-ray.com boundary is explicit, and it is a risk acceptance rather than a
+permission.** The site's Legal Notices prohibit the planned automated reuse; `robots.txt`
+never granted permission, so #108's closing claim that the approach "stays inside what the
+site allows" was **wrong** and #110 supersedes it. The owner accepts the stated risk,
+including a one-time 1,857-item backfill, within strict no-search / no-evasion /
+stop-on-block controls (`DECISIONS.md` #110). *This paragraph was written by a parallel
+session, deleted by an overwrite on 2026-09-09, and restored — it is the kind of thing that
+must not go missing.*
+
 **The app now has its first real price.** Arrow Video, *Misery Limited Edition 4K UHD*,
 **£25.00**, an exact 4K match for a 4K want with no substitution — verified independently
 against the live site. Phase 5.3's criterion is still unmet (it wants ≥ 1 row per working
@@ -412,9 +421,12 @@ blocked, because VAPID landed on 2026-09-09.
   have been filed as a broken selector. The three shops were re-enabled with their counters
   zeroed. **Zavvi still carries 2 strikes** from a genuine throttling failure.
 
-  **Batch 23's source settled and Batch 26 dropped** (#108, #109). Blu-ray.com disallows its
-  search routes, so specs are scraped from a URL supplied per film; a real page was measured
-  and returns every field §3.7 asks for. Three constraints recorded: the page also carries
+  **Batch 23's source settled and Batch 26 dropped** (#108, #109). Specs are scraped from a
+  URL supplied per film rather than from the site's search, which `robots.txt` disallows; a
+  real page was measured and returns every field §3.7 asks for. **#108's reasoning that this
+  therefore "stays inside what the site allows" was wrong**, and #110 — written earlier the
+  same day by a parallel session — supersedes it: absence from `robots.txt` is not
+  permission, and the access proceeds as an owner-accepted risk instead. Three constraints recorded: the page also carries
   third-party prices the scrape must ignore, `(more)`/`(less)` toggles duplicate the audio and
   subtitle blocks in the flattened text, and `Special Features` can be absent. Shelf QR is
   dropped — Batch 6's location filter already answers the question it existed for. Ledger
