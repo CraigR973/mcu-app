@@ -148,3 +148,33 @@ class Movie(BaseModel):
     credits: Credits | None = None
     videos: Videos | None = None
     watch_providers: WatchProviders | None = Field(None, alias="watch/providers")
+
+
+class PersonMovieCredit(BaseModel):
+    """One film in a person's TMDB filmography.
+
+    A deliberately small subset of what ``/person/{id}/movie_credits`` returns. Everything
+    here is displayed in the "films you are missing" list, which is the only reason these
+    are stored at all — the alternative is a TMDB call per set per page view.
+    """
+
+    id: int
+    title: str
+    release_date: str | None = None
+    poster_path: str | None = None
+    popularity: float | None = None
+    vote_count: int | None = None
+    #: Present on the crew half of the response only. "Directing" is the one this app
+    #: filters on: TMDB lists a director's producing and writing credits in the same
+    #: array, and a "Hitchcock films" set that included everything he ever produced would
+    #: not be the set anyone means.
+    department: str | None = None
+    job: str | None = None
+    #: Cast-half only. Used the same way, to keep a bit part out of an actor's set.
+    order: int | None = None
+
+
+class PersonMovieCredits(BaseModel):
+    id: int
+    cast: list[PersonMovieCredit] = []
+    crew: list[PersonMovieCredit] = []

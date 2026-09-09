@@ -9,6 +9,8 @@ import {
   collectionCopiesSchema,
   collectionFacetsSchema,
   collectionItemSchema,
+  completionFilmSchema,
+  completionSetSchema,
   duplicateCheckSchema,
   healthResponseSchema,
   movieDetailSchema,
@@ -601,5 +603,50 @@ describe('smartCollectionResultsSchema', () => {
       pages: 1,
     })
     expect(parsed.items[0].title).toBe('Heat')
+  })
+})
+
+describe('completionSetSchema', () => {
+  const base = {
+    id: UUID_A,
+    setType: 'director',
+    setKey: '2636',
+    setName: 'Alfred Hitchcock',
+    ownedCount: 12,
+    totalCount: 61,
+    missingCount: 49,
+    percentComplete: 20,
+    lastRefreshed: '2026-09-09T00:00:00Z',
+  }
+
+  it('parses the set §11.1’s acceptance criterion names', () => {
+    const parsed = completionSetSchema.parse(base)
+    expect(parsed.setName).toBe('Alfred Hitchcock')
+    expect(parsed.totalCount).toBe(61)
+  })
+
+  it('refuses a percentage outside 0–100', () => {
+    expect(completionSetSchema.safeParse({ ...base, percentComplete: 140 }).success).toBe(false)
+  })
+
+  it('accepts a set that has never been refreshed', () => {
+    expect(completionSetSchema.safeParse({ ...base, lastRefreshed: null }).success).toBe(true)
+  })
+})
+
+describe('completionFilmSchema', () => {
+  it('ties `movieId` to a film that is actually owned', () => {
+    // A missing film has no row in this database — that is what missing means — so its
+    // poster comes from the set's cached member list.
+    const missing = completionFilmSchema.parse({
+      tmdbId: 539,
+      title: 'Psycho',
+      year: 1960,
+      posterPath: '/psycho.jpg',
+      owned: false,
+      movieId: null,
+    })
+    expect(missing.movieId).toBeNull()
+    expect(missing.posterPath).toBe('/psycho.jpg')
   })
 })

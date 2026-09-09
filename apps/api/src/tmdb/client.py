@@ -8,7 +8,7 @@ import httpx
 import structlog
 
 from ..config import settings
-from .models import Movie, SearchResults
+from .models import Movie, PersonMovieCredits, SearchResults
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
@@ -133,6 +133,18 @@ class TMDBClient:
             append_to_response=["credits", "videos", "watch/providers"],
             language=language,
         )
+
+    async def get_person_movie_credits(
+        self, person_id: int, language: str = "en-US"
+    ) -> PersonMovieCredits:
+        """Everything TMDB says a person worked on, in one call.
+
+        The whole filmography per person is what makes a completion set answerable at all
+        — "you own 12 of the 54 films Hitchcock directed" needs the 54, and there is no
+        cheaper way to learn it. One call per set, not one per film.
+        """
+        data = await self._get(f"/person/{person_id}/movie_credits", {"language": language})
+        return PersonMovieCredits.model_validate(data)
 
     async def search_movie(
         self,

@@ -21,6 +21,7 @@ const BoxSetDetailPage = lazy(() => import('./pages/BoxSetDetailPage'))
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
 const CollectionResultsPage = lazy(() => import('./pages/CollectionResultsPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const InsightsPage = lazy(() => import('./pages/InsightsPage'))
 
 function AdminPage() {
   return (
@@ -124,6 +125,10 @@ export default function App() {
             <Route
               path="/collections/:id"
               element={<AppShell><CollectionResultsPage /></AppShell>}
+            />
+            <Route
+              path="/insights"
+              element={<AppShell><InsightsPage /></AppShell>}
             />
             <Route
               path="/dashboard"

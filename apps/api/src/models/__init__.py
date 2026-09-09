@@ -18,6 +18,12 @@ from src.models.collection_item import (
     SHELVED_SECTIONS,
     CollectionItem,
 )
+from src.models.completion_set import (
+    MIN_OWNED_FOR_SET,
+    SET_TYPES,
+    CompletionSet,
+    member_display,
+)
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile, RefreshToken, UserRole
 from src.models.rate_limit import RateLimitCounter
@@ -39,6 +45,10 @@ __all__ = [
     "COLLECTION_ITEMS_TABLE",
     "CONDITIONS",
     "CollectionItem",
+    "CompletionSet",
+    "MIN_OWNED_FOR_SET",
+    "SET_TYPES",
+    "member_display",
     "FORMAT_RANK",
     "LISTING_STATUSES",
     "Movie",

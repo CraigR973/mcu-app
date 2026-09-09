@@ -102,4 +102,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/smart-collections",
         "/api/v1/smart-collections/{collection_id}",
         "/api/v1/smart-collections/{collection_id}/results",
+        # Batch 13. Insights are readable by both; the refresh is admin-only because it
+        # spends a shared TMDB budget and rewrites a table everyone reads.
+        "/api/v1/insights/completion",
+        "/api/v1/insights/completion/{set_id}",
+        "/api/v1/insights/completion/refresh",
     }

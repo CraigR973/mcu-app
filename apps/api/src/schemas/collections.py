@@ -222,3 +222,61 @@ class SmartCollectionResultsResponse(BaseModel):
     page: int
     perPage: int
     pages: int
+
+
+# ---------------------------------------------------------------------------
+# Completion sets and insights (§3.15, §11.1, §11.2)
+# ---------------------------------------------------------------------------
+
+SetType = Literal["director", "actor", "franchise", "box_set", "award", "curated_list"]
+
+
+class CompletionFilmResponse(BaseModel):
+    """One film in a set, owned or not.
+
+    ``movieId`` is ``None`` for a film that is missing — it has no row in this database,
+    which is precisely what "missing" means. The title, year and poster therefore come
+    from the set's cached metadata rather than from ``movies``.
+    """
+
+    tmdbId: int
+    title: str
+    year: int | None
+    posterPath: str | None
+    owned: bool
+    movieId: uuid.UUID | None
+
+
+class CompletionSetResponse(BaseModel):
+    id: uuid.UUID
+    setType: SetType
+    setKey: str
+    setName: str
+    ownedCount: int
+    totalCount: int
+    missingCount: int
+    #: 0–100, computed server-side so the bar and the caption cannot disagree.
+    percentComplete: int
+    lastRefreshed: UtcDatetime | None
+
+
+class CompletionSetDetailResponse(CompletionSetResponse):
+    films: list[CompletionFilmResponse]
+
+
+class CompletionInsightsResponse(BaseModel):
+    items: list[CompletionSetResponse]
+    total: int
+    #: When the whole table was last rebuilt — the oldest ``lastRefreshed`` of any set,
+    #: because a page is only as current as its stalest row.
+    oldestRefresh: UtcDatetime | None
+
+
+class CompletionRefreshResponse(BaseModel):
+    created: int
+    updated: int
+    unchanged: int
+    skipped: int
+    total: int
+    errors: list[str]
+    dryRun: bool

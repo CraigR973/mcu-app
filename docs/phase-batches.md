@@ -321,6 +321,43 @@ which are groupings of a person's work rather than boxes. §11.3's acceptance is
 This batch touches no hosting/credentials and performs no destructive data operation, so
 automatic close-out applies once the gate is green.
 
+### ~~Batch 13 — Completion sets~~ 🟡 **shipped**
+**Covers phases 11.1 and 11.2**, verbatim from `MCU_Architecture_v2.1_FINAL.md` §16 at
+`d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 11.1: Completion Sets Data & Refresh**
+> - Seed director, franchise, award sets
+> - Weekly refresh job from TMDB collections
+> - **Acceptance:** Refresh job runs live against TMDB and populates `completion_sets` with ≥ 20 sets (directors, franchises, awards); Hitchcock set lists every Hitchcock film TMDB returns; re-running after a TMDB change updates the affected rows.
+>
+> **Phase 11.2: Completion Insights UI**
+> - Progress bars per set
+> - Missing films list with posters
+> - Bulk "add missing to wanted list"
+> - **Acceptance:** Opening Insights shows ≥ 20 sets with owned/missing counts
+
+**Three things in that spec do not hold, all recorded rather than worked around.**
+
+1. **"Bulk add missing to wanted list" was dropped.** The wanted list does not exist —
+   §3.5 designs `wanted_list`, **Batch 18** builds it, and `/watchlist` is a "coming soon"
+   stub. Shipping the button would ship a control that does nothing (`DECISIONS.md` #50,
+   `STATUS.md` gotcha 5). 11.2's acceptance criterion does not mention it. **Batch 18 owns
+   adding it.**
+2. **"awards" has no source.** TMDB has no awards API, so a Best Picture set has to be
+   typed by hand — which is what §3.15's `curated_list` type is for. Not built here.
+3. **"franchises" needs a column this app does not have.** TMDB's `belongs_to_collection`
+   is returned by `get_movie_full` and never stored, so learning it for the 1,086
+   identified films is a schema change plus a 1,086-call backfill — its own piece of work.
+
+**What the sets are built from instead: the collection's own credits.** `movie_credits`
+already holds real TMDB person ids, so the top 20 directors and top 20 actors by owned
+count give 40 sets with no name-matching step to get wrong — which matters, because
+gotcha 1b is the record of what fuzzy TMDB matching did to this app once already.
+
+**"Weekly" is not scheduled by this batch.** A Railway cron is a hosting change and stays
+explicit. `src/scripts/refresh_completion_sets.py` and `POST /insights/completion/refresh`
+are what a schedule would call; wiring one is an owner action.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -332,7 +369,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~10~~ | ~~Architecture doc split + §17 reconciliation~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~Part C deferred half~~ | `d94a6b8` · `ARCHITECTURE.md` split off with §16 replaced by a pointer to this ledger; all 50 §17 rows carry a reconciled status; `session-log.md.txt` retired |
 | 11 | Notifications + push | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 6.1, 6.2, 5.11 |
 | ~~12~~ | ~~Box sets + smart collections~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~11.3, 11.4, 11.5~~ | `881f444` · 3 tables, 7 endpoints; a saved collection and the filter bar evaluate through one function; "Unwatched 4Ks from the 2010s" listed 40 real films in the browser |
-| 13 | Completion sets | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 11.1, **11.2** |
+| ~~13~~ | ~~Completion sets~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~11.1, **11.2**~~ | 40 sets built live from TMDB, 0 errors; Hitchcock 12 of 61 (TMDB returns 65 director credits, 4 are screen tests); **"add to wanted list" dropped — Batch 18 owns it** |
 | 14 | Stats + export | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.1, 13.2, 13.3, 13.4 |
 | 15 | Trash, audit UI, lending | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 13.5, 13.6, 12.5 |
 | 16 | Watch providers + recommendations | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 7.1, 7.2 |
@@ -378,7 +415,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **B** | ~~7~~ → ~~8~~ → ~~9~~ | — shipped | — shipped | Dependency chain: offline queue needs write endpoints; onboarding needs the PWA |
 | — | ~~10 · solo~~ | — shipped | — shipped | Large mechanical restructure of a 2,639-line doc |
 | — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
-| **C** | ~~12~~ → 13 | Sonnet 5 · high | GPT-5.6 Terra · High | Same domain (sets/collections); 13 reuses 12's UI patterns · **12 shipped** |
+| ~~**C**~~ | ~~12~~ → ~~13~~ | — shipped | — shipped | ~~Same domain (sets/collections); 13 reuses 12's UI patterns~~ · **shipped** |
 | **D** | 14 → 15 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both admin-facing read surfaces, same verification shape |
 | **E** | 16 → 17 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both TMDB-driven, same client, 17 reuses 16's patterns |
 | **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |

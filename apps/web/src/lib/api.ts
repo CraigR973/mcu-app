@@ -7,6 +7,9 @@ import {
   collectionCopiesSchema,
   collectionFacetsSchema,
   collectionItemSchema,
+  completionInsightsSchema,
+  completionRefreshSchema,
+  completionSetDetailSchema,
   duplicateCheckSchema,
   movieDetailSchema,
   moviePageSchema,
@@ -26,6 +29,10 @@ import {
   type CollectionCopy,
   type CollectionFacets,
   type CollectionItem,
+  type CompletionInsights,
+  type CompletionRefresh,
+  type CompletionSetDetail,
+  type CompletionSetType,
   type Condition,
   type DuplicateCheck,
   type DuplicateReason,
@@ -58,6 +65,11 @@ export type {
   CollectionCopy,
   CollectionFacets,
   CollectionItem,
+  CompletionFilm,
+  CompletionInsights,
+  CompletionSet,
+  CompletionSetDetail,
+  CompletionSetType,
   Condition,
   DecadeFacet,
   DuplicateCheck,
@@ -680,4 +692,57 @@ export function describeFilters(filters: SmartCollectionFilters): string {
   if (filters.section !== null) parts.push(filters.shelf !== null ? `${filters.section} ${filters.shelf}` : filters.section)
   else if (filters.shelf !== null) parts.push(`${filters.shelf} shelf`)
   return parts.length === 0 ? 'Everything in the collection' : parts.join(' · ')
+}
+
+// ---------------------------------------------------------------------------
+// Completion insights (Batch 13) — §11.2
+// ---------------------------------------------------------------------------
+
+export async function fetchCompletionInsights(setType?: string): Promise<CompletionInsights> {
+  const suffix = setType ? `?setType=${encodeURIComponent(setType)}` : ''
+  return parseResponse(await authFetch(`/insights/completion${suffix}`), completionInsightsSchema)
+}
+
+export async function fetchCompletionSet(id: string): Promise<CompletionSetDetail> {
+  return parseResponse(
+    await authFetch(`/insights/completion/${id}`),
+    completionSetDetailSchema,
+  )
+}
+
+/**
+ * Rebuild the sets from TMDB. Admin-only, and slow — one API call per set.
+ *
+ * "Weekly" is not implemented in the app: scheduling is a hosting concern this project
+ * keeps explicit, so this button and `src/scripts/refresh_completion_sets.py` are what a
+ * schedule would call once someone wires one up.
+ */
+export async function refreshCompletionSets(dryRun = false): Promise<CompletionRefresh> {
+  return parseOrThrowApiError(
+    await authFetch(`/insights/completion/refresh?dryRun=${String(dryRun)}`, {
+      method: 'POST',
+    }),
+    completionRefreshSchema,
+  )
+}
+
+/** How a completion set reads in one line — "12 of 61". */
+export function completionCountLabel(set: {
+  ownedCount: number
+  totalCount: number
+}): string {
+  return `${set.ownedCount} of ${set.totalCount}`
+}
+
+/** The set's kind, as a person would say it. */
+export function setTypeLabel(setType: CompletionSetType): string {
+  const labels: Record<CompletionSetType, string> = {
+    director: 'Director',
+    actor: 'Actor',
+    franchise: 'Franchise',
+    box_set: 'Box set',
+    award: 'Award',
+    curated_list: 'List',
+  }
+  return labels[setType]
 }

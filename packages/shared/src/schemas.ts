@@ -480,3 +480,69 @@ export type BoxSet = z.infer<typeof boxSetSchema>
 export type BoxSetMember = z.infer<typeof boxSetMemberSchema>
 export type BoxSetDetail = z.infer<typeof boxSetDetailSchema>
 export type BoxSetList = z.infer<typeof boxSetListSchema>
+
+// ---------------------------------------------------------------------------
+// Completion insights (Batch 13) — §3.15, §11.1, §11.2
+// ---------------------------------------------------------------------------
+
+export const completionSetTypeSchema = z.enum([
+  'director',
+  'actor',
+  'franchise',
+  'box_set',
+  'award',
+  'curated_list',
+])
+
+/** One film in a set. `movieId` is null exactly when the film is missing — a missing film
+ *  has no row in this database, which is what "missing" means, so its title and poster
+ *  come from the set's cached member list rather than from `movies`. */
+export const completionFilmSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  owned: z.boolean(),
+  movieId: z.string().uuid().nullable(),
+})
+
+export const completionSetSchema = z.object({
+  id: z.string().uuid(),
+  setType: completionSetTypeSchema,
+  setKey: z.string().min(1),
+  setName: z.string().min(1),
+  ownedCount: z.number().int().nonnegative(),
+  totalCount: z.number().int().nonnegative(),
+  missingCount: z.number().int().nonnegative(),
+  // Computed server-side so the bar's width and the "12 of 61" beside it cannot disagree.
+  percentComplete: z.number().int().min(0).max(100),
+  lastRefreshed: z.string().nullable(),
+})
+
+export const completionSetDetailSchema = completionSetSchema.extend({
+  films: z.array(completionFilmSchema),
+})
+
+export const completionInsightsSchema = z.object({
+  items: z.array(completionSetSchema),
+  total: z.number().int().nonnegative(),
+  // The oldest `lastRefreshed` of any set: a page is only as current as its stalest row.
+  oldestRefresh: z.string().nullable(),
+})
+
+export const completionRefreshSchema = z.object({
+  created: z.number().int().nonnegative(),
+  updated: z.number().int().nonnegative(),
+  unchanged: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  errors: z.array(z.string()),
+  dryRun: z.boolean(),
+})
+
+export type CompletionSetType = z.infer<typeof completionSetTypeSchema>
+export type CompletionFilm = z.infer<typeof completionFilmSchema>
+export type CompletionSet = z.infer<typeof completionSetSchema>
+export type CompletionSetDetail = z.infer<typeof completionSetDetailSchema>
+export type CompletionInsights = z.infer<typeof completionInsightsSchema>
+export type CompletionRefresh = z.infer<typeof completionRefreshSchema>

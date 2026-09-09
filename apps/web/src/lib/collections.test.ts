@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { SmartCollectionFilters } from '@mcu/shared'
 
-import { completionLabel, describeFilters, filtersToMovieFilters } from './api'
+import {
+  completionCountLabel,
+  completionLabel,
+  describeFilters,
+  filtersToMovieFilters,
+  setTypeLabel,
+} from './api'
 
 const NO_FILTERS: SmartCollectionFilters = {
   genreId: null,
@@ -73,5 +79,31 @@ describe('filtersToMovieFilters', () => {
     const out = filtersToMovieFilters({ ...NO_FILTERS, minRating: 0, watched: false })
     expect(out.minRating).toBe(0)
     expect(out.watched).toBe(false)
+  })
+})
+
+describe('completionCountLabel', () => {
+  it('reads as §11.2 words it', () => {
+    expect(completionCountLabel({ ownedCount: 12, totalCount: 61 })).toBe('12 of 61')
+  })
+
+  it('does not special-case a complete set', () => {
+    // "43 of 43" is more useful than "complete" on a row whose neighbours all show counts.
+    expect(completionCountLabel({ ownedCount: 43, totalCount: 43 })).toBe('43 of 43')
+  })
+})
+
+describe('setTypeLabel', () => {
+  it('names every set type the API can return', () => {
+    // Exhaustive on purpose: an unmapped type would render as `undefined` in the UI, and
+    // the vocabulary is fixed by a CHECK constraint, so this can be complete.
+    expect([
+      setTypeLabel('director'),
+      setTypeLabel('actor'),
+      setTypeLabel('franchise'),
+      setTypeLabel('box_set'),
+      setTypeLabel('award'),
+      setTypeLabel('curated_list'),
+    ]).toEqual(['Director', 'Actor', 'Franchise', 'Box set', 'Award', 'List'])
   })
 })
