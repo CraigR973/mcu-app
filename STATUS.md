@@ -2,70 +2,70 @@
 
 ## Now
 
-**Batch 12 — box sets + smart collections — shipped.** Group C's first half. Production
-serves the merged SHA `881f444f5c04a0037a209acb9ad9fbe6a1774f2f` with `db: ok`, and
-migration `011` applied on boot.
+**Batch 13 — completion sets — shipped, closing Group C.** Production serves the merged SHA
+`22680de737fc80fc4e50613a2c335744302426f1` with `db: ok`; migration `012` applied on boot.
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 11.3 | Admin creates "Columbia Noir Vol 4" with 4 items | done — one call, one transaction. Proved by a test and again in the browser against live Neon |
-| 11.4 | Browsing box sets shows all with status | done — unpaginated grid, "3 of 4" with a progress bar; a soft-deleted disc drops out of the count |
-| 11.5 | Creating "Unwatched 4Ks from 2010s" lists correct films and updates live | done — created in the browser, listed **40 real 4K films from the 2010s**; nothing is materialised, so a newly added disc appears without the collection being touched |
+| 11.1 | Refresh job runs live against TMDB and populates `completion_sets` with ≥ 20 sets | **done — 40 sets, 0 errors, 0 skipped**, run live against TMDB after a clean dry run |
+| 11.1 | Hitchcock set lists every Hitchcock film TMDB returns | done — **12 of 61**. TMDB returns 129 crew credits; 65 are `job=Director`; the 4 dropped are two wardrobe tests, Tippi Hedren's screen test and a 2026 documentary *about* him. The set starts at *Always Tell Your Wife* (1923), his real first credit |
+| 11.1 | re-running after a TMDB change updates the affected rows | done — `(set_type, set_key)` is unique, so a second run edits Hitchcock's row rather than adding a second Hitchcock. Tested against two different TMDB answers |
+| 11.2 | Opening Insights shows ≥ 20 sets with owned/missing counts | done — **40 sets** with progress bars, sorted by how close each is to complete. Verified in a browser against live data |
 
-**Three tables (`box_sets`, `box_set_items`, `smart_collections`), seven endpoints, 38 new
-tests.** 410 `apps/api`, 34 shared and 65 web tests pass.
+**Three things in the spec did not hold. None was worked around silently.**
 
-**The dangerous part was the filter blob, and the loud risk was not the important one.**
-A JSONB column that becomes a query invites injection, which is closed off by validating
-every blob through a model whose fields *are* `GET /movies`' own parameters and which
-forbids unknown keys. The quieter risk is **divergence**: a second predicate builder that
-slowly stops agreeing with the first, so a saved collection lists subtly different films
-from the same filters typed into the filter bar — with nothing erroring and both pages
-looking right. `list_movies`' body was extracted into `movie_page()` so there is only one
-builder, and a test asserts the two routes return byte-identical pages (`DECISIONS.md` #55).
+1. **"Bulk add missing to wanted list" was dropped.** The wanted list does not exist — §3.5
+   designs `wanted_list`, **Batch 18** builds it, and `/watchlist` is still a "coming soon"
+   stub. Shipping the button would ship a control that does nothing, which is the defect
+   gotcha 5 catalogues four instances of and the one Batch 9 refused to repeat
+   (`DECISIONS.md` #50). **Batch 18 owns adding it.** 11.2's acceptance does not mention it.
+2. **"Awards" has no source.** TMDB has no awards API; a Best Picture set has to be typed by
+   hand, which is what §3.15's `curated_list` type is for.
+3. **"Franchises" needs a column this app lacks.** `belongs_to_collection` is returned by
+   `get_movie_full` and never stored, so it is a schema change plus a 1,086-call backfill.
 
-**`sub_category` was left alone.** 627 live items carry one across 106 values and ~30 look
-like box sets — but the same column holds "Clint Eastwood" (64 items) and "Hitchcock" (30),
-which are groupings of a person's work, not boxes. No regex separates them, which is why
-§11.3's acceptance says *"Admin creates …"*. Migration `011` creates empty tables and
-backfills nothing.
+**The dangerous part was a denominator that is wrong and looks right** (`DECISIONS.md` #58).
+Without the `job=Director` filter Hitchcock's set would read "12 of 91"; without the vote
+filter, "12 of 65". Both are plausible numbers that nothing in the app would ever flag, so
+each filter has a test rather than a comment.
 
-**Two failures on the way.** A pre-existing red on `main` had to be fixed and shipped
-first, on its own branch (below). And this batch's own CI run failed on a test of mine that
-asserted `totalMovies > 1` — true locally against 1,857 real films, false in CI's empty
-database. That is the *same* environment assumption the previous fix was about, made again
-the same day; the bound now rests on the test's own fixtures.
+**40 rows are now live in `completion_sets`** — that is 11.1's acceptance criterion, not
+verification leftovers, so they stay. Top of the list: Clint Eastwood 26 of 43 as director,
+30 of 148 as actor; Stanley Kubrick 8 of 16; Hitchcock 12 of 61.
 
-**What the browser verification left in the live database.** Driving §11.3–11.5 for real
-created and then deleted one box set and one smart collection. End state: `smart_collections`
-0 rows (hard delete, no trace); `box_sets` 1 soft-deleted row and its 1 `box_set_items` row,
-invisible to the app; **3 `admin_actions` rows** recording the create, the disc-add and the
-delete, attributed to Craig's profile because the local dev token was minted for it. They
-are truthful — those actions did happen — and are left rather than deleted, because
-falsifying an audit log is worse than a log that records a verification pass. **No
-`collection_items` row was modified: 0 discs are soft-deleted.**
+**"Weekly" is not scheduled.** A Railway cron is a hosting change and stays explicit
+(`DECISIONS.md` #60). `src/scripts/refresh_completion_sets.py --dry-run` and
+`POST /api/v1/insights/completion/refresh` are what a schedule would call. **Owner action:
+wire one up.**
 
 ---
 
-**A pre-existing red on `main` was fixed first: the date guards were reading the server's
-local timezone.** A `fix/` branch closed out on its own, per the guardrail against folding
-a pre-existing red into a batch (`04bfd44`).
+**Batch 12 — box sets + smart collections — shipped earlier** (`881f444`). Three tables,
+seven endpoints. A saved collection and the filter bar evaluate through *one* function, so
+they cannot drift (`DECISIONS.md` #55); `isComplete` is three-valued because an unrecorded
+box size means unmeasured, not incomplete (#56). "Unwatched 4Ks from the 2010s" listed 40
+real films in the browser.
 
-`test_logging_a_watch_returns_it_and_defaults_to_today` compared the endpoint's **UTC**
-default against Python's **local** `date.today()`. Those agree on Railway, which runs UTC,
-and disagree on a British machine for the hour after midnight — so it was green in CI all
-day and went red at 00:07 BST with nothing changed. `log_watch` and `purchaseDate` both
-carried the same guard. Comparing a person's calendar date against *any* single timezone's
-today is wrong: at 00:30 in London the wall calendar says the 9th while UTC says the 8th.
-`apps/api/src/clock.py` now holds `utcnow()`, `utc_today()` and `latest_plausible_today()`,
-and the ceiling is the latest date that is today anywhere on Earth (`DECISIONS.md` #53,
-gotcha 26).
+**Left in the live database by Batch 12's browser verification:** `smart_collections` 0 rows
+(hard delete, no trace); `box_sets` 1 soft-deleted row plus its 1 `box_set_items` row,
+invisible to the app; **3 `admin_actions` rows** attributed to Craig's profile, because the
+local dev token was minted for it. They are truthful and are left rather than deleted —
+falsifying an audit log is worse than one that records a verification pass. **No
+`collection_items` row was modified.**
+
+---
+
+**A pre-existing red on `main` was fixed first** (`04bfd44`): `date.today()` reads the
+*server's* timezone, so the watch-log default (UTC) and its own future-guard (local)
+disagreed for the hour after midnight BST — green in CI all day, red at 00:07 locally.
+`apps/api/src/clock.py` now owns "today", and the ceiling for a user-supplied date is the
+latest date that is today anywhere on Earth (`DECISIONS.md` #53, gotcha 26).
 
 ## Next
 
-**Batch 13 — Completion sets** (🟡, Sonnet 5 · high, phases 11.1 + 11.2) is Group C's
-second half and is next. It reuses Batch 12's UI patterns, which is why the two are a
-group.
+**Group C is complete.** **Group D — Batch 14 (Stats + export) → Batch 15 (Trash, audit
+UI, lending)** is next, at **Opus 5 · xhigh** because 15 performs a permanent delete on
+1,857 live rows.
 
 **Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
 on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
@@ -378,6 +378,15 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 13 shipped — completion sets, closing Group C** (`22680de`).
+  40 sets built live from TMDB, zero errors. Hitchcock 12 of 61, where TMDB returns 129
+  crew credits and 65 director ones — the filters that get from 65 to 61 are the batch
+  (`DECISIONS.md` #58), because "12 of 91" and "12 of 65" are both plausible wrong numbers
+  nothing would flag. Sets are seeded from the collection's own `movie_credits`, so there
+  is no name-matching step to get wrong (#57). Ownership is never stored (#59). **"Bulk add
+  missing to wanted list" was dropped** — the wanted list does not exist and Batch 18 owns
+  it. **"Weekly" is not scheduled**: a Railway cron is a hosting change (#60).
 
 - **2026-09-09** — **Batch 12 shipped — box sets + smart collections** (`881f444`). Three
   tables, seven endpoints, 38 tests. The saved-filter blob is closed off twice: validated

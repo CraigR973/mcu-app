@@ -790,3 +790,56 @@ contemporaneous.
     defaulting to `false` would put a permanent red mark against every set an admin had not
     filled in, which reads as a data problem the person cannot fix. The web app renders no
     progress bar at all in that case and says how many discs it holds instead.
+
+### 2026-09-09 — Batch 13 completion sets
+
+57. **A completion set's members come from the collection's own credits, never from a name
+    search.** `movie_credits` already holds a real TMDB person id for every identified
+    film, put there when the film was identified. The top directors and actors *by owned
+    count* become the sets.
+
+    *Why:* the alternative is a list of names — typed, or scraped from `sub_category` — and
+    then a TMDB search per name. `STATUS.md` gotcha 1b is the record of what that costs:
+    the matching engine once let TMDB popularity decide which film was on the shelf.
+    Starting from an id that arrived with the film removes the matching step rather than
+    improving it. It also makes every set one this collection has a stake in.
+
+58. **What counts as a member is filtered, and the filters are the batch.** A member is a
+    credit with `job=Director` (or, for an actor, `order <= 15`), a release date, and at
+    least one vote.
+
+    *Why each one:* TMDB returned **129** crew credits for Hitchcock. 65 have
+    `job=Director` — the other 64 are producing and writing credits, and "the Hitchcock
+    films" does not mean those. Of the 65, four have no votes: two wardrobe tests, Tippi
+    Hedren's screen test for *The Birds*, and a 2026 documentary *about* him. The set holds
+    **61**.
+
+    Without the job filter the app would report "12 of 91"; without the vote filter, "12 of
+    65". **Both look entirely plausible**, and nothing in the app would ever say they were
+    wrong — which is why each filter has its own test rather than a comment.
+
+    An unreleased credit is excluded for a different reason: counting announced projects as
+    "missing" makes every set permanently incomplete by construction, so the bar could
+    never reach 100% for a living director.
+
+59. **Ownership is computed at read time, never stored.** The insights page intersects the
+    cached `member_tmdb_ids` with `movies.tmdb_id` in one query for the whole page.
+
+    *Why:* the members change weekly and what is owned changes whenever a disc is added, so
+    a stored `owned_count` would need invalidating from the collection write path — a
+    coupling that is invisible when it breaks. Same reasoning as §3.23's smart collections
+    (#55): the thing that changes often is the thing not to cache.
+
+    What *is* cached is the display half — title, year and poster for each member — because
+    a **missing** film has no row in this database by definition, so §11.2's "missing films
+    list with posters" would otherwise be one TMDB call per missing film, per page view,
+    forever.
+
+60. **The weekly schedule in 11.1 is not implemented, and that is deliberate.** The refresh
+    exists twice — `src/scripts/refresh_completion_sets.py` and
+    `POST /api/v1/insights/completion/refresh` — and neither is on a timer.
+
+    *Why:* a Railway cron is a hosting change, which `AGENTS.md`'s close-out protocol keeps
+    explicit. An in-process scheduler would be worse than nothing: it would run once per
+    container, so scaling to two would double the TMDB spend silently. Wiring the schedule
+    is one console action against a job that already works, and it is the owner's.
