@@ -39,7 +39,13 @@ from src.clock import utcnow
 from src.models.movie import Movie
 from src.models.price_check import PriceCheck
 from src.models.wanted import Retailer, WantedItem
-from src.services.scraping.extract import ScrapeCandidate, check_shape, extract
+from src.services.scraping.extract import (
+    DEFAULT_FORMAT_SEARCH_TERM,
+    FORMAT_SEARCH_TERMS,
+    ScrapeCandidate,
+    check_shape,
+    extract,
+)
 from src.services.scraping.fetcher import (
     FetchError,
     UnsafeUrlError,
@@ -91,16 +97,27 @@ class ScrapeRunResult:
         return sum(1 for outcome in self.outcomes if not outcome.ok)
 
 
-def search_url_for(retailer: Retailer, title: str) -> str | None:
+def search_url_for(
+    retailer: Retailer, title: str, preferred_format: str | None = None
+) -> str | None:
     """Where to look for a film at this shop.
 
     ``{query}`` in §3.16's ``search_url_template``, percent-encoded. A retailer without a
     template cannot be searched — which is a configuration gap, reported as one, not an
     error.
+
+    A template may also carry **``{format}``**, replaced with how this shop writes the
+    wanted item's preferred format. THG's search redirects a bare film title to a franchise
+    landing page — twelve T-shirts, towels and statues, no discs — and returns a disc grid
+    only when the query names a format, so for those shops the format is what finds the
+    film at all. `DEFAULT_FORMAT_SEARCH_TERM` covers a want with no format set.
     """
     template = retailer.search_url_template
     if not template or "{query}" not in template:
         return None
+    if "{format}" in template:
+        term = FORMAT_SEARCH_TERMS.get(preferred_format or "", DEFAULT_FORMAT_SEARCH_TERM)
+        template = template.replace("{format}", quote(term))
     return template.replace("{query}", quote(title))
 
 
@@ -108,6 +125,7 @@ async def scrape_one(
     retailer: Retailer,
     title: str,
     *,
+    preferred_format: str | None = None,
     client: httpx.AsyncClient | None = None,
 ) -> tuple[ScrapeCandidate | None, ScrapeOutcome]:
     """Fetch and extract one film's price at one shop. **Makes a live request.**
@@ -122,7 +140,7 @@ async def scrape_one(
         outcome.error = "no selectors configured"
         return None, outcome
 
-    url = search_url_for(retailer, title)
+    url = search_url_for(retailer, title, preferred_format)
     if url is None:
         outcome.error = "no search URL template configured"
         return None, outcome
@@ -144,7 +162,12 @@ async def scrape_one(
         outcome.error = last_error or "could not be fetched"
         return None, outcome
 
-    candidate = extract(page.html, retailer.scraper_config)
+    candidate = extract(
+        page.html,
+        retailer.scraper_config,
+        expected_title=title,
+        preferred_format=preferred_format,
+    )
     # Retailer pages overwhelmingly use relative product links. Persisting one as-is made
     # `_write_check` silently return without a row, even though `written` was incremented.
     # Resolve it against the final page after redirects so the stored link is usable and
@@ -226,7 +249,12 @@ async def run_scrape(
     for retailer in retailers:
         any_success = False
         for wanted, movie in wanted_rows:
-            candidate, outcome = await scrape_one(retailer, movie.title, client=client)
+            candidate, outcome = await scrape_one(
+                retailer,
+                movie.title,
+                preferred_format=wanted.preferred_format,
+                client=client,
+            )
             result.outcomes.append(outcome)
 
             if candidate is not None and candidate.price is not None:

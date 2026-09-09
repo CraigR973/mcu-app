@@ -13,6 +13,8 @@ Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-
 ### 1. Live scraper acceptance runs — Group F's formal checkpoint
 
 - [ ] Press **Add missing defaults** on Retailers, then **Apply these selectors**
+      — *required again since 2026-09-09*: the built-ins changed (see below), and the live
+      retailer rows keep the old configuration until this is pressed
 - [ ] Test the 5 supported retailers, one at a time, before enabling any
 - [ ] Put at least one real film on the wanted list — the *Add a film* panel does this now
 - [ ] **Preview live run**, then **Run and save prices**, and confirm ≥ 1 `price_checks` row
@@ -34,6 +36,14 @@ The four on the right stay listed in the app, marked unverified with the reason,
 re-derives the same four answers. **eBay takes the general-market role** once item 4's
 application is approved. Arrow's seeded URL was the *US* storefront and returned USD, which
 the shape guard rejected — **Apply these selectors** corrects it to `arrowfilms.com`.
+
+**A search now names the format, and a listing must be a disc.** Searching Zavvi for
+*Jaws* used to return a beach towel — same name, plausible price, right shop, and it passed
+every shape rule. Three fixes landed on 2026-09-09 (`DECISIONS.md` #95–#98): a listing must
+name a disc format, a title carrying words that make it a *different* film is refused, and
+extraction reads product cards so the wanted item's **preferred format** decides which
+edition gets priced. Expect honest "not stocked" failures — Zavvi has no Michael Mann
+*Heat*, and now says so instead of pricing *Heat and Dust*.
 
 **What "test" means here:** a green tick means *"this looks like a real price for this
 film"*, not *"the page loaded"*. That distinction is the whole reason §5.4 exists. A

@@ -1258,3 +1258,60 @@ contemporaneous.
     against the page's post-redirect URL, which both makes the stored link usable and lets
     the same-site guard judge its real host — a relative URL previously had no hostname, so
     that guard was skipped entirely.
+
+### 2026-09-09 — scrapers filter on films, not on names
+
+95. **A listing must name a disc format, or it is not the film.** Searching Zavvi for
+    *Jaws* returns a beach towel, then a Christmas jumper, then nine T-shirts and a resin
+    statue. Every one of them passes all five of #79's shape rules — "Jaws" is in the
+    title, £17.99 is a plausible disc price, the currency is right, and the URL is Zavvi's
+    own — so the price of a towel was written as the price of the film. `check_shape` now
+    requires evidence of a physical format in the title or the URL.
+
+    *Why an allowlist of formats rather than a blocklist of merchandise:* a shop's
+    merchandise range is unbounded and a blocklist of "towel, t-shirt, mug" would be one
+    product category behind forever. The cost is that a real disc whose listing names no
+    format is refused — Powerhouse's *QUEEN BEE - LE* is one — and that is the trade this
+    module exists to make: a stated failure, never a wrong number.
+
+96. **A shop that does not stock the film still returns results, so "one word in common"
+    is not enough.** Zavvi has no Michael Mann *Heat*; searching for it yields *Heat and
+    Dust*, *The Big Heat*, *Red Heat*, *Night of the Big Heat* and *Step Up 4: Miami Heat*.
+    Each shares a significant word, so #79's deliberately generous title rule passed all of
+    them. A listing is now also refused when its title carries **meaningful extra words** —
+    everything left after removing format, edition, packaging and the release year.
+
+    *Why not a similarity threshold:* "Heat and Dust" and "Deep Red Blu-ray" score
+    identically against their wanted titles under any token-overlap ratio. The difference
+    is not how much they share, it is that *dust* names another film while *Blu-ray* names
+    a format. Only a vocabulary can tell those apart.
+
+    *The generous rule stays* as the first check, because "nothing in common with" is a
+    much clearer thing to read than a list of extra words when the selectors have simply
+    landed on the wrong page.
+
+97. **Extraction reads product cards, not the whole page.** `scraper_config` gained an
+    `item` selector, and every verified built-in sets it. Without it each selector ran over
+    the page independently, so a card missing a price paired its title with the *next*
+    product's price — and the first card always won regardless of what it was.
+
+    *Three things fall out of it.* The first card that is genuinely the film on disc wins
+    rather than simply the first card. A duplicate — Second Sight renders every product
+    twice, for its grid and list layouts — cannot out-rank a better listing below it. And
+    **`preferred_format` finally does something**: 101 Films lists *Bad Lieutenant* on 4K,
+    on Blu-ray and as a limited edition of both, and the wanted item already said which one
+    the owner wants. An out-of-stock listing carries no price, so a want for a format the
+    shop is not currently selling falls back rather than reporting nothing.
+
+    *And a card may be its own link.* Powerhouse's product card **is** its `<a>`, so
+    scoping to the card put its own URL out of reach — `select_one` searches descendants
+    only. `_select_one` checks the scope itself first.
+
+98. **The search URL names the format, because a bare title does not return discs.** THG's
+    search redirects `?q=Jaws` to a franchise landing page with no disc on it at all;
+    `?q=Jaws Blu-ray` returns the 4K disc as its first result. `search_url_template` gained
+    a `{format}` placeholder, used by Zavvi and Arrow and by nothing else.
+
+    *Why "Blu-ray" when no format is wanted:* it is not a guess at what the owner wants.
+    It is the term that makes THG return its disc categories, and its results include 4K
+    editions — verified against both shops on 2026-09-09.

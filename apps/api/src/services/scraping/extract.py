@@ -50,6 +50,143 @@ MIN_PLAUSIBLE = Decimal("0.50")
 #: a bundle, or a concatenation of two numbers.
 MAX_PLAUSIBLE = Decimal("500.00")
 
+#: Evidence that a listing is a **disc** rather than something else with the film's name on
+#: it. Searching Zavvi for "Jaws" returns a beach towel, a Christmas jumper and nine
+#: T-shirts before any disc — every one of which has "Jaws" in its title, a £ price in a
+#: plausible range, and a zavvi.com URL. All five of the original shape rules pass, and the
+#: price of a towel is written as the price of the film.
+#:
+#: An **allowlist**, not a blocklist of "towel", "t-shirt", "mug": merchandise is unbounded
+#: and a blocklist would be one product category behind forever. A listing that names no
+#: format is refused, which does mean the occasional real disc titled without one is
+#: refused too — a stated failure rather than a wrong number, which is the trade this
+#: module exists to make.
+MEDIA_MARKERS = re.compile(
+    r"\b(?:"
+    r"4k|uhd|ultra[\s-]?hd"
+    r"|blu[\s-]?ray|bluray|br|bd"
+    r"|dvd"
+    r"|steelbook"
+    r")\b",
+    re.IGNORECASE,
+)
+
+#: How each of `collection_item.FORMAT_RANK`'s codes is written on a shop's listing, so a
+#: want for a specific format picks that disc out of a search that returned several.
+#: ``download`` has no pattern: a digital copy is not something these shops list.
+FORMAT_PATTERNS: dict[str, re.Pattern[str]] = {
+    "4k_uhd": re.compile(r"\b(?:4k|uhd|ultra[\s-]?hd)\b", re.IGNORECASE),
+    "blu_ray": re.compile(r"\b(?:blu[\s-]?ray|bluray|bd)\b", re.IGNORECASE),
+    "dvd": re.compile(r"\bdvd\b", re.IGNORECASE),
+}
+
+#: How a retailer writes each format in a **search query**. THG's search returns a franchise
+#: landing page full of merchandise for a bare title, and a disc grid when the query names a
+#: format, so the format is part of finding the film at all rather than a nicety.
+FORMAT_SEARCH_TERMS: dict[str, str] = {
+    "4k_uhd": "4K",
+    "blu_ray": "Blu-ray",
+    "dvd": "DVD",
+}
+
+#: What to search for when a wanted item names no preferred format. "Blu-ray" is not a
+#: guess at what the owner wants — it is the term that makes THG return its **disc**
+#: categories, and its results include 4K editions as well.
+DEFAULT_FORMAT_SEARCH_TERM = "Blu-ray"
+
+
+#: Words a shop adds to a film's title that do **not** make it a different film: the format,
+#: the edition, the packaging, and the articles that survive `_normalise`'s length filter.
+#: A four-digit year is treated the same way by `_meaningful_extras` — "Bad Lieutenant
+#: (1992)" is Bad Lieutenant.
+TITLE_NOISE = frozenset(
+    {
+        # Format, spelled the many ways shops spell it.
+        "4k",
+        "uhd",
+        "ultra",
+        "hdr",
+        "blu",
+        "ray",
+        "bluray",
+        "dvd",
+        "steelbook",
+        # Edition and packaging.
+        "edition",
+        "editions",
+        "limited",
+        "standard",
+        "special",
+        "collector",
+        "collectors",
+        "collection",
+        "deluxe",
+        "anniversary",
+        "remastered",
+        "restored",
+        "includes",
+        "including",
+        "include",
+        "disc",
+        "discs",
+        "set",
+        "boxset",
+        "box",
+        "slipcover",
+        "digipak",
+        "region",
+        "version",
+        "versions",
+        "pack",
+        "triple",
+        "double",
+        "dual",
+        "exclusive",
+        "numbered",
+        "reissue",
+        "release",
+        "presents",
+        # Articles and conjunctions long enough to survive `_normalise`.
+        "the",
+        "and",
+        "with",
+        "for",
+    }
+)
+
+#: A standalone four-digit year, as shops append it: "Bad Lieutenant (1992)".
+YEAR_PATTERN = re.compile(r"^(?:19|20)\d{2}$")
+
+
+def _meaningful_extras(found_title: str, expected_title: str) -> set[str]:
+    """Words in a listing's title that name a *different film*.
+
+    The generous one-word-in-common rule catches a page about something else entirely, but
+    not the failure that actually happens: Zavvi does not stock Michael Mann's *Heat*, so a
+    search for it returns *Heat and Dust*, *The Big Heat*, *Red Heat* and *Step Up 4: Miami
+    Heat* — every one of which shares a significant word and would be priced as *Heat*.
+
+    So the extra words are what matter, once the ones a shop legitimately adds are removed:
+    format, edition, packaging and the release year. "Deep Red Blu-ray" adds nothing to
+    "Deep Red"; "Heat and Dust" adds *dust*, and is a different film.
+    """
+    wanted = _normalise(expected_title)
+    found = _normalise(found_title)
+    return {
+        word for word in found - wanted if word not in TITLE_NOISE and not YEAR_PATTERN.match(word)
+    }
+
+
+def looks_like_physical_media(title: str | None, url: str | None) -> bool:
+    """Whether a listing names a disc format anywhere in its title or its URL.
+
+    Both are checked because shops split the evidence differently: Zavvi puts the category
+    in the path (``/p/blu-ray/…`` against ``/p/clothing/…``), while the boutique labels put
+    it in the title (``Bad Lieutenant (1992) (4K-UHD)``).
+    """
+    haystack = " ".join(part for part in (title, url) if part)
+    return bool(haystack) and MEDIA_MARKERS.search(haystack) is not None
+
 
 @dataclass(frozen=True)
 class ScrapeCandidate:
@@ -108,22 +245,31 @@ def _text_of(node: Tag | None) -> str | None:
     return text or None
 
 
-def select_one_text(soup: BeautifulSoup, selector: str | None) -> str | None:
-    if not selector:
-        return None
+def _select_one(scope: BeautifulSoup | Tag, selector: str) -> Tag | None:
+    """``select_one``, except that a **card can be its own match**.
+
+    `select_one` searches descendants only. Powerhouse's product card *is* its link
+    (``<a class="list-view-item">``), so scoping extraction to the card would otherwise
+    make its own URL unreachable — the selector matches the scope, and nothing inside it.
+    """
     try:
-        return _text_of(soup.select_one(selector))
+        if isinstance(scope, Tag) and scope.name != "[document]" and scope.css.match(selector):
+            return scope
+        return scope.select_one(selector)
     except Exception:  # noqa: BLE001 - a bad selector is admin input, not a crash
         return None
 
 
-def select_one_attr(soup: BeautifulSoup, selector: str | None, attr: str) -> str | None:
+def select_one_text(soup: BeautifulSoup | Tag, selector: str | None) -> str | None:
     if not selector:
         return None
-    try:
-        node = soup.select_one(selector)
-    except Exception:  # noqa: BLE001 - as above
+    return _text_of(_select_one(soup, selector))
+
+
+def select_one_attr(soup: BeautifulSoup | Tag, selector: str | None, attr: str) -> str | None:
+    if not selector:
         return None
+    node = _select_one(soup, selector)
     if node is None:
         return None
     value = node.get(attr)
@@ -132,22 +278,103 @@ def select_one_attr(soup: BeautifulSoup, selector: str | None, attr: str) -> str
     return str(value) if value else None
 
 
-def extract(html: str, config: dict[str, object]) -> ScrapeCandidate:
-    """Run a retailer's configured selectors over a page.
-
-    ``config`` is §3.16's ``scraper_config``: ``{"title": "...", "price": "...",
-    "url": "..."}``. Anything missing simply yields ``None`` — a half-configured retailer
-    produces a candidate that fails the shape checks, which is the right outcome and a
-    legible one.
-    """
-    soup = BeautifulSoup(html, "html.parser")
-    title = select_one_text(soup, _string(config.get("title")))
-    raw_price = select_one_text(soup, _string(config.get("price")))
+def _candidate_from(scope: BeautifulSoup | Tag, config: dict[str, object]) -> ScrapeCandidate:
+    """Read one listing's fields from ``scope`` — a whole page, or a single product card."""
+    title = select_one_text(scope, _string(config.get("title")))
+    raw_price = select_one_text(scope, _string(config.get("price")))
     price, currency = parse_price(raw_price)
-    url = select_one_attr(soup, _string(config.get("url")), "href")
+    url = select_one_attr(scope, _string(config.get("url")), "href")
     return ScrapeCandidate(
         title=title, price=price, currency=currency, url=url, raw_price_text=raw_price
     )
+
+
+def _matches_title(title: str | None, expected_title: str | None) -> bool:
+    """The same title test `check_shape` applies, so a card it would reject never wins."""
+    if not expected_title:
+        return True
+    if not title:
+        return False
+    wanted_words = _normalise(expected_title)
+    if not wanted_words:
+        return True
+    if not wanted_words & _normalise(title):
+        return False
+    return not _meaningful_extras(title, expected_title)
+
+
+def extract(
+    html: str,
+    config: dict[str, object],
+    *,
+    expected_title: str | None = None,
+    preferred_format: str | None = None,
+) -> ScrapeCandidate:
+    """Run a retailer's configured selectors over a page and pick the best listing on it.
+
+    ``config`` is §3.16's ``scraper_config``: ``{"item": "...", "title": "...",
+    "price": "...", "url": "..."}``. Anything missing simply yields ``None`` — a
+    half-configured retailer produces a candidate that fails the shape checks, which is the
+    right outcome and a legible one.
+
+    **``item`` is what makes this a search-results reader rather than a first-node reader.**
+    Without it each selector runs over the whole page independently, so the title can come
+    from one product and the price from another whenever a card is missing a field. With
+    it, each card is read whole, and the *first card that is actually the film on disc*
+    wins rather than simply the first card:
+
+    - Searching Zavvi for "Jaws" returns a beach towel first and a T-shirt second. Reading
+      card by card lets a disc further down the page win.
+    - Searching 101 Films for "Bad Lieutenant" returns the 4K, the Blu-ray and a limited
+      edition of both. ``preferred_format`` is the wanted item's own answer to which of
+      those to price, and it was previously unused.
+
+    When no card qualifies, the **first** card is returned rather than nothing, so
+    `check_shape` reports why the page was rejected — "names no disc format" — instead of
+    the misleading "no price found" an empty candidate would produce.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    item_selector = _string(config.get("item"))
+    if not item_selector:
+        return _candidate_from(soup, config)
+
+    cards: list[Tag] = []
+    try:
+        cards = list(soup.select(item_selector))
+    except Exception:  # noqa: BLE001 - a bad selector is admin input, not a crash
+        cards = []
+    if not cards:
+        return _candidate_from(soup, config)
+
+    seen: set[str] = set()
+    candidates: list[ScrapeCandidate] = []
+    for card in cards:
+        candidate = _candidate_from(card, config)
+        # Shops render the same product twice for grid and list layouts; a duplicate is
+        # not a second listing and must not out-rank a better one below it.
+        key = candidate.url or candidate.title or ""
+        if key and key in seen:
+            continue
+        seen.add(key)
+        candidates.append(candidate)
+
+    qualifying = [
+        candidate
+        for candidate in candidates
+        if candidate.price is not None
+        and _matches_title(candidate.title, expected_title)
+        and looks_like_physical_media(candidate.title, candidate.url)
+    ]
+    if not qualifying:
+        return candidates[0]
+
+    pattern = FORMAT_PATTERNS.get(preferred_format or "")
+    if pattern is not None:
+        for candidate in qualifying:
+            haystack = " ".join(part for part in (candidate.title, candidate.url) if part)
+            if pattern.search(haystack):
+                return candidate
+    return qualifying[0]
 
 
 def _string(value: object) -> str | None:
@@ -180,7 +407,12 @@ def check_shape(
       would otherwise report dollar prices as pounds, and every alert would fire.
     - **A title with nothing in common with the film asked for** — the strongest guard
       against the *quiet* failure, where the selectors work perfectly on the wrong page.
+    - **A title naming a different film** — the same failure one step subtler. A shop that
+      does not stock the film still returns results: *Heat* at Zavvi yields *Heat and
+      Dust*, *The Big Heat* and *Red Heat*, all of which share a word.
     - **A listing URL on a different domain** — an advert, or a "customers also bought".
+    - **A listing that names no disc format** — the merchandise case. "Jaws" at Zavvi is a
+      beach towel long before it is a Blu-ray, and every other rule passes on a towel.
     """
     verdict = ShapeVerdict(ok=True)
 
@@ -216,11 +448,24 @@ def check_shape(
                 verdict.fail(
                     f"page title {candidate.title!r} has nothing in common with {expected_title!r}"
                 )
+            else:
+                extras = _meaningful_extras(candidate.title, expected_title)
+                if extras:
+                    verdict.fail(
+                        f"page title {candidate.title!r} names a different film from "
+                        f"{expected_title!r} ({', '.join(sorted(extras))})"
+                    )
 
     if candidate.url and retailer_host:
         host = urlparse(candidate.url).hostname
         if host and not _same_site(host, retailer_host):
             verdict.fail(f"listing URL is on {host}, not {retailer_host}")
+
+    if not looks_like_physical_media(candidate.title, candidate.url):
+        verdict.fail(
+            f"listing names no disc format, so it is probably merchandise rather than the "
+            f"film (title read: {candidate.title!r})"
+        )
 
     return verdict
 

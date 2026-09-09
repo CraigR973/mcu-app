@@ -4,8 +4,7 @@
 
 **Eleven batches shipped, all merged and deployed.**
 
-Production serves `a688339e3e8b7b759b05564499e8896c1bee4aed` (supported retailer paths) with
-`db: ok`.
+Production serves the scraper film-filtering fix with `db: ok`.
 
 | Batch | Result |
 |---|---|
@@ -438,6 +437,31 @@ something on it, including two the ledger describes as "solo".
     ```
 
 ## Log
+
+- **2026-09-09** — **The scrapers now filter on films, not on names.** Reported from the
+  app: searching Zavvi for *Jaws* returned **a beach towel**. It passed all five of #79's
+  shape rules — the film's name in the title, £17.99, GBP, a zavvi.com URL — so the price
+  of a towel was being written as the price of the film. Fixed, and two more found while
+  fixing it (`DECISIONS.md` #95–#98):
+
+  1. **Merchandise.** A listing must now name a disc format in its title or URL. Zavvi's
+     first twelve results for *Jaws* were towels, jumpers, T-shirts and a resin statue.
+  2. **The film the shop does not stock.** Zavvi has no Michael Mann *Heat*, so it returns
+     *Heat and Dust*, *The Big Heat*, *Red Heat* and *Step Up 4: Miami Heat* — each sharing
+     a significant word, each passing the generous title rule, each a different film. A
+     title carrying meaningful extra words, once format and edition wording is removed, is
+     now refused.
+  3. **Page-wide selectors.** Each selector ran over the whole page independently, so a
+     card with no price node paired its title with the *next* product's price. Extraction
+     now reads product cards, which also makes `preferred_format` work for the first time:
+     101 Films lists *Bad Lieutenant* on 4K and Blu-ray, and the want says which.
+
+  **Verified against the live shops, not only fixtures.** *Jaws* at Zavvi now returns the
+  4K disc at £19.99; Arrow, 101 Films, Second Sight and Powerhouse all return the right
+  film; *Heat* at Zavvi and *Don't Look Now* at Second Sight are both refused with a
+  legible reason. **Two built-in search templates changed** (`{format}`) and every verified
+  built-in gained an `item` selector — so **"Apply these selectors" must be pressed again**
+  before the next run, or the live retailer rows keep the old config.
 
 - **2026-09-09** — **Supported retailer paths.** Live page-shape checks settled which of
   §5.3's shops can actually be scraped: **five pass** — Zavvi, Arrow (on `arrowfilms.com`,
