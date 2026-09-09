@@ -4,107 +4,124 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-09**.
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-09**,
+after a session that cleared four of the nine items. *Numbers changed at that review; the
+old ones are noted in brackets so an earlier conversation still maps onto this file.*
 
 ---
 
 ## ⛔ Blocking the batch queue
 
-### 1. Live scraper acceptance runs — Group F's formal checkpoint
+### 1. Finish the live scraper acceptance run — Group F's checkpoint *(was 1)*
 
-- [ ] Press **Add missing defaults** on Retailers, then **Apply these selectors**
-      — *required again since 2026-09-09*: the built-ins changed (see below), and the live
-      retailer rows keep the old configuration until this is pressed
-- [ ] Test the 5 supported retailers, one at a time, before enabling any
-- [ ] Put at least one real film on the wanted list — the *Add a film* panel does this now
-- [ ] **Preview live run**, then **Run and save prices**, and confirm ≥ 1 `price_checks` row
-      per working scraper
+**The setup is done. The proof is not.**
 
-**Where:** <https://mcu-app-fawn.vercel.app> → Retailers. Every step above is now a button on
-that page. Or the API directly: `POST /api/v1/retailers/seed`,
-`POST /api/v1/scrapers/apply-built-ins`, `POST /api/v1/scrapers/test`, then
-`POST /api/v1/scrapers/run?dryRun=false`.
+- [x] **Add missing defaults** and **Apply these selectors** — pressed 2026-09-09. Arrow's
+      `base_url` is now the UK `arrowfilms.com`, and exactly the five supported shops are
+      enabled
+- [x] Films on the wanted list — *Misery*, *Nope* and *Project Hail Mary*, all wanting 4K
+- [x] A real run saved real rows — **2 `price_checks` rows exist**
+- [ ] **≥ 1 row per working scraper**, which is what phase 5.3 actually asks for
 
-**Which shops this is now about — five, not six.** Live page-shape checks on 2026-09-09
-settled the rest (`DECISIONS.md` #91):
+What the run produced, and it is worth reading before repeating it:
 
-| Supported — test these | Permanently unverified — do not test |
+| Shop | Result |
 |---|---|
-| Zavvi, Arrow (UK), 101 Films, Second Sight, Powerhouse/Indicator | HMV and CEX (search routes disallowed), Amazon UK (blocks automated access; its official API is unsuitable here), Blu-ray.com (a catalogue, third-party prices) |
+| **Arrow Video** | ✅ *Misery Limited Edition 4K UHD*, **£25.00**, exact 4K match, no substitution |
+| **Zavvi** | ⚠️ *Nope* at £8.99 — the **Blu-ray**, because Zavvi has no 4K *Nope* at all. Correct behaviour under `DECISIONS.md` #102, reported as `substitutedFormat` |
+| 101 Films · Powerhouse · Second Sight | "not stocked" — correct: none of them carries a Stephen King adaptation, a Universal blockbuster or an unreleased 2026 title |
 
-The four on the right stay listed in the app, marked unverified with the reason, so nobody
-re-derives the same four answers. **eBay takes the general-market role** once item 4's
-application is approved. Arrow's seeded URL was the *US* storefront and returned USD, which
-the shape guard rejected — **Apply these selectors** corrects it to `arrowfilms.com`.
+**Add a title each boutique label actually sells before running again**, or the criterion
+cannot be met: *Deep Red* for Arrow, *Don't Look Now* or *Near Dark* for Second Sight,
+*Sorcerer* or a Columbia Noir for Powerhouse, something from 101's Black Label. Then one
+unhurried run gives all five shops a fair test in a single pass.
 
-**A search now names the format, and a listing must be a disc.** Searching Zavvi for
-*Jaws* used to return a beach towel — same name, plausible price, right shop, and it passed
-every shape rule. Three fixes landed on 2026-09-09 (`DECISIONS.md` #95–#98): a listing must
-name a disc format, a title carrying words that make it a *different* film is refused, and
-extraction reads product cards so the wanted item's **preferred format** decides which
-edition gets priced. Expect honest "not stocked" failures — Zavvi has no Michael Mann
-*Heat*, and now says so instead of pricing *Heat and Dust*.
+**Space the runs out.** Zavvi succeeded at 17:06 and failed at 17:08 with "no price found"
+having worked minutes earlier — that is throttling, not a broken selector. **It still carries
+2 of the 3 strikes that auto-disable a shop.**
 
-**What "test" means here:** a green tick means *"this looks like a real price for this
-film"*, not *"the page loaded"*. That distinction is the whole reason §5.4 exists. A
-selector can still fail on a layout change; the tool prints the node it read and why it
-rejected the result, which is usually enough to correct the CSS in *Retailers → edit*.
+*A trap that already fired, now fixed.* The first run counted "this shop does not stock this
+film" as a scraper failure and **switched 101 Films, Powerhouse and Second Sight off** after
+three of them. They were re-enabled and the accounting was fixed the same day
+(`DECISIONS.md` #107) — a shop that answers honestly no longer accrues a strike. Zavvi's
+throttling failures still do, correctly.
+
+**Where:** <https://mcu-app-fawn.vercel.app> → Retailers. Or the API directly:
+`POST /api/v1/scrapers/test`, then `POST /api/v1/scrapers/run?dryRun=false`.
+
+**Four shops stay permanently unverified — do not test them.** HMV and CEX disallow the
+search routes this job needs; Amazon UK blocks automated access and its official API is
+unsuitable for a private app this size; Blu-ray.com is a catalogue whose prices belong to
+third parties (`DECISIONS.md` #91). **eBay takes the general-market role** once item 2 lands.
 
 **Unblocks:** Batch 20 (price scraping + drop alerts) → Batch 21 (price history charts, which
 then needs 7 real days of wall-clock data) → Group G (22 deals feed, 23 specs scraper).
 
-### 2. VAPID keys for push notifications
+### 2. eBay production API application *(was 4)*
 
-- [ ] Generate a VAPID key pair
-- [ ] Set them in Railway (a credential change — that's why it stops here)
+- [x] Applied 2026-09-09
+- [ ] Approval — eBay said at least one business day
 
-**Unblocks:** Batch 11, and pays two debts already outstanding — Batch 15's *"overdue loan
-triggers a push"* (§12.5, shipped without it) and Batch 19's price-drop notifications. Batch
-20 will want it too.
+**Unblocks:** Group I — Batch 28 (eBay integration) → Batch 29 (format upgrade + sale
+tracking). **And Batch 24**, which is not obvious from the ledger: `DECISIONS.md` #16 fixes
+that batch's UPC→title chain as *cached mapping → eBay Browse keyword search → manual
+fallback*, so the barcode lookup depends on the same approval.
 
-### 3. `ANTHROPIC_API_KEY` in Railway
+### 3. Two design choices nobody has made
 
-- [ ] Add a live Claude API key to the Railway `api` service
+- [ ] **Batch 25 — how big may a photo be?** Storage is settled as **Neon** (owner,
+      2026-09-09), which means photo bytes in Postgres rather than an object store. The
+      spec's raw sizing — 5 photos × 5 MB × 1,857 items ≈ 46 GB — is not sensible in any
+      Postgres; the database is 35 MB today. An agent proposed server-side resize to
+      ~300 KB per photo (worst case ~2.8 GB, realistic case under 200 MB) but **that has not
+      been confirmed**, so it is recorded here rather than acted on.
+- [ ] **Batch 35 — what provides realtime?** The design says Supabase Realtime and there is
+      no Supabase project any more (`DECISIONS.md` #17). An agent proposed Postgres
+      `LISTEN`/`NOTIFY` plus SSE over the existing FastAPI service — no new vendor, no new
+      credential — but **that has not been confirmed either.**
 
-There is no key anywhere in the repo, in `.railway/railway.ts`, or in `apps/api/.env.local`,
-so Batch 30 can't do anything real without one.
-
-**Unblocks:** Group J — Batch 30 (AI assistant client + usage caps) → Batch 31 (tools + chat).
-Batch 32 (voice input) sits behind these too; see the note at the bottom.
-
-### 4. eBay production API application
-
-- [x] Apply for eBay production API access — submitted 2026-09-09; eBay account approval is pending (at least one business day)
-
-**Unblocks:** Group I — Batch 28 (eBay integration) → Batch 29 (format upgrade + sale tracking).
-
-### 5. Google + Microsoft OAuth app registration
-
-- [ ] Register the OAuth apps and set the credentials in Railway
-
-**Unblocks:** Group K — Batch 33 (email accounts + OAuth) → Batch 34 (parsers + scanning).
+Neither is a credential, so an agent *could* take them; both are recorded as owner choices
+because they set a shape that is annoying to reverse once photos or sessions exist.
 
 ---
 
-## Finishing acceptance criteria on work that already shipped
+## Deprioritised by owner decision — not blocking
 
-### 6. Subscribe the `.ics` feed in Apple or Google Calendar — deprioritised
+### 4. Google + Microsoft OAuth app registration *(was 5)* — **deprioritised 2026-09-09**
 
-- [ ] Generate the feed URL (Calendar → Subscribe in the app, or `POST /api/v1/calendar/subscribe`)
-- [ ] Subscribe to it and confirm the 32 release-calendar events render
+Group K (Batch 33 email accounts + OAuth → Batch 34 parsers + scanning) is off the queue
+until this is wanted. The batches stay in the ledger; nothing is dropped.
+
+### 5. Subscribe the `.ics` feed in Apple or Google Calendar *(was 6)*
 
 Batch 17 shipped and the feed's bytes are verified against RFC 5545. The in-app release
-calendar is the primary experience; external-calendar subscription is retained as an optional
-convenience and is no longer a current owner action. Do this only if Craig or Mark wants it.
+calendar is the primary experience; external subscription is an optional convenience. Do this
+only if Craig or Mark wants it.
 
 **The URL is a capability URL** — anyone holding it can read the feed. It's `noindex,
 nofollow` and the token is rotatable, but treat it like a password.
 
 ---
 
+## Done since the last review
+
+| | What happened |
+|---|---|
+| **VAPID keys** *(was 2)* | Generated and set in Railway 2026-09-09. Verified: 87-char public key, 43-char private key, both base64url, **the pair mathematically matches**, and `VAPID_SUBJECT` carries a `mailto:`. **The names are now fixed by what is in Railway** — Batch 11 must read `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. `VITE_VAPID_PUBLIC_KEY` on Vercel is deliberately **not** set: it is a build-time Vite variable that does nothing until Batch 11 ships code that reads it. **Unblocked Batch 11.** |
+| **`ANTHROPIC_API_KEY`** *(was 3)* | Set in Railway 2026-09-09. **Unblocked Group J** (30 → 31), and Batch 32 behind them. |
+| **Mark's PIN** *(was 8)* | Set 2026-09-09. He can sign in, which is what two-user acceptance criteria need — Batch 35's movie night and Batch 38's login flow. |
+| **`TMDB_READ_TOKEN`** *(new — was never on this list)* | **It had never been set in Railway at all.** Every TMDB-backed feature in the deployed app was returning a 502 reading *"TMDB search is temporarily unavailable"* — the identify flow for 757 unidentified films, the add-form search, watch providers, recommendations, calendar refresh and completion-set rebuilds. Nothing was temporary about it: `config.py` defaults the token to `""`, so the API booted happily and sent `Authorization: Bearer ` on every call. Set 2026-09-09. |
+
+**Why the TMDB one is worth remembering.** CI cannot catch it — it is configuration, not
+code, and `AGENTS.md` already says the gate proves the code and not the infrastructure around
+it. It was invisible until someone tried to add a film to the wanted list. Anything that
+lives only in a Railway variable has no test.
+
+---
+
 ## Housekeeping — not blocking anything
 
-### 7. Revoke the April PAT at GitHub
+### 6. Revoke the April PAT at GitHub *(was 7)*
 
 - [ ] Revoke it
 
@@ -113,19 +130,7 @@ referenced truncated in `4768da8`. It is dead (returns 401) but was never formal
 **A history rewrite is not recommended** — the repo is private and the token is already
 invalid, so a rewrite would cost more than it buys.
 
-### 8. Set Mark's PIN
-
-- [ ] Choose a PIN and set it
-
-`profiles.pin_hash` is `NULL` for Mark, so he cannot sign in at all. Left to you because it's
-his PIN to choose, not an agent's to invent.
-
-```
-DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
-  apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
-```
-
-### 9. `VITE_API_URL` for Vercel preview deploys
+### 7. `VITE_API_URL` for Vercel preview deploys *(was 9)*
 
 - [ ] Add it in the Vercel dashboard — **only if you want preview deploys to work**
 
@@ -136,17 +141,18 @@ It's currently set for Production only. Production is fine; previews would white
 ## Consequences worth knowing
 
 **Batch 32 (voice input) is not independent, despite the ledger calling it "solo".** Phase
-9.5's acceptance is *"tapping mic, speaking a query, **sends correct transcription**"* — sends
-it to the chat input, which doesn't exist until Batch 31. Building it before Group J means a
-microphone button wired to nothing. It's grouped as solo because it shares no *files* with
-Group J, not because the feature stands alone. **Blocked by item 3.**
+9.5's acceptance is *"tapping mic, speaking a query, **sends correct transcription**"* — to
+the chat input, which doesn't exist until Batch 31. It is grouped as solo because it shares no
+*files* with Group J, not because the feature stands alone. Now unblocked at the credential
+level by `ANTHROPIC_API_KEY`, but still gated on Batch 31 existing.
 
-**Batch 38 (E2E suite) can only cover 3 of its 7 flows today.** Phase 13.10's acceptance names
-login, import, search, add-via-scan, price alert, chat session and movie night. Four of those
-seven features don't exist yet — scan is Batch 24, price alert is Batch 20 (item 1), chat is
-Batch 31 (item 3), movie night is Batch 35. **Partially blocked by items 1 and 3.**
+**Batch 38 (E2E suite) can only cover 4 of its 7 flows today.** Phase 13.10's acceptance names
+login, import, search, add-via-scan, price alert, chat session and movie night. Login is newly
+testable now Mark has a PIN; scan is Batch 24, price alert is Batch 20, chat is Batch 31 and
+movie night is Batch 35.
 
-**Batch 36 (command palette + keyboard shortcuts) needs nothing from this file.** Phase 6.3
-indexes films, pages, actions and recent items — all of which exist — and 6.4's shortcuts are
-self-contained. It is the only queued batch that can meet its acceptance criteria in full
-today.
+**Batch 26 (shelf QR) was dropped**, 2026-09-09, `DECISIONS.md` #109 — Batch 6's location
+filter already answers the question printed codes existed for.
+
+**No queued batch can meet its acceptance criteria in full today.** That line used to name
+Batch 36 as the exception; Batch 36 shipped on 2026-09-09.

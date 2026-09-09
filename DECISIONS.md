@@ -1476,3 +1476,36 @@ contemporaneous.
      *Recorded here rather than edited quietly into the ledger*, per that file's own rule
      about dropped phases. The `deleted_at`-style reversal is cheap: nothing was built, so
      reinstating it is another entry here and a row in the ledger.
+
+### 2026-09-09 — accepting Blu-ray.com's access-policy risk
+
+110. **Batch 23 will scrape Blu-ray.com, including a one-time backfill, as a conscious
+     owner-accepted risk. This supersedes #108's claim that fetching a supplied release
+     URL "stays inside what the site allows"; it does not supersede #108's technical
+     findings or its no-search design.** The site's Legal Notices explicitly forbid
+     automated crawling and reuse without written permission, including reuse for
+     non-public/internal calculations. A release page being absent from `robots.txt`'s
+     disallow list is not permission, so #108's reasoning on that point was wrong.
+
+     The owner reviewed the likely consequences and accepts them, including for the
+     existing 1,857-item collection: most likely nothing; plausibly an IP block, account
+     ban, cease-and-desist, hosting-provider complaint, and a requirement to disable the
+     integration or delete the derived data; civil proceedings are possible but judged
+     remote for this private, non-commercial, two-person app. This is risk acceptance,
+     not a finding that the access is permitted.
+
+     **The acceptance is bounded.** Batch 23 fetches public release HTML only, from exact
+     release URLs; it does not use Blu-ray.com's disallowed search routes, authenticate to
+     an account, fetch images/scripts/advertising, extract prices/reviews/ratings/member
+     content, republish a dataset, rotate IPs, solve CAPTCHAs, or evade an access control.
+     Requests are sequential and conservatively rate-limited; successful results are
+     cached indefinitely rather than refreshed automatically. Every derived row records
+     its Blu-ray.com source URL and fetch time so the data can be identified and removed.
+     A `403`, `429`, explicit objection, or hosting complaint halts the whole integration;
+     resuming after any of those requires a new owner decision. The one-time backfill does
+     not relax those stop conditions, and deletion remains an explicit owner action.
+
+     *Why proceed:* edition-specific video, audio and region data is the value of Batch 23,
+     no documented public API exposes it, and manual entry of roughly twenty fields per
+     disc defeats the feature. Written permission remains preferable and can remove the
+     accepted risk later, but it is no longer a prerequisite for the batch.

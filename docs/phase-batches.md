@@ -646,7 +646,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
 | 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
-| 23 | Specs — scraper + display | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 3.7, 3.8, 3.9 — Blu-ray.com, **URL supplied per film, never its search** (#108) |
+| 23 | Specs — scraper + display | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 3.7, 3.8, 3.9 — Blu-ray.com, **exact release URLs, never its search; owner accepts the stated access-policy risk including one-time backfill** (#108, #110) |
 | 24 | Barcode — scan + lookup | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 3.3, **3.4** — confirmation UI mandatory |
 | 25 | Photo uploads | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 3.10 — needs the `vercel.json` CSP fix |
 | ~~26~~ | ~~Shelf QR~~ | ~~🟢~~ | — dropped | — dropped | **dropped** | ~~12.3, 12.4~~ — Batch 6's location filter solved the retrieval problem it existed for (`DECISIONS.md` #109) |
