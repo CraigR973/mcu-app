@@ -2,71 +2,72 @@
 
 ## Now
 
-**Batch 16 — watch providers + recommendations — shipped.** Group E's first half.
-Production serves `d2218ab06dea9ac25aeb071bf24cb3c8c028e030` with `db: ok`; migration `014`
-applied on boot.
+**Batch 17 — release calendar + iCal — shipped, closing Group E.** Production serves
+`a09c172393b7b52bc397becf1368dc61587a16d9` with `db: ok`; migration `015` applied on boot.
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 7.1 | For a popular film, UK streaming options shown correctly | done, live — *North by Northwest* in GB: **HBO Max + HBO Max Amazon Channel** on subscription, 6 rent and 6 buy options, with TMDB's own "where to watch" link |
-| 7.2 | Detail page shows 10+ recommendations with correct ownership flags | done, live — **20 recommendations, 7 already on the shelf** |
+| 7.3 | Live ingestion populates `release_calendar` with ≥ 30 rows spanning the next 3 months (not seeded data) | done — **32 rows**, 2026-09-13 → 2026-11-27, 30 from TMDB and 2 curated sale events. The re-run was fully idempotent: 0 created, 32 unchanged |
+| 7.3 | Calendar page renders them | done — monthly view, bucketed by day server-side |
+| 7.4 | `/api/v1/calendar.ics` endpoint, monthly view, subscribe with copy-link | done — the feed serves **200 with no `Authorization` header**, 32 events, correct escaping and folding |
+| 7.4 | **Subscribing in Apple Calendar successfully displays events** | **not verifiable from here — owner action.** Needs a real calendar app on a real device |
 
-**§7.1 assumed a column that did not exist.** "User's streaming_region" had no home: the
-only region column in the schema is `collection_items.region_code`, which is a disc's
-**Blu-ray region**, a different thing. Migration `014` adds `profiles.streaming_region`,
-defaulting to `GB`, with a CHECK on the two-letter shape — because TMDB answers an
-unrecognised key with an **empty map rather than an error**, so a lower-cased "gb" would
-make every film appear to stream nowhere and nothing would say why (`DECISIONS.md` #70).
+**This is the app's first unauthenticated surface, and the token is handled as a refresh
+token** (`DECISIONS.md` #71): 256 bits, SHA-256-hashed at rest, one live token per person
+enforced by a *partial unique index*, rotated on every subscribe, `noindex` + `no-store`,
+and **a revoked token answering identically to one that never existed** — a 401 would
+confirm a guess had once been real. The feed carries no personal data and a test asserts it
+(#72), because the natural way to extend a personal calendar is to start adding personal
+things.
 
-**"Wanted" was dropped from the ownership flags** — §7.2 lists "owned / wanted / unowned"
-and the wanted list is §3.5, which **Batch 18** builds. The zod enum has exactly two states
-so a third cannot be rendered by accident. That is the third time this session a spec bullet
-has pointed at the wanted list; Batch 18 now owes: this badge, "bulk add missing to wanted
-list" (Batch 13), and its own trash tab (Batch 15).
+**A security review of this batch found a real content-injection hole** (`DECISIONS.md` #73).
+A URI property is not TEXT and so is not escaped, so a newline in `release_calendar.url`
+injected arbitrary iCalendar properties — a probe produced `X-EVIL:injected` and a hijacked
+`DESCRIPTION` in the served feed. **It was not reachable**: nothing writes that column
+today. **Batch 19's scrapers are what would have armed it**, populating it from scraped
+retailer pages — a defect that would have shipped two batches before becoming exploitable.
+An independent review pass reached the same finding, confirmed the fix against seven hostile
+variants, and found nothing else at its confidence bar.
 
-**One defect found only by driving the app, and it was mine** (`DECISIONS.md` #68). The
-first version raised **502** when TMDB was unreachable. The page then said *"Waiting for the
-network"* — correct client behaviour, since `send()` treats any 5xx as a network failure
-(#43), but it blamed the reader's connection for TMDB being down. The endpoint now returns
-200 with an `unavailable` flag, so four outcomes read differently: not identified, no
-offers, TMDB unreachable, and here they are. **When this API is a proxy for someone else's
-outage, it says so in the body** — a status code cannot carry "we are fine, they are not".
+**The first live ingestion found a defect a dry run could not.** TMDB's paginated `upcoming`
+list is re-sorted between requests, so the same film (*Shadows of Beirut*) came back on two
+pages and the unique constraint fired mid-insert. Candidates are keyed now. **A dry run
+never writes, so it never reaches a constraint** — gotcha 16 restated, and the second time
+this session a live-write stage has earned its place.
 
-**And one red CI gate, from a known trap.** `# type: ignore[arg-type]` was *necessary* for
-this machine's mypy and *unused* for CI's, which `warn_unused_ignores` makes a failure —
-`STATUS.md` gotcha 21 exactly. Fixed as that gotcha prescribes: typed the constant so the
-loop variable is already narrowed and no ignore is needed at all.
-
-**Nothing about availability is cached** (#69). Streaming rights move constantly, so a
-stale answer is a wrong answer with a confident face — the opposite of `completion_sets`,
-which caches because a filmography barely changes. The test is not "is it expensive" but
-"does it go wrong quietly".
+**Known and accepted**: the feed token travels in a query string and will appear in access
+logs (#74). Unavoidable for a subscription URL; mitigated by the feed carrying only public
+release dates, and by rotation.
 
 ---
 
-**Group D shipped earlier the same session.** Batch 14 (`20650b3`) — stats at 344 ms median;
-**two of five charts have no data** and say what they are waiting for (#61); CSV/JSON/HTML
-export of all 1,857 discs with **no server-side PDF renderer** (#62). Batch 15 (`20d1eff`) —
-the app's **first irreversible operation**, proved on live data by destroying Batch 12's
-leftover box set: row gone, cascade fired, audit trail outlived it, 1,857 discs untouched
-(#64–66). **"Overdue triggers a push" is not met** — push is Batch 11.
+**Group E's first half — Batch 16 — shipped earlier** (`d2218ab`). Live: *North by
+Northwest* shows HBO Max plus 6 rent and 6 buy options in GB; 20 recommendations with 7
+already owned. **A 502 for a TMDB outage made the page blame the reader's connection**; it
+now answers 200 with an `unavailable` flag (#68).
 
-**Group C shipped earlier.** Batch 12 (`881f444`) — a saved collection and the filter bar
-evaluate through one function (#55). Batch 13 (`22680de`) — 40 completion sets from live
-TMDB, Hitchcock 12 of 61 (#58).
+**Groups C and D shipped earlier the same session** — Batches 12 (`881f444`), 13
+(`22680de`), 14 (`20650b3`), 15 (`20d1eff`), plus a pre-existing-red fix (`04bfd44`).
 
-**A pre-existing red on `main` was fixed first** (`04bfd44`) — gotcha 26.
-
-**What this session has left in the live database.** 40 `completion_sets` rows (11.1's
-acceptance criterion, so they stay) and 4 `admin_actions` rows recording Batch 12's browser
-verification and its clean-up. **No `collection_items` row has been created, modified or
-deleted all session — still 1,857, all live.**
+**What this session has left in the live database.** 40 `completion_sets` rows and 32
+`release_calendar` rows — both are acceptance criteria, so they stay — and 4
+`admin_actions` rows recording Batch 12's browser verification and its clean-up. **No
+`collection_items` row has been created, modified or deleted all session: still 1,857, all
+live.**
 
 ## Next
 
-**Batch 17 — Release calendar + iCal** (phases 7.3, 7.4) closes Group E, at
-**Opus 5 · xhigh** because a secret-token `.ics` URL is an **unauthenticated public
-surface** — the first in this app.
+**Group F — Batch 18 (Wanted list + retailers) → Batch 19 (Scraper framework)** is next,
+at **Opus 5 · max**. It runs into a **checkpoint before Batch 20**: "live scraper acceptance
+runs", which the owner performs against real retailers.
+
+**Batch 18 owes four things that later batches deferred to it**, all pointing at the
+wanted list that §3.5 designs and nothing has built:
+1. Batch 13's **"bulk add missing to wanted list"** on the completion-insights page.
+2. Batch 15's **`wanted_list` trash tab** — the API currently *refuses* the table name
+   rather than answering an empty page.
+3. Batch 16's **"wanted" ownership badge** on recommendations; the enum has two states.
+4. Batch 17's **`release_calendar.is_wishlist_match`** column, created and never written.
 
 **Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
 on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
@@ -379,6 +380,16 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 17 shipped — release calendar and iCal, closing Group E**
+  (`a09c172`). Live ingestion put **32 rows** in `release_calendar`; the re-run was
+  idempotent. The `.ics` feed is the app's **first unauthenticated surface**, and its token
+  is handled as a refresh token — hashed, rotated, one live per person, revoked-answers-like-
+  never-existed (`DECISIONS.md` #71–72). **A security review found a real content-injection
+  hole**: a URI property is not escaped, so a newline in `release_calendar.url` injected
+  iCalendar properties. Not reachable today; **Batch 19's scrapers would have armed it**
+  (#73). The first live ingestion also hit a duplicate-page defect a dry run could not reach
+  — gotcha 16 again. **Apple Calendar verification is an owner action.**
 
 - **2026-09-09** — **Batch 16 shipped — watch providers and recommendations** (`d2218ab`).
   Live: *North by Northwest* shows HBO Max plus 6 rent and 6 buy options in GB; 20

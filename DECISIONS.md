@@ -966,3 +966,56 @@ contemporaneous.
     *Why the CHECK:* TMDB answers an unrecognised region key with an **empty map, not an
     error**. A lower-cased "gb" or a three-letter "GBR" would make every film in the
     collection appear to stream nowhere, with nothing anywhere saying why.
+
+### 2026-09-09 — Batch 17 release calendar + iCal
+
+71. **The `.ics` feed token is treated exactly as a refresh token, because it is one.**
+    256 bits from `secrets.token_urlsafe(32)`, stored SHA-256-hashed in a unique indexed
+    column, plaintext returned once and never again, one live token per person enforced by
+    a **partial unique index**, rotated on every subscribe.
+
+    *Why:* a calendar app fetches a bare URL on a schedule. It cannot attach a header,
+    cannot be prompted, and will not surface an error — so the URL *is* the credential, and
+    the only question is whether it is handled like one. Hashing means a database leak
+    yields no working links; the partial index means "there is exactly one working link" is
+    a database property rather than application discipline, which is what the revoke story
+    rests on; rotation is the only way to take back a URL already pasted somewhere.
+
+    *And a revoked token answers identically to one that never existed* — same 404, same
+    body. A 401, or a different message for "this used to work", would confirm to someone
+    guessing that a token had once existed. There is no user to tell apart from an attacker
+    on this endpoint, because nobody signs in.
+
+72. **The feed carries no personal data, and a test asserts it.** Release dates for films —
+    public facts, most of them from TMDB. Nothing about who owns what, who watched what, or
+    whose calendar it is; the response does not even vary by which token was presented.
+
+    *Why a test and not a habit:* the natural way to extend a personal calendar feed is to
+    start adding personal things — "films on your wishlist", "your loans due back". Each
+    would be a reasonable-looking commit that quietly turns a leaked URL from a nuisance
+    into a disclosure. The assertion is there to make that decision deliberate.
+
+73. **A URI property in iCalendar is not TEXT, so it must be validated rather than escaped.**
+    `safe_uri()` accepts `http`/`https` only, rejects any C0/C1 control character, and drops
+    the property rather than emitting a doubtful one.
+
+    *Why, and how it was found:* this batch's security review probed the serialiser and
+    `url = "https://ok.test/\r\nX-EVIL:injected\r\nDESCRIPTION:hijacked"` produced exactly
+    those two lines in the served feed, overriding the event's real description. `SUMMARY`
+    and `DESCRIPTION` go through `escape_text` and were never vulnerable; `URL` deliberately
+    does not, because escaping a URI would corrupt it — which is exactly why it needs the
+    other kind of check.
+
+    *It was not reachable.* `release_calendar.url` is written by nothing today. **Batch 19's
+    scrapers exist to populate that column from scraped retailer pages**, which is the
+    untrusted source that would have armed it — a defect that would have shipped two batches
+    before it became exploitable.
+
+74. **Known and accepted: the feed token travels in a query string**, so it will appear in
+    any platform access log that records the full request line.
+
+    Unavoidable — a calendar subscription is a URL and nothing else. Recorded rather than
+    hidden: the mitigations are that the token grants access to public film release dates
+    only (#72), that it is rotatable (#71), and that `last_used_at_utc` makes an unused link
+    visible. If the feed is ever extended to carry anything personal, this becomes a reason
+    not to.
