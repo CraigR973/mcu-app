@@ -2,57 +2,66 @@
 
 ## Now
 
-**21 of 37 batches shipped, 16 remain.** Production serves `e2fd94e` with `db: ok`.
-*(38 ledger rows: 21 shipped, 16 planned, and Batch 26 dropped on 2026-09-09.)*
+**22 of 37 batches shipped, 15 remain.** Production serves `69d263e` with `db: ok` and
+`push: configured`.
 
-The session that produced this entry did no batch work at all. It audited what was actually
-blocking the queue, and found that three of the things everyone believed were true were not.
+**Batch 11 shipped — notifications and Web Push (§6.1, §6.2, §5.11).** The overnight run of
+2026-09-09/10 is in progress; this is the first of its eight batches.
 
-| What was believed | What was true |
-|---|---|
-| TMDB was having a wobble | **`TMDB_READ_TOKEN` had never been set in Railway.** Every TMDB-backed feature in the deployed app — the identify flow for 757 films, the add form, watch providers, recommendations, calendar refresh — had been returning a 502 saying *"temporarily unavailable"*. Nothing was temporary. Set 2026-09-09 |
-| The scraper checkpoint was done | Setup was done; **`price_checks` was empty**. The acceptance run had never saved a row |
-| Three retailers were broken | They were **working perfectly** and had been auto-disabled for correctly saying "we do not stock this film" |
+*What is actually true in production, checked rather than assumed:* migration `020` has
+applied to live Neon and `push_subscriptions`, `notification_preferences` and
+`notifications` all exist; every notification route answers `401` unauthenticated while a
+made-up sibling answers `404`, so the router is genuinely registered; and
+`/api/v1/health/ready` reports **`push: configured`**, meaning the deployment can load
+`VAPID_PRIVATE_KEY` for real.
 
-**Batch 23's Blu-ray.com boundary is explicit, and it is a risk acceptance rather than a
-permission.** The site's Legal Notices prohibit the planned automated reuse; `robots.txt`
-never granted permission, so #108's closing claim that the approach "stays inside what the
-site allows" was **wrong** and #110 supersedes it. The owner accepts the stated risk,
-including a one-time 1,857-item backfill, within strict no-search / no-evasion /
-stop-on-block controls (`DECISIONS.md` #110). *This paragraph was written by a parallel
-session, deleted by an overwrite on 2026-09-09, and restored — it is the kind of thing that
-must not go missing.*
+**That last check is new, and it exists because of TMDB.** A value living only in a Railway
+variable had nothing testing it, so the app answered 502 for an unknown length of time behind
+a green gate. Readiness now reports `push: configured | not_configured | invalid` — the result
+of *loading* the key, so a malformed one reads `invalid` rather than passing a presence check
+and failing at the first send.
 
-**The app now has its first real price.** Arrow Video, *Misery Limited Edition 4K UHD*,
-**£25.00**, an exact 4K match for a 4K want with no substitution — verified independently
-against the live site. Phase 5.3's criterion is still unmet (it wants ≥ 1 row per working
-scraper, and only 2 rows exist), but the machine demonstrably works end to end.
+**`VITE_VAPID_PUBLIC_KEY` is no longer needed and should not be set** (`DECISIONS.md` #114).
+The API serves the public key derived from the private half, so the two cannot drift and push
+does not wait on a Vercel change. One of the run's three hosting steps has been removed rather
+than performed.
 
-**Group F's checkpoint is cleared.** The scraper acceptance run completed at 21:55 on
-2026-09-09: all five shops `success`, zero failures, six new `price_checks` rows — Zavvi
-*Don't Look Now* £11.99 and *Cross Of Iron* £12.99, Arrow *Deep Red* £15.00, 101 Films
-*Castle Freak* £17.00, Powerhouse *Romper Stomper* £27.99, Second Sight *Dead Man's Shoes*
-£39.99 (`DECISIONS.md` #111). **Batch 20 is open**, with 5.5's criterion corrected first
-(#112) because the run disproved it.
+**Two debts are paid.** §12.5's *"overdue loan triggers a push"* has been unmet since Batch 15
+and now writes the `loans.reminder_sent` column that batch left unused; and Batch 9's dropped
+onboarding notifications step (`#50`) is restored against real infrastructure — the wizard is
+7 steps for an admin, 6 for a viewer.
 
-*What finally worked was not code.* Two earlier attempts failed for reasons worth
-remembering: the first asked three boutique labels for films they do not carry, and the
-second was a **dry run**, which saves nothing by design. The titles that worked were read
-off each shop's live catalogue rather than guessed.
+**Three CI failures on the way, all found only against real Postgres.** A partial unique index
+cannot be an `ON CONFLICT` arbiter unless its predicate is repeated, so every deduplicated path
+failed; `UUIDPrimaryKeyMixin`'s `default=` is applied when SQLAlchemy builds the INSERT, so a
+hand-built one passed a NULL primary key; and two assertions read the whole `notifications`
+table when migration `002`'s seeded profiles mean a reminder correctly writes more rows than
+the fixture makes. Gotcha 15 in practice: **a green local run is silent about anything touching
+SQL.**
+
+**The dependency audit refused `cryptography` 48.0.1** for three advisories, and it was right —
+the `<49` pin that produced it existed only so this laptop could install a wheel. The floor is
+now 50.0.0 and **this machine runs a different version from CI**; see gotcha 28.
 
 ### ⛔ What is waiting for you
 
-**`OWNER-ACTIONS.md` is the list**, and it shrank from nine items to seven. VAPID keys, the
-Anthropic API key and Mark's PIN all landed on 2026-09-09; the TMDB token was added to the
-list and closed on the same day. **The only item you can act on now is finishing the scraper
-acceptance run** — everything else is either waiting on eBay or deprioritised.
+`OWNER-ACTIONS.md` is the list. Batch 11 adds one item and closes half of another: a **daily
+Railway cron** calling `POST /api/v1/notifications/run-reminders`, which is the entire
+scheduler for sale seasons, releases and overdue loans — until it exists every reminder waits
+for a button. Do it alongside Batch 20's scrape cron.
+
+**§6.2 is not met and is not an agent's to meet.** *"Admin connects phone + laptop; both
+receive pushes; removing one doesn't silence the other"* needs two real devices holding real
+subscriptions. The transport is stubbed in the suite; `tests/test_webpush.py` proves the half
+that can be proved without a device. Turn it on in Notifications on two devices and press
+Test on each.
 
 ### What the live database holds
 
-Counted against Neon at close: **1,857 `collection_items`, untouched all session.** 3
-`wanted_list` rows (*Misery*, *Nope*, *Project Hail Mary*, all wanting 4K), **2
-`price_checks` rows**, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers` — five
-enabled and five deliberately not. Both profiles now carry a `pin_hash`.
+Unchanged by this batch except for the new empty tables: **1,857 `collection_items`**, 3
+`wanted_list` rows, **8 `price_checks`**, 40 `completion_sets`, 32 `release_calendar`, 10
+`retailers`. `push_subscriptions`, `notification_preferences` and `notifications` exist and
+are empty — nothing has subscribed yet.
 
 
 ## Next
@@ -62,7 +71,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 
 | # | Batch | Closes fully? |
 |---|---|---|
-| 1 | **11** Notifications + push (6.1, 6.2, 5.11) | ❌ 6.2 needs two real devices |
+| ~~1~~ | ~~**11** Notifications + push (6.1, 6.2, 5.11)~~ | **shipped 2026-09-10** — 6.2 deferred, needs two real devices |
 | 2 | **20** Price scraping + drop alerts (5.5, 5.6, 5.8) | ❌ cron is hosting; 5.6 needs a device |
 | 3 | **30** AI assistant — client + caps (9.1, 9.7) | ✅ |
 | 4 | **31** AI assistant — tools + chat (9.2, 9.3, 9.4) | ✅ |
@@ -77,8 +86,9 @@ section rather than re-deriving from §16.
 
 **Three hosting steps stop and wait for the owner**, per the close-out protocol:
 
-1. `VITE_VAPID_PUBLIC_KEY` on Vercel — Batch 11 leaves the value ready. Push does not reach a
-   browser without it.
+1. ~~`VITE_VAPID_PUBLIC_KEY` on Vercel~~ — **no longer needed.** Batch 11 serves the public
+   key from the API, derived from the private half (`DECISIONS.md` #114). What Batch 11 *does*
+   need is a daily cron calling `POST /api/v1/notifications/run-reminders`.
 2. A Railway cron for the nightly scrape — Batch 20. `#60` explains why an in-process
    scheduler is worse than nothing.
 3. Nothing for Batch 35: `LISTEN`/`NOTIFY` + SSE needs no new service (`#113`).
@@ -404,7 +414,70 @@ it renders — and report what was observed rather than what passed.
     export DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | sed 's/^DATABASE_URL=//')"
     ```
 
+28. **`cryptography` runs at a different version here than in CI, and it is the security
+    floor that forces it.** The lock pins **50.0.1**; this machine has **48.0.1** and
+    cannot install the pinned one. cryptography 49+ ships no `macosx-10.15-x86_64` wheel,
+    so pip falls back to a Rust source build that fails here, while CI's and Railway's
+    manylinux wheels install without comment.
+
+    The obvious fix — pin below 49 — was tried and **reverted**: 48.0.1 carries
+    PYSEC-2026-3552, -3553 and -3554, and CI's dependency-audit job refused it, correctly.
+    A vulnerable crypto library in production is not worth a tidy local install
+    (`DECISIONS.md` #115).
+
+    **So CI is the authority for anything touching `cryptography`**, which today means
+    Web Push. A local `pytest` run exercises the same tests against a different version of
+    the library, and a green local run is therefore weaker evidence than usual — the same
+    caveat gotcha 15 puts on anything touching SQL. Lift this when the developer machine's
+    platform tag moves past `macosx-10.15-x86_64`.
+
+
 ## Log
+
+- **2026-09-10** — **Batch 11 shipped: notifications and Web Push.** `36d3efa`, plus
+  `69d263e` for the readiness check. First of the eight-batch overnight run.
+
+  §6.1's toggles, digest mode and quiet hours; §6.2's per-device subscriptions and test
+  button; §5.11's seeded sale seasons and their pre-sale reminder. Web Push is implemented
+  directly on `cryptography` against RFC 8291/8292 rather than pulling `pywebpush` and its
+  two companions, so `tests/test_webpush.py` can derive the message keys from the
+  **receiver** side — the browser's half of the algorithm — instead of proving only that a
+  library agrees with itself (`DECISIONS.md` #115).
+
+  **Everything routes through an outbox**, which is what makes §6.1 checkable rather than
+  asserted: a disabled category leaves a `suppressed` row naming itself, an evening alert
+  leaves a `queued` row due at 07:00, and digest mode leaves three sharing one push. Quiet
+  hours carry an IANA timezone — the one place this app is deliberately not UTC, because a
+  22:00 window read in UTC is an hour wrong for the seven months of BST (gotcha 26).
+
+  **A hosting step was removed rather than performed** (#114). The plan had the owner
+  setting `VITE_VAPID_PUBLIC_KEY` on Vercel; instead the API serves the public key derived
+  from the private half, so the two cannot disagree and push works the moment the code
+  deploys. And because the remaining key still lives only in a Railway variable — the TMDB
+  shape — `/api/v1/health/ready` now reports `push: configured | not_configured | invalid`,
+  loading the key rather than checking that a string is present.
+
+  **Two debts paid.** §12.5's overdue-loan push, unmet since Batch 15, now writes that
+  batch's unused `loans.reminder_sent`. Batch 9's dropped onboarding notifications step
+  (`#50`) is back against real infrastructure: 7 steps for an admin, 6 for a viewer.
+
+  **Three defects CI caught that the local gate could not.** A partial unique index is not
+  an `ON CONFLICT` arbiter unless its predicate is repeated — that took down all seven
+  deduplicated paths. `UUIDPrimaryKeyMixin`'s `default=` runs when SQLAlchemy builds the
+  INSERT, so a hand-built one sent a NULL primary key. And two assertions read the whole
+  `notifications` table, where migration `002`'s seeded profiles mean a reminder correctly
+  writes more rows than the fixture creates. All three are gotcha 15: a green local run says
+  nothing about SQL.
+
+  **The dependency audit rejected `cryptography` 48.0.1** over PYSEC-2026-3552/3553/3554.
+  The `<49` pin that produced it was mine, added so this laptop could install a wheel; it
+  was removed rather than defended. The cost is that this machine now runs 48.0.1 while CI
+  and Railway run 50.0.1 — recorded as gotcha 28 rather than hidden.
+
+  Verified live, not merely green: `020` applied to Neon with all three tables present,
+  every notification route `401` while a made-up sibling `404`s, and `push: configured`.
+  **§6.2 is deferred to the owner — it needs two real devices.** A daily cron for
+  `run-reminders` is a new owner action.
 
 - **2026-09-09** — **An audit session, not a batch session. Three beliefs about what was
   blocking the queue turned out to be false, and one production outage had been invisible

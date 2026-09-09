@@ -25,8 +25,15 @@ Two steps remain, and both are yours because an agent must not take them:
       be worse than nothing — it runs once per container, so scaling to two would silently
       double the scraping. Batch 20 leaves the job and its endpoint ready so this is one
       console action.
-- [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance. Needs Batch 11's
-      push to have shipped and a device subscribed — the same device step as item 3 below.
+- [ ] **And while you are in there, a second cron for reminders.** Batch 11 shipped
+      `POST /api/v1/notifications/run-reminders`, which is *the whole scheduler* for sale
+      seasons, upcoming releases and overdue loans — for the same #60 reason, nothing runs
+      it on a timer inside the process. Daily is right; the endpoint is idempotent, so a
+      double fire sends nothing twice. Until this exists, every reminder in the app waits
+      for someone to press a button.
+- [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance. **Batch 11's
+      push has now shipped** and production reports `push: configured`, so what remains is a
+      device: open the app, Notifications, "Turn on for this device".
 
 **5.5's criterion was corrected before the batch was built** (`DECISIONS.md` #112). As written
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
@@ -82,7 +89,7 @@ nofollow` and the token is rotatable, but treat it like a password.
 
 | | What happened |
 |---|---|
-| **VAPID keys** *(was 2)* | Generated and set in Railway 2026-09-09. Verified: 87-char public key, 43-char private key, both base64url, **the pair mathematically matches**, and `VAPID_SUBJECT` carries a `mailto:`. **The names are now fixed by what is in Railway** — Batch 11 must read `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. `VITE_VAPID_PUBLIC_KEY` on Vercel is deliberately **not** set: it is a build-time Vite variable that does nothing until Batch 11 ships code that reads it. **Unblocked Batch 11.** |
+| **VAPID keys** *(was 2)* | Generated and set in Railway 2026-09-09. Verified: 87-char public key, 43-char private key, both base64url, **the pair mathematically matches**, and `VAPID_SUBJECT` carries a `mailto:`. **The names are now fixed by what is in Railway** — Batch 11 must read `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. **`VITE_VAPID_PUBLIC_KEY` is not needed at all and should not be set** — Batch 11 serves the public key from the API, derived from the private half, so the two cannot drift and no Vercel change is required (`DECISIONS.md` #114). **Unblocked Batch 11, which shipped 2026-09-10** and whose deployment reports `push: configured` on `/api/v1/health/ready`. |
 | **`ANTHROPIC_API_KEY`** *(was 3)* | Set in Railway 2026-09-09. **Unblocked Group J** (30 → 31), and Batch 32 behind them. |
 | **Mark's PIN** *(was 8)* | Set 2026-09-09. He can sign in, which is what two-user acceptance criteria need — Batch 35's movie night and Batch 38's login flow. |
 | **`TMDB_READ_TOKEN`** *(new — was never on this list)* | **It had never been set in Railway at all.** Every TMDB-backed feature in the deployed app was returning a 502 reading *"TMDB search is temporarily unavailable"* — the identify flow for 757 unidentified films, the add-form search, watch providers, recommendations, calendar refresh and completion-set rebuilds. Nothing was temporary about it: `config.py` defaults the token to `""`, so the API booted happily and sent `Authorization: Bearer ` on every call. Set 2026-09-09. |

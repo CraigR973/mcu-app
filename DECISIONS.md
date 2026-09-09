@@ -1574,3 +1574,60 @@ contemporaneous.
      container and wrong at two: a second instance would not see the first's notifications
      unless both `LISTEN` on the same channel, which they would. Note it, do not design for
      scale this app does not have.
+
+### 2026-09-09 — Batch 11 notifications and push
+
+114. **The VAPID public key is served by the API, derived from the private key, rather than
+     built into the web bundle as `VITE_VAPID_PUBLIC_KEY`. This removes a hosting step the
+     overnight run had reserved for the owner.** `STATUS.md`'s plan listed setting that
+     Vercel variable as one of three things that would stop and wait; it is no longer
+     needed, and the variable should not be set.
+
+     *Two reasons, and the second is the one that matters.* A build-time variable means
+     push cannot work until somebody edits Vercel **and** redeploys, so the batch would
+     ship "ready but inert" — and a value living only in a hosting variable has no test.
+     That is precisely the shape of the TMDB outage: `TMDB_READ_TOKEN` was missing from
+     Railway for an unknown length of time behind a fully green gate, because nothing in
+     the code could observe its absence. The second reason is drift: two independently
+     set variables can disagree, and a public key that does not match the private key
+     produces subscriptions the server can never push to, with the push service answering
+     `201` throughout.
+
+     `GET /api/v1/notifications/vapid-key` derives the public half from
+     `VAPID_PRIVATE_KEY` at request time, so the key a browser subscribes with and the key
+     the server signs with cannot differ. It answers `{"configured": false}` when Railway
+     holds no key, which is what lets the settings page say *"push is not configured on
+     the server"* instead of failing inside `subscribe()` with a `DOMException`. If
+     `VAPID_PUBLIC_KEY` is set and disagrees with the derived value, the endpoint logs
+     `vapid_key_pair_mismatch` and serves the derived one.
+
+     *What this does not change:* the three Railway variables stay as they are, and the
+     names are still fixed by what is in Railway.
+
+115. **Web Push is implemented directly on `cryptography` rather than on `pywebpush`, and
+     the version floor is a security floor.** §17's row 2 says "pywebpush + VAPID keys";
+     the VAPID half is unchanged, the library is not.
+
+     *Why one dependency instead of four.* `pywebpush` brings `http-ece` and `py-vapid`
+     with it. The encryption is about sixty lines against RFC 8291 and RFC 8188, and PyJWT
+     — already a dependency — signs the RFC 8292 assertion once `cryptography` is present.
+     Writing it here buys a specific kind of test: `tests/test_webpush.py` derives the
+     message keys from the **receiver** side, running the browser's half of the algorithm
+     against our sender's half. A library test can only prove the library agrees with
+     itself, and a Web Push key-derivation error is completely silent — the push service
+     accepts ciphertext it cannot read and answers `201`, so nothing anywhere reports a
+     failure. The three HKDF `info` strings are pinned by their own test for the same
+     reason.
+
+     *The version floor, and what it costs.* An earlier revision of this decision pinned
+     `cryptography<49` because 49+ ships no `macosx-10.15-x86_64` wheel, so the developer
+     machine falls back to a Rust source build that fails there while CI installs a
+     manylinux wheel happily. The audit job then refused the resolved 48.0.1 for
+     PYSEC-2026-3552, -3553 and -3554. **The pin was wrong and was removed**: a vulnerable
+     crypto library in production is not a price worth paying for local convenience.
+
+     The consequence is a genuine split — **this machine runs 48.0.1, CI and Railway run
+     50.0.1** — and it is recorded in `STATUS.md`'s gotchas rather than papered over. CI is
+     the authority for this dependency. It is tolerable only because the surface in use
+     (P-256 key generation, ECDH, AES-GCM, PEM/scalar loading) is stable across those
+     versions, and because every test that exercises it runs on both sides.
