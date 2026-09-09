@@ -10,6 +10,10 @@ import {
   candidateListSchema,
   collectionCopiesSchema,
   collectionFacetsSchema,
+  notificationPreferenceSchema,
+  notificationSchema,
+  pushSubscriptionSchema,
+  vapidKeySchema,
   collectionItemSchema,
   completionFilmSchema,
   completionSetSchema,
@@ -1096,5 +1100,73 @@ describe('giftLinkSchema', () => {
       createdAt: '2026-09-09T00:00:00Z',
     })
     expect(short.success).toBe(false)
+  })
+})
+
+describe('notification schemas', () => {
+  const subscription = {
+    id: UUID_A,
+    deviceLabel: "Craig's phone",
+    endpointPreview: '…f3b2c1a8f3b2',
+    pushService: 'fcm.googleapis.com',
+    userAgent: 'Mozilla/5.0',
+    createdAt: '2026-09-09T00:00:00Z',
+    lastUsedAt: null,
+    failureCount: 0,
+  }
+
+  it('accepts a device record', () => {
+    expect(pushSubscriptionSchema.parse(subscription).pushService).toBe('fcm.googleapis.com')
+  })
+
+  it('drops an endpoint if the API ever starts sending one', () => {
+    // The endpoint is a bearer capability: anyone holding it can push to that device. The
+    // schema is the last place that can stop it reaching a browser's memory, so this is a
+    // guard against a future change to the response rather than against today's.
+    const parsed = pushSubscriptionSchema.parse({
+      ...subscription,
+      endpoint: 'https://fcm.googleapis.com/fcm/send/secret',
+    })
+    expect(parsed).not.toHaveProperty('endpoint')
+  })
+
+  it('treats "push is not configured" as a value, not an error', () => {
+    // The TMDB shape: a feature absent from the deployment. The UI can only say so if the
+    // schema lets the API say so.
+    expect(vapidKeySchema.parse({ publicKey: null, configured: false }).configured).toBe(false)
+  })
+
+  it('refuses a notification status outside the vocabulary', () => {
+    const parsed = notificationSchema.safeParse({
+      id: UUID_A,
+      category: 'deals',
+      status: 'delivered-probably',
+      title: 'x',
+      body: 'y',
+      url: null,
+      createdAt: '2026-09-09T00:00:00Z',
+      deliverAfter: null,
+      deferredReason: null,
+      suppressedReason: null,
+      sentAt: null,
+      deliveredCount: 0,
+    })
+    expect(parsed.success).toBe(false)
+  })
+
+  it('refuses a digest hour outside a day', () => {
+    const parsed = notificationPreferenceSchema.safeParse({
+      dealsEnabled: true,
+      saleEventsEnabled: true,
+      releasesEnabled: true,
+      loansEnabled: true,
+      movieNightEnabled: true,
+      digestMode: true,
+      digestHourLocal: 25,
+      quietHoursStart: null,
+      quietHoursEnd: null,
+      quietHoursTimezone: 'Europe/London',
+    })
+    expect(parsed.success).toBe(false)
   })
 })

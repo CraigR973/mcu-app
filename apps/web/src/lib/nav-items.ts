@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Boxes, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp } from 'lucide-react'
+import { Bell, Boxes, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp } from 'lucide-react'
 
 export interface NavItem {
   label: string
@@ -22,6 +22,9 @@ export const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Stats', path: '/stats', icon: TrendingUp },
   { label: 'Loans', path: '/loans', icon: HandHeart },
+  // Batch 11. Both people have their own devices and their own toggles, so this is a
+  // sidebar item rather than an admin one.
+  { label: 'Notifications', path: '/settings/notifications', icon: Bell },
 ]
 
 /** Batch 7's write surface. Admin-only, matching the routes and the API. */

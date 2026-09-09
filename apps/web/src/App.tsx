@@ -30,6 +30,7 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const WantedPage = lazy(() => import('./pages/WantedPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
+const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
 const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
@@ -188,6 +189,17 @@ export default function App() {
             <Route
               path="/gift-links"
               element={<AdminShell><GiftLinksPage /></AdminShell>}
+            />
+            {/* Batch 11. Devices and preferences belong to whoever is signed in —
+                both people have their own, so this is the ordinary shell rather than
+                the admin one. */}
+            <Route
+              path="/settings/notifications"
+              element={<AppShell><NotificationSettingsPage /></AppShell>}
+            />
+            <Route
+              path="/notifications"
+              element={<AppShell><NotificationSettingsPage /></AppShell>}
             />
             <Route
               path="/admin"

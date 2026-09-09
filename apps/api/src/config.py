@@ -69,6 +69,22 @@ class Settings(BaseSettings):
     tmdb_api_key: str = ""
     tmdb_read_token: str = ""
 
+    # Web Push (Batch 11). Set in Railway on 2026-09-09; the names here are fixed by
+    # what is already there. Absent locally and in CI, where every send is stubbed.
+    #
+    # **The public key is served to the browser by the API** rather than baked into the
+    # bundle as a `VITE_` variable. Two reasons, and the second is the one that matters:
+    # a build-time copy needs a Vercel change plus a redeploy before push can work at
+    # all, and it can drift from the private key silently — which is precisely the shape
+    # of the TMDB outage, where a value living only in a hosting variable had no test and
+    # no way to be noticed. Served from here, the key the browser subscribes with is
+    # derived from the private key the API signs with, so they cannot disagree.
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    #: RFC 8292 §2.1 — a `mailto:` or `https:` URL a push service can use to contact the
+    #: sender. Not a secret; required by Firefox's service, which 401s without it.
+    vapid_subject: str = ""
+
     # App
     frontend_origin: str = "http://localhost:5173"
     #: How many proxy hops in front of the app are ours. Exactly one on Railway, which

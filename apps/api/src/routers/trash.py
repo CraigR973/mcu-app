@@ -444,12 +444,11 @@ async def list_loans(
 async def lend_disc(payload: LoanCreateRequest, user: AdminUser, db: Database) -> LoanResponse:
     """§12.5's acceptance: "Lending a disc shows it in Loans".
 
-    **No push notification is sent or scheduled.** §12.5's second acceptance clause is
-    "overdue triggers a push", and push does not exist: there is no VAPID key, no
-    subscription store and no endpoint — that is Batch 11, which stops for an owner
-    credential checkpoint. `loans.reminder_sent` is here for Batch 11 to write; nothing
-    reads it yet. Shipping a reminder that never arrives is the defect Batch 9 refused to
-    repeat (`DECISIONS.md` #50).
+    **No push is sent from here, and that is deliberate.** §12.5's second clause is
+    "overdue triggers a push" — a statement about a *due date passing*, not about a disc
+    being lent, so it belongs to the scheduled pass rather than to this handler.
+    `notify_overdue_loans` in `services/reminders.py` owns it as of Batch 11, and writes
+    the `loans.reminder_sent` column this table has carried unused since Batch 15.
     """
     item = await db.get(CollectionItem, payload.collectionItemId)
     if item is None or item.deleted_at is not None:

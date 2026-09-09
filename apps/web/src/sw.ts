@@ -114,3 +114,100 @@ registerRoute(
     ],
   }),
 )
+
+// ---------------------------------------------------------------------------
+// Push (Batch 11) — §6.1, §6.2
+// ---------------------------------------------------------------------------
+
+/** What the API encrypts into a push. Mirrors `notification_payload` on the server. */
+interface PushPayload {
+  title?: string
+  body?: string
+  url?: string | null
+  category?: string
+  tag?: string
+}
+
+/**
+ * Show the notification the API sent.
+ *
+ * **`event.waitUntil` is not optional here.** A push handler that returns before its
+ * `showNotification` promise settles is terminated by the browser, and on some platforms
+ * a push that resolves without displaying anything shows a generic "This site has been
+ * updated in the background" notice instead — which looks like a bug in the app and is
+ * un-debuggable from the outside.
+ *
+ * The payload is parsed defensively: a malformed body must still produce *a* notification,
+ * because the alternative is the browser's own generic one.
+ */
+self.addEventListener('push', (event) => {
+  let payload: PushPayload = {}
+  try {
+    payload = (event.data?.json() ?? {}) as PushPayload
+  } catch {
+    payload = { body: event.data?.text() }
+  }
+
+  const title = payload.title ?? "Mark's Cinematic Universe"
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body ?? '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      // `tag` collapses a repeat of the same notification rather than stacking it. The
+      // server sends the notification's own id, so two different alerts never collapse
+      // into one and a re-delivered one never appears twice.
+      tag: payload.tag,
+      data: { url: payload.url ?? '/notifications', category: payload.category },
+    }),
+  )
+})
+
+/**
+ * Tapping a notification focuses the app rather than opening a second copy of it.
+ *
+ * `clients.matchAll` first: on a phone the app is usually already open behind the
+ * notification shade, and `openWindow` there leaves the person with two instances and an
+ * offline queue split across both.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = (event.notification.data as { url?: string } | undefined)?.url ?? '/notifications'
+
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      for (const client of windows) {
+        if (new URL(client.url).origin === self.location.origin) {
+          await client.focus()
+          // `navigate` needs the client to be controlled; fall back to focusing alone
+          // rather than failing the whole handler.
+          if ('navigate' in client) {
+            await client.navigate(target).catch(() => undefined)
+          }
+          return
+        }
+      }
+      await self.clients.openWindow(target)
+    })(),
+  )
+})
+
+/**
+ * A subscription the browser rotates must be re-registered, or push stops silently.
+ *
+ * Browsers fire this rarely and without warning — the endpoint is replaced and every
+ * future send to the old one answers `410`. The service worker cannot authenticate to the
+ * API on its own (the access token lives in the page), so it tells any open page to
+ * re-subscribe, and `usePushSubscription` re-registers on its next load regardless.
+ */
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      for (const client of windows) {
+        client.postMessage({ type: 'mcu-push-subscription-changed' })
+      }
+    })(),
+  )
+})

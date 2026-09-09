@@ -154,4 +154,17 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/gift-links",
         "/api/v1/gift-links/{link_id}",
         "/api/v1/gift/{slug}",
+        # Batch 11. Devices, preferences and the outbox are caller-scoped: there is no
+        # admin view of somebody else's phone. The three jobs are admin-only because they
+        # act on the whole app, and `run-reminders` is the entire scheduler — `#60` ruled
+        # out an in-process timer, so a Railway cron calls this.
+        "/api/v1/notifications",
+        "/api/v1/notifications/vapid-key",
+        "/api/v1/notifications/preferences",
+        "/api/v1/notifications/subscriptions",
+        "/api/v1/notifications/subscriptions/{subscription_id}",
+        "/api/v1/notifications/subscriptions/{subscription_id}/test",
+        "/api/v1/notifications/run-reminders",
+        "/api/v1/notifications/seed-sale-seasons",
+        "/api/v1/notifications/deliver",
     }

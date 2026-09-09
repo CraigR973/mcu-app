@@ -469,10 +469,10 @@ async def test_an_overdue_loan_is_derived_from_the_date_not_stored(
 ) -> None:
     """A stored `is_overdue` needs a job to keep it true and is wrong between runs.
 
-    **No push is sent.** §12.5's second acceptance clause is "overdue triggers a push",
-    and push does not exist — no VAPID key, no subscription store, no endpoint. That is
-    Batch 11, which stops for an owner credential checkpoint. What exists here is the
-    state a reminder would be sent *about*.
+    **No push is sent by this endpoint**, and none should be: the reminder fires when a
+    due date passes, which is the scheduled pass's job. Batch 11 built it — see
+    `test_notifications_api.py::TestOverdueLoans`. What this test covers is the state a
+    reminder is sent *about*, derived rather than stored.
     """
     _, item = await _disc(api_session, "A Disc Nobody Returned")
     await api_session.flush()

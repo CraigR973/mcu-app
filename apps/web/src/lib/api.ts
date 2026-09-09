@@ -21,6 +21,8 @@ import {
   giftPageSchema,
   movieDetailSchema,
   moviePageSchema,
+  notificationListSchema,
+  notificationPreferenceSchema,
   onThisDayMemoriesSchema,
   newReleaseListSchema,
   builtInScraperListSchema,
@@ -33,6 +35,11 @@ import {
   rewatchSuggestionsSchema,
   streamingSchema,
   profileResponseSchema,
+  pushSubscriptionListSchema,
+  pushSubscriptionSchema,
+  reminderRunSchema,
+  testNotificationSchema,
+  vapidKeySchema,
   loanListSchema,
   loanSchema,
   purgePreviewSchema,
@@ -75,6 +82,9 @@ import {
   type PurgePreview,
   type MovieDetail,
   type MoviePage,
+  type NotificationList,
+  type NotificationPreference,
+  type NotificationRecord,
   type OnThisDayMemory,
   type NewReleaseList,
   type OfferKind,
@@ -90,7 +100,12 @@ import {
   type ScraperType,
   type Streaming,
   type ProfileResponse,
+  type PushSubscriptionList,
+  type PushSubscriptionRecord,
+  type ReminderRun,
   type SearchResponse,
+  type TestNotificationResult,
+  type VapidKey,
   type SmartCollection,
   type SmartCollectionFilters,
   type SmartCollectionList,
@@ -1383,4 +1398,117 @@ export function giftLinkUrl(path: string): string {
   // path behind it is an implementation detail.
   void base
   return `${window.location.origin}${path}`
+}
+
+// ---------------------------------------------------------------------------
+// Notifications and push (Batch 11) — §6.1, §6.2, §5.11
+// ---------------------------------------------------------------------------
+
+export async function fetchVapidKey(): Promise<VapidKey> {
+  return parseResponse(await authFetch('/notifications/vapid-key'), vapidKeySchema)
+}
+
+export async function fetchPushSubscriptions(): Promise<PushSubscriptionList> {
+  return parseResponse(await authFetch('/notifications/subscriptions'), pushSubscriptionListSchema)
+}
+
+/**
+ * Register this browser.
+ *
+ * The body is the browser's own `subscription.toJSON()` plus a label, passed through
+ * without transcription — `p256dh` retyped by hand is a subscription that encrypts to
+ * nobody, and the push service still answers `201`.
+ */
+export async function registerPushSubscription(
+  subscription: PushSubscriptionJSON,
+  deviceLabel: string,
+): Promise<PushSubscriptionRecord> {
+  const query = new URLSearchParams({ userAgent: navigator.userAgent.slice(0, 300) })
+  return parseOrThrowApiError(
+    await authFetch(`/notifications/subscriptions?${query.toString()}`, {
+      method: 'POST',
+      body: JSON.stringify({ ...subscription, deviceLabel }),
+    }),
+    pushSubscriptionSchema,
+  )
+}
+
+export async function removePushSubscription(id: string): Promise<void> {
+  const response = await authFetch(`/notifications/subscriptions/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+export async function sendTestNotification(id: string): Promise<TestNotificationResult> {
+  return parseOrThrowApiError(
+    await authFetch(`/notifications/subscriptions/${id}/test`, { method: 'POST' }),
+    testNotificationSchema,
+  )
+}
+
+export async function fetchNotificationPreferences(): Promise<NotificationPreference> {
+  return parseResponse(await authFetch('/notifications/preferences'), notificationPreferenceSchema)
+}
+
+export interface NotificationPreferenceInput {
+  dealsEnabled?: boolean
+  saleEventsEnabled?: boolean
+  releasesEnabled?: boolean
+  loansEnabled?: boolean
+  movieNightEnabled?: boolean
+  digestMode?: boolean
+  digestHourLocal?: number
+  quietHoursStart?: string
+  quietHoursEnd?: string
+  clearQuietHours?: boolean
+  quietHoursTimezone?: string
+}
+
+export async function updateNotificationPreferences(
+  input: NotificationPreferenceInput,
+): Promise<NotificationPreference> {
+  return parseOrThrowApiError(
+    await authFetch('/notifications/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+    notificationPreferenceSchema,
+  )
+}
+
+export async function fetchNotifications(limit = 50): Promise<NotificationList> {
+  return parseResponse(await authFetch(`/notifications?limit=${limit}`), notificationListSchema)
+}
+
+/** Run the reminder senders. `asOf` is what makes §5.11's acceptance testable. */
+export async function runReminders(asOf?: string): Promise<ReminderRun> {
+  const query = asOf ? `?asOf=${encodeURIComponent(asOf)}` : ''
+  return parseOrThrowApiError(
+    await authFetch(`/notifications/run-reminders${query}`, { method: 'POST' }),
+    reminderRunSchema,
+  )
+}
+
+export async function seedSaleSeasons(year?: number): Promise<ReminderRun> {
+  const query = year ? `?year=${year}` : ''
+  return parseOrThrowApiError(
+    await authFetch(`/notifications/seed-sale-seasons${query}`, { method: 'POST' }),
+    reminderRunSchema,
+  )
+}
+
+/** How a notification's state reads to a person — the "why did I not get that" answer. */
+export function notificationStateLabel(notification: NotificationRecord): string {
+  if (notification.status === 'sent') {
+    const devices = notification.deliveredCount
+    return `Sent to ${devices} device${devices === 1 ? '' : 's'}`
+  }
+  if (notification.status === 'suppressed') {
+    return notification.suppressedReason === 'category_disabled'
+      ? 'Not sent — that category is switched off'
+      : 'Not sent — no devices are registered'
+  }
+  if (notification.status === 'failed') return 'Could not be delivered'
+  if (notification.deferredReason === 'quiet_hours') return 'Waiting — quiet hours'
+  if (notification.deferredReason === 'digest') return 'Waiting for your daily digest'
+  return 'Waiting to be sent'
 }

@@ -1102,3 +1102,105 @@ export type GiftLink = z.infer<typeof giftLinkSchema>
 export type GiftLinkList = z.infer<typeof giftLinkListSchema>
 export type GiftFilm = z.infer<typeof giftFilmSchema>
 export type GiftPage = z.infer<typeof giftPageSchema>
+
+// ---------------------------------------------------------------------------
+// Notifications and push (Batch 11) — §6.1, §6.2, §5.11
+// ---------------------------------------------------------------------------
+
+/** The application server's public key, for `pushManager.subscribe`.
+ *
+ *  `configured: false` is a first-class answer, not an error. It is the state the app was
+ *  in for TMDB for an unknown length of time behind a fully green gate — a feature simply
+ *  absent from the deployment, with the front end unable to say so. Here the UI can. */
+export const vapidKeySchema = z.object({
+  publicKey: z.string().nullable(),
+  configured: z.boolean(),
+})
+
+/** One registered device.
+ *
+ *  There is no `endpoint` field and there must never be one: the endpoint is a bearer
+ *  capability — anyone holding it can push to that device — and the UI only needs enough
+ *  to tell two rows apart. */
+export const pushSubscriptionSchema = z.object({
+  id: z.string().uuid(),
+  deviceLabel: z.string().nullable(),
+  endpointPreview: z.string().min(1),
+  pushService: z.string().min(1),
+  userAgent: z.string().nullable(),
+  createdAt: z.string(),
+  lastUsedAt: z.string().nullable(),
+  failureCount: z.number().int().nonnegative(),
+})
+
+export const pushSubscriptionListSchema = z.object({
+  items: z.array(pushSubscriptionSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const notificationPreferenceSchema = z.object({
+  dealsEnabled: z.boolean(),
+  saleEventsEnabled: z.boolean(),
+  releasesEnabled: z.boolean(),
+  loansEnabled: z.boolean(),
+  movieNightEnabled: z.boolean(),
+  digestMode: z.boolean(),
+  digestHourLocal: z.number().int().min(0).max(23),
+  quietHoursStart: z.string().nullable(),
+  quietHoursEnd: z.string().nullable(),
+  quietHoursTimezone: z.string().min(1),
+})
+
+export const notificationSchema = z.object({
+  id: z.string().uuid(),
+  category: z.string().min(1),
+  status: z.enum(['queued', 'sent', 'suppressed', 'failed']),
+  title: z.string().min(1),
+  body: z.string(),
+  url: z.string().nullable(),
+  createdAt: z.string(),
+  deliverAfter: z.string().nullable(),
+  deferredReason: z.string().nullable(),
+  suppressedReason: z.string().nullable(),
+  sentAt: z.string().nullable(),
+  deliveredCount: z.number().int().nonnegative(),
+})
+
+export const notificationListSchema = z.object({
+  items: z.array(notificationSchema),
+  total: z.number().int().nonnegative(),
+  queuedCount: z.number().int().nonnegative(),
+})
+
+/** What the test button did.
+ *
+ *  `delivered` separates "I pressed test and nothing happened" into three different
+ *  problems: no devices, the push service refused, or it was delivered and the browser
+ *  chose not to show it. */
+export const testNotificationSchema = z.object({
+  notificationId: z.string().uuid(),
+  delivered: z.number().int().nonnegative(),
+  devicesTried: z.number().int().nonnegative(),
+  subscriptionsRemoved: z.number().int().nonnegative(),
+  status: z.enum(['queued', 'sent', 'suppressed', 'failed']),
+  suppressedReason: z.string().nullable(),
+})
+
+export const reminderRunSchema = z.object({
+  asOf: z.string(),
+  seasonsSeeded: z.number().int().nonnegative(),
+  saleEvents: z.number().int().nonnegative(),
+  releases: z.number().int().nonnegative(),
+  overdueLoans: z.number().int().nonnegative(),
+  queued: z.number().int().nonnegative(),
+  delivered: z.number().int().nonnegative(),
+})
+
+export type VapidKey = z.infer<typeof vapidKeySchema>
+export type PushSubscriptionRecord = z.infer<typeof pushSubscriptionSchema>
+export type PushSubscriptionList = z.infer<typeof pushSubscriptionListSchema>
+export type NotificationPreference = z.infer<typeof notificationPreferenceSchema>
+export type NotificationRecord = z.infer<typeof notificationSchema>
+export type NotificationList = z.infer<typeof notificationListSchema>
+export type TestNotificationResult = z.infer<typeof testNotificationSchema>
+export type ReminderRun = z.infer<typeof reminderRunSchema>

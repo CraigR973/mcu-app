@@ -43,10 +43,10 @@ class Loan(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: separate status to disagree with it.
     returned_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    #: §3.8's column, written by the reminder job Batch 11 will own. **Nothing sets it
-    #: yet**: push needs VAPID keys, a subscription store and an endpoint, none of which
-    #: exist. The column is here because the loan is where the fact belongs, and a
-    #: reminder that fires twice is worse than one that fires late.
+    #: §3.8's column, written by `services/reminders.py::notify_overdue_loans` since
+    #: Batch 11. It carried no writer at all from Batch 15 until then. The flag lives on
+    #: the loan because that is where the fact belongs, and because a reminder that fires
+    #: twice is worse than one that fires late.
     reminder_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

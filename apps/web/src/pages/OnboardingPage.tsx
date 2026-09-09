@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth'
 import { useTheme } from '@/context/theme'
+import { usePushSubscription } from '@/hooks/usePushSubscription'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { completeOnboarding, fetchMovies } from '@/lib/api'
 
@@ -22,13 +23,13 @@ import { completeOnboarding, fetchMovies } from '@/lib/api'
  * - **Email connect** — Stage 10 is dropped, and this app has no email addresses at all:
  *   sign-in is a display name and a PIN (`DECISIONS.md` #11). The step displayed
  *   `user.email` from a field that cannot exist.
- * - **Notifications** — offered six toggles for features that do not exist yet: price
- *   drops (Batch 20), deals (22), new releases (17), loan reminders (15), purchase
- *   suggestions (18) and on-this-day (37). It also never requested notification
- *   permission or created a push subscription, and there is still no VAPID key, no
- *   endpoint to store one and no `push_subscription` column — push is Batch 11. The
- *   batch definition assumed this step now had infrastructure behind it; it does not
- *   (`DECISIONS.md` #50).
+ * - **Notifications** — dropped in Batch 9 and **restored here in Batch 11**, which is
+ *   the debt `DECISIONS.md` #50 recorded against this batch. The April version offered
+ *   six toggles for features that did not exist, never requested notification permission
+ *   and created no subscription, against no VAPID key and no `push_subscriptions` table.
+ *   All four now exist, and the step asks for exactly one thing — permission for this
+ *   device — with the categories left to the settings page, where they can be changed
+ *   again later.
  * - **Import** — the catalogue is loaded by a CLI script the owner runs, not by anything
  *   a person does in here. What remains of the step is a statement of what is in the
  *   collection, which is true and useful.
@@ -36,6 +37,87 @@ import { completeOnboarding, fetchMovies } from '@/lib/api'
  * The install step **does** have infrastructure now: Batch 8 shipped the manifest and the
  * service worker, so `beforeinstallprompt` can fire and {@link usePwaInstall} catches it.
  */
+
+/**
+ * Turn on push for this device — the step Batch 9 removed.
+ *
+ * **It asks for one thing and states what it cannot do.** Every unavailable case gets its
+ * own sentence rather than a disabled button: an iPhone that has not been added to the
+ * home screen, a browser where permission was already refused, and a server with no VAPID
+ * key are three different problems with three different answers, and the April version
+ * showed the same toggle for all of them.
+ *
+ * Skippable, always. Notifications are the one part of setup that is genuinely optional,
+ * and a wizard that will not advance without a permission grant teaches people to grant
+ * permissions to get past wizards.
+ */
+function NotificationsStep() {
+  const push = usePushSubscription()
+  const [label, setLabel] = useState('')
+
+  useEffect(() => {
+    setLabel((current) => current || push.suggestedLabel)
+  }, [push.suggestedLabel])
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
+      <p className="text-sm text-muted-foreground">
+        A price drop on something you want, a sale season starting, a disc you lent out
+        going overdue. You can change exactly which of those reach you afterwards, in
+        Settings.
+      </p>
+
+      {push.state === 'subscribed' && (
+        <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400">
+          <Check className="h-4 w-4" aria-hidden />
+          Notifications are on for this device.
+        </p>
+      )}
+      {push.state === 'unsupported' && (
+        <p className="text-sm text-muted-foreground">
+          This browser cannot receive notifications. On an iPhone, add the app to your home
+          screen first — Safari only allows them from an installed app.
+        </p>
+      )}
+      {push.state === 'denied' && (
+        <p className="text-sm text-muted-foreground">
+          Notifications are blocked for this site in your browser settings. That has to be
+          changed there; the app cannot ask again.
+        </p>
+      )}
+      {push.state === 'server-not-configured' && (
+        <p className="text-sm text-muted-foreground">
+          Notifications are not set up on the server yet, so there is nothing to turn on
+          here. Nothing else in the app is affected.
+        </p>
+      )}
+      {push.state === 'available' && (
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="text-sm">
+            <span className="mb-1 block text-muted-foreground">Name this device</span>
+            <input
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              maxLength={100}
+              placeholder={push.suggestedLabel}
+              className="rounded border border-input bg-background px-3 py-2 text-sm"
+            />
+          </label>
+          <Button
+            onClick={() => void push.subscribe(label.trim() || push.suggestedLabel)}
+            disabled={push.busy}
+          >
+            {push.busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
+            Turn on notifications
+          </Button>
+        </div>
+      )}
+      {push.error && <p className="text-sm text-destructive">{push.error}</p>}
+      <p className="text-xs text-muted-foreground">You can skip this and set it up later.</p>
+    </div>
+  )
+}
 
 interface StepDef {
   id: string
@@ -242,6 +324,9 @@ export default function OnboardingPage() {
     // pointer to "Add a disc" are not theirs to act on.
     ...(isAdmin ? [{ id: 'catalogue', label: 'Catalogue', node: <Catalogue /> }] : []),
     { id: 'install', label: 'Install', node: <InstallApp /> },
+    // After Install on purpose: on iOS push only works from an installed app, so
+    // asking before that step would fail for the one platform that needs the order.
+    { id: 'notifications', label: 'Alerts', node: <NotificationsStep /> },
     { id: 'theme', label: 'Theme', node: <ThemeChoice /> },
     { id: 'tour', label: 'Tour', node: <Tour /> },
     { id: 'done', label: 'Done', node: <Done isAdmin={isAdmin} /> },

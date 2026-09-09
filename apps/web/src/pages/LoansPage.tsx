@@ -78,12 +78,14 @@ function Row({ loan }: { loan: Loan }) {
 /**
  * §12.5's loans page.
  *
- * **There are no reminder notifications, and that is the honest state.** §12.5 lists
- * "reminder notifications for overdue" and its acceptance says "overdue triggers a push".
- * Push does not exist — no VAPID key, no subscription store, no endpoint — and building
- * it is Batch 11, which stops for an owner credential checkpoint. An overdue loan is shown
- * here in red and counted at the top; a toggle promising a notification that never arrives
- * is the defect Batch 9 refused to ship twice (`DECISIONS.md` #50).
+ * **Overdue loans now do trigger a push.** §12.5's second acceptance clause —
+ * "overdue triggers a push" — went unmet from Batch 15 until Batch 11 built the
+ * infrastructure it needed. `notify_overdue_loans` in `services/reminders.py` writes the
+ * notification and `loans.reminder_sent` stops it repeating. The reminder is sent to
+ * admins, since lending a disc is an admin action and getting it back is an admin problem.
+ *
+ * This page is still where an overdue loan is *shown* — red, and counted at the top —
+ * because a notification arrives once and a page answers whenever you look.
  */
 export default function LoansPage() {
   const [openOnly, setOpenOnly] = useState(true)

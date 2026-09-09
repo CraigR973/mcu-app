@@ -27,6 +27,17 @@ from src.models.completion_set import (
 from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink, new_slug
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
+from src.models.notification import (
+    DEFERRED_DIGEST,
+    DEFERRED_QUIET_HOURS,
+    SUPPRESSED_CATEGORY_DISABLED,
+    SUPPRESSED_NO_SUBSCRIPTIONS,
+    Notification,
+    NotificationCategory,
+    NotificationPreference,
+    NotificationStatus,
+    PushSubscription,
+)
 from src.models.price_check import PriceCheck
 from src.models.profile import Profile, RefreshToken, UserRole
 from src.models.rate_limit import RateLimitCounter
@@ -76,6 +87,15 @@ __all__ = [
     "GiftLink",
     "Movie",
     "MovieCredit",
+    "DEFERRED_DIGEST",
+    "DEFERRED_QUIET_HOURS",
+    "SUPPRESSED_CATEGORY_DISABLED",
+    "SUPPRESSED_NO_SUBSCRIPTIONS",
+    "Notification",
+    "NotificationCategory",
+    "NotificationPreference",
+    "NotificationStatus",
+    "PushSubscription",
     "PriceCheck",
     "Profile",
     "RATING_MAX",

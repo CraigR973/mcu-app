@@ -25,6 +25,7 @@ from src.routers import (
     insights,
     memories,
     movies,
+    notifications,
     scraping,
     smart_collections,
     stats,
@@ -114,3 +115,4 @@ app.include_router(calendar.router)
 app.include_router(wanted.router)
 app.include_router(scraping.router)
 app.include_router(gift.router)
+app.include_router(notifications.router)
