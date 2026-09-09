@@ -32,13 +32,14 @@ from src.routers.stats import GENRE_NAMES
 from src.schemas.discovery import (
     NewReleaseListResponse,
     NewReleaseResponse,
+    OfferKind,
     RecommendationListResponse,
     RecommendationResponse,
     StreamingOfferResponse,
     StreamingResponse,
 )
 from src.services.movie_metadata import parse_year
-from src.tmdb.models import SearchResult, WatchProviderCountry
+from src.tmdb.models import SearchResult, WatchProvider, WatchProviderCountry
 
 logger = structlog.get_logger()
 
@@ -46,7 +47,13 @@ router = APIRouter(prefix="/api/v1", tags=["discovery"])
 
 #: The three buckets TMDB reports, in the order a person cares about: already paid for,
 #: then cheap, then expensive.
-OFFER_ORDER: tuple[str, ...] = ("flatrate", "rent", "buy")
+#: Typed as the ``OfferKind`` literal, not ``tuple[str, ...]``, so the loop variable is
+#: already narrowed where it is used. With a bare ``str`` the constructor below needs a
+#: ``# type: ignore[arg-type]`` — and `STATUS.md` gotcha 21 is the record of what that
+#: costs: mypy is unpinned, this machine's called the ignore *necessary* and CI's called it
+#: *unused*, and ``warn_unused_ignores`` turned the disagreement into a red gate. The fix
+#: is to need no ignore.
+OFFER_ORDER: tuple[OfferKind, ...] = ("flatrate", "rent", "buy")
 
 
 async def _live_movie(db: AsyncSession, movie_id: uuid.UUID) -> Movie:
@@ -82,9 +89,10 @@ async def _owned_by_tmdb_id(db: AsyncSession, tmdb_ids: Sequence[int]) -> dict[i
 
 def _offers(country: WatchProviderCountry) -> list[StreamingOfferResponse]:
     offers: list[StreamingOfferResponse] = []
-    seen: set[tuple[int, str]] = set()
+    seen: set[tuple[int, OfferKind]] = set()
     for kind in OFFER_ORDER:
-        for provider in getattr(country, kind, []) or []:
+        providers: list[WatchProvider] = getattr(country, kind, []) or []
+        for provider in providers:
             key = (provider.provider_id, kind)
             if key in seen:
                 continue
@@ -94,7 +102,7 @@ def _offers(country: WatchProviderCountry) -> list[StreamingOfferResponse]:
                     providerId=provider.provider_id,
                     providerName=provider.provider_name,
                     logoPath=provider.logo_path,
-                    kind=kind,  # type: ignore[arg-type]
+                    kind=kind,
                 )
             )
     return offers
