@@ -4,7 +4,8 @@
 
 **Eleven batches shipped, all merged and deployed.**
 
-Production serves `50a48289272cdda5c133724a590078fff9e12881` (Batch 37) with `db: ok`.
+Production serves `a688339e3e8b7b759b05564499e8896c1bee4aed` (supported retailer paths) with
+`db: ok`.
 
 | Batch | Result |
 |---|---|
