@@ -21,6 +21,7 @@ import {
   giftPageSchema,
   movieDetailSchema,
   moviePageSchema,
+  onThisDayMemoriesSchema,
   newReleaseListSchema,
   builtInScraperListSchema,
   retailerListSchema,
@@ -29,6 +30,7 @@ import {
   scraperTestSchema,
   scrapeRunSchema,
   recommendationListSchema,
+  rewatchSuggestionsSchema,
   streamingSchema,
   profileResponseSchema,
   loanListSchema,
@@ -73,9 +75,11 @@ import {
   type PurgePreview,
   type MovieDetail,
   type MoviePage,
+  type OnThisDayMemory,
   type NewReleaseList,
   type OfferKind,
   type RecommendationList,
+  type RewatchSuggestion,
   type RetailerList,
   type RetailerRow,
   type BuiltInScraperList,
@@ -146,12 +150,14 @@ export type {
   MovieListItem,
   MovieLocation,
   MoviePage,
+  OnThisDayMemory,
   NewRelease,
   NewReleaseList,
   OfferKind,
   OwnershipState,
   Recommendation,
   RecommendationList,
+  RewatchSuggestion,
   BuiltInScraper,
   BuiltInScraperList,
   RetailerList,
@@ -365,6 +371,19 @@ export async function fetchWatches(movieId?: string, perPage = 50): Promise<Watc
 export async function deleteWatch(entryId: string): Promise<void> {
   const response = await authFetch(`/watch-log/${entryId}`, { method: 'DELETE' })
   if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/** Batch 37: private watches from this calendar day in prior years. */
+export async function fetchOnThisDayMemories(): Promise<OnThisDayMemory[]> {
+  return parseResponse(await authFetch('/memories/on-this-day'), onThisDayMemoriesSchema)
+}
+
+/** Batch 37: personally highly rated films not watched recently. */
+export async function fetchRewatchSuggestions(): Promise<RewatchSuggestion[]> {
+  return parseResponse(
+    await authFetch('/memories/rewatch-suggestions'),
+    rewatchSuggestionsSchema,
+  )
 }
 
 /** §3.7's half-star scale, for a star control that must not invent its own steps. */

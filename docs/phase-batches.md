@@ -602,6 +602,25 @@ raw listener: `shift+/` and `/` both arrive as `key: ''` through it) — and "ty
 against. Both rest on the 27 new unit/integration tests, which dispatch real
 `KeyboardEvent`s and mock the search endpoint directly.
 
+### Batch 37 — On-this-day + rewatch 🟢
+**Covers Phase 11.6**, recovered verbatim from §16 at `d94a6b8~1`
+(`DECISIONS.md` #54):
+
+> **Phase 11.6: On-This-Day & Rewatch Memories** 🟢 Sonnet 4.6
+> - On-this-day query from watch_log
+> - Rewatch suggestions (highly-rated, not recently watched)
+> - Optional daily push
+> - **Acceptance:** If a watch was logged a year ago, today's dashboard surfaces it
+
+`watch_log` was built early in Batch 6 (`DECISIONS.md` #35), but the feature remains
+inert until it has enough history to produce a real anniversary. The acceptance criterion
+must therefore be proved with a date-controlled test fixture, not by waiting a calendar
+year. The optional daily push depends on Batch 11's VAPID-key checkpoint; it is deferred
+to that batch and is not part of Batch 37's acceptance criterion.
+
+This batch touches no hosting/credentials and performs no destructive data operation, so
+automatic close-out applies once the gate is green.
+
 ---
 
 ## Post-launch — sequenced, not scheduled

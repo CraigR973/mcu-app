@@ -207,6 +207,32 @@ export const watchLogPageSchema = z.object({
   pages: z.number().int().nonnegative(),
 })
 
+// ---------------------------------------------------------------------------
+// On-this-day memories and rewatch suggestions (Batch 37)
+// ---------------------------------------------------------------------------
+
+export const onThisDayMemorySchema = z.object({
+  id: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  watchedAt: z.string(),
+  yearsAgo: z.number().int().positive(),
+  personalRating: z.number().min(0.5).max(5).nullable(),
+})
+
+export const onThisDayMemoriesSchema = z.array(onThisDayMemorySchema)
+
+export const rewatchSuggestionSchema = z.object({
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  lastWatchedAt: z.string(),
+  personalRating: z.number().min(0.5).max(5),
+})
+
+export const rewatchSuggestionsSchema = z.array(rewatchSuggestionSchema)
+
 export type UserRole = z.infer<typeof userRoleSchema>
 export type TokenPair = z.infer<typeof tokenPairSchema>
 export type ProfileResponse = z.infer<typeof profileResponseSchema>
@@ -227,6 +253,8 @@ export type DecadeFacet = z.infer<typeof decadeFacetSchema>
 export type CollectionFacets = z.infer<typeof collectionFacetsSchema>
 export type WatchLogEntry = z.infer<typeof watchLogEntrySchema>
 export type WatchLogPage = z.infer<typeof watchLogPageSchema>
+export type OnThisDayMemory = z.infer<typeof onThisDayMemorySchema>
+export type RewatchSuggestion = z.infer<typeof rewatchSuggestionSchema>
 
 // ---------------------------------------------------------------------------
 // Write surface (Batch 7) — §3.1, §3.2, §3.5, §3.11

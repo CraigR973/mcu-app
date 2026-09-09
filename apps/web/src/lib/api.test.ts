@@ -9,6 +9,8 @@ import {
   fetchCandidates,
   fetchFacets,
   fetchMovies,
+  fetchOnThisDayMemories,
+  fetchRewatchSuggestions,
   formatLabel,
   logWatch,
   restoreCollectionItem,
@@ -161,6 +163,46 @@ describe('formatLabel', () => {
     expect(formatLabel('4k_uhd')).toBe('4K UHD')
     expect(formatLabel('blu_ray')).toBe('Blu-ray')
     expect(formatLabel('download')).toBe('Digital')
+  })
+})
+
+describe('Batch 37 memories calls', () => {
+  it('calls both private endpoints and parses their distinct response shapes', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([
+        {
+          id: '5c9a1f7e-1f5e-4a7b-9a1e-0c2b3d4e5f60',
+          movieId: movie.id,
+          movieTitle: movie.title,
+          posterPath: null,
+          watchedAt: '2025-09-09',
+          yearsAgo: 1,
+          personalRating: 4.5,
+        },
+      ])))
+      .mockResolvedValueOnce(new Response(JSON.stringify([
+        {
+          movieId: movie.id,
+          movieTitle: movie.title,
+          posterPath: null,
+          lastWatchedAt: '2025-01-01',
+          personalRating: 4.5,
+        },
+      ])))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const [memories, suggestions] = await Promise.all([
+      fetchOnThisDayMemories(),
+      fetchRewatchSuggestions(),
+    ])
+
+    expect(memories[0].yearsAgo).toBe(1)
+    expect(suggestions[0].lastWatchedAt).toBe('2025-01-01')
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      expect.stringContaining('/api/v1/memories/on-this-day'),
+      expect.stringContaining('/api/v1/memories/rewatch-suggestions'),
+    ])
   })
 })
 

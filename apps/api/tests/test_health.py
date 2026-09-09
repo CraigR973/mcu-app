@@ -82,6 +82,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/collection/facets",
         "/api/v1/watch-log",
         "/api/v1/watch-log/{entry_id}",
+        # Batch 37. Both are private, caller-scoped views over watch history.
+        "/api/v1/memories/on-this-day",
+        "/api/v1/memories/rewatch-suggestions",
         "/api/v1/movies/{movie_id}/candidates",
         "/api/v1/movies/{movie_id}/identify",
         "/api/v1/search",

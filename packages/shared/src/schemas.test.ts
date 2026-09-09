@@ -21,9 +21,11 @@ import {
   loanSchema,
   movieDetailSchema,
   moviePageSchema,
+  onThisDayMemoriesSchema,
   ownershipStateSchema,
   profileResponseSchema,
   recommendationSchema,
+  rewatchSuggestionsSchema,
   scraperTestSchema,
   smartCollectionFiltersSchema,
   smartCollectionResultsSchema,
@@ -436,6 +438,57 @@ describe('tmdbSearchResponseSchema', () => {
       ],
     })
     expect(parsed.results[0].inCollection).toBe(true)
+  })
+})
+
+describe('memory schemas', () => {
+  it('parse the private dashboard memories', () => {
+    const memories = onThisDayMemoriesSchema.parse([
+      {
+        id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+        movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+        movieTitle: 'Heat',
+        posterPath: null,
+        watchedAt: '2025-09-09',
+        yearsAgo: 1,
+        personalRating: 4.5,
+      },
+    ])
+    const suggestions = rewatchSuggestionsSchema.parse([
+      {
+        movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+        movieTitle: 'Heat',
+        posterPath: null,
+        lastWatchedAt: '2025-09-09',
+        personalRating: 4.5,
+      },
+    ])
+
+    expect(memories[0].yearsAgo).toBe(1)
+    expect(suggestions[0].personalRating).toBe(4.5)
+  })
+
+  it('refuse a same-day watch and an unrated suggestion', () => {
+    expect(onThisDayMemoriesSchema.safeParse([
+        {
+          id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+          movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+          movieTitle: 'Heat',
+          posterPath: null,
+          watchedAt: '2026-09-09',
+          yearsAgo: 0,
+          personalRating: null,
+        },
+      ]).success).toBe(false)
+    expect(rewatchSuggestionsSchema.safeParse([
+        {
+          movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+          movieTitle: 'Heat',
+          posterPath: null,
+          lastWatchedAt: '2025-09-09',
+          personalRating: null,
+        },
+      ]).success).toBe(false)
   })
 })
 

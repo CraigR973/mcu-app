@@ -23,6 +23,7 @@ from src.routers import (
     gift,
     health,
     insights,
+    memories,
     movies,
     scraping,
     smart_collections,
@@ -100,6 +101,7 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(movies.router)
 app.include_router(watch_log.router)
+app.include_router(memories.router)
 app.include_router(collection.router)
 app.include_router(box_sets.router)
 app.include_router(smart_collections.router)
