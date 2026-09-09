@@ -2,9 +2,9 @@
 
 ## Now
 
-**Nine batches shipped, all merged and deployed.**
+**Ten batches shipped, all merged and deployed.**
 
-Production serves `888dae7a5cbcf268fb0914240e7e18594e836144` (Batch 27) with `db: ok`.
+Production serves `1425f912871604b10169555c67fcb02ed61c8014` (Batch 36) with `db: ok`.
 
 | Batch | Result |
 |---|---|
@@ -18,6 +18,7 @@ Production serves `888dae7a5cbcf268fb0914240e7e18594e836144` (Batch 27) with `db
 | 18 | Wanted list + retailers (`f85aa91`) — paid four earlier batches' debts |
 | 19 | Scraper framework (`bf1b4d5`) — **acceptance deferred to the owner** |
 | 27 | Gift links (`888dae7`) — **security review ran; four defects found and fixed** |
+| 36 | Command palette + keyboard shortcuts (`1425f91`) — `.` and the AI-conversations index dropped, Batch 31 isn't built |
 
 ### What Batch 27's security review actually found
 
@@ -105,9 +106,12 @@ also want **Batch 11's push**, which is still blocked on its own VAPID credentia
 
 ### Unblocked work that does not need this checkpoint
 
-**Batch 36 (command palette + keyboard shortcuts) is the only queued batch that can meet its
-acceptance criteria in full today.** Phases 6.3 and 6.4 index films, pages, actions and recent
-items — all of which exist — and the shortcuts are self-contained.
+**Batch 36 shipped** (command palette + keyboard shortcuts, `1425f91`) — see the ledger row
+above. Its `?` and `/` shortcuts, and "typing 'blade' surfaces Blade Runner films", were not
+independently browser-verified: the browser automation tool cannot synthesize a real
+`key: '?'`/`key: '/'` keydown, and no local API/Postgres was running to search against.
+Both rest on the 27 new unit/integration tests instead — worth a real browser check next
+time either surface is touched.
 
 **Three batches that look unblocked are not**, and two of them are labelled "solo" in the
 ledger, which describes file overlap rather than whether the feature can work:
@@ -429,6 +433,32 @@ something on it, including two the ledger describes as "solo".
     ```
 
 ## Log
+
+- **2026-09-09** — **Batch 36 shipped — command palette + keyboard shortcuts** (`1425f91`).
+  Phases 6.3/6.4. A Cmd/Ctrl+K modal indexing every page, the admin-only write action, and
+  films — reusing Batch 5's `/search` endpoint rather than re-implementing it — plus
+  recently-viewed films in localStorage. Ten shortcuts (`g`-chords, `/`, `n`, `?`, Esc) and
+  a help modal, centralized in one `useKeyboardShortcuts` hook; `SearchBar`'s pre-existing
+  `/` handler now defers to it via a `mcu:focus-search` event instead of the two owning
+  the same key.
+
+  **§7.5's `.` shortcut and the palette's "recent AI-assistant conversations" index were
+  dropped, not built wrong** — both depend on Batch 31's chat, which does not exist yet.
+  Same treatment Batches 8/9 gave dead onboarding steps.
+
+  **Verified live in a browser**: Ctrl+K open, the empty-query page index, fuzzy-filtering
+  "wanted" to one result, Enter navigating and closing the palette, Escape closing it, and
+  a `g s` chord landing on `/stats` — against the dev server with `VITE_SKIP_AUTH`, since
+  the local API wasn't running (no Docker/local Postgres — gotcha 15 again, this time for
+  the API itself rather than a migration). **`?` and `/` were not independently
+  browser-verified** — confirmed via a raw event listener that this environment's browser
+  automation tool cannot synthesize a real `key: '?'`/`key: '/'` keydown (both arrive as
+  `key: ''`) — nor was "typing 'blade' surfaces Blade Runner films", for lack of a running
+  search backend. All three rest on the batch's 27 new unit/integration tests, which
+  dispatch real `KeyboardEvent`s and mock the search endpoint directly.
+
+  No backend, hosting or credential changes; no destructive operation. 547 API tests and
+  107 web + 65 shared tests, zero skips. Production serves the merged SHA with `db: ok`.
 
 - **2026-09-09** — **Batch 27 closed out (`888dae7`), after its security review ran.** Gift
   links: a 128-bit slug rather than §3.21's UUID PK or §6.26's 32-bit example; four failure

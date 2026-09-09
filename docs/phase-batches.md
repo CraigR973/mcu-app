@@ -569,7 +569,7 @@ Two things the review named as conscious trade-offs rather than defects: the slu
 in plaintext (`DECISIONS.md` #84 — a gift link must be re-shareable, unlike Batch 17's feed
 token), and it transits request logs the way any path parameter does.
 
-### Batch 36 — Command palette + shortcuts
+### ~~Batch 36 — Command palette + shortcuts~~ 🟢 **shipped**
 **Covers phases 6.3 and 6.4**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
 
 > **Phase 6.3: Command Palette (⌘K)** — Modal with fuzzy search · Indexes films, pages,
@@ -579,6 +579,28 @@ token), and it transits request logs the way any path parameter does.
 > **Phase 6.4: Keyboard Shortcuts** — Global shortcuts (g+h, g+c, /, n, ., ?) · Help modal
 > listing all shortcuts (triggered with ?). **Acceptance:** All documented shortcuts work;
 > help modal shows all
+
+`1425f91` — a Cmd/Ctrl+K palette indexing every page, the admin-only write action, and
+films (reusing Batch 5's `/search`, not a re-implementation), plus recently-viewed films
+tracked in localStorage. All ten `g`-chord/`/`/`n`/`?`/Esc shortcuts and the help modal
+are centralized in one `useKeyboardShortcuts` hook; `SearchBar`'s pre-existing `/`
+handler now defers to it (`mcu:focus-search`) instead of the two owning the same key.
+
+**One fact in §7.5's fuller shortcut table had decayed, so it was dropped rather than
+built wrong**: `.` is specified to open AI-assistant chat, and the palette's "recent
+conversations with the AI assistant" index depends on the same feature — both depend on
+Batch 31, which is still planned, not shipped. Same treatment Batches 8/9 gave dead
+onboarding steps that outlived their backing feature.
+
+**Verified live in a browser** (Ctrl+K open, empty-state page index, fuzzy filter
+narrowing "wanted" to one result, Enter navigating and closing, Escape closing, a `g s`
+chord landing on `/stats`) against the dev server with `VITE_SKIP_AUTH`, since the local
+API wasn't running. **Not independently browser-verified**: `?` and `/` — the browser
+automation tool cannot synthesize a real `key: '?'`/`key: '/'` keydown (confirmed via a
+raw listener: `shift+/` and `/` both arrive as `key: ''` through it) — and "typing
+'blade' surfaces Blade Runner", since no local API/Postgres was running to search
+against. Both rest on the 27 new unit/integration tests, which dispatch real
+`KeyboardEvent`s and mock the search endpoint directly.
 
 ---
 
@@ -614,7 +636,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 33 | **Email — accounts + OAuth** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **10.1, 10.2, 10.3, 10.4** |
 | 34 | **Email — parsers + scanning** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **10.5, 10.6, 10.7, 10.8** |
 | 35 | Movie night | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
-| 36 | Command palette + shortcuts | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | in progress | **6.3, 6.4** |
+| ~~36~~ | ~~Command palette + shortcuts~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~6.3, 6.4~~ | `1425f91` · Ctrl/Cmd+K palette (pages, admin actions, films via Batch 5's search, recent items) + centralized shortcuts hook; `.` and the AI-conversations index dropped — Batch 31 isn't built |
 | 37 | On-this-day + rewatch | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **11.6** — `watch_log` now exists (Batch 6); still inert until it has ~a year of history |
 | 38 | E2E suite | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.10 — written alongside features, formalised here |
 

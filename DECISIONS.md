@@ -1168,3 +1168,15 @@ contemporaneous.
     quietly become false. Pathname-only matching would also have caught a same-path URL on
     another origin. The standing rule: an unauthenticated capability URL is excluded from
     the cache by name, and the exclusion list grows with each one added.
+
+### 2026-09-09 — Batch 36 command palette + keyboard shortcuts
+
+88. **§7.5's `.` shortcut and the command palette's "recent AI-assistant conversations"
+    index are dropped from Batch 36, not built against a stub.**
+
+    *Why:* both open or list Batch 31's chat, which does not exist — 30 → 31 (Group J) is
+    still blocked on `ANTHROPIC_API_KEY` in Railway. Wiring `.` to nothing, or indexing a
+    conversation history no table holds, would have broken this batch's own "all
+    documented shortcuts work" acceptance criterion the same way Batch 9 found a
+    notifications wizard step offering toggles with nothing behind them. Batch 31 owns
+    bringing both back once the assistant exists — the same way Batch 11 owns push.
