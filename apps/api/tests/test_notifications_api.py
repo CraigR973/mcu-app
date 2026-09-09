@@ -817,7 +817,11 @@ class TestOverdueLoans:
         return loan
 
     async def test_an_overdue_loan_triggers_a_push(
-        self, client: AsyncClient, api_session: AsyncSession, sender: RecordingSender
+        self,
+        client: AsyncClient,
+        api_session: AsyncSession,
+        admin: Profile,
+        sender: RecordingSender,
     ) -> None:
         """*"Overdue loan triggers a push"* — unmet since Batch 15, met here."""
         await _register(client, "phone")
@@ -831,7 +835,14 @@ class TestOverdueLoans:
         row = (
             (
                 await api_session.execute(
-                    select(Notification).where(Notification.category == "loans")
+                    select(Notification).where(
+                        Notification.category == "loans",
+                        # Scoped to this test's own admin. The seeded profiles from
+                        # migration 002 are real admins too, and the reminder correctly
+                        # goes to all of them — so an unscoped `.one()` asserts about the
+                        # state of the whole database rather than about this fixture.
+                        Notification.user_id == admin.id,
+                    )
                 )
             )
             .scalars()
@@ -963,7 +974,11 @@ class TestVapidKeyEndpoint:
 
 class TestReleaseReminders:
     async def test_an_imminent_release_is_announced(
-        self, client: AsyncClient, api_session: AsyncSession, sender: RecordingSender
+        self,
+        client: AsyncClient,
+        api_session: AsyncSession,
+        admin: Profile,
+        sender: RecordingSender,
     ) -> None:
         await _register(client, "phone")
         as_of = date(2026, 4, 1)
@@ -985,7 +1000,10 @@ class TestReleaseReminders:
         row = (
             (
                 await api_session.execute(
-                    select(Notification).where(Notification.category == "releases")
+                    select(Notification).where(
+                        Notification.category == "releases",
+                        Notification.user_id == admin.id,
+                    )
                 )
             )
             .scalars()

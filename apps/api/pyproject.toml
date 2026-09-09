@@ -42,12 +42,14 @@ dependencies = [
     # itself. `cryptography` ships manylinux wheels with its own OpenSSL, so unlike the
     # lxml case above it adds nothing to the Railway image's system libraries.
     #
-    # **Upper bound because of the developer machine, not the runtime.** cryptography 49+
-    # ships no `macosx-10.15-x86_64` wheel, so this laptop falls back to a Rust source
-    # build while CI's manylinux wheel installs fine — the local/CI split that gotcha 21
-    # already cost this project a red gate over. Pinned below 49 so both sides run the
-    # same code. Lift it when the developer machine's platform tag moves.
-    "cryptography>=43.0.1,<49",
+    # **Floor at 50, and the floor is a security floor.** 48.0.1 carries five advisories
+    # (PYSEC-2026-3552/3553/3554) and the dependency audit refuses it — correctly. An
+    # earlier revision of this line pinned `<49` because cryptography 49+ ships no
+    # `macosx-10.15-x86_64` wheel, so the developer machine builds from Rust source while
+    # CI installs a manylinux wheel. That convenience is not worth a vulnerable crypto
+    # library in production: the pin is gone, and the local/CI note now lives in
+    # `STATUS.md`'s gotchas instead of in a version bound.
+    "cryptography>=50.0.0",
 ]
 
 [project.optional-dependencies]
