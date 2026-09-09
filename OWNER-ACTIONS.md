@@ -57,7 +57,7 @@ Batch 32 (voice input) sits behind these too; see the note at the bottom.
 
 ### 4. eBay production API application
 
-- [ ] Apply for eBay production API access
+- [x] Apply for eBay production API access — submitted 2026-09-09; eBay account approval is pending (at least one business day)
 
 **Unblocks:** Group I — Batch 28 (eBay integration) → Batch 29 (format upgrade + sale tracking).
 

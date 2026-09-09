@@ -433,6 +433,11 @@ something on it, including two the ledger describes as "solo".
 
 ## Log
 
+- **2026-09-09** — **eBay production developer application submitted.** The owner received
+  eBay's confirmation that account review is pending and takes at least one business day.
+  The owner-side application action is complete; Group I remains blocked until eBay approves
+  production access.
+
 - **2026-09-09** — **Batch 37 shipped — on-this-day + rewatch** (`50a4828`). Phase 11.6:
   caller-scoped anniversary memories and high-rated, not-recently-watched suggestions are
   parsed through shared schemas and rendered on the dashboard. The acceptance is proved by a
