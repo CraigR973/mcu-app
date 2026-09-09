@@ -24,6 +24,7 @@ from src.models.completion_set import (
     CompletionSet,
     member_display,
 )
+from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile, RefreshToken, UserRole
 from src.models.rate_limit import RateLimitCounter
@@ -51,6 +52,8 @@ __all__ = [
     "member_display",
     "FORMAT_RANK",
     "LISTING_STATUSES",
+    "LOANS_TABLE",
+    "Loan",
     "Movie",
     "MovieCredit",
     "Profile",

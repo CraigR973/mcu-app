@@ -15,12 +15,16 @@ import {
   movieDetailSchema,
   moviePageSchema,
   profileResponseSchema,
+  loanListSchema,
+  loanSchema,
+  purgePreviewSchema,
   searchResponseSchema,
   smartCollectionListSchema,
   statsSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
   tmdbSearchResponseSchema,
+  trashListSchema,
   trashPageSchema,
   watchLogEntrySchema,
   watchLogPageSchema,
@@ -39,6 +43,9 @@ import {
   type Condition,
   type DuplicateCheck,
   type DuplicateReason,
+  type Loan,
+  type LoanList,
+  type PurgePreview,
   type MovieDetail,
   type MoviePage,
   type ProfileResponse,
@@ -49,7 +56,9 @@ import {
   type SmartCollectionResults,
   type Stats,
   type TmdbSearchResponse,
+  type TrashList,
   type TrashPage,
+  type TrashTable,
   type WatchLogEntry,
   type WatchLogPage,
 } from '@mcu/shared'
@@ -99,8 +108,15 @@ export type {
   Stats,
   TmdbSearchResult,
   WatchedFilm,
+  Loan,
+  LoanList,
+  PurgePreview,
+  TrashCount,
   TrashItem,
+  TrashList,
   TrashPage,
+  TrashRow,
+  TrashTable,
   WatchLogEntry,
   WatchLogPage,
 } from '@mcu/shared'
@@ -505,13 +521,29 @@ export async function restoreCollectionItem(itemId: string): Promise<CollectionI
 
 /** The audit log. `movieId` is what the detail page's history panel passes — it resolves
  *  to every one of that film's discs, deleted ones included. */
+export interface AuditFilter {
+  movieId?: string
+  targetId?: string
+  /** Batch 15 (§13.6). Who and when are the two questions a person brings to an audit
+   *  log, and neither was answerable before. */
+  actionType?: string
+  actorId?: string
+  since?: string
+  until?: string
+  perPage?: number
+}
+
 export async function fetchAudit(
-  filter: { movieId?: string; targetId?: string } = {},
+  filter: AuditFilter = {},
   perPage = 50,
 ): Promise<AuditPage> {
-  const params = new URLSearchParams({ perPage: String(perPage) })
+  const params = new URLSearchParams({ perPage: String(filter.perPage ?? perPage) })
   if (filter.movieId) params.set('movieId', filter.movieId)
   if (filter.targetId) params.set('targetId', filter.targetId)
+  if (filter.actionType) params.set('actionType', filter.actionType)
+  if (filter.actorId) params.set('actorId', filter.actorId)
+  if (filter.since) params.set('since', filter.since)
+  if (filter.until) params.set('until', filter.until)
   return parseResponse(await authFetch(`/admin/audit?${params}`), auditPageSchema)
 }
 
@@ -823,4 +855,97 @@ export function poundsFromCents(cents: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`
+}
+
+// ---------------------------------------------------------------------------
+// Trash, purge and lending (Batch 15) — §13.5, §12.5
+// ---------------------------------------------------------------------------
+
+export async function fetchTrashTable(table: TrashTable, page = 1): Promise<TrashList> {
+  return parseResponse(
+    await authFetch(`/trash/all?table=${table}&page=${String(page)}&perPage=100`),
+    trashListSchema,
+  )
+}
+
+export async function restoreTrashRow(table: TrashTable, id: string): Promise<void> {
+  const response = await authFetch(`/trash/${table}/${id}/restore-row`, { method: 'POST' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/**
+ * **Irreversible.** Destroys the row.
+ *
+ * Named `destroy` rather than `delete` on purpose: everything else in this file called
+ * "delete" is a soft delete that the trash undoes, and one word for both is how the wrong
+ * one gets called.
+ */
+export async function destroyTrashRow(table: TrashTable, id: string): Promise<void> {
+  const response = await authFetch(`/trash/${table}/${id}/permanent`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/** Dry by default, matching the endpoint — the destructive call is the one you ask for. */
+export async function purgeTrash(table: TrashTable, dryRun = true): Promise<PurgePreview> {
+  return parseOrThrowApiError(
+    await authFetch(`/trash/purge?table=${table}&dryRun=${String(dryRun)}`, {
+      method: 'POST',
+    }),
+    purgePreviewSchema,
+  )
+}
+
+export const TRASH_TABLE_LABELS: Record<TrashTable, string> = {
+  collection_items: 'Discs',
+  watch_log: 'Watches',
+  movies: 'Films',
+  box_sets: 'Box sets',
+}
+
+export async function fetchLoans(openOnly = false): Promise<LoanList> {
+  return parseResponse(
+    await authFetch(`/loans?openOnly=${String(openOnly)}`),
+    loanListSchema,
+  )
+}
+
+export interface LendInput {
+  collectionItemId: string
+  borrowerName: string
+  lentDate?: string
+  dueDate?: string | null
+  notes?: string | null
+}
+
+export async function lendDisc(input: LendInput): Promise<Loan> {
+  return parseOrThrowApiError(
+    await authFetch('/loans', { method: 'POST', body: JSON.stringify(input) }),
+    loanSchema,
+  )
+}
+
+export async function returnLoan(id: string, returnedDate?: string): Promise<Loan> {
+  return parseOrThrowApiError(
+    await authFetch(`/loans/${id}/return`, {
+      method: 'PUT',
+      body: JSON.stringify(returnedDate ? { returnedDate } : {}),
+    }),
+    loanSchema,
+  )
+}
+
+/** How a loan's timing reads in one line. */
+export function loanDueLabel(loan: {
+  isOverdue: boolean
+  daysUntilDue: number | null
+  returnedDate: string | null
+}): string {
+  if (loan.returnedDate) return `returned ${loan.returnedDate}`
+  if (loan.daysUntilDue === null) return 'no due date'
+  if (loan.isOverdue) {
+    const days = Math.abs(loan.daysUntilDue)
+    return `${String(days)} day${days === 1 ? '' : 's'} overdue`
+  }
+  if (loan.daysUntilDue === 0) return 'due today'
+  return `due in ${String(loan.daysUntilDue)} days`
 }

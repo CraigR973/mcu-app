@@ -114,4 +114,12 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/export/collection.csv",
         "/api/v1/export/collection.json",
         "/api/v1/export/collection.html",
+        # Batch 15. `/trash/all` sits beside Batch 7's `/trash` rather than replacing it —
+        # the offline queue and the existing page both call the older shape.
+        "/api/v1/trash/all",
+        "/api/v1/trash/{table}/{row_id}/restore-row",
+        "/api/v1/trash/{table}/{row_id}/permanent",
+        "/api/v1/trash/purge",
+        "/api/v1/loans",
+        "/api/v1/loans/{loan_id}/return",
     }

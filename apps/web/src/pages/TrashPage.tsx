@@ -1,56 +1,92 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, RotateCcw, Trash2 } from 'lucide-react'
+import { Loader2, RotateCcw, Trash2, TriangleAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import type { TrashRow, TrashTable } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
 import {
-  fetchTrash,
-  formatLabel,
+  destroyTrashRow,
+  fetchTrashTable,
   posterUrl,
-  restoreCollectionItem,
-  type TrashItem,
+  purgeTrash,
+  restoreTrashRow,
+  TRASH_TABLE_LABELS,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { cn } from '@/lib/utils'
 
-function Row({ item }: { item: TrashItem }) {
+const TABLES: TrashTable[] = ['collection_items', 'watch_log', 'movies', 'box_sets']
+
+/** Every query a restore or a destroy can change. Listed once so a new tab cannot forget one. */
+function invalidateEverything(queryClient: ReturnType<typeof useQueryClient>) {
+  for (const key of [
+    'trash',
+    'trash-table',
+    'movies',
+    'search',
+    'facets',
+    'collection-facets',
+    'stats',
+    'activity',
+    'box-sets',
+    'loans',
+    'completion-insights',
+  ]) {
+    void queryClient.invalidateQueries({ queryKey: [key] })
+  }
+}
+
+function Row({ row, table }: { row: TrashRow; table: TrashTable }) {
   const queryClient = useQueryClient()
+  const [confirming, setConfirming] = useState(false)
 
   const restore = useMutation({
-    mutationFn: () => restoreCollectionItem(item.id),
+    mutationFn: () => restoreTrashRow(table, row.id),
+    onSuccess: () => invalidateEverything(queryClient),
+  })
+  const destroy = useMutation({
+    mutationFn: () => destroyTrashRow(table, row.id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['trash'] })
-      // Restoring puts a disc back in every count: the film's copies, the grid's
-      // format badge, and the shelf facets.
-      void queryClient.invalidateQueries({ queryKey: ['movies'] })
-      void queryClient.invalidateQueries({ queryKey: ['search'] })
-      void queryClient.invalidateQueries({ queryKey: ['facets'] })
-      void queryClient.invalidateQueries({ queryKey: ['movie-copies', item.movieId] })
-      void queryClient.invalidateQueries({ queryKey: ['item-history', item.movieId] })
+      setConfirming(false)
+      invalidateEverything(queryClient)
     },
   })
 
   return (
     <li className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-      <img
-        src={posterUrl(item.posterPath, 'w92')}
-        alt=""
-        className="h-16 w-11 shrink-0 rounded object-cover"
-        loading="lazy"
-      />
+      {row.posterPath !== null || row.movieId !== null ? (
+        <img
+          src={posterUrl(row.posterPath, 'w92')}
+          alt=""
+          loading="lazy"
+          className="h-16 w-11 shrink-0 rounded object-cover"
+        />
+      ) : null}
       <div className="min-w-0 flex-1">
-        <Link
-          to={`/movies/${item.movieId}`}
-          className="font-medium text-foreground hover:underline"
-        >
-          {item.movieTitle}
-        </Link>
-        <p className="text-xs text-muted-foreground">
-          {item.formats.map((format) => formatLabel(format)).join(' + ')} · {item.locationLabel}
-        </p>
+        {row.movieId ? (
+          <Link
+            to={`/movies/${row.movieId}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            {row.label}
+          </Link>
+        ) : (
+          <span className="font-medium text-foreground">{row.label}</span>
+        )}
+        {row.sublabel ? (
+          <p className="text-xs text-muted-foreground">{row.sublabel}</p>
+        ) : null}
         <p className="text-[11px] text-muted-foreground">
-          Removed {new Date(item.deletedAt).toLocaleString()}
+          Removed {new Date(row.deletedAt).toLocaleString()}
         </p>
+        {destroy.isError ? (
+          <p className="text-xs text-destructive">
+            {queryErrorMessage(destroy.error, 'Could not delete permanently.')}
+          </p>
+        ) : null}
       </div>
+
       <Button
         type="button"
         variant="outline"
@@ -65,30 +101,156 @@ function Row({ item }: { item: TrashItem }) {
         )}
         Restore
       </Button>
+
+      {/* Two clicks, never one. This is the only irreversible control in the app, and the
+          confirming state names what will happen rather than asking "are you sure?". */}
+      {confirming ? (
+        <div className="flex shrink-0 gap-1">
+          <Button
+            type="button"
+            size="sm"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={destroy.isPending}
+            onClick={() => destroy.mutate()}
+          >
+            {destroy.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <TriangleAlert className="h-4 w-4" />
+            )}
+            Destroy for ever
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setConfirming(false)}>
+            Cancel
+          </Button>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label="Delete permanently"
+          onClick={() => setConfirming(true)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </li>
   )
 }
 
+function PurgePanel({ table }: { table: TrashTable }) {
+  const queryClient = useQueryClient()
+  const [armed, setArmed] = useState(false)
+
+  const preview = useMutation({
+    mutationFn: () => purgeTrash(table, true),
+    onSuccess: () => setArmed(true),
+  })
+  const run = useMutation({
+    mutationFn: () => purgeTrash(table, false),
+    onSuccess: () => {
+      setArmed(false)
+      invalidateEverything(queryClient)
+    },
+  })
+
+  return (
+    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+      <p className="text-xs text-muted-foreground">
+        §6.30 says anything deleted more than 90 days ago is purged. Nothing here is
+        automatic — a timer that permanently destroys rows is not something to add without
+        someone deciding to.
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={preview.isPending}
+          onClick={() => preview.mutate()}
+        >
+          {preview.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          What would be purged?
+        </Button>
+        {preview.data ? (
+          <span className="text-xs text-muted-foreground">
+            {preview.data.count} row{preview.data.count === 1 ? '' : 's'} older than{' '}
+            {preview.data.olderThanDays} days
+          </span>
+        ) : null}
+        {armed && preview.data && preview.data.count > 0 ? (
+          <Button
+            type="button"
+            size="sm"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={run.isPending}
+            onClick={() => run.mutate()}
+          >
+            {run.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <TriangleAlert className="h-4 w-4" />
+            )}
+            Purge {preview.data.count} for ever
+          </Button>
+        ) : null}
+      </div>
+      {run.data ? (
+        <p className="text-xs text-muted-foreground">Purged {run.data.deleted}.</p>
+      ) : null}
+    </div>
+  )
+}
+
 /**
- * §3.2's "deleted items appear in Trash UI", and the restore half of §13.5.
+ * §13.5's Trash — now across every table that soft-deletes, with restore and permanent
+ * delete.
  *
- * **There is no permanent delete here.** §13.5 owns it along with the other
- * soft-deleting tables, and it is the one action in this area that cannot be undone —
- * shipping it before the batch that specifies it would be the wrong order to take that
- * risk in.
+ * **`wanted_list` is absent, not empty.** §6.30 names it, Batch 18 builds it, and there is
+ * no table — so the API refuses the name rather than answering "nothing here", which is how
+ * an unimplemented feature passes for a working one.
  */
 export default function TrashPage() {
-  const trashQuery = useQuery({ queryKey: ['trash'], queryFn: fetchTrash })
-  const items = trashQuery.data?.items ?? []
-  const state = listState(trashQuery, items.length === 0)
+  const [table, setTable] = useState<TrashTable>('collection_items')
+
+  const trashQuery = useQuery({
+    queryKey: ['trash-table', table],
+    queryFn: () => fetchTrashTable(table),
+  })
+  const rows = trashQuery.data?.items ?? []
+  const counts = trashQuery.data?.counts ?? []
+  const state = listState(trashQuery, rows.length === 0)
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Trash</h1>
         <p className="text-sm text-muted-foreground">
-          Discs removed from the collection. Restoring brings one back exactly as it was.
+          Anything removed. Restoring brings it back exactly as it was; destroying does not.
         </p>
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {TABLES.map((candidate) => {
+          const count = counts.find((entry) => entry.table === candidate)?.count
+          return (
+            <button
+              key={candidate}
+              type="button"
+              onClick={() => setTable(candidate)}
+              className={cn(
+                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                table === candidate
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-muted',
+              )}
+            >
+              {TRASH_TABLE_LABELS[candidate]}
+              {count === undefined ? '' : ` (${String(count)})`}
+            </button>
+          )
+        })}
       </div>
 
       {state === 'loading' ? (
@@ -104,15 +266,19 @@ export default function TrashPage() {
       ) : state === 'empty' ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Trash2 className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Nothing has been removed.</p>
+          <p className="text-sm text-muted-foreground">
+            Nothing has been removed from {TRASH_TABLE_LABELS[table].toLowerCase()}.
+          </p>
         </div>
       ) : (
         <ul className="space-y-2">
-          {items.map((item) => (
-            <Row key={item.id} item={item} />
+          {rows.map((row) => (
+            <Row key={row.id} row={row} table={table} />
           ))}
         </ul>
       )}
+
+      <PurgePanel table={table} />
     </div>
   )
 }

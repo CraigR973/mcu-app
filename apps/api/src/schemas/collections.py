@@ -8,6 +8,7 @@ with it, because a schema added later never gets added.
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -280,3 +281,95 @@ class CompletionRefreshResponse(BaseModel):
     total: int
     errors: list[str]
     dryRun: bool
+
+
+# ---------------------------------------------------------------------------
+# Trash, audit and lending (Batch 15) — §13.5, §13.6, §12.5
+# ---------------------------------------------------------------------------
+
+TrashTable = Literal["collection_items", "watch_log", "movies", "box_sets"]
+
+
+class TrashCountResponse(BaseModel):
+    table: TrashTable
+    count: int
+
+
+class TrashRowResponse(BaseModel):
+    """One soft-deleted row, in a shape that reads the same whatever table it came from.
+
+    §13.5 lists items "per table", and four tables with four response shapes would mean
+    four list components. ``label`` and ``sublabel`` are composed server-side so the trash
+    is one list.
+    """
+
+    id: uuid.UUID
+    table: TrashTable
+    label: str
+    sublabel: str | None
+    posterPath: str | None
+    movieId: uuid.UUID | None
+    deletedAt: UtcDatetime
+
+
+class TrashListResponse(BaseModel):
+    items: list[TrashRowResponse]
+    total: int
+    page: int
+    perPage: int
+    pages: int
+    counts: list[TrashCountResponse]
+
+
+class PurgePreviewResponse(BaseModel):
+    """What a 90-day purge would destroy. ``dryRun`` is the default, deliberately."""
+
+    table: TrashTable
+    olderThanDays: int
+    count: int
+    dryRun: bool
+    deleted: int
+
+
+class LoanCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    collectionItemId: uuid.UUID
+    borrowerName: Annotated[str, Field(min_length=1, max_length=255)]
+    lentDate: date | None = None
+    dueDate: date | None = None
+    notes: str | None = None
+
+
+class LoanReturnRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    returnedDate: date | None = None
+
+
+class LoanResponse(BaseModel):
+    id: uuid.UUID
+    collectionItemId: uuid.UUID
+    movieId: uuid.UUID
+    movieTitle: str
+    posterPath: str | None
+    formats: list[str]
+    locationLabel: str
+    borrowerName: str
+    lentDate: date
+    dueDate: date | None
+    returnedDate: date | None
+    #: Derived, never stored: a loan with a due date in the past and no return date. A
+    #: stored flag would need a job to keep it true and would be wrong between runs.
+    isOverdue: bool
+    #: Negative when overdue. ``None`` when no due date was set — "no deadline" is not
+    #: "due today", and rendering it as 0 would put every open-ended loan in the red.
+    daysUntilDue: int | None
+    notes: str | None
+
+
+class LoanListResponse(BaseModel):
+    items: list[LoanResponse]
+    total: int
+    openCount: int
+    overdueCount: int

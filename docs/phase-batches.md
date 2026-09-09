@@ -388,6 +388,34 @@ object fails a deploy rather than a pull request. `/export/collection.html` is l
 print and the browser's own "Save as PDF" produces the file — one artifact for both halves
 of §13.4, with no dependency the gate cannot prove.
 
+### ~~Batch 15 — Trash, audit UI, lending~~ 🟢 **shipped**
+**Covers phases 13.5, 13.6, 12.5**, verbatim from §16 at `d94a6b8~1`
+(`DECISIONS.md` #54):
+
+> **Phase 13.5: Trash & Restore UI** — List soft-deleted items per table · Restore / permanently delete actions. **Acceptance:** Deleted item in Trash; restoring brings it back with full state
+>
+> **Phase 13.6: Admin Audit Log UI** — Filterable log of all admin actions. **Acceptance:** Making 5 test changes shows 5 entries with correct diffs
+>
+> **Phase 12.5: Lending Tracker** — Mark as lent / returned · Loans page · Reminder notifications for overdue. **Acceptance:** Lending a disc shows it in Loans; overdue triggers a push
+
+**12.5's second acceptance clause cannot be met and no substitute was shipped.** "Overdue
+triggers a push" needs push, and there is no VAPID key, no subscription store and no
+endpoint — that is **Batch 11**, which stops for an owner credential checkpoint. An overdue
+loan is shown in red and counted; `loans.reminder_sent` exists for Batch 11 to write and
+nothing reads it. A toggle promising a notification that never arrives is the defect Batch
+9 refused to ship (`DECISIONS.md` #50).
+
+**The permanent delete is the first irreversible operation in this app**, and the mechanism
+matters more than the endpoint (`DECISIONS.md` #64). `003`'s `soft_delete` trigger rewrites
+every DELETE, so the destroy path has to get past it — and **not** with
+`ALTER TABLE ... DISABLE TRIGGER`, which is persistent and *global*: a process death
+between disabling and re-enabling would make every delete in the app permanent while the
+trash kept showing an empty page. Migration `013` makes the trigger skip on a
+transaction-scoped `SET LOCAL`, turned off again immediately so it covers one statement.
+
+**`wanted_list` is absent from the trash, not empty.** §6.30 names it; Batch 18 builds it.
+The API refuses the table name rather than answering "nothing here".
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -401,7 +429,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~12~~ | ~~Box sets + smart collections~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~11.3, 11.4, 11.5~~ | `881f444` · 3 tables, 7 endpoints; a saved collection and the filter bar evaluate through one function; "Unwatched 4Ks from the 2010s" listed 40 real films in the browser |
 | ~~13~~ | ~~Completion sets~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~11.1, **11.2**~~ | 40 sets built live from TMDB, 0 errors; Hitchcock 12 of 61 (TMDB returns 65 director credits, 4 are screen tests); **"add to wanted list" dropped — Batch 18 owns it** |
 | ~~14~~ | ~~Stats + export~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.1, 13.2, 13.3, 13.4~~ | stats **344 ms median** against live Neon (criterion: <1s); CSV/JSON/HTML export all 1,857 discs; **2 of 5 charts have no data and say so** |
-| 15 | Trash, audit UI, lending | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 13.5, 13.6, 12.5 |
+| ~~15~~ | ~~Trash, audit UI, lending~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.5, 13.6, 12.5~~ | permanent delete proved on live data — row gone, cascade fired, **audit trail outlived its subject**, 1,857 discs untouched; **"overdue triggers a push" not met — Batch 11 owns push** |
 | 16 | Watch providers + recommendations | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 7.1, 7.2 |
 | 17 | Release calendar + iCal | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 7.3, 7.4 — secret-token `.ics` URL |
 | 18 | Wanted list + retailers | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.1, 5.2 (full scope) |
@@ -446,7 +474,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | ~~10 · solo~~ | — shipped | — shipped | Large mechanical restructure of a 2,639-line doc |
 | — | **checkpoint: generate VAPID keys + set them in Railway** → 11 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Credential change, so it stops for the owner. Solo: push shares no files with 10 or 12, and everything that *consumes* it (20, 22, 37) is far downstream |
 | ~~**C**~~ | ~~12~~ → ~~13~~ | — shipped | — shipped | ~~Same domain (sets/collections); 13 reuses 12's UI patterns~~ · **shipped** |
-| **D** | 14 → 15 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both admin-facing read surfaces, same verification shape |
+| ~~**D**~~ | ~~14~~ → ~~15~~ | — shipped | — shipped | ~~Both admin-facing read surfaces, same verification shape~~ · **shipped** |
 | **E** | 16 → 17 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Both TMDB-driven, same client, 17 reuses 16's patterns |
 | **F** | 18 → 19 → **checkpoint: live scraper acceptance runs** → 20 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those |
 | — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |

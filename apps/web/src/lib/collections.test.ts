@@ -6,6 +6,7 @@ import {
   completionLabel,
   describeFilters,
   filtersToMovieFilters,
+  loanDueLabel,
   poundsFromCents,
   setTypeLabel,
 } from './api'
@@ -118,5 +119,31 @@ describe('poundsFromCents', () => {
   it('keeps two decimal places on a round number', () => {
     // "£10" beside "£12.99" in a column reads as a different kind of value.
     expect(poundsFromCents(1000)).toBe('£10.00')
+  })
+})
+
+describe('loanDueLabel', () => {
+  const open = { returnedDate: null }
+
+  it('counts down to a due date', () => {
+    expect(loanDueLabel({ ...open, isOverdue: false, daysUntilDue: 14 })).toBe('due in 14 days')
+    expect(loanDueLabel({ ...open, isOverdue: false, daysUntilDue: 0 })).toBe('due today')
+  })
+
+  it('counts up once it is late, and says so in days', () => {
+    expect(loanDueLabel({ ...open, isOverdue: true, daysUntilDue: -1 })).toBe('1 day overdue')
+    expect(loanDueLabel({ ...open, isOverdue: true, daysUntilDue: -10 })).toBe('10 days overdue')
+  })
+
+  it('never calls an open-ended loan overdue', () => {
+    // "No deadline" is not "due today". Rendering it as 0 would put every open-ended loan
+    // in the red for ever.
+    expect(loanDueLabel({ ...open, isOverdue: false, daysUntilDue: null })).toBe('no due date')
+  })
+
+  it('stops counting once the disc is back', () => {
+    expect(
+      loanDueLabel({ isOverdue: true, daysUntilDue: -30, returnedDate: '2026-09-09' }),
+    ).toBe('returned 2026-09-09')
   })
 })

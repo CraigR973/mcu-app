@@ -622,3 +622,79 @@ export type Stats = z.infer<typeof statsSchema>
 export type ActivityKind = z.infer<typeof activityKindSchema>
 export type ActivityEvent = z.infer<typeof activityEventSchema>
 export type Activity = z.infer<typeof activitySchema>
+
+// ---------------------------------------------------------------------------
+// Trash, audit filters and lending (Batch 15) — §13.5, §13.6, §12.5
+// ---------------------------------------------------------------------------
+
+export const trashTableSchema = z.enum(['collection_items', 'watch_log', 'movies', 'box_sets'])
+
+export const trashCountSchema = z.object({
+  table: trashTableSchema,
+  count: z.number().int().nonnegative(),
+})
+
+/** One deleted row, in a shape that reads the same whatever table it came from — so the
+ *  trash is one list rather than four components maintaining one idea. */
+export const trashRowSchema = z.object({
+  id: z.string().uuid(),
+  table: trashTableSchema,
+  label: z.string().min(1),
+  sublabel: z.string().nullable(),
+  posterPath: z.string().nullable(),
+  movieId: z.string().uuid().nullable(),
+  deletedAt: z.string(),
+})
+
+export const trashListSchema = z.object({
+  items: z.array(trashRowSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  perPage: z.number().int().positive(),
+  pages: z.number().int().nonnegative(),
+  counts: z.array(trashCountSchema),
+})
+
+export const purgePreviewSchema = z.object({
+  table: trashTableSchema,
+  olderThanDays: z.number().int().positive(),
+  count: z.number().int().nonnegative(),
+  dryRun: z.boolean(),
+  deleted: z.number().int().nonnegative(),
+})
+
+export const loanSchema = z.object({
+  id: z.string().uuid(),
+  collectionItemId: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  formats: z.array(z.string()),
+  locationLabel: z.string().min(1),
+  borrowerName: z.string().min(1),
+  lentDate: z.string(),
+  dueDate: z.string().nullable(),
+  returnedDate: z.string().nullable(),
+  /** Derived server-side from the due date and today, never stored: a stored flag needs a
+   *  job to keep it true and is wrong between runs. */
+  isOverdue: z.boolean(),
+  /** Negative when overdue. Null when no due date was set — "no deadline" is not "due
+   *  today", and rendering it as 0 would put every open-ended loan in the red. */
+  daysUntilDue: z.number().int().nullable(),
+  notes: z.string().nullable(),
+})
+
+export const loanListSchema = z.object({
+  items: z.array(loanSchema),
+  total: z.number().int().nonnegative(),
+  openCount: z.number().int().nonnegative(),
+  overdueCount: z.number().int().nonnegative(),
+})
+
+export type TrashTable = z.infer<typeof trashTableSchema>
+export type TrashCount = z.infer<typeof trashCountSchema>
+export type TrashRow = z.infer<typeof trashRowSchema>
+export type TrashList = z.infer<typeof trashListSchema>
+export type PurgePreview = z.infer<typeof purgePreviewSchema>
+export type Loan = z.infer<typeof loanSchema>
+export type LoanList = z.infer<typeof loanListSchema>

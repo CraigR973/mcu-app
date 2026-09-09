@@ -23,6 +23,8 @@ const CollectionResultsPage = lazy(() => import('./pages/CollectionResultsPage')
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const InsightsPage = lazy(() => import('./pages/InsightsPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
+const LoansPage = lazy(() => import('./pages/LoansPage'))
+const AuditPage = lazy(() => import('./pages/AuditPage'))
 
 function AdminPage() {
   return (
@@ -143,9 +145,19 @@ export default function App() {
               path="/collection/add"
               element={<AdminShell><AddToCollectionPage /></AdminShell>}
             />
+            {/* Loans are readable by both — knowing where a disc went is not an
+                admin question, even though lending one is. §6.5 marks GET /loans "Any". */}
+            <Route
+              path="/loans"
+              element={<AppShell><LoansPage /></AppShell>}
+            />
             <Route
               path="/trash"
               element={<AdminShell><TrashPage /></AdminShell>}
+            />
+            <Route
+              path="/audit"
+              element={<AdminShell><AuditPage /></AdminShell>}
             />
             <Route
               path="/admin"

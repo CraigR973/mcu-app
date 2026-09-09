@@ -59,6 +59,17 @@ def _utcnow() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
+def _naive_utc(value: datetime) -> datetime:
+    """A filter bound, normalised to the naive UTC the column holds.
+
+    A client sends back what this app serialised, so it arrives *aware* — and an aware
+    datetime cannot be compared with a naive column at all: Python raises ``TypeError``
+    rather than answering wrongly. The same rule :data:`src.schemas.wire.UtcDatetimeIn`
+    applies to request bodies, applied here to a query parameter.
+    """
+    return value.astimezone(UTC).replace(tzinfo=None) if value.tzinfo else value
+
+
 def _best_rank(formats: Iterable[str]) -> int | None:
     """Position of the best format in :data:`FORMAT_RANK`, lower being better.
 
@@ -577,6 +588,12 @@ async def list_audit_entries(
         Literal["create", "update", "delete", "restore", "bulk_import"] | None,
         Query(alias="actionType"),
     ] = None,
+    # Batch 15 (§13.6, "filterable log of all admin actions"). Who and when are the two
+    # questions a person actually brings to an audit log — "what did I change last
+    # Tuesday" — and neither was answerable before.
+    actor_id: Annotated[uuid.UUID | None, Query(alias="actorId")] = None,
+    since: Annotated[datetime | None, Query()] = None,
+    until: Annotated[datetime | None, Query()] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(alias="perPage", ge=1, le=200)] = 50,
 ) -> AuditPageResponse:
@@ -593,6 +610,15 @@ async def list_audit_entries(
         predicates.append(AdminAction.target_id == target_id)
     if action_type is not None:
         predicates.append(AdminAction.action_type == action_type)
+    if actor_id is not None:
+        predicates.append(AdminAction.user_id == actor_id)
+    if since is not None:
+        predicates.append(AdminAction.created_at >= _naive_utc(since))
+    # Inclusive of the whole day when a date is given: `until=2026-09-09` means "up to the
+    # end of the 9th", not "up to midnight at its start", which would silently exclude
+    # everything the reader is looking for.
+    if until is not None:
+        predicates.append(AdminAction.created_at <= _naive_utc(until))
 
     if movie_id is not None:
         item_ids = (

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
+import { Boxes, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
@@ -21,6 +21,7 @@ const navItems = [
   { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Stats', path: '/stats', icon: TrendingUp },
+  { label: 'Loans', path: '/loans', icon: HandHeart },
 ]
 
 const LINK_CLS =
@@ -30,6 +31,7 @@ const LINK_CLS =
 const adminNavItems = [
   { label: 'Add a disc', path: '/collection/add', icon: Plus },
   { label: 'Trash', path: '/trash', icon: Trash2 },
+  { label: 'Audit log', path: '/audit', icon: ScrollText },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 

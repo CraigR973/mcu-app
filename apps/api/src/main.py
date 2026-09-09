@@ -23,6 +23,7 @@ from src.routers import (
     movies,
     smart_collections,
     stats,
+    trash,
     watch_log,
 )
 
@@ -100,3 +101,4 @@ app.include_router(smart_collections.router)
 app.include_router(insights.router)
 app.include_router(stats.router)
 app.include_router(export.router)
+app.include_router(trash.router)

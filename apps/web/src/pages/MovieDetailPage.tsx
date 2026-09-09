@@ -17,6 +17,7 @@ import {
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
+import { LendButton } from '@/components/collection/LendButton'
 import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
@@ -136,6 +137,14 @@ function CopyCard({
               Mark damaged
             </button>
           )}
+        </div>
+      )}
+      {/* §12.5's "mark as lent / returned", on the copy rather than the film: a loan is
+          about one physical object, and owning a film twice means only one of them left
+          the house. */}
+      {canEdit && (
+        <div className="border-t border-border pt-3">
+          <LendButton collectionItemId={item.id} />
         </div>
       )}
       {markDamaged.isError && (

@@ -14,6 +14,7 @@ import {
   completionSetSchema,
   duplicateCheckSchema,
   healthResponseSchema,
+  loanSchema,
   movieDetailSchema,
   moviePageSchema,
   profileResponseSchema,
@@ -24,6 +25,7 @@ import {
   tmdbSearchResponseSchema,
   tokenPairSchema,
   trashPageSchema,
+  trashRowSchema,
   watchLogPageSchema,
 } from './schemas'
 
@@ -712,6 +714,71 @@ describe('activitySchema', () => {
     const bad = activitySchema.safeParse({
       items: [{ id: 'x', kind: 'exploded', at: '2026-09-09T00:00:00Z', actorName: null, movieId: null, movieTitle: null, posterPath: null, detail: null }],
       total: 1,
+    })
+    expect(bad.success).toBe(false)
+  })
+})
+
+describe('loanSchema', () => {
+  const base = {
+    id: UUID_A,
+    collectionItemId: UUID_B,
+    movieId: UUID_A,
+    movieTitle: 'Heat',
+    posterPath: null,
+    formats: ['blu_ray'],
+    locationLabel: 'Front 2nd',
+    borrowerName: 'A Friend',
+    lentDate: '2026-09-01',
+    dueDate: '2026-09-15',
+    returnedDate: null,
+    isOverdue: false,
+    daysUntilDue: 6,
+    notes: null,
+  }
+
+  it('parses an open loan', () => {
+    expect(loanSchema.parse(base).isOverdue).toBe(false)
+  })
+
+  it('allows a negative countdown for an overdue loan', () => {
+    // Negative is the whole point: "-10" is ten days late, and a nonnegative schema would
+    // reject exactly the loans that matter.
+    const parsed = loanSchema.parse({ ...base, isOverdue: true, daysUntilDue: -10 })
+    expect(parsed.daysUntilDue).toBe(-10)
+  })
+
+  it('allows no due date at all', () => {
+    const parsed = loanSchema.parse({ ...base, dueDate: null, daysUntilDue: null })
+    expect(parsed.daysUntilDue).toBeNull()
+  })
+})
+
+describe('trashRowSchema', () => {
+  it('parses a deleted box set, which has no film behind it', () => {
+    const parsed = trashRowSchema.parse({
+      id: UUID_A,
+      table: 'box_sets',
+      label: 'Columbia Noir Vol 4',
+      sublabel: 'Indicator',
+      posterPath: null,
+      movieId: null,
+      deletedAt: '2026-09-09T00:00:00Z',
+    })
+    expect(parsed.movieId).toBeNull()
+  })
+
+  it('refuses a table the trash cannot serve', () => {
+    // `wanted_list` is Batch 18. Accepting the name here would let the UI ask for it and
+    // render a confidently empty page.
+    const bad = trashRowSchema.safeParse({
+      id: UUID_A,
+      table: 'wanted_list',
+      label: 'x',
+      sublabel: null,
+      posterPath: null,
+      movieId: null,
+      deletedAt: '2026-09-09T00:00:00Z',
     })
     expect(bad.success).toBe(false)
   })
