@@ -698,3 +698,80 @@ export type TrashList = z.infer<typeof trashListSchema>
 export type PurgePreview = z.infer<typeof purgePreviewSchema>
 export type Loan = z.infer<typeof loanSchema>
 export type LoanList = z.infer<typeof loanListSchema>
+
+// ---------------------------------------------------------------------------
+// Streaming and recommendations (Batch 16) — §7.1, §7.2
+// ---------------------------------------------------------------------------
+
+export const offerKindSchema = z.enum(['flatrate', 'rent', 'buy'])
+
+/** `wanted` is deliberately absent: §7.2 lists it, the wanted list is §3.5, and Batch 18
+ *  builds the table. A third state the app cannot produce is a legend entry pointing at
+ *  nothing. */
+export const ownershipStateSchema = z.enum(['owned', 'unowned'])
+
+export const streamingOfferSchema = z.object({
+  providerId: z.number().int().positive(),
+  providerName: z.string().min(1),
+  logoPath: z.string().nullable(),
+  kind: offerKindSchema,
+})
+
+export const streamingSchema = z.object({
+  movieId: z.string().uuid(),
+  region: z.string().length(2),
+  link: z.string().nullable(),
+  offers: z.array(streamingOfferSchema),
+  /** True when the film has no TMDB id, so nothing could be looked up — distinct from
+   *  "TMDB knows it and has no offers", which is a real answer. */
+  unidentified: z.boolean(),
+  /** True when TMDB could not be reached. A flag rather than a 5xx, because the client
+   *  treats any 5xx as a *network* failure — so a 502 here would blame the reader's
+   *  connection for TMDB being down. */
+  unavailable: z.boolean(),
+})
+
+export const recommendationSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  overview: z.string(),
+  posterPath: z.string().nullable(),
+  ownership: ownershipStateSchema,
+  movieId: z.string().uuid().nullable(),
+})
+
+export const recommendationListSchema = z.object({
+  movieId: z.string().uuid(),
+  items: z.array(recommendationSchema),
+  ownedCount: z.number().int().nonnegative(),
+  // Required, not `.default(false)`: the API always sends it (pydantic serialises a
+  // defaulted field), and a zod default makes the parsed type optional, which then leaks
+  // `boolean | undefined` into every consumer.
+  unavailable: z.boolean(),
+})
+
+export const newReleaseSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string().min(1),
+  releaseDate: z.string().nullable(),
+  posterPath: z.string().nullable(),
+  overview: z.string(),
+  matchedGenres: z.array(z.string()),
+  ownership: ownershipStateSchema,
+  movieId: z.string().uuid().nullable(),
+})
+
+export const newReleaseListSchema = z.object({
+  items: z.array(newReleaseSchema),
+  basedOnGenres: z.array(z.string()),
+})
+
+export type OfferKind = z.infer<typeof offerKindSchema>
+export type OwnershipState = z.infer<typeof ownershipStateSchema>
+export type StreamingOffer = z.infer<typeof streamingOfferSchema>
+export type Streaming = z.infer<typeof streamingSchema>
+export type Recommendation = z.infer<typeof recommendationSchema>
+export type RecommendationList = z.infer<typeof recommendationListSchema>
+export type NewRelease = z.infer<typeof newReleaseSchema>
+export type NewReleaseList = z.infer<typeof newReleaseListSchema>

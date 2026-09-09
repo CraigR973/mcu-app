@@ -14,6 +14,9 @@ import {
   duplicateCheckSchema,
   movieDetailSchema,
   moviePageSchema,
+  newReleaseListSchema,
+  recommendationListSchema,
+  streamingSchema,
   profileResponseSchema,
   loanListSchema,
   loanSchema,
@@ -48,6 +51,10 @@ import {
   type PurgePreview,
   type MovieDetail,
   type MoviePage,
+  type NewReleaseList,
+  type OfferKind,
+  type RecommendationList,
+  type Streaming,
   type ProfileResponse,
   type SearchResponse,
   type SmartCollection,
@@ -96,6 +103,14 @@ export type {
   MovieListItem,
   MovieLocation,
   MoviePage,
+  NewRelease,
+  NewReleaseList,
+  OfferKind,
+  OwnershipState,
+  Recommendation,
+  RecommendationList,
+  Streaming,
+  StreamingOffer,
   SearchResponse,
   SectionFacet,
   ShelfFacet,
@@ -948,4 +963,40 @@ export function loanDueLabel(loan: {
   }
   if (loan.daysUntilDue === 0) return 'due today'
   return `due in ${String(loan.daysUntilDue)} days`
+}
+
+// ---------------------------------------------------------------------------
+// Streaming and recommendations (Batch 16) — §7.1, §7.2
+// ---------------------------------------------------------------------------
+
+export async function fetchStreaming(movieId: string, region?: string): Promise<Streaming> {
+  const suffix = region ? `?region=${encodeURIComponent(region)}` : ''
+  return parseResponse(
+    await authFetch(`/movies/${movieId}/streaming${suffix}`),
+    streamingSchema,
+  )
+}
+
+export async function fetchRecommendations(movieId: string): Promise<RecommendationList> {
+  return parseResponse(
+    await authFetch(`/movies/${movieId}/recommendations`),
+    recommendationListSchema,
+  )
+}
+
+export async function fetchNewReleases(): Promise<NewReleaseList> {
+  return parseResponse(await authFetch('/discover/new-releases'), newReleaseListSchema)
+}
+
+/** How each offer kind reads. TMDB's own three buckets, in a person's words. */
+export const OFFER_KIND_LABELS: Record<OfferKind, string> = {
+  flatrate: 'Streaming',
+  rent: 'Rent',
+  buy: 'Buy',
+}
+
+/** A TMDB provider logo. Same CDN as the posters, so no new CSP origin is needed. */
+export function providerLogoUrl(path: string | null, size = 'w45'): string {
+  if (!path) return '/placeholder-poster.svg'
+  return `https://image.tmdb.org/t/p/${size}${path}`
 }

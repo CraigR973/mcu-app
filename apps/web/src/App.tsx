@@ -25,6 +25,7 @@ const InsightsPage = lazy(() => import('./pages/InsightsPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const LoansPage = lazy(() => import('./pages/LoansPage'))
 const AuditPage = lazy(() => import('./pages/AuditPage'))
+const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
 
 function AdminPage() {
   return (
@@ -132,6 +133,10 @@ export default function App() {
             <Route
               path="/insights"
               element={<AppShell><InsightsPage /></AppShell>}
+            />
+            <Route
+              path="/discover"
+              element={<AppShell><DiscoverPage /></AppShell>}
             />
             <Route
               path="/stats"

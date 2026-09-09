@@ -416,6 +416,28 @@ transaction-scoped `SET LOCAL`, turned off again immediately so it covers one st
 **`wanted_list` is absent from the trash, not empty.** §6.30 names it; Batch 18 builds it.
 The API refuses the table name rather than answering "nothing here".
 
+### ~~Batch 16 — Watch providers + recommendations~~ 🟢 **shipped**
+**Covers phases 7.1 and 7.2**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 7.1: TMDB Watch Providers Integration** — `GET /api/v1/movies/{id}/streaming` · Region-aware (user's streaming_region) · Display on detail page. **Acceptance:** For a popular film, UK streaming options shown correctly
+>
+> **Phase 7.2: Recommendations & New Releases** — TMDB `/recommendations` on detail page · Flag as owned / wanted / unowned · New releases feed filtered by collected genres. **Acceptance:** Detail page shows 10+ recommendations with correct ownership flags
+
+**`profiles.streaming_region` did not exist.** §7.1 says "user's streaming_region"; the only
+region column in the schema was `collection_items.region_code`, which is a disc's Blu-ray
+region — a different thing entirely. Migration `014` adds it, defaulting to `GB`, with a
+CHECK on the two-letter shape because TMDB answers an unrecognised key with an **empty map
+rather than an error**: a lower-cased "gb" would make every film appear to stream nowhere.
+
+**"Wanted" was dropped from the ownership flags.** §7.2 lists "owned / wanted / unowned";
+the wanted list is §3.5 and **Batch 18** builds it. Two states are what the app can
+distinguish today, and the zod enum has exactly two so a third cannot be rendered by
+accident.
+
+**Nothing is cached.** Streaming rights move constantly, so a stale answer is a wrong
+answer with a confident face. Contrast `completion_sets`, which caches precisely because a
+filmography barely changes.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -430,7 +452,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~13~~ | ~~Completion sets~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~11.1, **11.2**~~ | 40 sets built live from TMDB, 0 errors; Hitchcock 12 of 61 (TMDB returns 65 director credits, 4 are screen tests); **"add to wanted list" dropped — Batch 18 owns it** |
 | ~~14~~ | ~~Stats + export~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.1, 13.2, 13.3, 13.4~~ | stats **344 ms median** against live Neon (criterion: <1s); CSV/JSON/HTML export all 1,857 discs; **2 of 5 charts have no data and say so** |
 | ~~15~~ | ~~Trash, audit UI, lending~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.5, 13.6, 12.5~~ | permanent delete proved on live data — row gone, cascade fired, **audit trail outlived its subject**, 1,857 discs untouched; **"overdue triggers a push" not met — Batch 11 owns push** |
-| 16 | Watch providers + recommendations | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 7.1, 7.2 |
+| ~~16~~ | ~~Watch providers + recommendations~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~7.1, 7.2~~ | live: *North by Northwest* shows HBO Max + 6 rent + 6 buy in GB; **20 recommendations, 7 already on the shelf**; **"wanted" dropped — Batch 18 owns it** |
 | 17 | Release calendar + iCal | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 7.3, 7.4 — secret-token `.ics` URL |
 | 18 | Wanted list + retailers | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.1, 5.2 (full scope) |
 | 19 | **Scraper framework** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **5.3, 5.4** — see risk note below |

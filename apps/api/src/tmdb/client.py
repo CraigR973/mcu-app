@@ -8,7 +8,7 @@ import httpx
 import structlog
 
 from ..config import settings
-from .models import Movie, PersonMovieCredits, SearchResults
+from .models import Movie, PersonMovieCredits, SearchResults, WatchProviders
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
@@ -133,6 +133,47 @@ class TMDBClient:
             append_to_response=["credits", "videos", "watch/providers"],
             language=language,
         )
+
+    async def get_upcoming(
+        self, region: str = "GB", language: str = "en-US", page: int = 1
+    ) -> SearchResults:
+        """Films released soon in a given country.
+
+        ``/movie/upcoming`` rather than ``/search/movie`` with an empty query, which TMDB
+        rejects — and rather than ``/discover``, whose genre filter would answer with a
+        list that cannot say *which* genre matched. Filtering here keeps that explanation.
+
+        ``region`` genuinely changes the answer: cinema release dates differ by country,
+        and a UK app listing US dates would be wrong in a way that looks right.
+        """
+        data = await self._get(
+            "/movie/upcoming", {"language": language, "page": page, "region": region}
+        )
+        return SearchResults.model_validate(data)
+
+    async def get_watch_providers(self, movie_id: int) -> WatchProviders:
+        """Where a film can be streamed, rented or bought, per country.
+
+        No ``language`` parameter: TMDB keys this response by **region**, and the
+        provider names are brand names that do not translate. Passing one would suggest
+        the answer varies with it.
+        """
+        data = await self._get(f"/movie/{movie_id}/watch/providers")
+        return WatchProviders.model_validate(data)
+
+    async def get_recommendations(
+        self, movie_id: int, language: str = "en-US", page: int = 1
+    ) -> SearchResults:
+        """TMDB's own "if you liked this" list.
+
+        Returns the same shape as a search, which is what lets the ownership-flagging
+        below treat a recommendation and a search hit identically — they are both "a TMDB
+        film this collection may or may not already have".
+        """
+        data = await self._get(
+            f"/movie/{movie_id}/recommendations", {"language": language, "page": page}
+        )
+        return SearchResults.model_validate(data)
 
     async def get_person_movie_credits(
         self, person_id: int, language: str = "en-US"

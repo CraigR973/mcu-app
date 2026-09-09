@@ -87,6 +87,15 @@ class Profile(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
         DateTime(timezone=False), nullable=True
     )
 
+    #: §7.1's "user's streaming_region" — ISO 3166-1 alpha-2, the key TMDB's
+    #: ``watch/providers`` map uses. Not to be confused with
+    #: ``collection_items.region_code``, which is a disc's Blu-ray region.
+    #:
+    #: A CHECK enforces the shape, because TMDB answers an unrecognised key with an empty
+    #: map rather than an error — a lower-cased "gb" would make every film appear to be
+    #: streaming nowhere, and nothing would say why.
+    streaming_region: Mapped[str] = mapped_column(String(2), nullable=False, server_default="GB")
+
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

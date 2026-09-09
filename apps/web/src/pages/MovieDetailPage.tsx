@@ -18,6 +18,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
+import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
+import { StreamingPanel } from '@/components/movies/StreamingPanel'
 import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
@@ -35,7 +37,7 @@ import {
   type MovieDetail,
 } from '@/lib/api'
 
-type Tab = 'overview' | 'crew' | 'copies'
+type Tab = 'overview' | 'crew' | 'copies' | 'watch'
 
 function CopyCard({
   item,
@@ -230,6 +232,9 @@ export default function MovieDetailPage() {
     { key: 'overview', label: 'Overview' },
     { key: 'crew', label: 'Crew', count: movie.crew.length },
     { key: 'copies', label: 'Your copies', count: copies.length },
+    // Batch 16 (§7.1, §7.2). One tab, because "where can I watch this" and "what else
+    // is like it" are the same question asked twice.
+    { key: 'watch', label: 'Where to watch' },
   ]
 
   return (
@@ -353,6 +358,19 @@ export default function MovieDetailPage() {
                 <p className="text-xs capitalize text-muted-foreground">{member.role}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab === 'watch' && (
+          <div className="mt-6 max-w-4xl space-y-6">
+            <section className="space-y-2">
+              <h2 className="text-sm font-semibold text-foreground">Streaming</h2>
+              <StreamingPanel movieId={movie.id} />
+            </section>
+            <section className="space-y-2">
+              <h2 className="text-sm font-semibold text-foreground">If you liked this</h2>
+              <RecommendationsPanel movieId={movie.id} />
+            </section>
           </div>
         )}
 

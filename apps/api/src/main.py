@@ -17,6 +17,7 @@ from src.routers import (
     auth,
     box_sets,
     collection,
+    discovery,
     export,
     health,
     insights,
@@ -102,3 +103,4 @@ app.include_router(insights.router)
 app.include_router(stats.router)
 app.include_router(export.router)
 app.include_router(trash.router)
+app.include_router(discovery.router)

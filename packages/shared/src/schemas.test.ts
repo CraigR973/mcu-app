@@ -18,10 +18,12 @@ import {
   movieDetailSchema,
   moviePageSchema,
   profileResponseSchema,
+  recommendationSchema,
   smartCollectionFiltersSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
   statsSchema,
+  streamingSchema,
   tmdbSearchResponseSchema,
   tokenPairSchema,
   trashPageSchema,
@@ -781,5 +783,58 @@ describe('trashRowSchema', () => {
       deletedAt: '2026-09-09T00:00:00Z',
     })
     expect(bad.success).toBe(false)
+  })
+})
+
+describe('streamingSchema', () => {
+  const base = {
+    movieId: UUID_A,
+    region: 'GB',
+    link: 'https://www.themoviedb.org/movie/949-heat/watch?locale=GB',
+    offers: [
+      { providerId: 337, providerName: 'Disney Plus', logoPath: '/d.jpg', kind: 'flatrate' },
+    ],
+    unidentified: false,
+    unavailable: false,
+  }
+
+  it('parses a UK availability answer', () => {
+    expect(streamingSchema.parse(base).offers[0].kind).toBe('flatrate')
+  })
+
+  it('keeps "could not look" separate from "nothing found"', () => {
+    // 757 films in this collection had no TMDB id. Rendering both as an empty list would
+    // tell someone a film streams nowhere when nobody ever asked.
+    const parsed = streamingSchema.parse({
+      ...base,
+      link: null,
+      offers: [],
+      unidentified: true,
+    })
+    expect(parsed.unidentified).toBe(true)
+  })
+
+  it('refuses a region that is not two letters', () => {
+    // TMDB answers an unrecognised key with an empty map rather than an error, so a bad
+    // region makes every film look unavailable and nothing says why.
+    expect(streamingSchema.safeParse({ ...base, region: 'GBR' }).success).toBe(false)
+  })
+})
+
+describe('recommendationSchema', () => {
+  it('has exactly two ownership states', () => {
+    // §7.2 lists "owned / wanted / unowned". The wanted list is Batch 18, so a `wanted`
+    // badge could never appear — and a legend entry pointing at nothing is the defect
+    // gotcha 5 catalogues four instances of.
+    const wanted = recommendationSchema.safeParse({
+      tmdbId: 1,
+      title: 'A Film',
+      year: 2026,
+      overview: '',
+      posterPath: null,
+      ownership: 'wanted',
+      movieId: null,
+    })
+    expect(wanted.success).toBe(false)
   })
 })

@@ -122,4 +122,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/trash/purge",
         "/api/v1/loans",
         "/api/v1/loans/{loan_id}/return",
+        # Batch 16. Live TMDB reads, nothing stored — streaming rights move too fast for
+        # a cache to be anything but a confidently wrong answer.
+        "/api/v1/movies/{movie_id}/streaming",
+        "/api/v1/movies/{movie_id}/recommendations",
+        "/api/v1/discover/new-releases",
     }
