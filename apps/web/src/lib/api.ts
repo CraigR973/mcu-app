@@ -1,4 +1,5 @@
 import {
+  activitySchema,
   apiErrorSchema,
   auditPageSchema,
   boxSetDetailSchema,
@@ -16,12 +17,14 @@ import {
   profileResponseSchema,
   searchResponseSchema,
   smartCollectionListSchema,
+  statsSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
   tmdbSearchResponseSchema,
   trashPageSchema,
   watchLogEntrySchema,
   watchLogPageSchema,
+  type Activity,
   type AuditPage,
   type BoxSetDetail,
   type BoxSetList,
@@ -44,6 +47,7 @@ import {
   type SmartCollectionFilters,
   type SmartCollectionList,
   type SmartCollectionResults,
+  type Stats,
   type TmdbSearchResponse,
   type TrashPage,
   type WatchLogEntry,
@@ -54,6 +58,9 @@ import { z, type ZodType } from 'zod'
 import { authFetch } from './auth-tokens'
 
 export type {
+  Activity,
+  ActivityEvent,
+  ActivityKind,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -88,7 +95,10 @@ export type {
   SmartCollectionIcon,
   SmartCollectionList,
   SmartCollectionResults,
+  SpendPoint,
+  Stats,
   TmdbSearchResult,
+  WatchedFilm,
   TrashItem,
   TrashPage,
   WatchLogEntry,
@@ -745,4 +755,72 @@ export function setTypeLabel(setType: CompletionSetType): string {
     curated_list: 'List',
   }
   return labels[setType]
+}
+
+// ---------------------------------------------------------------------------
+// Stats, activity and export (Batch 14) — §13.1–13.4
+// ---------------------------------------------------------------------------
+
+export async function fetchStats(): Promise<Stats> {
+  return parseResponse(await authFetch('/collection/stats'), statsSchema)
+}
+
+export async function fetchActivity(limit = 20): Promise<Activity> {
+  return parseResponse(await authFetch(`/activity?limit=${String(limit)}`), activitySchema)
+}
+
+/**
+ * Download an export, with the token in the header where it belongs.
+ *
+ * **Not a plain `<a href>`.** A link cannot carry an `Authorization` header, so the only
+ * way to make one work is to put the token in the query string — where it lands in server
+ * logs, browser history and any `Referer` the page emits. The file is a few hundred KB for
+ * 1,857 rows, so holding it as a blob costs nothing and keeps the credential out of the URL.
+ *
+ * The object URL is revoked immediately: Chrome keeps the blob alive until the download
+ * commits, and leaving it attached leaks the whole file for the life of the tab.
+ */
+export async function downloadExport(format: 'csv' | 'json' | 'html'): Promise<void> {
+  const query = format === 'html' ? '?download=true' : ''
+  const response = await authFetch(`/export/collection.${format}${query}`)
+  if (!response.ok) throw new Error(await errorMessage(response))
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  try {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filenameFrom(response) ?? `mcu-collection.${format}`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/** The name the server chose, so the file on disk matches what the API called it. */
+function filenameFrom(response: Response): string | null {
+  const header = response.headers.get('content-disposition')
+  const match = header ? /filename="([^"]+)"/.exec(header) : null
+  return match ? match[1] : null
+}
+
+/** Open the printable view in a new tab — §13.4's route to a PDF is the print dialog. */
+export async function openPrintableCollection(): Promise<void> {
+  const response = await authFetch('/export/collection.html')
+  if (!response.ok) throw new Error(await errorMessage(response))
+  const url = URL.createObjectURL(await response.blob())
+  window.open(url, '_blank', 'noopener')
+  // Not revoked immediately: the new tab has not fetched it yet. A minute is far longer
+  // than the load needs and short enough that the blob does not outlive the session.
+  setTimeout(() => { URL.revokeObjectURL(url) }, 60_000)
+}
+
+/** Integer pence as money, for the spend chart's axis and captions. */
+export function poundsFromCents(cents: number): string {
+  return `£${(cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
 }

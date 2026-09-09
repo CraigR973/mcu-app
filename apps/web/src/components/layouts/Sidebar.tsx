@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, Sparkles, Target, Trash2, X } from 'lucide-react'
+import { Boxes, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
@@ -20,6 +20,7 @@ const navItems = [
   { label: 'Insights', path: '/insights', icon: Target },
   { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Stats', path: '/stats', icon: TrendingUp },
 ]
 
 const LINK_CLS =

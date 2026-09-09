@@ -358,6 +358,36 @@ gotcha 1b is the record of what fuzzy TMDB matching did to this app once already
 explicit. `src/scripts/refresh_completion_sets.py` and `POST /insights/completion/refresh`
 are what a schedule would call; wiring one is an owner action.
 
+### ~~Batch 14 — Stats + export~~ 🟢 **shipped**
+**Covers phases 13.1, 13.2, 13.3, 13.4**, verbatim from §16 at `d94a6b8~1`
+(`DECISIONS.md` #54):
+
+> **Phase 13.1: Stats Dashboard** — Format breakdown pie · Genre bar chart · Decade distribution · Most-watched · Collection value over time. **Acceptance:** Stats page loads in < 1s with all charts populated
+>
+> **Phase 13.2: Activity Feed** — Timeline of recent additions, watches, price drops, loans. **Acceptance:** Home dashboard shows last 20 events across all users
+>
+> **Phase 13.3: Collection Export (CSV, JSON)** — Full collection export endpoints · Download links. **Acceptance:** CSV opens cleanly in Excel; JSON is valid
+>
+> **Phase 13.4: Collection Export (PDF, HTML)** — Printable PDF with posters · "Coffee table" HTML style. **Acceptance:** PDF looks presentation-ready; HTML prints well
+
+**"All charts populated" cannot be literally true, and the page says so rather than
+drawing zeros.** Measured against live Neon before any code was written: `watch_log` holds
+**0 rows** and `purchase_price`/`purchase_date` are NULL on **all 1,857** items, because
+the spreadsheet never carried a price. So "most watched" and "collection value over time"
+have no data — while formats, genres, decades and sections all do. Both empty charts state
+what they are waiting for, and the response carries `itemsWithPrice` so an empty series can
+distinguish "nothing recorded" from "nothing bought". An empty chart reads as a broken
+chart; that is gotcha 19's lesson applied to a dashboard.
+
+**Two of §13.2's four feed sources do not exist yet** — price drops are Batch 20, loans are
+Batch 15. Both write into the same endpoint when they land.
+
+**There is no server-side PDF renderer, by decision** (`DECISIONS.md` #62). Every option
+needs system libraries in an image **Railway builds and CI does not**, so a missing shared
+object fails a deploy rather than a pull request. `/export/collection.html` is laid out for
+print and the browser's own "Save as PDF" produces the file — one artifact for both halves
+of §13.4, with no dependency the gate cannot prove.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -370,7 +400,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 11 | Notifications + push | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 6.1, 6.2, 5.11 |
 | ~~12~~ | ~~Box sets + smart collections~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~11.3, 11.4, 11.5~~ | `881f444` · 3 tables, 7 endpoints; a saved collection and the filter bar evaluate through one function; "Unwatched 4Ks from the 2010s" listed 40 real films in the browser |
 | ~~13~~ | ~~Completion sets~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~11.1, **11.2**~~ | 40 sets built live from TMDB, 0 errors; Hitchcock 12 of 61 (TMDB returns 65 director credits, 4 are screen tests); **"add to wanted list" dropped — Batch 18 owns it** |
-| 14 | Stats + export | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.1, 13.2, 13.3, 13.4 |
+| ~~14~~ | ~~Stats + export~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.1, 13.2, 13.3, 13.4~~ | stats **344 ms median** against live Neon (criterion: <1s); CSV/JSON/HTML export all 1,857 discs; **2 of 5 charts have no data and say so** |
 | 15 | Trash, audit UI, lending | 🟢 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 13.5, 13.6, 12.5 |
 | 16 | Watch providers + recommendations | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 7.1, 7.2 |
 | 17 | Release calendar + iCal | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 7.3, 7.4 — secret-token `.ics` URL |

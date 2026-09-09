@@ -6,6 +6,7 @@ import {
   completionLabel,
   describeFilters,
   filtersToMovieFilters,
+  poundsFromCents,
   setTypeLabel,
 } from './api'
 
@@ -105,5 +106,17 @@ describe('setTypeLabel', () => {
       setTypeLabel('award'),
       setTypeLabel('curated_list'),
     ]).toEqual(['Director', 'Actor', 'Franchise', 'Box set', 'Award', 'List'])
+  })
+})
+
+describe('poundsFromCents', () => {
+  it('renders integer pence as money', () => {
+    expect(poundsFromCents(1299)).toBe('£12.99')
+    expect(poundsFromCents(0)).toBe('£0.00')
+  })
+
+  it('keeps two decimal places on a round number', () => {
+    // "£10" beside "£12.99" in a column reads as a different kind of value.
+    expect(poundsFromCents(1000)).toBe('£10.00')
   })
 })

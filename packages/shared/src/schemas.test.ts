@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  activitySchema,
   auditEntrySchema,
   auditFieldChangeSchema,
   boxSetDetailSchema,
@@ -19,6 +20,7 @@ import {
   smartCollectionFiltersSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
+  statsSchema,
   tmdbSearchResponseSchema,
   tokenPairSchema,
   trashPageSchema,
@@ -648,5 +650,69 @@ describe('completionFilmSchema', () => {
     })
     expect(missing.movieId).toBeNull()
     expect(missing.posterPath).toBe('/psycho.jpg')
+  })
+})
+
+describe('statsSchema', () => {
+  const base = {
+    totalMovies: 1857,
+    totalItems: 1981,
+    identifiedMovies: 1086,
+    watchedMovies: 0,
+    formats: [{ key: '4k_uhd', label: '4K UHD', itemCount: 346, movieCount: 340 }],
+    genres: [],
+    decades: [{ decade: 1940, label: '1940s', movieCount: 203 }],
+    sections: [],
+    mostWatched: [],
+    spendOverTime: [],
+    itemsWithPrice: 0,
+  }
+
+  it('accepts a dashboard whose watch and spend charts have no data', () => {
+    // Both are empty in this collection today, and that must parse rather than throw —
+    // the page's job is to say *why* they are empty, which it cannot do if the response
+    // never arrives.
+    const parsed = statsSchema.parse(base)
+    expect(parsed.mostWatched).toEqual([])
+    expect(parsed.itemsWithPrice).toBe(0)
+  })
+
+  it('keeps money in integer pence', () => {
+    const parsed = statsSchema.parse({
+      ...base,
+      spendOverTime: [{ month: '2026-09', spentCents: 1299, cumulativeCents: 1299, itemCount: 1 }],
+      itemsWithPrice: 1,
+    })
+    expect(parsed.spendOverTime[0].spentCents).toBe(1299)
+  })
+})
+
+describe('activitySchema', () => {
+  it('parses an event with no film behind it', () => {
+    // An audit row can point at a table that has no poster — a box set, say.
+    const parsed = activitySchema.parse({
+      items: [
+        {
+          id: 'audit:1',
+          kind: 'edited',
+          at: '2026-09-09T00:00:00Z',
+          actorName: 'Craig',
+          movieId: null,
+          movieTitle: null,
+          posterPath: null,
+          detail: 'box sets',
+        },
+      ],
+      total: 1,
+    })
+    expect(parsed.items[0].movieId).toBeNull()
+  })
+
+  it('refuses an event kind the feed cannot render', () => {
+    const bad = activitySchema.safeParse({
+      items: [{ id: 'x', kind: 'exploded', at: '2026-09-09T00:00:00Z', actorName: null, movieId: null, movieTitle: null, posterPath: null, detail: null }],
+      total: 1,
+    })
+    expect(bad.success).toBe(false)
   })
 })

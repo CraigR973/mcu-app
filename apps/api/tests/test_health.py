@@ -107,4 +107,11 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/insights/completion",
         "/api/v1/insights/completion/{set_id}",
         "/api/v1/insights/completion/refresh",
+        # Batch 14. Stats and the activity feed are readable by both people; the exports
+        # are too — they carry nothing the app does not already show on screen.
+        "/api/v1/collection/stats",
+        "/api/v1/activity",
+        "/api/v1/export/collection.csv",
+        "/api/v1/export/collection.json",
+        "/api/v1/export/collection.html",
     }

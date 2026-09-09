@@ -546,3 +546,79 @@ export type CompletionSet = z.infer<typeof completionSetSchema>
 export type CompletionSetDetail = z.infer<typeof completionSetDetailSchema>
 export type CompletionInsights = z.infer<typeof completionInsightsSchema>
 export type CompletionRefresh = z.infer<typeof completionRefreshSchema>
+
+// ---------------------------------------------------------------------------
+// Stats, activity and export (Batch 14) — §13.1–13.4
+// ---------------------------------------------------------------------------
+
+export const countSliceSchema = z.object({
+  key: z.string().min(1),
+  label: z.string().min(1),
+  itemCount: z.number().int().nonnegative(),
+  movieCount: z.number().int().nonnegative(),
+})
+
+export const decadeSliceSchema = z.object({
+  decade: z.number().int(),
+  label: z.string().min(1),
+  movieCount: z.number().int().nonnegative(),
+})
+
+export const watchedFilmSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  posterPath: z.string().nullable(),
+  watchCount: z.number().int().positive(),
+  lastWatched: z.string().nullable(),
+})
+
+/** Money in integer pence. A running total built from floats drifts. */
+export const spendPointSchema = z.object({
+  month: z.string().min(1),
+  spentCents: z.number().int(),
+  cumulativeCents: z.number().int(),
+  itemCount: z.number().int().nonnegative(),
+})
+
+export const statsSchema = z.object({
+  totalMovies: z.number().int().nonnegative(),
+  totalItems: z.number().int().nonnegative(),
+  identifiedMovies: z.number().int().nonnegative(),
+  watchedMovies: z.number().int().nonnegative(),
+  formats: z.array(countSliceSchema),
+  genres: z.array(countSliceSchema),
+  decades: z.array(decadeSliceSchema),
+  sections: z.array(countSliceSchema),
+  mostWatched: z.array(watchedFilmSchema),
+  spendOverTime: z.array(spendPointSchema),
+  /** The denominator that lets an empty `spendOverTime` say *why* it is empty: no prices
+   *  recorded, rather than nothing bought. */
+  itemsWithPrice: z.number().int().nonnegative(),
+})
+
+export const activityKindSchema = z.enum(['added', 'watched', 'edited', 'removed', 'restored'])
+
+export const activityEventSchema = z.object({
+  id: z.string().min(1),
+  kind: activityKindSchema,
+  at: z.string(),
+  actorName: z.string().nullable(),
+  movieId: z.string().uuid().nullable(),
+  movieTitle: z.string().nullable(),
+  posterPath: z.string().nullable(),
+  detail: z.string().nullable(),
+})
+
+export const activitySchema = z.object({
+  items: z.array(activityEventSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export type CountSlice = z.infer<typeof countSliceSchema>
+export type DecadeSlice = z.infer<typeof decadeSliceSchema>
+export type WatchedFilm = z.infer<typeof watchedFilmSchema>
+export type SpendPoint = z.infer<typeof spendPointSchema>
+export type Stats = z.infer<typeof statsSchema>
+export type ActivityKind = z.infer<typeof activityKindSchema>
+export type ActivityEvent = z.infer<typeof activityEventSchema>
+export type Activity = z.infer<typeof activitySchema>

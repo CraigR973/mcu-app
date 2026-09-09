@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { Pin } from 'lucide-react'
+import { Activity, Pin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { ActivityFeed } from '@/components/ActivityFeed'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { describeFilters, fetchSmartCollections } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
@@ -9,11 +10,11 @@ import { listState, queryErrorMessage } from '@/lib/query-state'
 /**
  * §6.31's "pinned to the home dashboard".
  *
- * This page was a stub reading "Your stats at a glance — coming soon" and Batch 14 owns
- * the stats half of it. The pinned section lands here now because §11.5 lists "pin to
- * dashboard" as one of its three bullets, and a pin toggle with nowhere to appear is a
- * control that does nothing — the exact defect `STATUS.md` gotcha 5 catalogues four
- * instances of in the onboarding wizard.
+ * Batch 12 put the pinned section here, because §11.5 lists "pin to dashboard" as one of
+ * its three bullets and a pin toggle with nowhere to appear is a control that does nothing
+ * — the exact defect `STATUS.md` gotcha 5 catalogues four instances of in the onboarding
+ * wizard. Batch 14 adds §13.2's activity feed above it; the charts live on `/stats`,
+ * because §6's own page table gives them their own route.
  *
  * Only the pinned ones are fetched. Loading the whole sidebar to render three tiles
  * would ship every collection the person owns to display the few they chose.
@@ -31,9 +32,19 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Your pinned collections. Stats arrive with Batch 14.
+          Recent activity and your pinned collections.
         </p>
       </div>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Activity className="h-4 w-4" />
+          Recent activity
+        </h2>
+        {/* §13.2's feed. Batch 15 adds loans to it and Batch 20 adds price drops; both
+            land in the same endpoint, so this component does not change. */}
+        <ActivityFeed limit={20} />
+      </section>
 
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">

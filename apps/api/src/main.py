@@ -17,10 +17,12 @@ from src.routers import (
     auth,
     box_sets,
     collection,
+    export,
     health,
     insights,
     movies,
     smart_collections,
+    stats,
     watch_log,
 )
 
@@ -96,3 +98,5 @@ app.include_router(collection.router)
 app.include_router(box_sets.router)
 app.include_router(smart_collections.router)
 app.include_router(insights.router)
+app.include_router(stats.router)
+app.include_router(export.router)
