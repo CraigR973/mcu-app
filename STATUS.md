@@ -42,11 +42,12 @@ feed token), and it transits request logs the way any path parameter does.
 message. That claim was corrected in `247ee25` and the branch was held unmerged until a
 review genuinely ran. Nothing is a review until it returns findings.
 
-### ⛔ One thing is waiting for you
+### ⛔ What is waiting for you
 
-**Group F is stopped at its checkpoint: live scraper acceptance runs.** Batch 20 depends on
-phase 5.3's acceptance, and that acceptance is a live run against real shops — which
-`group-start.md` reserves for you. The steps are in "Next" below.
+**`OWNER-ACTIONS.md` is the list** — nine items, each with what it unblocks. The one that
+stops a group outright is **Group F's checkpoint: live scraper acceptance runs.** Batch 20
+depends on phase 5.3's acceptance, and that acceptance is a live run against real shops,
+which `group-start.md` reserves for you. The steps are in "Next" below and in that file.
 
 ### What tonight's batches left in the live database
 
@@ -104,10 +105,21 @@ also want **Batch 11's push**, which is still blocked on its own VAPID credentia
 
 ### Unblocked work that does not need this checkpoint
 
-**Group J** (30 → 31, AI assistant) is next in the queue — but note that 30 *may need a live
-Claude API key in Railway*, which is a credential change and therefore a stop, not something
-to work around. Then the solo batches **32** (voice input), **36** (command palette) and
-**38** (E2E suite), none of which need a checkpoint.
+**Batch 36 (command palette + keyboard shortcuts) is the only queued batch that can meet its
+acceptance criteria in full today.** Phases 6.3 and 6.4 index films, pages, actions and recent
+items — all of which exist — and the shortcuts are self-contained.
+
+**Three batches that look unblocked are not**, and two of them are labelled "solo" in the
+ledger, which describes file overlap rather than whether the feature can work:
+
+- **Group J (30 → 31)** needs `ANTHROPIC_API_KEY` in Railway. There is no key in the repo,
+  in `.railway/railway.ts`, or in `apps/api/.env.local`. Credential change → stop.
+- **Batch 32 (voice input)** is phase 9.5, whose acceptance is *"tapping mic, speaking a
+  query, **sends correct transcription**"* — to the chat input, which does not exist until
+  Batch 31. Building it first is a microphone button wired to nothing.
+- **Batch 38 (E2E suite)** is phase 13.10, whose acceptance names seven flows. Four of them
+  test features that do not exist: add-via-scan (24), price alert (20), chat session (31),
+  movie night (35). It can honestly cover three.
 
 ### Four things the next agent should know
 
@@ -128,13 +140,9 @@ DATABASE_URL='<neon url from apps/api/.env.local>' PYTHONPATH=apps/api \
   apps/api/.venv/bin/python3.12 -m src.scripts.set_pin Mark
 ```
 
-Two owner actions remain outstanding, unchanged:
-1. **Revoke the April PAT at GitHub.** Classic PAT, 40 chars, `ghp_3gLc…`, committed in
-   full in `0bfb672` (2026-04-25) and referenced truncated in `4768da8`. Dead (401) but
-   never revoked. History rewrite is **not** recommended — the repo is private and the token
-   is already invalid.
-2. **`VITE_API_URL` is set for Production only.** Add it in the Vercel dashboard if preview
-   deploys are wanted.
+**Everything waiting on the owner now lives in `OWNER-ACTIONS.md`** — nine items, each with
+what it unblocks. Read it before picking up work; three of the queued batches are blocked by
+something on it, including two the ledger describes as "solo".
 
 ## Gotchas
 

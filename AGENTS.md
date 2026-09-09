@@ -18,6 +18,7 @@ from TMDB, imported from a spreadsheet.
 | `docs/house-standard.md` | The cross-project engineering standard, extracted from `garmin-coach`, `the-coupon`, `wc_2026_predictor` and `app-starter`. Graded by what the code does, not what its docs claim. |
 | `REVIEW_PLAN_2026-09-07.md` | The in-flight review of this app and its roadmap, and the decisions taken. |
 | `ARCHITECTURE.md` | The April 2026 design spec — data model, API design, integrations, feature detail, frontend design system, security, ops, conventions, glossary, deployment strategy — split from `MCU_Architecture_v2.1_FINAL.md` in Batch 10. **Never read it whole** — grep for a `Phase X.Y` heading or `## N.` section and read a small window. `DECISIONS.md`/`STATUS.md` are the authority where it conflicts with them; §17 carries a reconciled status per decision. |
+| `OWNER-ACTIONS.md` | **Everything blocked on Craig** — credentials, live runs, devices, choices that aren't an agent's to make. **Read it before picking work, and never work around an item on it.** |
 | `docs/phase-batches.md` | **The single batch source of record** — what each batch is, its acceptance criteria, which batches run together, and **which model and effort each needs**. Read it to choose what to work on. |
 | `docs/agent-commands/` | The real command procedures. `.claude/commands/` holds thin wrappers only. |
 
