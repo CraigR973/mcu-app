@@ -1019,3 +1019,49 @@ contemporaneous.
     only (#72), that it is rotatable (#71), and that `last_used_at_utc` makes an unused link
     visible. If the feed is ever extended to carry anything personal, this becomes a reason
     not to.
+
+### 2026-09-09 — Batch 18 wanted list + retailers
+
+75. **A wanted entry can name a film this collection has never seen.** `POST /wanted`
+    accepts a bare `tmdbId` and creates the `movies` row from TMDB.
+
+    *Why:* the whole point of wanting a film is that you do not own it, so requiring an
+    existing `movies` row would exclude the normal case — and would make §11.2's "bulk add
+    missing to wanted list" and §7.2's recommendation cards impossible, since both start
+    from a TMDB id and nothing else. The created row has no `collection_items`, which is
+    exactly what distinguishes wanting from owning.
+
+76. **`is_active` and `deleted_at` are different things and get different buttons.**
+    "Stop looking" sets the first; "Remove" sets the second and sends the row to the Trash.
+
+    *Why:* §3.5 has only `is_active`, and §6.30 lists "wanted entries" among the things
+    that go to Trash — both are right, and they are not the same fact. *I bought it
+    elsewhere* is a decision worth keeping in the record; *I tapped the wrong row* is an
+    accident worth undoing. Collapsing them would mean either losing the history or filling
+    the bin with deliberate choices.
+
+77. **Seeded retailers ship with an empty `scraper_config`, and the UI says "no selectors
+    yet".** §5.2 asks for "seeded default retailers"; §3.16 names six.
+
+    *Why not seed selectors too:* the ledger's own risk note for Batch 19 is that a wrong
+    CSS selector *"does not error — it selects the wrong node and persists a plausible wrong
+    number"*, and that number then feeds price-drop alerts. A selector nobody has run
+    against a live page is exactly that. An empty config is **visibly** unconfigured;
+    `configuredCount` is reported alongside the total so a page can say so rather than imply
+    six working scrapers exist.
+
+    *And seeding is an endpoint, not a migration:* a migration that inserts rows makes
+    `downgrade` ambiguous — does it delete rows an admin has since edited? — and CI's
+    migration job cannot prove either direction. An idempotent endpoint can be run, re-run
+    and inspected.
+
+78. **A test that asserts an absence is a debt marker, and inverting it is how the debt is
+    paid.** Two tests written in Batches 15 and 16 asserted that `wanted_list` was a refused
+    trash table and that `wanted` was a refused ownership state. Both were correct then and
+    both now assert the opposite.
+
+    *Why this is worth naming:* the alternative at the time was to accept the values
+    silently and render nothing — which would have left no trace that anything was missing.
+    Encoding the gap as a failing-if-removed assertion meant the day the table arrived, the
+    test suite pointed straight at everything that had been waiting for it. The trash test
+    moved to `smart_collections`, which genuinely has no bin (#55).

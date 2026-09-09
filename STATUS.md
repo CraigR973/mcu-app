@@ -2,72 +2,69 @@
 
 ## Now
 
-**Batch 17 — release calendar + iCal — shipped, closing Group E.** Production serves
-`a09c172393b7b52bc397becf1368dc61587a16d9` with `db: ok`; migration `015` applied on boot.
+**Batch 18 — wanted list + retailers — shipped.** Group F's first half. Production serves
+`f85aa91e9d34b1dd6fbebd2913931b5f1563f25c` with `db: ok`; migration `016` applied on boot.
 
 | # | Criterion (verbatim) | Result |
 |---|---|---|
-| 7.3 | Live ingestion populates `release_calendar` with ≥ 30 rows spanning the next 3 months (not seeded data) | done — **32 rows**, 2026-09-13 → 2026-11-27, 30 from TMDB and 2 curated sale events. The re-run was fully idempotent: 0 created, 32 unchanged |
-| 7.3 | Calendar page renders them | done — monthly view, bucketed by day server-side |
-| 7.4 | `/api/v1/calendar.ics` endpoint, monthly view, subscribe with copy-link | done — the feed serves **200 with no `Authorization` header**, 32 events, correct escaping and folding |
-| 7.4 | **Subscribing in Apple Calendar successfully displays events** | **not verifiable from here — owner action.** Needs a real calendar app on a real device |
+| 5.1 | Adding to wanted list from detail page and listing it works both ways | done — verified end to end, including adding a film **this collection has never seen** by bare `tmdbId`, which is the normal case |
+| 5.2 | Admin adds a new retailer; it's saved and enabled | done — plus the six §3.16 defaults, seeded live: **6 seeded, 6 enabled, 0 configured** |
 
-**This is the app's first unauthenticated surface, and the token is handled as a refresh
-token** (`DECISIONS.md` #71): 256 bits, SHA-256-hashed at rest, one live token per person
-enforced by a *partial unique index*, rotated on every subscribe, `noindex` + `no-store`,
-and **a revoked token answering identically to one that never existed** — a 401 would
-confirm a guess had once been real. The feed carries no personal data and a test asserts it
-(#72), because the natural way to extend a personal calendar is to start adding personal
-things.
+**This batch paid four debts** that earlier batches recorded rather than fudged:
 
-**A security review of this batch found a real content-injection hole** (`DECISIONS.md` #73).
-A URI property is not TEXT and so is not escaped, so a newline in `release_calendar.url`
-injected arbitrary iCalendar properties — a probe produced `X-EVIL:injected` and a hijacked
-`DESCRIPTION` in the served feed. **It was not reachable**: nothing writes that column
-today. **Batch 19's scrapers are what would have armed it**, populating it from scraped
-retailer pages — a defect that would have shipped two batches before becoming exploitable.
-An independent review pass reached the same finding, confirmed the fix against seven hostile
-variants, and found nothing else at its confidence bar.
+| Batch | What it deferred | Now |
+|---|---|---|
+| 13 | §11.2's "bulk add missing to wanted list" — dropped | the button is on a completion set |
+| 15 | the `wanted_list` trash tab — the API **refused** the name | a real tab, with `retailers` beside it |
+| 16 | §7.2's third ownership state — a two-value enum | `owned` / `wanted` / `unowned`, with a badge |
+| 17 | `release_calendar.is_wishlist_match` — created, never written | **still unwritten** — left to whichever batch next touches ingestion |
 
-**The first live ingestion found a defect a dry run could not.** TMDB's paginated `upcoming`
-list is re-sorted between requests, so the same film (*Shadows of Beirut*) came back on two
-pages and the unique constraint fired mid-insert. Candidates are keyed now. **A dry run
-never writes, so it never reaches a constraint** — gotcha 16 restated, and the second time
-this session a live-write stage has earned its place.
+**Two of those debts surfaced as failing tests, which is the point.** A shared-schema test
+asserted `wanted` was a *refused* ownership state; a trash test used `wanted_list` as its
+example of an unimplemented table. Both were correct when written and both now assert the
+opposite (`DECISIONS.md` #78). Encoding a gap as an assertion meant the day the table
+arrived, the suite pointed straight at everything waiting for it.
 
-**Known and accepted**: the feed token travels in a query string and will appear in access
-logs (#74). Unavoidable for a subscription URL; mitigated by the feed carrying only public
-release dates, and by rotation.
+**Seeded retailers have no selectors, and the page says so.** A seeded row is a name and a
+URL, not a working scraper. Inventing CSS nobody has run against a live page would be worse
+than none — Batch 19's own risk note is that a wrong selector *"does not error — it selects
+the wrong node and persists a plausible wrong number"*, and that number feeds price alerts
+(`DECISIONS.md` #77).
+
+**`is_active` and `deleted_at` are kept apart** (#76): "I stopped looking" is a decision
+worth keeping, "I removed it by mistake" is an accident worth undoing. Two buttons.
 
 ---
 
-**Group E's first half — Batch 16 — shipped earlier** (`d2218ab`). Live: *North by
-Northwest* shows HBO Max plus 6 rent and 6 buy options in GB; 20 recommendations with 7
-already owned. **A 502 for a TMDB outage made the page blame the reader's connection**; it
-now answers 200 with an `unavailable` flag (#68).
+**Group E shipped earlier the same session.** Batch 16 (`d2218ab`) — live streaming and
+recommendations; a 502 for a TMDB outage made the page blame the reader's connection, now an
+`unavailable` flag (#68). Batch 17 (`a09c172`) — the app's **first unauthenticated surface**,
+whose security review found and closed a real iCal content-injection hole that **Batch 19's
+scrapers would have armed** (#73).
 
-**Groups C and D shipped earlier the same session** — Batches 12 (`881f444`), 13
-(`22680de`), 14 (`20650b3`), 15 (`20d1eff`), plus a pre-existing-red fix (`04bfd44`).
+**Groups C and D shipped earlier** — Batches 12 (`881f444`), 13 (`22680de`), 14 (`20650b3`),
+15 (`20d1eff`), plus a pre-existing-red fix (`04bfd44`).
 
-**What this session has left in the live database.** 40 `completion_sets` rows and 32
-`release_calendar` rows — both are acceptance criteria, so they stay — and 4
-`admin_actions` rows recording Batch 12's browser verification and its clean-up. **No
-`collection_items` row has been created, modified or deleted all session: still 1,857, all
-live.**
+**What this session has left in the live database.** 40 `completion_sets` rows, 32
+`release_calendar` rows and **6 `retailers` rows** — all three are acceptance criteria, so
+they stay. Plus `admin_actions` rows recording each browser verification and its clean-up.
+**No `collection_items` row has been created, modified or deleted all session: still 1,857,
+all live.**
 
 ## Next
 
-**Group F — Batch 18 (Wanted list + retailers) → Batch 19 (Scraper framework)** is next,
-at **Opus 5 · max**. It runs into a **checkpoint before Batch 20**: "live scraper acceptance
-runs", which the owner performs against real retailers.
+**Batch 19 — Scraper framework** (phases 5.3, 5.4) is next and closes the unblocked half
+of Group F, at **Opus 5 · max** — the highest setting in the ledger.
 
-**Batch 18 owes four things that later batches deferred to it**, all pointing at the
-wanted list that §3.5 designs and nothing has built:
-1. Batch 13's **"bulk add missing to wanted list"** on the completion-insights page.
-2. Batch 15's **`wanted_list` trash tab** — the API currently *refuses* the table name
-   rather than answering an empty page.
-3. Batch 16's **"wanted" ownership badge** on recommendations; the enum has two states.
-4. Batch 17's **`release_calendar.is_wishlist_match`** column, created and never written.
+**It stops before Batch 20.** Group F's manifest puts a **checkpoint: live scraper
+acceptance runs** between them, and phase 5.3's own acceptance requires each built-in
+scraper to run *against the live retailer*. `group-start.md`'s hard stop is explicit: "a
+batch whose acceptance requires **live third-party requests** ... stops before those runs.
+The owner performs them."
+
+So Batch 19 can build and test the framework against fixtures, and **cannot** self-certify
+5.3's acceptance. Expect it to end by handing over a runnable command and a list of what
+each scraper still needs.
 
 **Read this before starting it: Batch 11 is still unstarted and still blocked.** It opens
 on a **checkpoint: generate VAPID keys + set them in Railway** — a credential change that
@@ -380,6 +377,14 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 18 shipped — wanted list and retailers** (`f85aa91`). §3.5 and
+  §3.16 built, **paying four debts** from Batches 13, 15, 16 and 17. Two of them surfaced as
+  tests that had asserted an absence and now assert the presence — which is exactly why they
+  were written that way (`DECISIONS.md` #78). A wanted entry can name a film the collection
+  has never seen (#75); `is_active` and `deleted_at` stay distinct (#76); the six seeded
+  retailers ship with **no selectors** and say so, because a guessed selector persists a
+  plausible wrong price rather than erroring (#77).
 
 - **2026-09-09** — **Batch 17 shipped — release calendar and iCal, closing Group E**
   (`a09c172`). Live ingestion put **32 rows** in `release_calendar`; the re-run was
