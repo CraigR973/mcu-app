@@ -26,7 +26,7 @@ turns out to catch most of it.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
@@ -245,6 +245,14 @@ class ScrapeCandidate:
     currency: str | None
     url: str | None
     raw_price_text: str | None
+    #: How many product cards on the page yielded a title at all, and how many of those
+    #: named the film being looked for. Together they separate the two ways a search page
+    #: produces no price: **the selectors broke** (nothing parsed, so `titled_cards` is 0)
+    #: and **the shop does not stock the film** (listings parsed fine, none of them is it).
+    #: `run_scrape` counts only the first towards auto-disable. Both stay 0 when the page
+    #: is read whole rather than card by card, which is the conservative reading.
+    titled_cards: int = 0
+    matching_cards: int = 0
 
 
 @dataclass
@@ -414,6 +422,20 @@ def extract(
         seen.add(key)
         candidates.append(candidate)
 
+    # Counted before any price or media filtering, because this pair answers a different
+    # question from "can we price it": did the page parse into real listings, and is the
+    # film among them. A shop that answered properly and simply has not got it must not
+    # accrue a strike towards auto-disable.
+    titled = sum(1 for candidate in candidates if candidate.title)
+    matching = sum(
+        1
+        for candidate in candidates
+        if candidate.title and _matches_title(candidate.title, expected_title, preferred_edition)
+    )
+
+    def counted(candidate: ScrapeCandidate) -> ScrapeCandidate:
+        return replace(candidate, titled_cards=titled, matching_cards=matching)
+
     qualifying = [
         candidate
         for candidate in candidates
@@ -422,7 +444,7 @@ def extract(
         and looks_like_physical_media(candidate.title, candidate.url)
     ]
     if not qualifying:
-        return candidates[0]
+        return counted(candidates[0])
 
     # Both constraints, then format, then edition, then the shop's own order. Format wins
     # over edition when only one can be had: a Steelbook is still a disc you cannot play
@@ -451,8 +473,8 @@ def extract(
                 continue
             for candidate in qualifying:
                 if ranked(candidate) == want:
-                    return candidate
-    return qualifying[0]
+                    return counted(candidate)
+    return counted(qualifying[0])
 
 
 def _string(value: object) -> str | None:

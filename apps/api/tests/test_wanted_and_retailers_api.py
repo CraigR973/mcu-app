@@ -571,6 +571,66 @@ async def test_a_run_of_only_digital_wants_does_not_switch_every_shop_off(
     assert retailer.consecutive_failures == 0
 
 
+async def test_three_films_a_shop_does_not_carry_do_not_switch_it_off(
+    api_session: AsyncSession, admin: Profile
+) -> None:
+    """The 2026-09-09 regression, end to end.
+
+    A wanted list of *Misery*, *Nope* and *Project Hail Mary* took 101 Films, Powerhouse
+    and Second Sight offline: each returned a real page of real listings, the title guard
+    correctly refused all of them, and three refusals in one run read as three failures.
+    A shop that answered honestly must survive being asked for stock it never had.
+    """
+    for title in ("Misery", "Nope", "Project Hail Mary"):
+        movie = await _film(api_session, title)
+        api_session.add(
+            WantedItem(
+                id=uuid.uuid4(),
+                movie_id=movie.id,
+                preferred_format="4k_uhd",
+                is_active=True,
+                added_by=admin.id,
+            )
+        )
+    # A literal address, like the runner's own tests: `assert_fetchable` resolves the host
+    # before fetching, so a `.test` name is refused by the SSRF guard before the scrape
+    # under test ever happens.
+    retailer = Retailer(
+        id=uuid.uuid4(),
+        name=f"Boutique {uuid.uuid4().hex[:8]}",
+        base_url="https://93.184.216.34",
+        scraper_type="generic_css",
+        search_url_template="https://93.184.216.34/s?q={query}",
+        scraper_config={
+            "item": ".card",
+            "title": ".card a",
+            "price": ".price",
+            "url": ".card a",
+        },
+        enabled=True,
+        currency="GBP",
+    )
+    api_session.add(retailer)
+    await api_session.flush()
+
+    #: A real catalogue page: parsed perfectly, and about none of the three films.
+    catalogue = """
+    <div class="card"><a href="https://93.184.216.34/p/1">Cold Prey Trilogy Blu-ray Boxset</a>
+      <div class="price">£45.00</div></div>
+    <div class="card"><a href="https://93.184.216.34/p/2">BRUISER - 4K UHD LE</a>
+      <div class="price">£30.00</div></div>
+    """
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=catalogue))
+    async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+        result = await run_scrape(api_session, client=client, dry_run=False, polite_pause=0.0)
+
+    assert result.not_stocked == 3
+    assert result.failed == 0
+    assert result.disabled == []
+    assert retailer.enabled is True
+    assert retailer.consecutive_failures == 0
+
+
 async def test_a_wanted_edition_round_trips_through_the_api(
     client: AsyncClient, api_session: AsyncSession
 ) -> None:

@@ -1406,3 +1406,34 @@ contemporaneous.
      back and reports `editionMatched: false` — the same rule as #102, for the same reason.
      A Steelbook in the wrong format is a disc you cannot play; a plain edition in the
      right format is usable.
+
+### 2026-09-09 — a shop that has not got the film has not failed
+
+107. **"No usable result" was two different answers wearing one label, and it switched off
+     three working scrapers.** Auto-disable counts three consecutive failures (#82). On
+     2026-09-09 a wanted list of *Misery*, *Nope* and *Project Hail Mary* — a Stephen King
+     adaptation, a Universal blockbuster and an unreleased 2026 title — took **101 Films,
+     Powerhouse Films and Second Sight offline in a single run**. Every one of them was
+     working perfectly: each returned a real catalogue page, `extract` parsed it correctly,
+     and #96's title rule refused every listing because none of them was the film. Three
+     correct refusals read as three failures.
+
+     `ScrapeOutcome.not_stocked` now separates "the shop answered and has not got it" from
+     "the scraper is broken", and only the second counts towards auto-disable.
+
+     *Why it is read from card counts rather than from the rejection message:* `check_shape`
+     stops at "no price found" and returns before it reaches its title rules, so a page
+     whose first card is out of stock would have been filed as a broken selector. Zavvi's
+     real answer for `?q=Nope 4K` led with a priceless *Cujo*, which is exactly that case.
+     `extract` therefore carries `titled_cards` and `matching_cards`, counted **before** any
+     price or media filtering, and not-stocked is `titled_cards > 0 and matching_cards == 0`.
+
+     *Why the counter still fires:* the distinction has to cut both ways or auto-disable
+     never fires again. A page that yields no titled listing at all is the redesign case the
+     counter exists to catch, and still takes a strike.
+
+     *Why this is not just #103 again:* #103 said a shop that was **never asked** has not
+     failed, and exempted digital wants. This is the neighbouring case — a shop that *was*
+     asked, answered properly, and said no. It is reported as `notStocked` rather than
+     folded into `skipped` precisely because the question was put: a run that checked five
+     shops and found the film at one should read as four honest noes, not four blanks.

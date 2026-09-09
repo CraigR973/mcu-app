@@ -1013,6 +1013,10 @@ export const scrapeOutcomeSchema = z.object({
   /** Nothing was attempted — these shops sell discs and the want is for a digital copy.
    *  Neither a success nor a failure, and not counted towards auto-disable. */
   skipped: z.boolean(),
+  /** The shop was asked, answered with real listings, and has not got this film. Also
+   *  neither a success nor a failure — a boutique label that does not carry a blockbuster
+   *  has not broken, and must not be switched off for saying so. */
+  notStocked: z.boolean(),
   url: z.string().nullable(),
   reasons: z.array(z.string()),
   error: z.string().nullable(),
@@ -1023,6 +1027,7 @@ export const scrapeRunSchema = z.object({
   succeeded: z.number().int().nonnegative(),
   failed: z.number().int().nonnegative(),
   skipped: z.number().int().nonnegative(),
+  notStocked: z.number().int().nonnegative(),
   written: z.number().int().nonnegative(),
   disabled: z.array(z.string()),
   dryRun: z.boolean(),

@@ -91,6 +91,11 @@ class ScrapeOutcome:
     #: success nor a failure, and specifically **not** counted towards auto-disable: three
     #: digital wants would otherwise switch off every retailer in the app.
     skipped: bool = False
+    #: True when the shop **was** asked, answered with real listings, and none of them is
+    #: this film. Also not a failure, for the same reason `skipped` is not: a boutique
+    #: label that does not carry a blockbuster has not broken. Distinct from `skipped`
+    #: because the question was put and answered — it just came back "no".
+    not_stocked: bool = False
     url: str | None = None
     #: Why a result was rejected. The important field — a scraper that has started
     #: matching the wrong node reports here rather than silently writing a number.
@@ -110,7 +115,15 @@ class ScrapeRunResult:
 
     @property
     def failed(self) -> int:
-        return sum(1 for outcome in self.outcomes if not outcome.ok and not outcome.skipped)
+        return sum(
+            1
+            for outcome in self.outcomes
+            if not outcome.ok and not outcome.skipped and not outcome.not_stocked
+        )
+
+    @property
+    def not_stocked(self) -> int:
+        return sum(1 for outcome in self.outcomes if outcome.not_stocked)
 
     @property
     def skipped(self) -> int:
@@ -229,6 +242,13 @@ async def scrape_one(
     outcome.url = candidate.url or page.final_url
     outcome.reasons = verdict.reasons
     outcome.ok = verdict.ok
+    # The page parsed into real listings and none of them names this film. That is the
+    # shop answering, not the scraper breaking, so `run_scrape` must not count it. Read
+    # from the card counts rather than from the rejection message, because the first card
+    # is often priceless and `check_shape` then stops before it reaches its title rules.
+    if not verdict.ok and candidate.titled_cards > 0 and candidate.matching_cards == 0:
+        outcome.not_stocked = True
+        outcome.error = f"{retailer.name} does not stock {title}"
     if verdict.ok and preferred_format in DISC_FORMATS:
         priced = primary_format(candidate.title, candidate.url)
         if priced != preferred_format:
@@ -318,7 +338,9 @@ async def run_scrape(
 
         if not dry_run:
             attempted = [
-                o for o in result.outcomes if o.retailer == retailer.name and not o.skipped
+                o
+                for o in result.outcomes
+                if o.retailer == retailer.name and not o.skipped and not o.not_stocked
             ]
             if any_success:
                 _record_success(retailer)
@@ -326,9 +348,10 @@ async def run_scrape(
                 message = "; ".join(o.error or "; ".join(o.reasons) for o in attempted)[:2000]
                 if await _record_failure(db, retailer, message or "no usable result"):
                     result.disabled.append(retailer.name)
-            # Nothing attempted: every want was one these shops cannot serve. A shop that
-            # was never asked has not failed, and must not accrue a strike towards
-            # auto-disable — three digital wants would otherwise switch off the whole app.
+            # Nothing attempted: every want was one this shop could not be asked, or was
+            # asked and honestly has not got. A shop that was never asked has not failed,
+            # and neither has one that answered "no" — three digital wants, or three films
+            # a boutique label does not carry, would otherwise switch off the whole app.
 
     if not dry_run:
         await db.commit()

@@ -278,6 +278,10 @@ class ScrapeOutcomeResponse(BaseModel):
     #: a digital copy. Neither a success nor a failure, and not counted towards a
     #: retailer's auto-disable.
     skipped: bool
+    #: True when the shop was asked, answered with real listings, and has not got this
+    #: film. Also neither a success nor a failure: a boutique label that does not carry a
+    #: blockbuster has not broken, and must not be switched off for saying so.
+    notStocked: bool
     url: str | None
     reasons: list[str]
     error: str | None
@@ -289,6 +293,9 @@ class ScrapeRunResponse(BaseModel):
     failed: int
     #: Wants these shops cannot serve. Reported separately so they never read as failures.
     skipped: int
+    #: Films a shop answered about and has not got. Reported separately for the same
+    #: reason, and counted apart from `skipped` because the question was actually asked.
+    notStocked: int
     written: int
     #: Retailers switched off by this run, after three consecutive failures.
     disabled: list[str]
