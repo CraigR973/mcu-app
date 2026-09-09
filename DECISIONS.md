@@ -1192,3 +1192,10 @@ contemporaneous.
     §3.7's half-star 0.5–5 scale, while calendar months avoid calling a 28-day February the
     same amount of time as a 31-day month. The query uses the caller's own latest live watch,
     so another person's viewing and a soft-deleted mistake cannot suppress a suggestion.
+
+90. **The in-app release calendar is primary; Apple/Google `.ics` subscription is optional
+    and deprioritised.**
+
+    *Why:* this is a private, two-person app whose calendar already works in-app. The RFC 5545
+    feed remains available for either owner to subscribe to later, but device-level external
+    calendar verification is not a present priority and must not hold up other work.

@@ -71,13 +71,14 @@ Batch 32 (voice input) sits behind these too; see the note at the bottom.
 
 ## Finishing acceptance criteria on work that already shipped
 
-### 6. Subscribe the `.ics` feed in Apple or Google Calendar
+### 6. Subscribe the `.ics` feed in Apple or Google Calendar — deprioritised
 
 - [ ] Generate the feed URL (Calendar → Subscribe in the app, or `POST /api/v1/calendar/subscribe`)
 - [ ] Subscribe to it and confirm the 32 release-calendar events render
 
-Batch 17 shipped and the feed's bytes are verified against RFC 5545, but §7.4 asks for
-*"syncable to Apple/Google Calendar"* and that can only be proven on your devices.
+Batch 17 shipped and the feed's bytes are verified against RFC 5545. The in-app release
+calendar is the primary experience; external-calendar subscription is retained as an optional
+convenience and is no longer a current owner action. Do this only if Craig or Mark wants it.
 
 **The URL is a capability URL** — anyone holding it can read the feed. It's `noindex,
 nofollow` and the token is rotatable, but treat it like a password.

@@ -433,6 +433,10 @@ something on it, including two the ledger describes as "solo".
 
 ## Log
 
+- **2026-09-09** — **External calendar subscription deprioritised.** The in-app release
+  calendar remains primary; its RFC 5545 feed remains available as optional convenience, but
+  Apple/Google device verification is no longer a current owner action (Decision #90).
+
 - **2026-09-09** — **eBay production developer application submitted.** The owner received
   eBay's confirmation that account review is pending and takes at least one business day.
   The owner-side application action is complete; Group I remains blocked until eBay approves
