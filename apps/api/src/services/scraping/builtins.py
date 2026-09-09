@@ -66,8 +66,11 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
     },
     "Zavvi": {
         "base": "https://www.zavvi.com",
-        "search": "https://www.zavvi.com/search?q={query}",
+        # `{format}` is not a refinement here. A bare title redirects to a franchise
+        # landing page — towels, jumpers, T-shirts, a resin statue, no discs at all.
+        "search": "https://www.zavvi.com/search?q={query}%20{format}",
         "config": {
+            "item": "[data-testid='product-item']",
             "title": "[data-testid='product-title']",
             "price": "[data-testid='product-price'] .product-variant-price",
             "url": "[data-testid='product-title']",
@@ -80,8 +83,9 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         # is arrowfilms.com; using the US domain made the GBP shape guard reject every
         # otherwise-valid result.
         "base": "https://www.arrowfilms.com",
-        "search": "https://www.arrowfilms.com/search?q={query}",
+        "search": "https://www.arrowfilms.com/search?q={query}%20{format}",
         "config": {
+            "item": "[data-testid='product-item']",
             "title": "[data-testid='product-title']",
             "price": "[data-testid='product-price'] .product-variant-price",
             "url": "[data-testid='product-title']",
@@ -103,9 +107,10 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "base": "https://101-films-store.com",
         "search": "https://101-films-store.com/search?q={query}&type=product",
         "config": {
+            "item": ".product-info-inner",
             "title": ".prod-title",
-            "price": ".product-info-inner .money",
-            "url": ".product-info-inner a",
+            "price": ".money",
+            "url": "a",
         },
         "verified": True,
         "note": "Verified against the live UK storefront on 2026-09-09.",
@@ -114,6 +119,7 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "base": "https://secondsightfilms.co.uk",
         "search": "https://secondsightfilms.co.uk/search?q={query}&type=product",
         "config": {
+            "item": ".card-wrapper",
             "title": ".card__heading a",
             "price": ".price-item--sale, .price-item--regular",
             "url": ".card__heading a",
@@ -125,6 +131,7 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "base": "https://www.powerhousefilms.co.uk",
         "search": "https://www.powerhousefilms.co.uk/search?q={query}&type=product",
         "config": {
+            "item": "a.list-view-item",
             "title": ".list-view-item__title",
             "price": ".product-price__price",
             "url": "a.list-view-item",

@@ -28,6 +28,7 @@ from src.services.scraping.extract import (
     ScrapeCandidate,
     check_shape,
     extract,
+    looks_like_physical_media,
     parse_price,
 )
 from src.services.scraping.fetcher import UnsafeUrlError, assert_fetchable, fetch_page
@@ -330,6 +331,15 @@ def test_every_built_in_has_a_search_template_with_a_query_placeholder() -> None
         assert entry["config"].get("price"), name
 
 
+def test_every_verified_built_in_reads_product_cards_rather_than_the_whole_page() -> None:
+    """Without an ``item`` selector each field is selected independently across the page,
+    so a title can be paired with another product's price. Every built-in anyone actually
+    runs must name its card."""
+    for name, entry in BUILT_IN_SCRAPERS.items():
+        if entry["verified"]:
+            assert entry["config"].get("item"), name
+
+
 def test_zavvi_built_in_matches_its_current_search_result_markup() -> None:
     """The live site moved from ``/search/{query}.list`` and renamed every product class.
 
@@ -348,7 +358,7 @@ def test_zavvi_built_in_matches_its_current_search_result_markup() -> None:
     entry = BUILT_IN_SCRAPERS["Zavvi"]
     candidate = extract(html, entry["config"])
 
-    assert entry["search"] == "https://www.zavvi.com/search?q={query}"
+    assert entry["search"] == "https://www.zavvi.com/search?q={query}%20{format}"
     assert candidate.title == "Heat and Dust"
     assert candidate.price == Decimal("20.99")
     assert candidate.currency == "GBP"
@@ -369,7 +379,7 @@ def test_arrow_built_in_uses_the_uk_storefront_and_current_markup() -> None:
     candidate = extract(html, entry["config"])
 
     assert entry["base"] == "https://www.arrowfilms.com"
-    assert entry["search"] == "https://www.arrowfilms.com/search?q={query}"
+    assert entry["search"] == "https://www.arrowfilms.com/search?q={query}%20{format}"
     assert candidate.title == "Night Of The Big Heat Blu-ray"
     assert candidate.price == Decimal("10.00")
     assert candidate.currency == "GBP"
@@ -421,6 +431,252 @@ def test_supported_replacement_markup(
     assert candidate.price == expected_price
     assert candidate.currency == "GBP"
     assert candidate.url == expected_url
+
+
+# ---------------------------------------------------------------------------
+# Merchandise, and the film the shop does not actually stock
+# ---------------------------------------------------------------------------
+
+
+def _zavvi_card(href: str, title: str, price: str) -> str:
+    return f"""
+    <div class="product-card" data-testid="product-item">
+      <a href="{href}" data-testid="product-title">{title}</a>
+      <div data-testid="product-price">
+        <span class="product-variant-price">{price}</span>
+      </div>
+    </div>
+    """
+
+
+#: What Zavvi really returned for "Jaws" on 2026-09-09, in order. Nine more T-shirts and a
+#: resin statue followed; three are enough to make the point.
+JAWS_MERCH_PAGE = "".join(
+    [
+        _zavvi_card(
+            "/p/home-accessories/jaws-amity-welcome-sign-beach-towel/17376588/",
+            "Jaws Amity Welcome Sign Beach Towel",
+            "£17.99",
+        ),
+        _zavvi_card(
+            "/p/clothing/jaws-classic-poster-t-shirt-white/11716106/",
+            "Jaws Classic Poster T-Shirt - White",
+            "£16.99",
+        ),
+        _zavvi_card(
+            "/p/4k/jaws-4k-ultra-hd-includes-2d-blu-ray/12541038/",
+            "Jaws - 4K Ultra HD (Includes 2D Blu-ray)",
+            "£19.99",
+        ),
+    ]
+)
+
+
+def test_a_beach_towel_is_not_the_price_of_the_film() -> None:
+    """The reported defect. Searching Zavvi for "Jaws" returns a beach towel first, and it
+    passes every one of the original five shape rules — the film's name is in the title,
+    £17.99 is a plausible disc price, the currency is right and the URL is Zavvi's own.
+
+    Reading card by card and requiring a disc format lets the 4K further down the page win.
+    """
+    candidate = extract(
+        JAWS_MERCH_PAGE, BUILT_IN_SCRAPERS["Zavvi"]["config"], expected_title="Jaws"
+    )
+
+    assert candidate.title == "Jaws - 4K Ultra HD (Includes 2D Blu-ray)"
+    assert candidate.price == Decimal("19.99")
+    assert candidate.url == "/p/4k/jaws-4k-ultra-hd-includes-2d-blu-ray/12541038/"
+
+
+def test_a_page_of_nothing_but_merchandise_is_refused_with_that_reason() -> None:
+    """And when no disc is on the page at all, the towel must not become the answer. The
+    reported reason has to name the real problem, so the first card is still returned for
+    `check_shape` to judge rather than an empty candidate reporting "no price found"."""
+    towels_only = JAWS_MERCH_PAGE[: JAWS_MERCH_PAGE.index('<div class="product-card"', 100)]
+    candidate = extract(towels_only, BUILT_IN_SCRAPERS["Zavvi"]["config"], expected_title="Jaws")
+    verdict = check_shape(candidate, expected_title="Jaws", retailer_host="www.zavvi.com")
+
+    assert candidate.price is not None, "the candidate must survive to be judged"
+    assert not verdict.ok
+    assert any("no disc format" in reason for reason in verdict.reasons)
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Jaws Amity Welcome Sign Beach Towel",
+        "Jaws Fairisle Men's Christmas Jumper - Black",
+        "McFarlane Jaws 50th Anniversary 1/48 Scale Resin Statue",
+    ],
+)
+def test_merchandise_titles_name_no_disc_format(title: str) -> None:
+    assert not looks_like_physical_media(title, None)
+
+
+@pytest.mark.parametrize(
+    ("title", "url"),
+    [
+        ("Jaws - 4K Ultra HD (Includes 2D Blu-ray)", None),
+        ("Bad Lieutenant (1992) (Standard Edition) (Blu-ray)", None),
+        ("THE LAST DETAIL - BD", None),
+        ("Thousand Plane Raid (1969) (DVD)", None),
+        # Zavvi puts the format in the path rather than the title.
+        ("Heat and Dust", "/p/blu-ray/heat-and-dust/12044695/"),
+    ],
+)
+def test_real_disc_listings_are_recognised_as_media(title: str, url: str | None) -> None:
+    assert looks_like_physical_media(title, url)
+
+
+@pytest.mark.parametrize(
+    "found_title",
+    [
+        "Heat and Dust",
+        "The Big Heat (Standard Edition)",
+        "Red Heat - 4K Ultra HD",
+        "Night of the Big Heat",
+        "Step Up 4: Miami Heat",
+    ],
+)
+def test_a_shop_that_does_not_stock_the_film_is_refused(found_title: str) -> None:
+    """Zavvi has no Michael Mann *Heat*, and its search returns these instead. Every one
+    shares a significant word, so the generous one-word rule passes all of them and would
+    price a different film as *Heat*."""
+    verdict = check_shape(
+        _candidate(title=found_title, url="https://store.hmv.com/p/x"),
+        expected_title="Heat",
+        retailer_host="store.hmv.com",
+    )
+
+    assert not verdict.ok
+    assert any("different film" in reason for reason in verdict.reasons)
+
+
+@pytest.mark.parametrize(
+    ("wanted", "found"),
+    [
+        ("Deep Red", "Deep Red Blu-ray"),
+        ("Jaws", "Jaws - 4K Ultra HD (Includes 2D Blu-ray)"),
+        ("Bad Lieutenant", "Bad Lieutenant (1992) (Standard Edition) (Blu-ray)"),
+        ("The Babadook", "The Babadook Standard Edition 4K UHD"),
+        ("The Last Detail", "THE LAST DETAIL - BD"),
+        ("Carnal Knowledge", "CARNAL KNOWLEDGE - 4K UHD LE"),
+    ],
+)
+def test_format_and_edition_wording_is_not_a_different_film(wanted: str, found: str) -> None:
+    """The strictness above must not reject the real listings it has to accept. Everything
+    a shop legitimately appends — format, edition, packaging, the release year — is noise.
+    """
+    verdict = check_shape(
+        _candidate(title=found, url="https://store.hmv.com/p/x"),
+        expected_title=wanted,
+        retailer_host="store.hmv.com",
+    )
+    assert verdict.ok, verdict.reasons
+
+
+def test_the_wanted_format_decides_which_edition_is_priced() -> None:
+    """101 Films lists Bad Lieutenant on 4K, on Blu-ray, and as a limited edition of both.
+    `preferred_format` is the wanted item's own answer to which of those to price, and was
+    unused until now."""
+    html = """
+    <div class="product-info-inner"><a href="/products/bad-lieutenant-4k-uhd">
+      <span class="prod-title">Bad Lieutenant (1992) (Standard Edition) (4K-UHD)</span></a>
+      <div class="price"><span class="money">£22.00</span></div></div>
+    <div class="product-info-inner"><a href="/products/bad-lieutenant-blu-ray">
+      <span class="prod-title">Bad Lieutenant (1992) (Standard Edition) (Blu-ray)</span></a>
+      <div class="price"><span class="money">£17.00</span></div></div>
+    """
+    config = BUILT_IN_SCRAPERS["101 Films"]["config"]
+
+    blu_ray = extract(html, config, expected_title="Bad Lieutenant", preferred_format="blu_ray")
+    uhd = extract(html, config, expected_title="Bad Lieutenant", preferred_format="4k_uhd")
+    unstated = extract(html, config, expected_title="Bad Lieutenant")
+
+    assert blu_ray.price == Decimal("17.00")
+    assert uhd.price == Decimal("22.00")
+    # No preference stated: the shop's own first result, not an arbitrary one.
+    assert unstated.price == Decimal("22.00")
+
+
+def test_a_format_that_is_out_of_stock_falls_back_rather_than_reporting_nothing() -> None:
+    """Arrow lists a Deep Red DVD with no price at all — it is out of stock. A want for a
+    DVD must not turn that into a failure when the shop is plainly selling the film."""
+    html = """
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/deep-red-blu-ray/1/" data-testid="product-title">Deep Red Blu-ray</a>
+      <div data-testid="product-price"><span class="product-variant-price">£15.00</span></div>
+    </div>
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/deep-red-dvd/2/" data-testid="product-title">Deep Red DVD</a>
+      <div data-testid="product-price"><span class="product-variant-price"></span></div>
+    </div>
+    """
+    candidate = extract(
+        html,
+        BUILT_IN_SCRAPERS["Arrow Video"]["config"],
+        expected_title="Deep Red",
+        preferred_format="dvd",
+    )
+
+    assert candidate.title == "Deep Red Blu-ray"
+    assert candidate.price == Decimal("15.00")
+
+
+def test_a_cards_own_element_can_supply_its_link() -> None:
+    """Powerhouse's product card *is* its anchor, so scoping to the card would otherwise
+    put the listing URL out of reach — `select_one` searches descendants only."""
+    html = """
+    <a class="list-view-item" href="/products/the-last-detail-bd">
+      <div class="list-view-item__title">THE LAST DETAIL - BD</div>
+      <span class="product-price__price">£9.99</span>
+    </a>
+    """
+    candidate = extract(
+        html, BUILT_IN_SCRAPERS["Powerhouse Films"]["config"], expected_title="The Last Detail"
+    )
+
+    assert candidate.url == "/products/the-last-detail-bd"
+    assert candidate.price == Decimal("9.99")
+
+
+def test_a_title_is_never_paired_with_another_products_price() -> None:
+    """The failure card-scoping exists to prevent: the first card has no price node, so
+    page-wide selectors pair its title with the *second* card's price."""
+    html = """
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/blu-ray/the-thing/1/" data-testid="product-title">The Thing Blu-ray</a>
+    </div>
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/blu-ray/the-thing-4k/2/" data-testid="product-title">The Thing 4K UHD</a>
+      <div data-testid="product-price"><span class="product-variant-price">£29.99</span></div>
+    </div>
+    """
+    config = BUILT_IN_SCRAPERS["Zavvi"]["config"]
+
+    scoped = extract(html, config, expected_title="The Thing")
+    page_wide = extract(html, {k: v for k, v in config.items() if k != "item"})
+
+    assert scoped.title == "The Thing 4K UHD" and scoped.price == Decimal("29.99")
+    # Without `item`, the first title is reported with the second card's price.
+    assert page_wide.title == "The Thing Blu-ray" and page_wide.price == Decimal("29.99")
+
+
+def test_the_same_product_rendered_twice_does_not_out_rank_a_better_one() -> None:
+    """Second Sight renders each product twice, for its grid and list layouts."""
+    html = (
+        _zavvi_card("/p/4k/alien-4k/1/", "Alien 4K UHD", "£25.00")
+        + _zavvi_card("/p/4k/alien-4k/1/", "Alien 4K UHD", "£25.00")
+        + _zavvi_card("/p/blu-ray/alien-bd/2/", "Alien Blu-ray", "£12.00")
+    )
+    candidate = extract(
+        html,
+        BUILT_IN_SCRAPERS["Zavvi"]["config"],
+        expected_title="Alien",
+        preferred_format="blu_ray",
+    )
+
+    assert candidate.title == "Alien Blu-ray"
 
 
 # ---------------------------------------------------------------------------
@@ -614,6 +870,28 @@ def test_the_search_url_is_built_by_percent_encoding_the_title() -> None:
     )
     # A title with a character that would otherwise break the query string.
     assert "%26" in (search_url_for(retailer, "Fast & Furious") or "")
+
+
+def test_the_search_names_the_format_because_a_bare_title_returns_merchandise() -> None:
+    """THG redirects a bare film title to a franchise landing page — on 2026-09-09 the
+    first twelve results for "Jaws" were towels, jumpers, T-shirts and a resin statue, with
+    no disc at all. Naming a format is what makes the search return the disc grid, so
+    `{format}` is part of finding the film rather than a refinement of it.
+    """
+    retailer = _retailer(search_url_template="https://shop.test/s?q={query}%20{format}")
+
+    assert search_url_for(retailer, "Jaws", "4k_uhd") == "https://shop.test/s?q=Jaws%204K"
+    assert search_url_for(retailer, "Jaws", "dvd") == "https://shop.test/s?q=Jaws%20DVD"
+    # No preferred format: "Blu-ray" is not a guess at what the owner wants, it is the
+    # term that makes the shop return its disc categories — 4K editions included.
+    assert search_url_for(retailer, "Jaws") == "https://shop.test/s?q=Jaws%20Blu-ray"
+    assert search_url_for(retailer, "Jaws", "download") == "https://shop.test/s?q=Jaws%20Blu-ray"
+
+
+def test_a_template_without_the_format_placeholder_is_untouched() -> None:
+    """Only THG's shops need it; the Shopify labels search their own catalogue fine."""
+    retailer = _retailer(search_url_template="https://shop.test/s?q={query}&type=product")
+    assert search_url_for(retailer, "Heat", "4k_uhd") == "https://shop.test/s?q=Heat&type=product"
 
 
 def test_a_retailer_without_a_template_cannot_be_searched() -> None:
