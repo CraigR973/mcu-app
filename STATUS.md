@@ -2,52 +2,63 @@
 
 ## Now
 
-**Batch 19 — scraper framework — shipped, and its acceptance is deferred to you.**
-Production serves `bf1b4d5f1f2307d1725eec3e0474354e91b05b20` with `db: ok`; migration `017`
-applied on boot.
+**Nine batches shipped tonight. One is built but deliberately not merged.**
 
-**⛔ This is Group F's checkpoint. Batch 20 has not been started.**
+Production serves `bf1b4d5f1f2307d1725eec3e0474354e91b05b20` (Batch 19) with `db: ok`.
 
-| # | Criterion (verbatim) | Result |
-|---|---|---|
-| 5.3 | Each built-in scraper runs against the **live** retailer and persists ≥ 1 `price_checks` row per scraper | **not met — owner action.** `group-start.md`: *"a batch whose acceptance requires live third-party requests ... stops before those runs. The owner performs them."* |
-| 5.3 | Generic CSS scraper, six built-ins, retry, auto-disable after 3 fails | built and fixture-tested — 33 tests |
-| 5.4 | Admin validates a new retailer before enabling | the tool is built; validating means one live request, which is yours to make |
+| Batch | Result |
+|---|---|
+| — | `fix/date-guards-read-the-server-timezone` — a pre-existing red on `main`, fixed first (`04bfd44`) |
+| 12 | Box sets + smart collections (`881f444`) |
+| 13 | Completion sets (`22680de`) — 40 sets from live TMDB |
+| 14 | Stats + export (`20650b3`) — 344 ms median, all 1,857 discs exportable |
+| 15 | Trash, audit UI, lending (`20d1eff`) — the app's first irreversible operation |
+| 16 | Watch providers + recommendations (`d2218ab`) |
+| 17 | Release calendar + iCal (`a09c172`) — first unauthenticated surface |
+| 18 | Wanted list + retailers (`f85aa91`) — paid four earlier batches' debts |
+| 19 | Scraper framework (`bf1b4d5`) — **acceptance deferred to the owner** |
+| 27 | Gift links — **built on `feat/27-gift-links`, gate green, NOT merged** |
 
-**The whole batch is shaped by its own risk note.** *"A layout change does not error — it
-selects the wrong node and persists a plausible wrong number, which then feeds price-drop
-alerts and aggregates."* A success/fail counter cannot see that, so
-`services/scraping/extract.py:check_shape` asserts five things about every result and
-**discards** anything that fails, with a reason (`DECISIONS.md` #79). A test demonstrates
-the exact failure end to end: a selector pointing at a "Save £5.00" badge, which fetches
-fine, parses fine and is wrong.
+### ⛔ Two things are waiting for you
 
-**All six built-in configurations report `verified: false`, and the UI renders them amber**
-(#80). They are starting points for your live runs, not working scrapers.
+**1. Batch 27 is unmerged because its security review never ran.** You asked for the
+security review before letting it auto-close-out. It was launched and **failed before doing
+any work** — the account hit its monthly spend limit. The branch is pushed, all five CI jobs
+are green, and it is deliberately not merged, because a green gate is not the thing that was
+asked for.
 
-**A new kind of surface: the app now fetches URLs a person typed.** Everything else goes to
-TMDB and nowhere else. The fetcher resolves the host and refuses anything not publicly
-routable — re-checked at **every redirect hop**, because httpx would otherwise follow a 302
-into an internal address (#81).
+To finish it: `git checkout feat/27-gift-links`, run the review, then merge as usual.
+`docs/phase-batches.md`'s Batch 27 section lists what was verified without a review and what
+a review still needs to look at.
 
-**Two failures on the way.** CI went red because it installs from `requirements-dev.lock`
-with `--require-hashes`, not from `pyproject.toml` — adding beautifulsoup4 to one and not
-the other left `bs4` missing and every test module failed to import. Both locks regenerated;
-the diff is exactly two packages. And **`test_the_rate_limit_counter_survives_a_process_restart`
-failed once in a full-suite run and passed on the next two** — a single unexplained flake in
-an auth test, recorded here rather than ignored. It has not recurred.
+**2. Group F is stopped at its checkpoint: live scraper acceptance runs.** Batch 20 depends
+on phase 5.3's acceptance, and that acceptance is a live run against real shops — which
+`group-start.md` reserves for you. The steps are in "Next" below.
 
----
+### What tonight's batches left in the live database
 
-**Group F's first half — Batch 18 — shipped earlier** (`f85aa91`), paying four debts from
-Batches 13, 15, 16 and 17. **Group E** — Batches 16 (`d2218ab`) and 17 (`a09c172`).
-**Groups C and D** — Batches 12–15. Plus a pre-existing-red fix (`04bfd44`).
+40 `completion_sets` rows, 32 `release_calendar` rows and 6 `retailers` rows — all three are
+acceptance criteria, so they stay. **The six retailers now carry the built-in selectors**
+(5 of 6 have them; Criterion has no built-in config and CEX is not among the seeded six), so
+step 1 of the checkpoint below is already done — every one is still marked **unverified**.
+`price_checks`, `wanted_list`, `gift_links` and `loans` are all **empty**: every verification
+row was cleaned up.
 
-**What this session has left in the live database.** 40 `completion_sets` rows, 32
-`release_calendar` rows and 6 `retailers` rows — all acceptance criteria, so they stay —
-plus `admin_actions` rows recording each verification pass. `price_checks` is **empty**: the
-run that would fill it is yours. **No `collection_items` row has been created, modified or
-deleted all session: still 1,857, all live.**
+**No `collection_items` row has been created, modified or deleted all session — still 1,857,
+all live.**
+
+### Two defects found only by driving the app, both mine
+
+- **Batch 16** returned a 502 when TMDB was unreachable, and `send()` correctly classifies
+  any 5xx as a *network* failure — so the page told the reader to check their connection
+  while the connection was fine. Now a 200 with an `unavailable` flag (`DECISIONS.md` #68).
+- **Batch 17**'s iCal serialiser let a newline in a URL inject arbitrary calendar
+  properties. Not reachable today; **Batch 19's scrapers would have armed it** (#73).
+
+**One unexplained flake, recorded rather than ignored:**
+`test_the_rate_limit_counter_survives_a_process_restart` failed once in a full-suite run and
+passed on the three runs after it. It has not recurred. If it reappears, it is an auth test
+and worth taking seriously.
 
 ## Next
 
@@ -79,8 +90,9 @@ also want **Batch 11's push**, which is still blocked on its own VAPID credentia
 
 ### Unblocked work that does not need this checkpoint
 
-If you would rather keep moving: **Batch 27** (gift links — the app's other public surface,
-needs its own security review), **Group J** (30 → 31, AI assistant — *may need a live Claude
+**Batch 27 is built and waiting for its review** (above) — finishing it is the shortest path.
+
+If you would rather keep moving: **Group J** (30 → 31, AI assistant — *may need a live Claude
 API key in Railway, which is a credential change and therefore a stop*), and the solo
 batches **32** (voice input), **36** (command palette) and **38** (E2E suite).
 
@@ -382,6 +394,14 @@ Two owner actions remain outstanding, unchanged:
     someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
 
 ## Log
+
+- **2026-09-09** — **Batch 27 built but NOT closed out.** Gift links: a 128-bit slug rather
+  than §3.21's UUID PK or §6.26's 32-bit example; four failure modes answering identically;
+  a public response model deliberately unrelated to the admin one so no ownership, id, slug
+  or count can leak. Gate green on `feat/27-gift-links`. **The security review the owner
+  asked for was launched and failed before doing any work** (monthly spend limit), so the
+  branch is deliberately unmerged — and a first version of the ledger entry claimed it had
+  been reviewed, which was corrected in `247ee25`.
 
 - **2026-09-09** — **Batch 19 shipped — scraper framework** (`bf1b4d5`), **and Group F
   stopped at its checkpoint.** Both of 5.3's and 5.4's acceptance criteria need live
