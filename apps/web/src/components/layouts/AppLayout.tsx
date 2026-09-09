@@ -2,9 +2,13 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
+import CommandPalette from '@/components/CommandPalette'
+import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import OfflineBanner from '@/components/OfflineBanner'
 import SearchBar from '@/components/SearchBar'
+import { useAuth } from '@/context/auth'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { startAutoFlush } from '@/lib/sync'
 
 interface Props {
@@ -13,7 +17,18 @@ interface Props {
 
 export default function AppLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const queryClient = useQueryClient()
+  const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
+
+  useKeyboardShortcuts({
+    isAdmin,
+    suspended: paletteOpen || helpOpen,
+    onOpenPalette: () => setPaletteOpen(true),
+    onOpenHelp: () => setHelpOpen(true),
+  })
 
   // Reconnecting is the moment the queue can move, and the only one the app gets for
   // free. Registered on the shell rather than on a page so a queued edit is not stranded
@@ -57,6 +72,9 @@ export default function AppLayout({ children }: Props) {
           </ErrorBoundary>
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={isAdmin} />
+      <ShortcutsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} isAdmin={isAdmin} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -24,6 +24,7 @@ import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
 import { useAuth } from '@/context/auth'
+import { useRecentItems } from '@/hooks/useRecentItems'
 import {
   backdropUrl,
   conditionLabel,
@@ -181,6 +182,22 @@ export default function MovieDetailPage() {
     queryFn: () => fetchCopies(movieId),
     enabled: movieId.length > 0,
   })
+
+  const { addRecentItem } = useRecentItems()
+  const viewedMovie = movieQuery.data
+  // Phase 6.3's "recent items" index. Keyed on the movie's own id, not the route
+  // param, so identifying a film mid-visit (which can change the id — see `identified`
+  // below) still records the film that's actually on screen.
+  useEffect(() => {
+    if (!viewedMovie) return
+    addRecentItem({
+      id: viewedMovie.id,
+      title: viewedMovie.title,
+      year: viewedMovie.year,
+      posterPath: viewedMovie.posterPath,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedMovie?.id])
 
   function identified(movie: MovieDetail) {
     queryClient.setQueryData(['movie', movie.id], movie)

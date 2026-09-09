@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, CalendarDays, Film, Bookmark, Gift, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
+import { navItems, adminNavItems } from '@/lib/nav-items'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -13,31 +14,8 @@ interface Props {
   onClose: () => void
 }
 
-const navItems = [
-  { label: 'Movies', path: '/movies', icon: Film },
-  { label: 'Box sets', path: '/box-sets', icon: Boxes },
-  { label: 'Collections', path: '/collections', icon: Sparkles },
-  { label: 'Insights', path: '/insights', icon: Target },
-  { label: 'Coming soon', path: '/discover', icon: Sparkle },
-  { label: 'Calendar', path: '/calendar', icon: CalendarDays },
-  { label: 'Wanted', path: '/wanted', icon: Bookmark },
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Stats', path: '/stats', icon: TrendingUp },
-  { label: 'Loans', path: '/loans', icon: HandHeart },
-]
-
 const LINK_CLS =
   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors'
-
-/** Batch 7's write surface. Admin-only, matching the routes and the API. */
-const adminNavItems = [
-  { label: 'Add a disc', path: '/collection/add', icon: Plus },
-  { label: 'Trash', path: '/trash', icon: Trash2 },
-  { label: 'Audit log', path: '/audit', icon: ScrollText },
-  { label: 'Retailers', path: '/retailers', icon: Store },
-  { label: 'Gift links', path: '/gift-links', icon: Gift },
-  { label: 'Admin', path: '/admin', icon: ShieldCheck },
-]
 
 export default function Sidebar({ open, onClose }: Props) {
   const { profile, signOut } = useAuth()

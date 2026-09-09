@@ -92,19 +92,26 @@ export default function SearchBar() {
   }, [navigate])
 
   useEffect(() => {
+    // `/` is a global shortcut (§7.5), owned by useKeyboardShortcuts so there is one
+    // place deciding whether the person is "typing" before it fires. It signals here
+    // rather than focusing directly, so this stays the only thing that knows it has an
+    // input to focus.
+    const onFocusSearch = () => {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
-        e.preventDefault()
-        inputRef.current?.focus()
-        inputRef.current?.select()
-      }
       if (e.key === 'Escape') {
         setOpen(false)
         inputRef.current?.blur()
       }
     }
+    window.addEventListener('mcu:focus-search', onFocusSearch)
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('mcu:focus-search', onFocusSearch)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [])
 
   const results = data?.items ?? []
