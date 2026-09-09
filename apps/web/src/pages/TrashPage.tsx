@@ -16,7 +16,16 @@ import {
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
-const TABLES: TrashTable[] = ['collection_items', 'watch_log', 'movies', 'box_sets']
+const TABLES: TrashTable[] = [
+  'collection_items',
+  'watch_log',
+  'movies',
+  'box_sets',
+  // Batch 18. Batch 15 refused these two by name rather than answering an empty page for
+  // tables that did not exist; §3.5 and §3.16 exist now.
+  'wanted_list',
+  'retailers',
+]
 
 /** Every query a restore or a destroy can change. Listed once so a new tab cannot forget one. */
 function invalidateEverything(queryClient: ReturnType<typeof useQueryClient>) {
@@ -32,6 +41,8 @@ function invalidateEverything(queryClient: ReturnType<typeof useQueryClient>) {
     'box-sets',
     'loans',
     'completion-insights',
+    'wanted',
+    'retailers',
   ]) {
     void queryClient.invalidateQueries({ queryKey: [key] })
   }
@@ -207,9 +218,11 @@ function PurgePanel({ table }: { table: TrashTable }) {
  * §13.5's Trash — now across every table that soft-deletes, with restore and permanent
  * delete.
  *
- * **`wanted_list` is absent, not empty.** §6.30 names it, Batch 18 builds it, and there is
- * no table — so the API refuses the name rather than answering "nothing here", which is how
- * an unimplemented feature passes for a working one.
+ * **All six tables §6.30 implies are here since Batch 18.** Batch 15 shipped four and made
+ * the API *refuse* `wanted_list` by name rather than answer "nothing here" for a table that
+ * did not exist — which is how an unimplemented feature passes for a working one. §3.5 and
+ * §3.16 exist now, so the refusal became two more tabs rather than a lie that had to be
+ * unwound.
  */
 export default function TrashPage() {
   const [table, setTable] = useState<TrashTable>('collection_items')

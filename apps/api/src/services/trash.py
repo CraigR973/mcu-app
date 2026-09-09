@@ -31,20 +31,24 @@ from src.clock import utcnow
 from src.models.box_set import BOX_SETS_TABLE, BoxSet
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
+from src.models.wanted import RETAILERS_TABLE, WANTED_LIST_TABLE, Retailer, WantedItem
 from src.models.watch_log import WatchLog
 
 #: Every table §6.30 sends to the trash, restricted to the ones that exist.
 #:
-#: §6.30 names "collection items, wanted entries, watch logs, and movies". ``wanted_list``
-#: is **Batch 18** and has no table, so it is absent rather than present-and-empty — a
-#: filter that silently answers "nothing here" for something unimplemented is how a
-#: missing feature passes for a working one. ``box_sets`` is Batch 12's, whose own
-#: migration said this batch owns widening the list.
+#: §6.30 names "collection items, wanted entries, watch logs, and movies". All four now
+#: exist: Batch 15 deliberately left ``wanted_list`` **out** rather than answering an empty
+#: page for a table that did not exist, and Batch 18 built it — so it joins here, which is
+#: the whole point of having refused it by name instead of silently returning nothing.
+#: ``box_sets`` is Batch 12's; ``retailers`` soft-deletes too, and an accidentally removed
+#: shop is exactly the kind of thing a bin is for.
 TRASH_TABLES: tuple[str, ...] = (
     "collection_items",
     "watch_log",
     "movies",
     BOX_SETS_TABLE,
+    WANTED_LIST_TABLE,
+    RETAILERS_TABLE,
 )
 
 _MODELS: dict[str, Any] = {
@@ -52,6 +56,8 @@ _MODELS: dict[str, Any] = {
     "watch_log": WatchLog,
     "movies": Movie,
     BOX_SETS_TABLE: BoxSet,
+    WANTED_LIST_TABLE: WantedItem,
+    RETAILERS_TABLE: Retailer,
 }
 
 #: §6.30: "Items older than 90 days are auto-purged." The window is defined here; the

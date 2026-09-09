@@ -17,10 +17,10 @@ OfferKind = Literal["flatrate", "rent", "buy"]
 
 #: What this collection already has to say about a recommended film.
 #:
-#: ``wanted`` is **absent on purpose**. §7.2 lists "owned / wanted / unowned", and the
-#: wanted list is §3.5 — a table Batch 18 builds. A third state the app cannot produce
-#: would be a legend entry that never appears.
-OwnershipState = Literal["owned", "unowned"]
+#: Three states since **Batch 18** built §3.5's `wanted_list`. Batch 16 shipped two,
+#: because a ``wanted`` value the app could never produce would have been a legend entry
+#: pointing at nothing — this is the third arriving with the table behind it.
+OwnershipState = Literal["owned", "wanted", "unowned"]
 
 
 class StreamingOfferResponse(BaseModel):

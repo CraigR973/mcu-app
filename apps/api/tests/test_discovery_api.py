@@ -27,6 +27,7 @@ from src.main import app
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
+from src.models.wanted import WantedItem
 from src.routers.movies import get_tmdb_client
 from src.tmdb.models import (
     SearchResult,
@@ -431,3 +432,78 @@ async def test_the_upcoming_feed_asks_about_the_readers_region(
         app.dependency_overrides.clear()
 
     assert fake.regions_asked == ["IE"]
+
+
+async def test_a_wanted_film_gets_the_third_ownership_state(
+    api_session: AsyncSession, viewer: Profile
+) -> None:
+    """Batch 18's payoff for Batch 16's two-state enum.
+
+    Batch 16 shipped "owned" and "unowned" only, because §3.5's `wanted_list` did not
+    exist and a badge that could never appear is a legend entry pointing at nothing. The
+    table exists now.
+    """
+    source = await _owned_film(api_session, "The Source", 949)
+    wanted_film = await _owned_film(api_session, "On The Wanted List", 444_444, live_copy=False)
+    api_session.add(
+        WantedItem(id=uuid.uuid4(), movie_id=wanted_film.id, currency="GBP", is_active=True)
+    )
+    await api_session.flush()
+
+    _install(
+        api_session,
+        viewer,
+        FakeDiscoveryClient(recommendations=[_result(444_444, "On The Wanted List")]),
+    )
+    try:
+        async with _client() as client:
+            response = await client.get(f"/api/v1/movies/{source.id}/recommendations")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.json()["items"][0]["ownership"] == "wanted"
+
+
+async def test_an_inactive_wanted_entry_is_not_shown_as_wanted(
+    api_session: AsyncSession, viewer: Profile
+) -> None:
+    """ "No longer looking" is a decision, and calling it *wanted* would contradict it."""
+    source = await _owned_film(api_session, "The Source Again", 949)
+    film = await _owned_film(api_session, "No Longer Wanted", 555_555, live_copy=False)
+    api_session.add(WantedItem(id=uuid.uuid4(), movie_id=film.id, currency="GBP", is_active=False))
+    await api_session.flush()
+
+    _install(
+        api_session,
+        viewer,
+        FakeDiscoveryClient(recommendations=[_result(555_555, "No Longer Wanted")]),
+    )
+    try:
+        async with _client() as client:
+            response = await client.get(f"/api/v1/movies/{source.id}/recommendations")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.json()["items"][0]["ownership"] == "unowned"
+
+
+async def test_owning_a_film_beats_wanting_it(api_session: AsyncSession, viewer: Profile) -> None:
+    """Both can be true — a DVD-to-4K upgrade is exactly that — and "you already have
+    this" is the more useful thing to say on a card suggesting what to watch."""
+    source = await _owned_film(api_session, "Yet Another Source", 949)
+    both = await _owned_film(api_session, "Owned And Wanted", 666_666)
+    api_session.add(WantedItem(id=uuid.uuid4(), movie_id=both.id, currency="GBP", is_active=True))
+    await api_session.flush()
+
+    _install(
+        api_session,
+        viewer,
+        FakeDiscoveryClient(recommendations=[_result(666_666, "Owned And Wanted")]),
+    )
+    try:
+        async with _client() as client:
+            response = await client.get(f"/api/v1/movies/{source.id}/recommendations")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.json()["items"][0]["ownership"] == "owned"

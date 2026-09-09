@@ -26,6 +26,7 @@ from src.routers import (
     smart_collections,
     stats,
     trash,
+    wanted,
     watch_log,
 )
 
@@ -106,3 +107,4 @@ app.include_router(export.router)
 app.include_router(trash.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)
+app.include_router(wanted.router)

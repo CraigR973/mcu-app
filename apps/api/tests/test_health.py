@@ -134,4 +134,10 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/calendar/subscribe",
         "/api/v1/calendar.ics",
         "/api/v1/calendar/ingest",
+        # Batch 18. The table four earlier batches were waiting on.
+        "/api/v1/wanted",
+        "/api/v1/wanted/{item_id}",
+        "/api/v1/retailers",
+        "/api/v1/retailers/{retailer_id}",
+        "/api/v1/retailers/seed",
     }

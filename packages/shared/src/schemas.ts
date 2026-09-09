@@ -627,7 +627,16 @@ export type Activity = z.infer<typeof activitySchema>
 // Trash, audit filters and lending (Batch 15) — §13.5, §13.6, §12.5
 // ---------------------------------------------------------------------------
 
-export const trashTableSchema = z.enum(['collection_items', 'watch_log', 'movies', 'box_sets'])
+export const trashTableSchema = z.enum([
+  'collection_items',
+  'watch_log',
+  'movies',
+  'box_sets',
+  // Batch 18. Batch 15 deliberately left these out rather than answering an empty page
+  // for tables that did not exist; they exist now.
+  'wanted_list',
+  'retailers',
+])
 
 export const trashCountSchema = z.object({
   table: trashTableSchema,
@@ -705,10 +714,10 @@ export type LoanList = z.infer<typeof loanListSchema>
 
 export const offerKindSchema = z.enum(['flatrate', 'rent', 'buy'])
 
-/** `wanted` is deliberately absent: §7.2 lists it, the wanted list is §3.5, and Batch 18
- *  builds the table. A third state the app cannot produce is a legend entry pointing at
- *  nothing. */
-export const ownershipStateSchema = z.enum(['owned', 'unowned'])
+/** Three states since Batch 18 built §3.5's `wanted_list`. Batch 16 shipped two, because
+ *  a `wanted` badge that could never appear would have been a legend entry pointing at
+ *  nothing — this is the third state arriving with the table behind it. */
+export const ownershipStateSchema = z.enum(['owned', 'wanted', 'unowned'])
 
 export const streamingOfferSchema = z.object({
   providerId: z.number().int().positive(),
@@ -840,3 +849,79 @@ export type CalendarMonth = z.infer<typeof calendarMonthSchema>
 export type CalendarListing = z.infer<typeof calendarListSchema>
 export type CalendarSubscription = z.infer<typeof calendarSubscriptionSchema>
 export type CalendarIngest = z.infer<typeof calendarIngestSchema>
+
+// ---------------------------------------------------------------------------
+// Wanted list and retailers (Batch 18) — §3.5, §3.16, §5.1, §5.2
+// ---------------------------------------------------------------------------
+
+export const wantedItemSchema = z.object({
+  id: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  preferredFormat: z.string().nullable(),
+  /** A string, not a number: money must not round-trip through a float, and this is the
+   *  threshold Batch 20's price alerts compare against. */
+  maxPrice: z.string().nullable(),
+  currency: z.string().length(3),
+  /** "Still looking" — a decision. Distinct from `deleted_at`, which is an accident. */
+  isActive: z.boolean(),
+  notes: z.string().nullable(),
+  /** Wanting a film you own is not an error — a DVD-to-4K upgrade is exactly that. */
+  ownedAlready: z.boolean(),
+  addedAt: z.string(),
+})
+
+export const wantedListSchema = z.object({
+  items: z.array(wantedItemSchema),
+  total: z.number().int().nonnegative(),
+  activeCount: z.number().int().nonnegative(),
+})
+
+export const scraperTypeSchema = z.enum(['built_in', 'generic_css', 'custom'])
+export const scrapeFrequencySchema = z.enum(['daily', 'weekly', 'manual'])
+
+export const retailerSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  baseUrl: z.string().min(1),
+  dealsUrl: z.string().nullable(),
+  searchUrlTemplate: z.string().nullable(),
+  scraperType: scraperTypeSchema,
+  scraperConfig: z.record(z.unknown()),
+  scrapeFrequency: scrapeFrequencySchema,
+  enabled: z.boolean(),
+  currency: z.string().length(3),
+  region: z.string().length(2),
+  notes: z.string().nullable(),
+  lastScrapedAt: z.string().nullable(),
+  lastScrapeStatus: z.string().nullable(),
+  lastScrapeError: z.string().nullable(),
+  consecutiveFailures: z.number().int().nonnegative(),
+  /** False until Batch 19 gives this retailer selectors — so the page can say "not
+   *  configured" rather than implying a working scraper exists. */
+  isConfigured: z.boolean(),
+  addedAt: z.string(),
+})
+
+export const retailerListSchema = z.object({
+  items: z.array(retailerSchema),
+  total: z.number().int().nonnegative(),
+  enabledCount: z.number().int().nonnegative(),
+  configuredCount: z.number().int().nonnegative(),
+})
+
+export const retailerSeedSchema = z.object({
+  created: z.number().int().nonnegative(),
+  existing: z.number().int().nonnegative(),
+  names: z.array(z.string()),
+})
+
+export type WantedItem = z.infer<typeof wantedItemSchema>
+export type WantedList = z.infer<typeof wantedListSchema>
+export type ScraperType = z.infer<typeof scraperTypeSchema>
+export type ScrapeFrequency = z.infer<typeof scrapeFrequencySchema>
+export type RetailerRow = z.infer<typeof retailerSchema>
+export type RetailerList = z.infer<typeof retailerListSchema>
+export type RetailerSeed = z.infer<typeof retailerSeedSchema>

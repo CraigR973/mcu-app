@@ -27,6 +27,8 @@ const LoansPage = lazy(() => import('./pages/LoansPage'))
 const AuditPage = lazy(() => import('./pages/AuditPage'))
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage'))
+const WantedPage = lazy(() => import('./pages/WantedPage'))
+const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 
 function AdminPage() {
   return (
@@ -136,6 +138,10 @@ export default function App() {
               element={<AppShell><InsightsPage /></AppShell>}
             />
             <Route
+              path="/wanted"
+              element={<AppShell><WantedPage /></AppShell>}
+            />
+            <Route
               path="/calendar"
               element={<AppShell><CalendarPage /></AppShell>}
             />
@@ -168,6 +174,10 @@ export default function App() {
             <Route
               path="/audit"
               element={<AdminShell><AuditPage /></AdminShell>}
+            />
+            <Route
+              path="/retailers"
+              element={<AdminShell><RetailersPage /></AdminShell>}
             />
             <Route
               path="/admin"

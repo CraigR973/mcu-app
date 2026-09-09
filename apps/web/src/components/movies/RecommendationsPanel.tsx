@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Check } from 'lucide-react'
+import { Bookmark, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { fetchRecommendations, posterUrl } from '@/lib/api'
@@ -9,12 +9,12 @@ import { cn } from '@/lib/utils'
 /**
  * §7.2's recommendations, flagged against the shelf.
  *
- * **Two ownership states, not three.** §7.2 asks for "owned / wanted / unowned" and the
- * wanted list is §3.5 — a table **Batch 18** builds. A "wanted" badge that can never
- * appear is a legend entry pointing at nothing, which is the defect gotcha 5 catalogues.
+ * **All three of §7.2's ownership states since Batch 18.** Batch 16 shipped two, because
+ * §3.5's `wanted_list` did not exist and a "wanted" badge that can never appear is a legend
+ * entry pointing at nothing. The table exists now.
  *
- * An owned recommendation links to the film already here; an unowned one does not link
- * anywhere, because there is nowhere to go yet. Batch 18 gives it a destination.
+ * An owned recommendation links to the film already here; a wanted one is marked and links
+ * to the wanted list; an unowned one does not link anywhere, because there is nowhere to go.
  */
 export function RecommendationsPanel({ movieId }: { movieId: string }) {
   const recsQuery = useQuery({
@@ -56,6 +56,9 @@ export function RecommendationsPanel({ movieId }: { movieId: string }) {
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">
         {recsQuery.data?.ownedCount ?? 0} of {items.length} already on the shelf
+        {items.filter((item) => item.ownership === 'wanted').length > 0
+          ? `, ${String(items.filter((item) => item.ownership === 'wanted').length)} on the wanted list`
+          : ''}
       </p>
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
         {items.map((item) => {
@@ -72,8 +75,18 @@ export function RecommendationsPanel({ movieId }: { movieId: string }) {
                   )}
                 />
                 {item.ownership === 'owned' ? (
-                  <span className="absolute right-1 top-1 rounded-full bg-primary p-0.5 text-primary-foreground">
+                  <span
+                    className="absolute right-1 top-1 rounded-full bg-primary p-0.5 text-primary-foreground"
+                    title="On the shelf"
+                  >
                     <Check className="h-3 w-3" />
+                  </span>
+                ) : item.ownership === 'wanted' ? (
+                  <span
+                    className="absolute right-1 top-1 rounded-full bg-amber-500 p-0.5 text-white"
+                    title="On the wanted list"
+                  >
+                    <Bookmark className="h-3 w-3" />
                   </span>
                 ) : null}
               </div>
@@ -85,7 +98,13 @@ export function RecommendationsPanel({ movieId }: { movieId: string }) {
           )
           return (
             <li key={item.tmdbId}>
-              {item.movieId ? <Link to={`/movies/${item.movieId}`}>{card}</Link> : card}
+              {item.movieId ? (
+                <Link to={`/movies/${item.movieId}`}>{card}</Link>
+              ) : item.ownership === 'wanted' ? (
+                <Link to="/wanted">{card}</Link>
+              ) : (
+                card
+              )}
             </li>
           )
         })}

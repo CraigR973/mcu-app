@@ -17,6 +17,7 @@ import {
   loanSchema,
   movieDetailSchema,
   moviePageSchema,
+  ownershipStateSchema,
   profileResponseSchema,
   recommendationSchema,
   smartCollectionFiltersSchema,
@@ -28,6 +29,8 @@ import {
   tokenPairSchema,
   trashPageSchema,
   trashRowSchema,
+  trashTableSchema,
+  wantedItemSchema,
   watchLogPageSchema,
 } from './schemas'
 
@@ -771,11 +774,13 @@ describe('trashRowSchema', () => {
   })
 
   it('refuses a table the trash cannot serve', () => {
-    // `wanted_list` is Batch 18. Accepting the name here would let the UI ask for it and
+    // The example used to be `wanted_list`, which **Batch 18 built** — so it is a real tab
+    // now. `smart_collections` hard-deletes by design (`DECISIONS.md` #55), so it is the
+    // table that genuinely has no bin; accepting its name would let the UI ask for it and
     // render a confidently empty page.
     const bad = trashRowSchema.safeParse({
       id: UUID_A,
-      table: 'wanted_list',
+      table: 'smart_collections',
       label: 'x',
       sublabel: null,
       posterPath: null,
@@ -822,10 +827,10 @@ describe('streamingSchema', () => {
 })
 
 describe('recommendationSchema', () => {
-  it('has exactly two ownership states', () => {
-    // §7.2 lists "owned / wanted / unowned". The wanted list is Batch 18, so a `wanted`
-    // badge could never appear — and a legend entry pointing at nothing is the defect
-    // gotcha 5 catalogues four instances of.
+  it('has all three of §7.2’s ownership states since Batch 18', () => {
+    // Batch 16 shipped two and this test asserted the third was *refused*, because §3.5's
+    // `wanted_list` did not exist and a badge that could never appear is a legend entry
+    // pointing at nothing. Batch 18 built the table, so the assertion inverts.
     const wanted = recommendationSchema.safeParse({
       tmdbId: 1,
       title: 'A Film',
@@ -835,6 +840,75 @@ describe('recommendationSchema', () => {
       ownership: 'wanted',
       movieId: null,
     })
-    expect(wanted.success).toBe(false)
+    expect(wanted.success).toBe(true)
+  })
+
+  it('still refuses a state the app cannot produce', () => {
+    const bad = recommendationSchema.safeParse({
+      tmdbId: 1,
+      title: 'A Film',
+      year: 2026,
+      overview: '',
+      posterPath: null,
+      ownership: 'preordered',
+      movieId: null,
+    })
+    expect(bad.success).toBe(false)
+  })
+})
+
+describe('wantedItemSchema', () => {
+  const base = {
+    id: UUID_A,
+    movieId: UUID_B,
+    movieTitle: 'A Film To Buy',
+    year: 2026,
+    posterPath: null,
+    preferredFormat: '4k_uhd',
+    maxPrice: '19.99',
+    currency: 'GBP',
+    isActive: true,
+    notes: null,
+    ownedAlready: false,
+    addedAt: '2026-09-09T00:00:00Z',
+  }
+
+  it('keeps a price as a decimal string', () => {
+    // Money never round-trips through a float — this is the threshold Batch 20's alerts
+    // compare against, and a float compares wrongly at exactly the boundary.
+    expect(wantedItemSchema.parse(base).maxPrice).toBe('19.99')
+  })
+
+  it('allows wanting a film that is already owned', () => {
+    // A DVD-to-4K upgrade is exactly that, so it is flagged rather than refused.
+    expect(wantedItemSchema.parse({ ...base, ownedAlready: true }).ownedAlready).toBe(true)
+  })
+
+  it('separates "no longer looking" from removal', () => {
+    // `isActive` is a decision; deletion is an accident. Only the second goes to Trash.
+    expect(wantedItemSchema.parse({ ...base, isActive: false }).isActive).toBe(false)
+  })
+})
+
+describe('ownershipStateSchema', () => {
+  it('has all three of §7.2’s states now that Batch 18 built the table', () => {
+    // Batch 16 shipped two, because a `wanted` badge that could never appear would be a
+    // legend entry pointing at nothing.
+    expect(ownershipStateSchema.safeParse('wanted').success).toBe(true)
+    expect(ownershipStateSchema.safeParse('owned').success).toBe(true)
+    expect(ownershipStateSchema.safeParse('unowned').success).toBe(true)
+    expect(ownershipStateSchema.safeParse('borrowed').success).toBe(false)
+  })
+})
+
+describe('trashTableSchema', () => {
+  it('accepts the two tables Batch 15 refused and Batch 18 built', () => {
+    expect(trashTableSchema.safeParse('wanted_list').success).toBe(true)
+    expect(trashTableSchema.safeParse('retailers').success).toBe(true)
+  })
+
+  it('still refuses a table with no bin', () => {
+    // `smart_collections` hard-deletes by design — there is nothing for a trash to hold.
+    expect(trashTableSchema.safeParse('smart_collections').success).toBe(false)
   })
 })

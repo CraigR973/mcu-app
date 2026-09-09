@@ -466,6 +466,34 @@ carries no personal data at all — a test asserts it.
 (`DECISIONS.md` #73). Nothing writes `release_calendar.url` yet; **Batch 19's scrapers are
 what would have armed it.**
 
+### ~~Batch 18 — Wanted list + retailers~~ 🟢 **shipped**
+**Covers phases 5.1 and 5.2**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 5.1: Wanted List CRUD** — Add, edit, remove endpoints · Wanted list page UI with cards · Preferred format, max price, currency. **Acceptance:** Adding to wanted list from detail page and listing it works both ways
+>
+> **Phase 5.2: Retailer Management** — `retailers` CRUD UI · Admin adds retailer with base URL, deals URL, selectors · Seeded default retailers. **Acceptance:** Admin adds a new retailer; it's saved and enabled
+
+**This batch pays four debts.** Every one of them was deferred here because §3.5 had no
+table, and each was recorded rather than fudged at the time:
+
+| Batch | What it deferred | Now |
+|---|---|---|
+| 13 | §11.2's "bulk add missing to wanted list" — dropped | the button exists on a completion set |
+| 15 | the `wanted_list` trash tab — the API **refused** the name | a real tab, with `retailers` beside it |
+| 16 | §7.2's third ownership state — a two-value enum | `owned` / `wanted` / `unowned`, with a badge |
+| 17 | `release_calendar.is_wishlist_match` — created, never written | still unwritten; left to whichever batch next touches ingestion |
+
+**Seeded retailers arrive with no selectors, and the UI says so.** §5.2 asks for "seeded
+default retailers" and §3.16 names six; a seeded row is a name and a URL, not a working
+scraper. Inventing CSS nobody has run against a live page would be worse than none — the
+ledger's own risk note for Batch 19 is that a wrong selector *"does not error — it selects
+the wrong node and persists a plausible wrong number"*. `configuredCount` is 0 and the page
+says why.
+
+**Seeding is an endpoint, not a migration**, so it is idempotent, re-runnable and
+inspectable — a migration that inserts rows makes `downgrade` ambiguous and CI cannot prove
+either direction.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -482,7 +510,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~15~~ | ~~Trash, audit UI, lending~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~13.5, 13.6, 12.5~~ | permanent delete proved on live data — row gone, cascade fired, **audit trail outlived its subject**, 1,857 discs untouched; **"overdue triggers a push" not met — Batch 11 owns push** |
 | ~~16~~ | ~~Watch providers + recommendations~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~7.1, 7.2~~ | live: *North by Northwest* shows HBO Max + 6 rent + 6 buy in GB; **20 recommendations, 7 already on the shelf**; **"wanted" dropped — Batch 18 owns it** |
 | ~~17~~ | ~~Release calendar + iCal~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~7.3, 7.4 — secret-token `.ics` URL~~ | live ingestion put **32 rows** in `release_calendar`, re-run idempotent; feed serves unauthenticated with hashed rotating tokens. **A security review found and closed a URL content-injection hole.** Apple Calendar check is an owner action |
-| 18 | Wanted list + retailers | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.1, 5.2 (full scope) |
+| ~~18~~ | ~~Wanted list + retailers~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~5.1, 5.2 (full scope)~~ | §3.5 and §3.16 built; **four debts from Batches 13, 15, 16 and 17 paid**; 6 default retailers seeded, **0 configured — selectors are Batch 19's** |
 | 19 | **Scraper framework** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **5.3, 5.4** — see risk note below |
 | 20 | Price scraping + drop alerts | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 5.5, 5.6, 5.8 |
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |

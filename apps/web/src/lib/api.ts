@@ -19,6 +19,9 @@ import {
   movieDetailSchema,
   moviePageSchema,
   newReleaseListSchema,
+  retailerListSchema,
+  retailerSchema,
+  retailerSeedSchema,
   recommendationListSchema,
   streamingSchema,
   profileResponseSchema,
@@ -33,6 +36,8 @@ import {
   tmdbSearchResponseSchema,
   trashListSchema,
   trashPageSchema,
+  wantedItemSchema,
+  wantedListSchema,
   watchLogEntrySchema,
   watchLogPageSchema,
   type Activity,
@@ -62,6 +67,11 @@ import {
   type NewReleaseList,
   type OfferKind,
   type RecommendationList,
+  type RetailerList,
+  type RetailerRow,
+  type RetailerSeed,
+  type ScrapeFrequency,
+  type ScraperType,
   type Streaming,
   type ProfileResponse,
   type SearchResponse,
@@ -73,6 +83,8 @@ import {
   type TmdbSearchResponse,
   type TrashList,
   type TrashPage,
+  type WantedItem,
+  type WantedList,
   type TrashTable,
   type WatchLogEntry,
   type WatchLogPage,
@@ -123,6 +135,10 @@ export type {
   OwnershipState,
   Recommendation,
   RecommendationList,
+  RetailerList,
+  RetailerRow,
+  ScrapeFrequency,
+  ScraperType,
   Streaming,
   StreamingOffer,
   SearchResponse,
@@ -146,6 +162,8 @@ export type {
   TrashPage,
   TrashRow,
   TrashTable,
+  WantedItem,
+  WantedList,
   WatchLogEntry,
   WatchLogPage,
 } from '@mcu/shared'
@@ -929,6 +947,8 @@ export const TRASH_TABLE_LABELS: Record<TrashTable, string> = {
   watch_log: 'Watches',
   movies: 'Films',
   box_sets: 'Box sets',
+  wanted_list: 'Wanted',
+  retailers: 'Retailers',
 }
 
 export async function fetchLoans(openOnly = false): Promise<LoanList> {
@@ -1062,4 +1082,140 @@ export function calendarFeedUrl(path: string): string {
 /** A webcal: link, which Apple Calendar and most desktop clients open directly. */
 export function webcalUrl(httpUrl: string): string {
   return httpUrl.replace(/^https?:/, 'webcal:')
+}
+
+// ---------------------------------------------------------------------------
+// Wanted list and retailers (Batch 18) — §5.1, §5.2
+// ---------------------------------------------------------------------------
+
+export async function fetchWanted(activeOnly = false): Promise<WantedList> {
+  return parseResponse(
+    await authFetch(`/wanted?activeOnly=${String(activeOnly)}`),
+    wantedListSchema,
+  )
+}
+
+export interface WantedInput {
+  /** Exactly one of these. A wanted film usually has no `movies` row — that is the whole
+   *  point of wanting it — so `tmdbId` is the common case, not the exception. */
+  movieId?: string
+  tmdbId?: number
+  preferredFormat?: string | null
+  maxPrice?: string | null
+  currency?: string
+  notes?: string | null
+}
+
+export async function addWanted(input: WantedInput): Promise<WantedItem> {
+  return parseOrThrowApiError(
+    await authFetch('/wanted', {
+      method: 'POST',
+      body: JSON.stringify({ currency: 'GBP', ...input }),
+    }),
+    wantedItemSchema,
+  )
+}
+
+export async function updateWanted(
+  id: string,
+  input: { preferredFormat?: string | null; maxPrice?: string | null; isActive: boolean; notes?: string | null },
+): Promise<WantedItem> {
+  return parseOrThrowApiError(
+    await authFetch(`/wanted/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ currency: 'GBP', ...input }),
+    }),
+    wantedItemSchema,
+  )
+}
+
+export async function removeWanted(id: string): Promise<void> {
+  const response = await authFetch(`/wanted/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/**
+ * §11.2's "bulk add missing to wanted list", which Batch 13 dropped for want of a table.
+ *
+ * Sequential rather than parallel, and it does not stop at the first failure: a film
+ * already on the list answers 409, and one bad entry in a set of forty should not abandon
+ * the other thirty-nine. The result says what actually happened.
+ */
+export async function addManyWanted(
+  tmdbIds: number[],
+  preferredFormat?: string | null,
+): Promise<{ added: number; alreadyThere: number; failed: number }> {
+  let added = 0
+  let alreadyThere = 0
+  let failed = 0
+  for (const tmdbId of tmdbIds) {
+    try {
+      await addWanted({ tmdbId, preferredFormat })
+      added += 1
+    } catch (error) {
+      // 409 is "already on the list", which is a success from the person's point of view.
+      if (error instanceof ApiError && error.status === 409) alreadyThere += 1
+      else failed += 1
+    }
+  }
+  return { added, alreadyThere, failed }
+}
+
+export async function fetchRetailers(): Promise<RetailerList> {
+  return parseResponse(await authFetch('/retailers'), retailerListSchema)
+}
+
+export interface RetailerInput {
+  name: string
+  baseUrl: string
+  dealsUrl?: string | null
+  searchUrlTemplate?: string | null
+  scraperType?: ScraperType
+  scraperConfig?: Record<string, unknown>
+  scrapeFrequency?: ScrapeFrequency
+  enabled?: boolean
+  currency?: string
+  region?: string
+  notes?: string | null
+}
+
+function retailerBody(input: RetailerInput) {
+  return {
+    scraperType: 'generic_css',
+    scraperConfig: {},
+    scrapeFrequency: 'weekly',
+    enabled: true,
+    currency: 'GBP',
+    region: 'GB',
+    ...input,
+  }
+}
+
+export async function addRetailer(input: RetailerInput): Promise<RetailerRow> {
+  return parseOrThrowApiError(
+    await authFetch('/retailers', { method: 'POST', body: JSON.stringify(retailerBody(input)) }),
+    retailerSchema,
+  )
+}
+
+export async function updateRetailer(id: string, input: RetailerInput): Promise<RetailerRow> {
+  return parseOrThrowApiError(
+    await authFetch(`/retailers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(retailerBody(input)),
+    }),
+    retailerSchema,
+  )
+}
+
+export async function removeRetailer(id: string): Promise<void> {
+  const response = await authFetch(`/retailers/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+export async function seedRetailers(): Promise<RetailerSeed> {
+  return parseOrThrowApiError(
+    await authFetch('/retailers/seed', { method: 'POST' }),
+    retailerSeedSchema,
+  )
 }

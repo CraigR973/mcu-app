@@ -141,10 +141,16 @@ async def _disc(session: AsyncSession, title: str) -> tuple[Movie, CollectionIte
 # ---------------------------------------------------------------------------
 
 
-async def test_deleted_rows_from_four_tables_appear_in_one_shape(
+async def test_deleted_rows_from_every_table_appear_in_one_shape(
     client: AsyncClient, api_session: AsyncSession, admin: Profile
 ) -> None:
-    """§13.5's "list soft-deleted items per table"."""
+    """§13.5's "list soft-deleted items per table".
+
+    Six tables since **Batch 18**, not the four Batch 15 shipped: `wanted_list` and
+    `retailers` joined when §3.5 and §3.16 were finally built. This assertion was updated
+    because the feature legitimately grew — Batch 15 deliberately left those two names
+    *refused* rather than answering an empty page for tables that did not exist.
+    """
     movie, item = await _disc(api_session, "A Deleted Disc")
     item.deleted_at = datetime(2026, 9, 9)
 
@@ -167,6 +173,8 @@ async def test_deleted_rows_from_four_tables_appear_in_one_shape(
         "watch_log",
         "movies",
         "box_sets",
+        "wanted_list",
+        "retailers",
     }
 
     watches = (await client.get("/api/v1/trash/all?table=watch_log")).json()
@@ -176,15 +184,22 @@ async def test_deleted_rows_from_four_tables_appear_in_one_shape(
     assert any(row["label"] == "A Deleted Box Set" for row in sets["items"])
 
 
-async def test_a_table_with_no_trash_implementation_is_refused(client: AsyncClient) -> None:
-    """`wanted_list` is Batch 18 and has no table.
-
-    Answering "nothing here" for something unimplemented is how a missing feature passes
+async def test_a_table_with_no_trash_is_refused_rather_than_answered_empty(
+    client: AsyncClient,
+) -> None:
+    """Answering "nothing here" for a table with no bin is how a missing feature passes
     for a working one.
+
+    The example used to be ``wanted_list``, which **Batch 18 built** — so it is now a
+    supported tab, and this test moved to a table that genuinely has no trash.
+    ``smart_collections`` hard-deletes by design (`DECISIONS.md` #55: a saved collection
+    owns no data, so there is nothing for a bin to hold), and ``profiles`` is not
+    something a trash page should ever restore.
     """
-    response = await client.get("/api/v1/trash/all?table=wanted_list")
-    assert response.status_code == 422
-    assert "Unknown table" in response.json()["detail"]
+    for absent in ("smart_collections", "profiles", "loans", "not_a_table"):
+        response = await client.get(f"/api/v1/trash/all?table={absent}")
+        assert response.status_code == 422, absent
+        assert "Unknown table" in response.json()["detail"]
 
 
 async def test_restoring_brings_a_disc_back_with_full_state(

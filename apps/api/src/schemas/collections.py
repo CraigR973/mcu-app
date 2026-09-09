@@ -287,7 +287,9 @@ class CompletionRefreshResponse(BaseModel):
 # Trash, audit and lending (Batch 15) — §13.5, §13.6, §12.5
 # ---------------------------------------------------------------------------
 
-TrashTable = Literal["collection_items", "watch_log", "movies", "box_sets"]
+TrashTable = Literal[
+    "collection_items", "watch_log", "movies", "box_sets", "wanted_list", "retailers"
+]
 
 
 class TrashCountResponse(BaseModel):

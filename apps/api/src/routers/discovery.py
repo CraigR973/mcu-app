@@ -6,10 +6,10 @@ answer is a *wrong* answer with a plausible face, and there is no user-visible s
 it has gone stale. `completion_sets` caches because a filmography barely changes; this does
 not, for the opposite reason.
 
-**"Wanted" is missing from the ownership flags on purpose.** §7.2 asks for "owned / wanted
-/ unowned" and the wanted list is §3.5, which **Batch 18** builds. Two states are what this
-app can actually distinguish today; a third that never appears is a legend entry pointing at
-nothing.
+**All three of §7.2's ownership flags are live since Batch 18.** Batch 16 shipped two —
+"owned" and "unowned" — because §3.5's `wanted_list` did not exist and a "wanted" badge that
+could never appear is a legend entry pointing at nothing. The table exists now, so the third
+state is real.
 """
 
 from __future__ import annotations
@@ -27,12 +27,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth import CurrentUser
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
+from src.models.wanted import WantedItem
 from src.routers.movies import Database, TmdbClient
 from src.routers.stats import GENRE_NAMES
 from src.schemas.discovery import (
     NewReleaseListResponse,
     NewReleaseResponse,
     OfferKind,
+    OwnershipState,
     RecommendationListResponse,
     RecommendationResponse,
     StreamingOfferResponse,
@@ -61,6 +63,28 @@ async def _live_movie(db: AsyncSession, movie_id: uuid.UUID) -> Movie:
     if movie is None or movie.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
     return movie
+
+
+async def _wanted_tmdb_ids(db: AsyncSession, tmdb_ids: Sequence[int]) -> set[int]:
+    """Which of these films are on the wanted list — Batch 18's third ownership state.
+
+    Live, **active** entries only: an entry marked "no longer looking" is a decision, and
+    showing it as *wanted* would contradict it.
+    """
+    if not tmdb_ids:
+        return set()
+    rows = await db.execute(
+        select(Movie.tmdb_id)
+        .join(WantedItem, WantedItem.movie_id == Movie.id)
+        .where(
+            Movie.tmdb_id.in_(list(tmdb_ids)),
+            Movie.deleted_at.is_(None),
+            WantedItem.deleted_at.is_(None),
+            WantedItem.is_active.is_(True),
+        )
+        .distinct()
+    )
+    return {int(value) for value in rows.scalars().all() if value is not None}
 
 
 async def _owned_by_tmdb_id(db: AsyncSession, tmdb_ids: Sequence[int]) -> dict[int, uuid.UUID]:
@@ -165,7 +189,21 @@ async def movie_streaming(
     )
 
 
-def _recommendation(result: SearchResult, owned: dict[int, uuid.UUID]) -> RecommendationResponse:
+def _ownership(tmdb_id: int, movie_id: uuid.UUID | None, wanted: set[int]) -> OwnershipState:
+    """Owned beats wanted.
+
+    Both can be true at once — a DVD-to-4K upgrade is exactly a film you own *and* want —
+    and "you already have this" is the more useful thing to say on a card whose job is to
+    suggest something to watch or buy.
+    """
+    if movie_id is not None:
+        return "owned"
+    return "wanted" if tmdb_id in wanted else "unowned"
+
+
+def _recommendation(
+    result: SearchResult, owned: dict[int, uuid.UUID], wanted: set[int]
+) -> RecommendationResponse:
     movie_id = owned.get(result.id)
     return RecommendationResponse(
         tmdbId=result.id,
@@ -173,7 +211,7 @@ def _recommendation(result: SearchResult, owned: dict[int, uuid.UUID]) -> Recomm
         year=parse_year(result.release_date),
         overview=result.overview,
         posterPath=result.poster_path,
-        ownership="owned" if movie_id else "unowned",
+        ownership=_ownership(result.id, movie_id, wanted),
         movieId=movie_id,
     )
 
@@ -204,8 +242,10 @@ async def movie_recommendations(
             movieId=movie.id, items=[], ownedCount=0, unavailable=True
         )
 
-    owned = await _owned_by_tmdb_id(db, [result.id for result in results.results])
-    items = [_recommendation(result, owned) for result in results.results]
+    ids = [result.id for result in results.results]
+    owned = await _owned_by_tmdb_id(db, ids)
+    wanted = await _wanted_tmdb_ids(db, ids)
+    items = [_recommendation(result, owned, wanted) for result in results.results]
     return RecommendationListResponse(
         movieId=movie.id,
         items=items,
@@ -258,7 +298,9 @@ async def new_releases(
             detail="New releases are temporarily unavailable",
         ) from exc
 
-    owned = await _owned_by_tmdb_id(db, [result.id for result in results.results])
+    upcoming_ids = [result.id for result in results.results]
+    owned = await _owned_by_tmdb_id(db, upcoming_ids)
+    wanted = await _wanted_tmdb_ids(db, upcoming_ids)
     items: list[NewReleaseResponse] = []
     for result in results.results:
         matched = sorted(genre_set.intersection(result.genre_ids or []))
@@ -273,7 +315,7 @@ async def new_releases(
                 posterPath=result.poster_path,
                 overview=result.overview,
                 matchedGenres=[GENRE_NAMES.get(g, str(g)) for g in matched],
-                ownership="owned" if movie_id else "unowned",
+                ownership=_ownership(result.id, movie_id, wanted),
                 movieId=movie_id,
             )
         )

@@ -1,8 +1,13 @@
+import { Navigate } from 'react-router-dom'
+
+/**
+ * The "Watchlist" stub is gone; §3.5's list is called **Wanted** and lives at `/wanted`.
+ *
+ * A redirect rather than a deletion, because `/watchlist` was in the sidebar since Batch 1
+ * and may be bookmarked or cached by the service worker. Batch 9's lesson applies in
+ * reverse: a route that renders "coming soon" for ever is the same defect as a button that
+ * does nothing, and this one finally has something behind it.
+ */
 export default function WatchlistPage() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-foreground">Watchlist</h1>
-      <p className="text-muted-foreground mt-1">Your watchlist — coming soon.</p>
-    </div>
-  )
+  return <Navigate to="/wanted" replace />
 }

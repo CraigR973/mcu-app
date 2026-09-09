@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Boxes, CalendarDays, Film, Bookmark, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
+import { Boxes, CalendarDays, Film, Bookmark, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp, X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
@@ -20,7 +20,7 @@ const navItems = [
   { label: 'Insights', path: '/insights', icon: Target },
   { label: 'Coming soon', path: '/discover', icon: Sparkle },
   { label: 'Calendar', path: '/calendar', icon: CalendarDays },
-  { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
+  { label: 'Wanted', path: '/wanted', icon: Bookmark },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Stats', path: '/stats', icon: TrendingUp },
   { label: 'Loans', path: '/loans', icon: HandHeart },
@@ -34,6 +34,7 @@ const adminNavItems = [
   { label: 'Add a disc', path: '/collection/add', icon: Plus },
   { label: 'Trash', path: '/trash', icon: Trash2 },
   { label: 'Audit log', path: '/audit', icon: ScrollText },
+  { label: 'Retailers', path: '/retailers', icon: Store },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 

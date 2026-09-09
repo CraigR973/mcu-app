@@ -40,6 +40,16 @@ from src.models.smart_collection import (
     SMART_COLLECTION_SORTS,
     SmartCollection,
 )
+from src.models.wanted import (
+    DEFAULT_RETAILERS,
+    RETAILERS_TABLE,
+    SCRAPE_FREQUENCIES,
+    SCRAPE_STATUSES,
+    SCRAPER_TYPES,
+    WANTED_LIST_TABLE,
+    Retailer,
+    WantedItem,
+)
 from src.models.watch_log import RATING_MAX, RATING_MIN, WatchLog
 
 __all__ = [
@@ -82,4 +92,12 @@ __all__ = [
     "UUIDPrimaryKeyMixin",
     "UserRole",
     "WatchLog",
+    "DEFAULT_RETAILERS",
+    "RETAILERS_TABLE",
+    "SCRAPER_TYPES",
+    "SCRAPE_FREQUENCIES",
+    "SCRAPE_STATUSES",
+    "WANTED_LIST_TABLE",
+    "Retailer",
+    "WantedItem",
 ]

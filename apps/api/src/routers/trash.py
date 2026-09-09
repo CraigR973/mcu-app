@@ -28,6 +28,7 @@ from src.models.box_set import BoxSet
 from src.models.collection_item import CollectionItem
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie
+from src.models.wanted import Retailer, WantedItem
 from src.models.watch_log import WatchLog
 from src.routers.movies import Database, location_label
 from src.schemas.collections import (
@@ -112,18 +113,51 @@ async def _describe(
             for movie in films
         ]
 
-    box_sets: list[BoxSet] = list(rows)
+    if table == "box_sets":
+        box_sets: list[BoxSet] = list(rows)
+        return [
+            TrashRowResponse(
+                id=box_set.id,
+                table=table,
+                label=box_set.name,
+                sublabel=box_set.label,
+                posterPath=None,
+                movieId=None,
+                deletedAt=_deleted_at(box_set.deleted_at),
+            )
+            for box_set in box_sets
+        ]
+
+    if table == "wanted_list":
+        # Batch 15 refused this table by name rather than answering an empty page for
+        # something that did not exist. Batch 18 built it, so it renders here.
+        wanted: list[WantedItem] = list(rows)
+        wanted_films = await _movies_by_id(db, [item.movie_id for item in wanted])
+        return [
+            TrashRowResponse(
+                id=item.id,
+                table=table,
+                label=_title(wanted_films.get(item.movie_id)),
+                sublabel=item.preferred_format,
+                posterPath=_poster(wanted_films.get(item.movie_id)),
+                movieId=item.movie_id,
+                deletedAt=_deleted_at(item.deleted_at),
+            )
+            for item in wanted
+        ]
+
+    retailers: list[Retailer] = list(rows)
     return [
         TrashRowResponse(
-            id=box_set.id,
+            id=retailer.id,
             table=table,
-            label=box_set.name,
-            sublabel=box_set.label,
+            label=retailer.name,
+            sublabel=retailer.base_url,
             posterPath=None,
             movieId=None,
-            deletedAt=_deleted_at(box_set.deleted_at),
+            deletedAt=_deleted_at(retailer.deleted_at),
         )
-        for box_set in box_sets
+        for retailer in retailers
     ]
 
 
