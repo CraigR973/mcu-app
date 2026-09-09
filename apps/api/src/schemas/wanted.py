@@ -27,6 +27,12 @@ def _validate_max_price(value: str | None) -> str | None:
         parsed = Decimal(value)
     except InvalidOperation as exc:
         raise ValueError("maxPrice must be a decimal number") from exc
+    # `Decimal("NaN")` **parses**, and then every comparison against it raises
+    # `InvalidOperation` — so the guard below would have been the thing that 500'd, not the
+    # parse. Found by this batch's security review. `"Infinity"` is finite-checked by the
+    # same call.
+    if not parsed.is_finite():
+        raise ValueError("maxPrice must be a real number")
     if parsed <= 0:
         raise ValueError("maxPrice must be greater than zero")
     if parsed >= Decimal("1000000"):

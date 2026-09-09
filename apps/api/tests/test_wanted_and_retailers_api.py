@@ -24,7 +24,7 @@ from src.main import app
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
-from src.models.wanted import Retailer, WantedItem
+from src.models.wanted import DEFAULT_RETAILERS, Retailer, WantedItem
 from src.routers.movies import get_tmdb_client
 from src.tmdb.models import Credits, Genre
 from src.tmdb.models import Movie as TmdbMovie
@@ -392,7 +392,17 @@ async def test_seeding_is_idempotent_and_leaves_selectors_empty(
     risk note says a wrong selector *"does not error — it selects the wrong node and
     persists a plausible wrong number"*. An empty config is visibly unconfigured, and the
     list endpoint reports `configuredCount` so the settings page can say so.
+
+    The emptiness is asserted against `DEFAULT_RETAILERS` rather than against whatever the
+    rows currently hold. Live Neon's six defaults have since had Batch 19's built-in
+    selectors applied to them — a separate, deliberate action — so a test reading the rows
+    would be asserting the state of one database rather than the behaviour of the seed.
     """
+    assert all(
+        "scraper_config" not in default and "selectors" not in default
+        for default in DEFAULT_RETAILERS
+    ), "the seed data itself must carry no selectors"
+
     first = await client.post("/api/v1/retailers/seed")
     assert first.status_code == 200, first.text
 
@@ -400,21 +410,11 @@ async def test_seeding_is_idempotent_and_leaves_selectors_empty(
     # Idempotent: whatever the first call did, the second adds nothing.
     assert second.json()["created"] == 0
 
-    # Asserted on the resulting **state**, not on how many rows this call happened to
-    # create. Live Neon already holds the six defaults — they were seeded during Batch 18's
-    # own verification and are an acceptance criterion, so they stay — and a test that
-    # counted creations would pass only against an empty database. `STATUS.md`'s Now block
-    # is the standing record of tests that assumed exactly that.
+    # And every default is present afterwards, however it got there.
     listed = (await client.get("/api/v1/retailers")).json()
-    by_name = {r["name"]: r for r in listed["items"]}
-    for expected in ("HMV", "Zavvi", "Amazon UK", "Blu-ray.com", "Arrow Video", "Criterion"):
-        assert expected in by_name, expected
-
-    seeded = [by_name[name] for name in first.json()["names"]] or [
-        by_name[name] for name in ("HMV", "Zavvi")
-    ]
-    assert all(r["scraperConfig"] == {} for r in seeded), seeded
-    assert all(r["isConfigured"] is False for r in seeded)
+    by_name = {r["name"] for r in listed["items"]}
+    for default in DEFAULT_RETAILERS:
+        assert default["name"] in by_name, default["name"]
 
 
 async def test_a_removed_retailer_goes_to_the_trash(
@@ -451,3 +451,21 @@ async def test_a_scraper_config_that_is_not_an_object_is_refused(
         "/api/v1/retailers", json=_retailer_body(scraperConfig=["not", "an", "object"])
     )
     assert response.status_code == 422
+
+
+async def test_a_non_finite_price_is_refused_rather_than_raising(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """`Decimal("NaN")` **parses**, and then every comparison against it raises.
+
+    So the `<= 0` guard was the thing that would have 500'd, not the parse — the `try`
+    around `Decimal(value)` never saw it. Found by Batch 27's security review; admin-only
+    input, so never reachable by a visitor, but a 422 is the right answer to a price of
+    "NaN".
+    """
+    movie = await _film(api_session, "A Film With An Unreal Price")
+    for unreal in ("NaN", "nan", "Infinity", "-Infinity", "sNaN"):
+        response = await client.post(
+            "/api/v1/wanted", json={"movieId": str(movie.id), "maxPrice": unreal}
+        )
+        assert response.status_code == 422, unreal

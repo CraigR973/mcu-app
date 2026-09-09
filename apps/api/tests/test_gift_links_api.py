@@ -502,3 +502,89 @@ async def test_deactivating_stops_the_link_without_deleting_it(
     assert on.json()["slug"] == slug
     async with _anonymous(api_session) as visitor:
         assert (await visitor.get(f"/api/v1/gift/{slug}")).status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Fixes from this batch's security review
+# ---------------------------------------------------------------------------
+
+
+async def test_the_retailer_query_runs_once_not_once_per_film(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """The N+1 the review found.
+
+    `_retailer_links` used to be called *inside* the per-film loop and re-read the whole
+    `retailers` table each time — 50 identical queries for a 50-film list, on the
+    unauthenticated endpoint. The rows do not vary by film; only the query string does.
+    """
+    api_session.add(
+        Retailer(
+            id=uuid.uuid4(),
+            name=f"Counted Shop {uuid.uuid4().hex[:6]}",
+            base_url="https://shop.example",
+            search_url_template="https://shop.example/s?q={query}",
+            scraper_config={},
+            enabled=True,
+            added_at=utcnow(),
+        )
+    )
+    for n in range(4):
+        await _wanted(api_session, f"Film Number {n}")
+    await api_session.flush()
+
+    slug = (await client.post("/api/v1/gift-links", json={"title": "L"})).json()["slug"]
+
+    seen: list[str] = []
+    original = AsyncSession.execute
+
+    async def counting_execute(self, statement, *args, **kwargs):  # type: ignore[no-untyped-def]
+        seen.append(str(statement))
+        return await original(self, statement, *args, **kwargs)
+
+    AsyncSession.execute = counting_execute  # type: ignore[method-assign]
+    try:
+        async with _anonymous(api_session) as visitor:
+            page = await visitor.get(f"/api/v1/gift/{slug}")
+    finally:
+        AsyncSession.execute = original  # type: ignore[method-assign]
+
+    assert page.status_code == 200
+    assert len(page.json()["films"]) >= 4
+    retailer_queries = [sql for sql in seen if "FROM retailers" in sql]
+    assert len(retailer_queries) == 1, (
+        f"the retailers table was queried {len(retailer_queries)} times for one page"
+    )
+
+
+async def test_the_view_counter_is_incremented_in_sql_not_in_python(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """`link.view_count += 1` is a read-modify-write: two family members opening the link
+    at the same moment would record one view between them."""
+    await _wanted(api_session, "A Film")
+    created = await client.post("/api/v1/gift-links", json={"title": "Counted"})
+    slug = created.json()["slug"]
+
+    seen: list[str] = []
+    original = AsyncSession.execute
+
+    async def capturing_execute(self, statement, *args, **kwargs):  # type: ignore[no-untyped-def]
+        seen.append(str(statement))
+        return await original(self, statement, *args, **kwargs)
+
+    AsyncSession.execute = capturing_execute  # type: ignore[method-assign]
+    try:
+        async with _anonymous(api_session) as visitor:
+            await visitor.get(f"/api/v1/gift/{slug}")
+    finally:
+        AsyncSession.execute = original  # type: ignore[method-assign]
+
+    updates = [sql for sql in seen if sql.startswith("UPDATE gift_links")]
+    assert updates, "no UPDATE was issued for the view counter"
+    assert "view_count + " in updates[0].replace("gift_links.view_count", "view_count"), updates[0]
+
+    link = await api_session.get(GiftLink, uuid.UUID(created.json()["id"]))
+    assert link is not None
+    await api_session.refresh(link)
+    assert link.view_count == 1

@@ -29,7 +29,7 @@ from typing import Annotated
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Path, Request, Response, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
@@ -196,12 +196,13 @@ async def revoke_gift_link(link_id: uuid.UUID, user: AdminUser, db: Database) ->
 # ---------------------------------------------------------------------------
 
 
-async def _retailer_links(db: AsyncSession, title: str) -> list[GiftRetailerLink]:
-    """Where a family member could buy this — §6.26's "direct retailer links".
+async def _searchable_retailers(db: AsyncSession) -> list[tuple[str, str]]:
+    """The shops that can be linked to, fetched **once** per request.
 
-    Built from `retailers.search_url_template`, whose scheme is http/https by CHECK *and*
-    by the API validator. This is admin-supplied text rendered onto a **public** page, so
-    the constraint is doing real work rather than being belt and braces.
+    Previously this ran inside the per-film loop, re-reading the whole `retailers` table
+    for every film on the page — 50 identical queries for a 50-film list, on the
+    unauthenticated endpoint. Found by this batch's security review. The rows do not vary
+    by film; only the query string does.
     """
     rows = (
         (
@@ -216,15 +217,25 @@ async def _retailer_links(db: AsyncSession, title: str) -> list[GiftRetailerLink
         .scalars()
         .all()
     )
-    links: list[GiftRetailerLink] = []
-    for retailer in rows:
-        template = retailer.search_url_template
-        if not template or "{query}" not in template:
-            continue
-        links.append(
-            GiftRetailerLink(name=retailer.name, url=template.replace("{query}", quote(title)))
-        )
-    return links
+    return [
+        (retailer.name, str(retailer.search_url_template))
+        for retailer in rows
+        if retailer.search_url_template and "{query}" in retailer.search_url_template
+    ]
+
+
+def _retailer_links(retailers: list[tuple[str, str]], title: str) -> list[GiftRetailerLink]:
+    """Where a family member could buy this — §6.26's "direct retailer links".
+
+    Built from `retailers.search_url_template`, whose scheme is http/https by CHECK *and*
+    by the API validator. This is admin-supplied text rendered onto a **public** page, so
+    the constraint is doing real work rather than being belt and braces. The title is
+    percent-encoded, so a film called "Fast & Furious" cannot break out of the query string.
+    """
+    return [
+        GiftRetailerLink(name=name, url=template.replace("{query}", quote(title)))
+        for name, template in retailers
+    ]
 
 
 @router.get("/gift/{slug}", response_model=GiftPageResponse)
@@ -274,6 +285,9 @@ async def public_gift_page(
         )
     ).all()
 
+    # Once, not once per film.
+    retailers = await _searchable_retailers(db)
+
     films: list[GiftFilmResponse] = []
     for item, movie in rows:
         films.append(
@@ -284,14 +298,21 @@ async def public_gift_page(
                 preferredFormat=item.preferred_format,
                 maxPrice=str(item.max_price) if item.max_price is not None else None,
                 currency=item.currency,
-                retailerLinks=await _retailer_links(db, movie.title),
+                retailerLinks=_retailer_links(retailers, movie.title),
             )
         )
 
     # §6.26 step 5: "track view count". This is the one place an unauthenticated request
     # causes a write, which is why the endpoint is rate-limited.
-    link.view_count += 1
-    link.last_viewed_at = now
+    #
+    # An atomic `view_count = view_count + 1` in SQL, not `link.view_count += 1` in Python:
+    # the latter is a read-modify-write, so two family members opening the link at the same
+    # moment would record one view between them.
+    await db.execute(
+        update(GiftLink)
+        .where(GiftLink.id == link.id)
+        .values(view_count=GiftLink.view_count + 1, last_viewed_at=now)
+    )
     await db.commit()
 
     # A capability URL must not end up in a search index, and must not sit in a shared
