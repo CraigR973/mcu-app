@@ -41,10 +41,12 @@ from src.models.price_check import PriceCheck
 from src.models.wanted import Retailer, WantedItem
 from src.services.scraping.extract import (
     DEFAULT_FORMAT_SEARCH_TERM,
+    DISC_FORMATS,
     FORMAT_SEARCH_TERMS,
     ScrapeCandidate,
     check_shape,
     extract,
+    primary_format,
 )
 from src.services.scraping.fetcher import (
     FetchError,
@@ -75,6 +77,14 @@ class ScrapeOutcome:
     #: The currency the price was *read in*, never converted (`DECISIONS.md` #79). Carried
     #: so a report can render a price as money rather than as a bare number.
     currency: str | None = None
+    #: Set only when the wanted format was not on the shelf and a different one was priced
+    #: instead. A fallback is allowed, but it is never silent: `max_price` alerts compare
+    #: against whatever was priced, so the reader has to be able to see it was a substitute.
+    substituted_format: str | None = None
+    #: True when nothing was attempted — a want these shops cannot serve at all. Neither a
+    #: success nor a failure, and specifically **not** counted towards auto-disable: three
+    #: digital wants would otherwise switch off every retailer in the app.
+    skipped: bool = False
     url: str | None = None
     #: Why a result was rejected. The important field — a scraper that has started
     #: matching the wrong node reports here rather than silently writing a number.
@@ -94,7 +104,11 @@ class ScrapeRunResult:
 
     @property
     def failed(self) -> int:
-        return sum(1 for outcome in self.outcomes if not outcome.ok)
+        return sum(1 for outcome in self.outcomes if not outcome.ok and not outcome.skipped)
+
+    @property
+    def skipped(self) -> int:
+        return sum(1 for outcome in self.outcomes if outcome.skipped)
 
 
 def apply_search_template(template: str, title: str, preferred_format: str | None = None) -> str:
@@ -150,6 +164,13 @@ async def scrape_one(
     """
     outcome = ScrapeOutcome(retailer=retailer.name, wanted_title=title, ok=False)
 
+    if preferred_format is not None and preferred_format not in DISC_FORMATS:
+        # A digital want. These are disc shops, so there is nothing to look for — and
+        # nothing the shop did wrong, which is why it is skipped rather than failed.
+        outcome.skipped = True
+        outcome.error = f"{retailer.name} sells discs; this want is for a digital copy"
+        return None, outcome
+
     if not retailer.scraper_config:
         outcome.error = "no selectors configured"
         return None, outcome
@@ -199,6 +220,10 @@ async def scrape_one(
     outcome.url = candidate.url or page.final_url
     outcome.reasons = verdict.reasons
     outcome.ok = verdict.ok
+    if verdict.ok and preferred_format in DISC_FORMATS:
+        priced = primary_format(candidate.title, candidate.url)
+        if priced != preferred_format:
+            outcome.substituted_format = priced
     return (candidate if verdict.ok else None), outcome
 
 
@@ -280,16 +305,18 @@ async def run_scrape(
                 await asyncio.sleep(polite_pause)
 
         if not dry_run:
+            attempted = [
+                o for o in result.outcomes if o.retailer == retailer.name and not o.skipped
+            ]
             if any_success:
                 _record_success(retailer)
-            else:
-                message = "; ".join(
-                    o.error or "; ".join(o.reasons)
-                    for o in result.outcomes
-                    if o.retailer == retailer.name
-                )[:2000]
+            elif attempted:
+                message = "; ".join(o.error or "; ".join(o.reasons) for o in attempted)[:2000]
                 if await _record_failure(db, retailer, message or "no usable result"):
                     result.disabled.append(retailer.name)
+            # Nothing attempted: every want was one these shops cannot serve. A shop that
+            # was never asked has not failed, and must not accrue a strike towards
+            # auto-disable — three digital wants would otherwise switch off the whole app.
 
     if not dry_run:
         await db.commit()

@@ -12,6 +12,7 @@ import uuid
 from collections.abc import AsyncIterator
 from types import SimpleNamespace
 
+import httpx
 import pytest
 import pytest_asyncio
 from fastapi import Request
@@ -28,6 +29,7 @@ from src.models.profile import Profile, UserRole
 from src.models.wanted import DEFAULT_RETAILERS, Retailer, WantedItem
 from src.routers.movies import get_tmdb_client
 from src.services.scraping.builtins import BUILT_IN_SCRAPERS
+from src.services.scraping.runner import run_scrape
 from src.tmdb.models import Credits, Genre
 from src.tmdb.models import Movie as TmdbMovie
 
@@ -522,3 +524,48 @@ async def test_the_test_endpoint_fills_placeholders_and_prices_the_film_asked_fo
     assert body["title"] == "Jaws - 4K Ultra HD (Includes 2D Blu-ray)"
     assert body["price"] == "19.99"
     assert body["ok"] is True, body["reasons"]
+
+
+async def test_a_run_of_only_digital_wants_does_not_switch_every_shop_off(
+    api_session: AsyncSession, admin: Profile
+) -> None:
+    """A digital want is skipped, and a shop that was never asked has not failed.
+
+    Auto-disable counts three consecutive failures. Attributing a skip to the retailer
+    would have switched off every enabled shop in the app after three runs of a wanted list
+    the shops simply cannot serve (`DECISIONS.md` #101).
+    """
+    movie = await _film(api_session, "A Digital Only Film")
+    retailer = Retailer(
+        id=uuid.uuid4(),
+        name=f"Skip Test {uuid.uuid4().hex[:8]}",
+        base_url="https://shop.test",
+        scraper_type="generic_css",
+        search_url_template="https://shop.test/s?q={query}",
+        scraper_config={"title": ".t", "price": ".p", "url": ".t"},
+        enabled=True,
+        currency="GBP",
+    )
+    api_session.add(retailer)
+    api_session.add(
+        WantedItem(
+            id=uuid.uuid4(),
+            movie_id=movie.id,
+            preferred_format="download",
+            is_active=True,
+            added_by=admin.id,
+        )
+    )
+    await api_session.flush()
+
+    def explode(request: httpx.Request) -> httpx.Response:  # pragma: no cover
+        raise AssertionError("a digital want must not reach a shop")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(explode)) as client:
+        result = await run_scrape(api_session, client=client, dry_run=False, polite_pause=0.0)
+
+    assert result.skipped >= 1
+    assert result.failed == 0
+    assert result.disabled == []
+    assert retailer.enabled is True
+    assert retailer.consecutive_failures == 0
