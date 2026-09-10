@@ -56,14 +56,35 @@ SHOP_PAGE = """
 </body></html>
 """
 
-NOT_STOCKED_PAGE = """
-<html><body>
-  <div class="result">
-    <h3><a class="title" href="https://93.184.216.34/p/other">Some Other Film [Blu-ray]</a></h3>
-    <span class="price">£9.99</span>
-  </div>
-</body></html>
-"""
+#: A **card-shaped** page listing real products, none of which is the film.
+#:
+#: Card-shaped on purpose. `DECISIONS.md` #107's not-stocked detection is read from
+#: `titled_cards` / `matching_cards`, which `extract` only counts when the page is parsed
+#: card by card — a whole-page read leaves both at 0, which Batch 19 documents as "the
+#: conservative reading" and reports as a failure instead. Every enabled retailer is a
+#: card-based built-in, so that is the path the nightly job actually takes.
+NOT_STOCKED_PAGE = "".join(
+    f"""
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/{slug}/" data-testid="product-title">{title}</a>
+      <div data-testid="product-price">
+        <span class="product-variant-price">{price}</span>
+      </div>
+    </div>
+    """
+    for slug, title, price in (
+        ("cold-prey", "Cold Prey Trilogy Limited Edition Blu-ray Boxset", "£45.00"),
+        ("bruiser", "BRUISER - 4K UHD LE", "£30.00"),
+    )
+)
+
+#: The selectors the built-in shops actually use.
+CARD_CONFIG = {
+    "item": "[data-testid='product-item']",
+    "title": "[data-testid='product-title']",
+    "price": "[data-testid='product-price'] .product-variant-price",
+    "url": "[data-testid='product-title']",
+}
 
 
 @pytest_asyncio.fixture
@@ -111,13 +132,15 @@ async def _want(
     return want
 
 
-async def _retailer(db: AsyncSession, name: str = "Test Shop") -> Retailer:
+async def _retailer(
+    db: AsyncSession, name: str = "Test Shop", *, config: dict[str, str] | None = None
+) -> Retailer:
     retailer = Retailer(
         id=uuid.uuid4(),
         name=name,
         base_url="https://93.184.216.34",
         search_url_template="https://93.184.216.34/search?q={query}",
-        scraper_config={"title": "a.title", "price": ".price", "url": "a.title"},
+        scraper_config=config or {"title": "a.title", "price": ".price", "url": "a.title"},
         scraper_type="generic_css",
         scrape_frequency="daily",
         enabled=True,
@@ -543,10 +566,15 @@ class TestDailyRun:
     async def test_a_shop_that_has_not_got_it_is_not_counted_as_attempted(
         self, db: AsyncSession
     ) -> None:
-        """`DECISIONS.md` #107 — a correct "no" is not a failure and not a gap."""
+        """`DECISIONS.md` #107 — a correct "no" is not a failure and not a gap.
+
+        The retailer is card-shaped here, because that is where #107's detection lives and
+        what every enabled shop is. A nightly job is exactly the thing that would turn this
+        wrong: three correct refusals in a row auto-disable a working scraper.
+        """
         await _profile(db)
         await _want(db, await _movie(db))
-        await _retailer(db)
+        await _retailer(db, config=CARD_CONFIG)
 
         summary, _ = await self._run(db, NOT_STOCKED_PAGE)
 
