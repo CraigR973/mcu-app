@@ -305,6 +305,58 @@ async def test_marking_inactive_is_not_the_same_as_removing(
     assert row is not None and row.deleted_at is None
 
 
+async def test_the_update_is_a_full_replace_and_says_so(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """**This endpoint replaces the row. A field left out is a field set to null.**
+
+    Pinned because the web app got it wrong and nobody noticed: "Stop looking" sent
+    `{isActive}` alone, so every press silently wiped the format, the edition, the maximum
+    price and the notes of the want it was toggling (`DECISIONS.md` #123).
+
+    The endpoint is not the bug — `PUT` means replace, and `WantedUpdateRequest` defaults
+    every field to `None` deliberately. This test exists so that the next person to meet
+    the behaviour reads it as the contract rather than as a bug to be patched here.
+    """
+    movie = await _film(api_session, "A Fully Specified Want")
+    added = await client.post(
+        "/api/v1/wanted",
+        json={
+            "movieId": str(movie.id),
+            "preferredFormat": "4k_uhd",
+            "preferredEdition": "Steelbook",
+            "maxPrice": "20",
+        },
+    )
+    item_id = added.json()["id"]
+    assert added.json()["maxPrice"] == "20.00"
+
+    # A partial-looking body — exactly what the web app used to send.
+    stripped = await client.put(f"/api/v1/wanted/{item_id}", json={"isActive": False})
+    assert stripped.status_code == 200
+    body = stripped.json()
+    assert body["isActive"] is False
+    assert body["preferredFormat"] is None
+    assert body["preferredEdition"] is None
+    assert body["maxPrice"] is None
+
+    # And a complete body round-trips every field, which is what the client sends now.
+    restored = await client.put(
+        f"/api/v1/wanted/{item_id}",
+        json={
+            "preferredFormat": "4k_uhd",
+            "preferredEdition": "Steelbook",
+            "maxPrice": "14",
+            "currency": "GBP",
+            "isActive": True,
+            "notes": None,
+        },
+    )
+    assert restored.status_code == 200
+    assert restored.json()["preferredEdition"] == "Steelbook"
+    assert restored.json()["maxPrice"] == "14.00"
+
+
 async def test_a_removed_entry_appears_in_the_trash_tab_batch_15_could_not_fill(
     client: AsyncClient, api_session: AsyncSession
 ) -> None:

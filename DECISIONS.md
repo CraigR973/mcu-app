@@ -1801,3 +1801,31 @@ contemporaneous.
      kept precisely because it disagrees with the other about its own markup — it also
      turned out to be the only one carrying an HDR block, which the flattened version was
      dropping too.
+
+123. **"Stop looking" was silently wiping every buying preference on the want it toggled.**
+     Found on 2026-09-10 while adding a control to set a maximum price on an existing want.
+
+     `PUT /api/v1/wanted/{id}` **replaces the row** — `WantedUpdateRequest` defaults every
+     field to `None` and the handler assigns each one unconditionally. The web app's only
+     call site sent `{isActive}` alone, so each press of "Stop looking" or "Look again"
+     also set `preferred_format`, `preferred_edition`, `max_price` and `notes` to null.
+     No error, no warning, and `admin_actions` recorded it faithfully as a change nobody
+     had asked for.
+
+     *The endpoint is not the bug.* `PUT` means replace, and that default is deliberate.
+     The client was sending a `PATCH` body to a `PUT` route. So `fullUpdate()` builds the
+     complete resource with only the changed field overridden, and a test asserts the
+     toggle round-trips every preference. A second test pins the endpoint's own contract,
+     so the next person to meet this reads it as the contract rather than patching the API
+     to be lenient.
+
+     *`currency` was the same bug one layer down*, and is fixed with it: `updateWanted`
+     hard-coded `'GBP'` where no caller could override it, so any non-GBP want would have
+     been reset by any edit. Every want happens to be GBP today, which is exactly why it
+     would have gone unnoticed.
+
+     *Why it surfaced now:* §5.6 needs a want whose `max_price` sits above its current
+     price, and there was **no way to set one on a want you already had** — the field
+     existed only on the add form. Adding that control meant reading the update path, and
+     the wipe was sitting in it. The acceptance criterion found a second bug the suite had
+     no reason to look for, which is the same lesson as `#122` in a different corner.
