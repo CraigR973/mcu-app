@@ -2,13 +2,16 @@
 
 ## Now
 
-**The brand integration is merged and deployed.** Commit `916676e` (Merge the brand
-integration) is live on main. Vercel web app rebuilt and serving the new identity. Railway
-API deployment in progress (CI green at 1m42s). The approved three-case-and-disc identity
-is now wired into the app across all surfaces.
+**Phase 1 identity deployment: photo heroes and personalised poster now live.** Commit
+`9167430` (feat: deploy photo-based hero and personalised poster editions) is live on main.
+Vercel web app rebuilding with new assets. Multi-tier deployment strategy in place:
 
-The gate proved 235 web + 79 shared tests (22 new brand tests), 0 lint errors, clean
-typecheck, build passing, and all 18 brand assets precached in the built bundle.
+- **TIER 1: Hero photos** (public, rights-independent) — boot loaders, login page, social card
+- **TIER 2: Personalised poster** (authenticated, internal) — home page, onboarding, protected routes
+- **TIER 3: Concept-art** (fallback, always deployed) — mobile header, platform icons, compact UI
+
+Gate proved 235 web + 79 shared tests, 0 lint errors, clean typecheck, build passing. All photo
+assets now precached by the service worker.
 
 Two things are worth knowing. **The sidebar lockup is drawn at 240 px against a 280 px
 approved minimum** (`DECISIONS.md` #134) — the alternative was widening navigation by 40 px
