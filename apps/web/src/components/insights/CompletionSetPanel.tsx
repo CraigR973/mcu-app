@@ -13,6 +13,7 @@ import {
 } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/context/auth'
 
 interface Props {
   setId: string
@@ -70,6 +71,7 @@ function BulkAddMissing({ tmdbIds }: { tmdbIds: number[] }) {
           {add.data.failed > 0 ? `, ${add.data.failed} could not be added` : ''}.
         </p>
       ) : null}
+      {add.isError ? <p role="alert" className="text-xs text-destructive">{queryErrorMessage(add.error, 'The missing films could not be added to Wanted.')}</p> : null}
     </div>
   )
 }
@@ -87,6 +89,7 @@ function BulkAddMissing({ tmdbIds }: { tmdbIds: number[] }) {
  * says.
  */
 export function CompletionSetPanel({ setId, onBack }: Props) {
+  const { profile } = useAuth()
   const setQuery = useQuery({
     queryKey: ['completion-set', setId],
     queryFn: () => fetchCompletionSet(setId),
@@ -118,20 +121,18 @@ export function CompletionSetPanel({ setId, onBack }: Props) {
               {setTypeLabel(set.setType)} · {completionCountLabel(set)} ·{' '}
               {set.percentComplete}% complete
             </p>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div role="progressbar" aria-label={`${set.setName} completion`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={set.percentComplete} className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className={cn(
                   'h-full rounded-full',
-                  set.percentComplete === 100 ? 'bg-primary' : 'bg-amber-500',
+                  set.percentComplete === 100 ? 'bg-primary' : 'bg-warning',
                 )}
                 style={{ width: `${String(set.percentComplete)}%` }}
               />
             </div>
           </div>
 
-          <BulkAddMissing
-            tmdbIds={set.films.filter((film) => !film.owned).map((film) => film.tmdbId)}
-          />
+          {profile?.role === 'admin' ? <BulkAddMissing tmdbIds={set.films.filter((film) => !film.owned).map((film) => film.tmdbId)} /> : null}
 
           <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
             {set.films.map((film) => {
@@ -148,8 +149,8 @@ export function CompletionSetPanel({ setId, onBack }: Props) {
                       )}
                     />
                     {film.owned ? (
-                      <span className="absolute right-1 top-1 rounded-full bg-primary p-0.5 text-primary-foreground">
-                        <Check className="h-3 w-3" />
+                      <span className="absolute right-1 top-1 rounded-full bg-primary p-1 text-primary-foreground" aria-label="Owned">
+                        <Check className="h-3 w-3" aria-hidden />
                       </span>
                     ) : null}
                   </div>

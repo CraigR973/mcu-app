@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Film } from 'lucide-react'
 import { MovieCard } from './MovieCard'
 import { SkeletonCard } from './SkeletonCard'
 import type { MovieListItem } from '@/lib/api'
+import { StatePanel } from '@/components/ui/state-panel'
 
-const CARD_MIN_WIDTH = 160
-const GAP = 12
+const CARD_MIN_WIDTH = 152
+const GAP = 16
 const PADDING_X = 32 // px-4 * 2
 
 interface Props {
@@ -45,8 +45,8 @@ export function MovieGrid({ movies, isLoading }: Props) {
   const estimateSize = useCallback(() => {
     const w = containerWidthRef.current
     const cardWidth = (w - PADDING_X - (columns - 1) * GAP) / columns
-    // aspect-[2/3] image + ~52px info section + gap
-    return Math.round(cardWidth * 1.5 + 52 + GAP)
+    // 2:3 artwork plus its title, location and catalogue metadata.
+    return Math.round(cardWidth * 1.5 + 86 + GAP)
   }, [columns])
 
   const virtualizer = useVirtualizer({
@@ -64,20 +64,22 @@ export function MovieGrid({ movies, isLoading }: Props) {
 
   if (!isLoading && movies.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Film size={48} className="opacity-30" />
-        <p className="text-sm">No movies match your filters</p>
-      </div>
+      <StatePanel
+        tone="empty"
+        title="No films match this view"
+        description="Remove one or more filters to widen the archive selection."
+        className="m-4 flex-1"
+      />
     )
   }
 
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-h-0 overflow-y-auto"
+      className="min-h-0 flex-1 overflow-y-auto"
       style={{ contain: 'strict' }}
     >
-      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+      <div style={{ height: virtualizer.getTotalSize() + 96, position: 'relative' }}>
         {virtualizer.getVirtualItems().map((vRow) => (
           <div
             key={vRow.key}
@@ -92,7 +94,7 @@ export function MovieGrid({ movies, isLoading }: Props) {
             }}
           >
             <div
-              className="grid px-4 pt-3"
+              className="grid px-4 pt-4"
               style={{
                 gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
                 gap: GAP,

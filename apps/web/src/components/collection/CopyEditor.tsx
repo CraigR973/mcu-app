@@ -4,6 +4,7 @@ import { Loader2, Save, Trash2, X } from 'lucide-react'
 
 import CopyForm from '@/components/collection/CopyForm'
 import { Button } from '@/components/ui/button'
+import { Dialog } from '@/components/ui/dialog'
 import {
   StaleEditError,
   type CollectionCopy,
@@ -87,34 +88,30 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
   const error = save.error ?? remove.error
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit this copy"
-        className="w-full max-w-2xl space-y-4 rounded-xl border border-border bg-card p-5 shadow-xl"
-      >
+    <Dialog open onClose={onClose} label="Edit this copy" className="sm:max-w-2xl">
+      <div className="space-y-5 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Edit this copy</h2>
-            <p className="text-xs text-muted-foreground">
+            <h2 className="section-heading">Edit this copy</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Changes are recorded in the audit log.
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="Close"
-            className="text-muted-foreground hover:text-foreground"
           >
-            <X className="h-5 w-5" />
-          </button>
+            <X aria-hidden />
+          </Button>
         </div>
 
         <CopyForm value={fields} onChange={setFields} disabled={pending} />
 
         {error && (
-          <p className="text-sm text-destructive">
+          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error instanceof StaleEditError
               ? 'This disc was changed somewhere else while you were editing. Close and reopen it to see the current version.'
               : error instanceof Error
@@ -123,12 +120,13 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
           </p>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+        <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
             variant="destructive"
             disabled={pending}
             onClick={() => remove.mutate()}
+            className="w-full sm:w-auto"
           >
             {remove.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -137,14 +135,15 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
             )}
             Move to trash
           </Button>
-          <div className="flex gap-2">
-            <Button type="button" variant="ghost" disabled={pending} onClick={onClose}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button type="button" variant="ghost" disabled={pending} onClick={onClose} className="w-full sm:w-auto">
               Cancel
             </Button>
             <Button
               type="button"
               disabled={pending || fields.formats.length === 0}
               onClick={() => save.mutate()}
+              className="w-full sm:w-auto"
             >
               {save.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -156,6 +155,6 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </Dialog>
   )
 }

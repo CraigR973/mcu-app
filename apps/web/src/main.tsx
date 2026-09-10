@@ -14,7 +14,7 @@ const queryClient = createQueryClient()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p className="p-8 text-red-600">Something went wrong.</p>}>
+    <Sentry.ErrorBoundary fallback={<p className="p-8 text-destructive">Something went wrong.</p>}>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>

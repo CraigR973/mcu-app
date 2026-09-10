@@ -22,8 +22,7 @@ interface Props {
   onCancel: () => void
 }
 
-const SELECT_CLS =
-  'h-8 rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
+const SELECT_CLS = 'select-control w-auto text-sm'
 
 /**
  * Editing a smart collection *is* using the filter bar.
@@ -85,7 +84,7 @@ export function SmartCollectionEditor({ existing, pending, error, onSave, onCanc
                 aria-pressed={icon === candidate}
                 onClick={() => setIcon(candidate)}
                 className={cn(
-                  'rounded-md border p-1.5 transition-colors',
+                  'touch-target flex items-center justify-center rounded-md border p-2 transition-colors',
                   icon === candidate
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-transparent text-muted-foreground hover:bg-muted',
@@ -99,7 +98,10 @@ export function SmartCollectionEditor({ existing, pending, error, onSave, onCanc
       </div>
 
       <div className="-mx-4 border-y border-border">
-        <FilterBar filters={filters} total={0} onChange={setFilters} />
+        {/* Saved collections persist the shared filter schema only. Live-only AV
+            specification toggles and collection sort are deliberately omitted here so
+            the editor never presents a choice it cannot save. */}
+        <FilterBar filters={filters} onChange={setFilters} context="saved" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -142,7 +144,7 @@ export function SmartCollectionEditor({ existing, pending, error, onSave, onCanc
         Selects: {describeFilters(toNullable(filters))}
       </p>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
 
       <div className="flex gap-2">
         <Button type="button" size="sm" disabled={pending || trimmed.length === 0} onClick={save}>

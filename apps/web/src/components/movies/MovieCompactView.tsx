@@ -1,7 +1,11 @@
 import { useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { FORMAT_COLORS, formatLabel, type MovieListItem } from '../../lib/api'
+import { Copy, MapPin } from 'lucide-react'
+import { Link } from 'react-router-dom'
+
+import { StatePanel } from '@/components/ui/state-panel'
+import { type MovieListItem } from '@/lib/api'
+import { FormatBadge } from './FormatBadge'
 
 interface Props {
   movies: MovieListItem[]
@@ -9,74 +13,53 @@ interface Props {
 }
 
 export function MovieCompactView({ movies, isLoading }: Props) {
-  const navigate = useNavigate()
   const parentRef = useRef<HTMLDivElement>(null)
-
+  const rowHeight = 52
   const rowVirtualizer = useVirtualizer({
     count: isLoading ? 30 : movies.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 36,
+    estimateSize: () => rowHeight,
     overscan: 12,
   })
 
+  if (!isLoading && movies.length === 0) {
+    return <StatePanel tone="empty" title="No films match this view" description="Remove one or more filters to widen the archive selection." className="m-4 flex-1" />
+  }
+
   return (
-    <div ref={parentRef} className="overflow-y-auto flex-1">
-      <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
-        {rowVirtualizer.getVirtualItems().map(vRow => {
+    <div ref={parentRef} className="min-h-0 flex-1 overflow-y-auto" aria-busy={isLoading}>
+      <div style={{ height: rowVirtualizer.getTotalSize() + 96, position: 'relative' }}>
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const positioning = { position: 'absolute' as const, top: virtualRow.start, left: 0, right: 0, height: rowHeight }
           if (isLoading) {
             return (
-              <div
-                key={vRow.index}
-                style={{ position: 'absolute', top: vRow.start, left: 0, right: 0, height: 36 }}
-                className="flex items-center gap-3 px-3 border-b border-zinc-800/60"
-              >
-                <div className="w-4 h-3 rounded bg-zinc-700 animate-pulse shrink-0" />
-                <div className="flex-1 h-3 rounded bg-zinc-700 animate-pulse" />
-                <div className="w-16 h-3 rounded bg-zinc-700 animate-pulse shrink-0" />
+              <div key={virtualRow.index} style={positioning} className="flex items-center gap-3 border-b border-border/80 px-4">
+                <div className="h-3 w-5 shrink-0 animate-pulse rounded-sm bg-muted" />
+                <div className="h-3 flex-1 animate-pulse rounded-sm bg-muted" />
+                <div className="h-4 w-16 shrink-0 animate-pulse rounded-sm bg-muted" />
               </div>
             )
           }
 
-          const movie = movies[vRow.index]
-          const fmt = movie.bestFormatOwned
-
+          const movie = movies[virtualRow.index]
+          const locations = movie.locations.map((location) => location.label).join(' · ')
           return (
-            <div
-              key={movie.id}
-              style={{ position: 'absolute', top: vRow.start, left: 0, right: 0, height: 36 }}
-              className="flex items-center gap-3 px-3 border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors cursor-pointer"
-              onClick={() => navigate(`/movies/${movie.id}`)}
-            >
-              <span className="text-xs text-zinc-600 w-4 shrink-0 text-right">
-                {vRow.index + 1}
-              </span>
-              <p className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{movie.title}</p>
-              {/* The densest view still answers "where is it?" — that is the point of
-                  the batch, and the compact row is the one people scan on a phone. */}
-              <span
-                className="hidden sm:block text-xs text-zinc-500 shrink-0 w-28 truncate text-right"
-                title={movie.locations.map(l => l.label).join(' · ')}
-              >
-                {movie.locations.map(l => l.label).join(' · ')}
-              </span>
-              <span className="text-xs text-zinc-500 shrink-0 w-8 text-right">
-                {movie.year ?? ''}
-              </span>
-              {fmt ? (
-                <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${FORMAT_COLORS[fmt] ?? 'bg-zinc-700 text-zinc-300'}`}>
-                  {formatLabel(fmt)}
+            <Link key={movie.id} to={`/movies/${movie.id}`} style={positioning} className="group flex items-center gap-2 border-b border-border/80 px-3 transition-colors hover:bg-muted/65 focus-visible:z-10 sm:gap-3 sm:px-4">
+              <span className="hidden w-7 shrink-0 text-right font-mono text-[0.6875rem] tabular-nums text-muted-foreground sm:block">{virtualRow.index + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span className="truncate text-sm font-semibold text-foreground">{movie.title}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{movie.year ?? '—'}</span>
                 </span>
-              ) : (
-                <span className="w-14 shrink-0" />
-              )}
-              {movie.tmdbRating ? (
-                <span className="text-xs text-amber-400 w-8 shrink-0 text-right">
-                  {movie.tmdbRating.toFixed(1)}
+                <span className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs font-medium text-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+                  <span className="truncate">{locations || 'Location not recorded'}</span>
                 </span>
-              ) : (
-                <span className="w-8 shrink-0" />
-              )}
-            </div>
+              </span>
+              {movie.copyCount > 1 && <span className="hidden items-center gap-1 text-xs text-muted-foreground md:inline-flex"><Copy className="h-3.5 w-3.5" aria-hidden />{movie.copyCount}</span>}
+              {movie.bestFormatOwned && <FormatBadge format={movie.bestFormatOwned} className="shrink-0" />}
+              {movie.tmdbRating != null && <span className="hidden w-8 shrink-0 text-right text-xs font-semibold tabular-nums text-warning lg:block">{movie.tmdbRating.toFixed(1)}</span>}
+            </Link>
           )
         })}
       </div>

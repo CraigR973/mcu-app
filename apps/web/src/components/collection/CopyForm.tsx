@@ -28,7 +28,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const selectClass =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
+  'flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 disabled:opacity-50'
 
 /**
  * The editable fields of one disc — §3.2's "location, format, notes, condition, price"
@@ -79,7 +79,7 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
                 disabled={disabled}
                 onClick={() => toggleFormat(format.value)}
                 aria-pressed={active}
-                className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                className={`touch-target min-h-11 rounded-md border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
                   active
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-input bg-background text-muted-foreground hover:text-foreground'
@@ -159,11 +159,11 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
             ))}
           </select>
         </Field>
-        <Field label="Sub-category">
+        <Field label="Collector edition">
           <Input
             disabled={disabled}
             value={value.subCategory ?? ''}
-            placeholder="Criterion, Arrow…"
+            placeholder="Criterion, Arrow, SteelBook…"
             onChange={(event) => set('subCategory', event.target.value || null)}
           />
         </Field>
@@ -212,7 +212,7 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
       </Field>
 
       <div className="space-y-2 rounded-lg border border-border p-3">
-        <label className="flex items-center gap-2 text-sm text-foreground">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             disabled={disabled}

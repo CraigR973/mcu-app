@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import {
   createMovieNight,
   endMovieNight,
@@ -19,6 +21,7 @@ export default function MovieNightPage() {
   const navigate = useNavigate()
   const [decadeFrom, setDecadeFrom] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
+  const [copyError, setCopyError] = useState<string | null>(null)
 
   const sessions = useQuery({ queryKey: ['movie-nights'], queryFn: fetchMovieNights })
 
@@ -38,24 +41,36 @@ export default function MovieNightPage() {
 
   const state = listState(sessions, (sessions.data?.items.length ?? 0) === 0)
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-6 p-4">
-      <header>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <Popcorn className="h-6 w-6" aria-hidden />
-          Movie night
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Both of you swipe through the collection. When you both like the same film,
-          that's tonight sorted.
-        </p>
-      </header>
+  async function copyInvite(invitePath: string, sessionId: string) {
+    setCopyError(null)
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard access is unavailable in this browser.')
+      await navigator.clipboard.writeText(`${window.location.origin}${invitePath}`)
+      setCopied(sessionId)
+    } catch (cause) {
+      setCopyError(queryErrorMessage(cause, 'The invite link could not be copied.'))
+    }
+  }
 
-      <section className="rounded-lg border border-border p-4">
-        <h2 className="font-semibold">Start one</h2>
-        <div className="mt-3 flex flex-wrap items-end gap-3">
+  return (
+    <div className="page-shell-narrow space-y-6">
+      <PageHeader
+        eyebrow="Screening room"
+        title="Movie night"
+        description="Both of you work through the same private shortlist. When you both choose a film, tonight is sorted."
+      />
+
+      <section className="archive-panel p-4 sm:p-5">
+        <h2 className="section-heading">Start a screening</h2>
+        <form
+          className="mt-3 flex flex-wrap items-end gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            start.mutate()
+          }}
+        >
           <label className="text-sm">
-            <span className="mb-1 block text-muted-foreground">Nothing older than</span>
+            <span className="field-label">Nothing older than</span>
             <Input
               type="number"
               min={1900}
@@ -66,7 +81,7 @@ export default function MovieNightPage() {
               onChange={(event) => setDecadeFrom(event.target.value)}
             />
           </label>
-          <Button onClick={() => start.mutate()} disabled={start.isPending}>
+          <Button type="submit" disabled={start.isPending}>
             {start.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
             ) : (
@@ -74,35 +89,59 @@ export default function MovieNightPage() {
             )}
             Start swiping
           </Button>
-        </div>
+        </form>
         {start.isError ? (
-          <p className="mt-2 text-sm text-destructive">
+          <p role="alert" className="mt-2 text-sm text-destructive">
             {queryErrorMessage(start.error, 'Could not start a movie night.')}
           </p>
         ) : null}
       </section>
 
-      <section className="rounded-lg border border-border p-4">
-        <h2 className="font-semibold">Yours</h2>
-        {state === 'loading' ? <p className="mt-2 text-sm text-muted-foreground">Loading…</p> : null}
+      <section className="archive-panel p-4 sm:p-5">
+        <h2 className="section-heading">Your screenings</h2>
+        {state === 'loading' ? (
+          <StatePanel compact className="mt-3" tone="loading" title="Loading screenings" />
+        ) : null}
         {state === 'offline' ? (
-          <p className="mt-2 text-sm text-muted-foreground">Waiting for the network…</p>
+          <StatePanel
+            compact
+            className="mt-3"
+            tone="offline"
+            title="Screenings need the network"
+            description="Reconnect to load your shared sessions."
+          />
         ) : null}
         {state === 'error' ? (
-          <p className="mt-2 text-sm text-destructive">
-            {queryErrorMessage(sessions.error, 'Could not load your movie nights.')}
-          </p>
+          <StatePanel
+            compact
+            className="mt-3"
+            tone="error"
+            title="Screenings unavailable"
+            description={queryErrorMessage(sessions.error, 'Could not load your movie nights.')}
+          />
         ) : null}
         {state === 'empty' ? (
-          <p className="mt-2 text-sm text-muted-foreground">You have not had one yet.</p>
+          <StatePanel
+            compact
+            className="mt-3"
+            tone="empty"
+            title="No screenings yet"
+            description="Start one above, then share its private invite with the other person."
+          />
         ) : null}
+        {finish.isError ? (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {queryErrorMessage(finish.error, 'That screening could not be ended.')}
+          </p>
+        ) : null}
+        {copyError ? <p role="alert" className="mt-3 text-sm text-destructive">{copyError}</p> : null}
         {state === 'ready' ? (
           <ul className="mt-2 divide-y divide-border">
             {sessions.data?.items.map((session) => (
               <li key={session.id} className="flex flex-wrap items-center gap-2 py-3">
                 <Link
                   to={`/movie-night/${session.id}`}
-                  className="min-w-0 flex-1 text-sm hover:underline"
+                  className="touch-target flex min-w-0 flex-1 items-center text-sm hover:underline"
                 >
                   {new Date(session.createdAt).toLocaleString()} ·{' '}
                   {session.participantCount === 1 ? 'just you' : `${session.participantCount} people`}
@@ -113,13 +152,7 @@ export default function MovieNightPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        // The origin is the web app's, not the API's — the invite is a
-                        // page a person opens.
-                        void navigator.clipboard
-                          ?.writeText(`${window.location.origin}${session.invitePath}`)
-                          .then(() => setCopied(session.id))
-                      }}
+                      onClick={() => void copyInvite(session.invitePath, session.id)}
                     >
                       <Copy className="mr-1 h-3 w-3" aria-hidden />
                       {copied === session.id ? 'Copied' : 'Invite'}
@@ -161,18 +194,21 @@ export function MovieNightJoinPage() {
   })
 
   return (
-    <div className="mx-auto max-w-md p-8 text-center">
+    <div className="page-shell-narrow flex min-h-[60dvh] items-center justify-center">
       {join.isPending ? (
-        <p className="text-sm text-muted-foreground">Joining…</p>
+        <StatePanel compact tone="loading" title="Joining the screening" />
       ) : join.isError ? (
-        <>
-          <p className="text-sm text-destructive">
-            {queryErrorMessage(join.error, 'That invite is not valid.')}
-          </p>
-          <Link to="/movie-night" className="mt-3 inline-block text-sm underline">
-            Start your own instead
-          </Link>
-        </>
+        <StatePanel
+          compact
+          tone="error"
+          title="Invite unavailable"
+          description={queryErrorMessage(join.error, 'That invite is not valid.')}
+          action={(
+            <Button asChild variant="outline">
+              <Link to="/movie-night">Start your own instead</Link>
+            </Button>
+          )}
+        />
       ) : null}
     </div>
   )

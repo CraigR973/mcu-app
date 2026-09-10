@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchMovies, type MovieFilters } from '@/lib/api'
 import { FilterBar } from '@/components/movies/FilterBar'
@@ -7,12 +7,27 @@ import { MovieListView } from '@/components/movies/MovieListView'
 import { MovieCompactView } from '@/components/movies/MovieCompactView'
 import { ViewToggle } from '@/components/movies/ViewToggle'
 import { useViewPreference } from '@/hooks/useViewPreference'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
+import { Button } from '@/components/ui/button'
+import { listState, queryErrorMessage } from '@/lib/query-state'
+
+const FILTER_STORAGE_KEY = 'mcu-collection-filters'
+
+function restoredFilters(): MovieFilters {
+  try {
+    const value: unknown = JSON.parse(sessionStorage.getItem(FILTER_STORAGE_KEY) ?? '{}')
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as MovieFilters : {}
+  } catch {
+    return {}
+  }
+}
 
 export default function MoviesPage() {
-  const [filters, setFilters] = useState<MovieFilters>({})
+  const [filters, setFilters] = useState<MovieFilters>(restoredFilters)
   const { viewMode, setViewMode, enabledColumns, toggleColumn } = useViewPreference()
 
-  const { data, isLoading, isError, error } = useQuery({
+  const moviesQuery = useQuery({
     queryKey: ['movies', filters],
     // The three collection views are virtualised. Loading the catalogue in one page
     // gives them the full scroll range while keeping only the visible rows in the DOM.
@@ -20,51 +35,64 @@ export default function MoviesPage() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const movies = data?.items ?? []
-  const totalMovies = data?.totalMovies ?? 0
-  const totalItems = data?.totalItems ?? 0
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters))
+    } catch {
+      // Browsing still works when storage is unavailable.
+    }
+  }, [filters])
+
+  const movies = moviesQuery.data?.items ?? []
+  const totalMovies = moviesQuery.data?.totalMovies ?? 0
+  const totalItems = moviesQuery.data?.totalItems ?? 0
+  const state = listState(moviesQuery, movies.length === 0)
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 px-4 py-3 border-b border-border">
-        <h1 className="text-lg font-semibold text-foreground shrink-0">Movies</h1>
-        <p className="hidden text-xs text-muted-foreground sm:block">
-          {totalMovies.toLocaleString()} films · {totalItems.toLocaleString()} items
-        </p>
-        <div className="ml-auto flex items-center gap-2">
-          <ViewToggle value={viewMode} onChange={setViewMode} />
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Collection catalogue"
+        title="The archive"
+        description={state === 'loading' ? 'Opening the catalogue…' : `${totalMovies.toLocaleString()} films across ${totalItems.toLocaleString()} physical and digital items`}
+        actions={<ViewToggle value={viewMode} onChange={setViewMode} />}
+        className="mb-0 px-4 py-4 sm:items-center sm:px-6 sm:py-5 lg:px-8"
+      />
 
       <FilterBar
         filters={filters}
-        total={isLoading ? 0 : totalMovies}
+        total={state === 'loading' ? undefined : totalMovies}
         onChange={setFilters}
       />
 
-      {isError && (
-        <div className="flex flex-1 items-center justify-center">
-          <p className="text-sm text-destructive">
-            {error instanceof Error ? error.message : 'Failed to load movies. Please refresh.'}
-          </p>
-        </div>
+      {state === 'offline' && (
+        <StatePanel tone="offline" title="The archive has not been cached here yet" description="Reconnect once to load this collection on this device." className="m-4 flex-1" />
       )}
 
-      {!isError && viewMode === 'grid' && (
-        <MovieGrid movies={movies} isLoading={isLoading} />
+      {state === 'error' && (
+        <StatePanel
+          tone="error"
+          title="The archive could not be opened"
+          description={queryErrorMessage(moviesQuery.error, 'The server did not answer. Your filters have been kept.')}
+          action={<Button variant="outline" onClick={() => void moviesQuery.refetch()}>Try again</Button>}
+          className="m-4 flex-1"
+        />
       )}
 
-      {!isError && viewMode === 'list' && (
+      {state !== 'error' && state !== 'offline' && viewMode === 'grid' && (
+        <MovieGrid movies={movies} isLoading={state === 'loading'} />
+      )}
+
+      {state !== 'error' && state !== 'offline' && viewMode === 'list' && (
         <MovieListView
           movies={movies}
-          isLoading={isLoading}
+          isLoading={state === 'loading'}
           enabledColumns={enabledColumns}
           toggleColumn={toggleColumn}
         />
       )}
 
-      {!isError && viewMode === 'compact' && (
-        <MovieCompactView movies={movies} isLoading={isLoading} />
+      {state !== 'error' && state !== 'offline' && viewMode === 'compact' && (
+        <MovieCompactView movies={movies} isLoading={state === 'loading'} />
       )}
     </div>
   )

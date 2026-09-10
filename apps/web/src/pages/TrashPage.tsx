@@ -93,10 +93,11 @@ function Row({ row, table }: { row: TrashRow; table: TrashTable }) {
           Removed {new Date(row.deletedAt).toLocaleString()}
         </p>
         {destroy.isError ? (
-          <p className="text-xs text-destructive">
+          <p role="alert" className="text-xs text-destructive">
             {queryErrorMessage(destroy.error, 'Could not delete permanently.')}
           </p>
         ) : null}
+        {restore.isError ? <p role="alert" className="text-xs text-destructive">{queryErrorMessage(restore.error, 'Could not restore this item.')}</p> : null}
       </div>
 
       <Button
@@ -211,6 +212,7 @@ function PurgePanel({ table }: { table: TrashTable }) {
       {run.data ? (
         <p className="text-xs text-muted-foreground">Purged {run.data.deleted}.</p>
       ) : null}
+      {preview.isError || run.isError ? <p role="alert" className="text-xs text-destructive">{queryErrorMessage(preview.error ?? run.error, 'The purge request could not be completed.')}</p> : null}
     </div>
   )
 }
@@ -254,7 +256,7 @@ export default function TrashPage() {
               type="button"
               onClick={() => setTable(candidate)}
               className={cn(
-                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                'touch-target inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                 table === candidate
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted',
@@ -292,7 +294,9 @@ export default function TrashPage() {
         </ul>
       )}
 
-      <PurgePanel table={table} />
+      {/* Remount on table change: a preview is authorization for exactly the table it
+          named, never for whichever tab happens to be active later. */}
+      <PurgePanel key={table} table={table} />
     </div>
   )
 }

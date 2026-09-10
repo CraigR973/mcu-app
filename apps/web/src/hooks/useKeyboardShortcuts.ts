@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 /** §7.5's `g` chords. Not every documented target is reachable without a role check —
  *  `n` (add new item) is admin-only and enforced by the caller, same as the sidebar. */
 const GO_TARGETS: Record<string, string> = {
-  h: '/',
+  h: '/dashboard',
   c: '/movies',
   w: '/wanted',
   s: '/stats',
@@ -74,6 +74,12 @@ export function useKeyboardShortcuts({ isAdmin, suspended, onOpenPalette, onOpen
 
       if (e.key === '?') {
         onOpenHelp()
+        return
+      }
+
+      if (e.key === '.') {
+        e.preventDefault()
+        navigate('/assistant')
         return
       }
 

@@ -21,14 +21,14 @@ export default function DuplicatePrompt({ duplicate, onConfirm, onCancel, pendin
 
   return (
     <section
-      className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4"
+      className="space-y-3 rounded-xl border border-warning/40 bg-warning/10 p-4"
       role="alert"
     >
       <div className="flex items-start gap-2">
         {duplicate.isUpgrade ? (
-          <ArrowUpCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <ArrowUpCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
         ) : (
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
         )}
         <div>
           <h3 className="text-sm font-semibold text-foreground">

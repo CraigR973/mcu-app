@@ -1,9 +1,12 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { Link, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from '@/context/theme'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/layouts/AppLayout'
 import ErrorBoundary from './components/ErrorBoundary'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
+import { adminNavItems, navItems } from '@/lib/nav-items'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -42,33 +45,65 @@ const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-foreground">Admin</h1>
-      <p className="text-muted-foreground mt-1">Admin dashboard — coming soon.</p>
+    <div className="page-shell">
+      <PageHeader eyebrow="Craig’s tools" title="Administration" description="Collection maintenance, audit and private sharing controls in one place." />
+      <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 xl:grid-cols-3">
+        {adminNavItems.filter((item) => item.path !== '/admin').map(({ label, path, icon: Icon }) => (
+          <Link key={path} to={path} className="group flex min-h-32 flex-col justify-between bg-card p-5 transition-colors hover:bg-muted">
+            <Icon className="h-5 w-5 text-primary" aria-hidden />
+            <span><span className="block font-display text-lg font-semibold text-foreground">{label}</span><span className="mt-1 block text-xs text-muted-foreground">Open {label.toLowerCase()}</span></span>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
 
 function DebugPage() {
   return (
-    <div className="p-8 space-y-4">
-      <h1 className="text-xl font-bold">Debug Tools</h1>
+    <main className="page-shell-narrow space-y-4">
+      <PageHeader eyebrow="Diagnostics" title="Debug tools" description="A deliberate error trigger used to verify the application error boundary." />
       <button
-        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        className="min-h-11 rounded-md bg-destructive px-4 py-2 font-semibold text-destructive-foreground hover:opacity-90"
         onClick={() => { throw new Error('This is your first error!') }}
       >
         Break the world
       </button>
-    </div>
+    </main>
   )
 }
 
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
+      <StatePanel tone="loading" title="Opening the archive" className="w-full max-w-md" />
     </div>
   )
+}
+
+/** One owner for the tab title. `AppLayout` used to set it too, which meant the
+ *  shell and the router could disagree — 'Film archive' against 'Page not found' —
+ *  and the archive root rendered its own name twice. */
+const APP_NAME = 'The Real MCU'
+
+function RouteTitle() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const publicTitles: Record<string, string> = {
+      '/': APP_NAME,
+      '/login': 'Sign in',
+      '/welcome': 'Welcome',
+      '/unauthorized': 'Access denied',
+      '/offline': 'Offline',
+      '/debug': 'Debug tools',
+    }
+    const item = [...navItems, ...adminNavItems]
+      .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
+      .sort((a, b) => b.path.length - a.path.length)[0]
+    const title = publicTitles[pathname] ?? item?.label ?? (pathname.startsWith('/gift/') ? 'Gift guide' : 'Page not found')
+    document.title = title === APP_NAME ? APP_NAME : `${title} · ${APP_NAME}`
+  }, [pathname])
+  return null
 }
 
 function AppShell({ children }: { children: React.ReactNode }) {
@@ -92,6 +127,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ThemeProvider>
+      <RouteTitle />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>

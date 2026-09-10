@@ -7,6 +7,8 @@ import type { SmartCollection } from '@mcu/shared'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { SmartCollectionEditor } from '@/components/collections/SmartCollectionEditor'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import {
   createSmartCollection,
   deleteSmartCollection,
@@ -35,12 +37,12 @@ function Card({
   })
 
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-      <Icon className="h-5 w-5 shrink-0 text-primary" />
+    <li className="archive-panel flex min-h-20 flex-wrap items-center gap-3 p-3 sm:p-4">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden /></span>
       <div className="min-w-0 flex-1">
         <Link
           to={`/collections/${collection.id}`}
-          className="font-medium text-foreground hover:underline"
+          className="font-display text-lg font-semibold text-foreground hover:text-primary"
         >
           {collection.name}
         </Link>
@@ -51,19 +53,20 @@ function Card({
       {collection.isPinned ? (
         <Pin className="h-4 w-4 shrink-0 text-muted-foreground" aria-label="Pinned to dashboard" />
       ) : null}
-      <Button type="button" variant="ghost" size="sm" onClick={onEdit} aria-label="Edit">
+      <Button type="button" variant="ghost" size="icon" onClick={onEdit} aria-label={`Edit ${collection.name}`}>
         <Pencil className="h-4 w-4" />
       </Button>
       <Button
         type="button"
         variant="ghost"
-        size="sm"
-        aria-label="Delete"
+        size="icon"
+        aria-label={`Delete ${collection.name}`}
         disabled={remove.isPending}
         onClick={() => remove.mutate()}
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+      {remove.isError && <p role="alert" className="w-full text-xs text-destructive">{queryErrorMessage(remove.error, 'This collection could not be deleted.')}</p>}
     </li>
   )
 }
@@ -100,22 +103,13 @@ export default function CollectionsPage() {
   })
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Smart collections</h1>
-          <p className="text-sm text-muted-foreground">
-            Saved filters that stay current. Add a disc that matches and it appears here
-            without anything being updated.
-          </p>
-        </div>
-        {editing === null ? (
-          <Button type="button" size="sm" onClick={() => setEditing('new')}>
-            <Plus className="h-4 w-4" />
-            New
-          </Button>
-        ) : null}
-      </div>
+    <div className="page-shell-narrow space-y-5">
+      <PageHeader
+        eyebrow="Living shelves"
+        title="Collections"
+        description="Saved questions that stay current as discs enter or leave the archive."
+        actions={editing === null ? <Button type="button" onClick={() => setEditing('new')}><Plus aria-hidden />New collection</Button> : undefined}
+      />
 
       {editing !== null ? (
         <SmartCollectionEditor
@@ -131,22 +125,13 @@ export default function CollectionsPage() {
       ) : null}
 
       {state === 'loading' ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Opening your collections" />
       ) : state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — your collections could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="Collections are not cached here" description="Reconnect to load your saved collection views." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(collectionsQuery.error, 'Could not load your collections.')}
-        </p>
+        <StatePanel tone="error" title="Collections could not be opened" description={queryErrorMessage(collectionsQuery.error, 'The server did not answer.')} />
       ) : state === 'empty' ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <Sparkles className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">
-            No smart collections yet. Try &ldquo;Unwatched 4Ks from the 2010s&rdquo;.
-          </p>
-        </div>
+        <StatePanel tone="empty" icon={Sparkles} title="No collections yet" description="Try “Unwatched 4Ks from the 2010s” or a favourite director’s films." />
       ) : (
         <ul className="space-y-2">
           {items.map((collection) => (

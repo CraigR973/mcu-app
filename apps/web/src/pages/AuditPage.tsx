@@ -4,6 +4,8 @@ import { ScrollText } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { AuditEntry } from '@mcu/shared'
 
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import { fetchAudit } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
@@ -25,8 +27,8 @@ function Diff({ changes }: { changes: Record<string, unknown> | null }) {
             ? (value as { from: unknown; to: unknown })
             : null
         return (
-          <li key={field} className="text-[11px] text-muted-foreground">
-            <span className="text-foreground">{field.replaceAll('_', ' ')}</span>
+          <li key={field} className="break-words text-xs leading-5 text-muted-foreground">
+            <span className="font-medium text-foreground">{field.replaceAll('_', ' ')}</span>
             {move ? (
               <>
                 : <span className="line-through">{render(move.from)}</span> →{' '}
@@ -51,20 +53,20 @@ function render(value: unknown): string {
 
 function Row({ entry }: { entry: AuditEntry }) {
   return (
-    <li className="rounded-lg border border-border bg-card p-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-sm text-foreground">
+    <li className="archive-panel p-4">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+        <p className="min-w-0 text-sm leading-6 text-foreground">
           <span className="font-medium">{entry.actorName ?? 'A deleted profile'}</span>{' '}
-          <span className="text-muted-foreground">{entry.actionType}</span>{' '}
+          <span className="font-medium text-primary">{entry.actionType.replaceAll('_', ' ')}</span>{' '}
           <span className="text-muted-foreground">
             {entry.targetTable.replaceAll('_', ' ')}
           </span>
         </p>
-        <time className="shrink-0 text-[11px] text-muted-foreground" dateTime={entry.createdAt}>
+        <time className="shrink-0 text-xs tabular-nums text-muted-foreground" dateTime={entry.createdAt}>
           {new Date(entry.createdAt).toLocaleString()}
         </time>
       </div>
-      <div className="mt-1">
+      <div className="mt-3 border-t border-border pt-3">
         <Diff changes={entry.changes} />
       </div>
     </li>
@@ -96,69 +98,76 @@ export default function AuditPage() {
   const state = listState(auditQuery, entries.length === 0)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Audit log</h1>
-        <p className="text-sm text-muted-foreground">
-          Every change anyone has made, with what moved.
-        </p>
-      </div>
+    <div className="page-shell-narrow space-y-7">
+      <PageHeader
+        eyebrow="Administrator"
+        title="Audit log"
+        description="A permanent, filterable record of collection changes and who made them."
+      />
 
-      <div className="flex flex-wrap items-center gap-2">
-        {ACTIONS.map((value) => (
-          <button
-            key={value || 'all'}
-            type="button"
-            onClick={() => setAction(value)}
-            className={cn(
-              'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-              action === value
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted',
-            )}
-          >
-            {value === '' ? 'All' : value.replaceAll('_', ' ')}
-          </button>
-        ))}
-        <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-          Since
+      <div className="archive-panel flex flex-col gap-4 p-4 sm:p-5">
+        <fieldset>
+          <legend className="field-label">Action</legend>
+          <div className="flex flex-wrap gap-1.5">
+            {ACTIONS.map((value) => (
+              <button
+                key={value || 'all'}
+                type="button"
+                onClick={() => setAction(value)}
+                aria-pressed={action === value}
+                className={cn(
+                  'touch-target min-h-10 rounded-md border px-3 py-2 text-xs font-semibold capitalize transition-colors',
+                  action === value
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground',
+                )}
+              >
+                {value === '' ? 'All' : value.replaceAll('_', ' ')}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <label className="block max-w-56 text-sm text-muted-foreground">
+          <span className="field-label">From date</span>
           <input
             type="date"
             value={since}
             onChange={(event) => setSince(event.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+            className="form-control"
           />
         </label>
       </div>
 
       {state === 'loading' ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Opening the audit ledger" />
       ) : state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — the audit log could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="The audit ledger is not cached here" description="Reconnect to inspect the administrative history." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(auditQuery.error, 'Could not load the audit log.')}
-        </p>
+        <StatePanel
+          tone="error"
+          title="The audit ledger is unavailable"
+          description={queryErrorMessage(auditQuery.error, 'Could not load the audit log.')}
+        />
       ) : state === 'empty' ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <ScrollText className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Nothing matches those filters.</p>
-        </div>
+        <StatePanel
+          tone="empty"
+          icon={ScrollText}
+          title="Nothing matches these filters"
+          description="Choose another action or move the start date earlier."
+        />
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">
+          <p role="status" className="metadata-label">
             {auditQuery.data?.total.toLocaleString()} entries
           </p>
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {entries.map((entry) => (
               <Row key={entry.id} entry={entry} />
             ))}
           </ul>
         </>
       )}
-      <p className="text-[11px] text-muted-foreground">
+      <p className="border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
         Looking for a single disc&rsquo;s history? It is on the{' '}
         <Link to="/movies" className="text-primary hover:underline">
           film&rsquo;s own page

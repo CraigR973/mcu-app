@@ -9,13 +9,16 @@ type WantedUpdate = Parameters<typeof updateWanted>[1]
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
+import { Badge } from '@/components/ui/badge'
+import { Poster } from '@/components/movies/Poster'
+import { FormatBadge } from '@/components/movies/FormatBadge'
 import { useAuth } from '@/context/auth'
 import {
   addWanted,
   fetchWanted,
   FORMATS,
-  formatLabel,
-  posterUrl,
   removeWanted,
   searchTmdb,
   updateWanted,
@@ -55,16 +58,16 @@ function AddWantedPanel() {
   const searchState = listState(searchQuery, results.length === 0)
 
   return (
-    <section className="space-y-3 rounded-lg border border-border bg-card p-4">
+    <section className="archive-panel space-y-4 p-4 sm:p-5" aria-labelledby="add-wanted-heading">
       <div>
-        <h2 className="text-sm font-semibold text-foreground">Add a film</h2>
-        <p className="text-xs text-muted-foreground">
+        <h2 id="add-wanted-heading" className="section-heading">Add a wanted film</h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Search by title, then optionally set the format, edition and maximum price. The
           edition is free text — it picks between listings, it does not narrow the search.
         </p>
       </div>
       <form
-        className="flex gap-2"
+        className="flex flex-col gap-2 sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault()
           setSubmitted(query.trim())
@@ -91,7 +94,7 @@ function AddWantedPanel() {
           <select
             value={preferredFormat}
             onChange={(event) => setPreferredFormat(event.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            className="select-control"
             aria-label="Preferred format"
           >
             <option value="">Any format</option>
@@ -123,15 +126,18 @@ function AddWantedPanel() {
       </div>
 
       {submitted.length >= 2 && searchState === 'error' ? (
-        <p className="text-xs text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {queryErrorMessage(searchQuery.error, 'Could not reach TMDB.')}
         </p>
+      ) : null}
+      {submitted.length >= 2 && searchState === 'offline' ? (
+        <p className="text-sm text-muted-foreground">Search is waiting for a connection.</p>
       ) : null}
       {submitted.length >= 2 && searchState === 'empty' ? (
         <p className="text-xs text-muted-foreground">No films matched “{submitted}”.</p>
       ) : null}
       {add.isError ? (
-        <p className="text-xs text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {queryErrorMessage(add.error, 'Could not add that film.')}
         </p>
       ) : null}
@@ -141,14 +147,9 @@ function AddWantedPanel() {
           {results.map((result) => (
             <li
               key={result.tmdbId}
-              className="flex items-center gap-3 rounded-md border border-border p-2"
+              className="flex items-center gap-3 border-t border-border py-3 first:border-t-0"
             >
-              <img
-                src={posterUrl(result.posterPath, 'w92')}
-                alt=""
-                loading="lazy"
-                className="h-14 w-10 shrink-0 rounded object-cover"
-              />
+              <Poster path={result.posterPath} title={result.title} size="w92" decorative className="h-14 w-10 shrink-0 rounded-sm" />
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-foreground">{result.title}</p>
                 <p className="text-xs text-muted-foreground">
@@ -230,53 +231,47 @@ function Card({ item }: { item: WantedItem }) {
   return (
     <li
       className={cn(
-        'flex items-center gap-3 rounded-lg border border-border bg-card p-3',
+        'archive-panel flex flex-col gap-3 p-3 sm:flex-row sm:items-center',
         item.isActive ? '' : 'opacity-60',
       )}
     >
-      <img
-        src={posterUrl(item.posterPath, 'w92')}
-        alt=""
-        loading="lazy"
-        className="h-16 w-11 shrink-0 rounded object-cover"
-      />
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 gap-3">
+      <Poster path={item.posterPath} title={item.movieTitle} size="w92" decorative className="h-20 w-[3.35rem] shrink-0 rounded-sm" />
+      <div className="min-w-0 flex-1 py-0.5">
         <Link
           to={`/movies/${item.movieId}`}
           className="font-medium text-foreground hover:underline"
         >
           {item.movieTitle}
         </Link>
-        <p className="text-xs text-muted-foreground">
-          {[
-            item.year ? String(item.year) : null,
-            formatLabel(item.preferredFormat) ?? null,
-            item.preferredEdition,
-            item.maxPrice ? `under £${item.maxPrice}` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ') || 'any format, any price'}
-        </p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          {item.year && <span>{item.year}</span>}
+          {item.preferredFormat && <FormatBadge format={item.preferredFormat} />}
+          {item.preferredEdition && <Badge>{item.preferredEdition}</Badge>}
+          {item.maxPrice && <Badge tone="primary">Up to £{item.maxPrice}</Badge>}
+          {!item.preferredFormat && !item.preferredEdition && !item.maxPrice && <span>Any format or edition</span>}
+        </div>
         {/* Wanting a film you own is not an error — a DVD-to-4K upgrade is exactly that —
             so it is said plainly rather than refused. */}
         {item.ownedAlready ? (
-          <p className="text-[11px] text-amber-500">
+          <p className="mt-1 text-xs font-medium text-warning">
             You already own a copy — an upgrade?
           </p>
         ) : null}
         {!item.isActive ? (
-          <p className="text-[11px] text-muted-foreground">No longer looking</p>
+          <p className="mt-1 text-xs text-muted-foreground">No longer looking</p>
         ) : null}
         {saveBudget.isError ? (
-          <p className="text-[11px] text-destructive">
+          <p role="alert" className="mt-1 text-xs text-destructive">
             {queryErrorMessage(saveBudget.error, 'Could not save that limit.')}
           </p>
         ) : null}
       </div>
+      </div>
 
       {profile?.role === 'admin' && editingBudget ? (
         <form
-          className="flex items-center gap-1"
+          className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-0 sm:pt-0"
           onSubmit={(event) => {
             event.preventDefault()
             saveBudget.mutate()
@@ -317,7 +312,7 @@ function Card({ item }: { item: WantedItem }) {
       ) : null}
 
       {profile?.role === 'admin' && !editingBudget ? (
-        <>
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-0 sm:pt-0">
           <Button
             type="button"
             size="sm"
@@ -352,7 +347,8 @@ function Card({ item }: { item: WantedItem }) {
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-        </>
+          {(toggle.isError || remove.isError) && <p role="alert" className="w-full text-xs text-destructive">{queryErrorMessage(toggle.error ?? remove.error, 'That wanted-list change could not be saved.')}</p>}
+        </div>
       ) : null}
     </li>
   )
@@ -368,6 +364,9 @@ function Card({ item }: { item: WantedItem }) {
  */
 export default function WantedPage() {
   const [activeOnly, setActiveOnly] = useState(false)
+  // Keep the established one-step admin workflow: the form begins open, while the
+  // header control lets it be folded away during routine list review.
+  const [adding, setAdding] = useState(true)
   const { profile } = useAuth()
 
   const wantedQuery = useQuery({
@@ -378,18 +377,18 @@ export default function WantedPage() {
   const state = listState(wantedQuery, items.length === 0)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Wanted</h1>
-        <p className="text-sm text-muted-foreground">
-          Films to look out for.{' '}
-          {wantedQuery.data ? `${wantedQuery.data.activeCount} still looking.` : ''}
-        </p>
-      </div>
+    <div className="page-shell-narrow space-y-5">
+      <PageHeader
+        eyebrow="Acquisition list"
+        title="Wanted"
+        description="Titles and editions worth looking out for, with a clear ceiling before a tempting listing appears."
+        meta={wantedQuery.data ? <span>{wantedQuery.data.activeCount} still being sought</span> : undefined}
+        actions={profile?.role === 'admin' ? <Button type="button" onClick={() => setAdding((value) => !value)} aria-expanded={adding}><Plus aria-hidden />{adding ? 'Close add form' : 'Add a film'}</Button> : undefined}
+      />
 
-      {profile?.role === 'admin' ? <AddWantedPanel /> : null}
+      {profile?.role === 'admin' && adding ? <AddWantedPanel /> : null}
 
-      <div className="flex gap-1">
+      <div className="inline-flex overflow-hidden rounded-md border border-input bg-card" role="group" aria-label="Wanted-list view">
         {[
           { value: false, label: 'All' },
           { value: true, label: 'Still looking' },
@@ -399,11 +398,12 @@ export default function WantedPage() {
             type="button"
             onClick={() => setActiveOnly(option.value)}
             className={cn(
-              'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+              'touch-target min-h-11 border-r border-border px-4 text-sm font-semibold transition-colors last:border-r-0',
               activeOnly === option.value
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-muted',
             )}
+            aria-pressed={activeOnly === option.value}
           >
             {option.label}
           </button>
@@ -411,24 +411,13 @@ export default function WantedPage() {
       </div>
 
       {state === 'loading' ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Opening the wanted list" />
       ) : state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — the wanted list could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="The wanted list is not cached here" description="Reconnect to load it on this device." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(wantedQuery.error, 'Could not load the wanted list.')}
-        </p>
+        <StatePanel tone="error" title="The wanted list could not be opened" description={queryErrorMessage(wantedQuery.error, 'The server did not answer.')} />
       ) : state === 'empty' ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <Bookmark className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Nothing on the wanted list yet.</p>
-          <p className="max-w-sm text-xs text-muted-foreground">
-            Use “Add a film” above, or add a whole set&rsquo;s missing films from{' '}
-            <Link to="/insights" className="text-primary hover:underline">Insights</Link>.
-          </p>
-        </div>
+        <StatePanel tone="empty" icon={Bookmark} title={activeOnly ? 'Nothing is actively being sought' : 'Nothing on the wanted list yet'} description={profile?.role === 'admin' ? <>Add a title here, or add a set’s missing films from <Link to="/insights" className="font-semibold text-primary hover:underline">Insights</Link>.</> : 'Craig has not added any wanted titles yet.'} />
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (

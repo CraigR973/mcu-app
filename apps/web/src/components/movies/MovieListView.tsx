@@ -1,13 +1,17 @@
 import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Settings2 } from 'lucide-react'
-import { FORMAT_COLORS, formatLabel, posterUrl, type MovieListItem } from '../../lib/api'
-import { ALL_COLUMNS, type ColumnKey } from '../../hooks/useViewPreference'
+import { Check, MapPin, Settings2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-function formatRuntime(mins: number | null) {
-  if (!mins) return '—'
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`
+import { StatePanel } from '@/components/ui/state-panel'
+import { type MovieListItem } from '@/lib/api'
+import { ALL_COLUMNS, type ColumnKey } from '@/hooks/useViewPreference'
+import { FormatBadge } from './FormatBadge'
+import { Poster } from './Poster'
+
+function formatRuntime(minutes: number | null) {
+  if (!minutes) return '—'
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
 interface Props {
@@ -18,146 +22,91 @@ interface Props {
 }
 
 export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn }: Props) {
-  const navigate = useNavigate()
   const parentRef = useRef<HTMLDivElement>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const rowHeight = 68
 
   const rowVirtualizer = useVirtualizer({
     count: isLoading ? 20 : movies.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 52,
+    estimateSize: () => rowHeight,
     overscan: 8,
   })
+  const colDefs = ALL_COLUMNS.filter((column) => enabledColumns.includes(column.key))
 
-  const colDefs = ALL_COLUMNS.filter(c => enabledColumns.includes(c.key))
-
-  const renderCell = (movie: MovieListItem, key: ColumnKey) => {
+  function renderCell(movie: MovieListItem, key: ColumnKey) {
     switch (key) {
-      case 'year':
-        return <span className="text-muted-foreground">{movie.year ?? '—'}</span>
-      case 'format': {
-        const fmt = movie.bestFormatOwned
-        if (!fmt) return <span className="text-zinc-600">—</span>
-        return (
-          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${FORMAT_COLORS[fmt] ?? 'bg-zinc-700 text-zinc-300'}`}>
-            {formatLabel(fmt)}
-          </span>
-        )
-      }
-      case 'hdr':
-        return <span className="text-muted-foreground text-xs">{movie.bestHdrOwned ?? '—'}</span>
-      case 'audio':
-        return <span className="text-muted-foreground text-xs">{movie.bestAudioOwned ?? '—'}</span>
-      case 'runtime':
-        return <span className="text-muted-foreground">{formatRuntime(movie.runtimeMinutes)}</span>
-      case 'rating':
-        return movie.tmdbRating
-          ? <span className="text-amber-500 font-medium">{movie.tmdbRating.toFixed(1)}</span>
-          : <span className="text-muted-foreground">—</span>
+      case 'year': return <span className="text-muted-foreground">{movie.year ?? '—'}</span>
+      case 'format': return movie.bestFormatOwned ? <FormatBadge format={movie.bestFormatOwned} /> : <span className="text-muted-foreground">—</span>
+      case 'hdr': return <span className="block truncate text-xs text-muted-foreground">{movie.bestHdrOwned ?? '—'}</span>
+      case 'audio': return <span className="block truncate text-xs text-muted-foreground">{movie.bestAudioOwned ?? '—'}</span>
+      case 'runtime': return <span className="text-muted-foreground">{formatRuntime(movie.runtimeMinutes)}</span>
+      case 'rating': return movie.tmdbRating ? <span className="font-semibold tabular-nums text-warning">{movie.tmdbRating.toFixed(1)}</span> : <span className="text-muted-foreground">—</span>
       case 'location': {
-        if (movie.locations.length === 0) return <span className="text-muted-foreground">—</span>
-        const labels = movie.locations.map(l => l.label).join(' · ')
-        return (
-          <span className="text-muted-foreground text-xs truncate block" title={labels}>
-            {labels}
-          </span>
-        )
+        const locations = movie.locations.map((location) => location.label).join(' · ')
+        return <span className="block truncate text-xs font-medium text-foreground" title={locations}>{locations || '—'}</span>
       }
-      case 'watched':
-        return movie.watched
-          ? <span className="text-emerald-500 text-xs font-medium">Watched</span>
-          : <span className="text-muted-foreground">—</span>
+      case 'watched': return movie.watched ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-success"><Check className="h-3.5 w-3.5" aria-hidden /> Seen</span> : <span className="text-muted-foreground">—</span>
     }
   }
 
+  if (!isLoading && movies.length === 0) {
+    return <StatePanel tone="empty" title="No films match this view" description="Remove one or more filters to widen the archive selection." className="m-4 flex-1" />
+  }
+
   return (
-    <div className="flex flex-col min-h-0 flex-1">
-      {/* Header row */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-700 bg-zinc-900 text-xs font-medium text-zinc-500 uppercase tracking-wide select-none">
-        <div className="w-8 shrink-0" />
-        <div className="flex-1 min-w-0">Title</div>
-        {colDefs.map(c => (
-          <div key={c.key} className="w-16 shrink-0 text-right">{c.label}</div>
-        ))}
-        <div className="relative ml-auto shrink-0">
-          <button
-            onClick={() => setPickerOpen(p => !p)}
-            title="Configure columns"
-            className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
-          >
-            <Settings2 size={15} />
-          </button>
-          {pickerOpen && (
-            <div className="absolute right-0 top-7 z-20 w-44 rounded-lg border border-zinc-700 bg-zinc-850 shadow-xl p-2 bg-zinc-900">
-              <p className="text-xs text-zinc-500 px-1 pb-1 font-semibold uppercase tracking-wide">Columns</p>
-              {ALL_COLUMNS.map(c => (
-                <label key={c.key} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-zinc-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={enabledColumns.includes(c.key)}
-                    onChange={() => toggleColumn(c.key)}
-                    className="accent-blue-500"
-                  />
-                  <span className="text-sm text-zinc-300">{c.label}</span>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative hidden min-h-11 items-center gap-3 border-b border-border bg-surface-sunken/65 px-4 text-[0.6875rem] font-semibold uppercase tracking-[0.13em] text-muted-foreground lg:flex">
+        <div className="w-9 shrink-0" />
+        <div className="min-w-0 flex-1">Film</div>
+        {colDefs.map((column) => <div key={column.key} className="w-24 shrink-0 text-right">{column.label}</div>)}
+        <button type="button" onClick={() => setPickerOpen((value) => !value)} aria-expanded={pickerOpen} aria-label="Configure visible columns" className="touch-target flex shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+          <Settings2 size={17} aria-hidden />
+        </button>
+        {pickerOpen && (
+          <div className="absolute right-3 top-11 z-20 w-52 rounded-lg border border-border bg-popover p-2 normal-case tracking-normal shadow-lift">
+            <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Visible columns</p>
+            {ALL_COLUMNS.map((column) => (
+              <label key={column.key} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 text-sm font-medium text-foreground hover:bg-muted">
+                <input type="checkbox" checked={enabledColumns.includes(column.key)} onChange={() => toggleColumn(column.key)} className="h-4 w-4 accent-primary" />
+                {column.label}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Virtual rows */}
-      <div ref={parentRef} className="overflow-y-auto flex-1">
-        <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
-          {rowVirtualizer.getVirtualItems().map(vRow => {
+      <div ref={parentRef} className="min-h-0 flex-1 overflow-y-auto" aria-busy={isLoading}>
+        <div style={{ height: rowVirtualizer.getTotalSize() + 96, position: 'relative' }}>
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const positioning = { position: 'absolute' as const, top: virtualRow.start, left: 0, right: 0, height: rowHeight }
             if (isLoading) {
               return (
-                <div
-                  key={vRow.index}
-                  style={{ position: 'absolute', top: vRow.start, left: 0, right: 0, height: 52 }}
-                  className="flex items-center gap-2 px-3 border-b border-zinc-800"
-                >
-                  <div className="w-8 h-10 rounded bg-zinc-700 animate-pulse shrink-0" />
-                  <div className="flex-1 h-4 rounded bg-zinc-700 animate-pulse" />
-                  {colDefs.map(c => (
-                    <div key={c.key} className="w-24 h-4 rounded bg-zinc-700 animate-pulse shrink-0" />
-                  ))}
+                <div key={virtualRow.index} style={positioning} className="flex items-center gap-3 border-b border-border px-4">
+                  <div className="h-12 w-8 shrink-0 animate-pulse rounded-sm bg-muted" />
+                  <div className="h-4 flex-1 animate-pulse rounded-sm bg-muted" />
+                  {colDefs.map((column) => <div key={column.key} className="hidden h-4 w-24 shrink-0 animate-pulse rounded-sm bg-muted lg:block" />)}
+                  <div className="hidden w-11 lg:block" />
                 </div>
               )
             }
 
-            const movie = movies[vRow.index]
+            const movie = movies[virtualRow.index]
+            const locations = movie.locations.map((location) => location.label).join(' · ')
             return (
-              <div
-                key={movie.id}
-                style={{ position: 'absolute', top: vRow.start, left: 0, right: 0, height: 52 }}
-                className="flex items-center gap-2 px-3 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
-                onClick={() => navigate(`/movies/${movie.id}`)}
-              >
-                <div className="w-8 h-10 shrink-0 rounded overflow-hidden bg-zinc-800">
-                  {movie.posterPath && (
-                    <img
-                      src={posterUrl(movie.posterPath, 'w92')}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-100 truncate">{movie.title}</p>
-                  {!movie.identified && (
-                    <p className="text-[10px] font-medium text-amber-500">Needs identification</p>
-                  )}
-                </div>
-                {colDefs.map(c => (
-                  <div key={c.key} className="w-24 shrink-0 text-right text-sm">
-                    {renderCell(movie, c.key)}
-                  </div>
-                ))}
-                <div className="w-[23px] shrink-0" /> {/* spacer for settings gear */}
-              </div>
+              <Link key={movie.id} to={`/movies/${movie.id}`} style={positioning} className="group flex items-center gap-3 border-b border-border px-4 transition-colors hover:bg-muted/70 focus-visible:z-10">
+                <Poster path={movie.posterPath} title={movie.title} size="w92" decorative className="h-12 w-8 shrink-0 rounded-sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-foreground">{movie.title}</span>
+                  <span className="mt-1 flex min-w-0 items-center gap-2 text-xs text-muted-foreground lg:hidden">
+                    {movie.bestFormatOwned && <FormatBadge format={movie.bestFormatOwned} />}
+                    <span className="inline-flex min-w-0 items-center gap-1 truncate font-medium text-foreground"><MapPin className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />{locations || 'Location not recorded'}</span>
+                  </span>
+                  {!movie.identified && <span className="block text-xs font-semibold text-warning">Needs identification</span>}
+                </span>
+                {colDefs.map((column) => <span key={column.key} className="hidden w-24 shrink-0 text-right text-sm lg:block">{renderCell(movie, column.key)}</span>)}
+                <span className="hidden w-11 shrink-0 lg:block" aria-hidden />
+              </Link>
             )
           })}
         </div>

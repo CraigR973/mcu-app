@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, Loader2, Plus, Search } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Check, Loader2, Plus, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import CopyForm, { EMPTY_COPY } from '@/components/collection/CopyForm'
 import DuplicatePrompt from '@/components/collection/DuplicatePrompt'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
+import { Badge } from '@/components/ui/badge'
+import { Poster } from '@/components/movies/Poster'
 import {
   checkDuplicate,
   DuplicateItemError,
-  posterUrl,
   searchTmdb,
   type CollectionItemFields,
   type DuplicateCheck,
@@ -121,22 +123,11 @@ export default function AddToCollectionPage() {
   const canSave = film !== null && fields.formats.length > 0
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
-      <div>
-        <Link
-          to="/movies"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to movies
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">Add to the collection</h1>
-        <p className="text-sm text-muted-foreground">
-          Find the film, then say which disc it is and where it lives.
-        </p>
-      </div>
+    <div className="page-shell-narrow space-y-7">
+      <PageHeader backTo="/movies" backLabel="Back to the archive" eyebrow="Catalogue entry" title="Add a disc" description="Find the film first, then record the exact edition, format and shelf location." />
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">1. Which film?</h2>
+      <section className="archive-panel space-y-4 p-4 sm:p-6" aria-labelledby="choose-film-heading">
+        <div><p className="page-kicker">Step 1</p><h2 id="choose-film-heading" className="section-heading">Which film?</h2></div>
         <form
           className="flex gap-2"
           onSubmit={(event) => {
@@ -161,13 +152,13 @@ export default function AddToCollectionPage() {
         </form>
 
         {submitted.length >= 2 && searchState === 'error' && (
-          <p className="text-xs text-destructive">
+          <p role="alert" className="text-sm text-destructive">
             {queryErrorMessage(searchQuery.error, 'Could not reach TMDB.')}
           </p>
         )}
 
         {submitted.length >= 2 && searchState === 'offline' && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Waiting for the network — TMDB has not answered yet.
           </p>
         )}
@@ -175,7 +166,7 @@ export default function AddToCollectionPage() {
         {/* Only once results genuinely arrived: a paused query has no results either,
             and "no films matched" would be a confident lie about a search that never ran. */}
         {submitted.length >= 2 && searchState === 'empty' && (
-          <p className="text-xs text-muted-foreground">No films matched “{submitted}”.</p>
+          <p className="text-sm text-muted-foreground">No films matched “{submitted}”.</p>
         )}
 
         <ul className="space-y-2">
@@ -189,18 +180,14 @@ export default function AddToCollectionPage() {
                 <button
                   type="button"
                   onClick={() => void choose(result)}
-                  className={`flex w-full items-start gap-3 rounded-lg border p-2 text-left transition-colors ${
+                  aria-pressed={active}
+                  className={`flex min-h-20 w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
                     active
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:bg-muted/50'
                   }`}
                 >
-                  <img
-                    src={posterUrl(result.posterPath, 'w92')}
-                    alt=""
-                    className="h-16 w-11 shrink-0 rounded object-cover"
-                    loading="lazy"
-                  />
+                  <Poster path={result.posterPath} title={result.title} size="w92" decorative className="h-16 w-11 shrink-0 rounded-sm" />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="font-medium text-foreground">{result.title}</span>
@@ -208,9 +195,7 @@ export default function AddToCollectionPage() {
                         <span className="text-xs text-muted-foreground">{result.year}</span>
                       )}
                       {result.inCollection && (
-                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-secondary-foreground">
-                          Already catalogued
-                        </span>
+                        <Badge tone="success">Already catalogued</Badge>
                       )}
                     </span>
                     <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">
@@ -239,22 +224,21 @@ export default function AddToCollectionPage() {
             />
           )}
 
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              2. Which disc, and where does it live?
-            </h2>
+          <section className="archive-panel space-y-4 p-4 sm:p-6" aria-labelledby="describe-disc-heading">
+            <div><p className="page-kicker">Step 2</p><h2 id="describe-disc-heading" className="section-heading">Which edition, and where does it live?</h2></div>
             <CopyForm value={fields} onChange={setFields} disabled={add.isPending} />
           </section>
 
           {add.isError && !(add.error instanceof DuplicateItemError) && (
-            <p className="text-sm text-destructive">
+            <p role="alert" className="text-sm text-destructive">
               {add.error instanceof Error ? add.error.message : 'Could not save that disc.'}
             </p>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-border bg-background/95 px-4 py-4 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0">
             <Button
               type="button"
+              className="w-full min-w-0 sm:w-auto"
               disabled={!canSave || add.isPending}
               onClick={() => add.mutate(duplicate ? 'another_copy' : undefined)}
             >
@@ -263,9 +247,9 @@ export default function AddToCollectionPage() {
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              Add “{film.title}”
+              <span className="truncate">Add “{film.title}”</span>
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setFilm(null)}>
+            <Button type="button" className="w-full sm:w-auto" variant="ghost" onClick={() => setFilm(null)}>
               Choose a different film
             </Button>
           </div>

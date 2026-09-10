@@ -16,6 +16,7 @@ const ROWS: Row[] = [
   { keys: '⌘K / Ctrl K', action: 'Open command palette' },
   { keys: '/', action: 'Focus search' },
   { keys: '?', action: 'Show all shortcuts' },
+  { keys: '.', action: 'Open the assistant' },
   { keys: 'g then h', action: 'Go to home' },
   { keys: 'g then c', action: 'Go to collection' },
   { keys: 'g then w', action: 'Go to wanted list' },
@@ -24,8 +25,7 @@ const ROWS: Row[] = [
   { keys: 'Esc', action: 'Close modal / clear search' },
 ]
 
-/** §7.5's help modal, triggered by `?`. `.` (open AI-assistant chat) is not listed —
- *  Batch 31 hasn't shipped the assistant yet, so there is nothing for it to open. */
+/** §7.5's help modal, triggered by `?`. */
 export default function ShortcutsHelpModal({ open, onClose, isAdmin }: Props) {
   const rows = ROWS.filter((row) => !row.adminOnly || isAdmin)
 

@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Menu } from 'lucide-react'
+import { Command, Menu, Plus } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
 import { FloatingChatButton } from '@/components/FloatingChatButton'
@@ -11,6 +12,9 @@ import SearchBar from '@/components/SearchBar'
 import { useAuth } from '@/context/auth'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { startAutoFlush } from '@/lib/sync'
+import { MobileTabBar } from './MobileTabBar'
+import { Button } from '@/components/ui/button'
+import { navItems, adminNavItems } from '@/lib/nav-items'
 
 interface Props {
   children: ReactNode
@@ -22,7 +26,12 @@ export default function AppLayout({ children }: Props) {
   const [helpOpen, setHelpOpen] = useState(false)
   const queryClient = useQueryClient()
   const { profile } = useAuth()
+  const { pathname } = useLocation()
   const isAdmin = profile?.role === 'admin'
+  const routeLabel = [...navItems, ...adminNavItems]
+    .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0]?.label ?? 'Film archive'
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
 
   useKeyboardShortcuts({
     isAdmin,
@@ -47,27 +56,54 @@ export default function AppLayout({ children }: Props) {
   )
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-background text-foreground">
+      <a href="#main-content" className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-lift focus:translate-y-0">Skip to content</a>
+      <Sidebar open={sidebarOpen} onClose={closeSidebar} />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex items-center gap-3 border-b border-border px-4 py-2">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="relative z-20 border-b border-border bg-background/94 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+          <div className="flex min-h-[3.5rem] items-center gap-3 px-3 sm:px-5 lg:min-h-[4.5rem] lg:px-7">
           <button
+            type="button"
             onClick={() => setSidebarOpen(true)}
-            className="shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+            className="touch-target flex shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
             aria-label="Open menu"
           >
-            <Menu size={20} />
+            <Menu size={20} aria-hidden />
           </button>
-          <span className="shrink-0 font-semibold text-sm lg:hidden">The Real MCU</span>
-          <div className="flex-1 max-w-md">
+          <span className="flex min-w-0 flex-1 items-center gap-2 lg:hidden">
+            <span data-logo-slot="mobile-mark" aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-primary font-display text-sm font-semibold text-primary-foreground">M</span>
+            <span className="truncate text-sm font-semibold text-foreground">{routeLabel}</span>
+          </span>
+          <div className="hidden w-full max-w-2xl flex-1 lg:block">
+            <SearchBar />
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="touch-target hidden items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-muted-foreground hover:border-ring hover:text-foreground sm:flex"
+              aria-label="Open command palette"
+            >
+              <Command className="h-4 w-4" aria-hidden />
+              <span className="hidden xl:inline">Commands</span>
+              <kbd className="hidden rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground md:inline">⌘K</kbd>
+            </button>
+            {isAdmin && (
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link to="/collection/add"><Plus aria-hidden /> Add a disc</Link>
+              </Button>
+            )}
+          </div>
+          </div>
+          <div className="px-3 pb-3 lg:hidden">
             <SearchBar />
           </div>
         </header>
 
         <OfflineBanner />
 
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" className="min-h-0 flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0" tabIndex={-1}>
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
@@ -77,6 +113,8 @@ export default function AppLayout({ children }: Props) {
       {/* §9.3's "floating chat button on every page". On the shell rather than on each
           page, which is what "every page" means — and it hides itself on the chat. */}
       <FloatingChatButton />
+
+      <MobileTabBar onOpenMenu={() => setSidebarOpen(true)} />
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={isAdmin} />
       <ShortcutsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} isAdmin={isAdmin} />

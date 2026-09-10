@@ -77,9 +77,9 @@ export default function IdentifyPanel({ movieId, storedTitle, onIdentified }: Pr
   }
 
   return (
-    <section className="rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 md:p-5">
+    <section className="rounded-2xl border border-warning/40 bg-warning/10 p-4 md:p-5">
       <div className="flex items-start gap-3">
-        <span className="rounded-full bg-amber-400 p-2 text-zinc-950">
+        <span className="rounded-full bg-warning p-2 text-warning-foreground">
           <Sparkles className="h-4 w-4" />
         </span>
         <div>

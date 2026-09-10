@@ -258,6 +258,72 @@ number a setting rather than a shape, which is what stops it being annoying to r
 
 ---
 
+## From the UI redesign — four judgement calls and one capture *(2026-09-10)*
+
+**None of these block the batch queue.** The redesign merged and deployed without them;
+they are here because each is a call an agent should not take alone. Detail and repro steps
+are in `docs/ui-redesign/VERIFICATION.md` §3–§5; #15 is new here, not in that file.
+
+### 11. The floating assistant button covers a control on mobile
+
+Reproduced at 375px on `/settings/notifications`: the FAB — fixed, 48×48, `z-index: 20` —
+overlaps the **"Upcoming releases" switch**, so taps on the switch's right portion open the
+assistant instead. Any right-aligned control can fall under it at some scroll position, so
+this is not one page's bug.
+
+Three ways out, and choosing between them is information architecture, not styling:
+
+- make the assistant a **sixth mobile tab** and drop the FAB;
+- **hide the FAB** on routes with edge-aligned controls;
+- **reserve a right gutter**, at the cost of ~64px on a 375px screen.
+
+### 12. Edition is still invisible while browsing
+
+Unchanged from the audit, and not a styling gap: the list contract has no edition field, and
+fetching copies per film would be an **N+1 across 1,843 rows**. Making it visible means an
+**additive list field** — an array of distinct edition labels — which is an API-contract
+change and therefore its own batch.
+
+### 13. `/debug` remains production-reachable
+
+Whether it should be development-only is a deployment decision.
+
+### 14. The before/after screenshots — nine before, three after
+
+**This is the redesign's one incomplete deliverable.** Every surface was verified and
+measured live; what is missing is the saved image files. Two things stopped the capture, and
+both were correct behaviour:
+
+- driving a headless Chrome needs the session token moved out of the browser, which the
+  **permission guardrail correctly refused** — and typing the PIN is not an agent's to do;
+- **Chrome 152 headless aborts on this macOS build** (`_NSCGSTransaction dealloc`), so even
+  the unauthenticated login page could not be captured.
+
+The cheapest way to close it, whenever you want it: launch Chrome once with
+`--remote-debugging-port=9222`, sign in yourself, and a short CDP script can then capture all
+nine surfaces at both themes and both widths **without ever handling the PIN**.
+
+### 15. The brand assets are untracked — 56 MB, and a copyright call
+
+`docs/brand/` holds **189 files, 56 MB** and is **not in git**. The committed
+`VERIFICATION.md` §5 calls the `logo-system/stack-family/` set "approved" and the UI reserves
+four `data-logo-slot` placeholders for it — so the repo currently **references a path it does
+not contain**, which is exactly the handoff break the cross-tool rule exists to prevent.
+
+It was left untracked deliberately. Three things make it yours:
+
+- **56 MB of binaries in permanent history** is not cheaply reversible;
+- `source-images/` holds **third-party film stills and publicity photographs** — Jaws,
+  Double Indemnity, *An American Werewolf in London*, portraits of Hitchcock, Bogart,
+  Stanwyck and others — gathered as art-direction reference, not cleared for redistribution;
+- the useful subset is small: `stack-family/` is **13 MB**, and the shipped app would need
+  only a handful of SVGs and PNGs from it.
+
+The obvious middle path, if you want it: commit the **SVGs plus the icon sizes the app
+actually uses** into `apps/web/public/`, keep `stack-family/` as the tracked reference, and
+add `docs/brand/source-images/` to `.gitignore`.
+
+---
 ## Deprioritised by owner decision — not blocking
 
 ### 7. Google + Microsoft OAuth app registration — **deprioritised 2026-09-09**

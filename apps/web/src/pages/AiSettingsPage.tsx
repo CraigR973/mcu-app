@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bot, Loader2, Send, TriangleAlert } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import { MicButton } from '@/components/MicButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import {
   askAi,
   fetchAiSettings,
@@ -19,11 +22,9 @@ import { cn } from '@/lib/utils'
 /**
  * §9.7's caps, and the one-question box that proves §9.1 works.
  *
- * **Batch 31 owns the real chat** — conversations, streaming, tools and the floating
- * button. What is here is deliberately the smallest thing that makes the plumbing visible:
- * ask one question, see the answer, and see exactly what it cost. That last part is not a
- * developer detail — the person reading the answer is the person paying for it, and a cap
- * you cannot watch approaching is a cap that surprises you.
+ * The full chat now lives at `/assistant`; this settings page keeps the one-question health
+ * check alongside the personal caps. Cost remains visible because the person reading the
+ * answer is also the person paying for it.
  */
 export default function AiSettingsPage() {
   const queryClient = useQueryClient()
@@ -49,22 +50,33 @@ export default function AiSettingsPage() {
 
   const answer = ask.data
   const capped = answer?.stopReason === 'cap_reached'
+  const usagePercent = usage.data
+    ? Math.min(
+        100,
+        usage.data.messageCap === 0
+          ? 100
+          : (usage.data.messages / usage.data.messageCap) * 100,
+      )
+    : 0
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4">
-      <header>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <Bot className="h-6 w-6" aria-hidden />
-          Assistant
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Questions about the collection, answered by Claude. Chat, conversations and tools
-          arrive in the next batch — this is the plumbing and the limits.
-        </p>
-      </header>
+    <div className="page-shell-narrow space-y-6">
+      <PageHeader
+        eyebrow="Assistant"
+        title="Assistant settings"
+        description="Ask a quick collection question, review today's usage and set your personal limits."
+        actions={(
+          <Button asChild>
+            <Link to="/assistant">
+              <Bot className="h-4 w-4" aria-hidden />
+              Open chat
+            </Link>
+          </Button>
+        )}
+      />
 
       {status.data && !status.data.configured ? (
-        <p className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+        <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
           <span>
             The assistant is not configured on the server — there is no API key set. Nothing
@@ -72,9 +84,17 @@ export default function AiSettingsPage() {
           </span>
         </p>
       ) : null}
+      {status.isError ? (
+        <StatePanel
+          compact
+          tone="error"
+          title="Assistant status unavailable"
+          description={queryErrorMessage(status.error, 'The server status could not be checked.')}
+        />
+      ) : null}
 
-      <section className="rounded-lg border border-border p-4">
-        <h2 className="font-semibold">Ask something</h2>
+      <section className="archive-panel p-4 sm:p-5">
+        <h2 className="section-heading">Ask something</h2>
         <form
           className="mt-3 flex flex-wrap gap-2"
           onSubmit={(event) => {
@@ -87,6 +107,7 @@ export default function AiSettingsPage() {
             value={prompt}
             maxLength={4000}
             placeholder="Which 4Ks have I not watched?"
+            aria-label="Question for the assistant"
             onChange={(event) => setPrompt(event.target.value)}
           />
           <MicButton
@@ -106,7 +127,7 @@ export default function AiSettingsPage() {
         </form>
 
         {ask.isError ? (
-          <p className="mt-3 text-sm text-destructive">
+          <p role="alert" className="mt-3 text-sm text-destructive">
             {queryErrorMessage(ask.error, 'The question could not be sent.')}
           </p>
         ) : null}
@@ -117,8 +138,8 @@ export default function AiSettingsPage() {
               className={cn(
                 'whitespace-pre-wrap rounded-md p-3 text-sm',
                 capped || answer.error
-                  ? 'bg-amber-500/10 text-amber-900 dark:text-amber-200'
-                  : 'bg-muted',
+                  ? 'border border-warning/45 bg-warning/10 text-foreground'
+                  : 'bg-muted text-foreground',
               )}
             >
               {answer.text}
@@ -134,28 +155,29 @@ export default function AiSettingsPage() {
         ) : null}
       </section>
 
-      <section className="rounded-lg border border-border p-4">
-        <h2 className="font-semibold">Today</h2>
+      <section className="archive-panel p-4 sm:p-5">
+        <h2 className="section-heading">Today</h2>
         {usage.data ? (
           <>
             <p className="mt-2 text-sm">
               <strong>{usage.data.messages}</strong> of {usage.data.messageCap} messages ·{' '}
               {formatAiCost(usage.data.costUsd)} of ${usage.data.costCapUsd}
             </p>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-label="Daily assistant message usage"
+              aria-valuemin={0}
+              aria-valuemax={usage.data.messageCap}
+              aria-valuenow={Math.min(usage.data.messages, usage.data.messageCap)}
+              aria-valuetext={`${usage.data.messages} of ${usage.data.messageCap} messages used`}
+            >
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  usage.data.blocked ? 'bg-destructive' : 'bg-emerald-600',
+                  usage.data.blocked ? 'bg-destructive' : 'bg-success',
                 )}
-                style={{
-                  width: `${Math.min(
-                    100,
-                    usage.data.messageCap === 0
-                      ? 100
-                      : (usage.data.messages / usage.data.messageCap) * 100,
-                  )}%`,
-                }}
+                style={{ width: `${usagePercent}%` }}
               />
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -163,13 +185,21 @@ export default function AiSettingsPage() {
                 `Resets at ${new Date(usage.data.resetsAt).toLocaleTimeString()}.`}
             </p>
           </>
+        ) : usage.isError ? (
+          <StatePanel
+            compact
+            className="mt-3"
+            tone="error"
+            title="Usage unavailable"
+            description={queryErrorMessage(usage.error, 'Today’s usage could not be loaded.')}
+          />
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+          <StatePanel compact className="mt-3" tone="loading" title="Loading usage" />
         )}
       </section>
 
-      <section className="rounded-lg border border-border p-4">
-        <h2 className="font-semibold">Your limits</h2>
+      <section className="archive-panel p-4 sm:p-5">
+        <h2 className="section-heading">Your limits</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Two ceilings, because a message count alone does not bound spend — the same
           question costs more at the end of a long conversation than at the start. Set the
@@ -208,11 +238,19 @@ export default function AiSettingsPage() {
               <Loader2 className="mb-2 h-4 w-4 animate-spin" aria-hidden />
             ) : null}
           </div>
+        ) : settings.isError ? (
+          <StatePanel
+            compact
+            className="mt-3"
+            tone="error"
+            title="Limits unavailable"
+            description={queryErrorMessage(settings.error, 'Your limits could not be loaded.')}
+          />
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+          <StatePanel compact className="mt-3" tone="loading" title="Loading limits" />
         )}
         {save.isError ? (
-          <p className="mt-2 text-sm text-destructive">
+          <p role="alert" className="mt-2 text-sm text-destructive">
             {queryErrorMessage(save.error, 'Could not save that limit.')}
           </p>
         ) : null}

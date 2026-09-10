@@ -2035,3 +2035,51 @@ contemporaneous.
      category IDs and `conditionId` rather than title regexes — the regexes used to take
      the measurement above are themselves too fragile to ship, which is visible in the
      £368.35 outlier that survived them.
+
+### 2026-09-10 — the UI redesign's live pass
+
+130. **A tone colour gets two tokens, because a filled surface and a status word have
+     incompatible contrast rules.** `bg-destructive` carries white at 5.71:1 in dark; the
+     same value as `text-destructive` on a dark card measures **3.13:1**. Champagne is the
+     identity accent on ink and **1.92:1** on cream. One value cannot serve both jobs.
+
+     So `theme/tokens.ts` declares a `--<tone>-text` variant for all six semantic tones in
+     both themes, and `tailwind.config.ts` points Tailwind's **separate `textColor` scale**
+     at them. `text-*` resolves to the text-safe value while `bg-*`, `border-*` and
+     `ring-*` keep the surface value — **no call site changed**, which matters because
+     `text-destructive` is the error colour in about thirty places, most with
+     `role="alert"`. `foreground` is re-declared per tone so `text-primary-foreground` and
+     its siblings survive the override; `fill` is overridden for `accent` alone so the
+     rating star cannot render a champagne body with a bronze rim.
+
+     *Why this rather than repainting:* the alternative was editing ~37 call sites to a
+     second class name, which a future component would silently not adopt. The scale split
+     makes the correct thing the default.
+
+     Values were **solved** for the nearest passing lightness and rounded in the safe
+     direction, not chosen by eye. `src/theme/contrast.test.ts` now asserts all 42 pairings
+     — including the translucent tints badges paint beneath their own text — so a palette
+     tweak fails the gate instead of shipping.
+
+131. **A coarse-pointer floor must live in `@layer utilities`, not `@layer components`.**
+     `.touch-target` had been declared in `components`. Tailwind emits `components` before
+     `utilities`, and `.touch-target` and `.min-h-8` carry identical specificity, so the
+     smaller value simply came later and won. **Every control that appeared to opt in was
+     silently unchanged** — filter chips 32px, small buttons 36px — while the audit
+     recorded touch sizing as addressed.
+
+     Moved to `utilities`, it wins. Verified pointer-aware: the filter chip is 32px on a
+     fine pointer and 44px on a coarse one, so desktop density is untouched. A companion
+     `.touch-hit` grows only the hit area, via a centred transparent pseudo-element, for
+     controls whose drawn size carries meaning — a 24px switch track reads as a switch, a
+     44px one reads as a bar.
+
+     *The general lesson:* a utility that corrects another utility has to outrank it, and
+     in Tailwind that is decided by layer order, not by where the class appears in the
+     `class` attribute. Anything declared in `components` to override a utility is a
+     no-op.
+
+132. **`document.title` gets exactly one owner.** `App.tsx`'s `RouteTitle` and `AppLayout`
+     both wrote it. They could disagree — `Page not found` against `Film archive` — and the
+     archive root rendered "The Real MCU · The Real MCU". `RouteTitle` owns it router-wide;
+     `AppLayout` keeps `routeLabel` for the mobile header only.

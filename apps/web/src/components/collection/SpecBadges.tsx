@@ -55,9 +55,9 @@ function Badge({
       title={title}
       className={cn(
         'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-        tone === 'resolution' && 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
-        tone === 'hdr' && 'bg-violet-500/15 text-violet-700 dark:text-violet-300',
-        tone === 'audio' && 'bg-teal-500/15 text-teal-700 dark:text-teal-300',
+        tone === 'resolution' && 'bg-quality-4k/15 text-quality-4k',
+        tone === 'hdr' && 'bg-quality-hdr/15 text-quality-hdr',
+        tone === 'audio' && 'bg-quality-audio/15 text-quality-audio',
         tone === 'region' && 'bg-muted text-muted-foreground',
       )}
     >

@@ -24,6 +24,7 @@ describe('CopyForm', () => {
     expect(html).toContain('Blu-ray')
     expect(html).toContain('Section')
     expect(html).toContain('Condition')
+    expect(html).toContain('Collector edition')
     expect(html).toContain('Price paid')
     expect(html).toContain('Notes')
   })
