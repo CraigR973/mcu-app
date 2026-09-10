@@ -2,6 +2,37 @@
 
 ## Now
 
+**In flight, uncommitted: `feat/comprehensive-ui-redesign`.** A full UI/UX redesign of the
+web app, audited and implemented in an earlier session and **verified live on 2026-09-10
+against the real catalogue** — 1,843 films / 1,857 items, signed in as Craig. `main` is
+untouched; nothing below has been deployed.
+
+The live pass disproved three of the audit's own claims and fixed them
+(`docs/ui-redesign/VERIFICATION.md`, `DECISIONS.md` #130–#132):
+
+| Claimed addressed | Actually |
+|---|---|
+| Contrast | `text-destructive` — the error colour in ~30 places — was **3.13:1** on a dark card; champagne on cream **1.92:1**. Eight pairings failed. |
+| Touch sizing | `.touch-target` sat in `@layer components` and **lost every specificity race to the utility it was correcting**. Chips stayed 32px, small buttons 36px. |
+| Theme integrity | **~60 raw Tailwind palette classes** remained, including a settings page written almost entirely in `neutral-*`/`amber-*`. |
+
+Fixes: a `--<tone>-text` token per semantic tone wired through Tailwind's separate
+`textColor` scale (no call site changed), `.touch-target` moved to `@layer utilities` plus
+a `.touch-hit` companion, every raw palette class rehomed, and one owner for
+`document.title`. **`src/theme/contrast.test.ts` now asserts all 42 pairings**, so the gate
+catches the next palette tweak — suite 171 → 213 tests.
+
+Gate is green: **213 web + 79 shared tests, 0 lint errors, clean typecheck, build passes.**
+Measured live: **zero horizontal overflow across 18 routes at 320px and 375px**, **zero
+touch-target violations**, one `h1` per route with no level skips, and virtualisation
+holding at **1,421 DOM nodes when scrolled to 67,056px of 111,775px**.
+
+**Two things stop it closing out.** (1) The floating assistant button covers the
+"Upcoming releases" switch on `/settings/notifications` at 375px — fixing it properly is an
+IA decision, so it is the owner's. (2) Before/after screenshots are only partly captured:
+headless Chrome aborts on this macOS build, and the token-injection route was correctly
+refused by the permission guardrail.
+
 **29 of 37 batches shipped, 8 remain.** Production serves the merged `main`, reporting
 `db: ok`, `push: configured` and `ai: configured`.
 
@@ -519,6 +550,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **The UI redesign's live pass, and three claims that did not survive it.**
+  The branch's own audit recorded contrast, touch sizing and theme integrity as addressed;
+  measuring them found error text at **3.13:1**, champagne on cream at **1.92:1**, and
+  `.touch-target` silently inert because it was declared in `@layer components` — Tailwind
+  emits that **before** `utilities`, so at equal specificity `min-h-8` simply came later and
+  won. Every control that appeared to opt into a 44px floor had been unchanged. Fixed by
+  splitting each tone into surface and text tokens across Tailwind's separate `textColor`
+  scale (no call site touched), moving the floor to `utilities`, and rehoming ~60 raw
+  palette classes. The gate now asserts all 42 contrast pairings (#130–#132).
 
 - **2026-09-10** — **eBay connected, and the checkpoint that was supposed to gate it did not
   exist.** Research before the batch read eBay's own Buy API page — *"intended for eBay
