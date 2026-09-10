@@ -2,10 +2,9 @@
 
 ## Now
 
-**In flight, uncommitted: `feat/comprehensive-ui-redesign`.** A full UI/UX redesign of the
-web app, audited and implemented in an earlier session and **verified live on 2026-09-10
-against the real catalogue** — 1,843 films / 1,857 items, signed in as Craig. `main` is
-untouched; nothing below has been deployed.
+**Shipped and deployed: the comprehensive UI redesign.** A full UI/UX redesign of the web
+app, audited, implemented, **verified live on 2026-09-10 against the real catalogue** —
+1,843 films / 1,857 items, signed in as Craig — and **merged to `main` on 2026-09-10**.
 
 The live pass disproved three of the audit's own claims and fixed them
 (`docs/ui-redesign/VERIFICATION.md`, `DECISIONS.md` #130–#132):
@@ -27,11 +26,24 @@ Measured live: **zero horizontal overflow across 18 routes at 320px and 375px**,
 touch-target violations**, one `h1` per route with no level skips, and virtualisation
 holding at **1,421 DOM nodes when scrolled to 67,056px of 111,775px**.
 
-**Two things stop it closing out.** (1) The floating assistant button covers the
-"Upcoming releases" switch on `/settings/notifications` at 375px — fixing it properly is an
-IA decision, so it is the owner's. (2) Before/after screenshots are only partly captured:
-headless Chrome aborts on this macOS build, and the token-injection route was correctly
-refused by the permission guardrail.
+**What it left open is the owner's, and none of it blocks the batch queue** —
+`OWNER-ACTIONS.md` #11–#14. Three are judgement calls: the floating assistant button covers
+the "Upcoming releases" switch on `/settings/notifications` at 375px (an IA decision);
+edition is still invisible while browsing, which needs an additive list field on the list
+contract; and `/debug` is still production-reachable.
+
+**The fourth is an incomplete deliverable, and it was closed out incomplete, knowingly.**
+Before/after screenshots are nine before and three after: headless Chrome aborts on this
+macOS build (`_NSCGSTransaction dealloc`), and the token-injection route was correctly
+refused by the permission guardrail. Every surface was verified and measured live — the gap
+is the saved image files, not the verification.
+
+**The brand assets are still untracked, on purpose.** `docs/brand/` — 189 files, 56 MB,
+including third-party film stills under `source-images/` — sits in the working tree
+unversioned, while the committed `VERIFICATION.md` §5 calls the `stack-family/` set
+"approved" and the identity slots wait behind `data-logo-slot` placeholders. Putting 56 MB
+of binaries into permanent history is the owner's call, so the redesign was merged without
+them and the reference in §5 currently points outside the repo.
 
 **29 of 37 batches shipped, 8 remain.** Production serves the merged `main`, reporting
 `db: ok`, `push: configured` and `ai: configured`.
@@ -551,6 +563,22 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-10** — **The redesign closed out, with one deliverable knowingly incomplete.**
+  Gate green locally from a clean tree and green in CI (`34502543298`): ruff, 192 files
+  formatted, mypy across 118 files, **508 API tests**, **213 web + 79 shared**, 0 lint
+  errors, clean typecheck, build passing. Merged to `main` and deployed. **The before/after
+  screenshots did not get finished** — nine before, three after — because headless Chrome
+  aborts on this macOS build and the token-injection route was correctly refused; that is
+  recorded as an open deliverable (`OWNER-ACTIONS.md` #14) rather than quietly dropped.
+  Three design/deployment calls went to the owner as #11–#13.
+
+  **`docs/brand/` was deliberately not swept into the merge.** 189 files, 56 MB, untracked,
+  built in a separate session that morning — and `source-images/` is third-party film
+  stills gathered as reference. The committed `VERIFICATION.md` §5 already calls its
+  `stack-family/` set "approved", so `main` now references a path the repo does not
+  contain; closing that gap is `OWNER-ACTIONS.md` #15, because 56 MB of binaries in
+  permanent history and a redistribution question are both the owner's call, not an
+  agent's.
 - **2026-09-10** — **The UI redesign's live pass, and three claims that did not survive it.**
   The branch's own audit recorded contrast, touch sizing and theme integrity as addressed;
   measuring them found error text at **3.13:1**, champagne on cream at **1.92:1**, and
