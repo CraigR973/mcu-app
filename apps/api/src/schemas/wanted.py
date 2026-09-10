@@ -329,11 +329,15 @@ class BuiltInScraperListResponse(BaseModel):
 class ScrapeRunRecordResponse(BaseModel):
     """One recorded run — §5.5's acceptance in the numbers it is stated in.
 
-    `attempted` is every pair the shops were actually **asked** about — everything but
-    `skipped`. The denominator `DECISIONS.md` #112's corrected criterion compares `written`
-    against is `attempted` minus `notStocked` **minus `noResults`**: a shop that answered
-    "none of these" and a shop that answered nothing at all both had nothing to price.
-    `failures` is the criterion's "logged with retailer + reason".
+    **`attempted` already excludes `notStocked`** — `DECISIONS.md` #107: a shop that
+    answered honestly and has not got the film was not an attempt that failed. This
+    docstring used to say the denominator was "attempted minus notStocked", and the page
+    believed it, so a real run of 17 attempted against 23 not-stocked rendered as
+    "Nothing to price" over six priced discs (#125).
+
+    The denominator #112's corrected criterion compares `written` against is `attempted`
+    minus **`noResults`** alone: everything else in `attempted` was a pair somebody could
+    have priced. `failures` is the criterion's "logged with retailer + reason".
     """
 
     id: uuid.UUID

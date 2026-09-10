@@ -1904,15 +1904,26 @@ contemporaneous.
      precedence and never had it. Selector lists are now tried in order, which is what
      every such config in this file already meant.
 
-     *And a fourth, found while making the third observable.* `/retailers` renders each run
-     through `scrapeRunVerdict`, whose denominator is `attempted - notStocked` — the meaning
-     `ScrapeRunRecordResponse` documents and the verdict tests encode. **The API computed
-     `attempted` with `not_stocked` already removed**, so the page subtracted it twice. The
-     real run of 2026-09-10 — attempted 17, notStocked 23, six discs priced — rendered as
-     *"Nothing to price — no shop had any of the wants"*. `attempted` now means what it says,
-     every pair a shop was actually asked about, and the denominator subtracts `noResults`
-     as well: a shop that answered "none of these" and a shop that answered nothing at all
-     both had nothing to price.
+     ***This supersedes one clause of `#107`***, and the clause was deliberate, so it is
+     named rather than quietly dropped. #107 wrote: *"A page that yields no titled listing
+     at all is the redesign case the counter exists to catch, and **still takes a strike**"*
+     — auto-disable had to stay reachable or it would never fire again. That reasoning was
+     sound and its premise was wrong: it assumed zero listings means the site changed. The
+     first real unattended run measured the opposite — **eight of eleven were shops
+     answering a question honestly**, and only three were anything broken. The redesign case
+     survives, but it is visible one level up: a redesign makes *every* want return nothing,
+     which is what the per-retailer flag now says. The owner chose visibility over
+     auto-disable on 2026-09-10, and #107's strike is withdrawn on that basis.
+
+     *And a fourth bug, found while making the third observable.* `/retailers` renders each
+     run through `scrapeRunVerdict`, whose denominator was `attempted - notStocked`. But
+     `attempted` **already excludes** `notStocked` — that is #107's own doing — so the page
+     subtracted it twice, and the real run of 2026-09-10 (17 attempted, 23 not stocked, six
+     discs priced) rendered as *"Nothing to price — no shop had any of the wants"*. The
+     response docstring asserted the wrong contract and the web tests encoded it, so two
+     sources agreed with each other and disagreed with the producer. The denominator is
+     `attempted` minus `noResults` alone; everything else in `attempted` was a pair somebody
+     could have priced.
 
      *The general lesson, for the third time today:* **"we found nothing" is a measurement,
      not a conclusion.** `#122` was a parser that found nothing and was believed; this is a

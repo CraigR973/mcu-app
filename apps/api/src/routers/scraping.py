@@ -262,7 +262,7 @@ async def run_daily(
     return DailyRunResponse(
         runId=uuid.UUID(summary.run_id),
         written=result.written,
-        attempted=sum(1 for o in result.outcomes if not o.skipped),
+        attempted=sum(1 for o in result.outcomes if not o.skipped and not o.not_stocked),
         notStocked=result.not_stocked,
         noResults=result.no_results,
         skipped=result.skipped,

@@ -78,6 +78,19 @@ NOT_STOCKED_PAGE = "".join(
     )
 )
 
+#: The film **is** listed and its price cannot be read — a real scraper failure.
+#:
+#: Distinct from `NOT_STOCKED_PAGE` (the shop has other films) and from an empty page (the
+#: shop returned nothing, which `DECISIONS.md` #125 makes `no_results` rather than a
+#: failure). This is the case §5.5 means by "failures logged with retailer + reason": the
+#: listing is right there and the selector cannot read a number off it.
+UNREADABLE_PRICE_PAGE = """
+    <div class="product-card" data-testid="product-item">
+      <a href="/p/heat/" data-testid="product-title">Heat [4K UHD]</a>
+      <div data-testid="product-price"><span class="product-variant-price">Sold out</span></div>
+    </div>
+"""
+
 #: The selectors the built-in shops actually use.
 CARD_CONFIG = {
     "item": "[data-testid='product-item']",
@@ -588,10 +601,44 @@ class TestDailyRun:
         assert run.failed == 0, "answering honestly is not failing"
 
     async def test_failures_are_recorded_with_retailer_and_reason(self, db: AsyncSession) -> None:
-        """§5.5's own words — and readable the morning after, not only in a log."""
+        """§5.5's own words — and readable the morning after, not only in a log.
+
+        The page lists the film and its price is unreadable, which is a real failure. It
+        used to be an **empty** page, and that is no longer one: `DECISIONS.md` #125 makes
+        "the shop returned nothing" `no_results`, because it is equally what a shop
+        without the film and a selector that has stopped matching both look like.
+        """
         await _profile(db)
         await _want(db, await _movie(db))
-        await _retailer(db)
+        await _retailer(db, config=CARD_CONFIG)
+
+        summary, _ = await self._run(db, UNREADABLE_PRICE_PAGE)
+
+        run = (
+            (await db.execute(select(ScrapeRun).where(ScrapeRun.id == uuid.UUID(summary.run_id))))  # type: ignore[attr-defined]
+            .scalars()
+            .one()
+        )
+        assert run.failed >= 1
+        assert run.no_results == 0, "a listed film with a bad price is a failure, not silence"
+        assert run.failures, "the failure is written down"
+        assert run.failures[0]["retailer"] == "Test Shop"
+        assert run.failures[0]["reason"]
+
+    async def test_an_empty_page_is_recorded_as_no_results_not_a_failure(
+        self, db: AsyncSession
+    ) -> None:
+        """`DECISIONS.md` #125, and the clause of #107 it supersedes.
+
+        #107 decided a page with no titled listing "still takes a strike", so that a site
+        redesign would eventually auto-disable the shop. The live run of 2026-09-10
+        disproved the premise: **eight of eleven "failures" were shops answering "we have
+        not got that"** — Arrow's "Sorry We Couldn't Find Any Results", 101 Films' "0
+        results found". Three such nights would have switched a working shop off.
+        """
+        await _profile(db)
+        await _want(db, await _movie(db))
+        await _retailer(db, config=CARD_CONFIG)
 
         summary, _ = await self._run(db, "<html><body>nothing here</body></html>")
 
@@ -600,10 +647,16 @@ class TestDailyRun:
             .scalars()
             .one()
         )
-        assert run.failed >= 1
-        assert run.failures, "the failure is written down"
-        assert run.failures[0]["retailer"] == "Test Shop"
-        assert run.failures[0]["reason"]
+        assert run.no_results == 1
+        assert run.failed == 0, "an empty page is not the scraper breaking"
+        assert run.failures == []
+
+        retailer = (await db.execute(select(Retailer))).scalars().one()
+        # Flagged, so a broken selector is visible — and **not** disabled, which is the
+        # trade #125 records.
+        assert retailer.last_scrape_status == "no_results"
+        assert retailer.enabled is True
+        assert retailer.consecutive_failures == 0
 
     async def test_a_dry_run_writes_nothing(self, db: AsyncSession) -> None:
         await _profile(db)

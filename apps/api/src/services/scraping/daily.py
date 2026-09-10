@@ -113,12 +113,10 @@ async def run_daily_scrape(
             )
 
     run.finished_at_utc = utcnow()
-    # **Everything the shops were actually asked**, which is what `ScrapeRunRecordResponse`
-    # has always documented it as: "attempted minus notStocked is the denominator". It was
-    # computed with `not_stocked` already removed, so the page subtracted it twice — the
-    # real run of 2026-09-10 (attempted 17, notStocked 23) rendered as "Nothing to price —
-    # no shop had any of the wants" while six were priced. `DECISIONS.md` #125.
-    run.attempted = sum(1 for o in result.outcomes if not o.skipped)
+    # `not_stocked` is excluded here and **stays** excluded: `DECISIONS.md` #107 settled
+    # that a shop which answered honestly was not an attempt that failed. The double-count
+    # it caused lived in the *reader*, not here — see #125.
+    run.attempted = sum(1 for o in result.outcomes if not o.skipped and not o.not_stocked)
     run.not_stocked = result.not_stocked
     run.no_results = result.no_results
     run.skipped = result.skipped
