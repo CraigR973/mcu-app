@@ -2,58 +2,60 @@
 
 ## Now
 
-**28 of 37 batches shipped, 9 remain.** Production serves the merged `main`, reporting
+**29 of 37 batches shipped, 8 remain.** Production serves the merged `main`, reporting
 `db: ok`, `push: configured` and `ai: configured`.
 
-**Seven of the eight overnight batches are done** — 11, 20, 30, 31, 32, 35 and 25. **Groups F and J
-are both complete**, and Stage 9 is finished apart from 9.6, which #16 dropped.
+**The 2026-09-09/10 overnight run is finished. All eight batches are built and deployed** —
+11, 20, 30, 31, 32, 35, 25 and 23 — in the order the dependency chain required, plus a
+doc-recovery commit that turned out to be necessary. **Groups F and J are complete**, and
+Stage 9 is done apart from 9.6, which #16 dropped.
 
-**Batch 32 — dictation.** On-device Web Speech: the browser's own engine listens and this
-app uploads nothing. Two details worth keeping — dictation **fills the input and never
-sends**, because the engine mishears and reading it back is the only way "correct
-transcription" is checkable; and interim results are **rebuilt rather than appended**, which
-is the difference between "where is Heat" and "where where is where is Heat".
+**Every gate was green before every merge**, and three batches needed a second push to get
+there. Nothing was weakened to reach green: the three CI failures were a partial unique
+index that cannot be an `ON CONFLICT` arbiter without its predicate, a `default=` that
+SQLAlchemy applies when *it* builds the INSERT (so a hand-built one sent a NULL primary
+key), and two assertions that read the whole table when migration `002`'s seeded profiles
+mean a reminder correctly writes more rows than the fixture makes. All three are gotcha 15:
+**a green local run is silent about anything touching SQL.**
 
-**Batch 31 — tools, chat and the confirmation boundary.** Three decisions worth carrying:
+**Batch 23 is built but its §3.7 acceptance is not done, deliberately.** The scraper exists
+with `DECISIONS.md` #110's bounds enforced in code rather than described — an exact-release-
+URL predicate, sequential five-second-spaced requests, a `403`/`429`/`451` halt that stops
+the whole integration to a database row **nothing in the application can clear**, provenance
+on every derived row, and a delete endpoint that makes the acceptance reversible. What it
+has not done is fetch anything: production reports **0 pages ever fetched**. #110 is a risk
+acceptance the owner made, not a permission the site gave, and `group-start.md` puts live
+third-party runs in the owner's hands.
 
-- **The agent loop is manual, not the SDK's tool runner.** The runner drives the whole
-  cycle in one process; §9.4 needs the opposite. When Claude asks to call a write tool the
-  loop stops, hands the request to a browser, and resumes on a *later HTTP request*. A
-  pending call is therefore a row — an in-memory future would lose every outstanding
-  confirmation on the next deploy.
-- **"Write" and "admin-only" are separate axes.** Watch history is personal, so `log_watch`
-  writes *and* a viewer keeps it. Collapsing them would have taken it from Mark for nothing.
-- **`DECISIONS.md` #12 stays closed.** The tools dispatch to the same endpoint functions the
-  web app calls, so the assistant did not become the second consumer that reopens the
-  response-envelope question.
-
-**A correction to this block, found by checking rather than copying.** It has said "3
-`wanted_list` rows" since 2026-09-09; the true figure is **11 rows, 8 of them live and
-active**. The three originals (*Misery*, *Nope*, *Project Hail Mary*) were soft-deleted and
-eight boutique titles added during that evening's scraper acceptance run — the run
-`DECISIONS.md` #111 describes. The number was already stale when it was written.
-
-**Nothing this session has written to production data.** `collection_items` is 1,857,
-`price_checks` is still 8, and `ai_usage_log` is 0 — no model call has been made on the
-owner's key.
+**Nothing this run wrote to production data.** 1,857 `collection_items` untouched, 8
+`price_checks`, and every new table empty — `ai_usage_log` included, so no model call has
+been made on the owner's key.
 
 ### ⛔ What is waiting for you
 
-`OWNER-ACTIONS.md` is the list. In one sitting: **two Railway crons** (the nightly scrape
-and the reminder pass), **push turned on for two devices**, and **one question asked of the
-assistant**. Between them those close five criteria.
+`OWNER-ACTIONS.md` has four things this run created or unblocked, and they are mostly
+minutes:
 
-**Six acceptance criteria an agent cannot meet**, none implied met: 6.2 (two devices) ·
-5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) · 9.1 (one
-live call) · 9.5 (a spoken query) · 8.4's notification.
+1. **Two Railway crons in one visit** — the nightly scrape and the reminder pass.
+2. **Push on for two devices** — closes 5.6 and 6.2 between them.
+3. **One question to the assistant**, and **one spoken** — closes 9.1 and 9.5.
+4. **Ten Blu-ray.com URLs** — 3.7, and the one that is genuinely yours to decide.
+
+**Seven acceptance criteria an agent could not meet**, none of them implied met: 6.2 (two
+devices) · 5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) ·
+9.1 (one live model call) · 9.5 (a spoken query) · 8.4's push to a device · **3.7 (a live
+run against ten real Blu-ray.com URLs)**.
 
 ### What the live database holds
 
-**1,857 `collection_items`**, untouched. **11 `wanted_list` rows, 8 live and active.** 8
-`price_checks`, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers`. Empty and
-waiting: `push_subscriptions`, `notification_preferences`, `notifications`,
-`price_history_daily`, `scrape_runs`, `ai_usage_log`, `ai_settings`, `ai_conversations`,
-`ai_messages`, `ai_tool_calls`.
+**1,857 `collection_items`**, untouched all run. **11 `wanted_list` rows, 8 live and
+active.** 8 `price_checks`, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers`.
+The database measured **36 MB** on 2026-09-10, which is why Batch 25 resizes photos.
+
+Empty and waiting for a person: `push_subscriptions`, `notification_preferences`,
+`notifications`, `price_history_daily`, `scrape_runs`, `ai_usage_log`, `ai_settings`,
+`ai_conversations`, `ai_messages`, `ai_tool_calls`, `movie_night_*`, `item_photos`. Nothing
+derived from Blu-ray.com exists.
 
 
 ## Next
@@ -70,7 +72,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | ~~5~~ | ~~**32** Voice input (9.5)~~ | **shipped 2026-09-10** — ❌ 9.5 still needs a human speaking |
 | ~~6~~ | ~~**35** Movie night (8.3, 8.4)~~ | **shipped 2026-09-10** — ⚠️ 8.4's push to a device is an owner action |
 | ~~7~~ | ~~**25** Photo uploads (3.10)~~ | **shipped 2026-09-10** |
-| 8 | **23** Specs — scraper + display (3.7, 3.8, 3.9) | ✅ |
+| ~~8~~ | ~~**23** Specs — scraper + display (3.7, 3.8, 3.9)~~ | **built 2026-09-10** — ❌ 3.7's live run is an owner action |
 
 **Every batch's criteria are in `docs/phase-batches.md`** under "Criteria recovered for the
 2026-09-09 overnight run", each with what the April spec no longer knows. Read that section
@@ -431,6 +433,40 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 23 built: the Blu-ray.com spec scraper, badges and filters.**
+  The last of the overnight run's eight batches.
+
+  **#110's bounds are enforced by the code rather than described by it.** Exact release URLs
+  only, with the disallowed search routes refused by name; requests sequential and five
+  seconds apart, with an honest user agent and no redirect following, because #110 forbids
+  evasion; a `403`, `429` or `451` **halts the whole integration** and abandons the rest of
+  the batch. The halt is a database row, not a variable — one held in memory lasts until the
+  next deploy, and that is precisely the promise that must not break. **Nothing in the runner
+  can clear it**, and a test asserts that, because #110 says resuming needs a new owner
+  decision.
+
+  **No price, rating or review is extracted, and the page carries all three in the same
+  document.** #108 calls the temptation "unusually close to hand", so the parser reads an
+  allow-list of labels, the forbidden ones are named, and a test proves the two sets
+  disjoint. The fixture deliberately carries a list price, an Amazon price, a rating and a
+  review so their absence is demonstrated rather than promised.
+
+  Two more of #108's measured facts changed the code: **audio is rendered twice** behind the
+  `(more)`/`(less)` toggle, so extraction targets DOM nodes and de-duplicates; and **Special
+  Features was absent** from a real page, so it is nullable rather than assumed.
+
+  §3.8's badges use three genuinely distinct colours — resolution, HDR and audio are three
+  different claims, and a row of identical pills makes them one blur. A disc with no specs
+  renders **nothing**, not a grey "unknown": the app does not know until it has asked, and a
+  placeholder that looks like data is how a catalogue starts lying.
+
+  **§3.7's acceptance is not done and is an owner action.** It needs a live run against ten
+  real URLs on a site whose terms prohibit automated access; #110 is the owner's acceptance
+  of that risk rather than a permission an agent inherits, and `group-start.md` puts live
+  third-party runs in the owner's hands — which is how Batch 19's checkpoint worked too.
+  Production reports **0 pages ever fetched**, and `DELETE /api/v1/specs` is there to make
+  the whole thing reversible.
 
 - **2026-09-10** — **Batch 25 shipped: photos of a disc.** Bytes in Postgres, resized before
   they get there.

@@ -74,7 +74,41 @@ transcription" is a thing anyone can confirm. Nothing is uploaded by the app; th
 own engine does the listening. It works in Chrome, Edge and Safari, and **not in Firefox**,
 where the button is hidden rather than shown dead.
 
-### 4. eBay production API application *(was 4, then 2, then 3)*
+### 4. Run the Blu-ray.com spec fetch *(new — Batch 23, 2026-09-10)*
+
+- [ ] **Fetch specs for ten discs from ten exact Blu-ray.com release URLs.** That is Phase
+      3.7's acceptance in full: *"scraper run against 10 known **live** URLs persists correct
+      specs to the matching `collection_items` rows; row counts verified — not just unit
+      tests against fixture HTML."*
+
+**Everything except the requests themselves is built and deployed**, and production reports
+`0 pages ever fetched` — the machine is armed and has never touched the site.
+
+**Why an agent did not run it.** `DECISIONS.md` #110 is explicit that this is a *risk
+acceptance*, not a permission: the site's Legal Notices prohibit automated reuse, and #108's
+earlier claim that absence from `robots.txt` made it allowed was wrong. Accepting a stated
+legal risk on your own behalf is yours to do; `docs/agent-commands/group-start.md` also puts
+live third-party runs in your hands, which is how Batch 19's checkpoint worked.
+
+**#110's bounds are enforced by the code, not left to whoever runs it.** A URL that is not
+an exact release page is a 422 before anything leaves the building; requests go one at a
+time, five seconds apart, with an honest user agent and no redirect following; a `403`,
+`429` or `451` **halts the whole integration** and abandons the rest of the batch. That halt
+is a database row and **nothing in the application can clear it** — resuming needs a
+`DECISIONS.md` entry and a deliberate database change, which is what "requires a new owner
+decision" has to mean.
+
+**How to do it.** Gather ten release URLs from Blu-ray.com's browse pages (never its search
+— those routes are refused), then `POST /api/v1/specs/fetch` with
+`{"targets": [{"collectionItemId": ..., "sourceUrl": ...}, ...]}`. The response **lists
+every URL fetched**, which the ledger asks for in the close-out. `GET /api/v1/specs/state`
+shows the running count and whether anything halted it.
+
+**And it is reversible.** `DELETE /api/v1/specs` removes every field derived from that site
+— that is what `specs_source_url` and `specs_fetched_at_utc` on each row are for, and it
+leaves any hand-typed spec alone.
+
+### 5. eBay production API application *(was 4)*
 
 - [x] Applied 2026-09-09
 - [ ] Approval — eBay said at least one business day
@@ -84,7 +118,7 @@ tracking). **And Batch 24**, which is not obvious from the ledger: `DECISIONS.md
 that batch's UPC→title chain as *cached mapping → eBay Browse keyword search → manual
 fallback*, so the barcode lookup depends on the same approval.
 
-### 5. Two design choices nobody has made
+### 6. One design choice left
 
 - [ ] **Batch 25 — how big may a photo be?** *(shipped at 300 KB; still yours to change)*
       Storage is settled as **Neon** (owner, 2026-09-09) — photo bytes in Postgres. The
@@ -117,12 +151,12 @@ number a setting rather than a shape, which is what stops it being annoying to r
 
 ## Deprioritised by owner decision — not blocking
 
-### 6. Google + Microsoft OAuth app registration — **deprioritised 2026-09-09**
+### 7. Google + Microsoft OAuth app registration — **deprioritised 2026-09-09**
 
 Group K (Batch 33 email accounts + OAuth → Batch 34 parsers + scanning) is off the queue
 until this is wanted. The batches stay in the ledger; nothing is dropped.
 
-### 7. Subscribe the `.ics` feed in Apple or Google Calendar
+### 8. Subscribe the `.ics` feed in Apple or Google Calendar
 
 Batch 17 shipped and the feed's bytes are verified against RFC 5545. The in-app release
 calendar is the primary experience; external subscription is an optional convenience. Do this
@@ -151,7 +185,7 @@ lives only in a Railway variable has no test.
 
 ## Housekeeping — not blocking anything
 
-### 8. Revoke the April PAT at GitHub
+### 9. Revoke the April PAT at GitHub
 
 - [ ] Revoke it
 
@@ -160,7 +194,7 @@ referenced truncated in `4768da8`. It is dead (returns 401) but was never formal
 **A history rewrite is not recommended** — the repo is private and the token is already
 invalid, so a rewrite would cost more than it buys.
 
-### 9. `VITE_API_URL` for Vercel preview deploys
+### 10. `VITE_API_URL` for Vercel preview deploys
 
 - [ ] Add it in the Vercel dashboard — **only if you want preview deploys to work**
 

@@ -1631,3 +1631,50 @@ contemporaneous.
      the authority for this dependency. It is tolerable only because the surface in use
      (P-256 key generation, ECDH, AES-GCM, PEM/scalar loading) is stable across those
      versions, and because every test that exercises it runs on both sides.
+
+### 2026-09-10 — the overnight run's own decisions
+
+116. **§3.7's live Blu-ray.com run was not performed by an agent, and Batch 23 shipped
+     without it.** The batch is otherwise complete — parser, bounds enforcement, halt
+     switch, provenance, deletion, badges and filters — and production reports **0 pages
+     ever fetched**.
+
+     *Why.* #110 is explicit that this is a **risk acceptance, not a permission**: the
+     site's Legal Notices prohibit automated reuse, and #108's contrary claim was wrong.
+     Accepting a stated legal risk is something a person does on their own behalf.
+     `docs/agent-commands/group-start.md` says the same thing for a different reason —
+     *"a batch whose acceptance requires live third-party requests ... stops before those
+     runs. The owner performs them."* — and Batch 19's checkpoint worked exactly that way.
+
+     *What was done instead of asking again later:* every one of #110's conditions is a
+     mechanism rather than a note. A URL that is not an exact release page is refused
+     before any request; requests are sequential and spaced; a `403`/`429`/`451` halts the
+     whole integration to a **database row that nothing in the application can clear**;
+     every derived row carries its source URL and fetch time; and `DELETE /api/v1/specs`
+     removes everything derived from the site while leaving hand-typed specs alone. The
+     owner's run is therefore ten URLs and one request, not a judgement call each time.
+
+117. **Anything that lives only in a hosting variable now reports itself on
+     `/api/v1/health/ready`.** It answers `db`, `push` and `ai`.
+
+     *Why:* `STATUS.md` records the TMDB outage as "what that sentence looks like in
+     practice" — a token missing from Railway for an unknown length of time, behind a
+     fully green gate, because nothing in the code could observe its absence. Batch 11's
+     VAPID key and Batch 30's Anthropic key have the same shape, so both are checked by
+     *loading* them rather than testing that a string is present: a malformed VAPID key
+     reads `invalid`, which is a different problem from `not_configured` and would
+     otherwise surface only at the first send.
+
+     *Readiness is deliberately not failed by either.* A missing notification key is a
+     missing feature, not an unhealthy container, and 503-ing would pull the whole API out
+     of rotation over a setting.
+
+118. **`STATUS.md`'s "what the live database holds" was wrong, and had been since it was
+     written.** It said 3 `wanted_list` rows; the real figure on 2026-09-10 was 11, of
+     which 8 are live and active — the three originals were soft-deleted and eight boutique
+     titles added during the 2026-09-09 acceptance run (#111).
+
+     *Recorded because the block is copied forward by every close-out*, which is how a
+     count stays wrong for a day and would have stayed wrong indefinitely. The lesson is
+     the one #111 and the TMDB outage already teach in other forms: **count it, do not
+     carry it.** This run's closing figures were all read from Neon.
