@@ -1678,3 +1678,52 @@ contemporaneous.
      count stays wrong for a day and would have stayed wrong indefinitely. The lesson is
      the one #111 and the TMDB outage already teach in other forms: **count it, do not
      carry it.** This run's closing figures were all read from Neon.
+
+### 2026-09-10 — closing out the overnight run with the owner
+
+119. **The two "wire a Railway cron" owner actions had nothing a cron could run, and now
+     they do.** `src/scripts/daily_scrape.py` and `src/scripts/run_reminders.py` are the
+     nightly scrape and the reminder pass as commands. The HTTP endpoints stay exactly as
+     they are; nothing about them changed.
+
+     *Why:* `POST /api/v1/scrapers/daily` and `POST /api/v1/notifications/run-reminders`
+     are both `AdminUser`-authed, and an access token lives 24 hours (`auth.py`). A cron
+     container has no browser, no login and nothing to refresh, so **neither endpoint was
+     callable by a scheduler at all.** Batches 11 and 20 shipped the endpoint half and left
+     the command half unbuilt, which is how §5.5's *"first overnight run completes"* sat on
+     `OWNER-ACTIONS.md` as a console visit that could not actually be completed. It was
+     found by reading the endpoints while walking the owner through his remaining steps,
+     not by any test — a gate proves the code, and this was a gap *between* the code and
+     the infrastructure, which is the exact class `AGENTS.md` already warns about.
+
+     *Why a command rather than a service token.* A shared secret would have worked and was
+     offered; the owner chose the scripts. They add no second authentication path to the
+     API, need no credential of their own — the container already holds `DATABASE_URL` and
+     the VAPID keys — and match the precedent #60 set with
+     `refresh_completion_sets.py`, whose whole point was that scheduling should be *"one
+     console action rather than a piece of engineering"*. The other two jobs never got
+     theirs.
+
+     *One seam moved to make it possible.* `push_sender` and `set_push_sender` were defined
+     in `routers/notifications.py`; they now live in `src/services/push_transport.py` and
+     the router re-exports them, so a scheduled job does not import FastAPI and the whole
+     route table to obtain a transport. A test asserts the two names are one object, and
+     another asserts neither script imports a router.
+
+     *The exit code is the tested behaviour.* It is the only thing a scheduler reads, so a
+     failed retailer exits 1 and names the shop and the reason, while a shop that simply
+     does not stock a film exits 0 — Batch 20's distinction, restated where it decides
+     something. `--dry-run` stays **opt-in** on the scrape, the reverse of `/scrapers/run`:
+     a scheduled job whose purpose is to write must not default to writing nothing, because
+     that failure is indistinguishable from working.
+
+120. **A photo targets 300 KB, and that is now an owner decision rather than an
+     inference.** Confirmed by the owner on 2026-09-10.
+
+     *Why it needed recording:* Batch 25 shipped at 300 KB while two in-repo docs
+     disagreed about whether the number was ever confirmed — `OWNER-ACTIONS.md` called it
+     "proposed, not confirmed", `STATUS.md` and `docs/phase-batches.md` both listed it
+     under settled inputs — and no `DECISIONS.md` entry existed either way. The batch made
+     the disagreement cheap instead of arguing it: the target is the `PHOTO_TARGET_KB`
+     setting, so a different number is an environment variable and a re-upload, not a
+     migration. A phone's 4032×3024 photo stores at ~240 KB.
