@@ -1790,3 +1790,14 @@ contemporaneous.
 
      *And one thing it re-taught.* The live run was not a formality after a green gate; it
      was the only thing in the entire project that could have found this.
+
+     *Then the second real page broke the first fix, which is the part worth keeping.* With
+     one captured fixture the parser passed; the re-run stored **one** audio track for
+     `Blade-Runner-2049-4K/189774` where the page lists **six**, and gave that track a
+     channel count belonging to the line below it. Blu-ray.com wraps the tracks in a
+     `<span title="…">` on some pages and not on others, so a `_lines` that read only
+     top-level children flattened all six into a single string. **One real page is a
+     sample of one.** `_flatten` recurses now, both pages are fixtures, and the 4K one is
+     kept precisely because it disagrees with the other about its own markup — it also
+     turned out to be the only one carrying an HDR block, which the flattened version was
+     dropping too.

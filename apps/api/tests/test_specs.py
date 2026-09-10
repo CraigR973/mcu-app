@@ -481,3 +481,54 @@ class TestSingletonState:
 
         assert len(list(rows)) == 1
         assert list(rows)[0].id == 1
+
+
+class TestASecondRealPage:
+    """`bluray_com_release_page_4k.html` — Blade Runner 2049 4K, captured 2026-09-10.
+
+    **It is here because it broke the first fix.** The Fight Club page puts its audio
+    `<br>`s at the top level of the block; this one wraps the six tracks in a
+    `<span title="...">`. A parser that reads only top-level children flattens all six
+    into one string — and stores a single track whose format comes from the first line and
+    whose channel count comes from the second, which is worse than storing nothing.
+
+    One real page is a sample of one. `DECISIONS.md` #122.
+    """
+
+    PAGE_4K = (FIXTURES / "bluray_com_release_page_4k.html").read_text(encoding="utf-8")
+
+    def test_every_audio_track_survives_a_wrapping_span(self) -> None:
+        specs = extract(self.PAGE_4K)
+
+        assert len(specs.audio) == 6
+        assert [track["format"] for track in specs.audio] == [
+            "Dolby Atmos",
+            "Dolby TrueHD",
+            "DTS-HD MA",
+            "Dolby Digital",
+            "Dolby Digital",
+            "Dolby Digital",
+        ]
+
+    def test_a_track_does_not_borrow_the_next_ones_channel_count(self) -> None:
+        """The precise shape of the bug: Atmos has no channel count of its own, and the
+        flattened version gave it the 7.1 belonging to the TrueHD track below it."""
+        specs = extract(self.PAGE_4K)
+
+        atmos = next(t for t in specs.audio if t["format"] == "Dolby Atmos")
+        assert "channels" not in atmos
+
+    def test_the_4k_video_block_is_read(self) -> None:
+        specs = extract(self.PAGE_4K)
+
+        assert specs.video["resolution"] == "2160p"
+        assert specs.video["resolution_raw"] == "Native 4K (2160p)"
+        assert specs.video["codec"] == "HEVC / H.265 (58.04 Mbps)"
+        assert specs.video["hdr"] == ["HDR10"]
+
+    def test_native_4k_is_not_read_as_plain_4k(self) -> None:
+        """`_RESOLUTION_PATTERNS` is longest-first, and this page says "Native 4K"."""
+        assert extract(self.PAGE_4K).video["resolution"] == "2160p"
+
+    def test_the_page_carries_its_provenance(self) -> None:
+        assert "Captured verbatim from https://www.blu-ray.com/" in self.PAGE_4K
