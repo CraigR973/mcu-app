@@ -45,7 +45,10 @@ should read **`2 to add, 1 to change, 0 to destroy`**. If anything is to be dest
 
 `apply` is a hosting change and therefore yours, not an agent's.
 
-- [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*.
+- [x] **Wire the overnight schedule.** **Applied 2026-09-10** — `cron-scrape` exists and
+      is scheduled `0 3 * * *`. **§5.5 is not met until it actually fires**, which is the
+      first 03:00 UTC after that; `scrape_runs` currently holds one row and its trigger is
+      `manual`. Check for a row with `trigger=cron` the morning after. Phase 5.5 wants *"first overnight run completes"*.
       A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process
       scheduler would still be worse than nothing — it runs once per container, so scaling
       to two would silently double the scraping. The command is:
@@ -61,7 +64,8 @@ should read **`2 to add, 1 to change, 0 to destroy`**. If anything is to be dest
       `/retailers` renders the same thing with the criterion applied. Something around
       **03:00 UTC** is sensible. `POST /api/v1/scrapers/daily` still exists and still does
       the same work when you want to trigger it by hand from the app.
-- [ ] **And while you are in there, a second cron for reminders.** This is *the whole
+- [x] **And while you are in there, a second cron for reminders.** **Applied
+      2026-09-10** — `cron-reminders`, scheduled `0 8 * * *`. This is *the whole
       scheduler* for sale seasons, upcoming releases and overdue loans — for the same #60
       reason, nothing runs it on a timer inside the process. The command is:
 
@@ -73,8 +77,13 @@ should read **`2 to add, 1 to change, 0 to destroy`**. If anything is to be dest
       `notified` flag before setting it and the outbox deduplicates, so a double fire sends
       nothing twice. If a day is missed, `--as-of YYYY-MM-DD` catches it up. Until this
       exists, every reminder in the app waits for someone to press a button.
-- [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance, and the last
-      unmet part of Batch 20. Everything behind it is deployed: push reports `configured`,
+- [x] **Receive a price-drop push on a real device. Done 2026-09-10** — §5.6 is met.
+      The run wrote 6 checks and queued 2 alerts; *"Cross of Iron is £12.99"* was **sent and
+      delivered** to Craig's iPhone. Mark's copy of the same alert was `suppressed` with
+      reason `no_subscriptions`, which is the outbox doing exactly the right thing and is
+      also the standing evidence that §6.2 is still open.
+
+      ~~Phase 5.6's acceptance, and the last unmet part of Batch 20.~~ Everything behind it is deployed: push reports `configured`,
       the alert fires when a scrape finds a price at or below a want's `max_price`, and the
       service worker shows it. What is missing is a subscribed device.
 
@@ -100,8 +109,10 @@ pairs, with all 29 gaps correct, because no shop stocks every film.
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
-- [ ] **Open Assistant in the sidebar and ask it anything.** That is Phase 9.1's whole
-      acceptance: *"simple text prompt returns a response; tokens logged"*. The answer
+- [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is
+      met. Two calls to `claude-sonnet-5` are in `ai_usage_log` with input and output
+      tokens and cost recorded ($0.004266 and $0.005282), and no error on either. That is
+      Phase 9.1's whole acceptance: *"simple text prompt returns a response; tokens logged"*. The answer
       renders its own token count and cost underneath it, and the log row is written either
       way.
 

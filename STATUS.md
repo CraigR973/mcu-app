@@ -50,8 +50,8 @@ been made on the owner's key. **The one exception is §3.7's own acceptance**: t
 `OWNER-ACTIONS.md` has four things this run created or unblocked, and they are mostly
 minutes:
 
-1. **Two Railway crons in one visit** — the nightly scrape and the reminder pass. **Each is
-   now a command**, `python -m src.scripts.daily_scrape` and `python -m src.scripts.run_reminders`.
+1. ~~**Two Railway crons in one visit**~~ — **applied 2026-09-10.** `cron-scrape` and
+   `cron-reminders` exist and are scheduled. **Each is a command**, `python -m src.scripts.daily_scrape` and `python -m src.scripts.run_reminders`.
    Until 2026-09-10 both items said "point a cron at this endpoint" and **that could not be
    done**: both endpoints are admin-authed and an access token lives 24 hours, so no
    scheduler could ever have called them (`DECISIONS.md` #119).
@@ -60,10 +60,19 @@ minutes:
 4. ~~**Ten Blu-ray.com URLs** — 3.7.~~ **Done 2026-09-10** — and it found the scraper
    broken. See above and `#122`.
 
-**Six acceptance criteria still need a person**, none of them implied met: 6.2 (two
-devices) · 5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) ·
-9.1 (one live model call) · 9.5 (a spoken query) · 8.4's push to a device. ~~3.7~~ **closed
-2026-09-10.**
+**Three acceptance criteria still need a person.** ~~3.7~~, ~~5.6~~ and ~~9.1~~ were all
+closed on 2026-09-10 and are verified against live rows, not asserted:
+
+| Criterion | State on 2026-09-10 |
+|---|---|
+| **6.2** two devices | ❌ **one** `push_subscriptions` row (Craig's iPhone). Mark's copy of the price alert sits `suppressed`, reason `no_subscriptions` — the standing evidence. |
+| **8.4** match notification | ❌ session is `open` with **1 participant** and 11 votes. A match needs two people to like the same film, so none can exist yet. |
+| **5.5** first overnight run | ❌ `cron-scrape` is applied and scheduled `0 3 * * *`; the one `scrape_runs` row reads `trigger=manual`. Met by the first row reading `trigger=cron`. |
+| **9.5** a spoken query | ⏳ **unverifiable from data.** Recognition happens in the browser and dictation fills the input rather than sending it, so a spoken question and a typed one leave identical rows. Only the owner can say. |
+
+**Closed on 2026-09-10:** §5.6 — the run queued 2 alerts and *"Cross of Iron is £12.99"* was
+sent and delivered to a real device. §9.1 — two `claude-sonnet-5` calls logged with tokens
+and cost ($0.004266, $0.005282), no error.
 
 ### What the live database holds
 
@@ -480,6 +489,36 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **The owner applied the crons and closed three criteria; the live rows
+  say which, and which are still open.** `cron-scrape` (`0 3 * * *`) and `cron-reminders`
+  (`0 8 * * *`) exist in Railway, and `railway config plan` reads `0 to add, 0 to destroy`.
+
+  **§5.6 met.** A manual nightly run attempted 17, wrote 6, and queued 2 alerts;
+  *"Cross of Iron is £12.99"* was **sent and delivered** to a real iPhone. Mark's copy of
+  the same alert is `suppressed` with reason `no_subscriptions` — the outbox behaving
+  correctly, and the standing evidence that §6.2 is still open.
+
+  **§9.1 met.** Two `claude-sonnet-5` calls in `ai_usage_log` with input and output tokens
+  and cost recorded, no error on either.
+
+  **§9.5 cannot be settled from data, and that is by design.** Recognition runs in the
+  browser and dictation deliberately fills the input rather than sending it, so a spoken
+  question and a typed one write identical rows. Only the owner can confirm it.
+
+  **One thing to look at, not yet acted on.** That run recorded **11 failures out of 17
+  attempted**, every one *"no price found — the selector matched nothing usable"*, against
+  retailers where six other lookups succeeded in the same pass. 23 more were correctly
+  `not_stocked`, and no retailer was auto-disabled. It is not a regression from today, but
+  after `#122` — a parser that matched its own invented fixture and nothing the site
+  served — "the selector matched nothing usable" is a sentence worth taking at face value
+  rather than assuming it means the shop is out of stock.
+
+  **A permanent, benign plan diff.** `api deploy.restartPolicyType` reports as changing on
+  every plan: Railway stores it absent while `restartPolicyMaxRetries: 3` persists, so
+  `ON_FAILURE` appears to be the default normalised to null. It was **not** removed from
+  `railway.ts` — the default is undocumented, and changing a production restart policy on a
+  guess is not worth a tidy plan. The number that matters is still `0 to destroy` (`#124`).
 
 - **2026-09-10** — **`railway config apply` would have deleted two live credentials, and
   had been able to since the day they were set.** Found by running the read-only
