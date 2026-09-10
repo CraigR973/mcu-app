@@ -10,6 +10,28 @@
 doc-recovery commit that turned out to be necessary. **Groups F and J are complete**, and
 Stage 9 is done apart from 9.6, which #16 dropped.
 
+**Since then, 2026-09-10 afternoon: eBay is connected and Group I's checkpoint is gone.**
+Two small merges — `86c0a9a` (the account-deletion endpoint) and `afbf570` (its IaC
+declarations) — plus live verification against eBay's production API. Nothing else changed.
+
+| Proved | How |
+|---|---|
+| Browse works on a **self-service keyset** — no partner approval | `q="Blade Runner 2049 Blu-ray"`, `EBAY_GB`, HTTP 200, **`total=308`** |
+| The account-deletion endpoint is registered and live | **eBay's own** 64-char challenge → 200; **their** test notification POST → 204 |
+| Token mint, and the one net-new mechanism | client credentials, `expires_in` **7200s** — `src/tmdb/` has no equivalent to copy |
+| The real risk in Batch 28, measured | a naive median is **149% high** (£30.45 vs £12.21) |
+
+**Group I's checkpoint was built on a false premise** (`DECISIONS.md` #126) and is cleared;
+so is `OWNER-ACTIONS.md` #5, and **Batch 24 with it**, since its UPC→title chain runs
+through the same Browse search. **Batches 28, 29 and 24 are waiting on nobody.**
+
+**The finding worth carrying forward** is #129: eBay's `condition` is a *localised display
+string* — 132 plain Blu-rays returned **16 distinct condition values for about five real
+conditions**, across three languages, plus one listing with no condition at all. Batch 28
+segments on `conditionId`. And the batch's effort belongs in the **match filter**, not the
+median: a keyword search for a Blu-ray returns the 4K, the steelbook, the Filmarena edition
+and a double-bill with *Alien: Covenant*.
+
 **Every gate was green before every merge**, and three batches needed a second push to get
 there. Nothing was weakened to reach green: the three CI failures were a partial unique
 index that cannot be an `ON CONFLICT` arbiter without its predicate, a `default=` that
@@ -47,8 +69,8 @@ been made on the owner's key. **The one exception is §3.7's own acceptance**: t
 
 ### ⛔ What is waiting for you
 
-`OWNER-ACTIONS.md` has four things this run created or unblocked, and they are mostly
-minutes:
+`OWNER-ACTIONS.md` has five things, and they are mostly minutes. **eBay is no longer among
+them** — #5 closed on 2026-09-10 and needed no approval after all:
 
 1. ~~**Two Railway crons in one visit**~~ — **applied 2026-09-10.** `cron-scrape` and
    `cron-reminders` exist and are scheduled. **Each is a command**, `python -m src.scripts.daily_scrape` and `python -m src.scripts.run_reminders`.
@@ -73,6 +95,14 @@ closed on 2026-09-10 and are verified against live rows, not asserted:
 **Closed on 2026-09-10:** §5.6 — the run queued 2 alerts and *"Cross of Iron is £12.99"* was
 sent and delivered to a real device. §9.1 — two `claude-sonnet-5` calls logged with tokens
 and cost ($0.004266, $0.005282), no error.
+
+**5. One line of IaC drift, whenever you next run `apply`.** `railway config plan` reads
+`0 to add, 1 to change, 0 to destroy`, and the change is
+`deploy.restartPolicyType (null → "ON_FAILURE")`. **The live `api` service has had no
+restart policy since Batch 2** while `.railway/railway.ts` declared one — a crashed
+container has not been restarting itself. Nothing depends on it, so it blocks nothing; it
+became visible only because 2026-09-10 was the first `config plan` run since that file was
+written.
 
 ### What the live database holds
 
@@ -489,6 +519,40 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **eBay connected, and the checkpoint that was supposed to gate it did not
+  exist.** Research before the batch read eBay's own Buy API page — *"intended for eBay
+  partners only"* — plus forum reports of small developers being rejected, and called
+  production access roughly a coin toss. It is not: a self-service production keyset calls
+  Browse at 5,000/day, and `q="Blade Runner 2049 Blu-ray"` on `EBAY_GB` returned **308 live
+  listings**. Group I's checkpoint, `OWNER-ACTIONS.md` #5 and — less obviously — Batch 24
+  are all unblocked (#126).
+
+  **What was built:** `GET|POST /api/v1/ebay/account-deletion`, the app's **third**
+  unauthenticated route, because eBay activates no production keyset until a developer
+  either subscribes to account-deletion notifications or claims a "not persisting eBay data"
+  exemption that carries account suspension if claimed wrongly (#127). It reads and writes
+  nothing, carries **no rate limit** on purpose — eBay polls it and reads a 429 as an outage
+  — and answers **503 rather than a wrong-but-plausible digest** when unconfigured. Verified
+  end to end from eBay's own servers, not just our probes.
+
+  **The endpoint URL is a literal in `.railway/railway.ts`, not `preserve()`** (#128): eBay
+  hashes the URL *it* holds into every challenge, so a byte of drift fails validation with
+  nothing to show for it. Both eBay variables were declared for #124's reason — undeclared,
+  `apply` would have deleted them and returned the endpoint to 503.
+
+  **And the measurement that will shape the batch** (#129): segmenting 310 live GB listings
+  for one film gives **£30.45 across everything and £12.21 for the plain Blu-ray — a 149%
+  overstatement**, because the query also returns 4K editions (£50.45 median), collector
+  steelbooks (£105.61) and multi-film bundles. `condition` cannot fix it — it is a localised
+  display string with 16 spellings for five conditions. `conditionId` can. **"We got a
+  number" is not "we got the right number"** — the same lesson as `#122` and today's
+  scrape-verdict bug, arriving a third time from a different direction.
+
+  *Left for the owner:* `railway config apply` still shows one line of **pre-existing
+  drift** — `deploy.restartPolicyType (null → "ON_FAILURE")`. The live `api` service has had
+  **no restart policy since Batch 2** while this repo claimed otherwise; visible only because
+  today was the first `config plan` run since that file was written.
 
 - **2026-09-10** — **Checking the retailer selectors found four bugs, and the selectors were
   mostly fine.** The first unattended-shaped run logged 11 failures out of 17. Checked

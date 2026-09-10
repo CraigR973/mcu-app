@@ -897,6 +897,52 @@ a new owner decision.
 disallow — only `/search/` and `/movies/search.php` are. List every URL fetched in the
 close-out report.
 
+### Batch 28 — eBay integration 🔴
+**Covers phases 4.1 and 4.3**, verbatim from §16 at `d94a6b8~1` (`DECISIONS.md` #54):
+
+> **Phase 4.1: eBay API Integration** — eBay Browse API client (OAuth app credentials) ·
+> Search sold listings endpoint · Median price calculation for title + format + UK.
+> **Acceptance:** Querying "Blade Runner 2049 Blu-ray" returns a reasonable UK median price
+>
+> **Phase 4.3: eBay Listing Creation** — Option A (preferred): eBay Sell API draft listing
+> creation · Option B (fallback): pre-filled eBay listing URL · Admin publishes from eBay.
+> **Acceptance:** A draft listing appears in admin's eBay account (or URL opens with
+> prefilled fields)
+
+**Three things about those criteria are already known to be wrong, and are recorded here so
+the batch does not rediscover them.**
+
+**"Search sold listings endpoint" cannot be built.** `DECISIONS.md` #16 settled this in
+April and #126 re-confirmed it: Marketplace Insights is closed to new applicants, and since
+late August 2026 sold listings need a login. Built against **active listings**, labelled
+**"current asking prices"**.
+
+**Phase 4.3's Option A describes something eBay does not do.** There is no API to create a
+Seller Hub *draft*: an Inventory API offer is invisible until it is **published**, at which
+point it is a live listing with a buyer on the other end, not a draft for review. Option A
+would also require storing a refreshing eBay **user** token for a real selling account and
+opting that account into business policies — the same class of secret Batch 33 is
+deliberately sequenced late for. **Option B is the primary path, not the fallback**, and
+inverting §5.6's stated preference is a decision the batch must record. ⚠️ **Nobody has yet
+confirmed the pre-filled URL still accepts prefill parameters** — `ebay.co.uk/sl/prelist/suggest`
+is the current entry point, and an attempt to check it from an agent was served an error
+page rather than the form. **Check that in a browser before starting the batch**: if prefill
+is gone, 4.3 has no remaining path and Batch 28 is 4.1 alone.
+
+**"A reasonable UK median price" is not one number.** See #129 — segment by format and
+`conditionId`, report the sample size, and treat a result failing the match assertion as a
+failure rather than data. Sandbox cannot prove this criterion (its GB catalogue is empty),
+so **4.1's acceptance is a live production call** — an owner-run acceptance in the same
+shape as Batch 19's, not something an unattended agent signs off.
+
+**What is already built and proven**, ahead of the batch: a production keyset, the
+client-credentials token mint (`expires_in` 7200 — token caching is net-new versus
+`src/tmdb/`, whose token is static), and `POST|GET /api/v1/ebay/account-deletion`
+(`DECISIONS.md` #127). The client belongs in a new `src/ebay/` package modelled on
+`src/tmdb/`, **not** as a retailer in Batch 19's scraper framework: eBay is a fixed host
+with a typed API, `check_shape` exists for HTML drift, and #16's accepted ToS exposure
+covers retailers rather than eBay.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -923,7 +969,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~25~~ | ~~Photo uploads~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~3.10~~ | Bytes in Postgres (Neon, owner 2026-09-09), a real `item_photos` table rather than §3.4's external-URL JSONB. **A phone's 4032×3024 lands at ~240 KB** — measured, not asserted. The target is `photo_target_kb` **config**, so the number `OWNER-ACTIONS.md` reserved is now an env var rather than a migration. Every upload re-encoded: EXIF applied then dropped, alpha onto white, bomb refused. **No CSP change was needed** — the note is retired |
 | ~~26~~ | ~~Shelf QR~~ | ~~🟢~~ | — dropped | — dropped | **dropped** | ~~12.3, 12.4~~ — Batch 6's location filter solved the retrieval problem it existed for (`DECISIONS.md` #109) |
 | ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | `888dae7` · 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |
-| 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **4.1, 4.3** — active listings, not sold comps |
+| 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **ready — access proven 2026-09-10** | **4.1, 4.3** — active listings, not sold comps. Browse verified live (`total=308`, `EBAY_GB`); **the effort is the match filter, not the median** — a naive median over that query is **149% high** (`DECISIONS.md` #129) |
 | 29 | Format upgrade + sale tracking | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 4.2, 4.4 |
 | ~~30~~ | ~~AI assistant — client + caps~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~9.1 + 9.7~~ | `ecb00dd` · Anthropic SDK on `claude-sonnet-5`, **the id validated at load against a priced list** so a typo fails at boot and an unpriced model is refused too (it would work, and log every call as free). Adaptive thinking + effort, since `budget_tokens` is a 400 on the Claude 5 family. Two ceilings — messages and dollars — checked **before** the call, refusing with a 200 and a sentence. Every call logged including failures; a failure does not spend an allowance. Live: `ai: configured`. **9.1's live call is an owner action** |
 | ~~31~~ | ~~AI assistant — tools + chat~~ | ~~🔴~~ | — shipped | — shipped | **shipped** | ~~9.2, 9.3, 9.4~~ | `fe1db05` · Manual agent loop, **suspended across an HTTP boundary** so §9.4's confirmation can be answered by a person in a later request — a pending call is a row, not an in-memory future. Tools dispatch to the same endpoint functions the web app calls (#12 stays closed). **"Write" and "admin-only" are separate axes**: `log_watch` writes and a viewer keeps it. SSE chat with a floating button on every page. Cancelling leaves nothing behind, asserted against the table |
@@ -963,7 +1009,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **H** | 24 → ~~25~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | ~~**Both blocked on the same two `vercel.json` fixes**~~ — **neither fix was needed.** `camera=(self)` has been live since Batch 2, and photos are served from the API origin that `connect-src` already allows. **25 shipped 2026-09-10**; 24 (barcode) still waits on eBay |
 | — | ~~26 · solo~~ | — dropped | — dropped | ~~Conditional on Batch 6 proving insufficient~~ — **Batch 6 proved sufficient; dropped** (`DECISIONS.md` #109) |
 | — | ~~27 · solo~~ | — shipped | — shipped | ~~The app's only public surface; needs its own security review~~ · **shipped; reviewed, four defects found and fixed.** (It is in fact the *second* public surface; Batch 17's `.ics` feed came first) |
-| **I** | **checkpoint: eBay production API application** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28; API access gates the group |
+| **I** | ~~**checkpoint: eBay production API application**~~ **cleared 2026-09-10** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28. **The checkpoint's premise was false** — Browse needs no partner approval, only a self-service keyset (`DECISIONS.md` #126). Nothing gates the group |
 | ~~**J**~~ | ~~30~~ → ~~31~~ | — shipped | — shipped | ~~Strong dependency, same files; caps must exist before tools~~ · **both shipped 2026-09-10.** Group J is complete |
 | — | ~~32 · solo~~ | — shipped | — shipped | ~~Small and independent~~ · **shipped 2026-09-10** |
 | **K** | **checkpoint: Google + Microsoft OAuth app registration** → 33 → 34 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | 34 consumes 33; credential setup gates the group |
@@ -984,7 +1030,7 @@ point "when does 11 run?" had no answer.*
 
 - **Batch 19/20/22 (scraping).** Six retailer scrapers to build and keep working. A layout change does not error — it selects the wrong node and persists a plausible wrong number, which then feeds price-drop alerts and aggregates. Build a per-scraper "last known good shape" assertion, not just a success/fail counter. Phase 5.3's acceptance criterion requires live-retailer runs; keep those out of CI and run them manually.
 - **Batch 33 (email credentials).** Stores two people's live mailbox tokens. Must land **after** Batch 3's rate limiting and fail-closed config, never before. Encryption at rest is net-new — app-starter ships no `cryptography` dependency.
-- **Batch 28 (eBay).** Sold-comp data is unobtainable; the UI must say "current asking prices". Production API access is an application, not a given — start it early, it gates the batch.
+- **Batch 28 (eBay).** Sold-comp data is unobtainable; the UI must say "current asking prices" — and that is now *doubly* true, since eBay put sold listings behind a login wall in late August 2026, walling the scrape-it fallback as well as forbidding it. ~~Production API access is an application, not a given — start it early, it gates the batch.~~ **Superseded 2026-09-10 (`DECISIONS.md` #126): Browse works on a self-service keyset and gates nothing.** The real risk moved: a keyword search returns the 4K, the steelbook and a double-bill alongside the disc you asked for, so **the match filter is the batch, not the median** — measured at **149% overstatement** on live data, and `condition` cannot do the segmenting because it is a localised display string (#129).
 - **Batch 24 (barcode).** Expect a low hit rate on unknown discs and wrong-edition matches. Confirmation UI is mandatory.
 
 ## Dropped — not scheduled
