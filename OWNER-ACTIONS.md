@@ -97,16 +97,35 @@ where the button is hidden rather than shown dead.
 
 ### 4. Run the Blu-ray.com spec fetch *(new — Batch 23, 2026-09-10)*
 
-- [ ] **Fetch specs for ten discs from ten exact Blu-ray.com release URLs.** That is Phase
-      3.7's acceptance in full: *"scraper run against 10 known **live** URLs persists correct
-      specs to the matching `collection_items` rows; row counts verified — not just unit
-      tests against fixture HTML."*
+- [x] **Fetch specs for ten discs from ten exact Blu-ray.com release URLs.** **Done
+      2026-09-10.** You accepted `#110`'s risk and asked for it to be run for you
+      (`DECISIONS.md` #121). Phase 3.7's acceptance in full — *"scraper run against 10
+      known **live** URLs persists correct specs to the matching `collection_items` rows;
+      row counts verified — not just unit tests against fixture HTML"* — is met: **10 rows
+      of 1,857, from 10 distinct release URLs**, no halt, and no currency symbol anywhere
+      in a derived field.
 
-**Everything except the requests themselves is built and deployed**, and production reports
-`0 pages ever fetched` — the machine is armed and has never touched the site.
+      **The run found that the scraper did not work at all**, which is the reason the
+      criterion insists on live URLs. The first pass fetched all ten pages and extracted
+      **nothing**: the parser looked for `<strong>`-labelled rows and the site serves
+      `<span class="subheading">` sections. `test_specs.py`'s fixture had been *invented to
+      match the parser*, so eleven tests passed against markup the site has never served.
+      Then the fix's own re-run stored **one** audio track for Blade Runner 2049 where the
+      page lists six, because that page wraps its tracks in a `<span>` and Fight Club's does
+      not. Both fixtures are captured pages now, and a test asserts they stay captured.
+      `DECISIONS.md` #122.
 
-**Why an agent did not run it.** `DECISIONS.md` #110 is explicit that this is a *risk
-acceptance*, not a permission: the site's Legal Notices prohibit automated reuse, and #108's
+      Nothing was lost while it was broken: `apply_specs` checks `is_empty` before touching
+      a row, so a parser that stops matching the site writes nothing rather than blanking
+      1,857 rows.
+
+      *What you may want to look at:* the ten pages were matched by **title and format**,
+      not by edition or region — `Kick-Ass` and `Up` came back Region A, the rest region
+      free. Every row records `specs_source_url`, so a wrong edition is visible rather than
+      silently merged, and `DELETE /api/v1/specs` removes the lot.
+
+**Why an agent did not run it until you said so.** `DECISIONS.md` #110 is explicit that this
+is a *risk acceptance*, not a permission: the site's Legal Notices prohibit automated reuse, and #108's
 earlier claim that absence from `robots.txt` made it allowed was wrong. Accepting a stated
 legal risk on your own behalf is yours to do; `docs/agent-commands/group-start.md` also puts
 live third-party runs in your hands, which is how Batch 19's checkpoint worked.
