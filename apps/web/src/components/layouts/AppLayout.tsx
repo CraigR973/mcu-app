@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
+import { FloatingChatButton } from '@/components/FloatingChatButton'
 import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import OfflineBanner from '@/components/OfflineBanner'
@@ -72,6 +73,10 @@ export default function AppLayout({ children }: Props) {
           </ErrorBoundary>
         </main>
       </div>
+
+      {/* §9.3's "floating chat button on every page". On the shell rather than on each
+          page, which is what "every page" means — and it hides itself on the chat. */}
+      <FloatingChatButton />
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={isAdmin} />
       <ShortcutsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} isAdmin={isAdmin} />

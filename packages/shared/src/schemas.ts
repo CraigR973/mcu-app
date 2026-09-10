@@ -1317,3 +1317,63 @@ export type AiStatus = z.infer<typeof aiStatusSchema>
 export type AiAnswer = z.infer<typeof aiAnswerSchema>
 export type AiUsage = z.infer<typeof aiUsageSchema>
 export type AiSettings = z.infer<typeof aiSettingsSchema>
+
+// ---------------------------------------------------------------------------
+// AI conversations, tools and confirmation (Batch 31) — §9.2, §9.3, §9.4
+// ---------------------------------------------------------------------------
+
+export const aiToolSummarySchema = z.object({
+  name: z.string().min(1),
+  description: z.string(),
+  /** Whether using it changes something — and therefore whether it will ask first. */
+  writes: z.boolean(),
+})
+
+export const aiToolListSchema = z.object({
+  role: z.string().min(1),
+  items: z.array(aiToolSummarySchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const aiConversationSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export const aiConversationListSchema = z.object({
+  items: z.array(aiConversationSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const aiChatMessageSchema = z.object({
+  id: z.string().uuid(),
+  role: z.string().min(1),
+  text: z.string(),
+  sequence: z.number().int().positive(),
+  createdAt: z.string(),
+})
+
+/** A write Claude asked for and has **not** performed.
+ *
+ *  `input` is carried in full because §9.4's prompt has to say what will actually happen —
+ *  "Claude wants to use a tool" is not a decision anyone can make. */
+export const aiPendingToolCallSchema = z.object({
+  id: z.string().uuid(),
+  toolName: z.string().min(1),
+  input: z.record(z.unknown()),
+})
+
+export const aiConversationDetailSchema = aiConversationSchema.extend({
+  messages: z.array(aiChatMessageSchema),
+  pendingToolCalls: z.array(aiPendingToolCallSchema),
+})
+
+export type AiToolSummary = z.infer<typeof aiToolSummarySchema>
+export type AiToolList = z.infer<typeof aiToolListSchema>
+export type AiConversation = z.infer<typeof aiConversationSchema>
+export type AiConversationList = z.infer<typeof aiConversationListSchema>
+export type AiChatMessage = z.infer<typeof aiChatMessageSchema>
+export type AiPendingToolCall = z.infer<typeof aiPendingToolCallSchema>
+export type AiConversationDetail = z.infer<typeof aiConversationDetailSchema>

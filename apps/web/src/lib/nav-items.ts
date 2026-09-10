@@ -25,8 +25,9 @@ export const navItems: NavItem[] = [
   // Batch 11. Both people have their own devices and their own toggles, so this is a
   // sidebar item rather than an admin one.
   { label: 'Notifications', path: '/settings/notifications', icon: Bell },
-  // Batch 30. Per-person caps and usage; Batch 31 turns this into the chat.
-  { label: 'Assistant', path: '/settings/ai', icon: Bot },
+  // Batch 31. The chat itself; Batch 30's caps and usage live under it at
+  // /settings/ai, reachable from the header.
+  { label: 'Assistant', path: '/assistant', icon: Bot },
 ]
 
 /** Batch 7's write surface. Admin-only, matching the routes and the API. */

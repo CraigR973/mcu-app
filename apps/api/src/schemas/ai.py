@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -74,3 +75,78 @@ class AiStatusResponse(BaseModel):
 
     configured: bool
     model: str
+
+
+# ---------------------------------------------------------------------------
+# Conversations, tools and the confirmation boundary (Batch 31) — §9.2–§9.4
+# ---------------------------------------------------------------------------
+
+
+class ToolSummary(BaseModel):
+    """One tool this person may use.
+
+    `writes` is on the wire because §9.4's prompt is the visible consequence of it, and a
+    UI that has to guess which tools ask for confirmation will guess wrong eventually.
+    """
+
+    name: str
+    description: str
+    writes: bool
+
+
+class ToolListResponse(BaseModel):
+    """§9.2's acceptance, made directly observable: ask as an admin, ask as a viewer."""
+
+    role: str
+    items: list[ToolSummary]
+    total: int = Field(ge=0)
+
+
+class ConversationResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    createdAt: UtcDatetime
+    updatedAt: UtcDatetime
+
+
+class ConversationListResponse(BaseModel):
+    items: list[ConversationResponse]
+    total: int = Field(ge=0)
+
+
+class ChatMessageResponse(BaseModel):
+    """One rendered turn. `tool_result` rows never reach here — see the router."""
+
+    id: uuid.UUID
+    role: str
+    text: str
+    sequence: int = Field(ge=1)
+    createdAt: UtcDatetime
+
+
+class PendingToolCallResponse(BaseModel):
+    """A write Claude asked for and has **not** performed.
+
+    The input is included in full because §9.4's prompt has to say what will actually
+    happen — "Claude wants to use a tool" is not a decision anyone can make.
+    """
+
+    id: uuid.UUID
+    toolName: str
+    input: dict[str, Any]
+
+
+class ConversationDetailResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    createdAt: UtcDatetime
+    updatedAt: UtcDatetime
+    messages: list[ChatMessageResponse]
+    #: Survives the stream that raised it: a person can close the tab and come back.
+    pendingToolCalls: list[PendingToolCallResponse] = Field(default_factory=list)
+
+
+class ToolCallResolveRequest(BaseModel):
+    """`confirm: false` is a real answer, not an absence of one."""
+
+    confirm: bool

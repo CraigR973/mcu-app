@@ -23,6 +23,7 @@ failing.
 from __future__ import annotations
 
 import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Literal, Protocol
@@ -32,6 +33,7 @@ import structlog
 from anthropic.types import MessageParam
 from anthropic.types.output_config_param import OutputConfigParam
 from anthropic.types.thinking_config_adaptive_param import ThinkingConfigAdaptiveParam
+from anthropic.types.tool_param import ToolParam
 
 from src.config import settings
 from src.services.ai.pricing import estimate_cost_usd
@@ -75,6 +77,27 @@ class Usage(Protocol):
 
     input_tokens: int
     output_tokens: int
+
+
+#: Streaming lifts the HTTP-timeout constraint, so the ceiling can be generous — a turn
+#: that calls two tools and then writes a real answer needs the room.
+STREAM_MAX_TOKENS = 16000
+
+
+@dataclass
+class TurnEvent:
+    """One thing that happened while a turn streamed.
+
+    `text` arrives many times, then exactly one `done` (carrying the assembled message and
+    its accounting) **or** one `error`. The caller forwards the first kind to the browser
+    and acts on the second.
+    """
+
+    kind: Literal["text", "done", "error"]
+    text: str = ""
+    message: Any = None
+    reply: AiReply | None = None
+    error: str | None = None
 
 
 @dataclass
@@ -231,6 +254,93 @@ class ClaudeClient:
             stop_reason=reply.stop_reason,
         )
         return reply
+
+    async def stream_turn(
+        self,
+        messages: list[MessageParam],
+        *,
+        tools: list[ToolParam] | None = None,
+        system: str | None = None,
+        max_tokens: int = STREAM_MAX_TOKENS,
+        effort: Effort = DEFAULT_EFFORT,
+    ) -> AsyncIterator[TurnEvent]:
+        """Stream one turn, yielding text as it arrives and the final message at the end.
+
+        **Streaming rather than `create`, because §9.3's acceptance is that the response
+        "renders progressively"** — and because a turn that calls tools and then writes a
+        long answer is exactly the shape that hits an HTTP timeout without it.
+
+        The final message is *yielded* rather than returned: an async generator cannot
+        return a value, and the caller needs both halves — the deltas to forward to the
+        browser, and the assembled message to persist and inspect for tool calls.
+        """
+        client = self._resolve()
+        if client is None:
+            yield TurnEvent(
+                kind="error",
+                text=(
+                    "The assistant is not configured on the server yet. Nothing else in "
+                    "the app is affected."
+                ),
+                error="ANTHROPIC_API_KEY is not set",
+            )
+            return
+
+        started = time.perf_counter()
+        try:
+            async with client.messages.stream(
+                model=self._model,
+                max_tokens=max_tokens,
+                system=system or SYSTEM_PROMPT,
+                thinking=ThinkingConfigAdaptiveParam(type="adaptive"),
+                output_config=OutputConfigParam(effort=effort),
+                tools=tools or [],
+                messages=messages,
+            ) as stream:
+                async for chunk in stream.text_stream:
+                    yield TurnEvent(kind="text", text=chunk)
+                final = await stream.get_final_message()
+        except anthropic.APIStatusError as exc:
+            logger.warning("ai_stream_failed", status=exc.status_code, error=str(exc)[:300])
+            yield TurnEvent(kind="error", text=_friendly(exc.status_code), error=str(exc)[:500])
+            return
+        except anthropic.APIConnectionError as exc:
+            logger.warning("ai_stream_unreachable", error=str(exc)[:300])
+            yield TurnEvent(
+                kind="error",
+                text="The assistant could not be reached. Try again in a moment.",
+                error=str(exc)[:500],
+            )
+            return
+
+        usage = getattr(final, "usage", None)
+        input_tokens = _int_field(usage, "input_tokens")
+        output_tokens = _int_field(usage, "output_tokens")
+        cache_read = _int_field(usage, "cache_read_input_tokens")
+        cache_write = _int_field(usage, "cache_creation_input_tokens")
+        model_used = getattr(final, "model", self._model)
+
+        yield TurnEvent(
+            kind="done",
+            message=final,
+            reply=AiReply(
+                text=_text_of(final),
+                model=model_used,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cache_read_tokens=cache_read,
+                cache_write_tokens=cache_write,
+                cost_usd=estimate_cost_usd(
+                    model_used,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cache_read_tokens=cache_read,
+                    cache_write_tokens=cache_write,
+                ),
+                stop_reason=getattr(final, "stop_reason", None),
+                latency_ms=int((time.perf_counter() - started) * 1000),
+            ),
+        )
 
     def _failure(self, kind: str, exc: Exception, started: float, *, friendly: str) -> AiReply:
         latency = int((time.perf_counter() - started) * 1000)

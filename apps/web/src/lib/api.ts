@@ -1,6 +1,10 @@
 import {
   activitySchema,
   aiAnswerSchema,
+  aiConversationDetailSchema,
+  aiConversationListSchema,
+  aiConversationSchema,
+  aiToolListSchema,
   aiSettingsSchema,
   aiStatusSchema,
   aiUsageSchema,
@@ -64,6 +68,10 @@ import {
   watchLogPageSchema,
   type Activity,
   type AiAnswer,
+  type AiConversation,
+  type AiConversationDetail,
+  type AiConversationList,
+  type AiToolList,
   type AiSettings,
   type AiStatus,
   type AiUsage,
@@ -1632,4 +1640,127 @@ export function formatAiCost(costUsd: string): string {
   if (value === 0) return '$0.00'
   if (value < 0.01) return `<$0.01`
   return `$${value.toFixed(2)}`
+}
+
+// ---------------------------------------------------------------------------
+// AI conversations, streaming chat and confirmation (Batch 31) — §9.2–§9.4
+// ---------------------------------------------------------------------------
+
+export async function fetchAiTools(): Promise<AiToolList> {
+  return parseResponse(await authFetch('/ai/tools'), aiToolListSchema)
+}
+
+export async function fetchAiConversations(): Promise<AiConversationList> {
+  return parseResponse(await authFetch('/ai/conversations'), aiConversationListSchema)
+}
+
+export async function createAiConversation(): Promise<AiConversation> {
+  return parseOrThrowApiError(
+    await authFetch('/ai/conversations', { method: 'POST' }),
+    aiConversationSchema,
+  )
+}
+
+export async function fetchAiConversation(id: string): Promise<AiConversationDetail> {
+  return parseResponse(await authFetch(`/ai/conversations/${id}`), aiConversationDetailSchema)
+}
+
+export async function deleteAiConversation(id: string): Promise<void> {
+  const response = await authFetch(`/ai/conversations/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/** One frame from the chat stream. `text` many times, then exactly one terminal event. */
+export interface ChatStreamEvent {
+  kind: 'text' | 'done' | 'confirm' | 'error'
+  text: string
+  toolCalls?: Array<{ id: string; toolName: string; input: Record<string, unknown> }>
+}
+
+/**
+ * Read a `text/event-stream` body frame by frame.
+ *
+ * **Hand-rolled rather than `EventSource`,** which can only issue a bare GET — it cannot
+ * POST the question and cannot carry the Authorization header. The buffering below is the
+ * part that matters: a chunk boundary falls wherever the network puts it, so a frame
+ * routinely arrives split across two reads and a parser that assumes one chunk is one
+ * event drops text at random.
+ */
+export async function* readSse(response: Response): AsyncGenerator<ChatStreamEvent> {
+  if (!response.ok || !response.body) {
+    yield { kind: 'error', text: await errorMessage(response) }
+    return
+  }
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    let separator = buffer.indexOf('\n\n')
+    while (separator !== -1) {
+      const frame = buffer.slice(0, separator).trim()
+      buffer = buffer.slice(separator + 2)
+      if (frame.startsWith('data:')) {
+        try {
+          yield JSON.parse(frame.slice(5).trim()) as ChatStreamEvent
+        } catch {
+          // A malformed frame must not kill the stream — the rest of the answer is
+          // still coming, and dropping one frame is far better than dropping the turn.
+        }
+      }
+      separator = buffer.indexOf('\n\n')
+    }
+  }
+}
+
+/** Send a message and stream the reply. */
+export async function* streamAiMessage(
+  conversationId: string,
+  prompt: string,
+): AsyncGenerator<ChatStreamEvent> {
+  const response = await authFetch(`/ai/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ prompt }),
+  })
+  yield* readSse(response)
+}
+
+/**
+ * §9.4 — answer a pending write, then stream whatever the assistant says next.
+ *
+ * Nothing has run when this is called: the write happens here if `confirm` is true, and
+ * not at all if it is false.
+ */
+export async function* resolveAiToolCall(
+  callId: string,
+  confirm: boolean,
+): AsyncGenerator<ChatStreamEvent> {
+  const response = await authFetch(`/ai/tool-calls/${callId}/resolve`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm }),
+  })
+  yield* readSse(response)
+}
+
+/** What §9.4's prompt says, in words rather than a tool name and a JSON blob. */
+export function describeToolCall(call: {
+  toolName: string
+  input: Record<string, unknown>
+}): string {
+  const input = call.input
+  if (call.toolName === 'add_to_wanted') {
+    const format = typeof input.preferredFormat === 'string' ? ` on ${formatLabel(input.preferredFormat) ?? input.preferredFormat}` : ''
+    const price = typeof input.maxPrice === 'string' ? `, alerting below £${input.maxPrice}` : ''
+    return `Add ${String(input.title)} to the wanted list${format}${price}.`
+  }
+  if (call.toolName === 'log_watch') {
+    const rating = typeof input.rating === 'number' ? `, rated ${input.rating}/5` : ''
+    const when = typeof input.watchedAt === 'string' ? ` on ${input.watchedAt}` : ''
+    return `Record that you watched ${String(input.title)}${when}${rating}.`
+  }
+  return `Run ${call.toolName} with ${JSON.stringify(input)}.`
 }

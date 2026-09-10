@@ -32,6 +32,7 @@ const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
 const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
 const AiSettingsPage = lazy(() => import('./pages/AiSettingsPage'))
+const AiChatPage = lazy(() => import('./pages/AiChatPage'))
 const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
@@ -208,6 +209,12 @@ export default function App() {
             <Route
               path="/settings/ai"
               element={<AppShell><AiSettingsPage /></AppShell>}
+            />
+            {/* Batch 31. The chat is a real route rather than an overlay, so a
+                conversation can be linked to, returned to, and left open. */}
+            <Route
+              path="/assistant"
+              element={<AppShell><AiChatPage /></AppShell>}
             />
             <Route
               path="/admin"

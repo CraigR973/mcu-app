@@ -195,6 +195,15 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/ai/settings",
         "/api/v1/ai/status",
         "/api/v1/ai/history",
+        # Batch 31. `/tools` exists because §9.2's acceptance is a statement about what
+        # a given person can do, and the honest way to check it is to ask as them.
+        # `/tool-calls/{id}/resolve` is §9.4's boundary: nothing has run when it is
+        # called, and the write happens there or not at all.
+        "/api/v1/ai/tools",
+        "/api/v1/ai/conversations",
+        "/api/v1/ai/conversations/{conversation_id}",
+        "/api/v1/ai/conversations/{conversation_id}/messages",
+        "/api/v1/ai/tool-calls/{call_id}/resolve",
     }
 
 
