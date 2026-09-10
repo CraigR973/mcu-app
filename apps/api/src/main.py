@@ -14,6 +14,7 @@ from src.logging_config import configure_logging
 from src.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from src.rate_limit import limiter
 from src.routers import (
+    ai,
     auth,
     box_sets,
     calendar,
@@ -116,3 +117,4 @@ app.include_router(wanted.router)
 app.include_router(scraping.router)
 app.include_router(gift.router)
 app.include_router(notifications.router)
+app.include_router(ai.router)

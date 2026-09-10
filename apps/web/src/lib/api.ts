@@ -1,5 +1,9 @@
 import {
   activitySchema,
+  aiAnswerSchema,
+  aiSettingsSchema,
+  aiStatusSchema,
+  aiUsageSchema,
   apiErrorSchema,
   auditPageSchema,
   boxSetDetailSchema,
@@ -59,6 +63,10 @@ import {
   watchLogEntrySchema,
   watchLogPageSchema,
   type Activity,
+  type AiAnswer,
+  type AiSettings,
+  type AiStatus,
+  type AiUsage,
   type AuditPage,
   type BoxSetDetail,
   type BoxSetList,
@@ -1575,4 +1583,53 @@ export function scrapeRunVerdict(run: ScrapeRunRecord): {
       ? `${run.written} of ${answerable} priced`
       : `Only ${run.written} of ${answerable} priced — check the failures`,
   }
+}
+
+// ---------------------------------------------------------------------------
+// AI assistant — client and caps (Batch 30) — §9.1, §9.7
+// ---------------------------------------------------------------------------
+
+export async function fetchAiStatus(): Promise<AiStatus> {
+  return parseResponse(await authFetch('/ai/status'), aiStatusSchema)
+}
+
+export async function fetchAiUsage(): Promise<AiUsage> {
+  return parseResponse(await authFetch('/ai/usage'), aiUsageSchema)
+}
+
+export async function fetchAiSettings(): Promise<AiSettings> {
+  return parseResponse(await authFetch('/ai/settings'), aiSettingsSchema)
+}
+
+export async function updateAiSettings(input: {
+  dailyMessageCap?: number
+  dailyCostCapUsd?: number
+}): Promise<AiSettings> {
+  return parseOrThrowApiError(
+    await authFetch('/ai/settings', { method: 'PUT', body: JSON.stringify(input) }),
+    aiSettingsSchema,
+  )
+}
+
+/**
+ * Ask one question.
+ *
+ * A refusal from the daily cap comes back as a **200** with `stopReason: 'cap_reached'`,
+ * not an error status — §9.7 asks for a graceful message the person reads where they
+ * asked, and an error status hands the UI an exception to render instead of an answer.
+ */
+export async function askAi(prompt: string): Promise<AiAnswer> {
+  return parseOrThrowApiError(
+    await authFetch('/ai/ask', { method: 'POST', body: JSON.stringify({ prompt }) }),
+    aiAnswerSchema,
+  )
+}
+
+/** A sub-cent cost rendered so it does not read as free. */
+export function formatAiCost(costUsd: string): string {
+  const value = Number(costUsd)
+  if (!Number.isFinite(value)) return costUsd
+  if (value === 0) return '$0.00'
+  if (value < 0.01) return `<$0.01`
+  return `$${value.toFixed(2)}`
 }

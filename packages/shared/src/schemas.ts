@@ -1264,3 +1264,56 @@ export type ScrapeRunRecord = z.infer<typeof scrapeRunRecordSchema>
 export type ScrapeRunList = z.infer<typeof scrapeRunListSchema>
 export type Aggregation = z.infer<typeof aggregationSchema>
 export type DailyRun = z.infer<typeof dailyRunSchema>
+
+// ---------------------------------------------------------------------------
+// AI assistant — client and caps (Batch 30) — §9.1, §9.7
+// ---------------------------------------------------------------------------
+
+/** Whether the assistant works in **this** deployment.
+ *
+ *  `configured: false` is a first-class answer. `ANTHROPIC_API_KEY` lives only in a Railway
+ *  variable, and the TMDB outage is what a missing one looks like when nothing in the code
+ *  can observe its absence. */
+export const aiStatusSchema = z.object({
+  configured: z.boolean(),
+  model: z.string().min(1),
+})
+
+/** An answer, with what producing it cost.
+ *
+ *  `costUsd` is a **string** because it is a decimal: a short question costs a fraction of
+ *  a penny and a float would not round to what was billed. */
+export const aiAnswerSchema = z.object({
+  id: z.string().uuid(),
+  text: z.string(),
+  model: z.string().min(1),
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  cacheReadTokens: z.number().int().nonnegative(),
+  cacheWriteTokens: z.number().int().nonnegative(),
+  costUsd: z.string(),
+  stopReason: z.string().nullable(),
+  latencyMs: z.number().int().nonnegative(),
+  error: z.string().nullable(),
+})
+
+export const aiUsageSchema = z.object({
+  messages: z.number().int().nonnegative(),
+  messageCap: z.number().int().nonnegative(),
+  messagesRemaining: z.number().int().nonnegative(),
+  costUsd: z.string(),
+  costCapUsd: z.string(),
+  blocked: z.boolean(),
+  limitMessage: z.string().nullable(),
+  resetsAt: z.string(),
+})
+
+export const aiSettingsSchema = z.object({
+  dailyMessageCap: z.number().int().nonnegative(),
+  dailyCostCapUsd: z.string(),
+})
+
+export type AiStatus = z.infer<typeof aiStatusSchema>
+export type AiAnswer = z.infer<typeof aiAnswerSchema>
+export type AiUsage = z.infer<typeof aiUsageSchema>
+export type AiSettings = z.infer<typeof aiSettingsSchema>

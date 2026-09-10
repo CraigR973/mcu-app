@@ -43,7 +43,12 @@ async def test_readiness_returns_ok_when_database_responds() -> None:
     assert response.status_code == 200
     # `push` is "not_configured" here because the test environment holds no VAPID key,
     # which is the honest answer for it — see the dedicated tests below.
-    assert response.json() == {"status": "ready", "db": "ok", "push": "not_configured"}
+    assert response.json() == {
+        "status": "ready",
+        "db": "ok",
+        "push": "not_configured",
+        "ai": "not_configured",
+    }
     session.execute.assert_awaited_once()
 
 
@@ -62,6 +67,7 @@ async def test_readiness_returns_503_when_database_is_unreachable() -> None:
         "status": "not_ready",
         "db": "unreachable",
         "push": "not_configured",
+        "ai": "not_configured",
     }
 
 
@@ -181,6 +187,14 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/notifications/run-reminders",
         "/api/v1/notifications/seed-sale-seasons",
         "/api/v1/notifications/deliver",
+        # Batch 30. Caller-scoped: a person's questions, usage and caps are theirs.
+        # There is no admin view of the other person's — with two profiles that would
+        # be a surveillance feature rather than an administrative one.
+        "/api/v1/ai/ask",
+        "/api/v1/ai/usage",
+        "/api/v1/ai/settings",
+        "/api/v1/ai/status",
+        "/api/v1/ai/history",
     }
 
 

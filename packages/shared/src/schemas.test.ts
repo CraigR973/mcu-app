@@ -9,6 +9,9 @@ import {
   builtInScraperListSchema,
   candidateListSchema,
   collectionCopiesSchema,
+  aiAnswerSchema,
+  aiStatusSchema,
+  aiUsageSchema,
   collectionFacetsSchema,
   notificationPreferenceSchema,
   notificationSchema,
@@ -1168,5 +1171,49 @@ describe('notification schemas', () => {
       quietHoursTimezone: 'Europe/London',
     })
     expect(parsed.success).toBe(false)
+  })
+})
+
+describe('AI assistant schemas', () => {
+  it('keeps cost as a string, not a number', () => {
+    // A short question costs a fraction of a penny. Parsing it as a float and rendering
+    // it back would not be what was billed, and the daily cost cap counts these.
+    const answer = aiAnswerSchema.parse({
+      id: UUID_A,
+      text: 'Heat is on the Front 2nd shelf.',
+      model: 'claude-sonnet-5',
+      inputTokens: 1200,
+      outputTokens: 45,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      costUsd: '0.002850',
+      stopReason: 'end_turn',
+      latencyMs: 900,
+      error: null,
+    })
+    expect(answer.costUsd).toBe('0.002850')
+    expect(typeof answer.costUsd).toBe('string')
+  })
+
+  it('treats "the assistant is not configured" as a value, not an error', () => {
+    // The TMDB shape, again: a feature absent from the deployment that the UI can name.
+    expect(aiStatusSchema.parse({ configured: false, model: 'claude-sonnet-5' }).configured).toBe(
+      false,
+    )
+  })
+
+  it('carries the limit message only alongside the blocked flag', () => {
+    const usage = aiUsageSchema.parse({
+      messages: 50,
+      messageCap: 50,
+      messagesRemaining: 0,
+      costUsd: '0.140000',
+      costCapUsd: '2.00',
+      blocked: true,
+      limitMessage: "You have used all 50 of today's messages.",
+      resetsAt: '2026-09-11T23:00:00Z',
+    })
+    expect(usage.blocked).toBe(true)
+    expect(usage.limitMessage).toContain('50')
   })
 })

@@ -40,6 +40,11 @@ class ReadinessResponse(BaseModel):
     #: API out of rotation over a notification setting.
     push: Literal["configured", "not_configured", "invalid"]
 
+    #: Whether the AI assistant can work in this deployment — Batch 30, and the same
+    #: reasoning as `push`: `ANTHROPIC_API_KEY` lives only in a Railway variable, so
+    #: without this nothing in the code could observe its absence.
+    ai: Literal["configured", "not_configured"]
+
 
 @router.get("", response_model=HealthResponse)
 async def health() -> HealthResponse:
@@ -48,6 +53,11 @@ async def health() -> HealthResponse:
         status="ok",
         commitSha=settings.railway_git_commit_sha or "unknown",
     )
+
+
+def _ai_status() -> Literal["configured", "not_configured"]:
+    """Is there a key for the assistant? Presence only — a call would cost money."""
+    return "configured" if settings.anthropic_api_key else "not_configured"
 
 
 def _push_status() -> Literal["configured", "not_configured", "invalid"]:
@@ -69,11 +79,12 @@ def _push_status() -> Literal["configured", "not_configured", "invalid"]:
 @router.get("/ready", response_model=ReadinessResponse)
 async def ready(response: Response) -> ReadinessResponse:
     push = _push_status()
+    ai = _ai_status()
     try:
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))
-        return ReadinessResponse(status="ready", db="ok", push=push)
+        return ReadinessResponse(status="ready", db="ok", push=push, ai=ai)
     except Exception:
         log.warning("readiness check failed", db="unreachable")
         response.status_code = 503
-        return ReadinessResponse(status="not_ready", db="unreachable", push=push)
+        return ReadinessResponse(status="not_ready", db="unreachable", push=push, ai=ai)

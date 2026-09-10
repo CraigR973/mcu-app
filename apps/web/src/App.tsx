@@ -31,6 +31,7 @@ const WantedPage = lazy(() => import('./pages/WantedPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
 const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
+const AiSettingsPage = lazy(() => import('./pages/AiSettingsPage'))
 const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
@@ -200,6 +201,13 @@ export default function App() {
             <Route
               path="/notifications"
               element={<AppShell><NotificationSettingsPage /></AppShell>}
+            />
+            {/* Batch 30. Both people get their own caps and their own usage, so this
+                is the ordinary shell. Batch 31 replaces the one-question box here with
+                the real chat. */}
+            <Route
+              path="/settings/ai"
+              element={<AppShell><AiSettingsPage /></AppShell>}
             />
             <Route
               path="/admin"

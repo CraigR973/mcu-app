@@ -50,6 +50,10 @@ dependencies = [
     # library in production: the pin is gone, and the local/CI note now lives in
     # `STATUS.md`'s gotchas instead of in a version bound.
     "cryptography>=50.0.0",
+    # Batch 30 — the AI assistant's client. The official SDK rather than raw HTTP against
+    # `/v1/messages`: the request shapes for thinking, effort and tool use have all moved
+    # in the last year, and a hand-rolled client is a second place for that drift to land.
+    "anthropic>=0.69.0",
 ]
 
 [project.optional-dependencies]

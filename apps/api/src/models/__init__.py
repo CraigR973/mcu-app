@@ -3,6 +3,7 @@ from src.models.admin_action import (
     COLLECTION_ITEMS_TABLE,
     AdminAction,
 )
+from src.models.ai import AiSettings, AiUsageLogEntry
 from src.models.base import (
     Base,
     TimestampMixin,
@@ -73,6 +74,8 @@ from src.models.watch_log import RATING_MAX, RATING_MIN, WatchLog
 
 __all__ = [
     "ACTION_TYPES",
+    "AiSettings",
+    "AiUsageLogEntry",
     "AdminAction",
     "BOX_SETS_TABLE",
     "BoxSet",

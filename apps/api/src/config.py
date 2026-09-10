@@ -85,6 +85,22 @@ class Settings(BaseSettings):
     #: sender. Not a secret; required by Firefox's service, which 401s without it.
     vapid_subject: str = ""
 
+    # The AI assistant (Batch 30). `ANTHROPIC_API_KEY` was set in Railway on 2026-09-09.
+    #
+    # **The model id lives here and nowhere else.** `docs/phase-batches.md` says "do not
+    # guess a model id" — the April spec predates the current lineup by two generations —
+    # so it is one config value, validated against `SUPPORTED_MODELS`, rather than a
+    # string repeated across the code where only one copy gets updated.
+    anthropic_api_key: str = ""
+    ai_model: str = "claude-sonnet-5"
+    #: §9.7's cap. **50 messages per person per day** (owner, 2026-09-09) — a starting
+    #: value, not a commitment, and editable in the app. This is the fallback for a person
+    #: who has never changed it.
+    ai_daily_message_cap: int = 50
+    #: A second ceiling in dollars, because a message cap alone does not bound spend: one
+    #: question over a long conversation costs many times a short one. Zero disables it.
+    ai_daily_cost_cap_usd: float = 2.0
+
     # App
     frontend_origin: str = "http://localhost:5173"
     #: How many proxy hops in front of the app are ours. Exactly one on Railway, which
@@ -133,6 +149,21 @@ class Settings(BaseSettings):
             query.append(("ssl", sslmode))
 
         return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+    @field_validator("ai_model")
+    @classmethod
+    def _known_model(cls, value: str) -> str:
+        """Refuse a model id this app has no pricing for.
+
+        A wrong id is otherwise a 404 on the first person to open the assistant, and an
+        id that is merely *unpriced* is worse: it works, and silently logs every call as
+        costing nothing, which makes §9.7's cost cap unenforceable.
+        """
+        from src.services.ai.pricing import SUPPORTED_MODELS
+
+        if value not in SUPPORTED_MODELS:
+            raise ValueError(f"ai_model must be one of {', '.join(SUPPORTED_MODELS)}")
+        return value
 
     @model_validator(mode="after")
     def _reject_weak_secrets_outside_development(self) -> "Settings":
