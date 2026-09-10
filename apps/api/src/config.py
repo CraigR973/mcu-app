@@ -69,6 +69,13 @@ class Settings(BaseSettings):
     tmdb_api_key: str = ""
     tmdb_read_token: str = ""
 
+    # eBay (Batch 28). Optional at boot, like TMDB above: the API must start without
+    # them. ``ebay_account_deletion_endpoint`` is the URL registered with eBay and is
+    # hashed verbatim into the challenge reply, so it is configuration rather than
+    # anything derived from an incoming request — see ``routers/ebay.py``.
+    ebay_verification_token: str = ""
+    ebay_account_deletion_endpoint: str = ""
+
     # Web Push (Batch 11). Set in Railway on 2026-09-09; the names here are fixed by
     # what is already there. Absent locally and in CI, where every send is stubbed.
     #

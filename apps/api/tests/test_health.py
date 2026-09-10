@@ -230,6 +230,14 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/specs/state",
         "/api/v1/specs/halt",
         "/api/v1/specs/fetch",
+        # Batch 28's prerequisite, and the **third** unauthenticated route in this app
+        # after Batch 17's `.ics` feed and Batch 27's `/gift/{slug}`. eBay holds no
+        # credential of ours, so it cannot authenticate; it is safe anyway because the
+        # GET hashes three values it was handed and the POST is a no-op — no database
+        # session is imported in that module at all. It is also the only public route
+        # with **no rate limit**, deliberately: eBay polls it and reads a 429 as an
+        # outage. See `routers/ebay.py`.
+        "/api/v1/ebay/account-deletion",
     }
 
 
