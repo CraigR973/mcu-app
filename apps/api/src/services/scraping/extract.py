@@ -301,17 +301,63 @@ def _text_of(node: Tag | None) -> str | None:
     return text or None
 
 
+def split_selectors(selector: str) -> list[str]:
+    """A comma-separated selector, as a list — **in the order it was written**.
+
+    Commas inside brackets, parentheses or quotes are not separators:
+    ``[data-a="x,y"]`` and ``:is(a, b)`` stay whole.
+    """
+    parts: list[str] = []
+    depth = 0
+    quote: str | None = None
+    current: list[str] = []
+    for char in selector:
+        if quote:
+            if char == quote:
+                quote = None
+            current.append(char)
+            continue
+        if char in "\"'":
+            quote = char
+        elif char in "([":
+            depth += 1
+        elif char in ")]":
+            depth = max(0, depth - 1)
+        elif char == "," and depth == 0:
+            piece = "".join(current).strip()
+            if piece:
+                parts.append(piece)
+            current = []
+            continue
+        current.append(char)
+    piece = "".join(current).strip()
+    if piece:
+        parts.append(piece)
+    return parts
+
+
 def _select_one(scope: BeautifulSoup | Tag, selector: str) -> Tag | None:
-    """``select_one``, except that a **card can be its own match**.
+    """``select_one``, except that a **card can be its own match**, and that a
+    comma-separated selector is a **fallback list tried in order**.
 
     `select_one` searches descendants only. Powerhouse's product card *is* its link
     (``<a class="list-view-item">``), so scoping extraction to the card would otherwise
     make its own URL unreachable — the selector matches the scope, and nothing inside it.
+
+    **Order matters, and CSS does not give it to us.** `select_one("a, b")` returns
+    whichever comes first *in the document*, not whichever selector was written first — so
+    Second Sight's `".price-item--sale, .price-item--regular"` returned the regular price
+    whenever the markup happened to put it first, silently ignoring the sale it was written
+    to prefer. Trying each in turn is what that configuration always meant.
     """
     try:
-        if isinstance(scope, Tag) and scope.name != "[document]" and scope.css.match(selector):
-            return scope
-        return scope.select_one(selector)
+        for part in split_selectors(selector):
+            if isinstance(scope, Tag) and scope.name != "[document]" and scope.css.match(part):
+                return scope
+            found = scope.select_one(part)
+            if found is not None:
+                return found
+        return None
     except Exception:  # noqa: BLE001 - a bad selector is admin input, not a crash
         return None
 

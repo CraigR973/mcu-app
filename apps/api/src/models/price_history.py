@@ -83,6 +83,10 @@ class ScrapeRun(Base, UUIDPrimaryKeyMixin):
     #: stocked". The left-hand side of #112's corrected criterion.
     attempted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     not_stocked: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: Wants whose shop answered with an empty results page — neither a failure nor a
+    #: claim that the shop has not got it (`DECISIONS.md` #125). Recorded so the run's
+    #: numbers add up: before this column existed these were counted in `failed`.
+    no_results: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     skipped: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     succeeded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

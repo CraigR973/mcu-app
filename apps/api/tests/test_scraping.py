@@ -17,9 +17,11 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from pathlib import Path
 
 import httpx
 import pytest
+from bs4 import BeautifulSoup
 
 from src.models.wanted import Retailer
 from src.services.scraping.builtins import BUILT_IN_SCRAPERS, unverified_names
@@ -32,9 +34,13 @@ from src.services.scraping.extract import (
     looks_like_physical_media,
     parse_price,
     primary_format,
+    select_one_text,
+    split_selectors,
 )
 from src.services.scraping.fetcher import UnsafeUrlError, assert_fetchable, fetch_page
 from src.services.scraping.runner import (
+    ScrapeOutcome,
+    ScrapeRunResult,
     _record_failure,
     _record_success,
     apply_search_template,
@@ -1196,3 +1202,162 @@ def test_a_template_without_the_format_placeholder_is_untouched() -> None:
 def test_a_retailer_without_a_template_cannot_be_searched() -> None:
     assert search_url_for(_retailer(search_url_template=None), "Heat") is None
     assert search_url_for(_retailer(search_url_template="https://shop.test/"), "Heat") is None
+
+
+# ---------------------------------------------------------------------------
+# What a live run on 2026-09-10 found — `DECISIONS.md` #125
+# ---------------------------------------------------------------------------
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+class TestSelectorsAreATriedInOrder:
+    """A comma-separated selector is a **fallback list**, not a set.
+
+    `select_one("a, b")` returns whichever comes first *in the document*, so
+    Second Sight's `".price-item--sale, .price-item--regular"` silently returned the
+    regular price whenever the markup put it first — ignoring the sale it was written to
+    prefer. Nothing errored; it just quoted the wrong number.
+    """
+
+    @pytest.mark.parametrize(
+        ("selector", "expected"),
+        [
+            (".a, .b", [".a", ".b"]),
+            # A comma inside brackets or parentheses is not a separator.
+            ('[data-x="a,b"], .c', ['[data-x="a,b"]', ".c"]),
+            (":is(a, b), .c", [":is(a, b)", ".c"]),
+            ("  .a  ,  .b  ", [".a", ".b"]),
+            ("a", ["a"]),
+        ],
+    )
+    def test_a_selector_list_splits_only_at_the_top_level(
+        self, selector: str, expected: list[str]
+    ) -> None:
+        assert split_selectors(selector) == expected
+
+    def test_the_first_selector_wins_even_when_the_second_comes_first_in_the_page(self) -> None:
+        """The sale price is written second in the DOM and asked for first."""
+        html = (
+            '<div class="card">'
+            '<span class="price-item--regular">£19.99</span>'
+            '<span class="price-item--sale">£12.99</span>'
+            "</div>"
+        )
+        soup = BeautifulSoup(html, "html.parser")
+
+        text = select_one_text(soup, ".price-item--sale, .price-item--regular")
+        assert parse_price(text) == (Decimal("12.99"), "GBP")
+
+    def test_it_falls_through_to_the_later_selector(self) -> None:
+        html = '<div class="card"><span class="price-item--regular">£19.99</span></div>'
+        soup = BeautifulSoup(html, "html.parser")
+
+        text = select_one_text(soup, ".price-item--sale, .price-item--regular")
+        assert parse_price(text) == (Decimal("19.99"), "GBP")
+
+
+class TestZavviRendersTwoPriceShapes:
+    """`zavvi_search_two_price_shapes.html` — two cards captured from the live site.
+
+    **They disagree about their own markup**, which is why one of them used to be dropped:
+    a multi-variant listing wraps the figure in `.product-variant-price`, a single-price
+    listing puts it straight in the `product-price` wrapper. The scraper read only the
+    first, so a real £16.99 was fetched, parsed and thrown away — three of one live run's
+    eleven "failures".
+    """
+
+    PAGE = (FIXTURES / "zavvi_search_two_price_shapes.html").read_text(encoding="utf-8")
+
+    def test_the_fixture_really_carries_both_shapes(self) -> None:
+        soup = BeautifulSoup(self.PAGE, "html.parser")
+        cards = soup.select("[data-testid='product-item']")
+        assert len(cards) == 2
+        has_variant = [
+            c.select_one("[data-testid='product-price'] .product-variant-price") is not None
+            for c in cards
+        ]
+        # One of each. A fixture where both agree could not have caught this.
+        assert sorted(has_variant) == [False, True]
+
+    def test_both_shapes_yield_their_price(self) -> None:
+        selector = BUILT_IN_SCRAPERS["Zavvi"]["config"]["price"]
+        soup = BeautifulSoup(self.PAGE, "html.parser")
+
+        prices = [
+            parse_price(select_one_text(card, selector))[0]
+            for card in soup.select("[data-testid='product-item']")
+        ]
+        assert prices == [Decimal("12.99"), Decimal("16.99")]
+
+    def test_the_wrapper_label_is_not_read_as_the_price(self) -> None:
+        """The variant wrapper reads "Current price:  £12.99." — the label must not win."""
+        soup = BeautifulSoup(self.PAGE, "html.parser")
+        card = soup.select("[data-testid='product-item']")[0]
+
+        text = select_one_text(card, BUILT_IN_SCRAPERS["Zavvi"]["config"]["price"])
+        assert parse_price(text) == (Decimal("12.99"), "GBP")
+
+
+EMPTY_RESULTS_PAGE = """
+<html><body>
+  <h1 id="search-results-heading">Sorry We Couldn't Find Any Results Matching "Cross of Iron"</h1>
+  <p>Your search did not yield any results.</p>
+</body></html>
+"""
+
+
+class TestAnEmptyResultsPageIsNeitherAFailureNorAClaim:
+    """`DECISIONS.md` #125 — the third state.
+
+    Zero cards is what *"we do not stock that"* looks like **and** what a broken selector
+    looks like, and nothing in the response tells them apart. A live run on 2026-09-10
+    counted eight such pages as scraper failures — Arrow's "Sorry We Couldn't Find Any
+    Results" and 101 Films' "0 results found" — which feeds auto-disable.
+    """
+
+    async def test_an_empty_page_is_recorded_as_no_results(self) -> None:
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(200, text=EMPTY_RESULTS_PAGE)
+        )
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            candidate, outcome = await scrape_one(
+                _retailer(scraper_config=CARD_CONFIG),
+                "Cross of Iron",
+                client=client,
+            )
+
+        assert candidate is None
+        assert not outcome.ok
+        assert outcome.no_results
+        # It must not claim the shop has not got it — that is the claim it cannot make.
+        assert not outcome.not_stocked
+        assert not outcome.skipped
+
+    async def test_a_page_of_real_listings_is_still_not_stocked(self) -> None:
+        """The distinction the third state must not blur.
+
+        Cards present and none matching *is* the shop answering "no", and stays so.
+        """
+        transport = httpx.MockTransport(lambda request: httpx.Response(200, text=NOT_STOCKED_PAGE))
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(
+                _retailer(scraper_config=CARD_CONFIG), "Misery", client=client
+            )
+
+        assert outcome.not_stocked
+        assert not outcome.no_results
+
+    def test_no_results_does_not_count_towards_the_failure_total(self) -> None:
+        result = ScrapeRunResult(
+            outcomes=[
+                ScrapeOutcome(retailer="Arrow", wanted_title="A", ok=False, no_results=True),
+                ScrapeOutcome(retailer="Arrow", wanted_title="B", ok=False, no_results=True),
+                ScrapeOutcome(retailer="Arrow", wanted_title="C", ok=False, error="503"),
+            ]
+        )
+
+        assert result.no_results == 2
+        # Only the genuine one. Before #125 this read 3, and three runs of it disabled
+        # a shop that was merely carrying different films.
+        assert result.failed == 1
