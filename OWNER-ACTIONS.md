@@ -38,10 +38,23 @@ PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20
 IaC engine needs it, and the CLI's **full path** because the CLI lives in Node *20*'s bin,
 so putting 22 first on `PATH` makes `railway` itself vanish. See `.railway/README.md`.
 
-`plan` is read-only; run it first and **check the last number on the `Plan:` line**. It
-should read **`2 to add, 1 to change, 0 to destroy`**. If anything is to be destroyed, stop
-— that is `DECISIONS.md` #124, which is how applying this file would once have deleted
-`TMDB_READ_TOKEN` and `ANTHROPIC_API_KEY`.
+`plan` is read-only; run it first and **check the last number on the `Plan:` line**. If
+anything is to be destroyed, stop — that is `DECISIONS.md` #124, which is how applying this
+file would once have deleted `TMDB_READ_TOKEN` and `ANTHROPIC_API_KEY`.
+
+**As of 2026-09-10 the plan reads `0 to add, 1 to change, 0 to destroy`** — the crons are
+applied and the eBay variables are set, so the one remaining line is:
+
+```
+~ Update api deploy.restartPolicyType   (null → "ON_FAILURE")
+```
+
+**That is pre-existing drift and it is worth applying.** `.railway/railway.ts` has declared
+`ON_FAILURE` with three retries since Batch 2, and the live `api` service has **no restart
+policy at all** — so a crashed container has never been restarting itself, and the repo has
+said otherwise for the whole life of the project. It became visible only because 2026-09-10
+was the first `config plan` run since the file was written. Nothing depends on it, so it is
+not blocking; it is one command away whenever you next run `apply`.
 
 `apply` is a hosting change and therefore yours, not an agent's.
 
@@ -190,15 +203,27 @@ shows the running count and whether anything halted it.
 — that is what `specs_source_url` and `specs_fetched_at_utc` on each row are for, and it
 leaves any hand-typed spec alone.
 
-### 5. eBay production API application *(was 4)*
+### 5. ~~eBay production API application~~ — **done 2026-09-10, and the approval was never needed**
 
 - [x] Applied 2026-09-09
-- [ ] Approval — eBay said at least one business day
+- [x] Production keyset created, sandbox and production both verified 2026-09-10
+- [x] Marketplace account deletion notifications **subscribed** — eBay's own validation
+      challenge and test notification both answered from production
+- [x] `EBAY_VERIFICATION_TOKEN` set in Railway
 
-**Unblocks:** Group I — Batch 28 (eBay integration) → Batch 29 (format upgrade + sale
-tracking). **And Batch 24**, which is not obvious from the ledger: `DECISIONS.md` #16 fixes
-that batch's UPC→title chain as *cached mapping → eBay Browse keyword search → manual
-fallback*, so the barcode lookup depends on the same approval.
+**This item is closed, and its premise was wrong.** Browse works on a self-service keyset at
+the default 5,000 calls/day — verified live: `q="Blade Runner 2049 Blu-ray"`, `EBAY_GB`,
+**HTTP 200, `total=308`**. The eBay Partner Network application filed on 2026-09-09 is moot;
+the partner process governs the genuinely restricted Buy APIs, and plain
+`item_summary/search` is not one of them. `DECISIONS.md` #126.
+
+**Unblocked:** Group I — Batch 28 → Batch 29 — **and Batch 24**, whose UPC→title chain runs
+through the same Browse search (`DECISIONS.md` #16). Neither is waiting on you any more.
+
+**One thing this does not unblock.** Sold-comp data is still unobtainable and is now
+*doubly* so: Marketplace Insights remains closed to new applicants, and eBay put sold
+listings behind a login wall in late August 2026. #16's "current asking prices" labelling
+requirement stands.
 
 ### 6. One design choice left
 

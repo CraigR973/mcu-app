@@ -1929,3 +1929,109 @@ contemporaneous.
      not a conclusion.** `#122` was a parser that found nothing and was believed; this is a
      runner that found nothing and blamed itself. Both were only visible from a live run —
      and the fourth was only visible because the third made it worth reading the report.
+
+### 2026-09-10 — eBay, ahead of Batch 28
+
+126. **eBay Buy API production access needs no partner approval, and Group I's checkpoint
+     was built on a premise that turned out to be false.** A self-service production
+     keyset calls the Browse API at the default 5,000 requests/day. Verified live on
+     2026-09-10: `q="Blade Runner 2049 Blu-ray"`, `X-EBAY-C-MARKETPLACE-ID: EBAY_GB`,
+     **HTTP 200, `total=308`**, real GB prices.
+
+     *Why this is recorded rather than just noted:* the research that scheduled Batch 28
+     read eBay's own Buy API requirements page — *"intended for eBay partners only… you
+     must apply through the eBay Partner Network"* — alongside forum reports of small
+     developers being rejected, and concluded access was roughly a coin toss. The ledger's
+     risk note said *"Production API access is an application, not a given — start it
+     early, it gates the batch."* **It does not gate the batch.** The partner process
+     governs the genuinely restricted Buy APIs; plain `item_summary/search` is not one of
+     them.
+
+     `OWNER-ACTIONS.md` #5's application was filed on 2026-09-09 and is now moot. This also
+     clears **Batch 24**, whose UPC→title chain depends on the same Browse search (#16).
+
+     **What has *not* changed: sold comps remain unobtainable.** Marketplace Insights is
+     still closed to new applicants, and eBay put sold/completed listings behind a login
+     wall in late August 2026 — so the scrape-it fallback is now walled as well as
+     forbidden. #16's ruling stands, and its "current asking prices" labelling requirement
+     stands with it, on stronger ground than when it was written.
+
+127. **We subscribe to eBay marketplace account deletion/closure notifications rather than
+     claim the "not persisting eBay data" exemption.** `POST /api/v1/ebay/account-deletion`
+     acknowledges with 204 and does nothing else.
+
+     *Why:* eBay activates no production keyset until a developer does one or the other.
+     The exemption requires that the application *"must not persist eBay data"*, and eBay
+     attaches *"penalties or having their account disabled"* to claiming it wrongly. Batch
+     28 will persist eBay-derived listing data in `price_checks` — `title_snapshot`, `url`,
+     `price`. That is listing data rather than user PII, and the exemption is plainly aimed
+     at PII, so the exemption would probably have been defensible. **Probably is not a good
+     enough standard when the downside is account disablement**, and the cost of
+     subscribing is one endpoint that returns 204.
+
+     The endpoint is the app's **third unauthenticated route**, after Batch 17's `.ics`
+     feed and Batch 27's gift links. It is safe on three deliberate properties, each with a
+     test: it reads and writes nothing (no database session is imported in that module),
+     it carries **no rate limit** because eBay polls it and reads a 429 as an outage, and an
+     unconfigured deployment answers 503 rather than hashing an empty token into a
+     plausible-looking wrong digest.
+
+     Verified end to end on 2026-09-10 from eBay's own servers, not just our probes: their
+     64-character validation challenge answered 200, and their test notification `POST`
+     answered 204.
+
+128. **`EBAY_ACCOUNT_DELETION_ENDPOINT` is declared in `.railway/railway.ts` as a literal,
+     not `preserve()` — the only env var there that is not a secret.**
+
+     *Why:* eBay hashes the URL **it** holds into every validation challenge, so ours must
+     match byte for byte — scheme, host, path, trailing slash — or validation fails with
+     nothing diagnosable to show for it. A literal makes IaC enforce that identity instead
+     of trusting a console field nobody re-reads. The URL is already public in
+     `.railway/README.md`. `routers/ebay.py` reads it from config rather than reconstructing
+     it from the request, because behind Railway's proxy the app sees a different host and
+     scheme than the caller used.
+
+     `EBAY_VERIFICATION_TOKEN` stays `preserve()` like every other secret, so no token
+     enters the repository. **`preserve()` on an unset variable is a no-op** — `config plan`
+     confirmed it creates nothing — so that one is set in the console by hand.
+
+     Both were declared for the reason #124 records: a variable set in the console and left
+     undeclared reads as drift, and `apply` plans to remove it. Undeclared, this pair would
+     have returned the endpoint to 503 on the next apply, and eBay emails the owner when an
+     endpoint stops answering.
+
+129. **eBay prices are segmented on `conditionId`, never on `condition`, and a median is
+     reported per format and condition with its sample size — never one number over a
+     keyword search.**
+
+     *Why, measured rather than assumed.* 310 live GB listings for `"Blade Runner 2049
+     Blu-ray"` on 2026-09-10 segment like this:
+
+     | Segment | n | Median | Range |
+     |---|---|---|---|
+     | everything — the naive median | 310 | **£30.45** | £1.17–£1199.00 |
+     | collector editions | 80 | £105.61 | £1.17–£924.70 |
+     | 4K / UHD — a different format | 70 | £50.45 | £9.73–£1199.00 |
+     | bundles / multi-film | 28 | £12.05 | £4.49–£94.29 |
+     | **plain Blu-ray — the actual product** | 132 | **£12.21** | £2.24–£368.35 |
+
+     **The naive median overstates the real disc by 149%.** A keyword search for a Blu-ray
+     returns the 4K, the steelbook, the Filmarena limited edition and a double-bill with
+     *Alien: Covenant*, and a median across them is confident, plausible and wrong — the
+     failure mode this repo has now met three times (#79, #110's risk note, and #122's
+     invented fixture).
+
+     **And `condition` cannot do the segmenting.** It is a localised display string from the
+     seller's own marketplace: those 132 plain Blu-rays carried **16 distinct condition
+     values for about five real conditions** — `New` / `Brand New` / `Brand new` / `Neu` /
+     `Entièrement neuf`; `Very Good` / `Very good` / `Sehr gut` / `Très bon`; `Like New` /
+     `Like new` / `Neuwertig` — plus one listing with no condition at all. `conditionId`
+     is the numeric code (1000 New, 3000 Used, 4000 Very Good, 5000 Good) and is the only
+     stable key. A missing condition is its own bucket, never a default.
+
+     Three consequences for Batch 28: the match filter is where the batch's effort goes,
+     not the median function; a result failing the match assertion is a **failure, never
+     data**, exactly as #79 requires of the scrapers; and the segmentation must key on
+     category IDs and `conditionId` rather than title regexes — the regexes used to take
+     the measurement above are themselves too fragile to ship, which is visible in the
+     £368.35 outlier that survived them.
