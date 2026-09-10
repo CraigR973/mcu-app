@@ -20,6 +20,7 @@ from src.routers import (
     calendar,
     collection,
     discovery,
+    ebay,
     export,
     gift,
     health,
@@ -124,3 +125,4 @@ app.include_router(ai.router)
 app.include_router(movie_night.router)
 app.include_router(photos.router)
 app.include_router(specs.router)
+app.include_router(ebay.router)
