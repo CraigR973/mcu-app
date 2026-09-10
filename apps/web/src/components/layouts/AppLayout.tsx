@@ -13,7 +13,6 @@ import { useAuth } from '@/context/auth'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { startAutoFlush } from '@/lib/sync'
 import { MobileTabBar } from './MobileTabBar'
-import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 
 interface Props {
@@ -67,15 +66,12 @@ export default function AppLayout({ children }: Props) {
           >
             <Menu size={20} aria-hidden />
           </button>
-          {/* 32px, not the 28px the placeholder used: the compact mark is drawn for
-              32-96px and loses its disc hub below that. The short app name replaces the
-              route label, which repeated the page's own h1 a few pixels further down —
-              the mobile header had no brand anchor at all, and the route did not need
-              saying twice. */}
-          <span className="flex min-w-0 flex-1 items-center gap-2 lg:hidden">
-            <BrandMark size={32} />
-            <span className="truncate text-sm font-semibold text-foreground">The Real MCU</span>
-          </span>
+          {/* Mobile header: personalised poster stack with real photos */}
+          <img
+            src="/brand/personalised-poster-icon-512.png"
+            alt="Mark's Cinematic Universe collection"
+            className="h-10 w-auto rounded-sm lg:hidden"
+          />
           <div className="hidden w-full max-w-2xl flex-1 lg:block">
             <SearchBar />
           </div>

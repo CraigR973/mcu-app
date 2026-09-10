@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Eye, EyeOff, KeyRound, Loader2, UserRound, WifiOff } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-import { BrandLockup } from '@/components/brand/BrandLockup'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/auth'
@@ -70,13 +70,17 @@ export default function LoginPage() {
             </p>
           </div>
         </section>
-        <section className="relative flex min-h-64 flex-col justify-between border-b border-border bg-cover bg-center px-6 py-8 sm:px-10 sm:py-10 lg:hidden" style={{ backgroundImage: 'url(/brand/hero-photo-five-v3.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/50 to-background/30" />
-          <div className="relative z-10 w-fit">
-            <BrandLockup variant="horizontal" width={280} label="Mark's Cinematic Universe" />
-            <p className="mt-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-accent">
-              Private film archive
-            </p>
+        <section className="flex flex-col gap-4 border-b border-border bg-gradient-to-br from-muted/30 to-background px-6 py-8 sm:px-10 sm:py-10 lg:hidden">
+          <div className="flex items-center gap-3">
+            <BrandMark size={36} />
+            <div>
+              <p className="font-display text-lg font-semibold leading-none text-foreground">
+                The Real MCU
+              </p>
+              <p className="mt-1 text-[0.625rem] font-semibold uppercase tracking-[0.17em] text-muted-foreground">
+                Private film archive
+              </p>
+            </div>
           </div>
         </section>
 
