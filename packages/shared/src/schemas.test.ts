@@ -13,6 +13,8 @@ import {
   aiStatusSchema,
   aiUsageSchema,
   collectionFacetsSchema,
+  movieNightSessionSchema,
+  movieNightVoteResultSchema,
   notificationPreferenceSchema,
   notificationSchema,
   pushSubscriptionSchema,
@@ -1215,5 +1217,43 @@ describe('AI assistant schemas', () => {
     })
     expect(usage.blocked).toBe(true)
     expect(usage.limitMessage).toContain('50')
+  })
+})
+
+describe('movie night schemas', () => {
+  const session = {
+    id: UUID_A,
+    status: 'open' as const,
+    filters: { decadeFrom: 2000 },
+    inviteToken: 'a'.repeat(22),
+    invitePath: `/movie-night/join/${'a'.repeat(22)}`,
+    participantCount: 2,
+    createdAt: '2026-09-10T20:00:00Z',
+    endedAt: null,
+  }
+
+  it('refuses an invite token short enough to enumerate', () => {
+    // The same floor Batch 27 settled on after §6.26's 32-bit example: the URL is the
+    // whole credential for joining, so guessing must not be a strategy.
+    expect(movieNightSessionSchema.safeParse({ ...session, inviteToken: 'a8f3b2c1' }).success).toBe(
+      false,
+    )
+  })
+
+  it('accepts a live session', () => {
+    expect(movieNightSessionSchema.parse(session).participantCount).toBe(2)
+  })
+
+  it('refuses a session with nobody in it', () => {
+    // The creator is always a participant, so zero means something went wrong upstream.
+    expect(movieNightSessionSchema.safeParse({ ...session, participantCount: 0 }).success).toBe(
+      false,
+    )
+  })
+
+  it('treats "no match" as a value rather than an absent field', () => {
+    // `match` is non-null only on the swipe that completes one; a missing key would make
+    // "not yet" and "malformed response" the same thing.
+    expect(movieNightVoteResultSchema.parse({ recorded: true, match: null }).match).toBeNull()
   })
 })

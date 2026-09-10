@@ -29,6 +29,10 @@ import {
   giftPageSchema,
   movieDetailSchema,
   moviePageSchema,
+  movieNightCandidateListSchema,
+  movieNightSessionListSchema,
+  movieNightSessionSchema,
+  movieNightVoteResultSchema,
   notificationListSchema,
   notificationPreferenceSchema,
   onThisDayMemoriesSchema,
@@ -101,6 +105,10 @@ import {
   type PurgePreview,
   type MovieDetail,
   type MoviePage,
+  type MovieNightCandidateList,
+  type MovieNightSession,
+  type MovieNightSessionList,
+  type MovieNightVoteResult,
   type NotificationList,
   type NotificationPreference,
   type NotificationRecord,
@@ -1763,4 +1771,104 @@ export function describeToolCall(call: {
     return `Record that you watched ${String(input.title)}${when}${rating}.`
   }
   return `Run ${call.toolName} with ${JSON.stringify(input)}.`
+}
+
+// ---------------------------------------------------------------------------
+// Movie night (Batch 35) — §8.3, §8.4
+// ---------------------------------------------------------------------------
+
+export async function fetchMovieNights(): Promise<MovieNightSessionList> {
+  return parseResponse(await authFetch('/movie-night'), movieNightSessionListSchema)
+}
+
+export async function createMovieNight(
+  filters: Record<string, unknown> = {},
+): Promise<MovieNightSession> {
+  return parseOrThrowApiError(
+    await authFetch('/movie-night', { method: 'POST', body: JSON.stringify({ filters }) }),
+    movieNightSessionSchema,
+  )
+}
+
+export async function joinMovieNight(inviteToken: string): Promise<MovieNightSession> {
+  return parseOrThrowApiError(
+    await authFetch(`/movie-night/join/${encodeURIComponent(inviteToken)}`, { method: 'POST' }),
+    movieNightSessionSchema,
+  )
+}
+
+export async function fetchMovieNight(id: string): Promise<MovieNightSession> {
+  return parseResponse(await authFetch(`/movie-night/${id}`), movieNightSessionSchema)
+}
+
+export async function endMovieNight(id: string): Promise<MovieNightSession> {
+  return parseOrThrowApiError(
+    await authFetch(`/movie-night/${id}/end`, { method: 'POST' }),
+    movieNightSessionSchema,
+  )
+}
+
+export async function fetchMovieNightCandidates(id: string): Promise<MovieNightCandidateList> {
+  return parseResponse(
+    await authFetch(`/movie-night/${id}/candidates`),
+    movieNightCandidateListSchema,
+  )
+}
+
+export async function castMovieNightVote(
+  id: string,
+  movieId: string,
+  liked: boolean,
+): Promise<MovieNightVoteResult> {
+  return parseOrThrowApiError(
+    await authFetch(`/movie-night/${id}/votes`, {
+      method: 'POST',
+      body: JSON.stringify({ movieId, liked }),
+    }),
+    movieNightVoteResultSchema,
+  )
+}
+
+export interface MovieNightEvent {
+  kind: 'vote' | 'match' | 'joined' | 'ended'
+  sessionId: string
+  movieId?: string
+  title?: string
+  posterPath?: string | null
+}
+
+/**
+ * Watch a session's events — §8.4's realtime half, over `LISTEN`/`NOTIFY` and SSE.
+ *
+ * Same hand-rolled reader as the chat, for the same reason: `EventSource` cannot carry the
+ * Authorization header. The heartbeat arrives as an SSE comment line (`: keep-alive`),
+ * which has no `data:` prefix and is skipped here exactly as the spec intends.
+ */
+export async function* streamMovieNightEvents(
+  id: string,
+): AsyncGenerator<MovieNightEvent> {
+  const response = await authFetch(`/movie-night/${id}/events`)
+  if (!response.ok || !response.body) return
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let separator = buffer.indexOf('\n\n')
+    while (separator !== -1) {
+      const frame = buffer.slice(0, separator).trim()
+      buffer = buffer.slice(separator + 2)
+      if (frame.startsWith('data:')) {
+        try {
+          yield JSON.parse(frame.slice(5).trim()) as MovieNightEvent
+        } catch {
+          // One bad frame must not end the night.
+        }
+      }
+      separator = buffer.indexOf('\n\n')
+    }
+  }
 }

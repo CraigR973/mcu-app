@@ -33,6 +33,11 @@ const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
 const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
 const AiSettingsPage = lazy(() => import('./pages/AiSettingsPage'))
 const AiChatPage = lazy(() => import('./pages/AiChatPage'))
+const MovieNightPage = lazy(() => import('./pages/MovieNightPage'))
+const MovieNightJoinPage = lazy(() =>
+  import('./pages/MovieNightPage').then((module) => ({ default: module.MovieNightJoinPage })),
+)
+const MovieNightSessionPage = lazy(() => import('./pages/MovieNightSessionPage'))
 const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
@@ -215,6 +220,20 @@ export default function App() {
             <Route
               path="/assistant"
               element={<AppShell><AiChatPage /></AppShell>}
+            />
+            {/* Batch 35. Both people vote, so none of these is admin-gated — a movie
+                night where one of them may not swipe is not one. */}
+            <Route
+              path="/movie-night"
+              element={<AppShell><MovieNightPage /></AppShell>}
+            />
+            <Route
+              path="/movie-night/join/:token"
+              element={<AppShell><MovieNightJoinPage /></AppShell>}
+            />
+            <Route
+              path="/movie-night/:id"
+              element={<AppShell><MovieNightSessionPage /></AppShell>}
             />
             <Route
               path="/admin"

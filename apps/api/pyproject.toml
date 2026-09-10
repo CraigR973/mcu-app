@@ -64,6 +64,11 @@ dev = [
     "mypy>=1.11.2",
     "types-openpyxl>=3.1.0",
     "types-psycopg2>=2.9.21",
+    # Batch 35 — the movie-night listener talks to asyncpg directly, and asyncpg ships no
+    # `py.typed`. Real stubs rather than a mypy override for the module: the override
+    # would also stop checking every *use* of asyncpg, and a `LISTEN` connection is
+    # exactly the code worth having typed.
+    "asyncpg-stubs>=0.30.0",
 ]
 
 [build-system]

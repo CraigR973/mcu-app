@@ -1377,3 +1377,59 @@ export type AiConversationList = z.infer<typeof aiConversationListSchema>
 export type AiChatMessage = z.infer<typeof aiChatMessageSchema>
 export type AiPendingToolCall = z.infer<typeof aiPendingToolCallSchema>
 export type AiConversationDetail = z.infer<typeof aiConversationDetailSchema>
+
+// ---------------------------------------------------------------------------
+// Movie night (Batch 35) — §8.3, §8.4
+// ---------------------------------------------------------------------------
+
+/** One sitting.
+ *
+ *  `inviteToken` comes back only to people already in the session — it is the whole
+ *  credential for joining, the same as Batch 27's gift slug. */
+export const movieNightSessionSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(['open', 'ended']),
+  filters: z.record(z.unknown()),
+  inviteToken: z.string().min(16),
+  invitePath: z.string().min(1),
+  participantCount: z.number().int().positive(),
+  createdAt: z.string(),
+  endedAt: z.string().nullable(),
+})
+
+export const movieNightSessionListSchema = z.object({
+  items: z.array(movieNightSessionSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const movieNightCandidateSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  overview: z.string().nullable(),
+})
+
+export const movieNightCandidateListSchema = z.object({
+  items: z.array(movieNightCandidateSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const movieNightMatchSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  posterPath: z.string().nullable(),
+})
+
+export const movieNightVoteResultSchema = z.object({
+  recorded: z.boolean(),
+  /** Non-null only on the swipe that *completes* a match. */
+  match: movieNightMatchSchema.nullable(),
+})
+
+export type MovieNightSession = z.infer<typeof movieNightSessionSchema>
+export type MovieNightSessionList = z.infer<typeof movieNightSessionListSchema>
+export type MovieNightCandidate = z.infer<typeof movieNightCandidateSchema>
+export type MovieNightCandidateList = z.infer<typeof movieNightCandidateListSchema>
+export type MovieNightMatch = z.infer<typeof movieNightMatchSchema>
+export type MovieNightVoteResult = z.infer<typeof movieNightVoteResultSchema>

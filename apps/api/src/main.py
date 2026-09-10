@@ -25,6 +25,7 @@ from src.routers import (
     health,
     insights,
     memories,
+    movie_night,
     movies,
     notifications,
     scraping,
@@ -118,3 +119,4 @@ app.include_router(scraping.router)
 app.include_router(gift.router)
 app.include_router(notifications.router)
 app.include_router(ai.router)
+app.include_router(movie_night.router)

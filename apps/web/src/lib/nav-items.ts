@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bell, Bot, Boxes, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp } from 'lucide-react'
+import { Bell, Bot, Boxes, Popcorn, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp } from 'lucide-react'
 
 export interface NavItem {
   label: string
@@ -22,6 +22,8 @@ export const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Stats', path: '/stats', icon: TrendingUp },
   { label: 'Loans', path: '/loans', icon: HandHeart },
+  // Batch 35. Both people swipe, so it is an ordinary sidebar item.
+  { label: 'Movie night', path: '/movie-night', icon: Popcorn },
   // Batch 11. Both people have their own devices and their own toggles, so this is a
   // sidebar item rather than an admin one.
   { label: 'Notifications', path: '/settings/notifications', icon: Bell },

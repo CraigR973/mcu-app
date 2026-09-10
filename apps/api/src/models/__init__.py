@@ -36,6 +36,13 @@ from src.models.completion_set import (
 from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink, new_slug
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
+from src.models.movie_night import (
+    SESSION_STATUSES,
+    MovieNightParticipant,
+    MovieNightSession,
+    MovieNightVote,
+    new_invite_token,
+)
 from src.models.notification import (
     DEFERRED_DIGEST,
     DEFERRED_QUIET_HOURS,
@@ -109,6 +116,11 @@ __all__ = [
     "GiftLink",
     "Movie",
     "MovieCredit",
+    "SESSION_STATUSES",
+    "MovieNightParticipant",
+    "MovieNightSession",
+    "MovieNightVote",
+    "new_invite_token",
     "DEFERRED_DIGEST",
     "DEFERRED_QUIET_HOURS",
     "SUPPRESSED_CATEGORY_DISABLED",

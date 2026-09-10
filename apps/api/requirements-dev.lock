@@ -142,6 +142,12 @@ asyncpg==0.31.0 \
     --hash=sha256:eee690960e8ab85063ba93af2ce128c0f52fd655fdff9fdb1a28df01329f031d \
     --hash=sha256:f6b56b91bb0ffc328c4e3ed113136cddd9deefdf5f79ab448598b9772831df44 \
     --hash=sha256:f890de5e1e4f7e14023619399a471ce4b71f5418cd67a51853b9910fdfa73696
+    # via
+    #   mcu-api (apps/api/pyproject.toml)
+    #   asyncpg-stubs
+asyncpg-stubs==0.31.3 \
+    --hash=sha256:1ca28026dd36808363ece589fc3cd047f2ef1d431b18d8dd6bd9a36d539de26e \
+    --hash=sha256:37968e766d1e63a4993084ee1ed897e49a6c06a031767b2a3473b4ab81618b38
     # via mcu-api (apps/api/pyproject.toml)
 bcrypt==5.0.0 \
     --hash=sha256:046ad6db88edb3c5ece4369af997938fb1c19d6a699b9c1b27b0db432faae4c4 \
@@ -1407,6 +1413,7 @@ typing-extensions==4.16.0 \
     #   alembic
     #   anthropic
     #   anyio
+    #   asyncpg-stubs
     #   beautifulsoup4
     #   fastapi
     #   limits

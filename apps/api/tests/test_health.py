@@ -204,6 +204,18 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/ai/conversations/{conversation_id}",
         "/api/v1/ai/conversations/{conversation_id}/messages",
         "/api/v1/ai/tool-calls/{call_id}/resolve",
+        # Batch 35. Every route is `CurrentUser`, not admin-gated: a movie night is two
+        # people on a sofa, and there is no version of it where one of them may not vote.
+        # `/join/{token}` is authenticated, unlike Batch 17's feed and Batch 27's gift
+        # page — those are read-only surfaces for people with no account, and this one
+        # casts votes, which have to belong to somebody.
+        "/api/v1/movie-night",
+        "/api/v1/movie-night/join/{invite_token}",
+        "/api/v1/movie-night/{session_id}",
+        "/api/v1/movie-night/{session_id}/end",
+        "/api/v1/movie-night/{session_id}/candidates",
+        "/api/v1/movie-night/{session_id}/votes",
+        "/api/v1/movie-night/{session_id}/events",
     }
 
 
