@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bot, Loader2, Send, TriangleAlert } from 'lucide-react'
 
+import { MicButton } from '@/components/MicButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -87,6 +88,12 @@ export default function AiSettingsPage() {
             maxLength={4000}
             placeholder="Which 4Ks have I not watched?"
             onChange={(event) => setPrompt(event.target.value)}
+          />
+          <MicButton
+            disabled={ask.isPending}
+            onTranscript={(text) =>
+              setPrompt((current) => (current ? `${current} ${text}` : text))
+            }
           />
           <Button type="submit" disabled={ask.isPending || !prompt.trim()}>
             {ask.isPending ? (

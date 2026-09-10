@@ -4,6 +4,7 @@ import { Bot, Check, Loader2, MessageSquarePlus, Send, Trash2, X } from 'lucide-
 import { useSearchParams } from 'react-router-dom'
 import type { AiPendingToolCall } from '@mcu/shared'
 
+import { MicButton } from '@/components/MicButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -298,6 +299,15 @@ export default function AiChatPage() {
             placeholder="Which 4Ks have I not watched?"
             disabled={streaming}
             onChange={(event) => setPrompt(event.target.value)}
+          />
+          {/* §9.5. Dictation fills the box; it never sends. The engine mishears, and the
+              person reading what was heard before pressing send is both the safety net and
+              the thing that makes "correct transcription" checkable. */}
+          <MicButton
+            disabled={streaming}
+            onTranscript={(text) =>
+              setPrompt((current) => (current ? `${current} ${text}` : text))
+            }
           />
           <Button type="submit" disabled={streaming || !prompt.trim()}>
             {streaming ? (
