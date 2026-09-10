@@ -2,10 +2,10 @@
 
 ## Now
 
-**26 of 37 batches shipped, 11 remain.** Production serves the merged `main`, reporting
+**27 of 37 batches shipped, 10 remain.** Production serves the merged `main`, reporting
 `db: ok`, `push: configured` and `ai: configured`.
 
-**Five of the eight overnight batches are done** — 11, 20, 30, 31 and 32. **Groups F and J
+**Six of the eight overnight batches are done** — 11, 20, 30, 31, 32 and 35. **Groups F and J
 are both complete**, and Stage 9 is finished apart from 9.6, which #16 dropped.
 
 **Batch 32 — dictation.** On-device Web Speech: the browser's own engine listens and this
@@ -68,7 +68,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | ~~3~~ | ~~**30** AI assistant — client + caps (9.1, 9.7)~~ | **shipped 2026-09-10** — ⚠️ 9.1's live call is an owner action |
 | ~~4~~ | ~~**31** AI assistant — tools + chat (9.2, 9.3, 9.4)~~ | **shipped 2026-09-10** |
 | ~~5~~ | ~~**32** Voice input (9.5)~~ | **shipped 2026-09-10** — ❌ 9.5 still needs a human speaking |
-| 6 | **35** Movie night (8.3, 8.4) | ⚠️ 8.4's notification may need a device |
+| ~~6~~ | ~~**35** Movie night (8.3, 8.4)~~ | **shipped 2026-09-10** — ⚠️ 8.4's push to a device is an owner action |
 | 7 | **25** Photo uploads (3.10) | ✅ |
 | 8 | **23** Specs — scraper + display (3.7, 3.8, 3.9) | ✅ |
 
@@ -88,7 +88,8 @@ there; **only six were** — Batch 20's and Batch 35's were missing, and were re
 2. **Two** Railway crons, in one visit — the nightly scrape (`POST /api/v1/scrapers/daily`,
    Batch 20) and the reminder pass (`POST /api/v1/notifications/run-reminders`, Batch 11).
    `#60` explains why an in-process scheduler is worse than nothing for either.
-3. Nothing for Batch 35: `LISTEN`/`NOTIFY` + SSE needs no new service (`#113`).
+3. ~~Nothing for Batch 35~~ — **correct, and now proved.** `LISTEN`/`NOTIFY` + SSE needed
+   no new service, credential or hosting step (`#113`). Batch 35 shipped without one.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -430,6 +431,38 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 35 shipped: movie night.** Sessions, an invite URL, a swipe deck
+  and match detection over Postgres `LISTEN`/`NOTIFY`.
+
+  **The net-new integration turned out not to be needed.** §8.4 names Supabase Realtime and
+  the ledger tiered this batch 🔴 partly for it; `DECISIONS.md` #113 replaced it with
+  `LISTEN`/`NOTIFY` and SSE the day before, so it shipped with no new service, credential or
+  bill.
+
+  **#113's warning shaped the whole realtime module.** `LISTEN` holds a connection for as
+  long as it listens, and taking one from the request pool for a whole movie night exhausts
+  the pool and reads as the entire app hanging — Batch 8's paused query in another costume.
+  One dedicated connection is opened on the first watcher and closed with the last. Unlike
+  #60's cron, two containers is *correct* here: both listen on the same channel.
+
+  **A match is derived, never stored** (gotcha 1b), with `announced_at_utc` the only derived
+  state kept so it is announced once. The rule is "everyone here" rather than "two" — free
+  now, and the difference between a feature that grows and one with a 2 baked in. **The
+  other person's votes are invisible**: the stream says only that *a* vote happened, and a
+  card vanishing because they swiped it would leak which way.
+
+  `asyncpg-stubs` went in as a dev dependency rather than a mypy override for the module,
+  and immediately earned it: asyncpg's listener callback really takes `object`, not `str`,
+  because a binary-mode connection delivers bytes.
+
+  **A stale owner action closed on the way past.** `OWNER-ACTIONS.md` still asked "what
+  provides realtime for Batch 35?" — a question #113 had answered as an owner decision the
+  day before. Marked done rather than asked again.
+
+  **Nothing failed in CI.** Green on the first push, 16 new tests. §8.4's notification
+  *arriving on a device* is deferred with 6.2 and 5.6; the match and both notification rows
+  are proved.
 
 - **2026-09-10** — **Batch 32 shipped: voice input.** Stage 9 is complete apart from 9.6,
   which `DECISIONS.md` #16 dropped.

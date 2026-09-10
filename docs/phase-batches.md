@@ -930,7 +930,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~32~~ | ~~Voice input~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~**9.5**~~ | On-device Web Speech API — nothing is uploaded, and `microphone=(self)` was already live so no hosting change. **Dictation fills the input and never sends**: the engine mishears, and reading it back is both the safety net and the only way "correct transcription" is checkable. TS declares none of this API, so the used surface is declared in-repo. Interim results are **rebuilt, not appended** — the bug that yields "where where is where is Heat". **9.5's acceptance needs a person speaking — owner action** |
 | 33 | **Email — accounts + OAuth** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **10.1, 10.2, 10.3, 10.4** |
 | 34 | **Email — parsers + scanning** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **10.5, 10.6, 10.7, 10.8** |
-| 35 | Movie night | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **8.3, 8.4** — needs Supabase Realtime, net new |
+| ~~35~~ | ~~Movie night~~ | ~~🔴~~ | — shipped | — shipped | **shipped** | ~~**8.3, 8.4**~~ | Postgres `LISTEN`/`NOTIFY` + SSE (#113), **not** Supabase Realtime — no new service, no credential, no hosting step. One dedicated listening connection, opened on the first watcher and closed with the last, per #113's pool warning. **A match is derived, never stored** (gotcha 1b); the rule is "everyone here", not "two". The other person's votes are invisible. **8.4's notification arriving on a device is an owner action** |
 | ~~36~~ | ~~Command palette + shortcuts~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~6.3, 6.4~~ | `1425f91` · Ctrl/Cmd+K palette (pages, admin actions, films via Batch 5's search, recent items) + centralized shortcuts hook; `.` and the AI-conversations index dropped — Batch 31 isn't built |
 | ~~37~~ | ~~On-this-day + rewatch~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~**11.6**~~ | `50a4828` · caller-scoped anniversary memories and high-rated, not-recently-watched suggestions; date-controlled Postgres test proves a watch from a year ago appears on the dashboard |
 | 38 | E2E suite | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.10 — written alongside features, formalised here |
@@ -967,7 +967,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | ~~**J**~~ | ~~30~~ → ~~31~~ | — shipped | — shipped | ~~Strong dependency, same files; caps must exist before tools~~ · **both shipped 2026-09-10.** Group J is complete |
 | — | ~~32 · solo~~ | — shipped | — shipped | ~~Small and independent~~ · **shipped 2026-09-10** |
 | **K** | **checkpoint: Google + Microsoft OAuth app registration** → 33 → 34 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | 34 consumes 33; credential setup gates the group |
-| — | 35 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 🔴, needs Supabase Realtime — net new integration |
+| — | ~~35 · solo~~ | — shipped | — shipped | ~~🔴, needs Supabase Realtime — net new integration~~ · **shipped 2026-09-10 on `LISTEN`/`NOTIFY` instead (#113); no integration was needed** |
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
