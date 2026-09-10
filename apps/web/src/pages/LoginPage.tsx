@@ -6,7 +6,6 @@ import { BrandLockup } from '@/components/brand/BrandLockup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/auth'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 /**
@@ -17,8 +16,6 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const isOnline = useOnlineStatus()
-  // `lg`, the width at which this page becomes two columns and the left one becomes tall.
-  const isTwoColumn = useMediaQuery('(min-width: 1024px)')
   const from = (location.state as { from?: string })?.from ?? '/'
 
   const [displayName, setDisplayName] = useState('')
@@ -52,36 +49,33 @@ export default function LoginPage() {
     <main className="relative min-h-[100dvh] overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-accent/45 lg:left-[calc(50%-1px)] lg:block" />
       <div className="mx-auto grid min-h-[100dvh] w-full max-w-[90rem] lg:grid-cols-2">
-        <section className="relative flex min-h-64 flex-col justify-between border-b border-border bg-surface-sunken px-6 py-8 sm:px-10 sm:py-10 lg:min-h-full lg:border-b-0 lg:border-r lg:px-16 lg:py-14">
-          {/* The identity itself, not a typographic stand-in for it. The stacked lockup
-              needs 320px square and gets it in the two-column layout; below `lg` this
-              panel is a wide band across the top of a phone, which is what the horizontal
-              lockup is for. Neither is drawn under its approved minimum, and the name is
-              no longer set in page type beside a logo that already contains it. */}
-          <div className="w-fit">
-            {isTwoColumn ? (
-              <BrandLockup
-                variant="stacked"
-                width={320}
-                label="Mark's Cinematic Universe"
-                className="rounded-lg border border-border shadow-soft"
-              />
-            ) : (
-              <BrandLockup variant="horizontal" width={280} label="Mark's Cinematic Universe" />
-            )}
-            <p className="mt-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-accent">
+        <section className="relative hidden lg:flex lg:min-h-full lg:items-center lg:justify-center lg:border-b-0 lg:border-r lg:border-border lg:overflow-hidden">
+          {/* Hero photo backdrop with overlay gradient for text readability on mobile */}
+          <img
+            src="/brand/hero-photo-five-v3.png"
+            alt="Mark's Cinematic Universe"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/20" />
+          <div className="relative z-10 max-w-md">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-accent">
               Private film archive
             </p>
-          </div>
-
-          <div className="mt-12 hidden max-w-md lg:block">
-            <div className="mb-5 h-px w-16 bg-accent" />
-            <p className="font-display text-xl leading-8 text-foreground">
+            <p className="mt-6 font-display text-xl leading-8 text-foreground">
               Every edition, every shelf, every film night—kept in one carefully
               maintained collection.
             </p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               A private catalogue for Craig and Mark.
+            </p>
+          </div>
+        </section>
+        <section className="relative flex min-h-64 flex-col justify-between border-b border-border bg-cover bg-center px-6 py-8 sm:px-10 sm:py-10 lg:hidden" style={{ backgroundImage: 'url(/brand/hero-photo-five-v3.png)' }}>
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background/20" />
+          <div className="relative z-10 w-fit">
+            <BrandLockup variant="horizontal" width={280} label="Mark's Cinematic Universe" />
+            <p className="mt-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-accent">
+              Private film archive
             </p>
           </div>
         </section>

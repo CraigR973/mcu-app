@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Bell, BookOpen, Check, Disc3, Film, Loader2, LogOut, Monitor, Moon, Smartphone, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { BrandLockup } from '@/components/brand/BrandLockup'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth'
@@ -37,25 +36,18 @@ function StepIntro({ icon: Icon, visual, eyebrow, title, children }: { icon: typ
 }
 
 function Welcome({ isAdmin, name }: { isAdmin: boolean; name: string }) {
-  // The card is 320px wide inside its padding only from `sm` up. Below that the stacked
-  // lockup would have to be drawn under its minimum, so the step shows the display vector
-  // mark at 128px instead — the same tier the approved hierarchy names for that size.
+  // Personalised poster celebrates Mark's collection in authenticated context
   const isRoomy = useMediaQuery('(min-width: 640px)')
   return (
     <StepIntro
       icon={Film}
       visual={
         <div className="mb-6">
-          {isRoomy ? (
-            <BrandLockup
-              variant="stacked"
-              width={320}
-              label="Mark's Cinematic Universe"
-              className="rounded-lg border border-border"
-            />
-          ) : (
-            <BrandMark size={128} label="Mark's Cinematic Universe" />
-          )}
+          <img
+            src={isRoomy ? '/brand/personalised-poster-icon-1024.png' : '/brand/personalised-poster-icon-512.png'}
+            alt="Mark's Cinematic Universe"
+            className="rounded-lg border border-border"
+          />
         </div>
       }
       eyebrow="Welcome to the archive"

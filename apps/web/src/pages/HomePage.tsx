@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom'
 
-import { BrandMark } from '@/components/brand/BrandMark'
 import { useAuth } from '@/context/auth'
 
 export default function HomePage() {
@@ -9,7 +8,7 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-background">
-        <BrandMark size={128} label="Mark's Cinematic Universe" />
+        <img src="/brand/personalised-poster-icon-512.png" alt="Mark's Cinematic Universe" className="h-32 w-32 rounded-lg" />
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )
