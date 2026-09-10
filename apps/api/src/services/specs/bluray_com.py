@@ -90,6 +90,10 @@ READABLE_LABELS = frozenset(
         "subtitles",
         "discs",
         "region",
+        # The heading the live site prints the region under: "Playback" → "2K Blu-ray:
+        # Region free". Without it on the allow-list the region is silently dropped, which
+        # is what the first real run measured.
+        "playback",
         "special features",
         "studio",
         "distributor",
@@ -168,27 +172,154 @@ class DiscSpecs:
 
 
 def _label_of(node: Tag) -> str:
-    """The bolded label a spec row starts with, lower-cased."""
+    """The bolded label a spec row starts with, lower-cased.
+
+    Kept for a page that does mark a row up this way. **The live site does not**, which is
+    what :func:`_section_rows` is for — see `DECISIONS.md` #122.
+    """
     strong = node.find(["strong", "b"])
     text = strong.get_text(" ", strip=True) if isinstance(strong, Tag) else ""
     return text.rstrip(":").strip().lower()
 
 
-def _rows(soup: BeautifulSoup) -> list[tuple[str, Tag]]:
-    """Every labelled block on the page, as `(label, node)`.
+#: The section headings Blu-ray.com prints above each block of specifications, rendered as
+#: `<span class="subheading">`. The fields beneath them are plain `Label: value` text
+#: separated by `<br>` — **not** `<strong>`-labelled rows, which is what the original
+#: parser looked for and why it read nothing from ten real pages.
+SECTION_HEADINGS = frozenset({"video", "audio", "subtitles", "discs", "packaging", "playback"})
 
-    **Nodes, not text.** #108's second measured fact: audio and subtitles appear twice in
-    the flattened page text because of the `(more)`/`(less)` toggles, so anything reading
-    `soup.get_text()` sees every track listed twice and cannot tell which copy is which.
-    """
-    found: list[tuple[str, Tag]] = []
-    for node in soup.find_all(["div", "p", "li", "td"]):
-        if not isinstance(node, Tag):
+
+def _subheadings(soup: BeautifulSoup) -> list[Tag]:
+    return [
+        node
+        for node in soup.find_all("span")
+        if isinstance(node, Tag) and "subheading" in (node.get("class") or [])
+    ]
+
+
+def _is_subheading(node: object) -> bool:
+    return (
+        isinstance(node, Tag) and node.name == "span" and "subheading" in (node.get("class") or [])
+    )
+
+
+def _section_body(heading: Tag) -> list[Tag | str]:
+    """Everything between one subheading and the next, as raw siblings."""
+    body: list[Tag | str] = []
+    for sibling in heading.next_siblings:
+        if _is_subheading(sibling):
+            break
+        if isinstance(sibling, Tag):
+            body.append(sibling)
+        else:
+            text = str(sibling).strip()
+            if text:
+                body.append(text)
+    return body
+
+
+def _lines(body: list[Tag | str]) -> list[str]:
+    """One string per `<br>`-separated line, which is how the site lays a section out."""
+    lines: list[str] = []
+    current: list[str] = []
+    for part in body:
+        if isinstance(part, Tag) and part.name == "br":
+            joined = " ".join(current).strip()
+            if joined:
+                lines.append(joined)
+            current = []
             continue
-        label = _label_of(node)
-        if label and label in READABLE_LABELS:
-            found.append((label, node))
-    return found
+        text = part.get_text(" ", strip=True) if isinstance(part, Tag) else part
+        if text:
+            current.append(text)
+    joined = " ".join(current).strip()
+    if joined:
+        lines.append(joined)
+    return lines
+
+
+def _forbidden(name: str) -> bool:
+    """`Price` is a subheading exactly as `Video` is, so this is checked first, always."""
+    return name in FORBIDDEN_LABELS or any(bad in name for bad in FORBIDDEN_LABELS)
+
+
+def _audio_block(body: list[Tag | str]) -> list[str]:
+    """The audio track lines, preferring the untruncated `(more)` copy.
+
+    #108's measured fact was that the tracks appear twice, behind a `(more)`/`(less)`
+    toggle. Reading only the longer block is why this returns each track once.
+    """
+    long_block: Tag | None = None
+    short_block: Tag | None = None
+    for part in body:
+        if not isinstance(part, Tag):
+            continue
+        candidates = ([part] if part.name == "div" else []) + part.find_all("div")
+        for node in candidates:
+            node_id = str(node.get("id") or "")
+            if node_id.startswith("long") and long_block is None:
+                long_block = node
+            elif node_id.startswith("short") and short_block is None:
+                short_block = node
+
+    chosen = long_block or short_block
+    source: list[Tag | str] = body
+    if chosen is not None:
+        source = [child if isinstance(child, Tag) else str(child) for child in chosen.children]
+    return [line for line in _lines(source) if line.strip("() ").lower() not in ("more", "less")]
+
+
+def _section_rows(soup: BeautifulSoup) -> list[tuple[str, str]]:
+    """Every readable `(label, value)` on a live release page.
+
+    The label that matters is sometimes the section heading (`Playback`) and sometimes the
+    prefix of a line under it (`Codec:`). Both are checked against
+    :data:`READABLE_LABELS`, so a heading this code has never seen is ignored rather than
+    guessed at, and :data:`FORBIDDEN_LABELS` is checked first — `List price:` is a line
+    shaped exactly like `Codec:`.
+    """
+    rows: list[tuple[str, str]] = []
+    for heading in _subheadings(soup):
+        name = heading.get_text(" ", strip=True).rstrip(":").strip().lower()
+        if _forbidden(name) or name not in SECTION_HEADINGS:
+            continue
+
+        body = _section_body(heading)
+        if name == "audio":
+            rows.extend(("audio", line) for line in _audio_block(body))
+            continue
+
+        for line in _lines(body):
+            label, _, value = line.partition(":")
+            label = label.strip().lower()
+            value = value.strip()
+            if _forbidden(label):
+                continue
+            if value and label in READABLE_LABELS:
+                rows.append((label, value))
+            elif name in READABLE_LABELS:
+                # A line with no label of its own, under a heading that has one:
+                # "Playback" → "2K Blu-ray: Region free" is the region.
+                rows.append((name, line.strip()))
+    return rows
+
+
+def _release_label(soup: BeautifulSoup) -> str | None:
+    """The studio, from the grey `Studio | Year | Runtime | Rating | Date` line.
+
+    Read from the studio **link** rather than by splitting that text on `|`, because the
+    same line carries the year and the release date and a split would silently take
+    whichever came first if the site reordered them.
+    """
+    for heading in _subheadings(soup):
+        if "grey" not in (heading.get("class") or []):
+            continue
+        link = heading.find("a", href=re.compile(r"studioid="))
+        if isinstance(link, Tag):
+            text = link.get_text(" ", strip=True)
+            if text:
+                return text
+    return None
 
 
 def _value_of(node: Tag) -> str:
@@ -221,8 +352,7 @@ def extract(html: str) -> DiscSpecs:
     specs = DiscSpecs()
     seen_audio: set[str] = set()
 
-    for label, node in _rows(soup):
-        value = _value_of(node)
+    for label, value in _section_rows(soup):
         if not value:
             continue
 
@@ -240,37 +370,29 @@ def extract(html: str) -> DiscSpecs:
         elif label in ("aspect ratio", "original aspect ratio"):
             specs.video.setdefault("aspect_ratio", value.split(",")[0].strip())
         elif label == "audio":
-            for line in _audio_lines(node):
-                track = _parse_audio_line(line)
-                # De-duplicated because the same block is rendered twice behind the
-                # `(more)` toggle. Keyed on the whole track, not the language, so English
-                # Atmos and English TrueHD 7.1 are both kept.
-                key = f"{track.get('language')}|{track.get('format')}|{track.get('channels')}"
-                if track.get("format") and key not in seen_audio:
-                    seen_audio.add(key)
-                    specs.audio.append(track)
-        elif label == "region":
-            specs.region_code = _parse_region(value)
+            track = _parse_audio_line(value)
+            # Still de-duplicated: `_audio_block` prefers the untruncated copy, but a page
+            # that lists the tracks only once must not depend on that having worked. Keyed
+            # on the whole track, not the language, so English Atmos and English TrueHD
+            # 7.1 are both kept.
+            key = f"{track.get('language')}|{track.get('format')}|{track.get('channels')}"
+            if track.get("format") and key not in seen_audio:
+                seen_audio.add(key)
+                specs.audio.append(track)
+        elif label in ("region", "playback"):
+            # "Playback" is the heading the live site prints the region under; "Region" is
+            # the label a page may put on the line itself. Either can arrive, never both.
+            specs.region_code = specs.region_code or _parse_region(value)
         elif label == "special features":
             features = [part.strip() for part in re.split(r"\n|;|•", value) if part.strip()]
             specs.special_features = features or None
         elif label in ("studio", "distributor"):
             specs.release_label = specs.release_label or value.split(",")[0].strip()
 
+    # The live page prints no "Studio:" label at all — the studio is a link in the grey
+    # header line, so this is where a real release label actually comes from.
+    specs.release_label = specs.release_label or _release_label(soup)
     return specs
-
-
-def _audio_lines(node: Tag) -> list[str]:
-    """One string per audio track, from the DOM rather than the flattened text."""
-    lines = [
-        part.get_text(" ", strip=True)
-        for part in node.find_all(["li", "div", "span"])
-        if isinstance(part, Tag) and part.get_text(strip=True)
-    ]
-    if lines:
-        return lines
-    # A page that lists tracks as `<br>`-separated text rather than elements.
-    return [line.strip() for line in _value_of(node).split("\n") if line.strip()]
 
 
 def _parse_audio_line(line: str) -> dict[str, Any]:

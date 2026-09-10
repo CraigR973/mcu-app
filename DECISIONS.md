@@ -1727,3 +1727,66 @@ contemporaneous.
      the disagreement cheap instead of arguing it: the target is the `PHOTO_TARGET_KB`
      setting, so a different number is an environment variable and a re-upload, not a
      migration. A phone's 4032×3024 photo stores at ~240 KB.
+
+121. **The owner accepted `#110`'s Blu-ray.com risk on 2026-09-10 and asked an agent to
+     perform §3.7's run on his behalf.** Recorded before the first request was made.
+
+     *Why this needed his word and not an agent's judgement:* `#110` is explicit that it is
+     a **risk acceptance, not a permission**. The site's Legal Notices prohibit automated
+     reuse, and `#108`'s earlier reading — that absence from `robots.txt` made it allowed —
+     was wrong. Accepting a stated legal risk is something a person does on their own
+     behalf, so Batch 23 shipped the whole machine and fetched nothing:
+     `specs_integration_state` read `fetch_count: 0` for a day. He was offered three
+     options — run it himself, accept the risk and have it run for him, or leave §3.7
+     deferred — and chose the second.
+
+     *What the acceptance does **not** change:* every one of `#110`'s bounds stays enforced
+     by the code, not by whoever runs it. Exact release URLs only, the search routes refused
+     by name, one request at a time five seconds apart, an honest user agent, no redirect
+     following, and a `401`/`403`/`429`/`451` halt that abandons the rest of the batch to a
+     database row nothing in the application can clear. The caller cannot loosen any of it,
+     which is the point of having put them there.
+
+     *The ten discs were matched by title **and** format against the collection, not by
+     title alone*, and the URLs came from a browse listing rather than the site's search —
+     the route `#110` forbids and `is_release_url` refuses. **Edition and region were not
+     verified against the physical discs**, which is why provenance matters: every derived
+     row records `specs_source_url` and `specs_fetched_at_utc`, so a wrong edition is
+     visible rather than silently merged, and `DELETE /api/v1/specs` removes the lot.
+
+122. **Batch 23's extractor could not read a single real Blu-ray.com page, and its tests
+     could never have caught that, because the fixture was invented.** Found on 2026-09-10
+     by §3.7's first live run: ten pages fetched, `200` on all ten, **zero specs extracted**
+     — `"no specs found on the page"` ten times, and nothing written to any
+     `collection_item`.
+
+     *The cause.* The parser looked for `<div class="row"><strong>Codec:</strong> …`. The
+     site serves `<span class="subheading">Video</span><br>Codec: MPEG-4 AVC<br>Resolution:
+     1080p` — section headings with bare `Label: value` lines separated by `<br>`, and no
+     `<strong>` anywhere. `_label_of` returned `""` for every node on every page, so
+     `_rows` matched nothing and `extract` returned an empty `DiscSpecs` every time.
+
+     *Why the suite was green.* `test_specs.py`'s `PAGE` constant was **hand-written to
+     match the parser**. Parser and fixture agreed with each other and neither had ever
+     met the site. Eleven extraction tests passed against markup that has never existed.
+     This is `AGENTS.md`'s "a green run is not evidence the app runs", in the one place the
+     project had already been bitten twice — the missing TMDB token and the scraper *test*
+     button that saved nothing.
+
+     *The fix, and the part that matters.* `_section_rows` parses the real structure, and
+     `tests/fixtures/bluray_com_release_page.html` is now **captured markup** — three
+     regions of a real release page, verbatim, price cell included. `TestTheFixtureIsReal`
+     asserts that it stays captured: that it carries its provenance line, that it uses
+     `<span class="subheading">` rather than `<strong>` rows, and that the price cell is
+     still in it. A fixture written to match the parser is the bug; a test that says so is
+     the guard.
+
+     *Two things the run did prove.* Every one of #110's bounds worked — ten sequential
+     requests five seconds apart, honest user agent, no redirect following, no `403`, no
+     halt — and `apply_specs` correctly declined to write anything, because `DiscSpecs.
+     is_empty` is checked before a row is touched. **A parser that stops matching the site
+     writes nothing rather than blanking 1,857 rows.** That is why the failure cost only
+     ten wasted requests.
+
+     *And one thing it re-taught.* The live run was not a formality after a green gate; it
+     was the only thing in the entire project that could have found this.
