@@ -154,13 +154,13 @@ function RunPanel() {
                       : (outcome.error ?? outcome.reasons.join('; ')) ||
                         'no usable result'}
                   {outcome.substitutedFormat ? (
-                    <span className="mt-0.5 block text-amber-500">
+                    <span className="mt-0.5 block text-warning">
                       Not the format wanted — priced the{' '}
                       {formatLabel(outcome.substitutedFormat)}.
                     </span>
                   ) : null}
                   {outcome.editionMatched === false ? (
-                    <span className="mt-0.5 block text-amber-500">
+                    <span className="mt-0.5 block text-warning">
                       Not the edition wanted — priced a different one.
                     </span>
                   ) : null}
@@ -219,7 +219,7 @@ function Row({ retailer }: { retailer: RetailerRow }) {
           {retailer.isConfigured ? (
             'selectors configured'
           ) : (
-            <span className="text-amber-500">no selectors yet — Batch 19</span>
+            <span className="text-warning">no selectors yet — Batch 19</span>
           )}
           {retailer.consecutiveFailures > 0
             ? ` · ${String(retailer.consecutiveFailures)} recent failures`
@@ -262,7 +262,7 @@ function Row({ retailer }: { retailer: RetailerRow }) {
  *
  * **The two states are split into two lists, not two chip colours.** When every built-in
  * was unverified the colour carried no load; now that some are supported and some never
- * will be, it has to — and `text-primary` and `text-amber-500` are the same colour to the
+ * will be, it has to — and `text-primary` and `text-warning` are the same colour to the
  * eye in this theme. The unverified ones also show their *reason* rather than hiding it in
  * a `title` tooltip: the reason is what tells the reader not to bother testing them.
  */
@@ -330,7 +330,7 @@ function BuiltInPanel() {
                 key={entry.name}
                 className="flex items-start gap-1.5 text-[11px] text-muted-foreground"
               >
-                <Ban className="mt-0.5 h-3 w-3 shrink-0 text-amber-500" aria-hidden />
+                <Ban className="mt-0.5 h-3 w-3 shrink-0 text-warning" aria-hidden />
                 <span>
                   <span className="font-medium text-foreground">{entry.name}</span>
                   {entry.note ? ` — ${entry.note}` : ' — unverified'}
@@ -513,7 +513,7 @@ function NightlyPanel() {
                       dry run
                     </span>
                   ) : null}
-                  <span className={cn(verdict.ok ? 'text-emerald-600' : 'text-destructive')}>
+                  <span className={cn(verdict.ok ? 'text-success' : 'text-destructive')}>
                     {verdict.label}
                   </span>
                 </div>
@@ -529,7 +529,7 @@ function NightlyPanel() {
                   <ul className="mt-1 space-y-0.5 text-muted-foreground">
                     {run.failures.slice(0, 3).map((failure, index) => (
                       <li key={index} className="truncate">
-                        <TriangleAlert className="mr-1 inline h-3 w-3 text-amber-500" />
+                        <TriangleAlert className="mr-1 inline h-3 w-3 text-warning" />
                         {failure.retailer}: {failure.reason}
                       </li>
                     ))}
@@ -608,8 +608,8 @@ export default function RetailersPage() {
       <NightlyPanel />
 
       {items.length > 0 && retailersQuery.data?.configuredCount === 0 ? (
-        <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-muted-foreground">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <p className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/5 p-3 text-xs text-muted-foreground">
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <span>
             None of these have CSS selectors yet, so nothing is being scraped. The scraper
             framework is Batch 19 — a retailer configured with a guessed selector would not

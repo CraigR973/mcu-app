@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { HandHeart, Loader2, Undo2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { fetchLoans, lendDisc, loanDueLabel, returnLoan } from '@/lib/api'
-import { queryErrorMessage } from '@/lib/query-state'
+import { listState, queryErrorMessage } from '@/lib/query-state'
 
 interface Props {
   collectionItemId: string
@@ -20,6 +20,8 @@ interface Props {
  */
 export function LendButton({ collectionItemId }: Props) {
   const queryClient = useQueryClient()
+  const borrowerId = useId()
+  const dueId = useId()
   const [open, setOpen] = useState(false)
   const [borrower, setBorrower] = useState('')
   const [due, setDue] = useState('')
@@ -27,7 +29,9 @@ export function LendButton({ collectionItemId }: Props) {
   // Every loan, so this control knows whether *this* disc is already out. `openOnly`
   // keeps it to the ones that matter and the list is short by nature.
   const loansQuery = useQuery({ queryKey: ['loans', true], queryFn: () => fetchLoans(true) })
-  const active = loansQuery.data?.items.find(
+  const loans = loansQuery.data?.items ?? []
+  const state = listState(loansQuery, loans.length === 0)
+  const active = loans.find(
     (loan) => loan.collectionItemId === collectionItemId,
   )
 
@@ -56,10 +60,45 @@ export function LendButton({ collectionItemId }: Props) {
     onSuccess: refresh,
   })
 
+  if (state === 'loading') {
+    return (
+      <p role="status" className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        Checking loan status…
+      </p>
+    )
+  }
+
+  if (state === 'offline') {
+    return (
+      <div className="space-y-2" role="status">
+        <p className="text-sm text-muted-foreground">
+          Loan status is waiting for the network.
+        </p>
+        <Button type="button" size="sm" variant="outline" onClick={() => void loansQuery.refetch()}>
+          Try again
+        </Button>
+      </div>
+    )
+  }
+
+  if (state === 'error') {
+    return (
+      <div className="space-y-2" role="alert">
+        <p className="text-sm text-destructive">
+          {queryErrorMessage(loansQuery.error, 'Could not check whether this disc is on loan.')}
+        </p>
+        <Button type="button" size="sm" variant="outline" onClick={() => void loansQuery.refetch()}>
+          Try again
+        </Button>
+      </div>
+    )
+  }
+
   if (active) {
     return (
-      <div className="space-y-1">
-        <p className="text-[11px] text-muted-foreground">
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">
           With <span className="text-foreground">{active.borrowerName}</span> ·{' '}
           <span className={active.isOverdue ? 'font-medium text-destructive' : ''}>
             {loanDueLabel(active)}
@@ -77,15 +116,28 @@ export function LendButton({ collectionItemId }: Props) {
           ) : (
             <Undo2 className="h-3.5 w-3.5" />
           )}
-          Returned
+          Mark returned
         </Button>
+        {giveBack.isError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {queryErrorMessage(giveBack.error, 'Could not mark this disc as returned.')}
+          </p>
+        ) : null}
       </div>
     )
   }
 
   if (!open) {
     return (
-      <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={() => {
+          lend.reset()
+          setOpen(true)
+        }}
+      >
         <HandHeart className="h-3.5 w-3.5" />
         Lend
       </Button>
@@ -93,40 +145,57 @@ export function LendButton({ collectionItemId }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <form
+      className="space-y-3"
+      aria-busy={lend.isPending}
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (borrower.trim()) lend.mutate()
+      }}
+    >
+      <label htmlFor={borrowerId} className="block text-sm font-medium text-foreground">
+        Borrower
+      </label>
       <Input
+        id={borrowerId}
         value={borrower}
         onChange={(event) => setBorrower(event.target.value)}
         placeholder="Who has it?"
-        aria-label="Borrower name"
-        className="h-8 text-xs"
+        required
       />
+      <label htmlFor={dueId} className="block text-sm font-medium text-foreground">
+        Due back <span className="font-normal text-muted-foreground">(optional)</span>
+      </label>
       <Input
+        id={dueId}
         type="date"
         value={due}
         onChange={(event) => setDue(event.target.value)}
-        aria-label="Due back"
-        className="h-8 text-xs"
       />
       {lend.isError ? (
-        <p className="text-xs text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {queryErrorMessage(lend.error, 'Could not record the loan.')}
         </p>
       ) : null}
-      <div className="flex gap-1">
+      <div className="flex flex-wrap gap-2">
         <Button
-          type="button"
+          type="submit"
           size="sm"
           disabled={lend.isPending || borrower.trim().length === 0}
-          onClick={() => lend.mutate()}
         >
           {lend.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
           Lend it
         </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          disabled={lend.isPending}
+          onClick={() => setOpen(false)}
+        >
           Cancel
         </Button>
       </div>
-    </div>
+    </form>
   )
 }

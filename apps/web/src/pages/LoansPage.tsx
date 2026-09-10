@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom'
 import type { Loan } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import { fetchLoans, formatLabel, loanDueLabel, posterUrl, returnLoan } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
@@ -25,7 +27,7 @@ function Row({ loan }: { loan: Loan }) {
   return (
     <li
       className={cn(
-        'flex items-center gap-3 rounded-lg border bg-card p-3',
+        'archive-panel grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:p-4',
         loan.isOverdue ? 'border-destructive/50' : 'border-border',
       )}
     >
@@ -33,22 +35,22 @@ function Row({ loan }: { loan: Loan }) {
         src={posterUrl(loan.posterPath, 'w92')}
         alt=""
         loading="lazy"
-        className="h-16 w-11 shrink-0 rounded object-cover"
+        className="h-[4.5rem] w-12 shrink-0 rounded-sm border border-border object-cover"
       />
       <div className="min-w-0 flex-1">
         <Link
           to={`/movies/${loan.movieId}`}
-          className="font-medium text-foreground hover:underline"
+          className="line-clamp-2 font-semibold text-foreground hover:text-primary"
         >
           {loan.movieTitle}
         </Link>
-        <p className="text-xs text-muted-foreground">
-          {loan.formats.map((f) => formatLabel(f)).join(' + ')} · with{' '}
-          <span className="text-foreground">{loan.borrowerName}</span> since {loan.lentDate}
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          <span className="font-medium text-foreground">{loan.formats.map((f) => formatLabel(f)).join(' + ')}</span>
+          {' · '}with <span className="text-foreground">{loan.borrowerName}</span> since {loan.lentDate}
         </p>
         <p
           className={cn(
-            'text-[11px]',
+            'mt-0.5 text-[11px]',
             loan.isOverdue ? 'font-medium text-destructive' : 'text-muted-foreground',
           )}
         >
@@ -59,7 +61,7 @@ function Row({ loan }: { loan: Loan }) {
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          className="col-span-2 w-full sm:col-span-1 sm:w-auto"
           disabled={giveBack.isPending}
           onClick={() => giveBack.mutate()}
         >
@@ -68,8 +70,13 @@ function Row({ loan }: { loan: Loan }) {
           ) : (
             <Undo2 className="h-4 w-4" />
           )}
-          Returned
+          Mark returned
         </Button>
+      ) : null}
+      {giveBack.isError ? (
+        <p role="alert" className="col-span-2 text-sm text-destructive sm:col-start-2 sm:col-end-4">
+          {queryErrorMessage(giveBack.error, 'Could not mark this disc as returned.')}
+        </p>
       ) : null}
     </li>
   )
@@ -98,20 +105,20 @@ export default function LoansPage() {
   const state = listState(loansQuery, loans.length === 0)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Loans</h1>
-        <p className="text-sm text-muted-foreground">
-          Discs that have left the house.
-          {loansQuery.data && loansQuery.data.overdueCount > 0 ? (
-            <span className="ml-1 font-medium text-destructive">
-              {loansQuery.data.overdueCount} overdue.
-            </span>
-          ) : null}
-        </p>
-      </div>
+    <div className="page-shell-narrow space-y-7">
+      <PageHeader
+        eyebrow="Circulation desk"
+        title="Loans"
+        description="Keep track of every disc that has left the house and who has it."
+        meta={loansQuery.data && loansQuery.data.overdueCount > 0 ? (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-destructive">
+            <span className="h-1.5 w-1.5 rounded-full bg-destructive" aria-hidden />
+            {loansQuery.data.overdueCount} overdue
+          </span>
+        ) : undefined}
+      />
 
-      <div className="flex gap-1">
+      <div className="inline-flex rounded-lg border border-border bg-card p-1" aria-label="Loan history view">
         {[
           { value: true, label: 'Out now' },
           { value: false, label: 'All' },
@@ -120,11 +127,12 @@ export default function LoansPage() {
             key={String(option.value)}
             type="button"
             onClick={() => setOpenOnly(option.value)}
+            aria-pressed={openOnly === option.value}
             className={cn(
-              'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+              'touch-target min-h-10 rounded-md px-4 py-2 text-sm font-semibold transition-colors',
               openOnly === option.value
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted',
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
             {option.label}
@@ -133,27 +141,24 @@ export default function LoansPage() {
       </div>
 
       {state === 'loading' ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Checking the loan register" />
       ) : state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — the loans could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="The loan register is not cached here" description="Reconnect to see which discs are away from home." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(loansQuery.error, 'Could not load the loans.')}
-        </p>
+        <StatePanel
+          tone="error"
+          title="The loan register is unavailable"
+          description={queryErrorMessage(loansQuery.error, 'Could not load the loans.')}
+        />
       ) : state === 'empty' ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <HandHeart className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">
-            {openOnly ? 'Nothing is out on loan.' : 'Nothing has been lent yet.'}
-          </p>
-          <p className="max-w-sm text-xs text-muted-foreground">
-            Lend a disc from its own page — open a film, then the copy you are handing over.
-          </p>
-        </div>
+        <StatePanel
+          tone="empty"
+          icon={HandHeart}
+          title={openOnly ? 'Every disc is home' : 'No loans have been recorded'}
+          description="Lend a disc from its film page, then choose the exact copy you are handing over."
+        />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {loans.map((loan) => (
             <Row key={loan.id} loan={loan} />
           ))}

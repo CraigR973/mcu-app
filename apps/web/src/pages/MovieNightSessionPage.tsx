@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Heart, Loader2, Popcorn, X } from 'lucide-react'
+import { Check, Heart, Popcorn, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import type { MovieNightCandidate, MovieNightMatch } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
+import { StatePanel } from '@/components/ui/state-panel'
 import {
   castMovieNightVote,
   fetchMovieNight,
@@ -12,11 +13,21 @@ import {
   posterUrl,
   streamMovieNightEvents,
 } from '@/lib/api'
-import { queryErrorMessage } from '@/lib/query-state'
+import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
 /** How far a card must travel before it counts as a swipe rather than a wobble. */
 const SWIPE_THRESHOLD = 90
+
+/** Arrow keys belong to the field currently being edited, not to the swipe deck behind it. */
+function isTextEntryTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return (
+    target.matches('input, textarea, select') ||
+    target.isContentEditable ||
+    target.closest('[contenteditable="true"]') !== null
+  )
+}
 
 /**
  * §8.4 — the swipe deck.
@@ -38,6 +49,7 @@ export default function MovieNightSessionPage() {
   const [match, setMatch] = useState<MovieNightMatch | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [realtimeError, setRealtimeError] = useState<string | null>(null)
   const startX = useRef<number | null>(null)
 
   const session = useQuery({
@@ -57,16 +69,25 @@ export default function MovieNightSessionPage() {
     if (!id) return
     let cancelled = false
     void (async () => {
-      for await (const event of streamMovieNightEvents(id)) {
-        if (cancelled) return
-        if (event.kind === 'match' && event.movieId && event.title) {
-          setMatch({
-            movieId: event.movieId,
-            title: event.title,
-            posterPath: event.posterPath ?? null,
-          })
-        } else if (event.kind === 'joined' || event.kind === 'ended') {
-          void queryClient.invalidateQueries({ queryKey: ['movie-night', id] })
+      try {
+        for await (const event of streamMovieNightEvents(id)) {
+          if (cancelled) return
+          setRealtimeError(null)
+          if (event.kind === 'match' && event.movieId && event.title) {
+            setMatch({
+              movieId: event.movieId,
+              title: event.title,
+              posterPath: event.posterPath ?? null,
+            })
+          } else if (event.kind === 'joined' || event.kind === 'ended') {
+            void queryClient.invalidateQueries({ queryKey: ['movie-night', id] })
+          }
+        }
+      } catch (cause) {
+        if (!cancelled) {
+          setRealtimeError(
+            queryErrorMessage(cause, 'Live updates were interrupted. Your voting controls still work.'),
+          )
         }
       }
     })()
@@ -76,6 +97,7 @@ export default function MovieNightSessionPage() {
   }, [id, queryClient])
 
   const cards = deck.data?.items ?? []
+  const deckState = listState(deck, cards.length === 0)
   const current: MovieNightCandidate | undefined = cards[index]
 
   const vote = useCallback(
@@ -100,26 +122,63 @@ export default function MovieNightSessionPage() {
   // Keyboard, because a gesture-only control cannot be used on a laptop.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (match) return
-      if (event.key === 'ArrowRight') void vote(true)
-      if (event.key === 'ArrowLeft') void vote(false)
+      if (
+        match ||
+        !current ||
+        busy ||
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        isTextEntryTarget(event.target)
+      ) return
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        void vote(true)
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        void vote(false)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [match, vote])
+  }, [busy, current, match, vote])
 
   if (session.isError) {
     return (
-      <p className="p-8 text-center text-sm text-destructive">
-        {queryErrorMessage(session.error, 'That movie night could not be loaded.')}
-      </p>
+      <div className="page-shell-narrow">
+        <StatePanel
+          tone="error"
+          title="Screening unavailable"
+          description={queryErrorMessage(session.error, 'That movie night could not be loaded.')}
+          action={(
+            <Button asChild variant="outline">
+              <Link to="/movie-night">Back to movie night</Link>
+            </Button>
+          )}
+        />
+      </div>
+    )
+  }
+
+  if (session.fetchStatus === 'paused' && session.data === undefined) {
+    return (
+      <div className="page-shell-narrow">
+        <StatePanel
+          tone="offline"
+          title="Screening needs the network"
+          description="Reconnect to load this shared session."
+        />
+      </div>
     )
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-4 p-4">
-      <header className="w-full text-center">
-        <h1 className="flex items-center justify-center gap-2 text-lg font-semibold">
+    <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 pb-24 pt-6 sm:px-6">
+      <header className="w-full border-b border-border pb-4 text-center">
+        <p className="page-kicker">Screening room</p>
+        <h1 className="flex items-center justify-center gap-2 font-display text-2xl font-semibold">
           <Popcorn className="h-5 w-5" aria-hidden />
           Movie night
         </h1>
@@ -133,9 +192,15 @@ export default function MovieNightSessionPage() {
         ) : null}
       </header>
 
+      {realtimeError ? (
+        <p role="status" className="w-full rounded-md border border-warning/45 bg-warning/10 p-3 text-sm text-foreground">
+          {realtimeError}
+        </p>
+      ) : null}
+
       {match ? (
-        <div className="w-full rounded-lg border-2 border-emerald-500 bg-emerald-500/10 p-6 text-center">
-          <Check className="mx-auto h-8 w-8 text-emerald-600" aria-hidden />
+        <div role="status" className="w-full rounded-lg border-2 border-success bg-success/10 p-6 text-center">
+          <Check className="mx-auto h-8 w-8 text-success" aria-hidden />
           <p className="mt-2 text-lg font-bold">It's a match</p>
           <p className="mt-1 text-xl">{match.title}</p>
           {match.posterPath ? (
@@ -149,26 +214,58 @@ export default function MovieNightSessionPage() {
             <Button variant="outline" onClick={() => setMatch(null)}>
               Keep swiping
             </Button>
-            <Link to="/movie-night">
-              <Button>Done</Button>
-            </Link>
+            <Button asChild>
+              <Link to="/movie-night">Done</Link>
+            </Button>
           </div>
         </div>
-      ) : deck.isPending ? (
-        <Loader2 className="mt-12 h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
+      ) : deckState === 'loading' ? (
+        <StatePanel className="w-full" tone="loading" title="Preparing the shortlist" />
+      ) : deckState === 'offline' ? (
+        <StatePanel
+          className="w-full"
+          tone="offline"
+          title="The shortlist needs the network"
+          description="Reconnect to load the films in this screening."
+        />
+      ) : deckState === 'error' ? (
+        <StatePanel
+          className="w-full"
+          tone="error"
+          title="Shortlist unavailable"
+          description={queryErrorMessage(deck.error, 'The films for this screening could not be loaded.')}
+        />
+      ) : deckState === 'empty' ? (
+        <StatePanel
+          className="w-full"
+          tone="empty"
+          title="No films match this screening"
+          description="Start another screening with a wider year range."
+          action={(
+            <Button asChild variant="outline">
+              <Link to="/movie-night">Back to movie night</Link>
+            </Button>
+          )}
+        />
       ) : !current ? (
-        <p className="mt-12 text-center text-sm text-muted-foreground">
-          {cards.length === 0
-            ? 'Nothing left to swipe on with these filters.'
-            : 'That is the whole deck. No match yet — start another one, or loosen the filters.'}
-        </p>
+        <StatePanel
+          className="w-full"
+          tone="empty"
+          title="That is the whole deck"
+          description="There is no match yet. Start another screening or loosen the filters."
+          action={(
+            <Button asChild variant="outline">
+              <Link to="/movie-night">Start another</Link>
+            </Button>
+          )}
+        />
       ) : (
         <>
           <div
             role="group"
             aria-label={`${current.title}. Swipe right to like, left to pass.`}
             className={cn(
-              'w-full select-none rounded-xl border border-border bg-card p-4 shadow-lg',
+              'w-full select-none rounded-xl border border-border bg-card p-4 shadow-soft',
               'touch-pan-y transition-transform',
               busy && 'opacity-60',
             )}
@@ -243,7 +340,7 @@ export default function MovieNightSessionPage() {
         </>
       )}
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   )
 }

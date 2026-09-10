@@ -526,13 +526,6 @@ export const FORMATS = [
   { value: 'download', label: 'Digital' },
 ] as const
 
-export const FORMAT_COLORS: Record<string, string> = {
-  '4k_uhd': 'bg-sky-600 text-white',
-  'blu_ray': 'bg-indigo-600 text-white',
-  'dvd': 'bg-slate-500 text-white',
-  'download': 'bg-emerald-700 text-white',
-}
-
 export function formatLabel(value: string | null): string | null {
   if (!value) return null
   return FORMATS.find((format) => format.value === value)?.label ?? value.replaceAll('_', ' ')

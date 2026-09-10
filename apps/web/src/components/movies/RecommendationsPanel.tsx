@@ -83,7 +83,7 @@ export function RecommendationsPanel({ movieId }: { movieId: string }) {
                   </span>
                 ) : item.ownership === 'wanted' ? (
                   <span
-                    className="absolute right-1 top-1 rounded-full bg-amber-500 p-0.5 text-white"
+                    className="absolute right-1 top-1 rounded-full bg-warning p-0.5 text-warning-foreground"
                     title="On the wanted list"
                   >
                     <Bookmark className="h-3 w-3" />

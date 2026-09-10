@@ -89,13 +89,13 @@ function Toggle({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50',
-        checked ? 'bg-emerald-600' : 'bg-neutral-300 dark:bg-neutral-700',
+        'touch-hit relative h-6 w-11 shrink-0 rounded-full border transition-colors disabled:opacity-50',
+        checked ? 'border-success bg-success' : 'border-input bg-muted',
       )}
     >
       <span
         className={cn(
-          'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+          'absolute top-0.5 h-5 w-5 rounded-full border border-input bg-background shadow transition-transform',
           checked ? 'translate-x-5' : 'translate-x-0.5',
         )}
       />
@@ -155,43 +155,43 @@ function DeviceSection() {
   const state = listState(devices, (devices.data?.items.length ?? 0) === 0)
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className="rounded-lg border border-border p-4">
       <h2 className="flex items-center gap-2 text-lg font-semibold">
         <BellRing className="h-5 w-5" aria-hidden />
         Devices
       </h2>
-      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mt-1 text-sm text-muted-foreground">
         Each browser you turn notifications on in gets its own entry. Removing one leaves
         the others alone.
       </p>
 
       {push.state === 'unsupported' && (
-        <p className="mt-3 rounded bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        <p className="mt-3 rounded bg-warning/12 p-3 text-sm text-warning">
           This browser cannot receive push notifications. On an iPhone, add the app to your
           home screen first — Safari only allows push from an installed app.
         </p>
       )}
       {push.state === 'server-not-configured' && (
-        <p className="mt-3 flex items-start gap-2 rounded bg-red-50 p-3 text-sm text-red-900 dark:bg-red-950 dark:text-red-200">
+        <p className="mt-3 flex items-start gap-2 rounded bg-destructive/12 p-3 text-sm text-destructive">
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           Push is not configured on the server — no VAPID key is set. Nothing this page
           does will reach a device until it is.
         </p>
       )}
       {push.state === 'denied' && (
-        <p className="mt-3 rounded bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        <p className="mt-3 rounded bg-warning/12 p-3 text-sm text-warning">
           Notifications are blocked for this site in your browser settings. That has to be
           changed there — the app cannot ask again.
         </p>
       )}
       {push.error && (
-        <p className="mt-3 text-sm text-red-600 dark:text-red-400">{push.error}</p>
+        <p className="mt-3 text-sm text-destructive">{push.error}</p>
       )}
 
       {(push.state === 'available' || push.state === 'checking') && (
         <div className="mt-4 flex flex-wrap items-end gap-2">
           <label className="text-sm">
-            <span className="mb-1 block text-neutral-600 dark:text-neutral-400">
+            <span className="mb-1 block text-muted-foreground">
               Name this device
             </span>
             <Input
@@ -217,7 +217,7 @@ function DeviceSection() {
 
       {push.state === 'subscribed' && (
         <div className="mt-4 flex items-center gap-2">
-          <span className="text-sm text-emerald-700 dark:text-emerald-400">
+          <span className="text-sm text-success">
             Notifications are on for this device.
           </span>
           <Button variant="outline" onClick={() => void push.unsubscribe()} disabled={push.busy}>
@@ -229,33 +229,33 @@ function DeviceSection() {
 
       <div className="mt-4">
         {state === 'loading' && (
-          <p className="text-sm text-neutral-500">Loading devices…</p>
+          <p className="text-sm text-muted-foreground">Loading devices…</p>
         )}
         {state === 'offline' && (
-          <p className="text-sm text-neutral-500">Waiting for the network…</p>
+          <p className="text-sm text-muted-foreground">Waiting for the network…</p>
         )}
         {state === 'error' && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-destructive">
             {queryErrorMessage(devices.error, 'Could not load your devices.')}
           </p>
         )}
         {state === 'empty' && (
-          <p className="text-sm text-neutral-500">No devices are registered yet.</p>
+          <p className="text-sm text-muted-foreground">No devices are registered yet.</p>
         )}
         {state === 'ready' && (
-          <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
+          <ul className="divide-y divide-border">
             {devices.data?.items.map((device: PushSubscriptionRecord) => (
               <li key={device.id} className="flex items-center gap-3 py-3">
                 {/iPhone|iPad|Android/i.test(device.userAgent ?? '') ? (
-                  <Smartphone className="h-4 w-4 text-neutral-500" aria-hidden />
+                  <Smartphone className="h-4 w-4 text-muted-foreground" aria-hidden />
                 ) : (
-                  <Laptop className="h-4 w-4 text-neutral-500" aria-hidden />
+                  <Laptop className="h-4 w-4 text-muted-foreground" aria-hidden />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">
                     {device.deviceLabel ?? 'Unnamed device'}
                   </p>
-                  <p className="truncate text-xs text-neutral-500">
+                  <p className="truncate text-xs text-muted-foreground">
                     {device.pushService} · {device.endpointPreview}
                     {device.lastUsedAt
                       ? ` · last push ${new Date(device.lastUsedAt).toLocaleDateString()}`
@@ -286,7 +286,7 @@ function DeviceSection() {
             ))}
           </ul>
         )}
-        {testResult && <p className="mt-2 text-sm text-neutral-600">{testResult}</p>}
+        {testResult && <p className="mt-2 text-sm text-muted-foreground">{testResult}</p>}
       </div>
     </section>
   )
@@ -308,11 +308,11 @@ function PreferencesSection() {
 
   const current = preferences.data
   if (preferences.isPending) {
-    return <p className="text-sm text-neutral-500">Loading your preferences…</p>
+    return <p className="text-sm text-muted-foreground">Loading your preferences…</p>
   }
   if (!current) {
     return (
-      <p className="text-sm text-red-600">
+      <p className="text-sm text-destructive">
         {queryErrorMessage(preferences.error, 'Could not load your preferences.')}
       </p>
     )
@@ -321,14 +321,14 @@ function PreferencesSection() {
   const quietHoursOn = current.quietHoursStart !== null && current.quietHoursEnd !== null
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className="rounded-lg border border-border p-4">
       <h2 className="text-lg font-semibold">What you hear about</h2>
-      <ul className="mt-3 divide-y divide-neutral-200 dark:divide-neutral-800">
+      <ul className="mt-3 divide-y divide-border">
         {CATEGORIES.map((category) => (
           <li key={category.key} className="flex items-center gap-4 py-3">
             <div className="min-w-0 flex-1">
               <p className="font-medium">{category.label}</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="text-sm text-muted-foreground">
                 {category.description}
               </p>
             </div>
@@ -350,7 +350,7 @@ function PreferencesSection() {
       <div className="mt-3 flex items-center gap-4 py-2">
         <div className="min-w-0 flex-1">
           <p className="font-medium">Daily digest</p>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-muted-foreground">
             Hold everything and send one summary a day instead.
           </p>
         </div>
@@ -364,7 +364,7 @@ function PreferencesSection() {
 
       {current.digestMode && (
         <label className="mt-2 block text-sm">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-400">
+          <span className="mb-1 block text-muted-foreground">
             Digest hour (local time)
           </span>
           <Input
@@ -383,7 +383,7 @@ function PreferencesSection() {
       <div className="mt-4 flex items-center gap-4 py-2">
         <div className="min-w-0 flex-1">
           <p className="font-medium">Quiet hours</p>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-muted-foreground">
             Nothing arrives between these times. Anything raised during them waits until
             they end — it is not thrown away.
           </p>
@@ -405,7 +405,7 @@ function PreferencesSection() {
       {quietHoursOn && (
         <div className="mt-2 flex flex-wrap items-end gap-3">
           <label className="text-sm">
-            <span className="mb-1 block text-neutral-600 dark:text-neutral-400">From</span>
+            <span className="mb-1 block text-muted-foreground">From</span>
             <Input
               type="time"
               value={(current.quietHoursStart ?? '22:00:00').slice(0, 5)}
@@ -418,7 +418,7 @@ function PreferencesSection() {
             />
           </label>
           <label className="text-sm">
-            <span className="mb-1 block text-neutral-600 dark:text-neutral-400">Until</span>
+            <span className="mb-1 block text-muted-foreground">Until</span>
             <Input
               type="time"
               value={(current.quietHoursEnd ?? '07:00:00').slice(0, 5)}
@@ -430,14 +430,14 @@ function PreferencesSection() {
               }
             />
           </label>
-          <p className="pb-2 text-xs text-neutral-500">
+          <p className="pb-2 text-xs text-muted-foreground">
             Times are {current.quietHoursTimezone}, so they follow British Summer Time.
           </p>
         </div>
       )}
 
       {save.isError && (
-        <p className="mt-3 text-sm text-red-600">
+        <p className="mt-3 text-sm text-destructive">
           {queryErrorMessage(save.error, 'Could not save that.')}
         </p>
       )}
@@ -454,34 +454,34 @@ function HistorySection() {
   const state = listState(notifications, (notifications.data?.items.length ?? 0) === 0)
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className="rounded-lg border border-border p-4">
       <h2 className="text-lg font-semibold">Recent notifications</h2>
-      {state === 'loading' && <p className="mt-2 text-sm text-neutral-500">Loading…</p>}
+      {state === 'loading' && <p className="mt-2 text-sm text-muted-foreground">Loading…</p>}
       {state === 'offline' && (
-        <p className="mt-2 text-sm text-neutral-500">Waiting for the network…</p>
+        <p className="mt-2 text-sm text-muted-foreground">Waiting for the network…</p>
       )}
       {state === 'error' && (
-        <p className="mt-2 text-sm text-red-600">
+        <p className="mt-2 text-sm text-destructive">
           {queryErrorMessage(notifications.error, 'Could not load your notifications.')}
         </p>
       )}
       {state === 'empty' && (
-        <p className="mt-2 text-sm text-neutral-500">Nothing has been sent yet.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Nothing has been sent yet.</p>
       )}
       {state === 'ready' && (
-        <ul className="mt-2 divide-y divide-neutral-200 dark:divide-neutral-800">
+        <ul className="mt-2 divide-y divide-border">
           {notifications.data?.items.map((item) => (
             <li key={item.id} className="py-3">
               <p className="font-medium">{item.title}</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">{item.body}</p>
+              <p className="text-sm text-muted-foreground">{item.body}</p>
               <p
                 className={cn(
                   'mt-1 text-xs',
                   item.status === 'sent'
-                    ? 'text-emerald-700 dark:text-emerald-400'
+                    ? 'text-success'
                     : item.status === 'failed'
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-neutral-500',
+                      ? 'text-destructive'
+                      : 'text-muted-foreground',
                 )}
               >
                 {notificationStateLabel(item)}
@@ -502,7 +502,7 @@ export default function NotificationSettingsPage() {
     <div className="mx-auto max-w-3xl space-y-6 p-4">
       <header>
         <h1 className="text-2xl font-bold">Notifications</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Which alerts reach you, on which devices, and when.
         </p>
       </header>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Loader2,
   MapPin,
-  Package,
   Pencil,
   Plus,
   RefreshCcw,
@@ -22,6 +21,11 @@ import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { SpecBadges } from '@/components/collection/SpecBadges'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
+import { FormatBadge } from '@/components/movies/FormatBadge'
+import { Poster } from '@/components/movies/Poster'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { StatePanel } from '@/components/ui/state-panel'
 import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
@@ -32,13 +36,11 @@ import {
   conditionLabel,
   fetchCopies,
   fetchMovie,
-  FORMAT_COLORS,
-  formatLabel,
-  posterUrl,
   updateCollectionItem,
   type CollectionCopy,
   type MovieDetail,
 } from '@/lib/api'
+import { listState, queryErrorMessage } from '@/lib/query-state'
 
 type Tab = 'overview' | 'crew' | 'copies' | 'watch'
 
@@ -72,105 +74,137 @@ function CopyCard({
   })
 
   return (
-    <article className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {item.formats.map((format) => (
-            <span
-              key={format}
-              className={`rounded px-2 py-0.5 text-xs font-medium ${FORMAT_COLORS[format] ?? 'bg-secondary text-secondary-foreground'}`}
-            >
-              {formatLabel(format)}
-            </span>
-          ))}
+    <article className="archive-panel flex h-full flex-col gap-4 p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5" aria-label="Formats in this copy">
+          {item.formats.map((format) => <FormatBadge key={format} format={format} />)}
         </div>
         {item.condition && (
-          <span className="text-xs text-muted-foreground">{conditionLabel(item.condition)}</span>
+          <Badge tone={item.condition === 'damaged' ? 'danger' : 'neutral'}>
+            {conditionLabel(item.condition)} condition
+          </Badge>
         )}
       </div>
 
-      {item.location && (
-        <div className="flex items-start gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <div>
-            <p className="font-medium text-foreground">{item.location}</p>
-            {item.section && (
-              <p className="text-xs text-muted-foreground">
-                {item.section}{item.shelf ? ` · ${item.shelf} shelf` : ''}
+      {(item.subCategory || item.releaseLabel) && (
+        <div className="rounded-md border border-accent/35 bg-accent/10 px-3 py-2.5">
+          {item.subCategory ? (
+            <div>
+              <p className="metadata-label">Collector edition</p>
+              <p className="mt-0.5 font-display text-lg font-semibold text-foreground">
+                {item.subCategory}
               </p>
-            )}
-          </div>
+            </div>
+          ) : null}
+          {item.releaseLabel ? (
+            <div className={item.subCategory ? 'mt-2 border-t border-accent/25 pt-2' : ''}>
+              <p className="metadata-label">Release label</p>
+              <p className="metadata-value mt-0.5">{item.releaseLabel}</p>
+            </div>
+          ) : null}
         </div>
       )}
 
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {item.regionCode && <><dt>Region</dt><dd className="text-right">{item.regionCode}</dd></>}
-        {item.releaseLabel && <><dt>Label</dt><dd className="text-right">{item.releaseLabel}</dd></>}
-        {item.purchaseSource && <><dt>Bought from</dt><dd className="text-right">{item.purchaseSource}</dd></>}
-        {item.purchaseDate && <><dt>Bought</dt><dd className="text-right">{item.purchaseDate}</dd></>}
-        {item.purchasePrice && <><dt>Paid</dt><dd className="text-right">£{item.purchasePrice}</dd></>}
+      <div className="flex items-start gap-2 rounded-md bg-primary/10 px-3 py-2.5 text-sm">
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+        <div>
+          {item.location ? (
+            <p className="font-semibold text-foreground">{item.location}</p>
+          ) : (
+            <p className="text-muted-foreground">Location not recorded</p>
+          )}
+          {item.section && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {item.section}{item.shelf ? ` · ${item.shelf} shelf` : ''}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <dl className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-x-4 gap-y-2 border-t border-border pt-3">
+        {item.regionCode ? (
+          <>
+            <dt className="metadata-label">Region</dt>
+            <dd className="metadata-value text-right">{item.regionCode}</dd>
+          </>
+        ) : null}
+        {item.purchaseSource ? (
+          <>
+            <dt className="metadata-label">Bought from</dt>
+            <dd className="metadata-value text-right">{item.purchaseSource}</dd>
+          </>
+        ) : null}
+        {item.purchaseDate ? (
+          <>
+            <dt className="metadata-label">Bought</dt>
+            <dd className="metadata-value text-right"><time dateTime={item.purchaseDate}>{item.purchaseDate}</time></dd>
+          </>
+        ) : null}
+        {item.purchasePrice ? (
+          <>
+            <dt className="metadata-label">Paid</dt>
+            <dd className="metadata-value text-right">£{item.purchasePrice}</dd>
+          </>
+        ) : null}
       </dl>
 
-      {item.notes && <p className="border-t border-border pt-2 text-xs italic text-muted-foreground">{item.notes}</p>}
+      <SpecBadges
+        videoSpecs={item.videoSpecs}
+        audioSpecs={item.audioSpecs}
+        regionCode={item.regionCode}
+      />
+
+      {item.notes ? (
+        <p className="border-l-2 border-accent pl-3 text-sm italic leading-6 text-muted-foreground">
+          {item.notes}
+        </p>
+      ) : null}
       {item.hasPlaybackIssues && (
-        <p className="rounded bg-destructive/10 px-2 py-1 text-xs text-destructive">
-          Playback issue{item.playbackNotes ? `: ${item.playbackNotes}` : ''}
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <span className="font-semibold">Playback issue</span>
+          {item.playbackNotes ? `: ${item.playbackNotes}` : ''}
         </p>
       )}
 
       {canEdit && (
         <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-          <button
-            type="button"
-            onClick={() => onEdit(item)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground"
-          >
-            <Pencil className="h-3 w-3" /> Edit
-          </button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => onEdit(item)}>
+            <Pencil aria-hidden /> Edit copy
+          </Button>
           {item.condition !== 'damaged' && (
-            <button
+            <Button
               type="button"
+              size="sm"
+              variant="ghost"
               onClick={() => markDamaged.mutate()}
               disabled={markDamaged.isPending}
-              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               {markDamaged.isPending ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="animate-spin" aria-hidden />
               ) : (
-                <ShieldAlert className="h-3 w-3" />
+                <ShieldAlert aria-hidden />
               )}
               Mark damaged
-            </button>
+            </Button>
           )}
         </div>
       )}
-      {/* §12.5's "mark as lent / returned", on the copy rather than the film: a loan is
-          about one physical object, and owning a film twice means only one of them left
-          the house. */}
+
       {canEdit && (
         <div className="border-t border-border pt-3">
           <LendButton collectionItemId={item.id} />
         </div>
       )}
-      {/* §3.8. On the copy, because specs are a property of the physical disc — owning a
-          film on 4K and DVD means two very different rows. */}
-      <SpecBadges
-        videoSpecs={item.videoSpecs}
-        audioSpecs={item.audioSpecs}
-        regionCode={item.regionCode}
-        className="pt-1"
-      />
-      {/* §3.10. On the copy rather than the film, for the same reason lending is: a photo
-          of a shelf is a photo of *this* disc, and owning a film twice means two of them
-          are in two different places. Readable by both; only an admin adds or removes. */}
-      <div className="border-t border-border pt-3">
+
+      <div className="mt-auto border-t border-border pt-3">
+        <h3 className="metadata-label">Disc photos</h3>
         <PhotoGallery itemId={item.id} canEdit={canEdit} />
       </div>
+
       {markDamaged.isError && (
-        <p className="text-xs text-destructive">
-          {markDamaged.error instanceof Error
-            ? markDamaged.error.message
-            : 'Could not update this disc.'}
+        <p role="alert" className="text-sm text-destructive">
+          {queryErrorMessage(markDamaged.error, 'Could not update this disc.')}
         </p>
       )}
     </article>
@@ -181,7 +215,7 @@ export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [tab, setTab] = useState<Tab>('overview')
+  const [tab, setTab] = useState<Tab>('copies')
   const [correcting, setCorrecting] = useState(false)
   const [editing, setEditing] = useState<CollectionCopy | null>(null)
   const { profile } = useAuth()
@@ -224,37 +258,61 @@ export default function MovieDetailPage() {
     if (movie.id !== movieId) navigate(`/movies/${movie.id}`, { replace: true })
   }
 
-  if (movieQuery.isLoading) {
+  if (movieQuery.fetchStatus === 'paused' && movieQuery.data === undefined) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="page-shell-narrow">
+        <StatePanel
+          tone="offline"
+          title="This film is not available offline"
+          description="Reconnect to load the film record, or return to the cached collection."
+          action={(
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" variant="outline" onClick={() => void movieQuery.refetch()}>
+                Try again
+              </Button>
+              <Button asChild variant="ghost"><Link to="/movies">Back to collection</Link></Button>
+            </div>
+          )}
+        />
+      </div>
+    )
+  }
+
+  if (movieQuery.isPending) {
+    return (
+      <div className="page-shell-narrow">
+        <StatePanel tone="loading" title="Opening film record" description="Loading archive details…" />
       </div>
     )
   }
 
   if (movieQuery.isError || !movieQuery.data) {
     return (
-      <div className="p-6">
-        <p className="text-destructive">
-          {movieQuery.error instanceof Error ? movieQuery.error.message : 'Failed to load movie.'}
-        </p>
-        <Link to="/movies" className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to movies
-        </Link>
+      <div className="page-shell-narrow">
+        <StatePanel
+          tone="error"
+          title="Could not open this film"
+          description={queryErrorMessage(movieQuery.error, 'The film record did not respond.')}
+          action={(
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" variant="outline" onClick={() => void movieQuery.refetch()}>
+                Try again
+              </Button>
+              <Button asChild variant="ghost"><Link to="/movies">Back to collection</Link></Button>
+            </div>
+          )}
+        />
       </div>
     )
   }
 
   const movie = movieQuery.data
   const copies = copiesQuery.data ?? []
+  const copiesState = listState(copiesQuery, copies.length === 0)
   const runtime = movie.runtimeMinutes
     ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m`
     : null
   const rating = movie.tmdbRating ? movie.tmdbRating.toFixed(1) : null
-  const format = formatLabel(movie.bestFormatOwned)
-  const formatColor = movie.bestFormatOwned
-    ? (FORMAT_COLORS[movie.bestFormatOwned] ?? 'bg-secondary text-secondary-foreground')
-    : ''
   const backdrop = backdropUrl(movie.backdropPath)
   const imdbUrl = movie.imdbId ? `https://www.imdb.com/title/${movie.imdbId}/` : null
   const letterboxdUrl = movie.letterboxdSlug
@@ -262,188 +320,252 @@ export default function MovieDetailPage() {
     : `https://letterboxd.com/search/${encodeURIComponent(movie.title)}/`
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
+    { key: 'copies', label: 'Owned copies', count: movie.copyCount },
     { key: 'overview', label: 'Overview' },
     { key: 'crew', label: 'Crew', count: movie.crew.length },
-    { key: 'copies', label: 'Your copies', count: copies.length },
     // Batch 16 (§7.1, §7.2). One tab, because "where can I watch this" and "what else
     // is like it" are the same question asked twice.
     { key: 'watch', label: 'Where to watch' },
   ]
 
+  function moveTab(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    let nextIndex: number | null = null
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length
+    if (event.key === 'Home') nextIndex = 0
+    if (event.key === 'End') nextIndex = tabs.length - 1
+    if (nextIndex === null) return
+
+    event.preventDefault()
+    const next = tabs[nextIndex].key
+    setTab(next)
+    requestAnimationFrame(() => document.getElementById(`movie-tab-${next}`)?.focus())
+  }
+
+  const panelLabelledBy = `movie-tab-${tab}`
+
   return (
-    <div className="min-h-full pb-12">
-      <div className="relative h-64 overflow-hidden bg-zinc-900 md:h-96">
-        {backdrop && (
-          <img src={backdrop} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-black/20" />
-        <Link
-          to="/movies"
-          className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-md bg-black/45 px-3 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-black/65"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Link>
+    <div className="min-h-full pb-24 lg:pb-12">
+      <div className="relative h-44 overflow-hidden bg-surface-sunken sm:h-52 lg:h-60">
+        {backdrop ? (
+          <img src={backdrop} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45" />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-brand-ink/25" />
+        <Button asChild size="sm" variant="secondary" className="absolute left-4 top-4 sm:left-6 lg:left-8">
+          <Link to="/movies"><ArrowLeft aria-hidden /> Back to collection</Link>
+        </Button>
       </div>
 
-      <div className="relative -mt-28 px-4 md:px-8">
-        <div className="flex items-end gap-5">
-          <div className="hidden w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-muted shadow-2xl sm:block md:w-40">
-            <img
-              src={posterUrl(movie.posterPath, 'w342')}
-              alt={`${movie.title} poster`}
-              className="aspect-[2/3] w-full object-cover"
-            />
+      <div className="relative mx-auto -mt-16 w-full max-w-[96rem] px-4 sm:px-6 lg:px-8">
+        <header className="flex items-end gap-4 sm:gap-6">
+          <div className="w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted shadow-lift sm:w-28 md:w-36">
+            <Poster path={movie.posterPath} title={movie.title} className="w-full" eager />
           </div>
           <div className="min-w-0 flex-1 pb-1">
-            {movie.tagline && <p className="mb-1 text-sm italic text-muted-foreground">{movie.tagline}</p>}
-            <h1 className="text-2xl font-bold leading-tight text-foreground drop-shadow md:text-4xl">{movie.title}</h1>
-            <div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              {movie.year && <span>{movie.year}</span>}
-              {runtime && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{runtime}</span>}
-              {rating && <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />{rating}</span>}
-              {format && <span className={`rounded px-2 py-0.5 text-xs font-medium ${formatColor}`}>{format}</span>}
-              <span className="inline-flex items-center gap-1"><Disc3 className="h-3.5 w-3.5" />{movie.copyCount} {movie.copyCount === 1 ? 'copy' : 'copies'}</span>
+            {movie.tagline ? (
+              <p className="mb-1 line-clamp-2 text-sm italic text-muted-foreground">{movie.tagline}</p>
+            ) : null}
+            <h1 className="font-display text-2xl font-semibold leading-tight text-foreground sm:text-4xl lg:text-5xl">
+              {movie.title}
+            </h1>
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+              {movie.year ? <span>{movie.year}</span> : null}
+              {runtime ? <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" aria-hidden />{runtime}</span> : null}
+              {rating ? <span className="inline-flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" aria-hidden />{rating}</span> : null}
+              {movie.bestFormatOwned ? <FormatBadge format={movie.bestFormatOwned} /> : null}
+              <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                <Disc3 className="h-4 w-4 text-primary" aria-hidden />
+                {movie.copyCount} {movie.copyCount === 1 ? 'owned copy' : 'owned copies'}
+              </span>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {imdbUrl && (
-                <a href={imdbUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md bg-yellow-400 px-3 py-1.5 text-xs font-bold text-black">
-                  IMDb <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              {movie.identified && (
-                <a href={letterboxdUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-                  Letterboxd <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              {movie.identified && (
-                <button type="button" onClick={() => setCorrecting((value) => !value)} className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground">
-                  <RefreshCcw className="h-3 w-3" /> Correct match
-                </button>
-              )}
-            </div>
+            {movie.locations.length > 0 ? (
+              <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span>{movie.locations.map((location) => location.label).join(' · ')}</span>
+              </p>
+            ) : null}
           </div>
+        </header>
+
+        <div className="mt-5 flex flex-wrap gap-2 sm:ml-[9.5rem] lg:ml-[10.5rem]">
+          {imdbUrl ? (
+            <Button asChild size="sm" variant="outline">
+              <a href={imdbUrl} target="_blank" rel="noreferrer">IMDb <ExternalLink aria-hidden /></a>
+            </Button>
+          ) : null}
+          {movie.identified ? (
+            <Button asChild size="sm" variant="outline">
+              <a href={letterboxdUrl} target="_blank" rel="noreferrer">Letterboxd <ExternalLink aria-hidden /></a>
+            </Button>
+          ) : null}
+          {movie.identified ? (
+            <Button type="button" size="sm" variant="secondary" onClick={() => setCorrecting((value) => !value)}>
+              <RefreshCcw aria-hidden /> {correcting ? 'Cancel correction' : 'Correct match'}
+            </Button>
+          ) : null}
         </div>
 
-        {(!movie.identified || correcting) && (
+        {(!movie.identified || correcting) ? (
           <div className="mt-8">
             <IdentifyPanel movieId={movie.id} storedTitle={movie.title} onIdentified={identified} />
           </div>
-        )}
+        ) : null}
 
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <WatchPanel movieId={movie.id} />
-          {/* Admin-only: `GET /admin/audit` is, so a viewer would only watch it fail. */}
-          {canEdit && <ItemHistory movieId={movie.id} />}
-        </div>
-
-        <div className="mt-8 flex gap-1 overflow-x-auto border-b border-border">
-          {tabs.map(({ key, label, count }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${tab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        <div className="mt-8 grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,24rem)]">
+          <section className="min-w-0" aria-label="Film record">
+            <div
+              role="tablist"
+              aria-label="Film details"
+              className="flex gap-1 overflow-x-auto border-b border-border"
             >
-              {label}
-              {count !== undefined && count > 0 && <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs">{count}</span>}
-            </button>
-          ))}
-        </div>
+              {tabs.map(({ key, label, count }, index) => (
+                <button
+                  key={key}
+                  id={`movie-tab-${key}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === key}
+                  aria-controls={`movie-panel-${key}`}
+                  tabIndex={tab === key ? 0 : -1}
+                  onClick={() => setTab(key)}
+                  onKeyDown={(event) => moveTab(event, index)}
+                  className={`touch-target -mb-px min-h-11 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${tab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                >
+                  {label}
+                  {count !== undefined && count > 0 ? (
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs">{count}</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
 
-        {tab === 'overview' && (
-          <div className="mt-6 space-y-8">
-            {movie.overview ? (
-              <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{movie.overview}</p>
-            ) : movie.identified ? (
-              <p className="text-sm text-muted-foreground">No overview is available for this film.</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Choose the film above to add its overview and cast.</p>
-            )}
-
-            {movie.cast.length > 0 && (
-              <section>
-                <h2 className="mb-3 font-semibold text-foreground">Cast</h2>
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  {movie.cast.map((member) => (
-                    <div key={`${member.tmdbPersonId}-${member.personName}`} className="w-20 shrink-0 text-center">
-                      <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted text-xl text-muted-foreground">
-                        {member.profilePath ? (
-                          <img src={`https://image.tmdb.org/t/p/w185${member.profilePath}`} alt="" className="h-full w-full object-cover" loading="lazy" />
-                        ) : member.personName.charAt(0)}
-                      </div>
-                      <p className="mt-1.5 line-clamp-2 text-xs font-medium text-foreground">{member.personName}</p>
-                      {member.characterName && <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{member.characterName}</p>}
-                    </div>
-                  ))}
+            {tab === 'copies' ? (
+              <div id="movie-panel-copies" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 space-y-5 focus:outline-none">
+                <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="page-kicker">The archive answer</p>
+                    <h2 className="section-heading">Owned copies</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Format, edition and shelf for every catalogued copy.</p>
+                  </div>
+                  {canEdit ? (
+                    <Button asChild size="sm">
+                      <Link to="/collection/add"><Plus aria-hidden /> Add a copy</Link>
+                    </Button>
+                  ) : null}
                 </div>
-              </section>
-            )}
-          </div>
-        )}
 
-        {tab === 'crew' && (
-          <div className="mt-6 grid max-w-3xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {movie.crew.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No crew data available.</p>
-            ) : movie.crew.map((member) => (
-              <div key={`${member.role}-${member.tmdbPersonId}-${member.personName}`} className="rounded-lg border border-border bg-card px-3 py-2">
-                <p className="text-sm font-medium text-foreground">{member.personName}</p>
-                <p className="text-xs capitalize text-muted-foreground">{member.role}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'watch' && (
-          <div className="mt-6 max-w-4xl space-y-6">
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-foreground">Streaming</h2>
-              <StreamingPanel movieId={movie.id} />
-            </section>
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-foreground">If you liked this</h2>
-              <RecommendationsPanel movieId={movie.id} />
-            </section>
-          </div>
-        )}
-
-        {tab === 'copies' && (
-          <div className="mt-6 space-y-4">
-            {canEdit && (
-              <Link
-                to="/collection/add"
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
-              >
-                <Plus className="h-3 w-3" /> Add a copy
-              </Link>
-            )}
-            {copiesQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading copies…</p>
-            ) : copies.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <Package className="h-10 w-10 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">No live copies in the collection.</p>
-              </div>
-            ) : (
-              <div className="grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {copies.map((copy) => (
-                  <CopyCard
-                    key={copy.id}
-                    item={copy}
-                    movieId={movie.id}
-                    canEdit={canEdit}
-                    onEdit={setEditing}
+                {copiesState === 'loading' ? (
+                  <StatePanel tone="loading" title="Loading owned copies" description="Checking editions and shelf locations…" />
+                ) : copiesState === 'offline' ? (
+                  <StatePanel
+                    tone="offline"
+                    title="Copy details are not cached"
+                    description="Reconnect to check editions and locations for this film."
+                    action={<Button type="button" variant="outline" onClick={() => void copiesQuery.refetch()}>Try again</Button>}
                   />
-                ))}
+                ) : copiesState === 'error' ? (
+                  <StatePanel
+                    tone="error"
+                    title="Could not load the owned copies"
+                    description={queryErrorMessage(copiesQuery.error, 'The collection record did not respond.')}
+                    action={<Button type="button" variant="outline" onClick={() => void copiesQuery.refetch()}>Try again</Button>}
+                  />
+                ) : copiesState === 'empty' ? (
+                  <StatePanel
+                    tone="empty"
+                    title="No live copies in the collection"
+                    description={canEdit ? 'Add a copy if this film should still be in the archive.' : 'Craig can restore or add a copy if this record is out of date.'}
+                    icon={Disc3}
+                  />
+                ) : (
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    {copies.map((copy) => (
+                      <CopyCard
+                        key={copy.id}
+                        item={copy}
+                        movieId={movie.id}
+                        canEdit={canEdit}
+                        onEdit={setEditing}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
+            ) : null}
+
+            {tab === 'overview' ? (
+              <div id="movie-panel-overview" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 space-y-8 focus:outline-none">
+                {movie.overview ? (
+                  <p className="max-w-3xl text-[0.9375rem] leading-7 text-muted-foreground">{movie.overview}</p>
+                ) : movie.identified ? (
+                  <p className="text-sm text-muted-foreground">No overview is available for this film.</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Choose the film above to add its overview and cast.</p>
+                )}
+
+                {movie.cast.length > 0 ? (
+                  <section>
+                    <h2 className="section-heading mb-4">Cast</h2>
+                    <div className="flex gap-4 overflow-x-auto pb-3">
+                      {movie.cast.map((member) => (
+                        <div key={`${member.tmdbPersonId}-${member.personName}`} className="w-24 shrink-0 text-center">
+                          <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted text-xl text-muted-foreground">
+                            {member.profilePath ? (
+                              <img src={`https://image.tmdb.org/t/p/w185${member.profilePath}`} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            ) : member.personName.charAt(0)}
+                          </div>
+                          <p className="mt-2 line-clamp-2 text-sm font-medium text-foreground">{member.personName}</p>
+                          {member.characterName ? <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{member.characterName}</p> : null}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+              </div>
+            ) : null}
+
+            {tab === 'crew' ? (
+              <div id="movie-panel-crew" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 focus:outline-none">
+                {movie.crew.length === 0 ? (
+                  <StatePanel tone="empty" title="No crew data available" compact />
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {movie.crew.map((member) => (
+                      <div key={`${member.role}-${member.tmdbPersonId}-${member.personName}`} className="archive-panel px-4 py-3">
+                        <p className="text-sm font-semibold text-foreground">{member.personName}</p>
+                        <p className="mt-0.5 text-xs capitalize text-muted-foreground">{member.role}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {tab === 'watch' ? (
+              <div id="movie-panel-watch" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 space-y-8 focus:outline-none">
+                <section className="space-y-3">
+                  <h2 className="section-heading">Streaming</h2>
+                  <StreamingPanel movieId={movie.id} />
+                </section>
+                <section className="space-y-3">
+                  <h2 className="section-heading">If you liked this</h2>
+                  <RecommendationsPanel movieId={movie.id} />
+                </section>
+              </div>
+            ) : null}
+          </section>
+
+          <aside className="min-w-0 space-y-4" aria-label="Personal film tools">
+            <WatchPanel movieId={movie.id} />
+            {/* Admin-only: `GET /admin/audit` is, so a viewer would only watch it fail. */}
+            {canEdit ? <ItemHistory movieId={movie.id} /> : null}
+          </aside>
+        </div>
       </div>
 
-      {editing && (
+      {editing ? (
         <CopyEditor movieId={movie.id} copy={editing} onClose={() => setEditing(null)} />
-      )}
+      ) : null}
     </div>
   )
 }

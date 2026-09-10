@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import {
   addBoxSetItem,
@@ -55,7 +57,7 @@ function AddDisc({ boxSetId, onDone }: { boxSetId: string; onDone: () => void })
   })
 
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+    <div className="archive-panel space-y-3 p-4 sm:p-5">
       <div className="flex items-center gap-2">
         <Input
           value={query}
@@ -66,46 +68,78 @@ function AddDisc({ boxSetId, onDone }: { boxSetId: string; onDone: () => void })
           placeholder="Find a film already in the collection"
           aria-label="Find a film"
         />
-        <Button type="button" variant="ghost" size="sm" onClick={onDone} aria-label="Close">
+        <Button type="button" variant="ghost" size="icon" onClick={onDone} aria-label="Close disc picker">
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       {movieId === null ? (
-        <ul className="space-y-1">
-          {(searchQuery.data?.items ?? []).map((movie) => (
-            <li key={movie.id}>
-              <button
-                type="button"
-                className="w-full rounded px-2 py-1 text-left text-sm text-foreground hover:bg-muted"
-                onClick={() => setMovieId(movie.id)}
-              >
-                {movie.title}
-                {movie.year === null ? '' : ` (${String(movie.year)})`}
-              </button>
-            </li>
-          ))}
-        </ul>
+        query.trim().length <= 1 ? (
+          <p className="text-sm text-muted-foreground">Enter at least two characters to find a film.</p>
+        ) : searchQuery.isPending ? (
+          <StatePanel compact tone="loading" title="Searching the collection" />
+        ) : searchQuery.fetchStatus === 'paused' && searchQuery.data === undefined ? (
+          <StatePanel compact tone="offline" title="Search needs the network" />
+        ) : searchQuery.isError ? (
+          <StatePanel
+            compact
+            tone="error"
+            title="Search unavailable"
+            description={queryErrorMessage(searchQuery.error, 'Could not search the collection.')}
+          />
+        ) : (searchQuery.data?.items.length ?? 0) === 0 ? (
+          <StatePanel compact tone="empty" title="No collection films match" />
+        ) : (
+          <ul className="divide-y divide-border">
+            {searchQuery.data?.items.map((movie) => (
+              <li key={movie.id}>
+                <button
+                  type="button"
+                  className="min-h-11 w-full rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
+                  onClick={() => setMovieId(movie.id)}
+                >
+                  {movie.title}
+                  {movie.year === null ? '' : ` (${String(movie.year)})`}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
       ) : (
-        <ul className="space-y-1">
-          {(copiesQuery.data ?? []).map((copy) => (
-            <li key={copy.id}>
-              <button
-                type="button"
-                disabled={add.isPending}
-                className="w-full rounded px-2 py-1 text-left text-sm text-foreground hover:bg-muted"
-                onClick={() => add.mutate(copy.id)}
-              >
-                {copy.formats.map((f) => formatLabel(f)).join(' + ')} ·{' '}
-                {copy.location ?? 'Unfiled'}
-              </button>
-            </li>
-          ))}
-        </ul>
+        copiesQuery.isPending ? (
+          <StatePanel compact tone="loading" title="Loading owned copies" />
+        ) : copiesQuery.fetchStatus === 'paused' && copiesQuery.data === undefined ? (
+          <StatePanel compact tone="offline" title="Owned copies need the network" />
+        ) : copiesQuery.isError ? (
+          <StatePanel
+            compact
+            tone="error"
+            title="Owned copies unavailable"
+            description={queryErrorMessage(copiesQuery.error, 'Could not load this film’s copies.')}
+          />
+        ) : (copiesQuery.data?.length ?? 0) === 0 ? (
+          <StatePanel compact tone="empty" title="No owned copies to add" />
+        ) : (
+          <ul className="divide-y divide-border">
+            {copiesQuery.data?.map((copy) => (
+              <li key={copy.id}>
+                <button
+                  type="button"
+                  disabled={add.isPending}
+                  className="min-h-11 w-full rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                  onClick={() => add.mutate(copy.id)}
+                >
+                  {copy.formats.map((f) => formatLabel(f)).join(' + ')} ·{' '}
+                  {copy.location ?? 'Unfiled'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
       )}
 
       {add.isError ? (
-        <p className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {queryErrorMessage(add.error, 'Could not add that disc.')}
         </p>
       ) : null}
@@ -142,50 +176,77 @@ export default function BoxSetDetailPage() {
 
   if (setQuery.isError) {
     return (
-      <p className="p-8 text-sm text-destructive">
-        {queryErrorMessage(setQuery.error, 'Could not load this box set.')}
-      </p>
+      <div className="page-shell-narrow">
+        <StatePanel
+          tone="error"
+          title="Box set unavailable"
+          description={queryErrorMessage(setQuery.error, 'Could not load this box set.')}
+          action={(
+            <Button asChild variant="outline">
+              <Link to="/box-sets">Back to box sets</Link>
+            </Button>
+          )}
+        />
+      </div>
     )
   }
-  if (!boxSet) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>
+  if (setQuery.fetchStatus === 'paused' && !boxSet) {
+    return (
+      <div className="page-shell-narrow">
+        <StatePanel tone="offline" title="This box set needs the network" />
+      </div>
+    )
+  }
+  if (!boxSet) {
+    return (
+      <div className="page-shell-narrow">
+        <StatePanel tone="loading" title="Opening box set" />
+      </div>
+    )
+  }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-      <div className="flex items-start gap-3">
-        <Link
-          to="/box-sets"
-          className="mt-1 text-muted-foreground hover:text-foreground"
-          aria-label="Back to box sets"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{boxSet.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {[boxSet.label, boxSet.seriesName, completionLabel(boxSet)]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-        </div>
-        {profile?.role === 'admin' ? (
+    <div className="page-shell-narrow space-y-5">
+      <PageHeader
+        eyebrow="Box set"
+        title={boxSet.name}
+        backTo="/box-sets"
+        backLabel="All box sets"
+        meta={[
+          boxSet.label,
+          boxSet.seriesName,
+          completionLabel(boxSet),
+        ].filter(Boolean).join(' · ')}
+        actions={profile?.role === 'admin' ? (
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="outline"
             aria-label="Delete box set"
             disabled={destroy.isPending}
             onClick={() => destroy.mutate()}
           >
             <Trash2 className="h-4 w-4" />
+            Delete set
           </Button>
         ) : null}
-      </div>
+      />
+
+      {destroy.isError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {queryErrorMessage(destroy.error, 'Could not delete this box set.')}
+        </p>
+      ) : null}
+      {remove.isError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {queryErrorMessage(remove.error, 'Could not remove that disc from the set.')}
+        </p>
+      ) : null}
 
       {profile?.role === 'admin' ? (
         adding ? (
           <AddDisc boxSetId={id} onDone={() => setAdding(false)} />
         ) : (
-          <Button type="button" size="sm" variant="outline" onClick={() => setAdding(true)}>
+          <Button type="button" variant="outline" onClick={() => setAdding(true)}>
             <Plus className="h-4 w-4" />
             Add a disc
           </Button>
@@ -193,15 +254,17 @@ export default function BoxSetDetailPage() {
       ) : null}
 
       {boxSet.items.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          No discs in this set yet.
-        </p>
+        <StatePanel
+          tone="empty"
+          title="No discs in this set yet"
+          description={profile?.role === 'admin' ? 'Add an owned copy to begin cataloguing the box.' : undefined}
+        />
       ) : (
         <ul className="space-y-2">
           {boxSet.items.map((item) => (
             <li
               key={item.collectionItemId}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+              className="archive-panel flex items-center gap-3 p-3 sm:p-4"
             >
               <img
                 src={posterUrl(item.posterPath, 'w92')}
@@ -225,7 +288,7 @@ export default function BoxSetDetailPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   aria-label={`Remove ${item.movieTitle}`}
                   disabled={remove.isPending}
                   onClick={() => remove.mutate(item.collectionItemId)}
@@ -239,19 +302,19 @@ export default function BoxSetDetailPage() {
       )}
 
       {boxSet.volumes.length > 0 ? (
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-foreground">Volumes in this series</h2>
-          <ul className="space-y-1">
+        <section className="archive-panel p-4 sm:p-5">
+          <h2 className="section-heading">Volumes in this series</h2>
+          <ul className="mt-2 divide-y divide-border">
             {boxSet.volumes.map((volume) => (
-              <li key={volume.id} className="text-sm">
-                <Link to={`/box-sets/${volume.id}`} className="text-foreground hover:underline">
+              <li key={volume.id} className="py-2 text-sm">
+                <Link to={`/box-sets/${volume.id}`} className="inline-flex min-h-11 items-center font-medium text-foreground hover:underline">
                   {volume.name}
                 </Link>
                 <span className="text-muted-foreground"> · {completionLabel(volume)}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       ) : null}
     </div>
   )

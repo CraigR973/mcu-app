@@ -13,6 +13,8 @@ import { Link } from 'react-router-dom'
 import type { CalendarEntry } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import {
   calendarFeedUrl,
@@ -23,7 +25,6 @@ import {
   webcalUrl,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
 
 function monthKey(date: Date): string {
   return `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -44,25 +45,25 @@ function shift(key: string, by: number): string {
 
 function Entry({ entry }: { entry: CalendarEntry }) {
   const body = (
-    <div className="flex items-center gap-2">
+    <div className="flex min-h-12 items-center gap-3">
       {entry.posterPath ? (
         <img
           src={posterUrl(entry.posterPath, 'w92')}
           alt=""
           loading="lazy"
-          className="h-10 w-7 shrink-0 rounded object-cover"
+          className="h-12 w-8 shrink-0 rounded-sm border border-border object-cover"
         />
       ) : null}
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-foreground">{entry.title}</p>
-        <p className="text-[11px] text-muted-foreground">{entry.typeLabel}</p>
+        <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">{entry.title}</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{entry.typeLabel}</p>
       </div>
     </div>
   )
   return (
-    <li>
+    <li className="py-1.5 first:pt-0 last:pb-0">
       {entry.movieId ? (
-        <Link to={`/movies/${entry.movieId}`} className="block hover:opacity-80">
+        <Link to={`/movies/${entry.movieId}`} className="-mx-2 block rounded-md px-2 hover:bg-muted/60">
           {body}
         </Link>
       ) : (
@@ -83,6 +84,7 @@ function Entry({ entry }: { entry: CalendarEntry }) {
  */
 function SubscribePanel() {
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState(false)
 
   const subscribe = useMutation({
     mutationFn: subscribeToCalendar,
@@ -95,16 +97,21 @@ function SubscribePanel() {
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
+      setCopyError(false)
     } catch {
       // Clipboard access can be refused, and the URL is on screen to select by hand.
       setCopied(false)
+      setCopyError(true)
     }
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold text-foreground">Subscribe in your calendar</h2>
-      <p className="text-xs text-muted-foreground">
+    <section className="archive-panel space-y-4 p-5" aria-labelledby="calendar-subscribe-heading">
+      <div>
+        <p className="page-kicker">Private feed</p>
+        <h2 id="calendar-subscribe-heading" className="section-heading">Subscribe in your calendar</h2>
+      </div>
+      <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
         A private link your calendar app can follow. Anyone with it can read this
         calendar&rsquo;s release dates &mdash; nothing about your collection, watches or
         account. Generating a new link stops the old one working.
@@ -112,7 +119,7 @@ function SubscribePanel() {
 
       {url ? (
         <div className="space-y-2">
-          <code className="block break-all rounded-md bg-muted px-2 py-1.5 text-[11px] text-foreground">
+          <code className="block break-all rounded-md border border-border bg-surface-sunken px-3 py-2 text-xs leading-5 text-foreground">
             {url}
           </code>
           <div className="flex flex-wrap gap-2">
@@ -122,9 +129,9 @@ function SubscribePanel() {
             </Button>
             <a
               href={webcalUrl(url)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-input px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted"
+              className="touch-target inline-flex min-h-11 items-center gap-2 rounded-md border border-input px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted"
             >
-              <CalendarDays className="h-4 w-4" />
+              <CalendarDays className="h-4 w-4" aria-hidden />
               Open in Calendar
             </a>
           </div>
@@ -133,6 +140,11 @@ function SubscribePanel() {
               ? 'Your previous link has stopped working.'
               : 'This is the only time the link is shown — copy it now.'}
           </p>
+          {copyError ? (
+            <p role="alert" className="text-sm text-destructive">
+              Your browser blocked copying. Select the link above and copy it manually.
+            </p>
+          ) : null}
         </div>
       ) : (
         <Button
@@ -147,11 +159,11 @@ function SubscribePanel() {
       )}
 
       {subscribe.isError ? (
-        <p className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {queryErrorMessage(subscribe.error, 'Could not create a link.')}
         </p>
       ) : null}
-    </div>
+    </section>
   )
 }
 
@@ -177,18 +189,14 @@ export default function CalendarPage() {
   })
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Release calendar</h1>
-          <p className="text-sm text-muted-foreground">
-            What&rsquo;s coming, in the genres this collection leans on.
-          </p>
-        </div>
-        {profile?.role === 'admin' ? (
+    <div className="page-shell-narrow space-y-7">
+      <PageHeader
+        eyebrow="Programme diary"
+        title="Release calendar"
+        description="Forthcoming cinema and home-media dates in the genres this collection leans on."
+        actions={profile?.role === 'admin' ? (
           <Button
             type="button"
-            size="sm"
             variant="outline"
             disabled={ingest.isPending}
             onClick={() => ingest.mutate()}
@@ -200,11 +208,11 @@ export default function CalendarPage() {
             )}
             Refresh from TMDB
           </Button>
-        ) : null}
-      </div>
+        ) : undefined}
+      />
 
       {ingest.isSuccess ? (
-        <p className="text-sm text-muted-foreground">
+        <p role="status" className="rounded-md border border-success/30 bg-success/10 px-4 py-3 text-sm text-foreground">
           {ingest.data.created} new, {ingest.data.updated} moved, {ingest.data.unchanged}{' '}
           unchanged
           {ingest.data.errors.length > 0
@@ -213,58 +221,60 @@ export default function CalendarPage() {
           .
         </p>
       ) : null}
+      {ingest.isError ? (
+        <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {queryErrorMessage(ingest.error, 'Could not refresh the release calendar.')}
+        </p>
+      ) : null}
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="archive-panel flex items-center justify-between gap-2 p-2 sm:p-3">
         <Button
           type="button"
-          size="sm"
+          size="icon"
           variant="ghost"
           aria-label="Previous month"
           onClick={() => setMonth((current) => shift(current, -1))}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden />
         </Button>
-        <p className="text-sm font-semibold text-foreground">{monthLabel(month)}</p>
+        <h2 className="font-display text-xl font-semibold text-foreground" aria-live="polite">{monthLabel(month)}</h2>
         <Button
           type="button"
-          size="sm"
+          size="icon"
           variant="ghost"
           aria-label="Next month"
           onClick={() => setMonth((current) => shift(current, 1))}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden />
         </Button>
       </div>
 
       {state === 'loading' ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Setting the programme" />
       ) : state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — the calendar could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="This month is not cached here" description="Reconnect to load release dates on this device." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(monthQuery.error, 'Could not load the calendar.')}
-        </p>
+        <StatePanel
+          tone="error"
+          title="The release calendar is unavailable"
+          description={queryErrorMessage(monthQuery.error, 'Could not load the calendar.')}
+        />
       ) : state === 'empty' ? (
-        <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <CalendarDays className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Nothing scheduled in this month.</p>
-        </div>
+        <StatePanel tone="empty" icon={CalendarDays} title="Nothing is scheduled this month" description="Move to another month to continue browsing the release programme." />
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {Object.entries(days)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([day, entries]) => (
-              <li key={day} className="rounded-lg border border-border bg-card p-3">
-                <p className={cn('mb-2 text-xs font-semibold text-foreground')}>
+              <li key={day} className="archive-panel grid gap-3 p-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:p-5">
+                <p className="font-display text-lg font-semibold text-foreground">
                   {new Date(`${day}T00:00:00`).toLocaleDateString(undefined, {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'short',
                   })}
                 </p>
-                <ul className="space-y-2">
+                <ul className="divide-y divide-border">
                   {entries.map((entry) => (
                     <Entry key={entry.id} entry={entry} />
                   ))}

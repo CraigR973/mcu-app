@@ -30,11 +30,11 @@ function SetRow({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
             {completionCountLabel(set)}
           </span>
         </div>
-        <div className="my-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div role="progressbar" aria-label={`${set.setName} completion`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={set.percentComplete} className="my-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div
             className={cn(
               'h-full rounded-full',
-              set.percentComplete === 100 ? 'bg-primary' : 'bg-amber-500',
+              set.percentComplete === 100 ? 'bg-primary' : 'bg-warning',
             )}
             style={{ width: `${String(set.percentComplete)}%` }}
           />
@@ -136,11 +136,12 @@ export default function InsightsPage() {
             type="button"
             onClick={() => setFilter(option.value)}
             className={cn(
-              'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+              'touch-target min-h-11 rounded-md px-3 text-sm font-semibold transition-colors',
               filter === option.value
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-muted',
             )}
+            aria-pressed={filter === option.value}
           >
             {option.label}
           </button>

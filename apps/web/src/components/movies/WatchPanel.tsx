@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Eye, Loader2, Star, Trash2 } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
+import { StatePanel } from '@/components/ui/state-panel'
 import { deleteWatch, fetchWatches, logWatch, RATING_STEPS } from '@/lib/api'
+import { listState, queryErrorMessage } from '@/lib/query-state'
 
 interface Props {
   movieId: string
@@ -29,7 +32,7 @@ function Stars({
   onChange: (rating: number | null) => void
 }) {
   return (
-    <div className="flex items-center gap-0.5" role="group" aria-label="Your rating">
+    <div className="flex items-center" role="group" aria-label="Rating for this watch">
       {RATING_STEPS.filter((step) => Number.isInteger(step)).map((step) => (
         <button
           key={step}
@@ -39,12 +42,12 @@ function Stars({
           onClick={() => onChange(value === step ? null : step)}
           aria-label={`${step} star${step === 1 ? '' : 's'}`}
           aria-pressed={value != null && value >= step}
-          className="p-0.5"
+          className="touch-target inline-flex h-11 w-11 items-center justify-center rounded-md hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <Star
-            className={`h-4 w-4 ${
+            className={`h-5 w-5 ${
               value != null && value >= step
-                ? 'fill-yellow-400 text-yellow-400'
+                ? 'fill-accent text-accent'
                 : 'text-muted-foreground'
             }`}
           />
@@ -65,6 +68,8 @@ export default function WatchPanel({ movieId }: Props) {
   })
 
   const entries = watchesQuery.data?.items ?? []
+  const state = listState(watchesQuery, entries.length === 0)
+  const canLog = state === 'ready' || state === 'empty'
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: ['watch-log', movieId] })
@@ -95,68 +100,104 @@ export default function WatchPanel({ movieId }: Props) {
   })
 
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Watch log</h2>
-        <div className="flex items-center gap-3">
+    <section className="archive-panel space-y-4 p-4 sm:p-5" aria-busy={watchesQuery.isPending}>
+      <div>
+        <p className="page-kicker">Personal history</p>
+        <h2 className="section-heading">Watch log</h2>
+      </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="overflow-x-auto">
           <Stars value={rating} onChange={setRating} />
-          <button
-            type="button"
-            onClick={() => log.mutate()}
-            disabled={log.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
-          >
-            {log.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Eye className="h-3 w-3" />
-            )}
-            {entries.length > 0 ? 'Log a rewatch' : 'Mark watched'}
-          </button>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => log.mutate()}
+          disabled={log.isPending || !canLog}
+          className="w-full sm:w-auto"
+        >
+          {log.isPending ? (
+            <Loader2 className="animate-spin" aria-hidden />
+          ) : (
+            <Eye aria-hidden />
+          )}
+          {canLog && entries.length > 0 ? 'Log a rewatch' : 'Mark watched'}
+        </Button>
       </div>
 
       {log.isError && (
-        <p className="text-xs text-destructive">
-          {log.error instanceof Error ? log.error.message : 'Could not log that watch.'}
+        <p role="alert" className="text-sm text-destructive">
+          {queryErrorMessage(log.error, 'Could not log that watch.')}
         </p>
       )}
 
-      {watchesQuery.isLoading ? (
-        <p className="text-xs text-muted-foreground">Loading your watch history…</p>
-      ) : entries.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          You have not logged a watch for this film.
+      {remove.isError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {queryErrorMessage(remove.error, 'Could not remove that watch.')}
         </p>
+      ) : null}
+
+      {state === 'loading' ? (
+        <StatePanel
+          tone="loading"
+          title="Loading watch history"
+          description="Checking your private watch log…"
+          compact
+        />
+      ) : state === 'offline' ? (
+        <StatePanel
+          tone="offline"
+          title="Watch history is unavailable offline"
+          description="Reconnect to check whether this is a rewatch."
+          action={<Button type="button" size="sm" variant="outline" onClick={() => void watchesQuery.refetch()}>Try again</Button>}
+          compact
+        />
+      ) : state === 'error' ? (
+        <StatePanel
+          tone="error"
+          title="Could not load your watch history"
+          description={queryErrorMessage(watchesQuery.error, 'The watch log did not respond.')}
+          action={<Button type="button" size="sm" variant="outline" onClick={() => void watchesQuery.refetch()}>Try again</Button>}
+          compact
+        />
+      ) : state === 'empty' ? (
+        <StatePanel
+          tone="empty"
+          title="No watches logged"
+          description="Rate the film if you like, then mark it as watched."
+          compact
+        />
       ) : (
         <ul className="space-y-1.5">
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2 text-xs"
+              className="flex min-h-11 items-center justify-between gap-3 rounded-md bg-muted/50 px-3 py-2 text-sm"
             >
               <span className="text-foreground">
-                {formatWatchedAt(entry.watchedAt)}
+                <time dateTime={entry.watchedAt}>{formatWatchedAt(entry.watchedAt)}</time>
                 {entry.isRewatch && (
                   <span className="ml-2 text-muted-foreground">rewatch</span>
                 )}
               </span>
               <span className="flex items-center gap-3">
                 {entry.personalRating != null && (
-                  <span className="inline-flex items-center gap-1 text-yellow-500">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span className="inline-flex items-center gap-1 text-accent">
+                    <Star className="h-3 w-3 fill-accent text-accent" aria-hidden />
                     {entry.personalRating}
                   </span>
                 )}
-                <button
+                <Button
                   type="button"
                   onClick={() => remove.mutate(entry.id)}
                   disabled={remove.isPending}
-                  aria-label="Remove this watch"
-                  className="text-muted-foreground hover:text-destructive disabled:opacity-60"
+                  aria-label={`Remove watch from ${formatWatchedAt(entry.watchedAt)}`}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                  <Trash2 aria-hidden />
+                </Button>
               </span>
             </li>
           ))}

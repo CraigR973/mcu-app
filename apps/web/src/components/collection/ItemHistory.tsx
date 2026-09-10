@@ -24,7 +24,7 @@ const FIELD_LABELS: Record<string, string> = {
   location: 'Location',
   section: 'Section',
   shelf: 'Shelf',
-  sub_category: 'Sub-category',
+  sub_category: 'Collector edition',
   notes: 'Notes',
   condition: 'Condition',
   has_playback_issues: 'Playback issues',

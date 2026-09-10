@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Check, Sparkle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import { fetchNewReleases, posterUrl } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
@@ -23,71 +25,77 @@ export default function DiscoverPage() {
   const state = listState(releasesQuery, items.length === 0)
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Coming soon</h1>
-        <p className="text-sm text-muted-foreground">
-          New releases in the genres this collection actually leans on
-          {releasesQuery.data && releasesQuery.data.basedOnGenres.length > 0
-            ? `: ${releasesQuery.data.basedOnGenres.join(', ')}.`
-            : '.'}
-        </p>
-      </div>
+    <div className="page-shell space-y-7">
+      <PageHeader
+        eyebrow="Repertory programme"
+        title="Coming soon"
+        description="Forthcoming releases selected from the genres already represented on your shelves."
+        meta={releasesQuery.data && releasesQuery.data.basedOnGenres.length > 0 ? (
+          <span>Based on {releasesQuery.data.basedOnGenres.join(' · ')}</span>
+        ) : undefined}
+      />
 
       {state === 'loading' ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Preparing the programme" description="Looking for forthcoming releases that fit this archive…" />
       ) : state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — new releases could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="Coming soon is not cached here" description="Reconnect to refresh the release programme for this device." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(releasesQuery.error, 'Could not load new releases.')}
-        </p>
+        <StatePanel
+          tone="error"
+          title="The release programme is unavailable"
+          description={queryErrorMessage(releasesQuery.error, 'Could not load new releases.')}
+        />
       ) : state === 'empty' ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <Sparkle className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">
-            Nothing upcoming matches this collection&rsquo;s genres right now.
-          </p>
-        </div>
+        <StatePanel
+          tone="empty"
+          icon={Sparkle}
+          title="Nothing suitable is scheduled"
+          description="No forthcoming releases match this collection’s genres right now."
+        />
       ) : (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        <ul className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {items.map((item) => {
             const card = (
-              <div className="space-y-1">
-                <div className="relative">
+              <article className="group space-y-3">
+                <div className="relative overflow-hidden rounded-md border border-border bg-muted shadow-soft">
                   <img
                     src={posterUrl(item.posterPath, 'w342')}
                     alt=""
                     loading="lazy"
                     className={cn(
-                      'aspect-[2/3] w-full rounded object-cover',
+                      'aspect-[2/3] w-full object-cover transition-opacity',
                       item.ownership === 'owned' ? '' : 'opacity-90',
                     )}
                   />
                   {item.ownership === 'owned' ? (
-                    <span className="absolute right-1 top-1 rounded-full bg-primary p-0.5 text-primary-foreground">
-                      <Check className="h-3 w-3" />
+                    <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-success/40 bg-background/95 px-2 py-1 text-[0.625rem] font-semibold text-success shadow-soft">
+                      <Check className="h-3 w-3" aria-hidden />
+                      Owned
                     </span>
                   ) : null}
                 </div>
-                <p className="truncate text-sm font-medium text-foreground" title={item.title}>
-                  {item.title}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {item.releaseDate ?? 'date to be confirmed'}
-                </p>
-                {item.matchedGenres.length > 0 ? (
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {item.matchedGenres.join(' · ')}
+                <div>
+                  <h2 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground group-hover:text-primary" title={item.title}>
+                    {item.title}
+                  </h2>
+                  <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                    {item.releaseDate ?? 'Date to be confirmed'}
                   </p>
-                ) : null}
-              </div>
+                  {item.matchedGenres.length > 0 ? (
+                    <p className="mt-1 truncate text-[0.6875rem] text-muted-foreground">
+                      {item.matchedGenres.join(' · ')}
+                    </p>
+                  ) : null}
+                </div>
+              </article>
             )
             return (
               <li key={item.tmdbId}>
-                {item.movieId ? <Link to={`/movies/${item.movieId}`}>{card}</Link> : card}
+                {item.movieId ? (
+                  <Link to={`/movies/${item.movieId}`} className="block rounded-md">
+                    {card}
+                  </Link>
+                ) : card}
               </li>
             )
           })}

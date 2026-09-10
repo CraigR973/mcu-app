@@ -7,27 +7,30 @@ interface Props {
 }
 
 const MODES: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
-  { mode: 'grid',    icon: <LayoutGrid size={16} />,   label: 'Grid' },
-  { mode: 'list',    icon: <List size={16} />,          label: 'List' },
-  { mode: 'compact', icon: <AlignJustify size={16} />, label: 'Compact' },
+  { mode: 'grid', icon: <LayoutGrid size={16} aria-hidden />, label: 'Grid' },
+  { mode: 'list', icon: <List size={16} aria-hidden />, label: 'List' },
+  { mode: 'compact', icon: <AlignJustify size={16} aria-hidden />, label: 'Compact' },
 ]
 
 export function ViewToggle({ value, onChange }: Props) {
   return (
-    <div className="flex items-center rounded-md border border-zinc-700 overflow-hidden">
+    <div className="flex items-center overflow-hidden rounded-md border border-input bg-card" role="group" aria-label="Collection layout">
       {MODES.map(({ mode, icon, label }) => (
         <button
           key={mode}
-          title={label}
+          type="button"
+          aria-label={`${label} view`}
+          aria-pressed={value === mode}
           onClick={() => onChange(mode)}
           className={[
-            'flex items-center justify-center px-2.5 py-1.5 transition-colors',
+            'touch-target flex min-h-11 items-center justify-center gap-2 border-r border-border px-3 text-sm font-semibold transition-colors last:border-r-0',
             value === mode
-              ? 'bg-zinc-600 text-white'
-              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200',
+              ? 'bg-primary/12 text-primary'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
           ].join(' ')}
         >
           {icon}
+          <span className="hidden xl:inline">{label}</span>
         </button>
       ))}
     </div>

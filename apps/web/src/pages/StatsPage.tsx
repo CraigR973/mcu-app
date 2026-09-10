@@ -4,6 +4,8 @@ import { useState } from 'react'
 import type { CountSlice, Stats } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 import {
   downloadExport,
   fetchStats,
@@ -12,13 +14,12 @@ import {
   posterUrl,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
 
 function Tile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-semibold text-foreground">{value}</p>
+    <div className="border-l-2 border-l-accent bg-card px-4 py-4 shadow-soft">
+      <dt className="metadata-label">{label}</dt>
+      <dd className="mt-1 font-display text-3xl font-semibold tabular-nums tracking-tight text-foreground">{value}</dd>
     </div>
   )
 }
@@ -50,7 +51,7 @@ function BarChart({
             <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
               {slice.label}
             </span>
-            <span className="h-3 flex-1 overflow-hidden rounded-sm bg-muted">
+            <span className="h-2.5 flex-1 overflow-hidden rounded-sm bg-muted" aria-hidden>
               <span
                 className="block h-full rounded-sm bg-primary/70"
                 style={{ width: `${String(Math.round((count / ceiling) * 100))}%` }}
@@ -76,9 +77,9 @@ function Section({
   empty?: string
 }) {
   return (
-    <section className="space-y-2 rounded-lg border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      {empty ? <p className="text-xs text-muted-foreground">{empty}</p> : children}
+    <section className="archive-panel space-y-4 p-5">
+      <h2 className="section-heading text-lg">{title}</h2>
+      {empty ? <p className="text-sm leading-6 text-muted-foreground">{empty}</p> : children}
     </section>
   )
 }
@@ -96,10 +97,12 @@ function SpendChart({ stats }: { stats: Stats }) {
         {points.map((point) => (
           <li
             key={point.month}
-            className="flex-1 rounded-t-sm bg-primary/60"
+            className="relative flex-1 rounded-t-sm bg-primary/60"
             style={{ height: `${String(Math.max(4, (point.cumulativeCents / peak) * 100))}%` }}
             title={`${point.month} · ${poundsFromCents(point.cumulativeCents)}`}
-          />
+          >
+            <span className="sr-only">{point.month}: {poundsFromCents(point.cumulativeCents)}</span>
+          </li>
         ))}
       </ul>
       <p className="text-[11px] text-muted-foreground">
@@ -140,34 +143,33 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Stats</h1>
-        <p className="text-sm text-muted-foreground">
-          What the collection is made of, and how to take a copy of it with you.
-        </p>
-      </div>
+    <div className="page-shell-narrow space-y-8">
+      <PageHeader
+        eyebrow="Collection ledger"
+        title="Stats"
+        description="The shape of the archive: what is owned, where it lives and the history recorded against it."
+      />
 
       {state === 'offline' ? (
-        <p className="text-sm text-muted-foreground">
-          Waiting for the network — the stats could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="Stats are not cached here" description="Reconnect to load the collection ledger on this device." />
       ) : state === 'error' ? (
-        <p className="text-sm text-destructive">
-          {queryErrorMessage(statsQuery.error, 'Could not load the stats.')}
-        </p>
+        <StatePanel
+          tone="error"
+          title="The collection ledger is unavailable"
+          description={queryErrorMessage(statsQuery.error, 'Could not load the stats.')}
+        />
       ) : !stats ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <StatePanel tone="loading" title="Counting the archive" />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Tile label="Films" value={stats.totalMovies.toLocaleString()} />
             <Tile label="Discs" value={stats.totalItems.toLocaleString()} />
             <Tile label="Identified" value={stats.identifiedMovies.toLocaleString()} />
             <Tile label="You've watched" value={stats.watchedMovies.toLocaleString()} />
-          </div>
+          </dl>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <Section title="Formats">
               <BarChart slices={stats.formats} countOf={(s) => s.itemCount} />
             </Section>
@@ -231,9 +233,12 @@ export default function StatsPage() {
             </Section>
           </div>
 
-          <section className="space-y-3 rounded-lg border border-border bg-card p-4">
-            <h2 className="text-sm font-semibold text-foreground">Export</h2>
-            <p className="text-xs text-muted-foreground">
+          <section className="archive-panel space-y-4 p-5">
+            <div>
+              <p className="page-kicker">Portable archive</p>
+              <h2 className="section-heading">Export</h2>
+            </div>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
               One row per disc. The printable view opens in a new tab — use your
               browser&rsquo;s Print dialog and &ldquo;Save as PDF&rdquo;.
             </p>
@@ -273,7 +278,11 @@ export default function StatsPage() {
                 disabled={busy !== null}
                 onClick={() => void run('html', () => downloadExport('html'))}
               >
-                <Download className="h-4 w-4" />
+                {busy === 'html' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <Download className="h-4 w-4" aria-hidden />
+                )}
                 HTML
               </Button>
               <Button
@@ -290,7 +299,11 @@ export default function StatsPage() {
                 Printable view
               </Button>
             </div>
-            {error ? <p className={cn('text-sm text-destructive')}>{error}</p> : null}
+            {error ? (
+              <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
           </section>
         </>
       )}

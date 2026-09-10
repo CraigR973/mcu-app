@@ -1,15 +1,16 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Camera, ImagePlus, Loader2, Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Dialog } from '@/components/ui/dialog'
 import {
   deleteItemPhoto,
   fetchItemPhotos,
   itemPhotoUrl,
   uploadItemPhoto,
 } from '@/lib/api'
-import { queryErrorMessage } from '@/lib/query-state'
+import { listState, queryErrorMessage } from '@/lib/query-state'
 
 interface Props {
   itemId: string
@@ -32,7 +33,6 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
   const cameraRef = useRef<HTMLInputElement | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
   const [viewing, setViewing] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   const photos = useQuery({
     queryKey: ['item-photos', itemId],
@@ -45,11 +45,8 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
   const upload = useMutation({
     mutationFn: (file: File) => uploadItemPhoto(itemId, file),
     onSuccess: () => {
-      setError(null)
       void invalidate()
     },
-    onError: (cause) =>
-      setError(queryErrorMessage(cause, 'That photo could not be uploaded.')),
   })
 
   const remove = useMutation({
@@ -62,17 +59,44 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
 
   const items = photos.data?.items ?? []
   const remaining = photos.data?.remaining ?? 0
+  const state = listState(photos, items.length === 0)
+  const selectedPhoto = items.find((photo) => photo.id === viewing) ?? null
+  const closeLightbox = useCallback(() => setViewing(null), [])
 
   return (
     <div className="mt-3">
-      {items.length > 0 ? (
+      {state === 'loading' ? (
+        <p role="status" className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          Loading disc photos…
+        </p>
+      ) : state === 'offline' ? (
+        <div className="space-y-2" role="status">
+          <p className="text-sm text-muted-foreground">
+            Photos are waiting for the network.
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => void photos.refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : state === 'error' ? (
+        <div className="space-y-2" role="alert">
+          <p className="text-sm text-destructive">
+            {queryErrorMessage(photos.error, 'Could not load the photos for this disc.')}
+          </p>
+          <Button type="button" size="sm" variant="outline" onClick={() => void photos.refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : items.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
           {items.map((photo) => (
             <li key={photo.id} className="group relative">
               <button
                 type="button"
                 onClick={() => setViewing(photo.id)}
-                aria-label={photo.caption ?? 'Open photo'}
+                aria-label={photo.caption ? `Open photo: ${photo.caption}` : 'Open disc photo'}
+                className="touch-target rounded-md focus-visible:ring-2 focus-visible:ring-ring/30"
               >
                 <img
                   src={itemPhotoUrl(photo.url)}
@@ -82,24 +106,26 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
                 />
               </button>
               {canEdit ? (
-                <button
+                <Button
                   type="button"
+                  size="icon"
+                  variant="secondary"
                   aria-label="Delete photo"
                   onClick={() => remove.mutate(photo.id)}
                   disabled={remove.isPending}
-                  className="absolute -right-1 -top-1 rounded-full bg-background p-1 opacity-0 shadow transition-opacity group-hover:opacity-100 focus:opacity-100"
+                  className="absolute -right-2 -top-2 h-9 w-9 rounded-full shadow-soft"
                 >
-                  <Trash2 className="h-3 w-3 text-destructive" aria-hidden />
-                </button>
+                  <Trash2 className="text-destructive" aria-hidden />
+                </Button>
               ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-muted-foreground">No photos of this disc yet.</p>
+        <p className="text-sm text-muted-foreground">No photos of this disc yet.</p>
       )}
 
-      {canEdit ? (
+      {canEdit && (state === 'empty' || state === 'ready') ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {/* `capture` opens the camera on a phone and is ignored on a laptop, which is
               why there are two inputs rather than one plus a user-agent check. */}
@@ -108,6 +134,7 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
             type="file"
             accept="image/*"
             capture="environment"
+            aria-label="Take a disc photo"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0]
@@ -119,6 +146,7 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
             ref={fileRef}
             type="file"
             accept="image/*"
+            aria-label="Choose a disc photo"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0]
@@ -133,9 +161,9 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
             onClick={() => cameraRef.current?.click()}
           >
             {upload.isPending ? (
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" aria-hidden />
+              <Loader2 className="animate-spin" aria-hidden />
             ) : (
-              <Camera className="mr-1 h-3 w-3" aria-hidden />
+              <Camera aria-hidden />
             )}
             Take a photo
           </Button>
@@ -145,39 +173,57 @@ export function PhotoGallery({ itemId, canEdit }: Props) {
             disabled={upload.isPending || remaining === 0}
             onClick={() => fileRef.current?.click()}
           >
-            <ImagePlus className="mr-1 h-3 w-3" aria-hidden />
+            <ImagePlus aria-hidden />
             Choose a file
           </Button>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {remaining === 0 ? 'Five is the limit' : `${remaining} left`}
           </span>
         </div>
       ) : null}
 
-      {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
-
-      {viewing ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setViewing(null)}
-        >
-          <img
-            src={itemPhotoUrl(items.find((photo) => photo.id === viewing)?.url ?? '')}
-            alt=""
-            className="max-h-full max-w-full rounded shadow-2xl"
-          />
-          <button
-            type="button"
-            aria-label="Close"
-            className="absolute right-4 top-4 rounded-full bg-background p-2"
-            onClick={() => setViewing(null)}
-          >
-            <X className="h-4 w-4" aria-hidden />
-          </button>
-        </div>
+      {upload.isError ? (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {queryErrorMessage(upload.error, 'That photo could not be uploaded.')}
+        </p>
       ) : null}
+      {remove.isError ? (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {queryErrorMessage(remove.error, 'That photo could not be deleted.')}
+        </p>
+      ) : null}
+
+      <Dialog
+        open={selectedPhoto !== null}
+        onClose={closeLightbox}
+        label={selectedPhoto?.caption ? `Disc photo: ${selectedPhoto.caption}` : 'Disc photo'}
+        className="overflow-hidden border-brand-champagne/30 bg-brand-ink sm:max-w-5xl"
+      >
+        {selectedPhoto ? (
+          <figure className="relative flex min-h-64 flex-col items-center justify-center p-3 sm:p-5">
+            <img
+              src={itemPhotoUrl(selectedPhoto.url)}
+              alt={selectedPhoto.caption ?? 'Photo of this disc'}
+              className="max-h-[78dvh] w-auto rounded-md object-contain shadow-lift"
+            />
+            {selectedPhoto.caption ? (
+              <figcaption className="mt-3 text-sm text-brand-cream/80">
+                {selectedPhoto.caption}
+              </figcaption>
+            ) : null}
+            <Button
+              type="button"
+              aria-label="Close photo"
+              size="icon"
+              variant="secondary"
+              className="absolute right-3 top-3 rounded-full"
+              onClick={closeLightbox}
+            >
+              <X aria-hidden />
+            </Button>
+          </figure>
+        ) : null}
+      </Dialog>
     </div>
   )
 }

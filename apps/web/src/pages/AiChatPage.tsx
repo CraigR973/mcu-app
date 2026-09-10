@@ -7,6 +7,7 @@ import type { AiPendingToolCall } from '@mcu/shared'
 import { MicButton } from '@/components/MicButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { StatePanel } from '@/components/ui/state-panel'
 import {
   createAiConversation,
   deleteAiConversation,
@@ -57,6 +58,13 @@ export default function AiChatPage() {
   })
   const usage = useQuery({ queryKey: ['ai-usage'], queryFn: fetchAiUsage })
 
+  const storedTurns: Turn[] = (detail.data?.messages ?? [])
+    .filter((message) => message.role !== 'tool_result')
+    .map((message) => ({
+      role: message.role === 'assistant' ? 'assistant' : 'user',
+      text: message.text,
+    }))
+
   // A pending confirmation outlives the stream that raised it — somebody can close the
   // tab mid-prompt and come back to it.
   useEffect(() => {
@@ -64,31 +72,52 @@ export default function AiChatPage() {
   }, [detail.data])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    bottomRef.current?.scrollIntoView({
+      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+    })
   }, [liveTurns, detail.data])
 
   const startNew = useMutation({
     mutationFn: createAiConversation,
+    onMutate: () => setError(null),
     onSuccess: (created) => {
       void queryClient.invalidateQueries({ queryKey: ['ai-conversations'] })
       setLiveTurns([])
       setPending([])
       setParams({ c: created.id })
     },
+    onError: (cause) =>
+      setError(queryErrorMessage(cause, 'A new conversation could not be created.')),
   })
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteAiConversation(id),
+    onMutate: () => setError(null),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['ai-conversations'] })
       setParams({})
       setLiveTurns([])
+      setPending([])
     },
+    onError: (cause) =>
+      setError(queryErrorMessage(cause, 'That conversation could not be deleted.')),
   })
+
+  const selectConversation = useCallback(
+    (id: string | null) => {
+      setLiveTurns([])
+      setPending([])
+      setError(null)
+      setParams(id ? { c: id } : {})
+    },
+    [setParams],
+  )
 
   /** Drain a stream into the live transcript. Shared by asking and by confirming. */
   const consume = useCallback(
-    async (events: AsyncGenerator<ChatStreamEvent>) => {
+    async (targetId: string, events: AsyncGenerator<ChatStreamEvent>) => {
       setStreaming(true)
       setError(null)
       let assistant = ''
@@ -97,13 +126,19 @@ export default function AiChatPage() {
         for await (const event of events) {
           if (event.kind === 'text') {
             assistant += event.text
+            // Capture this before scheduling the state update. React may batch functional
+            // updaters until after the loop advances; reading the mutable `started` flag
+            // inside the updater could then replace the user's question with the answer.
+            const replaceLastAssistantTurn = started
+            started = true
             setLiveTurns((turns) => {
               const next = [...turns]
-              if (started) next[next.length - 1] = { role: 'assistant', text: assistant }
+              if (replaceLastAssistantTurn) {
+                next[next.length - 1] = { role: 'assistant', text: assistant }
+              }
               else next.push({ role: 'assistant', text: assistant })
               return next
             })
-            started = true
           } else if (event.kind === 'confirm') {
             setPending(
               (event.toolCalls ?? []).map((call) => ({
@@ -116,95 +151,155 @@ export default function AiChatPage() {
             setError(event.text)
           }
         }
+      } catch (cause) {
+        setError(queryErrorMessage(cause, 'The assistant response was interrupted.'))
       } finally {
         setStreaming(false)
-        void queryClient.invalidateQueries({ queryKey: ['ai-conversation', conversationId] })
+        void queryClient.invalidateQueries({ queryKey: ['ai-conversation', targetId] })
         void queryClient.invalidateQueries({ queryKey: ['ai-conversations'] })
         void queryClient.invalidateQueries({ queryKey: ['ai-usage'] })
       }
     },
-    [conversationId, queryClient],
+    [queryClient],
   )
 
-  const send = useCallback(async () => {
+  async function send() {
     const question = prompt.trim()
     if (!question || streaming) return
 
     let target = conversationId
     if (!target) {
-      const created = await createAiConversation()
-      target = created.id
-      setParams({ c: created.id })
+      try {
+        const created = await createAiConversation()
+        target = created.id
+        setParams({ c: created.id })
+        void queryClient.invalidateQueries({ queryKey: ['ai-conversations'] })
+      } catch (cause) {
+        setError(queryErrorMessage(cause, 'A new conversation could not be created.'))
+        return
+      }
     }
     setPrompt('')
-    setLiveTurns((turns) => [...turns, { role: 'user', text: question }])
-    await consume(streamAiMessage(target, question))
-  }, [conversationId, consume, prompt, setParams, streaming])
+    // `liveTurns` is the transcript shown while the cache catches up. When this is the
+    // first live turn in an existing conversation, seed it with the stored history rather
+    // than replacing that history with the new question.
+    setLiveTurns((turns) => [
+      ...(turns.length > 0 ? turns : storedTurns),
+      { role: 'user', text: question },
+    ])
+    await consume(target, streamAiMessage(target, question))
+  }
 
   const resolve = useCallback(
     async (call: AiPendingToolCall, confirm: boolean) => {
       setPending((calls) => calls.filter((candidate) => candidate.id !== call.id))
-      if (!confirm) {
-        setLiveTurns((turns) => [
-          ...turns,
-          { role: 'user', text: 'No, do not do that.' },
-        ])
-      }
-      await consume(resolveAiToolCall(call.id, confirm))
+      setLiveTurns((turns) => [
+        ...(turns.length > 0 ? turns : storedTurns),
+        ...(!confirm
+          ? [{ role: 'user' as const, text: 'No, do not do that.' }]
+          : []),
+      ])
+      await consume(conversationId ?? '', resolveAiToolCall(call.id, confirm))
     },
-    [consume],
+    [consume, conversationId, storedTurns],
   )
 
-  const stored = (detail.data?.messages ?? []).filter((message) => message.role !== 'tool_result')
   // While streaming, the live transcript is ahead of what the server has stored.
-  const transcript: Turn[] =
-    liveTurns.length > 0
-      ? liveTurns
-      : stored.map((message) => ({
-          role: message.role === 'assistant' ? 'assistant' : 'user',
-          text: message.text,
-        }))
+  const transcript: Turn[] = liveTurns.length > 0 ? liveTurns : storedTurns
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-6rem)] max-w-5xl gap-4 p-4">
-      <aside className="hidden w-56 shrink-0 flex-col gap-2 md:flex">
-        <Button size="sm" onClick={() => startNew.mutate()} disabled={startNew.isPending}>
+    <div className="mx-auto flex h-[calc(100dvh-5.5rem)] min-h-[32rem] max-w-6xl gap-5 p-4 sm:p-6">
+      <aside
+        className="archive-panel hidden w-60 shrink-0 flex-col gap-2 p-2 md:flex"
+        aria-label="Assistant conversations"
+      >
+        <Button type="button" onClick={() => startNew.mutate()} disabled={startNew.isPending}>
           <MessageSquarePlus className="mr-2 h-4 w-4" aria-hidden />
           New chat
         </Button>
-        <ul className="flex-1 space-y-1 overflow-y-auto">
+        {conversations.isError ? (
+          <p role="alert" className="px-2 py-3 text-sm text-destructive">
+            {queryErrorMessage(conversations.error, 'Conversations could not be loaded.')}
+          </p>
+        ) : null}
+        <ul className="flex-1 space-y-1 overflow-y-auto" aria-label="Conversation history">
           {conversations.data?.items.map((item) => (
             <li key={item.id} className="group flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => {
-                  setLiveTurns([])
-                  setPending([])
-                  setParams({ c: item.id })
-                }}
+                onClick={() => selectConversation(item.id)}
+                aria-current={item.id === conversationId ? 'page' : undefined}
                 className={cn(
-                  'min-w-0 flex-1 truncate rounded px-2 py-1.5 text-left text-sm',
-                  item.id === conversationId ? 'bg-muted font-medium' : 'hover:bg-muted/60',
+                  'min-h-11 min-w-0 flex-1 truncate rounded-md px-3 py-2 text-left text-sm',
+                  item.id === conversationId
+                    ? 'bg-primary/10 font-semibold text-primary'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
                 )}
               >
                 {item.title}
               </button>
-              <button
+              <Button
                 type="button"
+                size="icon"
+                variant="ghost"
                 aria-label={`Delete ${item.title}`}
-                className="opacity-0 transition-opacity group-hover:opacity-100"
+                className="h-9 w-9 opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100"
                 onClick={() => remove.mutate(item.id)}
+                disabled={remove.isPending && remove.variables === item.id}
               >
                 <Trash2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
       </aside>
 
-      <section className="flex min-w-0 flex-1 flex-col">
-        <header className="mb-2 flex items-baseline justify-between gap-2">
-          <h1 className="flex items-center gap-2 text-lg font-semibold">
+      <section className="flex min-w-0 flex-1 flex-col" aria-label="Assistant conversation">
+        <div className="mb-3 flex items-center gap-2 md:hidden">
+          <label className="sr-only" htmlFor="mobile-conversation">
+            Choose conversation
+          </label>
+          <select
+            id="mobile-conversation"
+            className="select-control min-w-0 flex-1"
+            value={conversationId ?? ''}
+            onChange={(event) => selectConversation(event.target.value || null)}
+          >
+            <option value="">New conversation</option>
+            {conversations.data?.items.map((item) => (
+              <option key={item.id} value={item.id}>{item.title}</option>
+            ))}
+          </select>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            aria-label="Create a new conversation"
+            onClick={() => startNew.mutate()}
+            disabled={startNew.isPending}
+          >
+            {startNew.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <MessageSquarePlus className="h-4 w-4" aria-hidden />
+            )}
+          </Button>
+          {conversationId ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label="Delete this conversation"
+              onClick={() => remove.mutate(conversationId)}
+              disabled={remove.isPending}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+            </Button>
+          ) : null}
+        </div>
+
+        <header className="mb-3 flex items-baseline justify-between gap-2 border-b border-border pb-3">
+          <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
             <Bot className="h-5 w-5" aria-hidden />
             {detail.data?.title ?? 'Assistant'}
           </h1>
@@ -216,13 +311,21 @@ export default function AiChatPage() {
         </header>
 
         {status.data && !status.data.configured ? (
-          <p className="mb-2 rounded border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <p role="alert" className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm">
             The assistant is not configured on the server — there is no API key set.
           </p>
         ) : null}
 
-        <div className="flex-1 space-y-3 overflow-y-auto rounded-lg border border-border p-4">
-          {transcript.length === 0 && !streaming ? (
+        <div
+          className="archive-panel flex-1 space-y-3 overflow-y-auto bg-surface-sunken/25 p-4"
+          role="log"
+          aria-live="polite"
+          aria-busy={streaming}
+        >
+          {detail.isPending && conversationId && transcript.length === 0 ? (
+            <StatePanel compact tone="loading" title="Opening conversation" />
+          ) : null}
+          {transcript.length === 0 && !streaming && !detail.isPending ? (
             <p className="text-sm text-muted-foreground">
               Ask about the collection — what you own, where it is shelved, what you have
               not watched. It can add to the wanted list and log a viewing too, and it will
@@ -236,8 +339,8 @@ export default function AiChatPage() {
               className={cn(
                 'max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm',
                 turn.role === 'user'
-                  ? 'ml-auto bg-primary/10'
-                  : 'mr-auto bg-muted',
+                  ? 'ml-auto bg-primary text-primary-foreground'
+                  : 'mr-auto border border-border bg-card text-card-foreground',
               )}
             >
               {turn.text}
@@ -254,7 +357,7 @@ export default function AiChatPage() {
           {pending.map((call) => (
             <div
               key={call.id}
-              className="rounded-lg border border-amber-500/50 bg-amber-500/5 p-3"
+              className="rounded-lg border border-warning/50 bg-warning/10 p-3"
             >
               <p className="text-sm font-medium">Can I do this?</p>
               <p className="mt-1 text-sm">{describeToolCall(call)}</p>
@@ -276,11 +379,14 @@ export default function AiChatPage() {
             </div>
           ))}
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           {detail.isError ? (
-            <p className="text-sm text-destructive">
-              {queryErrorMessage(detail.error, 'That conversation could not be loaded.')}
-            </p>
+            <StatePanel
+              compact
+              tone="error"
+              title="Conversation unavailable"
+              description={queryErrorMessage(detail.error, 'That conversation could not be loaded.')}
+            />
           ) : null}
           <div ref={bottomRef} />
         </div>
@@ -297,6 +403,7 @@ export default function AiChatPage() {
             value={prompt}
             maxLength={4000}
             placeholder="Which 4Ks have I not watched?"
+            aria-label="Message to the assistant"
             disabled={streaming}
             onChange={(event) => setPrompt(event.target.value)}
           />
@@ -309,7 +416,12 @@ export default function AiChatPage() {
               setPrompt((current) => (current ? `${current} ${text}` : text))
             }
           />
-          <Button type="submit" disabled={streaming || !prompt.trim()}>
+          <Button
+            type="submit"
+            size="icon"
+            aria-label={streaming ? 'Sending message' : 'Send message'}
+            disabled={streaming || !prompt.trim()}
+          >
             {streaming ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
             ) : (

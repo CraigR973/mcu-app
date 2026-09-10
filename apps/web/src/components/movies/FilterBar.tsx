@@ -1,5 +1,9 @@
-import { X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { ChevronDown, SlidersHorizontal, X } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   fetchFacets,
   FORMATS,
@@ -11,18 +15,13 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   filters: MovieFilters
-  total: number
-  onChange: (f: MovieFilters) => void
+  total?: number
+  onChange: (filters: MovieFilters) => void
+  context?: 'browse' | 'saved'
 }
 
-const SELECT_CLS =
-  'h-8 rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
+const CONTROL_CLS = 'select-control min-w-0 text-sm'
 
-function decadeLabel(decade: number): string {
-  return `${decade}s`
-}
-
-/** §3.9's filter panel, as data. The phase names these four by example. */
 const SPEC_TOGGLES: Array<{
   label: string
   isActive: (filters: MovieFilters) => boolean
@@ -45,251 +44,186 @@ const SPEC_TOGGLES: Array<{
   },
 ]
 
-export function FilterBar({ filters, total, onChange }: Props) {
-  // The section, shelf and decade vocabularies come from the collection itself. A
-  // hard-coded year list is what hid 47% of this collection before Batch 6: it started
-  // at 1970, and 517 of the 1,085 dated films are older than that.
-  const { data: facets } = useQuery({
+export function FilterBar({ filters, total, onChange, context = 'browse' }: Props) {
+  const [expanded, setExpanded] = useState(false)
+  const facetsQuery = useQuery({
     queryKey: ['collection-facets'],
     queryFn: fetchFacets,
     staleTime: 30 * 60 * 1000,
   })
 
-  const sections = facets?.sections ?? []
-  const decades = facets?.decades ?? []
-  const selectedSection = sections.find((s) => s.section === filters.section)
+  const sections = facetsQuery.data?.sections ?? []
+  const decades = facetsQuery.data?.decades ?? []
+  const selectedSection = sections.find((section) => section.section === filters.section)
   const shelves = selectedSection?.shelves ?? []
+  const supportsLiveOnly = context === 'browse'
 
-  const hasFilters = !!(
-    filters.genreId ||
-    filters.year ||
-    filters.format ||
-    filters.section ||
-    filters.shelf ||
-    filters.decadeFrom ||
-    filters.decadeTo ||
-    filters.minRating != null ||
-    filters.watched != null ||
-    filters.hdr ||
-    filters.audio ||
-    filters.regionFree
-  )
+  const activeFilters = useMemo(() => {
+    const active: Array<{ key: string; label: string; clear: () => void }> = []
+    const add = (key: string, label: string, patch: Partial<MovieFilters>) =>
+      active.push({ key, label, clear: () => onChange({ ...filters, ...patch }) })
 
-  function clear() {
-    onChange({})
-  }
+    if (filters.section) add('section', `Section: ${filters.section}`, { section: undefined, shelf: undefined })
+    if (filters.shelf) add('shelf', `Shelf: ${filters.shelf}`, { shelf: undefined })
+    if (filters.format) add('format', FORMATS.find((format) => format.value === filters.format)?.label ?? filters.format, { format: undefined })
+    if (filters.genreId) add('genre', TMDB_GENRES.find((genre) => genre.id === filters.genreId)?.name ?? 'Genre', { genreId: undefined })
+    if (filters.year) add('year', `Year: ${filters.year}`, { year: undefined })
+    if (filters.decadeFrom) add('decade-from', `From ${filters.decadeFrom}s`, { decadeFrom: undefined })
+    if (filters.decadeTo) add('decade-to', `Through ${filters.decadeTo}s`, { decadeTo: undefined })
+    if (filters.minRating != null) add('rating', `Rated ${filters.minRating}+`, { minRating: undefined })
+    if (filters.watched != null) add('watched', filters.watched ? 'Watched' : 'Not watched', { watched: undefined })
+    if (filters.hdr) add('hdr', filters.hdr, { hdr: undefined })
+    if (filters.audio) add('audio', filters.audio, { audio: undefined })
+    if (filters.regionFree) add('region', 'Region-free', { regionFree: undefined })
+    return active
+  }, [filters, onChange])
+
+  const advancedCount = activeFilters.filter(({ key }) => !['section', 'shelf', 'format'].includes(key)).length
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-border bg-background/80 backdrop-blur-sm">
-      {/* Section */}
-      <select
-        className={SELECT_CLS}
-        value={filters.section ?? ''}
-        onChange={(e) =>
-          // Changing section clears the shelf: "Front 2nd" then "Digital" would
-          // otherwise ask for a shelf the digital library does not have and return
-          // nothing, which reads as a bug rather than an impossible question.
-          onChange({ ...filters, section: e.target.value || undefined, shelf: undefined })
-        }
-        aria-label="Filter by section"
-      >
-        <option value="">Anywhere</option>
-        {sections.map((section) => (
-          <option key={section.section} value={section.section}>
-            {section.section} ({section.itemCount})
-          </option>
-        ))}
-      </select>
+    <section aria-label="Collection filters" className="border-b border-border bg-surface-sunken/35">
+      <div className="px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
+          <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-[minmax(10rem,1fr)_minmax(9rem,0.8fr)_auto] xl:max-w-3xl">
+            <select
+              className={CONTROL_CLS}
+              value={filters.section ?? ''}
+              onChange={(event) => onChange({ ...filters, section: event.target.value || undefined, shelf: undefined })}
+              aria-label="Filter by section"
+            >
+              <option value="">All locations</option>
+              {sections.map((section) => (
+                <option key={section.section} value={section.section}>{section.section} ({section.itemCount})</option>
+              ))}
+            </select>
 
-      {/* Shelf — only offered for a section that has shelves */}
-      {shelves.length > 0 && (
-        <select
-          className={SELECT_CLS}
-          value={filters.shelf ?? ''}
-          onChange={(e) => onChange({ ...filters, shelf: e.target.value || undefined })}
-          aria-label="Filter by shelf"
-        >
-          <option value="">All shelves</option>
-          {shelves.map((shelf) => (
-            <option key={shelf.shelf} value={shelf.shelf}>
-              {shelf.shelf} shelf ({shelf.itemCount})
-            </option>
-          ))}
-        </select>
-      )}
+            <select
+              className={CONTROL_CLS}
+              value={filters.format ?? ''}
+              onChange={(event) => onChange({ ...filters, format: event.target.value || undefined })}
+              aria-label="Filter by format"
+            >
+              <option value="">All formats</option>
+              {FORMATS.map((format) => <option key={format.value} value={format.value}>{format.label}</option>)}
+            </select>
 
-      {/* Genre */}
-      <select
-        className={SELECT_CLS}
-        value={filters.genreId ?? ''}
-        onChange={(e) =>
-          onChange({ ...filters, genreId: e.target.value ? Number(e.target.value) : undefined })
-        }
-        aria-label="Filter by genre"
-      >
-        <option value="">All genres</option>
-        {TMDB_GENRES.map((g) => (
-          <option key={g.id} value={g.id}>
-            {g.name}
-          </option>
-        ))}
-      </select>
+            <Button
+              type="button"
+              variant="outline"
+              className="col-span-2 justify-between md:col-span-1"
+              aria-expanded={expanded}
+              aria-controls="collection-more-filters"
+              onClick={() => setExpanded((value) => !value)}
+            >
+              <span className="inline-flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4" aria-hidden /> Filters
+                {advancedCount > 0 && <Badge tone="primary" className="min-w-5 justify-center px-1">{advancedCount}</Badge>}
+              </span>
+              <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} aria-hidden />
+            </Button>
+          </div>
 
-      {/* Format */}
-      <select
-        className={SELECT_CLS}
-        value={filters.format ?? ''}
-        onChange={(e) => onChange({ ...filters, format: e.target.value || undefined })}
-        aria-label="Filter by format"
-      >
-        <option value="">All formats</option>
-        {FORMATS.map((f) => (
-          <option key={f.value} value={f.value}>
-            {f.label}
-          </option>
-        ))}
-      </select>
+          {supportsLiveOnly && (
+            <div className="flex items-center gap-2 xl:ml-auto">
+              <label htmlFor="collection-sort" className="sr-only">Sort collection</label>
+              <select
+                id="collection-sort"
+                className={cn(CONTROL_CLS, 'flex-1 xl:min-w-40')}
+                value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
+                onChange={(event) => {
+                  const [sort, order] = event.target.value.split(':') as [NonNullable<MovieFilters['sort']>, NonNullable<MovieFilters['order']>]
+                  onChange({ ...filters, sort, order })
+                }}
+              >
+                <option value="title:asc">Title A–Z</option>
+                <option value="title:desc">Title Z–A</option>
+                <option value="year:desc">Newest first</option>
+                <option value="year:asc">Oldest first</option>
+                <option value="rating:desc">Highest rated</option>
+              </select>
+              {total != null && (
+                <span aria-live="polite" className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+                  {total.toLocaleString()} {total === 1 ? 'film' : 'films'}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
-      {/* Decade range */}
-      <div className="flex items-center gap-1">
-        <select
-          className={SELECT_CLS}
-          value={filters.decadeFrom ?? ''}
-          onChange={(e) =>
-            onChange({
-              ...filters,
-              decadeFrom: e.target.value ? Number(e.target.value) : undefined,
-            })
-          }
-          aria-label="Earliest decade"
-        >
-          <option value="">Any decade</option>
-          {decades.map((d) => (
-            <option key={d.decade} value={d.decade}>
-              {decadeLabel(d.decade)} ({d.movieCount})
-            </option>
-          ))}
-        </select>
-        <span className="text-xs text-muted-foreground">to</span>
-        <select
-          className={SELECT_CLS}
-          value={filters.decadeTo ?? ''}
-          onChange={(e) =>
-            onChange({
-              ...filters,
-              decadeTo: e.target.value ? Number(e.target.value) : undefined,
-            })
-          }
-          aria-label="Latest decade"
-        >
-          <option value="">Now</option>
-          {decades.map((d) => (
-            <option key={d.decade} value={d.decade}>
-              {decadeLabel(d.decade)}
-            </option>
-          ))}
-        </select>
-      </div>
+        {facetsQuery.isError && (
+          <p role="alert" className="mt-2 text-xs text-destructive">Location and decade choices are temporarily unavailable. Existing filters still apply.</p>
+        )}
 
-      {/* Rating */}
-      <select
-        className={SELECT_CLS}
-        value={filters.minRating ?? ''}
-        onChange={(e) =>
-          onChange({
-            ...filters,
-            minRating: e.target.value ? Number(e.target.value) : undefined,
-          })
-        }
-        aria-label="Minimum TMDB rating"
-      >
-        <option value="">Any rating</option>
-        {MIN_RATING_OPTIONS.map((rating) => (
-          <option key={rating} value={rating}>
-            {rating}+
-          </option>
-        ))}
-      </select>
+        {expanded && (
+          <div id="collection-more-filters" className="mt-3 border-t border-border pt-3">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+              {shelves.length > 0 && (
+                <select className={CONTROL_CLS} value={filters.shelf ?? ''} onChange={(event) => onChange({ ...filters, shelf: event.target.value || undefined })} aria-label="Filter by shelf">
+                  <option value="">All shelves</option>
+                  {shelves.map((shelf) => <option key={shelf.shelf} value={shelf.shelf}>{shelf.shelf} shelf ({shelf.itemCount})</option>)}
+                </select>
+              )}
+              <select className={CONTROL_CLS} value={filters.genreId ?? ''} onChange={(event) => onChange({ ...filters, genreId: event.target.value ? Number(event.target.value) : undefined })} aria-label="Filter by genre">
+                <option value="">All genres</option>
+                {TMDB_GENRES.map((genre) => <option key={genre.id} value={genre.id}>{genre.name}</option>)}
+              </select>
+              <input
+                type="number"
+                min="1870"
+                max="2100"
+                inputMode="numeric"
+                className="form-control"
+                value={filters.year ?? ''}
+                onChange={(event) => onChange({ ...filters, year: event.target.value ? Number(event.target.value) : undefined })}
+                placeholder="Exact year"
+                aria-label="Filter by exact year"
+              />
+              <select className={CONTROL_CLS} value={filters.decadeFrom ?? ''} onChange={(event) => onChange({ ...filters, decadeFrom: event.target.value ? Number(event.target.value) : undefined })} aria-label="Earliest decade">
+                <option value="">Any start decade</option>
+                {decades.map((decade) => <option key={decade.decade} value={decade.decade}>{decade.decade}s ({decade.movieCount})</option>)}
+              </select>
+              <select className={CONTROL_CLS} value={filters.decadeTo ?? ''} onChange={(event) => onChange({ ...filters, decadeTo: event.target.value ? Number(event.target.value) : undefined })} aria-label="Latest decade">
+                <option value="">Through today</option>
+                {decades.map((decade) => <option key={decade.decade} value={decade.decade}>{decade.decade}s</option>)}
+              </select>
+              <select className={CONTROL_CLS} value={filters.minRating ?? ''} onChange={(event) => onChange({ ...filters, minRating: event.target.value ? Number(event.target.value) : undefined })} aria-label="Minimum TMDB rating">
+                <option value="">Any rating</option>
+                {MIN_RATING_OPTIONS.map((rating) => <option key={rating} value={rating}>{rating}+ rating</option>)}
+              </select>
+              <select className={CONTROL_CLS} value={filters.watched === undefined ? '' : String(filters.watched)} onChange={(event) => onChange({ ...filters, watched: event.target.value === '' ? undefined : event.target.value === 'true' })} aria-label="Filter by watched status">
+                <option value="">Watched or not</option>
+                <option value="true">Watched</option>
+                <option value="false">Not watched</option>
+              </select>
+            </div>
 
-      {/* Watched */}
-      <select
-        className={SELECT_CLS}
-        value={filters.watched === undefined ? '' : String(filters.watched)}
-        onChange={(e) =>
-          onChange({
-            ...filters,
-            watched: e.target.value === '' ? undefined : e.target.value === 'true',
-          })
-        }
-        aria-label="Filter by watched status"
-      >
-        <option value="">Watched or not</option>
-        <option value="true">Watched</option>
-        <option value="false">Not watched</option>
-      </select>
-
-      {/* Sort */}
-      <select
-        className={SELECT_CLS}
-        value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
-        onChange={(e) => {
-          const [sort, order] = e.target.value.split(':') as [
-            NonNullable<MovieFilters['sort']>,
-            NonNullable<MovieFilters['order']>,
-          ]
-          onChange({ ...filters, sort, order })
-        }}
-        aria-label="Sort movies"
-      >
-        <option value="title:asc">Title A–Z</option>
-        <option value="title:desc">Title Z–A</option>
-        <option value="year:desc">Newest first</option>
-        <option value="year:asc">Oldest first</option>
-        <option value="rating:desc">Highest rated</option>
-      </select>
-
-      {/* §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Region-free".
-          Toggles rather than selects: each is one thing somebody wants to see, and a
-          dropdown of one useful value per category is three clicks for what should be one.
-
-          **They are only useful once specs have been fetched.** Until then every one of
-          them returns nothing, which is honest — the app does not know a disc is Dolby
-          Vision until Blu-ray.com has said so. */}
-      {SPEC_TOGGLES.map((toggle) => {
-        const active = toggle.isActive(filters)
-        return (
-          <button
-            key={toggle.label}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange({ ...filters, ...toggle.apply(active) })}
-            className={cn(
-              'h-8 rounded-md border px-2.5 text-xs transition-colors',
-              active
-                ? 'border-primary bg-primary/10 text-foreground'
-                : 'border-input text-muted-foreground hover:text-foreground hover:bg-muted',
+            {supportsLiveOnly && (
+              <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Technical specification filters">
+                {SPEC_TOGGLES.map((toggle) => {
+                  const active = toggle.isActive(filters)
+                  return (
+                    <Button key={toggle.label} type="button" size="sm" variant={active ? 'secondary' : 'outline'} aria-pressed={active} onClick={() => onChange({ ...filters, ...toggle.apply(active) })}>
+                      {toggle.label}
+                    </Button>
+                  )
+                })}
+              </div>
             )}
-          >
-            {toggle.label}
-          </button>
-        )
-      })}
+          </div>
+        )}
 
-      {/* Clear */}
-      {hasFilters && (
-        <button
-          onClick={clear}
-          className="flex items-center gap-1 h-8 px-2.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <X size={12} />
-          Clear
-        </button>
-      )}
-
-      {/* Count */}
-      <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-        {total.toLocaleString()} {total === 1 ? 'movie' : 'movies'}
-      </span>
-    </div>
+        {activeFilters.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3" aria-label="Active filters">
+            <span className="text-xs font-semibold text-muted-foreground">Showing</span>
+            {activeFilters.map((filter) => (
+              <button key={filter.key} type="button" onClick={filter.clear} className="touch-target inline-flex min-h-8 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-foreground hover:bg-primary/15" aria-label={`Remove ${filter.label} filter`}>
+                {filter.label}<X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+              </button>
+            ))}
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange({})}>Clear all</Button>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }

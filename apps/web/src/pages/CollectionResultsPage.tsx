@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { MovieGrid } from '@/components/movies/MovieGrid'
 import { describeFilters, fetchSmartCollectionResults } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatePanel } from '@/components/ui/state-panel'
 
 /**
  * One saved collection's current results — §11.5's "lists correct films and updates
@@ -34,40 +35,22 @@ export default function CollectionResultsPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-        <Link
-          to="/collections"
-          className="text-muted-foreground hover:text-foreground"
-          aria-label="Back to collections"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        {Icon ? <Icon className="h-5 w-5 text-primary" /> : null}
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold text-foreground">
-            {collection?.name ?? 'Collection'}
-          </h1>
-          {collection ? (
-            <p className="truncate text-xs text-muted-foreground">
-              {describeFilters(collection.filters)} ·{' '}
-              {resultsQuery.data?.totalMovies.toLocaleString() ?? '0'} films
-            </p>
-          ) : null}
-        </div>
-      </div>
+      <PageHeader
+        backTo="/collections"
+        backLabel="All collections"
+        eyebrow={<span className="inline-flex items-center gap-2">{Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}Saved collection</span>}
+        title={collection?.name ?? 'Collection'}
+        description={collection ? describeFilters(collection.filters) : 'Loading this saved collection…'}
+        meta={collection ? <span>{resultsQuery.data?.totalMovies.toLocaleString() ?? '0'} films</span> : undefined}
+        className="mb-0 px-4 py-4 sm:px-6 lg:px-8"
+      />
 
       {state === 'offline' ? (
-        <p className="p-4 text-sm text-muted-foreground">
-          Waiting for the network — these results could not be loaded yet.
-        </p>
+        <StatePanel tone="offline" title="This collection is not cached here" description="Reconnect to evaluate its filters against the archive." className="m-4 flex-1" />
       ) : state === 'error' ? (
-        <p className="p-4 text-sm text-destructive">
-          {queryErrorMessage(resultsQuery.error, 'Could not load this collection.')}
-        </p>
+        <StatePanel tone="error" title="This collection could not be opened" description={queryErrorMessage(resultsQuery.error, 'The server did not answer.')} className="m-4 flex-1" />
       ) : state === 'empty' ? (
-        <p className="p-8 text-center text-sm text-muted-foreground">
-          Nothing in the collection matches these filters yet.
-        </p>
+        <StatePanel tone="empty" title="Nothing matches yet" description="This collection will update automatically when a matching disc is added." className="m-4 flex-1" />
       ) : (
         <MovieGrid movies={movies} isLoading={state === 'loading'} />
       )}
