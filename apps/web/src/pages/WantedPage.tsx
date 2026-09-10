@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bookmark, Check, Loader2, Plus, Search, Trash2 } from 'lucide-react'
+import { Bookmark, Check, Loader2, Plus, PoundSterling, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { WantedItem } from '@mcu/shared'
+
+/** The body `PUT /wanted/{id}` replaces the row with — every field, always. */
+type WantedUpdate = Parameters<typeof updateWanted>[1]
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -174,9 +177,32 @@ function AddWantedPanel() {
   )
 }
 
+/**
+ * The complete resource, with only what is changing overridden.
+ *
+ * **`PUT /wanted/{id}` is a full replace, and every field on its request model defaults to
+ * `null`.** Sending `{ isActive }` alone therefore did not toggle a flag — it also wiped
+ * the format, the edition, the maximum price and the notes, silently, every time somebody
+ * pressed "Stop looking". Building the whole item here is what makes a partial-looking
+ * call safe. `DECISIONS.md` #123.
+ */
+function fullUpdate(item: WantedItem, changes: Partial<WantedUpdate>): WantedUpdate {
+  return {
+    preferredFormat: item.preferredFormat,
+    preferredEdition: item.preferredEdition,
+    maxPrice: item.maxPrice,
+    currency: item.currency,
+    isActive: item.isActive,
+    notes: item.notes ?? null,
+    ...changes,
+  }
+}
+
 function Card({ item }: { item: WantedItem }) {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
+  const [editingBudget, setEditingBudget] = useState(false)
+  const [budget, setBudget] = useState(item.maxPrice ?? '')
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: ['wanted'] })
@@ -185,8 +211,16 @@ function Card({ item }: { item: WantedItem }) {
   }
 
   const toggle = useMutation({
-    mutationFn: () => updateWanted(item.id, { isActive: !item.isActive }),
+    mutationFn: () => updateWanted(item.id, fullUpdate(item, { isActive: !item.isActive })),
     onSuccess: refresh,
+  })
+  const saveBudget = useMutation({
+    mutationFn: () =>
+      updateWanted(item.id, fullUpdate(item, { maxPrice: budget.trim() || null })),
+    onSuccess: () => {
+      setEditingBudget(false)
+      refresh()
+    },
   })
   const remove = useMutation({
     mutationFn: () => removeWanted(item.id),
@@ -233,10 +267,67 @@ function Card({ item }: { item: WantedItem }) {
         {!item.isActive ? (
           <p className="text-[11px] text-muted-foreground">No longer looking</p>
         ) : null}
+        {saveBudget.isError ? (
+          <p className="text-[11px] text-destructive">
+            {queryErrorMessage(saveBudget.error, 'Could not save that limit.')}
+          </p>
+        ) : null}
       </div>
 
-      {profile?.role === 'admin' ? (
+      {profile?.role === 'admin' && editingBudget ? (
+        <form
+          className="flex items-center gap-1"
+          onSubmit={(event) => {
+            event.preventDefault()
+            saveBudget.mutate()
+          }}
+        >
+          <Input
+            autoFocus
+            value={budget}
+            onChange={(event) => setBudget(event.target.value)}
+            inputMode="decimal"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="Max £"
+            aria-label={`Maximum price for ${item.movieTitle}`}
+            className="w-24"
+          />
+          <Button
+            type="button"
+            size="sm"
+            disabled={saveBudget.isPending}
+            onClick={() => saveBudget.mutate()}
+          >
+            {saveBudget.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setBudget(item.maxPrice ?? '')
+              setEditingBudget(false)
+            }}
+          >
+            Cancel
+          </Button>
+        </form>
+      ) : null}
+
+      {profile?.role === 'admin' && !editingBudget ? (
         <>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            aria-label={`Set a maximum price for ${item.movieTitle}`}
+            onClick={() => setEditingBudget(true)}
+          >
+            <PoundSterling className="h-4 w-4" />
+            {item.maxPrice ? `£${item.maxPrice}` : 'Set a limit'}
+          </Button>
           <Button
             type="button"
             size="sm"

@@ -1229,6 +1229,9 @@ export async function updateWanted(
     preferredFormat?: string | null
     preferredEdition?: string | null
     maxPrice?: string | null
+    // Carried explicitly for the reason the whole body is: `PUT /wanted/{id}` replaces the
+    // row, so a currency left out here is a currency reset to GBP.
+    currency?: string
     isActive: boolean
     notes?: string | null
   },
