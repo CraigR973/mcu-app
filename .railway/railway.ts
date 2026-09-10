@@ -36,6 +36,16 @@ export default defineRailway(() => {
       VAPID_PUBLIC_KEY: preserve(),
       VAPID_PRIVATE_KEY: preserve(),
       VAPID_SUBJECT: preserve(),
+      EBAY_VERIFICATION_TOKEN: preserve(),
+      // **A literal, not `preserve()` — the one env var here that is not a secret.**
+      // eBay hashes the URL *it* has on file into every validation challenge, so ours
+      // must match byte for byte or validation fails with no diagnosable error. Pinning
+      // it here makes IaC enforce that identity instead of trusting a console field
+      // nobody re-reads. It is already public in `.railway/README.md`, and
+      // `routers/ebay.py` reads it rather than reconstructing it from the request,
+      // because behind this proxy the app sees a different host and scheme.
+      EBAY_ACCOUNT_DELETION_ENDPOINT:
+        'https://api-production-a8fe.up.railway.app/api/v1/ebay/account-deletion',
     },
   })
 
