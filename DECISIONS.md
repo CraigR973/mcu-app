@@ -1860,3 +1860,72 @@ contemporaneous.
      make*. The real hazard was the opposite — a change nobody had authored, produced by the
      file's silence. The README now says to read the destroy count first, and `#117`'s
      readiness probe is what would have caught the aftermath.
+
+125. **An empty results page is neither a failure nor a claim, and now has its own state.**
+     The owner's first real nightly run recorded **11 failures out of 17 attempted** on
+     2026-09-10. Checked against the live sites: **eight were not failures at all.**
+
+     Arrow Video answered *"Sorry We Couldn't Find Any Results Matching 'Cross of Iron
+     blu-ray'"*; 101 Films answered *"Search: 0 results found"*; Second Sight the same.
+     They do not carry those films. The runner classified all three as scraper breakage
+     because `not_stocked` required `titled_cards > 0` — it handled *"results returned,
+     none matching"* and let *"no results returned"* fall through to the failure branch.
+
+     *Why that mattered more than a wrong number in a report.* Those failures fed
+     `_record_failure`, and three consecutive runs with no successes **auto-disables the
+     retailer**. The comment directly beneath the branch already stated the guarantee the
+     code was not delivering — *"neither has one that answered 'no' — three digital wants,
+     or three films a boutique label does not carry, would otherwise switch off the whole
+     app."* It had not bitten only because each shop happened to price one film that night;
+     all five still read `fails=0`. With the cron now running unattended, three quiet
+     nights would have switched a shop off silently.
+
+     *Why it is not simply `not_stocked`.* **Zero cards is what "we do not stock that" looks
+     like and what a broken selector looks like, and nothing in the response tells them
+     apart.** Calling it `not_stocked` would let a parser that had stopped matching read as
+     a healthy "nothing found" for ever — which is exactly how `#122` hid for a day, one
+     decision earlier on the same morning. So `no_results` is recorded and reported, kept
+     out of the auto-disable arithmetic, and a retailer answering that way for *every* want
+     in a run is **flagged** (`last_scrape_status = "no_results"`) rather than disabled.
+     `consecutive_failures` is deliberately left untouched rather than reset, so a genuinely
+     broken shop cannot launder its failures by returning one empty page.
+
+     *The other three were real, and the opposite kind of bug.* Zavvi renders **two price
+     markups on one page**: a multi-variant listing wraps the figure in
+     `.product-variant-price`, a single-price listing puts it straight into the
+     `product-price` wrapper. The selector read only the first, so a real **£16.99** on
+     `Castle Freak` was fetched, parsed and discarded. Missed alerts, not wrong ones — it
+     failed safe — but missed all the same.
+
+     *And fixing that exposed a third.* `_select_one` used `select_one`, which for a
+     comma-separated selector returns whichever matches first **in the document**, not
+     whichever selector was written first. Second Sight's
+     `".price-item--sale, .price-item--regular"` is plainly written expecting sale-first
+     precedence and never had it. Selector lists are now tried in order, which is what
+     every such config in this file already meant.
+
+     ***This supersedes one clause of `#107`***, and the clause was deliberate, so it is
+     named rather than quietly dropped. #107 wrote: *"A page that yields no titled listing
+     at all is the redesign case the counter exists to catch, and **still takes a strike**"*
+     — auto-disable had to stay reachable or it would never fire again. That reasoning was
+     sound and its premise was wrong: it assumed zero listings means the site changed. The
+     first real unattended run measured the opposite — **eight of eleven were shops
+     answering a question honestly**, and only three were anything broken. The redesign case
+     survives, but it is visible one level up: a redesign makes *every* want return nothing,
+     which is what the per-retailer flag now says. The owner chose visibility over
+     auto-disable on 2026-09-10, and #107's strike is withdrawn on that basis.
+
+     *And a fourth bug, found while making the third observable.* `/retailers` renders each
+     run through `scrapeRunVerdict`, whose denominator was `attempted - notStocked`. But
+     `attempted` **already excludes** `notStocked` — that is #107's own doing — so the page
+     subtracted it twice, and the real run of 2026-09-10 (17 attempted, 23 not stocked, six
+     discs priced) rendered as *"Nothing to price — no shop had any of the wants"*. The
+     response docstring asserted the wrong contract and the web tests encoded it, so two
+     sources agreed with each other and disagreed with the producer. The denominator is
+     `attempted` minus `noResults` alone; everything else in `attempted` was a pair somebody
+     could have priced.
+
+     *The general lesson, for the third time today:* **"we found nothing" is a measurement,
+     not a conclusion.** `#122` was a parser that found nothing and was believed; this is a
+     runner that found nothing and blamed itself. Both were only visible from a live run —
+     and the fourth was only visible because the third made it worth reading the report.

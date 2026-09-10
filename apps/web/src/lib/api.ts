@@ -1606,7 +1606,11 @@ export function scrapeRunVerdict(run: ScrapeRunRecord): {
   ok: boolean
   label: string
 } {
-  const answerable = Math.max(run.attempted - run.notStocked, 0)
+  // **`attempted` already excludes `notStocked`** (`DECISIONS.md` #107), so subtracting it
+  // here counted it twice: a real run of 17 attempted against 23 not-stocked read as
+  // "Nothing to price" over six priced discs. The only pairs left to remove are the ones
+  // whose shop answered with nothing at all. #125.
+  const answerable = Math.max(run.attempted - (run.noResults ?? 0), 0)
   if (run.error) return { answerable, ok: false, label: 'Run failed' }
   if (answerable === 0) {
     return { answerable, ok: true, label: 'Nothing to price — no shop had any of the wants' }

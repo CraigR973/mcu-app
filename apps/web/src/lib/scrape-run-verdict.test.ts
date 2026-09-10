@@ -21,6 +21,7 @@ function run(overrides: Partial<ScrapeRunRecord> = {}): ScrapeRunRecord {
     dryRun: false,
     attempted: 10,
     notStocked: 0,
+    noResults: 0,
     skipped: 0,
     succeeded: 10,
     failed: 0,
@@ -40,11 +41,22 @@ describe('scrapeRunVerdict', () => {
 
   it('does not count a shop that has not got the film against the run', () => {
     // #107: three correct refusals once read as three failures and took three working
-    // scrapers offline. They are neither a gap nor a failure.
-    const verdict = scrapeRunVerdict(run({ attempted: 10, notStocked: 6, written: 4 }))
+    // scrapers offline. They are neither a gap nor a failure — and the API already leaves
+    // them out of `attempted`, which is why this asserts 4 attempted rather than 10.
+    const verdict = scrapeRunVerdict(run({ attempted: 4, notStocked: 6, written: 4 }))
 
     expect(verdict.answerable).toBe(4)
     expect(verdict.ok).toBe(true)
+  })
+
+  it('does not subtract notStocked a second time', () => {
+    // The bug this file encoded. `attempted` already excludes `notStocked` (#107), so
+    // subtracting it here counted it twice, and any run where the shops honestly had more
+    // films than they carried collapsed to "Nothing to price". #125.
+    const verdict = scrapeRunVerdict(run({ attempted: 17, notStocked: 23, written: 6 }))
+
+    expect(verdict.answerable).toBe(17)
+    expect(verdict.label).not.toContain('Nothing to price')
   })
 
   it('tolerates the criterion\'s 10% failure margin', () => {
@@ -71,5 +83,27 @@ describe('scrapeRunVerdict', () => {
 
   it('reports a run that blew up as failed regardless of its counts', () => {
     expect(scrapeRunVerdict(run({ error: 'connection reset' })).ok).toBe(false)
+  })
+
+  it('does not count a shop that answered with nothing against the run', () => {
+    // #125: an empty results page is neither a failure nor a claim, and it is certainly
+    // not a pair anybody could have priced. Counting it in the denominator would make a
+    // healthy night read as a collapse.
+    const verdict = scrapeRunVerdict(run({ attempted: 10, noResults: 6, written: 4 }))
+
+    expect(verdict.answerable).toBe(4)
+    expect(verdict.ok).toBe(true)
+  })
+
+  it('reads the real run of 2026-09-10 correctly', () => {
+    // 40 pairs: 23 shops answered "not that one", 8 answered with nothing at all, 3 broke
+    // and 6 priced. Nine were genuinely answerable, and six of them were priced.
+    const verdict = scrapeRunVerdict(
+      run({ attempted: 17, notStocked: 23, noResults: 8, failed: 3, written: 6 }),
+    )
+
+    expect(verdict.answerable).toBe(9)
+    expect(verdict.ok).toBe(false)
+    expect(verdict.label).toContain('6 of 9')
   })
 })

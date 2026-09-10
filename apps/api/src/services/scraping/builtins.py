@@ -72,11 +72,23 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "config": {
             "item": "[data-testid='product-item']",
             "title": "[data-testid='product-title']",
-            "price": "[data-testid='product-price'] .product-variant-price",
+            # **Two markups on the same page.** A multi-variant listing wraps the figure
+            # in `.product-variant-price` under a "Current price:" label; a single-price
+            # listing puts it straight into the `product-price` wrapper as
+            # `<p class="text-md font-bold">`. Reading only the first silently discarded
+            # the second — a real £16.99 on `Castle Freak` measured on 2026-09-10 — so the
+            # wrapper is the fallback. Specific first: `_select_one` tries these in order.
+            "price": (
+                "[data-testid='product-price'] .product-variant-price, "
+                "[data-testid='product-price']"
+            ),
             "url": "[data-testid='product-title']",
         },
         "verified": True,
-        "note": "Verified against the live UK storefront on 2026-09-09.",
+        "note": (
+            "Verified against the live UK storefront on 2026-09-09; "
+            "price selector widened 2026-09-10."
+        ),
     },
     "Arrow Video": {
         # arrowvideo.com is the US storefront and correctly returns USD. Arrow's UK shop

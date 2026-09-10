@@ -97,6 +97,17 @@ class ScrapeOutcome:
     #: label that does not carry a blockbuster has not broken. Distinct from `skipped`
     #: because the question was put and answered — it just came back "no".
     not_stocked: bool = False
+    #: True when the shop answered with **no listings at all** — an empty results page.
+    #:
+    #: **Deliberately neither a failure nor a claim** (`DECISIONS.md` #125). Zero cards is
+    #: what "we do not stock that" looks like *and* what a broken selector looks like, and
+    #: nothing in the response distinguishes them. Counting it as a failure auto-disabled
+    #: shops that simply carry different films; counting it as `not_stocked` would let a
+    #: parser that stopped matching read as a healthy "nothing found" forever, which is
+    #: exactly how #122 hid for a day. So it is recorded, reported, and excluded from the
+    #: auto-disable arithmetic — and a retailer answering this way for *every* want in a
+    #: run is flagged, because that is what a broken selector looks like.
+    no_results: bool = False
     url: str | None = None
     #: Why a result was rejected. The important field — a scraper that has started
     #: matching the wrong node reports here rather than silently writing a number.
@@ -124,12 +135,19 @@ class ScrapeRunResult:
         return sum(
             1
             for outcome in self.outcomes
-            if not outcome.ok and not outcome.skipped and not outcome.not_stocked
+            if not outcome.ok
+            and not outcome.skipped
+            and not outcome.not_stocked
+            and not outcome.no_results
         )
 
     @property
     def not_stocked(self) -> int:
         return sum(1 for outcome in self.outcomes if outcome.not_stocked)
+
+    @property
+    def no_results(self) -> int:
+        return sum(1 for outcome in self.outcomes if outcome.no_results)
 
     @property
     def skipped(self) -> int:
@@ -255,6 +273,14 @@ async def scrape_one(
     if not verdict.ok and candidate.titled_cards > 0 and candidate.matching_cards == 0:
         outcome.not_stocked = True
         outcome.error = f"{retailer.name} does not stock {title}"
+    elif not verdict.ok and candidate.titled_cards == 0:
+        # The page parsed into **no listings at all**. Measured on 2026-09-10: Arrow's
+        # "Sorry We Couldn't Find Any Results" and 101 Films' "0 results found" both land
+        # here, and both were being counted as scraper failures — 8 of one run's 11.
+        # `not_stocked` cannot claim this, because a selector that has stopped matching
+        # produces exactly the same nothing (`DECISIONS.md` #125).
+        outcome.no_results = True
+        outcome.error = f"{retailer.name} returned no listings for {title}"
     if verdict.ok and preferred_format in DISC_FORMATS:
         priced = primary_format(candidate.title, candidate.url)
         if priced != preferred_format:
@@ -279,6 +305,22 @@ async def _record_failure(db: AsyncSession, retailer: Retailer, message: str) ->
         )
         return True
     return False
+
+
+def _record_no_results(retailer: Retailer, count: int) -> None:
+    """Every want came back empty. Say so; do not count it as a failure.
+
+    `consecutive_failures` is deliberately **left alone** rather than reset: a shop that
+    answered nothing has neither failed nor succeeded, and zeroing the counter here would
+    let a genuinely broken shop launder its failures by returning one empty page.
+    """
+    retailer.last_scrape_status = "no_results"
+    retailer.last_scrape_error = (
+        f"{count} want(s) returned an empty results page. The shop may not carry them, or "
+        "the selectors may have stopped matching — nothing in the response tells them apart."
+    )[:2000]
+    retailer.last_scraped_at = utcnow()
+    logger.info("retailer_no_results", retailer=retailer.name, wants=count)
 
 
 def _record_success(retailer: Retailer) -> None:
@@ -353,17 +395,25 @@ async def run_scrape(
                 await asyncio.sleep(polite_pause)
 
         if not dry_run:
+            mine = [o for o in result.outcomes if o.retailer == retailer.name]
             attempted = [
-                o
-                for o in result.outcomes
-                if o.retailer == retailer.name and not o.skipped and not o.not_stocked
+                o for o in mine if not o.skipped and not o.not_stocked and not o.no_results
             ]
+            empty = [o for o in mine if o.no_results]
             if any_success:
                 _record_success(retailer)
             elif attempted:
                 message = "; ".join(o.error or "; ".join(o.reasons) for o in attempted)[:2000]
                 if await _record_failure(db, retailer, message or "no usable result"):
                     result.disabled.append(retailer.name)
+            elif empty:
+                # **Flagged, never disabled** (`DECISIONS.md` #125). Every want this shop
+                # was asked came back with an empty page and nothing came back priced.
+                # That is what a boutique label stocking none of these films looks like —
+                # and equally what a selector that has stopped matching looks like. Saying
+                # so is honest; switching the shop off over it is the bug this replaced,
+                # and calling it "not stocked" is the one it must not become.
+                _record_no_results(retailer, len(empty))
             # Nothing attempted: every want was one this shop could not be asked, or was
             # asked and honestly has not got. A shop that was never asked has not failed,
             # and neither has one that answered "no" — three digital wants, or three films

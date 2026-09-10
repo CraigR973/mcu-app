@@ -1028,6 +1028,15 @@ export const scrapeRunSchema = z.object({
   failed: z.number().int().nonnegative(),
   skipped: z.number().int().nonnegative(),
   notStocked: z.number().int().nonnegative(),
+  /** Wants whose shop answered with an empty results page — neither a failure nor a
+   *  claim the shop has not got it (`DECISIONS.md` #125).
+   *
+   *  **Optional, not defaulted.** `.default()` leaves the *input* type optional, which
+   *  the response parser then cannot assign; and optional is the honest shape anyway —
+   *  an API deployed a minute before the web app does not send this field, and a run row
+   *  that fails to parse is a worse outcome than one missing a count. Read it as
+   *  `?? 0`. */
+  noResults: z.number().int().nonnegative().optional(),
   written: z.number().int().nonnegative(),
   disabled: z.array(z.string()),
   dryRun: z.boolean(),
@@ -1222,6 +1231,7 @@ export const scrapeRunRecordSchema = z.object({
   dryRun: z.boolean(),
   attempted: z.number().int().nonnegative(),
   notStocked: z.number().int().nonnegative(),
+  noResults: z.number().int().nonnegative().optional(),
   skipped: z.number().int().nonnegative(),
   succeeded: z.number().int().nonnegative(),
   failed: z.number().int().nonnegative(),
@@ -1249,6 +1259,7 @@ export const dailyRunSchema = z.object({
   written: z.number().int().nonnegative(),
   attempted: z.number().int().nonnegative(),
   notStocked: z.number().int().nonnegative(),
+  noResults: z.number().int().nonnegative().optional(),
   skipped: z.number().int().nonnegative(),
   succeeded: z.number().int().nonnegative(),
   failed: z.number().int().nonnegative(),

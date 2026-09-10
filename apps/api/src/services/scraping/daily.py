@@ -56,7 +56,7 @@ def failure_records(result: ScrapeRunResult) -> list[dict[str, str]]:
     """§5.5's "failures logged with retailer + reason", as rows rather than log lines."""
     records: list[dict[str, str]] = []
     for outcome in result.outcomes:
-        if outcome.ok or outcome.skipped or outcome.not_stocked:
+        if outcome.ok or outcome.skipped or outcome.not_stocked or outcome.no_results:
             continue
         reason = outcome.error or "; ".join(outcome.reasons) or "no usable result"
         records.append(
@@ -113,8 +113,12 @@ async def run_daily_scrape(
             )
 
     run.finished_at_utc = utcnow()
+    # `not_stocked` is excluded here and **stays** excluded: `DECISIONS.md` #107 settled
+    # that a shop which answered honestly was not an attempt that failed. The double-count
+    # it caused lived in the *reader*, not here — see #125.
     run.attempted = sum(1 for o in result.outcomes if not o.skipped and not o.not_stocked)
     run.not_stocked = result.not_stocked
+    run.no_results = result.no_results
     run.skipped = result.skipped
     run.succeeded = result.succeeded
     run.failed = result.failed
