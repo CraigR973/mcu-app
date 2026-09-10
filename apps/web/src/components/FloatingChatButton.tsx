@@ -28,8 +28,8 @@ export function FloatingChatButton() {
       to="/assistant"
       aria-label="Ask the assistant"
       className={cn(
-        'fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full',
-        'bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105',
+        'fixed bottom-[5.5rem] right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full lg:bottom-5 lg:right-5',
+        'bg-primary text-primary-foreground shadow-soft transition-transform hover:-translate-y-0.5',
         // Clear of the iOS home indicator, which otherwise swallows the tap.
         'mb-[env(safe-area-inset-bottom)]',
       )}

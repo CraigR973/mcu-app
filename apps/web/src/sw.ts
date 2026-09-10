@@ -30,6 +30,34 @@ clientsClaim()
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
+// Remove the pre-partition cache introduced before the two accounts' caller-specific
+// responses were isolated. Keeping it would allow an offline `/auth/me` from one person
+// to satisfy the same URL for the other.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(caches.delete('mcu-api'))
+})
+
+async function apiCacheKey({ request }: { request: Request }): Promise<Request> {
+  const authorization = request.headers.get('Authorization')
+  if (!authorization) return request
+
+  let identity = authorization
+  try {
+    const payload = authorization.replace(/^Bearer\s+/i, '').split('.')[1]
+    const decoded = atob(payload.replaceAll('-', '+').replaceAll('_', '/'))
+    const parsed: unknown = JSON.parse(decoded)
+    if (parsed && typeof parsed === 'object' && 'sub' in parsed && typeof parsed.sub === 'string') identity = parsed.sub
+  } catch {
+    // A non-JWT bearer value is still isolated by its full value below.
+  }
+
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(identity))
+  const partition = Array.from(new Uint8Array(digest).slice(0, 12), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  const cacheUrl = new URL(request.url)
+  cacheUrl.searchParams.set('__mcu_profile', partition)
+  return new Request(cacheUrl.toString(), request)
+}
+
 /**
  * SPA navigations: try the network, fall back to the cached shell.
  *
@@ -81,7 +109,7 @@ registerRoute(
     !url.pathname.startsWith('/api/v1/gift/') &&
     !url.pathname.startsWith('/api/v1/calendar.ics'),
   new NetworkFirst({
-    cacheName: 'mcu-api',
+    cacheName: 'mcu-api-user-v2',
     networkTimeoutSeconds: 3,
     plugins: [
       // Roughly the whole catalogue at the page sizes the app asks for, plus room for
@@ -89,6 +117,7 @@ registerRoute(
       // and a stale poster beats a blank screen.
       new ExpirationPlugin({ maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 }),
       new CacheableResponsePlugin({ statuses: [200] }),
+      { cacheKeyWillBeUsed: apiCacheKey },
     ],
   }),
 )

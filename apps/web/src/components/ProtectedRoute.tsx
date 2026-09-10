@@ -1,6 +1,8 @@
 import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/auth'
+import { Button } from '@/components/ui/button'
+import { StatePanel } from '@/components/ui/state-panel'
 
 interface Props {
   children: ReactNode
@@ -8,7 +10,7 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, role }: Props) {
-  const { profile, isLoading, isAuthenticated } = useAuth()
+  const { profile, isLoading, isAuthenticated, isSessionUnavailable, refresh } = useAuth()
   const location = useLocation()
 
   // Development only. This used to be reachable in any build, which meant a stray
@@ -19,8 +21,22 @@ export default function ProtectedRoute({ children, role }: Props) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
+        <StatePanel tone="loading" title="Opening your archive" description="Confirming this device’s session…" className="w-full max-w-lg" />
+      </div>
+    )
+  }
+
+  if (isSessionUnavailable) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
+        <StatePanel
+          tone="offline"
+          title="Your session could not be confirmed"
+          description="You have not been signed out. Reconnect and try again; cached archive pages will remain available once your profile can be restored."
+          action={<Button variant="outline" onClick={() => void refresh()}>Try again</Button>}
+          className="w-full max-w-lg"
+        />
       </div>
     )
   }

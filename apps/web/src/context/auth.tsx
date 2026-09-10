@@ -21,6 +21,9 @@ interface AuthContextValue {
   profile: ProfileResponse | null
   isLoading: boolean
   isAuthenticated: boolean
+  /** Credentials exist, but the server and any local profile cache could not establish
+   *  which role owns them. This is not the same as being signed out. */
+  isSessionUnavailable: boolean
   signIn: (displayName: string, pin: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   /** Re-read the profile. The wizard calls it so the route gate sees the new state. */
@@ -29,6 +32,24 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+const PROFILE_CACHE_KEY = 'mcu.lastProfile'
+
+function cachedProfile(): ProfileResponse | null {
+  try {
+    return profileResponseSchema.parse(JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) ?? 'null'))
+  } catch {
+    return null
+  }
+}
+
+function storeProfile(profile: ProfileResponse | null): void {
+  try {
+    if (profile) localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile))
+    else localStorage.removeItem(PROFILE_CACHE_KEY)
+  } catch {
+    // A live session continues even when storage is unavailable.
+  }
+}
 
 /** Pull a human-readable message out of whatever shape the API refused with. */
 async function errorMessage(response: Response, fallback: string): Promise<string> {
@@ -47,12 +68,15 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ProfileResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSessionUnavailable, setIsSessionUnavailable] = useState(false)
 
   const loadProfile = useCallback(async () => {
     if (!getAccessToken() && !getRefreshToken()) {
       setProfile(null)
+      storeProfile(null)
+      setIsSessionUnavailable(false)
       setIsLoading(false)
-      return
+      return null
     }
     try {
       const response = await authFetch('/auth/me')
@@ -66,15 +90,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // session that the offline queue was made under. An app whose whole point is to
         // work on a phone in a garage cannot log you out for being in the garage
         // (`DECISIONS.md` #48).
-        if (shouldEndSession(response.status)) clearTokens()
-        setProfile(null)
-        return
+        if (shouldEndSession(response.status)) {
+          clearTokens()
+          storeProfile(null)
+          setProfile(null)
+          setIsSessionUnavailable(false)
+          return null
+        }
+        const cached = cachedProfile()
+        setProfile(cached)
+        setIsSessionUnavailable(cached === null)
+        return cached
       }
       const body: unknown = await response.json()
-      setProfile(profileResponseSchema.parse(body))
+      const nextProfile = profileResponseSchema.parse(body)
+      storeProfile(nextProfile)
+      setProfile(nextProfile)
+      setIsSessionUnavailable(false)
+      return nextProfile
     } catch {
       // Network failure. The session is intact; we simply cannot confirm it right now.
-      setProfile(null)
+      const cached = cachedProfile()
+      setProfile(cached)
+      setIsSessionUnavailable(cached === null)
+      return cached
     } finally {
       setIsLoading(false)
     }
@@ -86,22 +125,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     async (displayName: string, pin: string): Promise<{ error: string | null }> => {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName, pin }),
-      })
+      let response: Response
+      try {
+        response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ displayName, pin }),
+        })
+      } catch {
+        return { error: 'Could not reach the archive. Check your connection and try again.' }
+      }
       if (!response.ok) {
         return { error: await errorMessage(response, 'Sign in failed') }
       }
       try {
         const body: unknown = await response.json()
         const tokens = tokenPairSchema.parse(body)
+        // A different person may be signing in on the same device. Never let their
+        // profile become the fallback while the new session is being established.
+        storeProfile(null)
         storeTokens(tokens.accessToken, tokens.refreshToken)
       } catch {
         return { error: 'Unexpected response from the server' }
       }
-      await loadProfile()
+      const loaded = await loadProfile()
+      if (!loaded) return { error: 'Signed in, but the archive could not confirm your profile. Try again when the connection is stable.' }
       return { error: null }
     },
     [loadProfile],
@@ -123,12 +171,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     clearTokens()
+    storeProfile(null)
     // An unsent write must not outlive the session it was made in — it would fire under
     // whoever signs in next. This is the objection that kept `the-coupon`'s queue in
     // memory; persisting the queue is only defensible with this line here
     // (`DECISIONS.md` #44).
     await clearQueue()
     setProfile(null)
+    setIsSessionUnavailable(false)
   }, [])
 
   const setPin = useCallback(
@@ -142,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       // Changing a PIN revokes every refresh row, this session's included.
       clearTokens()
+      storeProfile(null)
       setProfile(null)
       return { error: null }
     },
@@ -154,10 +205,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isAuthenticated: profile !== null,
+        isSessionUnavailable,
         signIn,
         signOut,
         setPin,
-        refresh: loadProfile,
+        refresh: async () => { await loadProfile() },
       }}
     >
       {children}

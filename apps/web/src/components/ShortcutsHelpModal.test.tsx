@@ -33,9 +33,11 @@ describe('ShortcutsHelpModal', () => {
     expect(screen.queryByText('Add new item')).toBeNull()
   })
 
-  it('does not list opening AI-assistant chat — Batch 31 has not shipped it', () => {
+  it('lists opening the assistant — Batch 31 shipped it and `.` now navigates there', () => {
     render(<ShortcutsHelpModal open onClose={() => {}} isAdmin />)
-    expect(screen.queryByText(/assistant/i)).toBeNull()
+
+    expect(screen.getByText('Open the assistant')).not.toBeNull()
+    expect(screen.getByText('.')).not.toBeNull()
   })
 
   it('closes on Escape', () => {

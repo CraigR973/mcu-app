@@ -43,9 +43,8 @@ interface Props {
 }
 
 /** Phase 6.3. Indexes films (via Batch 5's search endpoint), every page, the write
- *  action a viewer can't reach, and recently-viewed films — dropped: "recent
- *  conversations with the AI assistant" (§7.5), because Batch 31 hasn't built the
- *  assistant yet. Unmounts on close (`Dialog` returns null), so every reopen starts
+ *  action a viewer can't reach, and recently-viewed films. Unmounts on close
+ *  (`Dialog` returns null), so every reopen starts
  *  from a fresh query and a fresh read of recent items. */
 export default function CommandPalette({ open, onClose, isAdmin }: Props) {
   const navigate = useNavigate()
