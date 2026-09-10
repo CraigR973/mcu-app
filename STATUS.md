@@ -2,31 +2,13 @@
 
 ## Now
 
-**Built, not yet merged: the brand integration.** The approved three-case-and-disc identity
-is wired into the app. The temporary blue-disc icon set is deleted; `apps/web/public/brand/`
-holds the 18 assets the app references (744 kB), installed from the design system by the
-tracked `scripts/brand-sync.mjs`. Two reusable components — `BrandMark` and `BrandLockup` —
-apply the approved responsive hierarchy by *drawn artwork* rather than by scaling one file,
-and pick their theme variant from the same value that paints the first frame, so there is no
-flash of the wrong asset and no second fetch.
+**The brand integration is merged and deployed.** Commit `916676e` (Merge the brand
+integration) is live on main. Vercel web app rebuilt and serving the new identity. Railway
+API deployment in progress (CI green at 1m42s). The approved three-case-and-disc identity
+is now wired into the app across all surfaces.
 
-Surfaces changed: desktop sidebar (horizontal lockup), mobile header and drawer (compact
-mark + short name), login and onboarding (stacked lockup where the layout is square,
-horizontal where it is a band), the three full-screen boot loaders, and `/offline`. Empty
-states deliberately got nothing — the sidebar lockup is inches away.
-
-Three real defects were fixed on the way: `src/sw.ts` had been requesting
-`/icons/icon-192.png`, a path that **never existed**, so every push notification since Batch
-11 fell back to the browser's own glyph; the manifest's `theme_color` was `#0B1220`, the
-deleted placeholder's blue, so an installed PWA opened on a splash colour the app never
-draws; and the mobile header's mark was 28 px, under the compact master's 32 px floor.
-
-Gate green: **235 web + 79 shared tests** (suite 235 ← 213; 22 new brand tests), 0 lint
-errors, clean typecheck, build passing, every manifest and service-worker asset path
-resolving in `dist`, and all 18 brand assets confirmed **precached by the real worker in the
-built bundle**. Verified in the browser at 1440 / 768 / 375 in both themes, plus native-size
-proofs of the favicon's three ICO entries, the 32/36/48/64/128 interface marks, the maskable
-safe area and the badge at 24 dp. Measured CLS on the login page: **0**.
+The gate proved 235 web + 79 shared tests (22 new brand tests), 0 lint errors, clean
+typecheck, build passing, and all 18 brand assets precached in the built bundle.
 
 Two things are worth knowing. **The sidebar lockup is drawn at 240 px against a 280 px
 approved minimum** (`DECISIONS.md` #134) — the alternative was widening navigation by 40 px
