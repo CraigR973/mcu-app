@@ -2,11 +2,17 @@
 
 ## Now
 
-**25 of 37 batches shipped, 12 remain.** Production serves `fe1db05`, reporting `db: ok`,
-`push: configured` and `ai: configured`.
+**26 of 37 batches shipped, 11 remain.** Production serves the merged `main`, reporting
+`db: ok`, `push: configured` and `ai: configured`.
 
-**Four of the eight overnight batches are done** — 11, 20, 30 and 31. **Groups F and J are
-both complete.** Nothing has failed a gate that was not fixed and re-run.
+**Five of the eight overnight batches are done** — 11, 20, 30, 31 and 32. **Groups F and J
+are both complete**, and Stage 9 is finished apart from 9.6, which #16 dropped.
+
+**Batch 32 — dictation.** On-device Web Speech: the browser's own engine listens and this
+app uploads nothing. Two details worth keeping — dictation **fills the input and never
+sends**, because the engine mishears and reading it back is the only way "correct
+transcription" is checkable; and interim results are **rebuilt rather than appended**, which
+is the difference between "where is Heat" and "where where is where is Heat".
 
 **Batch 31 — tools, chat and the confirmation boundary.** Three decisions worth carrying:
 
@@ -61,7 +67,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | ~~2~~ | ~~**20** Price scraping + drop alerts (5.5, 5.6, 5.8)~~ | **shipped 2026-09-10** — cron is hosting; 5.6 needs a device |
 | ~~3~~ | ~~**30** AI assistant — client + caps (9.1, 9.7)~~ | **shipped 2026-09-10** — ⚠️ 9.1's live call is an owner action |
 | ~~4~~ | ~~**31** AI assistant — tools + chat (9.2, 9.3, 9.4)~~ | **shipped 2026-09-10** |
-| 5 | **32** Voice input (9.5) | ❌ needs a human speaking |
+| ~~5~~ | ~~**32** Voice input (9.5)~~ | **shipped 2026-09-10** — ❌ 9.5 still needs a human speaking |
 | 6 | **35** Movie night (8.3, 8.4) | ⚠️ 8.4's notification may need a device |
 | 7 | **25** Photo uploads (3.10) | ✅ |
 | 8 | **23** Specs — scraper + display (3.7, 3.8, 3.9) | ✅ |
@@ -424,6 +430,26 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 32 shipped: voice input.** Stage 9 is complete apart from 9.6,
+  which `DECISIONS.md` #16 dropped.
+
+  On-device recognition — the browser's engine listens and nothing is uploaded by this app.
+  `microphone=(self)` had been in `vercel.json` since Batch 2, so no hosting change.
+
+  **Dictation fills the input and never sends.** The engine mishears; a button that
+  submitted on the last word would put a wrong question to the assistant with no chance to
+  correct it, and would also make the acceptance criterion uncheckable — "correct
+  transcription" is something only the person can confirm, by reading it.
+
+  **Two things that would have been silent bugs.** TypeScript's DOM library declares none
+  of the Web Speech API, so the used surface is declared in-repo rather than casting
+  `window` to `any` — which accepts a misspelled event name and yields a mic that listens
+  and reports nothing. And interim results are reassembled rather than appended: the engine
+  revises earlier entries in place, so concatenating each event produces "where where is
+  where is Heat".
+
+  **9.5's acceptance is deferred** — it needs a person speaking into a microphone.
 
 - **2026-09-10** — **Batch 31 shipped: role-aware tools, streaming chat, and confirmation
   before any write.** `fe1db05`. Group J is complete.

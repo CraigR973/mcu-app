@@ -62,7 +62,19 @@ unproven is only that a real round trip works.
 Your caps are on the same page and start at **50 messages and $2 a day** (owner,
 2026-09-09). Both are editable, and a message cap of 0 turns the assistant off for you.
 
-### 3. eBay production API application *(was 4, then 2)*
+### 3. Say something to the assistant *(new — Batch 32, 2026-09-10)*
+
+- [ ] **Tap the microphone in the chat, say a question, and check what appears in the box.**
+      That is Phase 9.5's acceptance: *"tapping mic, speaking a query, sends correct
+      transcription"*.
+
+Dictation deliberately **fills the input rather than sending it** — the engine mishears, and
+reading it back before pressing send is both the safety net and the only way "correct
+transcription" is a thing anyone can confirm. Nothing is uploaded by the app; the browser's
+own engine does the listening. It works in Chrome, Edge and Safari, and **not in Firefox**,
+where the button is hidden rather than shown dead.
+
+### 4. eBay production API application *(was 4, then 2, then 3)*
 
 - [x] Applied 2026-09-09
 - [ ] Approval — eBay said at least one business day
@@ -72,7 +84,7 @@ tracking). **And Batch 24**, which is not obvious from the ledger: `DECISIONS.md
 that batch's UPC→title chain as *cached mapping → eBay Browse keyword search → manual
 fallback*, so the barcode lookup depends on the same approval.
 
-### 4. Two design choices nobody has made
+### 5. Two design choices nobody has made
 
 - [ ] **Batch 25 — how big may a photo be?** Storage is settled as **Neon** (owner,
       2026-09-09), which means photo bytes in Postgres rather than an object store. The
@@ -92,12 +104,12 @@ because they set a shape that is annoying to reverse once photos or sessions exi
 
 ## Deprioritised by owner decision — not blocking
 
-### 5. Google + Microsoft OAuth app registration *(was 5)* — **deprioritised 2026-09-09**
+### 6. Google + Microsoft OAuth app registration — **deprioritised 2026-09-09**
 
 Group K (Batch 33 email accounts + OAuth → Batch 34 parsers + scanning) is off the queue
 until this is wanted. The batches stay in the ledger; nothing is dropped.
 
-### 6. Subscribe the `.ics` feed in Apple or Google Calendar *(was 6)*
+### 7. Subscribe the `.ics` feed in Apple or Google Calendar
 
 Batch 17 shipped and the feed's bytes are verified against RFC 5545. The in-app release
 calendar is the primary experience; external subscription is an optional convenience. Do this
@@ -126,7 +138,7 @@ lives only in a Railway variable has no test.
 
 ## Housekeeping — not blocking anything
 
-### 7. Revoke the April PAT at GitHub *(was 7)*
+### 8. Revoke the April PAT at GitHub
 
 - [ ] Revoke it
 
@@ -135,7 +147,7 @@ referenced truncated in `4768da8`. It is dead (returns 401) but was never formal
 **A history rewrite is not recommended** — the repo is private and the token is already
 invalid, so a rewrite would cost more than it buys.
 
-### 8. `VITE_API_URL` for Vercel preview deploys *(was 9)*
+### 9. `VITE_API_URL` for Vercel preview deploys
 
 - [ ] Add it in the Vercel dashboard — **only if you want preview deploys to work**
 
