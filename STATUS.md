@@ -2,52 +2,52 @@
 
 ## Now
 
-**24 of 37 batches shipped, 13 remain.** Production serves `ecb00dd`, reporting
-`db: ok`, `push: configured` and **`ai: configured`**.
+**25 of 37 batches shipped, 12 remain.** Production serves `fe1db05`, reporting `db: ok`,
+`push: configured` and `ai: configured`.
 
-**Three of the eight overnight batches are done** — 11, 20 and 30 — plus a doc-recovery
-commit that turned out to be necessary. Group F is complete and Group J is half done.
+**Four of the eight overnight batches are done** — 11, 20, 30 and 31. **Groups F and J are
+both complete.** Nothing has failed a gate that was not fixed and re-run.
 
-**Batch 30 — the Claude client and §9.7's caps.** The load-bearing details:
+**Batch 31 — tools, chat and the confirmation boundary.** Three decisions worth carrying:
 
-- **The model id is validated at load.** `claude-sonnet-5`, checked against a priced list.
-  A guessed id is a 404 in front of the first person to ask; an **unpriced** id is worse,
-  because it works and logs every call as costing nothing, which makes the cost cap
-  unenforceable.
-- **`budget_tokens` is gone.** It returns a 400 on the Claude 5 family — adaptive thinking
-  plus an `effort` level replaces it. There is no assistant prefill either.
-- **The cap is checked before the call.** Checking after would still have spent the money,
-  which is the only thing the cap exists to prevent. A refusal is a **200** carrying a
-  sentence, because §9.7 asks for a message the person reads where they asked.
-- **The day is the person's day.** Gotcha 26 applied to "resets next day".
+- **The agent loop is manual, not the SDK's tool runner.** The runner drives the whole
+  cycle in one process; §9.4 needs the opposite. When Claude asks to call a write tool the
+  loop stops, hands the request to a browser, and resumes on a *later HTTP request*. A
+  pending call is therefore a row — an in-memory future would lose every outstanding
+  confirmation on the next deploy.
+- **"Write" and "admin-only" are separate axes.** Watch history is personal, so `log_watch`
+  writes *and* a viewer keeps it. Collapsing them would have taken it from Mark for nothing.
+- **`DECISIONS.md` #12 stays closed.** The tools dispatch to the same endpoint functions the
+  web app calls, so the assistant did not become the second consumer that reopens the
+  response-envelope question.
 
-**`/api/v1/health/ready` now reports three things**: `db`, `push` and `ai`. All three exist
-because a value living only in a Railway variable has nothing testing it — which is what
-the TMDB outage was. Two of the three would have caught it.
+**A correction to this block, found by checking rather than copying.** It has said "3
+`wanted_list` rows" since 2026-09-09; the true figure is **11 rows, 8 of them live and
+active**. The three originals (*Misery*, *Nope*, *Project Hail Mary*) were soft-deleted and
+eight boutique titles added during that evening's scraper acceptance run — the run
+`DECISIONS.md` #111 describes. The number was already stale when it was written.
+
+**Nothing this session has written to production data.** `collection_items` is 1,857,
+`price_checks` is still 8, and `ai_usage_log` is 0 — no model call has been made on the
+owner's key.
 
 ### ⛔ What is waiting for you
 
-**One Railway console visit and two taps on a phone still close five criteria.** See
-`OWNER-ACTIONS.md`: two crons (the nightly scrape and the reminder pass), and turning push
-on for two devices.
+`OWNER-ACTIONS.md` is the list. In one sitting: **two Railway crons** (the nightly scrape
+and the reminder pass), **push turned on for two devices**, and **one question asked of the
+assistant**. Between them those close five criteria.
 
-**A new one, and it is small: ask the assistant one question.** §9.1's acceptance is
-*"simple text prompt returns a response; tokens logged"*, which spends real money on your
-key — `docs/phase-batches.md` says one call is enough and *"do not loop"*. There is no
-Anthropic credential on the build machine and the deployed endpoint needs a login, so this
-is yours. Open **Assistant** in the sidebar and ask it anything; the answer shows its own
-token count and cost underneath.
-
-**Six acceptance criteria an agent cannot meet**, none of them implied met: 6.2 (two
-devices) · 5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) ·
-**9.1 (one live call)** · 9.5 (a spoken query) · 8.4's notification.
+**Six acceptance criteria an agent cannot meet**, none implied met: 6.2 (two devices) ·
+5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) · 9.1 (one
+live call) · 9.5 (a spoken query) · 8.4's notification.
 
 ### What the live database holds
 
-**1,857 `collection_items`**, untouched. 3 `wanted_list`, 8 `price_checks`, 40
-`completion_sets`, 32 `release_calendar`, 10 `retailers`. Empty and waiting:
-`push_subscriptions`, `notification_preferences`, `notifications`, `price_history_daily`,
-`scrape_runs`, `ai_usage_log`, `ai_settings`.
+**1,857 `collection_items`**, untouched. **11 `wanted_list` rows, 8 live and active.** 8
+`price_checks`, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers`. Empty and
+waiting: `push_subscriptions`, `notification_preferences`, `notifications`,
+`price_history_daily`, `scrape_runs`, `ai_usage_log`, `ai_settings`, `ai_conversations`,
+`ai_messages`, `ai_tool_calls`.
 
 
 ## Next
@@ -60,7 +60,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | ~~1~~ | ~~**11** Notifications + push (6.1, 6.2, 5.11)~~ | **shipped 2026-09-10** — 6.2 deferred, needs two real devices |
 | ~~2~~ | ~~**20** Price scraping + drop alerts (5.5, 5.6, 5.8)~~ | **shipped 2026-09-10** — cron is hosting; 5.6 needs a device |
 | ~~3~~ | ~~**30** AI assistant — client + caps (9.1, 9.7)~~ | **shipped 2026-09-10** — ⚠️ 9.1's live call is an owner action |
-| 4 | **31** AI assistant — tools + chat (9.2, 9.3, 9.4) | ✅ |
+| ~~4~~ | ~~**31** AI assistant — tools + chat (9.2, 9.3, 9.4)~~ | **shipped 2026-09-10** |
 | 5 | **32** Voice input (9.5) | ❌ needs a human speaking |
 | 6 | **35** Movie night (8.3, 8.4) | ⚠️ 8.4's notification may need a device |
 | 7 | **25** Photo uploads (3.10) | ✅ |
@@ -424,6 +424,44 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 31 shipped: role-aware tools, streaming chat, and confirmation
+  before any write.** `fe1db05`. Group J is complete.
+
+  **The agent loop is manual and that is the whole design.** The SDK's tool runner drives
+  the cycle in one process; §9.4 requires it to stop, hand a request to a browser, and
+  resume when a person answers in a *later HTTP request*. So a pending write is a row, not
+  an in-memory future — the latter loses every outstanding confirmation on the next deploy.
+
+  **Every call in a turn gets a row, including the reads.** The API insists one
+  `tool_result` message answers all of an assistant message's `tool_use` blocks, so a turn
+  that both searches and writes cannot send half an answer while it waits. The read runs,
+  its result is held, and both go back once the write is resolved. A cancelled call is kept
+  and marked, with a result the model reads as a refusal — otherwise its next sentence
+  cheerfully reports success.
+
+  **`DECISIONS.md` #12 stays closed.** Tools dispatch to the same endpoint functions the web
+  app calls, which are plain async functions taking `(user, db, ...)`, and results come back
+  as the same pydantic models the browser parses. No envelope was needed and none was added.
+
+  **"Write" and "admin-only" turned out to be different questions.** Watch history is
+  personal — Batch 6 and Batch 37 both scope it to the caller — so `log_watch` writes and a
+  viewer keeps it. One axis would have taken it from Mark for no reason.
+
+  Messages store raw content blocks rather than text, because replaying only the text makes
+  Claude answer as though a tool call never happened, silently. `sequence` orders them:
+  `NOW()` is the transaction's start time and a turn writes several rows in one (gotcha 24).
+  The browser parses SSE with `fetch` rather than `EventSource`, which cannot POST or carry
+  an Authorization header, and buffers across chunk boundaries — a frame routinely arrives
+  split across two reads, and a parser that assumes otherwise drops text with no error.
+
+  **Nothing failed in CI.** Green on the first push, 34 new tests.
+
+  **A stale number corrected while verifying.** The "what the live database holds" block has
+  said 3 `wanted_list` rows since 2026-09-09. It is 11, 8 of them live — the three originals
+  were soft-deleted and eight boutique titles added during that evening's acceptance run
+  (#111). Confirmed that nothing this session wrote to production: 1,857 items untouched,
+  8 `price_checks`, and `ai_usage_log` empty.
 
 - **2026-09-10** — **Batch 30 shipped: the Claude client and the AI usage caps.**
   `ecb00dd`. Group J is half done.
