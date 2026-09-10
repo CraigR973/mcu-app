@@ -58,10 +58,23 @@ start command to the line given and leave the rest of the service alone.
 - [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance, and the last
       unmet part of Batch 20. Everything behind it is deployed: push reports `configured`,
       the alert fires when a scrape finds a price at or below a want's `max_price`, and the
-      service worker shows it. What is missing is a subscribed device — open the app,
-      Notifications, "Turn on for this device". Setting a `max_price` **above** the current
-      price on a want and running the job is the quickest way to see it work.
-      **Doing this on a second device also closes §6.2**, Batch 11's remaining criterion.
+      service worker shows it. What is missing is a subscribed device.
+
+      **The exact sequence, all of it in the app:**
+      1. Settings → Notifications → name the device → **"Turn on for this device"**, then
+         press **Test** on the row that appears. If no notification arrives, stop — nothing
+         after this can work either.
+      2. `/wanted` → **Cross of Iron** → **"Set a limit"** → `14` → Save. It is £12.99 at
+         Zavvi and that check was never alerted, so the next run reads as a genuine drop.
+      3. `/retailers` → **The nightly run** → **"Run it now"**. That scrapes, alerts and
+         delivers in one pass.
+
+      **"Set a limit" only exists as of 2026-09-10** (`DECISIONS.md` #123). Until then the
+      maximum price could be set on the add form and nowhere else, so there was no way to
+      put a limit on a want you already had — and the same change fixed "Stop looking"
+      silently wiping the format, edition, limit and notes of whatever it toggled.
+
+      **Doing step 1 on a second device also closes §6.2**, Batch 11's remaining criterion.
 
 **5.5's criterion was corrected before the batch was built** (`DECISIONS.md` #112). As written
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
