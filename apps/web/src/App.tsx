@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/theme'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/layouts/AppLayout'
 import ErrorBoundary from './components/ErrorBoundary'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { adminNavItems, navItems } from '@/lib/nav-items'
@@ -73,9 +74,13 @@ function DebugPage() {
   )
 }
 
+/** The blank moment before a lazy route arrives — the one loading surface with nothing
+ *  else on screen to say whose app this is, so the display mark goes here. Empty states
+ *  inside the shell do not get one: the sidebar lockup is already a few inches away. */
 function PageLoader() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-7 bg-background p-4">
+      <BrandMark size={128} label="Mark's Cinematic Universe" />
       <StatePanel tone="loading" title="Opening the archive" className="w-full max-w-md" />
     </div>
   )

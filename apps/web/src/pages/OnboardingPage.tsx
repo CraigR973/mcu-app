@@ -3,9 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Bell, BookOpen, Check, Disc3, Film, Loader2, LogOut, Monitor, Moon, Smartphone, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { BrandLockup } from '@/components/brand/BrandLockup'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth'
 import { useTheme } from '@/context/theme'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { usePushSubscription } from '@/hooks/usePushSubscription'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { completeOnboarding, fetchMovies } from '@/lib/api'
@@ -16,12 +19,16 @@ interface StepDef {
   node: ReactNode
 }
 
-function StepIntro({ icon: Icon, eyebrow, title, children }: { icon: typeof Film; eyebrow: string; title: string; children: ReactNode }) {
+/** `visual` replaces the icon medallion where a step earns real brand artwork — only the
+ *  welcome step does. Everywhere else the medallion is the right weight. */
+function StepIntro({ icon: Icon, visual, eyebrow, title, children }: { icon: typeof Film; visual?: ReactNode; eyebrow: string; title: string; children: ReactNode }) {
   return (
     <div>
-      <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-full border border-accent/45 bg-accent/10 text-accent">
-        <Icon className="h-5 w-5" aria-hidden />
-      </span>
+      {visual ?? (
+        <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-full border border-accent/45 bg-accent/10 text-accent">
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+      )}
       <p className="page-kicker">{eyebrow}</p>
       <h2 tabIndex={-1} data-step-heading className="font-display text-3xl font-semibold tracking-[-0.025em] text-foreground">{title}</h2>
       <div className="mt-3 space-y-3 text-sm leading-6 text-muted-foreground">{children}</div>
@@ -30,8 +37,30 @@ function StepIntro({ icon: Icon, eyebrow, title, children }: { icon: typeof Film
 }
 
 function Welcome({ isAdmin, name }: { isAdmin: boolean; name: string }) {
+  // The card is 320px wide inside its padding only from `sm` up. Below that the stacked
+  // lockup would have to be drawn under its minimum, so the step shows the display vector
+  // mark at 128px instead — the same tier the approved hierarchy names for that size.
+  const isRoomy = useMediaQuery('(min-width: 640px)')
   return (
-    <StepIntro icon={Film} eyebrow="Welcome to the archive" title={`Good to see you, ${name}`}>
+    <StepIntro
+      icon={Film}
+      visual={
+        <div className="mb-6">
+          {isRoomy ? (
+            <BrandLockup
+              variant="stacked"
+              width={320}
+              label="Mark's Cinematic Universe"
+              className="rounded-lg border border-border"
+            />
+          ) : (
+            <BrandMark size={128} label="Mark's Cinematic Universe" />
+          )}
+        </div>
+      }
+      eyebrow="Welcome to the archive"
+      title={`Good to see you, ${name}`}
+    >
       <p>Every film, owned copy and shelf location is catalogued here for Craig and Mark.</p>
       <p>{isAdmin ? 'You can maintain the collection, its wanted titles and lending record. Every change is recorded.' : 'You can explore the full archive, plan film nights and keep your own watch history.'}</p>
     </StepIntro>
@@ -216,7 +245,12 @@ export default function OnboardingPage() {
     <main className="min-h-[100dvh] bg-background px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-5xl flex-col">
         <header className="flex items-center justify-between border-b border-border pb-4">
-          <div data-logo-slot="onboarding-stacked"><p className="font-display text-lg font-semibold text-foreground">The Real MCU</p><p className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Private film archive</p></div>
+          {/* A slim bar, so the compact mark and the short name — the full lockup belongs
+              in the welcome card below, where it has a square to sit in. */}
+          <div className="flex min-w-0 items-center gap-3">
+            <BrandMark size={36} />
+            <div className="min-w-0"><p className="truncate font-display text-lg font-semibold text-foreground">The Real MCU</p><p className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Private film archive</p></div>
+          </div>
           <Button type="button" variant="ghost" size="sm" onClick={() => void signOut()}><LogOut aria-hidden />Sign out</Button>
         </header>
 

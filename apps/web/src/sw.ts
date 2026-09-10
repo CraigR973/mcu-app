@@ -189,8 +189,14 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body ?? '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      // There has never been an `/icons/` directory in `public/`, at any point, so every
+      // push notification since Batch 11 has 404'd its icon and fallen back to the
+      // browser's own glyph. The brand assets live under `/brand/`.
+      icon: '/brand/app-icon-concept-art-192.png',
+      // A badge is a mask: the platform keeps the alpha channel and throws the colour
+      // away, so the detailed emblem shrunk into a 24dp slot resolves to a grey blob.
+      // This is the approved one-colour mark, drawn for exactly this.
+      badge: '/brand/notification-badge-96.png',
       // `tag` collapses a repeat of the same notification rather than stacking it. The
       // server sends the notification's own id, so two different alerts never collapse
       // into one and a re-delivered one never appears twice.

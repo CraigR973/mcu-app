@@ -22,33 +22,55 @@ export default defineConfig({
       // waiting to be told — see the comment in `src/sw.ts` for the iOS deadlock this
       // avoids. `autoUpdate` keeps the registration side consistent with that.
       registerType: 'autoUpdate',
+      // The approved identity, installed from the design system by
+      // `scripts/brand-sync.mjs`. Precached because an installed PWA that cannot draw its
+      // own icon offline is worse than one that cannot draw a poster. The interface marks
+      // and lockups are here too: the login screen and the app shell both render one
+      // before any network request completes.
       includeAssets: [
-        'favicon.svg',
-        'apple-touch-icon.png',
-        'icon-64.png',
-        'icon-128.png',
-        'icon-192.png',
-        'icon-384.png',
-        'icon-512.png',
-        'icon-1024.png',
+        'brand/favicon.ico',
+        'brand/apple-touch-icon.png',
+        'brand/app-icon-concept-art-192.png',
+        'brand/app-icon-concept-art-384.png',
+        'brand/app-icon-concept-art-512.png',
+        'brand/app-icon-concept-art-maskable-192.png',
+        'brand/app-icon-concept-art-maskable-512.png',
+        'brand/notification-badge-96.png',
+        'brand/social-card-1200x630.png',
+        'brand/stack-mark.svg',
+        'brand/stack-mark-light.svg',
+        'brand/stack-mark-compact.svg',
+        'brand/stack-mark-compact-light.svg',
+        'brand/micro-mark-16.svg',
+        'brand/horizontal-lockup-dark.svg',
+        'brand/horizontal-lockup-light.svg',
+        'brand/stacked-lockup-dark.svg',
+        'brand/stacked-lockup-light.svg',
         'placeholder-poster.svg',
       ],
       manifest: {
         name: "Mark's Cinematic Universe",
         short_name: 'The Real MCU',
         description: 'The film collection — what we own, and which shelf it is on.',
-        theme_color: '#0B1220',
-        background_color: '#0B1220',
+        // The interface's own dark background. `#0B1220` was the placeholder identity's
+        // blue and appeared nowhere in the shipped theme, so an installed app opened on a
+        // splash colour the app never draws.
+        theme_color: '#120F0D',
+        background_color: '#120F0D',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/movies',
+        // `any` and `maskable` are separate entries on purpose: a maskable icon holds its
+        // artwork inside a 72% safe area, so a platform that used it unmasked would draw
+        // the emblem small in a field of ink. Declaring one icon as both makes every
+        // launcher guess.
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-384.png', sizes: '384x384', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icon-1024.png', sizes: '1024x1024', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/brand/app-icon-concept-art-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/brand/app-icon-concept-art-384.png', sizes: '384x384', type: 'image/png', purpose: 'any' },
+          { src: '/brand/app-icon-concept-art-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/brand/app-icon-concept-art-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/brand/app-icon-concept-art-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       injectManifest: {

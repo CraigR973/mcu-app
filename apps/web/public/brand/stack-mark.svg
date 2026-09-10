@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Mark's Cinematic Universe three-case mark</title>
+  <desc id="desc">Three overlapping physical movie cases form an M silhouette with an optical disc behind them</desc>
+  <rect width="1024" height="1024" rx="216" fill="#0A0A0B"/>
+  <g transform="translate(61.44 61.44) scale(0.88)">
+  <g stroke-linejoin="round">
+    <circle cx="870" cy="520" r="180" fill="#D4AF7F"/>
+    <circle cx="870" cy="520" r="142" fill="#0A0A0B"/>
+    <circle cx="870" cy="520" r="58" fill="#D4AF7F"/>
+    <circle cx="870" cy="520" r="26" fill="#0A0A0B"/>
+    <path d="M116 266L432 326V748L116 696Z" fill="#D4AF7F"/>
+    <path d="M150 306L398 352V708L150 666Z" fill="#0A0A0B"/>
+    <path d="M592 326L908 266V696L592 748Z" fill="#D4AF7F"/>
+    <path d="M626 352L874 306V666L626 708Z" fill="#0A0A0B"/>
+    <path d="M358 358L666 394V802L358 844Z" fill="#D4AF7F"/>
+    <path d="M392 396L632 424V770L392 806Z" fill="#B8475E"/>
+    <path d="M408 400L434 403V792L408 796Z" fill="#520A1F"/>
+  </g>
+  </g>
+</svg>

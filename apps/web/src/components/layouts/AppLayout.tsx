@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Command, Menu, Plus } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
 import { FloatingChatButton } from '@/components/FloatingChatButton'
@@ -13,8 +13,8 @@ import { useAuth } from '@/context/auth'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { startAutoFlush } from '@/lib/sync'
 import { MobileTabBar } from './MobileTabBar'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
-import { navItems, adminNavItems } from '@/lib/nav-items'
 
 interface Props {
   children: ReactNode
@@ -26,11 +26,7 @@ export default function AppLayout({ children }: Props) {
   const [helpOpen, setHelpOpen] = useState(false)
   const queryClient = useQueryClient()
   const { profile } = useAuth()
-  const { pathname } = useLocation()
   const isAdmin = profile?.role === 'admin'
-  const routeLabel = [...navItems, ...adminNavItems]
-    .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
-    .sort((a, b) => b.path.length - a.path.length)[0]?.label ?? 'Film archive'
   const closeSidebar = useCallback(() => setSidebarOpen(false), [])
 
   useKeyboardShortcuts({
@@ -71,9 +67,14 @@ export default function AppLayout({ children }: Props) {
           >
             <Menu size={20} aria-hidden />
           </button>
+          {/* 32px, not the 28px the placeholder used: the compact mark is drawn for
+              32-96px and loses its disc hub below that. The short app name replaces the
+              route label, which repeated the page's own h1 a few pixels further down —
+              the mobile header had no brand anchor at all, and the route did not need
+              saying twice. */}
           <span className="flex min-w-0 flex-1 items-center gap-2 lg:hidden">
-            <span data-logo-slot="mobile-mark" aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-primary font-display text-sm font-semibold text-primary-foreground">M</span>
-            <span className="truncate text-sm font-semibold text-foreground">{routeLabel}</span>
+            <BrandMark size={32} />
+            <span className="truncate text-sm font-semibold text-foreground">The Real MCU</span>
           </span>
           <div className="hidden w-full max-w-2xl flex-1 lg:block">
             <SearchBar />
