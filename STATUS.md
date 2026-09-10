@@ -18,18 +18,32 @@ key), and two assertions that read the whole table when migration `002`'s seeded
 mean a reminder correctly writes more rows than the fixture makes. All three are gotcha 15:
 **a green local run is silent about anything touching SQL.**
 
-**Batch 23 is built but its §3.7 acceptance is not done, deliberately.** The scraper exists
-with `DECISIONS.md` #110's bounds enforced in code rather than described — an exact-release-
-URL predicate, sequential five-second-spaced requests, a `403`/`429`/`451` halt that stops
-the whole integration to a database row **nothing in the application can clear**, provenance
-on every derived row, and a delete endpoint that makes the acceptance reversible. What it
-has not done is fetch anything: production reports **0 pages ever fetched**. #110 is a risk
-acceptance the owner made, not a permission the site gave, and `group-start.md` puts live
-third-party runs in the owner's hands.
+**Batch 23 is complete: §3.7 was run on 2026-09-10 and it found the scraper broken.** The
+owner accepted #110's risk and asked for the run (`#121`). All ten pages fetched — and
+**nothing was extracted from any of them**. The parser looked for `<strong>`-labelled rows;
+Blu-ray.com serves `<span class="subheading">` sections with bare `Label: value` lines. The
+suite had been green throughout because `test_specs.py`'s fixture was *invented to match the
+parser* — eleven tests passing against markup the site has never served (`#122`).
+
+Then the fix's own re-run stored **one** audio track for Blade Runner 2049 where the page
+lists **six**, because that page wraps its tracks in a `<span>` and Fight Club's does not.
+**One real page is a sample of one.** Both are fixtures now, captured verbatim, and a test
+asserts they stay captured.
+
+§3.7 is met on the third attempt: **10 rows of 1,857, 10 distinct release URLs**, no halt,
+no currency symbol in any derived field, Blade Runner 2049 reading 2160p/HEVC/HDR10 with all
+six tracks. #110's bounds held throughout all three runs — sequential, five seconds apart,
+honest user agent, no redirect following, and never a `403`.
+
+**Nothing was lost while it was broken.** `apply_specs` checks `is_empty` before touching a
+row, so a parser that stops matching the site writes nothing rather than blanking 1,857 rows.
+That is the whole reason the failure cost ten wasted requests and no data.
 
 **Nothing this run wrote to production data.** 1,857 `collection_items` untouched, 8
 `price_checks`, and every new table empty — `ai_usage_log` included, so no model call has
-been made on the owner's key.
+been made on the owner's key. **The one exception is §3.7's own acceptance**: ten
+`collection_items` now carry specs derived from Blu-ray.com, each with its source URL, and
+`DELETE /api/v1/specs` reverses it.
 
 ### ⛔ What is waiting for you
 
@@ -43,12 +57,13 @@ minutes:
    scheduler could ever have called them (`DECISIONS.md` #119).
 2. **Push on for two devices** — closes 5.6 and 6.2 between them.
 3. **One question to the assistant**, and **one spoken** — closes 9.1 and 9.5.
-4. **Ten Blu-ray.com URLs** — 3.7. The owner accepted #110's risk on 2026-09-10.
+4. ~~**Ten Blu-ray.com URLs** — 3.7.~~ **Done 2026-09-10** — and it found the scraper
+   broken. See above and `#122`.
 
-**Seven acceptance criteria an agent could not meet**, none of them implied met: 6.2 (two
+**Six acceptance criteria still need a person**, none of them implied met: 6.2 (two
 devices) · 5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) ·
-9.1 (one live model call) · 9.5 (a spoken query) · 8.4's push to a device · **3.7 (a live
-run against ten real Blu-ray.com URLs)**.
+9.1 (one live model call) · 9.5 (a spoken query) · 8.4's push to a device. ~~3.7~~ **closed
+2026-09-10.**
 
 ### What the live database holds
 
@@ -58,8 +73,10 @@ The database measured **36 MB** on 2026-09-10, which is why Batch 25 resizes pho
 
 Empty and waiting for a person: `push_subscriptions`, `notification_preferences`,
 `notifications`, `price_history_daily`, `scrape_runs`, `ai_usage_log`, `ai_settings`,
-`ai_conversations`, `ai_messages`, `ai_tool_calls`, `movie_night_*`, `item_photos`. Nothing
-derived from Blu-ray.com exists.
+`ai_conversations`, `ai_messages`, `ai_tool_calls`, `movie_night_*`, `item_photos`.
+**10 of the 1,857 `collection_items` now carry Blu-ray.com specs** (`specs_integration_state`
+reads `fetch_count: 30` — ten wasted on the broken parser, ten more on the partial fix, ten
+that worked).
 
 
 ## Next
@@ -439,6 +456,45 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **§3.7's live run found that Batch 23's scraper had never worked, and
+  the fix's own re-run found a second bug.** The owner accepted `#110`'s risk and asked for
+  the run (`#121`).
+
+  **First pass: ten pages fetched, `200` on all ten, zero specs extracted.** The parser
+  looked for `<div class="row"><strong>Codec:</strong>`; the site serves
+  `<span class="subheading">Video</span><br>Codec: MPEG-4 AVC<br>` — section headings with
+  bare `Label: value` lines and no `<strong>` anywhere. `_label_of` returned `""` for every
+  node on every page.
+
+  **The suite could never have caught it.** `test_specs.py`'s `PAGE` was hand-written to
+  match the parser. Fixture and parser agreed with each other and neither had ever met the
+  site; eleven extraction tests passed against markup that has never existed. This is the
+  third time this project has had a green gate over a broken feature — the missing TMDB
+  token, the scraper *test* button that saved nothing, and now this.
+
+  **Second pass: one audio track where the page lists six.** With one captured fixture the
+  parser passed, but `Blade-Runner-2049-4K/189774` wraps its tracks in a `<span title="…">`
+  and Fight Club's page does not, so a `_lines` reading only top-level children flattened
+  all six into one string — and gave that one track a channel count belonging to the line
+  below it, which is worse than storing nothing. `_flatten` recurses now. **One real page is
+  a sample of one**, so the 4K page is a second fixture, kept precisely because it disagrees
+  with the first about its own markup. It also carried the only HDR block of the ten, which
+  the flattened version was dropping too.
+
+  **Third pass met the criterion:** 10 rows of 1,857, 10 distinct release URLs, no halt, no
+  currency symbol in any derived field.
+
+  **What held throughout.** Every one of `#110`'s bounds — sequential requests five seconds
+  apart, honest user agent, no redirect following, exact release URLs, never a `403`. And
+  `apply_specs` checks `is_empty` before touching a row, so two broken passes cost twenty
+  wasted requests and **no data**: a parser that stops matching the site writes nothing
+  rather than blanking 1,857 rows. `DECISIONS.md` #121, #122.
+
+  **The guard that matters more than the fix.** `TestTheFixtureIsReal` asserts the fixtures
+  stay captured — provenance line present, `<span class="subheading">` rather than
+  `<strong>` rows, price cell still in place. A fixture written to match the parser is the
+  bug; a test that says so is the guard.
 
 - **2026-09-10** — **The two Railway crons had nothing to run.** Found while walking the
   owner through his remaining close-out steps: `OWNER-ACTIONS.md` told him to point a cron
