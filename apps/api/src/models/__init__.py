@@ -80,6 +80,7 @@ from src.models.smart_collection import (
     SMART_COLLECTION_SORTS,
     SmartCollection,
 )
+from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.wanted import (
     DEFAULT_RETAILERS,
     RETAILERS_TABLE,
@@ -158,6 +159,8 @@ __all__ = [
     "SECTIONS",
     "SHELVED_SECTIONS",
     "SmartCollection",
+    "SINGLETON_ID",
+    "SpecsIntegrationState",
     "TimestampMixin",
     "UpdatedAtMixin",
     "UUIDPrimaryKeyMixin",

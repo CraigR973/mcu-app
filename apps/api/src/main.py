@@ -31,6 +31,7 @@ from src.routers import (
     photos,
     scraping,
     smart_collections,
+    specs,
     stats,
     trash,
     wanted,
@@ -122,3 +123,4 @@ app.include_router(notifications.router)
 app.include_router(ai.router)
 app.include_router(movie_night.router)
 app.include_router(photos.router)
+app.include_router(specs.router)

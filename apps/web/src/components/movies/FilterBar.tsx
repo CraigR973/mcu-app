@@ -7,6 +7,7 @@ import {
   TMDB_GENRES,
   type MovieFilters,
 } from '@/lib/api'
+import { cn } from '@/lib/utils'
 
 interface Props {
   filters: MovieFilters
@@ -20,6 +21,29 @@ const SELECT_CLS =
 function decadeLabel(decade: number): string {
   return `${decade}s`
 }
+
+/** §3.9's filter panel, as data. The phase names these four by example. */
+const SPEC_TOGGLES: Array<{
+  label: string
+  isActive: (filters: MovieFilters) => boolean
+  apply: (active: boolean) => Partial<MovieFilters>
+}> = [
+  {
+    label: 'Dolby Vision',
+    isActive: (filters) => filters.hdr === 'Dolby Vision',
+    apply: (active) => ({ hdr: active ? undefined : 'Dolby Vision' }),
+  },
+  {
+    label: 'Dolby Atmos',
+    isActive: (filters) => filters.audio === 'Dolby Atmos',
+    apply: (active) => ({ audio: active ? undefined : 'Dolby Atmos' }),
+  },
+  {
+    label: 'Region-free',
+    isActive: (filters) => filters.regionFree === true,
+    apply: (active) => ({ regionFree: active ? undefined : true }),
+  },
+]
 
 export function FilterBar({ filters, total, onChange }: Props) {
   // The section, shelf and decade vocabularies come from the collection itself. A
@@ -45,7 +69,10 @@ export function FilterBar({ filters, total, onChange }: Props) {
     filters.decadeFrom ||
     filters.decadeTo ||
     filters.minRating != null ||
-    filters.watched != null
+    filters.watched != null ||
+    filters.hdr ||
+    filters.audio ||
+    filters.regionFree
   )
 
   function clear() {
@@ -220,6 +247,33 @@ export function FilterBar({ filters, total, onChange }: Props) {
         <option value="year:asc">Oldest first</option>
         <option value="rating:desc">Highest rated</option>
       </select>
+
+      {/* §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Region-free".
+          Toggles rather than selects: each is one thing somebody wants to see, and a
+          dropdown of one useful value per category is three clicks for what should be one.
+
+          **They are only useful once specs have been fetched.** Until then every one of
+          them returns nothing, which is honest — the app does not know a disc is Dolby
+          Vision until Blu-ray.com has said so. */}
+      {SPEC_TOGGLES.map((toggle) => {
+        const active = toggle.isActive(filters)
+        return (
+          <button
+            key={toggle.label}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange({ ...filters, ...toggle.apply(active) })}
+            className={cn(
+              'h-8 rounded-md border px-2.5 text-xs transition-colors',
+              active
+                ? 'border-primary bg-primary/10 text-foreground'
+                : 'border-input text-muted-foreground hover:text-foreground hover:bg-muted',
+            )}
+          >
+            {toggle.label}
+          </button>
+        )
+      })}
 
       {/* Clear */}
       {hasFilters && (

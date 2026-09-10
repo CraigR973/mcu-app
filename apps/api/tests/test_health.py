@@ -221,6 +221,15 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # a megabyte of base64 re-sent on every render.
         "/api/v1/collection/{item_id}/photos",
         "/api/v1/photos/{photo_id}",
+        # Batch 23. Admin-only, and `/specs/fetch` makes live requests to a site whose
+        # terms prohibit them — `DECISIONS.md` #110 is a risk acceptance the owner made,
+        # so a person invokes it. **There is no un-halt route on purpose**: #110 says
+        # resuming needs a new owner decision, and `DELETE /specs` is what makes the
+        # acceptance reversible.
+        "/api/v1/specs",
+        "/api/v1/specs/state",
+        "/api/v1/specs/halt",
+        "/api/v1/specs/fetch",
     }
 
 

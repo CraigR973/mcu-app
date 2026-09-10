@@ -141,6 +141,16 @@ class CollectionItem(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     special_features: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     region_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
     release_label: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    #: **Required by `DECISIONS.md` #110**, not a convenience. The risk acceptance for
+    #: scraping Blu-ray.com is conditional on every derived row recording its source URL
+    #: and fetch time, "so the data can be identified and removed" — deletion is an
+    #: explicit owner action, and without these two columns it is not a query anyone can
+    #: write.
+    specs_source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    specs_fetched_at_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
     specs_source: Mapped[str | None] = mapped_column(String(50), nullable=True)
     specs_last_synced_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True

@@ -19,6 +19,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
+import { SpecBadges } from '@/components/collection/SpecBadges'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
 import ItemHistory from '@/components/collection/ItemHistory'
@@ -151,6 +152,14 @@ function CopyCard({
           <LendButton collectionItemId={item.id} />
         </div>
       )}
+      {/* §3.8. On the copy, because specs are a property of the physical disc — owning a
+          film on 4K and DVD means two very different rows. */}
+      <SpecBadges
+        videoSpecs={item.videoSpecs}
+        audioSpecs={item.audioSpecs}
+        regionCode={item.regionCode}
+        className="pt-1"
+      />
       {/* §3.10. On the copy rather than the film, for the same reason lending is: a photo
           of a shelf is a photo of *this* disc, and owning a film twice means two of them
           are in two different places. Readable by both; only an admin adds or removes. */}

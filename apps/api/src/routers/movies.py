@@ -77,6 +77,15 @@ class MovieFilters:
     decade_to: int | None = None
     min_rating: float | None = None
     watched: bool | None = None
+    #: §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Arrow Video",
+    #: "Region-free". They read the JSONB Batch 23 fills in from Blu-ray.com, so a
+    #: collection with no specs yet answers every one of them with an empty list. That is
+    #: correct rather than broken: nothing is known to be Dolby Vision until something has
+    #: said so.
+    hdr: str | None = None
+    audio: str | None = None
+    label: str | None = None
+    region_free: bool | None = None
     user_id: uuid.UUID | None = None
 
 
@@ -89,6 +98,24 @@ def _item_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
         predicates.append(CollectionItem.section == filters.section)
     if filters.shelf is not None:
         predicates.append(CollectionItem.shelf == filters.shelf)
+    if filters.hdr is not None:
+        # `video_specs -> 'hdr'` is an array of names. Containment rather than a text
+        # match, so "HDR10" cannot match a row that only has "HDR10+".
+        predicates.append(
+            CollectionItem.video_specs["hdr"].contains(func.jsonb_build_array(filters.hdr))
+        )
+    if filters.audio is not None:
+        # `audio_specs` is an array of track objects; containment finds the one whose
+        # `format` matches without caring which language or channel layout it is.
+        predicates.append(
+            CollectionItem.audio_specs.contains(
+                func.jsonb_build_array(func.jsonb_build_object("format", filters.audio))
+            )
+        )
+    if filters.label is not None:
+        predicates.append(CollectionItem.release_label == filters.label)
+    if filters.region_free:
+        predicates.append(CollectionItem.region_code == "Free")
     return predicates
 
 
@@ -438,6 +465,12 @@ async def list_movies(
     decade_to: Annotated[int | None, Query(alias="decadeTo", ge=1870, le=2200)] = None,
     min_rating: Annotated[float | None, Query(alias="minRating", ge=0, le=10)] = None,
     watched: Annotated[bool | None, Query()] = None,
+    # §3.9. Plain query parameters, so a filtered view is a URL somebody can bookmark —
+    # which is what the phase asks for in as many words.
+    hdr: Annotated[str | None, Query(min_length=1, max_length=40)] = None,
+    audio: Annotated[str | None, Query(min_length=1, max_length=40)] = None,
+    label: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
+    region_free: Annotated[bool | None, Query(alias="regionFree")] = None,
     sort_by: Annotated[Literal["title", "year", "rating"], Query(alias="sort")] = "title",
     order: Literal["asc", "desc"] = "asc",
 ) -> MoviePageResponse:
@@ -464,6 +497,10 @@ async def list_movies(
         decade_to=decade_to,
         min_rating=min_rating,
         watched=watched,
+        hdr=hdr,
+        audio=audio,
+        label=label,
+        region_free=region_free,
         user_id=user.id,
     )
     return await movie_page(

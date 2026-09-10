@@ -366,6 +366,13 @@ export interface MovieFilters {
   decadeTo?: number
   minRating?: number
   watched?: boolean
+  /** §3.9's spec filters. They read what Batch 23 fetched from Blu-ray.com, so a
+   *  collection whose specs have never been fetched answers all of them with nothing —
+   *  which is correct rather than broken. */
+  hdr?: string
+  audio?: string
+  label?: string
+  regionFree?: boolean
   sort?: 'title' | 'year' | 'rating'
   order?: 'asc' | 'desc'
 }
@@ -387,6 +394,12 @@ export async function fetchMovies(
   // both meaningful filters that a truthiness check would silently drop.
   if (filters.minRating != null) params.set('minRating', String(filters.minRating))
   if (filters.watched != null) params.set('watched', String(filters.watched))
+  // §3.9 asks for these to be URL-encoded so a filtered view is bookmarkable, which
+  // is what they already are — the page's own URL carries them.
+  if (filters.hdr) params.set('hdr', filters.hdr)
+  if (filters.audio) params.set('audio', filters.audio)
+  if (filters.label) params.set('label', filters.label)
+  if (filters.regionFree) params.set('regionFree', 'true')
   if (filters.sort) params.set('sort', filters.sort)
   if (filters.order) params.set('order', filters.order)
 
