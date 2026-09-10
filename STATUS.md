@@ -490,6 +490,49 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-10** — **Checking the retailer selectors found four bugs, and the selectors were
+  mostly fine.** The first unattended-shaped run logged 11 failures out of 17. Checked
+  against the live sites, one at a time:
+
+  **Eight were not failures.** Arrow answered *"Sorry We Couldn't Find Any Results"*, 101
+  Films *"0 results found"*, Second Sight the same — they do not carry those films.
+  `not_stocked` required `titled_cards > 0`, so it handled *"results returned, none
+  matching"* and let *"no results returned"* fall through to the failure branch. Those feed
+  auto-disable: **three quiet nights would have switched a working shop off**, unattended,
+  and it had not bitten only because each shop happened to price one film that night.
+
+  **Three were real, and the opposite kind of bug.** Zavvi renders two price markups on one
+  page; the selector read only the variant-wrapped one, so a genuine **£16.99** on `Castle
+  Freak` was fetched, parsed and discarded. Missed alerts rather than wrong ones.
+
+  **A third, found while fixing the second.** `_select_one` used `select_one`, which for a
+  comma list returns document order, not selector order — so Second Sight's
+  `".price-item--sale, .price-item--regular"` never had the sale-first precedence it was
+  plainly written for. Selector lists are tried in order now.
+
+  **A fourth, found while making the first observable.** `/retailers` computed its
+  denominator as `attempted - notStocked`, but `attempted` already excludes `notStocked`
+  (`#107`). The real run — 17 attempted, 23 not stocked, six discs priced — rendered as
+  *"Nothing to price — no shop had any of the wants"*. A docstring and the web tests both
+  asserted the wrong contract, so two sources agreed with each other and disagreed with the
+  producer.
+
+  **`#125` supersedes one clause of `#107`, and it is named rather than dropped.** #107
+  decided a page with no titled listing *"still takes a strike"*, so a redesign would
+  eventually auto-disable the shop. Sound reasoning, wrong premise — it assumed zero
+  listings means the site changed, and the measurement says it usually means the shop was
+  asked a question. The redesign case survives one level up: it makes *every* want return
+  nothing, which is what the new per-retailer flag says. Visibility over auto-disable, the
+  owner's call.
+
+  **CI caught what reading did not, twice.** A CHECK constraint rejected the new
+  `no_results` status — Batch 16 doing its job, a new state has to be declared. And two API
+  tests failed because I had changed expectations rather than fixed bugs: `attempted`'s
+  meaning is #107's, not the docstring's. Both invisible locally (gotcha 15).
+
+  Migration `027` is applied to production; 1,857 `collection_items` untouched.
+  **Tonight's 03:00 cron is the verification** — and closes §5.5 in the same run.
+
 - **2026-09-10** — **The owner applied the crons and closed three criteria; the live rows
   say which, and which are still open.** `cron-scrape` (`0 3 * * *`) and `cron-reminders`
   (`0 8 * * *`) exist in Railway, and `railway config plan` reads `0 to add, 0 to destroy`.
