@@ -30,11 +30,16 @@ clientsClaim()
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
-// Remove the pre-partition cache introduced before the two accounts' caller-specific
-// responses were isolated. Keeping it would allow an offline `/auth/me` from one person
-// to satisfy the same URL for the other.
+// Drop superseded runtime caches on activate:
+//  - `mcu-api`: the pre-partition cache from before the two accounts' caller-specific
+//    responses were isolated. Keeping it would let an offline `/auth/me` from one
+//    person satisfy the same URL for the other.
+//  - `mcu-posters`: entries written while `connect-src` was missing `image.tmdb.org`
+//    are cached errors — the SW's fetch was CSP-refused, so `no-response` was stored.
+//    A cache-first route would serve those failures for 30 days; the rename to
+//    `mcu-posters-v2` abandons them and this delete reclaims the space.
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.delete('mcu-api'))
+  event.waitUntil(Promise.all([caches.delete('mcu-api'), caches.delete('mcu-posters')]))
 })
 
 async function apiCacheKey({ request }: { request: Request }): Promise<Request> {
@@ -133,7 +138,10 @@ registerRoute(
 registerRoute(
   ({ url }) => url.origin === 'https://image.tmdb.org',
   new CacheFirst({
-    cacheName: 'mcu-posters',
+    // `-v2`: `mcu-posters` holds `no-response` errors written while the CSP
+    // `connect-src` did not allow `image.tmdb.org` and every SW fetch was refused.
+    // The rename abandons that poisoned cache; the `activate` handler deletes it.
+    cacheName: 'mcu-posters-v2',
     plugins: [
       new ExpirationPlugin({ maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 30 }),
       // TMDB serves posters cross-origin without CORS, so responses arrive opaque with
