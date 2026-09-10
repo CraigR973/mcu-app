@@ -279,8 +279,25 @@ class TestPersistence:
         assert wrote is True
         assert item.specs_source_url == RELEASE_URL
         assert item.specs_fetched_at_utc == now
-        assert item.video_specs is not None and item.video_specs["resolution"] == "2160p"
         assert item.region_code == "Free"
+
+        # The whole block, not one key. The fixture is a real 1080p Blu-ray now rather
+        # than an invented 4K page (#122), and asserting every field is what stops a
+        # future parser change from quietly dropping one and still passing.
+        assert item.video_specs == {
+            "codec": "MPEG-4 AVC (23.45 Mbps)",
+            "resolution": "1080p",
+            "resolution_raw": "1080p",
+            "aspect_ratio": "2.40:1",
+        }
+        assert item.audio_specs is not None
+        assert [track["format"] for track in item.audio_specs] == [
+            "DTS-HD MA",
+            "DTS",
+            "Dolby Digital",
+            "Dolby Digital",
+            "Dolby Digital",
+        ]
 
     async def test_a_page_with_no_specs_writes_nothing(
         self, db: AsyncSession, item: CollectionItem
