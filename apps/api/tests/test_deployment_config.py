@@ -30,3 +30,27 @@ def test_vercel_headers_preserve_future_browser_features() -> None:
     assert "https://*.up.railway.app" in headers["Content-Security-Policy"]
     assert "camera=(self)" in headers["Permissions-Policy"]
     assert "microphone=(self)" in headers["Permissions-Policy"]
+
+
+def test_the_container_can_run_the_cron_commands() -> None:
+    """`OWNER-ACTIONS.md` gives Railway two start commands; this is what makes them work.
+
+    CI never builds the image (`AGENTS.md`: "a Dockerfile regression surfaces at deploy
+    time"), so the contract those commands depend on is asserted here instead — a moved
+    `WORKDIR`, a dropped `PYTHONPATH` or a narrower `COPY` would break the two crons
+    silently, and the first sign would be a scrape that never ran.
+    """
+    dockerfile = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+    assert "WORKDIR /app" in dockerfile
+    assert "PYTHONPATH=/app" in dockerfile
+    # `src.scripts.*` has to be importable, which means the whole package is copied —
+    # not just the modules uvicorn happens to reach.
+    assert "COPY apps/api/src/ ./src/" in dockerfile
+
+    for module in ("daily_scrape", "run_reminders"):
+        assert (REPO_ROOT / "apps" / "api" / "src" / "scripts" / f"{module}.py").is_file()
+        # The command in OWNER-ACTIONS.md, spelled out so the two cannot drift apart.
+        assert f"python -m src.scripts.{module}" in (REPO_ROOT / "OWNER-ACTIONS.md").read_text(
+            encoding="utf-8"
+        )

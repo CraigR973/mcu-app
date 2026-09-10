@@ -36,10 +36,14 @@ been made on the owner's key.
 `OWNER-ACTIONS.md` has four things this run created or unblocked, and they are mostly
 minutes:
 
-1. **Two Railway crons in one visit** — the nightly scrape and the reminder pass.
+1. **Two Railway crons in one visit** — the nightly scrape and the reminder pass. **Each is
+   now a command**, `python -m src.scripts.daily_scrape` and `python -m src.scripts.run_reminders`.
+   Until 2026-09-10 both items said "point a cron at this endpoint" and **that could not be
+   done**: both endpoints are admin-authed and an access token lives 24 hours, so no
+   scheduler could ever have called them (`DECISIONS.md` #119).
 2. **Push on for two devices** — closes 5.6 and 6.2 between them.
 3. **One question to the assistant**, and **one spoken** — closes 9.1 and 9.5.
-4. **Ten Blu-ray.com URLs** — 3.7, and the one that is genuinely yours to decide.
+4. **Ten Blu-ray.com URLs** — 3.7. The owner accepted #110's risk on 2026-09-10.
 
 **Seven acceptance criteria an agent could not meet**, none of them implied met: 6.2 (two
 devices) · 5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) ·
@@ -87,9 +91,10 @@ there; **only six were** — Batch 20's and Batch 35's were missing, and were re
 1. ~~`VITE_VAPID_PUBLIC_KEY` on Vercel~~ — **no longer needed.** Batch 11 serves the public
    key from the API, derived from the private half (`DECISIONS.md` #114). What Batch 11 *does*
    need is a daily cron calling `POST /api/v1/notifications/run-reminders`.
-2. **Two** Railway crons, in one visit — the nightly scrape (`POST /api/v1/scrapers/daily`,
-   Batch 20) and the reminder pass (`POST /api/v1/notifications/run-reminders`, Batch 11).
-   `#60` explains why an in-process scheduler is worse than nothing for either.
+2. **Two** Railway crons, in one visit — the nightly scrape and the reminder pass. `#60`
+   explains why an in-process scheduler is worse than nothing for either. **The endpoints
+   named here were not callable by a cron**; each job is now also a command, which is what
+   a Railway cron runs (`#119`). `OWNER-ACTIONS.md` carries the exact lines.
 3. ~~Nothing for Batch 35~~ — **correct, and now proved.** `LISTEN`/`NOTIFY` + SSE needed
    no new service, credential or hosting step (`#113`). Batch 35 shipped without one.
 
@@ -99,7 +104,8 @@ spoken query) · 8.4's "notification to both", depending on how the match is sig
 
 **Settled inputs, so no batch has to ask again:** the AI daily cap is **50 messages per person**
 (`#112`'s neighbour, recorded in the ledger); photos are capped at **~300 KB** after
-server-side resize and stored in Postgres, not an object store; Batch 23 gathers its ten
+server-side resize and stored in Postgres, not an object store — **confirmed by the owner
+2026-09-10, `#120`**; Batch 23 gathers its ten
 Blu-ray.com URLs from browse pages under `#110`'s bounds and extracts no prices.
 
 ### Verify against the live system, not only the suite
@@ -433,6 +439,41 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **The two Railway crons had nothing to run.** Found while walking the
+  owner through his remaining close-out steps: `OWNER-ACTIONS.md` told him to point a cron
+  at `POST /api/v1/scrapers/daily` and `POST /api/v1/notifications/run-reminders`, but both
+  are `AdminUser`-authed and an access token lives 24 hours. **A cron container has no
+  browser, no login and nothing to refresh, so neither endpoint was callable by a scheduler
+  at all** — the owner action could not have been completed as written. Batches 11 and 20
+  each shipped the endpoint half and left the command half unbuilt.
+
+  `src/scripts/daily_scrape.py` and `src/scripts/run_reminders.py` are those jobs as
+  commands, matching the precedent `#60` set with `refresh_completion_sets.py` — whose whole
+  point was that scheduling should be *"one console action rather than a piece of
+  engineering"*. No new credential (the container already holds `DATABASE_URL` and the VAPID
+  keys) and no second authentication path on the API; the endpoints are untouched. A shared
+  secret was offered as the alternative and the owner chose the scripts. `DECISIONS.md` #119.
+
+  **The exit code is the behaviour worth testing**, because it is the only thing a scheduler
+  reads: a failed retailer exits 1 and names the shop and the reason, a shop that simply does
+  not stock a film exits 0, and `--dry-run` is opt-in on the scrape — a nightly job that
+  defaulted to writing nothing would be indistinguishable from one that works.
+
+  **One seam moved.** `push_sender` left `routers/notifications.py` for
+  `src/services/push_transport.py`, so a scheduled job does not import FastAPI and the whole
+  route table to obtain a transport; the router re-exports it and a test asserts the two
+  names are one object.
+
+  **CI cannot prove the container runs these**, because it never builds the image — so
+  `test_deployment_config.py` asserts the contract they depend on instead: `WORKDIR /app`,
+  `PYTHONPATH=/app`, the whole `src/` tree copied, and the command line in `OWNER-ACTIONS.md`
+  matching the module that exists. A moved `WORKDIR` would otherwise break both crons
+  silently, and the first sign would be a scrape that never ran.
+
+  **Also settled with the owner:** the 300 KB photo target is now a recorded decision rather
+  than an inference two docs disagreed about (`#120`), and the owner accepted `#110`'s
+  Blu-ray.com risk so §3.7's live run can proceed.
 
 - **2026-09-10** — **Batch 23 built: the Blu-ray.com spec scraper, badges and filters.**
   The last of the overnight run's eight batches.

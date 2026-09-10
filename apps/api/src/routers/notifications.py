@@ -9,13 +9,10 @@ seasons and running the reminder pass, both of which act on the whole app.
 
 from __future__ import annotations
 
-import contextlib
-from collections.abc import AsyncIterator
 from datetime import date
 from typing import Annotated, cast
 from urllib.parse import urlsplit
 
-import httpx
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -46,41 +43,20 @@ from src.schemas.notifications import (
 )
 from src.services import webpush
 from src.services.notifications import (
-    HttpPushSender,
-    PushSender,
     active_subscriptions,
     deliver_pending,
     deliver_to_subscriptions,
     get_or_create_preferences,
     notification_payload,
 )
+from src.services.push_transport import push_sender as push_sender
+from src.services.push_transport import set_push_sender as set_push_sender
 from src.services.reminders import run_reminders
 from src.services.sale_seasons import seed_year
 
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["notifications"])
-
-#: Overridden by the tests, which must never reach a push service. Production leaves it
-#: ``None`` and gets :class:`HttpPushSender` over a client opened per request — push is
-#: rare enough that a pooled client buys nothing and a module-level one would outlive the
-#: event loop it was created on.
-_sender_override: PushSender | None = None
-
-
-def set_push_sender(sender: PushSender | None) -> None:
-    """Substitute the push transport. Used by tests; never called in production."""
-    global _sender_override
-    _sender_override = sender
-
-
-@contextlib.asynccontextmanager
-async def push_sender() -> AsyncIterator[PushSender]:
-    if _sender_override is not None:
-        yield _sender_override
-        return
-    async with httpx.AsyncClient() as client:
-        yield HttpPushSender(client)
 
 
 def _push_service(endpoint: str) -> str:

@@ -21,19 +21,40 @@ and rolls up old checks is now deployed.
 What is left is a single Railway console visit and one tap on a phone. Both are yours because
 an agent must not take them:
 
-- [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*. A
-      Railway cron is a hosting change (`DECISIONS.md` #60), and an in-process scheduler would
-      be worse than nothing — it runs once per container, so scaling to two would silently
-      double the scraping. The endpoint is **`POST /api/v1/scrapers/daily`**, admin-authed,
-      and it scrapes, alerts, delivers and rolls up in one pass. `scrape_runs` is empty today,
-      which is the honest record that nothing has run it yet — check it the morning after,
-      and `/retailers` renders the same thing with the criterion applied.
-- [ ] **And while you are in there, a second cron for reminders.** Batch 11 shipped
-      `POST /api/v1/notifications/run-reminders`, which is *the whole scheduler* for sale
-      seasons, upcoming releases and overdue loans — for the same #60 reason, nothing runs
-      it on a timer inside the process. Daily is right; the endpoint is idempotent, so a
-      double fire sends nothing twice. Until this exists, every reminder in the app waits
-      for someone to press a button.
+**Read this first — what changed on 2026-09-10.** Both of these used to say "point a cron
+at this endpoint", and **that was not possible**: both endpoints are admin-authed and an
+access token lives 24 hours, so a cron container had no way to call either one. `DECISIONS.md`
+#119. Each is now a **command**, which is what a Railway cron runs anyway. Set the cron's
+start command to the line given and leave the rest of the service alone.
+
+- [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*.
+      A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process
+      scheduler would still be worse than nothing — it runs once per container, so scaling
+      to two would silently double the scraping. The command is:
+
+      ```
+      python -m src.scripts.daily_scrape
+      ```
+
+      It scrapes, alerts, delivers and rolls up in one pass, and **exits non-zero if a
+      retailer failed**, naming the shop and the reason — so a bad night shows up in
+      Railway rather than looking like a good one. `scrape_runs` is empty today, which is
+      the honest record that nothing has run it yet — check it the morning after, and
+      `/retailers` renders the same thing with the criterion applied. Something around
+      **03:00 UTC** is sensible. `POST /api/v1/scrapers/daily` still exists and still does
+      the same work when you want to trigger it by hand from the app.
+- [ ] **And while you are in there, a second cron for reminders.** This is *the whole
+      scheduler* for sale seasons, upcoming releases and overdue loans — for the same #60
+      reason, nothing runs it on a timer inside the process. The command is:
+
+      ```
+      python -m src.scripts.run_reminders
+      ```
+
+      Daily is right, **08:00 UTC** or so, and it is idempotent: every sender checks its
+      `notified` flag before setting it and the outbox deduplicates, so a double fire sends
+      nothing twice. If a day is missed, `--as-of YYYY-MM-DD` catches it up. Until this
+      exists, every reminder in the app waits for someone to press a button.
 - [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance, and the last
       unmet part of Batch 20. Everything behind it is deployed: push reports `configured`,
       the alert fires when a scrape finds a price at or below a want's `max_price`, and the
@@ -120,7 +141,9 @@ fallback*, so the barcode lookup depends on the same approval.
 
 ### 6. One design choice left
 
-- [ ] **Batch 25 — how big may a photo be?** *(shipped at 300 KB; still yours to change)*
+- [x] **Batch 25 — how big may a photo be? 300 KB — confirmed by owner 2026-09-10**
+      (`DECISIONS.md` #120). *The reasoning below is kept because it explains why the
+      number is a setting rather than a shape.*
       Storage is settled as **Neon** (owner, 2026-09-09) — photo bytes in Postgres. The
       spec's raw sizing, 5 photos × 5 MB × 1,857 items ≈ 46 GB, is not sensible in a
       database that measured **36 MB** on 2026-09-10.
@@ -135,7 +158,7 @@ fallback*, so the barcode lookup depends on the same approval.
       **not a migration**, and the database's own CHECK sits far above it so a larger value
       needs no schema change either. A phone's 4032×3024 photo currently stores at ~240 KB.
 
-      Tick this if 300 KB is right, or say a number and it is one variable.
+      Changing it later is still one variable — `PHOTO_TARGET_KB` — and a re-upload.
 - [x] **Batch 35 — what provides realtime?** ~~The design says Supabase Realtime and there
       is no Supabase project any more.~~ **Settled and shipped.** `DECISIONS.md` #113 records
       this as an owner decision taken on 2026-09-09 — Postgres `LISTEN`/`NOTIFY` plus SSE, no
