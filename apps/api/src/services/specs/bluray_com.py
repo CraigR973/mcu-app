@@ -218,20 +218,51 @@ def _section_body(heading: Tag) -> list[Tag | str]:
     return body
 
 
+#: Elements that end a line even without a `<br>`, because they are block-level and the
+#: browser breaks on them. The `Note:` under an audio block is one of these.
+_BREAKING_TAGS = frozenset({"br", "div", "p", "li", "tr"})
+
+
+def _flatten(node: Tag | str, out: list[str | None]) -> None:
+    """Depth-first text and line breaks, with ``None`` standing for a break.
+
+    **Recursive on purpose.** Blu-ray.com wraps a release's audio tracks in a
+    `<span title="...">` on some pages and not on others; a version that read only the
+    top-level children flattened all six tracks of `Blade-Runner-2049-4K/189774` into one
+    string and stored a single track whose format came from the first line and whose
+    channel count came from the second. See `DECISIONS.md` #122.
+    """
+    if isinstance(node, str):
+        text = node.strip()
+        if text:
+            out.append(text)
+        return
+    if node.name in _BREAKING_TAGS:
+        out.append(None)
+        if node.name == "br":
+            return
+    for child in node.children:
+        _flatten(child if isinstance(child, Tag) else str(child), out)
+    if node.name in _BREAKING_TAGS:
+        out.append(None)
+
+
 def _lines(body: list[Tag | str]) -> list[str]:
     """One string per `<br>`-separated line, which is how the site lays a section out."""
+    pieces: list[str | None] = []
+    for part in body:
+        _flatten(part, pieces)
+
     lines: list[str] = []
     current: list[str] = []
-    for part in body:
-        if isinstance(part, Tag) and part.name == "br":
+    for piece in pieces:
+        if piece is None:
             joined = " ".join(current).strip()
             if joined:
                 lines.append(joined)
             current = []
             continue
-        text = part.get_text(" ", strip=True) if isinstance(part, Tag) else part
-        if text:
-            current.append(text)
+        current.append(piece)
     joined = " ".join(current).strip()
     if joined:
         lines.append(joined)
