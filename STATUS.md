@@ -457,6 +457,34 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-10** — **`railway config apply` would have deleted two live credentials, and
+  had been able to since the day they were set.** Found by running the read-only
+  `railway config plan` before adding the cron services: it read `2 to add, 3 to change,
+  **2 to destroy**`, and the two were `api.ANTHROPIC_API_KEY` and `api.TMDB_READ_TOKEN`.
+
+  Both were set in the Railway console on 2026-09-09 and never declared in
+  `.railway/railway.ts`. IaC removes what the file does not declare, so it read them as
+  drift. Applying would have **recreated the TMDB outage of 2026-09-09 exactly** — every
+  TMDB-backed feature answering 502 behind a fully green gate — and taken the assistant
+  with it. The JWT secrets were a quieter version of the same thing: declared as generated
+  values but sealed, so they cannot be read back to compare, so every plan reported them as
+  changing and an apply would have signed both people out. `DECISIONS.md` #124.
+
+  All ten API variables are now `preserve()` — which names a variable without putting its
+  value in the repo — and the plan reads **`2 to add, 1 to change, 0 to destroy`**.
+
+  **The two crons are declared rather than clicked.** `cron-scrape` and `cron-reminders`
+  are services in `railway.ts` sharing the API's image at a different entry point, taking
+  `DATABASE_URL` and the VAPID keys **by reference** from `api` so each secret has one copy.
+  `restartPolicyType` is `NEVER`: they make live requests to real shops, and retrying a
+  failed night automatically would turn one bad night into three. All that is left for the
+  owner is `railway config apply`, which stays his because it is a hosting change.
+
+  *What made the trap invisible:* `.railway/README.md` warned against running `apply`
+  outside close-out, which reads as caution about changes you meant to make. The hazard was
+  the opposite — a change nobody authored, produced by the file's silence. The README now
+  says to read the destroy count first.
+
 - **2026-09-10** — **Writing out the owner's remaining steps found a live data-loss bug.**
   §5.6 needs a want whose `max_price` sits above its current price, and there was no way to
   set one on a want you already had: the field existed on the add form and nowhere else.
