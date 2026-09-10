@@ -457,6 +457,31 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-10** — **Writing out the owner's remaining steps found a live data-loss bug.**
+  §5.6 needs a want whose `max_price` sits above its current price, and there was no way to
+  set one on a want you already had: the field existed on the add form and nowhere else.
+
+  Adding that control meant reading the update path. `PUT /api/v1/wanted/{id}` **replaces
+  the row** — every field on its request model defaults to `None` — and the web app's one
+  call site sent `{isActive}` alone. **Every press of "Stop looking" or "Look again" also
+  nulled the format, the edition, the maximum price and the notes**, silently, in
+  production, with `admin_actions` recording it faithfully as a change nobody had asked
+  for. `DECISIONS.md` #123.
+
+  The endpoint is not the bug: `PUT` means replace. The client now sends the complete
+  resource with only the changed field overridden, `updateWanted` takes the row's own
+  `currency` instead of hard-coding `GBP` where no caller could override it, and two tests
+  pin both halves — the toggle round-trips every preference, and the endpoint's
+  full-replace contract is asserted so the next person reads it as the contract rather than
+  patching the API to be lenient.
+
+  **A verification note worth keeping.** Confirming the new control had deployed by
+  comparing the local bundle hash against Vercel's was wrong twice over: Vercel injects
+  `VITE_API_URL`, so the hashes can never match, and Vercel answers an unknown
+  `/assets/*.js` with `index.html` at **200**, which reads as "the file is there". The
+  reliable check is to read the deployed `sw.js` precache manifest, fetch what it names,
+  and grep for a string only the new build contains.
+
 - **2026-09-10** — **§3.7's live run found that Batch 23's scraper had never worked, and
   the fix's own re-run found a second bug.** The owner accepted `#110`'s risk and asked for
   the run (`#121`).
