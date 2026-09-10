@@ -2,10 +2,10 @@
 
 ## Now
 
-**27 of 37 batches shipped, 10 remain.** Production serves the merged `main`, reporting
+**28 of 37 batches shipped, 9 remain.** Production serves the merged `main`, reporting
 `db: ok`, `push: configured` and `ai: configured`.
 
-**Six of the eight overnight batches are done** — 11, 20, 30, 31, 32 and 35. **Groups F and J
+**Seven of the eight overnight batches are done** — 11, 20, 30, 31, 32, 35 and 25. **Groups F and J
 are both complete**, and Stage 9 is finished apart from 9.6, which #16 dropped.
 
 **Batch 32 — dictation.** On-device Web Speech: the browser's own engine listens and this
@@ -69,7 +69,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | ~~4~~ | ~~**31** AI assistant — tools + chat (9.2, 9.3, 9.4)~~ | **shipped 2026-09-10** |
 | ~~5~~ | ~~**32** Voice input (9.5)~~ | **shipped 2026-09-10** — ❌ 9.5 still needs a human speaking |
 | ~~6~~ | ~~**35** Movie night (8.3, 8.4)~~ | **shipped 2026-09-10** — ⚠️ 8.4's push to a device is an owner action |
-| 7 | **25** Photo uploads (3.10) | ✅ |
+| ~~7~~ | ~~**25** Photo uploads (3.10)~~ | **shipped 2026-09-10** |
 | 8 | **23** Specs — scraper + display (3.7, 3.8, 3.9) | ✅ |
 
 **Every batch's criteria are in `docs/phase-batches.md`** under "Criteria recovered for the
@@ -431,6 +431,40 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 25 shipped: photos of a disc.** Bytes in Postgres, resized before
+  they get there.
+
+  §3.10 says Supabase Storage and there is no Supabase project; the owner settled storage as
+  Neon, so a photo is a `BYTEA` column served by the API — and a real `item_photos` table
+  rather than §3.4's `photo_urls`, which designs a list of *external* URLs there is now
+  nothing to point at.
+
+  **The resize is why the batch is shaped like this.** §3.10's raw numbers are 5 MB × 5 ×
+  1,857 ≈ 46 GB, in a database that measured **36 MB** live today. A phone's 4032×3024
+  photo now stores at about 240 KB — measured in a test rather than asserted in a comment.
+
+  **A disagreement between two in-repo docs, resolved by making it cheap.**
+  `OWNER-ACTIONS.md` said the 300 KB cap was "proposed… not confirmed"; `STATUS.md`'s own
+  run plan and the batch ledger both listed it as *"(owner, 2026-09-09)"* under "settled
+  inputs, so no batch has to ask again". No `DECISIONS.md` entry exists either way. It
+  shipped at 300 KB — the number both docs name — with the target as the `PHOTO_TARGET_KB`
+  **setting**, so the thing that made it an owner choice ("annoying to reverse once photos
+  exist") is no longer true: changing it is one variable and a re-upload.
+
+  **Every upload is decoded and re-encoded.** EXIF orientation applied *then dropped* —
+  dropping it without applying is how a gallery fills with sideways shelves; transparency
+  composited onto white rather than the default black; and Pillow's pixel ceiling refuses a
+  decompression bomb, which is a tiny upload that unpacks to gigabytes.
+
+  **Two blockers turned out not to exist.** Group H said Batches 24 and 25 were "both
+  blocked on the same two `vercel.json` fixes". Neither was needed: `camera=(self)` has been
+  live since Batch 2, and the photos are served from the API origin `connect-src` already
+  allows. **`authFetch` did need a fix** — it forced `application/json` onto every body,
+  which for multipart omits the boundary and makes the server parse nothing out of a request
+  that looks perfectly normal.
+
+  **Nothing failed in CI.** Green on the first push, 21 new tests.
 
 - **2026-09-10** — **Batch 35 shipped: movie night.** Sessions, an invite URL, a swipe deck
   and match detection over Postgres `LISTEN`/`NOTIFY`.

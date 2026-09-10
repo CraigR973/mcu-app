@@ -86,20 +86,32 @@ fallback*, so the barcode lookup depends on the same approval.
 
 ### 5. Two design choices nobody has made
 
-- [ ] **Batch 25 — how big may a photo be?** Storage is settled as **Neon** (owner,
-      2026-09-09), which means photo bytes in Postgres rather than an object store. The
-      spec's raw sizing — 5 photos × 5 MB × 1,857 items ≈ 46 GB — is not sensible in any
-      Postgres; the database is 35 MB today. An agent proposed server-side resize to
-      ~300 KB per photo (worst case ~2.8 GB, realistic case under 200 MB) but **that has not
-      been confirmed**, so it is recorded here rather than acted on.
+- [ ] **Batch 25 — how big may a photo be?** *(shipped at 300 KB; still yours to change)*
+      Storage is settled as **Neon** (owner, 2026-09-09) — photo bytes in Postgres. The
+      spec's raw sizing, 5 photos × 5 MB × 1,857 items ≈ 46 GB, is not sensible in a
+      database that measured **36 MB** on 2026-09-10.
+
+      **Two in-repo docs disagreed about whether the number was confirmed**, and Batch 25
+      had to pick one: this file said "proposed, not confirmed", while `STATUS.md`'s run
+      plan and `docs/phase-batches.md` both listed *"~300 KB after server-side resize
+      (owner, 2026-09-09)"* under "settled inputs, so no batch has to ask again". There is
+      no `DECISIONS.md` entry either way. The batch shipped at **300 KB** — the number both
+      docs name — and made the disagreement cheap instead of arguing it: the target is the
+      `PHOTO_TARGET_KB` setting, so changing it is an environment variable and a re-upload,
+      **not a migration**, and the database's own CHECK sits far above it so a larger value
+      needs no schema change either. A phone's 4032×3024 photo currently stores at ~240 KB.
+
+      Tick this if 300 KB is right, or say a number and it is one variable.
 - [x] **Batch 35 — what provides realtime?** ~~The design says Supabase Realtime and there
       is no Supabase project any more.~~ **Settled and shipped.** `DECISIONS.md` #113 records
       this as an owner decision taken on 2026-09-09 — Postgres `LISTEN`/`NOTIFY` plus SSE, no
       new vendor and no new credential — and Batch 35 built it on 2026-09-10. *This item was
       already stale when it was read: #113 answered it the day before.*
 
-Neither is a credential, so an agent *could* take them; both are recorded as owner choices
-because they set a shape that is annoying to reverse once photos or sessions exist.
+Neither is a credential, so an agent *could* take them; both were recorded as owner choices
+because they set a shape that is annoying to reverse once photos or sessions exist. **Both are
+now resolved** — the realtime one by `DECISIONS.md` #113, and the photo one by making the
+number a setting rather than a shape, which is what stops it being annoying to reverse.
 
 ---
 
