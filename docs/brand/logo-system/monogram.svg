@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">The Real MCU</title>
+  <desc id="desc">MCU monogram combining an M, a film-disc C, and a supporting U</desc>
+  <rect width="1024" height="1024" rx="216" fill="#0A0A0B"/>
+  <rect x="38" y="38" width="948" height="948" rx="188" fill="none" stroke="#D4AF7F" stroke-width="18"/>
+  <path d="M250 548V220L512 474 774 220V548" fill="none" stroke="#D4AF7F" stroke-width="88" stroke-linejoin="miter" stroke-linecap="square"/>
+  <path d="M270 590V716Q270 824 382 824H642Q754 824 754 716V590" fill="none" stroke="#D4AF7F" stroke-width="84" stroke-linecap="square" stroke-linejoin="round"/>
+  <path d="M625 530A136 136 0 1 0 625 684" fill="none" stroke="#D4AF7F" stroke-width="66" stroke-linecap="square"/>
+  <path d="M643 551L682 566 668 611 630 597Z" fill="#B8475E"/>
+</svg>

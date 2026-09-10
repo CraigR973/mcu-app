@@ -42,11 +42,11 @@ function Welcome({ isAdmin, name }: { isAdmin: boolean; name: string }) {
     <StepIntro
       icon={Film}
       visual={
-        <div className="mb-6">
+        <div className="mb-6 flex justify-center">
           <img
             src={isRoomy ? '/brand/personalised-poster-icon-1024.png' : '/brand/personalised-poster-icon-512.png'}
             alt="Mark's Cinematic Universe"
-            className="rounded-lg border border-border"
+            className="h-48 w-auto rounded-lg border border-border shadow-md"
           />
         </div>
       }

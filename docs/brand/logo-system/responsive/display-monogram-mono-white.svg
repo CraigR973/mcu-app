@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">The Real MCU display monogram</title>
+  <desc id="desc">Display-size monogram combining an M, C, U and triangular accent</desc>
+  <rect x="42" y="42" width="940" height="940" rx="184" fill="none" stroke="#FFFFFF" stroke-width="18"/>
+  <path d="M244 526V230L512 486 780 230V526" fill="none" stroke="#FFFFFF" stroke-width="82" stroke-linejoin="miter" stroke-linecap="square"/>
+  <path d="M274 580V714Q274 820 384 820H640Q750 820 750 714V580" fill="none" stroke="#FFFFFF" stroke-width="78" stroke-linecap="square" stroke-linejoin="round"/>
+  <path d="M630 538A130 130 0 1 0 630 682" fill="none" stroke="#FFFFFF" stroke-width="60" stroke-linecap="square"/>
+  <path d="M629 565L691 591 629 617Z" fill="#FFFFFF"/>
+</svg>

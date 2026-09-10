@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-labelledby="title desc">
+  <title id="title">Mark's sixteen-pixel micro mark</title>
+  <desc id="desc">Pixel-hinted M and possessive mark for browser tabs</desc>
+  <g shape-rendering="crispEdges">
+    <rect width="16" height="16" fill="#0A0A0B"/>
+    <path d="M3 14V4H5L8 8L11 4H13V14H11V8L8 12L5 8V14Z" fill="#D4AF7F"/>
+    <rect x="13" y="2" width="2" height="3" fill="#B8475E"/>
+  </g>
+</svg>

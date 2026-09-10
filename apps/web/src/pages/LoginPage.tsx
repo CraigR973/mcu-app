@@ -50,13 +50,13 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-accent/45 lg:left-[calc(50%-1px)] lg:block" />
       <div className="mx-auto grid min-h-[100dvh] w-full max-w-[90rem] lg:grid-cols-2">
         <section className="relative hidden lg:flex lg:min-h-full lg:items-center lg:justify-center lg:border-b-0 lg:border-r lg:border-border lg:overflow-hidden">
-          {/* Hero photo backdrop with overlay gradient for text readability on mobile */}
+          {/* Hero photo backdrop with overlay gradient for text readability */}
           <img
             src="/brand/hero-photo-five-v3.png"
             alt="Mark's Cinematic Universe"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-auto min-w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/60 to-background/40" />
           <div className="relative z-10 max-w-md">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-accent">
               Private film archive
@@ -70,8 +70,8 @@ export default function LoginPage() {
             </p>
           </div>
         </section>
-        <section className="relative flex min-h-64 flex-col justify-between border-b border-border bg-cover bg-center px-6 py-8 sm:px-10 sm:py-10 lg:hidden" style={{ backgroundImage: 'url(/brand/hero-photo-five-v3.png)' }}>
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background/20" />
+        <section className="relative flex min-h-64 flex-col justify-between border-b border-border bg-cover bg-center px-6 py-8 sm:px-10 sm:py-10 lg:hidden" style={{ backgroundImage: 'url(/brand/hero-photo-five-v3.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/50 to-background/30" />
           <div className="relative z-10 w-fit">
             <BrandLockup variant="horizontal" width={280} label="Mark's Cinematic Universe" />
             <p className="mt-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-accent">

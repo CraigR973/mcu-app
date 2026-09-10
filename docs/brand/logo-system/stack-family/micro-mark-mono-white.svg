@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-labelledby="title desc">
+  <title id="title">Mark's Cinematic Universe one-colour micro mark</title>
+  <desc id="desc">Single-colour M silhouette with the centre case knocked out, for notification badges and masks</desc>
+  <defs>
+    <mask id="centre-case">
+      <rect width="16" height="16" fill="white"/>
+      <path d="M6 7L10 8V13L6 13Z" fill="black"/>
+    </mask>
+  </defs>
+  <g fill="#FFFFFF" mask="url(#centre-case)">
+    <path d="M1 3H4L8 6L12 3H15V13H12V7L9 9V14H7V9L4 7V13H1Z"/>
+    <path d="M5 6L11 7V15L5 14Z"/>
+  </g>
+</svg>

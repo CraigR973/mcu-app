@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Mark's micro mark</title>
+  <desc id="desc">Simplified M and possessive mark for very small sizes</desc>
+  <path d="M218 788V252L512 548 806 252V788" fill="none" stroke="#000000" stroke-width="138" stroke-linejoin="miter" stroke-linecap="square"/>
+  <path d="M806 194H894L881 326H793Z" fill="#000000"/>
+</svg>
