@@ -1904,6 +1904,17 @@ contemporaneous.
      precedence and never had it. Selector lists are now tried in order, which is what
      every such config in this file already meant.
 
+     *And a fourth, found while making the third observable.* `/retailers` renders each run
+     through `scrapeRunVerdict`, whose denominator is `attempted - notStocked` — the meaning
+     `ScrapeRunRecordResponse` documents and the verdict tests encode. **The API computed
+     `attempted` with `not_stocked` already removed**, so the page subtracted it twice. The
+     real run of 2026-09-10 — attempted 17, notStocked 23, six discs priced — rendered as
+     *"Nothing to price — no shop had any of the wants"*. `attempted` now means what it says,
+     every pair a shop was actually asked about, and the denominator subtracts `noResults`
+     as well: a shop that answered "none of these" and a shop that answered nothing at all
+     both had nothing to price.
+
      *The general lesson, for the third time today:* **"we found nothing" is a measurement,
      not a conclusion.** `#122` was a parser that found nothing and was believed; this is a
-     runner that found nothing and blamed itself. Both were only visible from a live run.
+     runner that found nothing and blamed itself. Both were only visible from a live run —
+     and the fourth was only visible because the third made it worth reading the report.

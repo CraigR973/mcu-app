@@ -1606,7 +1606,9 @@ export function scrapeRunVerdict(run: ScrapeRunRecord): {
   ok: boolean
   label: string
 } {
-  const answerable = Math.max(run.attempted - run.notStocked, 0)
+  // Three ways to have nothing to price: never asked (already out of `attempted`), asked
+  // and told "not that one", and asked and told nothing at all. `DECISIONS.md` #125.
+  const answerable = Math.max(run.attempted - run.notStocked - (run.noResults ?? 0), 0)
   if (run.error) return { answerable, ok: false, label: 'Run failed' }
   if (answerable === 0) {
     return { answerable, ok: true, label: 'Nothing to price — no shop had any of the wants' }

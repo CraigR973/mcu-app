@@ -296,6 +296,10 @@ class ScrapeRunResponse(BaseModel):
     #: Films a shop answered about and has not got. Reported separately for the same
     #: reason, and counted apart from `skipped` because the question was actually asked.
     notStocked: int
+    #: Wants whose shop answered with an **empty results page**. Neither a failure nor a
+    #: claim that the shop has not got it — nothing in an empty page tells "we do not
+    #: carry that" apart from "the selector stopped matching" (`DECISIONS.md` #125).
+    noResults: int = 0
     written: int
     #: Retailers switched off by this run, after three consecutive failures.
     disabled: list[str]
@@ -325,8 +329,11 @@ class BuiltInScraperListResponse(BaseModel):
 class ScrapeRunRecordResponse(BaseModel):
     """One recorded run — §5.5's acceptance in the numbers it is stated in.
 
-    `attempted` minus `notStocked` is the denominator `DECISIONS.md` #112's corrected
-    criterion compares `written` against; `failures` is its "logged with retailer + reason".
+    `attempted` is every pair the shops were actually **asked** about — everything but
+    `skipped`. The denominator `DECISIONS.md` #112's corrected criterion compares `written`
+    against is `attempted` minus `notStocked` **minus `noResults`**: a shop that answered
+    "none of these" and a shop that answered nothing at all both had nothing to price.
+    `failures` is the criterion's "logged with retailer + reason".
     """
 
     id: uuid.UUID
@@ -336,6 +343,8 @@ class ScrapeRunRecordResponse(BaseModel):
     dryRun: bool
     attempted: int = Field(ge=0)
     notStocked: int = Field(ge=0)
+    #: See `ScrapeRunResponse.noResults` — recorded so the numbers add up.
+    noResults: int = Field(ge=0, default=0)
     skipped: int = Field(ge=0)
     succeeded: int = Field(ge=0)
     failed: int = Field(ge=0)
@@ -367,6 +376,8 @@ class DailyRunResponse(BaseModel):
     written: int = Field(ge=0)
     attempted: int = Field(ge=0)
     notStocked: int = Field(ge=0)
+    #: See `ScrapeRunResponse.noResults` — recorded so the numbers add up.
+    noResults: int = Field(ge=0, default=0)
     skipped: int = Field(ge=0)
     succeeded: int = Field(ge=0)
     failed: int = Field(ge=0)

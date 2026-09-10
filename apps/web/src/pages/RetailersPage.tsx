@@ -519,6 +519,9 @@ function NightlyPanel() {
                 </div>
                 <p className="mt-1 text-muted-foreground">
                   {run.notStocked} not stocked · {run.skipped} skipped · {run.failed} failed
+                  {/* Shown separately from `failed` on purpose: an empty results page is a
+                      shop saying nothing, and counting it as breakage is what #125 fixed. */}
+                  {(run.noResults ?? 0) > 0 ? ` · ${run.noResults} no results` : ''}
                   {run.alertsQueued > 0 ? ` · ${run.alertsQueued} alerts` : ''}
                   {run.finishedAt === null ? ' · did not finish' : ''}
                 </p>

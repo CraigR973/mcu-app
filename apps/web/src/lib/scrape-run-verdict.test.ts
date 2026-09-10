@@ -21,6 +21,7 @@ function run(overrides: Partial<ScrapeRunRecord> = {}): ScrapeRunRecord {
     dryRun: false,
     attempted: 10,
     notStocked: 0,
+    noResults: 0,
     skipped: 0,
     succeeded: 10,
     failed: 0,
@@ -71,5 +72,27 @@ describe('scrapeRunVerdict', () => {
 
   it('reports a run that blew up as failed regardless of its counts', () => {
     expect(scrapeRunVerdict(run({ error: 'connection reset' })).ok).toBe(false)
+  })
+
+  it('does not count a shop that answered with nothing against the run', () => {
+    // #125: an empty results page is neither a failure nor a claim, and it is certainly
+    // not a pair anybody could have priced. Counting it in the denominator would make a
+    // healthy night read as a collapse.
+    const verdict = scrapeRunVerdict(run({ attempted: 10, noResults: 6, written: 4 }))
+
+    expect(verdict.answerable).toBe(4)
+    expect(verdict.ok).toBe(true)
+  })
+
+  it('reads the real run of 2026-09-10 correctly', () => {
+    // The numbers that exposed the double-subtraction: `attempted` was computed with
+    // `notStocked` already removed, so the page subtracted it twice and announced
+    // "Nothing to price — no shop had any of the wants" over six priced discs.
+    const verdict = scrapeRunVerdict(
+      run({ attempted: 40, notStocked: 23, noResults: 8, failed: 3, written: 6 }),
+    )
+
+    expect(verdict.answerable).toBe(9)
+    expect(verdict.label).not.toContain('Nothing to price')
   })
 })
