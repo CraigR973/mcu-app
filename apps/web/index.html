@@ -2,18 +2,40 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <!-- `/vite.svg` was never in `public/`, so the tab has shown a broken-icon
-         fallback since the re-scaffold. Batch 8 needed an icon set anyway. -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <!-- The ICO, and deliberately no SVG alternative. The approved family draws 16px
+         separately from 32/48 — a scalable file would override that hand-hinted 16px
+         master with a shrunk version of the larger one, which is the thing it exists to
+         avoid. The ICO carries all three sizes and lets the browser pick. -->
+    <link rel="icon" href="/brand/favicon.ico" sizes="16x16 32x32 48x48" />
     <!-- iOS ignores the manifest's icons for "Add to Home Screen" and reads this. -->
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="The Real MCU" />
-    <meta name="theme-color" content="#0B1220" />
+    <!-- The app's own dark background. It was #0B1220 — a leftover from the placeholder
+         blue-disc identity, and never a colour this interface uses. `applyThemeTokens`
+         rewrites this on load; the static value only has to be right for the first
+         paint, which starts dark. -->
+    <meta name="theme-color" content="#120F0D" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>MCU — Mark's Cinematic Universe</title>
+
+    <!-- Link previews. Paths are relative so preview, production and localhost each
+         resolve against themselves. The card is the horizontal lockup on the ink field:
+         the photographic hero is not used here, because a share card redistributes and
+         that edition is built from third-party film stills. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="The Real MCU" />
+    <meta property="og:title" content="Mark's Cinematic Universe" />
+    <meta property="og:description" content="The film collection — what we own, and which shelf it is on." />
+    <meta property="og:image" content="/brand/social-card-1200x630.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Mark's Cinematic Universe" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mark's Cinematic Universe" />
+    <meta name="twitter:description" content="The film collection — what we own, and which shelf it is on." />
+    <meta name="twitter:image" content="/brand/social-card-1200x630.png" />
   </head>
   <body>
     <div id="root"></div>

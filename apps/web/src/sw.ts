@@ -30,11 +30,16 @@ clientsClaim()
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
-// Remove the pre-partition cache introduced before the two accounts' caller-specific
-// responses were isolated. Keeping it would allow an offline `/auth/me` from one person
-// to satisfy the same URL for the other.
+// Drop superseded runtime caches on activate:
+//  - `mcu-api`: the pre-partition cache from before the two accounts' caller-specific
+//    responses were isolated. Keeping it would let an offline `/auth/me` from one
+//    person satisfy the same URL for the other.
+//  - `mcu-posters`: entries written while `connect-src` was missing `image.tmdb.org`
+//    are cached errors — the SW's fetch was CSP-refused, so `no-response` was stored.
+//    A cache-first route would serve those failures for 30 days; the rename to
+//    `mcu-posters-v2` abandons them and this delete reclaims the space.
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.delete('mcu-api'))
+  event.waitUntil(Promise.all([caches.delete('mcu-api'), caches.delete('mcu-posters')]))
 })
 
 async function apiCacheKey({ request }: { request: Request }): Promise<Request> {
@@ -133,7 +138,10 @@ registerRoute(
 registerRoute(
   ({ url }) => url.origin === 'https://image.tmdb.org',
   new CacheFirst({
-    cacheName: 'mcu-posters',
+    // `-v2`: `mcu-posters` holds `no-response` errors written while the CSP
+    // `connect-src` did not allow `image.tmdb.org` and every SW fetch was refused.
+    // The rename abandons that poisoned cache; the `activate` handler deletes it.
+    cacheName: 'mcu-posters-v2',
     plugins: [
       new ExpirationPlugin({ maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 30 }),
       // TMDB serves posters cross-origin without CORS, so responses arrive opaque with
@@ -181,8 +189,14 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body ?? '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      // There has never been an `/icons/` directory in `public/`, at any point, so every
+      // push notification since Batch 11 has 404'd its icon and fallen back to the
+      // browser's own glyph. The brand assets live under `/brand/`.
+      icon: '/brand/app-icon-concept-art-192.png',
+      // A badge is a mask: the platform keeps the alpha channel and throws the colour
+      // away, so the detailed emblem shrunk into a 24dp slot resolves to a grey blob.
+      // This is the approved one-colour mark, drawn for exactly this.
+      badge: '/brand/notification-badge-96.png',
       // `tag` collapses a repeat of the same notification rather than stacking it. The
       // server sends the notification's own id, so two different alerts never collapse
       // into one and a re-delivered one never appears twice.

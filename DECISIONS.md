@@ -2083,3 +2083,113 @@ contemporaneous.
      both wrote it. They could disagree — `Page not found` against `Film archive` — and the
      archive root rendered "The Real MCU · The Real MCU". `RouteTitle` owns it router-wide;
      `AppLayout` keeps `routeLabel` for the mobile header only.
+
+### 2026-09-10 — the brand integration
+
+133. **The favicon is an ICO, and there is deliberately no SVG alternative.** The approved
+     family draws 16 px on its own 16×16 grid — it keeps the M silhouette and the centre
+     case and *omits the disc*, because the disc's hub cannot survive there. 32 and 48 come
+     from a separately drawn compact optical master. A scalable `image/svg+xml` favicon
+     would be preferred by every browser that supports one and would render a shrunk
+     version of the larger drawing at 16 px, which is precisely what the hand-hinted master
+     exists to prevent.
+
+     So `index.html` declares `favicon.ico` alone, with `sizes="16x16 32x32 48x48"`, and the
+     browser picks the entry that matches the slot. The temporary `favicon.svg` and
+     `mcu-icon.svg` blue discs are deleted rather than kept as a fallback.
+
+134. **The desktop sidebar draws the horizontal lockup at 240 px against a 280 px approved
+     minimum, and the trade-off is recorded in the call site rather than hidden.** The
+     permanent sidebar is `w-[17rem]` with `px-4`, so 240 px is everything it has. Reaching
+     280 px would mean widening navigation by about 40 px at every desktop width, taking
+     that space from the main column at exactly the sizes — 1024 to 1280 — where it is
+     scarcest. The completed UI's layout won.
+
+     What is actually at risk below the minimum is the `CINEMATIC UNIVERSE` subtitle: at
+     240 px its cap height is about 5 CSS px. Measured at DPR 2 — which is every display
+     either person uses — that is 480 device pixels of lockup and the subtitle is crisp; on
+     a 1× display it reads as a tracked band rather than as words. The wordmark itself is
+     unambiguous at both.
+
+     `BrandLockup` therefore **warns in development** when it is drawn under a minimum, and
+     the warning is silenced only by passing `underMinimumReason` — a sentence that shows up
+     in review. A lockup quietly shrunk to fit its container is the ordinary way an identity
+     decays; this makes it a visible decision instead.
+
+     In the mobile drawer the same panel has under 200 px once the close button is placed,
+     which is past arguing about. There the compact mark carries the identity and the short
+     name carries the words.
+
+135. **No semantic interface colour was retuned to match the logo, and no new colour token
+     was introduced either.** The brief allowed explicit brand tokens "if needed". They were
+     not needed: every branded surface renders approved artwork that carries its own palette
+     inside the SVG or PNG, and the chrome around it — borders, plates, eyebrows — already
+     had correct semantic tokens. Adding a `logo-*` scale that nothing consumed would have
+     been dead code with a design-system label on it.
+
+     The four existing `brand-*` tokens were left alone as well. They are approximations of
+     the logo palette (champagne at 41° against the artwork's 33°) used for scrims and the
+     photo lightbox, and `theme/tokens.ts` invites the identity pass to tune them — but
+     tuning them changes shipped surfaces for no visible gain, and the contrast work in #130
+     is calibrated against the values that are there.
+
+     What *was* corrected is not a semantic colour at all: `theme_color` and
+     `background_color` were `#0B1220`, the placeholder identity's blue, a colour the
+     shipped interface never draws. An installed PWA opened on a splash colour from a
+     deleted logo. Both are now `#120F0D`, which is `hsl(24 15% 6%)` — the value
+     `applyThemeTokens` has been writing over the meta tag at runtime all along.
+
+136. **The notification badge is the micro mark in one colour, not the display-size
+     monochrome outline master.** A `badge` is a mask: Android draws it at 24 dp and keeps
+     only the alpha channel. `stack-mark-mono-white.svg` was tried first — it is the
+     family's designated one-colour asset — and at 24 dp its 32-unit strokes land under a
+     pixel and the mark resolves to a grey smudge. Proved by rendering it at the real size,
+     not by reasoning about it.
+
+     The badge is built instead from the **micro mark's** geometry: the same paths as
+     `micro-mark-16.svg`, hoisted to shared constants in the builder so there is one copy,
+     with the centre case knocked out rather than filled crimson — colour is what separates
+     the case from the M at that size, and a mask has no colour to separate them with. It is
+     padded to 86% so a platform crop cannot take the outer walls. The result is a bold,
+     unmistakable M at 24 dp.
+
+     *The general rule this follows is the system's own:* rich at display size, optically
+     strengthened below. A badge is the smallest context the identity has; it gets the
+     smallest-tier master, in one colour.
+
+137. **The share card is built from the rights-independent identity, and never from the
+     photographic editions.** `logo-system/responsive/social-card-1200x630.png` already
+     existed and is handsome, but its letterforms are filled with *Jaws*, Bogart, Hitchcock
+     and *An American Werewolf in London* — real film stills gathered as art direction, not
+     cleared for redistribution. An `og:image` is a redistribution surface by definition: it
+     is fetched and re-hosted by every chat client that renders a preview.
+
+     `stack-family/social-card-1200x630.png` is generated instead — the horizontal lockup
+     optically centred on the ink field, composed by the builder from approved vector
+     artwork. Optically, not mechanically: the lockup's viewBox carries asymmetric clear
+     space, so centring the box leaves the logo visibly left of centre. The builder measures
+     the drawn artwork's alpha bounds and centres those.
+
+     The card's paths in `index.html` are **relative**, so preview, production and localhost
+     each resolve against themselves and no hosting domain is baked into a tracked file.
+
+138. **The mobile header shows the short app name, not the route label** — superseding the
+     last sentence of #132, which kept `routeLabel` in `AppLayout` for exactly that slot.
+     The header had no brand anchor at all, and the label it did show repeated the page's
+     own `h1` a few pixels below it. The mark went from 28 px to 32 px at the same time: the
+     compact master is drawn for 32–96 px, and the placeholder had been sitting under it.
+
+     `routeLabel` and its `navItems`/`useLocation` imports are removed rather than left
+     unused. Route context survives in the visible `h1` and in `document.title`, which #132
+     gave a single owner.
+
+139. **The app ships brand assets whose generator is not in the repository, and that is now
+     a smaller hole rather than a new one.** `apps/web/public/brand/` holds the 18 files the
+     app references, 744 kB, committed. `docs/brand/logo-system/` — the builder and the
+     other 180-odd files — remains untracked for the reasons in `OWNER-ACTIONS.md` #15.
+
+     `scripts/brand-sync.mjs` is the bridge: a tracked manifest naming every shipped file
+     and the surface that uses it, which installs them and, with `--check`, reports drift
+     against the design system. `docs/brand-integration.md` records the mapping in prose.
+     Neither can run in CI, which clones a repo without `docs/brand/` — they are local
+     tools, and the report says so rather than implying a gate that does not exist.

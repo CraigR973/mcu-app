@@ -1,23 +1,24 @@
 import { useState, type FormEvent } from 'react'
-import { Eye, EyeOff, Film, KeyRound, Loader2, UserRound, WifiOff } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, Loader2, UserRound, WifiOff } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { BrandLockup } from '@/components/brand/BrandLockup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/auth'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 /**
  * The private front door to the archive.
- *
- * The reserved identity block deliberately contains text, not an approximation of the
- * approved logo. `data-logo-slot` is the hand-off point for the later brand pass.
  */
 export default function LoginPage() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const isOnline = useOnlineStatus()
+  // `lg`, the width at which this page becomes two columns and the left one becomes tall.
+  const isTwoColumn = useMediaQuery('(min-width: 1024px)')
   const from = (location.state as { from?: string })?.from ?? '/'
 
   const [displayName, setDisplayName] = useState('')
@@ -52,19 +53,24 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-accent/45 lg:left-[calc(50%-1px)] lg:block" />
       <div className="mx-auto grid min-h-[100dvh] w-full max-w-[90rem] lg:grid-cols-2">
         <section className="relative flex min-h-64 flex-col justify-between border-b border-border bg-surface-sunken px-6 py-8 sm:px-10 sm:py-10 lg:min-h-full lg:border-b-0 lg:border-r lg:px-16 lg:py-14">
-          <div
-            data-logo-slot="auth-stacked"
-            aria-label="Mark's Cinematic Universe"
-            className="w-fit"
-          >
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-accent/65 text-accent">
-              <Film className="h-5 w-5" aria-hidden />
-            </div>
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-accent">
+          {/* The identity itself, not a typographic stand-in for it. The stacked lockup
+              needs 320px square and gets it in the two-column layout; below `lg` this
+              panel is a wide band across the top of a phone, which is what the horizontal
+              lockup is for. Neither is drawn under its approved minimum, and the name is
+              no longer set in page type beside a logo that already contains it. */}
+          <div className="w-fit">
+            {isTwoColumn ? (
+              <BrandLockup
+                variant="stacked"
+                width={320}
+                label="Mark's Cinematic Universe"
+                className="rounded-lg border border-border shadow-soft"
+              />
+            ) : (
+              <BrandLockup variant="horizontal" width={280} label="Mark's Cinematic Universe" />
+            )}
+            <p className="mt-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-accent">
               Private film archive
-            </p>
-            <p className="mt-3 max-w-md font-display text-4xl font-semibold leading-[0.96] tracking-[-0.035em] text-foreground sm:text-5xl lg:text-6xl">
-              Mark&apos;s Cinematic Universe
             </p>
           </div>
 

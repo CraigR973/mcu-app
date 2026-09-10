@@ -2,9 +2,12 @@ import { useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { LogOut, X } from 'lucide-react'
+import { BrandLockup } from '@/components/brand/BrandLockup'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { adminNavGroup, navGroups } from '@/lib/nav-items'
@@ -20,6 +23,8 @@ const LINK_CLS =
 
 export default function Sidebar({ open, onClose }: Props) {
   const { profile, signOut } = useAuth()
+  // `lg`, matching the class that turns the drawer into a permanent panel.
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
   const closeRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLElement>(null)
 
@@ -88,20 +93,28 @@ export default function Sidebar({ open, onClose }: Props) {
       >
         {/* Header */}
         <div className="flex min-h-[5.5rem] items-center justify-between border-b border-border px-4 py-4">
-          <Link to="/movies" onClick={onClose} className="flex min-w-0 items-center gap-3">
-            {/* Reserved compact/horizontal identity slot. Brand artwork is integrated in
-                the next pass; this text treatment deliberately has no logo asset. */}
-            <span
-              data-logo-slot="desktop-horizontal"
-              aria-hidden
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-accent/55 bg-primary font-display text-lg font-semibold text-primary-foreground"
-            >
-              M
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate font-display text-lg font-semibold leading-none text-foreground">The Real MCU</span>
-              <span className="mt-1 block text-[0.625rem] font-semibold uppercase tracking-[0.17em] text-muted-foreground">Private film archive</span>
-            </span>
+          <Link to="/movies" onClick={onClose} className="flex min-w-0 items-center gap-3 rounded-md">
+            {/* Two arrangements, because the same 272px panel is two different brand
+                positions. On a desktop the panel is permanent and the full lockup owns it.
+                In the mobile drawer the close button takes the right of this row, leaving
+                under 200px — far too narrow for a lockup, so the compact mark carries the
+                identity and the short name carries the words. */}
+            {isDesktop ? (
+              <BrandLockup
+                variant="horizontal"
+                width={240}
+                label="Mark's Cinematic Universe"
+                underMinimumReason="The permanent sidebar is 272px wide by design; reaching the 280px minimum would cost the main column 40px at every desktop width."
+              />
+            ) : (
+              <>
+                <BrandMark size={36} />
+                <span className="min-w-0">
+                  <span className="block truncate font-display text-lg font-semibold leading-none text-foreground">The Real MCU</span>
+                  <span className="mt-1 block text-[0.625rem] font-semibold uppercase tracking-[0.17em] text-muted-foreground">Private film archive</span>
+                </span>
+              </>
+            )}
           </Link>
           <button
             ref={closeRef}

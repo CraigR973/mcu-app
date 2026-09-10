@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Mark's Cinematic Universe compact three-case mark</title>
+  <desc id="desc">Optically strengthened three-case and disc mark for compact interfaces</desc>
+  <rect width="1024" height="1024" rx="216" fill="#FAFAF9"/>
+  <g transform="translate(72 72) scale(0.86)">
+  <g stroke-linejoin="round" stroke-linecap="square">
+    <circle cx="870" cy="520" r="164" fill="#FAFAF9" stroke="#D4AF7F" stroke-width="52"/>
+    <circle cx="870" cy="520" r="46" fill="#FAFAF9" stroke="#D4AF7F" stroke-width="38"/>
+    <path d="M116 266L432 326V748L116 696Z" fill="#FAFAF9" stroke="#520A1F" stroke-width="48"/>
+    <path d="M592 326L908 266V696L592 748Z" fill="#FAFAF9" stroke="#520A1F" stroke-width="48"/>
+    <path d="M358 358L666 394V802L358 844Z" fill="#B8475E" stroke="#520A1F" stroke-width="52"/>
+    <path d="M410 405L438 408V790L410 794Z" fill="#D4AF7F"/>
+  </g>
+  </g>
+</svg>

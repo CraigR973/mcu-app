@@ -4,8 +4,18 @@
     {
       "name": "web",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": [".claude/dev.sh"],
+      "runtimeArgs": [
+        ".claude/dev.sh"
+      ],
       "port": 5173
+    },
+    {
+      "name": "web-dist",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        ".claude/preview.sh"
+      ],
+      "port": 4173
     }
   ]
 }

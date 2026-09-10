@@ -2,7 +2,40 @@
 
 ## Now
 
-**Shipped and deployed: the comprehensive UI redesign.** A full UI/UX redesign of the web
+**Built, not yet merged: the brand integration.** The approved three-case-and-disc identity
+is wired into the app. The temporary blue-disc icon set is deleted; `apps/web/public/brand/`
+holds the 18 assets the app references (744 kB), installed from the design system by the
+tracked `scripts/brand-sync.mjs`. Two reusable components — `BrandMark` and `BrandLockup` —
+apply the approved responsive hierarchy by *drawn artwork* rather than by scaling one file,
+and pick their theme variant from the same value that paints the first frame, so there is no
+flash of the wrong asset and no second fetch.
+
+Surfaces changed: desktop sidebar (horizontal lockup), mobile header and drawer (compact
+mark + short name), login and onboarding (stacked lockup where the layout is square,
+horizontal where it is a band), the three full-screen boot loaders, and `/offline`. Empty
+states deliberately got nothing — the sidebar lockup is inches away.
+
+Three real defects were fixed on the way: `src/sw.ts` had been requesting
+`/icons/icon-192.png`, a path that **never existed**, so every push notification since Batch
+11 fell back to the browser's own glyph; the manifest's `theme_color` was `#0B1220`, the
+deleted placeholder's blue, so an installed PWA opened on a splash colour the app never
+draws; and the mobile header's mark was 28 px, under the compact master's 32 px floor.
+
+Gate green: **235 web + 79 shared tests** (suite 235 ← 213; 22 new brand tests), 0 lint
+errors, clean typecheck, build passing, every manifest and service-worker asset path
+resolving in `dist`, and all 18 brand assets confirmed **precached by the real worker in the
+built bundle**. Verified in the browser at 1440 / 768 / 375 in both themes, plus native-size
+proofs of the favicon's three ICO entries, the 32/36/48/64/128 interface marks, the maskable
+safe area and the badge at 24 dp. Measured CLS on the login page: **0**.
+
+Two things are worth knowing. **The sidebar lockup is drawn at 240 px against a 280 px
+approved minimum** (`DECISIONS.md` #134) — the alternative was widening navigation by 40 px
+at every desktop width. It is recorded in the call site, and `BrandLockup` warns in
+development when anyone does it without saying why. **And `docs/brand/` is still untracked**,
+so the builder that generates these assets is not in the repository even though the assets
+now are (`OWNER-ACTIONS.md` #15, narrowed).
+
+**Shipped and deployed before it: the comprehensive UI redesign.** A full UI/UX redesign of the web
 app, audited, implemented, **verified live on 2026-09-10 against the real catalogue** —
 1,843 films / 1,857 items, signed in as Craig — and **merged to `main` on 2026-09-10**.
 
@@ -562,6 +595,22 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **The approved identity is integrated into the app.** Placeholder icons
+  deleted; 18 assets installed under `apps/web/public/brand/` from the untracked design
+  system via the new tracked `scripts/brand-sync.mjs`. `BrandMark`/`BrandLockup` apply the
+  responsive hierarchy and follow the theme without flashing. Builder extended for the 384 px
+  PWA icon, a one-colour notification badge and a rights-independent share card. Fixed the
+  `sw.ts` `/icons/` path that never existed, the placeholder blue in the manifest, and a
+  28 px mark under its 32 px floor. 235 web + 79 shared tests, 0 lint errors, clean
+  typecheck, build passing, CLS 0 on login. `DECISIONS.md` #133–#139.
+
+  **Headless Chrome still aborts on this macOS build** (`_NSCGSTransaction dealloc`,
+  reproduced) — but the **CDP route works**: a Chrome launched with
+  `--remote-debugging-port` and driven over the protocol captured all 16 branded surfaces at
+  2×, no credential involved. That is the mechanism `OWNER-ACTIONS.md` #14 proposes, now
+  proven, and `.claude/launch.json` gained a `web-dist` entry that serves the built bundle
+  so a session can verify the artefact that ships rather than the dev server.
 
 - **2026-09-10** — **The redesign closed out, with one deliverable knowingly incomplete.**
   Gate green locally from a clean tree and green in CI (`34502543298`): ruff, 192 files

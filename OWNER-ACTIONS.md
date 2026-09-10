@@ -303,6 +303,17 @@ The cheapest way to close it, whenever you want it: launch Chrome once with
 `--remote-debugging-port=9222`, sign in yourself, and a short CDP script can then capture all
 nine surfaces at both themes and both widths **without ever handling the PIN**.
 
+**Update, 2026-09-10 — the mechanism is proven.** The brand integration re-reproduced the
+headless abort, then captured **16 branded surfaces at 2×** over CDP against a Chrome
+launched with `--remote-debugging-port` and its own scratch profile: login, onboarding, the
+desktop sidebar, the mobile header and drawer, tablet and `/offline`, in both themes. No
+credential was involved — the dev server's `VITE_SKIP_AUTH` renders the protected shell, and
+the theme was seeded with `Page.addScriptToEvaluateOnNewDocument` before the app read it.
+
+So the only thing between you and the redesign's missing files is **signing in yourself once
+in that window** for the surfaces that need real catalogue data. `.claude/launch.json` also
+gained a `web-dist` entry, which serves the built bundle rather than the dev server.
+
 ### 15. The brand assets are untracked — 56 MB, and a copyright call
 
 `docs/brand/` holds **189 files, 56 MB** and is **not in git**. The committed
@@ -322,6 +333,29 @@ It was left untracked deliberately. Three things make it yours:
 The obvious middle path, if you want it: commit the **SVGs plus the icon sizes the app
 actually uses** into `apps/web/public/`, keep `stack-family/` as the tracked reference, and
 add `docs/brand/source-images/` to `.gitignore`.
+
+**Update, 2026-09-10 — half of that middle path is done, and the half left is yours.** The
+brand integration committed the shipped subset: `apps/web/public/brand/`, **18 files,
+744 kB**, no film stills, no photographic editions. `scripts/brand-sync.mjs` and
+`docs/brand-integration.md` record which asset serves which surface and how to regenerate
+the pair, so the repo no longer references a path it does not contain.
+
+What is still yours is **whether `docs/brand/logo-system/` itself goes into history**. It
+matters more now than it did, because the app *ships* assets whose generator is not in the
+repository — this session extended `build_stack_identity.cjs` (384 px icon, notification
+badge, share card, one-colour micro-mark masters) and those edits live only in your working
+tree. Three ways out, in ascending cost:
+
+1. **Track the generator and the vector masters only** — `build_stack_identity.cjs` plus
+   `stack-family/*.svg`, about 60 kB of text. The raster exports stay derived. This makes the
+   pipeline reproducible for anyone who also has the two concept masters.
+2. **Track `stack-family/` entirely** (6.5 MB) and `.gitignore` `source-images/`. The
+   `concepts/` masters the builder reads are still outside, so a fresh clone rebuilds the
+   vectors but not the concept-art rasters.
+3. **Leave it as it is.** The app is fine; the design system lives on your machine only.
+
+The copyright question narrows to `source-images/` and `concepts/`, not to `stack-family/`,
+whose shipped members are all drawn artwork.
 
 ---
 ## Deprioritised by owner decision — not blocking

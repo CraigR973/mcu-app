@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/auth'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
 
@@ -21,7 +22,8 @@ export default function ProtectedRoute({ children, role }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-7 bg-background p-4">
+        <BrandMark size={128} label="Mark's Cinematic Universe" />
         <StatePanel tone="loading" title="Opening your archive" description="Confirming this device’s session…" className="w-full max-w-lg" />
       </div>
     )
