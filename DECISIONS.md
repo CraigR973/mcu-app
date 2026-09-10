@@ -1829,3 +1829,34 @@ contemporaneous.
      existed only on the add form. Adding that control meant reading the update path, and
      the wipe was sitting in it. The acceptance criterion found a second bug the suite had
      no reason to look for, which is the same lesson as `#122` in a different corner.
+
+124. **`railway config apply` would have deleted two live credentials, and had been able to
+     since the day they were set.** Found on 2026-09-10 by running `railway config plan`
+     before adding the cron services — the plan read `2 to add, 3 to change, **2 to
+     destroy**`, and the two destroyed were `api.ANTHROPIC_API_KEY` and
+     `api.TMDB_READ_TOKEN`.
+
+     *Why:* `.railway/railway.ts` is the declared source for the environment, and IaC
+     removes what the file does not declare. Both tokens were set in the Railway console on
+     2026-09-09 and never added to the file, so drift-removal read them as deletable.
+     Applying would have recreated **the exact TMDB outage of 2026-09-09** — every
+     TMDB-backed feature answering 502 behind a green gate — and taken the AI assistant with
+     it.
+
+     *And the JWT secrets were worse in a quieter way.* They were declared as
+     `context.randomString(...)` with `isSealed: true`. A sealed variable cannot be read
+     back to compare, so every `plan` reported them as changing; applying would have minted
+     new secrets, **signing both people out and invalidating every refresh token**. They are
+     generated once, at service creation, and there is no reason to generate them again.
+
+     *The rule this settles:* **anything that exists in Railway must be declared here, and
+     anything already set is declared `preserve()`.** That keeps `apply` non-destructive
+     without putting a single secret in the repository — `preserve()` names the variable and
+     leaves the value where it is. All ten of the API's variables now read `preserve()`
+     except `ENVIRONMENT`, and the plan is `0 to destroy`.
+
+     *Why it went unnoticed:* `.railway/README.md` said "do not run `apply` outside the
+     explicit phase-closeout workflow", which reads as caution about *changes you meant to
+     make*. The real hazard was the opposite — a change nobody had authored, produced by the
+     file's silence. The README now says to read the destroy count first, and `#117`'s
+     readiness probe is what would have caught the aftermath.

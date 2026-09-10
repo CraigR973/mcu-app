@@ -8,6 +8,24 @@ enabled for new services.
 region `ams`, deploying `main` from `CraigR973/mcu-app` via the root `Dockerfile`.
 Public URL: `https://api-production-a8fe.up.railway.app`.
 
+## The scheduled jobs
+
+Two cron services share the API's image and run a different entry point (`DECISIONS.md`
+#60, #119). They are separate services because a Railway cron runs the service's own start
+command and expects it to **exit** — `api` runs uvicorn, which never does, so a schedule on
+`api` would restart the API on a timer instead of scraping anything.
+
+| Service | Command | Schedule (UTC) |
+|---|---|---|
+| `cron-scrape` | `python -m src.scripts.daily_scrape` | `0 3 * * *` |
+| `cron-reminders` | `python -m src.scripts.run_reminders` | `0 8 * * *` |
+
+Both take `DATABASE_URL` and the three VAPID variables **by reference** from `api`, so
+there is one copy of each secret. `restartPolicyType` is `NEVER`: these make live requests
+to real shops, and retrying a failed night automatically would turn one bad night into
+three. Railway skips a scheduled run whose previous run is still going, and the minimum
+interval it accepts is five minutes.
+
 ## Two things that will bite
 
 1. **Run the Railway CLI on Node 22+.** Its IaC engine invokes Node's type-stripping
@@ -39,7 +57,23 @@ railway config apply
 railway domain --service api --port 8080
 ```
 
-`plan` is read-only. Do not run `apply` outside the explicit phase-closeout workflow.
-`DATABASE_URL` and `FRONTEND_ORIGIN` are preserved from Railway and must be supplied as
-service variables; they are never stored in this repository. The two JWT secrets are
-generated independently and sealed by Railway — Batch 3 consumes them.
+## Read the destroy count before every apply
+
+`plan` is read-only. Do not run `apply` outside the explicit phase-closeout workflow — and
+**read the `N to destroy` line before you do**, because the dangerous change here is not one
+you authored. On 2026-09-10 a plan read `2 to destroy`, and the two were
+`ANTHROPIC_API_KEY` and `TMDB_READ_TOKEN`: set in the console, never declared in
+`railway.ts`, and therefore drift for IaC to remove. Applying would have recreated the TMDB
+outage of 2026-09-09 exactly. `DECISIONS.md` #124.
+
+**The rule:** anything that exists in Railway is declared in `railway.ts`, and anything
+already set is declared `preserve()` — which names the variable without putting its value in
+this repository. A healthy plan for a variable change reads `0 to destroy`.
+
+Sealed variables cannot be read back to compare, so declaring one as a generated value makes
+every plan report it as changing. The two JWT secrets are `preserve()` for that reason:
+applying a regenerated secret would sign both people out.
+
+Every variable is preserved from Railway and supplied as a service variable; none is stored
+in this repository. That now includes the two JWT secrets, which Batch 3 consumes and which
+were generated once when the service was created.

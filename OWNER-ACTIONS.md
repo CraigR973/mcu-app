@@ -24,8 +24,23 @@ an agent must not take them:
 **Read this first — what changed on 2026-09-10.** Both of these used to say "point a cron
 at this endpoint", and **that was not possible**: both endpoints are admin-authed and an
 access token lives 24 hours, so a cron container had no way to call either one. `DECISIONS.md`
-#119. Each is now a **command**, which is what a Railway cron runs anyway. Set the cron's
-start command to the line given and leave the rest of the service alone.
+#119. Each is now a command, and **both services are already declared in
+`.railway/railway.ts`** — so this is no longer a click-through. It is two commands:
+
+```
+PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" railway config plan
+```
+```
+PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" railway config apply
+```
+
+`plan` is read-only; run it first and **check the last number on the `Plan:` line**. It
+should read **`2 to add, 1 to change, 0 to destroy`**. If anything is to be destroyed, stop
+— that is `DECISIONS.md` #124, which is how applying this file would once have deleted
+`TMDB_READ_TOKEN` and `ANTHROPIC_API_KEY`.
+
+Node 22 is required for the IaC engine (`.railway/README.md`); the app's own build stays on
+Node 20. `apply` is a hosting change and therefore yours, not an agent's.
 
 - [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*.
       A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process

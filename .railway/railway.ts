@@ -1,6 +1,6 @@
 import { defineRailway, github, preserve, project, service } from 'railway/iac'
 
-export default defineRailway((context) => {
+export default defineRailway(() => {
   const api = service('api', {
     source: github('CraigR973/mcu-app', { branch: 'main' }),
     build: {
@@ -17,19 +17,82 @@ export default defineRailway((context) => {
       DATABASE_URL: preserve(),
       ENVIRONMENT: 'production',
       FRONTEND_ORIGIN: preserve(),
-      JWT_ACCESS_SECRET: {
-        value: context.randomString('jwt-access-secret', 32),
-        isSealed: true,
-      },
-      JWT_REFRESH_SECRET: {
-        value: context.randomString('jwt-refresh-secret', 32),
-        isSealed: true,
-      },
+      // **`preserve()`, not `randomString()`.** These are sealed, so Railway cannot read
+      // them back to compare — `config plan` therefore reported them as changing on every
+      // run, and applying that would have minted new secrets and signed both people out,
+      // invalidating every refresh token with them. They were generated once when the
+      // service was created (Batch 2) and there is no reason to generate them again.
+      JWT_ACCESS_SECRET: preserve(),
+      JWT_REFRESH_SECRET: preserve(),
+      // **Everything below is declared only so that `apply` does not delete it.**
+      // `ANTHROPIC_API_KEY` and `TMDB_READ_TOKEN` were set in the console and never added
+      // here, so IaC read them as drift and planned to remove them — which would have
+      // recreated the TMDB outage of 2026-09-09 exactly. `DECISIONS.md` #124.
+      //
+      // `preserve()` keeps whatever Railway already holds, so no secret enters this
+      // repository (`AGENTS.md`: never put a token in a tracked file).
+      ANTHROPIC_API_KEY: preserve(),
+      TMDB_READ_TOKEN: preserve(),
+      VAPID_PUBLIC_KEY: preserve(),
+      VAPID_PRIVATE_KEY: preserve(),
+      VAPID_SUBJECT: preserve(),
+    },
+  })
+
+  /**
+   * The two scheduled jobs — `DECISIONS.md` #60 and #119.
+   *
+   * **Separate services, not a schedule on `api`.** A Railway cron runs the service's own
+   * start command and expects the process to exit; `api` runs uvicorn, which never does.
+   * Putting a schedule on it would restart the API on a timer instead of scraping anything.
+   *
+   * They share the API's image because they *are* the API — same code, same models, same
+   * database — invoked at a different entry point. Nothing here runs a migration: `api`
+   * does that on deploy, and two containers racing `alembic upgrade head` is a way to lose
+   * a database rather than a way to schedule a job.
+   *
+   * **`restartPolicyType: 'NEVER'`.** A failed scrape must not be retried automatically:
+   * these make live requests to real shops, and `ON_FAILURE` would turn one bad night into
+   * three. The job exits non-zero, Railway shows it red, and the next run is tomorrow's.
+   */
+  const cronDefaults = {
+    source: github('CraigR973/mcu-app', { branch: 'main' }),
+    build: {
+      builder: 'DOCKERFILE' as const,
+      dockerfilePath: 'Dockerfile',
+    },
+    env: {
+      DATABASE_URL: api.env.DATABASE_URL,
+      ENVIRONMENT: 'production',
+      // Without these the job scrapes, queues, and silently sends nothing.
+      VAPID_PUBLIC_KEY: api.env.VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY: api.env.VAPID_PRIVATE_KEY,
+      VAPID_SUBJECT: api.env.VAPID_SUBJECT,
+    },
+  }
+
+  const scrape = service('cron-scrape', {
+    ...cronDefaults,
+    deploy: {
+      // 03:00 UTC — outside UK shopping hours, and well clear of the reminder pass.
+      cronSchedule: '0 3 * * *',
+      startCommand: 'python -m src.scripts.daily_scrape',
+      restartPolicyType: 'NEVER',
+    },
+  })
+
+  const reminders = service('cron-reminders', {
+    ...cronDefaults,
+    deploy: {
+      // 08:00 UTC — a reminder about tonight's release is worth having in the morning.
+      cronSchedule: '0 8 * * *',
+      startCommand: 'python -m src.scripts.run_reminders',
+      restartPolicyType: 'NEVER',
     },
   })
 
   return project('mcu-app', {
     environments: ['production'],
-    resources: [api],
+    resources: [api, scrape, reminders],
   })
 })
