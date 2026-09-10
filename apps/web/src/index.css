@@ -4,47 +4,12 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --background: 220 16% 96%;
-    --foreground: 220 30% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 10%;
-
-    /* Primary — gold/amber cinematic accent */
-    --primary: 38 92% 50%;
-    --primary-foreground: 220 30% 10%;
-
-    /* Secondary */
-    --secondary: 220 14% 90%;
-    --secondary-foreground: 220 30% 15%;
-
-    /* Muted */
-    --muted: 220 14% 90%;
-    --muted-foreground: 220 14% 45%;
-
-    /* Accent */
-    --accent: 38 92% 50%;
-    --accent-foreground: 220 30% 10%;
-
-    /* Destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    /* Borders & inputs */
-    --border: 220 14% 82%;
-    --input: 220 14% 82%;
-    --ring: 38 92% 50%;
-
-    /* Shape */
-    --radius: 0.5rem;
-
-    /* Typography scale */
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-
-    /* Spacing */
+    /* Shape and rhythm are theme-independent. Colour values are applied from
+       theme/tokens.ts before React paints. */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
@@ -53,51 +18,169 @@
     --spacing-2xl: 3rem;
   }
 
-  .dark {
-    /* Backgrounds — deep navy */
-    --background: 222 47% 5%;
-    --foreground: 210 40% 95%;
-    --card: 222 40% 8%;
-    --card-foreground: 210 40% 95%;
-    --popover: 222 40% 8%;
-    --popover-foreground: 210 40% 95%;
-
-    /* Primary — gold/amber */
-    --primary: 38 92% 50%;
-    --primary-foreground: 222 47% 5%;
-
-    /* Secondary */
-    --secondary: 222 32% 14%;
-    --secondary-foreground: 210 40% 90%;
-
-    /* Muted */
-    --muted: 222 32% 14%;
-    --muted-foreground: 215 20% 55%;
-
-    /* Accent */
-    --accent: 38 92% 50%;
-    --accent-foreground: 222 47% 5%;
-
-    /* Destructive */
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 210 40% 95%;
-
-    /* Borders & inputs */
-    --border: 222 32% 18%;
-    --input: 222 32% 18%;
-    --ring: 38 92% 50%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
+
   html {
-    font-family: var(--font-sans);
+    min-width: 320px;
+    background: hsl(var(--background));
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    margin: 0;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.4);
+    color: hsl(var(--foreground));
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply mx-auto w-full max-w-[96rem] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-12;
+  }
+
+  .page-shell-narrow {
+    @apply mx-auto w-full max-w-4xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-12;
+  }
+
+  .page-header {
+    @apply mb-7 flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .page-kicker {
+    @apply mb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-primary;
+  }
+
+  .page-title {
+    @apply font-display text-3xl font-semibold leading-none tracking-[-0.025em] text-foreground sm:text-4xl;
+  }
+
+  .page-description {
+    @apply mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[0.9375rem];
+  }
+
+  .archive-panel {
+    @apply rounded-lg border border-border bg-card text-card-foreground shadow-soft;
+  }
+
+  .archive-divider {
+    @apply border-t border-border;
+  }
+
+  .section-heading {
+    @apply font-display text-xl font-semibold leading-tight tracking-[-0.015em] text-foreground;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-foreground;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs leading-5 text-muted-foreground;
+  }
+
+  .form-control {
+    @apply min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70;
+  }
+
+  .select-control {
+    @apply form-control appearance-none pr-9;
+  }
+
+  .status-panel {
+    @apply flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card/45 px-6 py-10 text-center;
+  }
+
+  .metadata-label {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.13em] text-muted-foreground;
+  }
+
+  .metadata-value {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .eyebrow-rule {
+    @apply before:mr-2 before:inline-block before:h-px before:w-7 before:align-middle before:bg-accent;
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+}
+
+/**
+ * The coarse-pointer floor has to outrank the size utility it is correcting.
+ * Declared in `components` it lost every race — `.touch-target` and `.min-h-8` carry the
+ * same specificity, and Tailwind emits `components` before `utilities`, so the smaller
+ * value simply came later and won. Filter chips stayed 32px and small buttons 36px while
+ * appearing to opt in. In `utilities` it is emitted after the generated classes and wins.
+ * Fine pointers are untouched, so desktop keeps its density.
+ */
+@layer utilities {
+  @media (pointer: coarse) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* For a control whose drawn size carries meaning — a 24px switch track reads as a
+       switch, a 44px one reads as a bar — grow the hit area instead of the control.
+       The pseudo-element is centred, transparent and out of flow, so nothing moves. */
+    .touch-hit {
+      position: relative;
+    }
+
+    .touch-hit::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      min-width: 44px;
+      min-height: 44px;
+      transform: translate(-50%, -50%);
+    }
   }
 }
