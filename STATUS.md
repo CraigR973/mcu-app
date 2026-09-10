@@ -2,21 +2,22 @@
 
 ## Now
 
-**Phase 1 identity deployment complete: photo heroes and personalised poster live with display fixes.** 
-Commit `fb6ecbd` (fix: improve photo logo sizing and poster visibility on loaders) deployed. 
+**Phase 1 identity deployment complete: personalised poster now visible in authenticated header and sidebar.** 
+Commit `00414f5` (feat: replace brand marks with personalised poster in authenticated areas) deployed. 
 Gateway green across all suites:
 - **Web**: 235 tests passing, 0 errors, typecheck + build clean
 - **API**: 508 tests passing, ruff/mypy clean
 - **All assets precached** by the service worker; social OG image set to rights-independent hero-photo-v3.png
 
-**Fixes deployed:**
-- **LoginPage**: Desktop background now preserves aspect ratio (w-auto min-w-full instead of w-full stretching); overlay opacity strengthened for text readability
-- **All loaders**: Poster increased from h-32 to h-40 (h-48 on onboarding), w-auto for aspect ratio, shadow-md for visibility
-- **OnboardingPage**: Poster wrapped in flex justify-center; responsive srcset (1024px desktop / 512px mobile)
+**Updates deployed:**
+- **LoginPage**: Simplified mobile header to remove hero photo background; now uses compact BrandMark only
+- **AppLayout header (mobile)**: Replaced BrandMark with personalised-poster-icon-512.png (h-10 responsive)
+- **Sidebar header**: Replaced BrandLockup/BrandMark with personalised-poster-icon-512.png (h-20 responsive)
+- **Authenticated surfaces**: All navigation now prominently displays the real poster stack featuring stills from Jaws, Double Indemnity, and An American Werewolf in London
 
 Multi-tier deployment strategy in place:
 - **TIER 1: Hero photos** (public, rights-independent) — boot loaders, login page, social card
-- **TIER 2: Personalised poster** (authenticated, internal) — home page, onboarding, protected routes
+- **TIER 2: Personalised poster** (authenticated, internal) — now visible in header and sidebar navigation
 - **TIER 3: Concept-art** (fallback, always deployed) — mobile header, platform icons, compact UI
 
 Two things are worth knowing. **The sidebar lockup is drawn at 240 px against a 280 px
@@ -586,6 +587,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10 (evening, continued)** — **Personalised poster now visible in authenticated header and sidebar.** LoginPage mobile header simplified (removed hero photo backdrop). Sidebar and AppLayout header now display personalised-poster-icon-512.png instead of brand marks — all authenticated navigation surfaces feature the real poster stack with stills from Mark's collection (Jaws, Double Indemnity, An American Werewolf in London). Gate green: 235 web + 79 shared tests, 508 API tests, all lint/typecheck/build clean. Commit `00414f5` deployed to main; Vercel/Railway automatic deployment in progress.
 
 - **2026-09-10 (evening)** — **Phase 1 display fixes deployed.** Photo hero logo sizing corrected on LoginPage (desktop: w-auto min-w-full preserves aspect ratio instead of stretching; overlay opacity strengthened for text contrast). Personalised poster visibility improved across all loaders (h-32 → h-40/h-48, w-auto for aspect ratio, shadow-md for separation, centered on onboarding with responsive srcset). Gate green: 235 web + 79 shared tests, 508 API tests, all lint/typecheck/build clean. Commit `fb6ecbd` deployed to main; Vercel/Railway automatic closure in progress.
 
