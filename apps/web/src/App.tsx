@@ -6,6 +6,7 @@ import AppLayout from './components/layouts/AppLayout'
 import ErrorBoundary from './components/ErrorBoundary'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { adminNavItems, navItems } from '@/lib/nav-items'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -76,13 +77,9 @@ function DebugPage() {
 /** The blank moment before a lazy route arrives — the cinematic first impression. */
 function PageLoader() {
   return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background">
-      <img
-        src="/brand/hero-photo-five-v3.png"
-        alt="Mark's Cinematic Universe"
-        className="h-full w-full object-cover"
-      />
-      <StatePanel tone="loading" title="Opening the archive" className="absolute w-full max-w-md" />
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 bg-background px-4">
+      <BrandMark size={64} label="Mark's Cinematic Universe" />
+      <StatePanel tone="loading" title="Opening the archive" className="w-full max-w-md" />
     </div>
   )
 }

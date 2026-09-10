@@ -14,6 +14,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { startAutoFlush } from '@/lib/sync'
 import { MobileTabBar } from './MobileTabBar'
 import { Button } from '@/components/ui/button'
+import { BrandMark } from '@/components/brand/BrandMark'
 
 interface Props {
   children: ReactNode
@@ -66,12 +67,12 @@ export default function AppLayout({ children }: Props) {
           >
             <Menu size={20} aria-hidden />
           </button>
-          {/* Mobile header: personalised poster stack with real photos */}
-          <img
-            src="/brand/personalised-poster-icon-512.png"
-            alt="Mark's Cinematic Universe collection"
-            className="h-10 w-auto rounded-sm lg:hidden"
-          />
+          <span className="flex min-w-0 flex-1 items-center gap-2 lg:hidden">
+            <BrandMark size={32} />
+            <span className="truncate font-display text-sm font-semibold text-foreground">
+              The Real MCU
+            </span>
+          </span>
           <div className="hidden w-full max-w-2xl flex-1 lg:block">
             <SearchBar />
           </div>

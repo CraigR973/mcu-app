@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Eye, EyeOff, KeyRound, Loader2, UserRound, WifiOff } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { BrandLockup } from '@/components/brand/BrandLockup'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,26 +49,28 @@ export default function LoginPage() {
   return (
     <main className="relative min-h-[100dvh] overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-accent/45 lg:left-[calc(50%-1px)] lg:block" />
-      <div className="mx-auto grid min-h-[100dvh] w-full max-w-[90rem] lg:grid-cols-2">
-        <section className="relative hidden lg:flex lg:min-h-full lg:items-center lg:justify-center lg:border-b-0 lg:border-r lg:border-border lg:overflow-hidden">
-          {/* Hero photo backdrop with overlay gradient for text readability */}
-          <img
-            src="/brand/hero-photo-five-v3.png"
-            alt="Mark's Cinematic Universe"
-            className="absolute inset-0 h-full w-auto min-w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/60 to-background/40" />
-          <div className="relative z-10 max-w-md">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-accent">
-              Private film archive
-            </p>
-            <p className="mt-6 font-display text-xl leading-8 text-foreground">
-              Every edition, every shelf, every film night—kept in one carefully
-              maintained collection.
-            </p>
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              A private catalogue for Craig and Mark.
-            </p>
+      <div className="mx-auto grid min-h-[100dvh] w-full max-w-[90rem] grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1">
+        <section className="relative hidden overflow-hidden border-r border-border lg:flex lg:min-h-full">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/5" />
+          <div className="relative flex w-full flex-col justify-between px-14 py-14 xl:px-20 xl:py-16">
+            <BrandLockup
+              variant="horizontal"
+              width={440}
+              label="Mark's Cinematic Universe"
+              className="self-start"
+            />
+            <div className="max-w-lg border-t border-accent/45 pt-7">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-accent">
+                Private film archive
+              </p>
+              <p className="mt-5 font-display text-xl leading-8 text-foreground">
+                Every edition, every shelf, every film night—kept in one carefully
+                maintained collection.
+              </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                A private catalogue for Craig and Mark.
+              </p>
+            </div>
           </div>
         </section>
         <section className="flex flex-col gap-4 border-b border-border bg-gradient-to-br from-muted/30 to-background px-6 py-8 sm:px-10 sm:py-10 lg:hidden">

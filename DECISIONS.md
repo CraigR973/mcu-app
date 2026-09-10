@@ -2193,3 +2193,23 @@ contemporaneous.
      against the design system. `docs/brand-integration.md` records the mapping in prose.
      Neither can run in CI, which clones a repo without `docs/brand/` — they are local
      tools, and the report says so rather than implying a gate that does not exist.
+
+140. **The personalised photographic edition is a commemorative reveal, not the app's
+     everyday logo** — superseding the integration hierarchy introduced by `00414f5`.
+     Rendering that integration made the failure measurable: the desktop login cropped
+     the wordmark into partial letters and placed copy across faces; the 40 px mobile and
+     80 px sidebar posters collapsed into noisy thumbnails; and loaders made a private
+     collage the dominant identity on every navigation transition.
+
+     The app now uses the compact vector mark for navigation and loading, the complete
+     transparent horizontal lockup on desktop sign-in, concept art for platform icons, and
+     the personalised poster only at 192 px in the authenticated onboarding welcome. This
+     is not a retreat from the personalised art. It gives that art one high-value reveal
+     where its detail can be seen, instead of spending it everywhere at sizes where it
+     cannot. The public share card is restored to the rights-independent 1200×630 master,
+     as #137 already required.
+
+     A source-level regression test owns the boundary: photographic poster artwork may
+     appear in `OnboardingPage` and nowhere else in TSX, hero photos are not interface
+     chrome, and Open Graph/Twitter metadata points to the social-card master at its native
+     dimensions.

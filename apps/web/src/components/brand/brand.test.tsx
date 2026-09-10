@@ -118,6 +118,16 @@ describe('BrandLockup', () => {
     expect(document.querySelector('img')?.getAttribute('src')).toContain('horizontal-lockup-light')
   })
 
+  it('keeps its aspect ratio when a narrow container constrains the requested width', () => {
+    renderWithTheme(<BrandLockup variant="horizontal" width={440} />)
+    const lockup = document.querySelector('img')!
+
+    expect(lockup.style.maxWidth).toBe('')
+    expect(lockup.className).toContain('max-w-full')
+    expect(lockup.style.height).toBe('auto')
+    expect(Number.parseFloat(lockup.style.aspectRatio)).toBeCloseTo(1600 / 420)
+  })
+
   describe('below the approved minimum', () => {
     let warn: ReturnType<typeof vi.spyOn>
 
