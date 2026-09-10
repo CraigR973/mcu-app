@@ -12,28 +12,35 @@ old ones are noted in brackets so an earlier conversation still maps onto this f
 
 ## ⛔ Blocking the batch queue
 
-### 1. Settle Batch 20's remaining two steps *(was 1 — the scraper run itself is **done**)*
+### 1. Two crons and one device — everything Batches 11 and 20 left for you
 
-**The acceptance run is complete.** 2026-09-09, 21:55–21:56: all five shops `success`, zero
-failures, six new `price_checks` rows, one or more per shop (`DECISIONS.md` #111). Group F's
-checkpoint is cleared and Batch 20 is open.
+**Batch 20 shipped on 2026-09-10 and Group F is complete.** The scraper acceptance run was
+done on 2026-09-09 (`DECISIONS.md` #111); the code that runs nightly, alerts on price drops
+and rolls up old checks is now deployed.
 
-Two steps remain, and both are yours because an agent must not take them:
+What is left is a single Railway console visit and one tap on a phone. Both are yours because
+an agent must not take them:
 
 - [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*. A
       Railway cron is a hosting change (`DECISIONS.md` #60), and an in-process scheduler would
       be worse than nothing — it runs once per container, so scaling to two would silently
-      double the scraping. Batch 20 leaves the job and its endpoint ready so this is one
-      console action.
+      double the scraping. The endpoint is **`POST /api/v1/scrapers/daily`**, admin-authed,
+      and it scrapes, alerts, delivers and rolls up in one pass. `scrape_runs` is empty today,
+      which is the honest record that nothing has run it yet — check it the morning after,
+      and `/retailers` renders the same thing with the criterion applied.
 - [ ] **And while you are in there, a second cron for reminders.** Batch 11 shipped
       `POST /api/v1/notifications/run-reminders`, which is *the whole scheduler* for sale
       seasons, upcoming releases and overdue loans — for the same #60 reason, nothing runs
       it on a timer inside the process. Daily is right; the endpoint is idempotent, so a
       double fire sends nothing twice. Until this exists, every reminder in the app waits
       for someone to press a button.
-- [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance. **Batch 11's
-      push has now shipped** and production reports `push: configured`, so what remains is a
-      device: open the app, Notifications, "Turn on for this device".
+- [ ] **Receive a price-drop push on a real device.** Phase 5.6's acceptance, and the last
+      unmet part of Batch 20. Everything behind it is deployed: push reports `configured`,
+      the alert fires when a scrape finds a price at or below a want's `max_price`, and the
+      service worker shows it. What is missing is a subscribed device — open the app,
+      Notifications, "Turn on for this device". Setting a `max_price` **above** the current
+      price on a want and running the job is the quickest way to see it work.
+      **Doing this on a second device also closes §6.2**, Batch 11's remaining criterion.
 
 **5.5's criterion was corrected before the batch was built** (`DECISIONS.md` #112). As written
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35

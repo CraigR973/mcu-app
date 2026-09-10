@@ -2,66 +2,57 @@
 
 ## Now
 
-**22 of 37 batches shipped, 15 remain.** Production serves `69d263e` with `db: ok` and
+**23 of 37 batches shipped, 14 remain.** Production serves `464e495` with `db: ok` and
 `push: configured`.
 
-**Batch 11 shipped — notifications and Web Push (§6.1, §6.2, §5.11).** The overnight run of
-2026-09-09/10 is in progress; this is the first of its eight batches.
+**Batches 11 and 20 have shipped** — the second and third entries in the 2026-09-09/10
+overnight run, after a doc-recovery commit between them. **Group F is complete.**
 
-*What is actually true in production, checked rather than assumed:* migration `020` has
-applied to live Neon and `push_subscriptions`, `notification_preferences` and
-`notifications` all exist; every notification route answers `401` unauthenticated while a
-made-up sibling answers `404`, so the router is genuinely registered; and
-`/api/v1/health/ready` reports **`push: configured`**, meaning the deployment can load
-`VAPID_PRIVATE_KEY` for real.
+**Batch 20 — the nightly price job, drop alerts and the 90-day roll-up.** Three things in
+it are worth knowing:
 
-**That last check is new, and it exists because of TMDB.** A value living only in a Railway
-variable had nothing testing it, so the app answered 502 for an unknown length of time behind
-a green gate. Readiness now reports `push: configured | not_configured | invalid` — the result
-of *loading* the key, so a malformed one reads `invalid` rather than passing a presence check
-and failing at the first send.
+- **§5.6's Postgres trigger cannot exist as specified.** A trigger runs inside the writing
+  transaction and cannot call a push service; the most it could do is write a queue row,
+  and Batch 11 already built that queue. Detection therefore lives in the scrape path.
+- **An alert fires on the way down, not nightly while the price stays low.** "Price ≤
+  max_price" is true until the disc is bought, so alerting on the condition would send the
+  same message every night. It re-arms when the price recovers.
+- **`scrape_runs` exists because #112's criterion cannot be checked without it.** The
+  corrected acceptance is stated in counts that used to live only inside one HTTP response.
+  A run now writes down attempted, not-stocked, written, and every failure with its
+  retailer and reason — and a run that dies halfway reads as exactly that.
 
-**`VITE_VAPID_PUBLIC_KEY` is no longer needed and should not be set** (`DECISIONS.md` #114).
-The API serves the public key derived from the private half, so the two cannot drift and push
-does not wait on a Vercel change. One of the run's three hosting steps has been removed rather
-than performed.
+**One finding worth carrying forward, deliberately not fixed.** `DECISIONS.md` #107's
+not-stocked detection is read from card counts, and `extract` only produces those when a
+page is parsed card by card. A **generic** whole-page scraper asked for a film a shop has
+not got reports a *failure* — three of those in a row auto-disable it. Batch 19 documents
+that as "the conservative reading" and it is right: for a single-node read, "this page is
+about a different film" and "the selector grabbed the wrong node" are indistinguishable.
+Every enabled retailer is a card-based built-in, so the nightly job does not take that
+path — but a hand-configured generic retailer would.
 
-**Two debts are paid.** §12.5's *"overdue loan triggers a push"* has been unmet since Batch 15
-and now writes the `loans.reminder_sent` column that batch left unused; and Batch 9's dropped
-onboarding notifications step (`#50`) is restored against real infrastructure — the wizard is
-7 steps for an admin, 6 for a viewer.
-
-**Three CI failures on the way, all found only against real Postgres.** A partial unique index
-cannot be an `ON CONFLICT` arbiter unless its predicate is repeated, so every deduplicated path
-failed; `UUIDPrimaryKeyMixin`'s `default=` is applied when SQLAlchemy builds the INSERT, so a
-hand-built one passed a NULL primary key; and two assertions read the whole `notifications`
-table when migration `002`'s seeded profiles mean a reminder correctly writes more rows than
-the fixture makes. Gotcha 15 in practice: **a green local run is silent about anything touching
-SQL.**
-
-**The dependency audit refused `cryptography` 48.0.1** for three advisories, and it was right —
-the `<49` pin that produced it existed only so this laptop could install a wheel. The floor is
-now 50.0.0 and **this machine runs a different version from CI**; see gotcha 28.
+**Verified live rather than green:** migration `021` applied to Neon, `price_history_daily`
+and `scrape_runs` both exist, the 8 existing `price_checks` are untouched, and the three new
+endpoints answer `401`/`405` rather than `404`. `scrape_runs` is empty, correctly — nothing
+has run, because nothing schedules it yet.
 
 ### ⛔ What is waiting for you
 
-`OWNER-ACTIONS.md` is the list. Batch 11 adds one item and closes half of another: a **daily
-Railway cron** calling `POST /api/v1/notifications/run-reminders`, which is the entire
-scheduler for sale seasons, releases and overdue loans — until it exists every reminder waits
-for a button. Do it alongside Batch 20's scrape cron.
+**One Railway console visit closes three things at once.** `OWNER-ACTIONS.md` item 1 now
+holds two crons — the nightly scrape (`POST /api/v1/scrapers/daily`) and the reminder pass
+(`POST /api/v1/notifications/run-reminders`) — and turning push on for one device closes
+**5.6** and starts **6.2**.
 
-**§6.2 is not met and is not an agent's to meet.** *"Admin connects phone + laptop; both
-receive pushes; removing one doesn't silence the other"* needs two real devices holding real
-subscriptions. The transport is stubbed in the suite; `tests/test_webpush.py` proves the half
-that can be proved without a device. Turn it on in Notifications on two devices and press
-Test on each.
+**Four acceptance criteria an agent cannot meet**, and none of them is implied met: 6.2 (two
+devices) · 5.6 (a price-drop push received) · 9.5 (a spoken query) · 8.4's notification.
+**5.5's *"first overnight run completes"* is a fifth**, and it is waiting on the cron.
 
 ### What the live database holds
 
-Unchanged by this batch except for the new empty tables: **1,857 `collection_items`**, 3
-`wanted_list` rows, **8 `price_checks`**, 40 `completion_sets`, 32 `release_calendar`, 10
-`retailers`. `push_subscriptions`, `notification_preferences` and `notifications` exist and
-are empty — nothing has subscribed yet.
+**1,857 `collection_items`**, untouched. 3 `wanted_list`, **8 `price_checks`**, 40
+`completion_sets`, 32 `release_calendar`, 10 `retailers`. Empty and waiting:
+`push_subscriptions`, `notification_preferences`, `notifications`, `price_history_daily`,
+`scrape_runs`.
 
 
 ## Next
@@ -72,7 +63,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 | # | Batch | Closes fully? |
 |---|---|---|
 | ~~1~~ | ~~**11** Notifications + push (6.1, 6.2, 5.11)~~ | **shipped 2026-09-10** — 6.2 deferred, needs two real devices |
-| 2 | **20** Price scraping + drop alerts (5.5, 5.6, 5.8) | ❌ cron is hosting; 5.6 needs a device |
+| ~~2~~ | ~~**20** Price scraping + drop alerts (5.5, 5.6, 5.8)~~ | **shipped 2026-09-10** — cron is hosting; 5.6 needs a device |
 | 3 | **30** AI assistant — client + caps (9.1, 9.7) | ✅ |
 | 4 | **31** AI assistant — tools + chat (9.2, 9.3, 9.4) | ✅ |
 | 5 | **32** Voice input (9.5) | ❌ needs a human speaking |
@@ -93,8 +84,9 @@ there; **only six were** — Batch 20's and Batch 35's were missing, and were re
 1. ~~`VITE_VAPID_PUBLIC_KEY` on Vercel~~ — **no longer needed.** Batch 11 serves the public
    key from the API, derived from the private half (`DECISIONS.md` #114). What Batch 11 *does*
    need is a daily cron calling `POST /api/v1/notifications/run-reminders`.
-2. A Railway cron for the nightly scrape — Batch 20. `#60` explains why an in-process
-   scheduler is worse than nothing.
+2. **Two** Railway crons, in one visit — the nightly scrape (`POST /api/v1/scrapers/daily`,
+   Batch 20) and the reminder pass (`POST /api/v1/notifications/run-reminders`, Batch 11).
+   `#60` explains why an in-process scheduler is worse than nothing for either.
 3. Nothing for Batch 35: `LISTEN`/`NOTIFY` + SSE needs no new service (`#113`).
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -437,6 +429,38 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 20 shipped: the nightly price job, drop alerts and the 90-day
+  roll-up.** `464e495`. Group F is complete.
+
+  **§5.6 as written could not be built.** *"Postgres trigger after price_check insert …
+  queue push"* — a trigger runs inside the writing transaction and cannot make an HTTP
+  request. Batch 11's outbox is the queue it would have needed, so detection lives in the
+  scrape path and writes a `deals` notification. `price_checks.notification_sent`, the
+  column §3.6 designed for the trigger, is still the flag.
+
+  **Alerts fire on the transition, not the condition.** A price at or below `max_price`
+  stays that way until the disc is bought; alerting on it nightly would train the owner to
+  ignore the category. A substituted format or edition still alerts and **says so** —
+  suppressing it hides a real find, sending it silently lets "Deep Red is £15" mean the
+  Blu-ray when the want was the 4K.
+
+  **`scrape_runs` is new, and #112's criterion is unverifiable without it.** The counts the
+  corrected acceptance is stated in used to exist only inside one HTTP response. They are
+  now a row, with every failure carrying its retailer and reason, and a run that dies
+  halfway is visible as a run that died halfway rather than as no run at all.
+
+  **One CI failure, and it was the test that was wrong.** The not-stocked fixture used a
+  generic whole-page config to exercise `DECISIONS.md` #107's detection, which only exists
+  on the card-by-card path — `extract` says so in its own docstring. Batch 19's conservative
+  reading is left alone and the fixture is now card-shaped, which is what every enabled
+  retailer is. **Recorded because the gap is real for a hand-configured generic retailer:**
+  three correct refusals in a row would auto-disable it.
+
+  Verified live: `021` applied, both new tables present, 8 `price_checks` untouched, the new
+  endpoints auth-gated. `scrape_runs` is empty and correctly so — **nothing schedules the
+  job**, which is why §5.5's *"first overnight run completes"* and §5.6's *"push on a test
+  device"* are both deferred to the owner.
 
 - **2026-09-10** — **Batch 11 shipped: notifications and Web Push.** `36d3efa`, plus
   `69d263e` for the readiness check. First of the eight-batch overnight run.
