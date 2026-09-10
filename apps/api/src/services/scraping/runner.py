@@ -39,6 +39,7 @@ from src.clock import utcnow
 from src.models.movie import Movie
 from src.models.price_check import PriceCheck
 from src.models.wanted import Retailer, WantedItem
+from src.services.scraping.alerts import AlertCandidate
 from src.services.scraping.extract import (
     DEFAULT_FORMAT_SEARCH_TERM,
     DISC_FORMATS,
@@ -108,6 +109,11 @@ class ScrapeRunResult:
     outcomes: list[ScrapeOutcome] = field(default_factory=list)
     written: int = 0
     disabled: list[str] = field(default_factory=list)
+    #: The rows this run actually wrote, paired with the want they were found for and what
+    #: the scrape had to substitute. Batch 20 turns these into §5.6's price-drop alerts —
+    #: collected here rather than re-queried afterwards, because "checks written today" is
+    #: not the same set as "checks this run wrote" once a second run exists.
+    written_checks: list[AlertCandidate] = field(default_factory=list)
 
     @property
     def succeeded(self) -> int:
@@ -330,8 +336,18 @@ async def run_scrape(
 
             if candidate is not None and candidate.price is not None:
                 any_success = True
-                if not dry_run and await _write_check(db, retailer, wanted, candidate, outcome):
-                    result.written += 1
+                if not dry_run:
+                    row = await _write_check(db, retailer, wanted, candidate, outcome)
+                    if row is not None:
+                        result.written += 1
+                        result.written_checks.append(
+                            AlertCandidate(
+                                check=row,
+                                wanted=wanted,
+                                substituted_format=outcome.substituted_format,
+                                edition_matched=outcome.edition_matched,
+                            )
+                        )
 
             if polite_pause:
                 await asyncio.sleep(polite_pause)
@@ -364,18 +380,21 @@ async def _write_check(
     wanted: WantedItem,
     candidate: ScrapeCandidate,
     outcome: ScrapeOutcome,
-) -> bool:
-    """Persist one price check and report whether a row was inserted or updated.
+) -> PriceCheck | None:
+    """Persist one price check and return the row, or ``None`` if nothing was written.
+
+    Returns the row rather than a bool so Batch 20 can decide whether it is a price drop
+    without re-reading the table — see :class:`ScrapeRunResult.written_checks`.
 
     A second run on the same day updates the row rather than failing: `uq_price_checks_
     listing_day` exists so an afternoon re-run does not double-count, and hitting it is a
     normal outcome rather than an error.
     """
     if candidate.price is None:  # pragma: no cover - callers check
-        return False
+        return None
     url = candidate.url or ""
     if not url.lower().startswith(("http://", "https://")):
-        return False
+        return None
 
     existing = (
         await db.execute(
@@ -390,30 +409,29 @@ async def _write_check(
     if existing is not None:
         existing.price = candidate.price
         existing.title_snapshot = candidate.title
-        return True
+        return existing
 
     try:
         # Keep a same-day race inside a savepoint. Rolling back the whole session here
         # would also discard valid rows written earlier in this multi-retailer run.
         async with db.begin_nested():
-            db.add(
-                PriceCheck(
-                    id=uuid.uuid4(),
-                    wanted_id=wanted.id,
-                    retailer_id=retailer.id,
-                    # §3.6's own column: the check stays readable after deletion.
-                    retailer_name_snapshot=retailer.name,
-                    price=candidate.price,
-                    currency=candidate.currency or retailer.currency,
-                    title_snapshot=candidate.title,
-                    url=url,
-                    checked_at=utcnow(),
-                )
+            row = PriceCheck(
+                id=uuid.uuid4(),
+                wanted_id=wanted.id,
+                retailer_id=retailer.id,
+                # §3.6's own column: the check stays readable after deletion.
+                retailer_name_snapshot=retailer.name,
+                price=candidate.price,
+                currency=candidate.currency or retailer.currency,
+                title_snapshot=candidate.title,
+                url=url,
+                checked_at=utcnow(),
             )
+            db.add(row)
             await db.flush()
     except IntegrityError:
         # Lost a race with a concurrent run against the same listing. The row that won
         # says the same thing, so there is nothing to correct or count as a new write.
         outcome.reasons.append("already recorded today")
-        return False
-    return True
+        return None
+    return row

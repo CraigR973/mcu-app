@@ -1204,3 +1204,63 @@ export type NotificationRecord = z.infer<typeof notificationSchema>
 export type NotificationList = z.infer<typeof notificationListSchema>
 export type TestNotificationResult = z.infer<typeof testNotificationSchema>
 export type ReminderRun = z.infer<typeof reminderRunSchema>
+
+// ---------------------------------------------------------------------------
+// Daily scraping, drop alerts and the roll-up (Batch 20) — §5.5, §5.6, §5.8
+// ---------------------------------------------------------------------------
+
+/** One recorded scrape run.
+ *
+ *  `attempted` minus `notStocked` is the denominator `DECISIONS.md` #112's corrected §5.5
+ *  criterion compares `written` against. A shop that answered honestly and has not got the
+ *  film is neither a gap nor a failure (#107), which is why it has its own count. */
+export const scrapeRunRecordSchema = z.object({
+  id: z.string().uuid(),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  trigger: z.enum(['cron', 'manual']),
+  dryRun: z.boolean(),
+  attempted: z.number().int().nonnegative(),
+  notStocked: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  succeeded: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  written: z.number().int().nonnegative(),
+  alertsQueued: z.number().int().nonnegative(),
+  failures: z.array(z.record(z.string())),
+  disabledRetailers: z.array(z.string()),
+  error: z.string().nullable(),
+})
+
+export const scrapeRunListSchema = z.object({
+  items: z.array(scrapeRunRecordSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const aggregationSchema = z.object({
+  daysAggregated: z.number().int().nonnegative(),
+  rowsWritten: z.number().int().nonnegative(),
+  rowsMerged: z.number().int().nonnegative(),
+  rawRowsRemoved: z.number().int().nonnegative(),
+})
+
+export const dailyRunSchema = z.object({
+  runId: z.string().uuid(),
+  written: z.number().int().nonnegative(),
+  attempted: z.number().int().nonnegative(),
+  notStocked: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  succeeded: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  alertsQueued: z.number().int().nonnegative(),
+  pushesSent: z.number().int().nonnegative(),
+  disabledRetailers: z.array(z.string()),
+  failures: z.array(z.record(z.string())),
+  aggregation: aggregationSchema.nullable(),
+  dryRun: z.boolean(),
+})
+
+export type ScrapeRunRecord = z.infer<typeof scrapeRunRecordSchema>
+export type ScrapeRunList = z.infer<typeof scrapeRunListSchema>
+export type Aggregation = z.infer<typeof aggregationSchema>
+export type DailyRun = z.infer<typeof dailyRunSchema>

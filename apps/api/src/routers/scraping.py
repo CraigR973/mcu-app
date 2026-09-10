@@ -10,25 +10,34 @@ So these endpoints exist, are tested against fixtures, and are invoked by a pers
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import replace
-from typing import Annotated
+from typing import Annotated, Literal
 from urllib.parse import urljoin
 
 from fastapi import APIRouter, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from src.auth import AdminUser
+from src.models.price_history import RETENTION_DAYS, ScrapeRun
 from src.models.wanted import Retailer
 from src.routers.movies import Database
+from src.routers.notifications import push_sender
 from src.schemas.wanted import (
+    AggregationResponse,
     BuiltInScraperListResponse,
     BuiltInScraperResponse,
+    DailyRunResponse,
     ScrapeOutcomeResponse,
     ScraperTestRequest,
     ScraperTestResponse,
+    ScrapeRunListResponse,
+    ScrapeRunRecordResponse,
     ScrapeRunResponse,
 )
+from src.services.scraping.aggregate import aggregate_old_checks
 from src.services.scraping.builtins import BUILT_IN_SCRAPERS, unverified_names
+from src.services.scraping.daily import failure_records, run_daily_scrape
 from src.services.scraping.extract import check_shape, extract
 from src.services.scraping.fetcher import FetchError, UnsafeUrlError, fetch_page
 from src.services.scraping.runner import apply_search_template, run_scrape
@@ -194,3 +203,123 @@ async def apply_built_in_configs(user: AdminUser, db: Database) -> BuiltInScrape
         retailer.scraper_config = dict(entry["config"])
     await db.commit()
     return await list_built_in_scrapers(user)
+
+
+def _run_record(run: ScrapeRun) -> ScrapeRunRecordResponse:
+    return ScrapeRunRecordResponse(
+        id=run.id,
+        startedAt=run.started_at_utc,
+        finishedAt=run.finished_at_utc,
+        trigger="cron" if run.trigger == "cron" else "manual",
+        dryRun=run.dry_run,
+        attempted=run.attempted,
+        notStocked=run.not_stocked,
+        skipped=run.skipped,
+        succeeded=run.succeeded,
+        failed=run.failed,
+        written=run.written,
+        alertsQueued=run.alerts_queued,
+        failures=[{str(k): str(v) for k, v in item.items()} for item in run.failures],
+        disabledRetailers=[str(name) for name in run.disabled_retailers],
+        error=run.error,
+    )
+
+
+@router.post("/scrapers/daily", response_model=DailyRunResponse)
+async def run_daily(
+    _user: AdminUser,
+    db: Database,
+    dry_run: Annotated[bool, Query(alias="dryRun")] = False,
+    trigger: Annotated[Literal["cron", "manual"], Query()] = "manual",
+    retention_days: Annotated[int, Query(alias="retentionDays", ge=1, le=3650)] = RETENTION_DAYS,
+) -> DailyRunResponse:
+    """§5.5's nightly pass — **the endpoint a Railway cron calls.**
+
+    Scrape, alert on anything that has just fallen to or below its `max_price`, deliver
+    what is queued, then roll up whatever is now older than `retentionDays`.
+
+    **`dryRun` defaults to `false` here, unlike `/scrapers/run`.** That endpoint is a tool
+    a person points at live shops and its safe default is to write nothing; this one is a
+    scheduled job whose entire purpose is to write, and a cron that quietly did nothing
+    every night would be the worst possible failure — indistinguishable from working.
+
+    There is no in-process schedule behind it (`DECISIONS.md` #60): one container's timer
+    becomes two runs the moment the service scales, against real shops.
+    """
+    async with push_sender() as sender:
+        summary = await run_daily_scrape(
+            db,
+            sender=sender,
+            trigger=trigger,
+            dry_run=dry_run,
+            retention_days=retention_days,
+        )
+    await db.commit()
+
+    result = summary.scrape
+    return DailyRunResponse(
+        runId=uuid.UUID(summary.run_id),
+        written=result.written,
+        attempted=sum(1 for o in result.outcomes if not o.skipped and not o.not_stocked),
+        notStocked=result.not_stocked,
+        skipped=result.skipped,
+        succeeded=result.succeeded,
+        failed=result.failed,
+        alertsQueued=summary.alerts_queued,
+        pushesSent=summary.pushes_sent,
+        disabledRetailers=list(result.disabled),
+        failures=failure_records(result),
+        aggregation=(
+            AggregationResponse(
+                daysAggregated=summary.aggregation.days_aggregated,
+                rowsWritten=summary.aggregation.rows_written,
+                rowsMerged=summary.aggregation.rows_merged,
+                rawRowsRemoved=summary.aggregation.raw_rows_removed,
+            )
+            if summary.aggregation is not None
+            else None
+        ),
+        dryRun=dry_run,
+    )
+
+
+@router.get("/scrapers/runs", response_model=ScrapeRunListResponse)
+async def list_scrape_runs(
+    _user: AdminUser,
+    db: Database,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> ScrapeRunListResponse:
+    """Recent runs, newest first — how §5.5 is checked the morning after.
+
+    Readable rather than merely logged, because on 2026-09-09 a scraper "test" displayed
+    results while saving nothing and there was no way to tell afterwards.
+    """
+    rows = list(
+        (await db.execute(select(ScrapeRun).order_by(ScrapeRun.started_at_utc.desc()).limit(limit)))
+        .scalars()
+        .all()
+    )
+    total = (await db.execute(select(func.count()).select_from(ScrapeRun))).scalar_one()
+    return ScrapeRunListResponse(items=[_run_record(row) for row in rows], total=total)
+
+
+@router.post("/scrapers/aggregate", response_model=AggregationResponse)
+async def aggregate_price_history(
+    _user: AdminUser,
+    db: Database,
+    older_than_days: Annotated[int, Query(alias="olderThanDays", ge=1, le=3650)] = RETENTION_DAYS,
+) -> AggregationResponse:
+    """§5.8's roll-up on its own, without a scrape.
+
+    `olderThanDays` is what makes the acceptance — *"after backdating test data, rows > 90
+    days are aggregated and raw rows removed"* — checkable without waiting a quarter or
+    trusting a fixture's idea of what four months ago was.
+    """
+    result = await aggregate_old_checks(db, older_than_days=older_than_days)
+    await db.commit()
+    return AggregationResponse(
+        daysAggregated=result.days_aggregated,
+        rowsWritten=result.rows_written,
+        rowsMerged=result.rows_merged,
+        rawRowsRemoved=result.raw_rows_removed,
+    )

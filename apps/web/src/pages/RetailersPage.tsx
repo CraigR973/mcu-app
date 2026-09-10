@@ -24,7 +24,10 @@ import {
   fetchRetailers,
   removeRetailer,
   formatLabel,
+  fetchScrapeRuns,
+  runDailyScrape,
   runScrapers,
+  scrapeRunVerdict,
   seedRetailers,
   updateRetailer,
 } from '@/lib/api'
@@ -429,6 +432,121 @@ function NewRetailerForm({ onDone }: { onDone: () => void }) {
  * selector *"does not error — it selects the wrong node and persists a plausible wrong
  * number"*, and that number then feeds price alerts.
  */
+
+/**
+ * §5.5's nightly job, and the record of what it has been doing.
+ *
+ * **The verdict line is the acceptance criterion rendered.** `DECISIONS.md` #112 corrected
+ * it after a live run disproved the original: 7 wants × 5 shops predicted 35 rows and the
+ * right answer was 6, because a boutique label does not stock a blockbuster and saying so
+ * is not a failure (#107). So the comparison is against the pairs that were genuinely
+ * answerable — attempted minus not-stocked — and the point of it is catching a *silent
+ * mass failure*: if the scrapers break, that number stays high while `written` collapses.
+ */
+function NightlyPanel() {
+  const queryClient = useQueryClient()
+  const runsQuery = useQuery({ queryKey: ['scrape-runs'], queryFn: () => fetchScrapeRuns(10) })
+
+  const runNow = useMutation({
+    mutationFn: () => runDailyScrape(false),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['scrape-runs'] })
+      void queryClient.invalidateQueries({ queryKey: ['wanted'] })
+    },
+  })
+
+  const runs = runsQuery.data?.items ?? []
+
+  return (
+    <section className="rounded-lg border border-border p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-foreground">The nightly run</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Prices every active want at every enabled shop, alerts on anything at or below
+            its limit, then rolls up anything older than 90 days.{' '}
+            <strong>Nothing schedules this from inside the app</strong> — a timer in one
+            container becomes two runs the moment there are two containers, so the schedule
+            is a Railway cron.
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          disabled={runNow.isPending}
+          onClick={() => runNow.mutate()}
+        >
+          {runNow.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+          Run it now
+        </Button>
+      </div>
+
+      {runNow.isError ? (
+        <p className="mt-2 text-sm text-destructive">
+          {queryErrorMessage(runNow.error, 'The run could not be started.')}
+        </p>
+      ) : null}
+
+      {runs.length === 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {runsQuery.isPending ? 'Loading…' : 'It has never run.'}
+        </p>
+      ) : (
+        <ul className="mt-3 divide-y divide-border">
+          {runs.map((run) => {
+            const verdict = scrapeRunVerdict(run)
+            return (
+              <li key={run.id} className="py-2 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-foreground">
+                    {new Date(run.startedAt).toLocaleString()}
+                  </span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
+                    {run.trigger}
+                  </span>
+                  {run.dryRun ? (
+                    <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
+                      dry run
+                    </span>
+                  ) : null}
+                  <span className={cn(verdict.ok ? 'text-emerald-600' : 'text-destructive')}>
+                    {verdict.label}
+                  </span>
+                </div>
+                <p className="mt-1 text-muted-foreground">
+                  {run.notStocked} not stocked · {run.skipped} skipped · {run.failed} failed
+                  {run.alertsQueued > 0 ? ` · ${run.alertsQueued} alerts` : ''}
+                  {run.finishedAt === null ? ' · did not finish' : ''}
+                </p>
+                {run.failures.length > 0 ? (
+                  <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                    {run.failures.slice(0, 3).map((failure, index) => (
+                      <li key={index} className="truncate">
+                        <TriangleAlert className="mr-1 inline h-3 w-3 text-amber-500" />
+                        {failure.retailer}: {failure.reason}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {run.disabledRetailers.length > 0 ? (
+                  <p className="mt-1 text-destructive">
+                    <Ban className="mr-1 inline h-3 w-3" />
+                    Auto-disabled: {run.disabledRetailers.join(', ')}
+                  </p>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 export default function RetailersPage() {
   const queryClient = useQueryClient()
   const [creating, setCreating] = useState(false)
@@ -483,6 +601,8 @@ export default function RetailersPage() {
       <BuiltInPanel />
 
       <RunPanel />
+
+      <NightlyPanel />
 
       {items.length > 0 && retailersQuery.data?.configuredCount === 0 ? (
         <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-muted-foreground">

@@ -75,7 +75,7 @@ def set_push_sender(sender: PushSender | None) -> None:
 
 
 @contextlib.asynccontextmanager
-async def _push_sender() -> AsyncIterator[PushSender]:
+async def push_sender() -> AsyncIterator[PushSender]:
     if _sender_override is not None:
         yield _sender_override
         return
@@ -300,7 +300,7 @@ async def send_test_notification(
     db.add(notification)
     await db.flush()
 
-    async with _push_sender() as sender:
+    async with push_sender() as sender:
         fan_out = await deliver_to_subscriptions(
             db,
             subscriptions=[subscription],
@@ -464,7 +464,7 @@ async def run_reminder_pass(
     summary = await run_reminders(db, as_of=as_of)
     delivered = 0
     if deliver:
-        async with _push_sender() as sender:
+        async with push_sender() as sender:
             delivery = await deliver_pending(db, sender=sender)
             delivered = delivery.sent
     await db.commit()
@@ -504,7 +504,7 @@ async def seed_sale_seasons(
 @router.post("/notifications/deliver", response_model=ReminderRunResponse)
 async def deliver_now(_user: AdminUser, db: Database) -> ReminderRunResponse:
     """Push everything queued and due, without running the reminder senders."""
-    async with _push_sender() as sender:
+    async with push_sender() as sender:
         summary = await deliver_pending(db, sender=sender)
     await db.commit()
     return ReminderRunResponse(

@@ -31,6 +31,9 @@ import {
   retailerSeedSchema,
   scraperTestSchema,
   scrapeRunSchema,
+  scrapeRunListSchema,
+  aggregationSchema,
+  dailyRunSchema,
   recommendationListSchema,
   rewatchSuggestionsSchema,
   streamingSchema,
@@ -95,7 +98,11 @@ import {
   type BuiltInScraperList,
   type RetailerSeed,
   type ScrapeFrequency,
+  type Aggregation,
+  type DailyRun,
   type ScrapeRun,
+  type ScrapeRunList,
+  type ScrapeRunRecord,
   type ScraperTest,
   type ScraperType,
   type Streaming,
@@ -1511,4 +1518,61 @@ export function notificationStateLabel(notification: NotificationRecord): string
   if (notification.deferredReason === 'quiet_hours') return 'Waiting — quiet hours'
   if (notification.deferredReason === 'digest') return 'Waiting for your daily digest'
   return 'Waiting to be sent'
+}
+
+// ---------------------------------------------------------------------------
+// Daily scraping, drop alerts and the roll-up (Batch 20) — §5.5, §5.6, §5.8
+// ---------------------------------------------------------------------------
+
+export async function fetchScrapeRuns(limit = 20): Promise<ScrapeRunList> {
+  return parseResponse(await authFetch(`/scrapers/runs?limit=${limit}`), scrapeRunListSchema)
+}
+
+/**
+ * The nightly pass, run now.
+ *
+ * `dryRun` defaults to **false**, unlike `/scrapers/run` — this is the scheduled job, and
+ * a version of it that quietly wrote nothing would be indistinguishable from one that
+ * worked. Pass `true` deliberately to rehearse it.
+ */
+export async function runDailyScrape(dryRun = false): Promise<DailyRun> {
+  const query = new URLSearchParams({ dryRun: String(dryRun), trigger: 'manual' })
+  return parseOrThrowApiError(
+    await authFetch(`/scrapers/daily?${query.toString()}`, { method: 'POST' }),
+    dailyRunSchema,
+  )
+}
+
+export async function aggregatePriceHistory(olderThanDays = 90): Promise<Aggregation> {
+  return parseOrThrowApiError(
+    await authFetch(`/scrapers/aggregate?olderThanDays=${olderThanDays}`, { method: 'POST' }),
+    aggregationSchema,
+  )
+}
+
+/**
+ * How a run reads against §5.5's corrected criterion.
+ *
+ * `written` is compared with the pairs that were genuinely answerable — attempted minus
+ * not-stocked — because no shop stocks every film (`DECISIONS.md` #112). A run where
+ * nothing was answerable is "nothing to do", not a failure.
+ */
+export function scrapeRunVerdict(run: ScrapeRunRecord): {
+  answerable: number
+  ok: boolean
+  label: string
+} {
+  const answerable = Math.max(run.attempted - run.notStocked, 0)
+  if (run.error) return { answerable, ok: false, label: 'Run failed' }
+  if (answerable === 0) {
+    return { answerable, ok: true, label: 'Nothing to price — no shop had any of the wants' }
+  }
+  const ok = run.written >= answerable * 0.9
+  return {
+    answerable,
+    ok,
+    label: ok
+      ? `${run.written} of ${answerable} priced`
+      : `Only ${run.written} of ${answerable} priced — check the failures`,
+  }
 }

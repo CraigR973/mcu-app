@@ -315,3 +315,64 @@ class BuiltInScraperResponse(BaseModel):
 class BuiltInScraperListResponse(BaseModel):
     items: list[BuiltInScraperResponse]
     unverified: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Batch 20 — the daily job, its record, and the roll-up (§5.5, §5.6, §5.8)
+# ---------------------------------------------------------------------------
+
+
+class ScrapeRunRecordResponse(BaseModel):
+    """One recorded run — §5.5's acceptance in the numbers it is stated in.
+
+    `attempted` minus `notStocked` is the denominator `DECISIONS.md` #112's corrected
+    criterion compares `written` against; `failures` is its "logged with retailer + reason".
+    """
+
+    id: uuid.UUID
+    startedAt: UtcDatetime
+    finishedAt: UtcDatetime | None = None
+    trigger: Literal["cron", "manual"]
+    dryRun: bool
+    attempted: int = Field(ge=0)
+    notStocked: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    written: int = Field(ge=0)
+    alertsQueued: int = Field(ge=0)
+    failures: list[dict[str, str]] = Field(default_factory=list)
+    disabledRetailers: list[str] = Field(default_factory=list)
+    error: str | None = None
+
+
+class ScrapeRunListResponse(BaseModel):
+    items: list[ScrapeRunRecordResponse]
+    total: int = Field(ge=0)
+
+
+class AggregationResponse(BaseModel):
+    """What one §5.8 roll-up did."""
+
+    daysAggregated: int = Field(ge=0)
+    rowsWritten: int = Field(ge=0)
+    rowsMerged: int = Field(ge=0)
+    rawRowsRemoved: int = Field(ge=0)
+
+
+class DailyRunResponse(BaseModel):
+    """The nightly pass: what it scraped, what it alerted on, what it rolled up."""
+
+    runId: uuid.UUID
+    written: int = Field(ge=0)
+    attempted: int = Field(ge=0)
+    notStocked: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    alertsQueued: int = Field(ge=0)
+    pushesSent: int = Field(ge=0)
+    disabledRetailers: list[str] = Field(default_factory=list)
+    failures: list[dict[str, str]] = Field(default_factory=list)
+    aggregation: AggregationResponse | None = None
+    dryRun: bool

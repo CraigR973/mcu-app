@@ -39,6 +39,12 @@ from src.models.notification import (
     PushSubscription,
 )
 from src.models.price_check import PriceCheck
+from src.models.price_history import (
+    RETENTION_DAYS,
+    SCRAPE_TRIGGERS,
+    PriceHistoryDaily,
+    ScrapeRun,
+)
 from src.models.profile import Profile, RefreshToken, UserRole
 from src.models.rate_limit import RateLimitCounter
 from src.models.release_calendar import (
@@ -97,6 +103,10 @@ __all__ = [
     "NotificationStatus",
     "PushSubscription",
     "PriceCheck",
+    "RETENTION_DAYS",
+    "SCRAPE_TRIGGERS",
+    "PriceHistoryDaily",
+    "ScrapeRun",
     "Profile",
     "RATING_MAX",
     "RATING_MIN",
