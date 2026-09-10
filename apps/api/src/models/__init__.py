@@ -34,6 +34,11 @@ from src.models.completion_set import (
     member_display,
 )
 from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink, new_slug
+from src.models.item_photo import (
+    ALLOWED_CONTENT_TYPES,
+    MAX_PHOTOS_PER_ITEM,
+    ItemPhoto,
+)
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
 from src.models.movie_night import (
@@ -114,6 +119,9 @@ __all__ = [
     "Loan",
     "GIFT_LINKS_TABLE",
     "GiftLink",
+    "ALLOWED_CONTENT_TYPES",
+    "MAX_PHOTOS_PER_ITEM",
+    "ItemPhoto",
     "Movie",
     "MovieCredit",
     "SESSION_STATUSES",

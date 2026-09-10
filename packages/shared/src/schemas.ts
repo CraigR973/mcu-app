@@ -1433,3 +1433,33 @@ export type MovieNightCandidate = z.infer<typeof movieNightCandidateSchema>
 export type MovieNightCandidateList = z.infer<typeof movieNightCandidateListSchema>
 export type MovieNightMatch = z.infer<typeof movieNightMatchSchema>
 export type MovieNightVoteResult = z.infer<typeof movieNightVoteResultSchema>
+
+// ---------------------------------------------------------------------------
+// Item photos (Batch 25) — §3.10
+// ---------------------------------------------------------------------------
+
+/** One photo's metadata.
+ *
+ *  There is no `data` field and there must never be one: a five-photo gallery as base64
+ *  would be about a megabyte of JSON re-sent on every render. The browser fetches `url`,
+ *  which is a cacheable image with a strong `ETag`. */
+export const itemPhotoSchema = z.object({
+  id: z.string().uuid(),
+  url: z.string().min(1),
+  caption: z.string().nullable(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  byteSize: z.number().int().positive(),
+  position: z.number().int().nonnegative(),
+  createdAt: z.string(),
+})
+
+export const itemPhotoListSchema = z.object({
+  items: z.array(itemPhotoSchema),
+  total: z.number().int().nonnegative(),
+  /** How many more §3.10's five-per-item ceiling allows. */
+  remaining: z.number().int().nonnegative(),
+})
+
+export type ItemPhoto = z.infer<typeof itemPhotoSchema>
+export type ItemPhotoList = z.infer<typeof itemPhotoListSchema>

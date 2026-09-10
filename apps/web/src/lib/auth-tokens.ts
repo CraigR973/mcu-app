@@ -86,10 +86,15 @@ async function refreshTokens(): Promise<boolean> {
 export async function authFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const send = (): Promise<Response> => {
     const token = getAccessToken()
+    // **`FormData` must set its own `Content-Type`.** A multipart body needs the boundary
+    // the browser generates, and a hand-written `multipart/form-data` header omits it —
+    // the request goes out looking fine and the server parses nothing out of it. Batch 25's
+    // photo upload is the first body here that is not JSON.
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
     return fetch(path.startsWith('http') ? path : `${API_BASE}${path}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...((options.headers as Record<string, string>) ?? {}),
       },

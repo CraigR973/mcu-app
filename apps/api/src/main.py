@@ -28,6 +28,7 @@ from src.routers import (
     movie_night,
     movies,
     notifications,
+    photos,
     scraping,
     smart_collections,
     stats,
@@ -120,3 +121,4 @@ app.include_router(gift.router)
 app.include_router(notifications.router)
 app.include_router(ai.router)
 app.include_router(movie_night.router)
+app.include_router(photos.router)

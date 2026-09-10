@@ -216,6 +216,11 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/movie-night/{session_id}/candidates",
         "/api/v1/movie-night/{session_id}/votes",
         "/api/v1/movie-night/{session_id}/events",
+        # Batch 25. Admin writes, both read — a photo of a shelf is catalogue data.
+        # The bytes have their own route so a gallery is cacheable images rather than
+        # a megabyte of base64 re-sent on every render.
+        "/api/v1/collection/{item_id}/photos",
+        "/api/v1/photos/{photo_id}",
     }
 
 

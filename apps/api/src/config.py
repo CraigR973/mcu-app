@@ -91,6 +91,17 @@ class Settings(BaseSettings):
     # guess a model id" — the April spec predates the current lineup by two generations —
     # so it is one config value, validated against `SUPPORTED_MODELS`, rather than a
     # string repeated across the code where only one copy gets updated.
+    # Photos (Batch 25). Bytes live in Postgres — storage was settled as Neon by the owner
+    # on 2026-09-09, and §3.10's "Supabase Storage" refers to a product this app does not
+    # have (`DECISIONS.md` #17).
+    #
+    # **A setting rather than a constant, on purpose.** `OWNER-ACTIONS.md` reserves this
+    # number as an owner choice because it "sets a shape that is annoying to reverse once
+    # photos exist". Configuration is what stops that being true: changing it is an
+    # environment variable and a re-upload, not a migration, and the database's CHECK sits
+    # well above it so a tuned-up value needs no schema change either.
+    photo_target_kb: int = 300
+
     anthropic_api_key: str = ""
     ai_model: str = "claude-sonnet-5"
     #: §9.7's cap. **50 messages per person per day** (owner, 2026-09-09) — a starting

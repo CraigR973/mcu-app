@@ -54,6 +54,15 @@ dependencies = [
     # `/v1/messages`: the request shapes for thinking, effort and tool use have all moved
     # in the last year, and a hand-rolled client is a second place for that drift to land.
     "anthropic>=0.69.0",
+    # Batch 25 — server-side photo resize. Without it the spec's raw sizing is 5 MB × 5 ×
+    # 1,857 ≈ 46 GB in a database that is 35 MB today; with it the worst case is ~2.8 GB
+    # and the realistic case under 200 MB. Pillow ships wheels for every platform this
+    # project builds on, so unlike the lxml case it adds nothing to the Railway image.
+    "pillow>=11.0.0",
+    # FastAPI needs this to parse a multipart body at all. Base64 in JSON would avoid
+    # it and cost a third more bytes on a phone's upload, which is the connection least
+    # able to spare them.
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]

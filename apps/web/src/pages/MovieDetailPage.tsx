@@ -18,6 +18,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
+import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
 import ItemHistory from '@/components/collection/ItemHistory'
@@ -150,6 +151,12 @@ function CopyCard({
           <LendButton collectionItemId={item.id} />
         </div>
       )}
+      {/* §3.10. On the copy rather than the film, for the same reason lending is: a photo
+          of a shelf is a photo of *this* disc, and owning a film twice means two of them
+          are in two different places. Readable by both; only an admin adds or removes. */}
+      <div className="border-t border-border pt-3">
+        <PhotoGallery itemId={item.id} canEdit={canEdit} />
+      </div>
       {markDamaged.isError && (
         <p className="text-xs text-destructive">
           {markDamaged.error instanceof Error

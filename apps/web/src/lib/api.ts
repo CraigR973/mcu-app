@@ -27,6 +27,8 @@ import {
   giftLinkListSchema,
   giftLinkSchema,
   giftPageSchema,
+  itemPhotoListSchema,
+  itemPhotoSchema,
   movieDetailSchema,
   moviePageSchema,
   movieNightCandidateListSchema,
@@ -100,6 +102,8 @@ import {
   type GiftLink,
   type GiftLinkList,
   type GiftPage,
+  type ItemPhoto,
+  type ItemPhotoList,
   type Loan,
   type LoanList,
   type PurgePreview,
@@ -1871,4 +1875,40 @@ export async function* streamMovieNightEvents(
       separator = buffer.indexOf('\n\n')
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Item photos (Batch 25) — §3.10
+// ---------------------------------------------------------------------------
+
+export async function fetchItemPhotos(itemId: string): Promise<ItemPhotoList> {
+  return parseResponse(await authFetch(`/collection/${itemId}/photos`), itemPhotoListSchema)
+}
+
+/**
+ * Upload one photo.
+ *
+ * No `Content-Type` is set: `authFetch` now omits its JSON default for a `FormData` body,
+ * so the browser supplies `multipart/form-data` **with its boundary**. Writing that header
+ * by hand omits the boundary, and the request then looks perfectly normal while the server
+ * parses nothing out of it.
+ */
+export async function uploadItemPhoto(itemId: string, file: File): Promise<ItemPhoto> {
+  const body = new FormData()
+  body.append('file', file)
+  return parseOrThrowApiError(
+    await authFetch(`/collection/${itemId}/photos`, { method: 'POST', body }),
+    itemPhotoSchema,
+  )
+}
+
+export async function deleteItemPhoto(photoId: string): Promise<void> {
+  const response = await authFetch(`/photos/${photoId}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+/** The absolute URL for an image tag — the API origin, not the web app's. */
+export function itemPhotoUrl(path: string): string {
+  const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+  return `${base}${path}`
 }
