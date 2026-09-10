@@ -28,19 +28,22 @@ access token lives 24 hours, so a cron container had no way to call either one. 
 `.railway/railway.ts`** — so this is no longer a click-through. It is two commands:
 
 ```
-PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" railway config plan
+PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config plan
 ```
 ```
-PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" railway config apply
+PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config apply
 ```
+
+**Both halves of that line are load-bearing** and neither is obvious: Node 22 because the
+IaC engine needs it, and the CLI's **full path** because the CLI lives in Node *20*'s bin,
+so putting 22 first on `PATH` makes `railway` itself vanish. See `.railway/README.md`.
 
 `plan` is read-only; run it first and **check the last number on the `Plan:` line**. It
 should read **`2 to add, 1 to change, 0 to destroy`**. If anything is to be destroyed, stop
 — that is `DECISIONS.md` #124, which is how applying this file would once have deleted
 `TMDB_READ_TOKEN` and `ANTHROPIC_API_KEY`.
 
-Node 22 is required for the IaC engine (`.railway/README.md`); the app's own build stays on
-Node 20. `apply` is a hosting change and therefore yours, not an agent's.
+`apply` is a hosting change and therefore yours, not an agent's.
 
 - [ ] **Wire the overnight schedule.** Phase 5.5 wants *"first overnight run completes"*.
       A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process
