@@ -2,57 +2,52 @@
 
 ## Now
 
-**23 of 37 batches shipped, 14 remain.** Production serves `464e495` with `db: ok` and
-`push: configured`.
+**24 of 37 batches shipped, 13 remain.** Production serves `ecb00dd`, reporting
+`db: ok`, `push: configured` and **`ai: configured`**.
 
-**Batches 11 and 20 have shipped** — the second and third entries in the 2026-09-09/10
-overnight run, after a doc-recovery commit between them. **Group F is complete.**
+**Three of the eight overnight batches are done** — 11, 20 and 30 — plus a doc-recovery
+commit that turned out to be necessary. Group F is complete and Group J is half done.
 
-**Batch 20 — the nightly price job, drop alerts and the 90-day roll-up.** Three things in
-it are worth knowing:
+**Batch 30 — the Claude client and §9.7's caps.** The load-bearing details:
 
-- **§5.6's Postgres trigger cannot exist as specified.** A trigger runs inside the writing
-  transaction and cannot call a push service; the most it could do is write a queue row,
-  and Batch 11 already built that queue. Detection therefore lives in the scrape path.
-- **An alert fires on the way down, not nightly while the price stays low.** "Price ≤
-  max_price" is true until the disc is bought, so alerting on the condition would send the
-  same message every night. It re-arms when the price recovers.
-- **`scrape_runs` exists because #112's criterion cannot be checked without it.** The
-  corrected acceptance is stated in counts that used to live only inside one HTTP response.
-  A run now writes down attempted, not-stocked, written, and every failure with its
-  retailer and reason — and a run that dies halfway reads as exactly that.
+- **The model id is validated at load.** `claude-sonnet-5`, checked against a priced list.
+  A guessed id is a 404 in front of the first person to ask; an **unpriced** id is worse,
+  because it works and logs every call as costing nothing, which makes the cost cap
+  unenforceable.
+- **`budget_tokens` is gone.** It returns a 400 on the Claude 5 family — adaptive thinking
+  plus an `effort` level replaces it. There is no assistant prefill either.
+- **The cap is checked before the call.** Checking after would still have spent the money,
+  which is the only thing the cap exists to prevent. A refusal is a **200** carrying a
+  sentence, because §9.7 asks for a message the person reads where they asked.
+- **The day is the person's day.** Gotcha 26 applied to "resets next day".
 
-**One finding worth carrying forward, deliberately not fixed.** `DECISIONS.md` #107's
-not-stocked detection is read from card counts, and `extract` only produces those when a
-page is parsed card by card. A **generic** whole-page scraper asked for a film a shop has
-not got reports a *failure* — three of those in a row auto-disable it. Batch 19 documents
-that as "the conservative reading" and it is right: for a single-node read, "this page is
-about a different film" and "the selector grabbed the wrong node" are indistinguishable.
-Every enabled retailer is a card-based built-in, so the nightly job does not take that
-path — but a hand-configured generic retailer would.
-
-**Verified live rather than green:** migration `021` applied to Neon, `price_history_daily`
-and `scrape_runs` both exist, the 8 existing `price_checks` are untouched, and the three new
-endpoints answer `401`/`405` rather than `404`. `scrape_runs` is empty, correctly — nothing
-has run, because nothing schedules it yet.
+**`/api/v1/health/ready` now reports three things**: `db`, `push` and `ai`. All three exist
+because a value living only in a Railway variable has nothing testing it — which is what
+the TMDB outage was. Two of the three would have caught it.
 
 ### ⛔ What is waiting for you
 
-**One Railway console visit closes three things at once.** `OWNER-ACTIONS.md` item 1 now
-holds two crons — the nightly scrape (`POST /api/v1/scrapers/daily`) and the reminder pass
-(`POST /api/v1/notifications/run-reminders`) — and turning push on for one device closes
-**5.6** and starts **6.2**.
+**One Railway console visit and two taps on a phone still close five criteria.** See
+`OWNER-ACTIONS.md`: two crons (the nightly scrape and the reminder pass), and turning push
+on for two devices.
 
-**Four acceptance criteria an agent cannot meet**, and none of them is implied met: 6.2 (two
-devices) · 5.6 (a price-drop push received) · 9.5 (a spoken query) · 8.4's notification.
-**5.5's *"first overnight run completes"* is a fifth**, and it is waiting on the cron.
+**A new one, and it is small: ask the assistant one question.** §9.1's acceptance is
+*"simple text prompt returns a response; tokens logged"*, which spends real money on your
+key — `docs/phase-batches.md` says one call is enough and *"do not loop"*. There is no
+Anthropic credential on the build machine and the deployed endpoint needs a login, so this
+is yours. Open **Assistant** in the sidebar and ask it anything; the answer shows its own
+token count and cost underneath.
+
+**Six acceptance criteria an agent cannot meet**, none of them implied met: 6.2 (two
+devices) · 5.6 (a price-drop push received) · 5.5 (first overnight run, needs the cron) ·
+**9.1 (one live call)** · 9.5 (a spoken query) · 8.4's notification.
 
 ### What the live database holds
 
-**1,857 `collection_items`**, untouched. 3 `wanted_list`, **8 `price_checks`**, 40
+**1,857 `collection_items`**, untouched. 3 `wanted_list`, 8 `price_checks`, 40
 `completion_sets`, 32 `release_calendar`, 10 `retailers`. Empty and waiting:
 `push_subscriptions`, `notification_preferences`, `notifications`, `price_history_daily`,
-`scrape_runs`.
+`scrape_runs`, `ai_usage_log`, `ai_settings`.
 
 
 ## Next
@@ -64,7 +59,7 @@ dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 
 |---|---|---|
 | ~~1~~ | ~~**11** Notifications + push (6.1, 6.2, 5.11)~~ | **shipped 2026-09-10** — 6.2 deferred, needs two real devices |
 | ~~2~~ | ~~**20** Price scraping + drop alerts (5.5, 5.6, 5.8)~~ | **shipped 2026-09-10** — cron is hosting; 5.6 needs a device |
-| 3 | **30** AI assistant — client + caps (9.1, 9.7) | ✅ |
+| ~~3~~ | ~~**30** AI assistant — client + caps (9.1, 9.7)~~ | **shipped 2026-09-10** — ⚠️ 9.1's live call is an owner action |
 | 4 | **31** AI assistant — tools + chat (9.2, 9.3, 9.4) | ✅ |
 | 5 | **32** Voice input (9.5) | ❌ needs a human speaking |
 | 6 | **35** Movie night (8.3, 8.4) | ⚠️ 8.4's notification may need a device |
@@ -429,6 +424,37 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10** — **Batch 30 shipped: the Claude client and the AI usage caps.**
+  `ecb00dd`. Group J is half done.
+
+  **The model id is config, validated at load.** `docs/phase-batches.md` warned "do not
+  guess a model id" — the April spec predates the current lineup by two generations. The
+  validator refuses an id this app has no price for, which catches the *worse* failure as
+  well as the obvious one: a wrong id 404s loudly, an unpriced one works and silently logs
+  every call as free, and a cost cap counting zeros never fires.
+
+  Two more things the spec could not have known: `budget_tokens` returns a **400** on the
+  Claude 5 family (adaptive thinking plus an `effort` level replaces it), and assistant
+  prefill is gone, so response shaping lives in the system prompt.
+
+  **§9.7 enforces two ceilings, before the call.** A message count alone does not bound
+  spend — the same question costs more at the end of a long conversation. Checking after
+  the call would still have spent the money, and a test asserts the model is never reached
+  once the cap is hit. A refusal is a 200 carrying the sentence, not a 429. The day is the
+  person's local day (gotcha 26), and `cost_usd` holds six decimal places because rounding
+  a sub-penny call to cents records it as free.
+
+  **Readiness now reports `ai` alongside `push` and `db`,** and live it says `configured` —
+  so the Anthropic key really is in Railway, which is the one thing a green gate could not
+  have told anyone.
+
+  **Nothing failed in CI.** All five jobs green on the first push, 34 new tests.
+
+  **§9.1's acceptance is deferred and is a one-minute job.** It needs a live call, which
+  spends the owner's money on a key held only in Railway; there is no credential on this
+  machine and the deployed endpoint needs a login. Open Assistant in the sidebar, ask one
+  question — the token count and cost render underneath it.
 
 - **2026-09-10** — **Batch 20 shipped: the nightly price job, drop alerts and the 90-day
   roll-up.** `464e495`. Group F is complete.

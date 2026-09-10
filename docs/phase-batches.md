@@ -925,7 +925,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | `888dae7` · 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |
 | 28 | **eBay integration** | 🔴 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | **4.1, 4.3** — active listings, not sold comps |
 | 29 | Format upgrade + sale tracking | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 4.2, 4.4 |
-| 30 | AI assistant — client + caps | 🟡 | Opus 5 · high | GPT-5.6 Sol · High | planned | 9.1 + **9.7 together** |
+| ~~30~~ | ~~AI assistant — client + caps~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~9.1 + 9.7~~ | `ecb00dd` · Anthropic SDK on `claude-sonnet-5`, **the id validated at load against a priced list** so a typo fails at boot and an unpriced model is refused too (it would work, and log every call as free). Adaptive thinking + effort, since `budget_tokens` is a 400 on the Claude 5 family. Two ceilings — messages and dollars — checked **before** the call, refusing with a 200 and a sentence. Every call logged including failures; a failure does not spend an allowance. Live: `ai: configured`. **9.1's live call is an owner action** |
 | 31 | AI assistant — tools + chat | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | 9.2, 9.3, 9.4 |
 | 32 | Voice input | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **9.5** |
 | 33 | **Email — accounts + OAuth** | 🔴 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | planned | **10.1, 10.2, 10.3, 10.4** |
@@ -964,7 +964,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | ~~26 · solo~~ | — dropped | — dropped | ~~Conditional on Batch 6 proving insufficient~~ — **Batch 6 proved sufficient; dropped** (`DECISIONS.md` #109) |
 | — | ~~27 · solo~~ | — shipped | — shipped | ~~The app's only public surface; needs its own security review~~ · **shipped; reviewed, four defects found and fixed.** (It is in fact the *second* public surface; Batch 17's `.ics` feed came first) |
 | **I** | **checkpoint: eBay production API application** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28; API access gates the group |
-| **J** | 30 → 31 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Strong dependency, same files; caps must exist before tools |
+| **J** | ~~30~~ → 31 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Strong dependency, same files; caps must exist before tools. **30 shipped 2026-09-10** |
 | — | 32 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Small and independent |
 | **K** | **checkpoint: Google + Microsoft OAuth app registration** → 33 → 34 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | 34 consumes 33; credential setup gates the group |
 | — | 35 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 🔴, needs Supabase Realtime — net new integration |

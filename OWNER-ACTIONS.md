@@ -46,7 +46,23 @@ an agent must not take them:
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
 pairs, with all 29 gaps correct, because no shop stocks every film.
 
-### 2. eBay production API application *(was 4)*
+### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
+
+- [ ] **Open Assistant in the sidebar and ask it anything.** That is Phase 9.1's whole
+      acceptance: *"simple text prompt returns a response; tokens logged"*. The answer
+      renders its own token count and cost underneath it, and the log row is written either
+      way.
+
+It is yours rather than an agent's for one reason: **it spends real money on your key**,
+which lives only in Railway. `docs/phase-batches.md` says one call is enough and *"do not
+loop"* — a test suite is a loop, so the suite stubs the transport. Production already
+reports `ai: configured` on `/api/v1/health/ready`, so the key is genuinely there; what is
+unproven is only that a real round trip works.
+
+Your caps are on the same page and start at **50 messages and $2 a day** (owner,
+2026-09-09). Both are editable, and a message cap of 0 turns the assistant off for you.
+
+### 3. eBay production API application *(was 4, then 2)*
 
 - [x] Applied 2026-09-09
 - [ ] Approval — eBay said at least one business day
@@ -56,7 +72,7 @@ tracking). **And Batch 24**, which is not obvious from the ledger: `DECISIONS.md
 that batch's UPC→title chain as *cached mapping → eBay Browse keyword search → manual
 fallback*, so the barcode lookup depends on the same approval.
 
-### 3. Two design choices nobody has made
+### 4. Two design choices nobody has made
 
 - [ ] **Batch 25 — how big may a photo be?** Storage is settled as **Neon** (owner,
       2026-09-09), which means photo bytes in Postgres rather than an object store. The
@@ -76,12 +92,12 @@ because they set a shape that is annoying to reverse once photos or sessions exi
 
 ## Deprioritised by owner decision — not blocking
 
-### 4. Google + Microsoft OAuth app registration *(was 5)* — **deprioritised 2026-09-09**
+### 5. Google + Microsoft OAuth app registration *(was 5)* — **deprioritised 2026-09-09**
 
 Group K (Batch 33 email accounts + OAuth → Batch 34 parsers + scanning) is off the queue
 until this is wanted. The batches stay in the ledger; nothing is dropped.
 
-### 5. Subscribe the `.ics` feed in Apple or Google Calendar *(was 6)*
+### 6. Subscribe the `.ics` feed in Apple or Google Calendar *(was 6)*
 
 Batch 17 shipped and the feed's bytes are verified against RFC 5545. The in-app release
 calendar is the primary experience; external subscription is an optional convenience. Do this
@@ -110,7 +126,7 @@ lives only in a Railway variable has no test.
 
 ## Housekeeping — not blocking anything
 
-### 6. Revoke the April PAT at GitHub *(was 7)*
+### 7. Revoke the April PAT at GitHub *(was 7)*
 
 - [ ] Revoke it
 
@@ -119,7 +135,7 @@ referenced truncated in `4768da8`. It is dead (returns 401) but was never formal
 **A history rewrite is not recommended** — the repo is private and the token is already
 invalid, so a rewrite would cost more than it buys.
 
-### 7. `VITE_API_URL` for Vercel preview deploys *(was 9)*
+### 8. `VITE_API_URL` for Vercel preview deploys *(was 9)*
 
 - [ ] Add it in the Vercel dashboard — **only if you want preview deploys to work**
 
