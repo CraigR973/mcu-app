@@ -454,6 +454,30 @@ it renders — and report what was observed rather than what passed.
     caveat gotcha 15 puts on anything touching SQL. Lift this when the developer machine's
     platform tag moves past `macosx-10.15-x86_64`.
 
+29. **Prepending Node 22 to `PATH` makes the Railway CLI vanish**, and the error blames
+    the wrong thing: `bash: railway: command not found`, which reads as "not installed".
+
+    Two facts collide. The IaC engine needs **Node 22+** (gotcha in `.railway/README.md`),
+    but the CLI is installed under **Node 20's** nvm bin — `nvm alias default` is 20 — and
+    is an `#!/usr/bin/env node` script. So `PATH="…/v22.23.2/bin:$PATH" railway …` fixes
+    the runtime and removes the binary, because `railway` was never in Node 22's bin.
+
+    It is easy to miss from an agent session, where the shell is initialised from the
+    user's profile and already has Node 20's bin on `PATH` — the bare `railway` form
+    resolves there and fails only in the owner's terminal. **`.railway/README.md` carried
+    the broken form** until 2026-09-10.
+
+    Both halves, and it works from a shell with no nvm loaded:
+
+    ```
+    PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" \
+      "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config plan
+    ```
+
+    The general rule this is an instance of: **a command that only works because of the
+    ambient shell is not a command worth writing into a doc.** Test it under
+    `env -i HOME="$HOME" PATH=/usr/bin:/bin bash -lc '…'` before handing it to anyone.
+
 
 ## Log
 
