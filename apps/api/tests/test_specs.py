@@ -12,9 +12,11 @@ is the owner's risk acceptance, not a permission an agent inherits.
 
 from __future__ import annotations
 
+import re
 import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime
+from pathlib import Path
 
 import httpx
 import pytest
@@ -40,39 +42,22 @@ from src.services.specs.runner import (
     run_specs_fetch,
 )
 
-#: A release page, shaped like the one #108 measured. The audio block appears **twice** —
-#: that is the `(more)`/`(less)` toggle, and it is the reason extraction targets DOM nodes
-#: rather than the flattened text.
-PAGE = """
-<html><body>
-  <div id="specs">
-    <div class="row"><strong>Codec:</strong> HEVC / H.265</div>
-    <div class="row"><strong>Resolution:</strong> Native 4K (2160p)</div>
-    <div class="row"><strong>HDR:</strong> Dolby Vision, HDR10+</div>
-    <div class="row"><strong>Aspect ratio:</strong> 2.39:1</div>
-    <div class="row"><strong>Audio:</strong>
-      <div>English: Dolby Atmos</div>
-      <div>English: Dolby TrueHD 7.1 (48kHz, 24-bit)</div>
-      <div>French: Dolby Digital 5.1</div>
-    </div>
-    <div class="row more"><strong>Audio:</strong>
-      <div>English: Dolby Atmos</div>
-      <div>English: Dolby TrueHD 7.1 (48kHz, 24-bit)</div>
-      <div>French: Dolby Digital 5.1</div>
-    </div>
-    <div class="row"><strong>Region:</strong> 4K Blu-ray: Region free</div>
-    <div class="row"><strong>Studio:</strong> Universal Studios</div>
-  </div>
-  <div id="shop">
-    <div><strong>Price:</strong> &pound;34.99</div>
-    <div><strong>Amazon:</strong> &pound;24.99</div>
-    <div><strong>User rating:</strong> 4.6 / 5</div>
-    <div><strong>Review:</strong> A terrific transfer.</div>
-  </div>
-</body></html>
-"""
+#: **The real page, captured verbatim.** `tests/fixtures/bluray_com_release_page.html` is
+#: three regions of https://www.blu-ray.com/movies/Fight-Club-Blu-ray/5587/ as the site
+#: actually served it on 2026-09-10, price cell included.
+#:
+#: What was here before was invented — `<div class="row"><strong>Codec:</strong>` — and
+#: matched nothing the site has ever served. Every test below passed against it while the
+#: scraper read **nothing at all** from ten real pages. `DECISIONS.md` #122.
+FIXTURES = Path(__file__).parent / "fixtures"
+PAGE = (FIXTURES / "bluray_com_release_page.html").read_text(encoding="utf-8")
 
-#: #108's third measured fact: `Special Features` was **absent** from a real page.
+#: The same file with its provenance comment removed. The comment quotes the invented
+#: markup it replaced, so a test asserting that shape is absent has to read the body.
+PAGE_MARKUP = re.sub(r"<!--.*?-->", "", PAGE, flags=re.S)
+
+#: #108's third measured fact: `Special Features` is **absent** from this real page — the
+#: list of extras lives inside the editorial review, which #110 puts out of bounds.
 PAGE_WITHOUT_FEATURES = PAGE
 
 RELEASE_URL = "https://www.blu-ray.com/movies/Back-to-the-Future-4K-Blu-ray/327607/"
@@ -110,64 +95,130 @@ class TestBounds:
         assert not is_release_url("https://blu-ray.com.evil.example/movies/Heat/1/")
 
 
+class TestTheFixtureIsReal:
+    """The guard for the bug that made every other test in this file meaningless.
+
+    A parser can only be trusted against markup the site actually serves. The previous
+    fixture was hand-written to match the parser, so the two agreed with each other and
+    disagreed with reality — and ten live fetches returned "no specs found on the page"
+    while the suite stayed green.
+    """
+
+    def test_the_fixture_is_captured_markup_not_an_approximation(self) -> None:
+        assert "Captured verbatim from https://www.blu-ray.com/" in PAGE
+
+    def test_the_fixture_uses_the_sites_own_structure(self) -> None:
+        """`<span class="subheading">` sections with `<br>`-separated `Label: value` text.
+
+        If a future edit reintroduces `<strong>`-labelled rows, it is writing fiction again.
+        """
+        assert '<span class="subheading">Video</span>' in PAGE_MARKUP
+        assert "Codec: MPEG-4 AVC" in PAGE_MARKUP
+        assert "<strong>Codec:" not in PAGE_MARKUP
+
+    def test_the_fixture_still_carries_a_price(self) -> None:
+        """#108 calls the temptation "unusually close to hand".
+
+        A fixture with the price cell trimmed out could not prove the parser leaves it.
+        """
+        assert '<span class="subheading">Price</span>' in PAGE_MARKUP
+        assert "List price:" in PAGE_MARKUP
+
+
 class TestExtraction:
-    """§3.7's five fields, from a page shaped like the one #108 measured."""
+    """§3.7's five fields, read from the page the site really serves."""
 
     def test_the_video_block_is_read(self) -> None:
         specs = extract(PAGE)
 
-        assert specs.video["codec"] == "HEVC / H.265"
-        assert specs.video["resolution"] == "2160p"
-        assert specs.video["hdr"] == ["Dolby Vision", "HDR10+"]
-        assert specs.video["aspect_ratio"] == "2.39:1"
+        assert specs.video["codec"] == "MPEG-4 AVC (23.45 Mbps)"
+        assert specs.video["resolution"] == "1080p"
+        assert specs.video["aspect_ratio"] == "2.40:1"
 
-    def test_hdr10_plus_is_not_read_as_hdr10(self) -> None:
-        """Longest-first matching. Otherwise every HDR10+ disc is also an HDR10 disc."""
-        specs = extract(PAGE)
+    def test_nothing_is_read_when_the_markup_is_unrecognised(self) -> None:
+        """The failure that should have been loud, made loud.
 
-        assert "HDR10+" in specs.video["hdr"]
-        assert "HDR10" not in specs.video["hdr"]
+        `is_empty` is what `apply_specs` checks before writing, so a parser that stops
+        matching the site writes nothing rather than blanking a row.
+        """
+        assert extract("<html><body><p>Codec: HEVC</p></body></html>").is_empty
+
+    def test_hdr_is_read_when_the_page_has_it(self) -> None:
+        """Longest-first matching: otherwise every HDR10+ disc is also an HDR10 disc.
+
+        This 2009 Blu-ray has no HDR block at all, so the patterns are exercised directly
+        rather than pretending the fixture carries one.
+        """
+        from src.services.specs.bluray_com import _HDR_PATTERNS, _all_matches
+
+        assert _all_matches("Dolby Vision, HDR10+", _HDR_PATTERNS) == ["Dolby Vision", "HDR10+"]
+        assert "HDR10" not in _all_matches("HDR10+", _HDR_PATTERNS)
 
     def test_the_audio_block_is_not_read_twice(self) -> None:
-        """**#108's measured fact.** The `(more)`/`(less)` toggle renders it twice."""
+        """**#108's measured fact**, now against the real toggle.
+
+        The page ships `#shortaudio` and `#longaudio`; the fixture carries both.
+        """
         specs = extract(PAGE)
 
         formats = [track["format"] for track in specs.audio]
-        assert formats.count("Dolby Atmos") == 1
-        assert len(specs.audio) == 3
+        assert formats.count("DTS-HD MA") == 1
+        assert len(specs.audio) == 5
 
     def test_a_track_keeps_its_language_and_channels(self) -> None:
         specs = extract(PAGE)
 
-        truehd = next(t for t in specs.audio if t["format"] == "Dolby TrueHD")
-        assert truehd["language"] == "English"
-        assert truehd["channels"] == "7.1"
+        lossless = next(t for t in specs.audio if t["format"] == "DTS-HD MA")
+        assert lossless["language"] == "English"
+        assert lossless["channels"] == "5.1"
+
+    def test_the_more_and_less_toggles_are_not_read_as_tracks(self) -> None:
+        """They are anchor text inside the same block, and they are not audio."""
+        specs = extract(PAGE)
+
+        assert all(track.get("language") not in ("more", "less") for track in specs.audio)
 
     def test_region_free_is_normalised(self) -> None:
+        """Read from the `Playback` heading — the live page prints no `Region:` label."""
         assert extract(PAGE).region_code == "Free"
 
     def test_the_studio_becomes_the_release_label(self) -> None:
-        assert extract(PAGE).release_label == "Universal Studios"
+        """From the studio **link** in the grey header line, not from a `Studio:` label,
+        because the live page has no such label."""
+        assert extract(PAGE).release_label == "20th Century Fox"
 
     def test_absent_special_features_stay_null(self) -> None:
-        """#108: the field was missing from a real page, so it is nullable not assumed."""
+        """#108: the field is missing from this real page, so it is nullable not assumed.
+
+        The extras are listed only inside the editorial review, which #110 rules out.
+        """
         assert extract(PAGE_WITHOUT_FEATURES).special_features is None
 
     def test_no_price_rating_or_review_is_extracted(self) -> None:
         """**#110 forbids it and the page puts it in the same document.**
 
-        #108 calls the temptation "unusually close to hand" — the fixture therefore carries
-        a list price, an Amazon price, a user rating and a review, and none of them may
-        appear anywhere in the result.
+        The fixture carries the site's own price cell — `List price: $7.49` — laid out in
+        exactly the shape the parser reads specs from, so this is now a real test of the
+        allow-list rather than of a straw man.
         """
         specs = extract(PAGE)
 
         assert_no_price_fields(specs)
         blob = repr(specs)
-        assert "34.99" not in blob
-        assert "24.99" not in blob
-        assert "4.6" not in blob
-        assert "terrific" not in blob.lower()
+        assert "7.49" not in blob
+        assert "$" not in blob
+        assert "price" not in blob.lower()
+
+    def test_a_price_line_is_refused_even_in_a_readable_section(self) -> None:
+        """The allow-list is checked per line, not only per section."""
+        from bs4 import BeautifulSoup
+
+        from src.services.specs.bluray_com import _section_rows
+
+        html = '<span class="subheading">Video</span><br>Codec: HEVC<br>List price: $24.99<br>'
+        rows = _section_rows(BeautifulSoup(html, "html.parser"))
+        assert ("codec", "HEVC") in rows
+        assert not any("24.99" in value for _, value in rows)
 
     def test_the_readable_and_forbidden_label_sets_do_not_overlap(self) -> None:
         """The mechanism, not the intention: a label can be one or the other."""
