@@ -572,6 +572,15 @@ it renders — and report what was observed rather than what passed.
   recorded as an open deliverable (`OWNER-ACTIONS.md` #14) rather than quietly dropped.
   Three design/deployment calls went to the owner as #11–#13.
 
+  **And for the first time the deployed web bundle was actually run, not just built.**
+  Gotcha 3 has always said a green web job is no evidence the app boots — Decision #22's
+  white-screen is why. Post-merge, `mcu-app-fawn.vercel.app` was loaded live: the redesigned
+  login page renders, **no console errors**, and `document.title` reads `Sign in · The Real
+  MCU`, which is #132's single owner working in production. At **375px: zero horizontal
+  overflow, one `h1`, zero controls under 44px** — so #131's `@layer utilities` fix is real
+  in the shipped bundle and not only in the suite. Authenticated surfaces were not re-checked
+  post-merge; they were measured live before it.
+
   **`docs/brand/` was deliberately not swept into the merge.** 189 files, 56 MB, untracked,
   built in a separate session that morning — and `source-images/` is third-party film
   stills gathered as reference. The committed `VERIFICATION.md` §5 already calls its
