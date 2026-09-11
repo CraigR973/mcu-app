@@ -15,14 +15,14 @@ import { cn } from '@/lib/utils'
 
 const VARIANTS = {
   horizontal: {
-    /** `docs/brand/logo-system/stack-family/README.md` — navigation, footer, wide positions. */
+    /** `docs/brand/logo-system/stack-family/README.md` — login, footer, wide positions. */
     minimumWidth: 280,
     aspect: 1600 / 420,
     dark: '/brand/horizontal-lockup-dark.svg',
     light: '/brand/horizontal-lockup-light.svg',
   },
   stacked: {
-    /** Square login, onboarding and profile contexts. */
+    /** Square onboarding, profile and presentation contexts. */
     minimumWidth: 320,
     aspect: 1,
     dark: '/brand/stacked-lockup-dark.svg',
@@ -72,9 +72,9 @@ export function BrandLockup({
       alt={label ?? ''}
       width={renderedWidth}
       height={renderedHeight}
-      // Reserving both axes keeps the surrounding column from jumping while the SVG
-      // decodes — the login panel and the onboarding card both size themselves off it.
-      style={{ width: renderedWidth, height: renderedHeight }}
+      // Intrinsic dimensions reserve the ratio before decode. `height: auto` then keeps
+      // that ratio when `max-w-full` has to reduce the requested width at a breakpoint.
+      style={{ width: renderedWidth, height: 'auto', aspectRatio: String(spec.aspect) }}
       decoding="async"
       draggable={false}
       className={cn('block max-w-full select-none', className)}

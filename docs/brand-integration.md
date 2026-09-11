@@ -28,12 +28,14 @@ the tier; `apps/web/src/components/brand/brand.test.tsx` pins the table down.
 | Rendered size | Artwork | Where the app draws it |
 |---|---|---|
 | >= 192 px | concept-art emblem | platform icons only — manifest, Apple touch, notification |
-| 128–191 px | display vector mark | boot splash, onboarding welcome below `sm` |
-| 32–127 px | compact optical mark | mobile header (32), sidebar drawer and onboarding header (36), offline page (32) |
+| 128–191 px | display vector mark | reserved display contexts |
+| 32–127 px | compact optical mark | loading states (64), sidebar (40), mobile and onboarding headers (32–36), offline page (32) |
 | < 32 px | pixel-hinted micro mark | the 16 px entry of `favicon.ico` |
 
 Lockups are separate: horizontal (>= 280 px) for wide positions, stacked (>= 320 px) for
-square ones. `BrandLockup` warns in development when a call site goes under a minimum
+square ones. The desktop sign-in page uses the complete horizontal lockup at 440 px, where
+it remains legible without introducing the stacked artwork's square field into a tall
+editorial panel. `BrandLockup` warns in development when a call site goes under a minimum
 without recording why.
 
 ## Shipped assets
@@ -58,11 +60,13 @@ the service worker's precache.
 
 ## Two rules that constrain what may ship
 
-**The personalised poster edition is private.** `personalised-poster-icon-*` and the
-photographic `hero-photo-*` wordmarks are built from real film stills and publicity
-photographs. They are commemorative artwork, not the rights-independent identity, so they
-appear on no public surface — not as the app icon, and not on the share card. The share
-card is the rights-independent horizontal lockup on the ink field.
+**The personalised poster edition is private and ceremonial.**
+`personalised-poster-icon-*` and the photographic `hero-photo-*` wordmarks are built from
+real film stills and publicity photographs. They are commemorative artwork, not the
+rights-independent identity. The poster therefore appears once, at 192 px in the
+authenticated onboarding welcome; it is not navigation chrome, loading artwork, an app
+icon or a share card. The share card is the rights-independent horizontal lockup on the
+ink field.
 
 **Semantic interface colours are not brand colours.** The identity is carried by the
 artwork, which brings its own palette inside each SVG and PNG. No semantic token was

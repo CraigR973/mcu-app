@@ -6,6 +6,7 @@ import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
 import { adminNavGroup, navGroups } from '@/lib/nav-items'
 import { cn } from '@/lib/utils'
@@ -87,14 +88,17 @@ export default function Sidebar({ open, onClose }: Props) {
         )}
       >
         {/* Header */}
-        <div className="flex min-h-[5.5rem] items-center justify-between border-b border-border px-4 py-4">
-          <Link to="/movies" onClick={onClose} className="flex min-w-0 items-center rounded-md">
-            {/* Personalised poster stack with real photos from Mark's collection */}
-            <img
-              src="/brand/personalised-poster-icon-512.png"
-              alt="Mark's Cinematic Universe collection"
-              className="h-20 w-auto rounded-md shadow-md"
-            />
+        <div className="flex min-h-[4.75rem] items-center justify-between border-b border-border px-4 py-3">
+          <Link to="/movies" onClick={onClose} className="flex min-w-0 items-center gap-3 rounded-md">
+            <BrandMark size={40} />
+            <span className="min-w-0">
+              <span className="block truncate font-display text-base font-semibold leading-none text-foreground">
+                The Real MCU
+              </span>
+              <span className="mt-1 block truncate text-[0.5625rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Private film archive
+              </span>
+            </span>
           </Link>
           <button
             ref={closeRef}

@@ -2,30 +2,28 @@
 
 ## Now
 
-**Phase 1 identity deployment complete: personalised poster now visible in authenticated header and sidebar.** 
-Commit `00414f5` (feat: replace brand marks with personalised poster in authenticated areas) deployed. 
-Gateway green across all suites:
-- **Web**: 235 tests passing, 0 errors, typecheck + build clean
-- **API**: 508 tests passing, ruff/mypy clean
-- **All assets precached** by the service worker; social OG image set to rights-independent hero-photo-v3.png
+**The brand integration correction is prepared on `fix/brand-integration-hierarchy`; it is
+not deployed.** A rendered design review found that commit `00414f5` used commemorative
+photographic artwork as routine interface chrome: a cropped wordmark behind login copy,
+poster thumbnails at 40–80 px, and full-screen photographic loading states. The artwork
+was good; the hierarchy was not.
 
-**Updates deployed:**
-- **LoginPage**: Simplified mobile header to remove hero photo background; now uses compact BrandMark only
-- **AppLayout header (mobile)**: Replaced BrandMark with personalised-poster-icon-512.png (h-10 responsive)
-- **Sidebar header**: Replaced BrandLockup/BrandMark with personalised-poster-icon-512.png (h-20 responsive)
-- **Authenticated surfaces**: All navigation now prominently displays the real poster stack featuring stills from Jaws, Double Indemnity, and An American Werewolf in London
+The corrected hierarchy is now explicit:
 
-Multi-tier deployment strategy in place:
-- **TIER 1: Hero photos** (public, rights-independent) — boot loaders, login page, social card
-- **TIER 2: Personalised poster** (authenticated, internal) — now visible in header and sidebar navigation
-- **TIER 3: Concept-art** (fallback, always deployed) — mobile header, platform icons, compact UI
+- **platform identity:** concept-art app icons;
+- **everyday chrome and loading:** the responsive compact vector mark;
+- **desktop sign-in:** the complete transparent horizontal lockup at 440 px;
+- **onboarding welcome:** the personalised film-poster edition at 192 px — its one
+  celebratory in-app appearance;
+- **link previews:** the rights-independent 1200×630 social card.
 
-Two things are worth knowing. **The sidebar lockup is drawn at 240 px against a 280 px
-approved minimum** (`DECISIONS.md` #134) — the alternative was widening navigation by 40 px
-at every desktop width. It is recorded in the call site, and `BrandLockup` warns in
-development when anyone does it without saying why. **And `docs/brand/` is still untracked**,
-so the builder that generates these assets is not in the repository even though the assets
-now are (`OWNER-ACTIONS.md` #15, narrowed).
+The mobile login grid now gives its brand row intrinsic height instead of stretching it.
+`BrandLockup` also preserves its aspect ratio when a narrow container constrains it.
+`brand-integration.test.ts` prevents photographic art returning to navigation or loading
+chrome and pins the social-card metadata. Verified in rendered Chromium at 1440×900 and in
+the in-app browser at its mobile breakpoint: the complete logo, mobile header and sidebar
+all remain legible. Gate green: **239 web + 79 shared tests**, 0 lint errors (six existing
+Fast Refresh warnings), clean typecheck, production build passing. `DECISIONS.md` #140.
 
 **Shipped and deployed before it: the comprehensive UI redesign.** A full UI/UX redesign of the web
 app, audited, implemented, **verified live on 2026-09-10 against the real catalogue** —
@@ -587,6 +585,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-10 (brand hierarchy correction)** — A rendered design review reversed the
+  over-application of photographic identity artwork from `00414f5`. Navigation and loaders
+  now use the compact vector mark; desktop sign-in uses the complete 440 px horizontal
+  lockup in a restrained editorial panel; mobile sign-in no longer stretches its brand
+  row; onboarding keeps the personalised poster as its sole 192 px reveal; and social
+  metadata again names the rights-independent 1200×630 card. Added regression coverage for
+  those boundaries and for responsive lockup proportions. Rendered at 1440×900 and the
+  mobile breakpoint. Gate green: 239 web + 79 shared tests, lint/typecheck/build clean.
 
 - **2026-09-10 (evening, continued)** — **Personalised poster now visible in authenticated header and sidebar.** LoginPage mobile header simplified (removed hero photo backdrop). Sidebar and AppLayout header now display personalised-poster-icon-512.png instead of brand marks — all authenticated navigation surfaces feature the real poster stack with stills from Mark's collection (Jaws, Double Indemnity, An American Werewolf in London). Gate green: 235 web + 79 shared tests, 508 API tests, all lint/typecheck/build clean. Commit `00414f5` deployed to main; Vercel/Railway automatic deployment in progress.
 
