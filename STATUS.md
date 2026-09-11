@@ -2,31 +2,39 @@
 
 ## Now
 
-**The brand integration correction is merged and deployed.** PR #2 merged as `d961937` on
-2026-09-11. A rendered design review found that commit `00414f5` used commemorative
-photographic artwork as routine interface chrome: a cropped wordmark behind login copy,
-poster thumbnails at 40–80 px, and full-screen photographic loading states. The artwork
-was good; the hierarchy was not.
+**Every remaining batch now has acceptance criteria in the ledger.** `DECISIONS.md` #54
+closed the gap Batch 10 opened when it removed §16, but left the repair to whoever next ran
+a batch. On 2026-09-11 the **seven** planned batches still missing criteria — **21, 22, 24,
+29, 33, 34 and 38** — had theirs recovered verbatim from §16 at `d94a6b8~1` in one pass, and
+written into `docs/phase-batches.md`. All **69** quoted lines were checked against the
+archived document programmatically before the section was committed. The queue no longer has
+a batch that can be started with nothing to verify against. `DECISIONS.md` #141.
 
-The corrected hierarchy is now explicit:
+**Recovering them is also how you find out a criterion is wrong, and three were.** Phase 5.7
+names **Recharts** — the charting dependency Batch 14 explicitly declined when it drew
+§13.1's charts in CSS, so Batch 21 must either add it or hand-roll SVG, and record which.
+Phase 3.4's UPC chain names **Amazon**, one of the four shops `DECISIONS.md` #91 ruled out
+permanently; the workable chain is cached mapping → eBay Browse → TMDB. Phase 10.1 names
+**Supabase Vault**, a product this app has not used since the re-scaffold. Each is now a
+paragraph the batch reads before it writes code rather than a mid-batch surprise.
 
-- **platform identity:** concept-art app icons;
-- **everyday chrome and loading:** the responsive compact vector mark;
-- **desktop sign-in:** the complete transparent horizontal lockup at 440 px;
-- **onboarding welcome:** the personalised film-poster edition at 192 px — its one
-  celebratory in-app appearance;
-- **link previews:** the rights-independent 1200×630 social card.
+**Two stale claims in the same ledger were corrected** rather than left contradicting the new
+section: the Batch 33 risk note said app-starter ships no `cryptography` dependency — it has
+been a direct dependency since Batch 11, which needs it for RFC 8291 Web Push, so what is
+net-new is **key management**, not the library; and Group H still said Batch 24 waits on
+eBay, which `OWNER-ACTIONS.md` #5 closed on 2026-09-10.
 
-The mobile login grid now gives its brand row intrinsic height instead of stretching it.
-`BrandLockup` also preserves its aspect ratio when a narrow container constrains it.
-`brand-integration.test.ts` prevents photographic art returning to navigation or loading
-chrome and pins the social-card metadata. Verified in rendered Chromium at 1440×900 and in
-the in-app browser at its mobile breakpoint: the complete logo, mobile header and sidebar
-all remain legible. The production Vercel login was then rendered again at both sizes;
-Railway `/health` reported the merge SHA and `/health/ready` reported `db: ok`, with push
-and AI configured. CI run `34578379338` is green across all five jobs: **239 web + 79
-shared tests**, 508 API tests, lint/typecheck, reversible Postgres migrations, dependency
-audit and production build. `DECISIONS.md` #140.
+**⚠️ The nightly scrape cron is applied but not running.** `OWNER-ACTIONS.md` #1 said to
+check for a `trigger=cron` row the morning after; checked on 2026-09-11 at 22:26 UTC, there
+is none. `scrape_runs` still holds exactly one row, `trigger=manual`, from 2026-09-10, and
+`price_checks` still holds 14 rows across two hand-run days. The first scheduled fire was
+03:00 UTC that morning, **over 19 hours earlier**. So **§5.5 is failing, not pending** — and
+because Batch 21's criterion needs seven days of *scheduled* scrapes and forbids back-dated
+fixtures, **Batch 21 cannot start until this is fixed**. Worth checking the `cron-scrape`
+service's logs in Railway. Hosting is the owner's, so nothing was changed.
+
+**29 of 37 batches shipped, 8 remain** — 28 (ready), 29, 24, 22 and 38 are startable; 21 is
+blocked on the cron above; 33 and 34 are Group K, deprioritised by the owner on 2026-09-09.
 
 **Shipped and deployed before it: the comprehensive UI redesign.** A full UI/UX redesign of the web
 app, audited, implemented, **verified live on 2026-09-10 against the real catalogue** —
@@ -588,6 +596,25 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-11 (batch criteria recovery)** — Recovered acceptance criteria for the seven
+  remaining planned batches — 21, 22, 24, 29, 33, 34, 38 — verbatim from §16 at
+  `d94a6b8~1`, per `DECISIONS.md` #54, and wrote them into `docs/phase-batches.md` as a new
+  section. All 69 quoted lines verified against the archived document programmatically; the
+  one deliberate deviation is dropping the decayed `Sonnet 4.6` / `Opus` annotation while
+  keeping the tier emoji, following Batch 11's precedent. Recorded three criteria the repo
+  already contradicts (Recharts, Amazon, Supabase Vault) and corrected two stale ledger
+  claims (the `cryptography` risk note, Group H's eBay block on Batch 24). `DECISIONS.md`
+  #141.
+
+  Also found, while checking Batch 21's data gate: **the nightly scrape cron has not fired.**
+  Applied 2026-09-10 on `0 3 * * *`, it had produced no `scrape_runs` row by 22:26 UTC on
+  2026-09-11, 19 hours past its first scheduled run. §5.5 is failing rather than pending and
+  Batch 21 is blocked behind it. Recorded in `OWNER-ACTIONS.md` #1; not acted on, because
+  hosting is an owner action.
+
+  Gate green locally: 508 API tests passed, 239 web + 79 shared, ruff clean, mypy clean on
+  118 files, web lint 0 errors, typecheck clean, production build passes. Docs-only change.
 
 - **2026-09-11 (brand hierarchy correction)** — A rendered design review reversed the
   over-application of photographic identity artwork from `00414f5`. Navigation and loaders

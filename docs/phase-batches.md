@@ -943,6 +943,265 @@ client-credentials token mint (`expires_in` 7200 — token caching is net-new ve
 with a typed API, `check_shape` exists for HTML drift, and #16's accepted ToS exposure
 covers retailers rather than eBay.
 
+## Criteria recovered for the seven remaining batches *(2026-09-11)*
+
+`DECISIONS.md` #54 says a planned batch's criteria are recovered verbatim from §16 at
+`d94a6b8~1` and written here **before** any code is written, and that whoever runs a batch
+does this first. Batch 28's were recovered on 2026-09-10 and are above. These are the other
+seven — **21, 22, 24, 29, 33, 34 and 38** — recovered together on 2026-09-11 so that no
+remaining batch starts without something to verify against.
+
+**One deliberate deviation from verbatim, following Batch 11's precedent:** the tier emoji
+is kept and the `Sonnet 4.6` / `Opus` annotation is dropped. Those names are the decay this
+ledger exists to stop; the model each batch actually needs is in the table above.
+
+**Nothing here was re-authored.** Where the repo or the live system already contradicts a
+criterion, that is recorded *underneath* the quote, never folded into it.
+
+### Batch 21 — Price history charts 🟢
+**Covers Phase 5.7:**
+
+> **Phase 5.7: Price History Charts** 🟢
+> - Chart per wanted item showing price over time across retailers
+> - Recharts line chart
+> - **Acceptance:** After 7+ days of **real scheduled scrapes** (not back-dated fixtures), chart renders multi-retailer time-series for ≥ 3 wanted items.
+
+**The clock has not started, and the criterion is a wall-clock gate.** Measured against live
+Neon on 2026-09-11: `scrape_runs` holds **one** row and its trigger is `manual`;
+`price_checks` holds **14** rows across **two** days — 2026-09-09 (8) and 2026-09-10 (6) —
+both hand-run. `cron-scrape` was applied on 2026-09-10 at `0 3 * * *` and **has produced no
+row**, 19 hours past its first scheduled fire. So §5.5 is not merely pending, and 5.7 cannot
+begin until seven days of `trigger=cron` runs exist. **Check `scrape_runs` before starting,
+not the calendar.**
+
+**"Not back-dated fixtures" is in the criterion for a reason** — do not seed the table to
+reach green. That is the guardrail in `AGENTS.md`, stated inside the acceptance text itself.
+
+**The other half of the criterion is already satisfied.** `price_checks` covers **8 distinct
+wanted items** across **5 retailers**, against a floor of 3 — so when the days exist, the
+breadth will too.
+
+**"Recharts line chart" conflicts with a shipped decision, and the batch must resolve it
+out loud.** Batch 14 drew §13.1's charts in CSS and wrote down why, in `StatsPage.tsx`:
+*"No chart library"* — three of its four populated charts are "a label and a proportion",
+which a flex row expresses exactly. A multi-retailer time-series is **not** that shape. So
+this batch either adds the charting dependency Batch 14 declined or hand-rolls SVG;
+`apps/web/package.json` carries neither Recharts nor any other charting library today.
+Whichever way it goes is a `DECISIONS.md` entry, not a silent `pnpm add`.
+
+### Batch 22 — Deals feed 🟡
+**Covers Phases 5.9 and 5.10:**
+
+> **Phase 5.9: Deals Scraper & Feed** 🔴
+> - Scrape retailer deals pages (not just wanted items)
+> - Match to TMDB, store in `deals` table
+> - Skip already-owned
+> - **Acceptance:** Deals scraper run against live retailer pages populates the `deals` table with ≥ 20 rows from ≥ 3 retailers; UI renders them with posters; "skip already-owned" verified against the real `collection_items` table.
+>
+> **Phase 5.10: Deal Filtering & Actions** 🟢
+> - Filters: genre, discount %, retailer, format
+> - One-tap dismiss / add to wanted list
+> - **Acceptance:** Admin can curate the deals feed; dismissed items don't reappear
+
+**5.9's acceptance is a live third-party run, so it is an owner action** — the same shape as
+Batch 19's checkpoint and Batch 23's §3.7, and `docs/agent-commands/group-start.md` puts
+live retailer runs in the owner's hands. The ToS exposure itself is already accepted for
+retailers (`DECISIONS.md` #16); what stays the owner's is pressing the button.
+
+**The `deals` table does not exist** — verified against live Neon on 2026-09-11. It is a
+net-new migration, not an existing table to fill.
+
+**"≥ 3 retailers" is reachable and the ceiling is known.** 10 retailers are seeded, **5 are
+enabled and verified**, and 4 were ruled out permanently by page-shape checks on 2026-09-09
+(`DECISIONS.md` #91). Amazon is among the four that are out.
+
+**The risk note above applies in full.** A deals page that changes layout does not error —
+it selects the wrong node and stores a plausible wrong discount, which then feeds the feed.
+Batch 19's `check_shape` is the pattern; extend it rather than adding a bare success counter.
+
+### Batch 24 — Barcode scan + lookup 🟡
+**Covers Phases 3.3 and 3.4:**
+
+> **Phase 3.3: Barcode Scanner UI** 🟢
+> - Camera access via `getUserMedia`
+> - quagga2 or zxing-js barcode reading
+> - Display scanned UPC, ready for lookup
+> - **Acceptance:** Scanning a real Blu-ray barcode on mobile returns a valid EAN in < 2 seconds
+>
+> **Phase 3.4: Barcode → TMDB Lookup** 🔴
+> - `POST /api/v1/barcode/lookup` endpoint
+> - UPC-to-title resolution (try cached mapping, then eBay/Amazon UPC search, then TMDB)
+> - Confirmation UI before adding
+> - **Acceptance:** Scanning a common Blu-ray returns the correct movie; unknown UPCs prompt manual search
+
+**3.3's acceptance is an owner action.** "Scanning a real Blu-ray barcode on mobile … in
+< 2 seconds" needs a phone, a real disc and a stopwatch. An agent can build the decode path
+and prove it against fixture images; it cannot sign off the live timing. Say so in the
+close-out rather than letting a green gate imply it.
+
+**No hosting change is needed.** `camera=(self)` has been in the `Permissions-Policy` header
+since Batch 2 — verified in `vercel.json` on 2026-09-11. This supersedes the group table's
+older note that Batch 24 was blocked on a `vercel.json` fix; it never was.
+
+**3.4's lookup chain is half-available, and the unavailable half is named wrong.** eBay
+Browse is proven live on a self-service keyset (`DECISIONS.md` #126), so the eBay leg works.
+**Amazon does not** — it is one of the four shops #91 ruled out permanently. Build the chain
+as **cached mapping → eBay Browse → TMDB** and record the substitution.
+
+**The confirmation UI is mandatory, not a nicety.** The risk note above expects a low hit
+rate on unknown discs and wrong-edition matches; the criterion's own second half — "unknown
+UPCs prompt manual search" — is the same requirement stated from the other side.
+
+**`collection_items.barcode` already exists**, so the scanned value has a home; neither
+quagga2 nor zxing-js is installed today.
+
+### Batch 29 — Format upgrade + sale tracking 🟢
+**Covers Phases 4.2 and 4.4:**
+
+> **Phase 4.2: Format Upgrade Flow** 🟢
+> - After duplicate detection "it's an upgrade" path
+> - Flag old format as superseded
+> - Show suggested sell price from 4.1
+> - Admin adjusts or accepts
+> - **Acceptance:** Upgrade path completes in ≤ 3 taps; old item marked `listed_for_sale`
+>
+> **Phase 4.4: Listing Status Management** 🟢
+> - "Mark as sold" action on listed items
+> - Auto-archive from active collection
+> - **Acceptance:** Marking sold removes from active views, remains in audit/trash
+
+**4.2 depends on Batch 28 and the group order must not be inverted.** "Show suggested sell
+price from 4.1" is the eBay median; without Batch 28 there is nothing to show. That
+dependency *is* Group I's ordering.
+
+**The schema is already there — this is the rare criterion that needs no migration.**
+`collection_items` carries `listing_status`, `ebay_listing_url` and `listing_price`, and a
+CHECK constrains the status to `in_collection` / `listed_for_sale` / `sold` / `donated`.
+Verified live on 2026-09-11: all **1,857** rows are `in_collection`, so every transition
+this batch writes will be the first of its kind. `listed_for_sale`, the exact string the
+criterion names, is already a legal value.
+
+**4.4's second half is already served.** Batch 15 shipped trash and the audit UI and proved
+an audit trail outliving its subject through a permanent delete, so "remains in audit/trash"
+is a wiring job against existing machinery rather than new infrastructure.
+
+**Duplicate detection, which 4.2 hangs off, shipped in Batch 7** as §3.5.
+
+### Batch 33 — Email accounts + OAuth 🔴
+**Covers Phases 10.1, 10.2, 10.3 and 10.4:**
+
+> **Phase 10.1: Email Account Model & Encryption** 🔴
+> - Supabase Vault or encryption-at-rest for credentials
+> - email_accounts CRUD endpoints
+> - **Acceptance:** Credentials round-trip through encryption; DB never stores plaintext
+>
+> **Phase 10.2: Gmail OAuth Flow** 🔴
+> - Consent screen, read-only scope
+> - Token storage, refresh handling
+> - **Acceptance:** Admin connects Gmail; token refreshes automatically
+>
+> **Phase 10.3: Outlook OAuth Flow** 🔴
+> - Microsoft Graph integration
+> - **Acceptance:** Admin connects Outlook successfully
+>
+> **Phase 10.4: Generic IMAP Connector** 🟢
+> - IMAP client for iCloud, Yahoo, custom
+> - App-specific password input form
+> - Instructions linked per provider
+> - **Acceptance:** Admin connects an iCloud account using an app password
+
+**This group is deprioritised, not ready.** `OWNER-ACTIONS.md` #7 took Group K off the queue
+on 2026-09-09 pending Google and Microsoft OAuth app registrations. Nothing here starts
+until the owner says so.
+
+**"Supabase Vault" names a product this app does not use.** There is no Supabase project —
+the re-scaffold removed it (`DECISIONS.md` #5, #11) and #113 settled the last thing that
+still named it. Encryption at rest is the app's own to build, and every remaining `supabase`
+string in the source is a comment explaining its absence.
+
+**The risk note above is stale on one point and it matters.** It says *"Encryption at rest
+is net-new — app-starter ships no `cryptography` dependency"*. That was true when written
+and is not now: **`cryptography>=50.0.0` has been a direct dependency since Batch 11**, which
+needs ECDH and AES-GCM for RFC 8291 Web Push (`apps/api/src/services/webpush.py`). The
+library is present and pinned in both locks. **Key management is still net-new** — where the
+key lives, how it rotates, and what happens on a key the app cannot read — and that, not the
+dependency, is why this batch is `max` effort.
+
+**The sequencing rule holds and its precondition is met.** #16 requires this to land after
+Batch 3's rate limiting and fail-closed config, which shipped.
+
+**`email_accounts` does not exist** — verified live on 2026-09-11.
+
+### Batch 34 — Email parsers + scanning 🔴
+**Covers Phases 10.5, 10.6, 10.7 and 10.8:**
+
+> **Phase 10.5: Retailer Email Parsers** 🟢
+> - Templates for eBay, Amazon, HMV, Zavvi order confirmations
+> - Extract title, price, date
+> - **Acceptance:** Each parser passes against (a) a fixture sample email in unit tests AND (b) at least one **real received email** from the admin's connected mailbox, both producing correct structured output.
+>
+> **Phase 10.6: LLM Fallback Parser** 🔴
+> - Claude API call to extract order fields from unfamiliar email templates
+> - **Acceptance:** A novel retailer's email is parsed into structured data
+>
+> **Phase 10.7: Scheduled Scan Job** 🟢
+> - Per-account scheduled scan
+> - Fuzzy match to wanted_list
+> - purchase_candidate creation
+> - **Acceptance:** Scanning a mailbox with a known wanted item creates a candidate
+>
+> **Phase 10.8: Candidate Review UI** 🟢
+> - Review queue with confirm/dismiss actions
+> - Confirm creates collection_item and removes wanted entry
+> - **Acceptance:** Admin reviews and processes candidates; state updates correctly
+
+**10.5's acceptance has two halves and only one is an agent's.** The fixture unit tests are;
+*"at least one real received email from the admin's connected mailbox"* needs a connected
+mailbox, which needs Batch 33, which needs the deprioritised registrations. **This is the
+same trap Batch 23 fell into** — `test_specs.py`'s fixture was invented to match the parser,
+so eleven tests passed against markup the site has never served (`DECISIONS.md` #122).
+Capture real emails as fixtures; do not write fixtures to match the parser.
+
+**10.6 must route through Batch 30's client, not call Anthropic directly.** That client
+validates the model id against a priced list at load, checks both the message and dollar
+ceilings *before* the call, and logs every call including failures. A second call path
+bypasses all three — and an email scan is exactly the unattended loop those ceilings exist
+for.
+
+**10.7's schedule is a Railway cron, not an in-process timer** — `DECISIONS.md` #60, and
+#119's correction that an admin-authed endpoint is not callable by a cron. It needs to be a
+command, as `daily_scrape` and `run_reminders` are.
+
+**`purchase_candidates` does not exist** — verified live on 2026-09-11.
+
+### Batch 38 — E2E suite 🟢
+**Covers Phase 13.10:**
+
+> **Phase 13.10: Playwright E2E Tests** 🟢
+> - Critical flows: login, import, search, add via scan, price alert, chat session, movie night match
+> - Runs in CI
+> - **Acceptance:** All flows pass on CI in Chromium + Firefox + WebKit
+
+**The flow list names a flow that does not exist.** "Add via scan" is Batch 24, which is not
+built. Either 38 runs after 24, or it ships six flows of seven and **says which one is
+missing and why** — the one thing it must not do is quietly drop it and call the criterion
+met.
+
+**Every other named flow is built:** login (Batch 3), import (4), search (5), price alert
+(20), chat session (31), movie night match (35).
+
+**"Chromium + Firefox + WebKit" has one known casualty.** Firefox has no Web Speech API, so
+Batch 32 hides the dictation button there rather than showing it dead. Any assertion that
+touches dictation must skip on Firefox, not fail — and skipping must be visible, because a
+silent skip is the failure mode `AGENTS.md` calls out for `test_derived_field_triggers.py`.
+
+**Two people can sign in**, which is what the login flow and the movie-night match need:
+Mark's PIN was set on 2026-09-09.
+
+**Playwright is not installed today**, and CI does not run a browser — the web job builds the
+bundle but never boots it. This batch is what changes that, so expect the CI wiring to be a
+real part of the work rather than a `pnpm add`.
+
 ---
 
 ## Post-launch — sequenced, not scheduled
@@ -1006,7 +1265,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **F** | ~~18~~ → ~~19~~ → ~~**checkpoint: live scraper acceptance runs**~~ **met 2026-09-09** → ~~20~~ | **Opus 5 · max** | **GPT-5.6 Sol · Max** | Dependency chain, same files. 5.3's acceptance needs live retailer hits — owner performs those. **All three shipped; the checkpoint cleared 2026-09-09 (#111) and 20 shipped 2026-09-10.** Group F is complete |
 | — | 21 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Hard 7-day wall-clock gate after Batch 20 |
 | **G** | 22 → ~~23~~ | Opus 5 · high | GPT-5.6 Sol · High | Both consume the scraper framework from 19. **23 built 2026-09-10**; its §3.7 live run waits for the owner |
-| **H** | 24 → ~~25~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | ~~**Both blocked on the same two `vercel.json` fixes**~~ — **neither fix was needed.** `camera=(self)` has been live since Batch 2, and photos are served from the API origin that `connect-src` already allows. **25 shipped 2026-09-10**; 24 (barcode) still waits on eBay |
+| **H** | 24 → ~~25~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | ~~**Both blocked on the same two `vercel.json` fixes**~~ — **neither fix was needed.** `camera=(self)` has been live since Batch 2, and photos are served from the API origin that `connect-src` already allows. **25 shipped 2026-09-10**; ~~24 (barcode) still waits on eBay~~ — **24 is unblocked as of 2026-09-10** (`OWNER-ACTIONS.md` #5: eBay Browse needs no partner approval, `DECISIONS.md` #126). Its remaining gate is a person with a phone and a disc, not a credential |
 | — | ~~26 · solo~~ | — dropped | — dropped | ~~Conditional on Batch 6 proving insufficient~~ — **Batch 6 proved sufficient; dropped** (`DECISIONS.md` #109) |
 | — | ~~27 · solo~~ | — shipped | — shipped | ~~The app's only public surface; needs its own security review~~ · **shipped; reviewed, four defects found and fixed.** (It is in fact the *second* public surface; Batch 17's `.ics` feed came first) |
 | **I** | ~~**checkpoint: eBay production API application**~~ **cleared 2026-09-10** → 28 → 29 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | 29 consumes 28. **The checkpoint's premise was false** — Browse needs no partner approval, only a self-service keyset (`DECISIONS.md` #126). Nothing gates the group |
@@ -1029,7 +1288,7 @@ point "when does 11 run?" had no answer.*
 ## Risk notes carried by owner decision (`DECISIONS.md` #16)
 
 - **Batch 19/20/22 (scraping).** Six retailer scrapers to build and keep working. A layout change does not error — it selects the wrong node and persists a plausible wrong number, which then feeds price-drop alerts and aggregates. Build a per-scraper "last known good shape" assertion, not just a success/fail counter. Phase 5.3's acceptance criterion requires live-retailer runs; keep those out of CI and run them manually.
-- **Batch 33 (email credentials).** Stores two people's live mailbox tokens. Must land **after** Batch 3's rate limiting and fail-closed config, never before. Encryption at rest is net-new — app-starter ships no `cryptography` dependency.
+- **Batch 33 (email credentials).** Stores two people's live mailbox tokens. Must land **after** Batch 3's rate limiting and fail-closed config, never before. ~~Encryption at rest is net-new — app-starter ships no `cryptography` dependency.~~ **Corrected 2026-09-11:** `cryptography>=50.0.0` has been a direct dependency since Batch 11, which needs it for RFC 8291 Web Push. The library is not net-new; **key management is** — where the key lives, how it rotates, and what a key the app cannot read does to the rows behind it.
 - **Batch 28 (eBay).** Sold-comp data is unobtainable; the UI must say "current asking prices" — and that is now *doubly* true, since eBay put sold listings behind a login wall in late August 2026, walling the scrape-it fallback as well as forbidding it. ~~Production API access is an application, not a given — start it early, it gates the batch.~~ **Superseded 2026-09-10 (`DECISIONS.md` #126): Browse works on a self-service keyset and gates nothing.** The real risk moved: a keyword search returns the 4K, the steelbook and a double-bill alongside the disc you asked for, so **the match filter is the batch, not the median** — measured at **149% overstatement** on live data, and `condition` cannot do the segmenting because it is a localised display string (#129).
 - **Batch 24 (barcode).** Expect a low hit rate on unknown discs and wrong-edition matches. Confirmation UI is mandatory.
 

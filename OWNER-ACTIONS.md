@@ -62,6 +62,17 @@ not blocking; it is one command away whenever you next run `apply`.
       is scheduled `0 3 * * *`. **§5.5 is not met until it actually fires**, which is the
       first 03:00 UTC after that; `scrape_runs` currently holds one row and its trigger is
       `manual`. Check for a row with `trigger=cron` the morning after. Phase 5.5 wants *"first overnight run completes"*.
+
+      > **Checked 2026-09-11 at 22:26 UTC — it did not fire.** `scrape_runs` still holds
+      > exactly one row, `trigger=manual`, from 2026-09-10, and `price_checks` still holds
+      > 14 rows across two hand-run days. The first scheduled fire was 03:00 UTC that
+      > morning, **over 19 hours earlier**. So the cron is applied but not running, and
+      > §5.5 is failing rather than pending. Worth a look at the `cron-scrape` service's
+      > logs in Railway — a crashed container would not have been restarting itself either,
+      > since the live `api` service still has **no restart policy** (item 5 below).
+      > **This also blocks Batch 21**, whose criterion needs seven days of *scheduled*
+      > scrapes and cannot be met with back-dated rows.
+
       A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process
       scheduler would still be worse than nothing — it runs once per container, so scaling
       to two would silently double the scraping. The command is:
