@@ -2213,3 +2213,31 @@ contemporaneous.
      appear in `OnboardingPage` and nowhere else in TSX, hero photos are not interface
      chrome, and Open Graph/Twitter metadata points to the social-card master at its native
      dimensions.
+
+141. **Every remaining batch's acceptance criteria are recovered up front, not one batch at
+     a time.** #54 closed the gap Batch 10 opened, but left the repair to whoever next ran
+     a batch — *"batches not yet started still have the gap"*. On 2026-09-11 the seven
+     planned batches without criteria — **21, 22, 24, 29, 33, 34, 38** — had theirs
+     recovered verbatim from §16 at `d94a6b8~1` in one pass. The gap is now closed for the
+     whole queue, and a future agent should **not** re-recover; the ledger is the place to
+     read them.
+
+     *Why up front rather than at batch start:* recovering a criterion is also the moment
+     you find out it is wrong, and three of these were. 5.7 names **Recharts**, a
+     dependency Batch 14 explicitly declined when it drew §13.1's charts in CSS. 3.4's
+     lookup chain names **Amazon**, one of the four shops #91 ruled out permanently. 10.1
+     names **Supabase Vault**, a product this app has not used since the re-scaffold. Found
+     at batch start, each of those is a mid-batch surprise; found together, they are a
+     paragraph in the ledger the batch reads before it writes anything.
+
+     *One deliberate deviation from verbatim,* following Batch 11's precedent: the tier
+     emoji is kept, the `Sonnet 4.6` / `Opus` annotation is dropped. Those names are the
+     decay `docs/phase-batches.md` exists to stop, and the model each batch needs is in its
+     own table. All 69 quoted lines were checked against the archived doc programmatically
+     before the section was committed.
+
+     *Two stale claims in the same ledger were corrected rather than left to contradict the
+     new section:* the Batch 33 risk note said app-starter ships no `cryptography`
+     dependency — it has been a direct dependency since Batch 11, which needs it for RFC
+     8291 Web Push, so what is net-new is **key management**, not the library; and Group H
+     still said Batch 24 waits on eBay, which `OWNER-ACTIONS.md` #5 closed on 2026-09-10.
