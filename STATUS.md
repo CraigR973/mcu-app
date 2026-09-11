@@ -2,8 +2,8 @@
 
 ## Now
 
-**The brand integration correction is prepared on `fix/brand-integration-hierarchy`; it is
-not deployed.** A rendered design review found that commit `00414f5` used commemorative
+**The brand integration correction is merged and deployed.** PR #2 merged as `d961937` on
+2026-09-11. A rendered design review found that commit `00414f5` used commemorative
 photographic artwork as routine interface chrome: a cropped wordmark behind login copy,
 poster thumbnails at 40–80 px, and full-screen photographic loading states. The artwork
 was good; the hierarchy was not.
@@ -22,8 +22,11 @@ The mobile login grid now gives its brand row intrinsic height instead of stretc
 `brand-integration.test.ts` prevents photographic art returning to navigation or loading
 chrome and pins the social-card metadata. Verified in rendered Chromium at 1440×900 and in
 the in-app browser at its mobile breakpoint: the complete logo, mobile header and sidebar
-all remain legible. Gate green: **239 web + 79 shared tests**, 0 lint errors (six existing
-Fast Refresh warnings), clean typecheck, production build passing. `DECISIONS.md` #140.
+all remain legible. The production Vercel login was then rendered again at both sizes;
+Railway `/health` reported the merge SHA and `/health/ready` reported `db: ok`, with push
+and AI configured. CI run `34578379338` is green across all five jobs: **239 web + 79
+shared tests**, 508 API tests, lint/typecheck, reversible Postgres migrations, dependency
+audit and production build. `DECISIONS.md` #140.
 
 **Shipped and deployed before it: the comprehensive UI redesign.** A full UI/UX redesign of the web
 app, audited, implemented, **verified live on 2026-09-10 against the real catalogue** —
@@ -586,14 +589,19 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
-- **2026-09-10 (brand hierarchy correction)** — A rendered design review reversed the
+- **2026-09-11 (brand hierarchy correction)** — A rendered design review reversed the
   over-application of photographic identity artwork from `00414f5`. Navigation and loaders
   now use the compact vector mark; desktop sign-in uses the complete 440 px horizontal
   lockup in a restrained editorial panel; mobile sign-in no longer stretches its brand
   row; onboarding keeps the personalised poster as its sole 192 px reveal; and social
   metadata again names the rights-independent 1200×630 card. Added regression coverage for
-  those boundaries and for responsive lockup proportions. Rendered at 1440×900 and the
-  mobile breakpoint. Gate green: 239 web + 79 shared tests, lint/typecheck/build clean.
+  those boundaries and for responsive lockup proportions. PR #2 merged as `d961937` and
+  main CI run `34578379338` passed all five jobs. Production was rendered from Vercel at
+  1440×900 and the mobile breakpoint; Railway reported that exact SHA and `db: ok`.
+
+  One of two duplicate pre-merge CI runs hit the existing timing-sensitive SearchBar
+  assertion; the identical push run was fully green and the failed job passed unchanged on
+  rerun. No expectation or test was weakened.
 
 - **2026-09-10 (evening, continued)** — **Personalised poster now visible in authenticated header and sidebar.** LoginPage mobile header simplified (removed hero photo backdrop). Sidebar and AppLayout header now display personalised-poster-icon-512.png instead of brand marks — all authenticated navigation surfaces feature the real poster stack with stills from Mark's collection (Jaws, Double Indemnity, An American Werewolf in London). Gate green: 235 web + 79 shared tests, 508 API tests, all lint/typecheck/build clean. Commit `00414f5` deployed to main; Vercel/Railway automatic deployment in progress.
 
