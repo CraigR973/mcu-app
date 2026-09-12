@@ -142,18 +142,34 @@ async def test_sold_discs_are_excluded_from_an_owned_query(db_conn: object) -> N
 
     Written against the live schema because the predicate is SQL: a Python-level check
     would pass just as happily with the `IN` clause pointing at the wrong column.
+
+    **The film and the disc are both created here.** An earlier revision selected an
+    existing disc out of the catalogue, which passed on this machine — where
+    `DATABASE_URL` points at Neon and 1,857 of them exist — and failed in CI, where the
+    Postgres 17 service starts empty. `STATUS.md` gotcha 15, arriving on schedule: a
+    green local run is silent about anything touching SQL, and that cuts both ways.
     """
     from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+
+    from src.models.movie import Movie
 
     assert isinstance(db_conn, AsyncConnection)
     session = AsyncSession(bind=db_conn)
 
-    movie_id = await session.scalar(select(CollectionItem.movie_id).where(owned_copy()).limit(1))
-    assert movie_id is not None, "the catalogue has no owned discs to test against"
+    movie = Movie(
+        id=uuid.uuid4(),
+        tmdb_id=940_201,
+        title="A Film Sold On",
+        original_title="A Film Sold On",
+        year=1994,
+        media_type="film",
+    )
+    session.add(movie)
+    await session.flush()
 
     item = CollectionItem(
         id=uuid.uuid4(),
-        movie_id=movie_id,
+        movie_id=movie.id,
         formats=["blu_ray"],
         listing_status="in_collection",
     )
