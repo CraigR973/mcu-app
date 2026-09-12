@@ -37,6 +37,14 @@ or performed a **destructive data or history operation**. Those stay explicit.
    built" for work that had shipped. §17 is now the thing to update.*
 10. Update `STATUS.md` — overwrite the "Now" block, prepend a dated line to the "Log".
     Append to `DECISIONS.md` only if a durable decision was made.
+
+    *"The Now block" means `## Now` up to the next heading — **not** everything before
+    `## Log`.* `## Next` and `## Gotchas` sit between them, and the gotchas are cited by
+    number from code comments across the repo (`gotcha 15`, `gotcha 21`, `gotcha 24`,
+    `gotcha 26`). Batch 28's close-out spliced from `## Now` to `## Log` and deleted both
+    sections — 451 lines — leaving those references pointing at nothing; restored in
+    `cdb7def`. Check `grep -n '^## ' STATUS.md` after editing: it must still list
+    **Now, Next, Gotchas, Log**.
 11. Commit the docs, push `main`.
 12. Report what shipped, and **every failure encountered on the way** — including ones fixed
     on the first attempt.
