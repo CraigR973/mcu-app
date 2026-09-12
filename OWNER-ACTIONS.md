@@ -45,6 +45,13 @@ file would once have deleted `TMDB_READ_TOKEN` and `ANTHROPIC_API_KEY`.
 **As of 2026-09-10 the plan reads `0 to add, 1 to change, 0 to destroy`** — the crons are
 applied and the eBay variables are set, so the one remaining line is:
 
+> **Correction, 2026-09-12.** "The eBay variables are set" meant
+> `EBAY_VERIFICATION_TOKEN` and `EBAY_ACCOUNT_DELETION_ENDPOINT` — the account-deletion
+> pair. It did **not** mean the Browse keyset. `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET`
+> have never been in Railway, which Batch 28's new `ebay` health field surfaced on its
+> first deploy. See item **1b** below; a fresh `config plan` will also read differently
+> once they are declared.
+
 ```
 ~ Update api deploy.restartPolicyType   (null → "ON_FAILURE")
 ```
@@ -130,6 +137,51 @@ not blocking; it is one command away whenever you next run `apply`.
 **5.5's criterion was corrected before the batch was built** (`DECISIONS.md` #112). As written
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
 pairs, with all 29 gaps correct, because no shop stocks every film.
+
+### 1b. Set the eBay keyset in Railway *(new — Batch 28, 2026-09-12)*
+
+- [ ] **Set `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` in the Railway `api` service.**
+
+**Batch 28 shipped and every eBay surface in production answers 503 without these.**
+Confirmed after the merge: `/api/v1/health/ready` reports **`ebay: not_configured`**. The
+credentials exist in `apps/api/.env.local` and the production keyset has been working since
+2026-09-10 (`DECISIONS.md` #126) — what is missing is only that Railway has never held them.
+`.railway/railway.ts` declares neither, so they are also undeclared drift the way
+`ANTHROPIC_API_KEY` and `TMDB_READ_TOKEN` once were (#124): add
+`EBAY_CLIENT_ID: preserve()` and `EBAY_CLIENT_SECRET: preserve()` alongside
+`EBAY_VERIFICATION_TOKEN`, or the next `config apply` plans to remove them.
+
+*Why it is yours:* a Railway variable is a hosting change, which `AGENTS.md` keeps explicit.
+
+*Why it was found at all:* Batch 28 added `ebay` to `/health/ready` for the reason the TMDB
+outage taught — a value living only in a hosting variable has nothing testing it. It caught
+one on its first deploy.
+
+**This also blocks Phase 4.1's acceptance below.**
+
+### 1c. Run Phase 4.1's acceptance — one live eBay query *(new — Batch 28, 2026-09-12)*
+
+- [ ] **After 1b, ask the app what a disc is worth and check the number is sensible.**
+
+Phase 4.1's acceptance in full: *"Querying 'Blade Runner 2049 Blu-ray' returns a reasonable
+UK median price"*. `docs/phase-batches.md` says plainly this is *"not something an
+unattended agent signs off"* — eBay's sandbox has an empty GB catalogue, so only a live
+production call can prove it, and `docs/agent-commands/group-start.md` puts live
+third-party runs in your hands.
+
+**How:** open any film you own on Blu-ray → **Owned copies** → **Value and resale** →
+**What is it worth?**. Blade Runner 2049 is the query the criterion names.
+
+**What "reasonable" means here, so you are not judging blind.** Measured on 2026-09-11
+against two captured 200-listing payloads: the **naive** median over everything that query
+returns is **£24.74**; the matched plain-Blu-ray median is **£9.99 from 29 listings**. The
+panel shows the sample size and the range beside the price, and lists the other segments —
+the 4K collector steelbooks sit around £150 and are *meant* to. A headline near £8–£14 with
+a sample in the tens is the expected answer. One far above that means the match filter has
+stopped filtering, which is a defect to report, not data.
+
+Everything shown is **current asking prices**, never sold prices — sold comps are
+unobtainable (`DECISIONS.md` #16, #126).
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
