@@ -65,6 +65,457 @@ and CI is green because it runs against a fresh Postgres 17 service. The canonic
 `batch-verify.md` sets no `DATABASE_URL`, and that run is clean: **576 passed, 389
 skipped**. Worth fixing so the live-database run means something, but it is its own job.
 
+### ⛔ What is waiting for you
+
+`OWNER-ACTIONS.md` has five things, and they are mostly minutes. **eBay is no longer among
+them** — #5 closed on 2026-09-10 and needed no approval after all:
+
+1. ~~**Two Railway crons in one visit**~~ — **applied 2026-09-10.** `cron-scrape` and
+   `cron-reminders` exist and are scheduled. **Each is a command**, `python -m src.scripts.daily_scrape` and `python -m src.scripts.run_reminders`.
+   Until 2026-09-10 both items said "point a cron at this endpoint" and **that could not be
+   done**: both endpoints are admin-authed and an access token lives 24 hours, so no
+   scheduler could ever have called them (`DECISIONS.md` #119).
+2. **Push on for two devices** — closes 5.6 and 6.2 between them.
+3. **One question to the assistant**, and **one spoken** — closes 9.1 and 9.5.
+4. ~~**Ten Blu-ray.com URLs** — 3.7.~~ **Done 2026-09-10** — and it found the scraper
+   broken. See above and `#122`.
+
+**Three acceptance criteria still need a person.** ~~3.7~~, ~~5.6~~ and ~~9.1~~ were all
+closed on 2026-09-10 and are verified against live rows, not asserted:
+
+| Criterion | State on 2026-09-10 |
+|---|---|
+| **6.2** two devices | ❌ **one** `push_subscriptions` row (Craig's iPhone). Mark's copy of the price alert sits `suppressed`, reason `no_subscriptions` — the standing evidence. |
+| **8.4** match notification | ❌ session is `open` with **1 participant** and 11 votes. A match needs two people to like the same film, so none can exist yet. |
+| **5.5** first overnight run | ❌ `cron-scrape` is applied and scheduled `0 3 * * *`; the one `scrape_runs` row reads `trigger=manual`. Met by the first row reading `trigger=cron`. |
+| **9.5** a spoken query | ⏳ **unverifiable from data.** Recognition happens in the browser and dictation fills the input rather than sending it, so a spoken question and a typed one leave identical rows. Only the owner can say. |
+
+**Closed on 2026-09-10:** §5.6 — the run queued 2 alerts and *"Cross of Iron is £12.99"* was
+sent and delivered to a real device. §9.1 — two `claude-sonnet-5` calls logged with tokens
+and cost ($0.004266, $0.005282), no error.
+
+**5. One line of IaC drift, whenever you next run `apply`.** `railway config plan` reads
+`0 to add, 1 to change, 0 to destroy`, and the change is
+`deploy.restartPolicyType (null → "ON_FAILURE")`. **The live `api` service has had no
+restart policy since Batch 2** while `.railway/railway.ts` declared one — a crashed
+container has not been restarting itself. Nothing depends on it, so it blocks nothing; it
+became visible only because 2026-09-10 was the first `config plan` run since that file was
+written.
+
+### What the live database holds
+
+**1,857 `collection_items`**, untouched all run. **11 `wanted_list` rows, 8 live and
+active.** 8 `price_checks`, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers`.
+The database measured **36 MB** on 2026-09-10, which is why Batch 25 resizes photos.
+
+Empty and waiting for a person: `push_subscriptions`, `notification_preferences`,
+`notifications`, `price_history_daily`, `scrape_runs`, `ai_usage_log`, `ai_settings`,
+`ai_conversations`, `ai_messages`, `ai_tool_calls`, `movie_night_*`, `item_photos`.
+**10 of the 1,857 `collection_items` now carry Blu-ray.com specs** (`specs_integration_state`
+reads `fetch_count: 30` — ten wasted on the broken parser, ten more on the partial fix, ten
+that worked).
+
+
+## Next
+
+**The overnight run of 2026-09-09 — eight batches, in this order.** The order is
+dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 32 needs 31.
+
+| # | Batch | Closes fully? |
+|---|---|---|
+| ~~1~~ | ~~**11** Notifications + push (6.1, 6.2, 5.11)~~ | **shipped 2026-09-10** — 6.2 deferred, needs two real devices |
+| ~~2~~ | ~~**20** Price scraping + drop alerts (5.5, 5.6, 5.8)~~ | **shipped 2026-09-10** — cron is hosting; 5.6 needs a device |
+| ~~3~~ | ~~**30** AI assistant — client + caps (9.1, 9.7)~~ | **shipped 2026-09-10** — ⚠️ 9.1's live call is an owner action |
+| ~~4~~ | ~~**31** AI assistant — tools + chat (9.2, 9.3, 9.4)~~ | **shipped 2026-09-10** |
+| ~~5~~ | ~~**32** Voice input (9.5)~~ | **shipped 2026-09-10** — ❌ 9.5 still needs a human speaking |
+| ~~6~~ | ~~**35** Movie night (8.3, 8.4)~~ | **shipped 2026-09-10** — ⚠️ 8.4's push to a device is an owner action |
+| ~~7~~ | ~~**25** Photo uploads (3.10)~~ | **shipped 2026-09-10** |
+| ~~8~~ | ~~**23** Specs — scraper + display (3.7, 3.8, 3.9)~~ | **built 2026-09-10** — ❌ 3.7's live run is an owner action |
+
+**Every batch's criteria are in `docs/phase-batches.md`** under "Criteria recovered for the
+2026-09-09 overnight run", each with what the April spec no longer knows. Read that section
+rather than re-deriving from §16.
+
+*This sentence was wrong when it was written and is now true.* It claimed all eight were
+there; **only six were** — Batch 20's and Batch 35's were missing, and were recovered from
+`d94a6b8~1` on 2026-09-10 before either batch was built, as `DECISIONS.md` #54 requires.
+
+**Three hosting steps stop and wait for the owner**, per the close-out protocol:
+
+1. ~~`VITE_VAPID_PUBLIC_KEY` on Vercel~~ — **no longer needed.** Batch 11 serves the public
+   key from the API, derived from the private half (`DECISIONS.md` #114). What Batch 11 *does*
+   need is a daily cron calling `POST /api/v1/notifications/run-reminders`.
+2. **Two** Railway crons, in one visit — the nightly scrape and the reminder pass. `#60`
+   explains why an in-process scheduler is worse than nothing for either. **The endpoints
+   named here were not callable by a cron**; each job is now also a command, which is what
+   a Railway cron runs (`#119`). `OWNER-ACTIONS.md` carries the exact lines.
+3. ~~Nothing for Batch 35~~ — **correct, and now proved.** `LISTEN`/`NOTIFY` + SSE needed
+   no new service, credential or hosting step (`#113`). Batch 35 shipped without one.
+
+**Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
+a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
+spoken query) · 8.4's "notification to both", depending on how the match is signalled.
+
+**Settled inputs, so no batch has to ask again:** the AI daily cap is **50 messages per person**
+(`#112`'s neighbour, recorded in the ledger); photos are capped at **~300 KB** after
+server-side resize and stored in Postgres, not an object store — **confirmed by the owner
+2026-09-10, `#120`**; Batch 23 gathers its ten
+Blu-ray.com URLs from browse pages under `#110`'s bounds and extracts no prices.
+
+### Verify against the live system, not only the suite
+
+Three times on 2026-09-09 a green gate coexisted with a broken feature: CI was green while
+production had no TMDB token; the scraper "test" button showed results while saving nothing;
+and phase 5.5 carried a criterion no correctly working system could satisfy. For each batch,
+run the gate **and then exercise the real thing** — live API, real database, the browser where
+it renders — and report what was observed rather than what passed.
+
+### Four things the next agent should know
+
+1. **Planned batches whose criteria have not yet been recovered need them written into the
+   ledger before implementation.** Batch 10 removed §16. Recover them verbatim from
+   `git show d94a6b8~1:MCU_Architecture_v2.1_FINAL.md`, grep for `**Phase X.Y:`, and write
+   them into the batch's ledger section **before** writing code (`DECISIONS.md` #54).
+2. **Adding a Python dependency means regenerating both locks.** CI installs with
+   `pip install --require-hashes -r requirements-dev.lock`; `pyproject.toml` alone is not
+   enough. The command is in each lock file's own header.
+3. **The Postgres-backed tests cannot run on this machine** — no local server, no Docker — so
+   254 of them skip locally and run only in CI. Do **not** point them at production Neon to
+   get local coverage. A test fixture bug on 2026-09-09 used an unresolvable host and was
+   caught only because CI ran it against real Postgres; against Neon it would have passed and
+   shipped hidden behind a green local run.
+4. **Anything that lives only in a Railway variable has no test.** The TMDB token was missing
+   for an unknown length of time behind a fully green gate. `AGENTS.md` already says the gate
+   proves the code and not the infrastructure around it — the TMDB outage is what that
+   sentence looks like in practice.
+
+
+## Gotchas
+
+0. **The collection is 1,857 items, not ~140 and not 1,866.** Measured by running the
+   real parser over the real spreadsheet on 2026-09-07. The sheet has 1,867 rows = 1
+   header + 1,866 data rows, but **9 of those data rows are entirely blank** (all nine
+   columns `None`, at sheet-rows 1857–1863, 1865, 1866). The parser correctly drops them
+   and returns 1,857 candidates → 1,847 distinct titles, 10 of them repeated.
+
+   **1,866 was a trailing-blank-row artifact and was wrong everywhere it appeared** — the
+   roadmap's mentions, this gotcha, and Batch 4's own acceptance criterion. Phase 1.5's
+   acceptance ("parser produces 1,866 structured entries with no data loss") was therefore
+   unsatisfiable as written and always had been; there is no data loss, the count was just
+   wrong. Corrected in `MCU_Architecture_v2.1_FINAL.md` and `docs/phase-batches.md`
+   (`DECISIONS.md` #29). **`docs/part-b-audit.md` and `docs/part-d-roadmap.md` still say
+   1,866** — they are dated analysis records and are left as written per `DECISIONS.md` #16.
+
+   `import_review.csv` (137 rows) is a *review-queue* artifact from the April import, not
+   the collection. Anything that scales with catalogue size — location tracking, shelf QR
+   codes, smart collections, saved filters, export, natural-language search — must be
+   judged at 1,857.
+
+0b. **FIXED AND VERIFIED IN BATCH 4, COMPLETED IN BATCH 6. The location data was
+   extracted at import and then discarded** — the most consequential defect the 2026-09-07
+   review found. **1,855 of the 1,857 items now carry a structured `section`, and all 1,857
+   carry their `location` text**, in the live database. Batch 4 got 1,733 of them; Batch 6
+   added the four cabinets to the vocabulary and backfilled the remaining 122
+   (`DECISIONS.md` #34). Only 2 are unsectioned, and correctly so. **Batch 6 also made the
+   data reachable** — until then the columns and the composite index existed and no
+   endpoint queried them. Kept here as the record of what was wrong and how it was proved
+   fixed.
+
+   What was wrong, each link verified in April and re-verified 2026-09-07:
+   - `MCU_Architecture_v2.1_FINAL.md` §3.4 **designs** `location`, `section` and `shelf`
+     as first-class columns on `collection_items`.
+   - `apps/api/src/spreadsheet/parser.py` **implements** the extraction — `parse_location()`
+     yields `section` and `shelf`.
+   - The legacy `0003_create_collection_items.py` and the pre-re-scaffold flat
+     `models.py` **omitted all three columns**.
+   - The importer therefore fell back to `notes = candidate.location_raw` — the **raw**
+     string survived, the parsed structure was thrown away, and `notes` then held location
+     for imported rows and real notes for hand-added ones with nothing to tell them apart.
+   - `0015`'s `search_vector` never referenced `notes`, so the "put it in notes" workaround
+     would not have made location searchable even if it had been deliberate.
+   - §6.2 promises *"show me everything on the Front 2nd shelf"*. Not implementable as built.
+
+   **What Batch 4 changed.** Migration `003` creates `location`, `section` and `shelf` as
+   real columns with a CHECK constraint pinning `section` to the five §3.4 values, and a
+   partial composite index on `(section, shelf) WHERE deleted_at IS NULL` — the index
+   Batch 6's "Front 2nd shelf" query needs. The importer writes all three and leaves
+   `notes` alone. `parse_location` also gained `E:\\Movies` → `Digital`: the digital
+   library is only ever recorded as its filesystem path, so without it all 413 digital rows
+   landed with `section IS NULL` and the vocabulary never produced the value §3.4 names.
+
+   **Coverage after Batch 4 was 1,733 of 1,857** (Front 550, Back 575, Digital 413,
+   Lounge 160, Garage 35), with 124 cabinets unsectioned. **Batch 6 settled that question
+   by growing the vocabulary**: Top Big Cabinet 38, Top Small Cabinet 38, Fish Room
+   Cabinet 26, Black Box 20 — 122 rows, leaving 2. `location` was never modified, so the
+   backfill is derived and reversible.
+
+1. **RESOLVED. The derived-field trigger tests now run in CI — 14 of them, zero skips.**
+   Proved on run `34162647232`: `tests/test_derived_field_triggers.py ..............`
+   against the Postgres 17 service, no `s` characters in that line.
+
+   They were **re-authored, not resumed.** They could not be resumed: every one of them was
+   written against the April schema — `movies.id` as an INTEGER TMDB id, a scalar `format`
+   column, scalar `hdr_format` and `audio_formats[]` — and all three are gone under §3.4.
+   All 13 original behaviours are preserved one-for-one; the 14th covers a combo pack whose
+   single row holds several formats, which the old scalar column could not express.
+   This was an owner decision taken at the start of Batch 4 (`DECISIONS.md` #28) precisely
+   because rewriting a test to match new code is otherwise forbidden as a route to green.
+
+1b. **RESOLVED. The matching engine used to let TMDB popularity decide which film was on
+   the shelf.** Found by Batch 4's own `--dry-run`-against-`matching_eval.csv` criterion,
+   which is exactly what that criterion exists for.
+
+   The mechanism, both links verified: `engine.py` scored `original_title` as well as
+   `title` and took the **max**, so a film whose *original* title matched scored
+   identically to one whose displayed title did; then it sorted by
+   `(confidence, popularity)`, so ties were broken by a ranking that is not stable over
+   time and now favours 2025/2026 releases.
+
+   Measured over all 1,857 titles before the fix: **687 matched rows (39.9%) had ≥2
+   candidates tied at the top confidence, 652 of them with no year in the source title —
+   35.1% of the collection.** `Frankenstein` → 2025 rather than the 1931 Karloff,
+   `Lolita` → 1997 rather than Kubrick's 1962, `Amistad` → `Friendship (2023)`.
+
+   **The fix** (`DECISIONS.md` #31): `title_is_exact` promotes a displayed-title match
+   over an `original_title`-only one — a tiebreak that never moves a confidence — and
+   `is_ambiguous` marks a leader tied with films that are not plausibly the same one.
+   Ambiguous rows are **catalogued with their location** and only their identification is
+   deferred to review. After the fix: 1,093 settled, 628 ambiguous, 136 unmatched.
+
+   **The ranking is still imperfect, but Batch 5 gave it a route out.**
+   `title_similarity` floors a substring match at 0.9, and a near-miss that appends a
+   numeral can beat it: "french connection" scores 0.919 against "French Connection II"
+   and only 0.900 against the correct "The French Connection", because a leading article
+   costs more than an appended "II". **11 of the 1,093 settled rows are in this class and
+   about four look wrong:**
+
+   | sheet row | as written | chose |
+   |---|---|---|
+   | 550 | French Connection | French Connection **II** (1975) |
+   | 1789 | X-Men 2 | X-MEN 2 - **Wolverine's story** |
+   | 1831 | 11.22.63 | 11-22-63: **The Day the Nation Cried** |
+   | 1254 | Planet Earth II | Planet Earth II: **A World of Wonder** |
+
+   **These are now corrected in the app, not in the engine.** The identify picker, opened
+   from an already-identified film, replaces any of them in a click (`DECISIONS.md` #33).
+   A third change to the matching ranking would have cost its own measurement pass over
+   all 1,857 titles and risked regressing matches that are currently right.
+
+2. **The new migration chain starts with an intentionally empty `001`.** It has been
+   proven to apply and reverse against disposable Postgres, and CI repeats both commands.
+   Batch 3 owns the auth schema and Batch 4 owns the domain schema; do not put future
+   tables into the baseline.
+
+3. **`cd` is actively dangerous here.** autoenv sources `apps/api/.env` on entry and raises an interactive allow/deny prompt. Use absolute paths.
+
+4. **~22 of the 25 tables are speculative** — created in April for roadmap stages 4–11 that were never built. Do not assume a table's existence means its feature exists. Part D decides which survive onto the new baseline.
+
+5. **RESOLVED IN BATCH 9 — and there were four dead steps, not three.** The wizard is
+   rebuilt against a real completion column (migration `010`), and every remaining step is
+   backed by something that exists.
+
+   - `StepInstallPWA` read `window.__pwaInstallPrompt`, which nothing set and nothing
+     could have — there was no manifest and no service worker for `beforeinstallprompt` to
+     fire against. **Batch 8 supplied both**; `usePwaInstall` now captures the event, and
+     falls back to instructions on iOS, which never fires it.
+   - `StepNotifications` offered to enable push against **zero** infrastructure, and still
+     does: no VAPID key, no subscription, no endpoint, no `push_subscription` column.
+     **Dropped, not fixed** (`DECISIONS.md` #50) — the batch definition's claim that it
+     "now has real infrastructure behind it" was wrong. **Batch 11 owns bringing it back.**
+   - `StepEmailConnect` was doubly dead: Stage 10 is dropped *and* this app has no email
+     addresses at all, since sign-in is a display name and a PIN.
+   - **The fourth, which this gotcha never listed:** the catalogue step read
+     `d?.meta?.total` — the `{data, meta, errors}` envelope `DECISIONS.md` #6 removed — so
+     it rendered a loading skeleton for ever. A dead read can hide behind a plausible
+     loading state indefinitely.
+
+7. **RESOLVED IN BATCH 5. The web app now parses every API response through
+   `packages/shared`.** It previously imported no shared schemas at all — expected during
+   the bottom-up re-scaffold, but only true because there were no read endpoints yet.
+   Batch 5 shipped the schemas with their endpoints, as `DECISIONS.md` #6 requires: 7
+   `.parse()` call sites and **zero `as Promise<T>` casts** on an API response. The rule
+   that made this hold is that a schema ships *with* its endpoint — one added later never
+   gets added.
+
+8. **`pnpm -r test`, not `--filter @mcu/web test`** — the filtered form never runs `packages/shared`.
+
+9. **mypy runs `strict = true` with `warn_unused_ignores`** — prefer `model_validate()` over `**spread` with a `type: ignore`.
+
+10. **`ruff format` (not just `ruff check`) must pass** — a Phase 3.1 commit failed CI on formatting alone.
+
+11. **A GitHub PAT was committed in April and remains in git history** (commits `4768da8`, `0bfb672`). It is dead (401) and now redacted from the working tree, but **it has not been revoked at GitHub and history has not been rewritten.** Both are outstanding owner decisions.
+
+12. **A Railway 502 does not mean the app is down.** The public domain must target
+    Railway's injected `PORT` (8080), not the Dockerfile's `EXPOSE 8000`. Pointing it at
+    8000 returned a public 502 while the container was healthy and its internal
+    healthcheck returned 200 throughout. `DECISIONS.md` #20; `.railway/README.md`.
+
+13. **Run the Railway CLI on Node 22+.** Its IaC engine uses Node's type-stripping flag,
+    which Node 20 rejects, so `railway config plan` fails before touching infrastructure.
+    The app's own build stays on Node 20.
+
+14. **`mcu-app.vercel.app` is somebody else's app.** The bare name was taken, so Vercel
+    assigned us `mcu-app-fawn.vercel.app`. `FRONTEND_ORIGIN` was initially set to the bare
+    name, which pointed the API's CORS allowlist at a stranger's deployment while excluding
+    our own front end. Corrected at close-out. **Read the alias list from
+    `vercel inspect`; never assume the project name is the domain.** `DECISIONS.md` #23.
+
+15. **There is no local Postgres and no Docker on this machine.** Migration changes and
+    the DB-backed lockout tests cannot be run here at all — they skip locally and only
+    execute in CI. Both of Batch 3's CI failures were migration defects invisible to a
+    green local gate. **Treat a green local run as silent about anything touching SQL.**
+
+16. **The first real write against real data is its own test stage.** Batch 4's gate was
+    green, its `--dry-run` was clean, and the live import still hit three separate
+    defects: the importer could not connect to any hosted database (its tests mock the
+    connection), a 300-character `character_name` overflowed `VARCHAR(255)` and rolled
+    back a whole item, and an idempotency key on the item's contents collapsed two
+    distinct discs into one. **No test could have caught any of them** — mocks do not
+    enforce column widths or unique constraints, and a dry run never writes. Budget for a
+    real write, and read the import summary's error count rather than trusting its
+    success lines (`DECISIONS.md` #32).
+
+17. **A bare digit in a location string is not a shelf.** `parse_location`'s ordinal
+    regex used to match any `\d+` anywhere, so `Top small cabinet (Arrow 4 Film Noir
+    Classics Vol 2)` became shelf **"4th"** for four live discs. `Back 6th Shelf (Arrow 4
+    Film Noir Classics Vol 1)` was right only because `re.search` returns the leftmost
+    match — a correct answer for the wrong reason, which is the harder kind to notice.
+    Fixed in Batch 6: a shelf needs its ordinal suffix, or the word "shelf" after the
+    digit. **The general lesson is that the box-set titles in these cells are full of
+    numerals**, so any future parse of `location` must anchor on structure rather than on
+    finding a digit (`DECISIONS.md` #36).
+
+18. **CI's migration job runs against an empty schema, so it cannot prove a backfill.**
+    `upgrade head` → `downgrade base` proves a data migration *applies and reverses*; it
+    says nothing about whether its `WHERE` clauses select the right rows, because there are
+    no rows. Batch 6's `007` was checked by running its own predicates as read-only
+    `SELECT`s against live Neon first — 122 sectioned, 4 shelves cleared, 2 left — and the
+    post-deploy counts matched exactly. Do that for any future migration that writes data,
+    and see gotcha 16 for why.
+
+19. **A green build, green types and green tests can all coexist with a page that lies.**
+    TanStack Query **pauses** a retry when it believes the app is offline: the query sits
+    at `status: 'pending'`, `fetchStatus: 'paused'`, `isError: false`, with no data, and
+    stays there. The usual `isLoading → isError → items.length === 0` ladder therefore
+    falls through to the **empty state** — so `/trash` rendered "Nothing has been removed."
+    while its request had never come back, indefinitely and confidently.
+
+    Found by opening the page in a browser during Batch 7, with nothing failing anywhere
+    else. `listState()` in `apps/web/src/lib/query-state.ts` names the fourth state so a
+    list can say "waiting for the network" instead (`DECISIONS.md` #41). **Any new list
+    must use it**, and Batch 8's offline banner should build on it rather than around it.
+
+20. **A pydantic `field_validator` does not run for a field the request omits.** Batch 7's
+    create body used one on `tmdbId` to enforce "exactly one of `movieId`/`tmdbId`", which
+    correctly rejected a body naming *both* and silently accepted one naming **neither** —
+    a 500 where a 422 belonged. Use `model_validator(mode="after")` for any rule that spans
+    fields or must hold when a field is absent.
+
+21. **`mypy` is unpinned (`>=1.11.2`), so local and CI disagree about unused ignores.**
+    A `# type: ignore[arg-type]` that this machine's mypy 2.3.1 considered *necessary* was
+    reported as *unused* by CI's, and `warn_unused_ignores` made that a red gate. The fix
+    is to write code that needs no ignore — narrow in a loop rather than assert in a
+    comprehension. **Pinning mypy is an open suggestion, not a decision taken.**
+
+22. **A green build, green types and green tests prove nothing about behaviour with the
+    network away.** Batch 8's four defects were all found by driving the built app against
+    a stub API that could be switched off, with everything else passing. The most
+    important: **React Query pauses queries and mutations when it thinks you are offline**
+    (`networkMode` defaults to `'online'`), which silently disables both halves of an
+    offline story — the mutation never runs `mutationFn`, so an offline write queue inside
+    it is unreachable, and the query never issues the fetch a service worker exists to
+    answer. `apps/web/src/lib/query-client.ts` sets `'always'`, and
+    `query-client.test.ts` hangs if that is reverted. **Any new QueryClient must keep it.**
+
+23. **`fetch` resolves for a 5xx, so "the server answered" and "the write was applied" are
+    different questions.** A 503 comes from a gateway, a proxy, a captive portal or a
+    container that is still booting as readily as from the application. Treating one as a
+    refusal discards the write; treating it as certain failure and retrying duplicates it.
+    It is the *unknown* case — see `DECISIONS.md` #43 — and the same reasoning is why
+    only a 401 or 403 may end a session (#48).
+
+24. **`NOW()` in Postgres is the transaction start time.** Every row written by one
+    transaction gets the same value, and two updates inside one transaction are
+    indistinguishable. That is fine for "created at" and wrong for "modified at" — and
+    once `updated_at` became Batch 8's concurrency token it was a guard that could not
+    detect anything. Migration `009` moves `set_updated_at` to `clock_timestamp()`.
+    **The test harness runs each test in one transaction**, so anything that depends on
+    time advancing must use `clock_timestamp()` or it will pass for the wrong reason.
+
+25. **A service worker cannot be registered from the tooling available here.** The
+    in-app browser pane refuses with "An unknown error occurred when fetching the script"
+    even though the file serves correctly, and no Chrome extension is connected.
+    Everything else about the PWA is verifiable — the manifest, the icons, the generated
+    worker's contents, the queue end to end — but **"it caches the collection offline" and
+    "it installs to a home screen" can only be confirmed on a real device.**
+
+26. **`date.today()` reads the *server's* timezone, and this codebase is UTC everywhere
+    else.** A test can therefore go red from the clock alone, with nothing changed: the
+    watch-log default was computed in UTC and validated against local today, which agree on
+    Railway and disagree on a British machine for the hour after midnight. Green in CI all
+    day, red at 00:07 BST.
+
+    Use `src/clock.py` — `utcnow()`, `utc_today()`, `latest_plausible_today()` — never
+    `date.today()`. And for a date a *person* supplied, "in the future" means "not today
+    anywhere on Earth" (UTC+14), not "later than today here": a guard on UTC today refuses
+    someone in London logging tonight's film at 00:30 (`DECISIONS.md` #53).
+
+27. **`set -a; . apps/api/.env.local` silently drops `DATABASE_URL`, and pytest then reports
+    green while skipping 246 tests.** The Neon URL ends
+    `?sslmode=require&channel_binding=require` — **unquoted**, so bash reads the `&` as job
+    control: the assignment is backgrounded (no effect on the shell) and
+    `channel_binding=require` runs as its own command. `DATABASE_URL` ends up unset, the
+    database-backed tests skip rather than fail, and the run exits **0**.
+
+    Hit during Batch 27's close-out: `301 passed, 246 skipped` looked green next to the real
+    `547 passed`. Always read the count, not the colour. Export it by hand instead:
+
+    ```
+    export DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | sed 's/^DATABASE_URL=//')"
+    ```
+
+28. **`cryptography` runs at a different version here than in CI, and it is the security
+    floor that forces it.** The lock pins **50.0.1**; this machine has **48.0.1** and
+    cannot install the pinned one. cryptography 49+ ships no `macosx-10.15-x86_64` wheel,
+    so pip falls back to a Rust source build that fails here, while CI's and Railway's
+    manylinux wheels install without comment.
+
+    The obvious fix — pin below 49 — was tried and **reverted**: 48.0.1 carries
+    PYSEC-2026-3552, -3553 and -3554, and CI's dependency-audit job refused it, correctly.
+    A vulnerable crypto library in production is not worth a tidy local install
+    (`DECISIONS.md` #115).
+
+    **So CI is the authority for anything touching `cryptography`**, which today means
+    Web Push. A local `pytest` run exercises the same tests against a different version of
+    the library, and a green local run is therefore weaker evidence than usual — the same
+    caveat gotcha 15 puts on anything touching SQL. Lift this when the developer machine's
+    platform tag moves past `macosx-10.15-x86_64`.
+
+29. **Prepending Node 22 to `PATH` makes the Railway CLI vanish**, and the error blames
+    the wrong thing: `bash: railway: command not found`, which reads as "not installed".
+
+    Two facts collide. The IaC engine needs **Node 22+** (gotcha in `.railway/README.md`),
+    but the CLI is installed under **Node 20's** nvm bin — `nvm alias default` is 20 — and
+    is an `#!/usr/bin/env node` script. So `PATH="…/v22.23.2/bin:$PATH" railway …` fixes
+    the runtime and removes the binary, because `railway` was never in Node 22's bin.
+
+    It is easy to miss from an agent session, where the shell is initialised from the
+    user's profile and already has Node 20's bin on `PATH` — the bare `railway` form
+    resolves there and fails only in the owner's terminal. **`.railway/README.md` carried
+    the broken form** until 2026-09-10.
+
+    Both halves, and it works from a shell with no nvm loaded:
+
+    ```
+    PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" \
+      "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config plan
+    ```
+
+    The general rule this is an instance of: **a command that only works because of the
+    ambient shell is not a command worth writing into a doc.** Test it under
+    `env -i HOME="$HOME" PATH=/usr/bin:/bin bash -lc '…'` before handing it to anyone.
+
+
 ## Log
 
 - **2026-09-12 (Batch 28 — eBay integration)** — Shipped `b2a6c27`. New `src/ebay/` package
