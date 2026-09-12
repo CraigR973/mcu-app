@@ -1043,17 +1043,20 @@ close-out rather than letting a green gate imply it.
 since Batch 2 — verified in `vercel.json` on 2026-09-11. This supersedes the group table's
 older note that Batch 24 was blocked on a `vercel.json` fix; it never was.
 
-**3.4's lookup chain is half-available, and the unavailable half is named wrong.** eBay
-Browse is proven live on a self-service keyset (`DECISIONS.md` #126), so the eBay leg works.
-**Amazon does not** — it is one of the four shops #91 ruled out permanently. Build the chain
-as **cached mapping → eBay Browse → TMDB** and record the substitution.
+**3.4's lookup chain shipped with one extra certain leg and the unavailable half named
+correctly.** It is **confirmed cache → exact collection barcode → eBay Browse → TMDB**:
+an already-owned product is a free exact answer before a seller-title search spends quota.
+**Amazon does not work** — it is one of the four shops #91 ruled out permanently — so eBay
+is the recorded replacement (`DECISIONS.md` #148).
 
 **The confirmation UI is mandatory, not a nicety.** The risk note above expects a low hit
 rate on unknown discs and wrong-edition matches; the criterion's own second half — "unknown
 UPCs prompt manual search" — is the same requirement stated from the other side.
 
-**`collection_items.barcode` already exists**, so the scanned value has a home; neither
-quagga2 nor zxing-js is installed today.
+**`collection_items.barcode` was the scanned value's existing home.** The scanner uses
+ZXing `^0.21.3`, pinned below its Node-24 release and loaded only after the camera action.
+The real-phone timing and common/unknown-product observations remain owner acceptance in
+`OWNER-ACTIONS.md` 1d; shipment on 2026-09-12 deferred those observations, not the criteria.
 
 ### Batch 29 — Format upgrade + sale tracking 🟢
 **Covers Phases 4.2 and 4.4:**
@@ -1224,7 +1227,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | 21 | Price history charts | 🟢 | Sonnet 5 · medium | GPT-5.6 Terra · Medium | planned | **5.7** — needs 7 real days of data after B20 |
 | 22 | Deals feed | 🟡 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 5.9, 5.10 — RSS **and** scraped sources |
 | ~~23~~ | ~~Specs — scraper + display~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~3.7, 3.8, 3.9~~ | #110's bounds are **enforced in code, not described**: exact-release-URL predicate, sequential 5s-spaced requests, `403`/`429`/`451` halts the whole integration to a **database row** nothing in the runner can clear, provenance columns on every derived row, and `DELETE /specs` to make it reversible. No price, rating or review is extracted — the parser reads an allow-list and a test proves the sets disjoint. Badges and filters shipped. **Live: 0 pages ever fetched**  **§3.7 was run on 2026-09-10 (`#121`) and found the scraper broken**: ten pages fetched, nothing extracted, because the parser looked for `<strong>` rows and the site serves `<span class="subheading">` sections — and `test_specs.py`'s fixture had been invented to match the parser, so eleven tests passed against markup the site has never served. A second bug surfaced on the re-run: one audio track stored where the page listed six, on a page that wraps them in a `<span>`. Both fixtures are captured pages now and a test asserts they stay captured (`#122`). **Met on the third pass: 10 rows of 1,857, 10 distinct URLs, no halt.** `apply_specs` checks `is_empty` first, so two broken passes wrote nothing at all.|
-| 24 | Barcode — scan + lookup | 🟡 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | planned | 3.3, **3.4** — confirmation UI mandatory |
+| ~~24~~ | ~~Barcode — scan + lookup~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~3.3, 3.4 — confirmation UI mandatory~~ | `590504d` · Scan-first mobile UI with typed fallback; GS1 check-digit guard; confirmed cache → exact owned barcode → eBay → TMDB resolution; duplicate warning and mandatory human confirmation before a mapping or disc is written. Production serves the merge with `db: ok` and `ebay: configured`. **Physical acceptance remains open by explicit owner deferral:** real-phone decode in <2 seconds, correct common-disc match and unknown-code manual fallback (`OWNER-ACTIONS.md` 1d) |
 | ~~25~~ | ~~Photo uploads~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~3.10~~ | Bytes in Postgres (Neon, owner 2026-09-09), a real `item_photos` table rather than §3.4's external-URL JSONB. **A phone's 4032×3024 lands at ~240 KB** — measured, not asserted. The target is `photo_target_kb` **config**, so the number `OWNER-ACTIONS.md` reserved is now an env var rather than a migration. Every upload re-encoded: EXIF applied then dropped, alpha onto white, bomb refused. **No CSP change was needed** — the note is retired |
 | ~~26~~ | ~~Shelf QR~~ | ~~🟢~~ | — dropped | — dropped | **dropped** | ~~12.3, 12.4~~ — Batch 6's location filter solved the retrieval problem it existed for (`DECISIONS.md` #109) |
 | ~~27~~ | ~~Gift links~~ | ~~🟡~~ | — shipped | — shipped | **shipped** | ~~12.1, 12.2 — high-entropy slug, rate limiter, `noindex`~~ | `888dae7` · 128-bit slug (not §3.21's UUID PK, not §6.26's 32-bit example); four failure modes answer identically; public model carries **no** ownership, ids, slug or counts. Verified anonymously in a browser |

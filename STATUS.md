@@ -2,11 +2,11 @@
 
 ## Now
 
-**Batch 24 — barcode scan + lookup — is implemented on `feat/24-barcode-scan-lookup`,
-but deliberately not closed out or deployed.** The local gate is green; the two live
-acceptance checks still need Craig's phone, a real disc and production eBay credentials.
-Those are recorded as `OWNER-ACTIONS.md` **1b** and **1d**, and the close-out protocol says
-to stop rather than turn a green suite into a claim that a physical scan was observed.
+**Batch 24 — barcode scan + lookup — shipped as `590504d`.** Feature-branch CI and the
+post-merge `main` gate were green. Railway serves the exact merge SHA, production readiness
+reports `db: ok` and `ebay: configured`, and Vercel serves `/collection/add` with
+`Permissions-Policy: camera=(self)`. Craig explicitly authorised deployment with the
+physical acceptance observations deferred until afterwards (`DECISIONS.md` #149).
 
 **What is built.** Add Disc now opens on a scan-first mobile flow using `getUserMedia` and
 ZXing for EAN-8, UPC-A and EAN-13, with an explicit camera action, visible scanned digits,
@@ -19,25 +19,25 @@ matches into title search while retaining the barcode. A confirmed add persists 
 on `collection_items`; migration 028 stores only person-confirmed mappings for fast future
 scans. `DECISIONS.md` #148.
 
-**What the gate proves.** 608 API tests passed and 405 Postgres-backed tests skipped
-locally; CI remains the authority for the real-Postgres migration pass. Shared/web tests
-passed **88 + 261**, including a generated EAN-13 bitmap decoded by the pinned ZXing core.
-Ruff, format, mypy, web lint (0 errors; the same six pre-existing Fast Refresh warnings),
-typecheck and production build are green. Revision 028's upgrade and downgrade SQL both
-render independently. The scan-first and title-fallback panels were opened in the browser
-at mobile width; the camera itself was not opened because the criterion requires the real
-phone rather than a desktop permission simulation.
+**What the gate and deployment prove.** Locally: 608 API tests passed and 405
+Postgres-backed tests skipped; shared/web passed **88 + 261**, including a generated EAN-13
+bitmap decoded by the pinned ZXing core. Ruff, format, mypy, web lint (0 errors; the same
+six pre-existing Fast Refresh warnings), typecheck and production build are green. Both CI
+runs passed the real-Postgres migration and pytest jobs, including revision 028 upgrade and
+downgrade. The scan-first and title-fallback panels were opened in the browser at mobile
+width. Production API and web deployment checks are green at the merge.
 
-**What is not yet proved.** Phase 3.3 requires a real Blu-ray barcode to decode on mobile
-in under two seconds. Phase 3.4 requires a common Blu-ray to return the correct film and an
-unknown valid product code to offer manual search. Production still reports
-`ebay: not_configured`, so the common-disc lookup cannot exercise its eBay leg until
-`EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` are set in Railway. No hosting or credential
-change was attempted.
+**What is not yet proved.** Phase 3.3 still requires a real Blu-ray barcode to decode on a
+phone in under two seconds. Phase 3.4 still requires a common Blu-ray to return the correct
+film and an unknown valid product code to offer manual search. Those three observations
+remain `OWNER-ACTIONS.md` **1d**; shipment does not claim they passed. The eBay runtime
+credential blocker is cleared, but its two secrets remain undeclared drift in
+`.railway/railway.ts` and must be protected before the next explicitly authorised config
+apply (`OWNER-ACTIONS.md` **1b**). This close-out made no hosting or credential change.
 
-**31 of 37 batches shipped, 6 remain** — 24 is built pending owner acceptance; 22 and 38
-are startable; 21 is blocked on the scrape cron, which has still never fired; 33 and 34 are
-Group K, deprioritised.
+**32 of 37 batches shipped, 5 remain** — 22 and 38 are startable; 21 is blocked on the
+scrape cron, which has still never fired; 33 and 34 are Group K, deprioritised. Batch 24's
+remaining physical observations are tracked as acceptance debt, not as an unshipped batch.
 
 ## Next
 
@@ -440,6 +440,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-12 (Batch 24 — barcode scan + lookup shipped)** — Fast-forwarded and deployed
+  `590504d`; feature CI `34692586230` and post-merge `main` CI `34692681855` passed all
+  five jobs. Production `/health` returned the exact merge SHA, `/health/ready` returned
+  `db: ok` and `ebay: configured`, and Vercel served the Add Disc route with camera
+  permission scoped to self. Craig explicitly deferred the owner-only real-phone timing,
+  common-disc correctness and unknown-code fallback observations until after deployment;
+  they remain open in `OWNER-ACTIONS.md` 1d rather than being claimed by the green suite.
+  The live eBay keyset clears the runtime blocker, but its missing Railway `preserve()`
+  declarations remain owner hosting drift in 1b. Decision #149.
 
 - **2026-09-12 (Batch 24 — barcode scan + lookup, implementation complete)** — Built the
   scan-first Add Disc flow, `POST /api/v1/barcode/{lookup,confirm}`, GS1 check-digit guard,

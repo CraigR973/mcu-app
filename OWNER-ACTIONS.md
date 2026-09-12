@@ -4,9 +4,10 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-09**,
-after a session that cleared four of the nine items. *Numbers changed at that review; the
-old ones are noted in brackets so an earlier conversation still maps onto this file.*
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-12**,
+after Batch 24 deployed and the live eBay Browse keyset was confirmed. *Numbers changed at
+the 2026-09-09 review; the old ones are noted in brackets so an earlier conversation still
+maps onto this file.*
 
 ---
 
@@ -45,12 +46,11 @@ file would once have deleted `TMDB_READ_TOKEN` and `ANTHROPIC_API_KEY`.
 **As of 2026-09-10 the plan reads `0 to add, 1 to change, 0 to destroy`** — the crons are
 applied and the eBay variables are set, so the one remaining line is:
 
-> **Correction, 2026-09-12.** "The eBay variables are set" meant
+> **Correction, updated 2026-09-12.** "The eBay variables are set" originally meant only
 > `EBAY_VERIFICATION_TOKEN` and `EBAY_ACCOUNT_DELETION_ENDPOINT` — the account-deletion
-> pair. It did **not** mean the Browse keyset. `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET`
-> have never been in Railway, which Batch 28's new `ebay` health field surfaced on its
-> first deploy. See item **1b** below; a fresh `config plan` will also read differently
-> once they are declared.
+> pair. Batch 28's new health field surfaced that the Browse keyset was absent. The keyset
+> was subsequently added and Batch 24's deployment now reports **`ebay: configured`**.
+> It is still undeclared drift: see item **1b** before the next `config apply`.
 
 ```
 ~ Update api deploy.restartPolicyType   (null → "ON_FAILURE")
@@ -138,16 +138,19 @@ not blocking; it is one command away whenever you next run `apply`.
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
 pairs, with all 29 gaps correct, because no shop stocks every film.
 
-### 1b. Set the eBay keyset in Railway *(new — Batch 28, 2026-09-12)*
+### 1b. Preserve the live eBay keyset in Railway *(updated — Batch 24, 2026-09-12)*
 
-- [ ] **Set `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` in the Railway `api` service.**
+- [x] **Set `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` in the Railway `api` service.**
+      Done by 2026-09-12; Batch 24's production readiness check reports
+      **`ebay: configured`**.
+- [ ] **Add `preserve()` declarations for both variables before the next
+      `.railway/railway.ts` config apply.**
 
-**Batch 28 shipped and every eBay surface in production answers 503 without these.**
-Confirmed after the merge: `/api/v1/health/ready` reports **`ebay: not_configured`**. The
-credentials exist in `apps/api/.env.local` and the production keyset has been working since
-2026-09-10 (`DECISIONS.md` #126) — what is missing is only that Railway has never held them.
-`.railway/railway.ts` declares neither, so they are also undeclared drift the way
-`ANTHROPIC_API_KEY` and `TMDB_READ_TOKEN` once were (#124): add
+**The runtime blocker is cleared.** Production served Batch 24's exact merge SHA with
+`db: ok` and `ebay: configured`; the eBay-backed Batch 28 and Batch 24 surfaces no longer
+fail solely for missing credentials. The remaining checkbox is durability:
+`.railway/railway.ts` declares neither secret, so they are undeclared drift the way
+`ANTHROPIC_API_KEY` and `TMDB_READ_TOKEN` once were (#124). Add
 `EBAY_CLIENT_ID: preserve()` and `EBAY_CLIENT_SECRET: preserve()` alongside
 `EBAY_VERIFICATION_TOKEN`, or the next `config apply` plans to remove them.
 
@@ -157,11 +160,12 @@ credentials exist in `apps/api/.env.local` and the production keyset has been wo
 outage taught — a value living only in a hosting variable has nothing testing it. It caught
 one on its first deploy.
 
-**This also blocks Phase 4.1's acceptance below.**
+**This no longer blocks Phase 4.1's acceptance below.** The live call can be run now; the
+unchecked preservation step matters before the next config apply, not before testing.
 
 ### 1c. Run Phase 4.1's acceptance — one live eBay query *(new — Batch 28, 2026-09-12)*
 
-- [ ] **After 1b, ask the app what a disc is worth and check the number is sensible.**
+- [ ] **Ask the app what a disc is worth and check the number is sensible.**
 
 Phase 4.1's acceptance in full: *"Querying 'Blade Runner 2049 Blu-ray' returns a reasonable
 UK median price"*. `docs/phase-batches.md` says plainly this is *"not something an
@@ -189,10 +193,10 @@ unobtainable (`DECISIONS.md` #16, #126).
 
 This is the part a fixture cannot sign off. Phase 3.3 requires *"a valid EAN in < 2
 seconds"* from a real mobile camera; Phase 3.4 requires a common Blu-ray to return the
-correct movie and an unknown UPC to prompt manual search. Run it after Batch 24 is
-available to the phone and after item **1b**, because production currently has no eBay
-Browse credentials and an uncached common disc would correctly fall through to manual
-search without ever exercising the resolution leg under test.
+correct movie and an unknown UPC to prompt manual search. Batch 24 is now in production and
+readiness reports `ebay: configured`, so both observations can be run without another
+deployment or credential step. Shipment was explicitly authorised with these checks
+deferred; they remain open acceptance, not waived criteria (`DECISIONS.md` #149).
 
 1. Open **Add disc → Scan barcode** on the phone and press **Open camera**.
 2. Point it at a common Blu-ray. Time from the bars entering the frame to the digits being

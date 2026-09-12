@@ -2477,3 +2477,21 @@ contemporaneous.
      than the route's initial bundle. Decoder hints admit only the three retail symbologies,
      and every stop, detection, unmount and interrupted permission prompt releases the
      camera stream.
+
+### 2026-09-12 — Batch 24 close-out
+
+149. **Batch 24's physical acceptance was deferred until after deployment, not waived or
+     inferred from its automated gate.**
+
+     Phase 3.3 asks for a real Blu-ray barcode to decode on a phone in under two seconds;
+     Phase 3.4 asks for the correct common-disc match and an unknown valid code to reach
+     manual search. None can be truthfully observed from the desktop fixture decoder or a
+     Postgres-backed CI run. The owner explicitly authorised shipping `590504d` first so
+     those checks can run against the real HTTPS origin and live eBay-backed resolution
+     chain.
+
+     **"Shipped" and "all acceptance observed" are therefore separate facts for this
+     batch.** The batch ledger and §17 mark the code shipped while naming all three open
+     observations and their owner; `OWNER-ACTIONS.md` 1d remains unchecked until the phone
+     run supplies a barcode, device/browser and measured time. A later successful run can
+     close the acceptance debt without changing the deployment history.
