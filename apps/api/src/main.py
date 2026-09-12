@@ -20,6 +20,7 @@ from src.routers import (
     box_sets,
     calendar,
     collection,
+    deals,
     discovery,
     ebay,
     export,
@@ -128,3 +129,4 @@ app.include_router(photos.router)
 app.include_router(specs.router)
 app.include_router(ebay.router)
 app.include_router(barcode.router)
+app.include_router(deals.router)

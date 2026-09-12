@@ -32,6 +32,7 @@ const AuditPage = lazy(() => import('./pages/AuditPage'))
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const WantedPage = lazy(() => import('./pages/WantedPage'))
+const DealsPage = lazy(() => import('./pages/DealsPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
 const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
@@ -193,6 +194,10 @@ export default function App() {
             <Route
               path="/wanted"
               element={<AppShell><WantedPage /></AppShell>}
+            />
+            <Route
+              path="/deals"
+              element={<AppShell><DealsPage /></AppShell>}
             />
             <Route
               path="/calendar"

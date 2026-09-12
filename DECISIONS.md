@@ -2495,3 +2495,101 @@ contemporaneous.
      observations and their owner; `OWNER-ACTIONS.md` 1d remains unchecked until the phone
      run supplies a barcode, device/browser and measured time. A later successful run can
      close the acceptance debt without changing the deployment history.
+
+### 2026-09-12 — Batch 22 deals feed
+
+150. **A deals page needs a *population* check, not just a per-result one — and that is
+     the whole difference between §5.3's risk note and §5.9's.**
+
+     The ledger says the same sentence about both batches: a layout change *"does not
+     error — it selects the wrong node and persists a plausible wrong number"*, and the
+     answer is a "last known good shape" assertion rather than a success counter. Batch 19
+     built that as `extract.check_shape`, and its **strongest rule is that the title on
+     the page matches the film asked for**.
+
+     A deals page has no film asked for. Whatever the shop discounted is the answer, so
+     the single most powerful rule in the existing checker simply does not apply, and
+     something has to take its place.
+
+     What takes its place is **agreement across the page** (`deals.check_page_shape`).
+     Three shapes, each of which leaves every individual card looking entirely reasonable:
+
+     - every card showing the **same discount** — one shared node read forty times,
+       typically an "up to 70% off" banner caught by the `was` selector;
+     - **no card** having a `was` price at all — the sale-price selector has moved, which
+       turns a sale page into a price list and makes every discount null;
+     - every card showing the **same price**.
+
+     A page that fails any of them has **every** card discarded rather than the failing
+     ones, because if the `was` selector is reading a banner then each discount is wrong
+     in precisely the way that looks right. Below five cards the population rules are
+     silent: a shop with three discs on offer is an ordinary Tuesday, and three of the
+     five enabled retailers are small enough for that to be normal.
+
+     **`discount_percent` is arithmetic on two prices, never a number read off the page.**
+     A shop's own "save 60%" badge is exactly the node a layout change hands to the wrong
+     reader, and it is redundant — two prices that have each passed a range and currency
+     check already contain the answer. The database enforces it too: `CHECK
+     (discount_percent > 0 AND < 100)` and `CHECK (was_price > price)`.
+
+151. **"Skip already-owned" is format-aware, which the criterion does not say and would
+     be wrong without.**
+
+     §5.9 says *"skip already-owned"*. Read literally that hides the 4K of a film owned on
+     DVD — which is the single most interesting deal the feed could carry, and the one
+     Batch 29 just built an upgrade path for. So a deal is skipped only when the format on
+     offer is **no better than** the best already owned, by the same `FORMAT_RANK` the
+     `best_format_owned` trigger enforces. An upgrade is never already-owned.
+
+     A deal whose format could not be read is skipped when anything is owned: an unknown
+     format cannot be *shown* to be an upgrade, and a short feed beats a wrong one.
+
+     **An unmatched deal is kept, not dropped.** A title the matcher could not place is
+     the evidence that the matcher needs work; dropping it would make a broken matcher
+     indistinguishable from a quiet sale page — the same failure this batch's page checks
+     exist to prevent, one layer up. The UI says "not matched" rather than hiding the row.
+
+152. **The sale-page selectors ship verified and the sale-page URLs ship unverified, and
+     the distinction is recorded rather than blurred.**
+
+     Every `item`/`title`/`price`/`url` selector in a `deals` config is the one Batch 19
+     checked against that shop's live markup on 2026-09-09. They apply unchanged because a
+     Shopify collection page renders the same product card as a Shopify search page. What
+     is new is the `was` selector and the sale-page URL, and **neither has been run against
+     the live site** — `verified: False` on all five says so, and
+     `unverified_deals_names()` reports it the way `unverified_names()` already does for
+     search pages.
+
+     That is not laziness, it is the arrangement `group-start.md` requires: live retailer
+     requests are the owner's, so the run that verifies these selectors is the same run
+     that satisfies §5.9's acceptance. **Batch 19 shipped on exactly this footing and its
+     owner-run checkpoint found three real defects** (#91, #92, #94), which is the argument
+     for the arrangement rather than against it.
+
+     **Four of the five enabled shops had no `deals_url` at all**, so §5.9's "≥ 3
+     retailers" was unreachable before this batch: only Zavvi's was seeded, back in Batch
+     18. The four new ones are conventional Shopify `/collections/sale` paths — a
+     convention, which is precisely why they are marked unverified.
+
+     **No ruled-out shop gained one.** Amazon, HMV, CEX and Blu-ray.com are out
+     permanently under #91, and a deals config for any of them would quietly put it back
+     in the rotation. A test asserts they have none.
+
+153. **Zavvi's configured `url` selector points at a heading, so every deal would have
+     arrived unclickable — found by running the extractor over captured markup.**
+
+     `product-title` is an `<h3>`, not an `<a>`. The wanted-item scraper survives that: it
+     still has a title and a price, and the same-site guard simply does not run, which is
+     why nobody noticed. A **deal** does not survive it — the URL is the entire point of
+     the card, and worse, `deals`' uniqueness key is `(retailer_id, url)`, so every Zavvi
+     deal would have collided on the empty string and the table would have held one row
+     per shop.
+
+     `_card_to_candidate` now falls back to the card's own href, then to the first anchor
+     inside it — the same "a card can be its own match" reasoning `_select_one` already
+     applies for Powerhouse. Against the captured cards it recovers both real product
+     URLs.
+
+     *Worth noting for whoever next touches the retailer scrapers:* the same latent gap
+     is still there on the wanted-item path. It is harmless today and fixing it is not
+     this batch's business, but it is the reason `price_checks.url` is sometimes null.

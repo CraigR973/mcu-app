@@ -65,6 +65,14 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "A database rather than a shop — prices are third-party and may be absent.",
     },
     "Zavvi": {
+        # Already seeded by Batch 18 and the only deals URL that existed before this
+        # batch. The card selectors are Batch 19's, verified live.
+        "deals": {
+            "url": "https://www.zavvi.com/sale.list",
+            "was": "[data-testid='product-price'] .product-price__rrp, .rrp",
+            "image": "img",
+            "verified": False,
+        },
         "base": "https://www.zavvi.com",
         # `{format}` is not a refinement here. A bare title redirects to a franchise
         # landing page — towels, jumpers, T-shirts, a resin statue, no discs at all.
@@ -91,6 +99,14 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         ),
     },
     "Arrow Video": {
+        "deals": {
+            "url": "https://www.arrowfilms.com/collections/sale",
+            "was": (
+                "[data-testid='product-price'] .product-price__rrp, s .money, .price-item--regular"
+            ),
+            "image": "img",
+            "verified": False,
+        },
         # arrowvideo.com is the US storefront and correctly returns USD. Arrow's UK shop
         # is arrowfilms.com; using the US domain made the GBP shape guard reject every
         # otherwise-valid result.
@@ -116,6 +132,12 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "Named by §5.3 but not among §3.16's seeded defaults; sells used stock.",
     },
     "101 Films": {
+        "deals": {
+            "url": "https://101-films-store.com/collections/sale",
+            "was": "s .money, .price--compare, .compare-at",
+            "image": "img",
+            "verified": False,
+        },
         "base": "https://101-films-store.com",
         "search": "https://101-films-store.com/search?q={query}&type=product",
         "config": {
@@ -128,6 +150,12 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "Verified against the live UK storefront on 2026-09-09.",
     },
     "Second Sight": {
+        "deals": {
+            "url": "https://secondsightfilms.co.uk/collections/sale",
+            "was": ".price-item--regular, s .money",
+            "image": "img",
+            "verified": False,
+        },
         "base": "https://secondsightfilms.co.uk",
         "search": "https://secondsightfilms.co.uk/search?q={query}&type=product",
         "config": {
@@ -140,6 +168,12 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "Verified against the live UK storefront on 2026-09-09.",
     },
     "Powerhouse Films": {
+        "deals": {
+            "url": "https://www.powerhousefilms.co.uk/collections/sale",
+            "was": ".product-price__compare, s .money",
+            "image": "img",
+            "verified": False,
+        },
         "base": "https://www.powerhousefilms.co.uk",
         "search": "https://www.powerhousefilms.co.uk/search?q={query}&type=product",
         "config": {
@@ -152,6 +186,36 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "Verified against the live UK storefront on 2026-09-09.",
     },
 }
+
+
+def deals_config_for(name: str) -> dict[str, Any] | None:
+    """The sale-page configuration for a seeded retailer — Batch 22, Phase 5.9.
+
+    **The selectors are verified; the URLs are not, and the distinction matters.** Each
+    `item`/`title`/`price`/`url` selector is the one Batch 19 checked against that shop's
+    live markup on 2026-09-09, and it applies unchanged here because a Shopify collection
+    page renders the same product card as a Shopify search page. What is new is the `was`
+    selector and the sale-page URL, and **neither has been run against the live site** —
+    `verified: False` on every one of them says so.
+
+    That is deliberate rather than lazy. `docs/agent-commands/group-start.md` puts live
+    retailer requests in the owner's hands, so the run that proves these is the same run
+    that satisfies §5.9's acceptance. Batch 19 shipped on exactly this footing and its
+    owner-run checkpoint found real defects (`DECISIONS.md` #91, #92, #94) — which is the
+    argument for the arrangement, not against it.
+    """
+    entry = BUILT_IN_SCRAPERS.get(name)
+    deals = entry.get("deals") if entry else None
+    return dict(deals) if isinstance(deals, dict) else None
+
+
+def unverified_deals_names() -> list[str]:
+    """Every built-in sale page whose selectors have not passed a live check."""
+    return [
+        name
+        for name, entry in BUILT_IN_SCRAPERS.items()
+        if isinstance(entry.get("deals"), dict) and not entry["deals"].get("verified", False)
+    ]
 
 
 def config_for(name: str) -> dict[str, Any] | None:

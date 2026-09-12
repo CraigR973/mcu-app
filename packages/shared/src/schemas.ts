@@ -1581,3 +1581,72 @@ export const barcodeLookupSchema = z.object({
 
 export type BarcodeCandidate = z.infer<typeof barcodeCandidateSchema>
 export type BarcodeLookup = z.infer<typeof barcodeLookupSchema>
+
+// ---------------------------------------------------------------------------
+// Deals feed (Batch 22) — §5.9, §5.10
+// ---------------------------------------------------------------------------
+
+/** One discounted disc from a retailer's own sale page.
+ *
+ *  **`discountPercent` is arithmetic on the two prices, never a badge read off the page.**
+ *  The batch's risk note is that a layout change stores a plausible wrong discount; a
+ *  figure derived from two prices that each passed a shape check cannot be a "save 70%"
+ *  banner that happened to match a selector. */
+export const dealSchema = z.object({
+  id: z.string().uuid(),
+  retailer: z.string().min(1),
+  title: z.string().min(1),
+  url: z.string().min(1),
+  imageUrl: z.string().nullable(),
+  formatCode: z.string().nullable(),
+  price: z.string(),
+  wasPrice: z.string().nullable(),
+  currency: z.string().min(1),
+  discountPercent: z.number().int().nullable(),
+  /** Null when the title matched no catalogued film. Such a deal is still shown — it is
+   *  the evidence the matcher needs work, and hiding it would make a broken matcher look
+   *  like a quiet sale page. */
+  movieId: z.string().uuid().nullable(),
+  tmdbId: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  genres: z.array(z.string()),
+  firstSeenAt: z.string(),
+  lastSeenAt: z.string(),
+})
+
+export const dealListSchema = z.object({
+  items: z.array(dealSchema),
+  total: z.number().int().nonnegative(),
+  /** The vocabulary present in the unfiltered feed, so §5.10's filters never offer a
+   *  choice that matches nothing. */
+  retailers: z.array(z.string()),
+  genres: z.array(z.string()),
+})
+
+export const dealsRunSchema = z.object({
+  dryRun: z.boolean(),
+  /** §5.9's three numbers, so the acceptance can be read off the response rather than
+   *  inferred: "≥ 20 rows", "from ≥ 3 retailers", "skip already-owned verified". */
+  written: z.number().int().nonnegative(),
+  retailersWithDeals: z.number().int().nonnegative(),
+  skippedOwned: z.number().int().nonnegative(),
+  outcomes: z.array(
+    z.object({
+      retailer: z.string().min(1),
+      ok: z.boolean(),
+      found: z.number().int().nonnegative(),
+      kept: z.number().int().nonnegative(),
+      skippedOwned: z.number().int().nonnegative(),
+      rejected: z.number().int().nonnegative(),
+      matched: z.number().int().nonnegative(),
+      /** Why the page as a whole was refused. A page-level failure discards every card,
+       *  so this separates "a quiet sale" from "the selectors have moved". */
+      pageReasons: z.array(z.string()),
+      error: z.string().nullable(),
+    }),
+  ),
+})
+
+export type Deal = z.infer<typeof dealSchema>
+export type DealList = z.infer<typeof dealListSchema>
+export type DealsRun = z.infer<typeof dealsRunSchema>

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bell, Bot, Boxes, Popcorn, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Target, Trash2, TrendingUp } from 'lucide-react'
+import { Bell, Bot, Boxes, Popcorn, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Tag, Target, Trash2, TrendingUp } from 'lucide-react'
 
 export interface NavItem {
   label: string
@@ -24,6 +24,7 @@ export const navItems: NavItem[] = [
   { label: 'Coming soon', path: '/discover', icon: Sparkle },
   { label: 'Calendar', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
+  { label: 'Deals', path: '/deals', icon: Tag },
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Stats', path: '/stats', icon: TrendingUp },
   { label: 'Loans', path: '/loans', icon: HandHeart },

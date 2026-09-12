@@ -34,6 +34,7 @@ from src.models.completion_set import (
     CompletionSet,
     member_display,
 )
+from src.models.deal import DEALS_TABLE, Deal
 from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink, new_slug
 from src.models.item_photo import (
     ALLOWED_CONTENT_TYPES,
@@ -179,4 +180,6 @@ __all__ = [
     "WANTED_LIST_TABLE",
     "Retailer",
     "WantedItem",
+    "DEALS_TABLE",
+    "Deal",
 ]

@@ -28,6 +28,9 @@ import {
   giftLinkSchema,
   giftPageSchema,
   barcodeLookupSchema,
+  dealListSchema,
+  dealSchema,
+  dealsRunSchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
   itemPhotoListSchema,
@@ -78,6 +81,9 @@ import {
   type Activity,
   type BarcodeCandidate,
   type BarcodeLookup,
+  type Deal,
+  type DealList,
+  type DealsRun,
   type EbayListingUrl,
   type EbayPriceEstimate,
   type AiAnswer,
@@ -172,6 +178,9 @@ export type {
   ActivityKind,
   BarcodeCandidate,
   BarcodeLookup,
+  Deal,
+  DealList,
+  DealsRun,
   EbayListingUrl,
   EbayPriceEstimate,
   EbayPriceSegment,
@@ -2073,5 +2082,48 @@ export async function confirmBarcode(input: {
   return parseOrThrowApiError(
     await authFetch('/barcode/confirm', { method: 'POST', body: JSON.stringify(input) }),
     barcodeLookupSchema,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Deals feed (Batch 22) — §5.9, §5.10
+// ---------------------------------------------------------------------------
+
+export interface DealFilters {
+  retailer?: string | null
+  genre?: string | null
+  formatCode?: string | null
+  minDiscount?: number | null
+}
+
+/** §5.10's filters. Dismissed deals are never returned and cannot be asked for — the
+ *  acceptance is "dismissed items don't reappear", and a flag would be a way for them to. */
+export async function fetchDeals(filters: DealFilters = {}): Promise<DealList> {
+  const query = new URLSearchParams()
+  if (filters.retailer) query.set('retailer', filters.retailer)
+  if (filters.genre) query.set('genre', filters.genre)
+  if (filters.formatCode) query.set('formatCode', filters.formatCode)
+  if (filters.minDiscount) query.set('minDiscount', String(filters.minDiscount))
+  const suffix = query.toString() ? `?${query.toString()}` : ''
+  return parseResponse(await authFetch(`/deals${suffix}`), dealListSchema)
+}
+
+/** §5.10's one-tap dismiss, and its undo. A soft state, because tonight's scrape will
+ *  re-find the same deal and the row has to remember. */
+export async function dismissDeal(dealId: string, dismissed = true): Promise<Deal> {
+  return parseOrThrowApiError(
+    await authFetch(`/deals/${dealId}/dismiss`, {
+      method: 'POST',
+      body: JSON.stringify({ dismissed }),
+    }),
+    dealSchema,
+  )
+}
+
+/** Dry by default, matching the endpoint — this hits real shops. */
+export async function runDealsScrape(dryRun = true): Promise<DealsRun> {
+  return parseOrThrowApiError(
+    await authFetch(`/deals/scrape?dryRun=${String(dryRun)}`, { method: 'POST' }),
+    dealsRunSchema,
   )
 }

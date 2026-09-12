@@ -246,6 +246,12 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # Batch 28's two, and the contrast with the line above is the point: both are
         # admin-authed and rate limited, because each spends a unit of a finite daily
         # production quota on eBay's keyset.
+        # Batch 22's deals feed. `/deals/scrape` is admin-only and dry by default — it
+        # hits real shops, and §5.9's acceptance run is the owner's.
+        "/api/v1/deals",
+        "/api/v1/deals/count",
+        "/api/v1/deals/{deal_id}/dismiss",
+        "/api/v1/deals/scrape",
         "/api/v1/ebay/price-estimate",
         "/api/v1/ebay/listing-url",
         # Batch 24. Both are admin-only and structurally separate so a lookup can never
