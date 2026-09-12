@@ -2,42 +2,67 @@
 
 ## Now
 
-**Batch 24 — barcode scan + lookup — shipped as `590504d`.** Feature-branch CI and the
-post-merge `main` gate were green. Railway serves the exact merge SHA, production readiness
-reports `db: ok` and `ebay: configured`, and Vercel serves `/collection/add` with
-`Permissions-Policy: camera=(self)`. Craig explicitly authorised deployment with the
-physical acceptance observations deferred until afterwards (`DECISIONS.md` #149).
+**Batch 22 shipped — the deals feed is live and empty, which is the honest state.**
+The feature landed as `c190129`; its final built-in-retailer wiring repair is `493f031`.
+CI is green across all five jobs and production `/api/v1/health` serves that repair SHA
+with `db: ok` and `ebay: configured`. Migration **029** is applied in production: `deals`
+exists and holds **0 rows** until somebody runs a scrape.
 
-**What is built.** Add Disc now opens on a scan-first mobile flow using `getUserMedia` and
-ZXing for EAN-8, UPC-A and EAN-13, with an explicit camera action, visible scanned digits,
-a typed fallback and camera cleanup on every exit. The decoder loads only after the camera
-button is pressed. The lookup API resolves **confirmed cache → exact collection barcode →
-eBay Browse → TMDB**, refuses a bad GS1 check digit before spending a quota call, and
-returns candidates rather than adding anything. The confirmation screen shows source
-evidence, warns when that exact product is already owned, and routes no-match or rejected
-matches into title search while retaining the barcode. A confirmed add persists the code
-on `collection_items`; migration 028 stores only person-confirmed mappings for fast future
-scans. `DECISIONS.md` #148.
+**§5.10 is met. §5.9's acceptance is yours** — a live run against real retailer sale
+pages, the same footing as Batch 19's checkpoint and Batch 23's §3.7
+(`OWNER-ACTIONS.md` **1e**, which has the exact two commands and what the response means).
 
-**What the gate and deployment prove.** Locally: 608 API tests passed and 405
-Postgres-backed tests skipped; shared/web passed **88 + 261**, including a generated EAN-13
-bitmap decoded by the pinned ZXing core. Ruff, format, mypy, web lint (0 errors; the same
-six pre-existing Fast Refresh warnings), typecheck and production build are green. Both CI
-runs passed the real-Postgres migration and pytest jobs, including revision 028 upgrade and
-downgrade. The scan-first and title-fallback panels were opened in the browser at mobile
-width. Production API and web deployment checks are green at the merge.
+**The batch's risk note needed a check Batch 19 could not have written.** The ledger says
+the same sentence about §5.9 as about §5.3 — a layout change *"selects the wrong node and
+persists a plausible wrong number"* — but Batch 19's strongest rule is *"does the title
+match the film asked for"*, and **a deals page has no film asked for**. So
+`check_page_shape` replaces it with agreement across the page: every card showing the same
+discount is one shared node read forty times; no card having a struck-through price is the
+sale-price selector having moved. Each individual card looks entirely reasonable in both
+cases. A page that fails has **every** card discarded, not just the failing ones.
+`DECISIONS.md` #150.
 
-**What is not yet proved.** Phase 3.3 still requires a real Blu-ray barcode to decode on a
-phone in under two seconds. Phase 3.4 still requires a common Blu-ray to return the correct
-film and an unknown valid product code to offer manual search. Those three observations
-remain `OWNER-ACTIONS.md` **1d**; shipment does not claim they passed. The eBay runtime
-credential blocker is cleared, but its two secrets remain undeclared drift in
-`.railway/railway.ts` and must be protected before the next explicitly authorised config
-apply (`OWNER-ACTIONS.md` **1b**). This close-out made no hosting or credential change.
+**Two things the phase did not anticipate.** "Skip already-owned" read literally would
+hide the 4K of a film owned on DVD — the most interesting deal there is, and the one Batch
+29 just built an upgrade path for — so it is format-aware and an upgrade is never
+already-owned (#151). And `discount_percent` is arithmetic on two shape-checked prices,
+never a "save 60%" badge read off the page, with the database enforcing
+`was_price > price`.
 
-**32 of 37 batches shipped, 5 remain** — 22 and 38 are startable; 21 is blocked on the
-scrape cron, which has still never fired; 33 and 34 are Group K, deprioritised. Batch 24's
-remaining physical observations are tracked as acceptance debt, not as an unshipped batch.
+**Four defects found on the way, three of them in this batch's own work.** Zavvi's `url`
+selector points at an `<h3>`, so every deal would have been unclickable *and* collided on
+the empty string under the `(retailer_id, url)` uniqueness key (#153) — found by running
+the extractor over captured markup. `apply-built-ins` never copied the new deals config,
+so four of five shops would have kept `deals_url: NULL` and "≥ 3 retailers" would have
+stayed unreachable however well the scraper behaved — caught while writing the owner
+instructions, which claimed a capability that did not yet exist. And an unverified claim
+about RSS feeds was corrected out of `ARCHITECTURE.md` §17 rather than left standing.
+
+**CI went red once on a test this batch does not touch.** `SearchBar.test.tsx` races an
+effect: `activeIndex` is set in a `useEffect`, so the option is in the DOM one render
+before it is selected, and `findByRole` resolves on the earlier one. Measured at **1
+failure in 8 local runs** and latent since the search bar was written. Fixed on its own
+`fix/` branch (`92c96bb`) and merged to `main` first, per `AGENTS.md` — never folded into
+the batch. The assertion is unchanged; only the waiting was added. 12 consecutive runs
+green after.
+
+**The sale-page selectors are verified and the sale-page URLs are not**, and the
+difference is recorded rather than blurred: the selectors are the ones Batch 19 checked
+live on 2026-09-09, and a Shopify collection page renders the same card as its search
+page. The URLs — four of them new — are the conventional `/collections/sale` path and ship
+`verified: False`. Expect the first live run to find problems; Batch 19's equivalent found
+three (#91, #92, #94), which is the argument for the arrangement rather than against it.
+
+**Batch 21 is still blocked, and the blocker has not moved.** Measured against live Neon
+on 2026-09-12: `scrape_runs` holds **one** row, `trigger=manual`, from 2026-09-10;
+`price_checks` holds **14** rows across two hand-run days. `cron-scrape` was applied on
+2026-09-10 at `0 3 * * *` and **has still produced nothing**, now two days past its first
+scheduled fire. §5.7 needs seven days of *scheduled* scrapes and its criterion forbids
+back-dated fixtures, so it cannot be met — the chart is built and tested against fixtures
+and is **not merged**, by instruction.
+
+**33 of 37 batches shipped, 4 remain** — 38 is startable; 21 is built but blocked on the
+cron; 33 and 34 are Group K, deprioritised.
 
 ## Next
 
@@ -440,6 +465,19 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-12 (Batch 22 — deals feed shipped)** — The feature shipped as `c190129`, then
+  close-out found and repaired a real configuration path: **Apply built-ins** did not copy
+  the four new sale-page URLs or their `was`/`image` selectors, so only the one previously
+  seeded retailer could ever contribute deals. `493f031` fixes that merge and adds a
+  regression property covering all five enabled shops. Local targeted coverage: 25 deals
+  tests passed; the full local ruff/format/mypy, API, shared/web test, lint, typecheck and
+  build gate was green. CI `34702596864` passed all five jobs, including real-Postgres
+  migration upgrade/downgrade and pytest. Production `/health` reports `493f031` and
+  `/health/ready` reports `db: ok`, `push: configured`, `ai: configured`, `ebay:
+  configured`. **§5.10 is met; §5.9 remains owner acceptance** — the live sale-page run
+  and its ≥20 rows / ≥3 retailers observation are `OWNER-ACTIONS.md` 1e. No hosting,
+  credential, destructive-data, or history operation was performed.
 
 - **2026-09-12 (Batch 24 — barcode scan + lookup shipped)** — Fast-forwarded and deployed
   `590504d`; feature CI `34692586230` and post-merge `main` CI `34692681855` passed all

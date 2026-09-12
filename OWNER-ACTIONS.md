@@ -210,6 +210,47 @@ deferred; they remain open acceptance, not waived criteria (`DECISIONS.md` #149)
 The implementation and fixture decoder are green; only these physical/live observations
 remain. Record the barcode, phone/browser and measured time in `STATUS.md` when done.
 
+### 1e. Run the deals scrape — §5.9's acceptance *(new — Batch 22, 2026-09-12)*
+
+- [ ] **Run a live deals scrape and check the three numbers it reports back.**
+
+Phase 5.9's acceptance in full: *"Deals scraper run against live retailer pages populates
+the `deals` table with ≥ 20 rows from ≥ 3 retailers; UI renders them with posters; 'skip
+already-owned' verified against the real `collection_items` table."* A live run against
+somebody else's website is yours, not an agent's — the same footing as Batch 19's
+checkpoint and Batch 23's §3.7 (`docs/agent-commands/group-start.md`).
+
+**The endpoint is dry by default, deliberately.** A dry run fetches the pages and reports
+what it *would* have written without writing anything, so do that first:
+
+```
+POST /api/v1/deals/scrape?dryRun=true
+```
+
+then, if the numbers look sane:
+
+```
+POST /api/v1/deals/scrape?dryRun=false
+```
+
+**The response is shaped so you can read the criterion straight off it** — `written`,
+`retailersWithDeals` and `skippedOwned` are the criterion's own three numbers, and
+`outcomes` breaks them down per shop. `/deals` then renders the feed with posters.
+
+**Expect the first run to find problems, and that is what it is for.** The sale-page
+**selectors** are the ones Batch 19 verified live, but the **URLs are guesses** — four of
+the five enabled shops had no `deals_url` at all before this batch, so the new ones are
+the conventional Shopify `/collections/sale` path. All five ship marked unverified
+(`DECISIONS.md` #152). Batch 19's equivalent run found three real defects (#91, #92, #94).
+
+**What a broken selector looks like in the response**, rather than as silence: a page
+whose cards all show the same discount, or none of which has a struck-through price, is
+refused wholesale and `pageReasons` says why. A shop reporting `found: 40, kept: 0` with a
+`pageReasons` entry is a selector problem; `found: 0` is a wrong URL.
+
+**If a URL is wrong**, fix it on `/retailers` — each shop's deals URL is editable there,
+and the built-in configuration can be re-applied.
+
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is
