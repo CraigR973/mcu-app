@@ -2,119 +2,71 @@
 
 ## Now
 
-**Batch 28 shipped — eBay is integrated, and one acceptance criterion is deliberately
-left open for you.** Merged as `b2a6c27`, CI green across all five jobs, production
-`/api/v1/health` serving that SHA with `db: ok`.
+**Batches 28 and 29 shipped — Group I is complete.** eBay is integrated and the sale
+side of the collection works end to end. Merged as `b2a6c27` and `f215bf3`, CI green,
+production `/api/v1/health` serving `f215bf3` with `db: ok`.
 
-**⚠️ Production reports `ebay: not_configured`, and that is the batch's first finding.**
-`EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` are **not set in Railway** — they exist only in
-`apps/api/.env.local`, and `.railway/railway.ts` declares neither. So every eBay surface in
-the deployed app answers 503 until you set them. The new `ebay` field on
-`/api/v1/health/ready` is what makes that visible at all: it was added for exactly the
-reason `AGENTS.md` records about the TMDB outage — a value living only in a hosting
-variable has nothing testing it — and it caught one on its first deploy. **Setting them is
-a hosting change and therefore yours** (`OWNER-ACTIONS.md`).
+**⚠️ Production still reports `ebay: not_configured`.** `EBAY_CLIENT_ID` and
+`EBAY_CLIENT_SECRET` are **not set in Railway** — they exist only in
+`apps/api/.env.local`, and `.railway/railway.ts` declares neither, so the next
+`config apply` would not create them either. Every eBay surface in the deployed app
+answers 503 until you set them, and **Phase 4.1's acceptance cannot be run before that**.
+`OWNER-ACTIONS.md` items **1b** and **1c**. The new `ebay` field on `/health/ready` is
+what made this visible at all, on its first deploy.
 
-**What shipped.** A new `src/ebay/` package modelled on `src/tmdb/` — Browse client with a
-cached application token, the match filter, the segmented median, and Phase 4.3's
-pre-filled listing URL. Two endpoints, both admin-authed and rate limited because each
-spends a unit of a 5,000-a-day production quota:
-`POST /api/v1/ebay/price-estimate` and `POST /api/v1/ebay/listing-url`. On the web, a
-**Value and resale** panel inside every owned copy on a film's page, which fetches nothing
-until asked.
+**Batch 28 — eBay integration (4.1, 4.3).** A new `src/ebay/` package modelled on
+`src/tmdb/`: Browse client with a cached application token, the match filter, the
+segmented median, and Phase 4.3's pre-filled listing URL. `POST /api/v1/ebay/price-estimate`
+and `POST /api/v1/ebay/listing-url`, both admin-authed and rate limited because each
+spends a unit of a 5,000-a-day production quota. A **Value and resale** panel on each
+owned copy, which fetches nothing until asked.
 
-**Phase 4.3's preferred option does not exist, and the fallback's parameter is not the
-obvious one.** There is no eBay API that creates a Seller Hub *draft* — an Inventory API
-offer is invisible until published, at which point it is a live listing with a buyer on the
-other end. So Option B is primary (`DECISIONS.md` #142). `docs/phase-batches.md` flagged
-that nobody had confirmed prefill still worked; checked in a browser on 2026-09-12, it
-does — and `?keyword=`, `?q=` and `?sugKw=` all render the form with an **empty** box while
-`?title=` fills it. The three names that look right are the three that fail silently.
+**4.3 is met; 4.1's acceptance is the owner's.** There is no eBay API that creates a
+Seller Hub draft, so Option B is the primary path (`DECISIONS.md` #142) — and prefill was
+confirmed alive in a browser on 2026-09-12, where `?title=` fills the box and `?keyword=`,
+`?q=` and `?sugKw=` all render it **empty**. 4.1's *"a reasonable UK median price"* needs
+a live production call, which `group-start.md` puts in your hands and the ledger calls
+*"not something an unattended agent signs off"*. **A green gate does not imply it passed.**
 
-**Phase 4.1 is built and its acceptance is not met — that is the owner's, by design.**
-*"Querying 'Blade Runner 2049 Blu-ray' returns a reasonable UK median price"* needs a live
-production call: eBay's sandbox has an empty GB catalogue, and
-`docs/agent-commands/group-start.md` puts live third-party runs in your hands. The ledger's
-own words are that it is *"not something an unattended agent signs off"*. **A green gate
-does not imply it passed.**
+**What was proven instead.** Two verbatim production payloads are captured in
+`tests/fixtures/ebay_browse_*.json` (200 GB listings each). Naive median over everything a
+keyword search returns: **£24.74**. Matched plain-Blu-ray median: **£9.99 from 29
+listings** — the same shape as #129's £30.45 against £12.21. `test_ebay_pricing.py`
+re-takes that comparison every run, because a filter that degrades to "accept everything"
+leaves every other test green.
 
-**What was proven instead, and it is not nothing.** Two verbatim production payloads were
-captured to `tests/fixtures/ebay_browse_*.json` (200 GB listings each, 2026-09-11) and the
-filter is tested against them. Naive median over everything a keyword search returns:
-**£24.74**. Matched plain-Blu-ray median: **£9.99 from 29 listings**. That is the same
-shape as `DECISIONS.md` #129's £30.45 against £12.21, taken with a different method a day
-later, and `test_ebay_pricing.py` re-takes the comparison on every run — because a filter
-that silently degrades to "accept everything" leaves every other test green.
+**Batch 29 — format upgrade and sale tracking (4.2, 4.4). Both criteria met.** No
+migration: the schema has carried `listing_status`, `ebay_listing_url` and `listing_price`
+since Batch 4. **A sold disc keeps its row** — soft-deleting it would hand it to §6.30's
+90-day trash purge and destroy the record of what it fetched — so `owned_copy()` is what
+removes it from the views, replacing **eighteen** hand-written `deleted_at IS NULL`
+filters across seven routers. `listed_for_sale` still counts as owned: a disc advertised
+is still a disc in the house. `DECISIONS.md` #145.
 
-**Two guards were wrong on the first attempt and the captured fixtures caught both.**
-Format words sat on the "a number here is a quantity" list, so "Jaws 3 Blu-Ray (2016)" and
-"Jaws 2 - DVD" read as quantities and were priced as *Jaws* — nine wrong listings. And a
-BBFC age rating is a bare number, so "Blade Runner 2049 [15] 4K UHD" was rejected as a
-fifteenth instalment. Neither is findable against invented JSON, which is `DECISIONS.md`
-#122's whole lesson restated. #143 records both, and the losses the filter knowingly
-accepts: two real discs their sellers filed under "Audio Books" and "Other", and four where
-an actor's name sits where a subtitle would.
+**Five defects found across the two batches, all in the code rather than in the tests.**
+Two in Batch 28's match filter, caught only because the fixtures are real captures —
+format words on the "a number here is a quantity" list priced nine sequels as the film,
+and a BBFC rating read as a sequel number (#143). Three in Batch 29 — the listing endpoint
+wrote **no audit row** because `listing_status` was unaudited, a bespoke `listing_sold`
+action type is refused by §3.20's closed CHECK, and `copyCount` was declared `ge=1` so
+selling your only copy 500'd the film's own page (#146, #147).
+
+**One CI failure, fixed on the second attempt.** A Batch 29 test selected an existing disc
+out of the catalogue: fine here, where `DATABASE_URL` points at Neon and 1,857 exist, and
+a failure in CI's empty Postgres. Gotcha 15 arriving on schedule, in the direction nobody
+writes down — the *local* run was the one leaning on production data.
 
 **A pre-existing failure worth knowing about, which is not a red gate.** Running
 `pytest apps/api/tests` with `DATABASE_URL` pointed at **live Neon** produces **22
-failures** — in `test_ai_chat`, `test_movie_night`, `test_notifications_api`,
-`test_price_alerts_and_history` and `test_wanted_and_retailers_api`. They are **not new**:
-the identical 22 fail at `5237050` in a clean worktree (875 passed there, 943 on this
-branch). They are tests written for an empty database being run against production data,
-and CI is green because it runs against a fresh Postgres 17 service. The canonical gate in
-`batch-verify.md` sets no `DATABASE_URL`, and that run is clean: **576 passed, 389
-skipped**. Worth fixing so the live-database run means something, but it is its own job.
+failures**, in `test_ai_chat`, `test_movie_night`, `test_notifications_api`,
+`test_price_alerts_and_history` and `test_wanted_and_retailers_api`. Not new: the
+identical 22 fail at `5237050` in a clean worktree. They are tests written for an empty
+database being run against production data. The canonical gate in `batch-verify.md` sets
+no `DATABASE_URL`, and CI runs against a fresh Postgres 17 service — both green. Worth
+fixing so the live-database run means something, but it is its own job.
 
-### ⛔ What is waiting for you
-
-`OWNER-ACTIONS.md` has five things, and they are mostly minutes. **eBay is no longer among
-them** — #5 closed on 2026-09-10 and needed no approval after all:
-
-1. ~~**Two Railway crons in one visit**~~ — **applied 2026-09-10.** `cron-scrape` and
-   `cron-reminders` exist and are scheduled. **Each is a command**, `python -m src.scripts.daily_scrape` and `python -m src.scripts.run_reminders`.
-   Until 2026-09-10 both items said "point a cron at this endpoint" and **that could not be
-   done**: both endpoints are admin-authed and an access token lives 24 hours, so no
-   scheduler could ever have called them (`DECISIONS.md` #119).
-2. **Push on for two devices** — closes 5.6 and 6.2 between them.
-3. **One question to the assistant**, and **one spoken** — closes 9.1 and 9.5.
-4. ~~**Ten Blu-ray.com URLs** — 3.7.~~ **Done 2026-09-10** — and it found the scraper
-   broken. See above and `#122`.
-
-**Three acceptance criteria still need a person.** ~~3.7~~, ~~5.6~~ and ~~9.1~~ were all
-closed on 2026-09-10 and are verified against live rows, not asserted:
-
-| Criterion | State on 2026-09-10 |
-|---|---|
-| **6.2** two devices | ❌ **one** `push_subscriptions` row (Craig's iPhone). Mark's copy of the price alert sits `suppressed`, reason `no_subscriptions` — the standing evidence. |
-| **8.4** match notification | ❌ session is `open` with **1 participant** and 11 votes. A match needs two people to like the same film, so none can exist yet. |
-| **5.5** first overnight run | ❌ `cron-scrape` is applied and scheduled `0 3 * * *`; the one `scrape_runs` row reads `trigger=manual`. Met by the first row reading `trigger=cron`. |
-| **9.5** a spoken query | ⏳ **unverifiable from data.** Recognition happens in the browser and dictation fills the input rather than sending it, so a spoken question and a typed one leave identical rows. Only the owner can say. |
-
-**Closed on 2026-09-10:** §5.6 — the run queued 2 alerts and *"Cross of Iron is £12.99"* was
-sent and delivered to a real device. §9.1 — two `claude-sonnet-5` calls logged with tokens
-and cost ($0.004266, $0.005282), no error.
-
-**5. One line of IaC drift, whenever you next run `apply`.** `railway config plan` reads
-`0 to add, 1 to change, 0 to destroy`, and the change is
-`deploy.restartPolicyType (null → "ON_FAILURE")`. **The live `api` service has had no
-restart policy since Batch 2** while `.railway/railway.ts` declared one — a crashed
-container has not been restarting itself. Nothing depends on it, so it blocks nothing; it
-became visible only because 2026-09-10 was the first `config plan` run since that file was
-written.
-
-### What the live database holds
-
-**1,857 `collection_items`**, untouched all run. **11 `wanted_list` rows, 8 live and
-active.** 8 `price_checks`, 40 `completion_sets`, 32 `release_calendar`, 10 `retailers`.
-The database measured **36 MB** on 2026-09-10, which is why Batch 25 resizes photos.
-
-Empty and waiting for a person: `push_subscriptions`, `notification_preferences`,
-`notifications`, `price_history_daily`, `scrape_runs`, `ai_usage_log`, `ai_settings`,
-`ai_conversations`, `ai_messages`, `ai_tool_calls`, `movie_night_*`, `item_photos`.
-**10 of the 1,857 `collection_items` now carry Blu-ray.com specs** (`specs_integration_state`
-reads `fetch_count: 30` — ten wasted on the broken parser, ten more on the partial fix, ten
-that worked).
-
+**31 of 37 batches shipped, 6 remain** — 24, 22 and 38 are startable; 21 is blocked on the
+scrape cron, which has still never fired; 33 and 34 are Group K, deprioritised.
 
 ## Next
 
@@ -517,6 +469,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-12 (Batch 29 — format upgrade + sale tracking)** — Shipped `f215bf3`. **Both
+  criteria met**, no migration. A sold disc keeps its row and `owned_copy()` removes it
+  from the views, replacing eighteen hand-written filters across seven routers (#145);
+  `listed_for_sale` still counts as owned. Three defects found: no audit row was written
+  at all (`listing_status` was unaudited), a bespoke `listing_sold` action type is refused
+  by §3.20's closed CHECK, and `copyCount` was `ge=1` so selling your only copy 500'd the
+  film's page (#146, #147). CI red once — a test borrowed a disc from the catalogue, which
+  exists on Neon and not in CI's empty Postgres. Group I is complete.
 
 - **2026-09-12 (Batch 28 — eBay integration)** — Shipped `b2a6c27`. New `src/ebay/` package
   (Browse client with a cached application token, match filter, segmented median,
