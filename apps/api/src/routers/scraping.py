@@ -36,7 +36,11 @@ from src.schemas.wanted import (
     ScrapeRunResponse,
 )
 from src.services.scraping.aggregate import aggregate_old_checks
-from src.services.scraping.builtins import BUILT_IN_SCRAPERS, unverified_names
+from src.services.scraping.builtins import (
+    BUILT_IN_SCRAPERS,
+    deals_config_for,
+    unverified_names,
+)
 from src.services.scraping.daily import failure_records, run_daily_scrape
 from src.services.scraping.extract import check_shape, extract
 from src.services.scraping.fetcher import FetchError, UnsafeUrlError, fetch_page
@@ -201,7 +205,21 @@ async def apply_built_in_configs(user: AdminUser, db: Database) -> BuiltInScrape
         if entry.get("base"):
             retailer.base_url = str(entry["base"])
         retailer.search_url_template = str(entry["search"])
-        retailer.scraper_config = dict(entry["config"])
+        config = dict(entry["config"])
+
+        # Batch 22. The sale page is part of the built-in, and without this four of the
+        # five enabled shops keep the `deals_url: NULL` they were seeded with — which
+        # makes §5.9's "≥ 3 retailers" unreachable no matter how the scraper behaves.
+        #
+        # The `was` and `image` selectors are merged into the same `scraper_config` the
+        # wanted-item scrapers use, because a sale card and a search card are the same
+        # markup: the deals extractor reads `item`/`title`/`price`/`url` from exactly the
+        # selectors Batch 19 verified, and only needs the struck-through price adding.
+        deals = deals_config_for(retailer.name)
+        if deals:
+            retailer.deals_url = str(deals["url"])
+            config.update({key: value for key, value in deals.items() if key in {"was", "image"}})
+        retailer.scraper_config = config
     await db.commit()
     return await list_built_in_scrapers(user)
 

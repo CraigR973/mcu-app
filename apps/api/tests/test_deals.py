@@ -302,3 +302,28 @@ def test_no_ruled_out_shop_gained_a_sale_page() -> None:
     A deals config for one of them would quietly put it back in the rotation."""
     for name in ("Amazon UK", "HMV", "CEX", "Blu-ray.com"):
         assert deals_config_for(name) is None, name
+
+
+def test_applying_the_built_ins_would_give_every_enabled_shop_a_sale_page() -> None:
+    """The wiring `apply-built-ins` needs, asserted as a property rather than a run.
+
+    Without it, four of the five enabled shops keep the `deals_url: NULL` they were
+    seeded with in Batch 18 and §5.9's *"≥ 3 retailers"* is unreachable however well the
+    scraper behaves — which was nearly shipped: `deals_config_for` existed and nothing
+    called it.
+
+    The `was` and `image` selectors merge into the same `scraper_config` the wanted-item
+    scrapers use, because a sale card and a search card are the same markup.
+    """
+    enabled = ("Zavvi", "Arrow Video", "101 Films", "Second Sight", "Powerhouse Films")
+    for name in enabled:
+        entry = BUILT_IN_SCRAPERS[name]
+        deals = deals_config_for(name)
+        assert deals is not None, name
+
+        merged = dict(entry["config"])
+        merged.update({key: value for key, value in deals.items() if key in {"was", "image"}})
+
+        # Everything the deals extractor reads has to survive the merge.
+        for key in ("item", "title", "price", "url", "was"):
+            assert merged.get(key), f"{name} is missing {key}"
