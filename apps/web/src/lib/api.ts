@@ -27,6 +27,8 @@ import {
   giftLinkListSchema,
   giftLinkSchema,
   giftPageSchema,
+  ebayListingUrlSchema,
+  ebayPriceEstimateSchema,
   itemPhotoListSchema,
   itemPhotoSchema,
   movieDetailSchema,
@@ -73,6 +75,8 @@ import {
   watchLogEntrySchema,
   watchLogPageSchema,
   type Activity,
+  type EbayListingUrl,
+  type EbayPriceEstimate,
   type AiAnswer,
   type AiConversation,
   type AiConversationDetail,
@@ -163,6 +167,9 @@ export type {
   Activity,
   ActivityEvent,
   ActivityKind,
+  EbayListingUrl,
+  EbayPriceEstimate,
+  EbayPriceSegment,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -529,6 +536,18 @@ export const FORMATS = [
 export function formatLabel(value: string | null): string | null {
   if (!value) return null
   return FORMATS.find((format) => format.value === value)?.label ?? value.replaceAll('_', ' ')
+}
+
+/**
+ * Which format a copy **is**, when its `formats` array names several.
+ *
+ * `FORMATS` is in best-to-worst order, mirroring the API's `FORMAT_RANK` and the
+ * `recalculate_movie_derived_fields` trigger that enforces it. A combo pack holding a 4K
+ * disc and a Blu-ray is a 4K item: that is what is in the box, and it is what a price for
+ * it has to be a price *of*.
+ */
+export function bestFormat(formats: readonly string[]): string | null {
+  return FORMATS.find((format) => formats.includes(format.value))?.value ?? formats[0] ?? null
 }
 
 // ---------------------------------------------------------------------------
@@ -1924,4 +1943,46 @@ export async function deleteItemPhoto(photoId: string): Promise<void> {
 export function itemPhotoUrl(path: string): string {
   const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
   return `${base}${path}`
+}
+
+// ---------------------------------------------------------------------------
+// eBay (Batch 28) — §4.1, §4.3
+// ---------------------------------------------------------------------------
+
+/**
+ * What a disc is currently being **asked** for on eBay UK.
+ *
+ * A POST rather than a GET, and not for tidiness: each call spends a unit of a finite
+ * 5,000-a-day production quota, and a GET invites a prefetcher or a retry to spend it
+ * again. Nothing here is a sold price — `basis` says so and every surface must show it.
+ */
+export async function fetchEbayPriceEstimate(input: {
+  filmTitle: string
+  formatCode?: string | null
+  /** Sellers in this country only. `'GB'` by default at the server; `null` for anywhere. */
+  country?: string | null
+}): Promise<EbayPriceEstimate> {
+  return parseOrThrowApiError(
+    await authFetch('/ebay/price-estimate', { method: 'POST', body: JSON.stringify(input) }),
+    ebayPriceEstimateSchema,
+  )
+}
+
+/**
+ * A pre-filled link to eBay's "start your listing" form, and what to ask for the disc.
+ *
+ * Calling this creates nothing. Phase 4.3's preferred option — a Sell API draft listing —
+ * describes something eBay does not do, so the app never holds a selling credential
+ * (`DECISIONS.md` #142); the admin opens this signed in as themselves.
+ */
+export async function fetchEbayListingUrl(input: {
+  filmTitle: string
+  year?: number | null
+  formatCode?: string | null
+  condition?: string | null
+}): Promise<EbayListingUrl> {
+  return parseOrThrowApiError(
+    await authFetch('/ebay/listing-url', { method: 'POST', body: JSON.stringify(input) }),
+    ebayListingUrlSchema,
+  )
 }

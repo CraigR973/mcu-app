@@ -19,6 +19,7 @@ import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { SpecBadges } from '@/components/collection/SpecBadges'
+import { ValuePanel } from '@/components/collection/ValuePanel'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
 import { FormatBadge } from '@/components/movies/FormatBadge'
@@ -33,6 +34,7 @@ import { useAuth } from '@/context/auth'
 import { useRecentItems } from '@/hooks/useRecentItems'
 import {
   backdropUrl,
+  bestFormat,
   conditionLabel,
   fetchCopies,
   fetchMovie,
@@ -47,11 +49,18 @@ type Tab = 'overview' | 'crew' | 'copies' | 'watch'
 function CopyCard({
   item,
   movieId,
+  filmTitle,
+  year,
   canEdit,
   onEdit,
 }: {
   item: CollectionCopy
   movieId: string
+  /** The film's title and year, for §4.1's price lookup and §4.3's listing link. Passed
+   *  down rather than re-fetched: the copy row carries neither, and the page above has
+   *  both. */
+  filmTitle: string
+  year: number | null
   canEdit: boolean
   onEdit: (copy: CollectionCopy) => void
 }) {
@@ -194,6 +203,18 @@ function CopyCard({
       {canEdit && (
         <div className="border-t border-border pt-3">
           <LendButton collectionItemId={item.id} />
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="border-t border-border pt-3">
+          <h3 className="metadata-label mb-2">Value and resale</h3>
+          <ValuePanel
+            filmTitle={filmTitle}
+            year={year}
+            formatCode={bestFormat(item.formats)}
+            condition={item.condition}
+          />
         </div>
       )}
 
@@ -484,6 +505,8 @@ export default function MovieDetailPage() {
                         key={copy.id}
                         item={copy}
                         movieId={movie.id}
+                        filmTitle={movie.title}
+                        year={movie.year}
                         canEdit={canEdit}
                         onEdit={setEditing}
                       />

@@ -1474,3 +1474,66 @@ export const itemPhotoListSchema = z.object({
 
 export type ItemPhoto = z.infer<typeof itemPhotoSchema>
 export type ItemPhotoList = z.infer<typeof itemPhotoListSchema>
+
+// ---------------------------------------------------------------------------
+// eBay (Batch 28) — §4.1, §4.3
+// ---------------------------------------------------------------------------
+
+/** One comparable group of *current listings* on eBay UK.
+ *
+ *  **`sampleSize` must be shown wherever `median` is shown.** `DECISIONS.md` #129 measured
+ *  a naive keyword-search median at £30.45 against a real plain-Blu-ray median of £12.21 —
+ *  149% high, and entirely plausible on a card. A price with no sample size behind it is
+ *  the same failure waiting to happen. */
+export const ebayPriceSegmentSchema = z.object({
+  formatCode: z.string().min(1),
+  edition: z.enum(['standard', 'collector']),
+  /** eBay's **numeric** condition code — the only stable key. `condition` is a localised
+   *  display string: #129 found 16 distinct values for about five real conditions, in
+   *  three languages, in one result set. `'unknown'` is its own bucket, never a default. */
+  conditionId: z.string().min(1),
+  conditionLabel: z.string().min(1),
+  sampleSize: z.number().int().nonnegative(),
+  /** A string, not a number: a price is money and must not round-trip through a float. */
+  median: z.string(),
+  low: z.string(),
+  high: z.string(),
+  currency: z.string().min(1),
+})
+
+/** What a title is currently being **asked** for — never what it sold for.
+ *
+ *  Sold comps are unobtainable: Marketplace Insights is closed to new applicants and eBay
+ *  put sold listings behind a login wall in late August 2026 (`DECISIONS.md` #16, #126).
+ *  `basis` carries the exact words every surface must display. */
+export const ebayPriceEstimateSchema = z.object({
+  filmTitle: z.string().min(1),
+  formatCode: z.string().nullable(),
+  marketplaceId: z.string().min(1),
+  considered: z.number().int().nonnegative(),
+  matched: z.number().int().nonnegative(),
+  segments: z.array(ebayPriceSegmentSchema),
+  headline: ebayPriceSegmentSchema.nullable(),
+  /** Why the rest were rejected, by reason and count. **Part of the answer, not
+   *  diagnostics**: a search matching 4 of 200 is either a rare disc or a broken filter,
+   *  and this is what tells the two apart. */
+  rejected: z.record(z.number().int().nonnegative()),
+  unusable: z.number().int().nonnegative(),
+  basis: z.string().min(1),
+})
+
+/** A link that opens eBay's "start your listing" form with the title filled in.
+ *
+ *  Nothing is created by asking for it. Phase 4.3's Option A — a Sell API draft listing —
+ *  describes something eBay does not do, so the app holds no selling credential and never
+ *  creates a live listing (`DECISIONS.md` #142). */
+export const ebayListingUrlSchema = z.object({
+  url: z.string().min(1),
+  suggestedTitle: z.string().min(1),
+  /** The median of current asking prices, unshaded. Null when nothing matched. */
+  suggestedPrice: z.string().nullable(),
+})
+
+export type EbayPriceSegment = z.infer<typeof ebayPriceSegmentSchema>
+export type EbayPriceEstimate = z.infer<typeof ebayPriceEstimateSchema>
+export type EbayListingUrl = z.infer<typeof ebayListingUrlSchema>

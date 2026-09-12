@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   activitySchema,
+  ebayListingUrlSchema,
+  ebayPriceEstimateSchema,
+  ebayPriceSegmentSchema,
   auditEntrySchema,
   auditFieldChangeSchema,
   boxSetDetailSchema,
@@ -1255,5 +1258,90 @@ describe('movie night schemas', () => {
     // `match` is non-null only on the swipe that completes one; a missing key would make
     // "not yet" and "malformed response" the same thing.
     expect(movieNightVoteResultSchema.parse({ recorded: true, match: null }).match).toBeNull()
+  })
+})
+
+describe('eBay price estimates (Batch 28)', () => {
+  const segment = {
+    formatCode: 'blu_ray',
+    edition: 'standard',
+    conditionId: '1000',
+    conditionLabel: 'New',
+    sampleSize: 29,
+    median: '9.99',
+    low: '4.16',
+    high: '45.99',
+    currency: 'GBP',
+  }
+
+  it('keeps money as a string', () => {
+    // A price is money. A float median of 9.99 is not 9.99, and this one becomes a
+    // suggested sale price in Batch 29.
+    expect(() => ebayPriceSegmentSchema.parse({ ...segment, median: 9.99 })).toThrow()
+    expect(ebayPriceSegmentSchema.parse(segment).median).toBe('9.99')
+  })
+
+  it('refuses a segment with no sample size', () => {
+    // `DECISIONS.md` #129: a median without its sample size is the 149% overstatement
+    // waiting to be believed. The field is required at the wire, not just in the UI.
+    const { sampleSize: _dropped, ...withoutSampleSize } = segment
+    expect(() => ebayPriceSegmentSchema.parse(withoutSampleSize)).toThrow()
+  })
+
+  it('accepts "unknown" as a condition id but not an empty one', () => {
+    // A missing condition is its own bucket, never a default (#129).
+    expect(ebayPriceSegmentSchema.parse({ ...segment, conditionId: 'unknown' })).toBeTruthy()
+    expect(() => ebayPriceSegmentSchema.parse({ ...segment, conditionId: '' })).toThrow()
+  })
+
+  it('only knows two editions', () => {
+    expect(() => ebayPriceSegmentSchema.parse({ ...segment, edition: 'steelbook' })).toThrow()
+  })
+
+  it('carries the rejections and the basis', () => {
+    const parsed = ebayPriceEstimateSchema.parse({
+      filmTitle: 'Blade Runner 2049',
+      formatCode: 'blu_ray',
+      marketplaceId: 'EBAY_GB',
+      considered: 200,
+      matched: 117,
+      segments: [segment],
+      headline: segment,
+      rejected: { 'ships from JP, not GB': 7 },
+      unusable: 0,
+      basis: 'current asking prices',
+    })
+
+    expect(parsed.basis).toBe('current asking prices')
+    expect(parsed.rejected['ships from JP, not GB']).toBe(7)
+    expect(parsed.headline?.sampleSize).toBe(29)
+  })
+
+  it('allows a headline of null — nothing matched is an answer', () => {
+    const parsed = ebayPriceEstimateSchema.parse({
+      filmTitle: 'A Film Nobody Lists',
+      formatCode: null,
+      marketplaceId: 'EBAY_GB',
+      considered: 200,
+      matched: 0,
+      segments: [],
+      headline: null,
+      rejected: {},
+      unusable: 0,
+      basis: 'current asking prices',
+    })
+
+    expect(parsed.headline).toBeNull()
+  })
+
+  it('parses the listing link and a null suggested price', () => {
+    const parsed = ebayListingUrlSchema.parse({
+      url: 'https://www.ebay.co.uk/sl/prelist/suggest?title=Jaws+%281975%29+Blu-ray',
+      suggestedTitle: 'Jaws (1975) Blu-ray',
+      suggestedPrice: null,
+    })
+
+    expect(parsed.url).toContain('title=')
+    expect(parsed.suggestedPrice).toBeNull()
   })
 })

@@ -45,6 +45,12 @@ class ReadinessResponse(BaseModel):
     #: without this nothing in the code could observe its absence.
     ai: Literal["configured", "not_configured"]
 
+    #: Whether eBay Browse can be called in this deployment — Batch 28, and the third
+    #: field here for the same reason as the first two. `EBAY_CLIENT_ID` and
+    #: `EBAY_CLIENT_SECRET` are Railway variables, and until this field existed the only
+    #: way to learn they were missing was to ask for a price and read a 503.
+    ebay: Literal["configured", "not_configured"]
+
 
 @router.get("", response_model=HealthResponse)
 async def health() -> HealthResponse:
@@ -58,6 +64,13 @@ async def health() -> HealthResponse:
 def _ai_status() -> Literal["configured", "not_configured"]:
     """Is there a key for the assistant? Presence only — a call would cost money."""
     return "configured" if settings.anthropic_api_key else "not_configured"
+
+
+def _ebay_status() -> Literal["configured", "not_configured"]:
+    """Is there a keyset for Browse? Presence only — a call would spend the daily quota."""
+    if settings.ebay_client_id and settings.ebay_client_secret:
+        return "configured"
+    return "not_configured"
 
 
 def _push_status() -> Literal["configured", "not_configured", "invalid"]:
@@ -80,11 +93,12 @@ def _push_status() -> Literal["configured", "not_configured", "invalid"]:
 async def ready(response: Response) -> ReadinessResponse:
     push = _push_status()
     ai = _ai_status()
+    ebay = _ebay_status()
     try:
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))
-        return ReadinessResponse(status="ready", db="ok", push=push, ai=ai)
+        return ReadinessResponse(status="ready", db="ok", push=push, ai=ai, ebay=ebay)
     except Exception:
         log.warning("readiness check failed", db="unreachable")
         response.status_code = 503
-        return ReadinessResponse(status="not_ready", db="unreachable", push=push, ai=ai)
+        return ReadinessResponse(status="not_ready", db="unreachable", push=push, ai=ai, ebay=ebay)

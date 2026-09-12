@@ -2241,3 +2241,129 @@ contemporaneous.
      dependency — it has been a direct dependency since Batch 11, which needs it for RFC
      8291 Web Push, so what is net-new is **key management**, not the library; and Group H
      still said Batch 24 waits on eBay, which `OWNER-ACTIONS.md` #5 closed on 2026-09-10.
+
+### 2026-09-12 — Batch 28 eBay integration
+
+142. **Phase 4.3's Option A describes something eBay does not do, so Option B is the
+     primary path — and the prefill parameter is `title`, which is not one of the three
+     names that look right.**
+
+     The phase reads *"Option A (preferred): eBay Sell API draft listing creation · Option B
+     (fallback): pre-filled eBay listing URL"*. There is **no eBay API that creates a Seller
+     Hub draft.** An Inventory API offer is invisible until it is *published*, and
+     publishing produces a live listing with a buyer on the other end — not a draft for
+     review, which is the whole shape Option A describes. Option A would also require
+     storing a refreshing eBay **user** token for a real selling account, opted into
+     business policies: the class of third-party credential this project deliberately
+     sequences late (Batch 33) and has never held. Inverting a stated preference is a
+     decision, so it is recorded here rather than silently implemented.
+
+     **`docs/phase-batches.md` flagged that nobody had confirmed Option B still worked**,
+     and that if prefill were gone 4.3 would have no remaining path at all. Checked in a
+     browser on 2026-09-12 against `ebay.co.uk/sl/prelist/suggest`:
+
+     | Parameter | Result |
+     |---|---|
+     | `?keyword=` | form renders, box **empty** |
+     | `?q=` | form renders, box **empty** |
+     | `?sugKw=` | form renders, box **empty** |
+     | `?title=` | form renders with the box **pre-filled** |
+
+     So the mechanism survives and the three obvious names are the three that fail
+     *silently* — the button works, the form opens, the box is blank. That is why the URL is
+     built in `src/ebay/listing.py` with a test pinning the parameter, rather than
+     interpolated at a call site.
+
+     The form is step one of three and has exactly one field, so condition, price and photos
+     are set by the seller afterwards and the title carries everything useful — hence
+     `suggested_title`, which packs film, year, format and condition into eBay's 80
+     characters and drops components from the right so a long title never loses the film's
+     name to a truncation.
+
+     **The app therefore never holds a selling credential and never creates a listing.**
+     "Admin publishes from eBay" is literal: it is a link, opened by a person signed in as
+     themselves.
+
+143. **The match filter is built from eBay's own category ids and from *position* within a
+     title, not from a blocklist of words — and every guard in it was measured against two
+     captured 200-listing payloads rather than imagined.**
+
+     #129 said the batch's effort belongs in the match filter and that its own measuring
+     regexes were too fragile to ship. `tests/fixtures/ebay_browse_{blade_runner_2049,jaws}.json`
+     are verbatim production responses (`EBAY_GB`, 2026-09-11, 200 listings each), and every
+     rule below exists because those files contain a listing that breaks the rule's absence:
+
+     - **`leafCategoryIds` is the strongest gate.** 185 of 200 Blade Runner results are leaf
+       `617` ("DVDs & Blu-rays"); the rest are art prints, a DVD player, memorabilia and an
+       audio book, each with the film's name in the title and a plausible £ price.
+     - **Category cannot segment format.** `617` holds DVD, Blu-ray and 4K alike, so format
+       comes from the title via the scrapers' own `primary_format` — including its rule that
+       the *highest* format named wins, which matters here for a reason it was not written
+       for: sellers append "- DVD" to Blu-ray listings as a keyword.
+     - **A bare 1–2 digit number after the title is a sequel.** This is the gap that makes a
+       general-purpose matcher insufficient: `extract._normalise` drops tokens of two
+       characters or fewer, so "Jaws 2" and "Jaws" reduce to the same word and the scrapers'
+       `_meaningful_extras` cannot tell them apart. 33 captured Jaws listings are Jaws 2, 3
+       or 4.
+     - **A content word after the title is a subtitle, and a subtitle is a different film.**
+       "Jaws: The Revenge", "Blade Runner 2049/Final Cut", "Jaws E.T. Extra-Terrestrial…",
+       "Piranha … Jaws Homage" — 15 captured listings, none of them numeric, all of them a
+       different film.
+     - **`_meaningful_extras` itself is deliberately *not* reused.** eBay titles are keyword
+       dumps; it reads "KZVG The Cheap Fast Free Post" as evidence of another film and
+       rejects an ordinary Blu-ray.
+
+     **Two guards were wrong on the first attempt and the fixtures caught both**, which is
+     the entire argument for capturing rather than inventing them:
+
+     1. `blu` and `dvd` were on the "a number here is a quantity" list, so "Jaws 3
+        Blu-Ray (2016)" and "Jaws 2 - DVD" read as quantities and were priced as *Jaws*.
+        Nine wrong listings. A number followed by a *format* is a sequel; only a counted
+        noun makes it a quantity.
+     2. A BBFC age rating is a bare number: "Blade Runner 2049 [15] 4K UHD" was rejected as
+        a fifteenth instalment. Ratings are stripped before tokenising — narrower than
+        exempting 12/15/18, which would admit "Ocean's 12" as "Ocean's".
+
+     **The costs are stated rather than hidden**, per the trade `extract.MEDIA_MARKERS`
+     already makes: two genuine Jaws Blu-rays are lost because their sellers filed them
+     under "Other" and "Audio Books"; four are lost because an actor's name sits where a
+     subtitle would ("Jaws (Roy Scheider)"), and actors' names cannot be enumerated; one is
+     lost to a seller repeating the title. Each has a test naming it. A stated failure is
+     better than a wrong number.
+
+     Measured end to end on the captured payloads: the naive median over everything a
+     keyword search returns is **£24.74** against a matched plain-Blu-ray median of
+     **£9.99** from 29 listings — the same shape as #129's £30.45 against £12.21, taken with
+     a different method a day later. `test_ebay_pricing.py` re-takes that comparison on
+     every run, because a filter that silently degrades to "accept everything" leaves every
+     other test green.
+
+144. **A "UK median" means GB sellers, the answer is a table rather than a number, and the
+     rejections are part of the answer.**
+
+     Three shape decisions, each with a failure behind it:
+
+     **GB only, by default.** eBay GB returns overseas sellers with their prices converted
+     into GBP and says nothing about import duty — 52 of the 200 Blade Runner listings ship
+     from Japan, Canada, the US, Germany or Australia. The criterion asks for a *UK* median,
+     so `country` defaults to `"GB"` and `null` opts out.
+
+     **Segment on `(format, edition, conditionId)`, never on `condition`.** #129 established
+     the last part; `edition` is the new axis, splitting boutique steelbooks — FilmArena,
+     Relite Media, Blufans, KimchiDVD, Mondo, Cinemuseum, The Film Vault — from the standard
+     retail disc. They run £150–£925 against £9.99 and are most of #129's 149%. They are
+     **segmented, not rejected**: it is a real market, and Batch 29 may want it.
+
+     **`sampleSize` is mandatory at the wire and on screen.** A median over three listings
+     and a median over sixty look identical on a card.
+
+     **`rejected` is returned to the caller.** A search that matched 4 of 200 is either a
+     rare disc or a broken filter, and the tally is the only thing that tells them apart —
+     the lesson #122 cost ten live requests to learn. `unusable` is counted separately from
+     rejections, because a rise there means eBay changed its response rather than a keyword
+     search being noisy.
+
+     **And `ebay` joins `push` and `ai` on `/api/v1/health/ready`.** `EBAY_CLIENT_ID` and
+     `EBAY_CLIENT_SECRET` live only in Railway; without the field, the only way to learn
+     they were missing would be to ask for a price and read a 503 — which is the shape of
+     the TMDB outage of 2026-09-09 exactly.

@@ -48,6 +48,7 @@ async def test_readiness_returns_ok_when_database_responds() -> None:
         "db": "ok",
         "push": "not_configured",
         "ai": "not_configured",
+        "ebay": "not_configured",
     }
     session.execute.assert_awaited_once()
 
@@ -68,6 +69,7 @@ async def test_readiness_returns_503_when_database_is_unreachable() -> None:
         "db": "unreachable",
         "push": "not_configured",
         "ai": "not_configured",
+        "ebay": "not_configured",
     }
 
 
@@ -238,6 +240,11 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # with **no rate limit**, deliberately: eBay polls it and reads a 429 as an
         # outage. See `routers/ebay.py`.
         "/api/v1/ebay/account-deletion",
+        # Batch 28's two, and the contrast with the line above is the point: both are
+        # admin-authed and rate limited, because each spends a unit of a finite daily
+        # production quota on eBay's keyset.
+        "/api/v1/ebay/price-estimate",
+        "/api/v1/ebay/listing-url",
     }
 
 
@@ -295,3 +302,39 @@ async def test_readiness_distinguishes_an_unreadable_key_from_a_missing_one() ->
 
     assert response.json()["push"] == "invalid"
     assert response.status_code == 200, "a missing notification key is not an unhealthy API"
+
+
+@pytest.mark.asyncio
+async def test_readiness_reports_ebay_as_configured_when_a_keyset_is_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Batch 28, and the third field added here for the same reason as the first two.
+
+    `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` live only in Railway. Without this field the
+    only way to learn they are missing is to ask for a price and read a 503 — which is
+    precisely how the TMDB outage of 2026-09-09 stayed invisible for days.
+    """
+    import src.routers.health as health_router
+
+    monkeypatch.setattr(health_router.settings, "ebay_client_id", "an-id")
+    monkeypatch.setattr(health_router.settings, "ebay_client_secret", "a-secret")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/health/ready")
+
+    assert response.json()["ebay"] == "configured"
+
+
+@pytest.mark.asyncio
+async def test_a_half_set_ebay_keyset_is_not_configured(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An id with no secret mints nothing. Reporting it as configured would be worse than
+    reporting nothing at all."""
+    import src.routers.health as health_router
+
+    monkeypatch.setattr(health_router.settings, "ebay_client_id", "an-id")
+    monkeypatch.setattr(health_router.settings, "ebay_client_secret", "")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/health/ready")
+
+    assert response.json()["ebay"] == "not_configured"

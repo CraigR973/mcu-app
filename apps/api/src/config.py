@@ -76,6 +76,21 @@ class Settings(BaseSettings):
     ebay_verification_token: str = ""
     ebay_account_deletion_endpoint: str = ""
 
+    # The Browse API's client credentials (Batch 28, Phase 4.1). A self-service production
+    # keyset — `DECISIONS.md` #126 established that Browse needs no partner approval.
+    #
+    # **Optional here and checked at use**, like the TMDB pair above, so the API boots
+    # without them. That is only safe because the absence is *visible*:
+    # `/api/v1/health/ready` reports `ebay`, and `EbayClient` raises `EbayNotConfigured`
+    # before sending anything rather than letting eBay answer 401 to an empty credential.
+    # Without both of those this is the shape of the 2026-09-09 TMDB outage exactly — a
+    # value that lives only in a hosting variable has nothing testing it.
+    ebay_client_id: str = ""
+    ebay_client_secret: str = ""
+    #: Which eBay site to search. `EBAY_GB` is the one the criterion's "UK median" means,
+    #: and it is what #126 and #129 measured against.
+    ebay_marketplace_id: str = "EBAY_GB"
+
     # Web Push (Batch 11). Set in Railway on 2026-09-09; the names here are fixed by
     # what is already there. Absent locally and in CI, where every send is stubbed.
     #
