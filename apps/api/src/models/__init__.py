@@ -12,6 +12,7 @@ from src.models.ai import (
     AiToolCall,
     AiUsageLogEntry,
 )
+from src.models.barcode import BARCODE_LOOKUPS_TABLE, BARCODE_SOURCES, BarcodeLookup
 from src.models.base import (
     Base,
     TimestampMixin,
@@ -107,6 +108,9 @@ __all__ = [
     "BoxSet",
     "BoxSetItem",
     "Base",
+    "BARCODE_LOOKUPS_TABLE",
+    "BARCODE_SOURCES",
+    "BarcodeLookup",
     "COLLECTION_ITEMS_TABLE",
     "CONDITIONS",
     "CollectionItem",

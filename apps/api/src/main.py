@@ -16,6 +16,7 @@ from src.rate_limit import limiter
 from src.routers import (
     ai,
     auth,
+    barcode,
     box_sets,
     calendar,
     collection,
@@ -126,3 +127,4 @@ app.include_router(movie_night.router)
 app.include_router(photos.router)
 app.include_router(specs.router)
 app.include_router(ebay.router)
+app.include_router(barcode.router)

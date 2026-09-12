@@ -2,71 +2,42 @@
 
 ## Now
 
-**Batches 28 and 29 shipped — Group I is complete.** eBay is integrated and the sale
-side of the collection works end to end. Merged as `b2a6c27` and `f215bf3`, CI green,
-production `/api/v1/health` serving `f215bf3` with `db: ok`.
+**Batch 24 — barcode scan + lookup — is implemented on `feat/24-barcode-scan-lookup`,
+but deliberately not closed out or deployed.** The local gate is green; the two live
+acceptance checks still need Craig's phone, a real disc and production eBay credentials.
+Those are recorded as `OWNER-ACTIONS.md` **1b** and **1d**, and the close-out protocol says
+to stop rather than turn a green suite into a claim that a physical scan was observed.
 
-**⚠️ Production still reports `ebay: not_configured`.** `EBAY_CLIENT_ID` and
-`EBAY_CLIENT_SECRET` are **not set in Railway** — they exist only in
-`apps/api/.env.local`, and `.railway/railway.ts` declares neither, so the next
-`config apply` would not create them either. Every eBay surface in the deployed app
-answers 503 until you set them, and **Phase 4.1's acceptance cannot be run before that**.
-`OWNER-ACTIONS.md` items **1b** and **1c**. The new `ebay` field on `/health/ready` is
-what made this visible at all, on its first deploy.
+**What is built.** Add Disc now opens on a scan-first mobile flow using `getUserMedia` and
+ZXing for EAN-8, UPC-A and EAN-13, with an explicit camera action, visible scanned digits,
+a typed fallback and camera cleanup on every exit. The decoder loads only after the camera
+button is pressed. The lookup API resolves **confirmed cache → exact collection barcode →
+eBay Browse → TMDB**, refuses a bad GS1 check digit before spending a quota call, and
+returns candidates rather than adding anything. The confirmation screen shows source
+evidence, warns when that exact product is already owned, and routes no-match or rejected
+matches into title search while retaining the barcode. A confirmed add persists the code
+on `collection_items`; migration 028 stores only person-confirmed mappings for fast future
+scans. `DECISIONS.md` #148.
 
-**Batch 28 — eBay integration (4.1, 4.3).** A new `src/ebay/` package modelled on
-`src/tmdb/`: Browse client with a cached application token, the match filter, the
-segmented median, and Phase 4.3's pre-filled listing URL. `POST /api/v1/ebay/price-estimate`
-and `POST /api/v1/ebay/listing-url`, both admin-authed and rate limited because each
-spends a unit of a 5,000-a-day production quota. A **Value and resale** panel on each
-owned copy, which fetches nothing until asked.
+**What the gate proves.** 608 API tests passed and 405 Postgres-backed tests skipped
+locally; CI remains the authority for the real-Postgres migration pass. Shared/web tests
+passed **88 + 261**, including a generated EAN-13 bitmap decoded by the pinned ZXing core.
+Ruff, format, mypy, web lint (0 errors; the same six pre-existing Fast Refresh warnings),
+typecheck and production build are green. Revision 028's upgrade and downgrade SQL both
+render independently. The scan-first and title-fallback panels were opened in the browser
+at mobile width; the camera itself was not opened because the criterion requires the real
+phone rather than a desktop permission simulation.
 
-**4.3 is met; 4.1's acceptance is the owner's.** There is no eBay API that creates a
-Seller Hub draft, so Option B is the primary path (`DECISIONS.md` #142) — and prefill was
-confirmed alive in a browser on 2026-09-12, where `?title=` fills the box and `?keyword=`,
-`?q=` and `?sugKw=` all render it **empty**. 4.1's *"a reasonable UK median price"* needs
-a live production call, which `group-start.md` puts in your hands and the ledger calls
-*"not something an unattended agent signs off"*. **A green gate does not imply it passed.**
+**What is not yet proved.** Phase 3.3 requires a real Blu-ray barcode to decode on mobile
+in under two seconds. Phase 3.4 requires a common Blu-ray to return the correct film and an
+unknown valid product code to offer manual search. Production still reports
+`ebay: not_configured`, so the common-disc lookup cannot exercise its eBay leg until
+`EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` are set in Railway. No hosting or credential
+change was attempted.
 
-**What was proven instead.** Two verbatim production payloads are captured in
-`tests/fixtures/ebay_browse_*.json` (200 GB listings each). Naive median over everything a
-keyword search returns: **£24.74**. Matched plain-Blu-ray median: **£9.99 from 29
-listings** — the same shape as #129's £30.45 against £12.21. `test_ebay_pricing.py`
-re-takes that comparison every run, because a filter that degrades to "accept everything"
-leaves every other test green.
-
-**Batch 29 — format upgrade and sale tracking (4.2, 4.4). Both criteria met.** No
-migration: the schema has carried `listing_status`, `ebay_listing_url` and `listing_price`
-since Batch 4. **A sold disc keeps its row** — soft-deleting it would hand it to §6.30's
-90-day trash purge and destroy the record of what it fetched — so `owned_copy()` is what
-removes it from the views, replacing **eighteen** hand-written `deleted_at IS NULL`
-filters across seven routers. `listed_for_sale` still counts as owned: a disc advertised
-is still a disc in the house. `DECISIONS.md` #145.
-
-**Five defects found across the two batches, all in the code rather than in the tests.**
-Two in Batch 28's match filter, caught only because the fixtures are real captures —
-format words on the "a number here is a quantity" list priced nine sequels as the film,
-and a BBFC rating read as a sequel number (#143). Three in Batch 29 — the listing endpoint
-wrote **no audit row** because `listing_status` was unaudited, a bespoke `listing_sold`
-action type is refused by §3.20's closed CHECK, and `copyCount` was declared `ge=1` so
-selling your only copy 500'd the film's own page (#146, #147).
-
-**One CI failure, fixed on the second attempt.** A Batch 29 test selected an existing disc
-out of the catalogue: fine here, where `DATABASE_URL` points at Neon and 1,857 exist, and
-a failure in CI's empty Postgres. Gotcha 15 arriving on schedule, in the direction nobody
-writes down — the *local* run was the one leaning on production data.
-
-**A pre-existing failure worth knowing about, which is not a red gate.** Running
-`pytest apps/api/tests` with `DATABASE_URL` pointed at **live Neon** produces **22
-failures**, in `test_ai_chat`, `test_movie_night`, `test_notifications_api`,
-`test_price_alerts_and_history` and `test_wanted_and_retailers_api`. Not new: the
-identical 22 fail at `5237050` in a clean worktree. They are tests written for an empty
-database being run against production data. The canonical gate in `batch-verify.md` sets
-no `DATABASE_URL`, and CI runs against a fresh Postgres 17 service — both green. Worth
-fixing so the live-database run means something, but it is its own job.
-
-**31 of 37 batches shipped, 6 remain** — 24, 22 and 38 are startable; 21 is blocked on the
-scrape cron, which has still never fired; 33 and 34 are Group K, deprioritised.
+**31 of 37 batches shipped, 6 remain** — 24 is built pending owner acceptance; 22 and 38
+are startable; 21 is blocked on the scrape cron, which has still never fired; 33 and 34 are
+Group K, deprioritised.
 
 ## Next
 
@@ -469,6 +440,20 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-12 (Batch 24 — barcode scan + lookup, implementation complete)** — Built the
+  scan-first Add Disc flow, `POST /api/v1/barcode/{lookup,confirm}`, GS1 check-digit guard,
+  exact-collection duplicate signal, eBay→TMDB candidate chain, confirmation-only mapping
+  cache (migration 028), manual-title fallback and barcode persistence on the added copy.
+  ZXing `^0.21.3` is Node-20-compatible and loads only when the camera is requested. Added
+  unit, API, wire, state-handoff and real-decoder coverage; the latter synthesizes and
+  decodes EAN-13 `5051892211475`. Local gate green: 608 API passed / 405 DB-skipped,
+  88 shared + 261 web passed, ruff/format/mypy/lint/typecheck/build green; migration 028
+  upgrade and downgrade SQL render. Browser-checked scan and title panels at mobile width.
+  **Not closed out:** a physical phone scan under two seconds and the live common/unknown
+  lookup checks remain owner actions, and Railway still reports `ebay: not_configured`.
+  No hosting change, push, merge or production deployment was performed. Decision #148;
+  `OWNER-ACTIONS.md` 1b/1d.
 
 - **2026-09-12 (Batch 29 — format upgrade + sale tracking)** — Shipped `f215bf3`. **Both
   criteria met**, no migration. A sold disc keeps its row and `owned_copy()` removes it

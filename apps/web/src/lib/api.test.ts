@@ -4,6 +4,7 @@ import { ZodError } from 'zod'
 import {
   addCollectionItem,
   checkDuplicate,
+  confirmBarcode,
   DuplicateItemError,
   fetchAudit,
   fetchCandidates,
@@ -13,6 +14,7 @@ import {
   fetchRewatchSuggestions,
   formatLabel,
   logWatch,
+  lookupBarcode,
   restoreCollectionItem,
   updateCollectionItem,
 } from './api'
@@ -261,12 +263,19 @@ describe('write surface', () => {
       .mockResolvedValue(new Response(JSON.stringify(writtenItem), { status: 201 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await addCollectionItem({ ...newCopy, movieId: writtenItem.movieId })
+    const result = await addCollectionItem({
+      ...newCopy,
+      movieId: writtenItem.movieId,
+      barcode: '5051892211475',
+    })
 
     expect(result.locationLabel).toBe('Front 2nd')
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(init.method).toBe('POST')
-    expect(JSON.parse(String(init.body))).toMatchObject({ movieId: writtenItem.movieId })
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      movieId: writtenItem.movieId,
+      barcode: '5051892211475',
+    })
   })
 
   it('turns the 409 into a typed error carrying the §3.5 prompt', async () => {
@@ -355,5 +364,80 @@ describe('write surface', () => {
     await expect(
       addCollectionItem({ ...newCopy, movieId: writtenItem.movieId }),
     ).rejects.toBeInstanceOf(ZodError)
+  })
+})
+
+describe('Batch 24 barcode calls', () => {
+  const lookup = {
+    barcode: '5051892211475',
+    source: 'ebay',
+    alreadyOwned: false,
+    candidates: [
+      {
+        title: 'Blade Runner 2049',
+        source: 'ebay',
+        confidence: 0.7,
+        movieId: null,
+        tmdbId: 335984,
+        year: 2017,
+        posterPath: '/blade-runner.jpg',
+        evidence: "eBay listings for this barcode read as 'blade runner 2049'",
+      },
+    ],
+  }
+
+  it('looks up without adding and parses every candidate through the shared schema', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(lookup)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await lookupBarcode(lookup.barcode)
+
+    expect(result.candidates[0]).toMatchObject({ title: 'Blade Runner 2049', tmdbId: 335984 })
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain('/api/v1/barcode/lookup')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(String(init.body))).toEqual({ barcode: lookup.barcode })
+  })
+
+  it('records the separate confirmation action before a disc is added', async () => {
+    const confirmed = {
+      ...lookup,
+      source: 'cache',
+      candidates: [{ ...lookup.candidates[0], source: 'cache', confidence: 1 }],
+    }
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(confirmed)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await confirmBarcode({
+      barcode: lookup.barcode,
+      title: 'Blade Runner 2049',
+      source: 'ebay',
+      tmdbId: 335984,
+    })
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain('/api/v1/barcode/confirm')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      barcode: lookup.barcode,
+      source: 'ebay',
+      tmdbId: 335984,
+    })
+  })
+
+  it('rejects a successful lookup whose confidence escaped its wire bounds', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            ...lookup,
+            candidates: [{ ...lookup.candidates[0], confidence: 1.2 }],
+          }),
+        ),
+      ),
+    )
+
+    await expect(lookupBarcode(lookup.barcode)).rejects.toBeInstanceOf(ZodError)
   })
 })

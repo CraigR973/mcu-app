@@ -27,6 +27,7 @@ import {
   giftLinkListSchema,
   giftLinkSchema,
   giftPageSchema,
+  barcodeLookupSchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
   itemPhotoListSchema,
@@ -75,6 +76,8 @@ import {
   watchLogEntrySchema,
   watchLogPageSchema,
   type Activity,
+  type BarcodeCandidate,
+  type BarcodeLookup,
   type EbayListingUrl,
   type EbayPriceEstimate,
   type AiAnswer,
@@ -167,6 +170,8 @@ export type {
   Activity,
   ActivityEvent,
   ActivityKind,
+  BarcodeCandidate,
+  BarcodeLookup,
   EbayListingUrl,
   EbayPriceEstimate,
   EbayPriceSegment,
@@ -618,6 +623,7 @@ export async function checkDuplicate(
 export type AddCollectionItemInput = CollectionItemFields & {
   movieId?: string
   tmdbId?: number
+  barcode?: string
   confirmDuplicate?: DuplicateReason
 }
 
@@ -2028,5 +2034,44 @@ export async function updateListingStatus(
       body: JSON.stringify(input),
     }),
     collectionItemSchema,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Barcode scanning (Batch 24) — §3.3, §3.4
+// ---------------------------------------------------------------------------
+
+/**
+ * Ask what a scanned barcode is — §3.4's cached mapping → collection → eBay → TMDB chain.
+ *
+ * **Nothing is added by calling this.** The response is candidates; §3.4's confirmation
+ * step is mandatory because the batch's risk note expects a low hit rate on unknown discs
+ * and wrong-edition matches. A code nothing matched comes back with an empty list and a
+ * null `source`, which is an answer — the manual search — rather than an error.
+ */
+export async function lookupBarcode(barcode: string): Promise<BarcodeLookup> {
+  return parseOrThrowApiError(
+    await authFetch('/barcode/lookup', { method: 'POST', body: JSON.stringify({ barcode }) }),
+    barcodeLookupSchema,
+  )
+}
+
+/**
+ * Record what the person decided the barcode is, so the next scan is instant.
+ *
+ * Adds no disc — that stays `addCollectionItem`, called with the confirmed film. Keeping
+ * them apart means a confirmation that is right about the film and wrong about the shelf
+ * does not have to be undone twice.
+ */
+export async function confirmBarcode(input: {
+  barcode: string
+  title: string
+  source: Exclude<BarcodeCandidate['source'], 'cache'>
+  movieId?: string | null
+  tmdbId?: number | null
+}): Promise<BarcodeLookup> {
+  return parseOrThrowApiError(
+    await authFetch('/barcode/confirm', { method: 'POST', body: JSON.stringify(input) }),
+    barcodeLookupSchema,
   )
 }

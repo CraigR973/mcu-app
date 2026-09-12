@@ -2441,3 +2441,39 @@ contemporaneous.
      **zero**. It is the shape #93 and #73 both describe — a rule that is only wrong once
      something else starts using it — and it was found by a test asserting the criterion
      rather than by reasoning about the schema.
+
+### 2026-09-12 — Batch 24 barcode scan and lookup
+
+148. **A barcode resolution is a suggestion until a person confirms it; only confirmed
+     mappings are cached, and the physical collection itself sits before eBay in the
+     lookup chain.**
+
+     The recovered Phase 3.4 chain says cached mapping → eBay/Amazon UPC search → TMDB.
+     #91 has already ruled Amazon out and the batch ledger records eBay as its replacement.
+     Batch 24 adds one further leg: **confirmed cache → exact `collection_items.barcode` →
+     eBay Browse → TMDB**. A barcode already on a disc in the house is a certain, free
+     answer and gives the scanner its most useful shop-floor result — “you own this exact
+     product” — without consuming eBay's 5,000-call daily quota.
+
+     **Nothing learned from seller prose is cached on lookup.** eBay has no catalogue
+     endpoint for the keyset available here; Browse search returns listing titles, which
+     are reduced to conservative title queries and offered as TMDB candidates. A separate
+     confirmation request writes migration 028's `barcode_lookups` row, and adding the disc
+     remains the existing collection request. The client therefore cannot turn a plausible
+     wrong-edition match into catalogue data without an explicit **This is the disc** action.
+     Manual title search crosses the same confirmation boundary. A later correction
+     replaces the one mapping for that code rather than creating two competing answers.
+
+     **The code is refused before the network if its GS1 modulo-10 digit is wrong.** EAN-8,
+     UPC-A and EAN-13 are the only accepted lengths in both scanner and API. This prevents a
+     camera misread from spending quota and, more importantly, from presenting a convincing
+     match for digits that were never printed on the case. The lookup endpoint is also
+     capped at 60 requests per hour because each uncached request can spend an eBay call.
+
+     **ZXing is pinned to the last Node-20-compatible minor and loaded only on the camera
+     action.** `@zxing/library` 0.22+ declares Node 24; this repository builds on Node
+     20.20.2, so `^0.21.3` keeps the lock below that boundary. The package is a large decoder
+     and most Add Disc visits can use title search, so it sits in an on-demand chunk rather
+     than the route's initial bundle. Decoder hints admit only the three retail symbologies,
+     and every stop, detection, unmount and interrupted permission prompt releases the
+     camera stream.

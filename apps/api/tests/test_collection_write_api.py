@@ -290,7 +290,12 @@ async def test_admin_adds_a_disc_and_the_viewer_sees_it(
 
     created = await client.post(
         "/api/v1/collection",
-        json=_body(movieId=str(movie.id), purchasePrice="12.99", purchaseSource="Fopp"),
+        json=_body(
+            movieId=str(movie.id),
+            barcode="5-051892-211475",
+            purchasePrice="12.99",
+            purchaseSource="Fopp",
+        ),
     )
     assert created.status_code == 201, created.text
     body = created.json()
@@ -299,6 +304,13 @@ async def test_admin_adds_a_disc_and_the_viewer_sees_it(
     assert body["shelf"] == "2nd"
     assert body["locationLabel"] == "Front 2nd"
     assert body["purchasePrice"] == "12.99"
+
+    # Phase 3.4 is a scan-to-add flow, so the physical row must retain the normalised
+    # code. Without this, the confirmation cache answers next time but duplicate detection
+    # incorrectly says the exact disc is not already owned.
+    written = await api_session.get(CollectionItem, uuid.UUID(body["id"]))
+    assert written is not None
+    assert written.barcode == "5051892211475"
 
     # The viewer's read of the same film shows the disc without any further write.
     seen = await viewer_client.get(f"/api/v1/movies/{movie.id}/copies")
@@ -368,6 +380,29 @@ async def test_create_requires_exactly_one_film_reference(client: AsyncClient) -
     )
     assert neither.status_code == 422
     assert both.status_code == 422
+
+
+async def test_create_refuses_a_misread_scanner_code_before_writing(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    movie = await _a_film(api_session, title="Not Added From A Misread", tmdb_id=930012)
+
+    response = await client.post(
+        "/api/v1/collection",
+        json=_body(movieId=str(movie.id), barcode="5051892211476"),
+    )
+
+    assert response.status_code == 422
+    rows = (
+        (
+            await api_session.execute(
+                select(CollectionItem).where(CollectionItem.movie_id == movie.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert rows == []
 
 
 # ---------------------------------------------------------------------------

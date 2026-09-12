@@ -41,9 +41,10 @@ class CollectionItemFieldsMixin(BaseModel):
     """The fields a person edits, shared by the create and update bodies.
 
     Deliberately **not** every column on the table. AV specs are phase 3.7/23's, photos
-    are 3.10/25's, listing status and eBay fields are 4.x/29's, and the barcode is
-    3.3/24's. A create or update body that silently accepted them would let this batch
-    write columns no UI of this batch can show, read back or correct.
+    are 3.10/25's, listing status and eBay fields are 4.x/29's. Batch 24's barcode sits on
+    the create body alone because it belongs to the scanner flow, not to an ordinary copy
+    edit. Silently accepting any of these here would let both create and update write
+    columns their shared form cannot show, read back or correct.
     """
 
     formats: list[FormatCode] = Field(min_length=1, max_length=MAX_FORMATS)
@@ -102,6 +103,10 @@ class CollectionItemCreateRequest(CollectionItemFieldsMixin):
 
     movieId: uuid.UUID | None = None
     tmdbId: int | None = Field(default=None, gt=0)
+    #: Present only when this create follows Batch 24's scanner confirmation. The edit
+    #: body deliberately does not carry it: changing which physical product a row means
+    #: is not an ordinary copy edit.
+    barcode: str | None = Field(default=None, min_length=1, max_length=64)
     #: Set after the admin answers the duplicate prompt. Without it a film that already
     #: has a live copy is refused with 409 and the existing copies in the body — so the
     #: §3.5 confirmation holds even for a client that skipped the preflight check.

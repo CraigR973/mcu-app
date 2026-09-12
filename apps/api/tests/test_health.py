@@ -248,6 +248,11 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # production quota on eBay's keyset.
         "/api/v1/ebay/price-estimate",
         "/api/v1/ebay/listing-url",
+        # Batch 24. Both are admin-only and structurally separate so a lookup can never
+        # add or cache a guessed film. Only lookup is rate-limited: it can spend an eBay
+        # quota call, while confirm is a local write after a person checks the candidate.
+        "/api/v1/barcode/lookup",
+        "/api/v1/barcode/confirm",
     }
 
 

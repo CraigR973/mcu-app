@@ -38,6 +38,9 @@ AUDITED_ITEM_FIELDS = (
     "purchase_price",
     "purchase_source",
     "purchase_date",
+    # Batch 24. A scanned product code is part of what was physically added, and a
+    # create audit that omitted it could not explain a later cache/collection hit.
+    "barcode",
     # Batch 29, §4.4. *"Marking sold … remains in audit"* is only true if the log can see
     # the field move. Without these three the listing endpoint produced an empty diff and
     # therefore no audit row at all — a sale that left no trace, which is the one thing

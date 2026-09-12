@@ -373,7 +373,7 @@ _WINDOW_NOISE = frozenset(
 
 #: Format vocabulary, as tokens. Reaching one of these ends the subtitle window — from the
 #: format word onwards a title is describing the disc, not naming the film.
-_FORMAT_TOKENS = frozenset(
+FORMAT_TOKENS = frozenset(
     {"4k", "uhd", "ultra", "hd", "hdr", "blu", "ray", "bluray", "bd", "dvd", "3d", "2d", "vhs"}
 )
 
@@ -511,7 +511,7 @@ def _subtitle_after(listing_tokens: list[str], start: int) -> str | None:
     the listing is the film.
     """
     for token in listing_tokens[start:]:
-        if token in _FORMAT_TOKENS:
+        if token in FORMAT_TOKENS:
             return None
         if len(token) <= 2 or YEAR_PATTERN.match(token) or token.isdigit():
             continue

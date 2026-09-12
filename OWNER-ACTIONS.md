@@ -183,6 +183,29 @@ stopped filtering, which is a defect to report, not data.
 Everything shown is **current asking prices**, never sold prices — sold comps are
 unobtainable (`DECISIONS.md` #16, #126).
 
+### 1d. Run Batch 24's two physical barcode checks *(new — Batch 24, 2026-09-12)*
+
+- [ ] **On a phone, scan a real Blu-ray barcode and confirm all four observations below.**
+
+This is the part a fixture cannot sign off. Phase 3.3 requires *"a valid EAN in < 2
+seconds"* from a real mobile camera; Phase 3.4 requires a common Blu-ray to return the
+correct movie and an unknown UPC to prompt manual search. Run it after Batch 24 is
+available to the phone and after item **1b**, because production currently has no eBay
+Browse credentials and an uncached common disc would correctly fall through to manual
+search without ever exercising the resolution leg under test.
+
+1. Open **Add disc → Scan barcode** on the phone and press **Open camera**.
+2. Point it at a common Blu-ray. Time from the bars entering the frame to the digits being
+   displayed: it must be under two seconds, and the displayed EAN/UPC must match the case.
+3. Check that the proposed film is correct and that it still waits on **This is the disc**
+   rather than adding automatically. A wrong film is a Batch 24 defect, not something to
+   confirm for the sake of the test.
+4. Enter a checksum-valid product code for which no disc match exists. The result must say
+   no film matched and offer **Search by title** while retaining the scanned digits.
+
+The implementation and fixture decoder are green; only these physical/live observations
+remain. Record the barcode, phone/browser and measured time in `STATUS.md` when done.
+
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is

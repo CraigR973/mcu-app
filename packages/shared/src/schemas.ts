@@ -1547,3 +1547,37 @@ export const ebayListingUrlSchema = z.object({
 export type EbayPriceSegment = z.infer<typeof ebayPriceSegmentSchema>
 export type EbayPriceEstimate = z.infer<typeof ebayPriceEstimateSchema>
 export type EbayListingUrl = z.infer<typeof ebayListingUrlSchema>
+
+// ---------------------------------------------------------------------------
+// Barcode scanning (Batch 24) — §3.3, §3.4
+// ---------------------------------------------------------------------------
+
+/** One possible film for a scanned code.
+ *
+ *  **A candidate is never an answer.** §3.4 requires a confirmation step and the batch's
+ *  risk note expects wrong-edition matches, so `confidence` orders this list and does
+ *  nothing else. `evidence` is what makes a confirmation informed rather than a tap. */
+export const barcodeCandidateSchema = z.object({
+  title: z.string().min(1),
+  source: z.enum(['cache', 'collection', 'ebay', 'tmdb', 'manual']),
+  confidence: z.number().min(0).max(1),
+  movieId: z.string().uuid().nullable(),
+  tmdbId: z.number().int().nullable(),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  evidence: z.string().nullable(),
+})
+
+export const barcodeLookupSchema = z.object({
+  barcode: z.string().min(1),
+  /** Which leg of the chain answered, or null when none did — §3.4's "unknown UPCs
+   *  prompt manual search". Null is a result, not an error. */
+  source: z.enum(['cache', 'collection', 'ebay', 'tmdb', 'manual']).nullable(),
+  /** True when the code matches a disc already owned — the single most useful fact a
+   *  scan can produce while standing in a shop. */
+  alreadyOwned: z.boolean(),
+  candidates: z.array(barcodeCandidateSchema),
+})
+
+export type BarcodeCandidate = z.infer<typeof barcodeCandidateSchema>
+export type BarcodeLookup = z.infer<typeof barcodeLookupSchema>

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Loader2, Plus, Search } from 'lucide-react'
+import { Camera, Check, Loader2, Plus, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import BarcodeLookupPanel from '@/components/collection/BarcodeLookupPanel'
 import CopyForm, { EMPTY_COPY } from '@/components/collection/CopyForm'
 import DuplicatePrompt from '@/components/collection/DuplicatePrompt'
 import { Button } from '@/components/ui/button'
@@ -12,8 +13,10 @@ import { Badge } from '@/components/ui/badge'
 import { Poster } from '@/components/movies/Poster'
 import {
   checkDuplicate,
+  confirmBarcode,
   DuplicateItemError,
   searchTmdb,
+  type BarcodeCandidate,
   type CollectionItemFields,
   type DuplicateCheck,
   type DuplicateReason,
@@ -44,10 +47,22 @@ function chosenFrom(result: TmdbSearchResult): ChosenFilm {
   }
 }
 
+function chosenFromBarcode(candidate: BarcodeCandidate): ChosenFilm {
+  return {
+    title: candidate.title,
+    year: candidate.year,
+    posterPath: candidate.posterPath,
+    movieId: candidate.movieId,
+    tmdbId: candidate.movieId ? null : candidate.tmdbId,
+  }
+}
+
 export default function AddToCollectionPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  const [method, setMethod] = useState<'barcode' | 'title'>('barcode')
+  const [scannedBarcode, setScannedBarcode] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [submitted, setSubmitted] = useState('')
   const [film, setFilm] = useState<ChosenFilm | null>(null)
@@ -64,8 +79,7 @@ export default function AddToCollectionPage() {
     return chosen.movieId ? { movieId: chosen.movieId } : { tmdbId: chosen.tmdbId ?? 0 }
   }
 
-  async function choose(result: TmdbSearchResult) {
-    const chosen = chosenFrom(result)
+  async function chooseFilm(chosen: ChosenFilm) {
     setFilm(chosen)
     setDuplicate(null)
     // §3.1 wants the warning *before* saving, so ask as soon as the film is known
@@ -76,6 +90,34 @@ export default function AddToCollectionPage() {
     } catch {
       // A failed preflight must not block the add — the server-side 409 still holds.
     }
+  }
+
+  async function chooseBarcode(candidate: BarcodeCandidate, barcode: string) {
+    setScannedBarcode(barcode)
+    await chooseFilm(chosenFromBarcode(candidate))
+  }
+
+  const manualChoice = useMutation({
+    mutationFn: async ({ result, barcode }: { result: TmdbSearchResult; barcode: string }) => {
+      const chosen = chosenFrom(result)
+      await confirmBarcode({
+        barcode,
+        title: chosen.title,
+        source: 'manual',
+        movieId: chosen.movieId,
+        tmdbId: chosen.tmdbId,
+      })
+      return chosen
+    },
+    onSuccess: (chosen) => void chooseFilm(chosen),
+  })
+
+  function chooseTitle(result: TmdbSearchResult) {
+    if (scannedBarcode) {
+      manualChoice.mutate({ result, barcode: scannedBarcode })
+      return
+    }
+    void chooseFilm(chosenFrom(result))
   }
 
   // The film's local id at the moment the mutation is defined, so `onSuccess` does not
@@ -93,6 +135,7 @@ export default function AddToCollectionPage() {
       return addOrQueue({
         ...fields,
         ...(film.movieId ? { movieId: film.movieId } : { tmdbId: film.tmdbId ?? 0 }),
+        ...(scannedBarcode ? { barcode: scannedBarcode } : {}),
         confirmDuplicate,
       })
     },
@@ -133,86 +176,177 @@ export default function AddToCollectionPage() {
 
       <section className="archive-panel space-y-4 p-4 sm:p-6" aria-labelledby="choose-film-heading">
         <div><p className="page-kicker">Step 1</p><h2 id="choose-film-heading" className="section-heading">Which film?</h2></div>
-        <form
-          className="flex gap-2"
-          onSubmit={(event) => {
-            event.preventDefault()
-            setSubmitted(query.trim())
-          }}
-        >
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search TMDB by title…"
-            aria-label="Search for a film"
-          />
-          <Button type="submit" disabled={query.trim().length < 2}>
-            {searchQuery.isFetching ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4" />
+        <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="How to find the film">
+          <button
+            type="button"
+            role="tab"
+            id="barcode-tab"
+            aria-controls="barcode-panel"
+            aria-selected={method === 'barcode'}
+            onClick={() => {
+              setMethod('barcode')
+              setScannedBarcode(null)
+              setFilm(null)
+              setDuplicate(null)
+              manualChoice.reset()
+            }}
+            className={`touch-target inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-colors ${
+              method === 'barcode' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+            }`}
+          >
+            <Camera className="h-4 w-4" />
+            Scan barcode
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="title-tab"
+            aria-controls="title-panel"
+            aria-selected={method === 'title'}
+            onClick={() => {
+              // An explicit tab switch is a fresh title-only add. The scanner's
+              // "search by title" callback below is the one path that deliberately
+              // retains a code for manual resolution.
+              setMethod('title')
+              setScannedBarcode(null)
+              setFilm(null)
+              setDuplicate(null)
+              manualChoice.reset()
+            }}
+            className={`touch-target inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-colors ${
+              method === 'title' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+            }`}
+          >
+            <Search className="h-4 w-4" />
+            Search title
+          </button>
+        </div>
+
+        {method === 'barcode' ? (
+          <div id="barcode-panel" role="tabpanel" aria-labelledby="barcode-tab">
+            <BarcodeLookupPanel
+              onBarcodeChange={(barcode) => {
+                // A newly read physical product invalidates any earlier candidate.
+                // Keeping the old film selected here would let its save button attach
+                // the new barcode to the wrong movie while lookup was still pending.
+                setScannedBarcode(barcode)
+                setFilm(null)
+                setDuplicate(null)
+              }}
+              onConfirmed={chooseBarcode}
+              onManualSearch={(barcode) => {
+                setScannedBarcode(barcode)
+                setFilm(null)
+                setDuplicate(null)
+                setMethod('title')
+              }}
+            />
+          </div>
+        ) : (
+          <div id="title-panel" role="tabpanel" aria-labelledby="title-tab" className="space-y-4">
+            {scannedBarcode && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                <p className="font-medium text-foreground">Finding barcode {scannedBarcode} manually</p>
+                <p className="mt-1 text-muted-foreground">
+                  Choose the correct film below. It will still be confirmed against this barcode before the disc is added.
+                </p>
+              </div>
             )}
-            Search
-          </Button>
-        </form>
+            <form
+              className="flex gap-2"
+              onSubmit={(event) => {
+                event.preventDefault()
+                setSubmitted(query.trim())
+              }}
+            >
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search TMDB by title…"
+                aria-label="Search for a film"
+              />
+              <Button type="submit" disabled={query.trim().length < 2}>
+                {searchQuery.isFetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+                Search
+              </Button>
+            </form>
 
-        {submitted.length >= 2 && searchState === 'error' && (
-          <p role="alert" className="text-sm text-destructive">
-            {queryErrorMessage(searchQuery.error, 'Could not reach TMDB.')}
-          </p>
+            {submitted.length >= 2 && searchState === 'error' && (
+              <p role="alert" className="text-sm text-destructive">
+                {queryErrorMessage(searchQuery.error, 'Could not reach TMDB.')}
+              </p>
+            )}
+
+            {submitted.length >= 2 && searchState === 'offline' && (
+              <p className="text-sm text-muted-foreground">
+                Waiting for the network — TMDB has not answered yet.
+              </p>
+            )}
+
+            {/* Only once results genuinely arrived: a paused query has no results either,
+                and "no films matched" would be a confident lie about a search that never ran. */}
+            {submitted.length >= 2 && searchState === 'empty' && (
+              <p className="text-sm text-muted-foreground">No films matched “{submitted}”.</p>
+            )}
+
+            <ul className="space-y-2">
+              {results.map((result) => {
+                const active =
+                  film !== null &&
+                  (film.movieId === result.movieId ||
+                    (film.tmdbId !== null && film.tmdbId === result.tmdbId))
+                return (
+                  <li key={result.tmdbId}>
+                    <button
+                      type="button"
+                      onClick={() => chooseTitle(result)}
+                      aria-pressed={active}
+                      disabled={manualChoice.isPending}
+                      className={`flex min-h-20 w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors disabled:opacity-50 ${
+                        active
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-muted/50'
+                      }`}
+                    >
+                      <Poster path={result.posterPath} title={result.title} size="w92" decorative className="h-16 w-11 shrink-0 rounded-sm" />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">{result.title}</span>
+                          {result.year && (
+                            <span className="text-xs text-muted-foreground">{result.year}</span>
+                          )}
+                          {result.inCollection && (
+                            <Badge tone="success">Already catalogued</Badge>
+                          )}
+                        </span>
+                        <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">
+                          {result.overview}
+                        </span>
+                      </span>
+                      {manualChoice.isPending && manualChoice.variables?.result === result ? (
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+                      ) : active ? (
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
+                      ) : null}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+
+            {manualChoice.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                {manualChoice.error instanceof Error
+                  ? manualChoice.error.message
+                  : 'That barcode match could not be confirmed.'}
+              </p>
+            )}
+          </div>
         )}
-
-        {submitted.length >= 2 && searchState === 'offline' && (
-          <p className="text-sm text-muted-foreground">
-            Waiting for the network — TMDB has not answered yet.
-          </p>
-        )}
-
-        {/* Only once results genuinely arrived: a paused query has no results either,
-            and "no films matched" would be a confident lie about a search that never ran. */}
-        {submitted.length >= 2 && searchState === 'empty' && (
-          <p className="text-sm text-muted-foreground">No films matched “{submitted}”.</p>
-        )}
-
-        <ul className="space-y-2">
-          {results.map((result) => {
-            const active =
-              film !== null &&
-              (film.movieId === result.movieId ||
-                (film.tmdbId !== null && film.tmdbId === result.tmdbId))
-            return (
-              <li key={result.tmdbId}>
-                <button
-                  type="button"
-                  onClick={() => void choose(result)}
-                  aria-pressed={active}
-                  className={`flex min-h-20 w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
-                    active
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-muted/50'
-                  }`}
-                >
-                  <Poster path={result.posterPath} title={result.title} size="w92" decorative className="h-16 w-11 shrink-0 rounded-sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{result.title}</span>
-                      {result.year && (
-                        <span className="text-xs text-muted-foreground">{result.year}</span>
-                      )}
-                      {result.inCollection && (
-                        <Badge tone="success">Already catalogued</Badge>
-                      )}
-                    </span>
-                    <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">
-                      {result.overview}
-                    </span>
-                  </span>
-                  {active && <Check className="h-4 w-4 shrink-0 text-primary" />}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
       </section>
 
       {film && (

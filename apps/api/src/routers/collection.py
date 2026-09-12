@@ -46,6 +46,7 @@ from src.schemas.collection import (
     TrashPageResponse,
 )
 from src.services.audit import diff_snapshots, item_snapshot, record_action
+from src.services.barcode import check_digit_valid, normalise
 from src.services.movie_metadata import credit_rows, movie_metadata_values, parse_year
 from src.spreadsheet.parser import parse_location
 
@@ -326,6 +327,15 @@ async def add_collection_item(
     ``/collection/duplicate-check`` still gets everything §3.5's prompt needs and the
     confirmation cannot be bypassed by not asking.
     """
+    barcode: str | None = None
+    if payload.barcode is not None:
+        barcode = normalise(payload.barcode)
+        if not check_digit_valid(barcode):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="That does not look like a product barcode.",
+            )
+
     if payload.movieId is not None:
         movie = await _get_live_movie(db, payload.movieId)
     elif payload.tmdbId is not None:
@@ -351,6 +361,7 @@ async def add_collection_item(
         added_at_utc=_utcnow(),
     )
     _apply_fields(item, payload)
+    item.barcode = barcode
     db.add(item)
     await db.flush()
 
