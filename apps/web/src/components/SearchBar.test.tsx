@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -62,9 +62,18 @@ describe('SearchBar', () => {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
     const option = await screen.findByRole('option', { name: /Heat.*Owned.*4K UHD.*2 copies.*Front 2nd/i })
-    expect(option.getAttribute('aria-selected')).toBe('true')
+    // `waitFor`, not a bare assertion, and the distinction is a race rather than a
+    // preference. `SearchBar` sets `activeIndex` in a `useEffect` keyed on
+    // `[query, results.length]`, so the option is in the DOM one render *before* it is
+    // selected. `findByRole` resolves on the earlier render, and whether the effect has
+    // flushed by the time the next line runs is a matter of machine speed: this failed
+    // roughly one local run in eight and failed in CI on a slower runner.
+    //
+    // The assertion is unchanged — still `aria-selected === 'true'`, still the same
+    // element. Only the waiting is added.
+    await waitFor(() => expect(option.getAttribute('aria-selected')).toBe('true'))
     fireEvent.keyDown(input, { key: 'ArrowDown' })
-    expect(option.getAttribute('aria-selected')).toBe('true')
+    await waitFor(() => expect(option.getAttribute('aria-selected')).toBe('true'))
   })
 
   it('never presents a failed lookup as no owned results', async () => {
