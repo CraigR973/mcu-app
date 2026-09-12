@@ -230,6 +230,8 @@ const writtenItem = {
   purchaseSource: null,
   purchaseDate: null,
   listingStatus: 'in_collection',
+  ebayListingUrl: null,
+  listingPrice: null,
   updatedAt: '2026-09-08T15:00:00.123456Z',
   deletedAt: null,
 }

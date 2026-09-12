@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
-from src.models.collection_item import CollectionItem
+from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.wanted import (
     DEFAULT_RETAILERS,
@@ -70,7 +70,7 @@ async def _owned_movie_ids(db: AsyncSession, movie_ids: list[uuid.UUID]) -> set[
         return set()
     rows = await db.execute(
         select(CollectionItem.movie_id)
-        .where(CollectionItem.movie_id.in_(movie_ids), CollectionItem.deleted_at.is_(None))
+        .where(CollectionItem.movie_id.in_(movie_ids), owned_copy())
         .distinct()
     )
     return set(rows.scalars().all())

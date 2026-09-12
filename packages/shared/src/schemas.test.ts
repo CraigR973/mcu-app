@@ -202,6 +202,8 @@ describe('Batch 5 collection schemas', () => {
       regionCode: null,
       releaseLabel: null,
       listingStatus: 'in_collection',
+      ebayListingUrl: null,
+      listingPrice: null,
       updatedAt: '2026-09-08T14:00:00Z',
     }]
     expect(collectionCopiesSchema.parse(copies)).toEqual(copies)
@@ -318,6 +320,8 @@ const collectionItem = {
   purchaseSource: 'Fopp',
   purchaseDate: '2026-09-01',
   listingStatus: 'in_collection',
+  ebayListingUrl: null,
+  listingPrice: null,
   updatedAt: '2026-09-08T15:00:00.123456Z',
   deletedAt: null,
 }
@@ -1343,5 +1347,72 @@ describe('eBay price estimates (Batch 28)', () => {
 
     expect(parsed.url).toContain('title=')
     expect(parsed.suggestedPrice).toBeNull()
+  })
+})
+
+describe('listing status (Batch 29)', () => {
+  it('requires the listing fields rather than defaulting them', () => {
+    // `.nullable()`, not `.nullable().default(null)`. A default would let a response that
+    // simply stopped sending the fields parse cleanly as "not listed" — which is a wrong
+    // answer wearing a correct shape, and exactly what `DECISIONS.md` #6's parse-every-
+    // response rule exists to catch.
+    const withoutThem = {
+      id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+      formats: ['blu_ray'],
+      location: null,
+      section: null,
+      shelf: null,
+      subCategory: null,
+      notes: null,
+      purchasePrice: null,
+      purchaseSource: null,
+      purchaseDate: null,
+      condition: null,
+      hasPlaybackIssues: false,
+      playbackNotes: null,
+      videoSpecs: null,
+      audioSpecs: null,
+      specialFeatures: null,
+      regionCode: null,
+      releaseLabel: null,
+      listingStatus: 'sold',
+      updatedAt: '2026-09-12T09:00:00Z',
+    }
+    expect(() => collectionCopiesSchema.parse([withoutThem])).toThrow()
+    expect(
+      collectionCopiesSchema.parse([
+        { ...withoutThem, ebayListingUrl: null, listingPrice: '12.50' },
+      ])[0].listingPrice,
+    ).toBe('12.50')
+  })
+
+  it('keeps a sale price as a string', () => {
+    // The same rule as every other money field here: a price must not round-trip through
+    // a float on its way to being "what this disc fetched".
+    const copy = {
+      id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+      formats: ['blu_ray'],
+      location: null,
+      section: null,
+      shelf: null,
+      subCategory: null,
+      notes: null,
+      purchasePrice: null,
+      purchaseSource: null,
+      purchaseDate: null,
+      condition: null,
+      hasPlaybackIssues: false,
+      playbackNotes: null,
+      videoSpecs: null,
+      audioSpecs: null,
+      specialFeatures: null,
+      regionCode: null,
+      releaseLabel: null,
+      listingStatus: 'sold',
+      ebayListingUrl: null,
+      listingPrice: 12.5,
+      updatedAt: '2026-09-12T09:00:00Z',
+    }
+    expect(() => collectionCopiesSchema.parse([copy])).toThrow()
   })
 })

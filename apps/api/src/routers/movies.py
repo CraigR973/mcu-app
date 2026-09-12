@@ -18,7 +18,7 @@ from sqlalchemy.sql.selectable import ScalarSelect
 from src.auth import CurrentUser
 from src.database import get_db
 from src.matching import MatchingEngine
-from src.models.collection_item import SECTIONS, SHELVED_SECTIONS, CollectionItem
+from src.models.collection_item import SECTIONS, SHELVED_SECTIONS, CollectionItem, owned_copy
 from src.models.movie import Movie, MovieCredit
 from src.models.watch_log import WatchLog
 from src.schemas.movies import (
@@ -91,7 +91,7 @@ class MovieFilters:
 
 def _item_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     """Conditions on the disc itself — format and where it is kept."""
-    predicates: list[ColumnElement[bool]] = [CollectionItem.deleted_at.is_(None)]
+    predicates: list[ColumnElement[bool]] = [owned_copy()]
     if filters.format_code is not None:
         predicates.append(CollectionItem.formats.contains([filters.format_code]))
     if filters.section is not None:
@@ -171,7 +171,7 @@ def _copy_count() -> ScalarSelect[int]:
         select(func.count(CollectionItem.id))
         .where(
             CollectionItem.movie_id == Movie.id,
-            CollectionItem.deleted_at.is_(None),
+            owned_copy(),
         )
         .correlate(Movie)
         .scalar_subquery()
@@ -207,7 +207,7 @@ async def _locations_by_movie(
             select(CollectionItem.movie_id, CollectionItem.section, CollectionItem.shelf)
             .where(
                 CollectionItem.movie_id.in_(movie_ids),
-                CollectionItem.deleted_at.is_(None),
+                owned_copy(),
             )
             .group_by(CollectionItem.movie_id, CollectionItem.section, CollectionItem.shelf)
             .order_by(
@@ -301,7 +301,7 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
             await db.execute(
                 select(func.count(CollectionItem.id)).where(
                     CollectionItem.movie_id == movie.id,
-                    CollectionItem.deleted_at.is_(None),
+                    owned_copy(),
                 )
             )
         ).scalar_one()
@@ -532,7 +532,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
                 func.count(func.distinct(CollectionItem.movie_id)),
             )
             .join(Movie, Movie.id == CollectionItem.movie_id)
-            .where(CollectionItem.deleted_at.is_(None), Movie.deleted_at.is_(None))
+            .where(owned_copy(), Movie.deleted_at.is_(None))
             .group_by(CollectionItem.section, CollectionItem.shelf)
         )
     ).all()
@@ -612,15 +612,25 @@ async def get_movie_copies(
     movie_id: uuid.UUID,
     _user: CurrentUser,
     db: Database,
+    include_sold: Annotated[bool, Query(alias="includeSold")] = False,
 ) -> list[CollectionCopyResponse]:
+    """The discs owned for this film — and, on request, the ones that have gone.
+
+    **`includeSold` exists so §4.4's "removes from active views" does not mean
+    "unreachable".** A sold disc keeps its row (`collection.update_listing_status`
+    explains why it is not soft-deleted), and this is the one surface that can show it:
+    everywhere else, "owned" is what the word means. Default false, so every existing
+    caller keeps the active view it already had.
+    """
     await _get_live_movie(db, movie_id)
+    ownership = CollectionItem.deleted_at.is_(None) if include_sold else owned_copy()
     copies = (
         (
             await db.execute(
                 select(CollectionItem)
                 .where(
                     CollectionItem.movie_id == movie_id,
-                    CollectionItem.deleted_at.is_(None),
+                    ownership,
                 )
                 .order_by(CollectionItem.created_at, CollectionItem.id)
             )
@@ -649,6 +659,8 @@ async def get_movie_copies(
             regionCode=copy.region_code,
             releaseLabel=copy.release_label,
             listingStatus=copy.listing_status,
+            ebayListingUrl=copy.ebay_listing_url,
+            listingPrice=(str(copy.listing_price) if copy.listing_price is not None else None),
             updatedAt=copy.updated_at,
         )
         for copy in copies

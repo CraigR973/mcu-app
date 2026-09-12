@@ -38,6 +38,13 @@ AUDITED_ITEM_FIELDS = (
     "purchase_price",
     "purchase_source",
     "purchase_date",
+    # Batch 29, §4.4. *"Marking sold … remains in audit"* is only true if the log can see
+    # the field move. Without these three the listing endpoint produced an empty diff and
+    # therefore no audit row at all — a sale that left no trace, which is the one thing
+    # the criterion asks for.
+    "listing_status",
+    "listing_price",
+    "ebay_listing_url",
 )
 
 

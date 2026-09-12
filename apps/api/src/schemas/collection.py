@@ -8,10 +8,17 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from src.clock import latest_plausible_today
 from src.models.collection_item import CONDITIONS, FORMAT_RANK
@@ -163,6 +170,11 @@ class CollectionItemResponse(BaseModel):
     purchaseSource: str | None = None
     purchaseDate: date | None = None
     listingStatus: str
+    #: Batch 29 §4.2/§4.4. Null until the disc is listed. `listingPrice` is what it was
+    #: advertised at — the number §4.2's "admin adjusts or accepts" settled on, kept so a
+    #: sold disc records what it actually fetched rather than only that it went.
+    ebayListingUrl: str | None = None
+    listingPrice: str | None = None
     #: The value a later edit sends back as ``baseUpdatedAt``. Without it on the way out
     #: there is nothing for the offline queue to have based itself on.
     updatedAt: UtcDatetime
@@ -265,3 +277,50 @@ class AuditPageResponse(BaseModel):
     page: int = Field(ge=1)
     perPage: int = Field(ge=1)
     pages: int = Field(ge=0)
+
+
+class ListingUpdateRequest(BaseModel):
+    """Move a disc between §3.4's listing states — Batch 29, phases 4.2 and 4.4.
+
+    **One endpoint for every transition rather than a verb each.** "List for sale", "mark
+    sold", "mark donated" and "put it back" are the same write with a different target
+    state, and four endpoints would be four places to remember the audit row, the price
+    and the guard. Phase 4.4's acceptance turns on a transition being *recorded*, not on
+    which URL performed it.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["in_collection", "listed_for_sale", "sold", "donated"]
+    #: What it is advertised at, or what it fetched. Kept through the sale: §4.2's "admin
+    #: adjusts or accepts" produces a number, and a sold disc that records only *that* it
+    #: went has thrown that number away.
+    listingPrice: str | None = None
+    ebayListingUrl: str | None = None
+
+    @field_validator("listingPrice")
+    @classmethod
+    def _check_price(cls, value: str | None) -> str | None:
+        return _validate_listing_price(value)
+
+
+def _validate_listing_price(value: str | None) -> str | None:
+    """A sale price, as a decimal string.
+
+    The same shape as `wanted._validate_max_price`, and for the same reason: `Decimal`
+    parses ``"NaN"`` and ``"Infinity"`` happily, and every later comparison against a NaN
+    raises rather than answering — so the guard has to be `is_finite`, not `> 0`.
+    """
+    if value is None:
+        return None
+    try:
+        parsed = Decimal(value)
+    except InvalidOperation as exc:
+        raise ValueError("listingPrice must be a decimal number") from exc
+    if not parsed.is_finite():
+        raise ValueError("listingPrice must be a real number")
+    if parsed < 0:
+        raise ValueError("listingPrice cannot be negative")
+    if parsed >= Decimal("1000000"):
+        raise ValueError("listingPrice is implausibly large")
+    return value

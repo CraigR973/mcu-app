@@ -26,9 +26,11 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    and_,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.elements import ColumnElement
 
 from src.models.base import Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
 
@@ -68,6 +70,36 @@ CONDITIONS = ("new", "like_new", "good", "acceptable", "damaged")
 
 #: §3.4's listing states.
 LISTING_STATUSES = ("in_collection", "listed_for_sale", "sold", "donated")
+
+#: The states that mean **you still own the disc**. Batch 29, Phase 4.4.
+#:
+#: ``listed_for_sale`` is in here on purpose: a disc advertised is still a disc on the
+#: shelf, and it has to keep appearing in the collection until somebody buys it —
+#: otherwise listing it looks identical to losing it.
+OWNED_LISTING_STATUSES = ("in_collection", "listed_for_sale")
+
+
+def owned_copy() -> ColumnElement[bool]:
+    """The predicate every "what do I own?" query needs — Phase 4.4.
+
+    *"Marking sold removes from active views"* is not one endpoint's job. It is a change
+    to what **owned** means, and before this batch that word was spelled
+    ``deleted_at IS NULL`` in nineteen places across seven routers. Nineteen places is
+    where a rule goes to be applied in eighteen of them.
+
+    So the definition lives here and is imported. ``test_listing_status.py`` asserts that
+    no router builds the old bare predicate against ``collection_items`` again — a rule
+    with one home still needs something stopping the twentieth call site.
+
+    **One query deliberately does not use this**: `stats.py`'s spend-over-time. Selling a
+    disc does not un-spend the money you paid for it, so the purchase history keeps every
+    row it ever had. That exception is commented at the call site, which is the only place
+    it can be read in context.
+    """
+    return and_(
+        CollectionItem.deleted_at.is_(None),
+        CollectionItem.listing_status.in_(OWNED_LISTING_STATUSES),
+    )
 
 
 class CollectionItem(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):

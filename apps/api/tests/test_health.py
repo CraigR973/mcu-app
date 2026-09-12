@@ -106,6 +106,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/collection",
         "/api/v1/collection/duplicate-check",
         "/api/v1/collection/{item_id}",
+        # Batch 29 §4.2/§4.4. One endpoint for every listing transition rather than a
+        # verb each — see `collection.update_listing_status` for why sold is not deleted.
+        "/api/v1/collection/{item_id}/listing",
         "/api/v1/trash",
         "/api/v1/trash/{table}/{item_id}/restore",
         "/api/v1/admin/audit",

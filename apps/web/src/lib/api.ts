@@ -466,8 +466,15 @@ export async function fetchMovie(id: string): Promise<MovieDetail> {
   return parseResponse(await authFetch(`/movies/${id}`), movieDetailSchema)
 }
 
-export async function fetchCopies(movieId: string): Promise<CollectionCopy[]> {
-  return parseResponse(await authFetch(`/movies/${movieId}/copies`), collectionCopiesSchema)
+export async function fetchCopies(
+  movieId: string,
+  /** Include discs that have been sold or donated. Off by default, because everywhere
+   *  else "copies" means the ones you still own — §4.4. The film's page turns it on so
+   *  "removes from active views" does not come to mean "unreachable". */
+  includeSold = false,
+): Promise<CollectionCopy[]> {
+  const path = includeSold ? `/movies/${movieId}/copies?includeSold=true` : `/movies/${movieId}/copies`
+  return parseResponse(await authFetch(path), collectionCopiesSchema)
 }
 
 export async function fetchSearch(q: string, limit = 20): Promise<SearchResponse> {
@@ -1984,5 +1991,42 @@ export async function fetchEbayListingUrl(input: {
   return parseOrThrowApiError(
     await authFetch('/ebay/listing-url', { method: 'POST', body: JSON.stringify(input) }),
     ebayListingUrlSchema,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Listing status (Batch 29) — §4.2, §4.4
+// ---------------------------------------------------------------------------
+
+export type ListingStatus = 'in_collection' | 'listed_for_sale' | 'sold' | 'donated'
+
+/** How each state reads on screen. "Sold" and "Donated" are past tense on purpose: they
+ *  describe something that already happened, not a state the disc is waiting in. */
+export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
+  in_collection: 'On the shelf',
+  listed_for_sale: 'Listed for sale',
+  sold: 'Sold',
+  donated: 'Donated',
+}
+
+/**
+ * Move a disc between §3.4's listing states — one call for every transition.
+ *
+ * **Marking sold does not delete the disc.** The row stays, and the server's `owned_copy`
+ * predicate is what removes it from the collection views — soft-deleting it instead would
+ * hand it to §6.30's 90-day purge, which would destroy the record of what it fetched.
+ *
+ * Sending `in_collection` puts it back and clears the advert.
+ */
+export async function updateListingStatus(
+  itemId: string,
+  input: { status: ListingStatus; listingPrice?: string | null; ebayListingUrl?: string | null },
+): Promise<CollectionItem> {
+  return parseOrThrowApiError(
+    await authFetch(`/collection/${itemId}/listing`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+    collectionItemSchema,
   )
 }

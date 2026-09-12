@@ -36,7 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
 from src.clock import utcnow
-from src.models.collection_item import CollectionItem
+from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.routers.movies import Database, location_label
 
@@ -81,7 +81,7 @@ async def _rows(db: AsyncSession) -> AsyncIterator[tuple[CollectionItem, Movie]]
             await db.execute(
                 select(CollectionItem, Movie)
                 .join(Movie, Movie.id == CollectionItem.movie_id)
-                .where(CollectionItem.deleted_at.is_(None), Movie.deleted_at.is_(None))
+                .where(owned_copy(), Movie.deleted_at.is_(None))
                 .order_by(func.lower(Movie.title), CollectionItem.id)
                 .offset(offset)
                 .limit(PAGE_SIZE)
@@ -278,18 +278,12 @@ async def export_html(
     where the print dialog lives. Both are the same bytes.
     """
     items = int(
-        (
-            await db.execute(
-                select(func.count(CollectionItem.id)).where(CollectionItem.deleted_at.is_(None))
-            )
-        ).scalar_one()
+        (await db.execute(select(func.count(CollectionItem.id)).where(owned_copy()))).scalar_one()
     )
     films = int(
         (
             await db.execute(
-                select(func.count(func.distinct(CollectionItem.movie_id))).where(
-                    CollectionItem.deleted_at.is_(None)
-                )
+                select(func.count(func.distinct(CollectionItem.movie_id))).where(owned_copy())
             )
         ).scalar_one()
     )

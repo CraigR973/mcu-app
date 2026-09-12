@@ -13,12 +13,14 @@ import {
   ShieldAlert,
   Star,
 } from 'lucide-react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { SpecBadges } from '@/components/collection/SpecBadges'
+import { SalePanel } from '@/components/collection/SalePanel'
+import { UpgradePrompt } from '@/components/collection/UpgradePrompt'
 import { ValuePanel } from '@/components/collection/ValuePanel'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
@@ -36,10 +38,12 @@ import {
   backdropUrl,
   bestFormat,
   conditionLabel,
+  LISTING_STATUS_LABELS,
   fetchCopies,
   fetchMovie,
   updateCollectionItem,
   type CollectionCopy,
+  type ListingStatus,
   type MovieDetail,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
@@ -215,6 +219,9 @@ function CopyCard({
             formatCode={bestFormat(item.formats)}
             condition={item.condition}
           />
+          <div className="mt-3 border-t border-border pt-3">
+            <SalePanel copy={item} movieId={movieId} />
+          </div>
         </div>
       )}
 
@@ -242,6 +249,8 @@ export default function MovieDetailPage() {
   const { profile } = useAuth()
   const canEdit = profile?.role === 'admin'
   const movieId = id ?? ''
+  const [searchParams, setSearchParams] = useSearchParams()
+  const justUpgraded = searchParams.get('upgraded') === '1'
 
   const movieQuery = useQuery({
     queryKey: ['movie', movieId],
@@ -250,7 +259,9 @@ export default function MovieDetailPage() {
   })
   const copiesQuery = useQuery({
     queryKey: ['movie-copies', movieId],
-    queryFn: () => fetchCopies(movieId),
+    // `includeSold`, so §4.4's "removes from active views" does not come to mean
+    // "unreachable". The two groups are split below: owned discs first, gone ones after.
+    queryFn: () => fetchCopies(movieId, true),
     enabled: movieId.length > 0,
   })
 
@@ -328,7 +339,13 @@ export default function MovieDetailPage() {
   }
 
   const movie = movieQuery.data
-  const copies = copiesQuery.data ?? []
+  const allCopies = copiesQuery.data ?? []
+  // "Owned" matches the server's `owned_copy()`: a disc listed for sale is still a disc
+  // on the shelf, and only a sale or a donation takes it out of the collection.
+  const copies = allCopies.filter(
+    (copy) => copy.listingStatus === 'in_collection' || copy.listingStatus === 'listed_for_sale',
+  )
+  const goneCopies = allCopies.filter((copy) => !copies.includes(copy))
   const copiesState = listState(copiesQuery, copies.length === 0)
   const runtime = movie.runtimeMinutes
     ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m`
@@ -462,6 +479,17 @@ export default function MovieDetailPage() {
 
             {tab === 'copies' ? (
               <div id="movie-panel-copies" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 space-y-5 focus:outline-none">
+                {/* §4.2's tail. Arrived at by confirming "this is an upgrade" on the add
+                    form, which is what puts `?upgraded=1` on this URL — so the prompt
+                    appears exactly once, for the person who just upgraded. */}
+                {justUpgraded && canEdit ? (
+                  <UpgradePrompt
+                    movieId={movie.id}
+                    filmTitle={movie.title}
+                    copies={copies}
+                    onDismiss={() => setSearchParams({}, { replace: true })}
+                  />
+                ) : null}
                 <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="page-kicker">The archive answer</p>
@@ -512,6 +540,40 @@ export default function MovieDetailPage() {
                       />
                     ))}
                   </div>
+                )}
+
+                {/* §4.4. Sold and donated discs keep their row — nothing is deleted —
+                    so they are shown here rather than vanishing. The audit log is the
+                    other half of "remains in audit/trash". */}
+                {goneCopies.length > 0 && (
+                  <section className="mt-8 border-t border-border pt-5">
+                    <h2 className="section-heading">No longer in the collection</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {goneCopies.length === 1 ? 'One disc has' : `${goneCopies.length} discs have`}{' '}
+                      left the shelves. The record stays, including what it fetched.
+                    </p>
+                    <ul className="mt-3 space-y-2">
+                      {goneCopies.map((copy) => (
+                        <li
+                          key={copy.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2.5 text-sm"
+                        >
+                          <span className="flex flex-wrap items-center gap-2">
+                            {copy.formats.map((format) => (
+                              <FormatBadge key={format} format={format} />
+                            ))}
+                            <Badge tone="neutral">
+                              {LISTING_STATUS_LABELS[copy.listingStatus as ListingStatus] ??
+                                copy.listingStatus}
+                            </Badge>
+                          </span>
+                          {copy.listingPrice ? (
+                            <span className="text-muted-foreground">£{copy.listingPrice}</span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
                 )}
               </div>
             ) : null}

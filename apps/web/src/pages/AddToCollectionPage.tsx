@@ -82,6 +82,11 @@ export default function AddToCollectionPage() {
   // have to narrow a nullable piece of state it cannot prove is still set.
   const chosenMovieId = film?.movieId ?? null
 
+  // Which reason the save was confirmed with, read in `onSuccess`. §4.2's upgrade path
+  // does not end at "disc saved" — the old disc still has to be listed — so the film's
+  // page needs to know it was arrived at by upgrading.
+  const [confirmedAs, setConfirmedAs] = useState<DuplicateReason | null>(null)
+
   const add = useMutation({
     mutationFn: (confirmDuplicate?: DuplicateReason) => {
       if (!film) throw new Error('Choose a film first')
@@ -97,7 +102,7 @@ export default function AddToCollectionPage() {
       void queryClient.invalidateQueries({ queryKey: ['facets'] })
       if (item !== null) {
         void queryClient.invalidateQueries({ queryKey: ['movie-copies', item.movieId] })
-        navigate(`/movies/${item.movieId}`)
+        navigate(`/movies/${item.movieId}${confirmedAs === 'upgrade' ? '?upgraded=1' : ''}`)
         return
       }
       // Queued. A film added by TMDB id has no local row yet, so there is nothing to
@@ -216,7 +221,10 @@ export default function AddToCollectionPage() {
             <DuplicatePrompt
               duplicate={duplicate}
               pending={add.isPending}
-              onConfirm={(reason) => add.mutate(reason)}
+              onConfirm={(reason) => {
+                setConfirmedAs(reason)
+                add.mutate(reason)
+              }}
               onCancel={() => {
                 setDuplicate(null)
                 setFilm(null)

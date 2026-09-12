@@ -25,7 +25,7 @@ from sqlalchemy import func, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
-from src.models.collection_item import CollectionItem
+from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.wanted import WantedItem
 from src.routers.movies import Database, TmdbClient
@@ -103,7 +103,7 @@ async def _owned_by_tmdb_id(db: AsyncSession, tmdb_ids: Sequence[int]) -> dict[i
             .where(
                 Movie.tmdb_id.in_(list(tmdb_ids)),
                 Movie.deleted_at.is_(None),
-                CollectionItem.deleted_at.is_(None),
+                owned_copy(),
             )
             .distinct()
         )

@@ -1017,3 +1017,270 @@ async def test_a_purchase_date_of_today_is_accepted_from_a_timezone_ahead_of_utc
     )
 
     assert response.status_code == 201, response.text
+
+
+# ---------------------------------------------------------------------------
+# Batch 29 — §4.2 format upgrade, §4.4 listing status
+# ---------------------------------------------------------------------------
+
+
+class TestListingStatus:
+    """§4.4: *"Marking sold removes from active views, remains in audit/trash"*.
+
+    Every assertion here is against the **HTTP surface**, because "active views" is a
+    property of what the endpoints return rather than of a predicate in isolation —
+    `test_listing_status.py` covers the predicate.
+    """
+
+    async def test_listing_a_disc_for_sale_leaves_it_in_the_collection(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """§4.2 marks the old disc `listed_for_sale`, and it must stay on the shelf.
+
+        Hiding it at the moment of listing would make "I advertised it" and "I lost it"
+        look identical, and the disc is still in the house until somebody buys it.
+        """
+        movie = await _a_film(api_session, title="An Upgraded Film", tmdb_id=930101)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        response = await client.put(
+            f"/api/v1/collection/{disc.id}/listing",
+            json={"status": "listed_for_sale", "listingPrice": "9.99"},
+        )
+        assert response.status_code == 200
+        assert response.json()["listingStatus"] == "listed_for_sale"
+        assert response.json()["listingPrice"] == "9.99"
+
+        copies = await client.get(f"/api/v1/movies/{movie.id}/copies")
+        assert [copy["id"] for copy in copies.json()] == [str(disc.id)]
+
+    async def test_marking_sold_removes_it_from_every_active_view(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """The criterion itself, checked across the surfaces that mean "what I own"."""
+        movie = await _a_film(api_session, title="A Sold Film", tmdb_id=930102)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        before = await client.get(f"/api/v1/movies/{movie.id}")
+        assert before.json()["copyCount"] == 1
+
+        sold = await client.put(
+            f"/api/v1/collection/{disc.id}/listing",
+            json={"status": "sold", "listingPrice": "12.50"},
+        )
+        assert sold.status_code == 200
+
+        # The film's own page: no owned copies, and the count agrees with the list.
+        copies = await client.get(f"/api/v1/movies/{movie.id}/copies")
+        assert copies.json() == []
+        detail = await client.get(f"/api/v1/movies/{movie.id}")
+        assert detail.json()["copyCount"] == 0
+
+        # And the film drops out of the browse list, which filters on owning a disc.
+        listing = await client.get("/api/v1/movies", params={"q": "A Sold Film"})
+        assert str(movie.id) not in [row["id"] for row in listing.json()["items"]]
+
+    async def test_a_sold_disc_is_still_reachable_and_still_knows_what_it_fetched(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """ "Removes from active views" must not mean "unreachable".
+
+        `includeSold` is the one surface allowed to show it — and the row is **not**
+        soft-deleted, which matters in ninety days: §6.30 auto-purges the trash, so a
+        sold disc routed through `deleted_at` would be permanently destroyed a quarter
+        later along with the record of the sale.
+        """
+        movie = await _a_film(api_session, title="A Recorded Sale", tmdb_id=930103)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+        await client.put(
+            f"/api/v1/collection/{disc.id}/listing",
+            json={"status": "sold", "listingPrice": "12.50"},
+        )
+
+        with_sold = await client.get(
+            f"/api/v1/movies/{movie.id}/copies", params={"includeSold": "true"}
+        )
+        rows = with_sold.json()
+        assert [row["id"] for row in rows] == [str(disc.id)]
+        assert rows[0]["listingStatus"] == "sold"
+        assert rows[0]["listingPrice"] == "12.50"
+
+        stored = await api_session.get(CollectionItem, disc.id)
+        assert stored is not None
+        assert stored.deleted_at is None, "a sale is not a deletion"
+
+    async def test_the_transition_is_written_to_the_audit_log(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """ "Remains in audit" — §13.6's log is where a sold disc stays visible."""
+        movie = await _a_film(api_session, title="An Audited Sale", tmdb_id=930104)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        await client.put(
+            f"/api/v1/collection/{disc.id}/listing", json={"status": "listed_for_sale"}
+        )
+        await client.put(f"/api/v1/collection/{disc.id}/listing", json={"status": "sold"})
+
+        entries = (
+            (
+                await api_session.execute(
+                    select(AdminAction)
+                    .where(AdminAction.target_id == str(disc.id))
+                    .order_by(AdminAction.created_at)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        # `update`, not a bespoke `listing_sold`: §3.20's action vocabulary is a closed
+        # CHECK, and widening it is its own decision. The transition is legible in the
+        # diff, which is what the audit page renders.
+        assert [entry.action_type for entry in entries] == ["update", "update"]
+
+        moves = [(entry.changes or {}).get("listing_status", {}) for entry in entries]
+        assert moves[0] == {"from": "in_collection", "to": "listed_for_sale"}
+        assert moves[1] == {"from": "listed_for_sale", "to": "sold"}
+
+        # The row also reads as a sentence on its own rather than needing the one before
+        # it to be understood.
+        assert (entries[1].changes or {})["previous_listing_status"] == "listed_for_sale"
+
+    async def test_putting_a_disc_back_clears_the_advert(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """A live link to a dead listing outliving the sale it described is the failure
+        this prevents."""
+        movie = await _a_film(api_session, title="A Withdrawn Listing", tmdb_id=930105)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        await client.put(
+            f"/api/v1/collection/{disc.id}/listing",
+            json={
+                "status": "listed_for_sale",
+                "listingPrice": "9.99",
+                "ebayListingUrl": "https://www.ebay.co.uk/itm/123",
+            },
+        )
+        back = await client.put(
+            f"/api/v1/collection/{disc.id}/listing", json={"status": "in_collection"}
+        )
+
+        assert back.json()["listingStatus"] == "in_collection"
+        assert back.json()["ebayListingUrl"] is None
+        assert back.json()["listingPrice"] is None
+
+    async def test_a_sold_disc_is_no_longer_a_duplicate(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """You cannot own two of something you have sold one of.
+
+        This is the same rule as the views, reaching the place it matters most: §3.5's
+        prompt would otherwise warn about a clash with a disc that is in someone else's
+        house.
+        """
+        movie = await _a_film(api_session, title="A Replaced Film", tmdb_id=930106)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        clash = await client.get(
+            "/api/v1/collection/duplicate-check",
+            params={"movieId": str(movie.id), "format": "blu_ray"},
+        )
+        assert clash.json()["isDuplicate"] is True
+
+        await client.put(f"/api/v1/collection/{disc.id}/listing", json={"status": "sold"})
+
+        after = await client.get(
+            "/api/v1/collection/duplicate-check",
+            params={"movieId": str(movie.id), "format": "blu_ray"},
+        )
+        assert after.json()["isDuplicate"] is False
+
+    async def test_a_viewer_cannot_sell_a_disc(
+        self, viewer_client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        movie = await _a_film(api_session, title="Not Marks To Sell", tmdb_id=930107)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        response = await viewer_client.put(
+            f"/api/v1/collection/{disc.id}/listing", json={"status": "sold"}
+        )
+        assert response.status_code == 403
+
+    async def test_an_unknown_status_is_refused_before_it_reaches_the_check_constraint(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        movie = await _a_film(api_session, title="A Bad Transition", tmdb_id=930108)
+        disc = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        response = await client.put(
+            f"/api/v1/collection/{disc.id}/listing", json={"status": "lost_in_a_move"}
+        )
+        assert response.status_code == 422
+
+
+class TestUpgradePath:
+    """§4.2: *"Upgrade path completes in ≤ 3 taps; old item marked `listed_for_sale`"*."""
+
+    async def test_the_upgrade_path_is_three_requests_and_the_old_disc_ends_up_listed(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """The criterion counts *taps*, which the API can only bound from below: a flow
+        that needs four requests cannot be done in three taps.
+
+        The three are: confirm the upgrade on the add form, save the new disc, list the
+        old one. There is no fourth — in particular, listing the old disc does not need a
+        separate "fetch a price" round trip, because §4.1's estimate is what pre-fills the
+        number and the admin either accepts it or types over it.
+        """
+        movie = await _a_film(api_session, title="An Upgrade In Three", tmdb_id=930109)
+        old = await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        # 1 + 2: the duplicate prompt answers "it's an upgrade", and the disc is saved.
+        added = await client.post(
+            "/api/v1/collection",
+            json={
+                **_body(formats=["4k_uhd"]),
+                "movieId": str(movie.id),
+                "confirmDuplicate": "upgrade",
+            },
+        )
+        assert added.status_code == 201
+
+        # 3: the old disc goes up for sale at the suggested price.
+        listed = await client.put(
+            f"/api/v1/collection/{old.id}/listing",
+            json={"status": "listed_for_sale", "listingPrice": "9.99"},
+        )
+        assert listed.status_code == 200
+        assert listed.json()["listingStatus"] == "listed_for_sale"
+
+        # Both discs are still owned — the upgrade has not happened until it sells.
+        copies = await client.get(f"/api/v1/movies/{movie.id}/copies")
+        statuses = {row["id"]: row["listingStatus"] for row in copies.json()}
+        assert statuses[str(old.id)] == "listed_for_sale"
+        assert statuses[added.json()["id"]] == "in_collection"
+
+    async def test_the_reason_a_second_copy_was_allowed_is_still_recorded(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """Batch 7 wrote `duplicate_reason` into the audit *for this batch* — "upgrade is
+        the input phase 4.2's sale tracking will want, and it is unrecoverable if only the
+        click knew". This asserts the debt was actually paid."""
+        movie = await _a_film(api_session, title="A Recorded Upgrade", tmdb_id=930110)
+        await _a_disc(api_session, movie, formats=["blu_ray"])
+
+        added = await client.post(
+            "/api/v1/collection",
+            json={
+                **_body(formats=["4k_uhd"]),
+                "movieId": str(movie.id),
+                "confirmDuplicate": "upgrade",
+            },
+        )
+        entry = (
+            await api_session.execute(
+                select(AdminAction).where(AdminAction.target_id == added.json()["id"])
+            )
+        ).scalar_one()
+        assert entry.changes is not None
+        assert entry.changes["duplicate_reason"] == "upgrade"

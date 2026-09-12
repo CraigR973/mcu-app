@@ -128,6 +128,11 @@ export const collectionCopySchema = z.object({
   regionCode: z.string().nullable(),
   releaseLabel: z.string().nullable(),
   listingStatus: z.string(),
+  /** Batch 29 §4.2/§4.4. Null until the disc is listed. `listingPrice` is what it was
+   *  advertised at — kept through the sale, so a sold disc records what it fetched
+   *  rather than only that it went. */
+  ebayListingUrl: z.string().nullable(),
+  listingPrice: z.string().nullable(),
   // Batch 8: the version an edit is based on. Sent back as `baseUpdatedAt` so a queued
   // offline edit cannot overwrite a change made after it.
   updatedAt: z.string(),
@@ -291,6 +296,11 @@ export const collectionItemSchema = z.object({
   purchaseSource: z.string().nullable(),
   purchaseDate: z.string().nullable(),
   listingStatus: z.string(),
+  /** Batch 29 §4.2/§4.4. Null until the disc is listed. `listingPrice` is what it was
+   *  advertised at — kept through the sale, so a sold disc records what it fetched
+   *  rather than only that it went. */
+  ebayListingUrl: z.string().nullable(),
+  listingPrice: z.string().nullable(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
 })

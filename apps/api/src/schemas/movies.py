@@ -55,7 +55,17 @@ class MovieListItemResponse(BaseModel):
     bestHdrOwned: str | None = None
     bestAudioOwned: str | None = None
     identified: bool
-    copyCount: int = Field(ge=1)
+    #: **`ge=0`, and it was `ge=1` until Batch 29.** The old bound encoded a true
+    #: invariant — a film reached this response only by having a live disc — and §4.4
+    #: broke it: sell your only copy and the film still has a `movies` row, a watch
+    #: history and a detail page, with **zero** owned discs. The bound turned that into a
+    #: 500 on the film's own page.
+    #:
+    #: Latent rather than new: a film whose every copy was soft-deleted would have done
+    #: the same, and there are none of those today (checked against live Neon on
+    #: 2026-09-12: zero). Same shape as `DECISIONS.md` #93 and #73 — a rule that is only
+    #: wrong once something else starts using it.
+    copyCount: int = Field(ge=0)
     #: Distinct places this film's live copies are kept — §6.2's "results display ...
     #: crucially the physical storage location". Usually one entry; a film owned on the
     #: shelf and in the digital library has two.
@@ -107,6 +117,9 @@ class CollectionCopyResponse(BaseModel):
     regionCode: str | None = None
     releaseLabel: str | None = None
     listingStatus: str
+    #: Batch 29 §4.2/§4.4 — null until the disc is listed for sale.
+    ebayListingUrl: str | None = None
+    listingPrice: str | None = None
     #: Carried so an edit started from this view — which is where every edit starts — can
     #: say which version it was based on when it is finally sent (Batch 8).
     updatedAt: UtcDatetime

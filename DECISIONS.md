@@ -2367,3 +2367,77 @@ contemporaneous.
      `EBAY_CLIENT_SECRET` live only in Railway; without the field, the only way to learn
      they were missing would be to ask for a price and read a 503 — which is the shape of
      the TMDB outage of 2026-09-09 exactly.
+
+### 2026-09-12 — Batch 29 format upgrade and sale tracking
+
+145. **A sold disc keeps its row. "Removes from active views" is a change to what
+     *owned* means, not a soft delete — and the reason only shows up in ninety days.**
+
+     §4.4's acceptance reads *"marking sold removes from active views, remains in
+     audit/trash"*, and the obvious implementation is to soft-delete the item so the trash
+     machinery Batch 15 already built hides it. That is wrong: §6.30 **auto-purges the
+     trash after 90 days** (`services/trash.py`, `PURGE_AFTER`). A sold disc routed
+     through `deleted_at` would be permanently destroyed a quarter later, taking the
+     record of what it fetched with it — the one fact the sale produced.
+
+     So `listing_status` alone decides, the row is never deleted, and **`owned_copy()`**
+     in `models/collection_item.py` is the predicate that removes it from the views.
+
+     **`listed_for_sale` counts as owned.** A disc advertised is still a disc in the
+     house; hiding it at the moment of listing would make "I listed it" and "I lost it"
+     look identical.
+
+     **The word "owned" was previously written out nineteen times across seven routers.**
+     A rule applied in eighteen of nineteen places is not a rule, and nothing in a test
+     suite notices the nineteenth: the query works perfectly and quietly counts a disc
+     somebody sold. `test_listing_status.py` reads the router source and fails on a
+     twentieth bare `CollectionItem.deleted_at.is_(None)`.
+
+     **One exception, and it is in the source as well as here.** `stats.py`'s
+     spend-over-time keeps every row it ever had, because **selling a disc does not
+     un-spend the money you paid for it.** "What I own" and "what I paid" are different
+     questions and only the first one changed.
+
+     **`GET /movies/{id}/copies?includeSold=true`** exists so "removes from active views"
+     does not come to mean "unreachable" — it is the one surface allowed to show a gone
+     disc, and the film's own page uses it to render them in a separate section below the
+     owned ones.
+
+146. **The listing transition is logged as an `update`, not as a new `listing_sold`
+     action type — and `listing_status` had to be added to the audited field set before
+     anything was logged at all.**
+
+     Two findings, in the order they appeared.
+
+     First, the endpoint wrote **no audit row**. `AUDITED_ITEM_FIELDS` did not include
+     `listing_status`, `listing_price` or `ebay_listing_url`, so `diff_snapshots` returned
+     `{}` and the "only log a real change" guard correctly suppressed the entry. A sale
+     that left no trace, which is the single thing §4.4's criterion asks for. The three
+     fields are audited now.
+
+     Second, a bespoke `listing_sold` action type is **refused by the database**.
+     `ck_admin_actions_action_type` in migration 008 constrains the column to §3.20's
+     closed vocabulary — `create`, `update`, `delete`, `restore`, `bulk_import` —
+     deliberately, *"because the log's value is that it can be trusted later"*. Widening a
+     settled vocabulary is a decision for its own batch, not a side effect of this one, so
+     a transition is an `update` and the diff carries `listing_status: {from, to}` plus
+     `previous_listing_status`. The audit page renders diffs, so the sale is legible
+     either way.
+
+     *The same shape as Batch 7's `duplicate_reason`*, which is recorded inside `changes`
+     on a `create` rather than as an action type of its own — and which this batch finally
+     consumed, four batches after Batch 7 wrote it down for exactly this purpose.
+
+147. **`copyCount` was declared `ge=1`, and selling your only copy turned that into a 500
+     on the film's own page.**
+
+     The bound encoded a true invariant: a film reached `MovieListItemResponse` only by
+     having a live disc. §4.4 broke it — sell your last copy and the film still has a
+     `movies` row, a watch history, a wanted entry and a detail page, with **zero** owned
+     discs.
+
+     **Latent rather than new.** A film whose every copy was soft-deleted would have done
+     the same thing, and there are none of those: checked against live Neon on 2026-09-12,
+     **zero**. It is the shape #93 and #73 both describe — a rule that is only wrong once
+     something else starts using it — and it was found by a test asserting the criterion
+     rather than by reasoning about the schema.

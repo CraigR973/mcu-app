@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
 from src.models.box_set import BOX_SETS_TABLE, BoxSet, BoxSetItem
-from src.models.collection_item import CollectionItem
+from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.routers.movies import Database, location_label
 from src.schemas.collections import (
@@ -65,7 +65,7 @@ async def _owned_counts(db: AsyncSession, box_set_ids: Sequence[uuid.UUID]) -> d
             .join(CollectionItem, CollectionItem.id == BoxSetItem.collection_item_id)
             .where(
                 BoxSetItem.box_set_id.in_(box_set_ids),
-                CollectionItem.deleted_at.is_(None),
+                owned_copy(),
             )
             .group_by(BoxSetItem.box_set_id)
         )
@@ -120,7 +120,7 @@ async def _members(db: AsyncSession, box_set_id: uuid.UUID) -> list[BoxSetMember
             select(BoxSetItem, CollectionItem, Movie)
             .join(CollectionItem, CollectionItem.id == BoxSetItem.collection_item_id)
             .join(Movie, Movie.id == CollectionItem.movie_id)
-            .where(BoxSetItem.box_set_id == box_set_id, CollectionItem.deleted_at.is_(None))
+            .where(BoxSetItem.box_set_id == box_set_id, owned_copy())
             .order_by(
                 BoxSetItem.disc_number.asc().nulls_last(),
                 func.lower(Movie.title).asc(),
@@ -187,9 +187,7 @@ async def _live_items(db: AsyncSession, item_ids: Sequence[uuid.UUID]) -> list[C
     rows = (
         (
             await db.execute(
-                select(CollectionItem).where(
-                    CollectionItem.id.in_(item_ids), CollectionItem.deleted_at.is_(None)
-                )
+                select(CollectionItem).where(CollectionItem.id.in_(item_ids), owned_copy())
             )
         )
         .scalars()

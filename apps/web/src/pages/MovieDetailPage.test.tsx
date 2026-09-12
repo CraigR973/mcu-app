@@ -82,6 +82,8 @@ const COPY: CollectionCopy = {
   regionCode: 'Free',
   releaseLabel: 'The Criterion Collection',
   listingStatus: 'in_collection',
+  ebayListingUrl: null,
+  listingPrice: null,
   updatedAt: '2026-09-08T14:00:00Z',
 }
 

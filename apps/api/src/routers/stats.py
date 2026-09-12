@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
 from src.models.admin_action import AdminAction
-from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem
+from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.profile import Profile
 from src.models.watch_log import WatchLog
@@ -101,7 +101,7 @@ async def _format_slices(db: AsyncSession) -> list[CountSlice]:
             )
             .select_from(CollectionItem)
             .join(element, true())
-            .where(CollectionItem.deleted_at.is_(None))
+            .where(owned_copy())
             .group_by(element.c.format_code)
         )
     ).all()
@@ -174,7 +174,7 @@ async def _section_slices(db: AsyncSession) -> list[CountSlice]:
                 func.count(CollectionItem.id),
                 func.count(func.distinct(CollectionItem.movie_id)),
             )
-            .where(CollectionItem.deleted_at.is_(None))
+            .where(owned_copy())
             .group_by(section)
         )
     ).all()
@@ -278,11 +278,7 @@ async def collection_stats(
         ).scalar_one()
     )
     total_items = int(
-        (
-            await db.execute(
-                select(func.count(CollectionItem.id)).where(CollectionItem.deleted_at.is_(None))
-            )
-        ).scalar_one()
+        (await db.execute(select(func.count(CollectionItem.id)).where(owned_copy()))).scalar_one()
     )
     identified = int(
         (

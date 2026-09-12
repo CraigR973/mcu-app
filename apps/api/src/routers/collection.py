@@ -16,6 +16,7 @@ import math
 import uuid
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated, Literal
 
 import httpx
@@ -25,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser
 from src.models.admin_action import COLLECTION_ITEMS_TABLE, AdminAction
-from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem
+from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem, owned_copy
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile
 from src.routers.movies import Database, TmdbClient, location_label
@@ -38,6 +39,7 @@ from src.schemas.collection import (
     CollectionItemUpdateRequest,
     DuplicateCheckResponse,
     ExistingCopyResponse,
+    ListingUpdateRequest,
     TmdbSearchResponse,
     TmdbSearchResultResponse,
     TrashItemResponse,
@@ -136,6 +138,8 @@ def _item_response(item: CollectionItem, movie_title: str) -> CollectionItemResp
         purchaseSource=item.purchase_source,
         purchaseDate=item.purchase_date,
         listingStatus=item.listing_status,
+        ebayListingUrl=item.ebay_listing_url,
+        listingPrice=(str(item.listing_price) if item.listing_price is not None else None),
         updatedAt=item.updated_at,
         deletedAt=item.deleted_at,
     )
@@ -171,7 +175,7 @@ async def _live_copies(db: AsyncSession, movie_id: uuid.UUID) -> Sequence[Collec
                 select(CollectionItem)
                 .where(
                     CollectionItem.movie_id == movie_id,
-                    CollectionItem.deleted_at.is_(None),
+                    owned_copy(),
                 )
                 .order_by(CollectionItem.created_at, CollectionItem.id)
             )
@@ -434,6 +438,74 @@ async def update_collection_item(
             target_table=COLLECTION_ITEMS_TABLE,
             target_id=item.id,
             changes=changes,
+        )
+    await db.commit()
+    await db.refresh(item)
+    return _item_response(item, movie.title)
+
+
+@router.put("/collection/{item_id}/listing", response_model=CollectionItemResponse)
+async def update_listing_status(
+    item_id: uuid.UUID,
+    payload: ListingUpdateRequest,
+    user: AdminUser,
+    db: Database,
+) -> CollectionItemResponse:
+    """Move a disc between §3.4's listing states — phases 4.2 and 4.4.
+
+    **Sold is not deleted, and that distinction is the batch.** §4.4 asks that marking
+    sold *"removes from active views, remains in audit/trash"*, and the obvious reading —
+    soft-delete it, so the existing trash machinery hides it — is wrong for one reason
+    that only shows up in ninety days: §6.30 **auto-purges the trash after 90 days**
+    (`services/trash.py`). A sold disc routed through `deleted_at` would be permanently
+    destroyed a quarter later, taking the record of what it fetched with it.
+
+    So the row stays, undeleted, and ``owned_copy()`` is what removes it from the active
+    views — see that predicate for the nineteen places the word "owned" was previously
+    spelled out. "Remains in audit" is this function's audit row; "remains in trash" is
+    unchanged, because a sold disc can still be deleted and restored like any other.
+
+    **`listed_for_sale` stays visible.** A disc that is advertised is still a disc on the
+    shelf until somebody buys it; hiding it at the moment of listing would make listing
+    indistinguishable from losing.
+    """
+    item, movie = await _get_item(db, item_id)
+
+    before = item_snapshot(item)
+    previous = item.listing_status
+    item.listing_status = payload.status
+
+    if payload.listingPrice is not None:
+        item.listing_price = Decimal(payload.listingPrice)
+    if payload.ebayListingUrl is not None:
+        item.ebay_listing_url = payload.ebayListingUrl
+
+    if payload.status == "in_collection":
+        # Un-listing clears the advert. Keeping a stale eBay URL on a disc that is back
+        # on the shelf is how a link to a dead listing outlives the sale it described.
+        item.ebay_listing_url = None
+        item.listing_price = None
+
+    await db.flush()
+    changes = diff_snapshots(before, item_snapshot(item))
+    if changes:
+        record_action(
+            db,
+            user_id=user.id,
+            # **`update`, not `listing_sold`.** §3.20's vocabulary is a closed set —
+            # `create`/`update`/`delete`/`restore`/`bulk_import` — enforced by
+            # `ck_admin_actions_action_type` in migration 008 *"because the log's value
+            # is that it can be trusted later"*. A listing transition is an update to
+            # the disc, and widening a settled vocabulary is a decision for its own
+            # batch, not a side effect of this one. The transition is fully legible in
+            # `changes` regardless: `listing_status` carries from/to.
+            action_type="update",
+            target_table=COLLECTION_ITEMS_TABLE,
+            target_id=item.id,
+            # The previous state is in `changes` as the diff's left-hand side, but naming
+            # it here too means the audit row reads as a sentence on its own — which is
+            # what §13.6's log is for.
+            changes={**changes, "previous_listing_status": previous},
         )
     await db.commit()
     await db.refresh(item)
