@@ -79,6 +79,19 @@ not blocking; it is one command away whenever you next run `apply`.
       > since the live `api` service still has **no restart policy** (item 5 below).
       > **This also blocks Batch 21**, whose criterion needs seven days of *scheduled*
       > scrapes and cannot be met with back-dated rows.
+      >
+      > **Root cause found 2026-09-13.** `railway status` shows both `cron-scrape` and
+      > `cron-reminders` as **`Crashed`** — they aren't silently skipping, they're crashing
+      > at container start on every scheduled fire. Both logs show the identical error:
+      > `config.py`'s fail-closed `Settings` validation refuses to boot without
+      > `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`/`FRONTEND_ORIGIN`. `.railway/railway.ts`
+      > gives the two cron services `DATABASE_URL` and the VAPID vars by reference from
+      > `api`, but never those three — and both scripts import the whole app's `settings`,
+      > which enforces every check even though a scrape/reminder job never touches auth.
+      > **Fix:** add `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `FRONTEND_ORIGIN` as
+      > `preserve()`/by-reference vars on `cron-scrape` and `cron-reminders` in
+      > `railway.ts`, then `config plan` (check `0 to destroy`) and `config apply`. Until
+      > this lands, §5.5 will keep failing and Batch 21's 7-day window can never start.
 
       A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process
       scheduler would still be worse than nothing — it runs once per container, so scaling
@@ -250,6 +263,29 @@ refused wholesale and `pageReasons` says why. A shop reporting `found: 40, kept:
 
 **If a URL is wrong**, fix it on `/retailers` — each shop's deals URL is editable there,
 and the built-in configuration can be re-applied.
+
+> **Attempted live 2026-09-13, not met — real defects found, not just guesses to
+> re-check.** `apply-built-ins` had never been re-run against production since `493f031`,
+> so all 4 non-Zavvi retailers had `dealsUrl: null`; re-running it (idempotent, no writes to
+> `deals`) populated all 5. The second dry run then found each retailer needs its own fix,
+> checked live against real site markup:
+> - **101 Films** — URL correct, sale collection genuinely has 0 items today. Not a bug.
+> - **Arrow Video** — `/collections/sale` 404s; no equivalent page exists. Real discounts
+>   are `/c/offers/multibuy/...` bundles ("2 for £40"), not a per-item was/now price — the
+>   scraper's extraction model may not fit this site at all.
+> - **Powerhouse Films** — real sale page exists (14 pages) but shows only "Regular price"
+>   per item; its discount is a "3 for 20%" bundle badge, same shape problem as Arrow.
+> - **Second Sight** — real sale collection, and some items genuinely do carry a
+>   Regular/Sale price pair (e.g. Dog Soldiers, £24.99→£17.99), but the selector isn't
+>   matching that markup on this theme — `check_page_shape` correctly refused the page
+>   rather than risk 80 false discounts. Fixable with a corrected selector.
+> - **Zavvi** — configured URL 404s; the real page is `/c/offers/flash-deals/film/` and
+>   has genuine discount pairs across dozens of items. Fixable with the corrected URL.
+>
+> **Getting to ≥ 20 rows / ≥ 3 retailers needs real selector/URL fixes**, not another live
+> run — and Arrow/Powerhouse may need a different extraction shape entirely for bundle
+> discounts. Left for a dedicated pass rather than patched blind; see `STATUS.md`'s
+> 2026-09-13 log entry for the full detail.
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 

@@ -64,6 +64,17 @@ and is **not merged**, by instruction.
 **33 of 37 batches shipped, 4 remain** — 38 is startable; 21 is built but blocked on the
 cron; 33 and 34 are Group K, deprioritised.
 
+> **Correction, 2026-09-13.** "Cron-scrape has produced nothing" understated it: both crons
+> are **crashing on every scheduled fire**, not merely silent. `railway status` shows both
+> `cron-scrape` and `cron-reminders` as `Crashed`. Their logs show `config.py`'s fail-closed
+> validation refusing to boot — `jwt_access_secret is empty; jwt_refresh_secret is empty; ...
+> frontend_origin must not be empty` — because `.railway/railway.ts` gives the two cron
+> services `DATABASE_URL` and the VAPID vars by reference from `api`, but never
+> `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` or `FRONTEND_ORIGIN`, and both scripts import the
+> whole app's `settings`, which enforces every check regardless of whether the job touches
+> auth. Fix is a `railway.ts` var-reference change plus `config apply` — hosting, owner's per
+> `AGENTS.md`. See `OWNER-ACTIONS.md` item 1.
+
 ## Next
 
 **The overnight run of 2026-09-09 — eight batches, in this order.** The order is
@@ -465,6 +476,46 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-13 (Batch 21 cron diagnosis + Batch 22 §5.9 live attempt)** — Two read-only/
+  reversible investigations, no code changes, no hosting changes.
+
+  **Batch 21: root cause found.** `railway status` shows both `cron-scrape` and
+  `cron-reminders` as `Crashed`, not merely un-fired. Logs from both name the same
+  `pydantic` validation error: `config.py` refuses to boot without
+  `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`/`FRONTEND_ORIGIN`, none of which
+  `.railway/railway.ts` gives the cron services — only `DATABASE_URL` and the VAPID vars are
+  passed by reference from `api`. Every scheduled fire since 2026-09-10 has crashed at
+  import time before doing anything. Fix is a hosting change (`railway.ts` + `config apply`)
+  and stays the owner's.
+
+  **Batch 22 §5.9: attempted live, not met.** Owner logged in; `POST
+  /api/v1/deals/scrape?dryRun=true` run twice, nothing written either time.
+  First run: 4 of 5 enabled retailers had `dealsUrl: null` — `apply-built-ins`'s fix
+  (`493f031`) was never re-run against production after shipping, so the seeded rows
+  predate it. Re-ran `POST /api/v1/scrapers/apply-built-ins` (idempotent, no destructive
+  effect) and all 5 gained a `dealsUrl`. Second dry run then surfaced real per-retailer
+  problems, checked live in a browser against each site's actual markup:
+  - **101 Films** — URL correct; its sale collection genuinely holds 0 items right now.
+  - **Arrow Video** — guessed `/collections/sale` 404s; the site has no equivalent page at
+    all. Its real discounts are `/c/offers/multibuy/...` bundles ("2 for £40"), a different
+    shape than a per-item was/now price.
+  - **Powerhouse Films** — real sale page exists (14 pages of items) but every item shows
+    only "Regular price"; its discount mechanic is a "3 for 20% off" bundle badge, same
+    shape problem as Arrow.
+  - **Second Sight** — real sale collection (81 products); some genuinely carry a
+    Regular/Sale price pair (e.g. Dog Soldiers, £24.99 → £17.99) but the scraper's selector
+    isn't matching that markup, so `check_page_shape` correctly refused the page wholesale
+    rather than risk 80 false discounts.
+  - **Zavvi** — configured URL 404s; the real page is `/c/offers/flash-deals/film/` and
+    has genuine Current-price/RRP pairs across dozens of items, but was never tried because
+    the seeded URL guess was wrong.
+
+  **§5.9 remains open.** Getting to ≥ 20 rows / ≥ 3 retailers needs real fixes — a correct
+  `dealsUrl` and a markup-matched selector per retailer — not a second live run. Arrow and
+  Powerhouse may need a different extraction shape entirely (bundle discount, not was/now).
+  Owner decided to stop here rather than write scraper code unreviewed; this is recorded so
+  the next session doesn't re-discover it from scratch. `OWNER-ACTIONS.md` 1e updated.
 
 - **2026-09-12 (Batch 22 — deals feed shipped)** — The feature shipped as `c190129`, then
   close-out found and repaired a real configuration path: **Apply built-ins** did not copy
