@@ -2593,3 +2593,83 @@ contemporaneous.
      *Worth noting for whoever next touches the retailer scrapers:* the same latent gap
      is still there on the wanted-item path. It is harmless today and fixing it is not
      this batch's business, but it is the reason `price_checks.url` is sometimes null.
+
+### 2026-09-14 — the owner snag triage, and the four decisions Craig took on it
+
+154. **The menu loses six items by two different means, because it has two different
+     problems.**
+
+     Merging Home, Stats and Insights into one reading page removes two items. **Hiding
+     the four destinations whose tables are empty — Box sets, Collections, Deals, Loans —
+     removes four more**, and they reappear the moment their table has a row. Fourteen
+     sidebar items become eight. Notifications and AI settings fold into one Settings
+     page, which also brings AI settings back into the menu; it is defined as a
+     destination today but sits in no group and is reachable only from the header.
+
+     **The second half is the half the capture missed.** It argued the merge from
+     organisation. The database argues something stronger: measured 2026-09-14,
+     `smart_collections`, `box_sets`, `deals` and `loans` all hold **0 rows**, so five of
+     fourteen destinations lead to a page with nothing on it and Home is three-quarters
+     empty (`watch_log` 0, so On this day, Worth a rewatch and pinned collections are all
+     blank). A menu item that leads nowhere is worse than a long menu.
+
+155. **Mark gets write access: adding discs, and eBay prices.**
+
+     `profiles` holds exactly two rows — Craig `admin`, Mark `viewer` — and there is no
+     public sign-up, so **"only Mark and Craig can see this" already describes every page
+     in the app.** Snag 8 read literally was already satisfied and had nothing to do.
+     What Craig meant was the opposite of how it was captured: widen Mark's reach, not
+     narrow anyone's.
+
+     So `/collection/add` and both eBay endpoints (`/ebay/price-estimate`,
+     `/ebay/listing-url`) stop being `AdminUser`. **The API moves with the UI, not after
+     it** — this codebase's pattern is that pages hide what the API refuses, and a page
+     that stops hiding a button whose endpoint still 403s is worse than no change at all.
+
+     Trash, Audit log, Retailers and Admin stay admin-only. Those are Craig's tools in the
+     sense the Admin page's own label means.
+
+156. **Watch history arrives in two stages, RSS first.**
+
+     Letterboxd's API is not an option: their developer page excludes **"private or
+     personal projects"** and **"LLM or GPT-related use"**, and this app is both. Applying
+     would park the work behind an answer that is very likely to be no. **Do not apply.**
+
+     That leaves two paths, and Craig took both in order. **Stage one is the public diary
+     RSS feed** (`letterboxd.com/<user>/rss`) — free, no credential, no subscription, and
+     it carries recent viewings with their dates. **Stage two is the data export**, which
+     carries the full history with dates but needs Letterboxd Pro at ~$35/yr *per
+     account*, so it waits until Craig decides to pay for it.
+
+     Starting with RSS means recent viewings begin accumulating immediately at no cost,
+     and the backfill can land later without rework — both write the same `watch_log`
+     rows through the same matcher.
+
+     **Two consequences to carry into the batch.** A recurring RSS poll wants a cron, and
+     both Railway crons are crashing today (`OWNER-ACTIONS.md` item 1), so the first
+     version must work from a manual sync the same way the scraper does. And a Letterboxd
+     export carries title, year and a Letterboxd URI but **no TMDB or IMDb id**, so
+     matching against 1,854 films is on title + year and needs a confirmation step for
+     ambiguities — the shape Batch 24 already uses for barcodes.
+
+157. **Movie night is rebuilt to Craig's description, not tuned.**
+
+     What was built is a random swipe deck over films already in the collection.
+     `candidate_movies` is `select(Movie)` filtered by decade and rating, so **a film
+     outside the Archive can never appear**, and there is no suggestion concept anywhere
+     in the model. Two of Craig's five points were met — a session holds 2+ people, and
+     matching already generalises past two because it requires *everyone* to have liked a
+     film.
+
+     The other three need the input side replaced: anyone suggests films, everyone votes
+     on anyone's suggestion, films outside the Archive are allowed with their streaming
+     availability shown, and a card opens to the film's full details including whether the
+     others have seen it and when. `tmdb/client.py` already has `get_watch_providers`, so
+     the streaming half needs no new integration; the "seen it" half needs `watch_log`,
+     which is why this follows #156.
+
+     **A defect to fix regardless of this decision.** `candidate_movies` documents itself
+     as *"seeded per session so both people are shown the same deck in the same order"*,
+     and the query is `order_by(func.random())` with no seed — every call returns a
+     different order, per person and per refetch. The comment asserts a guarantee the code
+     does not give.

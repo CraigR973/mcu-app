@@ -2,6 +2,46 @@
 
 ## Now
 
+**Owner snag list triaged 2026-09-14 — seven batches proposed, none approved.** Craig raised
+11 snags (`docs/owner-snags-2026-09-14.md`); they are now investigated against the code, live
+Neon and the deployed app in **`docs/owner-snags-triage-2026-09-14.md`**. Still no code, no
+hosting change and no data change. The batch state below is unchanged by it.
+
+**Five of the capture's seven open questions are answered and two dissolved outright.**
+`gift_links` holds **0 rows**, so removing the feature destroys nothing and needs no owner
+decision. `profiles` holds **exactly two rows** — Craig (admin), Mark (viewer) — so "Mark and
+Craig only" already describes everyone who can sign in; snag 8 is really about *widening*
+Mark's access, not restricting anyone's. Letterboxd's API policy excludes this app twice over
+(private/personal projects, LLM-related use), so **do not apply** — the export is the path, and
+it costs Letterboxd Pro at ~$35/yr per account.
+
+**The eBay sell-offer Craig asked for already exists.** Batch 29 built it: add a disc → "this
+is an upgrade" → the film's page opens with a one-tap "List for sale" and a pre-filled eBay
+price. It does not create a listing — `DECISIONS.md` #142 explains why eBay has no true draft.
+Snag 7 is entirely about reach: the add button is `hidden sm:inline-flex` so a phone has none,
+`/collection/add` is `AdminShell` so Mark cannot reach it, and both eBay endpoints are
+`AdminUser`.
+
+**The zoom has three causes and two fix for free.** Measured on the deployed app at 375×812:
+form controls compute to **14px**, under iOS Safari's 16px threshold, so tapping any box zooms;
+and `touch-action` is `auto` on `html`, `body` and inputs — `manipulation` is scoped to buttons
+alone — so double-tap zooms everywhere else. Neither fix touches pinch-zoom, which dissolves
+the trade-off the capture said was Craig's to call.
+
+**The menu's real problem is emptiness, not organisation.** Measured: `smart_collections` 0,
+`box_sets` 0, `deals` 0, `loans` 0, `watch_log` 0, `purchase_price` 0 of 1,857. **Five of
+fourteen sidebar destinations lead to an empty page** and Home is three-quarters empty. Hiding
+what is empty removes four items; merging Home + Stats + Insights removes two more — 14 → 8.
+
+**Movie night is further from Craig's description than "check it" implies.** Two of his five
+points are met. There is no suggestion concept at all — the deck is a random draw from films
+already in the collection, so a film outside the Archive can never appear — and "has he seen
+it" needs `watch_log`, which is empty. Rebuilding the input side is a batch, not a tweak.
+
+**The highest-leverage item is the watch-history import.** `watch_log` is empty and the UI to
+write it already exists; one import lights up On this day, Worth a rewatch, Most watched and
+snag 6's "has he seen it" at once.
+
 **Batch 22 shipped — the deals feed is live and empty, which is the honest state.**
 The feature landed as `c190129`; its final built-in-retailer wiring repair is `493f031`.
 CI is green across all five jobs and production `/api/v1/health` serves that repair SHA
@@ -476,6 +516,21 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-14 (owner snag triage)** — Docs only: no code, hosting or data changes, and no
+  decisions taken. All 11 snags investigated against the code at `8e02399`, live Neon
+  (read-only `SELECT`s) and the deployed app at 375×812. Six of the capture's claims corrected;
+  five of its seven open questions answered and two dissolved. Seven batches proposed, two of
+  them startable with no further decision. Written up in
+  `docs/owner-snags-triage-2026-09-14.md`. Three new questions for Craig: Letterboxd Pro
+  (~$35/yr per account), whether Mark gets write access, and whether Movie night is rebuilt or
+  accepted as built.
+
+- **2026-09-14 (owner snag capture)** — Docs only: no code, hosting or data changes, and no
+  decisions. Craig listed 11 snags — Archive header and search placement, merging Calendar and
+  Coming soon, page-style zoom, removing Gift links, the menu, Movie night behaviour, quick add
+  with an eBay listing offer, Mark-and-Craig-only access, Letterboxd deep links, Letterboxd
+  sync, and the opening screen and bottom bar. Written up in `docs/owner-snags-2026-09-14.md`.
 
 - **2026-09-13 (Batch 21 cron diagnosis + Batch 22 §5.9 live attempt)** — Two read-only/
   reversible investigations, no code changes, no hosting changes.

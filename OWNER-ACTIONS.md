@@ -4,7 +4,7 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-12**,
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-14**,
 after Batch 24 deployed and the live eBay Browse keyset was confirmed. *Numbers changed at
 the 2026-09-09 review; the old ones are noted in brackets so an earlier conversation still
 maps onto this file.*
@@ -286,6 +286,30 @@ and the built-in configuration can be re-applied.
 > run — and Arrow/Powerhouse may need a different extraction shape entirely for bundle
 > discounts. Left for a dedicated pass rather than patched blind; see `STATUS.md`'s
 > 2026-09-13 log entry for the full detail.
+
+### 1f. Two Letterboxd usernames, and two public diaries *(new — snag triage, 2026-09-14)*
+
+**Blocks batch S5** (watch history, stage 1), not the current batch queue. `DECISIONS.md` #156.
+
+- [ ] **Give the two Letterboxd usernames — Craig's and Mark's — and make both diaries
+      public.**
+
+The free path to watch history is each person's public diary RSS feed at
+`https://letterboxd.com/<username>/rss`. It needs no credential, no subscription and no API
+key — but it needs the username, and **a private diary publishes no feed**, so the sync would
+silently find nothing.
+
+**Why an agent cannot do this.** It is two facts only Craig has, and a privacy setting on
+someone else's account. Mark's diary is Mark's to make public.
+
+**What it will and will not give.** Recent diary entries with their watched dates, which is
+enough to start `watch_log` accumulating. It is **not** a backfill — the feed carries recent
+entries only. Full history needs the data export, which needs Letterboxd Pro at ~£/\$35 a year
+*per account*; that is item 1g when Craig decides to buy it.
+
+**Do not** build anything that asks either person for a Letterboxd password. `DECISIONS.md`
+#156 rules that out, and the API is ruled out with it — Letterboxd's own policy excludes
+private/personal projects and LLM-related use, and this app is both.
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
