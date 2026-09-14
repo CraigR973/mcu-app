@@ -38,9 +38,19 @@ points are met. There is no suggestion concept at all — the deck is a random d
 already in the collection, so a film outside the Archive can never appear — and "has he seen
 it" needs `watch_log`, which is empty. Rebuilding the input side is a batch, not a tweak.
 
-**The highest-leverage item is the watch-history import.** `watch_log` is empty and the UI to
-write it already exists; one import lights up On this day, Worth a rewatch, Most watched and
-snag 6's "has he seen it" at once.
+**The highest-leverage item is the watch-history import, and it is now unblocked.** Craig gave
+both Letterboxd usernames on 2026-09-14 — `CraigR973`, `markr973` — and **both diaries were
+already public**, so `OWNER-ACTIONS.md` 1f closed the same day without a subscription or a
+setting change. Measured across both live feeds: every entry carries a `<tmdb:movieId>`, so
+matching is exact rather than fuzzy; **66 of 100 watches are of a film they own**, of which 42
+link immediately and **24 are films the April import never identified** — the diary supplies
+the id, so the sync identifies the film as well as logging the watch. `DECISIONS.md` #158, #159.
+
+> **An earlier reading of this was wrong and is corrected in #158.** A first pass filtered
+> title candidates on `abs(year - filmYear) <= 1` and reported **zero** owned-but-unidentified
+> matches. That was an artifact of the query: every unidentified row has `year IS NULL` and was
+> excluded by the test itself. Taken at face value it would have shipped S5 with neither an
+> identification step nor a confirmation step.
 
 **Batch 22 shipped — the deals feed is live and empty, which is the honest state.**
 The feature landed as `c190129`; its final built-in-retailer wiring repair is `493f031`.

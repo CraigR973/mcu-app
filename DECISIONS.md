@@ -2673,3 +2673,61 @@ contemporaneous.
      and the query is `order_by(func.random())` with no seed — every call returns a
      different order, per person and per refetch. The comment asserts a guarantee the code
      does not give.
+
+### 2026-09-14 — what the Letterboxd feeds actually contain
+
+158. **The diary RSS carries a TMDB id on every entry, and two-thirds of the entries
+     concern a film already in the collection.**
+
+     Craig gave the two usernames on 2026-09-14 — `CraigR973` and `markr973` — and both
+     diaries were already public, so `OWNER-ACTIONS.md` 1f closed on the spot. Measured
+     against both live feeds and live Neon the same day, across **100 diary entries**:
+
+     | | Craig | Mark | Both |
+     |---|---|---|---|
+     | Exact `tmdb_id` match — link immediately | 21 | 21 | **42** |
+     | Owned but **unidentified**, one unambiguous title candidate | 10 | 14 | **24** |
+     | Ambiguous — needs a person to choose | 0 | 0 | **0** |
+     | Genuinely not in the collection | 19 | 15 | **34** |
+
+     **So 66 of 100 watches are of a film they own**, and the import is worth more than
+     the watch rows alone.
+
+     **The 24 are the interesting number.** Those films are in `movies` with
+     `tmdb_id IS NULL` and `year IS NULL` — part of the **754 rows the April import never
+     identified** — and the diary hands over the exact TMDB id for each. So the sync can
+     **identify the film as well as log the watch**, which also fills in year, poster,
+     runtime, cast, and the Letterboxd link snag 9 depends on. One import, three dead
+     things fixed.
+
+     **The confirmation step stays**, even though this sample needed it zero times. Title
+     matching against 754 unidentified rows will be ambiguous eventually, and the rows are
+     messy in ways that guarantee it — `'Collector, The'`, `'Out of The past'`,
+     `'Death on the Nile [1978]'`, and one outright junk row, `'Test 15.04.26'`. Matching
+     normalises case, trailing articles and bracketed years; **anything not a single
+     unambiguous candidate is offered, never guessed**, the shape Batch 24 uses for
+     barcodes.
+
+     *Recorded because an earlier reading of this data was wrong and the wrong version is
+     the tempting one.* A first pass filtered title candidates on `abs(year - filmYear) <= 1`
+     and reported **zero** owned-but-unidentified matches — an artifact, because every
+     unidentified row has `year IS NULL` and was excluded by the test itself. It would have
+     shipped S5 with no identification step and no confirmation step, on the false premise
+     that TMDB ids always match exactly.
+
+159. **`watch_log` idempotency keys off the feed's `guid`, and the 50-entry cap sets the
+     sync interval.**
+
+     Each entry's `<guid>` is a stable `letterboxd-watch-<id>`, unique per diary entry and
+     unchanged across refetches — so a re-run updates rather than duplicates, without
+     comparing dates or titles. A rewatch of the same film on a later date is a *different*
+     guid and correctly becomes a second row, which is what `<letterboxd:rewatch>` marks.
+
+     **The feed returns only the most recent 50 entries.** Craig's reaches back to
+     2026-01-26; **Mark's only to 2026-07-20**, because he watches far more. A sync running
+     less often than roughly monthly would silently drop his entries — so the interval is a
+     correctness property, not a preference, and the manual-first version (the crons are
+     still crashing) must say plainly when it last ran.
+
+     Mark rates nothing — 0 of 50 entries carry `memberRating`, against Craig's 50 of 50 —
+     so a null rating on his rows is correct and must not be treated as missing data.

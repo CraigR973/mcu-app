@@ -287,29 +287,37 @@ and the built-in configuration can be re-applied.
 > discounts. Left for a dedicated pass rather than patched blind; see `STATUS.md`'s
 > 2026-09-13 log entry for the full detail.
 
-### 1f. Two Letterboxd usernames, and two public diaries *(new — snag triage, 2026-09-14)*
+### 1f. ~~Two Letterboxd usernames, and two public diaries~~ — **done 2026-09-14**
 
-**Blocks batch S5** (watch history, stage 1), not the current batch queue. `DECISIONS.md` #156.
+- [x] **Craig `CraigR973`, Mark `markr973`. Both diaries are already public** — each feed
+      returns HTTP 200 with 50 diary entries, checked 2026-09-14. **S5 is unblocked**; no
+      subscription, credential or setting change is needed to start.
 
-- [ ] **Give the two Letterboxd usernames — Craig's and Mark's — and make both diaries
-      public.**
+**What the feeds actually carry**, measured rather than assumed. Every entry has
+`<letterboxd:watchedDate>` (a plain `YYYY-MM-DD`, exactly what `watch_log.watched_at` wants),
+`<letterboxd:rewatch>`, `<letterboxd:filmTitle>`, `<letterboxd:filmYear>`, `<letterboxd:memberLike>`
+and — the important one — **`<tmdb:movieId>` on 100 out of 100 entries**. The `<guid>` is a
+stable `letterboxd-watch-<id>`, which is the idempotency key: re-running the sync cannot
+duplicate a row.
 
-The free path to watch history is each person's public diary RSS feed at
-`https://letterboxd.com/<username>/rss`. It needs no credential, no subscription and no API
-key — but it needs the username, and **a private diary publishes no feed**, so the sync would
-silently find nothing.
+Craig rates everything (50/50 entries carry `memberRating`); **Mark rates nothing** (0/50), so
+his `watch_log` rows land with a null rating and that is correct, not a bug.
 
-**Why an agent cannot do this.** It is two facts only Craig has, and a privacy setting on
-someone else's account. Mark's diary is Mark's to make public.
+**The 50-entry cap is the thing to design around.** Craig's feed reaches back to 2026-01-26,
+Mark's only to 2026-07-20 — Mark watches far more, so the cap bites after about eight weeks.
+**A sync that runs less often than roughly monthly will silently lose his entries.** That is
+the argument for item 1g, and for not leaving the first sync manual for long.
 
-**What it will and will not give.** Recent diary entries with their watched dates, which is
-enough to start `watch_log` accumulating. It is **not** a backfill — the feed carries recent
-entries only. Full history needs the data export, which needs Letterboxd Pro at ~£/\$35 a year
-*per account*; that is item 1g when Craig decides to buy it.
+### 1g. Letterboxd Pro, if Craig wants the backfill *(new — snag triage, 2026-09-14)*
 
-**Do not** build anything that asks either person for a Letterboxd password. `DECISIONS.md`
-#156 rules that out, and the API is ruled out with it — Letterboxd's own policy excludes
-private/personal projects and LLM-related use, and this app is both.
+**Does not block anything.** S5 ships on the free RSS feed; this only adds history.
+
+- [ ] **Decide whether to buy Letterboxd Pro (~£/$35 a year, *per account*) for the data
+      export.**
+
+RSS gives the most recent 50 entries and nothing older. The export gives the **whole** diary
+with dates, plus `watchlist.csv` and `ratings.csv`. Both write the same `watch_log` rows
+through the same matcher, so buying it later costs no rework — it is batch S8, additive to S5.
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 

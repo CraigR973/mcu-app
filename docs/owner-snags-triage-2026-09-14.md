@@ -400,7 +400,7 @@ Craig answered the four outstanding decisions on 2026-09-14. They are recorded a
 | 5 | Gift links: delete the rows or keep them? | **Dissolved.** There are no rows |
 | 6 | Zoom: is blocking pinch acceptable? | **Moot.** Both free fixes ship; pinch is left alone. If it still zooms on Craig's phone afterwards, pinch is the one he meant and we revisit |
 | 7 | Letterboxd: apply for API access? | **Decided, #156. No** — policy excludes this app twice over |
-| 8 | Letterboxd Pro for the export? | **Decided, #156.** Staged: free RSS first for recent viewings, the paid export later for backfill |
+| 8 | Letterboxd Pro for the export? | **Decided, #156.** Staged: free RSS first, the paid export later for backfill. Usernames given and both diaries confirmed public 2026-09-14 — `OWNER-ACTIONS.md` 1f closed, 1g holds the Pro decision |
 | 9 | Should Mark be able to add discs and see eBay prices? | **Decided, #155. Yes, both.** API moves with the UI |
 | 10 | Movie night: rebuild or accept? | **Decided, #157. Rebuild** to Craig's description |
 
@@ -417,7 +417,7 @@ Eight batches. Ordered so nothing is built before what it depends on. Model and 
 | **S2** | **App-feel fixes** — zoom + Letterboxd links | 3, 9 | — | 🟢 Sonnet 5 · medium |
 | **S3** | **Navigation shape** — menu, search, Archive header, opening screen | 5, 11, 1 | #154 | 🟡 Opus 5 · high |
 | **S4** | **Quick add within reach** — Home/bottom-bar add, Mark's write access | 7, 8 | S3, #155 | 🟡 Opus 5 · high |
-| **S5** | **Watch history, stage 1** — Letterboxd diary RSS | 10a | #156 | 🟡 Opus 5 · high |
+| **S5** | **Watch history, stage 1** — Letterboxd diary RSS + identify-on-match | 10a | #156 · **unblocked** | 🟡 Opus 5 · high |
 | **S6** | **Physical release dates** — merge Calendar + Coming soon | 2 | S3 | 🟡 Opus 5 · high |
 | **S7** | **Movie night rebuild** — suggestions, outside films, streaming, seen-it | 6 | S5, #157 | 🔴 Opus 5 · xhigh |
 | **S8** | **Watch history, stage 2** — Letterboxd export backfill | 10b | Craig buying Pro | 🔴 Opus 5 · xhigh |
@@ -451,11 +451,32 @@ below 640px. `/collection/add` and both eBay endpoints stop being admin-only, in
 well as the UI. The existing upgrade → "List for sale" flow is surfaced in the add flow rather
 than only on the film page afterwards.
 
-**S5 — Watch history, stage 1.** Read each person's public Letterboxd diary RSS, match on title
-+ year against `movies`, and write `watch_log` rows with their real watched dates. Manual sync
-first — both Railway crons are crashing, so a scheduled poll cannot be the only trigger.
-Ambiguous matches get a confirmation step rather than a guess. **Lights up On this day, Worth a
-rewatch, Most watched and snag 6's "seen it".**
+**S5 — Watch history, stage 1.** *Rescoped 2026-09-14 after measuring both live feeds —
+`DECISIONS.md` #158, #159.* Craig's and Mark's diaries are `CraigR973` and `markr973`, both
+already public, so this is unblocked.
+
+Read each person's diary RSS and write `watch_log` rows with their real watched dates. **Every
+entry carries a `<tmdb:movieId>`**, so the primary match is an exact TMDB id — not the fuzzy
+title+year match this plan originally assumed. Measured across 100 entries:
+
+- **42 link immediately** on `tmdb_id`
+- **24 are films they own that the April import never identified** (`tmdb_id IS NULL`). The
+  diary supplies the exact id, so the sync **identifies the film as well as logging the
+  watch** — filling in year, poster, runtime, cast, and the Letterboxd link snag 9 needs
+- **34 are genuinely not in the collection** — cinema and streaming
+- **0 were ambiguous**, but the confirmation step stays: 754 unidentified rows with messy
+  titles (`'Collector, The'`, `'Out of The past'`) will produce ambiguity eventually, and
+  anything not a single unambiguous candidate is offered, never guessed
+
+Idempotency keys off the feed's stable `<guid>`, so a re-run updates rather than duplicates
+and a genuine rewatch still becomes its own row. Manual sync first — both Railway crons are
+crashing — but **the interval is a correctness property, not a preference**: the feed holds
+only the last 50 entries and Mark's already reaches back just eight weeks, so a sync running
+less often than monthly silently loses his history. Mark rates nothing, so a null rating on
+his rows is correct.
+
+**Lights up On this day, Worth a rewatch, Most watched and snag 6's "seen it" — and identifies
+24 films on the way.**
 
 **S6 — Physical release dates.** Add `/movie/{id}/release_dates` to the TMDB client and ingest
 GB **type 5 (Physical)** dates as `blu_ray_release` and `4k_uhd_release` — both types already
