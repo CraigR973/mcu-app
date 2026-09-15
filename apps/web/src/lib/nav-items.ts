@@ -1,10 +1,21 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bell, Bot, Boxes, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Tag, Target, Trash2, TrendingUp } from 'lucide-react'
+import { Bot, Boxes, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Tag, Trash2 } from 'lucide-react'
+
+import type { NavSections } from '@mcu/shared'
 
 export interface NavItem {
   label: string
   path: string
   icon: LucideIcon
+  /**
+   * Which `nav/sections` count decides whether this item is shown.
+   *
+   * Absent means "always shown". Present means **hidden while that count is 0** and
+   * visible the moment it is not — `DECISIONS.md` #154. Measured on 2026-09-14, all four
+   * of these tables held zero rows, so five of fourteen destinations led to a page with
+   * nothing on it.
+   */
+  showWhen?: keyof NavSections
 }
 
 export interface NavGroup {
@@ -16,27 +27,42 @@ export interface NavGroup {
  *  command palette's page index needs it named separately from `navItems`. */
 export const HOME_ITEM: NavItem = { label: 'Archive shortcut', path: '/', icon: Home }
 
+/**
+ * Every non-admin destination, flat, because the command palette searches destinations
+ * while the shell groups them by the job somebody is doing.
+ *
+ * **Batch S3 took this from fifteen defined entries to nine, by two different means**,
+ * because the menu had two different problems (`DECISIONS.md` #154):
+ *
+ * - **Merged what was thin but real.** Home, Stats and Insights are one reading page at
+ *   `/dashboard`; Notifications and AI settings are one `/settings` page. Four items
+ *   become two, and `/settings/ai` stops being a destination reachable only from the
+ *   header — it was defined here but placed in no group at all.
+ * - **Hid what is empty.** Box sets, Collections, Deals and Loans carry `showWhen` and
+ *   stay out of the menu until their table has a row.
+ *
+ * With all four empty — the state of the database today — **a signed-in non-admin sees
+ * eight destinations**, down from fourteen.
+ */
 export const navItems: NavItem[] = [
   { label: 'Movies', path: '/movies', icon: Film },
-  { label: 'Box sets', path: '/box-sets', icon: Boxes },
-  { label: 'Collections', path: '/collections', icon: Sparkles },
-  { label: 'Insights', path: '/insights', icon: Target },
+  { label: 'Box sets', path: '/box-sets', icon: Boxes, showWhen: 'boxSets' },
+  { label: 'Collections', path: '/collections', icon: Sparkles, showWhen: 'collections' },
   { label: 'Coming soon', path: '/discover', icon: Sparkle },
   { label: 'Calendar', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
-  { label: 'Deals', path: '/deals', icon: Tag },
+  { label: 'Deals', path: '/deals', icon: Tag, showWhen: 'deals' },
+  // Batch S3: Home now *is* Stats and Insights. `/stats` and `/insights` redirect here
+  // rather than 404, because they are in people's history and in the command palette.
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Stats', path: '/stats', icon: TrendingUp },
-  { label: 'Loans', path: '/loans', icon: HandHeart },
+  { label: 'Loans', path: '/loans', icon: HandHeart, showWhen: 'loans' },
   // Batch 35. Both people swipe, so it is an ordinary sidebar item.
   { label: 'Movie night', path: '/movie-night', icon: Popcorn },
-  // Batch 11. Both people have their own devices and their own toggles, so this is a
-  // sidebar item rather than an admin one.
-  { label: 'Notifications', path: '/settings/notifications', icon: Bell },
-  // Batch 31. The chat itself; Batch 30's caps and usage live under it at
-  // /settings/ai, reachable from the header.
+  // Batch 31. The chat itself.
   { label: 'Assistant', path: '/assistant', icon: Bot },
-  { label: 'AI settings', path: '/settings/ai', icon: Settings2 },
+  // Batch S3. Notifications + AI settings, one page. AI settings was defined as a
+  // destination before this batch and sat in no group — reachable only from the header.
+  { label: 'Settings', path: '/settings', icon: Settings2 },
 ]
 
 /** Batch 7's write surface. Admin-only, matching the routes and the API. */
@@ -45,22 +71,66 @@ export const adminNavItems: NavItem[] = [
   { label: 'Trash', path: '/trash', icon: Trash2 },
   { label: 'Audit log', path: '/audit', icon: ScrollText },
   { label: 'Retailers', path: '/retailers', icon: Store },
+  // Batch S3. Moved here from the foot of the old Stats page.
+  { label: 'Export', path: '/export', icon: Download },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 
 /**
- * The sidebar's information architecture. `navItems` stays flat because the command
- * palette searches destinations, while the shell groups them by the job somebody is
- * doing. This keeps all routes visible without presenting nineteen equal choices.
+ * The sidebar's information architecture.
+ *
+ * Built by name rather than by index. The previous version indexed into `navItems`
+ * (`navItems[10]`, `navItems[13]`) so **removing one entry silently re-pointed three
+ * groups at the wrong destinations** — and adding one left `AI settings` in no group at
+ * all, which is how it ended up reachable only from the header. A lookup by path cannot
+ * drift that way, and `byPath` throws rather than rendering a hole.
  */
+function byPath(path: string): NavItem {
+  const item = navItems.find((candidate) => candidate.path === path)
+  if (!item) throw new Error(`nav-items: no destination at ${path}`)
+  return item
+}
+
 export const navGroups: NavGroup[] = [
-  { label: 'The archive', items: [navItems[0], navItems[6], navItems[1], navItems[2]] },
-  { label: 'Plan a screening', items: [navItems[10], navItems[4], navItems[5]] },
-  { label: 'Explore', items: [navItems[3], navItems[7], navItems[8], navItems[9]] },
-  { label: 'Personal', items: [navItems[11], navItems[12], navItems[13]] },
+  {
+    label: 'The archive',
+    items: [byPath('/movies'), byPath('/wanted'), byPath('/box-sets'), byPath('/collections')],
+  },
+  {
+    label: 'Plan a screening',
+    items: [byPath('/movie-night'), byPath('/discover'), byPath('/calendar')],
+  },
+  { label: 'Explore', items: [byPath('/deals'), byPath('/dashboard'), byPath('/loans')] },
+  { label: 'Personal', items: [byPath('/assistant'), byPath('/settings')] },
 ]
 
 export const adminNavGroup: NavGroup = {
   label: 'Administration',
   items: adminNavItems,
+}
+
+/**
+ * Whether a destination should appear, given what the API says is behind it.
+ *
+ * **`undefined` counts as "show".** The shell renders before `nav/sections` resolves, and
+ * on a cold or offline load it may never resolve — hiding four destinations because a
+ * count has not arrived yet would make the menu flicker, and hiding them permanently
+ * because the request failed would be worse than the emptiness this feature is fixing.
+ * So an unknown count shows the item; only a count that is genuinely `0` hides it.
+ */
+export function isVisible(item: NavItem, sections: NavSections | undefined): boolean {
+  if (!item.showWhen) return true
+  if (!sections) return true
+  return sections[item.showWhen] > 0
+}
+
+/** The groups with their empty destinations removed, and any group left with nothing in
+ *  it dropped entirely — a heading over no links is its own kind of dead menu item. */
+export function visibleGroups(
+  groups: NavGroup[],
+  sections: NavSections | undefined,
+): NavGroup[] {
+  return groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => isVisible(item, sections)) }))
+    .filter((group) => group.items.length > 0)
 }

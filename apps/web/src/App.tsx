@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Link, Routes, Route, useLocation } from 'react-router-dom'
+import { Link, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from '@/context/theme'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/layouts/AppLayout'
@@ -25,8 +25,6 @@ const BoxSetDetailPage = lazy(() => import('./pages/BoxSetDetailPage'))
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
 const CollectionResultsPage = lazy(() => import('./pages/CollectionResultsPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
-const InsightsPage = lazy(() => import('./pages/InsightsPage'))
-const StatsPage = lazy(() => import('./pages/StatsPage'))
 const LoansPage = lazy(() => import('./pages/LoansPage'))
 const AuditPage = lazy(() => import('./pages/AuditPage'))
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
@@ -34,8 +32,8 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const WantedPage = lazy(() => import('./pages/WantedPage'))
 const DealsPage = lazy(() => import('./pages/DealsPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
-const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
-const AiSettingsPage = lazy(() => import('./pages/AiSettingsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const ExportPage = lazy(() => import('./pages/ExportPage'))
 const AiChatPage = lazy(() => import('./pages/AiChatPage'))
 const MovieNightPage = lazy(() => import('./pages/MovieNightPage'))
 const MovieNightJoinPage = lazy(() =>
@@ -181,10 +179,6 @@ export default function App() {
               element={<AppShell><CollectionResultsPage /></AppShell>}
             />
             <Route
-              path="/insights"
-              element={<AppShell><InsightsPage /></AppShell>}
-            />
-            <Route
               path="/wanted"
               element={<AppShell><WantedPage /></AppShell>}
             />
@@ -200,10 +194,13 @@ export default function App() {
               path="/discover"
               element={<AppShell><DiscoverPage /></AppShell>}
             />
-            <Route
-              path="/stats"
-              element={<AppShell><StatsPage /></AppShell>}
-            />
+            {/* Batch S3. Home, Stats and Insights are one reading page. The two old
+                paths **redirect rather than 404**: both are in browser history, in the
+                command palette's index, and in whatever links exist outside the app —
+                and a 404 for a page that still exists under another name is the worst
+                of the three possible answers. */}
+            <Route path="/stats" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/insights" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/dashboard"
               element={<AppShell><DashboardPage /></AppShell>}
@@ -230,24 +227,23 @@ export default function App() {
               path="/retailers"
               element={<AdminShell><RetailersPage /></AdminShell>}
             />
-            {/* Batch 11. Devices and preferences belong to whoever is signed in —
-                both people have their own, so this is the ordinary shell rather than
-                the admin one. */}
+            {/* Batch S3. Moved off the foot of Stats — it is a maintenance action, and
+                Stats is a section of Home now rather than a page it could sit under. */}
             <Route
-              path="/settings/notifications"
-              element={<AppShell><NotificationSettingsPage /></AppShell>}
+              path="/export"
+              element={<AdminShell><ExportPage /></AdminShell>}
             />
+            {/* Batch S3. Notifications and AI settings are one page with two tabs.
+                Both belong to whoever is signed in — each person has their own devices
+                and their own spend cap — so this is the ordinary shell, not the admin
+                one. The three old paths redirect, each onto its own tab. */}
             <Route
-              path="/notifications"
-              element={<AppShell><NotificationSettingsPage /></AppShell>}
+              path="/settings"
+              element={<AppShell><SettingsPage /></AppShell>}
             />
-            {/* Batch 30. Both people get their own caps and their own usage, so this
-                is the ordinary shell. Batch 31 replaces the one-question box here with
-                the real chat. */}
-            <Route
-              path="/settings/ai"
-              element={<AppShell><AiSettingsPage /></AppShell>}
-            />
+            <Route path="/settings/notifications" element={<Navigate to="/settings" replace />} />
+            <Route path="/notifications" element={<Navigate to="/settings" replace />} />
+            <Route path="/settings/ai" element={<Navigate to="/settings?tab=assistant" replace />} />
             {/* Batch 31. The chat is a real route rather than an overlay, so a
                 conversation can be linked to, returned to, and left open. */}
             <Route

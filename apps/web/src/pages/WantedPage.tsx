@@ -417,7 +417,7 @@ export default function WantedPage() {
       ) : state === 'error' ? (
         <StatePanel tone="error" title="The wanted list could not be opened" description={queryErrorMessage(wantedQuery.error, 'The server did not answer.')} />
       ) : state === 'empty' ? (
-        <StatePanel tone="empty" icon={Bookmark} title={activeOnly ? 'Nothing is actively being sought' : 'Nothing on the wanted list yet'} description={profile?.role === 'admin' ? <>Add a title here, or add a set’s missing films from <Link to="/insights" className="font-semibold text-primary hover:underline">Insights</Link>.</> : 'Craig has not added any wanted titles yet.'} />
+        <StatePanel tone="empty" icon={Bookmark} title={activeOnly ? 'Nothing is actively being sought' : 'Nothing on the wanted list yet'} description={profile?.role === 'admin' ? <>Add a title here, or add a set’s missing films from <Link to="/dashboard" className="font-semibold text-primary hover:underline">Home</Link>.</> : 'Craig has not added any wanted titles yet.'} />
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (

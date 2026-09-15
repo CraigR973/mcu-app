@@ -497,15 +497,12 @@ function HistorySection() {
   )
 }
 
-export default function NotificationSettingsPage() {
+/** The notification settings, without page chrome — Batch S3 folded this page into
+ *  `/settings` as one of two tabs, so the heading is the tab's job now. `/settings/notifications`
+ *  still resolves; it redirects. */
+export function NotificationSettings() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4">
-      <header>
-        <h1 className="text-2xl font-bold">Notifications</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Which alerts reach you, on which devices, and when.
-        </p>
-      </header>
+    <div className="space-y-6">
       <DeviceSection />
       <PreferencesSection />
       <HistorySection />

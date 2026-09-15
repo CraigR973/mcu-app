@@ -15,5 +15,9 @@ export default function HomePage() {
     )
   }
 
-  return <Navigate to={isAuthenticated ? '/movies' : '/login'} replace />
+  // Batch S3, snag 11. `/` used to land on the Archive, and that was the right answer
+  // while Home was three-quarters empty — the triage said as much: *"decide 5 first, and
+  // 11 falls out of it"*. Now that Home absorbs Stats and Insights and hides what is
+  // empty, it is a page worth opening on.
+  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
 }

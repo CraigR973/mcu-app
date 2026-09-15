@@ -59,7 +59,13 @@ describe('CommandPalette', () => {
   it('lists pages to jump to when the query is empty', () => {
     renderPalette()
     expect(screen.getByText('Movies')).not.toBeNull()
-    expect(screen.getByText('Stats')).not.toBeNull()
+    // Batch S3: 'Stats' was here until the merge, and naming it now would assert a
+    // destination that no longer exists. 'Settings' replaces it as the second page —
+    // the one the merge created, and the one that was previously in no menu group at all.
+    expect(screen.getByText('Settings')).not.toBeNull()
+    // And the merged destinations are genuinely gone from the index, not merely renamed.
+    expect(screen.queryByText('Stats')).toBeNull()
+    expect(screen.queryByText('Insights')).toBeNull()
     // Admin-only actions stay out of a viewer's index, same as the sidebar.
     expect(screen.queryByText('Add a disc')).toBeNull()
   })
@@ -107,9 +113,12 @@ describe('CommandPalette', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { onClose, path } = renderPalette()
-    fireEvent.click(screen.getByText('Stats'))
+    // Batch S3 merged Stats into Home, so the palette's page index no longer carries a
+    // 'Stats' row. 'Settings' is the destination the merge created, and it exercises the
+    // same thing this test is about: a page result navigates without touching search.
+    fireEvent.click(screen.getByText('Settings'))
 
-    expect(path()).toBe('/stats')
+    expect(path()).toBe('/settings')
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(fetchMock).not.toHaveBeenCalled()
   })

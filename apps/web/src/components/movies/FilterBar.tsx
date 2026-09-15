@@ -11,6 +11,7 @@ import {
   TMDB_GENRES,
   type MovieFilters,
 } from '@/lib/api'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -44,8 +45,21 @@ const SPEC_TOGGLES: Array<{
   },
 ]
 
+/**
+ * Batch S3, snag 5: **below `sm` this is a single button.**
+ *
+ * It used to put four controls — section, format, a Filters toggle and a sort — across a
+ * 375px screen, above every page of the Archive. Wrapped onto three rows, they cost more
+ * vertical space than the first film poster.
+ *
+ * `useMediaQuery` decides *where* the three selects render rather than rendering them
+ * twice and hiding one with CSS: two copies of a `<select>` labelled "Filter by section"
+ * is a duplicate id and a duplicate accessible name, and the hidden one comes back the
+ * moment somebody changes a `hidden` class. One copy, one place, chosen at runtime.
+ */
 export function FilterBar({ filters, total, onChange, context = 'browse' }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const isNarrow = !useMediaQuery('(min-width: 640px)')
   const facetsQuery = useQuery({
     queryKey: ['collection-facets'],
     queryFn: fetchFacets,
@@ -80,75 +94,104 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
 
   const advancedCount = activeFilters.filter(({ key }) => !['section', 'shelf', 'format'].includes(key)).length
 
+  const sectionSelect = (
+    <select
+      className={CONTROL_CLS}
+      value={filters.section ?? ''}
+      onChange={(event) => onChange({ ...filters, section: event.target.value || undefined, shelf: undefined })}
+      aria-label="Filter by section"
+    >
+      <option value="">All locations</option>
+      {sections.map((section) => (
+        <option key={section.section} value={section.section}>{section.section} ({section.itemCount})</option>
+      ))}
+    </select>
+  )
+
+  const formatSelect = (
+    <select
+      className={CONTROL_CLS}
+      value={filters.format ?? ''}
+      onChange={(event) => onChange({ ...filters, format: event.target.value || undefined })}
+      aria-label="Filter by format"
+    >
+      <option value="">All formats</option>
+      {FORMATS.map((format) => <option key={format.value} value={format.value}>{format.label}</option>)}
+    </select>
+  )
+
+  const sortSelect = supportsLiveOnly ? (
+    <>
+      <label htmlFor="collection-sort" className="sr-only">Sort collection</label>
+      <select
+        id="collection-sort"
+        className={cn(CONTROL_CLS, 'flex-1 xl:min-w-40')}
+        value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
+        onChange={(event) => {
+          const [sort, order] = event.target.value.split(':') as [NonNullable<MovieFilters['sort']>, NonNullable<MovieFilters['order']>]
+          onChange({ ...filters, sort, order })
+        }}
+      >
+        <option value="title:asc">Title A–Z</option>
+        <option value="title:desc">Title Z–A</option>
+        <option value="year:desc">Newest first</option>
+        <option value="year:asc">Oldest first</option>
+        <option value="rating:desc">Highest rated</option>
+      </select>
+    </>
+  ) : null
+
+  const filtersToggle = (
+    <Button
+      type="button"
+      variant="outline"
+      className={cn('justify-between', isNarrow ? 'w-full' : 'col-span-2 md:col-span-1')}
+      aria-expanded={expanded}
+      aria-controls="collection-more-filters"
+      onClick={() => setExpanded((value) => !value)}
+    >
+      <span className="inline-flex items-center gap-2">
+        <SlidersHorizontal className="h-4 w-4" aria-hidden /> Filters
+        {activeFilters.length > 0 && <Badge tone="primary" className="min-w-5 justify-center px-1">{isNarrow ? activeFilters.length : advancedCount}</Badge>}
+      </span>
+      <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} aria-hidden />
+    </Button>
+  )
+
+  const filmCount =
+    total != null ? (
+      <span aria-live="polite" className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+        {total.toLocaleString()} {total === 1 ? 'film' : 'films'}
+      </span>
+    ) : null
+
   return (
     <section aria-label="Collection filters" className="border-b border-border bg-surface-sunken/35">
       <div className="px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-[minmax(10rem,1fr)_minmax(9rem,0.8fr)_auto] xl:max-w-3xl">
-            <select
-              className={CONTROL_CLS}
-              value={filters.section ?? ''}
-              onChange={(event) => onChange({ ...filters, section: event.target.value || undefined, shelf: undefined })}
-              aria-label="Filter by section"
-            >
-              <option value="">All locations</option>
-              {sections.map((section) => (
-                <option key={section.section} value={section.section}>{section.section} ({section.itemCount})</option>
-              ))}
-            </select>
-
-            <select
-              className={CONTROL_CLS}
-              value={filters.format ?? ''}
-              onChange={(event) => onChange({ ...filters, format: event.target.value || undefined })}
-              aria-label="Filter by format"
-            >
-              <option value="">All formats</option>
-              {FORMATS.map((format) => <option key={format.value} value={format.value}>{format.label}</option>)}
-            </select>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="col-span-2 justify-between md:col-span-1"
-              aria-expanded={expanded}
-              aria-controls="collection-more-filters"
-              onClick={() => setExpanded((value) => !value)}
-            >
-              <span className="inline-flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4" aria-hidden /> Filters
-                {advancedCount > 0 && <Badge tone="primary" className="min-w-5 justify-center px-1">{advancedCount}</Badge>}
-              </span>
-              <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} aria-hidden />
-            </Button>
+        {isNarrow ? (
+          /* One button, and the count beside it. The count is a reading, not a control —
+             it is the answer to "did that filter do anything", and hiding it behind the
+             same tap that set the filter would be the wrong economy. */
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">{filtersToggle}</div>
+            {filmCount}
           </div>
-
-          {supportsLiveOnly && (
-            <div className="flex items-center gap-2 xl:ml-auto">
-              <label htmlFor="collection-sort" className="sr-only">Sort collection</label>
-              <select
-                id="collection-sort"
-                className={cn(CONTROL_CLS, 'flex-1 xl:min-w-40')}
-                value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
-                onChange={(event) => {
-                  const [sort, order] = event.target.value.split(':') as [NonNullable<MovieFilters['sort']>, NonNullable<MovieFilters['order']>]
-                  onChange({ ...filters, sort, order })
-                }}
-              >
-                <option value="title:asc">Title A–Z</option>
-                <option value="title:desc">Title Z–A</option>
-                <option value="year:desc">Newest first</option>
-                <option value="year:asc">Oldest first</option>
-                <option value="rating:desc">Highest rated</option>
-              </select>
-              {total != null && (
-                <span aria-live="polite" className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-                  {total.toLocaleString()} {total === 1 ? 'film' : 'films'}
-                </span>
-              )}
+        ) : (
+          <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
+            <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-[minmax(10rem,1fr)_minmax(9rem,0.8fr)_auto] xl:max-w-3xl">
+              {sectionSelect}
+              {formatSelect}
+              {filtersToggle}
             </div>
-          )}
-        </div>
+
+            {supportsLiveOnly && (
+              <div className="flex items-center gap-2 xl:ml-auto">
+                {sortSelect}
+                {filmCount}
+              </div>
+            )}
+          </div>
+        )}
 
         {facetsQuery.isError && (
           <p role="alert" className="mt-2 text-xs text-destructive">Location and decade choices are temporarily unavailable. Existing filters still apply.</p>
@@ -156,6 +199,15 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
 
         {expanded && (
           <div id="collection-more-filters" className="mt-3 border-t border-border pt-3">
+            {/* Below `sm` the three controls that left the bar live here instead, so
+                collapsing the bar hides them rather than removing them. */}
+            {isNarrow && (
+              <div className="mb-2 grid gap-2">
+                {sectionSelect}
+                {formatSelect}
+                {sortSelect}
+              </div>
+            )}
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
               {shelves.length > 0 && (
                 <select className={CONTROL_CLS} value={filters.shelf ?? ''} onChange={(event) => onChange({ ...filters, shelf: event.target.value || undefined })} aria-label="Filter by shelf">

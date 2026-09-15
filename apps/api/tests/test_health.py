@@ -255,6 +255,11 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # quota call, while confirm is a local write after a person checks the candidate.
         "/api/v1/barcode/lookup",
         "/api/v1/barcode/confirm",
+        # Batch S3. One question — which self-hiding destinations have rows behind them —
+        # answered in four COUNT(*)s rather than by the sidebar fetching four full lists
+        # on every page load to learn they were empty. `CurrentUser`, because every one
+        # of those destinations is visible to a viewer.
+        "/api/v1/nav/sections",
     }
 
 

@@ -48,6 +48,7 @@ import {
   trashTableSchema,
   wantedItemSchema,
   watchLogPageSchema,
+  navSectionsSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -1344,5 +1345,24 @@ describe('listing status (Batch 29)', () => {
       updatedAt: '2026-09-12T09:00:00Z',
     }
     expect(() => collectionCopiesSchema.parse([copy])).toThrow()
+  })
+})
+
+describe('navSectionsSchema', () => {
+  it('parses the four counts', () => {
+    const parsed = navSectionsSchema.parse({ boxSets: 0, collections: 3, deals: 0, loans: 12 })
+    expect(parsed.collections).toBe(3)
+    expect(parsed.boxSets).toBe(0)
+  })
+
+  it('refuses a negative count rather than hiding a destination on bad data', () => {
+    // A negative would read as "empty" everywhere it is compared with `> 0`, which is the
+    // quietest possible way for a destination to disappear.
+    expect(navSectionsSchema.safeParse({ boxSets: -1, collections: 0, deals: 0, loans: 0 }).success).toBe(false)
+  })
+
+  it('refuses a missing section rather than defaulting it to zero', () => {
+    // `undefined > 0` is false, so a dropped field would silently hide its destination.
+    expect(navSectionsSchema.safeParse({ boxSets: 1, collections: 0, deals: 0 }).success).toBe(false)
   })
 })

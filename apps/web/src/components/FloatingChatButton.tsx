@@ -16,7 +16,6 @@ export function FloatingChatButton() {
   const { pathname } = useLocation()
   const hidden =
     pathname.startsWith('/assistant') ||
-    pathname.startsWith('/settings/ai') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/welcome')
 

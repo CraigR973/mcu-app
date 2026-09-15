@@ -7,7 +7,10 @@ const GO_TARGETS: Record<string, string> = {
   h: '/dashboard',
   c: '/movies',
   w: '/wanted',
-  s: '/stats',
+  // Batch S3. `g s` was "go to stats", and stats is a *section* of `/dashboard` now —
+  // which `g h` already reaches. Rather than leave the chord landing on a redirect to
+  // somewhere another chord goes, it takes the destination the merge created.
+  s: '/settings',
 }
 
 /** How long the second key of a `g` chord has to land. */

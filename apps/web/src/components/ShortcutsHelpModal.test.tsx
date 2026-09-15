@@ -23,7 +23,9 @@ describe('ShortcutsHelpModal', () => {
     expect(screen.getByText('Go to home')).not.toBeNull()
     expect(screen.getByText('Go to collection')).not.toBeNull()
     expect(screen.getByText('Go to wanted list')).not.toBeNull()
-    expect(screen.getByText('Go to stats')).not.toBeNull()
+    // Batch S3: `g s` was "go to stats"; stats is a section of `/dashboard` now, which
+    // `g h` already reaches, so the chord took the destination the merge created.
+    expect(screen.getByText('Go to settings')).not.toBeNull()
     expect(screen.getByText('Add new item')).not.toBeNull()
     expect(screen.getByText('Close modal / clear search')).not.toBeNull()
   })

@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom'
 import { MicButton } from '@/components/MicButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import {
   askAi,
@@ -26,7 +25,10 @@ import { cn } from '@/lib/utils'
  * check alongside the personal caps. Cost remains visible because the person reading the
  * answer is also the person paying for it.
  */
-export default function AiSettingsPage() {
+/** The assistant's caps, usage and one-question health check, without page chrome —
+ *  Batch S3 folded this page into `/settings` as one of two tabs. `/settings/ai` still
+ *  resolves; it redirects. */
+export function AiSettings() {
   const queryClient = useQueryClient()
   const [prompt, setPrompt] = useState('')
 
@@ -60,20 +62,15 @@ export default function AiSettingsPage() {
     : 0
 
   return (
-    <div className="page-shell-narrow space-y-6">
-      <PageHeader
-        eyebrow="Assistant"
-        title="Assistant settings"
-        description="Ask a quick collection question, review today's usage and set your personal limits."
-        actions={(
-          <Button asChild>
-            <Link to="/assistant">
-              <Bot className="h-4 w-4" aria-hidden />
-              Open chat
-            </Link>
-          </Button>
-        )}
-      />
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button asChild size="sm" variant="outline">
+          <Link to="/assistant">
+            <Bot className="h-4 w-4" aria-hidden />
+            Open chat
+          </Link>
+        </Button>
+      </div>
 
       {status.data && !status.data.configured ? (
         <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">

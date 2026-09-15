@@ -29,6 +29,7 @@ from src.routers import (
     memories,
     movie_night,
     movies,
+    navigation,
     notifications,
     photos,
     scraping,
@@ -116,6 +117,7 @@ app.include_router(insights.router)
 app.include_router(stats.router)
 app.include_router(export.router)
 app.include_router(trash.router)
+app.include_router(navigation.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)
 app.include_router(wanted.router)

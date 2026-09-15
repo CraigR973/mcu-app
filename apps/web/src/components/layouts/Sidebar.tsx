@@ -3,12 +3,12 @@ import { Link, NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { LogOut, X } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
-import { fetchSmartCollections } from '@/lib/api'
+import { fetchNavSections, fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
-import { adminNavGroup, navGroups } from '@/lib/nav-items'
+import { adminNavGroup, navGroups, visibleGroups } from '@/lib/nav-items'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -63,6 +63,22 @@ export default function Sidebar({ open, onClose }: Props) {
   })
   const saved = collections?.items ?? []
 
+  // Batch S3, snag 5. Four destinations hide while their table is empty
+  // (`DECISIONS.md` #154). Four `COUNT(*)`s in one round trip, cached for five minutes —
+  // the menu is drawn on every page, and a count that is one navigation stale costs
+  // nothing, while a request per page would cost something on a phone.
+  //
+  // **Failing quietly shows the items rather than hiding them.** `isVisible` treats an
+  // unknown count as "show", so a failed or still-loading request leaves the menu as it
+  // was rather than removing four links — hiding them because the network was slow would
+  // be a worse bug than the emptiness this is fixing.
+  const { data: sections } = useQuery({
+    queryKey: ['nav-sections'],
+    queryFn: fetchNavSections,
+    staleTime: 5 * 60 * 1000,
+  })
+  const groups = visibleGroups(navGroups, sections)
+
   return (
     <>
       {/* Backdrop (mobile) */}
@@ -113,7 +129,7 @@ export default function Sidebar({ open, onClose }: Props) {
 
         {/* Nav */}
         <nav aria-label="Application destinations" className="flex-1 overflow-y-auto px-3 py-4">
-          {navGroups.map((group) => (
+          {groups.map((group) => (
             <div key={group.label} className="mb-5 last:mb-0">
               <p className="mb-1 px-3 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {group.label}

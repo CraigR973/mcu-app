@@ -61,7 +61,9 @@ describe('useKeyboardShortcuts', () => {
 
     press('g')
     press('s')
-    expect(navigateMock).toHaveBeenCalledWith('/stats')
+    // Batch S3: `/stats` is a section of `/dashboard` now, which `g h` already reaches,
+    // so `g s` took the destination the merge created instead of landing on a redirect.
+    expect(navigateMock).toHaveBeenCalledWith('/settings')
   })
 
   it('drops a chord whose second key never arrives within the window', () => {

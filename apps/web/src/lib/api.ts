@@ -65,6 +65,7 @@ import {
   purgePreviewSchema,
   searchResponseSchema,
   smartCollectionListSchema,
+  navSectionsSchema,
   statsSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
@@ -152,6 +153,7 @@ import {
   type SmartCollectionFilters,
   type SmartCollectionList,
   type SmartCollectionResults,
+  type NavSections,
   type Stats,
   type TmdbSearchResponse,
   type TrashList,
@@ -210,6 +212,7 @@ export type {
   MovieListItem,
   MovieLocation,
   MoviePage,
+  NavSections,
   OnThisDayMemory,
   NewRelease,
   NewReleaseList,
@@ -961,6 +964,19 @@ export function setTypeLabel(setType: CompletionSetType): string {
     curated_list: 'List',
   }
   return labels[setType]
+}
+
+// ---------------------------------------------------------------------------
+// Navigation shape (Batch S3) — snag 5, `DECISIONS.md` #154
+// ---------------------------------------------------------------------------
+
+/** Which self-hiding destinations have anything behind them.
+ *
+ *  Read by the shell on every page, so it is deliberately the cheapest call in the app:
+ *  four `COUNT(*)`s in one round trip, where the alternative was fetching four full lists
+ *  to discover they were empty. */
+export async function fetchNavSections(): Promise<NavSections> {
+  return parseResponse(await authFetch('/nav/sections'), navSectionsSchema)
 }
 
 // ---------------------------------------------------------------------------

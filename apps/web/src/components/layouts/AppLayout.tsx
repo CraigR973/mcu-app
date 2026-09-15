@@ -24,6 +24,7 @@ export default function AppLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const queryClient = useQueryClient()
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
@@ -94,9 +95,6 @@ export default function AppLayout({ children }: Props) {
             )}
           </div>
           </div>
-          <div className="px-3 pb-3 lg:hidden">
-            <SearchBar />
-          </div>
         </header>
 
         <OfflineBanner />
@@ -112,7 +110,51 @@ export default function AppLayout({ children }: Props) {
           page, which is what "every page" means — and it hides itself on the chat. */}
       <FloatingChatButton />
 
-      <MobileTabBar onOpenMenu={() => setSidebarOpen(true)} />
+      {/* Batch S3, snag 1. Search left the mobile header's second row — a permanent band
+          of chrome above every page, on the smallest screen — and became a slot in the
+          bottom bar. It opens here as a sheet so the whole results list has room, rather
+          than a dropdown pinned under a 44px strip.
+
+          `mcu:focus-search` is Batch 36's own event, already how `/` focuses the search
+          box on a keyboard; reusing it means the sheet does not need `SearchBar` to grow
+          an `autoFocus` prop that only one caller would ever pass. */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close search"
+            className="absolute inset-0 cursor-default bg-brand-ink/70 backdrop-blur-[2px]"
+            onClick={() => setSearchOpen(false)}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search the archive"
+            className="absolute inset-x-0 top-0 border-b border-border bg-background px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-lift"
+          >
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <SearchBar />
+              </div>
+              <button
+                type="button"
+                onClick={() => setSearchOpen(false)}
+                className="touch-target shrink-0 rounded-md px-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <MobileTabBar
+        onOpenMenu={() => setSidebarOpen(true)}
+        onOpenSearch={() => {
+          setSearchOpen(true)
+          requestAnimationFrame(() => window.dispatchEvent(new Event('mcu:focus-search')))
+        }}
+      />
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={isAdmin} />
       <ShortcutsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} isAdmin={isAdmin} />

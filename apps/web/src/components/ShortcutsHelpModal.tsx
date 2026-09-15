@@ -20,7 +20,7 @@ const ROWS: Row[] = [
   { keys: 'g then h', action: 'Go to home' },
   { keys: 'g then c', action: 'Go to collection' },
   { keys: 'g then w', action: 'Go to wanted list' },
-  { keys: 'g then s', action: 'Go to stats' },
+  { keys: 'g then s', action: 'Go to settings' },
   { keys: 'n', action: 'Add new item', adminOnly: true },
   { keys: 'Esc', action: 'Close modal / clear search' },
 ]

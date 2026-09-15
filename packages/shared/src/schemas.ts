@@ -1583,3 +1583,21 @@ export const dealsRunSchema = z.object({
 export type Deal = z.infer<typeof dealSchema>
 export type DealList = z.infer<typeof dealListSchema>
 export type DealsRun = z.infer<typeof dealsRunSchema>
+
+// ---------------------------------------------------------------------------
+// Navigation shape (Batch S3) — snag 5, `DECISIONS.md` #154
+// ---------------------------------------------------------------------------
+
+/** How many rows stand behind each destination that hides itself when empty.
+ *
+ *  Counts rather than booleans: a boolean answers "show this?" and nothing else, while a
+ *  count lets the sidebar show a number later without a second endpoint — and makes a
+ *  wrong answer legible in the response instead of opaque. */
+export const navSectionsSchema = z.object({
+  boxSets: z.number().int().nonnegative(),
+  collections: z.number().int().nonnegative(),
+  deals: z.number().int().nonnegative(),
+  loans: z.number().int().nonnegative(),
+})
+
+export type NavSections = z.infer<typeof navSectionsSchema>
