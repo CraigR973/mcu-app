@@ -50,13 +50,19 @@ class SyncResult:
 
 
 async def last_sync(db: AsyncSession, user_id: uuid.UUID) -> LetterboxdSync | None:
-    """The most recent run for this person, finished or not."""
-    return await db.scalar(
+    """The most recent run for this person, finished or not.
+
+    The result is bound to a typed name rather than returned straight from ``scalar``:
+    CI's mypy resolves that call as ``Any`` and ``warn_no_any_return`` makes the implicit
+    version a red gate, while this machine's does not notice (`STATUS.md` gotcha 21).
+    """
+    run: LetterboxdSync | None = await db.scalar(
         select(LetterboxdSync)
         .where(LetterboxdSync.user_id == user_id)
         .order_by(desc(LetterboxdSync.started_at_utc))
         .limit(1)
     )
+    return run
 
 
 async def sync_watch_history(
