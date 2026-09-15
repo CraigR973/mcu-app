@@ -3382,3 +3382,80 @@ contemporaneous.
      *Worth recording as a class: an instruction that has never been executed is not an
      instruction, it is a guess. This one was written in the same close-out that could not
      run it.*
+
+### 2026-09-15 — the collection importer cannot refresh, and the watch history changed the stakes
+
+192. **Re-running `import_collection.py` over live data does not refresh anything. It
+     creates orphan film rows and skips every changed disc.**
+
+     Found on 2026-09-15 when Craig proposed a fresher import of the spreadsheet before go
+     live, and asked whether the identification step should wait for it. The answer turned
+     on how the importer deduplicates, which is not what "re-running is safe"
+     (`DECISIONS.md` #32) leads a reader to expect.
+
+     **Three facts, read off the code and confirmed against live Neon:**
+
+     - `upsert_movie` is `INSERT … ON CONFLICT (tmdb_id) DO NOTHING`. **A NULL `tmdb_id`
+       does not conflict**, so a film currently held as an unidentified title-only row gets
+       a *brand-new second row* the moment TMDB matches it.
+     - `upsert_unmatched_movie` looks up `WHERE title = %s AND tmdb_id IS NULL` — an
+       **exact** string match. A tidied title in the new sheet is a new row.
+     - `insert_collection_item` dedupes on `import_source_row`, **the spreadsheet line
+       number**, and the movie upsert above runs *before it and independently of it*
+       (`import_collection.py`'s run loop).
+
+     **So a re-import of a fresher sheet does this:** inserts a new identified `movies` row,
+     then skips the disc because that line number is taken — leaving a film row with **no
+     discs attached**, while the original row keeps the disc, the location and (since
+     today) the watch history. Changed content at an existing line number is silently
+     ignored; only lines past the current maximum land at all.
+
+     **Measured: 1,857 items occupy lines 2–1867 with exactly 9 gaps**, and those 9 are the
+     9 blank spreadsheet rows `STATUS.md` gotcha 0 already documents. **Every non-blank line
+     of the current sheet is claimed.** A re-import over live data would therefore skip the
+     entire collection and add only mess.
+
+     *#32's "re-running is safe" was true and remains true — safe means it will not
+     duplicate discs. It was never a claim that it would **update** them, and this entry
+     exists because the two read alike right up until somebody needs the second one.*
+
+     **The watch history raised the stakes this afternoon.** 397 unidentified films now
+     carry **586 watch rows**, and they are precisely the messy-titled ones exact-title
+     dedup will miss — `African Queen, The`, `39 Steps The (Robert Donat)`,
+     `Apartment, The`. A tidied title in the new sheet splits the disc from the history.
+
+     **And a wipe-and-reload is no longer available for free.** `watch_log.movie_id` is
+     `RESTRICT`, so those 397 rows cannot be hard-deleted while watches point at them. That
+     option was open this morning and closed at 18:16.
+
+     **Three paths, and the choice is the owner's** (`OWNER-ACTIONS.md` 1k):
+
+     1. **Refresh in place** — match the new sheet to existing items and update them. Needs
+        an upsert path the importer does not have, keyed on something more durable than a
+        line number.
+     2. **Clean reload** — delete the watch rows, reload the collection, re-run the diary
+        import. Viable *only because* that import is idempotent on `letterboxd_viewing_id`,
+        so the history reconstructs itself from the CSVs (#176, #189).
+     3. **Identify first, then reload** — give the 397 rows a real `tmdb_id` so the reload
+        deduplicates on that instead of on exact title, which is the fragile part.
+
+     **Identification was deferred at Craig's instruction**, which is reasonable and cheap
+     to reverse; the note here is that deferring it does **not** save duplicated work, because
+     the importer cannot back-fill identification onto an existing row. Nothing will identify
+     those 754 rows except the diary import's `--identify` or the `/movies/{id}/identify`
+     endpoint.
+
+193. **`.letterboxd-export/` is load-bearing now, and it exists on one machine.**
+
+     Path 2 above — and any recovery from a bad reload — depends on re-running the diary
+     import to rebuild 1,555 watch rows. That works because the import is idempotent on the
+     viewing id, and it works **only while the CSVs exist**.
+
+     They are gitignored and must stay so: they are personal watch history (#161). But that
+     means the only copies are on Craig's machine, and the retrieval that produced them was
+     a deliberate one-off — 47 paced page loads, outside the product, never to be repeated
+     by anything that ships (#160).
+
+     **So they want a backup somewhere off that machine and out of the repo.** Losing them
+     does not lose the 1,555 rows already in Neon, but it removes the ability to rebuild
+     them, which is exactly what the reload paths lean on.

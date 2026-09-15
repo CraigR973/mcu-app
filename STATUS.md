@@ -38,6 +38,42 @@ them have seen** is what S7's "has he seen it" reads, up from 0.
 file wrote **0** and reported all 593 already imported. **The 28 ambiguities were skipped
 rather than guessed**, and are in `.letterboxd-export/*-ambiguous.csv`.
 
+### ⛔ Go live is blocked on one decision: how the spreadsheet refresh happens
+
+**Re-running `import_collection.py` over the live database will not refresh anything**
+(`DECISIONS.md` #192, `OWNER-ACTIONS.md` **1k**). Found on 2026-09-15 when Craig proposed a
+fresher import of his dad's spreadsheet before go live.
+
+Items deduplicate on `import_source_row` — **the spreadsheet line number** — and the 1,857
+discs occupy lines 2–1867 with exactly **9 gaps**, which are the 9 blank rows gotcha 0
+already records. **Every non-blank line is claimed**, so every disc is skipped however much
+its row changed. The *film* upsert runs independently of that check and is
+`ON CONFLICT (tmdb_id) DO NOTHING` — and **a NULL `tmdb_id` does not conflict** — so any
+title TMDB can now match gets a brand-new `movies` row **with no discs on it**, while the
+old row keeps the disc, the shelf and the watch history.
+
+> **#32's "re-running is safe" is true and was never the claim being relied on.** Safe means
+> it will not duplicate discs. It is not a claim that it will *update* them, and the two read
+> alike right up until somebody needs the second one.
+
+**Two things changed today and narrow the options.** 397 unidentified films now carry **586
+watch rows**, and they are precisely the messy-titled ones exact-title dedup will miss —
+`African Queen, The`, `39 Steps The (Robert Donat)`. And **a wipe-and-reload is no longer
+free**: `watch_log.movie_id` is `RESTRICT`, so those rows cannot be hard-deleted while
+watches point at them. That option was open this morning.
+
+Three paths are laid out in `OWNER-ACTIONS.md` 1k — refresh in place, clean reload, or
+identify first then reload. **The choice is Craig's and nothing is started.**
+
+**Deferring identification does not save duplicated work**, which was the premise worth
+correcting: the collection importer **cannot** back-fill a `tmdb_id` onto an existing row.
+Nothing identifies those 754 rows except 1i step 2 or the identify button.
+
+**`.letterboxd-export/` is load-bearing now** (#193). Two of the three paths rebuild the
+watch rows by re-running the diary import, which works only while those CSVs exist — and
+they live on one machine, gitignored, from a retrieval nothing in the product repeats.
+Worth a backup off that machine and out of the repo.
+
 ### Two things still wait for Craig, and one new one
 
 1. **`OWNER-ACTIONS.md` 1i step 2 — identify the ~397 films. NOT RUN.** Deliberately: it
@@ -527,6 +563,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (the importer cannot refresh)** — No code change. Craig proposed a fresher
+  spreadsheet import before go live and asked whether identification should wait for it.
+  Checking turned up that **re-running the importer over live data refreshes nothing**:
+  items dedupe on the spreadsheet *line number* and all 1,857 lines are claimed, while the
+  film upsert runs independently and would add orphan `movies` rows with no discs (#192).
+  Identification was deferred as Craig asked — but the premise does not hold, because the
+  importer cannot back-fill a `tmdb_id` onto an existing row. **A wipe-and-reload also
+  stopped being free today**: 397 unidentified films now carry 586 watches and
+  `watch_log.movie_id` is `RESTRICT`. Three paths written up as `OWNER-ACTIONS.md` **1k**,
+  which now blocks go live. Also flagged: `.letterboxd-export/` is load-bearing for two of
+  those paths and exists on one machine (#193).
 
 - **2026-09-15 (the live watch-history import)** — Run at Craig's instruction after Group S
   closed. **1,555 watch rows written** — Craig 593, Mark 962 — matching the dry runs exactly,
