@@ -3311,3 +3311,74 @@ contemporaneous.
      because the backfill happened to succeed — and would have failed on any database where
      it did not, which is precisely when a constraint needs to be forgiving rather than
      smug.
+
+### 2026-09-15 — the live watch-history import
+
+189. **The import ran. `watch_log` went from 0 rows to 1,555, and four dead features came
+     alive at once.**
+
+     Run at Craig's explicit instruction on 2026-09-15, after S8's dry runs had been
+     executed against production and reported the same numbers. Craig 593, Mark 962 —
+     matching the dry runs exactly, which is the check that a dry run is a rehearsal rather
+     than a different code path that prints numbers.
+
+     | | Craig | Mark |
+     |---|---|---|
+     | Watches written | 593 | 962 |
+     | Distinct films seen | 477 | 869 |
+     | Rewatches | 112 | 85 |
+     | Range | 2013-12-24 → 2026-09-05 | 2022-11-02 → 2026-09-14 |
+
+     **1,101 distinct films, and 245 that both of them have seen** — the last number is what
+     S7's "has he seen it" reads, and it was 0 an hour earlier.
+
+     **Idempotency is now proved against production, not fixtures.** A second run of Craig's
+     file wrote **0** and reported all 593 already imported.
+
+     **The 28 ambiguities were skipped rather than guessed**, and written to
+     `.letterboxd-export/*-ambiguous.csv`. Most resolve themselves once the identification
+     step gives those rows real years.
+
+     **Step 2 — `--identify` — was deliberately not run.** #175 made it a separate flag
+     because it rewrites ~397 existing `movies` rows and merges two into one where the
+     collection holds both; "run the import" is not authorisation for that, and step 1 is
+     additive and reversible where step 2 is neither.
+
+190. **`DECISIONS.md` #159's "Mark rates nothing" is true of the RSS window and wrong about
+     his history.**
+
+     #159 measured the most recent **50** entries — Craig 50 of 50 rated, Mark 0 of 50 —
+     and generalised it to *"Mark rates nothing, so a null rating on his rows is correct
+     and must not be treated as missing data"*.
+
+     The full diaries say otherwise. **Mark has rated 178 of 1,149 entries (15%)**, spanning
+     2023–2026; **Craig 426 of 1,173 (36%)**. Mark has simply stopped recently, which is
+     exactly what a 50-entry window would show as "never".
+
+     **The conclusion survives and the reasoning does not.** A null rating is still correct
+     data and still must not be treated as missing — that is true because people log watches
+     without opinions, not because one of them never rates anything. The distinction matters
+     for anything that later reasons *from* the claim: a feature that treated Mark's rows as
+     unratable would be wrong about 147 of the rows now in the database.
+
+     *Recorded because a measurement taken through a 50-entry window is a measurement of the
+     window, and #159 did not say so.*
+
+191. **The `set -a` command in `OWNER-ACTIONS.md` 1i could not have worked, and the failure
+     it produces points at the wrong thing.**
+
+     `DATABASE_URL` in `apps/api/.env.local` is **unquoted and contains an `&`**
+     (`…?sslmode=require&channel_binding=require`). `set -a; . apps/api/.env.local` therefore
+     splits the line at the `&`: the shell sets a truncated `DATABASE_URL`, backgrounds the
+     remainder, and the script connects to `localhost:5432` and fails with
+     *"Connect call failed ('::1', 5432)"*.
+
+     **That error names the wrong culprit** — it reads as a Neon outage or a missing
+     environment, and the actual cause is shell word-splitting in the instructions
+     themselves. The corrected commands export the three values explicitly through `$(…)`,
+     which keeps the `&` inside one word; quoting the value in `.env.local` would also fix it
+     permanently.
+
+     *Worth recording as a class: an instruction that has never been executed is not an
+     instruction, it is a guess. This one was written in the same close-out that could not
+     run it.*

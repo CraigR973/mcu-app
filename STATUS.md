@@ -17,21 +17,50 @@ merged to `main` and deployed.** S1 → S2 → S3 → S4 → S8 → S5 → S6 �
 | S6 | Physical release dates | `b5b3796` | first physical rows ever written; **coverage 1%** |
 | S7 | Movie night rebuild | `804744f` | suggestions, films outside the Archive, "has he seen it" |
 
-### Three things wait for Craig, and none of them blocked the group
+### The watch history is in — 1,555 rows, imported 2026-09-15
 
-1. **`OWNER-ACTIONS.md` 1i — run the watch-history import.** The highest-leverage item on
-   the whole list. Both dry runs were executed against production and wrote nothing:
-   **1,555 watches** (Craig 593, Mark 962) and **~397 films** that the April import never
-   identified. `watch_log` holds 0 rows today, and four features are inert until it does
-   not — On this day, Worth a rewatch, Most watched, and the "has he seen it?" S7 just
-   built. `--identify` is a separate flag from `--write` on purpose (#175).
+**Run at Craig's instruction after the group finished.** `watch_log` went from **0 rows to
+1,555** across **1,101 distinct films**, matching the dry runs exactly (#189).
+
+| | Craig | Mark |
+|---|---|---|
+| Watches | **593** | **962** |
+| Distinct films | 477 | 869 |
+| Rewatches | 112 | 85 |
+| Range | 2013-12-24 → 2026-09-05 | 2022-11-02 → 2026-09-14 |
+
+**Four features that were inert are live.** Most watched opens on *Jaws* and *The Muppet
+Christmas Carol* at 7 apiece; Worth a rewatch has 161 candidates; On this day already has
+something — they both watched *Touch of Evil* on 15 September 2023; and **245 films both of
+them have seen** is what S7's "has he seen it" reads, up from 0.
+
+**Idempotency is proved against production now, not fixtures.** A second run of the same
+file wrote **0** and reported all 593 already imported. **The 28 ambiguities were skipped
+rather than guessed**, and are in `.letterboxd-export/*-ambiguous.csv`.
+
+### Two things still wait for Craig, and one new one
+
+1. **`OWNER-ACTIONS.md` 1i step 2 — identify the ~397 films. NOT RUN.** Deliberately: it
+   rewrites title, year, poster, runtime and cast on rows that already exist, and merges
+   two into one where the collection holds both, **deleting one** (#175). Step 1 running is
+   not authorisation for it. It also makes ~800 live TMDB calls. **It is what would settle
+   most of the 28 ambiguities** — nothing distinguishes two `Dunkirk`s while neither has a
+   year.
 2. **`OWNER-ACTIONS.md` 1j — press "Sync now" once.** One button press, and the first time
-   this app has ever talked to Letterboxd. It also settles the one thing the fixtures
-   could not: the feed's exact XML (#178).
+   this app has ever talked to Letterboxd. It also settles the one thing the fixtures could
+   not: the feed's exact XML (#178). **Now more useful than it was this morning** — with
+   1,555 rows already in, a sync should report almost everything as *already logged*, which
+   is the sync working.
 3. **`OWNER-ACTIONS.md` 1h — two checks on the phone.** Does tapping a field still zoom,
    does double-tapping, and does **pinch** still work (it should). And does a Letterboxd
-   link open the Letterboxd app. An agent can measure the causes and not the behaviour
-   (#163).
+   link open the Letterboxd app (#163).
+
+> **⚠️ Two credentials were printed into a session transcript on 2026-09-15** — the Supabase
+> service-role key and the TMDB API key — by a careless `head -3` of `apps/api/.env.local`
+> while checking its quoting. Nothing was committed and nothing left the machine beyond that
+> transcript, but **both are worth rotating**, and the TMDB one has form: `STATUS.md` already
+> records an outage caused by that token going missing. Rotating is a hosting change and
+> therefore Craig's.
 
 ### Four spec facts turned out to be wrong, and the code was right each time
 
@@ -498,6 +527,19 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (the live watch-history import)** — Run at Craig's instruction after Group S
+  closed. **1,555 watch rows written** — Craig 593, Mark 962 — matching the dry runs exactly,
+  which is the check that a dry run is a rehearsal rather than a different code path that
+  prints numbers. 1,101 distinct films; 245 both of them have seen. On this day, Worth a
+  rewatch, Most watched and S7's "has he seen it" all have data for the first time.
+  **Re-running wrote 0**, proving idempotency against production. 28 ambiguities skipped and
+  written out. **Step 2 (`--identify`) deliberately not run** — it rewrites ~397 existing
+  `movies` rows and deletes some (#189). **Two corrections:** #159's "Mark rates nothing" is
+  true of the 50-entry RSS window and wrong about his history — he has rated 178 of 1,149
+  (#190); and `OWNER-ACTIONS.md` 1i's `set -a` command could never have worked, because
+  `DATABASE_URL` is unquoted and contains an `&` (#191). **Two credentials were exposed in a
+  session transcript** by a careless `head` of `.env.local` — see the Now block.
 
 - **2026-09-15 (Batch S7 — movie night rebuild)** — Group S batch 8 of 8, shipped as
   `804744f`, **green first time**. Votes moved from films onto `movie_night_suggestions`,

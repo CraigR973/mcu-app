@@ -355,11 +355,38 @@ the *cause* and not the *behaviour*, and a green gate was not allowed to stand i
       that searches is not a failure of this fix** — it is a film waiting to be identified,
       which is what S8's import is for.
 
-### 1i. Run the watch-history import *(new — Batch S8, 2026-09-15)*
+### 1i. ~~Run the watch-history import~~ — **step 1 done 2026-09-15, step 2 waiting**
 
-**Nothing is blocked on this, and it is the highest-leverage thing on the list.** `watch_log`
-holds 0 rows, and four features are inert until it does not: On this day, Worth a rewatch,
-Most watched, and the "has he seen it?" that S7's movie-night rebuild needs.
+- [x] **Step 1 ran on 2026-09-15 at Craig's instruction. 1,555 watches are in.**
+      Craig 593, Mark 962 — exactly what the dry runs predicted. `watch_log` went from
+      **0 rows to 1,555**, covering **1,101 distinct films**, and the four features that
+      were inert are live: On this day, Worth a rewatch, Most watched, and the "has he
+      seen it?" S7 needs. Re-running wrote **0** and reported all 593 already imported,
+      which is the idempotency criterion proved against production rather than fixtures.
+- [ ] **Step 2 — identify the ~397 films — has not run.** See the bottom of this item.
+
+**What landed**, measured after the import:
+
+| | Craig | Mark |
+|---|---|---|
+| Watches written | **593** | **962** |
+| Distinct films seen | 477 | 869 |
+| Rewatches | 112 | 85 |
+| Rated | 247 | 147 |
+| Range | 2013-12-24 → 2026-09-05 | 2022-11-02 → 2026-09-14 |
+
+**245 films both of them have seen** — that is what S7's "has he seen it" reads. Most
+watched opens on *Jaws* and *The Muppet Christmas Carol* at 7 apiece. On this day already
+has something: they both watched *Touch of Evil* on 15 September 2023.
+
+**The 28 ambiguities were skipped, not guessed**, and are written out to
+`.letterboxd-export/craig-ambiguous.csv` and `mark-ambiguous.csv` (gitignored). They
+mostly resolve themselves once step 2 gives those rows real years — a re-run then picks
+them up.
+
+---
+
+*The original instructions, kept for the record:*
 
 **S8 shipped the importer and ran both dry runs against production.** They wrote nothing.
 Measured 2026-09-15 against live Neon:
@@ -372,22 +399,39 @@ Measured 2026-09-15 against live Neon:
 | Ambiguous — need you to choose | 13 | 15 | **28** |
 | Not in the collection | 567 | 172 | 739 |
 
-- [ ] **Step 1 — write the watches.** Additive and reversible: the rows soft-delete, and
-      nothing that already exists changes.
+**Step 1 — write the watches.** Additive and reversible: the rows soft-delete, and
+nothing that already exists changes. **Done 2026-09-15.**
+
+> **⚠️ The `set -a` form these instructions originally gave does not work, and the
+> correction matters.** `DATABASE_URL` in `apps/api/.env.local` is **unquoted and contains
+> an `&`** (`…?sslmode=require&channel_binding=require`). Sourcing the file splits the line
+> at the `&`, so `DATABASE_URL` silently becomes a truncated string, the connection falls
+> back to `localhost:5432`, and the script fails with *"Connect call failed ('::1', 5432)"*
+> — which reads like a Neon outage rather than a shell quoting bug.
+>
+> **Two ways round it.** Quote the value in `.env.local` (`DATABASE_URL="postgres…"`), after
+> which `set -a` works as written. Or export it explicitly, which is what the commands
+> below do — the `$(…)` keeps the `&` inside one shell word.
 
 ```bash
-cd /Users/craigrobinson/mcu_app && set -a && . apps/api/.env.local && set +a && PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --write
+cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" JWT_ACCESS_SECRET="$(grep '^JWT_ACCESS_SECRET=' apps/api/.env.local | cut -d= -f2-)" JWT_REFRESH_SECRET="$(grep '^JWT_REFRESH_SECRET=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --write
 ```
 
-```bash
-cd /Users/craigrobinson/mcu_app && set -a && . apps/api/.env.local && set +a && PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/mark-diary.csv --user Mark --write
-```
+- [ ] **Step 2 — identify the films. NOT RUN.** Add `--identify` to the commands above.
+      **This one is different in kind**: it rewrites title, year, poster, runtime and cast
+      on **~397 rows that already exist**, and where the collection holds both an
+      unidentified row and an identified one for the same film it merges them and **deletes
+      one**. That is why it is a separate flag (`DECISIONS.md` #175), and why step 1 running
+      is not authorisation for it.
 
-- [ ] **Step 2 — identify the films, once you are happy with step 1.** Add `--identify` to
-      the same two commands. **This one is different in kind**: it rewrites title, year,
-      poster, runtime and cast on **~397 rows that already exist**, and where the collection
-      holds both an unidentified row and an identified one for the same film it merges them
-      and deletes one. That is why it is a separate flag (`DECISIONS.md` #175).
+      **It also makes roughly 800 live TMDB calls** — a search and a fetch per film — so it
+      takes a few minutes and can fail partway. It is safe to re-run: films already
+      identified are skipped, because they are no longer unidentified.
+
+      **What it would fix beyond the metadata:** 754 films currently have no `tmdb_id`, and
+      those rows are why 28 diary entries came back ambiguous (nothing distinguishes two
+      `Dunkirk`s when neither has a year). Give them years and most of the 28 settle
+      themselves on the next import.
 
 **Re-running is safe.** Every row carries its Letterboxd viewing id, so a second run writes
 zero — the script will say `already imported 1,173`. That is also what stops S5's RSS sync
