@@ -371,10 +371,14 @@ async def test_a_viewer_may_add_a_disc_but_not_edit_or_destroy_one(
     disc creates a row attributed to whoever added it; editing or deleting one changes or
     removes something the other person put there.
     """
+    # Two films on purpose. Adding a *second* copy of a film that already has one is a
+    # duplicate and answers 409 before it ever reaches the role check — which would have
+    # made this test pass for the wrong reason the day the widening was reverted.
+    fresh = await _a_film(api_session, title="Marks To Add", tmdb_id=930201)
     movie = await _a_film(api_session, title="Not Yours To Edit", tmdb_id=930011)
     item = await _a_disc(api_session, movie)
 
-    added = await viewer_client.post("/api/v1/collection", json=_body(movieId=str(movie.id)))
+    added = await viewer_client.post("/api/v1/collection", json=_body(movieId=str(fresh.id)))
     assert added.status_code == 201, added.text
 
     assert (
@@ -384,16 +388,28 @@ async def test_a_viewer_may_add_a_disc_but_not_edit_or_destroy_one(
 
 
 async def test_the_admin_only_tools_still_refuse_a_viewer(viewer_client: AsyncClient) -> None:
-    """Batch S4's other criterion: **403**, for the four that do not move.
+    """Batch S4's other criterion: **403**, for the tools that do not move.
 
-    #155 widens Mark's reach; it does not remove the distinction. Trash, the audit log,
-    retailers and the admin surface are Craig's tools in the sense the Admin page's own
-    label means, and a batch about *reach* is exactly when a boundary quietly stops being
-    enforced.
+    #155 widens Mark's reach; it does not remove the distinction. Trash, the audit log and
+    changing retailers are Craig's in the sense the Admin page's own label means, and a
+    batch about *reach* is exactly when a boundary quietly stops being enforced.
+
+    **Retailers is where the criterion is looser than the code, and the code is right.**
+    The ledger says "Retailers still refuses a viewer", which is true of the *page* —
+    `/retailers` is `AdminShell` — but `GET /api/v1/retailers` has been `CurrentUser`
+    since Batch 18, deliberately and with its reason written down: *"reads are open to
+    both people — Mark can reasonably want to see what is being looked for"*. Every
+    **write** is admin-only, which is the boundary this asserts. S4 changed none of it.
     """
     assert (await viewer_client.get("/api/v1/trash")).status_code == 403
     assert (await viewer_client.get("/api/v1/admin/audit")).status_code == 403
-    assert (await viewer_client.get("/api/v1/retailers")).status_code == 403
+    assert (
+        await viewer_client.post(
+            "/api/v1/retailers",
+            json={"name": "Marks Shop", "baseUrl": "https://example.invalid"},
+        )
+    ).status_code == 403
+    assert (await viewer_client.post("/api/v1/retailers/seed")).status_code == 403
 
 
 async def test_a_viewer_can_reach_every_step_of_the_add_flow(
