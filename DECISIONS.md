@@ -2959,3 +2959,67 @@ contemporaneous.
      and the `.env.local` it needed is gitignored and was deleted. Worth recording as a
      method: a future frontend batch with the same problem should reach for this rather than
      for a credential.
+
+### 2026-09-15 — Group S, batch S4
+
+170. **Following the button found an endpoint the criterion did not name, and it was the
+     one that mattered.**
+
+     `#155` names `/collection/add` and the two eBay routes. S4 moved **eight** endpoints,
+     and the eighth — `PUT /collection/{item_id}/listing` — is the one without which the
+     batch would have shipped broken in exactly the way #155 warns about.
+
+     The two eBay routes only *price* and *link*. Pressing "List for sale" writes the
+     listing status, and that lands on the collection router. With it left `AdminUser`,
+     Mark would have reached the add page, marked the disc an upgrade, seen the prompt,
+     watched the price arrive — and then got a 403 from the button. **Every visible step
+     would have worked.** The failure was reachable only by walking the flow.
+
+     *The general form: a criterion that names endpoints is naming the ones its author
+     could see from the outside. The check is to follow each control the batch makes
+     reachable and ask what it calls.*
+
+     Barcode lookup and confirm moved for the same reason, one step earlier: scanning is
+     the fastest route through the add page, and an add page whose scan button refuses the
+     person who opened it is the same defect in a different place.
+
+171. **Adding moved to a viewer; editing and destroying did not, and the line is where the
+     attribution is.**
+
+     Adding a disc *creates* a row, attributed to whoever added it — the audit log tells
+     Craig's and Mark's apart, which is the property that makes widening safe rather than
+     merely convenient. Editing or deleting *changes or removes* something the other person
+     put there, and no attribution makes that reversible.
+
+     So `POST /collection` is a viewer's; `PUT /collection/{id}` and
+     `DELETE /collection/{id}` are not. `PUT /collection/{id}/listing` is, which looks
+     inconsistent until you read what it does: it is one endpoint covering "I have listed
+     this" and "this is gone", and the first is half the flow snag 7 exists for. The old
+     test called it "sell" and asserted 403 on that word alone.
+
+172. **The ledger said "Retailers still refuses a viewer". The code disagreed, and the code
+     was right.**
+
+     `GET /api/v1/retailers` answers **200** for a viewer and has since Batch 18, with the
+     reason written into the router's own docstring: *"reads are open to both people — Mark
+     can reasonably want to see what is being looked for"*. Every retailer **write** is
+     admin-only.
+
+     The criterion is true of the *page* — `/retailers` is `AdminShell` — and the batch
+     changed neither. Recorded rather than quietly adjusted, because a criterion asserting
+     a 403 that the code has deliberately answered 200 to for four batches is the kind of
+     thing that gets "fixed" in the wrong direction by whoever reads it next.
+
+     *The test now asserts the boundary that actually exists: a viewer cannot create a
+     retailer and cannot re-seed the list.*
+
+173. **A fixture that makes a test pass for the wrong reason is worse than one that fails.**
+
+     `test_a_viewer_may_add_a_disc` created a disc for the film it then tried to add, so
+     `POST /collection` answered **409 duplicate** — before the role check ran at all. CI
+     caught it because 409 ≠ 201. Had the assertion been the looser `!= 403`, it would have
+     passed, and gone on passing on the day somebody reverted the widening.
+
+     The same shape as the `scraper_type="generic"` fixture in S1 and for the same
+     structural reason: **49 Postgres-backed tests in that file skip on this machine**, so
+     the first execution of any new test there happens in CI (`STATUS.md` gotcha 3).

@@ -1330,23 +1330,51 @@ Both causes were measured on the deployed app at 375×812, not inferred (`triage
 > palette assertion was **strengthened**: it now also proves 'Stats' and 'Insights' are gone
 > from the index rather than merely renamed.
 
-### Batch S4 — Quick add within reach 🟡
+### ~~Batch S4 — Quick add within reach~~ 🟡 **shipped 2026-09-15 (`45ec4fa`)**
 **Covers snags 7 and 8.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #155.
 
 The eBay sell-offer already exists (Batch 29). **This batch is reach, not capability.**
 
-**Acceptance:**
-- A quick-add entry point on Home and in the bottom bar, **visible below 640px**.
-- `/collection/add` is reachable by a `viewer` — the route guard **and** the API.
-- `POST /api/v1/ebay/price-estimate` and `/ebay/listing-url` accept a `viewer`; tests assert
-  **200, not 403**.
-- Trash, Audit log, Retailers and Admin still refuse a viewer; tests assert **403**.
-- The upgrade → "List for sale" flow is reachable from the add flow, not only from the film
-  page afterwards.
-- Gate green, plus a browser pass at 375×812.
+**Acceptance — six of six met.**
+- ~~A quick-add entry point on Home and in the bottom bar, **visible below 640px**.~~ ✅ Both
+  seen at 375×812: a button on Home (where `/` lands since S3) and an accented **Add** slot in
+  the bottom bar. The header's own button keeps `hidden sm:inline-flex` on purpose — two add
+  controls in the scarcest space the app has would be one too many.
+- ~~`/collection/add` is reachable by a `viewer` — the route guard **and** the API.~~ ✅ The
+  route is `AppShell` now, and the page was **opened as a viewer in a browser**: heading, scan
+  button and search field all render, no access denial. **Five endpoints moved for the page to
+  work, not one** — `/tmdb/search`, `/collection/duplicate-check`, `POST /collection`,
+  `/barcode/lookup`, `/barcode/confirm`.
+- ~~`POST /api/v1/ebay/price-estimate` and `/ebay/listing-url` accept a `viewer`; tests assert
+  **200, not 403**.~~ ✅ Two tests, both asserting 200 with a body.
+- ~~Trash, Audit log, Retailers and Admin still refuse a viewer; tests assert **403**.~~ ✅ —
+  **with one correction to the criterion, in the code's favour.** `GET /api/v1/retailers` is
+  **200** for a viewer and has been since Batch 18, deliberately: *"reads are open to both
+  people — Mark can reasonably want to see what is being looked for"*. "Retailers refuses a
+  viewer" is true of the **page** (`/retailers` is `AdminShell`), not of the read endpoint.
+  Every retailer *write* is admin-only, and that is what the test asserts.
+- ~~The upgrade → "List for sale" flow is reachable from the add flow, not only from the film
+  page afterwards.~~ ✅ — **and this criterion found the defect the others would have missed.**
+  The flow already ran add → "this is an upgrade" → film page with a one-tap button. But that
+  button calls `PUT /collection/{id}/listing`, which the criterion does not name and which was
+  still `AdminUser`: Mark would have seen the prompt, fetched the price, pressed the button and
+  got a 403. **Found by following the button rather than the criterion.**
+- ~~Gate green, plus a browser pass at 375×812.~~ ✅ Browser pass driven **as a viewer**, by the
+  method `DECISIONS.md` #169 records.
+
+**Two test expectations flipped**, both required by the criteria: a viewer posting to
+`/collection` is a **201**, and a viewer listing a superseded disc for sale is a **200**. The
+old test name *"a viewer cannot sell a disc"* was doing too much work — that endpoint covers
+both "I have listed this" and "this is gone", and the first is half the flow snag 7 is about.
+
+**One CI failure, in this batch's own new tests.** The add test built a disc for the film it
+then tried to add, so `POST /collection` answered **409 duplicate** before the role check ever
+ran — it would have passed for the wrong reason the day the widening was reverted. Fixed in
+`45ec4fa`. Both failures were invisible locally, where the 49 Postgres-backed tests in that
+file skip.
 
 **The API moves with the UI, never after it.** A button that appears while its endpoint still
-403s is worse than no change.
+403s is worse than no change. Eight endpoints moved in the same commit as the route guard.
 
 ### Batch S8 — Watch history, the backfill 🔴
 **Covers snag 10b.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High. `DECISIONS.md` #160, #161.
@@ -1504,7 +1532,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

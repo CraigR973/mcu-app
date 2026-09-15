@@ -2,9 +2,9 @@
 
 ## Now
 
-**Group S is running. S1, S2 and S3 of 8 have shipped; S4 is next.** The eight batches from
-the 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
-S5 → S6 → S7**. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
+**Group S is running. S1–S4 of 8 have shipped; S8 is next.** The eight batches from the
+2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
+S5 → S6 → S7**. The four UI batches are done; the four remaining are the data ones. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
 were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
 and there is no `**Phase X.Y:` heading behind them to go looking for.
 
@@ -111,6 +111,46 @@ palette no longer indexes 'Stats'; `g s` — "go to stats" — goes to `/setting
 is a section of `/dashboard` that `g h` already reaches. The palette assertion was
 **strengthened** on the way: it now also proves 'Stats' and 'Insights' are genuinely gone
 rather than renamed.
+
+**S4 shipped 2026-09-15 as `45ec4fa` — Mark can add a disc, and so can a phone.**
+Production serves that SHA with `db: ok`.
+
+**The batch was reach, not capability, and the reach cost eight endpoints.** Batch 29 had
+already built what Craig asked for — add a disc, mark it an upgrade, one tap to list the old
+one at a pre-filled eBay price — and all of it worked. `/collection/add` was `AdminShell`, the
+header's add button is `hidden sm:inline-flex`, and every endpoint behind the flow was
+`AdminUser`. **Snag 8 read literally was already satisfied**: `profiles` holds two rows and
+there is no public sign-up, so "only Mark and Craig can see this" described every page already.
+
+> **The criterion named three endpoints; following the button found five more, and the last
+> one was the batch.** "List for sale" does not call an eBay route — it writes through
+> `PUT /collection/{id}/listing`, which nothing in the criterion mentions. Left admin-only,
+> **every visible step would have worked**: Mark reaches the page, marks the upgrade, sees the
+> prompt, watches the price arrive — and the button 403s. `DECISIONS.md` #170. The general
+> form is worth keeping: *a criterion that names endpoints names the ones its author could see
+> from outside; the check is to follow each control and ask what it calls.*
+
+**Adding moved; editing and destroying did not.** Adding creates a row attributed to whoever
+added it, which is what makes widening safe rather than merely convenient; editing or deleting
+changes something the other person put there (#171). Trash and the audit log still refuse a
+viewer.
+
+> **One criterion was wrong and the code was right.** The ledger said "Retailers still refuses
+> a viewer". `GET /api/v1/retailers` has answered **200** for a viewer since Batch 18,
+> deliberately — *"reads are open to both people"*. The criterion is true of the *page*
+> (`AdminShell`), not the endpoint, and every retailer **write** is still admin-only. Recorded
+> in #172 rather than quietly adjusted, because a criterion asserting a 403 the code has
+> deliberately answered 200 to for four batches is what gets "fixed" in the wrong direction.
+
+**On the phone:** an accented **Add** slot in the bottom bar and a button on Home, both visible
+below 640px — snag 7 was that below that width there was no add control at all. The bar is six
+slots; `px-0.5` and a 9px label are what stop "Movie night" truncating, measured at 375px.
+
+**One CI failure, in S4's own new test, and it would have passed for the wrong reason.** The
+add test built a disc for the film it then added, so `POST /collection` answered **409
+duplicate** before the role check ran. A looser `!= 403` assertion would have gone on passing
+after the widening was reverted (#173). Same structural cause as S1's: **the Postgres-backed
+tests skip locally**, so a new one there first executes in CI.
 
 **Three owner actions sit inside later batches and are not group blockers.** S8 ships the
 importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
@@ -546,6 +586,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S4 — quick add within reach)** — Group S batch 4 of 8, shipped as
+  `45ec4fa`. Mark can add a disc and a phone has somewhere to do it from: an accented Add slot
+  in the bottom bar and a button on Home, both visible below 640px. **Eight endpoints moved
+  from `AdminUser` to `CurrentUser`**, not the three the criterion named — the eighth,
+  `PUT /collection/{id}/listing`, is what "List for sale" actually calls, and without it every
+  visible step of the upgrade flow would have worked and the button would have 403'd (#170).
+  Editing and destroying stayed admin-only; the line is where the attribution is (#171). **One
+  criterion was wrong in the code's favour** — `GET /retailers` has been open to a viewer since
+  Batch 18 and the criterion meant the page (#172). **One CI failure in this batch's own test**,
+  which was passing a 409 duplicate off as a role check (#173). Browser pass driven as a
+  *viewer* at 375×812 by the harness method #169 records.
 
 - **2026-09-15 (Batch S3 — navigation shape)** — Group S batch 3 of 8, shipped as `a3409f1`,
   green first time. **Fourteen sidebar destinations became eight**, by merging what was thin
