@@ -11,23 +11,26 @@ function labels(sections: NavSections | undefined): string[] {
 }
 
 describe('the sidebar a signed-in non-admin sees', () => {
-  it('is exactly eight destinations while the four conditional tables are empty', () => {
-    // Batch S3's headline number, and the one `DECISIONS.md` #154 commits to: fourteen
-    // become eight. Asserted as the whole list rather than a count, so a swap that keeps
-    // the total at eight still fails.
+  it('is exactly seven destinations while the four conditional tables are empty', () => {
+    // **Batch S3 made this eight; Batch S6 made it seven**, by merging Calendar and
+    // Coming soon into one Releases screen — its own criterion, and the same two-sources-
+    // one-question argument `DECISIONS.md` #154 made about Home, Stats and Insights.
+    // Fourteen → eight → seven.
+    //
+    // Asserted as the whole list rather than a count, so a swap that keeps the total
+    // still fails.
     expect(labels(EMPTY)).toEqual([
       'Movies',
       'Wanted',
       'Movie night',
-      'Coming soon',
-      'Calendar',
+      'Releases',
       'Home',
       'Assistant',
       'Settings',
     ])
   })
 
-  it('grows to twelve once all four have rows — the un-hide half', () => {
+  it('grows to eleven once all four have rows — the un-hide half', () => {
     // **A hide that never un-hides is the failure mode.** It looks right on this
     // database, where all four tables are empty, and stays wrong forever.
     expect(labels(FULL)).toEqual([
@@ -36,8 +39,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
       'Box sets',
       'Collections',
       'Movie night',
-      'Coming soon',
-      'Calendar',
+      'Releases',
       'Deals',
       'Home',
       'Loans',
@@ -59,7 +61,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
     // The shell renders before `nav/sections` resolves, and offline it may never
     // resolve. Hiding four destinations because a request is slow would be a worse bug
     // than the emptiness this feature exists to fix.
-    expect(labels(undefined)).toHaveLength(12)
+    expect(labels(undefined)).toHaveLength(11)
   })
 
   it('drops a group heading left with no links under it', () => {

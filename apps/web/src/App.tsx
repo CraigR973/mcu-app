@@ -27,8 +27,7 @@ const CollectionResultsPage = lazy(() => import('./pages/CollectionResultsPage')
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const LoansPage = lazy(() => import('./pages/LoansPage'))
 const AuditPage = lazy(() => import('./pages/AuditPage'))
-const DiscoverPage = lazy(() => import('./pages/DiscoverPage'))
-const CalendarPage = lazy(() => import('./pages/CalendarPage'))
+const ReleasesPage = lazy(() => import('./pages/ReleasesPage'))
 const WantedPage = lazy(() => import('./pages/WantedPage'))
 const DealsPage = lazy(() => import('./pages/DealsPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
@@ -186,14 +185,15 @@ export default function App() {
               path="/deals"
               element={<AppShell><DealsPage /></AppShell>}
             />
+            {/* Batch S6, snag 2. Calendar and Coming soon are one screen: both answered
+                "what is coming out", from two sources. `/discover` redirects rather than
+                404s, for the same reason `/stats` does — it is in history, in the command
+                palette's index, and in whatever links exist outside the app. */}
             <Route
               path="/calendar"
-              element={<AppShell><CalendarPage /></AppShell>}
+              element={<AppShell><ReleasesPage /></AppShell>}
             />
-            <Route
-              path="/discover"
-              element={<AppShell><DiscoverPage /></AppShell>}
-            />
+            <Route path="/discover" element={<Navigate to="/calendar" replace />} />
             {/* Batch S3. Home, Stats and Insights are one reading page. The two old
                 paths **redirect rather than 404**: both are in browser history, in the
                 command palette's index, and in whatever links exist outside the app —

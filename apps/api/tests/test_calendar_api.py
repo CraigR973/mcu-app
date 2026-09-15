@@ -26,7 +26,13 @@ from src.main import app
 from src.models.profile import Profile, UserRole
 from src.models.release_calendar import CalendarFeedToken, ReleaseCalendarEntry
 from src.services.calendar import hash_feed_token, ingest_upcoming, new_feed_token
-from src.tmdb.models import SearchResult, SearchResults
+from src.tmdb.models import (
+    CountryReleaseDates,
+    ReleaseDate,
+    ReleaseDates,
+    SearchResult,
+    SearchResults,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -387,10 +393,24 @@ async def test_a_viewer_can_read_the_calendar_but_not_ingest(
 
 
 class _FakeUpcoming:
-    """TMDB's upcoming list, with the shuffling that broke the first live run."""
+    """TMDB's upcoming list, with the shuffling that broke the first live run.
 
-    def __init__(self, pages: dict[int, list[SearchResult]]) -> None:
+    **`get_release_dates` answers "no GB physical date" by default**, which is Batch S6's
+    measured common case rather than a convenience: over three pages of `/movie/upcoming`
+    GB on 2026-09-15, **1 of 58 films had one at all**. A fake whose default was "yes"
+    would make every ingestion test exercise the rare path.
+    """
+
+    def __init__(
+        self,
+        pages: dict[int, list[SearchResult]],
+        physical: dict[int, list[ReleaseDate]] | None = None,
+        *,
+        release_dates_raise: bool = False,
+    ) -> None:
         self._pages = pages
+        self._physical = physical or {}
+        self._raise = release_dates_raise
 
     async def get_upcoming(
         self, region: str = "GB", language: str = "en-US", page: int = 1
@@ -399,6 +419,15 @@ class _FakeUpcoming:
         results = self._pages.get(page, [])
         return SearchResults(
             page=page, total_pages=len(self._pages), total_results=len(results), results=results
+        )
+
+    async def get_release_dates(self, movie_id: int) -> ReleaseDates:
+        if self._raise:
+            raise RuntimeError("TMDB said no")
+        entries = self._physical.get(movie_id, [])
+        return ReleaseDates(
+            id=movie_id,
+            results=[CountryReleaseDates(iso_3166_1="GB", release_dates=entries)],
         )
 
 
@@ -567,3 +596,218 @@ async def test_a_year_outside_the_supported_range_is_refused_not_a_500(
     """
     assert (await client.get("/api/v1/calendar/month?month=0000-01")).status_code == 422
     assert (await client.get("/api/v1/calendar/month?month=9999-01")).status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Batch S6 — the physical dates nothing has ever written
+# ---------------------------------------------------------------------------
+
+
+async def test_a_gb_physical_date_is_ingested_beside_the_cinema_date(
+    api_session: AsyncSession,
+) -> None:
+    """Snag 2. `RELEASE_TYPES` has carried these two members since Batch 17 and ingestion
+    hardcoded `"theatrical"`, so every one of the 30 live rows was a cinema date.
+
+    **Beside, not instead.** One film yields two rows — when it reaches cinemas and when
+    it reaches a disc — because those are different questions and Craig asked about the
+    second one.
+    """
+    soon = utc_today() + timedelta(days=20)
+    disc_day = utc_today() + timedelta(days=40)
+    film = _upcoming(9_600_001, "A Film With A Disc Date", soon)
+    fake = _FakeUpcoming(
+        {1: [film]},
+        {
+            9_600_001: [
+                ReleaseDate(
+                    release_date=f"{disc_day.isoformat()}T00:00:00.000Z",
+                    type=5,
+                    note="4k Ultra HD Blu-ray",
+                )
+            ]
+        },
+    )
+
+    result = await ingest_upcoming(api_session, fake, region="GB", genre_ids={53}, pages=1)
+    assert result.errors == []
+    assert result.physical_checked == 1
+    assert result.physical_found == 1
+
+    rows = list(
+        (
+            await api_session.execute(
+                select(ReleaseCalendarEntry).where(ReleaseCalendarEntry.tmdb_id == 9_600_001)
+            )
+        ).scalars()
+    )
+    assert {row.release_type for row in rows} == {"theatrical", "4k_uhd_release"}
+    disc = next(row for row in rows if row.release_type == "4k_uhd_release")
+    assert disc.release_date == disc_day
+
+
+async def test_a_film_with_no_physical_date_keeps_its_cinema_date(
+    api_session: AsyncSession,
+) -> None:
+    """**The criterion, and the common case by a wide margin.**
+
+    Measured 2026-09-15 over three pages of `/movie/upcoming` GB: 1 of 58 films had a GB
+    physical date at all. If that meant a film vanished from the calendar, the merge would
+    have emptied a screen that worked.
+    """
+    soon = utc_today() + timedelta(days=15)
+    fake = _FakeUpcoming({1: [_upcoming(9_600_002, "A Film With No Disc Date", soon)]})
+
+    result = await ingest_upcoming(api_session, fake, region="GB", genre_ids={53}, pages=1)
+    assert result.physical_checked == 1
+    assert result.physical_found == 0
+
+    rows = list(
+        (
+            await api_session.execute(
+                select(ReleaseCalendarEntry).where(ReleaseCalendarEntry.tmdb_id == 9_600_002)
+            )
+        ).scalars()
+    )
+    assert [row.release_type for row in rows] == ["theatrical"]
+
+
+async def test_a_failed_release_dates_lookup_does_not_cost_the_cinema_date(
+    api_session: AsyncSession,
+) -> None:
+    """A second TMDB call per film is a second thing that can fail, and it must never take
+    a row with it that already worked."""
+    soon = utc_today() + timedelta(days=15)
+    fake = _FakeUpcoming(
+        {1: [_upcoming(9_600_003, "A Film TMDB Would Not Discuss", soon)]},
+        release_dates_raise=True,
+    )
+
+    result = await ingest_upcoming(api_session, fake, region="GB", genre_ids={53}, pages=1)
+    assert len(result.errors) == 1
+    assert "release_dates" in result.errors[0]
+
+    rows = list(
+        (
+            await api_session.execute(
+                select(ReleaseCalendarEntry).where(ReleaseCalendarEntry.tmdb_id == 9_600_003)
+            )
+        ).scalars()
+    )
+    assert [row.release_type for row in rows] == ["theatrical"]
+
+
+async def test_re_ingesting_the_same_physical_date_writes_nothing_new(
+    api_session: AsyncSession,
+) -> None:
+    """Idempotent on `(tmdb_id, release_type, region)` — the criterion, and the constraint
+    that already exists. Adding a second row type per film is exactly when that could have
+    been broken."""
+    soon = utc_today() + timedelta(days=20)
+    disc_day = utc_today() + timedelta(days=45)
+    film = _upcoming(9_600_004, "A Film Ingested Twice", soon)
+    physical = {
+        9_600_004: [
+            ReleaseDate(
+                release_date=f"{disc_day.isoformat()}T00:00:00.000Z", type=5, note="Blu-ray"
+            )
+        ]
+    }
+
+    first = await ingest_upcoming(
+        api_session, _FakeUpcoming({1: [film]}, physical), region="GB", genre_ids={53}, pages=1
+    )
+    second = await ingest_upcoming(
+        api_session, _FakeUpcoming({1: [film]}, physical), region="GB", genre_ids={53}, pages=1
+    )
+
+    assert first.created >= 2
+    assert second.created == 0
+    assert second.unchanged >= 2
+
+    rows = list(
+        (
+            await api_session.execute(
+                select(ReleaseCalendarEntry).where(ReleaseCalendarEntry.tmdb_id == 9_600_004)
+            )
+        ).scalars()
+    )
+    assert len(rows) == 2
+
+
+async def test_two_physical_entries_of_the_same_format_become_one_row(
+    api_session: AsyncSession,
+) -> None:
+    """A re-release and a box set are both type 5 with the same format.
+
+    The unique constraint is `(tmdb_id, release_type, region)`, so two would fire it
+    mid-insert — the same shape as the two-pages bug above, found before it could happen
+    rather than after.
+    """
+    soon = utc_today() + timedelta(days=20)
+    first_day = utc_today() + timedelta(days=30)
+    second_day = utc_today() + timedelta(days=60)
+    fake = _FakeUpcoming(
+        {1: [_upcoming(9_600_005, "A Film Released Twice On Disc", soon)]},
+        {
+            9_600_005: [
+                # Listed later-first on purpose: the earliest must win on merit, not on
+                # payload order.
+                ReleaseDate(
+                    release_date=f"{second_day.isoformat()}T00:00:00.000Z",
+                    type=5,
+                    note="Blu-ray Box Set",
+                ),
+                ReleaseDate(
+                    release_date=f"{first_day.isoformat()}T00:00:00.000Z", type=5, note="Blu-ray"
+                ),
+            ]
+        },
+    )
+
+    result = await ingest_upcoming(api_session, fake, region="GB", genre_ids={53}, pages=1)
+    assert result.errors == []
+
+    rows = list(
+        (
+            await api_session.execute(
+                select(ReleaseCalendarEntry).where(
+                    ReleaseCalendarEntry.tmdb_id == 9_600_005,
+                    ReleaseCalendarEntry.release_type == "blu_ray_release",
+                )
+            )
+        ).scalars()
+    )
+    assert len(rows) == 1
+    # The earlier date wins, which is the one somebody waiting for the disc cares about.
+    assert rows[0].release_date == first_day
+
+
+async def test_a_cinema_date_is_never_reclassified_as_a_disc_date(
+    api_session: AsyncSession,
+) -> None:
+    """Type 3 is theatrical and type 4 is digital; only type 5 is physical. Reading the
+    wrong one would be this batch's own bug inverted — and silent."""
+    soon = utc_today() + timedelta(days=20)
+    later = utc_today() + timedelta(days=50)
+    fake = _FakeUpcoming(
+        {1: [_upcoming(9_600_006, "A Film With Only Cinema Dates", soon)]},
+        {
+            9_600_006: [
+                ReleaseDate(release_date=f"{later.isoformat()}T00:00:00.000Z", type=3),
+                ReleaseDate(release_date=f"{later.isoformat()}T00:00:00.000Z", type=4),
+            ]
+        },
+    )
+
+    result = await ingest_upcoming(api_session, fake, region="GB", genre_ids={53}, pages=1)
+    assert result.physical_found == 0
+
+    rows = list(
+        (
+            await api_session.execute(
+                select(ReleaseCalendarEntry).where(ReleaseCalendarEntry.tmdb_id == 9_600_006)
+            )
+        ).scalars()
+    )
+    assert [row.release_type for row in rows] == ["theatrical"]

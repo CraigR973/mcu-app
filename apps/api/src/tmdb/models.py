@@ -81,6 +81,55 @@ class WatchProviders(BaseModel):
     results: dict[str, WatchProviderCountry] = Field(default_factory=dict)
 
 
+#: TMDB's release-date vocabulary. **5 is the one this app wanted for two batches and
+#: never asked for**: `RELEASE_TYPES` has carried `4k_uhd_release` and `blu_ray_release`
+#: since Batch 17 and nothing ever wrote either, because ingestion only ever read
+#: `/movie/upcoming`, which is cinema dates.
+TMDB_RELEASE_PREMIERE = 1
+TMDB_RELEASE_THEATRICAL_LIMITED = 2
+TMDB_RELEASE_THEATRICAL = 3
+TMDB_RELEASE_DIGITAL = 4
+TMDB_RELEASE_PHYSICAL = 5
+TMDB_RELEASE_TV = 6
+
+
+class ReleaseDate(BaseModel):
+    """One dated release of a film in one country.
+
+    ``note`` is free text a contributor typed — *"4K UHD"*, *"Criterion"*, or nothing at
+    all — and it is the **only** thing in this payload that can tell a 4K disc from a
+    Blu-ray. TMDB's type 5 means "Physical" and no more.
+    """
+
+    release_date: str | None = None
+    type: int = 0
+    certification: str = ""
+    note: str = ""
+
+
+class CountryReleaseDates(BaseModel):
+    iso_3166_1: str = ""
+    release_dates: list[ReleaseDate] = Field(default_factory=list)
+
+
+class ReleaseDates(BaseModel):
+    """``/movie/{id}/release_dates`` — every country, every type.
+
+    **Community-maintained and patchy**, which is the thing to carry forward rather than
+    hide: plenty of films have a GB cinema date and no GB physical one, and a screen that
+    implied otherwise would be the failure mode here.
+    """
+
+    id: int = 0
+    results: list[CountryReleaseDates] = Field(default_factory=list)
+
+    def for_country(self, iso_3166_1: str) -> list[ReleaseDate]:
+        for country in self.results:
+            if country.iso_3166_1.upper() == iso_3166_1.upper():
+                return country.release_dates
+        return []
+
+
 class SearchResult(BaseModel):
     """A single result row from ``/search/movie``."""
 

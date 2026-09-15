@@ -8,7 +8,13 @@ import httpx
 import structlog
 
 from ..config import settings
-from .models import Movie, PersonMovieCredits, SearchResults, WatchProviders
+from .models import (
+    Movie,
+    PersonMovieCredits,
+    ReleaseDates,
+    SearchResults,
+    WatchProviders,
+)
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
@@ -150,6 +156,20 @@ class TMDBClient:
             "/movie/upcoming", {"language": language, "page": page, "region": region}
         )
         return SearchResults.model_validate(data)
+
+    async def get_release_dates(self, movie_id: int) -> ReleaseDates:
+        """Every dated release of a film, per country and per type — Batch S6, snag 2.
+
+        No ``language`` parameter: this response is keyed by **country**, and a date does
+        not translate.
+
+        **TMDB type 5 is "Physical" and says nothing about format.** A 4K disc and a
+        Blu-ray released the same day are one entry, so anything that wants to tell them
+        apart has only the free-text ``note`` to go on — see
+        :func:`src.services.calendar.classify_physical`.
+        """
+        data = await self._get(f"/movie/{movie_id}/release_dates")
+        return ReleaseDates.model_validate(data)
 
     async def get_watch_providers(self, movie_id: int) -> WatchProviders:
         """Where a film can be streamed, rented or bought, per country.

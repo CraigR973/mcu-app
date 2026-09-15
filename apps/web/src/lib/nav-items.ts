@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bot, Boxes, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Tag, Trash2 } from 'lucide-react'
+import { Bot, Boxes, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2 } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -48,8 +48,9 @@ export const navItems: NavItem[] = [
   { label: 'Movies', path: '/movies', icon: Film },
   { label: 'Box sets', path: '/box-sets', icon: Boxes, showWhen: 'boxSets' },
   { label: 'Collections', path: '/collections', icon: Sparkles, showWhen: 'collections' },
-  { label: 'Coming soon', path: '/discover', icon: Sparkle },
-  { label: 'Calendar', path: '/calendar', icon: CalendarDays },
+  // Batch S6: one destination, because the two pages answered the same question from two
+  // sources. `/discover` redirects here.
+  { label: 'Releases', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
   { label: 'Deals', path: '/deals', icon: Tag, showWhen: 'deals' },
   // Batch S3: Home now *is* Stats and Insights. `/stats` and `/insights` redirect here
@@ -98,7 +99,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: 'Plan a screening',
-    items: [byPath('/movie-night'), byPath('/discover'), byPath('/calendar')],
+    items: [byPath('/movie-night'), byPath('/calendar')],
   },
   { label: 'Explore', items: [byPath('/deals'), byPath('/dashboard'), byPath('/loans')] },
   { label: 'Personal', items: [byPath('/assistant'), byPath('/settings')] },
