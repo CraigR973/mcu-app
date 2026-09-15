@@ -2801,3 +2801,73 @@ contemporaneous.
      that delivers the history, with S5 keeping it current afterwards. The 50-entry RSS cap
      from #159 stops being a backfill problem and remains only an interval requirement —
      sync at least monthly or Mark's newest entries fall off the feed before they are read.
+
+### 2026-09-15 — Group S, batches S1 and S2
+
+162. **The Letterboxd link is built from the IMDb id, and the slug branch is deleted rather
+     than kept in front of it.**
+
+     §17 row 4's April resolution was *"slug-based URL with search fallback"*, and the code
+     implemented it exactly. It still produced a search link for **every film in the
+     collection**, because `movies.letterboxd_slug` is `NULL` for all 1,854 rows: TMDB does
+     not supply it, no import writes it, and the model's own comment says so. A two-branch
+     conditional where one branch is unreachable is not a fallback — it is a single
+     behaviour wearing a disguise, and it survived review precisely because the code looked
+     like it handled both cases.
+
+     `letterboxd.com/imdb/<imdbId>` redirects to the film's own page, and
+     `MovieDetailResponse` already carried `imdbId`, so the fix needed **no schema change,
+     no new request and no new integration**.
+
+     **The slug branch is removed, not demoted.** Keeping it first would preserve the shape
+     of the April decision while changing nothing observable, and would leave behind a
+     branch no test can reach and no row can exercise. If a slug is ever imported, restoring
+     a preference for it is a two-line change against a test that would then have something
+     to assert.
+
+     **The ceiling is stated rather than implied: 1,091 of 1,854 films have an IMDb id**, so
+     this moves roughly **59%** of the collection from a search page to the right page. The
+     other ~763 are the rows the April import never identified; they improve when S8's
+     import identifies them, which is the same 396-film population that batch is about.
+
+163. **Two of S2's criteria were closed as *unmeetable by an agent*, and the gate was not
+     allowed to stand in for them.**
+
+     Craig's snag was *"the phone zooms"*. What an agent can do is measure the causes — form
+     controls at 14px against iOS Safari's 16px threshold, and `touch-action: auto` on
+     `html`, `body` and every input — fix them, and re-measure. What it cannot do is observe
+     iOS Safari's actual behaviour on his iPhone, or whether a `letterboxd.com` link is
+     claimed by the Letterboxd app, which is universal-link handling no code here controls.
+
+     Both were recorded as open owner checks at close-out and written into
+     `OWNER-ACTIONS.md`, with the coverage number attached to the second so a film that
+     still lands on a search page is not read as a failure of the fix.
+
+     *This is the same discipline `#149` applied to Batch 24's physical acceptance and
+     `STATUS.md` applies to 6.2, 5.6, 9.5 and 8.4 — the batch ships, the criterion stays
+     visibly unmet, and nobody has to reconstruct later which was which.*
+
+164. **The 16px floor lives in the base layer, not on the shared form class, and the
+     `:not()` that makes it work is load-bearing.**
+
+     `.form-control` was the obvious place, and it would have been wrong: `FilterBar`,
+     `CommandPalette` and `SearchBar` each style their own controls, so a fix confined to
+     the shared class would have left three of the most-used inputs in the app still at
+     14px — and left the next hand-styled input free to reintroduce the bug.
+
+     A base-layer rule is the right scope, but a bare `input` selector (0-0-1) loses to
+     Tailwind's `text-sm` (0-1-0) no matter where it appears in the file, because Tailwind
+     v3 emits its layers as ordinary CSS. `input:not([type='checkbox'])` borrows the 0-1-0
+     of the selector inside `:not()` and lands at **0-1-1**, which wins without
+     `!important`. Checkboxes, radios and ranges are excluded because they render no text
+     and sizing them would change their boxes.
+
+     **Verified by probing the shipped stylesheet**, not by reading the source: ten real
+     class combinations measured at 375px, including one deliberately styled `text-xs`,
+     all computing 16px — and 14px again at desktop width, so the design is unchanged where
+     the bug never existed.
+
+     **Form controls keep `touch-action: auto` deliberately.** The effective touch behaviour
+     is the intersection along the ancestor chain, so the root's `manipulation` already
+     suppresses double-tap *zoom* over an input, while leaving double-tap-to-select-word —
+     a gesture someone uses correcting a shelf name — working.

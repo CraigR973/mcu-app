@@ -324,6 +324,37 @@ reviews — Pro remains the route, but nothing in the plan needs it.
 **Nothing further is blocked on Craig for watch history.** S8 imports the CSVs that already
 exist; S5 keeps them current from the RSS feed. Neither ships a scraper (`#161`).
 
+### 1h. Two phone checks Batch S2 could not make *(new — Batch S2, 2026-09-15)*
+
+**Neither blocks anything.** S2 shipped; these confirm that the fixes do on an iPhone what
+they demonstrably do in a browser at phone width. `DECISIONS.md` #163 — an agent can measure
+the *cause* and not the *behaviour*, and a green gate was not allowed to stand in for either.
+
+- [ ] **Does the phone still zoom?** Three separate gestures, and two of them should have
+      changed:
+      1. **Tap a text box** — on the sign-in screen, or any field on Add a disc. It should
+         **no longer zoom in**. The cause was form controls at 14px, under iOS Safari's 16px
+         threshold; every control now measures **16px** at 375px wide.
+      2. **Double-tap the page** — anywhere that is not a button. It should **no longer
+         zoom**. `touch-action: manipulation` is now on `html` and `body`, where it was
+         previously on buttons alone.
+      3. **Pinch** — this **should still work**, and if it does not, that is the bug. It was
+         deliberately left alone so small print can still be enlarged; a test guards the
+         one-line shortcut that would have suppressed all three at once.
+
+- [ ] **Does a Letterboxd link open the Letterboxd app?** Open any film's page and tap
+      **Letterboxd**. With the app installed, iOS claims `letterboxd.com` links via universal
+      links — nothing in this codebase controls that, which is why it needs a device.
+
+      **Before S2 this check was meaningless**: every link went to a *search* page, for every
+      film, because `letterboxd_slug` is null on all 1,854 rows. Links now go to the film's
+      own page via `letterboxd.com/imdb/<id>`.
+
+      **Expect about 59% to work this way.** 1,091 of 1,854 films carry an IMDb id; the rest
+      are rows the April import never identified and still land on a search page. **A film
+      that searches is not a failure of this fix** — it is a film waiting to be identified,
+      which is what S8's import is for.
+
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is

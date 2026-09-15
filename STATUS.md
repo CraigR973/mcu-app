@@ -2,7 +2,7 @@
 
 ## Now
 
-**Group S is running. S1 of 8 has shipped; S2 is next.** The eight batches from the
+**Group S is running. S1 and S2 of 8 have shipped; S3 is next.** The eight batches from the
 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
 S5 → S6 → S7**. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
 were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
@@ -31,6 +31,37 @@ it against real Postgres 17. Fixed in `43d1ecf`, green on the re-run.
 out of the restore path while the suite stays green. The new test therefore walks the
 registry itself rather than a hand-written list, so it covers whatever `TRASH_TABLES`
 contains and fails loudly if a member goes missing.
+
+**S2 shipped 2026-09-15 as `baef542`** — the app-feel fixes. Production serves that SHA with
+`db: ok`. Two of the three zoom behaviours are fixed at the cause and **pinch-zoom is
+deliberately still working**; every Letterboxd link now reaches a film instead of a search.
+
+**The zoom fixes are measured, not asserted.** Form controls read **16px** at 375×812 where
+they read 14px before — probed against the *shipped stylesheet* across ten real class
+combinations, including one deliberately styled `text-xs` to prove the floor wins the
+cascade — and 14px again at desktop, so the design is unchanged where the bug never was.
+`html` and `body` read `touch-action: manipulation`. The viewport meta is byte-identical and
+four tests keep it that way, because `user-scalable=no` or a `maximum-scale` would suppress
+all three gestures at once and look like success.
+
+**The floor is in the base layer, and the `:not()` holding it up is load-bearing.**
+`.form-control` alone would have missed `FilterBar`, `CommandPalette` and `SearchBar`, which
+style their own controls. A bare `input` selector loses to Tailwind's `text-sm` on
+specificity; `input:not([type='checkbox'])` borrows the 0-1-0 inside `:not()` and wins at
+0-1-1 without `!important` (`DECISIONS.md` #164).
+
+**Every Letterboxd link was a search link, and the two-branch code hid it.** `letterboxd_slug`
+is NULL on all 1,854 rows, so the "fallback" was the only branch that ever ran. Links are now
+`letterboxd.com/imdb/<imdbId>`, and the slug branch is **deleted rather than demoted** (#162).
+**Coverage is 1,091 of 1,854 — about 59%;** the rest are the unidentified rows S8's import
+exists to fix.
+
+> **Two of S2's criteria are unmet and are Craig's, and the green gate does not cover them**
+> (`OWNER-ACTIONS.md` **1h**, `DECISIONS.md` #163). On the phone: does tapping a field still
+> zoom, does double-tapping still zoom — and does **pinch** still work, which is the one that
+> should. And: does a Letterboxd link open the Letterboxd app? That is universal-link
+> handling no code here controls. **A film that still lands on a search page is not a failure
+> of the fix** — it is one of the ~763 films waiting to be identified.
 
 **Three owner actions sit inside later batches and are not group blockers.** S8 ships the
 importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
@@ -466,6 +497,19 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S2 — app-feel fixes)** — Group S batch 2 of 8, shipped as `baef542`,
+  green first time. Form controls **14px → 16px** at touch widths, `touch-action:
+  manipulation` moved from buttons alone to `html` and `body`, and the Letterboxd link
+  rebuilt on `letterboxd.com/imdb/<imdbId>`. **Pinch-zoom deliberately preserved** and
+  guarded by four tests on the real `index.html`, because `user-scalable=no` would have
+  suppressed all three gestures at once and looked like a fix. The 16px floor sits in the
+  base layer with a `:not()` that lifts it to 0-1-1 so it beats Tailwind's `text-sm` without
+  `!important` — `.form-control` alone would have missed `FilterBar`, `CommandPalette` and
+  `SearchBar`. Probed against the shipped stylesheet at 375px: ten class combinations, all
+  16px; 14px again at desktop. The slug branch is **deleted, not demoted** — it was
+  unreachable on all 1,854 rows. **Two criteria stay unmet and are Craig's** — both need a
+  phone — recorded as `OWNER-ACTIONS.md` **1h** rather than implied away.
 
 - **2026-09-15 (Batch S1 — gift links removed)** — Group S batch 1 of 8, shipped as
   `43d1ecf`. Both routes, both pages, the model, router, schemas, the eight `lib/api.ts`

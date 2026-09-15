@@ -1252,24 +1252,39 @@ destroyed nothing.
   `scraper_type="generic"`, which `ck_retailers_scraper_type` refuses — a bug that can only
   appear against real Postgres (`STATUS.md` gotcha 3). Fixed in `43d1ecf`; green on the re-run.
 
-### Batch S2 — App-feel fixes 🟢
+### ~~Batch S2 — App-feel fixes~~ 🟢 **shipped 2026-09-15 (`baef542`)**
 **Covers snags 3 and 9.** Model: **Sonnet 5 · medium** / GPT-5.6 Terra · Medium.
 
 Both causes were measured on the deployed app at 375×812, not inferred (`triage` §3, §9).
 
-**Acceptance:**
-- Form controls compute **≥ 16px** at touch widths — verified by reading the computed style in
-  a browser, not only by asserting the class.
-- `html` and `body` compute `touch-action: manipulation`.
-- **Pinch-zoom still works.** The viewport meta gains no `user-scalable=no` and no
-  `maximum-scale`; a test or a recorded check proves it.
-- The Letterboxd link resolves to `letterboxd.com/imdb/<imdbId>` when `imdbId` is present and
-  to search only when it is null. Both branches tested.
-- Gate green.
+**Acceptance — five of five met in code; two real-device checks remain open below.**
+- ~~Form controls compute **≥ 16px** at touch widths — verified by reading the computed style in
+  a browser, not only by asserting the class.~~ ✅ **16px measured at 375×812** against the
+  shipped stylesheet, across ten real class combinations — `.form-control`, `.select-control`,
+  `FilterBar`'s `CONTROL_CLS`, `CommandPalette`, `SearchBar`, a bare input, and one deliberately
+  styled `text-xs` to prove the floor wins the cascade. Desktop is unchanged at 14px.
+- ~~`html` and `body` compute `touch-action: manipulation`.~~ ✅ Both, read from the browser.
+- ~~**Pinch-zoom still works.** The viewport meta gains no `user-scalable=no` and no
+  `maximum-scale`; a test or a recorded check proves it.~~ ✅ Meta is byte-identical; four tests
+  in `viewport-meta.test.ts` read the real `index.html` and fail on either shortcut.
+- ~~The Letterboxd link resolves to `letterboxd.com/imdb/<imdbId>` when `imdbId` is present and
+  to search only when it is null. Both branches tested.~~ ✅ Six tests in `external-links.test.ts`.
+- ~~Gate green.~~ ✅ First time, no CI failures.
 
-**An agent cannot meet the last two criteria** — on Craig's phone, that tapping a field and
-double-tapping no longer zoom, and that a Letterboxd link opens the Letterboxd app. Say so
-plainly at close-out; never let a green gate imply otherwise.
+> **⚠️ Two checks remain open and are Craig's, exactly as this row warned.** An agent cannot
+> observe either, and **the green gate above does not stand in for them**:
+>
+> 1. **On the phone: does tapping a field still zoom, and does double-tapping still zoom?**
+>    The causes are fixed and measured in a desktop browser at phone width; the *behaviour* is
+>    iOS Safari's and only a real iPhone shows it. Also worth confirming the thing this batch
+>    protected: **pinch-zoom should still work**.
+> 2. **Does a Letterboxd link now open the Letterboxd app?** That is universal-link handling on
+>    the device, controlled by nothing in this codebase. The prerequisite is done — the link is
+>    a *film* link now instead of a search — so the check is finally meaningful.
+>
+> **Coverage to expect on check 2:** 1,091 of 1,854 films carry an IMDb id, so ~59% open the
+> film's own page and the rest still land on a search until they are identified. A film that
+> searches is not a bug in this batch.
 
 ### Batch S3 — Navigation shape 🟡
 **Covers snags 5, 11 and 1.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #154.
@@ -1465,7 +1480,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → S2 → S3 → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → S3 → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
