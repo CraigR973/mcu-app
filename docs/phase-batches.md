@@ -1223,26 +1223,34 @@ needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's 
 
 ---
 
-### Batch S1 — Remove Gift links 🟢
+### ~~Batch S1 — Remove Gift links~~ 🟢 **shipped 2026-09-15 (`43d1ecf`)**
 **Covers snag 4.** Model: **Sonnet 5 · medium** / GPT-5.6 Terra · Medium.
 
-`gift_links` holds **0 rows** and 0 views, measured against live Neon 2026-09-14. Dropping the
+~~`gift_links` holds **0 rows** and 0 views, measured against live Neon 2026-09-14. Dropping the
 table therefore destroys no data and **does not trip the close-out's destructive-operation
-stop**, which `AGENTS.md` scopes to "tables holding real rows". Say the row count at close-out.
+stop**, which `AGENTS.md` scopes to "tables holding real rows". Say the row count at close-out.~~
+**Re-measured immediately before the merge, 2026-09-15: still 0 rows, still 0 views.** The drop
+destroyed nothing.
 
-**Acceptance:**
-- `/gift-links` and the public `/gift/:slug` route are gone, with the nav item and every client
-  function in `lib/api.ts`.
-- `routers/gift.py`, `schemas/gift.py` and `models/gift_link.py` are removed and the router is
-  deregistered from `main.py`.
-- `services/trash.py` no longer registers `gift_links`, and a test proves restore still works
-  for every remaining table.
-- The `/api/v1/gift/` cache exclusion is out of `sw.ts` without reopening the bug its comment
-  records.
-- The gift zod schemas and their tests are gone from `packages/shared`.
-- A migration drops the table, and CI's `upgrade head` → `downgrade base` reverses cleanly.
-- `grep -ri gift apps/ packages/` returns only historical mentions in docs and comments.
-- Gate green.
+**Acceptance — all eight met:**
+- ~~`/gift-links` and the public `/gift/:slug` route are gone, with the nav item and every client
+  function in `lib/api.ts`.~~ ✅ Both 404 in the running built bundle; eight client functions gone.
+- ~~`routers/gift.py`, `schemas/gift.py` and `models/gift_link.py` are removed and the router is
+  deregistered from `main.py`.~~ ✅
+- ~~`services/trash.py` no longer registers `gift_links`, and a test proves restore still works
+  for every remaining table.~~ ✅ `test_every_remaining_table_can_still_be_restored` walks
+  `TRASH_TABLES` itself rather than a hand-written list, so it cannot fall behind the registry.
+- ~~The `/api/v1/gift/` cache exclusion is out of `sw.ts` without reopening the bug its comment
+  records.~~ ✅ The same-origin guard and the `.ics` exclusion both stay.
+- ~~The gift zod schemas and their tests are gone from `packages/shared`.~~ ✅
+- ~~A migration drops the table, and CI's `upgrade head` → `downgrade base` reverses cleanly.~~
+  ✅ Migration `030`; its downgrade recreates the table in full, because `018.downgrade` drops a
+  table that must exist by the time the reversal reaches it.
+- ~~`grep -ri gift apps/ packages/` returns only historical mentions in docs and comments.~~ ✅
+  Plus migrations `018` and `030` themselves, which are the record of the table and its removal.
+- ~~Gate green.~~ ✅ **One CI failure on the way:** the new test's retailer fixture said
+  `scraper_type="generic"`, which `ck_retailers_scraper_type` refuses — a bug that can only
+  appear against real Postgres (`STATUS.md` gotcha 3). Fixed in `43d1ecf`; green on the re-run.
 
 ### Batch S2 — App-feel fixes 🟢
 **Covers snags 3 and 9.** Model: **Sonnet 5 · medium** / GPT-5.6 Terra · Medium.
@@ -1457,7 +1465,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | S1 → S2 → S3 → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → S2 → S3 → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

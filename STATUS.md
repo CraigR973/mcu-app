@@ -2,149 +2,68 @@
 
 ## Now
 
-**Owner snag list triaged 2026-09-14 — seven batches proposed, none approved.** Craig raised
-11 snags (`docs/owner-snags-2026-09-14.md`); they are now investigated against the code, live
-Neon and the deployed app in **`docs/owner-snags-triage-2026-09-14.md`**. Still no code, no
-hosting change and no data change. The batch state below is unchanged by it.
+**Group S is running. S1 of 8 has shipped; S2 is next.** The eight batches from the
+2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
+S5 → S6 → S7**. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
+were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
+and there is no `**Phase X.Y:` heading behind them to go looking for.
 
-**Five of the capture's seven open questions are answered and two dissolved outright.**
-`gift_links` holds **0 rows**, so removing the feature destroys nothing and needs no owner
-decision. `profiles` holds **exactly two rows** — Craig (admin), Mark (viewer) — so "Mark and
-Craig only" already describes everyone who can sign in; snag 8 is really about *widening*
-Mark's access, not restricting anyone's. Letterboxd's API policy excludes this app twice over
-(private/personal projects, LLM-related use), so **do not apply** — the export is the path, and
-it costs Letterboxd Pro at ~$35/yr per account.
+**S1 shipped 2026-09-15 as `43d1ecf`** — gift links removed entirely. Production
+`/api/v1/health` serves that SHA, `/health/ready` reports `db: ok`, and
+`/api/v1/gift/{slug}` now answers **404** where it used to render a page.
 
-**The eBay sell-offer Craig asked for already exists.** Batch 29 built it: add a disc → "this
-is an upgrade" → the film's page opens with a one-tap "List for sale" and a pre-filled eBay
-price. It does not create a listing — `DECISIONS.md` #142 explains why eBay has no true draft.
-Snag 7 is entirely about reach: the add button is `hidden sm:inline-flex` so a phone has none,
-`/collection/add` is `AdminShell` so Mark cannot reach it, and both eBay endpoints are
-`AdminUser`.
+**The table was empty when it was dropped, and that was re-checked rather than assumed.**
+The triage measured `gift_links` at 0 rows on 2026-09-14; it was measured again against live
+Neon immediately before the merge on 2026-09-15 — **still 0 rows, still 0 recorded views**.
+So migration `030` destroyed nothing, and the close-out's destructive-operation stop, which
+`AGENTS.md` scopes to "tables holding real rows", did not apply. Its downgrade recreates the
+table in full: `018.downgrade` drops a table that has to exist by the time CI's
+`upgrade head` → `downgrade base` reversal reaches it.
 
-**The zoom has three causes and two fix for free.** Measured on the deployed app at 375×812:
-form controls compute to **14px**, under iOS Safari's 16px threshold, so tapping any box zooms;
-and `touch-action` is `auto` on `html`, `body` and inputs — `manipulation` is scoped to buttons
-alone — so double-tap zooms everywhere else. Neither fix touches pinch-zoom, which dissolves
-the trade-off the capture said was Craig's to call.
+**One CI failure on the way, and it is the failure shape gotcha 3 describes.** The new
+restore test's retailer fixture used `scraper_type="generic"`; the allowed values are
+`built_in`, `generic_css` and `custom`, enforced by a CHECK constraint. It passed locally
+because all 254 Postgres-backed tests **skip** on this machine, and failed the moment CI ran
+it against real Postgres 17. Fixed in `43d1ecf`, green on the re-run.
 
-**The menu's real problem is emptiness, not organisation.** Measured: `smart_collections` 0,
-`box_sets` 0, `deals` 0, `loans` 0, `watch_log` 0, `purchase_price` 0 of 1,857. **Five of
-fourteen sidebar destinations lead to an empty page** and Home is three-quarters empty. Hiding
-what is empty removes four items; merging Home + Stats + Insights removes two more — 14 → 8.
+**Losing a trash table touches three structures that mirror each other** — `TRASH_TABLES`,
+`_MODELS` and `_describe` — and the failure mode is not a crash but a table quietly dropping
+out of the restore path while the suite stays green. The new test therefore walks the
+registry itself rather than a hand-written list, so it covers whatever `TRASH_TABLES`
+contains and fails loudly if a member goes missing.
 
-**Movie night is further from Craig's description than "check it" implies.** Two of his five
-points are met. There is no suggestion concept at all — the deck is a random draw from films
-already in the collection, so a film outside the Archive can never appear — and "has he seen
-it" needs `watch_log`, which is empty. Rebuilding the input side is a batch, not a tweak.
+**Three owner actions sit inside later batches and are not group blockers.** S8 ships the
+importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
+rows and overwrites **396 existing `movies` rows** with identification data, which is Craig's
+to run. S5 ships the feed reader and fixture tests and **stops before the first live RSS
+fetch**. And two of S2's criteria need Craig's phone — whether tapping a field still zooms,
+and whether a Letterboxd link opens the Letterboxd app — which no agent can meet; that will
+be said plainly at S2's close-out rather than implied away by a green gate.
 
-**The watch history is retrieved in full, and it cost nothing.** `DECISIONS.md` #160, #161.
-The 403 that made this look impossible was **curl's TLS fingerprint, not a policy block** — the
-diary pages are public and load normally in a real browser. Retrieved 2026-09-15 in 47 paced
-page loads, once, outside the product: **Craig 1,173 entries** (997 films, Dec 2013 → Sep 2026)
-and **Mark 1,149** (1,050 films, Nov 2022 → Sep 2026) — **2,322 against the 100 RSS gives**.
-
-Matched against live Neon: **1,530 (66%) are watches of films they own** — the same 66% the
-100-entry RSS sample predicted, which is the check that the matcher scales; **396 distinct
-films would be identified** by the import, over half the 754 the April import never resolved;
-and **6 entries are ambiguous** across 2,047 distinct films (`Death on the Nile`, `Murder on
-the Orient Express`), so #158's confirmation step is right and fires about three times.
-
-Files are in `.letterboxd-export/`, **gitignored — personal data, never committed**.
-**Letterboxd Pro is not needed**, `OWNER-ACTIONS.md` 1g closes unused (~£70 saved), and
-**nothing is blocked on Craig for watch history at all**.
-
-**The eight snag batches are in the ledger as Group S**, added 2026-09-15 with acceptance
-criteria authored rather than recovered — there is no §16 phase behind them, so `DECISIONS.md`
-#54 does not apply. Order: **S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7**. Run it with
-`/group-start S`. The group has **no blocking checkpoint**: S8's live import and S5's first
-live fetch are owner actions that stop *inside* their own batches, so the run reaches the end
-and reports what waits for Craig.
-
-**The app never scrapes Letterboxd.** S8 imports a file that already exists; S5 reads the
-sanctioned public RSS feed. No scraper, no Cloudflare dependency and no stored Letterboxd
-credential ships (#161). **S8 and S5 swapped places** — S8 now delivers the history, S5 keeps
-it current, run back to back because they share one matcher.
-
-> **Two cautions were wrong and are corrected in #158 and #160.** A match query filtered on
-> `abs(year - filmYear) <= 1` reported **zero** owned-but-unidentified films — an artifact,
-> since every unidentified row has `year IS NULL`; taken at face value it would have shipped S5
-> with neither an identification nor a confirmation step. And the session first declined to
-> drive a browser at all, treating the curl 403 as a policy position; with a real browser no
-> challenge arises, so there was nothing to defeat.
+**Everything below this line predates Group S and is unchanged by it.**
 
 **Batch 22 shipped — the deals feed is live and empty, which is the honest state.**
 The feature landed as `c190129`; its final built-in-retailer wiring repair is `493f031`.
-CI is green across all five jobs and production `/api/v1/health` serves that repair SHA
-with `db: ok` and `ebay: configured`. Migration **029** is applied in production: `deals`
-exists and holds **0 rows** until somebody runs a scrape.
+Migration **029** is applied in production: `deals` exists and holds **0 rows** until
+somebody runs a scrape. §5.10 is met; **§5.9's acceptance is Craig's** — a live run against
+real retailer sale pages (`OWNER-ACTIONS.md` **1e**).
 
-**§5.10 is met. §5.9's acceptance is yours** — a live run against real retailer sale
-pages, the same footing as Batch 19's checkpoint and Batch 23's §3.7
-(`OWNER-ACTIONS.md` **1e**, which has the exact two commands and what the response means).
+**Batch 21 is still blocked, and the blocker has not moved.** `scrape_runs` holds **one**
+row, `trigger=manual`; `price_checks` holds **14** across two hand-run days. §5.7 needs seven
+days of *scheduled* scrapes and forbids back-dated fixtures, so the chart is built, tested
+against fixtures and **not merged**, by instruction.
 
-**The batch's risk note needed a check Batch 19 could not have written.** The ledger says
-the same sentence about §5.9 as about §5.3 — a layout change *"selects the wrong node and
-persists a plausible wrong number"* — but Batch 19's strongest rule is *"does the title
-match the film asked for"*, and **a deals page has no film asked for**. So
-`check_page_shape` replaces it with agreement across the page: every card showing the same
-discount is one shared node read forty times; no card having a struck-through price is the
-sale-price selector having moved. Each individual card looks entirely reasonable in both
-cases. A page that fails has **every** card discarded, not just the failing ones.
-`DECISIONS.md` #150.
+> **Both Railway crons are crashing on every scheduled fire**, not merely silent.
+> `cron-scrape` and `cron-reminders` both show as `Crashed`: `.railway/railway.ts` gives them
+> `DATABASE_URL` and the VAPID vars by reference from `api` but never `JWT_ACCESS_SECRET`,
+> `JWT_REFRESH_SECRET` or `FRONTEND_ORIGIN`, and both scripts import the whole app's
+> `settings`, which enforces every check regardless of what the job touches. The fix is a
+> `railway.ts` change plus `config apply` — **hosting, so the owner's** per `AGENTS.md`.
+> `OWNER-ACTIONS.md` item 1.
 
-**Two things the phase did not anticipate.** "Skip already-owned" read literally would
-hide the 4K of a film owned on DVD — the most interesting deal there is, and the one Batch
-29 just built an upgrade path for — so it is format-aware and an upgrade is never
-already-owned (#151). And `discount_percent` is arithmetic on two shape-checked prices,
-never a "save 60%" badge read off the page, with the database enforcing
-`was_price > price`.
+**33 of 37 numbered batches shipped, 4 remain** — 38 is startable; 21 is built but blocked on
+the cron; 33 and 34 are Group K, deprioritised. Group S's eight are additional to those.
 
-**Four defects found on the way, three of them in this batch's own work.** Zavvi's `url`
-selector points at an `<h3>`, so every deal would have been unclickable *and* collided on
-the empty string under the `(retailer_id, url)` uniqueness key (#153) — found by running
-the extractor over captured markup. `apply-built-ins` never copied the new deals config,
-so four of five shops would have kept `deals_url: NULL` and "≥ 3 retailers" would have
-stayed unreachable however well the scraper behaved — caught while writing the owner
-instructions, which claimed a capability that did not yet exist. And an unverified claim
-about RSS feeds was corrected out of `ARCHITECTURE.md` §17 rather than left standing.
-
-**CI went red once on a test this batch does not touch.** `SearchBar.test.tsx` races an
-effect: `activeIndex` is set in a `useEffect`, so the option is in the DOM one render
-before it is selected, and `findByRole` resolves on the earlier one. Measured at **1
-failure in 8 local runs** and latent since the search bar was written. Fixed on its own
-`fix/` branch (`92c96bb`) and merged to `main` first, per `AGENTS.md` — never folded into
-the batch. The assertion is unchanged; only the waiting was added. 12 consecutive runs
-green after.
-
-**The sale-page selectors are verified and the sale-page URLs are not**, and the
-difference is recorded rather than blurred: the selectors are the ones Batch 19 checked
-live on 2026-09-09, and a Shopify collection page renders the same card as its search
-page. The URLs — four of them new — are the conventional `/collections/sale` path and ship
-`verified: False`. Expect the first live run to find problems; Batch 19's equivalent found
-three (#91, #92, #94), which is the argument for the arrangement rather than against it.
-
-**Batch 21 is still blocked, and the blocker has not moved.** Measured against live Neon
-on 2026-09-12: `scrape_runs` holds **one** row, `trigger=manual`, from 2026-09-10;
-`price_checks` holds **14** rows across two hand-run days. `cron-scrape` was applied on
-2026-09-10 at `0 3 * * *` and **has still produced nothing**, now two days past its first
-scheduled fire. §5.7 needs seven days of *scheduled* scrapes and its criterion forbids
-back-dated fixtures, so it cannot be met — the chart is built and tested against fixtures
-and is **not merged**, by instruction.
-
-**33 of 37 batches shipped, 4 remain** — 38 is startable; 21 is built but blocked on the
-cron; 33 and 34 are Group K, deprioritised.
-
-> **Correction, 2026-09-13.** "Cron-scrape has produced nothing" understated it: both crons
-> are **crashing on every scheduled fire**, not merely silent. `railway status` shows both
-> `cron-scrape` and `cron-reminders` as `Crashed`. Their logs show `config.py`'s fail-closed
-> validation refusing to boot — `jwt_access_secret is empty; jwt_refresh_secret is empty; ...
-> frontend_origin must not be empty` — because `.railway/railway.ts` gives the two cron
-> services `DATABASE_URL` and the VAPID vars by reference from `api`, but never
-> `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` or `FRONTEND_ORIGIN`, and both scripts import the
-> whole app's `settings`, which enforces every check regardless of whether the job touches
-> auth. Fix is a `railway.ts` var-reference change plus `config apply` — hosting, owner's per
-> `AGENTS.md`. See `OWNER-ACTIONS.md` item 1.
 
 ## Next
 
@@ -547,6 +466,19 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S1 — gift links removed)** — Group S batch 1 of 8, shipped as
+  `43d1ecf`. Both routes, both pages, the model, router, schemas, the eight `lib/api.ts`
+  client functions, the zod schemas and their tests, the nav item and the service-worker
+  cache exclusion are all gone; migration `030` drops the table. **Re-measured against live
+  Neon immediately before the merge: 0 rows, 0 recorded views** — so the drop destroyed
+  nothing and the destructive-operation stop did not apply. `030.downgrade` recreates the
+  table in full, because `018.downgrade` drops a table that must exist by the time CI's
+  reversal reaches it. Production serves `43d1ecf` with `db: ok`, and `/api/v1/gift/{slug}`
+  answers 404. **One CI failure:** the new restore test's retailer fixture used
+  `scraper_type="generic"` against a CHECK constraint allowing only `built_in`,
+  `generic_css` and `custom` — invisible locally, where all 254 Postgres-backed tests skip
+  (gotcha 3), and caught the moment CI ran it against real Postgres 17.
 
 - **2026-09-15 (snag batches entered as Group S)** — Docs only. The eight batches from the
   triage written into `docs/phase-batches.md` with acceptance criteria **authored, not
