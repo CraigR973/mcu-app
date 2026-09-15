@@ -35,7 +35,6 @@ from src.models.completion_set import (
     member_display,
 )
 from src.models.deal import DEALS_TABLE, Deal
-from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink, new_slug
 from src.models.item_photo import (
     ALLOWED_CONTENT_TYPES,
     MAX_PHOTOS_PER_ITEM,
@@ -123,8 +122,6 @@ __all__ = [
     "LISTING_STATUSES",
     "LOANS_TABLE",
     "Loan",
-    "GIFT_LINKS_TABLE",
-    "GiftLink",
     "ALLOWED_CONTENT_TYPES",
     "MAX_PHOTOS_PER_ITEM",
     "ItemPhoto",
@@ -171,7 +168,6 @@ __all__ = [
     "UUIDPrimaryKeyMixin",
     "UserRole",
     "WatchLog",
-    "new_slug",
     "DEFAULT_RETAILERS",
     "RETAILERS_TABLE",
     "SCRAPER_TYPES",

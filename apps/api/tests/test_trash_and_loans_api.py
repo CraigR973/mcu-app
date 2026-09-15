@@ -11,6 +11,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import AsyncIterator
 from datetime import date, datetime, timedelta
+from typing import Any
 
 import pytest
 import pytest_asyncio
@@ -29,7 +30,9 @@ from src.models.collection_item import CollectionItem
 from src.models.loan import Loan
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
+from src.models.wanted import Retailer, WantedItem
 from src.models.watch_log import WatchLog
+from src.services import trash as trash_service
 
 pytestmark = pytest.mark.asyncio
 
@@ -146,10 +149,12 @@ async def test_deleted_rows_from_every_table_appear_in_one_shape(
 ) -> None:
     """§13.5's "list soft-deleted items per table".
 
-    Seven tables now. Batch 15 shipped four; `wanted_list` and `retailers` joined when
-    Batch 18 built §3.5 and §3.16, and `gift_links` when Batch 27 did. The assertion has
-    been updated twice because the feature legitimately grew — Batch 15 deliberately left
-    those names *refused* rather than answering an empty page for tables that did not exist.
+    Six tables. Batch 15 shipped four; `wanted_list` and `retailers` joined when Batch 18
+    built §3.5 and §3.16. `gift_links` was a seventh from Batch 27 until **Batch S1 removed
+    the feature** — the table held 0 rows, so nothing left the bin that was ever in it.
+    Batch 15 deliberately left the names it could not serve *refused* rather than answering
+    an empty page for tables that did not exist, which is why this list has only ever
+    contained tables that are real.
     """
     movie, item = await _disc(api_session, "A Deleted Disc")
     item.deleted_at = datetime(2026, 9, 9)
@@ -175,7 +180,6 @@ async def test_deleted_rows_from_every_table_appear_in_one_shape(
         "box_sets",
         "wanted_list",
         "retailers",
-        "gift_links",
     }
 
     watches = (await client.get("/api/v1/trash/all?table=watch_log")).json()
@@ -224,6 +228,63 @@ async def test_restoring_brings_a_disc_back_with_full_state(
     assert item.notes == "A note that must survive a restore"
     assert item.sub_category == "A set"
     assert (item.section, item.shelf) == ("Front", "2nd")
+
+
+async def test_every_remaining_table_can_still_be_restored(
+    client: AsyncClient, api_session: AsyncSession, admin: Profile
+) -> None:
+    """Batch S1's own criterion: removing one table from the bin must not break the other six.
+
+    `TRASH_TABLES` is a tuple that `_MODELS` mirrors and `_describe` switches on, and a
+    removal touches all three. The failure mode is not a crash — it is one table quietly
+    dropping out of the restore path while the other five keep working and the suite keeps
+    passing. So this walks the registry itself rather than a hand-written list: a table
+    added later is covered without anyone remembering to add it here, and a table lost by
+    accident fails at the `KeyError` in ``_rows``.
+    """
+    movie, item = await _disc(api_session, "A Disc For Every Table")
+
+    watched = WatchLog(
+        id=uuid.uuid4(),
+        movie_id=movie.id,
+        user_id=admin.id,
+        watched_at=date(2026, 9, 1),
+    )
+    box_set = BoxSet(id=uuid.uuid4(), name="A Box Set For Every Table")
+    wanted = WantedItem(id=uuid.uuid4(), movie_id=movie.id, preferred_format="4k_uhd")
+    retailer = Retailer(
+        id=uuid.uuid4(),
+        name=f"A Shop {uuid.uuid4().hex[:8]}",
+        base_url="https://example.invalid",
+        scraper_type="generic",
+    )
+    api_session.add_all([watched, box_set, wanted, retailer])
+    await api_session.flush()
+
+    rows: dict[str, Any] = {
+        "collection_items": item,
+        "watch_log": watched,
+        "movies": movie,
+        "box_sets": box_set,
+        "wanted_list": wanted,
+        "retailers": retailer,
+    }
+    # The registry is the source of truth, not this dict — if they disagree, say which
+    # name is unaccounted for rather than skipping it silently.
+    assert set(rows) == set(trash_service.TRASH_TABLES)
+
+    for table, row in rows.items():
+        row.deleted_at = datetime(2026, 9, 9)
+        await api_session.flush()
+
+        listed = (await client.get(f"/api/v1/trash/all?table={table}")).json()
+        assert any(entry["id"] == str(row.id) for entry in listed["items"]), table
+
+        response = await client.post(f"/api/v1/trash/{table}/{row.id}/restore-row")
+        assert response.status_code == 204, f"{table}: {response.text}"
+
+        await api_session.refresh(row)
+        assert row.deleted_at is None, table
 
 
 async def test_restoring_something_that_is_not_deleted_is_a_404(

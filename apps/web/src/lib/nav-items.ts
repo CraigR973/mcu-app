@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bell, Bot, Boxes, Popcorn, CalendarDays, Film, Bookmark, Gift, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Tag, Target, Trash2, TrendingUp } from 'lucide-react'
+import { Bell, Bot, Boxes, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkle, Sparkles, Tag, Target, Trash2, TrendingUp } from 'lucide-react'
 
 export interface NavItem {
   label: string
@@ -45,7 +45,6 @@ export const adminNavItems: NavItem[] = [
   { label: 'Trash', path: '/trash', icon: Trash2 },
   { label: 'Audit log', path: '/audit', icon: ScrollText },
   { label: 'Retailers', path: '/retailers', icon: Store },
-  { label: 'Gift links', path: '/gift-links', icon: Gift },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 

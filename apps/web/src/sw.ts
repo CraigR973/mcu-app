@@ -89,15 +89,17 @@ registerRoute(
  * acceptance criterion *is* that it survives the network going away.
  *
  * **That last sentence used to read "the API sets no `Cache-Control`, so nothing here is
- * overriding a stated instruction", and it stopped being true.** Batch 17's `.ics` feed and
- * Batch 27's gift page both answer `Cache-Control: private, no-store`, and this route
- * matched them on pathname alone — so a public gift page a family member opened was being
- * stored for 24 hours in *their* browser against the API's explicit instruction. Caught by
- * Batch 27's security review.
+ * overriding a stated instruction", and it stopped being true.** Batch 17's `.ics` feed
+ * answers `Cache-Control: private, no-store`, and this route once matched it on pathname
+ * alone — so a response the API had explicitly asked nobody to store was being kept for 24
+ * hours. Caught by Batch 27's security review, which found the same bug on the gift page
+ * that Batch S1 has since removed.
  *
- * The route now honours `no-store` and matches only this app's own origin. Both matter:
- * the first respects what the API asked for, and the second stops a cross-origin response
- * being cached under a rule written for same-origin catalogue reads.
+ * The route still honours `no-store` and still matches only this app's own origin. Both
+ * matter: the first respects what the API asked for, and the second stops a cross-origin
+ * response being cached under a rule written for same-origin catalogue reads. **Batch S1
+ * removed the gift exclusion because the endpoint is gone, not because the rule relaxed**
+ * — every `no-store` route the API still serves is still excluded below.
  *
  * Only `GET` is cached. Writes go through the offline queue in `lib/offline-queue.ts`,
  * which is durable in a way a response cache is not.
@@ -107,11 +109,10 @@ registerRoute(
     request.method === 'GET' &&
     url.origin === self.location.origin &&
     url.pathname.startsWith('/api/v1/') &&
-    // The two capability URLs. Neither is catalogue data, neither is wanted offline, and
-    // both say `no-store` — a rule that reads the API's own instruction rather than
-    // listing paths would be better, but a service worker cannot see response headers
-    // when deciding whether a route *matches*.
-    !url.pathname.startsWith('/api/v1/gift/') &&
+    // The capability URL. Not catalogue data, not wanted offline, and it says `no-store`
+    // — a rule that reads the API's own instruction rather than listing paths would be
+    // better, but a service worker cannot see response headers when deciding whether a
+    // route *matches*. Anything new that answers `no-store` belongs on this list.
     !url.pathname.startsWith('/api/v1/calendar.ics'),
   new NetworkFirst({
     cacheName: 'mcu-api-user-v2',

@@ -294,7 +294,6 @@ TrashTable = Literal[
     "box_sets",
     "wanted_list",
     "retailers",
-    "gift_links",
 ]
 
 

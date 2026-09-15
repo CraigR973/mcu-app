@@ -26,9 +26,6 @@ import {
   completionFilmSchema,
   completionSetSchema,
   duplicateCheckSchema,
-  giftFilmSchema,
-  giftLinkSchema,
-  giftPageSchema,
   healthResponseSchema,
   loanSchema,
   movieDetailSchema,
@@ -1045,73 +1042,6 @@ describe('builtInScraperListSchema', () => {
     })
     expect(parsed.items[0].verified).toBe(false)
     expect(parsed.unverified).toEqual(['HMV'])
-  })
-})
-
-describe('giftPageSchema', () => {
-  it('parses the public page', () => {
-    const parsed = giftPageSchema.parse({
-      title: "Mark's Christmas 2026",
-      films: [
-        {
-          title: 'Heat',
-          year: 1995,
-          posterPath: '/heat.jpg',
-          preferredFormat: '4k_uhd',
-          maxPrice: '24.99',
-          currency: 'GBP',
-          retailerLinks: [{ name: 'HMV', url: 'https://store.hmv.com/search?q=Heat' }],
-        },
-      ],
-      total: 1,
-      filterConfig: { maxPrice: '30.00', formats: ['4k_uhd'] },
-    })
-    expect(parsed.films[0].retailerLinks[0].name).toBe('HMV')
-  })
-
-  it('has no field that could say what the recipient already owns', () => {
-    // The public schema is deliberately unrelated to any admin type. If it extended one,
-    // a field added there would appear here — and whether someone owns a film is not what
-    // a family member needs in order to buy a present.
-    const film = giftFilmSchema.parse({
-      title: 'Heat',
-      year: 1995,
-      posterPath: null,
-      preferredFormat: null,
-      maxPrice: null,
-      currency: 'GBP',
-      retailerLinks: [],
-    })
-    expect(Object.keys(film).sort()).toEqual([
-      'currency',
-      'maxPrice',
-      'posterPath',
-      'preferredFormat',
-      'retailerLinks',
-      'title',
-      'year',
-    ])
-  })
-})
-
-describe('giftLinkSchema', () => {
-  it('refuses a slug short enough to enumerate', () => {
-    // §6.26's worked example is `/gift/a8f3b2c1` — eight hex characters, 32 bits. What
-    // would be enumerated is a named person's wish list.
-    const short = giftLinkSchema.safeParse({
-      id: UUID_A,
-      slug: 'a8f3b2c1',
-      path: '/gift/a8f3b2c1',
-      title: 'x',
-      filterConfig: { maxPrice: null, formats: [] },
-      expiresAt: null,
-      viewCount: 0,
-      lastViewedAt: null,
-      isActive: true,
-      isUsable: true,
-      createdAt: '2026-09-09T00:00:00Z',
-    })
-    expect(short.success).toBe(false)
   })
 })
 

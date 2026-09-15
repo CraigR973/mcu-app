@@ -34,7 +34,6 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const WantedPage = lazy(() => import('./pages/WantedPage'))
 const DealsPage = lazy(() => import('./pages/DealsPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
-const GiftLinksPage = lazy(() => import('./pages/GiftLinksPage'))
 const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'))
 const AiSettingsPage = lazy(() => import('./pages/AiSettingsPage'))
 const AiChatPage = lazy(() => import('./pages/AiChatPage'))
@@ -43,7 +42,6 @@ const MovieNightJoinPage = lazy(() =>
   import('./pages/MovieNightPage').then((module) => ({ default: module.MovieNightJoinPage })),
 )
 const MovieNightSessionPage = lazy(() => import('./pages/MovieNightSessionPage'))
-const GiftPage = lazy(() => import('./pages/GiftPage'))
 
 function AdminPage() {
   return (
@@ -104,7 +102,7 @@ function RouteTitle() {
     const item = [...navItems, ...adminNavItems]
       .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
       .sort((a, b) => b.path.length - a.path.length)[0]
-    const title = publicTitles[pathname] ?? item?.label ?? (pathname.startsWith('/gift/') ? 'Gift guide' : 'Page not found')
+    const title = publicTitles[pathname] ?? item?.label ?? 'Page not found'
     document.title = title === APP_NAME ? APP_NAME : `${title} · ${APP_NAME}`
   }, [pathname])
   return null
@@ -143,11 +141,6 @@ export default function App() {
             {/* Public: it has to render when the API is unreachable, and requiring a
                 session check would be the one thing guaranteed to fail offline. */}
             <Route path="/offline" element={<OfflinePage />} />
-            {/* §12.2. Public by design and outside the shell entirely: a visitor here has
-                never logged in, so `ProtectedRoute` would redirect them to a sign-in page
-                and `AppLayout` would show them a sidebar of things they cannot open. */}
-            <Route path="/gift/:slug" element={<GiftPage />} />
-
             {/* Protected routes — all wrapped in AppLayout sidebar */}
             {/* Protected, but outside AppShell: the wizard is the full screen, and it
                 must not be gated by the very flag it exists to set. */}
@@ -236,10 +229,6 @@ export default function App() {
             <Route
               path="/retailers"
               element={<AdminShell><RetailersPage /></AdminShell>}
-            />
-            <Route
-              path="/gift-links"
-              element={<AdminShell><GiftLinksPage /></AdminShell>}
             />
             {/* Batch 11. Devices and preferences belong to whoever is signed in —
                 both people have their own, so this is the ordinary shell rather than

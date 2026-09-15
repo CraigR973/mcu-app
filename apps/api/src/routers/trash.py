@@ -26,7 +26,6 @@ from src.auth import AdminUser, CurrentUser
 from src.clock import latest_plausible_today, utc_today
 from src.models.box_set import BoxSet
 from src.models.collection_item import CollectionItem
-from src.models.gift_link import GiftLink
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie
 from src.models.wanted import Retailer, WantedItem
@@ -147,36 +146,21 @@ async def _describe(
             for item in wanted
         ]
 
-    if table == "retailers":
-        retailers: list[Retailer] = list(rows)
-        return [
-            TrashRowResponse(
-                id=retailer.id,
-                table=table,
-                label=retailer.name,
-                sublabel=retailer.base_url,
-                posterPath=None,
-                movieId=None,
-                deletedAt=_deleted_at(retailer.deleted_at),
-            )
-            for retailer in retailers
-        ]
-
-    # Gift links. **The slug is not shown here** — the trash is a list, read casually and
-    # at a glance, and the slug is a credential. Restoring brings it back; seeing it needs
-    # the gift-links page.
-    links: list[GiftLink] = list(rows)
+    # Retailers. The last branch, so it falls through rather than testing its own name —
+    # ``_require_table`` has already refused anything outside ``TRASH_TABLES``, and every
+    # other member is handled above.
+    retailers: list[Retailer] = list(rows)
     return [
         TrashRowResponse(
-            id=link.id,
+            id=retailer.id,
             table=table,
-            label=link.title,
-            sublabel=f"{link.view_count} views",
+            label=retailer.name,
+            sublabel=retailer.base_url,
             posterPath=None,
             movieId=None,
-            deletedAt=_deleted_at(link.deleted_at),
+            deletedAt=_deleted_at(retailer.deleted_at),
         )
-        for link in links
+        for retailer in retailers
     ]
 
 

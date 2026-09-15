@@ -674,9 +674,6 @@ export const trashTableSchema = z.enum([
   // for tables that did not exist; they exist now.
   'wanted_list',
   'retailers',
-  // Batch 27. A revoked gift link is soft-deleted, so restoring brings the **same slug**
-  // back and a link already shared with family keeps working.
-  'gift_links',
 ])
 
 export const trashCountSchema = z.object({
@@ -1057,70 +1054,6 @@ export type BuiltInScraper = z.infer<typeof builtInScraperSchema>
 export type BuiltInScraperList = z.infer<typeof builtInScraperListSchema>
 export type ScrapeOutcome = z.infer<typeof scrapeOutcomeSchema>
 export type ScrapeRun = z.infer<typeof scrapeRunSchema>
-
-// ---------------------------------------------------------------------------
-// Gift links (Batch 27) — §3.21, §6.26, §12.1, §12.2
-// ---------------------------------------------------------------------------
-
-export const giftFilterConfigSchema = z.object({
-  // Nullable rather than defaulted: a zod `.default()` makes the *parsed* type optional,
-  // which leaks `| undefined` into every consumer. The API always sends both fields.
-  maxPrice: z.string().nullable(),
-  formats: z.array(z.string()),
-})
-
-/** The **admin** view: slug, counts, provenance. */
-export const giftLinkSchema = z.object({
-  id: z.string().uuid(),
-  slug: z.string().min(16),
-  path: z.string().min(1),
-  title: z.string().min(1),
-  filterConfig: giftFilterConfigSchema,
-  expiresAt: z.string().nullable(),
-  viewCount: z.number().int().nonnegative(),
-  lastViewedAt: z.string().nullable(),
-  isActive: z.boolean(),
-  isUsable: z.boolean(),
-  createdAt: z.string(),
-})
-
-export const giftLinkListSchema = z.object({
-  items: z.array(giftLinkSchema),
-  total: z.number().int().nonnegative(),
-})
-
-export const giftRetailerLinkSchema = z.object({
-  name: z.string().min(1),
-  url: z.string().min(1),
-})
-
-/** One film on the **public** page.
- *
- *  Deliberately **not** an extension of any admin type. Nothing here says whether the
- *  recipient already owns the film, what they have watched, or who they are — and keeping
- *  the two schemas unrelated is what stops a field added to one leaking through the other. */
-export const giftFilmSchema = z.object({
-  title: z.string().min(1),
-  year: z.number().int().nullable(),
-  posterPath: z.string().nullable(),
-  preferredFormat: z.string().nullable(),
-  maxPrice: z.string().nullable(),
-  currency: z.string().length(3),
-  retailerLinks: z.array(giftRetailerLinkSchema),
-})
-
-export const giftPageSchema = z.object({
-  title: z.string().min(1),
-  films: z.array(giftFilmSchema),
-  total: z.number().int().nonnegative(),
-  filterConfig: giftFilterConfigSchema,
-})
-
-export type GiftFilterConfig = z.infer<typeof giftFilterConfigSchema>
-export type GiftLink = z.infer<typeof giftLinkSchema>
-export type GiftLinkList = z.infer<typeof giftLinkListSchema>
-export type GiftFilm = z.infer<typeof giftFilmSchema>
-export type GiftPage = z.infer<typeof giftPageSchema>
 
 // ---------------------------------------------------------------------------
 // Notifications and push (Batch 11) — §6.1, §6.2, §5.11

@@ -25,7 +25,6 @@ const TABLES: TrashTable[] = [
   // tables that did not exist; §3.5 and §3.16 exist now.
   'wanted_list',
   'retailers',
-  'gift_links',
 ]
 
 /** Every query a restore or a destroy can change. Listed once so a new tab cannot forget one. */

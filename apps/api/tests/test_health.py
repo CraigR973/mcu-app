@@ -174,11 +174,6 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/scrapers/daily",
         "/api/v1/scrapers/runs",
         "/api/v1/scrapers/aggregate",
-        # Batch 27. `/gift/{slug}` is the **second** unauthenticated route in this
-        # application, after `/calendar.ics`. Both are capability URLs.
-        "/api/v1/gift-links",
-        "/api/v1/gift-links/{link_id}",
-        "/api/v1/gift/{slug}",
         # Batch 11. Devices, preferences and the outbox are caller-scoped: there is no
         # admin view of somebody else's phone. The three jobs are admin-only because they
         # act on the whole app, and `run-reminders` is the entire scheduler — `#60` ruled
@@ -211,9 +206,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/ai/tool-calls/{call_id}/resolve",
         # Batch 35. Every route is `CurrentUser`, not admin-gated: a movie night is two
         # people on a sofa, and there is no version of it where one of them may not vote.
-        # `/join/{token}` is authenticated, unlike Batch 17's feed and Batch 27's gift
-        # page — those are read-only surfaces for people with no account, and this one
-        # casts votes, which have to belong to somebody.
+        # `/join/{token}` is authenticated, unlike Batch 17's feed — that is a read-only
+        # surface for a person with no account, and this one casts votes, which have to
+        # belong to somebody.
         "/api/v1/movie-night",
         "/api/v1/movie-night/join/{invite_token}",
         "/api/v1/movie-night/{session_id}",
@@ -235,8 +230,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/specs/state",
         "/api/v1/specs/halt",
         "/api/v1/specs/fetch",
-        # Batch 28's prerequisite, and the **third** unauthenticated route in this app
-        # after Batch 17's `.ics` feed and Batch 27's `/gift/{slug}`. eBay holds no
+        # Batch 28's prerequisite, and the **second** unauthenticated route in this app
+        # after Batch 17's `.ics` feed. *It was the third* until Batch S1 removed
+        # Batch 27's `/gift/{slug}`, which sat between them. eBay holds no
         # credential of ours, so it cannot authenticate; it is safe anyway because the
         # GET hashes three values it was handed and the POST is a no-op — no database
         # session is imported in that module at all. It is also the only public route

@@ -30,7 +30,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.clock import utcnow
 from src.models.box_set import BOX_SETS_TABLE, BoxSet
 from src.models.collection_item import CollectionItem
-from src.models.gift_link import GIFT_LINKS_TABLE, GiftLink
 from src.models.movie import Movie
 from src.models.wanted import RETAILERS_TABLE, WANTED_LIST_TABLE, Retailer, WantedItem
 from src.models.watch_log import WatchLog
@@ -50,10 +49,6 @@ TRASH_TABLES: tuple[str, ...] = (
     BOX_SETS_TABLE,
     WANTED_LIST_TABLE,
     RETAILERS_TABLE,
-    # Batch 27. A revoked gift link is soft-deleted, so it can be restored — and restoring
-    # brings the **same slug** back, which is the point: a link already shared with family
-    # keeps working rather than being silently replaced.
-    GIFT_LINKS_TABLE,
 )
 
 _MODELS: dict[str, Any] = {
@@ -63,7 +58,6 @@ _MODELS: dict[str, Any] = {
     BOX_SETS_TABLE: BoxSet,
     WANTED_LIST_TABLE: WantedItem,
     RETAILERS_TABLE: Retailer,
-    GIFT_LINKS_TABLE: GiftLink,
 }
 
 #: §6.30: "Items older than 90 days are auto-purged." The window is defined here; the

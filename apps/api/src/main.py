@@ -24,7 +24,6 @@ from src.routers import (
     discovery,
     ebay,
     export,
-    gift,
     health,
     insights,
     memories,
@@ -121,7 +120,6 @@ app.include_router(discovery.router)
 app.include_router(calendar.router)
 app.include_router(wanted.router)
 app.include_router(scraping.router)
-app.include_router(gift.router)
 app.include_router(notifications.router)
 app.include_router(ai.router)
 app.include_router(movie_night.router)

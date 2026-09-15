@@ -18,8 +18,7 @@ export function FloatingChatButton() {
     pathname.startsWith('/assistant') ||
     pathname.startsWith('/settings/ai') ||
     pathname.startsWith('/login') ||
-    pathname.startsWith('/welcome') ||
-    pathname.startsWith('/gift/')
+    pathname.startsWith('/welcome')
 
   if (hidden) return null
 
