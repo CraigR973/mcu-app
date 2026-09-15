@@ -3114,3 +3114,61 @@ contemporaneous.
      somebody's watch history — the reason `.letterboxd-export/` is gitignored (#161) — and
      a six-line excerpt is still six viewings. The column shape is faithful, which is all a
      reader test needs.
+
+### 2026-09-15 — Group S, batch S5
+
+178. **Where a real payload could not be captured unattended, the parser was written to
+     have no opinions about the parts that were not measured.**
+
+     `AGENTS.md` says to work from real sample payloads rather than guessed shapes. The
+     element names *are* a real measurement — `OWNER-ACTIONS.md` 1f read both live feeds on
+     2026-09-14 across 100 entries and recorded `letterboxd:watchedDate`,
+     `letterboxd:rewatch`, `letterboxd:memberRating`, `letterboxd:filmTitle`,
+     `letterboxd:filmYear`, `tmdb:movieId` and the `letterboxd-watch-<id>` guid.
+
+     **The exact XML was not**, and capturing it needs a live third-party request, which
+     `group-start.md` keeps out of unattended runs. So rather than guess namespace URIs and
+     depend on the guess:
+
+     - matching is on **local names**, ignoring prefixes entirely;
+     - the title **falls back** to RSS's own `<title>` when the namespaced one is absent;
+     - an item with no `letterboxd-watch-` guid is **skipped, not failed** — Letterboxd puts
+       list publications in the same channel;
+     - a test renames every prefix and points the namespaces at nonsense URIs.
+
+     That is a better parser regardless. It is recorded because the *reason* matters: the
+     fixture is honest about being constructed, and `OWNER-ACTIONS.md` 1j is the check that
+     closes the gap rather than the gap being left unstated.
+
+179. **The sync writes by default; the file import does not. The asymmetry is the point.**
+
+     `run_import` defaults to `dry_run=True` because a file import is a 1,555-row operation
+     over history reaching back to 2013. A sync is at most 50 recent entries of which a
+     healthy run writes a handful, and it is triggered by a person pressing a button
+     labelled "Sync now".
+
+     **The dangerous default belongs on the dangerous operation.** Making both dry by
+     default would have meant a sync button that did nothing until someone found a second
+     switch; making both write by default would have meant S8 writing 1,555 rows to whoever
+     forgot an argument.
+
+     **The sync does not identify films**, though every feed entry carries a TMDB id and it
+     easily could. Identification rewrites `movies` rows — the operation S8 deliberately put
+     in the owner's hands — and doing it from a button, repeatedly, would take that decision
+     back without asking.
+
+180. **A failed sync keeps its row.**
+
+     `letterboxd_syncs` records a run before the fetch and stamps `finished_at_utc` plus the
+     error if it fails, so **a sync that failed is distinguishable from one that never
+     ran**. With a feed that holds 50 entries and a person who cycles them in eight weeks,
+     those two states have very different consequences and look identical from the outside.
+
+     Same argument `scrape_runs` was built on in Batch 20, after a scraper "test" showed
+     results on screen while saving nothing. The UI carries it through: a failed run reads
+     *"— and it failed"* with the reason, rather than quietly showing the previous success.
+
+     **A feed that comes back full at 50 is surfaced as a cadence warning, not an error.**
+     Nothing went wrong; the interval is too long, and entries may already have fallen off
+     the end. That distinction is the difference between a warning someone acts on and an
+     error they learn to ignore.

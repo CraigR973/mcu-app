@@ -2,10 +2,11 @@
 
 ## Now
 
-**Group S is running. S1–S4 and S8 of 8 have shipped; S5 is next.** The eight batches from
-the 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
-S5 → S6 → S7**. The four UI batches are done, the backfill is built, and **one owner action
-is now waiting: the live watch-history import** (`OWNER-ACTIONS.md` **1i**). Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
+**Group S is running. S1–S4, S8 and S5 of 8 have shipped; S6 is next.** The eight batches
+from the 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 →
+S8 → S5 → S6 → S7**. The four UI batches are done and the whole watch-history spine is
+built. **Three owner actions are now waiting** — the live import (`OWNER-ACTIONS.md` **1i**),
+the first RSS sync (**1j**), and S2's two phone checks (**1h**). None blocks the group. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
 were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
 and there is no `**Phase X.Y:` heading behind them to go looking for.
 
@@ -196,6 +197,43 @@ change is that the service flushes and the caller commits.
 legitimately break — the diary's year settles it — so the assertion was wrong. Fixed, with a
 second test pinning the behaviour CI demonstrated: **every row in both diaries carries a
 Year**, so that is the common path.
+
+**S5 shipped 2026-09-15 as `834c3f1` — the sync is built and the first live fetch is
+Craig's.** Production serves that SHA with `db: ok`, migration `032` is applied, and
+`/api/v1/watch-history/status` is live and correctly refusing an unauthenticated caller.
+
+**S5 added a feed reader and a thin top, and nothing else** — no second matcher, no second
+writer. That is what S8-before-S5 bought. The end-to-end test imports a viewing from the
+*file* and then syncs the *feed*: the second writes zero, because both store the same bare
+viewing id (#176).
+
+**The last-run line is the feature, not the button.** Seen at 375×812: *"Last synced 3 days
+ago · 4 new"*. A **failed** run keeps its row and reads *"— and it failed"* with the reason —
+a sync that failed silently is indistinguishable from one that never ran, and with a
+50-entry feed those have very different consequences (#180). A feed returning a full 50 is
+surfaced as a **cadence warning**, not a success: nothing went wrong, the interval is too
+long.
+
+**A button rather than a cron**, because both Railway crons are still crashing.
+`letterboxd_syncs.trigger` already accepts `cron`, so wiring one up later needs no migration.
+
+> **The RSS fixture is constructed from a measurement, not captured from the wire** (#178).
+> The element names are real — `OWNER-ACTIONS.md` 1f read both live feeds across 100 entries
+> — but the exact namespace URIs and nesting were never captured, because that needs a live
+> request. **So the parser was written to have no opinions about the parts that were not
+> measured**: local-name matching, prefix-blind, with a fallback to RSS's own `<title>`, and
+> a test that renames every prefix and points the namespaces at nonsense URIs. `1j` is the
+> check that closes the gap rather than leaving it unstated.
+
+**The sync writes by default and the file import does not** (#179). A sync is at most 50
+recent entries triggered by somebody pressing a button; a file import is 1,555 rows reaching
+back to 2013. The dangerous default belongs on the dangerous operation. **The sync does not
+identify films**, though every feed entry carries a TMDB id — that rewrites `movies` rows,
+which is S8's owner decision, and a button doing it repeatedly would take it back.
+
+**One CI failure, in the lint job alone.** CI's mypy resolves `db.scalar(...)` as `Any` where
+this machine's does not — `STATUS.md` gotcha 21's shape, third time this session that CI and
+local mypy have disagreed. pytest against real Postgres was green first time.
 
 **Three owner actions sit inside later batches and are not group blockers.** S8 ships the
 importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
@@ -631,6 +669,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S5 — watch history, ongoing)** — Group S batch 6 of 8, shipped as
+  `834c3f1`. Reads the public Letterboxd diary RSS feed and keeps `watch_log` current,
+  **reusing S8's matcher and writer whole** — S5 added only `feed.py` and `sync.py`. The
+  no-double-count criterion is proved end to end: import from the file, sync the feed, second
+  writes zero. `letterboxd_syncs` records every run **including failures**, because a silent
+  failure and a sync that never ran look identical and the 50-entry cap makes the difference
+  expensive (#180). The panel says when it last ran — seen at 375×812. **The fixture is built
+  from recorded element names rather than a captured payload**, so the parser is deliberately
+  prefix-blind and a test proves it (#178); `OWNER-ACTIONS.md` **1j** is the one-press owner
+  check that settles the real shape. **One CI failure** in the lint job: CI's mypy vs local,
+  gotcha 21 again.
 
 - **2026-09-15 (Batch S8 — watch history, the backfill)** — Group S batch 5 of 8, shipped as
   `0a8c813`. Importer, matcher and dry run for a Letterboxd diary; migration `031` adds

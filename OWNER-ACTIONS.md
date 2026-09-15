@@ -402,6 +402,36 @@ up.
 *Note the shell line: `.env.local`'s connection string contains `&`, so it must be sourced with
 `set -a` rather than exported by hand.*
 
+### 1j. Press "Sync now" once *(new — Batch S5, 2026-09-15)*
+
+**One button press, and it is the first time this app has ever talked to Letterboxd.**
+Everything up to it is tested against fixtures and ran unattended; the live fetch did not,
+because `docs/agent-commands/group-start.md` keeps live third-party requests out of
+unattended runs.
+
+- [ ] **Settings → Watch history → Sync now.** Both usernames are already known —
+      `CraigR973` and `markr973` — and both diaries are public. Each of you syncs your own.
+
+**What to expect.** It reads the 50 most recent viewings and writes the ones it can match.
+If you have already run the S8 import (item **1i**), almost all 50 will come back as
+*already logged* — that is the sync working, not failing.
+
+**What it also settles.** The parser was built from element names measured on 2026-09-14
+across 100 entries, but the exact XML — namespace URIs, nesting — was never captured, so
+the parser deliberately ignores prefixes and falls back to RSS's own `<title>`. **If the
+counts look right, the shape was right.** If the run reports 0 entries read from a feed
+that plainly has entries in it, that is the thing to report back.
+
+**Then keep the habit: at least monthly.** The feed holds **50 entries and no more**.
+Craig's reaches back to January; **Mark's only about eight weeks**, because he watches far
+more. A longer gap loses viewings *silently* — the feed simply stops mentioning them and
+nothing errors. The panel says when it last ran for exactly this reason, and warns when a
+feed comes back full.
+
+*A cron would be better and is not possible yet: both Railway crons have been crashing on
+every scheduled fire since 2026-09-10 (item 1). The sync record already carries a `trigger`
+column that accepts `cron`, so wiring one up afterwards needs no migration.*
+
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is

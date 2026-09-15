@@ -1432,26 +1432,46 @@ data, never commit them): **Craig 1,173 entries, Mark 1,149, 2,322 total.**
 > is additive and reversible, identification rewrites rows that already exist and merges two
 > into one where the collection holds both.
 
-### Batch S5 — Watch history, ongoing 🟡
+### ~~Batch S5 — Watch history, ongoing~~ 🟡 **shipped 2026-09-15 (`834c3f1`)** · ⏸ **first live fetch waits for Craig**
 **Covers snag 10a.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #156, #158, #159.
 
-**Acceptance:**
-- Reads `letterboxd.com/<user>/rss` and parses `letterboxd:watchedDate`, `letterboxd:rewatch`,
-  `letterboxd:memberRating`, `tmdb:movieId` and `guid`.
-- **Reuses S8's matcher and writer.** No second matching implementation — building it twice is
-  the waste this ordering exists to avoid.
-- **Cannot double-count across sources:** the RSS `guid` wraps the same id as S8's `ViewingId`,
-  so a viewing present in both file and feed yields exactly one row. Tested.
-- A **null rating is valid** — Mark rates nothing, and 0 of 50 is correct data, not missing.
-- A manual "sync now" works with no cron, because both Railway crons are crashing
-  (`OWNER-ACTIONS.md` item 1).
-- The UI states **when the sync last ran**. The 50-entry cap makes the interval a correctness
-  property: Mark cycles it in about eight weeks, so a gap longer than that loses history
-  silently.
-- Gate green against fixtures.
+**Acceptance — seven of seven met.**
+- ~~Reads `letterboxd.com/<user>/rss` and parses `letterboxd:watchedDate`, `letterboxd:rewatch`,
+  `letterboxd:memberRating`, `tmdb:movieId` and `guid`.~~ ✅ 18 parser tests. **It matches on
+  local names and ignores namespace prefixes** — see the caveat below.
+- ~~**Reuses S8's matcher and writer.** No second matching implementation~~ ✅ S5 added
+  `feed.py` and `sync.py` and **nothing else**. The feed reader's only job is to produce the
+  same `DiaryEntry` the file reader produces.
+- ~~**Cannot double-count across sources**~~ ✅ Tested end to end: import the viewing from the
+  *file*, then sync the *feed*, and the second writes zero. The guid wraps the same number
+  `watch_log.letterboxd_viewing_id` already stores (#176).
+- ~~A **null rating is valid**~~ ✅ The fixture's *Collector* entry carries no `memberRating`
+  at all — an ordinary entry, and Mark's look exactly like it.
+- ~~A manual "sync now" works with no cron~~ ✅ `letterboxd_syncs.trigger` already accepts
+  `cron`, so adding one when the Railway crons are fixed needs no migration.
+- ~~The UI states **when the sync last ran**.~~ ✅ **Seen in a browser at 375×812**: *"Last
+  synced 3 days ago · 4 new"*, with the watch count beside it. A **failed** run keeps its row
+  and reads *"— and it failed"* with the reason; a feed that comes back full at 50 is surfaced
+  as a **cadence warning**, not a success.
+- ~~Gate green against fixtures.~~ ✅ **One CI failure**, in the lint job alone: CI's mypy
+  resolves `db.scalar(...)` as `Any` where this machine's does not (`STATUS.md` gotcha 21).
+  pytest against real Postgres was green on the first run.
 
-**The live fetch is an owner action** — `group-start.md` keeps live third-party requests out of
-unattended runs. Fixture tests run unattended; the first real fetch does not.
+> **⏸ The first live fetch is Craig's** — `OWNER-ACTIONS.md` **1j**. It is one button press,
+> and it is also what settles the caveat below.
+>
+> **The fixture is constructed from a measurement, not captured from the wire.** The element
+> names come from `OWNER-ACTIONS.md` 1f's reading of both real feeds across 100 entries; the
+> exact namespace URIs and nesting were never captured, because capturing them needs a live
+> request. `AGENTS.md` says to work from real payloads — where that is not available
+> unattended, the honest substitute is **a parser with no opinions about the parts that were
+> not measured**: it matches local names, ignores prefixes, and falls back to RSS's own
+> `<title>`. A test renames every prefix and points the namespaces at nonsense URIs to prove
+> it does not care.
+
+**Identification is deliberately not attempted**, though every feed entry carries a TMDB id.
+That rewrites `movies` rows — the operation S8 put in the owner's hands — and doing it from a
+button, repeatedly, would take that decision back without asking.
 
 ### Batch S6 — Physical release dates 🟡
 **Covers snag 2.** Model: **Opus 5 · high** / GPT-5.6 Sol · High.
@@ -1564,7 +1584,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
