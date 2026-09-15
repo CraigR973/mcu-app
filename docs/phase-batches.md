@@ -1207,6 +1207,184 @@ real part of the work rather than a `pnpm add`.
 
 ---
 
+## Owner snag batches — from the 2026-09-14 triage
+
+**These eight are not from the April spec, and there is no `**Phase X.Y:` heading to recover.**
+They come from Craig's 11 snags (`docs/owner-snags-2026-09-14.md`), triaged against the code
+and live data in `docs/owner-snags-triage-2026-09-14.md`. **The acceptance criteria below were
+authored on 2026-09-15, not recovered** — `DECISIONS.md` #54 governs recovery from §16 and does
+not apply. Do not go looking for a phase row; this section is the ledger entry.
+
+The four shaping decisions are `DECISIONS.md` **#154–#157**; the Letterboxd findings are
+**#158–#161**.
+
+**Order is dependency-derived and must not be rearranged:** S4 needs S3's navigation shape, S6
+needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history.
+
+---
+
+### Batch S1 — Remove Gift links 🟢
+**Covers snag 4.** Model: **Sonnet 5 · medium** / GPT-5.6 Terra · Medium.
+
+`gift_links` holds **0 rows** and 0 views, measured against live Neon 2026-09-14. Dropping the
+table therefore destroys no data and **does not trip the close-out's destructive-operation
+stop**, which `AGENTS.md` scopes to "tables holding real rows". Say the row count at close-out.
+
+**Acceptance:**
+- `/gift-links` and the public `/gift/:slug` route are gone, with the nav item and every client
+  function in `lib/api.ts`.
+- `routers/gift.py`, `schemas/gift.py` and `models/gift_link.py` are removed and the router is
+  deregistered from `main.py`.
+- `services/trash.py` no longer registers `gift_links`, and a test proves restore still works
+  for every remaining table.
+- The `/api/v1/gift/` cache exclusion is out of `sw.ts` without reopening the bug its comment
+  records.
+- The gift zod schemas and their tests are gone from `packages/shared`.
+- A migration drops the table, and CI's `upgrade head` → `downgrade base` reverses cleanly.
+- `grep -ri gift apps/ packages/` returns only historical mentions in docs and comments.
+- Gate green.
+
+### Batch S2 — App-feel fixes 🟢
+**Covers snags 3 and 9.** Model: **Sonnet 5 · medium** / GPT-5.6 Terra · Medium.
+
+Both causes were measured on the deployed app at 375×812, not inferred (`triage` §3, §9).
+
+**Acceptance:**
+- Form controls compute **≥ 16px** at touch widths — verified by reading the computed style in
+  a browser, not only by asserting the class.
+- `html` and `body` compute `touch-action: manipulation`.
+- **Pinch-zoom still works.** The viewport meta gains no `user-scalable=no` and no
+  `maximum-scale`; a test or a recorded check proves it.
+- The Letterboxd link resolves to `letterboxd.com/imdb/<imdbId>` when `imdbId` is present and
+  to search only when it is null. Both branches tested.
+- Gate green.
+
+**An agent cannot meet the last two criteria** — on Craig's phone, that tapping a field and
+double-tapping no longer zoom, and that a Letterboxd link opens the Letterboxd app. Say so
+plainly at close-out; never let a green gate imply otherwise.
+
+### Batch S3 — Navigation shape 🟡
+**Covers snags 5, 11 and 1.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #154.
+
+**Acceptance:**
+- Home, Stats and Insights are one reading page at `/dashboard`; `/stats` and `/insights`
+  redirect to it rather than 404.
+- Box sets, Collections, Deals and Loans are **hidden from the menu while their table is
+  empty** and appear once it is not. **Both states tested** — a hide that never un-hides is the
+  failure mode.
+- Notifications and AI settings are one `/settings` page, and AI settings is in the menu.
+- A signed-in non-admin sees **8** sidebar destinations.
+- Search is gone from the shell header's mobile second row and reachable from the bottom bar on
+  every screen.
+- `FilterBar` collapses to a single button below `sm`.
+- `/` opens the merged Home.
+- Empty sections inside the merged page hide rather than render empty.
+- Export moves to Admin.
+- Gate green, **plus a real browser pass at 375×812 recording what was actually looked at** —
+  `batch-verify.md` requires this for frontend-visible batches.
+
+### Batch S4 — Quick add within reach 🟡
+**Covers snags 7 and 8.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #155.
+
+The eBay sell-offer already exists (Batch 29). **This batch is reach, not capability.**
+
+**Acceptance:**
+- A quick-add entry point on Home and in the bottom bar, **visible below 640px**.
+- `/collection/add` is reachable by a `viewer` — the route guard **and** the API.
+- `POST /api/v1/ebay/price-estimate` and `/ebay/listing-url` accept a `viewer`; tests assert
+  **200, not 403**.
+- Trash, Audit log, Retailers and Admin still refuse a viewer; tests assert **403**.
+- The upgrade → "List for sale" flow is reachable from the add flow, not only from the film
+  page afterwards.
+- Gate green, plus a browser pass at 375×812.
+
+**The API moves with the UI, never after it.** A button that appears while its endpoint still
+403s is worse than no change.
+
+### Batch S8 — Watch history, the backfill 🔴
+**Covers snag 10b.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High. `DECISIONS.md` #160, #161.
+
+Both diaries are already retrieved and sit in `.letterboxd-export/` (gitignored — personal
+data, never commit them): **Craig 1,173 entries, Mark 1,149, 2,322 total.**
+
+**Acceptance:**
+- An importer reads a Letterboxd `diary.csv`-shaped file and writes `watch_log` rows.
+- **Idempotent on `ViewingId`** — a second run of the same file writes zero new rows. Tested.
+- Matching is exact on `tmdb_id` where present, else normalised title + year. Normalisation
+  covers trailing articles (`Collector, The`), bracketed years (`[1978]`), `&`/`and`, and case.
+- **Ambiguous matches are offered, never guessed** — tested against a `Death on the Nile`
+  fixture, which is one of the 6 real ambiguities in 2,047 distinct films.
+- A film matching an **unidentified** row is identified: `tmdb_id`, year, poster, runtime and
+  cast filled, and each identification reported.
+- A **dry-run** mode reports every count without writing.
+- Gate green against fixtures.
+
+**The live import is an owner action and must not run unattended.** It writes ~1,530 watch rows
+and **overwrites 396 existing `movies` rows** with identification data — which
+`docs/agent-commands/group-start.md` puts squarely in the owner's hands ("never run unattended
+… stop before executing and ask, naming the row count"). Ship the importer and the dry-run;
+stop there.
+
+### Batch S5 — Watch history, ongoing 🟡
+**Covers snag 10a.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #156, #158, #159.
+
+**Acceptance:**
+- Reads `letterboxd.com/<user>/rss` and parses `letterboxd:watchedDate`, `letterboxd:rewatch`,
+  `letterboxd:memberRating`, `tmdb:movieId` and `guid`.
+- **Reuses S8's matcher and writer.** No second matching implementation — building it twice is
+  the waste this ordering exists to avoid.
+- **Cannot double-count across sources:** the RSS `guid` wraps the same id as S8's `ViewingId`,
+  so a viewing present in both file and feed yields exactly one row. Tested.
+- A **null rating is valid** — Mark rates nothing, and 0 of 50 is correct data, not missing.
+- A manual "sync now" works with no cron, because both Railway crons are crashing
+  (`OWNER-ACTIONS.md` item 1).
+- The UI states **when the sync last ran**. The 50-entry cap makes the interval a correctness
+  property: Mark cycles it in about eight weeks, so a gap longer than that loses history
+  silently.
+- Gate green against fixtures.
+
+**The live fetch is an owner action** — `group-start.md` keeps live third-party requests out of
+unattended runs. Fixture tests run unattended; the first real fetch does not.
+
+### Batch S6 — Physical release dates 🟡
+**Covers snag 2.** Model: **Opus 5 · high** / GPT-5.6 Sol · High.
+
+`RELEASE_TYPES` has carried `4k_uhd_release` and `blu_ray_release` since Batch 17 and
+**nothing has ever written either** — `services/calendar.py` hardcodes `"theatrical"`, and all
+32 live rows are cinema dates.
+
+**Acceptance:**
+- `tmdb/client.py` gains a `release_dates` method; GB **type 5 (Physical)** is ingested as
+  `blu_ray_release` / `4k_uhd_release`.
+- Calendar and Coming soon are one screen; `/calendar` and `/discover` both resolve to it.
+- Physical releases lead; cinema dates are kept and visibly distinct.
+- **A film with no physical date is still visible, not silently dropped.** Tested.
+- Ingestion stays idempotent on `(tmdb_id, release_type, region)`.
+- Gate green, plus a browser pass.
+
+**Report the real coverage number.** TMDB's UK physical dates are community-maintained and
+patchy; a screen that implies completeness it does not have is the failure mode here.
+
+### Batch S7 — Movie night rebuild 🔴
+**Covers snag 6.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High. `DECISIONS.md` #157.
+
+What exists is a random swipe deck over the collection. Two of Craig's five points are met;
+the other three need the input side replaced.
+
+**Acceptance:**
+- Anyone in a session can **suggest** a film, and everyone can vote on anyone's suggestion.
+- **Films outside the Archive can be suggested**, with streaming availability from the existing
+  `get_watch_providers`.
+- Opening a card shows the film's full details — cast, runtime, genres, and a link to its page.
+- A card shows **whether the other participants have watched it, and when**, from `watch_log`.
+- Sessions still work for 3+ people, and a match still requires **everyone** to have liked it.
+- `candidate_movies`'s unseeded `func.random()` no longer contradicts its docstring — either
+  seed it per session or delete the claim. *(If the standalone `fix/` branch #157 calls for has
+  already landed, note that instead of redoing it.)*
+- Gate green, plus a browser pass.
+
+---
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -1279,6 +1457,12 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
+| **S** | S1 → S2 → S3 → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+
+**Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
+April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
+recover and `DECISIONS.md` #54 does not apply to it.
+
 **Net: 37 batches → 24 sessions.** Eleven groups absorb 24 batches; 13 stay solo.
 *Was 38 → 25 until Batch 26 was dropped on 2026-09-09 (`DECISIONS.md` #109).*
 

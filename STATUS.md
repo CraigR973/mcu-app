@@ -54,6 +54,13 @@ Files are in `.letterboxd-export/`, **gitignored — personal data, never commit
 **Letterboxd Pro is not needed**, `OWNER-ACTIONS.md` 1g closes unused (~£70 saved), and
 **nothing is blocked on Craig for watch history at all**.
 
+**The eight snag batches are in the ledger as Group S**, added 2026-09-15 with acceptance
+criteria authored rather than recovered — there is no §16 phase behind them, so `DECISIONS.md`
+#54 does not apply. Order: **S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7**. Run it with
+`/group-start S`. The group has **no blocking checkpoint**: S8's live import and S5's first
+live fetch are owner actions that stop *inside* their own batches, so the run reaches the end
+and reports what waits for Craig.
+
 **The app never scrapes Letterboxd.** S8 imports a file that already exists; S5 reads the
 sanctioned public RSS feed. No scraper, no Cloudflare dependency and no stored Letterboxd
 credential ships (#161). **S8 and S5 swapped places** — S8 now delivers the history, S5 keeps
@@ -540,6 +547,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (snag batches entered as Group S)** — Docs only. The eight batches from the
+  triage written into `docs/phase-batches.md` with acceptance criteria **authored, not
+  recovered**, plus a Group S row ordering them S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7.
+  `/batch-start` stops on a batch it cannot grep, so the ledger entry is what makes
+  `/group-start S` possible at all. Two owner actions are scoped inside their batches rather
+  than made group checkpoints: S8's live import (~1,530 watch rows and **396 `movies` rows
+  overwritten** with identification data) and S5's first live RSS fetch.
 
 - **2026-09-15 (Letterboxd history retrieved)** — No code, hosting or schema changes. Both
   diaries retrieved in full from the **public** diary pages — Craig 1,173 entries back to Dec
