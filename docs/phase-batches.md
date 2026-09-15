@@ -1516,23 +1516,49 @@ with `2>/dev/null` hiding the error. **The same trap S1 hit.** Fixed in `b5b3796
 **A signed-in non-admin now sees 7 sidebar destinations, not S3's 8** — merging two more is
 this batch's own criterion. Fourteen → eight → seven.
 
-### Batch S7 — Movie night rebuild 🔴
+### ~~Batch S7 — Movie night rebuild~~ 🔴 **shipped 2026-09-15 (`804744f`)**
 **Covers snag 6.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High. `DECISIONS.md` #157.
 
-What exists is a random swipe deck over the collection. Two of Craig's five points are met;
-the other three need the input side replaced.
+What existed was a random swipe deck over the collection. Two of Craig's five points were met;
+the other three needed the input side replaced.
 
-**Acceptance:**
-- Anyone in a session can **suggest** a film, and everyone can vote on anyone's suggestion.
-- **Films outside the Archive can be suggested**, with streaming availability from the existing
-  `get_watch_providers`.
-- Opening a card shows the film's full details — cast, runtime, genres, and a link to its page.
-- A card shows **whether the other participants have watched it, and when**, from `watch_log`.
-- Sessions still work for 3+ people, and a match still requires **everyone** to have liked it.
-- `candidate_movies`'s unseeded `func.random()` no longer contradicts its docstring — either
-  seed it per session or delete the claim. *(If the standalone `fix/` branch #157 calls for has
-  already landed, note that instead of redoing it.)*
-- Gate green, plus a browser pass.
+**Acceptance — six of six met.**
+- ~~Anyone in a session can **suggest** a film, and everyone can vote on anyone's suggestion.~~
+  ✅ New `movie_night_suggestions`, and **a vote is cast on a suggestion rather than on a
+  film** — which is what makes both halves true. Tested with the *viewer* suggesting and both
+  people voting.
+- ~~**Films outside the Archive can be suggested**, with streaming availability.~~ ✅ Seen at
+  375×812: *The Matrix*, "Streaming on Netflix", "Not in the collection — this one would be a
+  rental." `Match.movie_id` is nullable, because there is nothing on the shelf to point at.
+- ~~Opening a card shows the film's full details — cast, runtime, genres, and a link to its
+  page.~~ ✅ Seen: *"2h 50m · Crime · Drama"*, *"Starring Al Pacino, Robert De Niro"*,
+  *"Suggested by Mark"*, *"Open its full details"*.
+- ~~A card shows **whether the other participants have watched it, and when**.~~ ✅ Seen:
+  *"Mark saw this on 2026-03-04"*. **Everyone except the person asking** — "have I seen it" is
+  on the film's own page. **Reads empty until S8's import runs**, which is why #157 put S7
+  after S8.
+- ~~Sessions still work for 3+ people, and a match still requires **everyone**.~~ ✅ Unchanged:
+  `issubset` was already right, and is one of the two points Batch 35 met.
+- ~~`candidate_movies`'s unseeded `func.random()` no longer contradicts its docstring.~~ ✅
+  **Seeded rather than the claim deleted.** Ordering on `md5(session_id ‖ movie_id)` is stable
+  per session, different between sessions and identical for everyone in one — without
+  `setseed()`, which is connection state that would leak into whatever ran next on that
+  connection. Two tests: same session twice, and two sessions differing. *(No standalone
+  `fix/` branch had landed; `git log --all` was checked.)*
+- ~~Gate green, plus a browser pass.~~ ✅ **Green first time**, migration reversal included.
+
+> **The migration is additive, because the tables hold real rows.** 13 votes across **2
+> sessions that were still open**, measured against live Neon. Nothing is dropped and no
+> column is rewritten: `movie_id` is *relaxed* to nullable, and a backfill gives each existing
+> vote a suggestion so those two sessions keep working rather than becoming history. The CHECK
+> is "one of `movie_id` or `suggestion_id`", not "`suggestion_id NOT NULL`" — a constraint
+> that only holds where a backfill happened to succeed fails on the one database where it did
+> not.
+
+**One expectation changed on purpose: a card no longer vanishes when you swipe it.** Batch 35
+removed it because the deck was private; a shortlist everyone is adding to is a list you
+re-read. **The privacy property it protected is kept** — `myVote` is built from the caller's
+own votes alone, and a test asserts the other person's vote is still invisible.
 
 ---
 
@@ -1608,7 +1634,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → ~~S6~~ → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → ~~S6~~ → ~~S7~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Complete — all eight shipped 2026-09-15.** The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

@@ -2,304 +2,99 @@
 
 ## Now
 
-**Group S is running. Seven of eight have shipped; S7 is the last.** The batches from the
-2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
-S5 → S6 → S7**. **Three owner actions are waiting** — the live watch-history import
-(`OWNER-ACTIONS.md` **1i**), the first RSS sync (**1j**), and S2's two phone checks
-(**1h**). None blocks the group. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
-were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
-and there is no `**Phase X.Y:` heading behind them to go looking for.
+**Group S is complete. All eight snag batches shipped on 2026-09-15, in order, each
+merged to `main` and deployed.** S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7. Production
+`/api/v1/health` serves `804744f` with `db: ok`. Migrations **030–033** are applied.
 
-**S1 shipped 2026-09-15 as `43d1ecf`** — gift links removed entirely. Production
-`/api/v1/health` serves that SHA, `/health/ready` reports `db: ok`, and
-`/api/v1/gift/{slug}` now answers **404** where it used to render a page.
-
-**The table was empty when it was dropped, and that was re-checked rather than assumed.**
-The triage measured `gift_links` at 0 rows on 2026-09-14; it was measured again against live
-Neon immediately before the merge on 2026-09-15 — **still 0 rows, still 0 recorded views**.
-So migration `030` destroyed nothing, and the close-out's destructive-operation stop, which
-`AGENTS.md` scopes to "tables holding real rows", did not apply. Its downgrade recreates the
-table in full: `018.downgrade` drops a table that has to exist by the time CI's
-`upgrade head` → `downgrade base` reversal reaches it.
-
-**One CI failure on the way, and it is the failure shape gotcha 3 describes.** The new
-restore test's retailer fixture used `scraper_type="generic"`; the allowed values are
-`built_in`, `generic_css` and `custom`, enforced by a CHECK constraint. It passed locally
-because all 254 Postgres-backed tests **skip** on this machine, and failed the moment CI ran
-it against real Postgres 17. Fixed in `43d1ecf`, green on the re-run.
-
-**Losing a trash table touches three structures that mirror each other** — `TRASH_TABLES`,
-`_MODELS` and `_describe` — and the failure mode is not a crash but a table quietly dropping
-out of the restore path while the suite stays green. The new test therefore walks the
-registry itself rather than a hand-written list, so it covers whatever `TRASH_TABLES`
-contains and fails loudly if a member goes missing.
-
-**S2 shipped 2026-09-15 as `baef542`** — the app-feel fixes. Production serves that SHA with
-`db: ok`. Two of the three zoom behaviours are fixed at the cause and **pinch-zoom is
-deliberately still working**; every Letterboxd link now reaches a film instead of a search.
-
-**The zoom fixes are measured, not asserted.** Form controls read **16px** at 375×812 where
-they read 14px before — probed against the *shipped stylesheet* across ten real class
-combinations, including one deliberately styled `text-xs` to prove the floor wins the
-cascade — and 14px again at desktop, so the design is unchanged where the bug never was.
-`html` and `body` read `touch-action: manipulation`. The viewport meta is byte-identical and
-four tests keep it that way, because `user-scalable=no` or a `maximum-scale` would suppress
-all three gestures at once and look like success.
-
-**The floor is in the base layer, and the `:not()` holding it up is load-bearing.**
-`.form-control` alone would have missed `FilterBar`, `CommandPalette` and `SearchBar`, which
-style their own controls. A bare `input` selector loses to Tailwind's `text-sm` on
-specificity; `input:not([type='checkbox'])` borrows the 0-1-0 inside `:not()` and wins at
-0-1-1 without `!important` (`DECISIONS.md` #164).
-
-**Every Letterboxd link was a search link, and the two-branch code hid it.** `letterboxd_slug`
-is NULL on all 1,854 rows, so the "fallback" was the only branch that ever ran. Links are now
-`letterboxd.com/imdb/<imdbId>`, and the slug branch is **deleted rather than demoted** (#162).
-**Coverage is 1,091 of 1,854 — about 59%;** the rest are the unidentified rows S8's import
-exists to fix.
-
-> **Two of S2's criteria are unmet and are Craig's, and the green gate does not cover them**
-> (`OWNER-ACTIONS.md` **1h**, `DECISIONS.md` #163). On the phone: does tapping a field still
-> zoom, does double-tapping still zoom — and does **pinch** still work, which is the one that
-> should. And: does a Letterboxd link open the Letterboxd app? That is universal-link
-> handling no code here controls. **A film that still lands on a search page is not a failure
-> of the fix** — it is one of the ~763 films waiting to be identified.
-
-**S3 shipped 2026-09-15 as `a3409f1` — the menu is eight items, down from fourteen.**
-Production serves that SHA with `db: ok`, and `/api/v1/nav/sections` is live and correctly
-refusing an unauthenticated caller.
-
-**The menu lost items by two different means, because it had two different problems.** Home,
-Stats and Insights are one page at `/dashboard`; Notifications and AI settings are one
-`/settings` with two tabs — which is also what **put AI settings in the menu at all**, since it
-was a defined destination sitting in no group, reachable only from a header button. And Box
-sets, Collections, Deals and Loans hide while their tables are empty, which today is all four.
-
-**Both halves of the hide rule were seen in a browser, not only asserted.** At 375×812 with
-every count at 0 the sidebar holds **8** destinations; with all four non-zero it holds **12**.
-A hide that never un-hides looks correct on this database and stays wrong forever, which is
-why the un-hide half is the half that matters.
-
-**`GET /nav/sections` answers in four `COUNT(*)`s, and each count matches what its page would
-list** — dismissed deals excluded, *returned* loans included, collections scoped to the caller
-because they are per-user. A count that disagreed with its page would give the subtlest version
-of this bug: an item right about the table and wrong about the page. **An unknown count shows
-the item** (`DECISIONS.md` #165) — hiding four links because a request was slow is worse than
-the emptiness being fixed.
-
-**`navGroups` is built by path now.** It indexed into `navItems`, so removing an entry silently
-re-pointed three groups at the wrong destinations — and appending one left it ungrouped, which
-is precisely how AI settings got lost. A test asserts every destination is in some group (#166).
-
-**Two rules about empty states collided and both were kept.** The merged page hides what is
-empty; Batch 14 argued an empty chart reads as a *broken* chart and should say what it waits
-for. Most watched and Spend over time are now **hidden**, with their reasons collected into one
-line beneath the charts — the explanation was the hard-won part, and the naive reading of the
-criterion would have deleted it along with the frame (#167).
-
-**Search left the mobile header's second row for a slot in the bottom bar**, which now reads
-Archive · Search · Home · Movie night · More; the bar opens a sheet with the field focused.
-`FilterBar` is **one control** at 375px, measured, with all nine reachable when expanded. `/`
-opens Home now that Home is worth opening, and Export moved to Admin.
-
-> **The browser pass used the repo's own DEV-only `VITE_SKIP_AUTH` and a throwaway API stub**,
-> because S3's criteria are about what a *signed-in* person sees and entering Craig's PIN is
-> not an agent's to do (#169). The flag is compiled out of production builds. Nothing from the
-> harness is in the tree — the stub is in the session scratchpad and the `.env.local` was
-> gitignored and deleted. **Worth reusing for the next frontend batch with the same problem.**
-
-**Three test expectations changed in S3, all of them the batch's own point.** The command
-palette no longer indexes 'Stats'; `g s` — "go to stats" — goes to `/settings`, because stats
-is a section of `/dashboard` that `g h` already reaches. The palette assertion was
-**strengthened** on the way: it now also proves 'Stats' and 'Insights' are genuinely gone
-rather than renamed.
-
-**S4 shipped 2026-09-15 as `45ec4fa` — Mark can add a disc, and so can a phone.**
-Production serves that SHA with `db: ok`.
-
-**The batch was reach, not capability, and the reach cost eight endpoints.** Batch 29 had
-already built what Craig asked for — add a disc, mark it an upgrade, one tap to list the old
-one at a pre-filled eBay price — and all of it worked. `/collection/add` was `AdminShell`, the
-header's add button is `hidden sm:inline-flex`, and every endpoint behind the flow was
-`AdminUser`. **Snag 8 read literally was already satisfied**: `profiles` holds two rows and
-there is no public sign-up, so "only Mark and Craig can see this" described every page already.
-
-> **The criterion named three endpoints; following the button found five more, and the last
-> one was the batch.** "List for sale" does not call an eBay route — it writes through
-> `PUT /collection/{id}/listing`, which nothing in the criterion mentions. Left admin-only,
-> **every visible step would have worked**: Mark reaches the page, marks the upgrade, sees the
-> prompt, watches the price arrive — and the button 403s. `DECISIONS.md` #170. The general
-> form is worth keeping: *a criterion that names endpoints names the ones its author could see
-> from outside; the check is to follow each control and ask what it calls.*
-
-**Adding moved; editing and destroying did not.** Adding creates a row attributed to whoever
-added it, which is what makes widening safe rather than merely convenient; editing or deleting
-changes something the other person put there (#171). Trash and the audit log still refuse a
-viewer.
-
-> **One criterion was wrong and the code was right.** The ledger said "Retailers still refuses
-> a viewer". `GET /api/v1/retailers` has answered **200** for a viewer since Batch 18,
-> deliberately — *"reads are open to both people"*. The criterion is true of the *page*
-> (`AdminShell`), not the endpoint, and every retailer **write** is still admin-only. Recorded
-> in #172 rather than quietly adjusted, because a criterion asserting a 403 the code has
-> deliberately answered 200 to for four batches is what gets "fixed" in the wrong direction.
-
-**On the phone:** an accented **Add** slot in the bottom bar and a button on Home, both visible
-below 640px — snag 7 was that below that width there was no add control at all. The bar is six
-slots; `px-0.5` and a 9px label are what stop "Movie night" truncating, measured at 375px.
-
-**One CI failure, in S4's own new test, and it would have passed for the wrong reason.** The
-add test built a disc for the film it then added, so `POST /collection` answered **409
-duplicate** before the role check ran. A looser `!= 403` assertion would have gone on passing
-after the widening was reverted (#173). Same structural cause as S1's: **the Postgres-backed
-tests skip locally**, so a new one there first executes in CI.
-
-**S8 shipped 2026-09-15 as `0a8c813` — the watch-history import is built, and the live run
-is Craig's.** Production serves that SHA with `db: ok`, migration `031` is applied, and
-**both dry runs were executed against production and wrote nothing.**
-
-| | Craig | Mark | Both |
+| | Batch | SHA | What it did |
 |---|---|---|---|
-| Entries read | 1,173 | 1,149 | 2,322 |
-| Watches a real run would write | 593 | 962 | **1,555** |
-| Films it could identify | 223 | 363 | **397 distinct** |
-| Ambiguous — need a person | 13 | 15 | **28** |
-| Not in the collection | 567 | 172 | 739 |
+| S1 | Remove Gift links | `43d1ecf` | 0 rows, 0 views — dropped entirely |
+| S2 | App-feel fixes | `baef542` | 16px controls, root `touch-action`, real Letterboxd links |
+| S3 | Navigation shape | `a3409f1` | 14 destinations → 8 |
+| S4 | Quick add within reach | `45ec4fa` | Mark can add a disc; a phone has somewhere to do it |
+| S8 | Watch history, backfill | `0a8c813` | importer + dry run; **live import waits** |
+| S5 | Watch history, ongoing | `834c3f1` | RSS sync; **first live fetch waits** |
+| S6 | Physical release dates | `b5b3796` | first physical rows ever written; **coverage 1%** |
+| S7 | Movie night rebuild | `804744f` | suggestions, films outside the Archive, "has he seen it" |
 
-> **⚠️ `DECISIONS.md` #160 said 6 ambiguities. The shipped matcher finds 28, and it is the
-> stricter of the two** (#174). #160's pass did not collapse parenthetical disambiguators or
-> rotate trailing articles, so `'Mummy, The (Brendan Fraser)'`, `'(Original)'` and
-> `'(Tom Cruise)'` read as three unrelated titles and a diary entry for *The Mummy* matched
-> **none** — scored "not in the collection" rather than offered as a question. That is the
-> entire 47-row difference: **22 silent misses became 22 explicit questions**, and 25 more
-> watches found a home. All 15 distinct ambiguous titles are genuine — the collection really
-> holds two *Dunkirk*s, two *Titanic*s, two *Lion King*s and three *Mummy*s. **66% is
-> unchanged**, which is the check that mattered.
->
-> *The alternative to an ambiguity is not a correct match — it is a wrong absence: the watch
-> silently unlogged, the film never identified, and nothing saying so.*
+### Three things wait for Craig, and none of them blocked the group
 
-**`--identify` is a separate flag from `--write`, and the difference is the point** (#175).
-Writing watches is additive and reversible; identification rewrites ~397 rows that already
-exist and merges two into one where the collection holds both. Craig can do the first, look
-at it, and decide about the second.
+1. **`OWNER-ACTIONS.md` 1i — run the watch-history import.** The highest-leverage item on
+   the whole list. Both dry runs were executed against production and wrote nothing:
+   **1,555 watches** (Craig 593, Mark 962) and **~397 films** that the April import never
+   identified. `watch_log` holds 0 rows today, and four features are inert until it does
+   not — On this day, Worth a rewatch, Most watched, and the "has he seen it?" S7 just
+   built. `--identify` is a separate flag from `--write` on purpose (#175).
+2. **`OWNER-ACTIONS.md` 1j — press "Sync now" once.** One button press, and the first time
+   this app has ever talked to Letterboxd. It also settles the one thing the fixtures
+   could not: the feed's exact XML (#178).
+3. **`OWNER-ACTIONS.md` 1h — two checks on the phone.** Does tapping a field still zoom,
+   does double-tapping, and does **pinch** still work (it should). And does a Letterboxd
+   link open the Letterboxd app. An agent can measure the causes and not the behaviour
+   (#163).
 
-**The idempotency column is what makes S5 free** (#176). `watch_log.letterboxd_viewing_id`
-stores the bare id, and the RSS `<guid>` wraps the same number — so **S5's
-"cannot double-count across sources" criterion is already met and tested**, rather than
-discovered after 2,322 rows are in.
+### Four spec facts turned out to be wrong, and the code was right each time
 
-**`_apply_identification` moved out of `routers/movies.py`** into `services/identification.py`
-so an imported identification and a hand-made one cannot drift apart. The only behavioural
-change is that the service flushes and the caller commits.
+- **#160 said 6 ambiguities; the shipped matcher finds 28** (#174). #160's pass did not
+  collapse parenthetical disambiguators or rotate trailing articles, so `'Mummy, The
+  (Brendan Fraser)'` and its two siblings read as unrelated titles and *The Mummy* matched
+  **none** — scored "not in the collection" rather than offered as a question. **22 silent
+  misses became 22 explicit questions**, and 25 more watches found a home. 66% unchanged.
+- **The S4 criterion said "Retailers still refuses a viewer"** (#172). `GET /retailers` has
+  answered 200 for a viewer since Batch 18, deliberately. The criterion is true of the
+  *page*, not the endpoint; every retailer **write** is still admin-only.
+- **The S4 criterion named three endpoints; eight had to move** (#170). "List for sale"
+  does not call an eBay route — it writes through `PUT /collection/{id}/listing`, which
+  nothing named. Left admin-only, **every visible step would have worked** and the button
+  would have 403'd.
+- **The S6 row said "all 32 live rows are cinema dates"**; it is 30 theatrical plus 2
+  `sale_event`. The point stood — no physical row had ever existed.
 
-**One CI failure, and the code was right.** The new ambiguity test built a tie the engine can
-legitimately break — the diary's year settles it — so the assertion was wrong. Fixed, with a
-second test pinning the behaviour CI demonstrated: **every row in both diaries carries a
-Year**, so that is the common path.
+### The number S6 was told to report is 1%
 
-**S5 shipped 2026-09-15 as `834c3f1` — the sync is built and the first live fetch is
-Craig's.** Production serves that SHA with `db: ok`, migration `032` is applied, and
-`/api/v1/watch-history/status` is live and correctly refusing an unauthenticated caller.
+Measured against live TMDB: over three pages of `/movie/upcoming` GB, **1 of 58 forthcoming
+films had a GB physical date at all**. Across a 60-film sample of the collection, 11%,
+against 68% for cinema dates. **So the disc section leads and is usually empty, and the
+page states the number** rather than implying no discs are coming — which is exactly the
+failure mode that ledger row named. "A film with no physical date is still visible" is the
+load-bearing criterion, not a defensive afterthought: it is 99% of them (#181).
 
-**S5 added a feed reader and a thin top, and nothing else** — no second matcher, no second
-writer. That is what S8-before-S5 bought. The end-to-end test imports a viewing from the
-*file* and then syncs the *feed*: the second writes zero, because both store the same bare
-viewing id (#176).
+### Six CI failures across eight batches, and what each was
 
-**The last-run line is the feature, not the button.** Seen at 375×812: *"Last synced 3 days
-ago · 4 new"*. A **failed** run keeps its row and reads *"— and it failed"* with the reason —
-a sync that failed silently is indistinguishable from one that never ran, and with a
-50-entry feed those have very different consequences (#180). A feed returning a full 50 is
-surfaced as a **cadence warning**, not a success: nothing went wrong, the interval is too
-long.
+Every one was caught by CI and none reached `main`.
 
-**A button rather than a cron**, because both Railway crons are still crashing.
-`letterboxd_syncs.trigger` already accepts `cron`, so wiring one up later needs no migration.
+- **S1, S4, S7-adjacent** — three fixture or assertion bugs in the batches' *own new
+  tests*, all invisible locally because the Postgres-backed tests skip on this machine
+  (gotcha 3). S4's was the dangerous shape: it passed a **409 duplicate** off as a role
+  check, and a looser assertion would have gone on passing after the widening was reverted
+  (#173).
+- **S5** — CI's mypy resolves `db.scalar(...)` as `Any` where this machine's does not;
+  gotcha 21, third time this session.
+- **S8** — the new ambiguity test constructed a tie the engine can legitimately break. The
+  code was right and the assertion wrong.
+- **S6** — **not a code failure at all.** `git add` was handed two already-deleted paths
+  alongside everything else; it **aborts the whole invocation** on a pathspec that matches
+  nothing, and `2>/dev/null` hid the error, so the commit carried only two deletions. S1
+  hit the identical trap and caught it before committing (#184).
 
-> **The RSS fixture is constructed from a measurement, not captured from the wire** (#178).
-> The element names are real — `OWNER-ACTIONS.md` 1f read both live feeds across 100 entries
-> — but the exact namespace URIs and nesting were never captured, because that needs a live
-> request. **So the parser was written to have no opinions about the parts that were not
-> measured**: local-name matching, prefix-blind, with a fallback to RSS's own `<title>`, and
-> a test that renames every prefix and points the namespaces at nonsense URIs. `1j` is the
-> check that closes the gap rather than leaving it unstated.
+> **Staging explicitly is only half of `AGENTS.md`'s rule.** The other half is checking
+> `git diff --cached --name-only` before committing, and never suppressing `git add`'s
+> stderr. Worth making a habit rather than a lesson.
 
-**The sync writes by default and the file import does not** (#179). A sync is at most 50
-recent entries triggered by somebody pressing a button; a file import is 1,555 rows reaching
-back to 2013. The dangerous default belongs on the dangerous operation. **The sync does not
-identify films**, though every feed entry carries a TMDB id — that rewrites `movies` rows,
-which is S8's owner decision, and a button doing it repeatedly would take it back.
+### Nine test expectations changed, every one required by a criterion
 
-**One CI failure, in the lint job alone.** CI's mypy resolves `db.scalar(...)` as `Any` where
-this machine's does not — `STATUS.md` gotcha 21's shape, third time this session that CI and
-local mypy have disagreed. pytest against real Postgres was green first time.
+S3 (3): the command palette no longer indexes 'Stats'; `g s` goes to `/settings`.
+S4 (2): a viewer posting to `/collection` is a **201**, and listing a superseded disc a
+**200**. S6 (1): the sidebar is **7** destinations, not S3's 8, because S6 merged two more.
+S7 (3): a vote carries a `suggestionId`, and a card no longer vanishes when you swipe it.
+**None weakened an assertion** — S3's palette test was strengthened to prove 'Stats' and
+'Insights' are genuinely gone, and S7's kept the privacy property the old behaviour
+protected.
 
-**S6 shipped 2026-09-15 as `b5b3796` — the release calendar has its first physical rows,
-and the coverage is 1%.** Production serves that SHA with `db: ok`.
+### The collection is still 1,857 discs and `watch_log` is still empty
 
-> **📉 The number this batch was told to report.** Measured against live TMDB on 2026-09-15:
-> over three pages of `/movie/upcoming` GB, **1 of 58 forthcoming films had a GB physical
-> date at all** — and its note said 'DVD'. Across a 60-film sample of the collection itself,
-> 7 of 60 (11%), against 68% for cinema dates.
->
-> **So the disc section leads and will usually be empty, and the page says the number** —
-> rather than rendering an empty frame or implying no discs are coming, which is exactly the
-> failure mode the ledger row named. **"A film with no physical date is still visible" is the
-> load-bearing criterion**, not a defensive afterthought: it is 99% of them (#181).
-
-**A physical date is ingested beside the cinema date, never instead of it** (#183). One film
-yields up to three rows, so `candidates` is rekeyed on `(tmdb_id, release_type)` — the shape
-the existing unique constraint already required. Two type-5 entries of one format collapse to
-one row and **the earliest wins**. A failed `release_dates` lookup is recorded and the film
-**keeps its cinema date**.
-
-**TMDB type 5 says "Physical" and no more** (#182), so `classify_physical` reads the
-contributor's free-text note. A DVD-only release is filed as `blu_ray_release` — an admitted
-approximation, because `RELEASE_TYPES` has no DVD member and widening two labels beats
-inventing one.
-
-> **⚠️ `git add` cost a CI run, for the second time in this group** (#184). S6's first commit
-> carried *only* two file deletions: `git add` was handed the two already-removed paths
-> alongside everything else, and it **aborts the whole invocation** on a pathspec that matches
-> nothing — with `2>/dev/null` hiding the error. S1 hit the identical trap. **Staging
-> explicitly is only half of `AGENTS.md`'s rule**; the other half is checking
-> `git diff --cached --name-only` before committing.
-
-**A signed-in non-admin now sees 7 sidebar destinations, not the 8 S3 delivered.** Merging
-Calendar and Coming soon is S6's own criterion. Fourteen → eight → seven.
-
-**Three owner actions sit inside later batches and are not group blockers.** S8 ships the
-importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
-rows and overwrites **396 existing `movies` rows** with identification data, which is Craig's
-to run. S5 ships the feed reader and fixture tests and **stops before the first live RSS
-fetch**. And two of S2's criteria need Craig's phone — whether tapping a field still zooms,
-and whether a Letterboxd link opens the Letterboxd app — which no agent can meet; that will
-be said plainly at S2's close-out rather than implied away by a green gate.
-
-**Everything below this line predates Group S and is unchanged by it.**
-
-**Batch 22 shipped — the deals feed is live and empty, which is the honest state.**
-The feature landed as `c190129`; its final built-in-retailer wiring repair is `493f031`.
-Migration **029** is applied in production: `deals` exists and holds **0 rows** until
-somebody runs a scrape. §5.10 is met; **§5.9's acceptance is Craig's** — a live run against
-real retailer sale pages (`OWNER-ACTIONS.md` **1e**).
-
-**Batch 21 is still blocked, and the blocker has not moved.** `scrape_runs` holds **one**
-row, `trigger=manual`; `price_checks` holds **14** across two hand-run days. §5.7 needs seven
-days of *scheduled* scrapes and forbids back-dated fixtures, so the chart is built, tested
-against fixtures and **not merged**, by instruction.
-
-> **Both Railway crons are crashing on every scheduled fire**, not merely silent.
-> `cron-scrape` and `cron-reminders` both show as `Crashed`: `.railway/railway.ts` gives them
-> `DATABASE_URL` and the VAPID vars by reference from `api` but never `JWT_ACCESS_SECRET`,
-> `JWT_REFRESH_SECRET` or `FRONTEND_ORIGIN`, and both scripts import the whole app's
-> `settings`, which enforces every check regardless of what the job touches. The fix is a
-> `railway.ts` change plus `config apply` — **hosting, so the owner's** per `AGENTS.md`.
-> `OWNER-ACTIONS.md` item 1.
-
-**33 of 37 numbered batches shipped, 4 remain** — 38 is startable; 21 is built but blocked on
-the cron; 33 and 34 are Group K, deprioritised. Group S's eight are additional to those.
+Nothing in Group S wrote a single row of user data. Every batch shipped code; the three
+data operations are Craig's, above.
 
 
 ## Next
@@ -703,6 +498,29 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S7 — movie night rebuild)** — Group S batch 8 of 8, shipped as
+  `804744f`, **green first time**. Votes moved from films onto `movie_night_suggestions`,
+  which is the one change that makes three of Craig's five points possible at once (#185):
+  anyone suggests, everyone votes on anyone's, and a film outside the Archive — with no
+  `movies` row to key against — can be voted on at all. Cards carry cast, runtime, genres,
+  who suggested it, streaming for films nobody owns, and **which other participants have
+  seen it and when** (empty until S8's import runs). The unseeded `func.random()` that
+  contradicted its own docstring is seeded on `md5(session_id ‖ movie_id)` rather than
+  having the claim deleted (#187). **The migration is additive** — 13 votes across 2 open
+  sessions — with a CHECK written for the database where the backfill did not run (#188).
+  The shared list keeps what you have voted on; the other person's vote stays invisible
+  (#186).
+
+- **2026-09-15 (Group S complete)** — All eight snag batches from the 2026-09-14 triage
+  shipped and deployed in one run. **Six CI failures, none reaching `main`**: four in the
+  batches' own new tests (invisible locally, where the Postgres tests skip), one mypy
+  strictness difference, and one that was not a code failure at all — `git add` aborting on
+  a stale pathspec with its stderr suppressed, so a commit carried only two deletions
+  (#184). **Four spec facts were wrong and the code was right each time** (#170, #172,
+  #174, and S6's row count). Nine test expectations changed, every one required by a
+  criterion and none of them a weakening. **Three owner actions wait**: `OWNER-ACTIONS.md`
+  1h, 1i and 1j.
 
 - **2026-09-15 (Batch S6 — physical release dates)** — Group S batch 7 of 8, shipped as
   `b5b3796`. `tmdb/client.py` gains `get_release_dates`; GB type 5 is ingested **beside** the

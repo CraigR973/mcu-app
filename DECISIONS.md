@@ -3245,3 +3245,69 @@ contemporaneous.
      stage explicitly rather than `git add -A`; **staging explicitly is only half of it** —
      the other half is checking `git diff --cached --name-only` before committing, and
      never suppressing `git add`'s stderr.
+
+### 2026-09-15 — Group S, batch S7
+
+185. **A movie-night vote is cast on a suggestion, not on a film — and that one change is
+     what makes three of Craig's five points possible at once.**
+
+     Batch 35's `candidate_movies` was `select(Movie)` filtered by decade and rating, and
+     votes keyed on `movies.id`. Two consequences followed from that single fact: **a film
+     outside the Archive could never appear** (it has no `movies` row to key against), and
+     there was **no suggestion concept anywhere** (a deck is dealt, not proposed).
+
+     Moving the vote onto `movie_night_suggestions` answers both. A suggestion carries
+     *either* a `movie_id` or a `tmdb_id` plus the title and poster captured at the moment
+     it was put forward — because for a film nobody owns there is no row to read them back
+     from. "Shall we rent something" became a sayable answer to "what shall we watch".
+
+     `Match.movie_id` is nullable for the same reason, and the notification and SSE payload
+     both carry the title regardless, which is what a person actually reads.
+
+186. **The shortlist is shared; the votes on it are not.**
+
+     Batch 35 removed a card from your deck once you had swiped it, and deliberately did
+     **not** remove it when the other person swiped — *"a card disappearing because they
+     swiped it would leak their vote"*.
+
+     S7 keeps the second property and reverses the first. A shortlist everyone is adding to
+     is a list you re-read: you need to see that the film you liked is still there, and who
+     added the three that appeared since. So cards stay, `myVote` reports **your own** swipe
+     back to you, and nothing on the card says how anybody else voted. The swiping still
+     opens on the first film you have not decided on, which is where Batch 35's deck left
+     you.
+
+     *A test asserts the other person's vote is invisible, because this is the property
+     most likely to be lost by accident while making the list shared.*
+
+187. **The deck order was seeded rather than the claim deleted.**
+
+     #157 offered both: *"either seed it per session or delete the claim"*. Deleting would
+     have been honest and would have left two people scrolling different orders of the same
+     shortlist — awkward in exactly the situation the feature is for, two people on a sofa
+     comparing what they are looking at.
+
+     Ordering on `md5(session_id || movie_id)` is **stable per session, different between
+     sessions, identical for everyone in one**. Postgres' `setseed()` would also work and
+     is worse: it is connection state, and would leak into whatever ran next on that
+     pooled connection.
+
+188. **The migration is additive because the tables held real rows, and the CHECK is
+     written for the database where the backfill did not run.**
+
+     `movie_night_votes` held **13 rows across 2 sessions that were still open**, measured
+     against live Neon before designing. `AGENTS.md` scopes the destructive-operation stop
+     to *"dropping or rewriting columns and tables holding real rows"*, so nothing is
+     dropped and nothing is rewritten: `movie_id` is **relaxed** to nullable — a film
+     outside the Archive has no `movies` row — and every existing value stays put.
+
+     A backfill creates one suggestion per `(session, film)` already voted on and points
+     the existing votes at it, so **those two open sessions kept working** rather than
+     becoming history the moment this deployed. The suggestions are credited to nobody,
+     because nobody suggested them: Batch 35 dealt them.
+
+     **The CHECK is `movie_id IS NOT NULL OR suggestion_id IS NOT NULL`, not
+     `suggestion_id NOT NULL`.** The stricter form would have held on this database purely
+     because the backfill happened to succeed — and would have failed on any database where
+     it did not, which is precisely when a constraint needs to be forgiving rather than
+     smug.
