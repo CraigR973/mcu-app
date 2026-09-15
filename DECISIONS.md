@@ -3023,3 +3023,94 @@ contemporaneous.
      The same shape as the `scraper_type="generic"` fixture in S1 and for the same
      structural reason: **49 Postgres-backed tests in that file skip on this machine**, so
      the first execution of any new test there happens in CI (`STATUS.md` gotcha 3).
+
+### 2026-09-15 — Group S, batch S8
+
+174. **`DECISIONS.md` #160 recorded 6 ambiguities. Running the shipped matcher over the
+     same two diaries finds 28, and the shipped matcher is the stricter of the two.**
+
+     Measured on 2026-09-15 against live Neon — 2,322 entries, 1,854 films, read-only:
+
+     | | measured | #160 said |
+     |---|---|---|
+     | Links straight to an owned film | 969 | 950 |
+     | Owned but unidentified → identify | 586 | 580 |
+     | **Ambiguous** | **28** | **6** |
+     | Not in the collection | 739 | 786 |
+     | Watches of owned films | **1,555 (66%)** | 1,530 (66%) |
+     | Distinct films identified | **397** | 396 |
+
+     **The difference is normalisation, and it moves rows out of the wrong column.** #160's
+     pass did not collapse parenthetical disambiguators or rotate trailing articles, so
+     `'Mummy, The (Brendan Fraser)'`, `'Mummy, The (Original)'` and `'Mummy, The (Tom
+     Cruise)'` read as three unrelated titles — and a diary entry for *The Mummy* matched
+     **none of them**. It was counted as "not in the collection". Same for
+     `'Lion King (Animation)'` / `'(Live Action Movie)'` and for `'Man Who Knew Too Much,
+     The'` against `'The Man Who Knew Too Much'`.
+
+     That is the entire 47-row difference in the last row: **22 silent misses became 22
+     explicit questions**, and 25 more watches found a home.
+
+     **Which behaviour is better is not a close call.** The alternative to an ambiguity is
+     not a correct match — it is a *wrong absence*: the watch is silently not logged, the
+     film is never identified, and nothing says so. 28 confirmations is the price of never
+     doing that, and the criterion is explicit that ambiguous matches are offered rather
+     than guessed.
+
+     **All 15 distinct ambiguous titles are genuine.** The collection really does hold two
+     *Dunkirk*s, two *Titanic*s, two *Lion King*s, two *Ghostbusters*, two *Death on the
+     Nile*s, two *Murder on the Orient Express*es and three *Mummy*s. Not one is an
+     artifact of the aggressive normalisation.
+
+     **66% is unchanged**, which is the check that mattered: the same figure the 100-entry
+     RSS sample and #160's coarser pass both produced, from a matcher that disagrees with
+     both about the details.
+
+     *Recorded rather than quietly shipped, because the ledger's acceptance criterion names
+     "the 6 real ambiguities" and the next person to read it would otherwise conclude the
+     matcher was over-firing.*
+
+175. **Identification is a separate flag from writing, because they are different-sized
+     decisions.**
+
+     `--write` inserts `watch_log` rows: additive, attributed, soft-deletable, and nothing
+     that existed before changes. `--identify` rewrites `title`, `year`, `poster_path`,
+     `runtime_minutes` and the whole credit list on ~397 rows that are already there — and
+     where the collection turns out to hold both the unidentified row *and* an identified
+     one for the same TMDB id, it **merges them and deletes one**.
+
+     Putting both behind one flag would mean the safer operation could not be performed
+     without the riskier one. Craig can import 1,555 watches, look at them, and decide
+     about the 397 separately.
+
+     **A TMDB match the engine calls ambiguous is refused, not lowered.** `MatchingEngine`
+     reports `ambiguous` when the leading candidate ties with films that are not plausibly
+     the same film, and the tie is then broken by TMDB *popularity* — which is not a
+     property of the disc on the shelf (#31). **The watch is still written**: failing to
+     identify a film is no reason to lose the record that somebody watched it.
+
+176. **The idempotency column stores the bare viewing id, which is what makes S5 free.**
+
+     The CSV calls it `ViewingId`; the RSS feed wraps the same number as
+     `letterboxd-watch-<id>` in its `<guid>`. `watch_log.letterboxd_viewing_id` holds what
+     they have in common, so a viewing present in both sources collapses to one row —
+     **S5's "cannot double-count across sources" criterion, met and tested in S8.**
+
+     Doing it here rather than there is the point of the S8-before-S5 ordering: the
+     alternative is discovering the collision after 2,322 rows are already in.
+
+     `UNIQUE (user_id, letterboxd_viewing_id)`, partial on `IS NOT NULL` — watches logged
+     by hand in the app carry no viewing id and never will, and a plain unique index would
+     allow exactly one such row per person.
+
+177. **The test fixture carries real collection titles and invented diary rows.**
+
+     The messy titles are the point and are real: `'Death on the Nile [1978]'`,
+     `'Collector, The'`, `'Out of The past'`, `'Mummy, The (Tom Cruise)'`, `'Test 15.04.26'`.
+     Those are rows live Neon holds, they are what the normalisation has to survive, and a
+     film title is not personal data.
+
+     **The dates, ratings and viewing ids are invented.** Those three together *are*
+     somebody's watch history — the reason `.letterboxd-export/` is gitignored (#161) — and
+     a six-line excerpt is still six viewings. The column shape is faithful, which is all a
+     reader test needs.

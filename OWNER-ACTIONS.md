@@ -355,6 +355,53 @@ the *cause* and not the *behaviour*, and a green gate was not allowed to stand i
       that searches is not a failure of this fix** — it is a film waiting to be identified,
       which is what S8's import is for.
 
+### 1i. Run the watch-history import *(new — Batch S8, 2026-09-15)*
+
+**Nothing is blocked on this, and it is the highest-leverage thing on the list.** `watch_log`
+holds 0 rows, and four features are inert until it does not: On this day, Worth a rewatch,
+Most watched, and the "has he seen it?" that S7's movie-night rebuild needs.
+
+**S8 shipped the importer and ran both dry runs against production.** They wrote nothing.
+Measured 2026-09-15 against live Neon:
+
+| | Craig | Mark | Both |
+|---|---|---|---|
+| Entries read | 1,173 | 1,149 | 2,322 |
+| Watches a real run would write | **593** | **962** | **1,555** |
+| Films it could identify | 223 | 363 | **397 distinct** |
+| Ambiguous — need you to choose | 13 | 15 | **28** |
+| Not in the collection | 567 | 172 | 739 |
+
+- [ ] **Step 1 — write the watches.** Additive and reversible: the rows soft-delete, and
+      nothing that already exists changes.
+
+```bash
+cd /Users/craigrobinson/mcu_app && set -a && . apps/api/.env.local && set +a && PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --write
+```
+
+```bash
+cd /Users/craigrobinson/mcu_app && set -a && . apps/api/.env.local && set +a && PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/mark-diary.csv --user Mark --write
+```
+
+- [ ] **Step 2 — identify the films, once you are happy with step 1.** Add `--identify` to
+      the same two commands. **This one is different in kind**: it rewrites title, year,
+      poster, runtime and cast on **~397 rows that already exist**, and where the collection
+      holds both an unidentified row and an identified one for the same film it merges them
+      and deletes one. That is why it is a separate flag (`DECISIONS.md` #175).
+
+**Re-running is safe.** Every row carries its Letterboxd viewing id, so a second run writes
+zero — the script will say `already imported 1,173`. That is also what stops S5's RSS sync
+re-importing anything this file already wrote.
+
+**The 28 ambiguities are skipped, not guessed.** Both *Dunkirk*s, both *Titanic*s, both *Lion
+King*s, all three *Mummy*s and so on — the collection genuinely holds more than one, and
+nothing in a diary row says which. `--ambiguous-out ambiguous.csv` writes them to a file. They
+resolve themselves once step 2 has given those rows real years, and a re-run then picks them
+up.
+
+*Note the shell line: `.env.local`'s connection string contains `&`, so it must be sourced with
+`set -a` rather than exported by hand.*
+
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is

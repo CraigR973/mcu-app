@@ -1376,29 +1376,61 @@ file skip.
 **The API moves with the UI, never after it.** A button that appears while its endpoint still
 403s is worse than no change. Eight endpoints moved in the same commit as the route guard.
 
-### Batch S8 — Watch history, the backfill 🔴
+### ~~Batch S8 — Watch history, the backfill~~ 🔴 **shipped 2026-09-15 (`0a8c813`)** · ⏸ **live import waits for Craig**
 **Covers snag 10b.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High. `DECISIONS.md` #160, #161.
 
 Both diaries are already retrieved and sit in `.letterboxd-export/` (gitignored — personal
 data, never commit them): **Craig 1,173 entries, Mark 1,149, 2,322 total.**
 
-**Acceptance:**
-- An importer reads a Letterboxd `diary.csv`-shaped file and writes `watch_log` rows.
-- **Idempotent on `ViewingId`** — a second run of the same file writes zero new rows. Tested.
-- Matching is exact on `tmdb_id` where present, else normalised title + year. Normalisation
-  covers trailing articles (`Collector, The`), bracketed years (`[1978]`), `&`/`and`, and case.
-- **Ambiguous matches are offered, never guessed** — tested against a `Death on the Nile`
-  fixture, which is one of the 6 real ambiguities in 2,047 distinct films.
-- A film matching an **unidentified** row is identified: `tmdb_id`, year, poster, runtime and
-  cast filled, and each identification reported.
-- A **dry-run** mode reports every count without writing.
-- Gate green against fixtures.
+**Acceptance — seven of seven met.**
+- ~~An importer reads a Letterboxd `diary.csv`-shaped file and writes `watch_log` rows.~~ ✅
+  `services/letterboxd/` — reader, matcher and importer, split so S5 reuses all but the reader.
+- ~~**Idempotent on `ViewingId`** — a second run of the same file writes zero new rows.
+  Tested.~~ ✅ Migration `031` adds `watch_log.letterboxd_viewing_id`, unique per person and
+  partial on NOT NULL. **One column serves both sources**: the feed's
+  `letterboxd-watch-<id>` guid wraps the same number, so **S5's no-double-count criterion is
+  met here** — tested — rather than discovered after 2,322 rows are in.
+- ~~Matching is exact on `tmdb_id` where present, else normalised title + year.~~ ✅ And **the
+  year is a tie-breaker, never a filter** — filtering is the artifact #158 records.
+- ~~**Ambiguous matches are offered, never guessed** — tested against a `Death on the Nile`
+  fixture~~ ✅ — **and the count is 28, not 6. See the correction below.**
+- ~~A film matching an **unidentified** row is identified: `tmdb_id`, year, poster, runtime and
+  cast filled, and each identification reported.~~ ✅ Reuses `services/identification.py`,
+  extracted from `routers/movies.py` so an imported identification and a hand-made one cannot
+  drift. A TMDB match the engine calls ambiguous is **refused and reported**, and the watch is
+  still written.
+- ~~A **dry-run** mode reports every count without writing.~~ ✅ `dry_run=True` is the
+  *default*, and a dry run never touches TMDB.
+- ~~Gate green against fixtures.~~ ✅ **One CI failure**, in this batch's own new test — it
+  constructed a tie the engine can legitimately break (the diary's year settles it), so the
+  assertion was wrong and the code was right. Fixed in `0a8c813`, with a second test pinning
+  the behaviour CI demonstrated.
 
-**The live import is an owner action and must not run unattended.** It writes ~1,530 watch rows
-and **overwrites 396 existing `movies` rows** with identification data — which
-`docs/agent-commands/group-start.md` puts squarely in the owner's hands ("never run unattended
-… stop before executing and ask, naming the row count"). Ship the importer and the dry-run;
-stop there.
+> **⚠️ Correction to `DECISIONS.md` #160: ambiguities are 28, not 6** — see #174. Measured by
+> running *this* matcher over both real diaries against live Neon:
+>
+> | | measured | #160 said |
+> |---|---|---|
+> | Links straight to an owned film | 969 | 950 |
+> | Owned but unidentified → identify | 586 | 580 |
+> | **Ambiguous** | **28** | **6** |
+> | Not in the collection | 739 | 786 |
+> | Watches of owned films | **1,555 (66%)** | 1,530 (66%) |
+> | Distinct films identified | **397** | 396 |
+>
+> **This matcher is the stricter of the two.** #160's pass did not collapse parenthetical
+> disambiguators or rotate trailing articles, so `Mummy, The (Brendan Fraser)`, `(Original)`
+> and `(Tom Cruise)` looked like three unrelated titles and a diary entry for *The Mummy*
+> matched **none** — counted as "not in the collection" rather than as a question. That is the
+> whole 47-row difference: **22 silent misses became 22 explicit questions.** All 15 distinct
+> ambiguities are genuine; the collection really holds two *Dunkirk*s, two *Titanic*s, two
+> *Lion King*s and three *Mummy*s. 66% is unchanged, which is the check that it scales.
+
+> **⏸ The live import is Craig's and was not run.** `OWNER-ACTIONS.md` **1i** has the two
+> commands. It writes **~1,555 watch rows** and, with `--identify`, **overwrites ~397 existing
+> `movies` rows**. `--identify` is a separate flag from `--write` on purpose: writing watches
+> is additive and reversible, identification rewrites rows that already exist and merges two
+> into one where the collection holds both.
 
 ### Batch S5 — Watch history, ongoing 🟡
 **Covers snag 10a.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #156, #158, #159.
@@ -1532,7 +1564,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

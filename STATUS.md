@@ -2,9 +2,10 @@
 
 ## Now
 
-**Group S is running. S1–S4 of 8 have shipped; S8 is next.** The eight batches from the
-2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
-S5 → S6 → S7**. The four UI batches are done; the four remaining are the data ones. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
+**Group S is running. S1–S4 and S8 of 8 have shipped; S5 is next.** The eight batches from
+the 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
+S5 → S6 → S7**. The four UI batches are done, the backfill is built, and **one owner action
+is now waiting: the live watch-history import** (`OWNER-ACTIONS.md` **1i**). Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
 were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
 and there is no `**Phase X.Y:` heading behind them to go looking for.
 
@@ -151,6 +152,50 @@ add test built a disc for the film it then added, so `POST /collection` answered
 duplicate** before the role check ran. A looser `!= 403` assertion would have gone on passing
 after the widening was reverted (#173). Same structural cause as S1's: **the Postgres-backed
 tests skip locally**, so a new one there first executes in CI.
+
+**S8 shipped 2026-09-15 as `0a8c813` — the watch-history import is built, and the live run
+is Craig's.** Production serves that SHA with `db: ok`, migration `031` is applied, and
+**both dry runs were executed against production and wrote nothing.**
+
+| | Craig | Mark | Both |
+|---|---|---|---|
+| Entries read | 1,173 | 1,149 | 2,322 |
+| Watches a real run would write | 593 | 962 | **1,555** |
+| Films it could identify | 223 | 363 | **397 distinct** |
+| Ambiguous — need a person | 13 | 15 | **28** |
+| Not in the collection | 567 | 172 | 739 |
+
+> **⚠️ `DECISIONS.md` #160 said 6 ambiguities. The shipped matcher finds 28, and it is the
+> stricter of the two** (#174). #160's pass did not collapse parenthetical disambiguators or
+> rotate trailing articles, so `'Mummy, The (Brendan Fraser)'`, `'(Original)'` and
+> `'(Tom Cruise)'` read as three unrelated titles and a diary entry for *The Mummy* matched
+> **none** — scored "not in the collection" rather than offered as a question. That is the
+> entire 47-row difference: **22 silent misses became 22 explicit questions**, and 25 more
+> watches found a home. All 15 distinct ambiguous titles are genuine — the collection really
+> holds two *Dunkirk*s, two *Titanic*s, two *Lion King*s and three *Mummy*s. **66% is
+> unchanged**, which is the check that mattered.
+>
+> *The alternative to an ambiguity is not a correct match — it is a wrong absence: the watch
+> silently unlogged, the film never identified, and nothing saying so.*
+
+**`--identify` is a separate flag from `--write`, and the difference is the point** (#175).
+Writing watches is additive and reversible; identification rewrites ~397 rows that already
+exist and merges two into one where the collection holds both. Craig can do the first, look
+at it, and decide about the second.
+
+**The idempotency column is what makes S5 free** (#176). `watch_log.letterboxd_viewing_id`
+stores the bare id, and the RSS `<guid>` wraps the same number — so **S5's
+"cannot double-count across sources" criterion is already met and tested**, rather than
+discovered after 2,322 rows are in.
+
+**`_apply_identification` moved out of `routers/movies.py`** into `services/identification.py`
+so an imported identification and a hand-made one cannot drift apart. The only behavioural
+change is that the service flushes and the caller commits.
+
+**One CI failure, and the code was right.** The new ambiguity test built a tie the engine can
+legitimately break — the diary's year settles it — so the assertion was wrong. Fixed, with a
+second test pinning the behaviour CI demonstrated: **every row in both diaries carries a
+Year**, so that is the common path.
 
 **Three owner actions sit inside later batches and are not group blockers.** S8 ships the
 importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
@@ -586,6 +631,17 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S8 — watch history, the backfill)** — Group S batch 5 of 8, shipped as
+  `0a8c813`. Importer, matcher and dry run for a Letterboxd diary; migration `031` adds
+  `watch_log.letterboxd_viewing_id`, unique per person, which is **also S5's
+  no-double-count criterion, met and tested here** (#176). **Both dry runs executed against
+  production and wrote nothing**: 1,555 watches and ~397 identifiable films wait for Craig
+  (`OWNER-ACTIONS.md` 1i). **#160's "6 ambiguities" is corrected to 28** (#174) — the shipped
+  matcher is stricter, and 22 rows #160 scored as "not in the collection" are really
+  questions; 66% unchanged. `--identify` is deliberately a separate flag from `--write`
+  (#175). `_apply_identification` extracted to `services/identification.py`. **One CI
+  failure**, in this batch's own test, where the code was right and the assertion wrong.
 
 - **2026-09-15 (Batch S4 — quick add within reach)** — Group S batch 4 of 8, shipped as
   `45ec4fa`. Mark can add a disc and a phone has somewhere to do it from: an accented Add slot
