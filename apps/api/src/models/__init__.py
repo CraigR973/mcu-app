@@ -47,6 +47,7 @@ from src.models.movie_night import (
     SESSION_STATUSES,
     MovieNightParticipant,
     MovieNightSession,
+    MovieNightSuggestion,
     MovieNightVote,
     new_invite_token,
 )
@@ -133,6 +134,7 @@ __all__ = [
     "SESSION_STATUSES",
     "MovieNightParticipant",
     "MovieNightSession",
+    "MovieNightSuggestion",
     "MovieNightVote",
     "new_invite_token",
     "DEFERRED_DIGEST",

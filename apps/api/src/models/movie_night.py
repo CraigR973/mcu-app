@@ -11,7 +11,16 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -73,6 +82,55 @@ class MovieNightParticipant(Base, UUIDPrimaryKeyMixin):
     )
 
 
+class MovieNightSuggestion(Base, UUIDPrimaryKeyMixin):
+    """A film somebody put forward for this session — Batch S7, snag 6.
+
+    **Batch 35 had no suggestion concept at all.** `candidate_movies` dealt a random deck
+    from `movies`, so a film outside the Archive could never appear and nobody could put
+    one forward. `DECISIONS.md` #157: *"anyone suggests films, everyone votes on anyone's
+    suggestion, films outside the Archive are allowed"*.
+
+    **Exactly one of `movie_id` and `tmdb_id`**, enforced by a CHECK. A film on the shelf
+    is a `movies` row and reads its metadata from there; a film nobody owns is a TMDB id
+    plus the title and poster captured at the moment it was suggested, because there is no
+    row to read them back from.
+    """
+
+    __tablename__ = "movie_night_suggestions"
+
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("movie_night_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    #: ``SET NULL``: the suggestion outlives whoever made it. Who put a film forward is
+    #: shown on its card, so losing the person should not lose the film.
+    suggested_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
+    )
+
+    #: ``RESTRICT``, matching `watch_log.movie_id` rather than a cascade: a suggestion is
+    #: something a person did, not a fact about the film.
+    movie_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("movies.id", ondelete="RESTRICT"), nullable=True
+    )
+    tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    poster_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    overview: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at_utc: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False, server_default=func.now()
+    )
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return f"<MovieNightSuggestion {self.title}>"
+
+
 class MovieNightVote(Base, UUIDPrimaryKeyMixin):
     """One swipe — §8.4."""
 
@@ -89,9 +147,25 @@ class MovieNightVote(Base, UUIDPrimaryKeyMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False
     )
-    movie_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("movies.id", ondelete="CASCADE"), nullable=False
+    #: Batch S7 relaxed this to nullable: **a film outside the Archive has no `movies`
+    #: row to point at.** Every pre-S7 vote still carries one, and the backfill in
+    #: migration 033 gave each of them a suggestion too, so the two sessions that were
+    #: open at the time kept working rather than becoming history.
+    movie_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("movies.id", ondelete="CASCADE"), nullable=True
     )
+
+    #: Batch S7. **What the vote is actually about.** A CHECK requires one of this and
+    #: `movie_id` to be set — not `suggestion_id NOT NULL`, which would refuse the legacy
+    #: shape the migration just filled in, and a constraint that only holds because a
+    #: backfill happened to succeed fails on the one database where it did not.
+    suggestion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("movie_night_suggestions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+
     liked: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     #: Written on every vote in a matched pair when the match is announced, so it is

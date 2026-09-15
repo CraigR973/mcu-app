@@ -1356,12 +1356,38 @@ export const movieNightSessionListSchema = z.object({
   total: z.number().int().nonnegative(),
 })
 
+/** Who else in the session has seen a film, and when — Batch S7.
+ *
+ *  **Everyone except the person asking.** "Have I seen it" is on the film's own page;
+ *  what a card needs to say is whether the people you are choosing with have. */
+export const watchedBySchema = z.object({
+  personName: z.string().min(1),
+  watchedAt: z.string(),
+})
+
+/** One film on tonight's shortlist.
+ *
+ *  **Batch S7 made this a suggestion rather than a deal from a private deck.** `movieId`
+ *  is null for a film outside the Archive — those can be suggested now, and carry their
+ *  own title and poster because there is no `movies` row to read them from. */
 export const movieNightCandidateSchema = z.object({
-  movieId: z.string().uuid(),
+  suggestionId: z.string().uuid(),
+  movieId: z.string().uuid().nullable(),
+  tmdbId: z.number().int().nullable(),
   title: z.string().min(1),
   year: z.number().int().nullable(),
   posterPath: z.string().nullable(),
   overview: z.string().nullable(),
+  runtimeMinutes: z.number().int().nullable(),
+  genres: z.array(z.string()),
+  cast: z.array(z.string()),
+  /** Null for the films the session was seeded with — nobody suggested those. */
+  suggestedBy: z.string().nullable(),
+  streamingOn: z.array(z.string()),
+  watchedBy: z.array(watchedBySchema),
+  /** The caller's own swipe. **Only ever the caller's**: a movie night where each person
+   *  can see the other's votes before deciding is not the same game. */
+  myVote: z.boolean().nullable(),
 })
 
 export const movieNightCandidateListSchema = z.object({
@@ -1370,7 +1396,8 @@ export const movieNightCandidateListSchema = z.object({
 })
 
 export const movieNightMatchSchema = z.object({
-  movieId: z.string().uuid(),
+  /** Null when the match is a film nobody owns, which Batch S7 made possible. */
+  movieId: z.string().uuid().nullable(),
   title: z.string().min(1),
   posterPath: z.string().nullable(),
 })
@@ -1385,6 +1412,7 @@ export type MovieNightSession = z.infer<typeof movieNightSessionSchema>
 export type MovieNightSessionList = z.infer<typeof movieNightSessionListSchema>
 export type MovieNightCandidate = z.infer<typeof movieNightCandidateSchema>
 export type MovieNightCandidateList = z.infer<typeof movieNightCandidateListSchema>
+export type MovieNightWatchedBy = z.infer<typeof watchedBySchema>
 export type MovieNightMatch = z.infer<typeof movieNightMatchSchema>
 export type MovieNightVoteResult = z.infer<typeof movieNightVoteResultSchema>
 

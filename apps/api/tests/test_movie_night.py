@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from collections.abc import AsyncIterator
+from datetime import date
 
 import pytest
 import pytest_asyncio
@@ -26,13 +27,24 @@ from src.models.movie import Movie
 from src.models.movie_night import (
     MovieNightParticipant,
     MovieNightSession,
+    MovieNightSuggestion,
     MovieNightVote,
     new_invite_token,
 )
 from src.models.notification import Notification
 from src.models.profile import Profile, UserRole
+from src.models.watch_log import WatchLog
 from src.services.movie_night.realtime import MovieNightBroadcaster, encode
-from src.services.movie_night.sessions import candidate_movies, detect_match, record_vote
+from src.services.movie_night.sessions import (
+    SuggestionRefused,
+    add_suggestion,
+    detect_match,
+    ensure_seeded,
+    record_vote,
+    seeded_candidates,
+    session_suggestions,
+    watched_by_others,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -86,6 +98,19 @@ async def _session(
     return session
 
 
+async def _suggest(
+    db: AsyncSession, session: MovieNightSession, movie: Movie, by: Profile
+) -> MovieNightSuggestion:
+    """Put a film on tonight's list.
+
+    **Batch S7 made this the step before a vote.** Batch 35 dealt a deck and voted
+    straight onto `movies`; `DECISIONS.md` #157 replaced the input side, so every vote is
+    now cast on a suggestion — which is what lets a film outside the Archive be voted on
+    at all.
+    """
+    return await add_suggestion(db, session=session, user=by, movie_id=movie.id)
+
+
 class TestMatching:
     """§8.4 — *"both users swiping on the same film triggers a match notification"*."""
 
@@ -93,9 +118,10 @@ class TestMatching:
         craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark)
         heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
 
-        first = await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
-        second = await record_vote(db, session=session, user=mark, movie_id=heat.id, liked=True)
+        first = await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
+        second = await record_vote(db, session=session, user=mark, suggestion=pick, liked=True)
 
         assert first is None, "one like is not a match"
         assert second is not None
@@ -105,9 +131,10 @@ class TestMatching:
         craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark)
         heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
 
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
-        result = await record_vote(db, session=session, user=mark, movie_id=heat.id, liked=False)
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
+        result = await record_vote(db, session=session, user=mark, suggestion=pick, liked=False)
 
         assert result is None
 
@@ -116,10 +143,11 @@ class TestMatching:
         craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark)
         heat = await _movie(db, "Heat")
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
-        await record_vote(db, session=session, user=mark, movie_id=heat.id, liked=True)
+        pick = await _suggest(db, session, heat, craig)
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
+        await record_vote(db, session=session, user=mark, suggestion=pick, liked=True)
 
-        again = await detect_match(db, session=session, movie_id=heat.id)
+        again = await detect_match(db, session=session, suggestion=pick)
 
         assert again is None
 
@@ -128,8 +156,9 @@ class TestMatching:
         craig = await _profile(db)
         session = await _session(db, craig)
         heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
 
-        result = await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
+        result = await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
 
         assert result is None
 
@@ -138,9 +167,10 @@ class TestMatching:
         craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark)
         heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
 
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
-        await record_vote(db, session=session, user=mark, movie_id=heat.id, liked=True)
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
+        await record_vote(db, session=session, user=mark, suggestion=pick, liked=True)
 
         rows = list(
             (await db.execute(select(Notification).where(Notification.category == "movie_night")))
@@ -156,9 +186,10 @@ class TestMatching:
         craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark)
         heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
 
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=False)
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=False)
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
 
         votes = list(
             (await db.execute(select(MovieNightVote).where(MovieNightVote.user_id == craig.id)))
@@ -175,50 +206,244 @@ class TestMatching:
         third = await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark, third)
         heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
 
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=True)
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=True)
         two_of_three = await record_vote(
-            db, session=session, user=mark, movie_id=heat.id, liked=True
+            db, session=session, user=mark, suggestion=pick, liked=True
         )
-        all_three = await record_vote(db, session=session, user=third, movie_id=heat.id, liked=True)
+        all_three = await record_vote(db, session=session, user=third, suggestion=pick, liked=True)
 
         assert two_of_three is None
         assert all_three is not None
 
 
-class TestCandidates:
-    async def test_a_film_you_voted_on_leaves_your_deck(self, db: AsyncSession) -> None:
+class TestTheShortlist:
+    """**Batch S7 turned a private deck into a shared shortlist** — `DECISIONS.md` #157.
+
+    Batch 35 dealt each person their own hand and hid what they had swiped. Three of
+    Craig's five points needed the input side replaced: anyone suggests, everyone votes on
+    anyone's suggestion, and films outside the Archive are allowed.
+    """
+
+    async def test_anyone_can_suggest_and_everyone_votes_on_it(self, db: AsyncSession) -> None:
+        """#157's first point. **Not the admin, not the creator — anyone in the session.**"""
         craig = await _profile(db)
-        session = await _session(db, craig)
-        heat = await _movie(db, "Heat")
-        await _movie(db, "Nope")
-
-        await record_vote(db, session=session, user=craig, movie_id=heat.id, liked=False)
-        deck = await candidate_movies(db, session=session, user=craig)
-
-        assert heat.id not in {movie.id for movie in deck}
-
-    async def test_the_other_persons_votes_do_not_change_your_deck(self, db: AsyncSession) -> None:
-        """**A card vanishing because they swiped it would leak their vote.**"""
-        craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
+        mark = await _profile(db, UserRole.viewer)
         session = await _session(db, craig, mark)
         heat = await _movie(db, "Heat")
 
-        await record_vote(db, session=session, user=mark, movie_id=heat.id, liked=True)
-        deck = await candidate_movies(db, session=session, user=craig)
+        # Suggested by the *viewer*, voted on by both.
+        pick = await add_suggestion(db, session=session, user=mark, movie_id=heat.id)
+        assert pick.suggested_by == mark.id
 
-        assert heat.id in {movie.id for movie in deck}
+        assert (
+            await record_vote(db, session=session, user=craig, suggestion=pick, liked=True) is None
+        )
+        match = await record_vote(db, session=session, user=mark, suggestion=pick, liked=True)
+        assert match is not None
+        assert match.title == "Heat"
 
-    async def test_the_sessions_filters_narrow_the_deck(self, db: AsyncSession) -> None:
+    async def test_a_film_outside_the_archive_can_be_suggested_and_matched(
+        self, db: AsyncSession
+    ) -> None:
+        """#157's second point, and the one Batch 35 made structurally impossible.
+
+        `candidate_movies` was `select(Movie)`, so **a film outside the Archive could never
+        appear**. A suggestion carries a TMDB id and its own title instead, because there
+        is no `movies` row to read them from — and a match on one is still a match.
+        """
+        craig = await _profile(db)
+        mark = await _profile(db, UserRole.viewer)
+        session = await _session(db, craig, mark)
+
+        rental = await add_suggestion(
+            db,
+            session=session,
+            user=craig,
+            tmdb_id=603,
+            title="The Matrix",
+            year=1999,
+        )
+        assert rental.movie_id is None
+        assert rental.tmdb_id == 603
+
+        await record_vote(db, session=session, user=craig, suggestion=rental, liked=True)
+        match = await record_vote(db, session=session, user=mark, suggestion=rental, liked=True)
+
+        assert match is not None
+        assert match.title == "The Matrix"
+        assert match.movie_id is None  # nothing on the shelf to point at
+
+    async def test_the_same_film_twice_is_agreement_rather_than_two_cards(
+        self, db: AsyncSession
+    ) -> None:
+        craig = await _profile(db)
+        mark = await _profile(db, UserRole.viewer)
+        session = await _session(db, craig, mark)
+        heat = await _movie(db, "Heat")
+
+        await add_suggestion(db, session=session, user=craig, movie_id=heat.id)
+        with pytest.raises(SuggestionRefused):
+            await add_suggestion(db, session=session, user=mark, movie_id=heat.id)
+
+    async def test_a_suggestion_names_exactly_one_film(self, db: AsyncSession) -> None:
+        craig = await _profile(db)
+        session = await _session(db, craig)
+        heat = await _movie(db, "Heat")
+
+        with pytest.raises(SuggestionRefused):
+            await add_suggestion(db, session=session, user=craig, movie_id=heat.id, tmdb_id=603)
+        with pytest.raises(SuggestionRefused):
+            await add_suggestion(db, session=session, user=craig)
+        with pytest.raises(SuggestionRefused):
+            # A film outside the collection has no row to read a title from.
+            await add_suggestion(db, session=session, user=craig, tmdb_id=603)
+
+    async def test_a_film_you_voted_on_stays_on_the_shared_list(self, db: AsyncSession) -> None:
+        """**The deliberate change.** Batch 35 removed a card once you had swiped it,
+        because the deck was yours alone. A shortlist everyone is adding to is a list you
+        re-read, so the card stays and the API reports your own vote back to you."""
+        craig = await _profile(db)
+        session = await _session(db, craig)
+        heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
+
+        await record_vote(db, session=session, user=craig, suggestion=pick, liked=False)
+        listed = await session_suggestions(db, session=session)
+
+        assert heat.id in {item.movie_id for item in listed}
+
+    async def test_the_other_persons_vote_is_still_not_visible(self, db: AsyncSession) -> None:
+        """**The privacy property Batch 35 had, kept.**
+
+        A movie night where each person can see the other's swipes before deciding is not
+        the same game. The shortlist is shared; the votes on it are not — `myVote` is
+        built from the caller's own votes alone, and nothing else on the card says how
+        anybody voted.
+        """
+        craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
+        session = await _session(db, craig, mark)
+        heat = await _movie(db, "Heat")
+        pick = await _suggest(db, session, heat, craig)
+
+        await record_vote(db, session=session, user=mark, suggestion=pick, liked=True)
+
+        mine = {
+            vote.suggestion_id: vote.liked
+            for vote in (
+                await db.execute(
+                    select(MovieNightVote).where(
+                        MovieNightVote.session_id == session.id,
+                        MovieNightVote.user_id == craig.id,
+                    )
+                )
+            ).scalars()
+        }
+        assert mine == {}, "Craig's own votes are empty; Mark's are not his to see"
+
+    async def test_the_sessions_filters_narrow_what_it_is_seeded_with(
+        self, db: AsyncSession
+    ) -> None:
         """§8.3's "session creation with filters", doing something."""
         craig = await _profile(db)
         session = await _session(db, craig, filters={"decadeFrom": 2000, "decadeTo": 2009})
         await _movie(db, "Old Film", year=1975)
         modern = await _movie(db, "Noughties Film", year=2005)
 
-        deck = await candidate_movies(db, session=session, user=craig)
+        deck = await seeded_candidates(db, session=session)
 
         assert {movie.id for movie in deck} == {modern.id}
+
+    async def test_seeding_twice_does_not_double_the_list(self, db: AsyncSession) -> None:
+        craig = await _profile(db)
+        session = await _session(db, craig)
+        await _movie(db, "Heat")
+
+        await ensure_seeded(db, session=session)
+        first = len(await session_suggestions(db, session=session))
+        await ensure_seeded(db, session=session)
+
+        assert len(await session_suggestions(db, session=session)) == first
+
+
+class TestTheDeckOrderMatchesItsDocstring:
+    """`DECISIONS.md` #157's *"defect to fix regardless of this decision"*.
+
+    Batch 35's `candidate_movies` documented itself as *"seeded per session so both people
+    are shown the same deck in the same order"* and ordered by `func.random()` with **no
+    seed** — every call returned a different order, per person and per refetch. The
+    comment asserted a guarantee the code did not give.
+    """
+
+    async def test_the_same_session_deals_the_same_order_every_time(self, db: AsyncSession) -> None:
+        craig = await _profile(db)
+        session = await _session(db, craig)
+        for index in range(12):
+            await _movie(db, f"Film {index}", year=2000 + index)
+
+        first = [movie.id for movie in await seeded_candidates(db, session=session)]
+        second = [movie.id for movie in await seeded_candidates(db, session=session)]
+
+        assert first == second
+        assert len(first) >= 12
+
+    async def test_two_sessions_deal_different_orders(self, db: AsyncSession) -> None:
+        """Otherwise every movie night opens on the same twelve films, which is the reason
+        the ordering was random in the first place."""
+        craig = await _profile(db)
+        one = await _session(db, craig)
+        two = await _session(db, craig)
+        for index in range(25):
+            await _movie(db, f"Shuffled {index}", year=1980 + index)
+
+        assert [m.id for m in await seeded_candidates(db, session=one)] != [
+            m.id for m in await seeded_candidates(db, session=two)
+        ]
+
+
+class TestWhoHasSeenIt:
+    """#157's fourth point: *"whether the others have seen it and when"*.
+
+    **Empty for every film until S8's import runs** — `watch_log` held 0 rows when this was
+    written, which is exactly why #157 put S7 after S8 in the order.
+    """
+
+    async def test_it_reports_the_other_participants_and_not_you(self, db: AsyncSession) -> None:
+        craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
+        session = await _session(db, craig, mark)
+        heat = await _movie(db, "Heat")
+
+        db.add(
+            WatchLog(
+                id=uuid.uuid4(),
+                movie_id=heat.id,
+                user_id=mark.id,
+                watched_at=date(2026, 3, 4),
+            )
+        )
+        db.add(
+            WatchLog(
+                id=uuid.uuid4(),
+                movie_id=heat.id,
+                user_id=craig.id,
+                watched_at=date(2026, 5, 6),
+            )
+        )
+        await db.flush()
+
+        seen = await watched_by_others(db, session=session, user=craig, movie_ids=[heat.id])
+
+        # Mark's watch, not Craig's own: "have I seen it" is on the film's page.
+        assert [name for name, _ in seen[heat.id]] == [mark.display_name]
+        assert seen[heat.id][0][1] == date(2026, 3, 4)
+
+    async def test_a_film_nobody_else_has_seen_is_simply_absent(self, db: AsyncSession) -> None:
+        craig, mark = await _profile(db), await _profile(db, UserRole.viewer)
+        session = await _session(db, craig, mark)
+        heat = await _movie(db, "Heat")
+
+        assert await watched_by_others(db, session=session, user=craig, movie_ids=[heat.id]) == {}
 
 
 class TestBroadcaster:

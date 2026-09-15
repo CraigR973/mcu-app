@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Heart, Popcorn, X } from 'lucide-react'
+import { Check, Eye, Heart, Popcorn, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import type { MovieNightCandidate, MovieNightMatch } from '@mcu/shared'
 
 import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
+import { SuggestFilmPanel } from '@/components/movies/SuggestFilmPanel'
 import {
   castMovieNightVote,
   fetchMovieNight,
@@ -98,7 +99,11 @@ export default function MovieNightSessionPage() {
 
   const cards = deck.data?.items ?? []
   const deckState = listState(deck, cards.length === 0)
-  const current: MovieNightCandidate | undefined = cards[index]
+  // **Batch S7: the list is shared, so it keeps what you have already voted on** — a
+  // shortlist everyone is adding to is a list you re-read. The *swiping* still starts at
+  // the first film you have not decided on, which is where Batch 35's deck left you.
+  const undecided = cards.filter((card) => card.myVote === null)
+  const current: MovieNightCandidate | undefined = undecided[index]
 
   const vote = useCallback(
     async (liked: boolean) => {
@@ -107,7 +112,7 @@ export default function MovieNightSessionPage() {
       setError(null)
       setDrag(0)
       try {
-        const result = await castMovieNightVote(id, current.movieId, liked)
+        const result = await castMovieNightVote(id, current.suggestionId, liked)
         if (result.match) setMatch(result.match)
         setIndex((value) => value + 1)
       } catch (cause) {
@@ -308,11 +313,78 @@ export default function MovieNightSessionPage() {
             {current.year ? (
               <p className="text-center text-sm text-muted-foreground">{current.year}</p>
             ) : null}
+            {/* Batch S7, `DECISIONS.md` #157's third point: **the card answers "what is
+                this" before a swipe** — runtime, genres and top billing, so nobody has to
+                open another screen to decide. */}
+            {(current.runtimeMinutes ?? current.genres.length > 0) ? (
+              <p className="mt-1 text-center text-xs text-muted-foreground">
+                {[
+                  current.runtimeMinutes
+                    ? `${String(Math.floor(current.runtimeMinutes / 60))}h ${String(current.runtimeMinutes % 60)}m`
+                    : null,
+                  current.genres.join(' · ') || null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            ) : null}
+
+            {current.suggestedBy ? (
+              <p className="mt-1 text-center text-xs text-primary">
+                Suggested by {current.suggestedBy}
+              </p>
+            ) : null}
+
             {current.overview ? (
               <p className="mt-2 line-clamp-4 text-sm text-muted-foreground">
                 {current.overview}
               </p>
             ) : null}
+
+            {current.cast.length > 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">Starring</span>{' '}
+                {current.cast.join(', ')}
+              </p>
+            ) : null}
+
+            {/* #157's fourth point. **Empty until the S8 import runs** — `watch_log` held
+                0 rows when this shipped, which is why S7 follows S8 in the order. */}
+            {current.watchedBy.length > 0 ? (
+              <p className="mt-2 flex items-start gap-1.5 text-xs text-warning">
+                <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span>
+                  {current.watchedBy
+                    .map((seen) => `${seen.personName} saw this on ${seen.watchedAt}`)
+                    .join(' · ')}
+                </span>
+              </p>
+            ) : null}
+
+            {/* A film nobody owns still has to be watchable somewhere, or suggesting it
+                is a dead end. `get_watch_providers` already existed (#157). */}
+            {current.streamingOn.length > 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">Streaming on</span>{' '}
+                {current.streamingOn.join(', ')}
+              </p>
+            ) : null}
+
+            {current.movieId ? (
+              <p className="mt-3 text-center">
+                <Link
+                  to={`/movies/${current.movieId}`}
+                  className="text-xs font-semibold text-primary hover:underline"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  Open its full details
+                </Link>
+              </p>
+            ) : (
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Not in the collection — this one would be a rental.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-6">
@@ -326,7 +398,7 @@ export default function MovieNightSessionPage() {
               <X className="h-5 w-5" aria-hidden />
             </Button>
             <span className="text-xs text-muted-foreground">
-              {index + 1} of {cards.length}
+              {index + 1} of {undecided.length}
             </span>
             <Button
               size="icon"
@@ -339,6 +411,11 @@ export default function MovieNightSessionPage() {
           </div>
         </>
       )}
+
+      {/* Batch S7, #157's first point: **anyone in the session can add to the list**,
+          and the list is the same for everybody. Below the deck rather than above it —
+          the common act is swiping, and adding is the occasional one. */}
+      {session.data?.status === 'open' ? <SuggestFilmPanel sessionId={id} /> : null}
 
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>

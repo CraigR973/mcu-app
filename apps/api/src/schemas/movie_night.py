@@ -39,14 +39,48 @@ class MovieNightSessionListResponse(BaseModel):
     total: int = Field(ge=0)
 
 
-class CandidateResponse(BaseModel):
-    """A film still to swipe on."""
+class WatchedByResponse(BaseModel):
+    """One other participant who has seen this film, and when — Batch S7.
 
-    movieId: uuid.UUID
+    `DECISIONS.md` #157's fourth point. **Everyone except the person asking**: "have I
+    seen it" is on the film's own page; what a card needs to say is whether the people you
+    are choosing with have.
+    """
+
+    personName: str
+    watchedAt: str
+
+
+class CandidateResponse(BaseModel):
+    """A film on tonight's list.
+
+    **Batch S7 made this a suggestion rather than a deal from the deck.** `movieId` is null
+    for a film outside the Archive — those can be suggested now, and carry their own title
+    and poster because there is no `movies` row to read them from.
+    """
+
+    suggestionId: uuid.UUID
+    movieId: uuid.UUID | None = None
+    tmdbId: int | None = None
     title: str
     year: int | None = None
     posterPath: str | None = None
     overview: str | None = None
+    runtimeMinutes: int | None = None
+    genres: list[str] = Field(default_factory=list)
+    #: Top billing, for the "what is this" question a card has to answer before a swipe.
+    cast: list[str] = Field(default_factory=list)
+    #: Who put it forward. Null for the films the session was seeded with — nobody
+    #: suggested those.
+    suggestedBy: str | None = None
+    #: Where it can be streamed, for a film nobody owns. #157: `get_watch_providers`
+    #: already exists, so the streaming half needed no new integration.
+    streamingOn: list[str] = Field(default_factory=list)
+    #: Which *other* participants have seen it, and when.
+    watchedBy: list[WatchedByResponse] = Field(default_factory=list)
+    #: This person's own swipe, if they have made one. The deck no longer hides what you
+    #: have voted on, because a shortlist everyone is adding to is a list you re-read.
+    myVote: bool | None = None
 
 
 class CandidateListResponse(BaseModel):
@@ -54,13 +88,27 @@ class CandidateListResponse(BaseModel):
     total: int = Field(ge=0)
 
 
+class SuggestionRequest(BaseModel):
+    """Put a film forward. **Exactly one of `movieId` and `tmdbId`.**"""
+
+    movieId: uuid.UUID | None = None
+    tmdbId: int | None = None
+    #: Required with `tmdbId`, ignored with `movieId` — a film in the collection reads its
+    #: own metadata, and one outside it has none to read.
+    title: str | None = Field(default=None, max_length=500)
+    year: int | None = None
+    posterPath: str | None = None
+    overview: str | None = None
+
+
 class VoteRequest(BaseModel):
-    movieId: uuid.UUID
+    suggestionId: uuid.UUID
     liked: bool
 
 
 class MatchResponse(BaseModel):
-    movieId: uuid.UUID
+    #: Null when the match is a film nobody owns, which Batch S7 made possible.
+    movieId: uuid.UUID | None = None
     title: str
     posterPath: str | None = None
 

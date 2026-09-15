@@ -214,6 +214,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/movie-night/{session_id}",
         "/api/v1/movie-night/{session_id}/end",
         "/api/v1/movie-night/{session_id}/candidates",
+        # Batch S7. Anyone in the session, not just the creator or an admin: a movie night
+        # where one person may not name a film is not one (`DECISIONS.md` #157).
+        "/api/v1/movie-night/{session_id}/suggestions",
         "/api/v1/movie-night/{session_id}/votes",
         "/api/v1/movie-night/{session_id}/events",
         # Batch 25. Admin writes, both read — a photo of a shelf is catalogue data.

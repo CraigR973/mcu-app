@@ -20,6 +20,7 @@ vi.mock('@/lib/api', () => ({
 
 const SESSION_ID = '3f2504e0-4f89-41d3-9a0c-0305e82c3401'
 const MOVIE_ID = '3f2504e0-4f89-41d3-9a0c-0305e82c3402'
+const SUGGESTION_ID = '9f1d2a6c-4c1e-4f6a-9d3b-8a2c7e5b1f04'
 
 async function* noEvents() {
   yield* []
@@ -53,12 +54,24 @@ beforeEach(() => {
     endedAt: null,
   })
   mocks.fetchMovieNightCandidates.mockReset().mockResolvedValue({
+    // Batch S7: a card is a *suggestion* now, and carries what it takes to decide without
+    // opening another screen — `myVote: null` is "not swiped yet", which is what puts it
+    // in the deck.
     items: [{
+      suggestionId: SUGGESTION_ID,
       movieId: MOVIE_ID,
+      tmdbId: null,
       title: 'The Red Shoes',
       year: 1948,
       posterPath: null,
       overview: 'A ballerina is torn between art and life.',
+      runtimeMinutes: 135,
+      genres: ['Drama'],
+      cast: ['Moira Shearer'],
+      suggestedBy: null,
+      streamingOn: [],
+      watchedBy: [],
+      myVote: null,
     }],
     total: 1,
   })
@@ -92,7 +105,10 @@ describe('MovieNightSessionPage', () => {
 
     fireEvent.keyDown(window, { key: 'ArrowRight' })
     await waitFor(() => {
-      expect(mocks.castMovieNightVote).toHaveBeenCalledWith(SESSION_ID, MOVIE_ID, true)
+      // Batch S7: **a vote is cast on a suggestion, not on a film.** That is what lets
+      // everyone vote on anyone's suggestion, and what lets a film outside the Archive —
+      // which has no `movies` row — be voted on at all.
+      expect(mocks.castMovieNightVote).toHaveBeenCalledWith(SESSION_ID, SUGGESTION_ID, true)
     })
   })
 })

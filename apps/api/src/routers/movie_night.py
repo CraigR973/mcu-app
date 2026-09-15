@@ -24,13 +24,16 @@ from sqlalchemy import func, select
 
 from src.auth import CurrentUser
 from src.clock import utcnow
+from src.models.movie import Movie
 from src.models.movie_night import (
     MovieNightParticipant,
     MovieNightSession,
+    MovieNightSuggestion,
+    MovieNightVote,
     new_invite_token,
 )
 from src.models.profile import Profile
-from src.routers.movies import Database
+from src.routers.movies import Database, TmdbClient
 from src.schemas.movie_night import (
     CandidateListResponse,
     CandidateResponse,
@@ -38,11 +41,21 @@ from src.schemas.movie_night import (
     MovieNightSessionListResponse,
     MovieNightSessionResponse,
     SessionCreateRequest,
+    SuggestionRequest,
     VoteRequest,
     VoteResponse,
+    WatchedByResponse,
 )
 from src.services.movie_night.realtime import broadcaster
-from src.services.movie_night.sessions import candidate_movies, publish, record_vote
+from src.services.movie_night.sessions import (
+    SuggestionRefused,
+    add_suggestion,
+    ensure_seeded,
+    publish,
+    record_vote,
+    session_suggestions,
+    watched_by_others,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -99,6 +112,46 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
         createdAt=session.created_at,
         endedAt=session.ended_at_utc,
     )
+
+
+# ---------------------------------------------------------------------------
+# Batch S7 — what a card has to say before somebody swipes on it
+# ---------------------------------------------------------------------------
+
+
+def _genre_names(movie: Movie | None) -> list[str]:
+    if movie is None or not movie.genres:
+        return []
+    # TMDB's genres arrive as `[{"id": 28, "name": "Action"}, …]`.
+    return [str(genre.get("name", "")) for genre in movie.genres[:4] if genre.get("name")]
+
+
+def _top_cast(movie: Movie | None) -> list[str]:
+    """Top billing, from the summary Batch 5 already denormalises onto the row.
+
+    Reading `movie_credits` per card would be one query per film on a list of thirty.
+    """
+    if movie is None or not movie.top_cast_summary:
+        return []
+    return [
+        str(person.get("name", "")) for person in movie.top_cast_summary[:4] if person.get("name")
+    ]
+
+
+async def _streaming_names(tmdb: TmdbClient, tmdb_id: int, user: Profile) -> list[str]:
+    """Where a film nobody owns can be watched — `DECISIONS.md` #157's second point.
+
+    **Fails quietly to an empty list.** TMDB being slow or down should cost the card its
+    streaming line, never the movie night.
+    """
+    try:
+        providers = await tmdb.get_watch_providers(tmdb_id)
+    except Exception:  # noqa: BLE001 - a missing streaming line must not fail the list
+        return []
+    country = providers.results.get(user.streaming_region or "GB")
+    if country is None:
+        return []
+    return [provider.provider_name for provider in (country.flatrate or [])][:4]
 
 
 @router.get("/movie-night", response_model=MovieNightSessionListResponse)
@@ -222,34 +275,140 @@ async def list_candidates(
     session_id: uuid.UUID,
     user: CurrentUser,
     db: Database,
+    tmdb: TmdbClient,
     limit: Annotated[int, Query(ge=1, le=100)] = 30,
 ) -> CandidateListResponse:
-    """The deck — films **this** person has not swiped on yet."""
+    """Tonight's list — **Batch S7 rebuilt this from a deck into a shortlist.**
+
+    Batch 35 dealt each person a random hand of films from the collection and hid what
+    they had swiped. `DECISIONS.md` #157 replaced the input side: anyone suggests, everyone
+    sees the same list, and a film outside the Archive can be on it.
+
+    **The card answers "what is this and have they seen it"** before a swipe — cast,
+    runtime, genres, where it streams if nobody owns it, and which of the *other*
+    participants have watched it and when.
+    """
     session = await _session_for(db, session_id, user)
-    movies = await candidate_movies(db, session=session, user=user, limit=limit)
-    return CandidateListResponse(
-        items=[
-            CandidateResponse(
-                movieId=movie.id,
-                title=movie.title,
-                year=movie.year,
-                posterPath=movie.poster_path,
-                overview=movie.overview,
+    await ensure_seeded(db, session=session, limit=limit)
+    suggestions = await session_suggestions(db, session=session)
+    await db.commit()
+
+    owned_ids = [s.movie_id for s in suggestions if s.movie_id is not None]
+    movies = {
+        movie.id: movie
+        for movie in (await db.execute(select(Movie).where(Movie.id.in_(owned_ids)))).scalars()
+        if owned_ids
+    }
+    seen = await watched_by_others(db, session=session, user=user, movie_ids=owned_ids)
+
+    names = {
+        person_id: name
+        for person_id, name in (await db.execute(select(Profile.id, Profile.display_name))).all()
+    }
+    my_votes = {
+        vote.suggestion_id: vote.liked
+        for vote in (
+            await db.execute(
+                select(MovieNightVote).where(
+                    MovieNightVote.session_id == session.id,
+                    MovieNightVote.user_id == user.id,
+                )
             )
-            for movie in movies
-        ],
-        total=len(movies),
-    )
+        ).scalars()
+        if vote.suggestion_id is not None
+    }
+
+    items: list[CandidateResponse] = []
+    for suggestion in suggestions:
+        movie = movies.get(suggestion.movie_id) if suggestion.movie_id else None
+        streaming: list[str] = []
+        if movie is None and suggestion.tmdb_id is not None:
+            # #157: `get_watch_providers` already existed, so the streaming half needed no
+            # new integration. Only asked for films nobody owns — for one on the shelf the
+            # answer is "it is on the shelf".
+            streaming = await _streaming_names(tmdb, suggestion.tmdb_id, user)
+        items.append(
+            CandidateResponse(
+                suggestionId=suggestion.id,
+                movieId=suggestion.movie_id,
+                tmdbId=suggestion.tmdb_id,
+                title=suggestion.title,
+                year=suggestion.year,
+                posterPath=suggestion.poster_path,
+                overview=suggestion.overview,
+                runtimeMinutes=movie.runtime_minutes if movie else None,
+                genres=_genre_names(movie),
+                cast=_top_cast(movie),
+                suggestedBy=names.get(suggestion.suggested_by) if suggestion.suggested_by else None,
+                streamingOn=streaming,
+                watchedBy=[
+                    WatchedByResponse(personName=name, watchedAt=when.isoformat())
+                    for name, when in seen.get(suggestion.movie_id, [])
+                ]
+                if suggestion.movie_id
+                else [],
+                myVote=my_votes.get(suggestion.id),
+            )
+        )
+
+    return CandidateListResponse(items=items, total=len(items))
+
+
+@router.post(
+    "/movie-night/{session_id}/suggestions",
+    response_model=CandidateListResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def suggest_film(
+    session_id: uuid.UUID,
+    payload: SuggestionRequest,
+    user: CurrentUser,
+    db: Database,
+    tmdb: TmdbClient,
+) -> CandidateListResponse:
+    """Put a film forward — `DECISIONS.md` #157's first and second points.
+
+    **Anyone in the session, and any film.** Not admin-gated and not restricted to the
+    Archive: a movie night where one person may not name a film is not one, and the point
+    of allowing films nobody owns is that "shall we rent something" is a real answer.
+    """
+    session = await _session_for(db, session_id, user, must_be_open=True)
+    try:
+        await add_suggestion(
+            db,
+            session=session,
+            user=user,
+            movie_id=payload.movieId,
+            tmdb_id=payload.tmdbId,
+            title=payload.title,
+            year=payload.year,
+            poster_path=payload.posterPath,
+            overview=payload.overview,
+        )
+    except SuggestionRefused as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    await db.commit()
+    return await list_candidates(session_id, user, db, tmdb)
 
 
 @router.post("/movie-night/{session_id}/votes", response_model=VoteResponse)
 async def cast_vote(
     session_id: uuid.UUID, payload: VoteRequest, user: CurrentUser, db: Database
 ) -> VoteResponse:
-    """§8.4 — one swipe, and the match if it completed one."""
+    """§8.4 — one swipe, and the match if it completed one.
+
+    **Cast on a suggestion since Batch S7**, not on a film: that is what lets everyone vote
+    on anyone's suggestion and what lets a film with no `movies` row be voted on at all.
+    """
     session = await _session_for(db, session_id, user, must_be_open=True)
+    suggestion = await db.get(MovieNightSuggestion, payload.suggestionId)
+    if suggestion is None or suggestion.session_id != session.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="That film is not on tonight's list"
+        )
+
     match = await record_vote(
-        db, session=session, user=user, movie_id=payload.movieId, liked=payload.liked
+        db, session=session, user=user, suggestion=suggestion, liked=payload.liked
     )
     await db.commit()
     return VoteResponse(

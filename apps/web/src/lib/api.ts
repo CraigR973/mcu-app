@@ -1852,15 +1852,32 @@ export async function fetchMovieNightCandidates(id: string): Promise<MovieNightC
 
 export async function castMovieNightVote(
   id: string,
-  movieId: string,
+  suggestionId: string,
   liked: boolean,
 ): Promise<MovieNightVoteResult> {
   return parseOrThrowApiError(
     await authFetch(`/movie-night/${id}/votes`, {
       method: 'POST',
-      body: JSON.stringify({ movieId, liked }),
+      body: JSON.stringify({ suggestionId, liked }),
     }),
     movieNightVoteResultSchema,
+  )
+}
+
+/** Put a film forward — Batch S7, `DECISIONS.md` #157.
+ *
+ *  **Exactly one of `movieId` and `tmdbId`.** A film on the shelf reads its own metadata;
+ *  one outside the Archive needs a title, because there is no row to read it from. */
+export async function suggestMovieNightFilm(
+  id: string,
+  input: { movieId?: string; tmdbId?: number; title?: string; year?: number | null; posterPath?: string | null },
+): Promise<MovieNightCandidateList> {
+  return parseOrThrowApiError(
+    await authFetch(`/movie-night/${id}/suggestions`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+    movieNightCandidateListSchema,
   )
 }
 
