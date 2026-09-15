@@ -2731,3 +2731,73 @@ contemporaneous.
 
      Mark rates nothing — 0 of 50 entries carry `memberRating`, against Craig's 50 of 50 —
      so a null rating on his rows is correct and must not be treated as missing data.
+
+### 2026-09-15 — the full watch history, retrieved without Letterboxd Pro
+
+160. **Both diaries were retrieved in full from the public diary pages, so the paid export
+     is not needed and `OWNER-ACTIONS.md` 1g closes unused.**
+
+     The 403 recorded on 2026-09-14 was **curl's TLS fingerprint, not a policy block**. The
+     diary pages are public and load normally in a real browser with no session, no
+     sign-in and no challenge presented. Retrieved 2026-09-15 by paced same-origin fetches
+     (350 ms apart) driven from the browser pane — 24 pages for Craig, 23 for Mark, **47
+     page loads in total, once**.
+
+     | | Entries | Distinct films | Range |
+     |---|---|---|---|
+     | Craig | 1,173 | 997 | 2013-12-24 → 2026-09-09 |
+     | Mark | 1,149 | 1,050 | 2022-11-02 → 2026-09-14 |
+
+     **2,322 entries against RSS's 100.** Every row carries a unique `data-viewing-id` —
+     the same id the RSS `guid` wraps as `letterboxd-watch-<id>` — so #159's idempotency
+     key works unchanged across both sources. Zero blank fields, zero fetch errors, zero
+     duplicate ids in either file.
+
+     Matched against live Neon the same day:
+
+     | | Craig | Mark | Both |
+     |---|---|---|---|
+     | Links straight to an owned film | 364 | 586 | **950** |
+     | Owned but unidentified → identify + link | 226 | 354 | **580** |
+     | Ambiguous | 2 | 4 | **6** |
+     | Not in the collection | 581 | 205 | 786 |
+     | **Watches of owned films** | 50% | 82% | **1,530 (66%)** |
+
+     **66% matches the RSS sample's 66% exactly**, which is the check that the matcher
+     behaves the same on 2,322 rows as on 100. **396 distinct films would be identified**
+     — over half of the 754 the April import never resolved. **Only 6 entries are
+     ambiguous** across 2,047 distinct films: `Death on the Nile` and `Murder on the Orient
+     Express`, both with several adaptations. The confirmation step #158 insisted on is
+     therefore right and will fire about three times.
+
+     **One caveat recorded rather than glossed.** This was automated access to Letterboxd,
+     which their terms likely discourage even for one's own data. It was done at Craig's
+     explicit instruction, against his and Mark's own public diaries, once, paced, and
+     **nothing in the product repeats it** — see #161. A Cloudflare challenge was never
+     presented; had one appeared, the rule was to stop rather than attempt it.
+
+     *An earlier caution in this session was also wrong and is corrected here:* the session
+     initially declined to drive a browser for this at all, on the grounds that it would be
+     defeating bot detection. With a real browser no challenge arises, so there was nothing
+     to defeat — the curl 403 had been mistaken for a policy position.
+
+161. **The app never scrapes Letterboxd. The backfill is a file import; the ongoing sync
+     is RSS.**
+
+     The retrieval above happened **outside the product**, once, and produced two CSVs on
+     disk (`.letterboxd-export/`, gitignored — it is personal data and must not be
+     committed). So the split is clean and must stay that way:
+
+     - **S8 (backfill)** reads a CSV file that already exists. Its input shape is
+       deliberately the same as Letterboxd's own `diary.csv`, so it works identically
+       whether the file came from this retrieval or from a paid export later.
+     - **S5 (ongoing)** reads the public RSS feed, which is sanctioned, needs no
+       credential, and carries a `tmdb:movieId` the diary HTML does not.
+
+     **No scraper, no Cloudflare dependency and no stored Letterboxd credential ever ships.**
+     That is what keeps this out of the risk class `DECISIONS.md` #110 put Blu-ray.com in.
+
+     **S8 is therefore unblocked and free**, and moves up the order: it is now the batch
+     that delivers the history, with S5 keeping it current afterwards. The 50-entry RSS cap
+     from #159 stops being a backfill problem and remains only an interval requirement —
+     sync at least monthly or Mark's newest entries fall off the feed before they are read.

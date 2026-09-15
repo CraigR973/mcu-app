@@ -308,16 +308,21 @@ Mark's only to 2026-07-20 — Mark watches far more, so the cap bites after abou
 **A sync that runs less often than roughly monthly will silently lose his entries.** That is
 the argument for item 1g, and for not leaving the first sync manual for long.
 
-### 1g. Letterboxd Pro, if Craig wants the backfill *(new — snag triage, 2026-09-14)*
+### 1g. ~~Letterboxd Pro, if Craig wants the backfill~~ — **not needed, closed 2026-09-15**
 
-**Does not block anything.** S5 ships on the free RSS feed; this only adds history.
+- [x] **Nothing to buy.** Both diaries were retrieved in full from the **public** diary pages
+      on 2026-09-15 — Craig 1,173 entries back to December 2013, Mark 1,149 back to November
+      2022, **2,322 in total**. `DECISIONS.md` #160.
 
-- [ ] **Decide whether to buy Letterboxd Pro (~£/$35 a year, *per account*) for the data
-      export.**
+The 403 that made this look impossible was **curl's TLS fingerprint, not a policy block**: the
+pages are public and load normally in a real browser, with no sign-in and no challenge shown.
+The files are on disk at `.letterboxd-export/` (gitignored — personal data, never committed).
 
-RSS gives the most recent 50 entries and nothing older. The export gives the **whole** diary
-with dates, plus `watchlist.csv` and `ratings.csv`. Both write the same `watch_log` rows
-through the same matcher, so buying it later costs no rework — it is batch S8, additive to S5.
+**~£70 saved** across the two accounts. If a fuller export is ever wanted — watchlist, lists,
+reviews — Pro remains the route, but nothing in the plan needs it.
+
+**Nothing further is blocked on Craig for watch history.** S8 imports the CSVs that already
+exist; S5 keeps them current from the RSS feed. Neither ships a scraper (`#161`).
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
 

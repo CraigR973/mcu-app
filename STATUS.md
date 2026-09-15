@@ -38,19 +38,33 @@ points are met. There is no suggestion concept at all — the deck is a random d
 already in the collection, so a film outside the Archive can never appear — and "has he seen
 it" needs `watch_log`, which is empty. Rebuilding the input side is a batch, not a tweak.
 
-**The highest-leverage item is the watch-history import, and it is now unblocked.** Craig gave
-both Letterboxd usernames on 2026-09-14 — `CraigR973`, `markr973` — and **both diaries were
-already public**, so `OWNER-ACTIONS.md` 1f closed the same day without a subscription or a
-setting change. Measured across both live feeds: every entry carries a `<tmdb:movieId>`, so
-matching is exact rather than fuzzy; **66 of 100 watches are of a film they own**, of which 42
-link immediately and **24 are films the April import never identified** — the diary supplies
-the id, so the sync identifies the film as well as logging the watch. `DECISIONS.md` #158, #159.
+**The watch history is retrieved in full, and it cost nothing.** `DECISIONS.md` #160, #161.
+The 403 that made this look impossible was **curl's TLS fingerprint, not a policy block** — the
+diary pages are public and load normally in a real browser. Retrieved 2026-09-15 in 47 paced
+page loads, once, outside the product: **Craig 1,173 entries** (997 films, Dec 2013 → Sep 2026)
+and **Mark 1,149** (1,050 films, Nov 2022 → Sep 2026) — **2,322 against the 100 RSS gives**.
 
-> **An earlier reading of this was wrong and is corrected in #158.** A first pass filtered
-> title candidates on `abs(year - filmYear) <= 1` and reported **zero** owned-but-unidentified
-> matches. That was an artifact of the query: every unidentified row has `year IS NULL` and was
-> excluded by the test itself. Taken at face value it would have shipped S5 with neither an
-> identification step nor a confirmation step.
+Matched against live Neon: **1,530 (66%) are watches of films they own** — the same 66% the
+100-entry RSS sample predicted, which is the check that the matcher scales; **396 distinct
+films would be identified** by the import, over half the 754 the April import never resolved;
+and **6 entries are ambiguous** across 2,047 distinct films (`Death on the Nile`, `Murder on
+the Orient Express`), so #158's confirmation step is right and fires about three times.
+
+Files are in `.letterboxd-export/`, **gitignored — personal data, never committed**.
+**Letterboxd Pro is not needed**, `OWNER-ACTIONS.md` 1g closes unused (~£70 saved), and
+**nothing is blocked on Craig for watch history at all**.
+
+**The app never scrapes Letterboxd.** S8 imports a file that already exists; S5 reads the
+sanctioned public RSS feed. No scraper, no Cloudflare dependency and no stored Letterboxd
+credential ships (#161). **S8 and S5 swapped places** — S8 now delivers the history, S5 keeps
+it current, run back to back because they share one matcher.
+
+> **Two cautions were wrong and are corrected in #158 and #160.** A match query filtered on
+> `abs(year - filmYear) <= 1` reported **zero** owned-but-unidentified films — an artifact,
+> since every unidentified row has `year IS NULL`; taken at face value it would have shipped S5
+> with neither an identification nor a confirmation step. And the session first declined to
+> drive a browser at all, treating the curl 403 as a policy position; with a real browser no
+> challenge arises, so there was nothing to defeat.
 
 **Batch 22 shipped — the deals feed is live and empty, which is the honest state.**
 The feature landed as `c190129`; its final built-in-retailer wiring repair is `493f031`.
@@ -526,6 +540,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Letterboxd history retrieved)** — No code, hosting or schema changes. Both
+  diaries retrieved in full from the **public** diary pages — Craig 1,173 entries back to Dec
+  2013, Mark 1,149 back to Nov 2022, **2,322 total** against RSS's 100. The earlier 403 was
+  curl's TLS fingerprint, not a block. 47 paced page loads, once, outside the product; files
+  gitignored in `.letterboxd-export/`. Matched live: **1,530 (66%) are films they own** and
+  **396 would be identified** by the import; 6 ambiguous across 2,047 distinct films.
+  **Letterboxd Pro is not needed** — `OWNER-ACTIONS.md` 1g closed unused, ~£70 saved. S8
+  unblocked and resequenced ahead of S5; neither ships a scraper. `DECISIONS.md` #160, #161.
 
 - **2026-09-14 (owner snag triage)** — Docs only: no code, hosting or data changes, and no
   decisions taken. All 11 snags investigated against the code at `8e02399`, live Neon

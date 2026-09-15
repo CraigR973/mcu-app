@@ -417,14 +417,18 @@ Eight batches. Ordered so nothing is built before what it depends on. Model and 
 | **S2** | **App-feel fixes** — zoom + Letterboxd links | 3, 9 | — | 🟢 Sonnet 5 · medium |
 | **S3** | **Navigation shape** — menu, search, Archive header, opening screen | 5, 11, 1 | #154 | 🟡 Opus 5 · high |
 | **S4** | **Quick add within reach** — Home/bottom-bar add, Mark's write access | 7, 8 | S3, #155 | 🟡 Opus 5 · high |
-| **S5** | **Watch history, stage 1** — Letterboxd diary RSS + identify-on-match | 10a | #156 · **unblocked** | 🟡 Opus 5 · high |
+| **S8** | **Watch history — backfill** — import the two diary CSVs, identify 396 films | 10b | **unblocked, free** | 🔴 Opus 5 · xhigh |
+| **S5** | **Watch history — ongoing** — Letterboxd diary RSS, same matcher | 10a | S8, #156 | 🟡 Opus 5 · high |
 | **S6** | **Physical release dates** — merge Calendar + Coming soon | 2 | S3 | 🟡 Opus 5 · high |
-| **S7** | **Movie night rebuild** — suggestions, outside films, streaming, seen-it | 6 | S5, #157 | 🔴 Opus 5 · xhigh |
-| **S8** | **Watch history, stage 2** — Letterboxd export backfill | 10b | Craig buying Pro | 🔴 Opus 5 · xhigh |
+| **S7** | **Movie night rebuild** — suggestions, outside films, streaming, seen-it | 6 | S8, #157 | 🔴 Opus 5 · xhigh |
 
-**Order:** S1 → S2 → S3 → S4 → S5 → S6 → S7. S8 lands whenever Craig decides to pay for Pro;
-it writes the same `watch_log` rows through the same matcher as S5, so it is additive rather
-than a rework.
+**Order:** S1 → S2 → S3 → S4 → **S8 → S5** → S6 → S7.
+
+**S8 and S5 swapped places on 2026-09-15** (`DECISIONS.md` #160, #161). S8 was blocked on
+Craig buying Letterboxd Pro; it is now unblocked and free, because both diaries were retrieved
+in full from the public diary pages. **S8 is the batch that delivers the history** — 2,322
+entries — and S5 keeps it current afterwards. **Run them back to back**: they share one matcher
+and one `watch_log` writer, and building S5's matcher twice would be the waste.
 
 ### What each one is
 
@@ -451,47 +455,53 @@ below 640px. `/collection/add` and both eBay endpoints stop being admin-only, in
 well as the UI. The existing upgrade → "List for sale" flow is surfaced in the add flow rather
 than only on the film page afterwards.
 
-**S5 — Watch history, stage 1.** *Rescoped 2026-09-14 after measuring both live feeds —
-`DECISIONS.md` #158, #159.* Craig's and Mark's diaries are `CraigR973` and `markr973`, both
-already public, so this is unblocked.
+**S8 — Watch history, the backfill.** *Unblocked and free as of 2026-09-15 —
+`DECISIONS.md` #160, #161.* Both diaries are already retrieved and sitting in
+`.letterboxd-export/` (gitignored; personal data, never committed):
 
-Read each person's diary RSS and write `watch_log` rows with their real watched dates. **Every
-entry carries a `<tmdb:movieId>`**, so the primary match is an exact TMDB id — not the fuzzy
-title+year match this plan originally assumed. Measured across 100 entries:
+| | Entries | Distinct films | Range |
+|---|---|---|---|
+| Craig | 1,173 | 997 | Dec 2013 → Sep 2026 |
+| Mark | 1,149 | 1,050 | Nov 2022 → Sep 2026 |
 
-- **42 link immediately** on `tmdb_id`
-- **24 are films they own that the April import never identified** (`tmdb_id IS NULL`). The
-  diary supplies the exact id, so the sync **identifies the film as well as logging the
-  watch** — filling in year, poster, runtime, cast, and the Letterboxd link snag 9 needs
-- **34 are genuinely not in the collection** — cinema and streaming
-- **0 were ambiguous**, but the confirmation step stays: 754 unidentified rows with messy
-  titles (`'Collector, The'`, `'Out of The past'`) will produce ambiguity eventually, and
-  anything not a single unambiguous candidate is offered, never guessed
+Import those CSVs and write `watch_log` rows. Matched against live Neon:
 
-Idempotency keys off the feed's stable `<guid>`, so a re-run updates rather than duplicates
-and a genuine rewatch still becomes its own row. Manual sync first — both Railway crons are
-crashing — but **the interval is a correctness property, not a preference**: the feed holds
-only the last 50 entries and Mark's already reaches back just eight weeks, so a sync running
-less often than monthly silently loses his history. Mark rates nothing, so a null rating on
-his rows is correct.
+- **950 watches link straight** to a film already identified
+- **580 more are films they own that the April import never identified** — so the import
+  **identifies 396 distinct films** on the way, over half the 754 outstanding, each gaining its
+  TMDB id, year, poster, runtime, cast, and the Letterboxd link snag 9 needs
+- **786 are genuinely not in the collection** — cinema and streaming
+- **1,530 of 2,322 (66%)** are watches of films they own — the same 66% the 100-entry RSS
+  sample predicted, which is the check that the matcher scales
+- **6 entries are ambiguous** across 2,047 distinct films: `Death on the Nile` and `Murder on
+  the Orient Express`. The confirmation step fires about three times, and is still right
 
-**Lights up On this day, Worth a rewatch, Most watched and snag 6's "seen it" — and identifies
-24 films on the way.**
+The input shape is deliberately Letterboxd's own `diary.csv`, so a paid export would import
+identically if one is ever taken. Idempotency keys off the `ViewingId` column.
 
-**S6 — Physical release dates.** Add `/movie/{id}/release_dates` to the TMDB client and ingest
-GB **type 5 (Physical)** dates as `blu_ray_release` and `4k_uhd_release` — both types already
-exist in the vocabulary and nothing has ever written them. Merge Calendar and Coming soon into
-one screen led by physical releases, with cinema dates kept. Expect patchy coverage and do not
-silently drop a film that has no physical date.
+**`watched_at` is `nullable=False`** and every row here has a real date, so no migration is
+needed for this batch — the undated-watch question only arises if a "films marked watched"
+list is ever imported, which nothing plans to do.
 
-**S7 — Movie night rebuild.** Replace the random deck with a suggestion board: anyone suggests,
-everyone votes on anyone's suggestion. Allow films outside the Archive, with streaming
-availability from `get_watch_providers`. Open a card to the film's full details, including
-whether the others have seen it and when.
+**S5 — Watch history, ongoing.** *Rescoped 2026-09-14, resequenced 2026-09-15 —
+`DECISIONS.md` #158, #159, #161.* Craig's and Mark's diaries are `CraigR973` and `markr973`,
+both public.
 
-**S8 — Watch history, stage 2.** Import a Letterboxd export ZIP — `diary.csv` for watched dates
-and rewatches, `watchlist.csv` for wants, `ratings.csv` for scores. Same matcher and same
-confirmation step as S5.
+Read each person's **RSS feed** and top up `watch_log` with new viewings. Reuses S8's matcher
+and writer, so this batch is the feed reader and the schedule, not the matching. **Every RSS
+entry carries a `<tmdb:movieId>`** the diary HTML does not, so the ongoing path matches on an
+exact TMDB id and is more reliable than the backfill.
+
+Idempotency keys off the feed's `<guid>` — `letterboxd-watch-<id>` — which wraps the same
+`ViewingId` S8 uses, so the two sources cannot double-count the same viewing.
+
+Manual sync first, because both Railway crons are crashing. **The interval is a correctness
+property, not a preference:** the feed holds only the last 50 entries and Mark watches enough
+to cycle that in about eight weeks, so a sync running less often than monthly loses history.
+The UI must say plainly when it last ran. Mark rates nothing, so a null rating is correct.
+
+**Neither batch ships a scraper.** The backfill reads a file; the ongoing sync reads a
+sanctioned public feed. No Cloudflare dependency, no stored Letterboxd credential (#161).
 
 ### Carried separately
 

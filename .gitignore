@@ -55,3 +55,4 @@ supabase/.temp/
 
 # Build artifacts
 apps/web/tsconfig.tsbuildinfo
+.letterboxd-export/
