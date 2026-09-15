@@ -3172,3 +3172,76 @@ contemporaneous.
      Nothing went wrong; the interval is too long, and entries may already have fallen off
      the end. That distinction is the difference between a warning someone acts on and an
      error they learn to ignore.
+
+### 2026-09-15 — Group S, batch S6
+
+181. **TMDB's UK physical release dates cover 1% of forthcoming films, and the screen says
+     so.**
+
+     S6's ledger row demanded the real coverage number because *"a screen that implies
+     completeness it does not have is the failure mode here"*. Measured against live TMDB
+     on 2026-09-15:
+
+     | population | has a GB **physical** date | has a GB **cinema** date |
+     |---|---|---|
+     | 58 films from 3 pages of `/movie/upcoming` GB | **1 (1%)** | 47 (81%) |
+     | 60-film sample of this collection | 7 (11%) | 41 (68%) |
+
+     The one upcoming film with a physical date has the note `'DVD'`.
+
+     **The feature is correct and thin, and the honest response is to say the number.**
+     When the disc section is empty the page states the measurement rather than rendering
+     an empty frame or — far worse — implying that no discs are coming. It fills in as
+     TMDB's contributors add dates, and nothing about the ingestion changes when they do.
+
+     **This is why "a film with no physical date is still visible" is the load-bearing
+     criterion**, not a defensive afterthought: it is not the edge case, it is 99% of them.
+
+182. **TMDB type 5 means "Physical" and nothing more, so the format comes from free text.**
+
+     A 4K disc and a Blu-ray released the same day are **one** type-5 entry. The only
+     signal separating them is the `note` a contributor typed, and the real values are
+     `'4k Ultra HD Blu-ray'`, `'Blu-ray'`, `'DVD'`, `'DVD release'`, `'VHS'`,
+     `'Alien Anthology Blu-ray Box Set'`, `'The Alien Legacy DVD'`.
+
+     So: a note naming 4K/UHD → `4k_uhd_release`; a note naming *only* an obsolete format →
+     skipped, because a VHS date is a fact about 1994 and this is a calendar of upcoming
+     releases; anything else, including an empty note → `blu_ray_release`.
+
+     **That last rule is a deliberate approximation and the code admits it.**
+     `RELEASE_TYPES` has no DVD member, so a DVD-only release is recorded as
+     `blu_ray_release`, which reads as "out on disc". Inventing a vocabulary member for a
+     format nobody in this collection is waiting for would be worse than widening two
+     labels slightly.
+
+183. **A physical date is ingested beside the cinema date, never instead of it — and a
+     failed lookup costs neither.**
+
+     One film now yields up to three rows: cinema, Blu-ray, 4K. "When can I see it" and
+     "when can I buy it" are different questions and snag 2 is about the second, so
+     replacing one with the other would answer the wrong one.
+
+     `candidates` is therefore rekeyed from `tmdb_id` to `(tmdb_id, release_type)`, which
+     is the shape the existing `(tmdb_id, release_type, region)` unique constraint already
+     required. Two type-5 entries of one format — a release and a box set — collapse to one
+     row, and **the earliest date wins**, because that is when somebody waiting can first
+     buy it. The same-film-on-two-pages bug from Batch 17's first live run is the reason
+     this is keyed at all.
+
+     **The extra TMDB call per film is a second thing that can fail.** It is caught per
+     film, recorded in `errors`, and the film **keeps its cinema date** — a physical lookup
+     that failed must never cost a row that already worked.
+
+184. **`git add` aborting on a stale pathspec cost a CI run, for the second time in this
+     group.**
+
+     S6's first commit carried *only* two file deletions. The `git add` meant to stage
+     everything else was handed the two already-removed paths as well; `git add` aborts the
+     **whole invocation** when any pathspec matches nothing, and `2>/dev/null` hid the
+     error. The commit succeeded, the push succeeded, and CI failed on an `App.tsx` that
+     still imported two deleted pages.
+
+     S1 hit the identical trap and it was caught before committing. `AGENTS.md` says to
+     stage explicitly rather than `git add -A`; **staging explicitly is only half of it** —
+     the other half is checking `git diff --cached --name-only` before committing, and
+     never suppressing `git add`'s stderr.

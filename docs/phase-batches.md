@@ -1473,24 +1473,48 @@ data, never commit them): **Craig 1,173 entries, Mark 1,149, 2,322 total.**
 That rewrites `movies` rows — the operation S8 put in the owner's hands — and doing it from a
 button, repeatedly, would take that decision back without asking.
 
-### Batch S6 — Physical release dates 🟡
+### ~~Batch S6 — Physical release dates~~ 🟡 **shipped 2026-09-15 (`b5b3796`)**
 **Covers snag 2.** Model: **Opus 5 · high** / GPT-5.6 Sol · High.
 
 `RELEASE_TYPES` has carried `4k_uhd_release` and `blu_ray_release` since Batch 17 and
-**nothing has ever written either** — `services/calendar.py` hardcodes `"theatrical"`, and all
-32 live rows are cinema dates.
+**nothing has ever written either** — `services/calendar.py` hardcoded `"theatrical"`.
+*(The row said "all 32 live rows are cinema dates"; measured, it is **30 theatrical plus 2
+`sale_event`** from Batch 11's seeding. The point stands: no physical row had ever existed.)*
 
-**Acceptance:**
-- `tmdb/client.py` gains a `release_dates` method; GB **type 5 (Physical)** is ingested as
-  `blu_ray_release` / `4k_uhd_release`.
-- Calendar and Coming soon are one screen; `/calendar` and `/discover` both resolve to it.
-- Physical releases lead; cinema dates are kept and visibly distinct.
-- **A film with no physical date is still visible, not silently dropped.** Tested.
-- Ingestion stays idempotent on `(tmdb_id, release_type, region)`.
-- Gate green, plus a browser pass.
+**Acceptance — six of six met.**
+- ~~`tmdb/client.py` gains a `release_dates` method; GB **type 5 (Physical)** is ingested as
+  `blu_ray_release` / `4k_uhd_release`.~~ ✅ Ingested **beside** the cinema date, not instead
+  — one film, two rows. **TMDB type 5 says "Physical" and no more**, so `classify_physical`
+  reads the free-text note; every string it matches was read off live TMDB.
+- ~~Calendar and Coming soon are one screen; `/calendar` and `/discover` both resolve to
+  it.~~ ✅ `/discover` redirects; confirmed in a browser.
+- ~~Physical releases lead; cinema dates are kept and visibly distinct.~~ ✅ Seen at 375×812:
+  a **Coming to disc** section above the month, and an accented **4K UHD** badge against a
+  muted **In cinemas** one.
+- ~~**A film with no physical date is still visible, not silently dropped.** Tested.~~ ✅ —
+  **and it is not an edge case, it is almost every film.**
+- ~~Ingestion stays idempotent on `(tmdb_id, release_type, region)`.~~ ✅ `candidates` is
+  rekeyed on `(tmdb_id, release_type)` because one film now yields up to three rows. Two
+  type-5 entries of one format collapse to one row and **the earliest date wins**.
+- ~~Gate green, plus a browser pass.~~ ✅
 
-**Report the real coverage number.** TMDB's UK physical dates are community-maintained and
-patchy; a screen that implies completeness it does not have is the failure mode here.
+> **📉 The real coverage number, as this row demanded: 1%.** Measured against live TMDB on
+> 2026-09-15 over three pages of `/movie/upcoming` GB — **1 of 58 forthcoming films had a GB
+> physical date at all**, and that one's note said 'DVD'. Across a 60-film sample of the
+> collection itself it is **11%** (7 of 60), against 68% for cinema dates.
+>
+> **So the disc section leads and will usually be empty.** When it is, the page states the
+> number rather than rendering an empty frame or implying no discs are coming — which is
+> precisely the failure mode this row named. The feature is correct and thin, and it fills in
+> as TMDB's contributors add dates.
+
+**One CI failure, and it was a staging mistake rather than a code one.** The first commit
+carried *only* the two page deletions: `git add` was handed the already-removed paths along
+with everything else, and it aborts the whole invocation on a pathspec that matches nothing —
+with `2>/dev/null` hiding the error. **The same trap S1 hit.** Fixed in `b5b3796`.
+
+**A signed-in non-admin now sees 7 sidebar destinations, not S3's 8** — merging two more is
+this batch's own criterion. Fourteen → eight → seven.
 
 ### Batch S7 — Movie night rebuild 🔴
 **Covers snag 6.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High. `DECISIONS.md` #157.
@@ -1584,7 +1608,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → ~~S6~~ → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

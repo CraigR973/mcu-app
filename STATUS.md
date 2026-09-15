@@ -2,11 +2,11 @@
 
 ## Now
 
-**Group S is running. S1–S4, S8 and S5 of 8 have shipped; S6 is next.** The eight batches
-from the 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 →
-S8 → S5 → S6 → S7**. The four UI batches are done and the whole watch-history spine is
-built. **Three owner actions are now waiting** — the live import (`OWNER-ACTIONS.md` **1i**),
-the first RSS sync (**1j**), and S2's two phone checks (**1h**). None blocks the group. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
+**Group S is running. Seven of eight have shipped; S7 is the last.** The batches from the
+2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
+S5 → S6 → S7**. **Three owner actions are waiting** — the live watch-history import
+(`OWNER-ACTIONS.md` **1i**), the first RSS sync (**1j**), and S2's two phone checks
+(**1h**). None blocks the group. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
 were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
 and there is no `**Phase X.Y:` heading behind them to go looking for.
 
@@ -234,6 +234,40 @@ which is S8's owner decision, and a button doing it repeatedly would take it bac
 **One CI failure, in the lint job alone.** CI's mypy resolves `db.scalar(...)` as `Any` where
 this machine's does not — `STATUS.md` gotcha 21's shape, third time this session that CI and
 local mypy have disagreed. pytest against real Postgres was green first time.
+
+**S6 shipped 2026-09-15 as `b5b3796` — the release calendar has its first physical rows,
+and the coverage is 1%.** Production serves that SHA with `db: ok`.
+
+> **📉 The number this batch was told to report.** Measured against live TMDB on 2026-09-15:
+> over three pages of `/movie/upcoming` GB, **1 of 58 forthcoming films had a GB physical
+> date at all** — and its note said 'DVD'. Across a 60-film sample of the collection itself,
+> 7 of 60 (11%), against 68% for cinema dates.
+>
+> **So the disc section leads and will usually be empty, and the page says the number** —
+> rather than rendering an empty frame or implying no discs are coming, which is exactly the
+> failure mode the ledger row named. **"A film with no physical date is still visible" is the
+> load-bearing criterion**, not a defensive afterthought: it is 99% of them (#181).
+
+**A physical date is ingested beside the cinema date, never instead of it** (#183). One film
+yields up to three rows, so `candidates` is rekeyed on `(tmdb_id, release_type)` — the shape
+the existing unique constraint already required. Two type-5 entries of one format collapse to
+one row and **the earliest wins**. A failed `release_dates` lookup is recorded and the film
+**keeps its cinema date**.
+
+**TMDB type 5 says "Physical" and no more** (#182), so `classify_physical` reads the
+contributor's free-text note. A DVD-only release is filed as `blu_ray_release` — an admitted
+approximation, because `RELEASE_TYPES` has no DVD member and widening two labels beats
+inventing one.
+
+> **⚠️ `git add` cost a CI run, for the second time in this group** (#184). S6's first commit
+> carried *only* two file deletions: `git add` was handed the two already-removed paths
+> alongside everything else, and it **aborts the whole invocation** on a pathspec that matches
+> nothing — with `2>/dev/null` hiding the error. S1 hit the identical trap. **Staging
+> explicitly is only half of `AGENTS.md`'s rule**; the other half is checking
+> `git diff --cached --name-only` before committing.
+
+**A signed-in non-admin now sees 7 sidebar destinations, not the 8 S3 delivered.** Merging
+Calendar and Coming soon is S6's own criterion. Fourteen → eight → seven.
 
 **Three owner actions sit inside later batches and are not group blockers.** S8 ships the
 importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
@@ -669,6 +703,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S6 — physical release dates)** — Group S batch 7 of 8, shipped as
+  `b5b3796`. `tmdb/client.py` gains `get_release_dates`; GB type 5 is ingested **beside** the
+  cinema date, and Calendar merged with Coming soon at `/calendar` (`/discover` redirects).
+  **Coverage measured and reported: 1%** — 1 of 58 forthcoming GB films has a physical date
+  (#181), so the disc section leads, is usually empty, and says the number. `classify_physical`
+  reads TMDB's free-text note because type 5 cannot distinguish 4K from Blu-ray (#182).
+  **One CI failure, from `git add` aborting on a stale pathspec** with its stderr suppressed —
+  the first commit carried only two deletions (#184). Sidebar 8 → 7.
 
 - **2026-09-15 (Batch S5 — watch history, ongoing)** — Group S batch 6 of 8, shipped as
   `834c3f1`. Reads the public Letterboxd diary RSS feed and keeps `watch_log` current,
