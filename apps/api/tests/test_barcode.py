@@ -26,7 +26,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 import src.routers.barcode as barcode_router
-from src.auth import require_admin
+from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
@@ -262,33 +262,73 @@ async def barcode_session(db_conn: AsyncConnection) -> AsyncIterator[AsyncSessio
         await session.close()
 
 
-@pytest_asyncio.fixture
-async def barcode_client(barcode_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    admin = Profile(
+async def _barcode_client(session: AsyncSession, role: UserRole) -> AsyncIterator[AsyncClient]:
+    """**Batch S4 (`DECISIONS.md` #155) overrides `get_current_user`, not `require_admin`.**
+
+    Both endpoints were ``AdminUser``; scanning is the quickest way to add a disc, and snag
+    7 is about a phone, so leaving them admin-only would have handed a viewer the add page
+    with its fastest path disabled. The old fixture overrode the dependency that no longer
+    guards them — and could not have expressed a viewer at all, which is why this takes the
+    role as an argument.
+    """
+    profile = Profile(
         id=uuid.uuid4(),
-        display_name=f"Barcode Admin {uuid.uuid4().hex[:8]}",
-        role=UserRole.admin,
+        display_name=f"Barcode {role.value.title()} {uuid.uuid4().hex[:8]}",
+        role=role,
     )
-    barcode_session.add(admin)
-    await barcode_session.flush()
+    session.add(profile)
+    await session.flush()
 
     async def override_db() -> AsyncIterator[AsyncSession]:
-        yield barcode_session
+        yield session
 
-    async def override_admin() -> Profile:
-        return admin
+    async def override_user() -> Profile:
+        return profile
 
     async def override_tmdb() -> AsyncIterator[FakeTmdbClient]:
         yield FakeTmdbClient()
 
     app.dependency_overrides[get_db] = override_db
-    app.dependency_overrides[require_admin] = override_admin
+    app.dependency_overrides[get_current_user] = override_user
     app.dependency_overrides[get_tmdb_client] = override_tmdb
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             yield client
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def barcode_client(barcode_session: AsyncSession) -> AsyncIterator[AsyncClient]:
+    async for client in _barcode_client(barcode_session, UserRole.admin):
+        yield client
+
+
+@pytest_asyncio.fixture
+async def barcode_viewer_client(barcode_session: AsyncSession) -> AsyncIterator[AsyncClient]:
+    async for client in _barcode_client(barcode_session, UserRole.viewer):
+        yield client
+
+
+@pytest.mark.asyncio
+async def test_a_viewer_can_scan_a_barcode_rather_than_getting_a_403(
+    barcode_viewer_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Batch S4, `DECISIONS.md` #155 — **200, not 403.**
+
+    Scanning is the fastest route through the add flow, and snag 7 is about reaching that
+    flow from a phone. An add page a viewer can open whose scan button refuses them would
+    be the exact defect #155 names: a button whose endpoint still 403s.
+    """
+
+    async def no_titles(_barcode: str) -> list[str]:
+        return []
+
+    monkeypatch.setattr(barcode_router, "_ebay_titles", no_titles)
+    response = await barcode_viewer_client.post(
+        "/api/v1/barcode/lookup", json={"barcode": "5051892211475"}
+    )
+    assert response.status_code == 200, response.text
 
 
 @pytest.mark.asyncio

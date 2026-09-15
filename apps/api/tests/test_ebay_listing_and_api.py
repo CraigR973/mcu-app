@@ -19,7 +19,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 import src.routers.ebay as ebay_router
-from src.auth import require_admin
+from src.auth import get_current_user
 from src.ebay.client import SEARCH_PATH, TOKEN_PATH
 from src.ebay.listing import MAX_TITLE_LENGTH, PRELIST_URL, prelist_url, suggested_title
 from src.main import app
@@ -82,16 +82,33 @@ def test_the_url_is_escaped() -> None:
 pytestmark_asyncio = pytest.mark.asyncio
 
 ADMIN = Profile(display_name="Craig", role=UserRole.admin)
+VIEWER = Profile(display_name="Mark", role=UserRole.viewer)
+
+
+def _as(profile: Profile) -> Any:
+    async def override() -> Profile:
+        return profile
+
+    app.dependency_overrides[get_current_user] = override
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture
 def as_admin() -> Any:
-    async def override() -> Profile:
-        return ADMIN
+    yield from _as(ADMIN)
 
-    app.dependency_overrides[require_admin] = override
-    yield
-    app.dependency_overrides.pop(require_admin, None)
+
+@pytest.fixture
+def as_viewer() -> Any:
+    """Batch S4 (`DECISIONS.md` #155).
+
+    These two endpoints were ``AdminUser``; the fixture overrode ``require_admin``, which
+    is the dependency that no longer guards them. Overriding ``get_current_user`` instead
+    is both what the endpoints now read *and* what makes a viewer expressible at all — the
+    old shape could not describe the caller this batch exists to admit.
+    """
+    yield from _as(VIEWER)
 
 
 @pytest.fixture
@@ -124,8 +141,44 @@ async def _post(path: str, payload: dict[str, Any]) -> httpx.Response:
 
 
 @pytest.mark.asyncio
-async def test_price_estimate_requires_an_admin() -> None:
-    """It spends a unit of a finite daily quota. Nothing unauthenticated may."""
+async def test_a_viewer_gets_a_price_estimate_rather_than_a_403(
+    as_viewer: None, fake_ebay: None
+) -> None:
+    """Batch S4's criterion, stated as **200, not 403** — `DECISIONS.md` #155.
+
+    Snag 7 was never about capability: Batch 29 built the whole upgrade → sell offer and
+    it worked. It was about reach. Mark could not open the add page, and both eBay
+    endpoints behind the "List for sale" button refused him, so the feature existed and
+    was invisible to half the people it was for.
+    """
+    response = await _post(
+        "/api/v1/ebay/price-estimate",
+        {"filmTitle": "Blade Runner 2049", "formatCode": "blu_ray"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["segments"]
+
+
+@pytest.mark.asyncio
+async def test_a_viewer_gets_a_listing_url_rather_than_a_403(
+    as_viewer: None, fake_ebay: None
+) -> None:
+    response = await _post(
+        "/api/v1/ebay/listing-url",
+        {"filmTitle": "Blade Runner 2049", "formatCode": "blu_ray"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["url"].startswith(PRELIST_URL)
+
+
+@pytest.mark.asyncio
+async def test_price_estimate_refuses_an_unauthenticated_caller() -> None:
+    """It spends a unit of a finite daily quota. Nothing unauthenticated may.
+
+    **Batch S4 widened this to any signed-in person, not to the public.** The endpoint was
+    admin-only and is now ``CurrentUser``; what it must never be is open, because the quota
+    is finite and the keyset is Craig's.
+    """
     response = await _post("/api/v1/ebay/price-estimate", {"filmTitle": "Jaws"})
     assert response.status_code in {401, 403}
 

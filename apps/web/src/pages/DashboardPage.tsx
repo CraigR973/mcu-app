@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, BarChart3, CalendarHeart, Pin, RotateCcw, Target } from 'lucide-react'
+import { Activity, BarChart3, CalendarHeart, Pin, Plus, RotateCcw, Target } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { ActivityFeed } from '@/components/ActivityFeed'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { ArchiveStats } from '@/components/dashboard/ArchiveStats'
+import { Button } from '@/components/ui/button'
 import { CompletionSets } from '@/components/dashboard/CompletionSets'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -73,6 +74,19 @@ export default function DashboardPage() {
         eyebrow="Your archive"
         title="Home"
         description="The shape of the collection, what you have been watching, and how close each set is to complete."
+        actions={(
+          /* Batch S4, snag 7. **Visible below 640px**, unlike the header's own "Add a
+             disc" which is `hidden sm:inline-flex`. Not role-gated: `DECISIONS.md` #155
+             makes adding a viewer's to do, and every endpoint behind the page moved in
+             the same commit. Home is where `/` lands since S3, so this is the first thing
+             on the first screen. */
+          <Button asChild>
+            <Link to="/collection/add">
+              <Plus className="h-4 w-4" aria-hidden />
+              Add a disc
+            </Link>
+          </Button>
+        )}
       />
 
       {/* On this day — hidden entirely until there is a watch history to look back

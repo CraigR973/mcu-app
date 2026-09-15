@@ -22,7 +22,7 @@ import structlog
 from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy import select
 
-from src.auth import AdminUser
+from src.auth import CurrentUser
 from src.ebay import EbayClient, EbayError, EbayNotConfigured
 from src.models.movie import Movie
 from src.rate_limit import limiter
@@ -82,7 +82,11 @@ def _to_response(candidate: BarcodeCandidate) -> BarcodeCandidateResponse:
 async def lookup(
     request: Request,
     payload: BarcodeLookupRequest,
-    _user: AdminUser,
+    # Batch S4. Scanning is the *quickest* way to add a disc, and snag 7 is about a phone
+    # — leaving this admin-only would hand a viewer the add page with its fastest path
+    # disabled. It spends an eBay quota call, which is deliberate and shared: the rate
+    # limit is per caller, so Mark cannot exhaust Craig's allowance.
+    _user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
 ) -> BarcodeLookupResponse:
@@ -235,7 +239,9 @@ async def _attach_local_movies(db: Database, candidates: list[BarcodeCandidate])
 @router.post("/barcode/confirm", response_model=BarcodeLookupResponse)
 async def confirm(
     payload: BarcodeConfirmRequest,
-    user: AdminUser,
+    # Batch S4, with lookup above. Confirmation is a local write after a person has
+    # checked the candidate, and it records who confirmed it.
+    user: CurrentUser,
     db: Database,
 ) -> BarcodeLookupResponse:
     """Record what a barcode turned out to be — §3.4's confirmation, persisted.

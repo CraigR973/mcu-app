@@ -205,9 +205,15 @@ export default function App() {
               path="/dashboard"
               element={<AppShell><DashboardPage /></AppShell>}
             />
+            {/* Batch S4 (`DECISIONS.md` #155). **The ordinary shell, not the admin one.**
+                `profiles` holds exactly two rows and there is no public sign-up, so "only
+                Mark and Craig" already described every page; what Craig wanted was for
+                Mark to be able to add a disc. Every endpoint behind this page moved in the
+                same commit — a route guard that opens onto an API that still refuses is
+                worse than leaving it shut. */}
             <Route
               path="/collection/add"
-              element={<AdminShell><AddToCollectionPage /></AdminShell>}
+              element={<AppShell><AddToCollectionPage /></AppShell>}
             />
             {/* Loans are readable by both — knowing where a disc went is not an
                 admin question, even though lending one is. §6.5 marks GET /loans "Any". */}

@@ -355,22 +355,66 @@ async def test_adding_a_tmdb_film_already_in_the_catalogue_reuses_its_row(
     assert response.json()["movieId"] == str(existing.id)
 
 
-async def test_a_viewer_cannot_write(
+async def test_a_viewer_may_add_a_disc_but_not_edit_or_destroy_one(
     viewer_client: AsyncClient,
     api_session: AsyncSession,
 ) -> None:
+    """**Batch S4 moved the line, and this test is where the line lives.**
+
+    This used to assert that a viewer could not `POST /collection` either. That assertion
+    was right until `DECISIONS.md` #155 and is wrong after it: `profiles` holds exactly
+    two rows and there is no public sign-up, so "only Mark and Craig can see this" already
+    described every page — what Craig actually wanted was for **Mark to be able to add a
+    disc**. Adding is now a viewer's to do.
+
+    **Editing and destroying are not**, and that is the half worth keeping sharp. Adding a
+    disc creates a row attributed to whoever added it; editing or deleting one changes or
+    removes something the other person put there.
+    """
     movie = await _a_film(api_session, title="Not Yours To Edit", tmdb_id=930011)
     item = await _a_disc(api_session, movie)
 
-    assert (
-        await viewer_client.post("/api/v1/collection", json=_body(movieId=str(movie.id)))
-    ).status_code == 403
+    added = await viewer_client.post("/api/v1/collection", json=_body(movieId=str(movie.id)))
+    assert added.status_code == 201, added.text
+
     assert (
         await viewer_client.put(f"/api/v1/collection/{item.id}", json=_body())
     ).status_code == 403
     assert (await viewer_client.delete(f"/api/v1/collection/{item.id}")).status_code == 403
+
+
+async def test_the_admin_only_tools_still_refuse_a_viewer(viewer_client: AsyncClient) -> None:
+    """Batch S4's other criterion: **403**, for the four that do not move.
+
+    #155 widens Mark's reach; it does not remove the distinction. Trash, the audit log,
+    retailers and the admin surface are Craig's tools in the sense the Admin page's own
+    label means, and a batch about *reach* is exactly when a boundary quietly stops being
+    enforced.
+    """
     assert (await viewer_client.get("/api/v1/trash")).status_code == 403
     assert (await viewer_client.get("/api/v1/admin/audit")).status_code == 403
+    assert (await viewer_client.get("/api/v1/retailers")).status_code == 403
+
+
+async def test_a_viewer_can_reach_every_step_of_the_add_flow(
+    viewer_client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """**The API moves with the UI, never after it** — #155.
+
+    A page that stops hiding a button whose endpoint still 403s is worse than no change at
+    all, so the criterion is the *whole flow*, not the final POST. Search for the film,
+    check for a duplicate, then add: any one of the three still refusing a viewer would
+    leave Mark with an add page that fails somewhere in the middle.
+    """
+    movie = await _a_film(api_session, title="A Film Mark Can Add", tmdb_id=930012)
+
+    duplicate = await viewer_client.get(
+        f"/api/v1/collection/duplicate-check?movieId={movie.id}&format=blu_ray"
+    )
+    assert duplicate.status_code == 200, duplicate.text
+
+    added = await viewer_client.post("/api/v1/collection", json=_body(movieId=str(movie.id)))
+    assert added.status_code == 201, added.text
 
 
 async def test_create_requires_exactly_one_film_reference(client: AsyncClient) -> None:
@@ -1230,16 +1274,30 @@ class TestListingStatus:
         )
         assert after.json()["isDuplicate"] is False
 
-    async def test_a_viewer_cannot_sell_a_disc(
+    async def test_a_viewer_can_list_a_superseded_disc_for_sale(
         self, viewer_client: AsyncClient, api_session: AsyncSession
     ) -> None:
-        movie = await _a_film(api_session, title="Not Marks To Sell", tmdb_id=930107)
+        """**Batch S4 moved this, and it was not in the criterion's list.**
+
+        `DECISIONS.md` #155 names `/collection/add` and the two eBay endpoints. Following
+        the *button* rather than the criterion found a third: "List for sale" prices via
+        eBay and then lands here, so with this left admin-only Mark would have seen the
+        upgrade prompt, fetched the price, pressed the button and got a 403 — the precise
+        failure #155 calls worse than no change at all.
+
+        This used to assert 403 under the name "a viewer cannot sell a disc". The word
+        *sell* was doing too much work: it is one endpoint covering both "I have listed
+        this" and "this is gone", and the first is half of the flow snag 7 is about.
+        """
+        movie = await _a_film(api_session, title="Marks To List", tmdb_id=930107)
         disc = await _a_disc(api_session, movie, formats=["blu_ray"])
 
         response = await viewer_client.put(
-            f"/api/v1/collection/{disc.id}/listing", json={"status": "sold"}
+            f"/api/v1/collection/{disc.id}/listing",
+            json={"status": "listed_for_sale", "listingPrice": "12.99"},
         )
-        assert response.status_code == 403
+        assert response.status_code == 200, response.text
+        assert response.json()["listingStatus"] == "listed_for_sale"
 
     async def test_an_unknown_status_is_refused_before_it_reaches_the_check_constraint(
         self, client: AsyncClient, api_session: AsyncSession

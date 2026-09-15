@@ -111,3 +111,23 @@ describe('the destinations themselves', () => {
     expect(navItems.map((item) => item.path)).not.toContain('/export')
   })
 })
+
+describe('Batch S4 — quick add within reach', () => {
+  it('keeps Add a disc in the admin menu while the page itself is open to a viewer', () => {
+    // `DECISIONS.md` #155 widens *reach*, and the sidebar's Administration group is still
+    // Craig's own list. What changed is the route guard and the API behind it — the page
+    // is reachable by a viewer from Home and from the bottom bar, which is where snag 7
+    // said a phone had nothing at all.
+    expect(adminNavItems.map((item) => item.path)).toContain('/collection/add')
+  })
+
+  it('leaves the four admin-only tools where they are', () => {
+    // A batch about widening access is exactly when a boundary quietly stops being
+    // enforced, so the four that do not move are named here as well as in the API tests.
+    const admin = adminNavItems.map((item) => item.path)
+    for (const path of ['/trash', '/audit', '/retailers', '/admin']) {
+      expect(admin).toContain(path)
+      expect(navItems.map((item) => item.path)).not.toContain(path)
+    }
+  })
+})

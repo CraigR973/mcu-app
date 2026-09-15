@@ -88,11 +88,13 @@ export default function AppLayout({ children }: Props) {
               <span className="hidden xl:inline">Commands</span>
               <kbd className="hidden rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground md:inline">⌘K</kbd>
             </button>
-            {isAdmin && (
-              <Button asChild size="sm" className="hidden sm:inline-flex">
-                <Link to="/collection/add"><Plus aria-hidden /> Add a disc</Link>
-              </Button>
-            )}
+            {/* Batch S4. The `isAdmin &&` is gone with #155, and `hidden sm:inline-flex`
+                stays on purpose: below 640px the bottom bar carries the add slot, so a
+                second one here would be two controls for one job in the scarcest space
+                the app has. Snag 7 was that the phone had *neither*. */}
+            <Button asChild size="sm" className="hidden sm:inline-flex">
+              <Link to="/collection/add"><Plus aria-hidden /> Add a disc</Link>
+            </Button>
           </div>
           </div>
         </header>

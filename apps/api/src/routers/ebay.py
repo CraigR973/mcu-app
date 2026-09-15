@@ -30,9 +30,15 @@ nothing here could detect: eBay simply reports validation failed.
 
 **Batch 28 added the rest of the integration below it**, and the contrast with the
 notification endpoint above is the thing to notice: everything from here down is
-``AdminUser``-authed and rate limited, because it spends a finite daily quota on eBay's
+*authenticated* and rate limited, because it spends a finite daily quota on eBay's
 production keyset. The account-deletion endpoint must stay unauthenticated and *un*-limited
 for the reasons above; these must not.
+
+**Batch S4 widened these two from ``AdminUser`` to ``CurrentUser``** (`DECISIONS.md` #155).
+Batch 29's upgrade flow — add a disc, mark it an upgrade, get a pre-filled eBay price for
+the old one — already existed; snag 7 was entirely that a viewer could not reach any of it.
+Quota is still the reason for the rate limit, and the limit is per caller, so widening the
+audience does not let one person exhaust the other's allowance.
 """
 
 from __future__ import annotations
@@ -44,7 +50,7 @@ import structlog
 from fastapi import APIRouter, HTTPException, Query, Response, status
 from pydantic import BaseModel
 
-from ..auth import AdminUser
+from ..auth import CurrentUser
 from ..config import settings
 from ..ebay import (
     EbayClient,
@@ -234,7 +240,9 @@ async def _estimate(payload: PriceEstimateRequest) -> PriceEstimate:
 
 
 @router.post("/ebay/price-estimate", response_model=PriceEstimateResponse)
-async def price_estimate(payload: PriceEstimateRequest, _user: AdminUser) -> PriceEstimateResponse:
+async def price_estimate(
+    payload: PriceEstimateRequest, _user: CurrentUser
+) -> PriceEstimateResponse:
     """Phase 4.1 — a median per segment, with the sample size and the rejections.
 
     **A POST rather than a GET, and not for tidiness.** A film title in a query string ends
@@ -276,7 +284,7 @@ async def price_estimate(payload: PriceEstimateRequest, _user: AdminUser) -> Pri
 
 
 @router.post("/ebay/listing-url", response_model=ListingUrlResponse)
-async def listing_url(payload: ListingUrlRequest, _user: AdminUser) -> ListingUrlResponse:
+async def listing_url(payload: ListingUrlRequest, _user: CurrentUser) -> ListingUrlResponse:
     """Phase 4.3 — the pre-filled listing link, and what to ask for the disc.
 
     **Option B promoted to primary.** Option A, a Sell API draft listing, describes

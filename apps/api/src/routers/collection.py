@@ -24,7 +24,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth import AdminUser
+from src.auth import AdminUser, CurrentUser
 from src.models.admin_action import COLLECTION_ITEMS_TABLE, AdminAction
 from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem, owned_copy
 from src.models.movie import Movie, MovieCredit
@@ -279,7 +279,10 @@ async def _movie_from_tmdb(db: AsyncSession, tmdb: TmdbClient, tmdb_id: int) -> 
 
 @router.get("/collection/duplicate-check", response_model=DuplicateCheckResponse)
 async def check_duplicate(
-    _user: AdminUser,
+    # Batch S4 (`DECISIONS.md` #155): a viewer, because the add form asks this and a
+    # viewer can now use the add form. A duplicate check that 403s would let Mark fill in
+    # a disc and only discover the clash when `POST /collection` refused it.
+    _user: CurrentUser,
     db: Database,
     movie_id: Annotated[uuid.UUID | None, Query(alias="movieId")] = None,
     tmdb_id: Annotated[int | None, Query(alias="tmdbId", gt=0)] = None,
@@ -317,7 +320,12 @@ async def check_duplicate(
 )
 async def add_collection_item(
     payload: CollectionItemCreateRequest,
-    user: AdminUser,
+    # Batch S4. **The widening is here, not in the UI.** `DECISIONS.md` #155: `profiles`
+    # holds exactly two rows and there is no public sign-up, so "only Mark and Craig" was
+    # already true of every page; what Craig meant was that Mark should be able to add a
+    # disc. Every write is attributed to whoever made it, so the audit log tells them
+    # apart — which is the property that makes this safe rather than merely convenient.
+    user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
 ) -> CollectionItemResponse:
@@ -459,7 +467,13 @@ async def update_collection_item(
 async def update_listing_status(
     item_id: uuid.UUID,
     payload: ListingUpdateRequest,
-    user: AdminUser,
+    # Batch S4, and **this one is what makes the upgrade flow actually work for a viewer**
+    # rather than merely start. The two eBay endpoints only price and link; "List for sale"
+    # lands here, so leaving it `AdminUser` would have given Mark a prompt he could see, a
+    # price he could fetch, and a button that 403s — the precise defect `DECISIONS.md` #155
+    # says is worse than no change at all. Found by following the button rather than the
+    # criterion, which named the two eBay routes and not this one.
+    user: CurrentUser,
     db: Database,
 ) -> CollectionItemResponse:
     """Move a disc between §3.4's listing states — phases 4.2 and 4.4.
@@ -758,7 +772,9 @@ async def list_audit_entries(
 
 @router.get("/tmdb/search", response_model=TmdbSearchResponse)
 async def search_tmdb(
-    _user: AdminUser,
+    # Batch S4. The add form's first step. Admin-only here would make `/collection/add`
+    # reachable by a viewer and useless to one.
+    _user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
     q: Annotated[str, Query(min_length=2, max_length=200)],
