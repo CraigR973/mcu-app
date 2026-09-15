@@ -33,6 +33,7 @@ import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
 import { useAuth } from '@/context/auth'
+import { imdbUrl, letterboxdUrl } from '@/lib/external-links'
 import { useRecentItems } from '@/hooks/useRecentItems'
 import {
   backdropUrl,
@@ -352,10 +353,10 @@ export default function MovieDetailPage() {
     : null
   const rating = movie.tmdbRating ? movie.tmdbRating.toFixed(1) : null
   const backdrop = backdropUrl(movie.backdropPath)
-  const imdbUrl = movie.imdbId ? `https://www.imdb.com/title/${movie.imdbId}/` : null
-  const letterboxdUrl = movie.letterboxdSlug
-    ? `https://letterboxd.com/film/${movie.letterboxdSlug}/`
-    : `https://letterboxd.com/search/${encodeURIComponent(movie.title)}/`
+  // Batch S2, snag 9. Both builders live in `lib/external-links.ts` so each branch can be
+  // asserted directly — the Letterboxd one had two branches and only ever took the worse.
+  const imdbHref = imdbUrl(movie)
+  const letterboxdHref = letterboxdUrl(movie)
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: 'copies', label: 'Owned copies', count: movie.copyCount },
@@ -426,14 +427,14 @@ export default function MovieDetailPage() {
         </header>
 
         <div className="mt-5 flex flex-wrap gap-2 sm:ml-[9.5rem] lg:ml-[10.5rem]">
-          {imdbUrl ? (
+          {imdbHref ? (
             <Button asChild size="sm" variant="outline">
-              <a href={imdbUrl} target="_blank" rel="noreferrer">IMDb <ExternalLink aria-hidden /></a>
+              <a href={imdbHref} target="_blank" rel="noreferrer">IMDb <ExternalLink aria-hidden /></a>
             </Button>
           ) : null}
           {movie.identified ? (
             <Button asChild size="sm" variant="outline">
-              <a href={letterboxdUrl} target="_blank" rel="noreferrer">Letterboxd <ExternalLink aria-hidden /></a>
+              <a href={letterboxdHref} target="_blank" rel="noreferrer">Letterboxd <ExternalLink aria-hidden /></a>
             </Button>
           ) : null}
           {movie.identified ? (

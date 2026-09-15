@@ -27,12 +27,20 @@
     background: hsl(var(--background));
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
+    /* Batch S2, snag 3. `manipulation` is "auto minus double-tap-zoom", and it was scoped
+       to buttons alone — measured on the deployed app at 375x812, `html`, `body` and every
+       input computed `touch-action: auto`, so a double-tap anywhere except a button zoomed
+       the page. **Pinch-zoom is explicitly not affected**: the spec keeps continuous pinch
+       zooming under `manipulation`, and the viewport meta still sets neither
+       `user-scalable=no` nor `maximum-scale`. Only the double-tap gesture goes. */
+    touch-action: manipulation;
   }
 
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     margin: 0;
+    touch-action: manipulation;
   }
 
   ::selection {
@@ -53,9 +61,35 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Kept after the root rule above, not replaced by it: `touch-action` does not inherit,
+     so a descendant that sets `auto` for its own scrolling would otherwise take the
+     double-tap behaviour back for anything inside it.
+     **Form controls are deliberately left at `auto`.** The effective touch behaviour is the
+     intersection along the ancestor chain, so the root's `manipulation` already suppresses
+     double-tap *zoom* on an input — while leaving the input's own double-tap-to-select-word
+     alone, which is a gesture somebody actually uses when correcting a shelf name. */
   button,
   [role='button'] {
     touch-action: manipulation;
+  }
+
+  /* Batch S2, snag 3 — the other half. iOS Safari zooms the viewport when a control whose
+     font is under **16px** receives focus, and `.form-control` was `text-sm` = 14px, so
+     tapping any box on a phone zoomed the page and left it zoomed.
+     `.form-control` now carries the size itself (below), but not every control in the app
+     uses that class — `FilterBar`, `CommandPalette` and `SearchBar` each style their own —
+     so this is the floor underneath all of them, and underneath any input written later.
+     **The `:not()` is load-bearing.** Tailwind emits `text-sm` as a class (specificity
+     0-1-0), which beats a bare `input` selector however late it appears; `[type='...']`
+     inside `:not()` contributes its own 0-1-0, taking this rule to 0-1-1 so it wins
+     without `!important`. Checkboxes and radios are excluded because they render no text,
+     and sizing them would change their box. */
+  @media (max-width: 639px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select:not([size]),
+    textarea:not([hidden]) {
+      font-size: 1rem;
+    }
   }
 
   img {
@@ -120,7 +154,7 @@
   }
 
   .form-control {
-    @apply min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70;
+    @apply min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground sm:text-sm shadow-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70;
   }
 
   .select-control {
