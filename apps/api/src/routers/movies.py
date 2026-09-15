@@ -10,7 +10,7 @@ from typing import Annotated, Literal, cast
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import asc, delete, desc, exists, func, select, update
+from sqlalchemy import asc, desc, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.selectable import ScalarSelect
@@ -39,7 +39,7 @@ from src.schemas.movies import (
     SectionFacetResponse,
     ShelfFacetResponse,
 )
-from src.services.movie_metadata import credit_rows, movie_metadata_values
+from src.services.identification import apply_identification
 from src.tmdb import TMDBClient
 
 router = APIRouter(prefix="/api/v1", tags=["movies"])
@@ -749,62 +749,6 @@ async def get_movie_candidates(
     )
 
 
-async def _apply_identification(
-    db: AsyncSession,
-    source: Movie,
-    tmdb_movie: object,
-) -> Movie:
-    from src.tmdb.models import Movie as TmdbMovie
-
-    if not isinstance(tmdb_movie, TmdbMovie):  # defensive boundary for dependency overrides
-        raise TypeError("Expected a validated TMDB movie")
-
-    existing = await db.scalar(
-        select(Movie).where(
-            Movie.tmdb_id == tmdb_movie.id,
-            Movie.id != source.id,
-        )
-    )
-    target = existing or source
-    values = movie_metadata_values(tmdb_movie)
-    for name, value in values.items():
-        setattr(target, name, value)
-
-    await db.execute(delete(MovieCredit).where(MovieCredit.movie_id == target.id))
-    for row in credit_rows(target.id, tmdb_movie):
-        db.add(
-            MovieCredit(
-                id=uuid.UUID(row[0]),
-                movie_id=target.id,
-                person_name=row[2],
-                tmdb_person_id=row[3],
-                role=row[4],
-                character_name=row[5],
-                display_order=row[6],
-            )
-        )
-
-    if existing is not None:
-        await db.execute(
-            update(CollectionItem)
-            .where(CollectionItem.movie_id == source.id)
-            .values(movie_id=target.id)
-        )
-        # Watch history moves with the discs. Without this the ``RESTRICT`` on
-        # ``watch_log.movie_id`` refuses the delete below and identification fails for
-        # any film someone had already logged a watch against — which is precisely the
-        # film they cared enough about to watch.
-        await db.execute(
-            update(WatchLog).where(WatchLog.movie_id == source.id).values(movie_id=target.id)
-        )
-        await db.execute(delete(MovieCredit).where(MovieCredit.movie_id == source.id))
-        await db.delete(source)
-
-    await db.commit()
-    await db.refresh(target)
-    return target
-
-
 @router.post("/movies/{movie_id}/identify", response_model=MovieDetailResponse)
 async def identify_movie(
     movie_id: uuid.UUID,
@@ -824,5 +768,10 @@ async def identify_movie(
         )
         raise HTTPException(status_code=code, detail="TMDB movie could not be loaded") from exc
 
-    target = await _apply_identification(db, source, tmdb_movie)
+    # Batch S8 moved the body to `services/identification.py` so an import script can
+    # reuse it. The commit moved out with it — the service flushes, the caller decides
+    # when to commit — so this endpoint keeps its previous behaviour exactly.
+    target = await apply_identification(db, source, tmdb_movie)
+    await db.commit()
+    await db.refresh(target)
     return await _movie_detail(db, target)

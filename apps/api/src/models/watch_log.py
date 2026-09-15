@@ -13,7 +13,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -68,6 +68,19 @@ class WatchLog(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     personal_rating: Mapped[Decimal | None] = mapped_column(Numeric(2, 1), nullable=True)
 
     review: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    #: Batch S8. The Letterboxd viewing this row came from, or NULL for a watch logged by
+    #: hand in the app.
+    #:
+    #: **The idempotency key for every imported watch, and it is deliberately the *bare*
+    #: id.** The diary CSV calls it `ViewingId`; the public RSS feed wraps the same number
+    #: as `letterboxd-watch-<id>` in its `<guid>`. Storing what they have in common is
+    #: what stops S5's feed re-importing a viewing S8's file already wrote
+    #: (`DECISIONS.md` #159, #161).
+    #:
+    #: A rewatch on a later date is a *different* viewing and correctly becomes a second
+    #: row — which is what `is_rewatch` is for.
+    letterboxd_viewing_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     #: Soft delete, so an accidental log is recoverable and §13.5's Trash has something
     #: to show. Every read path filters on it, and the watched facet counts only live

@@ -205,6 +205,16 @@ class MatchingEngine:
     def cache_size(self) -> int:
         return len(self._cache)
 
+    @property
+    def tmdb(self) -> TMDBClient:
+        """The client this engine searches with.
+
+        Exposed in Batch S8 so a caller that has already asked the engine *which* film a
+        title is can fetch the full record without being handed a second client and having
+        to keep the two in step.
+        """
+        return self._tmdb
+
     async def match(self, raw_title: str) -> MatchResult:
         clean_title, year = normalise_query(raw_title)
         cache_key = (_canonicalise(clean_title), year)
