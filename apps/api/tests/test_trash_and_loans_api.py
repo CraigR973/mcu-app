@@ -256,7 +256,7 @@ async def test_every_remaining_table_can_still_be_restored(
         id=uuid.uuid4(),
         name=f"A Shop {uuid.uuid4().hex[:8]}",
         base_url="https://example.invalid",
-        scraper_type="generic",
+        scraper_type="generic_css",
     )
     api_session.add_all([watched, box_set, wanted, retailer])
     await api_session.flush()
