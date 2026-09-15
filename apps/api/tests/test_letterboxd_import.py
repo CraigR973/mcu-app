@@ -423,6 +423,11 @@ async def test_an_unconfident_tmdb_match_leaves_the_row_alone_and_says_so(
     the importer refuses it rather than taking TMDB's popularity ordering as an answer —
     the same rule Batch 4's collection import follows (`DECISIONS.md` #31).
 
+    **The entry has no year**, which is what makes this a genuine tie: with no year to
+    score against, two same-titled films 44 years apart get identical confidence and the
+    leader's position comes from popularity alone. A diary row *with* a year resolves
+    instead — see the test below, which is the common case.
+
     **The watch is still written.** Failing to identify the film is not a reason to lose
     the record that somebody watched it.
     """
@@ -432,7 +437,7 @@ async def test_an_unconfident_tmdb_match_leaves_the_row_alone_and_says_so(
     report = await run_import(
         db,
         person,
-        [_entry("111", "Death on the Nile", year=1978)],
+        [_entry("111", "Death on the Nile")],
         dry_run=False,
         engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
     )
@@ -445,6 +450,34 @@ async def test_an_unconfident_tmdb_match_leaves_the_row_alone_and_says_so(
     await db.refresh(unidentified)
     assert unidentified.tmdb_id is None
     assert report.written == 1
+
+
+async def test_the_diary_year_resolves_a_tie_tmdb_alone_could_not(
+    db: AsyncSession, person: Profile
+) -> None:
+    """**The diary's year is the thing TMDB search does not have**, and it settles most of
+    these.
+
+    Two *Death on the Nile*s, 44 years apart, are ambiguous on title alone. The diary row
+    says 1978, so the 1978 film scores an exact year match and the 2022 one a mismatch —
+    not a tie, and identification proceeds. **Every row in both real diaries carries a
+    Year**, measured, so this is the common path and the test above is the edge.
+    """
+    unidentified = await _film(db, "Death on the Nile [1978]")
+
+    tmdb = _StubTmdb(title="Death on the Nile", tmdb_id=1, year="1978", confident=False)
+    report = await run_import(
+        db,
+        person,
+        [_entry("111", "Death on the Nile", year=1978)],
+        dry_run=False,
+        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
+    )
+
+    assert report.identified == [("Death on the Nile", 1)]
+    assert report.identification_failures == []
+    await db.refresh(unidentified)
+    assert unidentified.tmdb_id == 1
 
 
 async def test_a_dry_run_never_touches_tmdb(db: AsyncSession, person: Profile) -> None:
