@@ -38,6 +38,7 @@ from src.routers import (
     stats,
     trash,
     wanted,
+    watch_history,
     watch_log,
 )
 
@@ -118,6 +119,7 @@ app.include_router(stats.router)
 app.include_router(export.router)
 app.include_router(trash.router)
 app.include_router(navigation.router)
+app.include_router(watch_history.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)
 app.include_router(wanted.router)

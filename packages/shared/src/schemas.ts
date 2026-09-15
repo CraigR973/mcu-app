@@ -1601,3 +1601,48 @@ export const navSectionsSchema = z.object({
 })
 
 export type NavSections = z.infer<typeof navSectionsSchema>
+
+// ---------------------------------------------------------------------------
+// Watch history sync (Batch S5) — snag 10a, `DECISIONS.md` #156, #158, #159
+// ---------------------------------------------------------------------------
+
+/** One sync run.
+ *
+ *  `startedAt` is the field the panel exists to show. The diary feed returns 50 entries
+ *  and no more, and Mark cycles his in about eight weeks — so a sync that quietly stopped
+ *  running would lose history *without ever failing*, and "when did this last run" is a
+ *  correctness property rather than a nicety. A failed run still answers it; `error`
+ *  says why it failed. */
+export const syncRunSchema = z.object({
+  id: z.string(),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  trigger: z.string(),
+  entries: z.number().int().nonnegative(),
+  written: z.number().int().nonnegative(),
+  alreadyImported: z.number().int().nonnegative(),
+  ambiguous: z.number().int().nonnegative(),
+  notInCollection: z.number().int().nonnegative(),
+  error: z.string().nullable(),
+})
+
+export const watchHistoryStatusSchema = z.object({
+  /** Null until this person supplies one — the panel says so rather than offering a
+   *  button that cannot work. A **public username**, never a credential. */
+  letterboxdUsername: z.string().nullable(),
+  lastSync: syncRunSchema.nullable(),
+  watchCount: z.number().int().nonnegative(),
+})
+
+export const syncResponseSchema = z.object({
+  run: syncRunSchema,
+  /** Offered, never guessed — each described so a person can settle it. */
+  ambiguities: z.array(z.string()),
+  /** The feed came back at its 50-entry cap, so entries may have fallen off the end
+   *  since the last sync. A cadence warning, not a failure. */
+  feedWasFull: z.boolean(),
+})
+
+export type SyncRun = z.infer<typeof syncRunSchema>
+export type WatchHistoryStatus = z.infer<typeof watchHistoryStatusSchema>
+export type SyncResponse = z.infer<typeof syncResponseSchema>

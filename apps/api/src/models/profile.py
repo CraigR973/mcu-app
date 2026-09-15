@@ -96,6 +96,15 @@ class Profile(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: streaming nowhere, and nothing would say why.
     streaming_region: Mapped[str] = mapped_column(String(2), nullable=False, server_default="GB")
 
+    #: Batch S5. This person's **public** Letterboxd username, or NULL if they have not
+    #: given one. `CraigR973` and `markr973` as of 2026-09-14, both diaries already public.
+    #:
+    #: **Not a credential**, and there is deliberately nowhere to put one: `DECISIONS.md`
+    #: #161 rules out any design where a Letterboxd password reaches this app. A CHECK
+    #: holds it to Letterboxd's own username alphabet, which also means nothing that looks
+    #: like a path segment or a full URL can reach the feed URL builder.
+    letterboxd_username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

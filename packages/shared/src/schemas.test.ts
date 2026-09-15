@@ -49,6 +49,9 @@ import {
   wantedItemSchema,
   watchLogPageSchema,
   navSectionsSchema,
+  watchHistoryStatusSchema,
+  syncRunSchema,
+  syncResponseSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -1364,5 +1367,46 @@ describe('navSectionsSchema', () => {
   it('refuses a missing section rather than defaulting it to zero', () => {
     // `undefined > 0` is false, so a dropped field would silently hide its destination.
     expect(navSectionsSchema.safeParse({ boxSets: 1, collections: 0, deals: 0 }).success).toBe(false)
+  })
+})
+
+describe('watch history sync schemas', () => {
+  const run = {
+    id: 'abc',
+    startedAt: '2026-09-15T10:00:00Z',
+    finishedAt: '2026-09-15T10:00:04Z',
+    trigger: 'manual',
+    entries: 50,
+    written: 3,
+    alreadyImported: 45,
+    ambiguous: 1,
+    notInCollection: 1,
+    error: null,
+  }
+
+  it('parses a status with no sync yet', () => {
+    const parsed = watchHistoryStatusSchema.parse({
+      letterboxdUsername: null,
+      lastSync: null,
+      watchCount: 0,
+    })
+    expect(parsed.lastSync).toBeNull()
+  })
+
+  it('keeps a failed run rather than dropping it', () => {
+    // A sync that failed and left no trace is indistinguishable from one that never ran,
+    // which is the expensive confusion given the 50-entry feed cap.
+    const parsed = syncRunSchema.parse({ ...run, finishedAt: null, error: 'HTTPStatusError: 503' })
+    expect(parsed.error).toContain('503')
+  })
+
+  it('carries the cadence warning separately from the counts', () => {
+    const parsed = syncResponseSchema.parse({ run, ambiguities: ['Dunkirk (2017) → …'], feedWasFull: true })
+    expect(parsed.feedWasFull).toBe(true)
+    expect(parsed.ambiguities).toHaveLength(1)
+  })
+
+  it('refuses a run whose counts are negative', () => {
+    expect(syncRunSchema.safeParse({ ...run, written: -1 }).success).toBe(false)
   })
 })

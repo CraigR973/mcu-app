@@ -66,6 +66,8 @@ import {
   searchResponseSchema,
   smartCollectionListSchema,
   navSectionsSchema,
+  syncResponseSchema,
+  watchHistoryStatusSchema,
   statsSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
@@ -154,6 +156,8 @@ import {
   type SmartCollectionList,
   type SmartCollectionResults,
   type NavSections,
+  type SyncResponse,
+  type WatchHistoryStatus,
   type Stats,
   type TmdbSearchResponse,
   type TrashList,
@@ -213,6 +217,9 @@ export type {
   MovieLocation,
   MoviePage,
   NavSections,
+  SyncRun,
+  SyncResponse,
+  WatchHistoryStatus,
   OnThisDayMemory,
   NewRelease,
   NewReleaseList,
@@ -964,6 +971,39 @@ export function setTypeLabel(setType: CompletionSetType): string {
     curated_list: 'List',
   }
   return labels[setType]
+}
+
+// ---------------------------------------------------------------------------
+// Watch history sync (Batch S5) — snag 10a
+// ---------------------------------------------------------------------------
+
+export async function fetchWatchHistoryStatus(): Promise<WatchHistoryStatus> {
+  return parseResponse(await authFetch('/watch-history/status'), watchHistoryStatusSchema)
+}
+
+export async function setLetterboxdUsername(
+  letterboxdUsername: string | null,
+): Promise<WatchHistoryStatus> {
+  return parseOrThrowApiError(
+    await authFetch('/watch-history/username', {
+      method: 'PUT',
+      body: JSON.stringify({ letterboxdUsername }),
+    }),
+    watchHistoryStatusSchema,
+  )
+}
+
+/** Fetch the diary feed and write whatever is new.
+ *
+ *  **The only live third-party request the app makes on a button press.** It is a button
+ *  rather than a schedule because both Railway crons have been crashing on every fire
+ *  since 2026-09-10 (`DECISIONS.md` #156), and a design that assumed a schedule would
+ *  have shipped inert. */
+export async function syncWatchHistory(): Promise<SyncResponse> {
+  return parseOrThrowApiError(
+    await authFetch('/watch-history/sync', { method: 'POST' }),
+    syncResponseSchema,
+  )
 }
 
 // ---------------------------------------------------------------------------

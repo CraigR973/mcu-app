@@ -1,16 +1,20 @@
 import { useState } from 'react'
-import { Bell, Bot } from 'lucide-react'
+import { Bell, Bot, Clapperboard } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
+import { WatchHistoryPanel } from '@/components/settings/WatchHistoryPanel'
 import { PageHeader } from '@/components/ui/page-header'
 import { cn } from '@/lib/utils'
 import { AiSettings } from './AiSettingsPage'
 import { NotificationSettings } from './NotificationSettingsPage'
 
-type Tab = 'notifications' | 'assistant'
+type Tab = 'notifications' | 'assistant' | 'history'
 
 const TABS: { key: Tab; label: string; icon: typeof Bell }[] = [
   { key: 'notifications', label: 'Notifications', icon: Bell },
+  // Batch S5. A third tab rather than a fourth sidebar destination: it is a setting about
+  // your own account, which is what this page is for.
+  { key: 'history', label: 'Watch history', icon: Clapperboard },
   { key: 'assistant', label: 'Assistant', icon: Bot },
 ]
 
@@ -32,7 +36,10 @@ export default function SettingsPage() {
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab')
   const [fallback, setFallback] = useState<Tab>('notifications')
-  const active: Tab = requested === 'assistant' || requested === 'notifications' ? requested : fallback
+  const active: Tab =
+    requested === 'assistant' || requested === 'notifications' || requested === 'history'
+      ? requested
+      : fallback
 
   function select(tab: Tab) {
     setFallback(tab)
@@ -44,7 +51,7 @@ export default function SettingsPage() {
       <PageHeader
         eyebrow="Your account"
         title="Settings"
-        description="Which alerts reach you and on which devices, and what the assistant is allowed to spend."
+        description="Which alerts reach you and on which devices, how your watch history stays current, and what the assistant is allowed to spend."
       />
 
       <div role="tablist" aria-label="Settings sections" className="flex gap-1 border-b border-border">
@@ -76,7 +83,9 @@ export default function SettingsPage() {
         aria-labelledby={`settings-tab-${active}`}
         tabIndex={0}
       >
-        {active === 'notifications' ? <NotificationSettings /> : <AiSettings />}
+        {active === 'notifications' ? <NotificationSettings /> : null}
+        {active === 'history' ? <WatchHistoryPanel /> : null}
+        {active === 'assistant' ? <AiSettings /> : null}
       </div>
     </div>
   )

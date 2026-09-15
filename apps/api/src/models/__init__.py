@@ -40,6 +40,7 @@ from src.models.item_photo import (
     MAX_PHOTOS_PER_ITEM,
     ItemPhoto,
 )
+from src.models.letterboxd_sync import LETTERBOXD_SYNCS_TABLE, LetterboxdSync
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie, MovieCredit
 from src.models.movie_night import (
@@ -122,6 +123,8 @@ __all__ = [
     "LISTING_STATUSES",
     "LOANS_TABLE",
     "Loan",
+    "LETTERBOXD_SYNCS_TABLE",
+    "LetterboxdSync",
     "ALLOWED_CONTENT_TYPES",
     "MAX_PHOTOS_PER_ITEM",
     "ItemPhoto",

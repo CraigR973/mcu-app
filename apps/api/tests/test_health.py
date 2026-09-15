@@ -260,6 +260,14 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # on every page load to learn they were empty. `CurrentUser`, because every one
         # of those destinations is visible to a viewer.
         "/api/v1/nav/sections",
+        # Batch S5. Caller-scoped, all three: each person has their own diary, their own
+        # username and their own watch rows, so there is no admin view of somebody else's
+        # viewing history. `/sync` is the manual button #156 requires because both Railway
+        # crons are crashing; `letterboxd_syncs.trigger` already accepts `cron` so adding
+        # one later needs no migration.
+        "/api/v1/watch-history/status",
+        "/api/v1/watch-history/username",
+        "/api/v1/watch-history/sync",
     }
 
 
