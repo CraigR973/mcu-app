@@ -2871,3 +2871,91 @@ contemporaneous.
      is the intersection along the ancestor chain, so the root's `manipulation` already
      suppresses double-tap *zoom* over an input, while leaving double-tap-to-select-word —
      a gesture someone uses correcting a shelf name — working.
+
+### 2026-09-15 — Group S, batch S3
+
+165. **The menu hides a destination on a count the API supplies, and an unknown count shows
+     it.**
+
+     #154 hides Box sets, Collections, Deals and Loans while their tables are empty. That is
+     a fact about the database, so the client has to be told: `GET /nav/sections` answers it
+     in four `COUNT(*)`s. The alternative considered and rejected was having the sidebar
+     fetch the four lists it already has clients for — four full result sets on every page
+     load, on a phone, to learn they were empty.
+
+     **Each count matches what its page would actually list**, not merely what its table
+     holds. A dismissed deal does not count, because `GET /deals` filters it out. A
+     *returned* loan does, because `GET /loans` lists it. Smart collections are counted for
+     the caller alone, because they carry a `user_id` and a shared count would show one
+     person a destination holding only the other's. A count that disagreed with its page
+     would produce the subtlest possible version of this bug: a menu item that is right
+     about the table and wrong about the page.
+
+     **`undefined` means show.** The shell renders before the counts resolve, and offline
+     they may never resolve. Hiding four destinations because a request was slow is a worse
+     failure than the emptiness this exists to fix, so only a genuine `0` hides. The cost is
+     a menu that is briefly longer than it will settle to; the alternative was one that
+     flickers, or one that silently loses four links whenever the network does.
+
+166. **`navGroups` is built by path, because building it by index had already caused the
+     bug it was going to cause again.**
+
+     The previous version was `navItems[10]`, `navItems[13]` and so on. **Removing one entry
+     silently re-points every later group at the wrong destination** — no error, no type
+     failure, just a menu that quietly means something else. And adding one at the end
+     leaves it in no group at all, which is exactly what had happened to AI settings: it was
+     a defined destination sitting in no group, reachable only from a header button, and
+     nothing in the code could notice.
+
+     `byPath` throws on a name that does not exist, and a test asserts every entry in
+     `navItems` appears in some group. The second is the one that would have caught the
+     original defect.
+
+167. **Two rules about empty states collided on the merged page, and both were kept.**
+
+     #154 says the merged Home hides what is empty. Batch 14 said an empty chart reads as a
+     *broken* chart, so "Most watched" and "Spend over time" should each say what they are
+     waiting for. On one page, obeying the second means two empty panels — on a page whose
+     entire complaint was emptiness.
+
+     **The panels are hidden and their explanations are kept**, collected into one muted
+     line beneath the charts: *"Not shown yet: Most watched — nothing logged yet…"*. That
+     preserves what Batch 14 was protecting — the reader learns there is no data *and* why —
+     without spending two panels on it. The denominator that made the original argument
+     (`itemsWithPrice`, which distinguishes "nothing bought" from "nothing recorded") is
+     still what chooses the wording.
+
+     *Recorded because the naive reading of the criterion would have deleted the
+     explanation along with the frame, and the explanation is the part that was hard-won.*
+
+168. **`FilterBar` chooses where its controls render, rather than rendering them twice and
+     hiding one.**
+
+     Collapsing to a single button below `sm` had two possible shapes. The CSS one —
+     duplicate the three primary controls into the expanded panel and toggle each copy with
+     `hidden sm:block` — is purely declarative and wrong: two `<select>`s labelled *"Filter
+     by section"*, one `id="collection-sort"` twice, and both copies live in the DOM where a
+     later class change can expose them together.
+
+     `useMediaQuery('(min-width: 640px)')` decides *where* the single copy is rendered. One
+     element, one id, one accessible name. The hook already existed and already reads its
+     initial value synchronously, so there is no frame of the wrong layout.
+
+169. **The browser pass used the repo's own DEV-only auth bypass and a scratch stub of the
+     API, because the alternative was typing Craig's PIN.**
+
+     S3's criteria are about what a *signed-in* person sees — eight destinations, a bottom
+     bar, a collapsed filter bar — and none of it renders on the sign-in screen. Entering
+     the PIN is not an agent's to do.
+
+     `ProtectedRoute` already carries `import.meta.env.DEV && VITE_SKIP_AUTH === 'true'`,
+     compiled out of production builds rather than merely unreached. Running the dev server
+     with that flag against a throwaway stub serving `/auth/me`, `/nav/sections` and the
+     dashboard's reads gave the real components, the real stylesheet and real JSON shapes —
+     and let the hide/un-hide rule be *seen* in both states by flipping one value in the
+     stub, which no unit test can demonstrate.
+
+     **Nothing from the harness is in the tree.** The stub lives in the session scratchpad
+     and the `.env.local` it needed is gitignored and was deleted. Worth recording as a
+     method: a future frontend batch with the same problem should reach for this rather than
+     for a credential.

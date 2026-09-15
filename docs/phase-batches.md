@@ -1286,25 +1286,49 @@ Both causes were measured on the deployed app at 375×812, not inferred (`triage
 > film's own page and the rest still land on a search until they are identified. A film that
 > searches is not a bug in this batch.
 
-### Batch S3 — Navigation shape 🟡
+### ~~Batch S3 — Navigation shape~~ 🟡 **shipped 2026-09-15 (`a3409f1`)**
 **Covers snags 5, 11 and 1.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #154.
 
-**Acceptance:**
-- Home, Stats and Insights are one reading page at `/dashboard`; `/stats` and `/insights`
-  redirect to it rather than 404.
-- Box sets, Collections, Deals and Loans are **hidden from the menu while their table is
-  empty** and appear once it is not. **Both states tested** — a hide that never un-hides is the
-  failure mode.
-- Notifications and AI settings are one `/settings` page, and AI settings is in the menu.
-- A signed-in non-admin sees **8** sidebar destinations.
-- Search is gone from the shell header's mobile second row and reachable from the bottom bar on
-  every screen.
-- `FilterBar` collapses to a single button below `sm`.
-- `/` opens the merged Home.
-- Empty sections inside the merged page hide rather than render empty.
-- Export moves to Admin.
-- Gate green, **plus a real browser pass at 375×812 recording what was actually looked at** —
-  `batch-verify.md` requires this for frontend-visible batches.
+**Acceptance — ten of ten met.**
+- ~~Home, Stats and Insights are one reading page at `/dashboard`; `/stats` and `/insights`
+  redirect to it rather than 404.~~ ✅ Both redirects confirmed in the browser.
+- ~~Box sets, Collections, Deals and Loans are **hidden from the menu while their table is
+  empty** and appear once it is not. **Both states tested**~~ ✅ Tested at three levels and
+  **seen in a browser in both states**: `8` destinations with all four counts at 0, `12` with
+  all four non-zero. Nine API tests cover each table's empty and non-empty case, including the
+  three that would be wrong in a subtler way — a soft-deleted box set must not count, a
+  dismissed deal must not, a *returned* loan must.
+- ~~Notifications and AI settings are one `/settings` page, and AI settings is in the menu.~~
+  ✅ Two tabs; the three old paths redirect, each onto its own tab.
+- ~~A signed-in non-admin sees **8** sidebar destinations.~~ ✅ Counted in the DOM at 375×812:
+  Movies · Wanted · Movie night · Coming soon · Calendar · Home · Assistant · Settings.
+- ~~Search is gone from the shell header's mobile second row and reachable from the bottom bar
+  on every screen.~~ ✅ No visible search input in the header at 375px; the bottom bar reads
+  Archive · **Search** · Home · Movie night · More, and opens a sheet with the field focused.
+- ~~`FilterBar` collapses to a single button below `sm`.~~ ✅ **One control** in the bar at
+  375px, measured; all nine reappear when expanded.
+- ~~`/` opens the merged Home.~~ ✅
+- ~~Empty sections inside the merged page hide rather than render empty.~~ ✅ On this day,
+  Worth a rewatch and Pinned collections render nothing at all today. **The two empty charts
+  are hidden too**, with their reasons collected into one line beneath — see the note below.
+- ~~Export moves to Admin.~~ ✅ `/export`, admin-only.
+- ~~Gate green, **plus a real browser pass at 375×812**~~ ✅ Green first time. The browser pass
+  drove the real bundle against a scratch stub of the API, using the repo's own DEV-only
+  `VITE_SKIP_AUTH` (compiled out of production builds), because a signed-in view needs Craig's
+  PIN. Nothing from that harness is in the tree.
+
+> **One judgement call worth flagging.** "Empty sections hide" and Batch 14's *"an empty chart
+> reads as a broken chart, so say what it is waiting for"* pull in opposite directions for
+> Most watched and Spend over time. Both are honoured: the panels are **hidden**, and their
+> explanations — *"nothing logged yet"*, *"the imported spreadsheet never carried a price"* —
+> are collected into a single muted line under the charts. Two empty frames on a page whose
+> complaint was emptiness would have been the complaint.
+
+> **Three test expectations changed.** The command palette no longer indexes 'Stats', and
+> `g s` — "go to stats" — now goes to `/settings`, because stats is a section of `/dashboard`
+> that `g h` already reaches. Each is the batch's own point rather than a concession, and the
+> palette assertion was **strengthened**: it now also proves 'Stats' and 'Insights' are gone
+> from the index rather than merely renamed.
 
 ### Batch S4 — Quick add within reach 🟡
 **Covers snags 7 and 8.** Model: **Opus 5 · high** / GPT-5.6 Sol · High. `DECISIONS.md` #155.
@@ -1480,7 +1504,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 36 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Already two phases in one batch |
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
-| **S** | ~~S1~~ → ~~S2~~ → S3 → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → S4 → **S8 → S5** → S6 → S7 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

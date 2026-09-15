@@ -2,8 +2,8 @@
 
 ## Now
 
-**Group S is running. S1 and S2 of 8 have shipped; S3 is next.** The eight batches from the
-2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
+**Group S is running. S1, S2 and S3 of 8 have shipped; S4 is next.** The eight batches from
+the 2026-09-14 owner snag triage, in the dependency-derived order **S1 → S2 → S3 → S4 → S8 →
 S5 → S6 → S7**. Criteria are in `docs/phase-batches.md` under "Owner snag batches"; they
 were **authored 2026-09-15, not recovered from §16**, so `DECISIONS.md` #54 does not apply
 and there is no `**Phase X.Y:` heading behind them to go looking for.
@@ -62,6 +62,55 @@ exists to fix.
 > should. And: does a Letterboxd link open the Letterboxd app? That is universal-link
 > handling no code here controls. **A film that still lands on a search page is not a failure
 > of the fix** — it is one of the ~763 films waiting to be identified.
+
+**S3 shipped 2026-09-15 as `a3409f1` — the menu is eight items, down from fourteen.**
+Production serves that SHA with `db: ok`, and `/api/v1/nav/sections` is live and correctly
+refusing an unauthenticated caller.
+
+**The menu lost items by two different means, because it had two different problems.** Home,
+Stats and Insights are one page at `/dashboard`; Notifications and AI settings are one
+`/settings` with two tabs — which is also what **put AI settings in the menu at all**, since it
+was a defined destination sitting in no group, reachable only from a header button. And Box
+sets, Collections, Deals and Loans hide while their tables are empty, which today is all four.
+
+**Both halves of the hide rule were seen in a browser, not only asserted.** At 375×812 with
+every count at 0 the sidebar holds **8** destinations; with all four non-zero it holds **12**.
+A hide that never un-hides looks correct on this database and stays wrong forever, which is
+why the un-hide half is the half that matters.
+
+**`GET /nav/sections` answers in four `COUNT(*)`s, and each count matches what its page would
+list** — dismissed deals excluded, *returned* loans included, collections scoped to the caller
+because they are per-user. A count that disagreed with its page would give the subtlest version
+of this bug: an item right about the table and wrong about the page. **An unknown count shows
+the item** (`DECISIONS.md` #165) — hiding four links because a request was slow is worse than
+the emptiness being fixed.
+
+**`navGroups` is built by path now.** It indexed into `navItems`, so removing an entry silently
+re-pointed three groups at the wrong destinations — and appending one left it ungrouped, which
+is precisely how AI settings got lost. A test asserts every destination is in some group (#166).
+
+**Two rules about empty states collided and both were kept.** The merged page hides what is
+empty; Batch 14 argued an empty chart reads as a *broken* chart and should say what it waits
+for. Most watched and Spend over time are now **hidden**, with their reasons collected into one
+line beneath the charts — the explanation was the hard-won part, and the naive reading of the
+criterion would have deleted it along with the frame (#167).
+
+**Search left the mobile header's second row for a slot in the bottom bar**, which now reads
+Archive · Search · Home · Movie night · More; the bar opens a sheet with the field focused.
+`FilterBar` is **one control** at 375px, measured, with all nine reachable when expanded. `/`
+opens Home now that Home is worth opening, and Export moved to Admin.
+
+> **The browser pass used the repo's own DEV-only `VITE_SKIP_AUTH` and a throwaway API stub**,
+> because S3's criteria are about what a *signed-in* person sees and entering Craig's PIN is
+> not an agent's to do (#169). The flag is compiled out of production builds. Nothing from the
+> harness is in the tree — the stub is in the session scratchpad and the `.env.local` was
+> gitignored and deleted. **Worth reusing for the next frontend batch with the same problem.**
+
+**Three test expectations changed in S3, all of them the batch's own point.** The command
+palette no longer indexes 'Stats'; `g s` — "go to stats" — goes to `/settings`, because stats
+is a section of `/dashboard` that `g h` already reaches. The palette assertion was
+**strengthened** on the way: it now also proves 'Stats' and 'Insights' are genuinely gone
+rather than renamed.
 
 **Three owner actions sit inside later batches and are not group blockers.** S8 ships the
 importer and its dry-run and **stops before the live import** — that run writes ~1,530 watch
@@ -497,6 +546,19 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-15 (Batch S3 — navigation shape)** — Group S batch 3 of 8, shipped as `a3409f1`,
+  green first time. **Fourteen sidebar destinations became eight**, by merging what was thin
+  but real (Home+Stats+Insights → `/dashboard`; Notifications+AI settings → `/settings`) and
+  hiding what is empty (Box sets, Collections, Deals, Loans). New `GET /nav/sections` supplies
+  the four counts; an unknown count shows the item, so a slow request cannot empty the menu.
+  **Both states seen in a browser at 375×812 — 8 with the counts at zero, 12 with them full.**
+  `navGroups` is built by path rather than index, which is the defect that had already lost AI
+  settings from every group. Search moved from the mobile header's second row to the bottom
+  bar; `FilterBar` is one control at 375px; `/` opens Home; Export moved to Admin. The empty
+  charts are hidden **with their explanations kept** in one line beneath (#167). The signed-in
+  browser pass used the repo's DEV-only `VITE_SKIP_AUTH` plus a scratch API stub rather than a
+  PIN (#169); nothing from it is in the tree. Decisions #165–#169.
 
 - **2026-09-15 (Batch S2 — app-feel fixes)** — Group S batch 2 of 8, shipped as `baef542`,
   green first time. Form controls **14px → 16px** at touch widths, `touch-action:
