@@ -1572,7 +1572,7 @@ not apply.
 
 ---
 
-### Batch 39 — Collection refresh 🟡
+### ~~Batch 39 — Collection refresh~~ 🟡 **shipped 2026-09-16 (`b1db470`)**
 **Covers `OWNER-ACTIONS.md` 1k, option A.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High.
 `DECISIONS.md` #192, #193.
 
@@ -1602,40 +1602,26 @@ without them. The importer does not transfer specs by `import_source_row`: sprea
 position is the unstable identity this batch exists to replace, so doing that would risk
 attaching edition-specific specs to the wrong new disc.
 
-**Acceptance:**
-- `insert_collection_item`'s dedup query filters on `deleted_at IS NULL`. **Both states
-  tested** — a live row still blocks re-insert (no duplicate discs), a soft-deleted one
-  does not. *Without this the whole batch is inert: the replace empties the collection and
-  the re-import skips all 1,857, leaving nothing, and reporting success.* Migration 034
-  replaces the old all-history unique index with a live-row lookup index: the importer is
-  the only writer of non-NULL source rows, and keeping live uniqueness in the database
-  would make §13.5's full-state restore fail whenever a replacement reused that row.
-- The importer gains `--replace-items`, which soft-deletes every live `collection_items`
-  row **in the same transaction as the import** and reports the count. Without the flag,
-  behaviour is byte-identical — tested.
-- `--replace-items --dry-run` reports the count it *would* remove and removes nothing.
-- **The replaced rows are restorable.** They land in §13.5's Trash and `restore-row` brings
-  one back. Tested — this is the entire argument for soft-deleting rather than hard, and
-  the only thing making a bad spreadsheet recoverable.
-- **Watch history survives a replace.** A film with `watch_log` rows keeps every one, and
-  its `movies` row is not modified. Tested.
-- **An already-identified film deduplicates onto its existing `movies` row** rather than
-  gaining a second. Tested. *This is the silent one: a second row takes the disc and leaves
-  the watch history behind on the first, and nothing errors.*
-- Derived fields on `movies` are correct afterwards — no film reports a copy count that
-  includes soft-deleted rows. The recalc trigger fires ~3,700 times in one run.
-- **`--replace-items` refuses to run while an unidentified film carries watch history.** It
-  counts `movies` rows with `tmdb_id IS NULL` holding live `watch_log` rows — **397 films
-  and 586 watches** as measured 2026-09-15 — and stops with that number and a pointer to
-  `--identify` (`OWNER-ACTIONS.md` 1i step 2). **`--accept-split` overrides it.** Both
-  paths tested: refused without the flag, proceeds with it.
-
-  *The override is not a weakness, it is what makes the guard survivable.* Identification
-  cannot reach every film — some have no confident TMDB match and stay unidentified
-  legitimately — so a guard with no way past it is a guard somebody eventually works around
-  with hand-written SQL, which is worse than the guard not existing. The flag names the
-  **consequence** rather than the bypass, the same way `--dry-run` names a behaviour.
-- Gate green.
+**Acceptance — nine of nine met.**
+- ~~Live source rows block re-import and Trash rows do not.~~ ✅ Query and both states
+  tested. Migration 034 replaces the all-history unique index with a live lookup index so
+  full-state restore remains possible even when a replacement reused the sheet line.
+- ~~`--replace-items` soft-deletes every live item in the import transaction and reports
+  the count; no flag leaves the old path unchanged.~~ ✅ One locked transaction for the
+  replace, one transaction per item for the unchanged path, both tested.
+- ~~`--replace-items --dry-run` reports its count and removes nothing.~~ ✅ Tested.
+- ~~A replaced row lands in Trash and `restore-row` brings it back.~~ ✅ Postgres CI restores
+  the complete old row even while a replacement has the same `import_source_row`.
+- ~~Watch history survives and existing movie metadata is not overwritten.~~ ✅ Tested in
+  Postgres with both identified and unidentified watched films.
+- ~~An identified replacement deduplicates onto the existing movie.~~ ✅ One TMDB id, one
+  movie row, replacement item attached to it.
+- ~~Derived fields and copy counts ignore the soft-deleted rows.~~ ✅ Postgres CI sees the
+  replacement Blu-ray as the sole live copy and recalculates `best_format_owned`.
+- ~~Unidentified watched films block replacement with counts and `--identify` guidance;
+  `--accept-split` is explicit override.~~ ✅ Refusal and override both tested; the final
+  transaction locks items, movies and watches before repeating the guard.
+- ~~Gate green.~~ ✅ Feature branch and `main` CI green; migration 034 upgraded and reversed.
 
 > **⏸ The live run is the owner's, and it needs a spreadsheet that does not exist yet.**
 > Ship the mechanism and the dry run, then stop — the same shape as S8. The real run

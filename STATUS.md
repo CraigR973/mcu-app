@@ -2,9 +2,23 @@
 
 ## Now
 
-**Group S is complete. All eight snag batches shipped on 2026-09-15, in order, each
-merged to `main` and deployed.** S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7. Production
-`/api/v1/health` serves `804744f` with `db: ok`. Migrations **030–033** are applied.
+**Batch 39 — Collection refresh shipped on 2026-09-16 at `b1db470`.** Production
+`/api/v1/health` serves the full merge SHA with `db: ok`; migration **034** is applied.
+The importer now has an atomic, table-locked `--replace-items` path, a no-write dry run,
+and a guard that refuses while unidentified films hold watch history unless Craig names
+the consequence with `--accept-split`. CI's Postgres 17 run proves old items remain fully
+restorable, watches survive, identified films reuse their existing movie row, and derived
+ownership ignores the Trash rows.
+
+**No live collection refresh was run.** The collection remains at 1,857 active discs and
+the 10 active Blu-ray.com specs remain where they are. The eventual owner-run refresh will
+leave those specs on the old Trash rows and create replacements without them, which Craig
+accepted (#195). `OWNER-ACTIONS.md` 1k remains the go-live blocker: identify the watched
+unidentified films first, obtain the fresh spreadsheet, run the replacement dry run, then
+run the live replacement explicitly.
+
+**Group S is also complete.** All eight snag batches shipped on 2026-09-15, in order:
+S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7.
 
 | | Batch | SHA | What it did |
 |---|---|---|---|
@@ -38,7 +52,7 @@ them have seen** is what S7's "has he seen it" reads, up from 0.
 file wrote **0** and reported all 593 already imported. **The 28 ambiguities were skipped
 rather than guessed**, and are in `.letterboxd-export/*-ambiguous.csv`.
 
-### ⛔ Go live is blocked on one decision: how the spreadsheet refresh happens
+### ⛔ Go live is blocked on the owner-run spreadsheet refresh
 
 **Re-running `import_collection.py` over the live database will not refresh anything**
 (`DECISIONS.md` #192, `OWNER-ACTIONS.md` **1k**). Found on 2026-09-15 when Craig proposed a
@@ -76,11 +90,11 @@ old rows retain them in Trash for 90 days, while the new items start without the
 Transferring them by spreadsheet row would trust the unstable identity this batch exists
 to replace.
 
-**The code half is `docs/phase-batches.md` Batch 39 — Collection refresh**, written up
-2026-09-16 and **not yet built**. It is the next thing to build. Tiered 🟡 by size but
-**`xhigh` by blast radius** — 1,857 live rows, and two failure modes that announce nothing:
-a dedup filter that is missing empties the collection and reports success, and a replace run
-before identification splits history from discs in silence.
+**The code half is shipped as Batch 39 (`b1db470`).** The live-row dedup filter, atomic
+replacement, Trash restoration, movie/watch preservation, derived-field recalculation and
+history-split guard are proved in Postgres CI. The mechanism shipped without exercising it
+against live user data; the fresh spreadsheet does not exist yet and the eventual run is
+explicitly Craig's.
 
 **Deferring identification does not save duplicated work**, which was the premise worth
 correcting: the collection importer **cannot** back-fill a `tmdb_id` onto an existing row.
@@ -173,10 +187,11 @@ S7 (3): a vote carries a `suggestionId`, and a card no longer vanishes when you 
 'Insights' are genuinely gone, and S7's kept the privacy property the old behaviour
 protected.
 
-### The collection is still 1,857 discs and `watch_log` is still empty
+### The collection is still 1,857 discs and `watch_log` still has 1,555 rows
 
-Nothing in Group S wrote a single row of user data. Every batch shipped code; the three
-data operations are Craig's, above.
+Batch 39 changed schema and code but did not run the live replacement. Group S's authorised
+diary import wrote the 1,555 watches recorded above; its other owner data operations still
+wait.
 
 
 ## Next
@@ -580,6 +595,21 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-16 (Batch 39 — guarded collection refresh shipped, `b1db470`)** — Added
+  `--replace-items`: all live items move to Trash in the same locked transaction as the
+  import, dry-run reports without writing, and matching/enrichment or database failure
+  leaves the live collection intact. The importer now deduplicates source rows against
+  live items only; migration 034 replaces the historical unique index with a live lookup
+  index so a complete old row can be restored even after its sheet line is reused (#196).
+  Postgres CI proves watches survive, existing movies are not overwritten, identified
+  replacements reuse their movie, and derived ownership ignores old rows. **The live run
+  did not happen** and remains `OWNER-ACTIONS.md` 1k after identification and a fresh sheet.
+  Batch-start corrected the safety measurement from 0 specs to 10; Craig accepted losing
+  those from the active collection while preserving them on the Trash rows (#195). First
+  CI was red because the new test fixture used `None` where the TMDB model requires integer
+  budget/revenue; fixed to TMDB's `0`, then branch and `main` gates passed. Production serves
+  `b1db470162e7cab62ff1e72036a7fdba690c5c05` with `db: ok`.
 
 - **2026-09-16 (the refresh path chosen, and written up as Batch 39)** — Docs only. Craig
   picked option 1 of `OWNER-ACTIONS.md` 1k: rebuild the discs, keep the films. Decided on a

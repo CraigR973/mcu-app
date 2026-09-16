@@ -476,7 +476,7 @@ feed comes back full.
 every scheduled fire since 2026-09-10 (item 1). The sync record already carries a `trigger`
 column that accepts `cron`, so wiring one up afterwards needs no migration.*
 
-### 1k. Decide how the spreadsheet refresh happens *(new — 2026-09-15)* ⛔ **blocks go live**
+### 1k. Run the guarded spreadsheet refresh *(opened 2026-09-15)* ⛔ **blocks go live**
 
 **Re-running the importer over the live database will not refresh anything.** That is the
 finding, and it is the reason this item exists — `DECISIONS.md` #192 has the detail.
@@ -510,9 +510,9 @@ Net effect: nothing refreshed, and a scattering of orphan film rows.
       So the identity that option 2 exists to preserve still protects nothing worth the
       risk of matching replacement discs by an unstable spreadsheet row.
 
-      **The code half is `docs/phase-batches.md` Batch 39 — Collection refresh**, written
-      up 2026-09-16 and not yet built. It ships the mechanism and the dry run and stops
-      before the live run, which needs the fresher spreadsheet.
+      **The code half shipped as Batch 39 on 2026-09-16 (`b1db470`).** It added the guarded,
+      atomic `--replace-items` mechanism and dry run, then stopped before the live run as
+      required. The live run still needs the fresher spreadsheet and remains Craig's.
 
 *The three options as they were weighed:*
 
@@ -533,8 +533,8 @@ Net effect: nothing refreshed, and a scattering of orphan film rows.
          > `--replace-items` counts the unidentified films holding watch rows and **refuses
          > to run** while that count is non-zero, naming the number. `--accept-split`
          > overrides it, because some films have no confident TMDB match and stay
-         > unidentified legitimately. **Until Batch 39 ships, nothing stops the wrong
-         > sequence** — the constraint is prose.
+         > unidentified legitimately. The final write transaction locks the affected
+         > tables and repeats the guard, so the constraint is code rather than prose.
       2. **Refresh in place.** Teach the importer to match the new sheet to existing items
          and update them. The most work, and it reopens a question `DECISIONS.md` #32
          settled the other way — content-keying collapsed "French Connection" and "French
