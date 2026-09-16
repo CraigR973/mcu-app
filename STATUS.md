@@ -62,8 +62,22 @@ watch rows**, and they are precisely the messy-titled ones exact-title dedup wil
 free**: `watch_log.movie_id` is `RESTRICT`, so those rows cannot be hard-deleted while
 watches point at them. That option was open this morning.
 
-Three paths are laid out in `OWNER-ACTIONS.md` 1k — refresh in place, clean reload, or
-identify first then reload. **The choice is Craig's and nothing is started.**
+**Craig chose on 2026-09-16: rebuild the discs, keep the films.** Soft-delete the 1,857
+items and re-import the fresh sheet; `movies` is never touched, so the watch history, the
+wanted list, the credits and the completion sets all survive, and the old items sit in
+Trash for 90 days if the new sheet turns out wrong.
+
+**The deciding measurement:** `collection_items` holds no app-created data — 0 photos, 0
+notes, 0 prices, 0 loans, 0 specs, 0 barcodes — and **nothing references a
+`collection_items.id`**: `box_set_items`, `loans` and `item_photos` are all empty, and the
+audit log has zero rows targeting an item. So the identity that a refresh-in-place would
+preserve is preserving nothing.
+
+**The code half is `docs/phase-batches.md` Batch 39 — Collection refresh**, written up
+2026-09-16 and **not yet built**. It is the next thing to build. Tiered 🟡 by size but
+**`xhigh` by blast radius** — 1,857 live rows, and two failure modes that announce nothing:
+a dedup filter that is missing empties the collection and reports success, and a replace run
+before identification splits history from discs in silence.
 
 **Deferring identification does not save duplicated work**, which was the premise worth
 correcting: the collection importer **cannot** back-fill a `tmdb_id` onto an existing row.
@@ -563,6 +577,17 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-16 (the refresh path chosen, and written up as Batch 39)** — Docs only. Craig
+  picked option 1 of `OWNER-ACTIONS.md` 1k: rebuild the discs, keep the films. Decided on a
+  measurement rather than a preference — `collection_items` carries no app-created data and
+  **nothing references a `collection_items.id`**, so the item identity a refresh-in-place
+  would protect is protecting nothing. **Batch 39 — Collection refresh** entered in the
+  ledger with criteria authored rather than recovered (#54 does not apply). Tiered 🟡 /
+  `xhigh` on Batch 15's precedent: 1,857 live rows, and two silent failure modes — a missing
+  `deleted_at` filter empties the collection while reporting success, and replacing before
+  identifying splits 586 watches from their discs without erroring. **The live run stays the
+  owner's** and waits on a spreadsheet that does not exist yet.
 
 - **2026-09-15 (the importer cannot refresh)** — No code change. Craig proposed a fresher
   spreadsheet import before go live and asked whether identification should wait for it.

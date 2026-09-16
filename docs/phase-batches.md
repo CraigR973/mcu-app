@@ -1562,6 +1562,75 @@ own votes alone, and a test asserts the other person's vote is still invisible.
 
 ---
 
+## Go live — the collection refresh *(2026-09-16)*
+
+**Not from the April spec and not from the 2026-09-14 snag triage.** This comes from
+`DECISIONS.md` #192, found on 2026-09-15 when Craig proposed a fresher import of his dad's
+spreadsheet before go live. The acceptance criteria below were **authored 2026-09-16, not
+recovered** — there is no `**Phase X.Y:` heading behind them and `DECISIONS.md` #54 does
+not apply.
+
+---
+
+### Batch 39 — Collection refresh 🟡
+**Covers `OWNER-ACTIONS.md` 1k, option A.** Model: **Opus 5 · xhigh** / GPT-5.6 Sol · Extra High.
+`DECISIONS.md` #192, #193.
+
+**🟡 by size, `xhigh` by blast radius and silence** — the same disagreement Batches 15, 17,
+24 and 27 carry, and for Batch 15's exact reason: this operates on all **1,857 live
+collection rows**. Two of its failure modes announce nothing at all.
+
+**The problem.** Re-running `import_collection.py` over live data refreshes nothing. Items
+deduplicate on `import_source_row` — the spreadsheet **line number** — and the 1,857 discs
+occupy lines 2–1867 with exactly 9 gaps, which are the 9 blank rows `STATUS.md` gotcha 0
+records. Every non-blank line is claimed, so every disc is skipped however much its row
+changed. Meanwhile the *film* upsert runs independently of that check and is
+`ON CONFLICT (tmdb_id) DO NOTHING` — and a NULL `tmdb_id` does not conflict — so a title
+TMDB can now match gets a brand-new `movies` row **with no discs on it**.
+
+**Why rebuilding the discs is safe**, measured 2026-09-15: `collection_items` holds **no
+app-created data**. 0 photos, 0 notes, 0 purchase prices, 0 loans, 0 disc specs, 0
+barcodes, and `listing_status` is `in_collection` on all 1,857. **Nothing references a
+`collection_items.id` either** — `box_set_items`, `loans` and `item_photos` are all empty,
+and the audit log has zero rows targeting an item. The valuable data hangs off `movies`:
+1,555 watches, 11 wanted-list rows, 40 completion sets, 45,600 credits. A replace that
+never touches `movies` keeps all of it.
+
+**Acceptance:**
+- `insert_collection_item`'s dedup query filters on `deleted_at IS NULL`. **Both states
+  tested** — a live row still blocks re-insert (no duplicate discs), a soft-deleted one
+  does not. *Without this the whole batch is inert: the replace empties the collection and
+  the re-import skips all 1,857, leaving nothing, and reporting success.*
+- The importer gains `--replace-items`, which soft-deletes every live `collection_items`
+  row **in the same transaction as the import** and reports the count. Without the flag,
+  behaviour is byte-identical — tested.
+- `--replace-items --dry-run` reports the count it *would* remove and removes nothing.
+- **The replaced rows are restorable.** They land in §13.5's Trash and `restore-row` brings
+  one back. Tested — this is the entire argument for soft-deleting rather than hard, and
+  the only thing making a bad spreadsheet recoverable.
+- **Watch history survives a replace.** A film with `watch_log` rows keeps every one, and
+  its `movies` row is not modified. Tested.
+- **An already-identified film deduplicates onto its existing `movies` row** rather than
+  gaining a second. Tested. *This is the silent one: a second row takes the disc and leaves
+  the watch history behind on the first, and nothing errors.*
+- Derived fields on `movies` are correct afterwards — no film reports a copy count that
+  includes soft-deleted rows. The recalc trigger fires ~3,700 times in one run.
+- Gate green.
+
+> **⏸ The live run is the owner's, and it needs a spreadsheet that does not exist yet.**
+> Ship the mechanism and the dry run, then stop — the same shape as S8. The real run
+> soft-deletes 1,857 rows, which `docs/agent-commands/group-start.md` puts squarely in the
+> owner's hands.
+
+> **⚠️ Ordering constraint: `--identify` must run first.** `OWNER-ACTIONS.md` 1i step 2.
+> 397 unidentified films currently carry **586 watch rows**, and they are exactly the
+> messy-titled ones — `African Queen, The`, `39 Steps The (Robert Donat)` — that
+> exact-title dedup will miss the moment the new sheet tidies them. Give them a real
+> `tmdb_id` first and the reload deduplicates on the id instead. **Running the replace
+> before the identification is the one sequence that silently splits history from discs.**
+
+---
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -1635,6 +1704,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 37 · solo | Sonnet 5 · medium | GPT-5.6 Terra · Medium | Table exists since Batch 6; inert until it has ~a year of history |
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
 | **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → ~~S6~~ → ~~S7~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Complete — all eight shipped 2026-09-15.** The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
+| — | 39 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The go-live collection refresh (`DECISIONS.md` #192). Solo: it touches the import path alone, and its live run waits on a spreadsheet that does not exist yet. 🟡 by size, `xhigh` by blast radius — 1,857 live rows, and two failure modes that announce nothing |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

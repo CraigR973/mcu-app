@@ -500,20 +500,34 @@ Net effect: nothing refreshed, and a scattering of orphan film rows.
 - **A wipe-and-reload is no longer free.** `watch_log.movie_id` is `RESTRICT`; those 397
   rows cannot be hard-deleted while watches point at them.
 
-- [ ] **Pick one of three before go live.** None is started; each is a different amount of
-      work and the choice is yours.
+- [x] **Decided 2026-09-16: option 1 below — rebuild the discs, keep the films.**
+      The deciding measurement was that `collection_items` holds no app-created data and
+      **nothing references a `collection_items.id`** — `box_set_items`, `loans` and
+      `item_photos` are all empty, and the audit log has zero rows targeting an item. So
+      the identity that option 2 exists to preserve is preserving nothing.
 
-      1. **Refresh in place.** Match the new sheet to existing items and update them.
-         Needs an upsert path the importer does not have, keyed on something more durable
-         than a line number. The most work, and the only one that preserves everything
-         without a rebuild.
-      2. **Clean reload.** Delete the 1,555 watch rows, reload the collection from the new
-         sheet, then re-run the diary import to rebuild them. Safe *only because* that
-         import is idempotent on the Letterboxd viewing id — the history genuinely
-         reconstructs itself. Depends on `.letterboxd-export/` still existing; see below.
-      3. **Identify first, then reload.** Run `--identify` (item 1i step 2) so those 397
-         rows carry a real `tmdb_id`, then reload. The reload then deduplicates on the id
-         rather than on exact title, which is the fragile part.
+      **The code half is `docs/phase-batches.md` Batch 39 — Collection refresh**, written
+      up 2026-09-16 and not yet built. It ships the mechanism and the dry run and stops
+      before the live run, which needs the fresher spreadsheet.
+
+*The three options as they were weighed:*
+
+      1. **✅ CHOSEN — rebuild the discs, keep the films.** Soft-delete the 1,857 items
+         and re-import the fresh sheet; `movies` is never touched, so the watch history,
+         the wanted list, the credits and the completion sets all survive. Reversible: the
+         old items land in Trash for 90 days. **Identification (1i step 2) must run
+         first** — see the warning below.
+      2. **Refresh in place.** Teach the importer to match the new sheet to existing items
+         and update them. The most work, and it reopens a question `DECISIONS.md` #32
+         settled the other way — content-keying collapsed "French Connection" and "French
+         Connection 2" into one row. Its advantage is preserving item identity, which
+         nothing currently uses. **Worth revisiting if refreshing the sheet turns out to be
+         a repeated pattern rather than a one-off.**
+      3. **Full wipe and reload.** Delete watches, wanted list, items and films, re-import,
+         then re-run the diary import. **Loses the 11 hand-entered wanted-list rows
+         permanently** and depends entirely on `.letterboxd-export/` surviving. Highest
+         risk, and it would not fix the film rows anyway, since nothing back-fills
+         identification.
 
 **Deferring identification does not save duplicated work.** The collection importer
 **cannot** back-fill a `tmdb_id` onto an existing row — it only ever inserts. Nothing will
