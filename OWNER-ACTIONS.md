@@ -517,13 +517,20 @@ Net effect: nothing refreshed, and a scattering of orphan film rows.
          the wanted list, the credits and the completion sets all survive. Reversible: the
          old items land in Trash for 90 days.
 
-         > **⚠️ Identification (1i step 2) must run first, and nothing currently stops you
-         > if it does not.** 397 unidentified films carry **586 watch rows**, and they are
-         > the messy-titled ones — `African Queen, The`, `39 Steps The (Robert Donat)` —
-         > that exact-title dedup misses the moment the new sheet tidies them. The new sheet
-         > creates a fresh identified row, the disc attaches to it, and the watches stay
-         > behind on the old one. **Nothing errors.** Give those rows a real `tmdb_id` first
-         > and the reload deduplicates on the id instead.
+         > **⚠️ Identification (1i step 2) must run first.** 397 unidentified films carry
+         > **586 watch rows**, and they are the messy-titled ones — `African Queen, The`,
+         > `39 Steps The (Robert Donat)` — that exact-title dedup misses the moment the new
+         > sheet tidies them. The new sheet creates a fresh identified row, the disc
+         > attaches to it, and the watches stay behind on the old one. **Nothing errors.**
+         > Give those rows a real `tmdb_id` first and the reload deduplicates on the id
+         > instead.
+         >
+         > **Batch 39 enforces this rather than asking you to remember it** (#194):
+         > `--replace-items` counts the unidentified films holding watch rows and **refuses
+         > to run** while that count is non-zero, naming the number. `--accept-split`
+         > overrides it, because some films have no confident TMDB match and stay
+         > unidentified legitimately. **Until Batch 39 ships, nothing stops the wrong
+         > sequence** — the constraint is prose.
       2. **Refresh in place.** Teach the importer to match the new sheet to existing items
          and update them. The most work, and it reopens a question `DECISIONS.md` #32
          settled the other way — content-keying collapsed "French Connection" and "French

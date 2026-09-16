@@ -1615,6 +1615,17 @@ never touches `movies` keeps all of it.
   the watch history behind on the first, and nothing errors.*
 - Derived fields on `movies` are correct afterwards — no film reports a copy count that
   includes soft-deleted rows. The recalc trigger fires ~3,700 times in one run.
+- **`--replace-items` refuses to run while an unidentified film carries watch history.** It
+  counts `movies` rows with `tmdb_id IS NULL` holding live `watch_log` rows — **397 films
+  and 586 watches** as measured 2026-09-15 — and stops with that number and a pointer to
+  `--identify` (`OWNER-ACTIONS.md` 1i step 2). **`--accept-split` overrides it.** Both
+  paths tested: refused without the flag, proceeds with it.
+
+  *The override is not a weakness, it is what makes the guard survivable.* Identification
+  cannot reach every film — some have no confident TMDB match and stay unidentified
+  legitimately — so a guard with no way past it is a guard somebody eventually works around
+  with hand-written SQL, which is worse than the guard not existing. The flag names the
+  **consequence** rather than the bypass, the same way `--dry-run` names a behaviour.
 - Gate green.
 
 > **⏸ The live run is the owner's, and it needs a spreadsheet that does not exist yet.**
@@ -1622,12 +1633,16 @@ never touches `movies` keeps all of it.
 > soft-deletes 1,857 rows, which `docs/agent-commands/group-start.md` puts squarely in the
 > owner's hands.
 
-> **⚠️ Ordering constraint: `--identify` must run first.** `OWNER-ACTIONS.md` 1i step 2.
-> 397 unidentified films currently carry **586 watch rows**, and they are exactly the
-> messy-titled ones — `African Queen, The`, `39 Steps The (Robert Donat)` — that
-> exact-title dedup will miss the moment the new sheet tidies them. Give them a real
-> `tmdb_id` first and the reload deduplicates on the id instead. **Running the replace
-> before the identification is the one sequence that silently splits history from discs.**
+> **⚠️ Ordering constraint: `--identify` must run first — and this batch is what enforces
+> it.** `OWNER-ACTIONS.md` 1i step 2. 397 unidentified films currently carry **586 watch
+> rows**, and they are exactly the messy-titled ones — `African Queen, The`, `39 Steps The
+> (Robert Donat)` — that exact-title dedup will miss the moment the new sheet tidies them.
+> Give them a real `tmdb_id` first and the reload deduplicates on the id instead.
+>
+> **Running the replace before the identification is the one sequence that silently splits
+> history from discs**, which is why the guard above is an acceptance criterion rather than
+> a note. Until this batch ships, **nothing stops that sequence at all** — the constraint
+> lives only in prose, in this entry and in `OWNER-ACTIONS.md` 1k.
 
 ---
 

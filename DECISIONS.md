@@ -3459,3 +3459,39 @@ contemporaneous.
      **So they want a backup somewhere off that machine and out of the repo.** Losing them
      does not lose the 1,555 rows already in Neon, but it removes the ability to rebuild
      them, which is exactly what the reload paths lean on.
+
+### 2026-09-16 — the replace guard, and why it does not merge instead
+
+194. **`--replace-items` refuses while an unidentified film carries watch history, rather
+     than trying to rescue the situation itself.**
+
+     Batch 39's ordering constraint — identify before you replace — protects against a
+     failure that produces no error: the new sheet's tidied title creates a fresh
+     identified `movies` row, the disc attaches to it, and the watches stay behind on the
+     old row. 397 films and 586 watches are exposed to it today.
+
+     Until this was added, the constraint lived **only in prose**, across three documents.
+     An agent running the live step would have stopped anyway — `batch-start.md` and
+     `group-start.md` both halt on an operation that overwrites collection data — but
+     **Craig running the documented command himself would not have been stopped by
+     anything**, and that is the path `OWNER-ACTIONS.md` exists to describe. A constraint
+     that only binds the careful reader is not a constraint.
+
+     **The override is deliberate.** Identification cannot reach every film: some have no
+     confident TMDB match and stay unidentified legitimately, so a guard with no way past
+     it would eventually be worked around with hand-written SQL — which is worse than no
+     guard, because it is unreviewed and unlogged. `--accept-split` names the
+     **consequence** rather than the bypass, the same way `--dry-run` names a behaviour.
+
+     **The cleverer fix was considered and rejected.** The importer could detect the old
+     unidentified row by *normalised* title — S8's matcher already has
+     `normalise_title` — and merge into it rather than creating a second row, which would
+     remove the ordering constraint altogether.
+
+     It is the wrong place for it. That is fuzzy matching during a bulk import **with
+     nobody to ask**, and `DECISIONS.md` #32 already rejected content-keying in this exact
+     importer after it collapsed "French Connection" and "French Connection 2" into one
+     row. S8's matcher is safe precisely because it *offers* an ambiguity rather than
+     resolving it — 28 of them on the real data (#174) — and an unattended import has no
+     one to offer it to. **Identification is where that matching belongs**, and the guard's
+     job is to make sure identification has happened, not to do it again badly.
