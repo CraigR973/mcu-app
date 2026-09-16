@@ -3495,3 +3495,34 @@ contemporaneous.
      resolving it — 28 of them on the real data (#174) — and an unattended import has no
      one to offer it to. **Identification is where that matching belongs**, and the guard's
      job is to make sure identification has happened, not to do it again badly.
+
+195. **The 10 Blu-ray.com spec records may be lost from the active collection during the
+     Batch 39 refresh; they are not transferred to replacement items.** Owner decision,
+     2026-09-16, taken when `/batch-start 39` found that the batch ledger's safety premise
+     was wrong: live `collection_items` held 10 spec-bearing rows, not zero.
+
+     The old rows retain every spec field in Trash for 90 days, so the data is not erased
+     by the replace transaction. The new active rows begin without specs. Craig explicitly
+     accepts that active-data loss rather than expanding the batch into a spec migration.
+
+     **Why not copy by `import_source_row`:** spreadsheet position is the unstable identity
+     this batch exists to stop treating as a disc. A fresher sheet may insert, remove or
+     reorder lines, and Blu-ray.com specs are edition-specific; copying them by line can
+     attach a plausible, detailed and wrong specification to another disc. Losing ten
+     visible records is cheaper than silently lying about ten replacements. A future
+     reattachment or refetch remains a separate owner action under #110/#121's live-site
+     rules.
+
+196. **`collection_items.import_source_row` is importer idempotency, not a permanent
+     database identity.** Batch 39 replaces migration 004's unique partial index with a
+     non-unique live-row lookup index. The importer is the only writer of a non-NULL value
+     and still checks for a live row inside each item transaction, so an ordinary run
+     remains idempotent.
+
+     A database uniqueness rule cannot satisfy both halves of the refresh contract. If it
+     includes Trash, replacement inserts fail against the old rows; if it covers only live
+     rows, restoring an old item fails when its replacement reused the spreadsheet line.
+     §13.5 promises a full-state restore which clears only `deleted_at`, so restore wins.
+     It may temporarily leave two live items with the same source line while Craig compares
+     the old and replacement discs. That is honest recovery state, not a claim that a
+     spreadsheet position is the disc's identity.

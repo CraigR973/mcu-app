@@ -9,19 +9,30 @@ whose absence was the defect this batch exists to fix.
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import uuid
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import psycopg2
 import pytest
 
 from src.scripts.import_collection import (
     DEFAULT_CONDITION,
     REVIEW_FIELDNAMES,
+    ImportRow,
+    ImportStats,
+    ReplacementBlocked,
+    ReplacementPlan,
+    ensure_replacement_allowed,
     insert_collection_item,
     insert_credits,
+    lock_replacement_tables,
+    replacement_plan,
+    run,
+    soft_delete_live_items,
     upsert_movie,
     upsert_unmatched_movie,
     write_review_file,
@@ -443,11 +454,21 @@ def test_insert_collection_item_uses_default_condition() -> None:
     assert _item_params(cur)[7] == DEFAULT_CONDITION
 
 
-def test_insert_collection_item_skips_an_exact_duplicate() -> None:
+def test_insert_collection_item_live_source_row_still_blocks_a_duplicate() -> None:
     conn, cur = _make_conn([(1,)])
     assert insert_collection_item(conn, uuid.uuid4(), _make_candidate()) is False
     # Only the duplicate check ran.
     assert cur.execute.call_count == 1
+    assert "deleted_at IS NULL" in cur.execute.call_args[0][0]
+
+
+def test_insert_collection_item_soft_deleted_source_row_does_not_block_reinsert() -> None:
+    # The SELECT contains the live-row predicate, so None is the database answer when a
+    # row with this source number exists only in Trash.
+    conn, cur = _make_conn([None])
+    assert insert_collection_item(conn, uuid.uuid4(), _make_candidate()) is True
+    assert "deleted_at IS NULL" in cur.execute.call_args_list[0][0][0]
+    assert "INSERT INTO collection_items" in cur.execute.call_args_list[1][0][0]
 
 
 def test_insert_collection_item_keys_re_runs_on_the_spreadsheet_line() -> None:
@@ -483,6 +504,234 @@ def test_insert_collection_item_does_not_collapse_two_titles_on_one_film() -> No
 
     assert _item_params(cur_first)[8] == 550
     assert _item_params(cur_second)[8] == 551
+
+
+# ---------------------------------------------------------------------------
+# Batch 39 replacement planning and dry-run behaviour
+# ---------------------------------------------------------------------------
+
+
+def test_replacement_plan_counts_live_items_and_the_split_risk() -> None:
+    conn, cur = _make_conn([(1857,), (397, 586)])
+    plan = replacement_plan(conn)
+
+    assert plan == ReplacementPlan(
+        live_items=1857,
+        unidentified_films_with_watches=397,
+        watch_rows_at_risk=586,
+    )
+    assert "collection_items WHERE deleted_at IS NULL" in cur.execute.call_args_list[0][0][0]
+    risk_sql = cur.execute.call_args_list[1][0][0]
+    assert "m.tmdb_id IS NULL" in risk_sql
+    assert "w.deleted_at IS NULL" in risk_sql
+
+
+def test_replacement_guard_names_both_counts_and_the_identify_step() -> None:
+    plan = ReplacementPlan(
+        live_items=1857,
+        unidentified_films_with_watches=397,
+        watch_rows_at_risk=586,
+    )
+
+    with pytest.raises(ReplacementBlocked) as caught:
+        ensure_replacement_allowed(plan, accept_split=False)
+
+    message = str(caught.value)
+    assert "397 unidentified films" in message
+    assert "586 live watch rows" in message
+    assert "--identify" in message
+
+
+def test_accept_split_is_the_explicit_guard_override() -> None:
+    plan = ReplacementPlan(
+        live_items=1,
+        unidentified_films_with_watches=1,
+        watch_rows_at_risk=2,
+    )
+    ensure_replacement_allowed(plan, accept_split=True)
+
+
+def test_soft_delete_reports_the_database_rowcount() -> None:
+    conn, cur = _make_conn()
+    cur.rowcount = 1857
+    assert soft_delete_live_items(conn) == 1857
+    sql = cur.execute.call_args[0][0]
+    assert "UPDATE collection_items" in sql
+    assert "SET deleted_at" in sql
+    assert "WHERE deleted_at IS NULL" in sql
+
+
+def test_replacement_locks_watched_movies_and_items_during_the_write_pass() -> None:
+    conn, cur = _make_conn()
+    lock_replacement_tables(conn)
+
+    sql = cur.execute.call_args[0][0]
+    assert "collection_items, movies, watch_log" in sql
+    assert "SHARE ROW EXCLUSIVE" in sql
+
+
+class _FakeTMDBClient:
+    async def __aenter__(self) -> object:
+        return object()
+
+    async def __aexit__(self, *_args: object) -> None:
+        return None
+
+
+async def _prepared_rows(
+    candidates: list[ImportCandidate], _tmdb: object, _stats: ImportStats
+) -> tuple[list[ImportRow], list[dict[str, Any]]]:
+    return [ImportRow(candidate=candidate) for candidate in candidates], []
+
+
+def test_replace_dry_run_reports_the_count_and_writes_nothing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    conn, _ = _make_conn()
+    plan = ReplacementPlan(
+        live_items=1857,
+        unidentified_films_with_watches=397,
+        watch_rows_at_risk=586,
+    )
+    review_out = tmp_path / "review.csv"
+
+    with (
+        patch("src.scripts.import_collection.parse_xlsx", return_value=[_make_candidate()]),
+        patch("src.scripts.import_collection.psycopg2.connect", return_value=conn),
+        patch("src.scripts.import_collection.replacement_plan", return_value=plan),
+        patch("src.scripts.import_collection.TMDBClient", return_value=_FakeTMDBClient()),
+        patch("src.scripts.import_collection.match_and_enrich", side_effect=_prepared_rows),
+        patch("src.scripts.import_collection.soft_delete_live_items") as soft_delete,
+    ):
+        stats = asyncio.run(
+            run(
+                Path("catalogue.xlsx"),
+                True,
+                review_out,
+                replace_items=True,
+                accept_split=True,
+            )
+        )
+
+    assert stats.items_to_replace == 1857
+    assert stats.items_replaced == 0
+    soft_delete.assert_not_called()
+    conn.close.assert_called_once()
+    assert (
+        "Would soft-delete 1857 live collection items; removed nothing" in capsys.readouterr().out
+    )
+
+
+def test_replace_guard_stops_before_tmdb_or_any_write(tmp_path: Path) -> None:
+    conn, _ = _make_conn()
+    plan = ReplacementPlan(
+        live_items=1857,
+        unidentified_films_with_watches=397,
+        watch_rows_at_risk=586,
+    )
+
+    with (
+        patch("src.scripts.import_collection.parse_xlsx", return_value=[_make_candidate()]),
+        patch("src.scripts.import_collection.psycopg2.connect", return_value=conn),
+        patch("src.scripts.import_collection.replacement_plan", return_value=plan),
+        patch("src.scripts.import_collection.TMDBClient") as tmdb_client,
+        pytest.raises(ReplacementBlocked),
+    ):
+        asyncio.run(
+            run(
+                Path("catalogue.xlsx"),
+                True,
+                tmp_path / "review.csv",
+                replace_items=True,
+            )
+        )
+
+    tmdb_client.assert_not_called()
+    conn.close.assert_called_once()
+
+
+def test_plain_dry_run_keeps_the_existing_no_database_behaviour(tmp_path: Path) -> None:
+    with (
+        patch("src.scripts.import_collection.parse_xlsx", return_value=[_make_candidate()]),
+        patch("src.scripts.import_collection.psycopg2.connect") as connect,
+        patch("src.scripts.import_collection.TMDBClient", return_value=_FakeTMDBClient()),
+        patch("src.scripts.import_collection.match_and_enrich", side_effect=_prepared_rows),
+    ):
+        stats = asyncio.run(run(Path("catalogue.xlsx"), True, tmp_path / "review.csv"))
+
+    assert stats.items_to_replace == 0
+    connect.assert_not_called()
+
+
+def test_plain_import_keeps_per_item_transactions_and_never_replaces(tmp_path: Path) -> None:
+    preflight_conn, _ = _make_conn()
+    write_conn, _ = _make_conn()
+    candidates = [_make_candidate(row_number=2), _make_candidate(row_number=3)]
+
+    with (
+        patch("src.scripts.import_collection.parse_xlsx", return_value=candidates),
+        patch(
+            "src.scripts.import_collection.psycopg2.connect",
+            side_effect=[preflight_conn, write_conn],
+        ),
+        patch("src.scripts.import_collection.TMDBClient", return_value=_FakeTMDBClient()),
+        patch("src.scripts.import_collection.match_and_enrich", side_effect=_prepared_rows),
+        patch("src.scripts.import_collection.write_import_row") as write_row,
+        patch("src.scripts.import_collection.replace_collection_items") as replace,
+    ):
+        stats = asyncio.run(run(Path("catalogue.xlsx"), False, tmp_path / "review.csv"))
+
+    assert stats.items_to_replace == 0
+    assert write_row.call_count == 2
+    assert write_conn.__exit__.call_count == 2
+    replace.assert_not_called()
+
+
+def test_replace_write_failure_rolls_back_the_single_connection_context(tmp_path: Path) -> None:
+    preflight_conn, _ = _make_conn()
+    write_conn, _ = _make_conn()
+    plan = ReplacementPlan(1, 0, 0)
+
+    def fail_replacement(
+        _conn: Any,
+        _rows: list[ImportRow],
+        stats: ImportStats,
+        *,
+        accept_split: bool,
+    ) -> ReplacementPlan:
+        assert accept_split is False
+        stats.items_replaced = 1
+        stats.items_inserted = 1
+        raise psycopg2.DatabaseError("forced failure")
+
+    with (
+        patch("src.scripts.import_collection.parse_xlsx", return_value=[_make_candidate()]),
+        patch(
+            "src.scripts.import_collection.psycopg2.connect",
+            side_effect=[preflight_conn, write_conn],
+        ),
+        patch("src.scripts.import_collection.replacement_plan", return_value=plan),
+        patch("src.scripts.import_collection.TMDBClient", return_value=_FakeTMDBClient()),
+        patch("src.scripts.import_collection.match_and_enrich", side_effect=_prepared_rows),
+        patch(
+            "src.scripts.import_collection.replace_collection_items", side_effect=fail_replacement
+        ),
+    ):
+        stats = asyncio.run(
+            run(
+                Path("catalogue.xlsx"),
+                False,
+                tmp_path / "review.csv",
+                replace_items=True,
+            )
+        )
+
+    assert write_conn.__exit__.call_count == 1
+    assert write_conn.__exit__.call_args.args[0] is psycopg2.DatabaseError
+    assert isinstance(write_conn.__exit__.call_args.args[1], psycopg2.DatabaseError)
+    assert stats.items_replaced == 0
+    assert stats.items_inserted == 0
+    assert stats.errors == ["replacement rolled back — forced failure"]
 
 
 # ---------------------------------------------------------------------------

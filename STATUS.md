@@ -67,11 +67,14 @@ items and re-import the fresh sheet; `movies` is never touched, so the watch his
 wanted list, the credits and the completion sets all survive, and the old items sit in
 Trash for 90 days if the new sheet turns out wrong.
 
-**The deciding measurement:** `collection_items` holds no app-created data — 0 photos, 0
-notes, 0 prices, 0 loans, 0 specs, 0 barcodes — and **nothing references a
-`collection_items.id`**: `box_set_items`, `loans` and `item_photos` are all empty, and the
-audit log has zero rows targeting an item. So the identity that a refresh-in-place would
-preserve is preserving nothing.
+**The deciding measurement, corrected at Batch 39 start:** `collection_items` holds no
+app-created data apart from **10 Blu-ray.com spec records** — 0 photos, 0 notes, 0 prices,
+0 loans and 0 barcodes — and **nothing references a `collection_items.id`**:
+`box_set_items`, `loans` and `item_photos` are all empty, and the audit log has zero rows
+targeting an item. Craig accepted losing those 10 specs from the active collection; their
+old rows retain them in Trash for 90 days, while the new items start without them (#195).
+Transferring them by spreadsheet row would trust the unstable identity this batch exists
+to replace.
 
 **The code half is `docs/phase-batches.md` Batch 39 — Collection refresh**, written up
 2026-09-16 and **not yet built**. It is the next thing to build. Tiered 🟡 by size but

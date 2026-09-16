@@ -230,6 +230,43 @@ async def test_restoring_brings_a_disc_back_with_full_state(
     assert (item.section, item.shelf) == ("Front", "2nd")
 
 
+async def test_replaced_disc_can_be_restored_with_the_same_source_row(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Batch 39 leaves provenance intact, so restore must allow the replacement's row.
+
+    A bad spreadsheet can put something different on a line which the previous sheet
+    used.  Recovery means bringing the complete old item back for comparison, not
+    silently clearing its source provenance or refusing at the former unique index.
+    """
+    movie, old_item = await _disc(api_session, "A Replaced Disc")
+    source_row = 1_000_000_000 + uuid.uuid4().int % 1_000_000_000
+    old_item.import_source_row = source_row
+    old_item.deleted_at = datetime(2026, 9, 16)
+    await api_session.flush()
+
+    replacement = CollectionItem(
+        id=uuid.uuid4(),
+        movie_id=movie.id,
+        formats=["4k_uhd"],
+        location="Front 1st shelf",
+        section="Front",
+        shelf="1st",
+        condition="good",
+        import_source_row=source_row,
+    )
+    api_session.add(replacement)
+    await api_session.flush()
+
+    response = await client.post(f"/api/v1/trash/collection_items/{old_item.id}/restore-row")
+    assert response.status_code == 204, response.text
+
+    await api_session.refresh(old_item)
+    assert old_item.deleted_at is None
+    assert old_item.import_source_row == source_row
+    assert old_item.notes == "A note that must survive a restore"
+
+
 async def test_every_remaining_table_can_still_be_restored(
     client: AsyncClient, api_session: AsyncSession, admin: Profile
 ) -> None:

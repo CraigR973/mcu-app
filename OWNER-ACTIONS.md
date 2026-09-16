@@ -501,10 +501,14 @@ Net effect: nothing refreshed, and a scattering of orphan film rows.
   rows cannot be hard-deleted while watches point at them.
 
 - [x] **Decided 2026-09-16: option 1 below — rebuild the discs, keep the films.**
-      The deciding measurement was that `collection_items` holds no app-created data and
-      **nothing references a `collection_items.id`** — `box_set_items`, `loans` and
-      `item_photos` are all empty, and the audit log has zero rows targeting an item. So
-      the identity that option 2 exists to preserve is preserving nothing.
+      Re-measurement at Batch 39 start corrected one premise: `collection_items` holds
+      **10 Blu-ray.com spec records**, not zero app-created data. Craig explicitly accepted
+      losing those 10 specs from the active collection; the old rows retain them in Trash
+      for 90 days, and the new items start without them (#195). Everything else measured
+      zero, and **nothing references a `collection_items.id`** — `box_set_items`, `loans`
+      and `item_photos` are all empty, and the audit log has zero rows targeting an item.
+      So the identity that option 2 exists to preserve still protects nothing worth the
+      risk of matching replacement discs by an unstable spreadsheet row.
 
       **The code half is `docs/phase-batches.md` Batch 39 — Collection refresh**, written
       up 2026-09-16 and not yet built. It ships the mechanism and the dry run and stops

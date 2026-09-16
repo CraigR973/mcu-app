@@ -1588,19 +1588,28 @@ changed. Meanwhile the *film* upsert runs independently of that check and is
 `ON CONFLICT (tmdb_id) DO NOTHING` — and a NULL `tmdb_id` does not conflict — so a title
 TMDB can now match gets a brand-new `movies` row **with no discs on it**.
 
-**Why rebuilding the discs is safe**, measured 2026-09-15: `collection_items` holds **no
-app-created data**. 0 photos, 0 notes, 0 purchase prices, 0 loans, 0 disc specs, 0
-barcodes, and `listing_status` is `in_collection` on all 1,857. **Nothing references a
-`collection_items.id` either** — `box_set_items`, `loans` and `item_photos` are all empty,
-and the audit log has zero rows targeting an item. The valuable data hangs off `movies`:
-1,555 watches, 11 wanted-list rows, 40 completion sets, 45,600 credits. A replace that
-never touches `movies` keeps all of it.
+**Why rebuilding the discs is safe**, re-measured 2026-09-16: `collection_items` holds no
+app-created data **apart from 10 Blu-ray.com spec records**. 0 photos, 0 notes, 0 purchase
+prices, 0 loans, 0 barcodes, and `listing_status` is `in_collection` on all 1,857.
+**Nothing references a `collection_items.id` either** — `box_set_items`, `loans` and
+`item_photos` are all empty, and the audit log has zero rows targeting an item. The
+valuable data hangs off `movies`: 1,555 watches, 11 wanted-list rows, 40 completion sets,
+45,600 credits. A replace that never touches `movies` keeps all of it.
+
+**Craig accepted losing those 10 specs from the active collection on 2026-09-16** (#195).
+The old rows and their specs still land in Trash for 90 days, but the new items start
+without them. The importer does not transfer specs by `import_source_row`: spreadsheet
+position is the unstable identity this batch exists to replace, so doing that would risk
+attaching edition-specific specs to the wrong new disc.
 
 **Acceptance:**
 - `insert_collection_item`'s dedup query filters on `deleted_at IS NULL`. **Both states
   tested** — a live row still blocks re-insert (no duplicate discs), a soft-deleted one
   does not. *Without this the whole batch is inert: the replace empties the collection and
-  the re-import skips all 1,857, leaving nothing, and reporting success.*
+  the re-import skips all 1,857, leaving nothing, and reporting success.* Migration 034
+  replaces the old all-history unique index with a live-row lookup index: the importer is
+  the only writer of non-NULL source rows, and keeping live uniqueness in the database
+  would make §13.5's full-state restore fail whenever a replacement reused that row.
 - The importer gains `--replace-items`, which soft-deletes every live `collection_items`
   row **in the same transaction as the import** and reports the count. Without the flag,
   behaviour is byte-identical — tested.
