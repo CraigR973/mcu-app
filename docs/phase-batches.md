@@ -1641,6 +1641,45 @@ attaching edition-specific specs to the wrong new disc.
 
 ---
 
+### Batch 40 — Identification on a re-run 🟢
+**Unblocks `OWNER-ACTIONS.md` 1i step 2, which unblocks 1k.** Model: **Opus 5 · xhigh** /
+GPT-5.6 Sol · Extra High. `DECISIONS.md` #197.
+
+**🟢 by size, `xhigh` by consequence.** The change is one hoisted branch in
+`run_import`. What it re-enables is not small: a run that rewrites title, year, poster,
+runtime and cast on ~396 live `movies` rows carrying **582 watch rows between them**, and
+deletes a row wherever the collection turns out to hold the same film twice.
+
+**The problem.** `--identify` cannot reach anything. The already-imported check sits
+*above* the match, so once step 1 wrote the 1,555 watches on 2026-09-15 every entry
+short-circuits on its `letterboxd_viewing_id` before the matcher runs. Measured against
+live Neon on 2026-09-17: **Craig 593 already imported, films identified 0; Mark 962
+already imported, films identified 0.** The flag reports a clean run and does nothing.
+
+**Why no test caught it.** Every S8 identification test identifies on a *first* run — the
+one case where writing watches and identifying films are separable. The sequence that
+breaks it is the sequence the live database is actually in: watches first, identification
+second.
+
+**Acceptance.**
+- Identification reaches a film whose watches are already imported, and that run writes
+  **zero** watch rows.
+- `would_write` still means "rows a real run would insert" — already-imported entries do
+  not inflate it.
+- A dry run reports how many films it would identify, and their local titles, while
+  spending **no** TMDB calls. It cannot say what each becomes; that stays true.
+- A film whose identification **fails** reports one failure line, not one per watch.
+- A later entry for a film that identification merged away follows the surviving row
+  rather than fetching and re-merging it.
+- Gate green, with the Postgres-backed tests running rather than skipping.
+
+> **⏸ The live run is the owner's.** Shipping this batch does not identify anything. The
+> run rewrites ~396 rows and makes ~800 live TMDB calls, which
+> `docs/agent-commands/group-start.md` puts in Craig's hands — and it is the ordering
+> constraint Batch 39's guard enforces, so it must precede the collection refresh.
+
+---
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -1715,6 +1754,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 38 · solo | Sonnet 5 · high | GPT-5.6 Terra · High | Formalises work written across earlier batches |
 | **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → ~~S6~~ → ~~S7~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Complete — all eight shipped 2026-09-15.** The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 | — | 39 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The go-live collection refresh (`DECISIONS.md` #192). Solo: it touches the import path alone, and its live run waits on a spreadsheet that does not exist yet. 🟡 by size, `xhigh` by blast radius — 1,857 live rows, and two failure modes that announce nothing |
+| — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

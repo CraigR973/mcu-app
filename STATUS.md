@@ -2,6 +2,21 @@
 
 ## Now
 
+**Batch 40 — Identification on a re-run shipped on 2026-09-17 at `78dc054`.**
+`--identify` had been unreachable since 2026-09-15 and nothing said so: the
+already-imported check sat above the match, so once step 1 wrote the 1,555 watches every
+entry short-circuited on its viewing id and the identification branch was never reached.
+Measured against live Neon before the fix — Craig 593 already imported / **0 identified**,
+Mark 962 / **0 identified**. The skip now suppresses the watch row alone (#197). TMDB is
+called once per film rather than once per watch, and a later entry follows a row that
+identification merged away instead of writing against a deleted movie.
+
+**Next step, and it is Craig's: `OWNER-ACTIONS.md` 1i step 2.** 396 unidentified films
+hold 582 watch rows, and Batch 39's guard refuses the collection refresh until that count
+is zero. Rehearse without `--write` (free, no TMDB calls, lists the local titles), then
+run it for both diaries. It will report `films identified 396` and `WROTE 0 watches` —
+that is correct, not a failure. Only then the fresh spreadsheet and `--replace-items`.
+
 **Batch 39 — Collection refresh shipped on 2026-09-16 at `b1db470`.** Production
 `/api/v1/health` serves the full merge SHA with `db: ok`; migration **034** is applied.
 The importer now has an atomic, table-locked `--replace-items` path, a no-write dry run,
@@ -595,6 +610,23 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-17 (Batch 40 — identification on a re-run, `78dc054`)** — Craig asked
+  whether to import a fresher spreadsheet. Checking the prerequisite turned up that
+  `OWNER-ACTIONS.md` 1i step 2 **could not be run**: `--identify` had been unreachable
+  since step 1 wrote the watches on 2026-09-15, because the already-imported check sat
+  above the match. Two dry runs against live Neon proved it — Craig 593 already imported /
+  0 identified, Mark 962 / 0 identified — and no test caught it, because every S8
+  identification test identifies on a *first* run, the one case where the two halves are
+  separable (#197). The skip now suppresses the watch row alone. Fixed two latent faults
+  the change would otherwise have made common: TMDB is called once per film rather than
+  once per watch (a failed identification leaves `tmdb_id` NULL and so looked like work to
+  redo on every watch), and a later entry follows a row that identification merged away
+  rather than writing against the deleted movie. Six tests added; CI ran **1,152 tests
+  with none skipped**. A throwaway branch carrying the new tests against the *unfixed*
+  importer was pushed first to confirm they actually fail — this batch exists because a
+  suite asserted a design and never the sequence. **Nothing was identified and nothing was
+  imported**; both live runs remain Craig's.
 
 - **2026-09-16 (Batch 39 — guarded collection refresh shipped, `b1db470`)** — Added
   `--replace-items`: all live items move to Trash in the same locked transaction as the

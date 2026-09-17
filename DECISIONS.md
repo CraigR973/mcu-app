@@ -3526,3 +3526,44 @@ contemporaneous.
      It may temporarily leave two live items with the same source line while Craig compares
      the old and replacement discs. That is honest recovery state, not a claim that a
      spreadsheet position is the disc's identity.
+
+
+### 2026-09-17 — Identification could not be reached
+
+197. **`--identify` became unreachable the moment step 1 ran without it, and nothing said
+     so. Batch 40 separates identification from the already-imported skip.** The check on
+     `letterboxd_viewing_id` sat *above* the match in `run_import`, so once step 1 of
+     `OWNER-ACTIONS.md` 1i wrote the 1,555 watches on 2026-09-15, every entry
+     short-circuited before the matcher ran. Measured against live Neon on 2026-09-17:
+     Craig 1,173 entries / 593 already imported / **0 identified**; Mark 1,149 / 962 /
+     **0 identified**. The command `OWNER-ACTIONS.md` 1i gives for step 2 was a no-op, and
+     it reported a clean run.
+
+     *Why:* the two halves were designed as different-sized decisions with different flags
+     (#175), which was right — but they were only ever *separable* on a first run. Every
+     S8 test identified on a first run, so the suite asserted the design and never the
+     sequence the database would actually be in. The skip now suppresses the watch row
+     alone; an entry always matches and may always identify.
+
+     *Two things tightened in passing. Both were checked against the unfixed importer
+     rather than reasoned about, and the obvious account of each was wrong.* Identification
+     is now attempted once per **film** rather than once per **entry**. The reason is not
+     TMDB cost — `MatchingEngine` caches on (title, year), so the repeat searches were
+     already free — it is that a film the matcher **cannot** resolve kept `tmdb_id` NULL
+     and so appended a fresh line to `identification_failures` for every watch it had. The
+     count a person reads after the run was the wrong number. And a later entry now
+     follows a row that identification merged away. That one is **not** a corruption fix,
+     though the shape of the code invites the claim: re-identifying a merged-away row is
+     idempotent — it merges into the same survivor again and the watch still lands on the
+     right film. A test asserting otherwise passed against the unfixed code, which is how
+     this was caught. What it saves is a second `get_movie_full` over the wire per extra
+     watch, and a pointless delete-and-reinsert of the survivor's credits.
+
+     *What stays true:* a dry run still spends no TMDB calls. It reports how many films it
+     would identify and their local titles, but not what any becomes — resolving that
+     costs the calls the rehearsal exists to avoid. The existing test asserting a dry run
+     never touches TMDB is unchanged.
+
+     *This does not identify anything.* The live run remains Craig's, is still
+     `OWNER-ACTIONS.md` 1i step 2, and still has to precede the collection refresh —
+     which is exactly the ordering Batch 39's guard refuses to let anyone skip (#194).

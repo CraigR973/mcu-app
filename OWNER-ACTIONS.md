@@ -363,7 +363,9 @@ the *cause* and not the *behaviour*, and a green gate was not allowed to stand i
       were inert are live: On this day, Worth a rewatch, Most watched, and the "has he
       seen it?" S7 needs. Re-running wrote **0** and reported all 593 already imported,
       which is the idempotency criterion proved against production rather than fixtures.
-- [ ] **Step 2 — identify the ~397 films — has not run.** See the bottom of this item.
+- [ ] **Step 2 — identify the ~396 films — has not run, and could not have.** Until
+      Batch 40 shipped on 2026-09-17 the command below was a **no-op** (`DECISIONS.md`
+      #197). See the bottom of this item.
 
 **What landed**, measured after the import:
 
@@ -417,16 +419,46 @@ nothing that already exists changes. **Done 2026-09-15.**
 cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" JWT_ACCESS_SECRET="$(grep '^JWT_ACCESS_SECRET=' apps/api/.env.local | cut -d= -f2-)" JWT_REFRESH_SECRET="$(grep '^JWT_REFRESH_SECRET=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --write
 ```
 
-- [ ] **Step 2 — identify the films. NOT RUN.** Add `--identify` to the commands above.
-      **This one is different in kind**: it rewrites title, year, poster, runtime and cast
-      on **~397 rows that already exist**, and where the collection holds both an
-      unidentified row and an identified one for the same film it merges them and **deletes
-      one**. That is why it is a separate flag (`DECISIONS.md` #175), and why step 1 running
-      is not authorisation for it.
+- [ ] **Step 2 — identify the films. NOT RUN.** Add `--identify` to the commands above,
+      and run it for **both** diaries — Craig's covers 477 distinct films and Mark's 869,
+      and the 396 that need identifying are spread across the two.
 
-      **It also makes roughly 800 live TMDB calls** — a search and a fetch per film — so it
-      takes a few minutes and can fail partway. It is safe to re-run: films already
-      identified are skipped, because they are no longer unidentified.
+      > **⚠️ This command did nothing at all until 2026-09-17.** The already-imported check
+      > sat above the match, so once step 1 wrote the 1,555 watches every entry
+      > short-circuited before the matcher ran and the identification branch became
+      > unreachable. It reported a clean run — *"already imported 593, films identified
+      > 0"* — and that was the whole of it. **Batch 40 fixed it** (`DECISIONS.md` #197).
+      > If you are reading a transcript from before that date claiming step 2 was run,
+      > it identified nothing.
+
+      **This one is different in kind** from step 1: it rewrites title, year, poster,
+      runtime and cast on **~396 rows that already exist**, and where the collection holds
+      both an unidentified row and an identified one for the same film it merges them and
+      **deletes one**. That is why it is a separate flag (`DECISIONS.md` #175), and why
+      step 1 running is not authorisation for it.
+
+      **It makes roughly 800 live TMDB calls** — one search and one fetch per *film*, not
+      per watch — so it takes a few minutes and can fail partway. It is safe to re-run:
+      films already identified are no longer unidentified, so a second pass skips them.
+
+      **It writes no watch rows.** Every entry is already imported, so the summary will
+      say `films identified 396` and `WROTE 0 watches`. That is correct, not a failure.
+
+      **Rehearse it first.** Drop `--write` and it reports how many films it would
+      identify and their local titles, spending no TMDB calls:
+
+      ```
+      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --identify
+      ```
+
+      Then the real runs, Craig's then Mark's:
+
+      ```
+      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --identify --write
+      ```
+      ```
+      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/mark-diary.csv --user Mark --identify --write
+      ```
 
       **What it would fix beyond the metadata:** 754 films currently have no `tmdb_id`, and
       those rows are why 28 diary entries came back ambiguous (nothing distinguishes two
@@ -443,8 +475,9 @@ nothing in a diary row says which. `--ambiguous-out ambiguous.csv` writes them t
 resolve themselves once step 2 has given those rows real years, and a re-run then picks them
 up.
 
-*Note the shell line: `.env.local`'s connection string contains `&`, so it must be sourced with
-`set -a` rather than exported by hand.*
+*Note the shell line: `.env.local`'s connection string contains an unquoted `&`, so it must
+be **exported explicitly**, as the commands above do. `set -a; source …` truncates it at the
+`&` and the script then fails against `localhost` (`DECISIONS.md` #191).*
 
 ### 1j. Press "Sync now" once *(new — Batch S5, 2026-09-15)*
 
