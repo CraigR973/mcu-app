@@ -363,9 +363,19 @@ the *cause* and not the *behaviour*, and a green gate was not allowed to stand i
       were inert are live: On this day, Worth a rewatch, Most watched, and the "has he
       seen it?" S7 needs. Re-running wrote **0** and reported all 593 already imported,
       which is the idempotency criterion proved against production rather than fixtures.
-- [ ] **Step 2 — identify the ~396 films — has not run, and could not have.** Until
-      Batch 40 shipped on 2026-09-17 the command below was a **no-op** (`DECISIONS.md`
-      #197). See the bottom of this item.
+- [~] **Step 2 — Craig's diary ran 2026-09-17: 180 of 181 films identified. Mark's has
+      not run.** Until Batch 40 shipped that day the command was a **no-op**
+      (`DECISIONS.md` #197). Unidentified films holding watch history: **396 → 216**, and
+      the watches behind them **582 → 228**. Verified against a pre-run snapshot of all
+      1,854 `movies` rows: **0 rows deleted, 0 added, 0 orphaned watches, 0 rows that lost
+      a `tmdb_id`** — no merge was needed, because no film in Craig's diary was already in
+      the collection twice. 64 titles were tidied in passing (`Birds, The` → `The Birds`).
+      The single failure is **The Pacific (2010)**, a TV miniseries with no confident film
+      match; it stays unidentified and still holds watch history, so `--accept-split` will
+      be needed for it at refresh time unless it is identified by hand first.
+
+      **Mark's diary is the remaining 316 — run it next**, and expect the guard to reach
+      or approach 0. See the bottom of this item.
 
 **What landed**, measured after the import:
 
@@ -448,16 +458,16 @@ cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/ap
       identify and their local titles, spending no TMDB calls:
 
       ```
-      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --identify
+      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --identify
       ```
 
       Then the real runs, Craig's then Mark's:
 
       ```
-      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --identify --write
+      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/craig-diary.csv --user Craig --identify --write
       ```
       ```
-      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/mark-diary.csv --user Mark --identify --write
+      cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history --csv .letterboxd-export/mark-diary.csv --user Mark --identify --write
       ```
 
       **What it would fix beyond the metadata:** 754 films currently have no `tmdb_id`, and

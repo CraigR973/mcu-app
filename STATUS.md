@@ -16,11 +16,23 @@ identification merged away instead of writing against a deleted movie.
 fix, and the union matches the guard's own count of unidentified films holding watches
 row for row. Both rehearsals wrote nothing: every live count is unchanged.
 
-**Next step, and it is Craig's: `OWNER-ACTIONS.md` 1i step 2.** 396 unidentified films
-hold 582 watch rows, and Batch 39's guard refuses the collection refresh until that count
-is zero. Rehearse without `--write` (free, no TMDB calls, lists the local titles), then
-run it for both diaries. It will report `films identified 396` and `WROTE 0 watches` —
-that is correct, not a failure. Only then the fresh spreadsheet and `--replace-items`.
+**Craig's half of `OWNER-ACTIONS.md` 1i step 2 ran on 2026-09-17 at his instruction:
+180 of 181 films identified, 0 watches written.** Unidentified films holding watch
+history **396 → 216**, and the watches behind them **582 → 228**. Checked against a
+pre-run snapshot of all 1,854 `movies` rows: 0 deleted, 0 added, 0 orphaned watches, 0
+rows that lost a `tmdb_id`. No merge occurred. 64 titles were tidied (`Birds, The` → `The
+Birds`). One failure — **The Pacific (2010)**, a miniseries with no confident film match.
+
+**Next step: Mark's diary, the remaining 316 films.** Then the fresh spreadsheet and
+`--replace-items`. Batch 39's guard refuses the refresh while any unidentified film holds
+watch history, so The Pacific alone will require `--accept-split` unless it is identified
+by hand first.
+
+> **The command in 1i needs `TMDB_READ_TOKEN` exported as well as `DATABASE_URL`.** The
+> first attempt exported only the latter, `config.py` defaults the token to `""`, and all
+> 181 identifications failed with *"Illegal header value b'Bearer '"* — **while the script
+> exited 0**. Nothing was written and nothing was harmed, but a run that fails every
+> identification should not look like a success. Worth a guard.
 
 **Batch 39 — Collection refresh shipped on 2026-09-16 at `b1db470`.** Production
 `/api/v1/health` serves the full merge SHA with `db: ok`; migration **034** is applied.
