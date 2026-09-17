@@ -363,19 +363,24 @@ the *cause* and not the *behaviour*, and a green gate was not allowed to stand i
       were inert are live: On this day, Worth a rewatch, Most watched, and the "has he
       seen it?" S7 needs. Re-running wrote **0** and reported all 593 already imported,
       which is the idempotency criterion proved against production rather than fixtures.
-- [~] **Step 2 — Craig's diary ran 2026-09-17: 180 of 181 films identified. Mark's has
-      not run.** Until Batch 40 shipped that day the command was a **no-op**
-      (`DECISIONS.md` #197). Unidentified films holding watch history: **396 → 216**, and
-      the watches behind them **582 → 228**. Verified against a pre-run snapshot of all
-      1,854 `movies` rows: **0 rows deleted, 0 added, 0 orphaned watches, 0 rows that lost
-      a `tmdb_id`** — no merge was needed, because no film in Craig's diary was already in
-      the collection twice. 64 titles were tidied in passing (`Birds, The` → `The Birds`).
-      The single failure is **The Pacific (2010)**, a TV miniseries with no confident film
-      match; it stays unidentified and still holds watch history, so `--accept-split` will
-      be needed for it at refresh time unless it is identified by hand first.
+- [x] **Step 2 — both diaries ran 2026-09-17 at Craig's instruction. 395 films
+      identified, 1 left.** Craig's 180 of 181, Mark's **215 of 215 with no failures**.
+      Until Batch 40 shipped that day the command was a **no-op** (`DECISIONS.md` #197).
+      Unidentified films holding watch history: **396 → 1**; the watches behind them
+      **582 → 1**; unidentified films overall 753 → 358.
 
-      **Mark's diary is the remaining 316 — run it next**, and expect the guard to reach
-      or approach 0. See the bottom of this item.
+      Verified against a snapshot of all 1,854 `movies` rows taken before the first run:
+      **0 rows deleted, 0 added, 0 orphaned watches, 0 rows that lost a `tmdb_id`.** No
+      merge was needed in either run. **155 titles were tidied** — `Ben Hur` → `Ben-Hur`
+      (1959), `Postman Always rings twice, The` → `The Postman Always Rings Twice` (1946)
+      — which is exactly the messy-title problem that would have split history from discs.
+      Discs stayed at 1,857 and watches at 1,555.
+
+      **The one holdout is `The Pacific (2010)`.** It is a TV miniseries, so TMDB's film
+      search has no confident match and there is no correct film id to give it by hand
+      either. It holds **1 watch row**. Batch 39's guard therefore still refuses
+      `--replace-items`, and the refresh needs **`--accept-split`** for this single film.
+      The consequence is bounded to that one watch.
 
 **What landed**, measured after the import:
 
