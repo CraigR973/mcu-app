@@ -11,6 +11,11 @@ Mark 962 / **0 identified**. The skip now suppresses the watch row alone (#197).
 called once per film rather than once per watch, and a later entry follows a row that
 identification merged away instead of writing against a deleted movie.
 
+**Verified against production after the merge.** The rehearsal now reports
+`films to identify` — **Craig 181, Mark 316, union exactly 396** — against 0 before the
+fix, and the union matches the guard's own count of unidentified films holding watches
+row for row. Both rehearsals wrote nothing: every live count is unchanged.
+
 **Next step, and it is Craig's: `OWNER-ACTIONS.md` 1i step 2.** 396 unidentified films
 hold 582 watch rows, and Batch 39's guard refuses the collection refresh until that count
 is zero. Rehearse without `--write` (free, no TMDB calls, lists the local titles), then
