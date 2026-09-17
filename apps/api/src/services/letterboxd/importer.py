@@ -223,16 +223,25 @@ async def run_import(
     index = build_index(movies)
     seen = await _existing_viewing_ids(db, profile.id)
     # **One film is many entries** — 2,322 entries cover 1,101 films, every rewatch
-    # revisits a row, and 245 films appear in both diaries. Two consequences, and neither
-    # mattered while identification ran only on a first pass over unwritten entries:
+    # revisits a row, and 245 films appear in both diaries. Identification is therefore
+    # per *film*, not per entry. Both of these make that true; neither is load-bearing
+    # against a corruption, and it is worth being exact about why, because the obvious
+    # reasons are wrong:
     #
-    # ``attempted`` caps TMDB at one search and one fetch per film. Without it a film the
-    # matcher *cannot* resolve is retried once per watch, because a failed identification
-    # leaves ``tmdb_id`` NULL and so still looks like work to do.
+    # ``attempted`` stops a film the matcher **cannot** resolve being retried once per
+    # watch. A failed identification leaves ``tmdb_id`` NULL, so it still looks like work
+    # to do. The searches behind those retries were already cheap — `MatchingEngine`
+    # caches on (title, year) — but each retry appended another line to
+    # ``identification_failures``, so one unresolvable film reported itself once per
+    # watch. A successful identification needs no such guard: it sets ``tmdb_id`` and so
+    # hides itself from the next entry.
     #
     # ``merged`` follows a row that identification collapsed into another. The index was
-    # built before the loop and still points at the row `apply_identification` deleted;
-    # a later entry for the same film would otherwise identify a deleted row.
+    # built before the loop and still points at the row `apply_identification` deleted.
+    # Re-identifying it is **idempotent** rather than destructive — it merges into the
+    # same survivor again — so this is not a fix for a silent failure, whatever the shape
+    # of the code suggests. What it saves is a second `get_movie_full` over the wire per
+    # extra watch, and a pointless delete-and-reinsert of the survivor's credits.
     attempted: set[uuid.UUID] = set()
     merged: dict[uuid.UUID, Movie] = {}
 

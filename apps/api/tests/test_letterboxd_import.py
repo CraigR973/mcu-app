@@ -602,11 +602,12 @@ async def test_a_dry_run_reports_the_films_it_would_identify_without_touching_tm
 async def test_a_film_watched_more_than_once_is_put_to_tmdb_only_once(
     db: AsyncSession, person: Profile
 ) -> None:
-    """One film is many entries — 2,322 of them cover 1,101 films.
+    """Characterisation, not a regression — and worth saying so.
 
-    Identifying per *entry* rather than per *film* would multiply the live run's ~800 TMDB
-    calls by the rewatch rate. It never showed up before because a successful
-    identification sets `tmdb_id` and so hides itself from the next entry.
+    This passes against the unfixed importer too, because a *successful* identification
+    sets `tmdb_id` and so hides the film from the next entry. It is here to keep that
+    true: the guard that matters is the one below, for identifications that **fail** and
+    leave `tmdb_id` NULL.
     """
     await _film(db, "Collector, The")
     entries = [
@@ -628,6 +629,7 @@ async def test_a_film_watched_more_than_once_is_put_to_tmdb_only_once(
     assert tmdb.fetches == 1
     assert report.identified == [("The Collector", 29259)]
     assert report.written == 3, "all three watches still land"
+    assert len(report.identifiable) == 1, "one film, however many times it was watched"
 
 
 async def test_a_film_tmdb_cannot_resolve_is_not_retried_for_every_watch(
@@ -635,9 +637,12 @@ async def test_a_film_tmdb_cannot_resolve_is_not_retried_for_every_watch(
 ) -> None:
     """A *failed* identification leaves `tmdb_id` NULL, so it still looks like work to do.
 
-    That is the case the `tmdb_id` check cannot close by itself, and the one that costs
-    the most calls: the films with no confident match are exactly the messy-titled ones
-    someone watched repeatedly.
+    That is the case the `tmdb_id` check cannot close by itself, and the films with no
+    confident match are exactly the messy-titled ones someone watched repeatedly. The
+    visible cost was the **report**: one failure line per watch rather than per film, so
+    the count a person reads after the run was the wrong number. The searches behind the
+    retries were already cache hits — `MatchingEngine` caches on (title, year) — so this
+    is about what the run *says*, not what it spends.
     """
     await _film(db, "Death on the Nile [1978]")
     entries = [
@@ -654,9 +659,8 @@ async def test_a_film_tmdb_cannot_resolve_is_not_retried_for_every_watch(
         engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
     )
 
-    assert tmdb.searches == 1, "one refusal is enough; the second watch changes nothing"
     assert report.identified == []
-    assert len(report.identification_failures) == 1
+    assert len(report.identification_failures) == 1, "one line per film, not per watch"
     assert report.written == 2
 
 
@@ -667,8 +671,13 @@ async def test_a_later_watch_follows_a_film_that_identification_merged_away(
 
     `apply_identification` merges when the collection already holds the TMDB id — here the
     same film sits in the sheet twice, once identified and once as a bare title. The
-    second entry still matches the deleted row through the stale index, so the watch would
-    be written against a row that no longer exists.
+    second entry still matches the deleted row through the stale index.
+
+    **Re-identifying that row is idempotent, not destructive** — it merges into the same
+    survivor again, and the watch still lands on the right film. Measured, not assumed:
+    every assertion here except the fetch count passes against the unfixed importer. What
+    following the merge saves is the second `get_movie_full` over the wire, and a
+    delete-and-reinsert of the survivor's credits behind it.
     """
     survivor = await _film(db, "Le Collectionneur", year=1965, tmdb_id=29259)
     doomed = await _film(db, "Collector, The")
@@ -687,7 +696,7 @@ async def test_a_later_watch_follows_a_film_that_identification_merged_away(
     )
 
     assert report.written == 2
-    assert tmdb.searches == 1, "the merged-away row must not be put to TMDB again"
+    assert tmdb.fetches == 1, "the merged-away row must not be fetched from TMDB again"
 
     rows = list(await db.scalars(select(WatchLog.movie_id).where(WatchLog.user_id == person.id)))
     assert rows == [survivor.id, survivor.id], "both watches hang off the surviving row"
