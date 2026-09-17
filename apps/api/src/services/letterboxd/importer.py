@@ -32,6 +32,13 @@ Two things follow from these numbers, and both shape the code below.
 why :func:`run_import` defaults to ``dry_run=True``: a default that writes is a default
 that eventually writes by accident.
 
+**Batch 40 separated identification from the already-imported skip** after step 1 of
+`OWNER-ACTIONS.md` 1i ran without ``--identify`` on 2026-09-15 and left the flag
+unreachable — every entry short-circuited on its viewing id before the match, so
+``--identify`` reported success and identified nothing. The counts above are still the
+first-run counts; on the live database that same pass now identifies the films and writes
+**zero** watches (`DECISIONS.md` #197).
+
 **66% of watches are of films they own** — the same 66% both the 100-entry RSS sample and
 #160's coarser pass predicted, which is the check that the matcher behaves the same on
 2,322 rows as on 100.
@@ -80,6 +87,12 @@ class ImportReport:
     #: criterion asks, rather than as a single total.
     identified: list[tuple[str, int]] = field(default_factory=list)
     identification_failures: list[str] = field(default_factory=list)
+    #: Distinct films this run found carrying no ``tmdb_id``, counted **whether or not
+    #: their watches were already imported**. That is the number Batch 40 exists to make
+    #: visible: once the watches are in, :attr:`matched_unidentified` is 0 forever and
+    #: stops describing the work left. A dry run spends no TMDB calls, so it can say how
+    #: many films it would identify but not what any of them becomes.
+    identifiable: dict[uuid.UUID, str] = field(default_factory=dict)
     written: int = 0
 
     @property
@@ -97,6 +110,7 @@ class ImportReport:
             f"  matched, unidentified  {self.matched_unidentified}\n"
             f"  ambiguous (offered)    {len(self.ambiguous)}\n"
             f"  not in the collection  {self.not_in_collection}\n"
+            f"  films to identify      {len(self.identifiable)}\n"
             f"  films identified       {len(self.identified)}"
         )
 
@@ -190,9 +204,17 @@ async def run_import(
     that eventually writes because somebody forgot an argument.
 
     **Idempotent on ``letterboxd_viewing_id``.** Every entry already present for this
-    person is skipped, so a second run of the same file writes zero rows — and so an RSS
-    sync (S5) cannot re-import a viewing this file already wrote, because the feed's
+    person writes no watch row, so a second run of the same file writes zero — and so an
+    RSS sync (S5) cannot re-import a viewing this file already wrote, because the feed's
     ``guid`` wraps the same id.
+
+    **Identification is not subject to that skip, since Batch 40.** It used to be: the
+    already-imported check sat above the match, so once step 1 of `OWNER-ACTIONS.md` 1i
+    had written the 1,555 watches, every entry short-circuited and ``--identify`` became
+    unreachable — it reported success and identified nothing. The two halves were only
+    ever separable on a *first* run, which is the one case the S8 tests covered
+    (`DECISIONS.md` #197). An entry now always matches and may always identify; what
+    ``already`` suppresses is the watch row alone.
     """
     del now  # watched_at comes from the file; nothing here needs the clock
     report = ImportReport(dry_run=dry_run, entries=len(entries))
@@ -200,11 +222,26 @@ async def run_import(
     movies = list(await db.scalars(select(Movie).where(Movie.deleted_at.is_(None))))
     index = build_index(movies)
     seen = await _existing_viewing_ids(db, profile.id)
+    # **One film is many entries** — 2,322 entries cover 1,101 films, every rewatch
+    # revisits a row, and 245 films appear in both diaries. Two consequences, and neither
+    # mattered while identification ran only on a first pass over unwritten entries:
+    #
+    # ``attempted`` caps TMDB at one search and one fetch per film. Without it a film the
+    # matcher *cannot* resolve is retried once per watch, because a failed identification
+    # leaves ``tmdb_id`` NULL and so still looks like work to do.
+    #
+    # ``merged`` follows a row that identification collapsed into another. The index was
+    # built before the loop and still points at the row `apply_identification` deleted;
+    # a later entry for the same film would otherwise identify a deleted row.
+    attempted: set[uuid.UUID] = set()
+    merged: dict[uuid.UUID, Movie] = {}
 
     for entry in entries:
-        if entry.viewing_id in seen:
+        # **The skip suppresses the watch row, not the match.** See the docstring: hoisting
+        # the match above this is the whole of Batch 40.
+        already = entry.viewing_id in seen
+        if already:
             report.already_imported += 1
-            continue
 
         outcome = match_entry(entry, index)
         if outcome.ambiguity is not None:
@@ -218,19 +255,27 @@ async def run_import(
             report.not_in_collection += 1
             continue
 
-        movie = outcome.movie
-        if outcome.identifies:
-            report.matched_unidentified += 1
+        movie = merged.get(outcome.movie.id, outcome.movie)
+        if movie.tmdb_id is None:
+            report.identifiable[movie.id] = movie.title
+            # Counted only for entries that would write, because `would_write` is what
+            # this pairs with. `identifiable` above is the count that survives a re-run.
+            if not already:
+                report.matched_unidentified += 1
             # **Identification is opt-in even on a real run.** Writing watches is additive
             # and reversible; this rewrites rows that already exist and merges two into
             # one where the collection holds both. Different-sized decisions, different
             # flags — see `scripts/import_watch_history.py`.
-            if not dry_run and engine is not None:
+            if not dry_run and engine is not None and movie.id not in attempted:
+                attempted.add(movie.id)
+                source_id = movie.id
                 movie = await _identify(db, movie, entry, engine, report)
-        else:
+                if movie.id != source_id:
+                    merged[source_id] = movie
+        elif not already:
             report.matched_identified += 1
 
-        if dry_run:
+        if already or dry_run:
             continue
 
         db.add(

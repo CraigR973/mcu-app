@@ -135,6 +135,11 @@ class MatchOutcome:
 
         **580 of 2,322 entries**, covering **396 distinct films** — over half the 754 rows
         the April import never resolved (#160). One import, three dead features fixed.
+
+        **The importer no longer reads this.** Since Batch 40 it re-checks ``tmdb_id`` on
+        the row it is about to write against, because a merge earlier in the same run can
+        replace that row and this outcome was decided before it (`DECISIONS.md` #197).
+        Kept because it states the rule this module is judged by, and is tested directly.
         """
         return self.movie is not None and self.movie.tmdb_id is None
 

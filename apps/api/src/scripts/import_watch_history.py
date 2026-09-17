@@ -2,11 +2,16 @@
 
 Usage (from the repo root):
 
-    set -a; source apps/api/.env.local; set +a
+    DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" \\
     PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history \\
         --csv .letterboxd-export/craig-diary.csv \\
         --user "Craig" \\
         [--write] [--identify] [--ambiguous-out ambiguous.csv]
+
+**Do not use `set -a; source apps/api/.env.local`.** `DATABASE_URL` is unquoted in that
+file and contains an `&`, so sourcing splits the line and the value silently truncates —
+the script then falls back to `localhost:5432` and fails with a connection error that
+reads like a Neon outage (`DECISIONS.md` #191). The `$(...)` form above keeps it one word.
 
 **It is a dry run unless you pass `--write`.** That is the wrong way round for
 convenience and the right way round for this: a real run writes ~1,530 watch rows and,
@@ -15,8 +20,16 @@ with `--identify`, **overwrites 396 existing `movies` rows** with TMDB metadata
 in the owner's hands, so no agent runs it.
 
 **Re-running is safe.** Every row carries its `letterboxd_viewing_id`, and a viewing
-already present for that person is skipped — so a second run of the same file writes zero
-rows, and S5's RSS sync cannot re-import a viewing this file already wrote (#159, #161).
+already present for that person writes nothing — so a second run of the same file writes
+zero rows, and S5's RSS sync cannot re-import a viewing this file already wrote (#159, #161).
+
+**`--identify` is not subject to that skip, since Batch 40 — and was, before it.** Step 1
+of `OWNER-ACTIONS.md` 1i ran on 2026-09-15 **without** `--identify`, which wrote all 1,555
+watches. Every entry then short-circuited on its viewing id *above* the match, so the
+identification branch became unreachable and `--identify` reported a clean run having
+identified nothing (`DECISIONS.md` #197). The skip now suppresses the watch row alone.
+On this database `--identify --write` therefore identifies ~396 films and writes **0**
+watches, and the summary says so.
 
 **`--identify` is separate from `--write` on purpose.** Writing watches is additive and
 reversible: the rows soft-delete, and nothing that existed before changes. Identification
@@ -140,6 +153,14 @@ def main() -> None:
             print(f"    … and {len(report.ambiguous) - 20} more")
         if args.ambiguous_out:
             print(f"  written to {args.ambiguous_out}")
+    if report.dry_run and report.identifiable:
+        print(f"\n  {len(report.identifiable)} films would be identified:")
+        for title in list(report.identifiable.values())[:20]:
+            print(f"    - {title}")
+        if len(report.identifiable) > 20:
+            print(f"    … and {len(report.identifiable) - 20} more")
+        print("  Local titles only — a dry run spends no TMDB calls, so it cannot say")
+        print("  what each becomes. Pass --identify --write to resolve them.")
     if report.identified:
         print(f"\n  {len(report.identified)} films identified:")
         for title, tmdb_id in report.identified[:20]:
