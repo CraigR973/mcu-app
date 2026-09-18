@@ -24,6 +24,8 @@ from src.scripts.import_collection import (
     REVIEW_FIELDNAMES,
     ImportRow,
     ImportStats,
+    LiveFilmIndex,
+    OrphanRisk,
     ReplacementBlocked,
     ReplacementPlan,
     ensure_replacement_allowed,
@@ -330,11 +332,12 @@ def test_upsert_movie_handles_a_film_with_no_genres() -> None:
 
 def test_upsert_unmatched_movie_inserts_title_only_row() -> None:
     conn, cur = _make_conn([None])
-    movie_id, inserted = upsert_unmatched_movie(conn, "Some Obscure Disc")
+    movie_id, inserted, kind = upsert_unmatched_movie(conn, LiveFilmIndex([]), "Some Obscure Disc")
 
     assert inserted is True
+    assert kind == "new"
     assert isinstance(movie_id, uuid.UUID)
-    insert_sql, params = cur.execute.call_args_list[1][0]
+    insert_sql, params = cur.execute.call_args_list[0][0]
     assert "INSERT INTO movies" in insert_sql
     assert params[1] == "Some Obscure Disc"
 
@@ -342,12 +345,89 @@ def test_upsert_unmatched_movie_inserts_title_only_row() -> None:
 def test_upsert_unmatched_movie_reuses_existing_row() -> None:
     existing = uuid.uuid4()
     conn, cur = _make_conn([(str(existing),)])
-    movie_id, inserted = upsert_unmatched_movie(conn, "Some Obscure Disc")
+    index = LiveFilmIndex([(existing, "Some Obscure Disc")])
+    movie_id, inserted, kind = upsert_unmatched_movie(conn, index, "Some Obscure Disc")
 
     assert inserted is False
     assert movie_id == existing
-    # Only the lookup ran — nothing was inserted.
-    assert cur.execute.call_count == 1
+    assert kind == "title"
+    # **No SQL at all now.** Batch 41 answers this from the index the run already holds,
+    # where the old code issued one lookup per unsettled row.
+    assert cur.execute.call_count == 0
+
+
+def test_upsert_unmatched_movie_reuses_a_film_that_has_since_been_identified() -> None:
+    """The 2026-09-18 defect, at its smallest (`DECISIONS.md` #198).
+
+    The old lookup was `title = %s AND tmdb_id IS NULL`. Once `OWNER-ACTIONS.md` 1i step 2
+    gave 395 films a `tmdb_id`, that clause stopped finding them — so a sheet row TMDB
+    could not settle minted a duplicate, hung the new disc on it, and left the watch
+    history on a film with no disc. Measured: 401 films, 587 watch rows, no error.
+    """
+    identified = uuid.uuid4()
+    conn, cur = _make_conn()
+    index = LiveFilmIndex([(identified, "Double Indemnity")])
+
+    movie_id, inserted, kind = upsert_unmatched_movie(conn, index, "Double Indemnity")
+
+    assert movie_id == identified
+    assert inserted is False
+    assert kind == "title"
+    cur.execute.assert_not_called()
+
+
+def test_upsert_unmatched_movie_matches_a_title_identification_tidied() -> None:
+    """Identification rewrites `Thing, The` to `The Thing`; the sheet still says the old one.
+
+    155 of the 395 films identified on 2026-09-17 were retitled this way, so exact
+    matching alone would have recovered only part of the damage.
+    """
+    tidied = uuid.uuid4()
+    conn, _ = _make_conn()
+    index = LiveFilmIndex([(tidied, "The Thing")])
+
+    movie_id, inserted, kind = upsert_unmatched_movie(conn, index, "Thing, The")
+
+    assert movie_id == tidied
+    assert inserted is False
+    assert kind == "normalised"
+
+
+def test_upsert_unmatched_movie_refuses_to_choose_between_two_live_films() -> None:
+    """Two `Dunkirk`s, and nothing in a spreadsheet row says which.
+
+    Seven titles in the real collection are like this. Offering rather than guessing is
+    the rule the matcher already applies to TMDB candidates, applied to our own rows.
+    """
+    first, second = uuid.uuid4(), uuid.uuid4()
+    conn, cur = _make_conn()
+    index = LiveFilmIndex([(first, "Dunkirk"), (second, "Dunkirk")])
+
+    movie_id, inserted, kind = upsert_unmatched_movie(conn, index, "Dunkirk")
+
+    assert inserted is True, "a disc is never dropped on the floor"
+    assert kind == "ambiguous"
+    assert movie_id not in {first, second}
+    assert "INSERT INTO movies" in cur.execute.call_args_list[0][0][0]
+
+
+def test_an_exact_title_beats_a_normalised_collision() -> None:
+    """`The Mummy` resolves exactly even though three `Mummy` rows normalise alike."""
+    exact = uuid.uuid4()
+    conn, _ = _make_conn()
+    index = LiveFilmIndex(
+        [
+            (exact, "The Mummy"),
+            (uuid.uuid4(), "Mummy, The (Original)"),
+            (uuid.uuid4(), "Mummy, The (Tom Cruise)"),
+        ]
+    )
+
+    movie_id, inserted, kind = upsert_unmatched_movie(conn, index, "The Mummy")
+
+    assert movie_id == exact
+    assert inserted is False
+    assert kind == "title"
 
 
 # ---------------------------------------------------------------------------
@@ -602,6 +682,7 @@ def test_replace_dry_run_reports_the_count_and_writes_nothing(
         patch("src.scripts.import_collection.TMDBClient", return_value=_FakeTMDBClient()),
         patch("src.scripts.import_collection.match_and_enrich", side_effect=_prepared_rows),
         patch("src.scripts.import_collection.soft_delete_live_items") as soft_delete,
+        patch("src.scripts.import_collection.orphan_risk", return_value=OrphanRisk(0, 0, [])),
     ):
         stats = asyncio.run(
             run(
@@ -616,7 +697,9 @@ def test_replace_dry_run_reports_the_count_and_writes_nothing(
     assert stats.items_to_replace == 1857
     assert stats.items_replaced == 0
     soft_delete.assert_not_called()
-    conn.close.assert_called_once()
+    # Two now: the preflight that proves the DSN before TMDB, and the read the history
+    # guard needs *after* matching, since it depends on what matching produced.
+    assert conn.close.call_count == 2
     assert (
         "Would soft-delete 1857 live collection items; removed nothing" in capsys.readouterr().out
     )
@@ -689,6 +772,7 @@ def test_plain_import_keeps_per_item_transactions_and_never_replaces(tmp_path: P
 
 def test_replace_write_failure_rolls_back_the_single_connection_context(tmp_path: Path) -> None:
     preflight_conn, _ = _make_conn()
+    risk_conn, _ = _make_conn()
     write_conn, _ = _make_conn()
     plan = ReplacementPlan(1, 0, 0)
 
@@ -708,9 +792,10 @@ def test_replace_write_failure_rolls_back_the_single_connection_context(tmp_path
         patch("src.scripts.import_collection.parse_xlsx", return_value=[_make_candidate()]),
         patch(
             "src.scripts.import_collection.psycopg2.connect",
-            side_effect=[preflight_conn, write_conn],
+            side_effect=[preflight_conn, risk_conn, write_conn],
         ),
         patch("src.scripts.import_collection.replacement_plan", return_value=plan),
+        patch("src.scripts.import_collection.orphan_risk", return_value=OrphanRisk(0, 0, [])),
         patch("src.scripts.import_collection.TMDBClient", return_value=_FakeTMDBClient()),
         patch("src.scripts.import_collection.match_and_enrich", side_effect=_prepared_rows),
         patch(

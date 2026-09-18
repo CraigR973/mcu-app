@@ -47,6 +47,7 @@ import argparse
 import asyncio
 import csv
 import uuid
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -56,6 +57,7 @@ import psycopg2.extras
 
 from src.config import psycopg2_dsn, settings
 from src.matching import LOW_CONFIDENCE, MatchingEngine, MatchResult
+from src.services.letterboxd.matcher import normalise_title
 from src.services.movie_metadata import (
     credit_rows,
     movie_metadata_values,
@@ -106,6 +108,13 @@ class ImportStats:
     review: int = 0
     ambiguous: int = 0
     no_match: int = 0
+    #: Rows TMDB could not settle that were attached to a film the collection already
+    #: holds, rather than to a fresh title-only row. Batch 41; see :class:`LiveFilmIndex`.
+    films_reused: int = 0
+    #: Rows whose title matches **more than one** live film — two `Dunkirk`s, two
+    #: `Ghostbusters`. Offered, never guessed: these still mint a new row and are written
+    #: to the review file.
+    films_collection_ambiguous: int = 0
     errors: list[str] = field(default_factory=list)
 
 
@@ -282,28 +291,90 @@ def upsert_movie(conn: Any, movie: Movie) -> tuple[uuid.UUID, bool]:
         return uuid.UUID(str(existing[0])), False
 
 
-def upsert_unmatched_movie(conn: Any, title: str) -> tuple[uuid.UUID, bool]:
-    """Insert a title-only movie row for a candidate TMDB could not identify.
+class LiveFilmIndex:
+    """Every live film by exact and by normalised title, maintained across one import.
 
-    ``tmdb_id`` stays NULL, which is what marks the row as needing enrichment. There is
-    no unique constraint to lean on here — NULLs do not conflict — so the lookup is an
-    explicit select on the title.
+    **This exists because the old lookup was ``title = %s AND tmdb_id IS NULL``**, and
+    that clause is a trap once films have been identified. Measured on the 2026-09-18 dry
+    run of the fresh sheet: of 757 titles TMDB could not settle, **401 named a film that
+    had just been given a `tmdb_id`** by `OWNER-ACTIONS.md` 1i step 2. The lookup missed
+    every one, minted a duplicate, hung the new disc on it, and left **587 watch rows** on
+    a film with no disc. Nothing errored (`DECISIONS.md` #198).
+
+    Identification made that worse rather than better, which is the part worth
+    remembering: before it, `Double Indemnity` was a title-only row spelled exactly as the
+    sheet spells it, and the old lookup found it.
+
+    **Normalised matching is the second half.** Identification also *tidies* titles —
+    `Thing, The` becomes `The Thing` — so exact matching alone recovers only some of them.
+    :func:`normalise_title` is the matcher the diary import already uses for this, article
+    rotation and all, so the two agree by construction rather than by coincidence.
+
+    **More than one match is a question, not a guess.** Seven titles match two live films
+    each — two `Dunkirk`s, two `Ghostbusters`, two `Titanic`s — and nothing in a
+    spreadsheet row says which. Those mint a new row, as before, and are reported.
     """
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT id FROM movies WHERE title = %s AND tmdb_id IS NULL AND deleted_at IS NULL",
-            (title,),
-        )
-        existing = cur.fetchone()
-        if existing is not None:
-            return uuid.UUID(str(existing[0])), False
 
-        movie_id = uuid.uuid4()
+    def __init__(self, rows: list[tuple[uuid.UUID, str]]) -> None:
+        self.by_exact: dict[str, list[uuid.UUID]] = defaultdict(list)
+        self.by_normalised: dict[str, list[uuid.UUID]] = defaultdict(list)
+        for movie_id, title in rows:
+            self.add(movie_id, title)
+
+    @classmethod
+    def load(cls, conn: Any) -> LiveFilmIndex:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, title FROM movies WHERE deleted_at IS NULL")
+            return cls([(uuid.UUID(str(r[0])), r[1] or "") for r in cur.fetchall()])
+
+    def add(self, movie_id: uuid.UUID, title: str) -> None:
+        self.by_exact[(title or "").strip()].append(movie_id)
+        self.by_normalised[normalise_title(title or "")].append(movie_id)
+
+    def resolve(self, title: str) -> tuple[uuid.UUID | None, str]:
+        """Find the one live film this title names, or say why there isn't one.
+
+        Returns ``(movie_id, kind)`` where kind is ``"title"``, ``"normalised"``,
+        ``"ambiguous"`` or ``"new"``. Exact wins over normalised so that a collection
+        holding both `The Mummy` and `Mummy, The (Original)` resolves the former exactly
+        rather than calling the pair ambiguous.
+        """
+        exact = self.by_exact.get((title or "").strip(), [])
+        if len(exact) == 1:
+            return exact[0], "title"
+        if len(exact) > 1:
+            return None, "ambiguous"
+
+        normalised = self.by_normalised.get(normalise_title(title or ""), [])
+        if len(normalised) == 1:
+            return normalised[0], "normalised"
+        if len(normalised) > 1:
+            return None, "ambiguous"
+        return None, "new"
+
+
+def upsert_unmatched_movie(
+    conn: Any, index: LiveFilmIndex, title: str
+) -> tuple[uuid.UUID, bool, str]:
+    """Attach a candidate TMDB could not identify to the film the collection already has.
+
+    Returns ``(movie_id, inserted, kind)``. Only mints a title-only row — ``tmdb_id``
+    NULL, which is what marks it as needing enrichment — when the collection holds no
+    single film by that name.
+    """
+    movie_id, kind = index.resolve(title)
+    if movie_id is not None:
+        return movie_id, False, kind
+
+    movie_id = uuid.uuid4()
+    with conn.cursor() as cur:
         cur.execute(
             "INSERT INTO movies (id, title, media_type) VALUES (%s, %s, %s)",
             (str(movie_id), title, "film"),
         )
-        return movie_id, True
+    # So a second row for the same new title reuses this one rather than minting again.
+    index.add(movie_id, title)
+    return movie_id, True, kind
 
 
 def insert_credits(conn: Any, movie_id: uuid.UUID, movie: Movie) -> int:
@@ -404,6 +475,86 @@ def ensure_replacement_allowed(plan: ReplacementPlan, *, accept_split: bool) -> 
         raise ReplacementBlocked(plan)
 
 
+@dataclass(frozen=True)
+class OrphanRisk:
+    """Films holding watch history that the incoming sheet would leave without a disc."""
+
+    films: int
+    watch_rows: int
+    examples: list[str]
+
+
+class HistoryWouldBeOrphaned(RuntimeError):
+    """Raised before a replacement that would strand watch history on disc-less films."""
+
+    def __init__(self, risk: OrphanRisk) -> None:
+        self.risk = risk
+        shown = ", ".join(risk.examples[:5])
+        super().__init__(
+            "Refusing --replace-items: "
+            f"{risk.films} films holding {risk.watch_rows} watch rows would be left "
+            f"without a disc — no row in the sheet resolves to them ({shown}"
+            f"{', …' if risk.films > len(risk.examples[:5]) else ''}). "
+            "Pass --accept-split to accept that those watches stay on films the new "
+            "collection no longer has."
+        )
+
+
+def orphan_risk(conn: Any, rows: list[ImportRow], index: LiveFilmIndex) -> OrphanRisk:
+    """Work out which watched films the sheet will not reach — **before** removing anything.
+
+    This is the mirror of :func:`replacement_plan`'s guard and was the gap that let the
+    2026-09-18 dry run plan to strand 587 watch rows in silence (`DECISIONS.md` #198).
+    That guard asks "is any *unidentified* film watched?"; this asks the question that
+    actually matters — "will every watched film still own a disc afterwards?" — which
+    covers identified films whose sheet row TMDB cannot settle.
+
+    Resolution mirrors the write path exactly: a matched row lands on its ``tmdb_id``, an
+    unmatched row on whatever :meth:`LiveFilmIndex.resolve` finds. Anything else would
+    make the guard a second opinion rather than a check.
+    """
+    tmdb_ids = {row.movie.id for row in rows if row.movie is not None}
+    reached: set[uuid.UUID] = set()
+    for row in rows:
+        if row.movie is None:
+            movie_id, _ = index.resolve(row.candidate.title)
+            if movie_id is not None:
+                reached.add(movie_id)
+
+    with conn.cursor() as cur:
+        if tmdb_ids:
+            cur.execute(
+                "SELECT id FROM movies WHERE deleted_at IS NULL AND tmdb_id = ANY(%s)",
+                (list(tmdb_ids),),
+            )
+            reached.update(uuid.UUID(str(r[0])) for r in cur.fetchall())
+
+        cur.execute(
+            """
+            SELECT m.id, m.title, count(w.id)
+            FROM movies m
+            JOIN watch_log w ON w.movie_id = m.id AND w.deleted_at IS NULL
+            WHERE m.deleted_at IS NULL
+            GROUP BY m.id, m.title
+            """
+        )
+        watched = [(uuid.UUID(str(r[0])), r[1], int(r[2])) for r in cur.fetchall()]
+
+    stranded = [(title, n) for movie_id, title, n in watched if movie_id not in reached]
+    stranded.sort(key=lambda pair: (-pair[1], pair[0]))
+    return OrphanRisk(
+        films=len(stranded),
+        watch_rows=sum(n for _, n in stranded),
+        examples=[f"{title} ({n})" for title, n in stranded],
+    )
+
+
+def ensure_history_survives(risk: OrphanRisk, *, accept_split: bool) -> None:
+    """Stop before a replacement that would strand watch history, unless told not to."""
+    if risk.films and not accept_split:
+        raise HistoryWouldBeOrphaned(risk)
+
+
 def soft_delete_live_items(conn: Any) -> int:
     """Move every live collection item to Trash and return the affected count."""
     with conn.cursor() as cur:
@@ -429,17 +580,22 @@ def lock_replacement_tables(conn: Any) -> None:
         cur.execute("LOCK TABLE collection_items, movies, watch_log IN SHARE ROW EXCLUSIVE MODE")
 
 
-def write_import_row(conn: Any, row: ImportRow, stats: ImportStats) -> None:
+def write_import_row(conn: Any, row: ImportRow, stats: ImportStats, index: LiveFilmIndex) -> None:
     """Write one prepared row into the caller's current transaction."""
     if row.movie is not None:
         movie_id, inserted = upsert_movie(conn, row.movie)
         if inserted:
             stats.movies_inserted += 1
+            index.add(movie_id, row.movie.title)
         insert_credits(conn, movie_id, row.movie)
     else:
-        movie_id, inserted = upsert_unmatched_movie(conn, row.candidate.title)
+        movie_id, inserted, kind = upsert_unmatched_movie(conn, index, row.candidate.title)
         if inserted:
             stats.movies_inserted += 1
+            if kind == "ambiguous":
+                stats.films_collection_ambiguous += 1
+        else:
+            stats.films_reused += 1
 
     if insert_collection_item(conn, movie_id, row.candidate):
         stats.items_inserted += 1
@@ -462,13 +618,18 @@ def replace_collection_items(
     rolls the deletion and every insert back together.
     """
     lock_replacement_tables(conn)
+    index = LiveFilmIndex.load(conn)
     plan = replacement_plan(conn)
     ensure_replacement_allowed(plan, accept_split=accept_split)
+    # Repeated under the lock for the same reason the plan is: the sheet was matched
+    # against TMDB long before this transaction opened, and a watch written in between
+    # would change the answer.
+    ensure_history_survives(orphan_risk(conn, rows, index), accept_split=accept_split)
     stats.items_to_replace = plan.live_items
     stats.items_replaced = soft_delete_live_items(conn)
 
     for row in rows:
-        write_import_row(conn, row, stats)
+        write_import_row(conn, row, stats, index)
 
     return plan
 
@@ -515,6 +676,26 @@ async def run(
 
     write_review_file(review_rows, review_out)
     print(f"Review file written → {review_out} ({len(review_rows)} rows)")
+
+    # The history check needs the matched rows, so unlike the row-count plan it cannot run
+    # in the preflight. It runs here for both a dry run and a real one, so a rehearsal
+    # reports the same refusal the real run would hit rather than looking clean.
+    if replace_items:
+        risk_conn = psycopg2.connect(psycopg2_dsn(settings.database_url))
+        try:
+            index = LiveFilmIndex.load(risk_conn)
+            risk = orphan_risk(risk_conn, rows, index)
+        finally:
+            risk_conn.close()
+        if risk.films:
+            print(
+                f"⚠ {risk.films} films holding {risk.watch_rows} watch rows would be left "
+                f"without a disc: {', '.join(risk.examples[:8])}"
+                f"{', …' if risk.films > 8 else ''}"
+            )
+        else:
+            print("Every watched film still owns a disc after the replacement")
+        ensure_history_survives(risk, accept_split=accept_split)
 
     if dry_run:
         if replace_items:
@@ -565,13 +746,18 @@ async def run(
                 stats.errors.append(f"replacement rolled back — {exc}")
             return stats
 
+        # Built once, then kept current by `upsert_unmatched_movie` and
+        # `write_import_row` as rows are minted. Rebuilding it per row would be 1,880
+        # reads of 1,854 films for no gain, since this loop is the only writer.
+        index = LiveFilmIndex.load(conn)
+
         for i, row in enumerate(rows, 1):
             if i % 50 == 0 or i == len(rows):
                 print(f"  {i}/{len(rows)} written", flush=True)
 
             try:
                 with conn:  # one transaction per item
-                    write_import_row(conn, row, stats)
+                    write_import_row(conn, row, stats, index)
             except psycopg2.Error as exc:
                 stats.errors.append(f"row {row.candidate.row_number}: insert error — {exc}")
     finally:
@@ -630,7 +816,7 @@ def main() -> None:
                 accept_split=args.accept_split,
             )
         )
-    except ReplacementBlocked as exc:
+    except (ReplacementBlocked, HistoryWouldBeOrphaned) as exc:
         parser.error(str(exc))
 
     print("\n=== Import Summary ===")
@@ -644,6 +830,8 @@ def main() -> None:
         print(f"  Items to replace  : {stats.items_to_replace}")
         print(f"  Items soft-deleted: {stats.items_replaced}")
     print(f"  Ambiguous         : {stats.ambiguous}  (catalogued, identification deferred)")
+    print(f"  Reused a live film: {stats.films_reused}  (unsettled title, film already held)")
+    print(f"  Title names 2 films: {stats.films_collection_ambiguous}  (new row; see review)")
     print(f"  Low confidence    : {stats.review}  → {args.review_out}")
     print(f"  No match          : {stats.no_match}")
     if stats.errors:

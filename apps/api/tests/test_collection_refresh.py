@@ -18,10 +18,14 @@ import pytest
 
 from src.config import psycopg2_dsn
 from src.scripts.import_collection import (
+    HistoryWouldBeOrphaned,
     ImportRow,
     ImportStats,
+    LiveFilmIndex,
     ReplacementBlocked,
+    ensure_history_survives,
     ensure_replacement_allowed,
+    orphan_risk,
     replace_collection_items,
     replacement_plan,
 )
@@ -102,6 +106,17 @@ def _insert_watch(conn, *, movie_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID
             (str(watch_id), str(movie_id), str(user_id), date(2026, 9, 16)),
         )
     return watch_id
+
+
+def _seed_profile(conn) -> uuid.UUID:
+    user_id = uuid.uuid4()
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO profiles (id, display_name, role, is_active) "
+            "VALUES (%s, %s, 'admin', true)",
+            (str(user_id), f"Orphan Guard {uuid.uuid4().hex[:8]}"),
+        )
+    return user_id
 
 
 def _replacement_movie(tmdb_id: int) -> Movie:
@@ -249,3 +264,111 @@ def test_guarded_replace_keeps_movies_and_watches_and_recalculates_ownership(db)
         assert old_formats == ["4k_uhd"]
         assert old_source_row == source_row
         assert is_deleted is True
+
+
+# ---------------------------------------------------------------------------
+# Batch 41 — the history-orphan guard
+#
+# Batch 39's guard asks "is any *unidentified* film watched?". The 2026-09-18 dry run of
+# the fresh sheet passed that guard with 1 and planned to strand **587 watch rows**
+# anyway, because the films at risk had just been identified (`DECISIONS.md` #198). The
+# question that actually protects the history is the one below: will every watched film
+# still own a disc when this is over?
+# ---------------------------------------------------------------------------
+
+
+def _row_for(title: str, *, tmdb_id: int | None = None, source_row: int = 2) -> ImportRow:
+    candidate = ImportCandidate(
+        row=source_row,
+        title=title,
+        formats=["blu_ray"],
+        location=None,
+        category=None,
+        sub_category=None,
+        media_type="film",
+    )
+    return ImportRow(
+        candidate=candidate,
+        movie=_replacement_movie(tmdb_id) if tmdb_id is not None else None,
+    )
+
+
+def test_orphan_risk_sees_a_watched_identified_film_the_sheet_cannot_settle(db) -> None:
+    """The exact shape of the 2026-09-18 defect, in Postgres.
+
+    `Double Indemnity` is identified and watched. The sheet names it, but TMDB returns an
+    ambiguous result so the row arrives with no `movie` — and before Batch 41 that meant a
+    fresh title-only row and a stranded watch. The guard must see it coming.
+    """
+    user_id = _seed_profile(db)
+    watched = _insert_movie(db, title="Double Indemnity", tmdb_id=996, year=1944)
+    _insert_item(db, movie_id=watched, source_row=2, formats=["blu_ray"])
+    _insert_watch(db, movie_id=watched, user_id=user_id)
+
+    index = LiveFilmIndex.load(db)
+    risk = orphan_risk(db, [_row_for("Double Indemnity")], index)
+
+    assert risk.films == 0, "the index resolves it by title, so nothing is stranded"
+
+    # And with the film absent from the index — the pre-Batch-41 behaviour — it is seen.
+    risk_without = orphan_risk(db, [_row_for("Double Indemnity")], LiveFilmIndex([]))
+    assert risk_without.films == 1
+    assert risk_without.watch_rows == 1
+    assert "Double Indemnity (1)" in risk_without.examples
+
+
+def test_orphan_risk_counts_a_watched_film_the_sheet_no_longer_lists(db) -> None:
+    """A disc genuinely sold or removed still strands its history, and should be named."""
+    user_id = _seed_profile(db)
+    gone = _insert_movie(db, title="Sold Last Year", tmdb_id=997, year=1999)
+    _insert_item(db, movie_id=gone, source_row=3, formats=["dvd"])
+    _insert_watch(db, movie_id=gone, user_id=user_id)
+
+    risk = orphan_risk(db, [_row_for("Something Else Entirely")], LiveFilmIndex.load(db))
+
+    assert risk.films == 1
+    assert risk.watch_rows == 1
+    assert risk.examples == ["Sold Last Year (1)"]
+
+
+def test_orphan_risk_follows_a_matched_row_to_its_tmdb_id(db) -> None:
+    """Resolution must mirror the write path, not second-guess it.
+
+    A high-confidence row lands on its `tmdb_id`, so a film reached that way is safe even
+    though its title in the sheet differs from the title we hold.
+    """
+    user_id = _seed_profile(db)
+    watched = _insert_movie(db, title="Ben-Hur", tmdb_id=665, year=1959)
+    _insert_item(db, movie_id=watched, source_row=4, formats=["blu_ray"])
+    _insert_watch(db, movie_id=watched, user_id=user_id)
+
+    risk = orphan_risk(db, [_row_for("Ben Hur", tmdb_id=665)], LiveFilmIndex.load(db))
+
+    assert risk.films == 0
+
+
+def test_a_film_with_no_watch_history_is_not_a_reason_to_refuse(db) -> None:
+    """The guard protects history, not discs. Losing an unwatched film is ordinary."""
+    unwatched = _insert_movie(db, title="Never Watched", tmdb_id=998, year=2001)
+    _insert_item(db, movie_id=unwatched, source_row=5, formats=["dvd"])
+
+    risk = orphan_risk(db, [_row_for("Something Else")], LiveFilmIndex.load(db))
+
+    assert risk.films == 0
+
+
+def test_the_replacement_refuses_rather_than_stranding_history(db) -> None:
+    user_id = _seed_profile(db)
+    watched = _insert_movie(db, title="Stranded", tmdb_id=999, year=1980)
+    _insert_item(db, movie_id=watched, source_row=6, formats=["dvd"])
+    _insert_watch(db, movie_id=watched, user_id=user_id)
+
+    risk = orphan_risk(db, [_row_for("Nothing Like It")], LiveFilmIndex.load(db))
+
+    with pytest.raises(HistoryWouldBeOrphaned) as caught:
+        ensure_history_survives(risk, accept_split=False)
+    assert "1 films holding 1 watch rows" in str(caught.value)
+    assert "Stranded (1)" in str(caught.value)
+
+    # Named and accepted, it proceeds — the same override Batch 39 established.
+    ensure_history_survives(risk, accept_split=True)
