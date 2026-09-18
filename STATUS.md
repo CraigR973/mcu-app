@@ -35,9 +35,14 @@ history, so the refresh needs **`--accept-split`** for that single film. The con
 bounded to one watch: if the new sheet retitles it, that watch stays on the old Trash row
 while the new disc attaches to a fresh one.
 
-> ## ⛔ DO NOT RUN `--replace-items`. The dry run on 2026-09-18 says it would split
-> **401 films holding 587 watch rows** from their discs — silently, and Batch 39's guard
-> does not catch it.
+> ## ✅ Fixed by Batch 41 on 2026-09-18 — was: DO NOT RUN `--replace-items`
+>
+> **Re-measured against production after the fix: 5 films holding 9 watch rows, each named
+> in the refusal**, against 401 films and 587 watch rows silently before it. The record of
+> what was wrong follows, because the mechanism is worth keeping.
+>
+> The dry run on 2026-09-18 would have split **401 films holding 587 watch rows** from
+> their discs — silently, and Batch 39's guard did not catch it.
 >
 > **Why.** An ambiguous spreadsheet row is catalogued title-only, and the lookup that
 > reuses an existing film is `WHERE title = %s AND tmdb_id IS NULL`
@@ -69,7 +74,20 @@ and *Hacksaw Ridge*, and a set of shelf moves. Replacing all 1,857 items to capt
 changes is worth re-weighing against `OWNER-ACTIONS.md` 1k option 2, refresh-in-place,
 which was rejected when the delta was unknown.
 
-**Next step is a decision, not a run.** Nothing has been written.
+**Batch 41 shipped 2026-09-18.** A row TMDB cannot settle now attaches to the live film
+of that title — exact first, then through the diary matcher's `normalise_title`, since
+identification also tidied 155 titles. A title naming two live films is offered, never
+guessed. And `orphan_risk` asks the question that actually protects the history — *will
+every watched film still own a disc afterwards?* — refusing unless `--accept-split`, on a
+dry run as well as a real one.
+
+**The 5 that remain**, from the verified dry run: *A Christmas Carol* (2 watches),
+*Misery* (2), *Project Hail Mary* (2), *The Secret Identity of Jack the Ripper* (2),
+*Crime and Punishment* (1). Some are the two-films-one-title case, some are discs the new
+sheet no longer lists. Nine watch rows, all named.
+
+**Next step is Craig's: decide whether to accept those 9 watches and run the live
+replacement.** Nothing has been written — every run so far has been a dry run.
 
 > **The command in 1i needs `TMDB_READ_TOKEN` exported as well as `DATABASE_URL`.** The
 > first attempt exported only the latter, `config.py` defaults the token to `""`, and all

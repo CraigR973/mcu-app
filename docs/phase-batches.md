@@ -1641,6 +1641,35 @@ attaching edition-specific specs to the wrong new disc.
 
 ---
 
+### Batch 41 — An unsettled row reuses the film we hold 🟡
+**Unblocks the refresh in `OWNER-ACTIONS.md` 1k.** Model: **Opus 5 · xhigh** /
+GPT-5.6 Sol · Extra High. `DECISIONS.md` #198.
+
+**🟡 by size, `xhigh` by what it stands in front of** — the 1,857-row replacement.
+
+**The problem, measured rather than predicted.** The 2026-09-18 dry run of the fresh
+spreadsheet would have duplicated **401 films and stranded 587 watch rows**, silently.
+`upsert_unmatched_movie` reused an existing film only via `title = %s AND tmdb_id IS NULL`,
+and Batch 40's identification run had just given 395 films a `tmdb_id`. Batch 39's guard
+passed it, because that guard counts *unidentified* films holding watches — which was 1.
+
+**Acceptance.**
+- A row TMDB cannot settle attaches to the live film of that title, identified or not.
+- A title identification tidied (`Thing, The` → `The Thing`) still resolves, through the
+  same `normalise_title` the diary matcher uses.
+- A title naming two live films mints a new row and is reported — offered, never guessed.
+- An exact title beats a normalised collision.
+- `orphan_risk` refuses the replacement when any watched film would end without a disc,
+  names the films, and is overridden only by `--accept-split`.
+- Its resolution mirrors the write path — `tmdb_id` for a matched row, the index for an
+  unsettled one — so it is a check rather than a second opinion.
+- A dry run reports the same refusal and the same reuse counts a real run would.
+- Gate green with the Postgres tests running rather than skipping.
+
+> **⏸ The live replacement stays the owner's.** This batch only makes it safe to consider.
+
+---
+
 ### Batch 40 — Identification on a re-run 🟢
 **Unblocks `OWNER-ACTIONS.md` 1i step 2, which unblocks 1k.** Model: **Opus 5 · xhigh** /
 GPT-5.6 Sol · Extra High. `DECISIONS.md` #197.
@@ -1755,6 +1784,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **S** | ~~S1~~ → ~~S2~~ → ~~S3~~ → ~~S4~~ → **~~S8~~ → ~~S5~~** → ~~S6~~ → ~~S7~~ | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Complete — all eight shipped 2026-09-15.** The 2026-09-14 owner snags. Ordered by dependency: S4 needs S3's navigation shape, S6 needs somewhere to put the merged screen, S5 reuses S8's matcher, S7 needs S8's watch history. **No blocking checkpoint** — the two owner actions (S8's live import, S5's first live fetch) sit *inside* their batches and stop there, so the group runs end to end. `xhigh` derived from S8 and S7 |
 | — | 39 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The go-live collection refresh (`DECISIONS.md` #192). Solo: it touches the import path alone, and its live run waits on a spreadsheet that does not exist yet. 🟡 by size, `xhigh` by blast radius — 1,857 live rows, and two failure modes that announce nothing |
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
+| — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

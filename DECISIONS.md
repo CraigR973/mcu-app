@@ -3567,3 +3567,45 @@ contemporaneous.
      *This does not identify anything.* The live run remains Craig's, is still
      `OWNER-ACTIONS.md` 1i step 2, and still has to precede the collection refresh —
      which is exactly the ordering Batch 39's guard refuses to let anyone skip (#194).
+
+
+### 2026-09-18 — The refresh would have stranded the history it was protecting
+
+198. **A sheet row TMDB cannot settle now attaches to the film the collection already
+     holds, instead of minting a duplicate. Batch 41.** `upsert_unmatched_movie` looked up
+     `title = %s AND tmdb_id IS NULL`. That clause was correct while every unsettled film
+     was unidentified — and became a trap the moment #197's identification run gave 395
+     films a `tmdb_id`. Measured on the 2026-09-18 dry run of the fresh spreadsheet:
+     **401 films holding 587 watch rows** would have been duplicated, the new disc hung on
+     the duplicate, and the history left on a film with no disc. Nothing would have errored.
+
+     *Why it was invisible.* Batch 39's guard (#194) asks whether any **unidentified** film
+     holds watch history. After #197 the answer was 1, so the guard passed. The case it
+     cannot see is the mirror: an **identified** film whose sheet row TMDB will not settle.
+     The dry run's own summary said `627 ambiguous` and nothing else — a number that looked
+     like deferred enrichment rather than 587 watches about to come loose.
+
+     *Identification made it worse, and that is the part to remember.* Before #197,
+     `Double Indemnity` was a title-only row spelled exactly as the sheet spells it, and
+     the old lookup found it. Doing the right thing in the right order created the hazard.
+
+     **The fix has three parts.** `LiveFilmIndex` resolves a title against live films
+     regardless of `tmdb_id`, exact first and then through the same `normalise_title` the
+     diary matcher uses — necessary because identification also *tidies* titles, and 155 of
+     the 395 were retitled. More than one match is offered, never guessed: seven titles name
+     two live films each. And `orphan_risk` asks the question that actually protects the
+     history — *will every watched film still own a disc afterwards?* — refusing unless
+     `--accept-split`, on a dry run as well as a real one.
+
+     *Measured after the fix, against production:* **5 films holding 9 watch rows**, each
+     named in the refusal, against 401/587 silent before.
+
+     *Why not let the importer take TMDB's leading candidate for an ambiguous row:* it would
+     be wrong **69 times** here. The sheet's `Titanic` is #16535 (1953) in this collection;
+     TMDB leads with #597 (1997). `War of the Worlds` is #74 (2005); TMDB leads with a 2024
+     remake. Our own row is better evidence than TMDB popularity, which is what #31 and #174
+     already say in other words.
+
+     *A smaller thing fixed alongside:* a dry run reported `Reused a live film: 0` whatever
+     the real figure was, because `ImportStats` is filled by the write path a dry run never
+     runs. A zero that cannot be anything else is how this defect stayed invisible for a day.
