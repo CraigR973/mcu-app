@@ -279,13 +279,15 @@ def test_guarded_replace_keeps_movies_and_watches_and_recalculates_ownership(db)
 
 def _row_for(title: str, *, tmdb_id: int | None = None, source_row: int = 2) -> ImportRow:
     candidate = ImportCandidate(
-        row=source_row,
+        row_number=source_row,
         title=title,
         formats=["blu_ray"],
-        location=None,
-        category=None,
+        location_raw="Front 2nd shelf",
+        section="Front",
+        shelf="2nd",
+        category="Film",
         sub_category=None,
-        media_type="film",
+        item_type=None,
     )
     return ImportRow(
         candidate=candidate,
