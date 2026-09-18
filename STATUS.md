@@ -2,92 +2,49 @@
 
 ## Now
 
-**Batch 40 — Identification on a re-run shipped on 2026-09-17 at `78dc054`.**
-`--identify` had been unreachable since 2026-09-15 and nothing said so: the
-already-imported check sat above the match, so once step 1 wrote the 1,555 watches every
-entry short-circuited on its viewing id and the identification branch was never reached.
-Measured against live Neon before the fix — Craig 593 already imported / **0 identified**,
-Mark 962 / **0 identified**. The skip now suppresses the watch row alone (#197). TMDB is
-called once per film rather than once per watch, and a later entry follows a row that
-identification merged away instead of writing against a deleted movie.
+**The collection refresh is done — 2026-09-18. 1,880 discs live, 0 watch rows lost.**
+The fresh spreadsheet replaced the April catalogue in one transaction. Verified against a
+full pre-run snapshot of `movies`, `collection_items` and `watch_log`:
 
-**Verified against production after the merge.** The rehearsal now reports
-`films to identify` — **Craig 181, Mark 316, union exactly 396** — against 0 before the
-fix, and the union matches the guard's own count of unidentified films holding watches
-row for row. Both rehearsals wrote nothing: every live count is unchanged.
+| | before | after |
+|---|---|---|
+| live discs | 1,857 | **1,880** |
+| films | 1,854 | **1,888** (34 new) |
+| watch rows | 1,555 | **1,555** — none lost, none repointed |
+| films that lost a `tmdb_id` | — | **0** |
+| old items in Trash | 0 | **1,857**, all 10 Blu-ray.com spec rows among them |
 
-**`OWNER-ACTIONS.md` 1i step 2 is done — both diaries ran on 2026-09-17 at Craig's
-instruction. 395 films identified, 0 watches written, 1 film left.** Craig's diary: 180 of
-181. Mark's: **215 of 215, no failures**. Unidentified films holding watch history
-**396 → 1**, and the watches behind them **582 → 1**. Unidentified films overall 753 → 358.
+The 4K upgrades are live — *Inception*, *I Am Legend* and *Hacksaw Ridge* are all
+`4k_uhd` on Front 1st now — along with 25 new titles and the shelf moves.
 
-Checked against a snapshot of all 1,854 `movies` rows taken before the first run:
-**0 rows deleted, 0 added, 0 orphaned watch rows, 0 rows that lost a `tmdb_id`.** No merge
-was needed in either run — no film was in the collection twice under two titles. **155
-titles were tidied** in passing: `Ben Hur` → `Ben-Hur` (1959), `Postman Always rings
-twice, The` → `The Postman Always Rings Twice` (1946). Discs still 1,857 and watches still
-1,555, both untouched.
+**7 watch rows sit on 4 films with no disc**, which is the accepted cost and was named
+before the run: *Misery* (2) and *Project Hail Mary* (2) were **already** disc-less
+beforehand, so the refresh took nothing from them; *The Secret Identity of Jack the
+Ripper* (2) was removed from the sheet deliberately; *Crime and Punishment* (1) is a TMDB
+duplicate — the same 1935 film exists twice there and the sheet row matched the other copy.
+Only the last two lost anything, which is exactly what Batch 42's guard predicted.
 
-**The one holdout is `The Pacific (2010)`**, a TV miniseries — TMDB's *film* search has no
-confident match and there is no correct film id to give it by hand. It holds **1 watch
-row**. Batch 39's guard refuses `--replace-items` while any unidentified film holds watch
-history, so the refresh needs **`--accept-split`** for that single film. The consequence is
-bounded to one watch: if the new sheet retitles it, that watch stays on the old Trash row
-while the new disc attaches to a fresh one.
+**It took three batches on the day to make that safe**, and the middle one is the lesson.
+The first dry run against the fresh sheet would have duplicated **401 films and stranded
+587 watch rows in silence** — because Batch 40's identification run, done correctly and in
+the right order that morning, had given those films a `tmdb_id` and so broken the
+`title = %s AND tmdb_id IS NULL` lookup the importer used to reuse a film (#198). Batch 39's
+guard passed it: that guard counts *unidentified* films holding watches, and the answer was
+1. Batch 41 made unsettled rows attach to the film already held and added the guard that
+asks the question that matters — will every watched film still own a disc? Batch 42
+narrowed it to films that actually *lose* one, after it named two that were never at risk
+(#199).
 
-> ## ✅ Fixed by Batch 41 on 2026-09-18 — was: DO NOT RUN `--replace-items`
->
-> **Re-measured against production after the fix: 5 films holding 9 watch rows, each named
-> in the refusal**, against 401 films and 587 watch rows silently before it. The record of
-> what was wrong follows, because the mechanism is worth keeping.
->
-> The dry run on 2026-09-18 would have split **401 films holding 587 watch rows** from
-> their discs — silently, and Batch 39's guard did not catch it.
->
-> **Why.** An ambiguous spreadsheet row is catalogued title-only, and the lookup that
-> reuses an existing film is `WHERE title = %s AND tmdb_id IS NULL`
-> (`import_collection.py:294`). Yesterday's identification gave 395 films a `tmdb_id`, so
-> that lookup now **misses them**, mints a brand-new unidentified row, and hangs the new
-> disc on it. The identified row keeps the watch history and loses its disc.
->
-> **Identification made this failure mode worse, not better.** Before it, `Double
-> Indemnity` was an unidentified row titled exactly that, and the ambiguous row would have
-> found it. The measured dry run: 1,880 rows, **1,116 high-confidence, 627 ambiguous, 120
-> no-match, 17 low-confidence** — and 401 of those unmatched rows map to a film that now
-> holds watch history.
->
-> **Batch 39's guard is the mirror of this case and cannot see it.** It counts
-> *unidentified* films holding watches, which is now 1. The unguarded case is *identified*
-> films whose sheet row will not match confidently.
->
-> **The fix:** when a row is ambiguous, attach it to the live film whose title already
-> matches instead of minting a new row. Measured, that resolves all 401 — and in **69** of
-> them our own row is *more* right than TMDB's leading candidate, because the diary gave a
-> year and the collection is curated. `Titanic` in the sheet is #16535 (1953) here; TMDB
-> leads with #597 (1997). `War of the Worlds` is #74 (2005); TMDB leads with a 2024
-> remake. Guessing from TMDB popularity would have been wrong 69 times.
+| batch | what | ships |
+|---|---|---|
+| 40 | identification reachable on a re-run | `78dc054` |
+| 41 | unsettled rows reuse the film we hold + orphan guard | `2d2858c` |
+| 42 | guard counts discs lost, not films ending disc-less | `00bdcd9` |
 
-**Also worth knowing: the sheet's actual delta is small.** 25 brand-new titles, 2 renames
-(`Outlaw Josey Wales [Clint Eastwood Western Collection]` → `Outlaw Josey Wales, The`) and
-31 rows whose format or location changed — real 4K upgrades for *Inception*, *I Am Legend*
-and *Hacksaw Ridge*, and a set of shelf moves. Replacing all 1,857 items to capture ~58
-changes is worth re-weighing against `OWNER-ACTIONS.md` 1k option 2, refresh-in-place,
-which was rejected when the delta was unknown.
-
-**Batch 41 shipped 2026-09-18.** A row TMDB cannot settle now attaches to the live film
-of that title — exact first, then through the diary matcher's `normalise_title`, since
-identification also tidied 155 titles. A title naming two live films is offered, never
-guessed. And `orphan_risk` asks the question that actually protects the history — *will
-every watched film still own a disc afterwards?* — refusing unless `--accept-split`, on a
-dry run as well as a real one.
-
-**The 5 that remain**, from the verified dry run: *A Christmas Carol* (2 watches),
-*Misery* (2), *Project Hail Mary* (2), *The Secret Identity of Jack the Ripper* (2),
-*Crime and Punishment* (1). Some are the two-films-one-title case, some are discs the new
-sheet no longer lists. Nine watch rows, all named.
-
-**Next step is Craig's: decide whether to accept those 9 watches and run the live
-replacement.** Nothing has been written — every run so far has been a dry run.
+**Next step: nothing is blocked.** `OWNER-ACTIONS.md` 1k and 1i are both closed. Worth
+doing when convenient: re-run the diary import, since ~25 newly catalogued films may pick
+up some of the 739 diary entries that previously matched nothing, and the 28 ambiguous
+entries should now mostly settle themselves on the years identification supplied.
 
 > **The command in 1i needs `TMDB_READ_TOKEN` exported as well as `DATABASE_URL`.** The
 > first attempt exported only the latter, `config.py` defaults the token to `""`, and all
@@ -688,6 +645,28 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-18 (the collection refresh ran — 1,880 discs, 0 watches lost)** — Three batches
+  and one live replacement. Batch 41 (`2d2858c`) and Batch 42 (`00bdcd9`) shipped, then the
+  fresh spreadsheet replaced the April catalogue: 1,857 items to Trash, 1,880 inserted, 34
+  new films, **1,555 watch rows unchanged and none repointed**. All 10 Blu-ray.com spec rows
+  are preserved on the Trash items as #195 accepted. 7 watch rows sit on 4 disc-less films;
+  two of those were already disc-less before the run.
+
+  **The day's real finding was between the batches.** The first dry run of the fresh sheet
+  would have duplicated 401 films and stranded 587 watch rows silently, *because* of the
+  identification run done correctly that morning: `upsert_unmatched_movie` reused a film
+  only via `title = %s AND tmdb_id IS NULL`, and 395 films had just gained a `tmdb_id`
+  (#198). Batch 39's guard passed it — it counts unidentified films holding watches, which
+  was 1. Doing the right thing in the right order created the hazard, and only running the
+  rehearsal and reading past the summary line caught it. Batch 42 then narrowed the new
+  guard after it named two films that were never at risk (#199), on the reasoning that a
+  guard with a one-flag override must not cry wolf.
+
+  Also corrected mid-flight: two claims in Batch 40's write-up that a throwaway branch
+  disproved — the per-film identification guard is about duplicate *report* lines, not TMDB
+  cost, since the matcher already caches searches.
+
 
 - **2026-09-17 (Batch 40 — identification on a re-run, `78dc054`)** — Craig asked
   whether to import a fresher spreadsheet. Checking the prerequisite turned up that

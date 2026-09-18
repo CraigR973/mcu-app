@@ -524,7 +524,19 @@ feed comes back full.
 every scheduled fire since 2026-09-10 (item 1). The sync record already carries a `trigger`
 column that accepts `cron`, so wiring one up afterwards needs no migration.*
 
-### 1k. Run the guarded spreadsheet refresh *(opened 2026-09-15)* ⛔ **blocks go live**
+### 1k. ~~Run the guarded spreadsheet refresh~~ — **DONE 2026-09-18**
+
+- [x] **Ran at Craig's instruction on 2026-09-18. 1,857 items to Trash, 1,880 imported, 34
+      new films, and 0 of the 1,555 watch rows lost or repointed.** Verified against a full
+      pre-run snapshot. The 10 Blu-ray.com spec rows are preserved on the Trash items (#195).
+      7 watch rows sit on 4 disc-less films — *Misery* and *Project Hail Mary* were already
+      disc-less, *Jack the Ripper* was removed from the sheet, and *Crime and Punishment* is
+      a TMDB duplicate record. **It needed Batches 41 and 42 first**: the first rehearsal
+      would have stranded 587 watch rows in silence (`DECISIONS.md` #198, #199).
+
+*The original analysis is kept below, because the mechanism is worth keeping.*
+
+#### How it was weighed *(historic)*
 
 **Re-running the importer over the live database will not refresh anything.** That is the
 finding, and it is the reason this item exists — `DECISIONS.md` #192 has the detail.
