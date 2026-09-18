@@ -512,6 +512,13 @@ def orphan_risk(conn: Any, rows: list[ImportRow], index: LiveFilmIndex) -> Orpha
     Resolution mirrors the write path exactly: a matched row lands on its ``tmdb_id``, an
     unmatched row on whatever :meth:`LiveFilmIndex.resolve` finds. Anything else would
     make the guard a second opinion rather than a check.
+
+    **Only films that hold a disc today can lose one.** The first cut asked which watched
+    films end up without a disc, which is not the same question and reported *Project Hail
+    Mary* — watched twice, never owned on disc — as though the refresh were about to take
+    something from it. A guard that cries wolf on a film nothing is happening to teaches
+    people to pass ``--accept-split`` without reading, which is exactly the habit it exists
+    to prevent (`DECISIONS.md` #199).
     """
     tmdb_ids = {row.movie.id for row in rows if row.movie is not None}
     reached: set[uuid.UUID] = set()
@@ -535,6 +542,10 @@ def orphan_risk(conn: Any, rows: list[ImportRow], index: LiveFilmIndex) -> Orpha
             FROM movies m
             JOIN watch_log w ON w.movie_id = m.id AND w.deleted_at IS NULL
             WHERE m.deleted_at IS NULL
+              AND EXISTS (
+                  SELECT 1 FROM collection_items i
+                  WHERE i.movie_id = m.id AND i.deleted_at IS NULL
+              )
             GROUP BY m.id, m.title
             """
         )

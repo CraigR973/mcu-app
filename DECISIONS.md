@@ -3609,3 +3609,24 @@ contemporaneous.
      *A smaller thing fixed alongside:* a dry run reported `Reused a live film: 0` whatever
      the real figure was, because `ImportStats` is filled by the write path a dry run never
      runs. A zero that cannot be anything else is how this defect stayed invisible for a day.
+
+
+### 2026-09-18 — A guard that names the wrong films teaches people to ignore it
+
+199. **`orphan_risk` counts films that *lose* a disc, not films that end without one.
+     Batch 42.** The first cut, shipped hours earlier in #198, asked which watched films
+     would hold no live `collection_items` row afterwards. Run against production it named
+     five, and **two of them were not at risk of anything**: *Project Hail Mary*, watched
+     twice and never owned on disc, and *Misery*, whose watches and disc already sit on two
+     different rows. Neither loses anything to a replacement.
+
+     *Why that matters more than the two wrong numbers:* this guard's only job is to stop a
+     person at a destructive command, and the override is a single flag. A guard that names
+     films nothing is happening to is one a tired person learns to `--accept-split` past
+     without reading — which is how #194's guard came to be passed on 2026-09-18 while 587
+     watch rows were about to come loose. Precision is the safety property here, not
+     conservatism.
+
+     Measured on the same production dry run: **5 films / 9 watch rows → 3 films / 5 watch
+     rows**, and each of the three is now a real one — a disc removed from the sheet, and
+     two rows whose sheet title matches a different TMDB film than the one we hold.

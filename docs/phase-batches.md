@@ -1641,6 +1641,23 @@ attaching edition-specific specs to the wrong new disc.
 
 ---
 
+### Batch 42 — The guard counts discs lost 🟢
+**Sharpens Batch 41's guard.** Model: **Opus 5 · high** / GPT-5.6 Sol · High.
+`DECISIONS.md` #199.
+
+**The problem.** Batch 41's `orphan_risk` asked which watched films end without a disc.
+Against production that named five, and two were not at risk: *Project Hail Mary* (watched,
+never owned on disc) and *Misery* (already split between two rows today). A guard whose
+override is one flag must not name films nothing is happening to.
+
+**Acceptance.**
+- A watched film that holds no live disc today is not reported as losing one.
+- A watched film that does hold one still is — the narrowing cannot silently disable it.
+- A film whose only disc is already in Trash does not count.
+- Gate green with the Postgres tests running.
+
+---
+
 ### Batch 41 — An unsettled row reuses the film we hold 🟡
 **Unblocks the refresh in `OWNER-ACTIONS.md` 1k.** Model: **Opus 5 · xhigh** /
 GPT-5.6 Sol · Extra High. `DECISIONS.md` #198.
@@ -1785,6 +1802,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 39 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The go-live collection refresh (`DECISIONS.md` #192). Solo: it touches the import path alone, and its live run waits on a spreadsheet that does not exist yet. 🟡 by size, `xhigh` by blast radius — 1,857 live rows, and two failure modes that announce nothing |
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
+| — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

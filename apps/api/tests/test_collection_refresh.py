@@ -374,3 +374,53 @@ def test_the_replacement_refuses_rather_than_stranding_history(db) -> None:
 
     # Named and accepted, it proceeds — the same override Batch 39 established.
     ensure_history_survives(risk, accept_split=True)
+
+
+def test_a_watched_film_that_never_had_a_disc_is_not_reported_as_losing_one(db) -> None:
+    """*Project Hail Mary*: watched twice, owned on no disc, listed in no sheet.
+
+    The first cut of this guard counted it, because it asked which watched films end
+    without a disc rather than which *lose* one. Nothing is being taken from a film that
+    never had one, and a guard that names it teaches people to pass `--accept-split`
+    without reading (`DECISIONS.md` #199).
+    """
+    user_id = _seed_profile(db)
+    discless = _insert_movie(db, title="Project Hail Mary", tmdb_id=687163, year=2026)
+    _insert_watch(db, movie_id=discless, user_id=user_id)
+    _insert_watch(db, movie_id=discless, user_id=user_id)
+
+    risk = orphan_risk(db, [_row_for("Something Else")], LiveFilmIndex.load(db))
+
+    assert risk.films == 0
+    assert risk.watch_rows == 0
+
+
+def test_a_watched_film_that_does_hold_a_disc_is_still_reported(db) -> None:
+    """The other half of the same rule, so narrowing it cannot quietly disable it."""
+    user_id = _seed_profile(db)
+    owned = _insert_movie(db, title="Jack the Ripper", tmdb_id=220168, year=1988)
+    _insert_item(db, movie_id=owned, source_row=7, formats=["dvd"])
+    _insert_watch(db, movie_id=owned, user_id=user_id)
+
+    risk = orphan_risk(db, [_row_for("Not In The Sheet")], LiveFilmIndex.load(db))
+
+    assert risk.films == 1
+    assert risk.watch_rows == 1
+    assert risk.examples == ["Jack the Ripper (1)"]
+
+
+def test_the_disc_a_film_holds_must_be_live_to_count(db) -> None:
+    """A film whose only disc is already in Trash has nothing left to lose either."""
+    user_id = _seed_profile(db)
+    trashed = _insert_movie(db, title="Already Gone", tmdb_id=220169, year=1990)
+    item_id = _insert_item(db, movie_id=trashed, source_row=8, formats=["dvd"])
+    _insert_watch(db, movie_id=trashed, user_id=user_id)
+    with db.cursor() as cur:
+        cur.execute(
+            "UPDATE collection_items SET deleted_at = now() AT TIME ZONE 'utc' WHERE id = %s",
+            (str(item_id),),
+        )
+
+    risk = orphan_risk(db, [_row_for("Not In The Sheet")], LiveFilmIndex.load(db))
+
+    assert risk.films == 0
