@@ -35,8 +35,41 @@ history, so the refresh needs **`--accept-split`** for that single film. The con
 bounded to one watch: if the new sheet retitles it, that watch stays on the old Trash row
 while the new disc attaches to a fresh one.
 
-**Next step: the fresh spreadsheet, then `--replace-items --dry-run`, then the live
-replacement.** All three are Craig's.
+> ## ⛔ DO NOT RUN `--replace-items`. The dry run on 2026-09-18 says it would split
+> **401 films holding 587 watch rows** from their discs — silently, and Batch 39's guard
+> does not catch it.
+>
+> **Why.** An ambiguous spreadsheet row is catalogued title-only, and the lookup that
+> reuses an existing film is `WHERE title = %s AND tmdb_id IS NULL`
+> (`import_collection.py:294`). Yesterday's identification gave 395 films a `tmdb_id`, so
+> that lookup now **misses them**, mints a brand-new unidentified row, and hangs the new
+> disc on it. The identified row keeps the watch history and loses its disc.
+>
+> **Identification made this failure mode worse, not better.** Before it, `Double
+> Indemnity` was an unidentified row titled exactly that, and the ambiguous row would have
+> found it. The measured dry run: 1,880 rows, **1,116 high-confidence, 627 ambiguous, 120
+> no-match, 17 low-confidence** — and 401 of those unmatched rows map to a film that now
+> holds watch history.
+>
+> **Batch 39's guard is the mirror of this case and cannot see it.** It counts
+> *unidentified* films holding watches, which is now 1. The unguarded case is *identified*
+> films whose sheet row will not match confidently.
+>
+> **The fix:** when a row is ambiguous, attach it to the live film whose title already
+> matches instead of minting a new row. Measured, that resolves all 401 — and in **69** of
+> them our own row is *more* right than TMDB's leading candidate, because the diary gave a
+> year and the collection is curated. `Titanic` in the sheet is #16535 (1953) here; TMDB
+> leads with #597 (1997). `War of the Worlds` is #74 (2005); TMDB leads with a 2024
+> remake. Guessing from TMDB popularity would have been wrong 69 times.
+
+**Also worth knowing: the sheet's actual delta is small.** 25 brand-new titles, 2 renames
+(`Outlaw Josey Wales [Clint Eastwood Western Collection]` → `Outlaw Josey Wales, The`) and
+31 rows whose format or location changed — real 4K upgrades for *Inception*, *I Am Legend*
+and *Hacksaw Ridge*, and a set of shelf moves. Replacing all 1,857 items to capture ~58
+changes is worth re-weighing against `OWNER-ACTIONS.md` 1k option 2, refresh-in-place,
+which was rejected when the delta was unknown.
+
+**Next step is a decision, not a run.** Nothing has been written.
 
 > **The command in 1i needs `TMDB_READ_TOKEN` exported as well as `DATABASE_URL`.** The
 > first attempt exported only the latter, `config.py` defaults the token to `""`, and all
