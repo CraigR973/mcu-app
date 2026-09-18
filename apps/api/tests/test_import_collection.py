@@ -33,6 +33,7 @@ from src.scripts.import_collection import (
     insert_credits,
     lock_replacement_tables,
     replacement_plan,
+    resolution_counts,
     run,
     soft_delete_live_items,
     upsert_movie,
@@ -929,3 +930,31 @@ def test_review_row_renders_a_missing_year_rather_than_omitting_it() -> None:
     )
     row = review_row(_make_candidate(title="Scapegoat"), result, "ambiguous_match")
     assert row["alternatives"] == "9:Scapegoat (?)"
+
+
+def test_a_dry_run_can_count_resolutions_the_write_path_never_reaches() -> None:
+    """`ImportStats` learns the reuse counts from the write path, which a dry run skips.
+
+    So the rehearsal reported `Reused a live film: 0` whatever the real number was —
+    a zero that could not be anything else. Reporting one of those is how the defect this
+    batch fixes stayed invisible for a day, so the dry run computes them instead.
+    """
+    held = uuid.uuid4()
+    index = LiveFilmIndex(
+        [
+            (held, "The Thing"),
+            (uuid.uuid4(), "Dunkirk"),
+            (uuid.uuid4(), "Dunkirk"),
+            (uuid.uuid4(), "Double Indemnity"),
+        ]
+    )
+    rows = [
+        ImportRow(candidate=_make_candidate(title="Thing, The")),
+        ImportRow(candidate=_make_candidate(title="Double Indemnity")),
+        ImportRow(candidate=_make_candidate(title="Dunkirk")),
+        ImportRow(candidate=_make_candidate(title="Never Heard Of It")),
+    ]
+
+    counts = resolution_counts(rows, index)
+
+    assert counts == {"title": 1, "normalised": 1, "ambiguous": 1, "new": 1}

@@ -549,6 +549,22 @@ def orphan_risk(conn: Any, rows: list[ImportRow], index: LiveFilmIndex) -> Orpha
     )
 
 
+def resolution_counts(rows: list[ImportRow], index: LiveFilmIndex) -> dict[str, int]:
+    """How the unsettled rows will resolve, countable *before* anything is written.
+
+    :class:`ImportStats` learns this from the write path, which a dry run never runs — so
+    a rehearsal reported ``Reused a live film: 0`` however many it would reuse. Reporting
+    a zero that cannot be anything else is the failure this batch exists to stop, so the
+    dry run computes it here instead.
+    """
+    counts = {"title": 0, "normalised": 0, "ambiguous": 0, "new": 0}
+    for row in rows:
+        if row.movie is None:
+            _, kind = index.resolve(row.candidate.title)
+            counts[kind] += 1
+    return counts
+
+
 def ensure_history_survives(risk: OrphanRisk, *, accept_split: bool) -> None:
     """Stop before a replacement that would strand watch history, unless told not to."""
     if risk.films and not accept_split:
@@ -695,6 +711,13 @@ async def run(
             )
         else:
             print("Every watched film still owns a disc after the replacement")
+        if dry_run:
+            counts = resolution_counts(rows, index)
+            print(
+                f"Unsettled rows: {counts['title'] + counts['normalised']} would attach to a "
+                f"film already held ({counts['normalised']} by a tidied title), "
+                f"{counts['ambiguous']} name two films, {counts['new']} are new"
+            )
         ensure_history_survives(risk, accept_split=accept_split)
 
     if dry_run:
@@ -830,8 +853,9 @@ def main() -> None:
         print(f"  Items to replace  : {stats.items_to_replace}")
         print(f"  Items soft-deleted: {stats.items_replaced}")
     print(f"  Ambiguous         : {stats.ambiguous}  (catalogued, identification deferred)")
-    print(f"  Reused a live film: {stats.films_reused}  (unsettled title, film already held)")
-    print(f"  Title names 2 films: {stats.films_collection_ambiguous}  (new row; see review)")
+    if not args.dry_run:
+        print(f"  Reused a live film: {stats.films_reused}  (unsettled, film already held)")
+        print(f"  Title names 2 films: {stats.films_collection_ambiguous}  (new row; see review)")
     print(f"  Low confidence    : {stats.review}  → {args.review_out}")
     print(f"  No match          : {stats.no_match}")
     if stats.errors:
