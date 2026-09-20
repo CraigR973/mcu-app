@@ -646,6 +646,16 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-20 (diary re-run after the refresh — 11 new watches)** — Additive run of both
+  diaries now the 34 new films are catalogued. Craig 1, Mark 10; `watch_log` 1,555 → 1,566.
+  Mark's are mostly the Agatha Christie TV films and the noir downloads the April sheet
+  never listed — *Murder in Three Acts*, *Thirteen at Dinner*, *Appointment with Death*,
+  *Murder Is Easy*, *Way Out West*, *Blood on Satan's Claw*. **Unidentified films holding
+  watches went 1 → 3**: *The Firm* and *Nocturnal Animals* arrived in the refresh without a
+  `tmdb_id` and have now been watched. `--identify` was deliberately not passed — it is a
+  separate decision from writing watches (#175) and this run was authorised as the import.
+
+
 - **2026-09-18 (the collection refresh ran — 1,880 discs, 0 watches lost)** — Three batches
   and one live replacement. Batch 41 (`2d2858c`) and Batch 42 (`00bdcd9`) shipped, then the
   fresh spreadsheet replaced the April catalogue: 1,857 items to Trash, 1,880 inserted, 34
