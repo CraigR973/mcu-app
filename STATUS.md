@@ -646,6 +646,25 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-20 (identification tidy-up — and Jack the Ripper got its disc back)** — Ran
+  `--identify` over both diaries at Craig's instruction after the import above. **3 films
+  identified**, all from Mark's: *Nocturnal Animals* (340666), *The Firm* (37233, retitled
+  from `Firm, The`) and *The Secret Identity of Jack the Ripper* (220168).
+
+  **The third was a merge, and it repaired a split the refresh had made.** The fresh sheet
+  lists the film as plain `Jack the Ripper`, which matched nothing and arrived as a new
+  title-only row carrying the disc — while the old `The Secret Identity of Jack the Ripper`
+  row kept its 2 watches and no disc, one of the two genuinely-stranded films from 2026-09-18.
+  Mark's diary resolved the new row to 220168, `apply_identification` found the existing row
+  and merged them, and the disc and the history are back together. `movies` 1,888 → 1,887,
+  and **0 orphaned watch rows** created by the merge.
+
+  Watch rows on disc-less films: **7 → 5** (*Misery* 2, *Project Hail Mary* 2, *Crime and
+  Punishment* 1 — the first two were already disc-less before any of this). **Unidentified
+  films holding watch history is back to 1**, and that one is *The Pacific*, a miniseries
+  TMDB's film search cannot match. Craig's diary reported 1 film to identify and identified
+  0, which is that same title.
+
 - **2026-09-20 (diary re-run after the refresh — 11 new watches)** — Additive run of both
   diaries now the 34 new films are catalogued. Craig 1, Mark 10; `watch_log` 1,555 → 1,566.
   Mark's are mostly the Agatha Christie TV films and the noir downloads the April sheet
