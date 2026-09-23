@@ -377,6 +377,9 @@ async def test_the_column_stores_only_the_constrained_fields(
         "decadeFrom": FIXTURE_DECADE,
         "decadeTo": FIXTURE_DECADE,
         "minRating": None,
+        # Batch T3: the vocabulary gained runtime, and the wire carries every key.
+        "runtimeMin": None,
+        "runtimeMax": None,
         "watched": False,
     }
 
