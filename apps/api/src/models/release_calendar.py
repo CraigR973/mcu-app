@@ -3,7 +3,17 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -119,3 +129,31 @@ class CalendarFeedToken(Base, UUIDPrimaryKeyMixin):
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<CalendarFeedToken {self.user_id} revoked={self.revoked_at_utc is not None}>"
+
+
+class CalendarRefreshState(Base):
+    """When the release calendar last refreshed, and what it found — Batch T5.
+
+    **One row.** The calendar refreshes itself when it is read and is more than a day old,
+    and this is how two readers at once start one refresh rather than two: the claim is a
+    conditional update of this row. It is also how the page says how fresh it is.
+    """
+
+    __tablename__ = "calendar_refresh_state"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_calendar_refresh_singleton"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    last_started_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
+    last_finished_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
+    #: The last run's failures, joined. A refresh that half-worked is still recorded as
+    #: finished, because its rows are real; this is where the other half is said.
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_created: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_updated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_unchanged: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: How many films had a disc date in the window. The number T5's acceptance is stated in.
+    last_disc_releases: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

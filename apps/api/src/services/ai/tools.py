@@ -27,6 +27,7 @@ from typing import Any
 
 import structlog
 from anthropic.types.tool_param import ToolParam
+from fastapi import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.profile import Profile, UserRole
@@ -254,7 +255,9 @@ async def execute_tool(
             return _truncate((await collection_stats(user, db)).model_dump())
 
         if name == "upcoming_releases":
-            return _truncate((await list_calendar(user, db)).model_dump())
+            # A task list nobody runs: the assistant reading the calendar should not wait on
+            # Batch T5's refresh, and the next page view will start it anyway.
+            return _truncate((await list_calendar(user, db, BackgroundTasks())).model_dump())
 
         if name == "add_to_wanted":
             movie_id = await _find_movie(db, str(tool_input.get("title", "")))

@@ -285,7 +285,7 @@ async def test_a_match_is_pushed_to_both_at_once(db: AsyncSession, pushes: Recor
     assert sorted(pushes.sent) == sorted([craigs_phone, marks_phone])
 
 
-def test_the_invite_key_names_the_night_and_the_person() -> None:
+async def test_the_invite_key_names_the_night_and_the_person() -> None:
     night, person = uuid.uuid4(), uuid.uuid4()
     assert invite_key(night, person) == f"movie-night-invite:{night}:{person}"
 

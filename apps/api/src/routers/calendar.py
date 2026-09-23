@@ -30,7 +30,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 from typing import Annotated, cast
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,7 +50,14 @@ from src.schemas.discovery import (
     CalendarSubscriptionResponse,
     ReleaseType,
 )
-from src.services.calendar import ingest_upcoming, issue_feed_token, resolve_feed_token
+from src.services.calendar import (
+    REFRESH_AFTER,
+    calendar_refreshed_at,
+    issue_feed_token,
+    refresh_calendar,
+    refresh_calendar_if_stale,
+    resolve_feed_token,
+)
 from src.services.ical import CalendarEvent, render_calendar
 
 router = APIRouter(prefix="/api/v1", tags=["calendar"])
@@ -99,22 +106,40 @@ async def _entries_between(db: AsyncSession, start: date, end: date) -> list[Rel
     )
 
 
+async def _refresh_if_stale(db: AsyncSession, background_tasks: BackgroundTasks) -> None:
+    """Batch T5: a read of a stale calendar refreshes it, after the response has gone.
+
+    The reader gets today's rows at once; the next reader gets fresh ones. Staleness is
+    checked here so a fresh calendar costs one indexed read, not a background task.
+    """
+    refreshed = await calendar_refreshed_at(db)
+    if refreshed is None or refreshed < utcnow() - REFRESH_AFTER:
+        background_tasks.add_task(refresh_calendar_if_stale)
+
+
 @router.get("/calendar", response_model=CalendarListResponse)
 async def list_calendar(
     _user: CurrentUser,
     db: Database,
+    background_tasks: BackgroundTasks,
     days: Annotated[int, Query(ge=1, le=730)] = 120,
 ) -> CalendarListResponse:
     """Upcoming releases, soonest first — §6.5's `/calendar`."""
     today = utc_today()
     entries = await _entries_between(db, today, today + timedelta(days=days))
-    return CalendarListResponse(items=[_entry(entry) for entry in entries], total=len(entries))
+    await _refresh_if_stale(db, background_tasks)
+    return CalendarListResponse(
+        items=[_entry(entry) for entry in entries],
+        total=len(entries),
+        refreshedAt=await calendar_refreshed_at(db),
+    )
 
 
 @router.get("/calendar/month", response_model=CalendarMonthResponse)
 async def calendar_month(
     _user: CurrentUser,
     db: Database,
+    background_tasks: BackgroundTasks,
     month: Annotated[str, Query(pattern=r"^\d{4}-\d{2}$")],
 ) -> CalendarMonthResponse:
     """§7.4's monthly view, bucketed by day server-side.
@@ -135,6 +160,7 @@ async def calendar_month(
 
     grouped: dict[str, list[CalendarEntryResponse]] = defaultdict(list)
     entries = await _entries_between(db, start, end)
+    await _refresh_if_stale(db, background_tasks)
     for entry in entries:
         grouped[entry.release_date.isoformat()].append(_entry(entry))
 
@@ -177,6 +203,7 @@ async def subscribe_to_calendar(user: CurrentUser, db: Database) -> CalendarSubs
 async def calendar_feed(
     request: Request,
     db: Database,
+    background_tasks: BackgroundTasks,
     token: Annotated[str, Query(min_length=16, max_length=200)],
 ) -> Response:
     """The unauthenticated iCal feed — §7.4.
@@ -196,6 +223,9 @@ async def calendar_feed(
 
     today = utc_today()
     entries = await _entries_between(db, today - FEED_LOOKBACK, today + FEED_HORIZON)
+    # A subscribed calendar app polls even when nobody opens the app, so its reads keep
+    # the calendar fresh too (Batch T5).
+    await _refresh_if_stale(db, background_tasks)
 
     events = [
         CalendarEvent(
@@ -237,25 +267,20 @@ async def ingest_calendar(
     user: AdminUser,
     db: Database,
     tmdb: TmdbClient,
-    dry_run: Annotated[bool, Query(alias="dryRun")] = False,
-    pages: Annotated[int, Query(ge=1, le=10)] = 3,
 ) -> CalendarIngestResponse:
-    """§7.3's ingestion, on demand.
+    """§7.3's ingestion, on demand — the same refresh a stale read starts, now.
 
-    Admin-only: it spends a shared TMDB budget and writes a table both people read. As with
-    Batch 13's refresh, **the schedule is not created here** — a cron is a hosting change
-    this project keeps explicit (`DECISIONS.md` #60).
+    Admin-only: it spends a shared TMDB budget and writes a table both people read. Since
+    Batch T5 the calendar also refreshes itself when read and more than a day old, so this
+    is the "now, please" button rather than the only way it ever updates.
     """
     del user
-    genres = await _genres_of_interest(db)
-    result = await ingest_upcoming(
-        db,
-        tmdb,
-        region="GB",
-        genre_ids=genres,
-        pages=pages,
-        dry_run=dry_run,
-    )
+    result = await refresh_calendar(db, tmdb, force=True)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The calendar is already refreshing. Try again in a few minutes.",
+        )
     return CalendarIngestResponse(
         created=result.created,
         updated=result.updated,
@@ -263,17 +288,5 @@ async def ingest_calendar(
         skipped=result.skipped,
         total=result.total,
         errors=result.errors,
-        dryRun=dry_run,
+        dryRun=False,
     )
-
-
-async def _genres_of_interest(db: AsyncSession) -> set[int] | None:
-    """§7.3's "filter by genres of interest", taken from the collection itself.
-
-    ``None`` when the collection has no genre data at all, which keeps everything rather
-    than filtering to nothing — an empty calendar is a worse answer than a broad one.
-    """
-    from src.routers.discovery import _collected_genres
-
-    genres = await _collected_genres(db, 8)
-    return set(genres) or None

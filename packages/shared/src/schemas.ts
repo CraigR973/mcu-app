@@ -923,6 +923,8 @@ export const calendarMonthSchema = z.object({
 export const calendarListSchema = z.object({
   items: z.array(calendarEntrySchema),
   total: z.number().int().nonnegative(),
+  /** Batch T5 — when the calendar last refreshed from TMDB. Defaulted, as #205 explains. */
+  refreshedAt: z.string().nullable().default(null),
 })
 
 /** A path, not a URL: the API cannot know its own public origin without trusting the

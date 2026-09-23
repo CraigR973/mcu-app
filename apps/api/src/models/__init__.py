@@ -75,6 +75,7 @@ from src.models.release_calendar import (
     RELEASE_TYPE_LABELS,
     RELEASE_TYPES,
     CalendarFeedToken,
+    CalendarRefreshState,
     ReleaseCalendarEntry,
 )
 from src.models.smart_collection import (
@@ -157,6 +158,7 @@ __all__ = [
     "RELEASE_TYPES",
     "RELEASE_TYPE_LABELS",
     "CalendarFeedToken",
+    "CalendarRefreshState",
     "RateLimitCounter",
     "ReleaseCalendarEntry",
     "RefreshToken",

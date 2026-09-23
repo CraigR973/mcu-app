@@ -24,16 +24,24 @@ import re
 import secrets
 import uuid
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
-from sqlalchemy import select
+import structlog
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utc_today, utcnow
+from src.database import AsyncSessionLocal
 from src.models.movie import Movie
-from src.models.release_calendar import CalendarFeedToken, ReleaseCalendarEntry
+from src.models.release_calendar import (
+    CalendarFeedToken,
+    CalendarRefreshState,
+    ReleaseCalendarEntry,
+)
 from src.tmdb import TMDBClient
-from src.tmdb.models import TMDB_RELEASE_PHYSICAL
+from src.tmdb.models import TMDB_RELEASE_PHYSICAL, SearchResult
+
+logger = structlog.get_logger(__name__)
 
 #: How far ahead the ingestion looks. §7.3's acceptance asks for rows "spanning the next 3
 #: months", and TMDB's upcoming list is roughly that window anyway.
@@ -123,117 +131,167 @@ async def _movies_by_tmdb_id(db: AsyncSession, tmdb_ids: list[int]) -> dict[int,
     return {int(tmdb_id): movie_id for tmdb_id, movie_id in rows if tmdb_id is not None}
 
 
-async def ingest_upcoming(
+#: TMDB's release types. 5 is a physical release (disc), 2 and 3 are limited and wide
+#: cinema releases. Pipe means "either" in TMDB's filter syntax.
+PHYSICAL_TYPES = "5"
+CINEMA_TYPES = "2|3"
+TMDB_CINEMA_TYPES = frozenset({2, 3})
+
+#: How many pages of each kind one run reads, at 20 films a page. 28 GB disc releases were
+#: listed for the 14 weeks from 23 Sep 2026, so six months of discs is a few pages; the cap
+#: is there so a run cannot walk TMDB's whole index.
+MAX_PAGES = 10
+
+#: The calendar refreshes itself when it is read and older than this.
+REFRESH_AFTER = timedelta(hours=24)
+#: A refresh that claimed the row this recently is assumed to be still running.
+REFRESH_RUNNING_FOR = timedelta(minutes=30)
+
+
+async def _discovered(
+    tmdb: TMDBClient,
+    *,
+    region: str,
+    release_types: str,
+    today: date,
+    horizon: date,
+    result: IngestResult,
+) -> list[SearchResult]:
+    """Every film TMDB lists with a release of these types in the window, once each.
+
+    Keyed by id, not appended: TMDB's paginated lists are re-sorted between requests, so a
+    film can appear on two pages of one run — the defect the first live ingestion hit in
+    Batch 17. A page that fails keeps the pages before it.
+    """
+    films: dict[int, SearchResult] = {}
+    for page in range(1, MAX_PAGES + 1):
+        try:
+            batch = await tmdb.discover_by_release_type(
+                region=region,
+                release_types=release_types,
+                date_from=today,
+                date_to=horizon,
+                page=page,
+            )
+        except Exception as exc:  # noqa: BLE001 - one bad page must not lose the others
+            result.errors.append(f"{release_types} page {page}: {exc}")
+            break
+        for film in batch.results:
+            films.setdefault(film.id, film)
+        if page >= batch.total_pages or not batch.results:
+            break
+    return list(films.values())
+
+
+async def ingest_releases(
     db: AsyncSession,
     tmdb: TMDBClient,
     *,
     region: str = "GB",
     genre_ids: set[int] | None = None,
-    pages: int = 3,
+    horizon_days: int = 183,
     dry_run: bool = False,
 ) -> IngestResult:
-    """Populate `release_calendar` from TMDB's upcoming list — §7.3.
+    """Fill `release_calendar` with disc and cinema releases, six months ahead — Batch T5.
 
-    ``genre_ids`` is §7.3's "filter by genres of interest". Passing ``None`` keeps
-    everything, which is what the first run wants: an empty calendar is worse than one with
-    a few films nobody will buy.
+    **It asks TMDB by release type.** Until Batch T5 this read `/movie/upcoming` — films
+    about to reach cinemas — and looked for disc dates among them. Those films almost never
+    have one yet: 1 of 58 when measured, and none written in production. Asked directly for
+    GB physical releases, TMDB listed 28 for the 14 weeks from 23 Sep 2026, re-issues of
+    older films among them.
+
+    - **Discs** are every GB type-5 release in the window, classified 4K or Blu-ray by the
+      note a contributor typed (:func:`classify_physical`). They are not genre-filtered: a
+      collector's disc calendar is about the discs.
+    - **Cinema dates** keep §7.3's genres of interest.
+    - Each film's own GB date comes from its release dates, because the date on a discover
+      result is the film's premiere. **The earliest date in the window wins**, per type.
+
+    Idempotent on `(tmdb_id, release_type, region)`, as before.
     """
     result = IngestResult()
     today = utc_today()
-    horizon = today + HORIZON
+    horizon = today + timedelta(days=horizon_days)
 
-    # Keyed, not appended. **TMDB's paginated `upcoming` list is not stable**: it is
-    # re-sorted between requests, so a film can appear on page 2 and again on page 3 of
-    # the same run. Found by the first live ingestion — *Shadows of Beirut* came back
-    # twice and the unique constraint fired mid-insert.
-    #
-    # A `--dry-run` cannot catch this: it never writes, so it never reaches the
-    # constraint. `STATUS.md` gotcha 16, restated — "the first real write against real
-    # data is its own test stage".
-    # **Keyed on (film, release type) since Batch S6**, because one film now yields up to
-    # three rows — a cinema date and up to two physical ones — and the unique constraint
-    # this feeds is `(tmdb_id, release_type, region)`. Keyed rather than appended for the
-    # original reason too: TMDB's paginated `upcoming` list is re-sorted between requests.
+    discs = await _discovered(
+        tmdb,
+        region=region,
+        release_types=PHYSICAL_TYPES,
+        today=today,
+        horizon=horizon,
+        result=result,
+    )
+    cinema = await _discovered(
+        tmdb, region=region, release_types=CINEMA_TYPES, today=today, horizon=horizon, result=result
+    )
+
+    #: (tmdb id, release type) -> (tmdb id, title, date, type, overview, poster)
     candidates: dict[tuple[int, str], tuple[int, str, date, str, str | None, str | None]] = {}
-    for page in range(1, pages + 1):
-        try:
-            batch = await tmdb.get_upcoming(region=region, page=page)
-        except Exception as exc:  # noqa: BLE001 - one bad page must not lose the others
-            result.errors.append(f"page {page}: {exc}")
-            break
-        if not batch.results:
-            break
-        for entry in batch.results:
-            when = _release_year(entry.release_date)
-            if when is None or when < today or when > horizon:
-                result.skipped += 1
-                continue
-            if genre_ids and not genre_ids.intersection(entry.genre_ids or []):
-                result.skipped += 1
-                continue
-            if (entry.id, "theatrical") in candidates:
-                # The same film on two pages. Counted once, not skipped — it is a
-                # duplicate of something already accepted, not a rejection.
-                continue
-            candidates[(entry.id, "theatrical")] = (
-                entry.id,
-                entry.title,
+
+    def offer(film: SearchResult, kind: str, when: date) -> None:
+        existing = candidates.get((film.id, kind))
+        if existing is None or when < existing[2]:
+            candidates[(film.id, kind)] = (
+                film.id,
+                film.title,
                 when,
-                "theatrical",
-                entry.overview,
-                entry.poster_path,
+                kind,
+                film.overview,
+                film.poster_path,
             )
 
-    # ------------------------------------------------------------------
-    # Batch S6, snag 2 — the physical dates the vocabulary has carried since
-    # Batch 17 while nothing ever wrote one.
-    # ------------------------------------------------------------------
-    #
-    # One pass over the films already collected, so a film seen on two pages is asked
-    # about once. **Expect almost nothing, and report it**: measured 2026-09-15 over
-    # three pages of `/movie/upcoming` GB, 1 of 58 films had a GB physical date at all.
-    # A film that has not reached cinemas rarely has a disc date yet, and TMDB's UK
-    # physical dates are community-maintained.
-    #
-    # A failed lookup is recorded and the film **keeps its cinema date** — a physical
-    # lookup that failed must never cost a row that already worked.
-    for tmdb_id in sorted({key[0] for key in candidates}):
-        source = candidates[(tmdb_id, "theatrical")]
-        result.physical_checked += 1
+    wanted_cinema = {
+        film.id: film
+        for film in cinema
+        if not genre_ids or genre_ids.intersection(film.genre_ids or [])
+    }
+    result.skipped += len(cinema) - len(wanted_cinema)
+    disc_ids = {film.id for film in discs}
+    everything = {film.id: film for film in [*discs, *wanted_cinema.values()]}
+
+    for tmdb_id in sorted(everything):
+        film = everything[tmdb_id]
+        is_disc = tmdb_id in disc_ids
+        if is_disc:
+            result.physical_checked += 1
         try:
             dates = await tmdb.get_release_dates(tmdb_id)
         except Exception as exc:  # noqa: BLE001 - one film must not lose the others
             result.errors.append(f"release_dates {tmdb_id}: {exc}")
             continue
-        found = False
+        found_disc = False
         for released in dates.for_country(region):
-            if released.type != TMDB_RELEASE_PHYSICAL:
-                continue
             when = _release_year(released.release_date)
             if when is None or when < today or when > horizon:
                 continue
-            kind = classify_physical(released.note)
-            if kind is None:
-                continue
-            found = True
-            # **The earliest date wins**, not whichever TMDB happened to list first. A
-            # film can carry two type-5 entries of one format — a release and a box set —
-            # and the unique constraint on `(tmdb_id, release_type, region)` allows one
-            # row, so something has to choose. Somebody waiting for the disc cares when
-            # they can first buy it.
-            existing_entry = candidates.get((tmdb_id, kind))
-            if existing_entry is None or when < existing_entry[2]:
-                candidates[(tmdb_id, kind)] = (
-                    tmdb_id,
-                    source[1],
-                    when,
-                    kind,
-                    source[4],
-                    source[5],
-                )
-        if found:
+            if released.type == TMDB_RELEASE_PHYSICAL and is_disc:
+                kind = classify_physical(released.note)
+                if kind is None:
+                    continue
+                offer(film, kind, when)
+                found_disc = True
+            elif released.type in TMDB_CINEMA_TYPES and tmdb_id in wanted_cinema:
+                offer(film, "theatrical", when)
+        if found_disc:
             result.physical_found += 1
 
+    await _write_candidates(db, candidates, region=region, result=result, dry_run=dry_run)
+    await _write_curated_events(
+        db, region=region, today=today, horizon=horizon, result=result, dry_run=dry_run
+    )
+    if not dry_run:
+        await db.commit()
+    return result
+
+
+async def _write_candidates(
+    db: AsyncSession,
+    candidates: dict[tuple[int, str], tuple[int, str, date, str, str | None, str | None]],
+    *,
+    region: str,
+    result: IngestResult,
+    dry_run: bool,
+) -> None:
     known = await _movies_by_tmdb_id(db, sorted({key[0] for key in candidates}))
     existing = {
         (row.tmdb_id, row.release_type, row.region): row
@@ -280,6 +338,16 @@ async def ingest_upcoming(
             row.poster_path = poster
             row.movie_id = known.get(tmdb_id) or row.movie_id
 
+
+async def _write_curated_events(
+    db: AsyncSession,
+    *,
+    region: str,
+    today: date,
+    horizon: date,
+    result: IngestResult,
+    dry_run: bool,
+) -> None:
     for title, kind, when in CURATED_EVENTS:
         if when < today or when > horizon:
             result.skipped += 1
@@ -311,9 +379,112 @@ async def ingest_upcoming(
                 )
             )
 
-    if not dry_run:
+
+# ---------------------------------------------------------------------------
+# Batch T5 — the calendar keeps itself fresh
+# ---------------------------------------------------------------------------
+
+
+async def claim_refresh(db: AsyncSession, *, now: datetime, force: bool = False) -> bool:
+    """Take the right to refresh, if the calendar is stale and nobody else has it.
+
+    One conditional ``UPDATE``, so two readers at the same moment cannot both win: the
+    database decides. ``force`` (the admin button, the command) skips the "is it stale"
+    test but still respects a refresh that is running.
+    """
+    running_since = now - REFRESH_RUNNING_FOR
+    stale_before = now - REFRESH_AFTER
+    conditions = [
+        CalendarRefreshState.id == 1,
+        or_(
+            CalendarRefreshState.last_started_utc.is_(None),
+            CalendarRefreshState.last_started_utc < running_since,
+            and_(
+                CalendarRefreshState.last_finished_utc.is_not(None),
+                CalendarRefreshState.last_finished_utc >= CalendarRefreshState.last_started_utc,
+            ),
+        ),
+    ]
+    if not force:
+        conditions.append(
+            or_(
+                CalendarRefreshState.last_finished_utc.is_(None),
+                CalendarRefreshState.last_finished_utc < stale_before,
+            )
+        )
+    claimed = await db.execute(
+        update(CalendarRefreshState)
+        .where(*conditions)
+        .values(last_started_utc=now)
+        .returning(CalendarRefreshState.id)
+    )
+    won = claimed.scalar_one_or_none() is not None
+    await db.commit()
+    return won
+
+
+async def refresh_calendar(
+    db: AsyncSession, tmdb: TMDBClient, *, force: bool = False, now: datetime | None = None
+) -> IngestResult | None:
+    """Refresh the calendar if it is stale (or ``force``) and nobody else is — Batch T5.
+
+    ``None`` when there was nothing to do. The run is recorded whether or not TMDB
+    co-operated: a run that half-worked still wrote real rows, and the page says how fresh
+    the calendar is from ``last_finished_utc``.
+    """
+    now = now or utcnow()
+    if not await claim_refresh(db, now=now, force=force):
+        return None
+    from src.routers.discovery import _collected_genres
+
+    genres = set(await _collected_genres(db, 8)) or None
+    try:
+        result = await ingest_releases(db, tmdb, region="GB", genre_ids=genres)
+    except Exception as exc:
+        await db.rollback()
+        await db.execute(
+            update(CalendarRefreshState)
+            .where(CalendarRefreshState.id == 1)
+            .values(last_finished_utc=utcnow(), last_error=f"refresh failed: {exc}")
+        )
         await db.commit()
+        raise
+    await db.execute(
+        update(CalendarRefreshState)
+        .where(CalendarRefreshState.id == 1)
+        .values(
+            last_finished_utc=utcnow(),
+            last_error="; ".join(result.errors) or None,
+            last_created=result.created,
+            last_updated=result.updated,
+            last_unchanged=result.unchanged,
+            last_disc_releases=result.physical_found,
+        )
+    )
+    await db.commit()
     return result
+
+
+async def refresh_calendar_if_stale() -> None:
+    """The background half of a read: refresh a stale calendar after the response is sent.
+
+    Its own session and its own TMDB client, because the request's are gone by the time
+    this runs. **This is not an in-process scheduler** (#60 rules those out): nothing runs
+    on a timer. A read triggers idempotent work at most once a day, and a container
+    restarting mid-run only means the next read finishes the job.
+    """
+    try:
+        async with AsyncSessionLocal() as db, TMDBClient() as tmdb:
+            await refresh_calendar(db, tmdb)
+    except Exception:  # noqa: BLE001 - a background refresh must never surface to a reader
+        logger.warning("calendar_refresh_failed", exc_info=True)
+
+
+async def calendar_refreshed_at(db: AsyncSession) -> datetime | None:
+    """When the calendar last finished refreshing, for the page to say."""
+    return await db.scalar(
+        select(CalendarRefreshState.last_finished_utc).where(CalendarRefreshState.id == 1)
+    )
 
 
 # ---------------------------------------------------------------------------

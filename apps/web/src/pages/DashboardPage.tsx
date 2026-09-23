@@ -9,6 +9,7 @@ import { ArchiveStats } from '@/components/dashboard/ArchiveStats'
 import { Button } from '@/components/ui/button'
 import { CompletionSets } from '@/components/dashboard/CompletionSets'
 import { PageHeader } from '@/components/ui/page-header'
+import { ComingToDisc } from '@/components/releases/ComingToDisc'
 import { StatePanel } from '@/components/ui/state-panel'
 import {
   describeFilters,
@@ -88,6 +89,10 @@ export default function DashboardPage() {
           </Button>
         )}
       />
+
+      {/* Batch T5, and #201's Home: the next disc releases lead, so buying is one tap from
+          the opening screen. Hidden when there are none. */}
+      <ComingToDisc limit={5} />
 
       {/* On this day — hidden entirely until there is a watch history to look back
           through. Empty for both people today: `watch_log` holds 0 rows. */}

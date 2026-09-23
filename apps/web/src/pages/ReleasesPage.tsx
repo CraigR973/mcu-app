@@ -28,6 +28,8 @@ import {
   webcalUrl,
 } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { ComingToDisc } from '@/components/releases/ComingToDisc'
+import { isPhysical } from '@/lib/releases'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
 function monthKey(date: Date): string {
@@ -45,16 +47,6 @@ function monthLabel(key: string): string {
 function shift(key: string, by: number): string {
   const [year, month] = key.split('-').map(Number)
   return monthKey(new Date(year, month - 1 + by, 1))
-}
-
-/** The two `RELEASE_TYPES` members that mean "on a disc".
- *
- *  Batch 17 declared them and **nothing wrote either one until Batch S6** — ingestion
- *  hardcoded `"theatrical"`, so every row in the table was a cinema date. */
-const PHYSICAL_TYPES = new Set(['4k_uhd_release', 'blu_ray_release'])
-
-export function isPhysical(entry: CalendarEntry): boolean {
-  return PHYSICAL_TYPES.has(entry.releaseType)
 }
 
 function Entry({ entry }: { entry: CalendarEntry }) {
@@ -226,12 +218,6 @@ export default function ReleasesPage() {
   const days = monthQuery.data?.days ?? {}
   const state = listState(monthQuery, Object.keys(days).length === 0)
 
-  // Batch S6. Flattened out of the day buckets so the disc dates can lead, while staying
-  // in the month list below — the same date in both places, because "what is out on disc"
-  // and "what is happening in March" are both real questions.
-  const physicalEntries = Object.entries(days)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .flatMap(([day, entries]) => entries.filter(isPhysical).map((entry) => ({ day, entry })))
 
   const releasesQuery = useQuery({
     queryKey: ['new-releases'],
@@ -287,40 +273,8 @@ export default function ReleasesPage() {
         </p>
       ) : null}
 
-      {/* Batch S6, snag 2 — and the section that leads. */}
-      <section className="space-y-3" aria-labelledby="coming-to-disc-heading">
-        <h2 id="coming-to-disc-heading" className="section-heading flex items-center gap-2">
-          <Disc3 className="h-5 w-5 text-primary" aria-hidden />
-          Coming to disc
-        </h2>
-        {physicalEntries.length > 0 ? (
-          <ul className="archive-panel divide-y divide-border px-4 sm:px-5">
-            {physicalEntries.map(({ day, entry }) => (
-              <li key={entry.id} className="flex flex-wrap items-center gap-x-4 py-1.5">
-                <span className="w-24 shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                  {new Date(`${day}T00:00:00`).toLocaleDateString(undefined, {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <Entry entry={entry} />
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          /* **Says why, rather than rendering an empty frame or implying none are
-             coming.** The number is the measurement, not an apology. */
-          <p className="text-sm leading-6 text-muted-foreground">
-            No disc dates this month. TMDB&rsquo;s UK physical dates are
-            community-maintained and sparse &mdash; when this was last measured it had one
-            for <strong className="text-foreground">1 of 58</strong> forthcoming films, so
-            most titles below will show a cinema date only until somebody adds a disc date
-            to TMDB.
-          </p>
-        )}
-      </section>
+      {/* Batch T5, snag 9: the next disc releases from today, whichever month is below. */}
+      <ComingToDisc />
 
       <div className="archive-panel flex items-center justify-between gap-2 p-2 sm:p-3">
         <Button

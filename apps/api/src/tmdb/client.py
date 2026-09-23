@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from datetime import date
 from typing import Any
 
 import httpx
@@ -154,6 +155,42 @@ class TMDBClient:
         """
         data = await self._get(
             "/movie/upcoming", {"language": language, "page": page, "region": region}
+        )
+        return SearchResults.model_validate(data)
+
+    async def discover_by_release_type(
+        self,
+        *,
+        region: str,
+        release_types: str,
+        date_from: date,
+        date_to: date,
+        page: int = 1,
+        language: str = "en-US",
+    ) -> SearchResults:
+        """Films with a release of these types in this country between two dates — Batch T5.
+
+        ``release_types`` is TMDB's own syntax: ``"5"`` for physical, ``"2|3"`` for limited
+        or wide cinema release. With ``region`` set, TMDB applies the date range to that
+        country's releases of those types, not to the film's premiere. That is the whole
+        difference from ``/movie/upcoming``, which lists films about to reach cinemas, and
+        so almost never has a disc date yet (1 of 58 when measured on 2026-09-15).
+
+        The ``release_date`` on each result is still the film's *primary* date, so the
+        country's own date comes from :meth:`get_release_dates`.
+        """
+        data = await self._get(
+            "/discover/movie",
+            {
+                "region": region,
+                "with_release_type": release_types,
+                "release_date.gte": date_from.isoformat(),
+                "release_date.lte": date_to.isoformat(),
+                "sort_by": "popularity.desc",
+                "include_adult": "false",
+                "language": language,
+                "page": page,
+            },
         )
         return SearchResults.model_validate(data)
 

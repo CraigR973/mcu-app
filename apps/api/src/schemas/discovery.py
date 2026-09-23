@@ -133,6 +133,9 @@ class CalendarMonthResponse(BaseModel):
 class CalendarListResponse(BaseModel):
     items: list[CalendarEntryResponse]
     total: int
+    #: Batch T5 — when the calendar last finished refreshing from TMDB, so the page can say
+    #: how fresh it is. ``None`` before the first refresh.
+    refreshedAt: UtcDatetime | None = None
 
 
 class CalendarSubscriptionResponse(BaseModel):
