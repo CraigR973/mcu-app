@@ -20,8 +20,9 @@ maps onto this file.*
 > `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and a non-localhost `FRONTEND_ORIGIN`.
 > `.railway/railway.ts` gives the job services none of these, and no job uses them.
 > `scrape_runs` holds a single manual row, from 10 Sep. **A code-only fix is proposed in
-> `docs/phase-batches.md`** under Group T ("Scheduled jobs never start"). It needs no Railway
-> change from you, only your go. Once it ships, the rest of this item is still yours: the
+> `docs/phase-batches.md`** under Group T ("Scheduled jobs never start"). **Fixed and live
+> on 2026-09-23 (`aeb87aa`)**, with no Railway change. The first real runs are at 03:00 and
+> 08:00 UTC on 24 Sep. Once it ships, the rest of this item is still yours: the
 > real-device push check, and the `restartPolicyType` drift.
 
 **Batch 20 shipped on 2026-09-10 and Group F is complete.** The scraper acceptance run was
@@ -889,9 +890,7 @@ credential change and yours.
 
 This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consent settings in
 eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.
-**Optional:** apply to eBay for Buy API access if you want true automatic purchase. eBay
-approves it only for select partners under contract, so expect a refusal. Nothing in T8
-depends on it.
+~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
 
 ---
 ## Deprioritised by owner decision — not blocking

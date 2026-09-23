@@ -3695,3 +3695,23 @@ contemporaneous.
      Reading his watch list and selling list needs his consent through eBay's own sign-in
      and a stored user token — the first personal third-party token this app holds, and the
      thing #142 deliberately avoided for selling. That is why T8 is Deep · max.
+
+204. **A scheduled job is not the web server, and no longer needs its secrets. Shipped
+     2026-09-23 (`aeb87aa`) at Craig's go.** Both Railway crons had fired on time every night
+     since 10 Sep and crashed on import: `Settings()` refused production without the JWT
+     secrets and a real `FRONTEND_ORIGIN`, which `.railway/railway.ts` never gives the job
+     services and no job reads (only `auth.py` and `main.py`'s CORS do).
+
+     *The fix:* `Settings.process_role` is `job` for anything launched as
+     `python -m src.scripts.<name>` and `web` otherwise, unless `PROCESS_ROLE` says
+     otherwise. A job skips the session-secret and browser-origin checks and still refuses an
+     empty database URL. **`src.main` refuses to start as a job**, so the relaxation cannot
+     reach the one process that signs sessions.
+
+     *Why not add the secrets to the job services instead:* that's a hosting change, and it
+     would hand the session-signing keys to two containers that never sign anything. The
+     role is read from how the interpreter was launched because this module validates at
+     import, before a script could declare anything.
+
+     *Also decided 2026-09-23:* Craig will **not** apply for eBay's Buy API (#203's optional
+     step). T8's automatic half is eBay's own maximum-bid bidding, and nothing more.

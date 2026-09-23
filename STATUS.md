@@ -11,7 +11,10 @@ waiting for his go.**
   (`DECISIONS.md` #200). **Live check owed:** a renewal row in `refresh_tokens` (created in
   the same instant its predecessor is revoked) the next time either person's access token
   lapses. Craig's lapses at 18:46 UTC on 23 Sep.
-- **The scheduled jobs have never run.** Both Railway crons start on time and crash on
+- **The scheduled jobs are fixed (`aeb87aa`, live) and have their first real runs tonight.**
+  They had crashed on import every day since 10 Sep (#204). The proof is a `scrape_runs` row
+  with `trigger=cron` after 03:00 UTC on 24 Sep. Background: both Railway crons started on
+  time and crashed on
   import. `Settings()` refuses to start in production without the JWT secrets and
   `FRONTEND_ORIGIN`, and `.railway/railway.ts` never passes those to the job services. A
   code-only fix (a job profile) is written up in `docs/phase-batches.md` and waits for
@@ -35,7 +38,7 @@ waiting for his go.**
 - **Discs with Blu-ray.com specs:** 0.
 - **Purchase prices:** 0.
 
-**Next step:** Craig's go on the scheduled-jobs fix and on Group T, then T2.
+**Next step:** Group T is approved (23 Sep). T2 (one search) is under way; then T3 to T8 in order.
 
 ## Next
 
@@ -440,6 +443,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (scheduled jobs fixed, `aeb87aa`; Group T approved)** — Craig said yes to the
+  jobs fix and to Group T, and no to applying for eBay's Buy API. A job now runs without
+  the web server's secrets, and `src.main` refuses to start as a job (#204). CI failed once
+  on a new test that read secrets from the environment. It was fixed and green on the
+  re-run, and production serves `aeb87aa` with `db: ok`. The first cron runs are due at
+  03:00 and 08:00 UTC on 24 Sep.
 
 - **2026-09-23 (the 23 Sep snags reconciled, and sign-in renewal fixed, `aa112bd`)** — Craig
   raised 14 snags. Each was checked against the code, live Neon (read-only) and live TMDB,

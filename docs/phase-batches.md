@@ -1733,8 +1733,8 @@ from Craig's 14 snags of 23 Sep, reconciled against the code and live data in
 `docs/owner-snags-2026-09-23.md`. **The criteria below were authored on 2026-09-23**, so
 `DECISIONS.md` #54 does not apply. The shaping decisions are **#200–#203**.
 
-**Status: proposed, not approved.** Only T1 has shipped. Craig's standing rule is that a
-multi-batch run is shown whole and waits for his go.
+**Status: approved by Craig on 2026-09-23** ("2) yes"). T1 and the scheduled-jobs fix have
+shipped. The batches run in order and close out one at a time.
 
 **Order is dependency-derived:** T2 → T3 → T4 → T5 → T6 → T7 → T8. T4 needs T2's search and
 T3's top bar. T6 and T8 share the eBay client. T6, T7 and T8 each end in a scheduled job, so
@@ -1750,7 +1750,12 @@ tests among them. Production serves `aa112bd` with `db: ok`.
 24-hour access token lapses (Craig's lapses at 18:46 UTC on 23 Sep). A renewal's row is
 created in the same instant its predecessor is revoked.
 
-### Scheduled jobs never start — proposed fix, awaiting Craig's go
+### ~~Scheduled jobs never start~~ **fixed 2026-09-23 (`aeb87aa`) at Craig's go** — `DECISIONS.md` #204
+**One CI failure on the way:** a new test left the session secrets to the environment, so it
+raised locally, where there are none, and not in CI, which sets them. Fixed in `aeb87aa`,
+after reproducing CI's variables locally. **Still owed:** the first real runs, at 03:00 and
+08:00 UTC on 24 Sep. A `scrape_runs` row with `trigger=cron` is the proof.
+
 Found on 23 Sep from read-only Railway logs. Both crons fire on time (03:00 and 08:00 UTC)
 and crash on import. `Settings()` refuses to start in production without
 `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and a non-localhost `FRONTEND_ORIGIN`.
@@ -1984,7 +1989,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → **checkpoint: go on the jobs fix and the group** → T2 → T3 → T4 → T5 → T6 → **checkpoint: search API account** → T7 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Proposed, not approved** — only T1 shipped (as a fix, `aa112bd`). Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → T2 → T3 → T4 → T5 → T6 → **checkpoint: search API account** → T7 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Proposed, not approved** — only T1 shipped (as a fix, `aa112bd`). Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
