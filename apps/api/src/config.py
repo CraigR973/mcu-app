@@ -1,7 +1,9 @@
+import sys
+from collections.abc import Sequence
 from enum import StrEnum
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _PLACEHOLDER_SECRETS = {
@@ -41,6 +43,38 @@ def psycopg2_dsn(database_url: str) -> str:
         query.append(("sslmode", value) if key == "ssl" else (key, value))
 
     return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+class ProcessRole(StrEnum):
+    """What kind of process loaded these settings — `DECISIONS.md` #204.
+
+    ``web`` serves the API and signs sessions, so it must never start without real secrets.
+    ``job`` is a command under ``src.scripts`` — a Railway cron, an import — which signs no
+    token and serves no browser. Until 2026-09-23 both were held to the web server's rule,
+    and every scheduled run crashed on import for want of JWT secrets it never uses.
+    """
+
+    web = "web"
+    job = "job"
+
+
+def launched_role(argv: Sequence[str]) -> ProcessRole:
+    """``job`` for ``python -m src.scripts.<name>``; ``web`` for anything else.
+
+    Read from how the interpreter was launched rather than declared by each script,
+    because this module validates at import: a script's own imports would run before any
+    declaration it could make. ``PROCESS_ROLE`` in the environment still wins.
+    """
+    args = list(argv)
+    try:
+        target = args[args.index("-m") + 1]
+    except (ValueError, IndexError):
+        return ProcessRole.web
+    return ProcessRole.job if target.startswith("src.scripts.") else ProcessRole.web
+
+
+def _role_of_this_process() -> ProcessRole:
+    return launched_role(sys.orig_argv)
 
 
 class Environment(StrEnum):
@@ -144,6 +178,9 @@ class Settings(BaseSettings):
     sentry_dsn_backend: str = ""
     log_level: str = "INFO"
     environment: Environment = Environment.development
+    #: Web server or job. Derived from how the process was launched unless
+    #: ``PROCESS_ROLE`` says otherwise; see :class:`ProcessRole`.
+    process_role: ProcessRole = Field(default_factory=_role_of_this_process)
     # Railway injects this for Git-backed deployments. The health endpoint
     # exposes it so deployment verification can prove which commit is running.
     railway_git_commit_sha: str | None = None
@@ -203,23 +240,31 @@ class Settings(BaseSettings):
         if self.environment == Environment.development:
             return self
 
-        errors: list[str] = []
-        for field_name, secret in (
-            ("jwt_access_secret", self.jwt_access_secret),
-            ("jwt_refresh_secret", self.jwt_refresh_secret),
-        ):
-            if not secret:
-                errors.append(f"{field_name} is empty")
-            elif secret in _PLACEHOLDER_SECRETS:
-                errors.append(f"{field_name} is a placeholder value")
-            elif len(secret) < _MIN_SECRET_LENGTH:
-                errors.append(f"{field_name} must be at least {_MIN_SECRET_LENGTH} characters")
+        # The session secrets and the browser origin belong to the web server. A job never
+        # reads them (only `auth.py` and `main.py`'s CORS do), and `main.py` refuses to
+        # start as a job, so skipping them here cannot let the API boot weakly.
+        serves_web = self.process_role == ProcessRole.web
 
-        if self.jwt_access_secret == self.jwt_refresh_secret:
-            errors.append("jwt_access_secret and jwt_refresh_secret must be different")
+        errors: list[str] = []
+        if serves_web:
+            for field_name, secret in (
+                ("jwt_access_secret", self.jwt_access_secret),
+                ("jwt_refresh_secret", self.jwt_refresh_secret),
+            ):
+                if not secret:
+                    errors.append(f"{field_name} is empty")
+                elif secret in _PLACEHOLDER_SECRETS:
+                    errors.append(f"{field_name} is a placeholder value")
+                elif len(secret) < _MIN_SECRET_LENGTH:
+                    errors.append(f"{field_name} must be at least {_MIN_SECRET_LENGTH} characters")
+
+            if self.jwt_access_secret == self.jwt_refresh_secret:
+                errors.append("jwt_access_secret and jwt_refresh_secret must be different")
         if not self.database_url:
             errors.append("database_url is empty")
-        if not self.frontend_origin or self.frontend_origin.startswith("http://localhost"):
+        if serves_web and (
+            not self.frontend_origin or self.frontend_origin.startswith("http://localhost")
+        ):
             errors.append("frontend_origin must not be empty or localhost outside development")
 
         if errors:

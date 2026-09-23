@@ -9,7 +9,7 @@ from sentry_sdk.types import Event, Hint
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from src.config import Environment, docs_urls, settings
+from src.config import Environment, ProcessRole, docs_urls, settings
 from src.logging_config import configure_logging
 from src.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from src.rate_limit import limiter
@@ -41,6 +41,15 @@ from src.routers import (
     watch_history,
     watch_log,
 )
+
+# **The web server never starts as a job** (`DECISIONS.md` #204). A job may run without the
+# session secrets, because it signs nothing; this process signs every session, and would
+# sign them with an empty key.
+if settings.process_role != ProcessRole.web:
+    raise RuntimeError(
+        "src.main is the web server and must run with PROCESS_ROLE=web, "
+        f"not {settings.process_role.value}."
+    )
 
 configure_logging(settings.log_level)
 
