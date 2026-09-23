@@ -102,21 +102,22 @@ def test_the_role_comes_from_how_the_process_was_launched(
 
 
 def _production(**overrides: object) -> Settings:
+    # Every web-only value is passed explicitly. Left to the environment, they come from
+    # whatever the machine running the tests has set — CI sets real-looking secrets, so
+    # the first version of this helper proved nothing there.
     params: dict[str, object] = {
         "environment": Environment.production,
         "database_url": "postgresql+asyncpg://user:password@db.example.com:5432/mcu",
+        "jwt_access_secret": "",
+        "jwt_refresh_secret": "",
+        "frontend_origin": "",
     }
     params.update(overrides)
     return Settings(**params)
 
 
 def test_a_job_needs_no_session_secrets_and_no_browser_origin() -> None:
-    settings = _production(
-        process_role=ProcessRole.job,
-        jwt_access_secret="",
-        jwt_refresh_secret="",
-        frontend_origin="",
-    )
+    settings = _production(process_role=ProcessRole.job)
     assert settings.process_role == ProcessRole.job
 
 
@@ -127,4 +128,4 @@ def test_a_job_still_needs_a_database() -> None:
 
 def test_the_web_server_still_needs_its_secrets() -> None:
     with pytest.raises(ValidationError, match="jwt_access_secret is empty"):
-        _production(process_role=ProcessRole.web, frontend_origin="https://mcu.example.com")
+        _production(process_role=ProcessRole.web)
