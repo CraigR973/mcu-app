@@ -3757,3 +3757,23 @@ contemporaneous.
        below 1024px any more. Keeping a drawer that nothing opened would have been dead
        code with a focus trap in it.
 
+207. **Batch T4's movie night: the choices. Shipped 2026-09-23 (`99b04c0`).**
+
+     - **Movie-night pushes go out at once, "It's a match" included.** They were queued
+       and nothing more. Only the scheduled jobs delivered, and they crashed every night
+       until `aeb87aa` (#204), so a match never reached a phone. Delivery now runs
+       straight after the commit, for the people concerned. Quiet hours still defer, to
+       the morning pass. A failed push never fails the vote or the invite; the
+       notification stays queued for the next pass.
+     - **Only an account that can sign in can be sent a night.** A profile with no PIN
+       (the state migration 002 seeds) would get a night in a list it cannot open. In
+       production both accounts have a PIN, so "send to everyone else" means Mark.
+     - **Sending puts the person in the night**, so it is in their list before they open
+       anything. One push per person per night, by dedupe key; sending twice changes
+       nothing.
+     - **Arrow keys vote only in the deck.** On the list there is no single film an arrow
+       would mean.
+     - **The floating assistant button hides on a movie night.** It sat on top of the
+       deck's Add button, and a mis-tap there costs a vote. The wider question
+       (`OWNER-ACTIONS.md` item 11) stays open.
+

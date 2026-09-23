@@ -38,9 +38,14 @@ waiting for his go.**
 - **Discs with Blu-ray.com specs:** 0.
 - **Purchase prices:** 0.
 
-**Group T progress:** T2 (one search) shipped as `fe409f3`, and T3 (five tabs, the title in
-the top bar, one Archive row, the runtime filter) as `90d6994`. **Next: T4**, movie night.
-Then T5 to T8 in order.
+**Group T progress:**
+- T2 (one search) shipped as `fe409f3`.
+- T3 (five tabs, the title in the top bar, one Archive row, the runtime filter) shipped
+  as `90d6994`.
+- T4 (movie night: shortlist first, Skip and Add, Send to Mark by push, pushes sent at
+  once) shipped as `99b04c0`. Its two-phone check is Craig's (`OWNER-ACTIONS.md` 16b).
+
+**Next: T5**, releases. Then T6 to T8.
 
 ## Next
 
@@ -445,6 +450,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (Batch T4 — movie night, `99b04c0`)** — A night opens on its shortlist,
+  showing your own vote on each film. The deck says Skip and Add. "Send to Mark" puts him
+  in the night and pushes a notification that opens it, and Share link uses the share
+  sheet. **Found:** movie-night notifications had only ever been queued, so no match had
+  ever reached a phone; they now go out at once (#207). CI was green first time.
+  Production serves `99b04c0` with `db: ok`. The two-phone check is Craig's.
 
 - **2026-09-23 (Batch T3 — navigation and the Archive row, `90d6994`)** — Phones get five
   tabs (Home, Archive, Add, Movie night, Search) with 11px labels. There's no slide-out

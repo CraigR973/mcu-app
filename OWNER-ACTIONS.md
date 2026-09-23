@@ -884,6 +884,13 @@ you open the app after 18:46 UTC on 23 Sep it should renew silently instead of a
 your PIN. If it asks, say so: the fix has a hole. Mark's next open works the same way,
 unless his session was already cleared before the fix.
 
+### 16b. Send a movie night to Mark, on both phones — T4's last criterion
+
+`99b04c0` is live. On your iPhone, open a movie night and tap **Send to Mark**. On Mark's
+Android, a notification should arrive, and tapping it should open that night, not the
+front page. Then both of you tap **Add** on the same film: "It's a match" should arrive on
+both phones. This also closes Batch 11's open 6.2 (a push reaching two real devices).
+
 ### 17. A Brave Search API account and key — for T7, the Blu-ray.com backfill
 
 This is `DECISIONS.md` #202. Brave charges $5 per 1,000 queries, with $5 of monthly credit,
