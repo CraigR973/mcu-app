@@ -5,7 +5,7 @@ import { Search } from 'lucide-react'
 import { Dialog } from '@/components/ui/dialog'
 import { fetchSearch, posterUrl } from '@/lib/api'
 import { fuzzyScore } from '@/lib/fuzzy'
-import { HOME_ITEM, navItems, adminNavItems, type NavItem } from '@/lib/nav-items'
+import { HOME_ITEM, navItems, adminNavItems, YOU_ITEM, type NavItem } from '@/lib/nav-items'
 import { useRecentItems, type RecentItem } from '@/hooks/useRecentItems'
 import { cn } from '@/lib/utils'
 
@@ -62,7 +62,7 @@ export default function CommandPalette({ open, onClose, isAdmin }: Props) {
   })
 
   const pages = useMemo<NavItem[]>(
-    () => [HOME_ITEM, ...navItems, ...(isAdmin ? adminNavItems : [])],
+    () => [HOME_ITEM, ...navItems, YOU_ITEM, ...(isAdmin ? adminNavItems : [])],
     [isAdmin],
   )
 

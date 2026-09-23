@@ -120,7 +120,8 @@ export default function ExternalFilmPage() {
 
   return (
     <div className="page-shell-narrow space-y-6">
-      <button type="button" onClick={() => navigate(-1)} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+      {/* A desktop back link: on a phone the top bar has the arrow (Batch T3). */}
+      <button type="button" onClick={() => navigate(-1)} className="hidden min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground lg:inline-flex">
         <ArrowLeft className="h-4 w-4" aria-hidden /> Back
       </button>
 

@@ -1,7 +1,6 @@
-import { useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LogOut, X } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { fetchNavSections, fetchSmartCollections } from '@/lib/api'
 import { useAuth } from '@/context/auth'
@@ -11,47 +10,18 @@ import { Button } from '@/components/ui/button'
 import { adminNavGroup, navGroups, visibleGroups } from '@/lib/nav-items'
 import { cn } from '@/lib/utils'
 
-interface Props {
-  open: boolean
-  onClose: () => void
-}
-
 const LINK_CLS =
   'group flex min-h-10 items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm font-semibold transition-colors'
 
-export default function Sidebar({ open, onClose }: Props) {
+/**
+ * The desktop sidebar — every destination, the account, and sign-out.
+ *
+ * **Desktop only since Batch T3** (`DECISIONS.md` #201). Below 1024px it used to slide
+ * out from a menu button and from the bottom bar's "More"; both are gone, and the "You"
+ * page carries everything the five bottom tabs do not.
+ */
+export default function Sidebar() {
   const { profile, signOut } = useAuth()
-  const closeRef = useRef<HTMLButtonElement>(null)
-  const panelRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const previouslyFocused = document.activeElement as HTMLElement | null
-    closeRef.current?.focus()
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-      if (event.key !== 'Tab' || !panelRef.current) return
-      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'))
-      if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('keydown', closeOnEscape)
-      document.body.style.overflow = previousOverflow
-      previouslyFocused?.focus?.()
-    }
-  }, [open, onClose])
 
   // §6.31: "Smart collections appear in the sidebar with custom icons." Failing quietly
   // is right here — the sidebar is navigation, and a network problem should not cost
@@ -81,31 +51,10 @@ export default function Sidebar({ open, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop (mobile) */}
-      {open && (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          className="fixed inset-0 z-40 cursor-default bg-brand-ink/70 backdrop-blur-[2px] lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar panel */}
-      <aside
-        ref={panelRef}
-        role={open ? 'dialog' : undefined}
-        aria-modal={open || undefined}
-        aria-label={open ? 'Application navigation' : undefined}
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[17rem] max-w-[86vw] flex-col border-r border-border bg-card transition-[transform,visibility] duration-200',
-          'lg:relative lg:translate-x-0',
-          open ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible',
-        )}
-      >
+      <aside className="relative hidden w-[17rem] shrink-0 flex-col border-r border-border bg-card lg:flex">
         {/* Header */}
         <div className="flex min-h-[4.75rem] items-center justify-between border-b border-border px-4 py-3">
-          <Link to="/movies" onClick={onClose} className="flex min-w-0 items-center gap-3 rounded-md">
+          <Link to="/movies" className="flex min-w-0 items-center gap-3 rounded-md">
             <BrandMark size={40} />
             <span className="min-w-0">
               <span className="block truncate font-display text-base font-semibold leading-none text-foreground">
@@ -116,15 +65,6 @@ export default function Sidebar({ open, onClose }: Props) {
               </span>
             </span>
           </Link>
-          <button
-            ref={closeRef}
-            type="button"
-            aria-label="Close menu"
-            className="touch-target -mr-2 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
-            onClick={onClose}
-          >
-            <X size={20} aria-hidden />
-          </button>
         </div>
 
         {/* Nav */}
@@ -139,7 +79,6 @@ export default function Sidebar({ open, onClose }: Props) {
                   <NavLink
                     key={path}
                     to={path}
-                    onClick={onClose}
                     className={({ isActive }) =>
                       cn(
                         LINK_CLS,
@@ -167,7 +106,6 @@ export default function Sidebar({ open, onClose }: Props) {
               <NavLink
                 key={path}
                 to={path}
-                onClick={onClose}
                 className={({ isActive }) =>
                   cn(
                     LINK_CLS,
@@ -196,7 +134,6 @@ export default function Sidebar({ open, onClose }: Props) {
                   <NavLink
                     key={collection.id}
                     to={`/collections/${collection.id}`}
-                    onClick={onClose}
                     className={({ isActive }) =>
                       cn(
                         LINK_CLS,

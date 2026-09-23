@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bot, Boxes, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2 } from 'lucide-react'
+import { Bot, Boxes, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -134,4 +134,62 @@ export function visibleGroups(
   return groups
     .map((group) => ({ ...group, items: group.items.filter((item) => isVisible(item, sections)) }))
     .filter((group) => group.items.length > 0)
+}
+
+// ---------------------------------------------------------------------------
+// Batch T3 — five tabs, a title in the top bar, and a "You" page
+// ---------------------------------------------------------------------------
+
+/** Everything that is not in the bottom bar lives on this page — `DECISIONS.md` #201. */
+export const YOU_ITEM: NavItem = { label: 'You', path: '/you', icon: UserRound }
+
+/**
+ * The destinations the phone's bottom bar carries, in its order. Search is the fifth slot,
+ * and is a button rather than a page. The "You" page lists everything *not* here.
+ */
+export const BOTTOM_BAR_PATHS = ['/dashboard', '/movies', '/collection/add', '/movie-night'] as const
+
+const TOP_LEVEL_PATHS = new Set<string>([
+  '/',
+  YOU_ITEM.path,
+  ...navItems.map(({ path }) => path),
+  ...adminNavItems.map(({ path }) => path),
+])
+
+/** Pages below a destination, named by what they show rather than where they sit. */
+const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
+  ['/movies/', 'Film'],
+  ['/films/tmdb/', 'Film'],
+  ['/movie-night/', 'Movie night'],
+  ['/box-sets/', 'Box set'],
+  ['/collections/', 'Collection'],
+  ['/settings/', 'Settings'],
+]
+
+/** A destination's own page, as opposed to something opened from it. Sub-pages get a
+ *  back arrow in the top bar; destinations do not. */
+export function isTopLevel(pathname: string): boolean {
+  return TOP_LEVEL_PATHS.has(pathname)
+}
+
+/** What the phone's top bar calls this page when the page itself has not said. */
+export function titleForPath(pathname: string): string | null {
+  const exact = [...navItems, ...adminNavItems, YOU_ITEM].find(({ path }) => path === pathname)
+  if (exact) return exact.label
+  const sub = SUB_PAGE_TITLES.find(([prefix]) => pathname.startsWith(prefix))
+  if (sub) return sub[1]
+  const parent = [...navItems, ...adminNavItems]
+    .filter(({ path }) => pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0]
+  return parent?.label ?? null
+}
+
+/** Where the back arrow goes when there is no history to go back through — a page opened
+ *  from a notification or a shared link. */
+export function parentPath(pathname: string): string {
+  if (pathname.startsWith('/films/')) return '/movies'
+  const parent = [...navItems, ...adminNavItems]
+    .filter(({ path }) => pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0]
+  return parent?.path ?? '/dashboard'
 }

@@ -7,7 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { BrandMark } from '@/components/brand/BrandMark'
-import { adminNavItems, navItems } from '@/lib/nav-items'
+import { adminNavItems, navItems, titleForPath } from '@/lib/nav-items'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -16,6 +16,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const ExternalFilmPage = lazy(() => import('./pages/ExternalFilmPage'))
+const YouPage = lazy(() => import('./pages/YouPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
 const TrashPage = lazy(() => import('./pages/TrashPage'))
@@ -100,10 +101,9 @@ function RouteTitle() {
     const item = [...navItems, ...adminNavItems]
       .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
       .sort((a, b) => b.path.length - a.path.length)[0]
-    // Batch T2. Routes with no menu entry of their own, matched by prefix.
-    const unlistedTitles: Array<[prefix: string, title: string]> = [['/films/tmdb/', 'Film']]
-    const unlisted = unlistedTitles.find(([prefix]) => pathname.startsWith(prefix))?.[1]
-    const title = publicTitles[pathname] ?? item?.label ?? unlisted ?? 'Page not found'
+    // Batch T2 and T3. Routes with no menu entry of their own — the film card, the "You"
+    // page — take the name the phone's top bar gives them.
+    const title = publicTitles[pathname] ?? item?.label ?? titleForPath(pathname) ?? 'Page not found'
     document.title = title === APP_NAME ? APP_NAME : `${title} · ${APP_NAME}`
   }, [pathname])
   return null
@@ -156,6 +156,11 @@ export default function App() {
             <Route
               path="/movies/:id"
               element={<AppShell><MovieDetailPage /></AppShell>}
+            />
+            {/* Batch T3. Everything the phone's five bottom tabs do not carry. */}
+            <Route
+              path="/you"
+              element={<AppShell><YouPage /></AppShell>}
             />
             {/* Batch T2. A film the collection does not hold, reached from search. */}
             <Route

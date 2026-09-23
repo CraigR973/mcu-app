@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, SlidersHorizontal, X } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import {
   fetchFacets,
   FORMATS,
   MIN_RATING_OPTIONS,
+  runtimeLabel,
   TMDB_GENRES,
   type MovieFilters,
 } from '@/lib/api'
@@ -19,6 +20,82 @@ interface Props {
   total?: number
   onChange: (filters: MovieFilters) => void
   context?: 'browse' | 'saved'
+  /** Batch T3, snag 1: the layout switch, drawn at the end of the same row. */
+  trailing?: ReactNode
+}
+
+const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'title:asc', label: 'Title A–Z' },
+  { value: 'title:desc', label: 'Title Z–A' },
+  { value: 'year:desc', label: 'Newest first' },
+  { value: 'year:asc', label: 'Oldest first' },
+  { value: 'rating:desc', label: 'Highest rated' },
+]
+
+function parseMinutes(value: string): number | undefined {
+  const minutes = Number.parseInt(value, 10)
+  return Number.isFinite(minutes) && minutes > 0 ? minutes : undefined
+}
+
+/**
+ * Batch T3, snag 2 — runtime from and to, in minutes.
+ *
+ * Typed values are held here and applied after a pause, because every change refetches
+ * the whole catalogue: "120" should be one request, not three. A range whose "from" is
+ * longer than its "to" is never applied; the API would refuse it.
+ */
+function RuntimeRange({ filters, onChange }: { filters: MovieFilters; onChange: (filters: MovieFilters) => void }) {
+  const [from, setFrom] = useState(filters.runtimeMin != null ? String(filters.runtimeMin) : '')
+  const [to, setTo] = useState(filters.runtimeMax != null ? String(filters.runtimeMax) : '')
+
+  useEffect(() => {
+    setFrom(filters.runtimeMin != null ? String(filters.runtimeMin) : '')
+    setTo(filters.runtimeMax != null ? String(filters.runtimeMax) : '')
+  }, [filters.runtimeMin, filters.runtimeMax])
+
+  const min = parseMinutes(from)
+  const max = parseMinutes(to)
+  const backwards = min != null && max != null && min > max
+
+  useEffect(() => {
+    if (backwards || (min === filters.runtimeMin && max === filters.runtimeMax)) return
+    const timer = setTimeout(() => onChange({ ...filters, runtimeMin: min, runtimeMax: max }), 500)
+    return () => clearTimeout(timer)
+  }, [backwards, filters, max, min, onChange])
+
+  return (
+    <fieldset className="min-w-0">
+      <legend className="field-label">Runtime, in minutes</legend>
+      <div className="mt-1 flex items-center gap-2">
+        <input
+          type="number"
+          min="1"
+          max="1000"
+          inputMode="numeric"
+          className="form-control w-24"
+          value={from}
+          onChange={(event) => setFrom(event.target.value)}
+          placeholder="From"
+          aria-label="Shortest runtime in minutes"
+        />
+        <span aria-hidden className="text-muted-foreground">–</span>
+        <input
+          type="number"
+          min="1"
+          max="1000"
+          inputMode="numeric"
+          className="form-control w-24"
+          value={to}
+          onChange={(event) => setTo(event.target.value)}
+          placeholder="To"
+          aria-label="Longest runtime in minutes"
+        />
+      </div>
+      {backwards ? (
+        <p role="alert" className="mt-1 text-xs text-destructive">The shortest can't be longer than the longest.</p>
+      ) : null}
+    </fieldset>
+  )
 }
 
 const CONTROL_CLS = 'select-control min-w-0 text-sm'
@@ -46,6 +123,10 @@ const SPEC_TOGGLES: Array<{
 ]
 
 /**
+ * **Batch T3, snag 1: one row at every width** — Filters, Sort, the film count once, and
+ * whatever the page puts at the end (the Archive's layout switch). Below 1280px, location
+ * and format live in the Filters panel; above it they join the row.
+ *
  * Batch S3, snag 5: **below `sm` this is a single button.**
  *
  * It used to put four controls — section, format, a Filters toggle and a sort — across a
@@ -57,9 +138,10 @@ const SPEC_TOGGLES: Array<{
  * is a duplicate id and a duplicate accessible name, and the hidden one comes back the
  * moment somebody changes a `hidden` class. One copy, one place, chosen at runtime.
  */
-export function FilterBar({ filters, total, onChange, context = 'browse' }: Props) {
+export function FilterBar({ filters, total, onChange, context = 'browse', trailing }: Props) {
   const [expanded, setExpanded] = useState(false)
   const isNarrow = !useMediaQuery('(min-width: 640px)')
+  const isWide = useMediaQuery('(min-width: 1280px)')
   const facetsQuery = useQuery({
     queryKey: ['collection-facets'],
     queryFn: fetchFacets,
@@ -85,6 +167,8 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
     if (filters.decadeFrom) add('decade-from', `From ${filters.decadeFrom}s`, { decadeFrom: undefined })
     if (filters.decadeTo) add('decade-to', `Through ${filters.decadeTo}s`, { decadeTo: undefined })
     if (filters.minRating != null) add('rating', `Rated ${filters.minRating}+`, { minRating: undefined })
+    const runtime = runtimeLabel(filters.runtimeMin, filters.runtimeMax)
+    if (runtime) add('runtime', runtime.charAt(0).toUpperCase() + runtime.slice(1), { runtimeMin: undefined, runtimeMax: undefined })
     if (filters.watched != null) add('watched', filters.watched ? 'Watched' : 'Not watched', { watched: undefined })
     if (filters.hdr) add('hdr', filters.hdr, { hdr: undefined })
     if (filters.audio) add('audio', filters.audio, { audio: undefined })
@@ -92,7 +176,11 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
     return active
   }, [filters, onChange])
 
-  const advancedCount = activeFilters.filter(({ key }) => !['section', 'shelf', 'format'].includes(key)).length
+  // In the wide row, location and format are on show beside the button; everywhere else
+  // they are inside it, and so is everything it counts.
+  const advancedCount = isWide
+    ? activeFilters.filter(({ key }) => !['section', 'shelf', 'format'].includes(key)).length
+    : activeFilters.length
 
   const sectionSelect = (
     <select
@@ -120,78 +208,89 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
     </select>
   )
 
-  const sortSelect = supportsLiveOnly ? (
+  const sortValue = `${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`
+  const sortLabel = SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? 'Title A–Z'
+  const onSort = (value: string) => {
+    const [sort, order] = value.split(':') as [NonNullable<MovieFilters['sort']>, NonNullable<MovieFilters['order']>]
+    onChange({ ...filters, sort, order })
+  }
+  const sortOptions = SORT_OPTIONS.map((option) => (
+    <option key={option.value} value={option.value}>{option.label}</option>
+  ))
+
+  // Batch T3: on a phone the sort is an icon that opens the full list. Every control here
+  // is 44px wide on a touch screen, and a labelled box could not share one 375px row with
+  // Filters, the count and three layout buttons.
+  const sortSelect = !supportsLiveOnly ? null : isNarrow ? (
+    <label className="touch-target relative inline-flex shrink-0 items-center justify-center rounded-md border border-input bg-card text-muted-foreground">
+      <ArrowUpDown className="h-4 w-4" aria-hidden />
+      <select
+        id="collection-sort"
+        aria-label={`Sort collection, now ${sortLabel}`}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        value={sortValue}
+        onChange={(event) => onSort(event.target.value)}
+      >
+        {sortOptions}
+      </select>
+    </label>
+  ) : (
     <>
       <label htmlFor="collection-sort" className="sr-only">Sort collection</label>
       <select
         id="collection-sort"
-        className={cn(CONTROL_CLS, 'flex-1 xl:min-w-40')}
-        value={`${filters.sort ?? 'title'}:${filters.order ?? 'asc'}`}
-        onChange={(event) => {
-          const [sort, order] = event.target.value.split(':') as [NonNullable<MovieFilters['sort']>, NonNullable<MovieFilters['order']>]
-          onChange({ ...filters, sort, order })
-        }}
+        className={cn(CONTROL_CLS, 'w-auto shrink-0 xl:min-w-40')}
+        value={sortValue}
+        onChange={(event) => onSort(event.target.value)}
       >
-        <option value="title:asc">Title A–Z</option>
-        <option value="title:desc">Title Z–A</option>
-        <option value="year:desc">Newest first</option>
-        <option value="year:asc">Oldest first</option>
-        <option value="rating:desc">Highest rated</option>
+        {sortOptions}
       </select>
     </>
-  ) : null
+  )
 
   const filtersToggle = (
     <Button
       type="button"
       variant="outline"
-      className={cn('justify-between', isNarrow ? 'w-full' : 'col-span-2 md:col-span-1')}
+      className="shrink-0 justify-between gap-2 px-3"
       aria-expanded={expanded}
       aria-controls="collection-more-filters"
       onClick={() => setExpanded((value) => !value)}
     >
       <span className="inline-flex items-center gap-2">
         <SlidersHorizontal className="h-4 w-4" aria-hidden /> Filters
-        {activeFilters.length > 0 && <Badge tone="primary" className="min-w-5 justify-center px-1">{isNarrow ? activeFilters.length : advancedCount}</Badge>}
+        {advancedCount > 0 && <Badge tone="primary" className="min-w-5 justify-center px-1">{advancedCount}</Badge>}
       </span>
-      <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} aria-hidden />
+      <ChevronDown className={cn('hidden h-4 w-4 transition-transform sm:block', expanded && 'rotate-180')} aria-hidden />
     </Button>
   )
 
+  // The count is a reading, not a control: the answer to "did that filter do anything".
+  // Batch T3: it appears here and nowhere else, and on a phone as the bare number.
   const filmCount =
     total != null ? (
       <span aria-live="polite" className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-        {total.toLocaleString()} {total === 1 ? 'film' : 'films'}
+        {total.toLocaleString()}
+        <span className={cn(isNarrow && 'sr-only')}> {total === 1 ? 'film' : 'films'}</span>
       </span>
     ) : null
 
   return (
     <section aria-label="Collection filters" className="border-b border-border bg-surface-sunken/35">
       <div className="px-4 py-3 sm:px-6 lg:px-8">
-        {isNarrow ? (
-          /* One button, and the count beside it. The count is a reading, not a control —
-             it is the answer to "did that filter do anything", and hiding it behind the
-             same tap that set the filter would be the wrong economy. */
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">{filtersToggle}</div>
-            {filmCount}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-            <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-[minmax(10rem,1fr)_minmax(9rem,0.8fr)_auto] xl:max-w-3xl">
-              {sectionSelect}
-              {formatSelect}
-              {filtersToggle}
-            </div>
-
-            {supportsLiveOnly && (
-              <div className="flex items-center gap-2 xl:ml-auto">
-                {sortSelect}
-                {filmCount}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2" data-testid="collection-controls-row">
+          {isWide && (
+            <>
+              <div className="w-44 shrink-0">{sectionSelect}</div>
+              <div className="w-40 shrink-0">{formatSelect}</div>
+            </>
+          )}
+          {filtersToggle}
+          {sortSelect}
+          <span className="ml-auto" />
+          {filmCount}
+          {trailing}
+        </div>
 
         {facetsQuery.isError && (
           <p role="alert" className="mt-2 text-xs text-destructive">Location and decade choices are temporarily unavailable. Existing filters still apply.</p>
@@ -199,13 +298,12 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
 
         {expanded && (
           <div id="collection-more-filters" className="mt-3 border-t border-border pt-3">
-            {/* Below `sm` the three controls that left the bar live here instead, so
-                collapsing the bar hides them rather than removing them. */}
-            {isNarrow && (
-              <div className="mb-2 grid gap-2">
+            {/* Below 1280px, location and format live here rather than in the row, so
+                collapsing the panel hides them rather than removing them. */}
+            {!isWide && (
+              <div className="mb-2 grid gap-2 sm:grid-cols-2">
                 {sectionSelect}
                 {formatSelect}
-                {sortSelect}
               </div>
             )}
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
@@ -247,6 +345,10 @@ export function FilterBar({ filters, total, onChange, context = 'browse' }: Prop
                 <option value="true">Watched</option>
                 <option value="false">Not watched</option>
               </select>
+            </div>
+
+            <div className="mt-3">
+              <RuntimeRange filters={filters} onChange={onChange} />
             </div>
 
             {supportsLiveOnly && (

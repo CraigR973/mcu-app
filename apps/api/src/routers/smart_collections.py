@@ -75,6 +75,8 @@ def _movie_filters(filters: SmartCollectionFilters, user_id: uuid.UUID) -> Movie
         decade_from=filters.decadeFrom,
         decade_to=filters.decadeTo,
         min_rating=filters.minRating,
+        runtime_min=filters.runtimeMin,
+        runtime_max=filters.runtimeMax,
         watched=filters.watched,
         user_id=user_id,
     )

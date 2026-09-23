@@ -441,6 +441,10 @@ export const smartCollectionFiltersSchema = z.object({
   decadeFrom: z.number().int().nullable(),
   decadeTo: z.number().int().nullable(),
   minRating: z.number().min(0).max(10).nullable(),
+  /** Batch T3 — minutes, inclusive. Defaulted rather than required, as `lastWatchedAt`
+   *  is (#205): the service worker can serve a collection cached before these existed. */
+  runtimeMin: z.number().int().positive().nullable().default(null),
+  runtimeMax: z.number().int().positive().nullable().default(null),
   watched: z.boolean().nullable(),
 })
 

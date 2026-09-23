@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Command, Menu, Plus } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { ArrowLeft, Command, Plus } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
 import { FloatingChatButton } from '@/components/FloatingChatButton'
@@ -15,20 +15,81 @@ import { startAutoFlush } from '@/lib/sync'
 import { MobileTabBar } from './MobileTabBar'
 import { Button } from '@/components/ui/button'
 import { BrandMark } from '@/components/brand/BrandMark'
+import { isTopLevel, parentPath, titleForPath, YOU_ITEM } from '@/lib/nav-items'
+import { usePageChromeTitle } from './page-chrome'
+import { PageChromeProvider } from './PageChromeProvider'
 
 interface Props {
   children: ReactNode
 }
 
+/**
+ * The phone's top bar — Batch T3, `DECISIONS.md` #201.
+ *
+ * **The page's name, where the app's name used to be.** A back arrow on anything below a
+ * destination, and the person's initial, which opens the "You" page: everything the five
+ * bottom tabs do not carry. It replaces the slide-out menu, and the menu button with it.
+ *
+ * The back arrow goes back through history when there is some, and otherwise to the
+ * page's parent — a page opened from a notification or a shared link has nowhere to go
+ * "back" to, and `navigate(-1)` would leave the app.
+ */
+function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
+  const { pathname, key } = useLocation()
+  const navigate = useNavigate()
+  const { profile } = useAuth()
+  const announced = usePageChromeTitle()
+  const title = announced ?? titleForPath(pathname) ?? 'The Real MCU'
+  const subPage = !isTopLevel(pathname)
+
+  return (
+    <div className="flex min-h-[3.5rem] items-center gap-2 px-3 sm:px-5 lg:hidden">
+      {subPage ? (
+        <button
+          type="button"
+          onClick={() => (key === 'default' ? navigate(parentPath(pathname)) : navigate(-1))}
+          className="touch-target -ml-1 flex shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label="Back"
+        >
+          <ArrowLeft size={20} aria-hidden />
+        </button>
+      ) : (
+        <BrandMark size={28} />
+      )}
+      {/* A heading only when the page announced it: that page's own heading is hidden on
+          a phone. A page that did not announce one keeps its own, so this stays text. */}
+      {announced ? (
+        <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold text-foreground">{title}</h1>
+      ) : (
+        <p className="min-w-0 flex-1 truncate font-display text-lg font-semibold text-foreground">{title}</p>
+      )}
+      <button
+        type="button"
+        onClick={onOpenPalette}
+        className="touch-target hidden shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+        aria-label="Open command palette"
+      >
+        <Command className="h-4 w-4" aria-hidden />
+      </button>
+      <Link
+        to={YOU_ITEM.path}
+        aria-label="You: every other page, and your account"
+        aria-current={pathname === YOU_ITEM.path ? 'page' : undefined}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-sm font-semibold text-secondary-foreground ring-offset-background aria-[current=page]:ring-2 aria-[current=page]:ring-primary"
+      >
+        {profile?.displayName?.slice(0, 1).toUpperCase() ?? '?'}
+      </Link>
+    </div>
+  )
+}
+
 export default function AppLayout({ children }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const queryClient = useQueryClient()
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
-  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
   const location = useLocation()
 
   // Batch T2, snag 6. Picking a result navigates, and the sheet has to go with it: it used
@@ -61,28 +122,16 @@ export default function AppLayout({ children }: Props) {
   )
 
   return (
+    <PageChromeProvider>
     <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-background text-foreground">
       <a href="#main-content" className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-lift focus:translate-y-0">Skip to content</a>
-      <Sidebar open={sidebarOpen} onClose={closeSidebar} />
+      <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="relative z-20 border-b border-border bg-background/94 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-          <div className="flex min-h-[3.5rem] items-center gap-3 px-3 sm:px-5 lg:min-h-[4.5rem] lg:px-7">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="touch-target flex shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
-            aria-label="Open menu"
-          >
-            <Menu size={20} aria-hidden />
-          </button>
-          <span className="flex min-w-0 flex-1 items-center gap-2 lg:hidden">
-            <BrandMark size={32} />
-            <span className="truncate font-display text-sm font-semibold text-foreground">
-              The Real MCU
-            </span>
-          </span>
-          <div className="hidden w-full max-w-2xl flex-1 lg:block">
+        <header aria-label="Top bar" className="relative z-20 border-b border-border bg-background/94 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+          <PhoneTopBar onOpenPalette={() => setPaletteOpen(true)} />
+          <div className="hidden min-h-[4.5rem] items-center gap-3 px-7 lg:flex">
+          <div className="w-full max-w-2xl flex-1">
             <SearchBar />
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -159,7 +208,6 @@ export default function AppLayout({ children }: Props) {
       )}
 
       <MobileTabBar
-        onOpenMenu={() => setSidebarOpen(true)}
         onOpenSearch={() => {
           setSearchOpen(true)
           requestAnimationFrame(() => window.dispatchEvent(new Event('mcu:focus-search')))
@@ -169,5 +217,6 @@ export default function AppLayout({ children }: Props) {
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={isAdmin} />
       <ShortcutsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} isAdmin={isAdmin} />
     </div>
+    </PageChromeProvider>
   )
 }

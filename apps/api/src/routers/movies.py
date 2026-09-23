@@ -77,6 +77,9 @@ class MovieFilters:
     decade_from: int | None = None
     decade_to: int | None = None
     min_rating: float | None = None
+    #: Batch T3, snag 2. Minutes, inclusive at both ends.
+    runtime_min: int | None = None
+    runtime_max: int | None = None
     watched: bool | None = None
     #: §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Arrow Video",
     #: "Region-free". They read the JSONB Batch 23 fills in from Blu-ray.com, so a
@@ -147,6 +150,13 @@ def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
         # them are unidentified, so "rated 7+" quietly meaning "identified and rated
         # 7+" is the only reading that does not overstate what is known.
         predicates.append(Movie.tmdb_rating >= filters.min_rating)
+    # Batch T3, snag 2. As with the rating, a film with no runtime is excluded rather than
+    # treated as zero: all 366 of them on 2026-09-23 were unidentified, and "under two hours"
+    # quietly meaning "known to be under two hours" is the reading that overstates nothing.
+    if filters.runtime_min is not None:
+        predicates.append(Movie.runtime_minutes >= filters.runtime_min)
+    if filters.runtime_max is not None:
+        predicates.append(Movie.runtime_minutes <= filters.runtime_max)
     if filters.watched is not None and filters.user_id is not None:
         seen = _watched_exists(filters.user_id)
         predicates.append(seen if filters.watched else ~seen)
@@ -470,6 +480,8 @@ async def list_movies(
     decade_from: Annotated[int | None, Query(alias="decadeFrom", ge=1870, le=2200)] = None,
     decade_to: Annotated[int | None, Query(alias="decadeTo", ge=1870, le=2200)] = None,
     min_rating: Annotated[float | None, Query(alias="minRating", ge=0, le=10)] = None,
+    runtime_min: Annotated[int | None, Query(alias="runtimeMin", ge=1, le=1000)] = None,
+    runtime_max: Annotated[int | None, Query(alias="runtimeMax", ge=1, le=1000)] = None,
     watched: Annotated[bool | None, Query()] = None,
     # §3.9. Plain query parameters, so a filtered view is a URL somebody can bookmark —
     # which is what the phase asks for in as many words.
@@ -492,6 +504,11 @@ async def list_movies(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="decadeFrom must not be later than decadeTo",
         )
+    if runtime_min is not None and runtime_max is not None and runtime_min > runtime_max:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="runtimeMin must not be more than runtimeMax",
+        )
 
     filters = MovieFilters(
         genre_id=genre_id,
@@ -502,6 +519,8 @@ async def list_movies(
         decade_from=decade_from,
         decade_to=decade_to,
         min_rating=min_rating,
+        runtime_min=runtime_min,
+        runtime_max=runtime_max,
         watched=watched,
         hdr=hdr,
         audio=audio,

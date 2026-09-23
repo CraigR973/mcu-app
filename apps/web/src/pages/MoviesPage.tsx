@@ -45,16 +45,16 @@ export default function MoviesPage() {
 
   const movies = moviesQuery.data?.items ?? []
   const totalMovies = moviesQuery.data?.totalMovies ?? 0
-  const totalItems = moviesQuery.data?.totalItems ?? 0
   const state = listState(moviesQuery, movies.length === 0)
 
   return (
     <div className="flex flex-col h-full">
+      {/* Batch T3, snag 1. The title is all the header keeps, and only on a desktop — on a
+          phone it lives in the top bar. The count and the layout switch moved into the
+          filter row, so the count is said once and the controls take one line. */}
       <PageHeader
         eyebrow="Collection catalogue"
         title="The archive"
-        description={state === 'loading' ? 'Opening the catalogue…' : `${totalMovies.toLocaleString()} films across ${totalItems.toLocaleString()} physical and digital items`}
-        actions={<ViewToggle value={viewMode} onChange={setViewMode} />}
         className="mb-0 px-4 py-4 sm:items-center sm:px-6 sm:py-5 lg:px-8"
       />
 
@@ -62,6 +62,7 @@ export default function MoviesPage() {
         filters={filters}
         total={state === 'loading' ? undefined : totalMovies}
         onChange={setFilters}
+        trailing={<ViewToggle value={viewMode} onChange={setViewMode} />}
       />
 
       {state === 'offline' && (

@@ -148,12 +148,21 @@ class SmartCollectionFilters(BaseModel):
     decadeFrom: Annotated[int | None, Field(ge=1870, le=2200)] = None
     decadeTo: Annotated[int | None, Field(ge=1870, le=2200)] = None
     minRating: Annotated[float | None, Field(ge=0, le=10)] = None
+    #: Batch T3 — minutes, inclusive, matching ``GET /movies``' ``runtimeMin``/``runtimeMax``.
+    runtimeMin: Annotated[int | None, Field(ge=1, le=1000)] = None
+    runtimeMax: Annotated[int | None, Field(ge=1, le=1000)] = None
     watched: bool | None = None
 
     @model_validator(mode="after")
     def _check_vocabulary_and_range(self) -> SmartCollectionFilters:
         if self.section is not None and self.section not in SECTIONS:
             raise ValueError(f"Unknown section. Expected one of: {', '.join(SECTIONS)}")
+        if (
+            self.runtimeMin is not None
+            and self.runtimeMax is not None
+            and self.runtimeMin > self.runtimeMax
+        ):
+            raise ValueError("runtimeMin must not be more than runtimeMax")
         for name, value in (("decadeFrom", self.decadeFrom), ("decadeTo", self.decadeTo)):
             if value is not None and value % 10 != 0:
                 raise ValueError(f"{name} must be the first year of a decade, such as 1940")

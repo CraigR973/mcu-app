@@ -403,6 +403,10 @@ export interface MovieFilters {
   /** First year of the latest decade to include — 1940 means "up to and including 1949". */
   decadeTo?: number
   minRating?: number
+  /** Batch T3, snag 2 — minutes, inclusive. A film with no known runtime is left out
+   *  whenever either is set, as it is for the rating. */
+  runtimeMin?: number
+  runtimeMax?: number
   watched?: boolean
   /** §3.9's spec filters. They read what Batch 23 fetched from Blu-ray.com, so a
    *  collection whose specs have never been fetched answers all of them with nothing —
@@ -431,6 +435,8 @@ export async function fetchMovies(
   // `!= null` rather than truthiness: a minimum rating of 0 and `watched: false` are
   // both meaningful filters that a truthiness check would silently drop.
   if (filters.minRating != null) params.set('minRating', String(filters.minRating))
+  if (filters.runtimeMin != null) params.set('runtimeMin', String(filters.runtimeMin))
+  if (filters.runtimeMax != null) params.set('runtimeMax', String(filters.runtimeMax))
   if (filters.watched != null) params.set('watched', String(filters.watched))
   // §3.9 asks for these to be URL-encoded so a filtered view is bookmarkable, which
   // is what they already are — the page's own URL carries them.
@@ -922,8 +928,18 @@ export function filtersToMovieFilters(filters: SmartCollectionFilters): MovieFil
   if (filters.decadeFrom !== null) out.decadeFrom = filters.decadeFrom
   if (filters.decadeTo !== null) out.decadeTo = filters.decadeTo
   if (filters.minRating !== null) out.minRating = filters.minRating
+  if (filters.runtimeMin !== null) out.runtimeMin = filters.runtimeMin
+  if (filters.runtimeMax !== null) out.runtimeMax = filters.runtimeMax
   if (filters.watched !== null) out.watched = filters.watched
   return out
+}
+
+/** Batch T3. How a runtime range is said: "90–120 min", "at least 90 min", "up to 2 hours". */
+export function runtimeLabel(min: number | null | undefined, max: number | null | undefined): string | null {
+  if (min != null && max != null) return `${String(min)}–${String(max)} min`
+  if (min != null) return `at least ${String(min)} min`
+  if (max != null) return `up to ${String(max)} min`
+  return null
 }
 
 /** A human sentence for what a saved collection selects, for the sidebar and the cards. */
@@ -944,6 +960,8 @@ export function describeFilters(filters: SmartCollectionFilters): string {
   }
   if (filters.year !== null) parts.push(String(filters.year))
   if (filters.minRating !== null) parts.push(`rated ${String(filters.minRating)}+`)
+  const runtime = runtimeLabel(filters.runtimeMin, filters.runtimeMax)
+  if (runtime) parts.push(runtime)
   if (filters.section !== null) parts.push(filters.shelf !== null ? `${filters.section} ${filters.shelf}` : filters.section)
   else if (filters.shelf !== null) parts.push(`${filters.shelf} shelf`)
   return parts.length === 0 ? 'Everything in the collection' : parts.join(' · ')

@@ -20,6 +20,8 @@ const NO_FILTERS: SmartCollectionFilters = {
   decadeFrom: null,
   decadeTo: null,
   minRating: null,
+  runtimeMin: null,
+  runtimeMax: null,
   watched: null,
 }
 
@@ -147,3 +149,16 @@ describe('loanDueLabel', () => {
     ).toBe('returned 2026-09-09')
   })
 })
+
+describe('Batch T3 — runtime in a saved collection', () => {
+  it('says a runtime range the way the filter chip does', () => {
+    expect(describeFilters({ ...NO_FILTERS, runtimeMin: 90, runtimeMax: 120 })).toBe('90–120 min')
+    expect(describeFilters({ ...NO_FILTERS, runtimeMax: 100 })).toBe('up to 100 min')
+    expect(describeFilters({ ...NO_FILTERS, runtimeMin: 150 })).toBe('at least 150 min')
+  })
+
+  it('opens a saved runtime range in the filter bar', () => {
+    expect(filtersToMovieFilters({ ...NO_FILTERS, runtimeMin: 90, runtimeMax: 120 })).toEqual({ runtimeMin: 90, runtimeMax: 120 })
+  })
+})
+

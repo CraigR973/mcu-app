@@ -14,7 +14,7 @@ const MODES: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
 
 export function ViewToggle({ value, onChange }: Props) {
   return (
-    <div className="flex items-center overflow-hidden rounded-md border border-input bg-card" role="group" aria-label="Collection layout">
+    <div className="flex shrink-0 items-center overflow-hidden rounded-md border border-input bg-card" role="group" aria-label="Collection layout">
       {MODES.map(({ mode, icon, label }) => (
         <button
           key={mode}
@@ -30,7 +30,7 @@ export function ViewToggle({ value, onChange }: Props) {
           ].join(' ')}
         >
           {icon}
-          <span className="hidden xl:inline">{label}</span>
+          <span className="hidden 2xl:inline">{label}</span>
         </button>
       ))}
     </div>

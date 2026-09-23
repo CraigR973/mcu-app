@@ -169,6 +169,8 @@ function toNullable(filters: MovieFilters) {
     decadeFrom: filters.decadeFrom ?? null,
     decadeTo: filters.decadeTo ?? null,
     minRating: filters.minRating ?? null,
+    runtimeMin: filters.runtimeMin ?? null,
+    runtimeMax: filters.runtimeMax ?? null,
     watched: filters.watched ?? null,
   }
 }

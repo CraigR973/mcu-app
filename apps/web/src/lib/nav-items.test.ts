@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import type { NavSections } from '@mcu/shared'
 
-import { adminNavItems, isVisible, navGroups, navItems, visibleGroups } from './nav-items'
+import {
+  adminNavItems,
+  BOTTOM_BAR_PATHS,
+  isTopLevel,
+  isVisible,
+  navGroups,
+  navItems,
+  parentPath,
+  titleForPath,
+  visibleGroups,
+  YOU_ITEM,
+} from './nav-items'
 
 const EMPTY: NavSections = { boxSets: 0, collections: 0, deals: 0, loans: 0 }
 const FULL: NavSections = { boxSets: 2, collections: 3, deals: 9, loans: 1 }
@@ -133,3 +144,37 @@ describe('Batch S4 — quick add within reach', () => {
     }
   })
 })
+
+describe('Batch T3 — the phone top bar', () => {
+  it('names a destination by its menu label, and a page below one by what it shows', () => {
+    expect(titleForPath('/wanted')).toBe('Wanted')
+    expect(titleForPath('/you')).toBe('You')
+    expect(titleForPath('/movies/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Film')
+    expect(titleForPath('/films/tmdb/11050')).toBe('Film')
+    expect(titleForPath('/movie-night/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Movie night')
+    expect(titleForPath('/nowhere')).toBeNull()
+  })
+
+  it('gives a back arrow to pages below a destination, and none to destinations', () => {
+    for (const path of [...navItems, ...adminNavItems, YOU_ITEM].map((item) => item.path)) {
+      expect(isTopLevel(path), path).toBe(true)
+    }
+    expect(isTopLevel('/movies/abc')).toBe(false)
+    expect(isTopLevel('/films/tmdb/1')).toBe(false)
+    expect(isTopLevel('/settings/ai')).toBe(false)
+  })
+
+  it('sends a page with no history back to its parent', () => {
+    expect(parentPath('/movies/abc')).toBe('/movies')
+    expect(parentPath('/movie-night/abc')).toBe('/movie-night')
+    expect(parentPath('/films/tmdb/1')).toBe('/movies')
+    expect(parentPath('/somewhere/else')).toBe('/dashboard')
+  })
+
+  it('keeps four destinations in the bottom bar, every one a real page', () => {
+    const known = new Set([...navItems, ...adminNavItems].map((item) => item.path))
+    expect([...BOTTOM_BAR_PATHS]).toEqual(['/dashboard', '/movies', '/collection/add', '/movie-night'])
+    for (const path of BOTTOM_BAR_PATHS) expect(known.has(path), path).toBe(true)
+  })
+})
+
