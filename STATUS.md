@@ -38,8 +38,9 @@ waiting for his go.**
 - **Discs with Blu-ray.com specs:** 0.
 - **Purchase prices:** 0.
 
-**Group T progress:** T2 (one search) shipped as `fe409f3`. **Next: T3**, navigation and the
-Archive row. Then T4 to T8 in order.
+**Group T progress:** T2 (one search) shipped as `fe409f3`, and T3 (five tabs, the title in
+the top bar, one Archive row, the runtime filter) as `90d6994`. **Next: T4**, movie night.
+Then T5 to T8 in order.
 
 ## Next
 
@@ -444,6 +445,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (Batch T3 — navigation and the Archive row, `90d6994`)** — Phones get five
+  tabs (Home, Archive, Add, Movie night, Search) with 11px labels. There's no slide-out
+  menu any more: the top bar shows the page's title, a back arrow below a destination, and
+  your initial, which opens a new "You" page with everything else. The Archive's controls
+  are one row at every width, and runtime from/to is a filter, a chip and a
+  saved-collection key. CI failed once on a Postgres-only test that pins the saved-collection
+  wire shape; it was fixed and green, and production serves `90d6994` with `db: ok` (#206).
 
 - **2026-09-23 (Batch T2 — one search, `fe409f3`)** — Owned results say when *you* last
   watched them. Films not in the collection follow them, from TMDB, with a UK streaming

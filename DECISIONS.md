@@ -3738,3 +3738,22 @@ contemporaneous.
        Batch 29.** A film whose only disc was sold failed to parse on its own page. Search
        now links to such films, which surfaced it.
 
+206. **Batch T3's navigation: the choices under #201. Shipped 2026-09-23 (`90d6994`).**
+
+     - **The back arrow uses history when there is some, and otherwise goes to the page's
+       parent.** A page opened from a notification or a shared link has no in-app
+       history, and `navigate(-1)` would leave the app. The parent is the longest menu
+       path the page sits under, or the Archive for a film card.
+     - **A page's `meta` line stays on a phone; the kicker, title and description do
+       not.** Meta carries facts, like "2 overdue" on Loans, and the rest is decoration
+       once the title is in the top bar.
+     - **On a phone the sort is an icon that opens the full list.** On a touch screen
+       every control is 44px wide (the `.touch-target` rule). A labelled sort box could
+       not share a 375px row with Filters, the count and three layout buttons, and the
+       touch target is not negotiable.
+     - **The layout switch spells out Grid, List and Compact only from 1536px.** At
+       1280px, next to the sidebar, the words pushed the row 22px past the edge.
+     - **The sidebar is desktop-only, and its drawer code is gone.** Nothing opens it
+       below 1024px any more. Keeping a drawer that nothing opened would have been dead
+       code with a focus trap in it.
+
