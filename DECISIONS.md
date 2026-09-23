@@ -3798,3 +3798,40 @@ contemporaneous.
        takes a real session of its own, which in CI committed curated sale events into
        the shared test database and broke an unrelated test. CI found it before merge.
 
+209. **Batch T6's collection value: the choices. Shipped 2026-09-23 (`9acd0ee`).**
+
+     - **Priced per film and format, counted per disc.** One eBay search prices one film on
+       one format, so the 1,457 physical discs need 1,454 searches. Two copies count twice
+       in the total. A 4K box with a Blu-ray inside is priced as a 4K. Downloads are left
+       out: they cannot be resold.
+     - **The film page's estimator, moved rather than copied** (`src/ebay/estimate.py`), so a
+       stored value and a live check of the same disc agree. Its headline is the largest
+       group of standard-edition listings in one condition, which is often "New", so a disc
+       listed mostly new reads high.
+     - **Three matching listings, or "not priced".** A median of two is one seller's asking
+       price (#129). The table's CHECK makes a price without "priced", or the reverse,
+       unstorable.
+     - **750 calls a day, 15% of eBay's 5,000, counted per UTC day.** The first full
+       valuation takes two days and leaves the rest of each day for the film page, barcode
+       lookups and T8. A rolling 24 hours would starve a nightly job, because its previous
+       run would always still be inside the window. A run never starts on fewer than three
+       calls, one search and its retries.
+     - **Re-priced every 30 days**, films that could not be priced included.
+     - **One run at a time**, held by a partial unique index. A run silent for 30 minutes is
+       closed by the next start or by anyone reading the total, so Home never shows a dead
+       run as pricing. **Five eBay failures in a row, or one 429, stop a run**, and old
+       prices stay.
+     - **Two ways to start a run.** Home's button (admin only; it runs in the web service,
+       which already holds the eBay keys) and `python -m src.scripts.value_collection` for a
+       scheduled job. A job would need eBay keys on a job service, a hosting change that is
+       Craig's.
+     - **Mark sees the total and each disc's stored value; only Craig can start a run**,
+       because a run spends the allowance the film page's check also uses.
+     - **Known limits.** The search does not use the year, so a remake's listings mix with
+       the original's, as they already do on the film page. A film sold in the UK under
+       another title (*The Avengers* as *Avengers Assemble*) finds nothing and is marked not
+       priced.
+     - **The documented local mypy command was weaker than CI's.** Run from the repo root,
+       it never loaded `apps/api/pyproject.toml`, so strict mode was off, and CI caught a
+       query result returned as `Any`. `AGENTS.md` and `batch-verify.md` now pass
+       `--config-file`.

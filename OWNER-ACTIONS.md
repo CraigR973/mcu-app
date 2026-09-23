@@ -903,6 +903,23 @@ This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consen
 eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.
 ~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
 
+### 19. Start the first collection valuation — T6
+
+`9acd0ee` is live, and **no disc is priced yet**. A full valuation spends about 1,454 eBay
+calls at 750 a day, so it takes two days. Either:
+
+- **On Home, press "Value the collection".** You see it; Mark won't until there is a
+  total. It prices up to 750 today; press **Update values** tomorrow for the rest.
+- **Or tell the agent to run it** from here, which does the same thing.
+
+Afterwards, open a couple of films and compare the stored value with **What is it
+worth?**. They should match, because they use the same estimator.
+
+**Optional, and a hosting change:** to re-price monthly on its own, add a Railway cron
+running `python -m src.scripts.value_collection` nightly, with `EBAY_CLIENT_ID` and
+`EBAY_CLIENT_SECRET` on it. Without it, press **Update values** whenever you want fresh
+prices: anything older than 30 days is due again.
+
 ---
 ## Deprioritised by owner decision — not blocking
 

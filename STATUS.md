@@ -2,54 +2,35 @@
 
 ## Now
 
-**23 Sep 2026: Craig's 14 new snags are reconciled, the sign-in bug is fixed, and Group T is
-waiting for his go.**
+**23 Sep 2026: Group T is running. T2 to T6 have shipped. T7 waits for Craig's search API
+key.**
 
-- **Sessions renew now (`aa112bd`, live).** Until now, every sign-in ended after 24 hours.
-  `/auth/refresh` split the token at the wrong dot and never matched a row: **30 sign-ins
-  and zero renewals** from 8 to 22 Sep. It shipped as a fix, not a batch, at Craig's word
-  (`DECISIONS.md` #200). **Live check owed:** a renewal row in `refresh_tokens` (created in
-  the same instant its predecessor is revoked) the next time either person's access token
-  lapses. Craig's lapses at 18:46 UTC on 23 Sep.
-- **The scheduled jobs are fixed (`aeb87aa`, live) and have their first real runs tonight.**
-  They had crashed on import every day since 10 Sep (#204). The proof is a `scrape_runs` row
-  with `trigger=cron` after 03:00 UTC on 24 Sep. Background: both Railway crons started on
-  time and crashed on
-  import. `Settings()` refuses to start in production without the JWT secrets and
-  `FRONTEND_ORIGIN`, and `.railway/railway.ts` never passes those to the job services. A
-  code-only fix (a job profile) is written up in `docs/phase-batches.md` and waits for
-  Craig's go. **Switching it on starts the nightly shop checks and the morning reminder
-  pushes for the first time.** `OWNER-ACTIONS.md` item 1 is updated.
-- **The 23 Sep snags** are in `docs/owner-snags-2026-09-23.md`, with Craig's answers:
-  - navigation: five tabs (#201)
-  - Blu-ray.com: the full backfill, via an outside search API (#202)
-  - eBay: a hybrid of alerts and eBay's own automatic bidding (#203)
-- **Group T (T2–T8) is proposed in `docs/phase-batches.md` and not approved.** Craig's rule
-  is that a multi-batch run is shown whole and waits for his go.
-- **Two records were wrong and are now corrected.** §17 row 44 and this file's Group S
-  table said S6 wrote the first physical release rows. The live `release_calendar` holds
-  none, and nothing in it has been added or changed since 9 Sep.
+- **Group T was approved on 23 Sep**, and each batch closes out on a green gate:
+  - T2, one search: `fe409f3`.
+  - T3, five tabs and the title in the top bar: `90d6994`.
+  - T4, movie night: `99b04c0`. Its two-phone check is Craig's (`OWNER-ACTIONS.md` 16b).
+  - T5, the release calendar: `1e08f40`. Its first live run wrote **28 disc releases** and
+    131 cinema dates.
+  - **T6, the collection value: `9acd0ee`.** Live, but **no disc is priced yet**: the first
+    full run spends about 1,454 eBay calls over two days and is Craig's to start
+    (`OWNER-ACTIONS.md` 19). He can press **Value the collection** on Home.
+- **Next: T7**, the Blu-ray.com backfill. It waits for a Brave Search API key
+  (`OWNER-ACTIONS.md` 17). Then T8, which waits on item 18.
+- **Sessions renew now (`aa112bd`).** Live check owed: a renewal row in `refresh_tokens`
+  after 18:46 UTC on 23 Sep, when Craig's access token lapses (#200).
+- **The scheduled jobs are fixed (`aeb87aa`).** Their first real runs are at 03:00 and 08:00
+  UTC on 24 Sep. The proof is a `scrape_runs` row with `trigger=cron` (#204).
+- **The documented local mypy command was not strict** until T6 (#209). Use the one in
+  `AGENTS.md`, which passes `--config-file`.
+- The 23 Sep snags, with Craig's answers, are in `docs/owner-snags-2026-09-23.md`.
 
 **Live numbers (23 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
   1,887 films (1,521 identified).
 - **`watch_log`:** 1,566 rows.
-- **`release_calendar`:** 32 rows (30 cinema dates up to 6 Oct, and 2 sale events).
+- **`release_calendar`:** 172 rows, 28 of them 4K or Blu-ray releases.
 - **Discs with Blu-ray.com specs:** 0.
-- **Purchase prices:** 0.
-
-**Group T progress:**
-- T2 (one search) shipped as `fe409f3`.
-- T3 (five tabs, the title in the top bar, one Archive row, the runtime filter) shipped
-  as `90d6994`.
-- T4 (movie night: shortlist first, Skip and Add, Send to Mark by push, pushes sent at
-  once) shipped as `99b04c0`. Its two-phone check is Craig's (`OWNER-ACTIONS.md` 16b).
-
-- T5 (the release calendar, by release type and self-refreshing) shipped as `1e08f40`. The
-  first live run wrote **28 disc releases** and 131 cinema dates.
-
-**Next: T6**, collection value. Then T7 and T8, each waiting on an owner step first
-(`OWNER-ACTIONS.md` 17 and 18).
+- **Purchase prices:** 0. **Disc valuations:** 0, until the first run.
 
 ## Next
 
@@ -454,6 +435,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (Batch T6 — collection value, `9acd0ee`)** — A valuation run prices each
+  owned disc at current eBay asking prices with the film page's own estimator: one search
+  per film and format, three listings or "not priced", 750 calls per UTC day, re-priced
+  every 30 days. Home shows the total and how many discs it rests on; each copy shows its
+  stored value. Migration 036 is live. Nothing is priced yet: the first full run is
+  Craig's (`OWNER-ACTIONS.md` 19). CI failed once, on strict mypy, which the documented
+  local command never ran; the command is fixed (#209).
 
 - **2026-09-23 (Batch T5 — releases, `1e08f40`)** — The calendar asks TMDB for GB releases
   by type, six months ahead. Discs aren't genre-filtered. The calendar refreshes itself

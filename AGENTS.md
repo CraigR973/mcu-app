@@ -71,7 +71,7 @@ Backend (absolute paths — never `cd`):
 ```
 apps/api/.venv/bin/python3.12 -m pytest apps/api/tests
 apps/api/.venv/bin/ruff check apps/api && apps/api/.venv/bin/ruff format --check apps/api
-PYTHONPATH=apps/api apps/api/.venv/bin/mypy apps/api/src
+PYTHONPATH=apps/api apps/api/.venv/bin/mypy --config-file apps/api/pyproject.toml apps/api/src
 ```
 Frontend / shared (Node 20):
 ```
