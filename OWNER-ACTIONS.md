@@ -22,8 +22,9 @@ maps onto this file.*
 > `scrape_runs` holds a single manual row, from 10 Sep. **A code-only fix is proposed in
 > `docs/phase-batches.md`** under Group T ("Scheduled jobs never start"). **Fixed and live
 > on 2026-09-23 (`aeb87aa`)**, with no Railway change. The first real runs are at 03:00 and
-> 08:00 UTC on 24 Sep. Once it ships, the rest of this item is still yours: the
-> real-device push check, and the `restartPolicyType` drift.
+> 08:00 UTC on 24 Sep. The *same cause* was first found on 13 Sep (below) and parked as a
+> Railway change. What's still yours in this item: the real-device push check, and the
+> `restartPolicyType` drift.
 
 **Batch 20 shipped on 2026-09-10 and Group F is complete.** The scraper acceptance run was
 done on 2026-09-09 (`DECISIONS.md` #111); the code that runs nightly, alerts on price drops
@@ -98,10 +99,13 @@ not blocking; it is one command away whenever you next run `apply`.
       > gives the two cron services `DATABASE_URL` and the VAPID vars by reference from
       > `api`, but never those three — and both scripts import the whole app's `settings`,
       > which enforces every check even though a scrape/reminder job never touches auth.
-      > **Fix:** add `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `FRONTEND_ORIGIN` as
+      > ~~**Fix:** add `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `FRONTEND_ORIGIN` as
       > `preserve()`/by-reference vars on `cron-scrape` and `cron-reminders` in
-      > `railway.ts`, then `config plan` (check `0 to destroy`) and `config apply`. Until
-      > this lands, §5.5 will keep failing and Batch 21's 7-day window can never start.
+      > `railway.ts`, then `config plan` and `config apply`.~~ **Superseded 2026-09-23 by a
+      > code fix (`aeb87aa`, `DECISIONS.md` #204). Don't add these variables.** A job no
+      > longer needs the web server's secrets, and handing session-signing keys to two
+      > containers that never sign anything would be the worse fix. §5.5 and Batch 21's
+      > 7-day window start with the first cron run on 24 Sep.
 
       A Railway cron is still a hosting change (`DECISIONS.md` #60), and an in-process
       scheduler would still be worse than nothing — it runs once per container, so scaling
