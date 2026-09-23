@@ -3777,3 +3777,24 @@ contemporaneous.
        deck's Add button, and a mis-tap there costs a vote. The wider question
        (`OWNER-ACTIONS.md` item 11) stays open.
 
+208. **Batch T5's release calendar: asked by release type, and fresh without a schedule.
+     Shipped 2026-09-23 (`1e08f40`).**
+
+     - **TMDB is asked for releases by type, not for "upcoming" films.** `/discover/movie`
+       with `region=GB` and `with_release_type=5` applies the date window to the GB
+       physical releases themselves. S6 looked for disc dates among films about to reach
+       cinemas, which almost never have one yet. **The first live run found 28 disc
+       releases (18 4K, 10 Blu-ray)**, where the table had held none, plus 131 cinema
+       dates to March 2027.
+     - **Disc releases are not genre-filtered; cinema dates still are (§7.3).** A disc
+       calendar for a collector is about the discs: the 4K re-issues of *Blood Simple* and
+       *Inside Llewyn Davis* would not survive a filter built from the shelves' top genres.
+     - **Freshness comes from reads, not a timer.** A read of a calendar more than a day
+       old starts one refresh after the response, claimed by a conditional `UPDATE` of a
+       single-row state table, so two readers cannot start two. The `.ics` feed's polls
+       count as reads. #60's objection is to in-process *scheduling*, and nothing here
+       runs on a clock. The cost: a calendar nobody reads goes stale, and nobody minds.
+     - **In tests, the background refresh is a no-op unless a test is about it.** It
+       takes a real session of its own, which in CI committed curated sale events into
+       the shared test database and broke an unrelated test. CI found it before merge.
+

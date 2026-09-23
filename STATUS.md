@@ -45,7 +45,11 @@ waiting for his go.**
 - T4 (movie night: shortlist first, Skip and Add, Send to Mark by push, pushes sent at
   once) shipped as `99b04c0`. Its two-phone check is Craig's (`OWNER-ACTIONS.md` 16b).
 
-**Next: T5**, releases. Then T6 to T8.
+- T5 (the release calendar, by release type and self-refreshing) shipped as `1e08f40`. The
+  first live run wrote **28 disc releases** and 131 cinema dates.
+
+**Next: T6**, collection value. Then T7 and T8, each waiting on an owner step first
+(`OWNER-ACTIONS.md` 17 and 18).
 
 ## Next
 
@@ -450,6 +454,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (Batch T5 — releases, `1e08f40`)** — The calendar asks TMDB for GB releases
+  by type, six months ahead. Discs aren't genre-filtered. The calendar refreshes itself
+  when read and more than a day old. "Coming to disc" lists the next releases from today,
+  and Home leads with five. **Live run: 28 disc releases** (18 4K, 10 Blu-ray) and 131
+  cinema dates, with no errors. Migration 035 is applied. CI failed once: a background
+  refresh leaked rows between tests. It was fixed and green (#208).
 
 - **2026-09-23 (Batch T4 — movie night, `99b04c0`)** — A night opens on its shortlist,
   showing your own vote on each film. The deck says Skip and Add. "Send to Mark" puts him
