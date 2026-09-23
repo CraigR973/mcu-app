@@ -4,8 +4,8 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-14**,
-after Batch 24 deployed and the live eBay Browse keyset was confirmed. *Numbers changed at
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-23**,
+after the sign-in fix (`aa112bd`) and the scheduled-jobs diagnosis. *Numbers changed at
 the 2026-09-09 review; the old ones are noted in brackets so an earlier conversation still
 maps onto this file.*
 
@@ -14,6 +14,15 @@ maps onto this file.*
 ## ⛔ Blocking the batch queue
 
 ### 1. Two crons and one device — everything Batches 11 and 20 left for you
+
+> **Diagnosed 2026-09-23 from read-only Railway logs: both crons fire on time and crash on
+> import, every day.** `Settings()` refuses to start in production without
+> `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and a non-localhost `FRONTEND_ORIGIN`.
+> `.railway/railway.ts` gives the job services none of these, and no job uses them.
+> `scrape_runs` holds a single manual row, from 10 Sep. **A code-only fix is proposed in
+> `docs/phase-batches.md`** under Group T ("Scheduled jobs never start"). It needs no Railway
+> change from you, only your go. Once it ships, the rest of this item is still yours: the
+> real-device push check, and the `restartPolicyType` drift.
 
 **Batch 20 shipped on 2026-09-10 and Group F is complete.** The scraper acceptance run was
 done on 2026-09-09 (`DECISIONS.md` #111); the code that runs nightly, alerts on price drops
@@ -857,6 +866,32 @@ tree. Three ways out, in ascending cost:
 
 The copyright question narrows to `source-images/` and `concepts/`, not to `stack-family/`,
 whose shipped members are all drawn artwork.
+
+---
+## Coming with Group T — only once Craig approves it *(new 2026-09-23)*
+
+None of these is needed yet. Each gates one batch of Group T (`docs/phase-batches.md`).
+
+### 16. Check the sign-in fix on your phone
+
+`aa112bd` is live. Your current session was issued at 18:46 UTC on 22 Sep, so the first time
+you open the app after 18:46 UTC on 23 Sep it should renew silently instead of asking for
+your PIN. If it asks, say so: the fix has a hole. Mark's next open works the same way,
+unless his session was already cleared before the fix.
+
+### 17. A Brave Search API account and key — for T7, the Blu-ray.com backfill
+
+This is `DECISIONS.md` #202. Brave charges $5 per 1,000 queries, with $5 of monthly credit,
+so expect roughly £5–10 for about 1,250 discs. The key goes into Railway, which is a
+credential change and yours.
+
+### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
+
+This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consent settings in
+eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.
+**Optional:** apply to eBay for Buy API access if you want true automatic purchase. eBay
+approves it only for select partners under contract, so expect a refusal. Nothing in T8
+depends on it.
 
 ---
 ## Deprioritised by owner decision — not blocking

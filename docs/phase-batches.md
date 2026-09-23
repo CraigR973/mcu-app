@@ -1726,6 +1726,187 @@ second.
 
 ---
 
+## Owner snag batches — from the 2026-09-23 reconciliation
+
+**Not from the April spec, and there is no `**Phase X.Y:` heading to recover.** They come
+from Craig's 14 snags of 23 Sep, reconciled against the code and live data in
+`docs/owner-snags-2026-09-23.md`. **The criteria below were authored on 2026-09-23**, so
+`DECISIONS.md` #54 does not apply. The shaping decisions are **#200–#203**.
+
+**Status: proposed, not approved.** Only T1 has shipped. Craig's standing rule is that a
+multi-batch run is shown whole and waits for his go.
+
+**Order is dependency-derived:** T2 → T3 → T4 → T5 → T6 → T7 → T8. T4 needs T2's search and
+T3's top bar. T6 and T8 share the eBay client. T6, T7 and T8 each end in a scheduled job, so
+they want the scheduled-jobs fix below first.
+
+---
+
+### ~~T1 — Session renewal~~ **shipped 2026-09-23 (`aa112bd`) as a fix, not a batch**
+Covers snag 5. `DECISIONS.md` #200. CI green, with 1,175 passed and the four new Postgres
+tests among them. Production serves `aa112bd` with `db: ok`.
+
+**Live check owed:** a renewal row in `refresh_tokens` the next time either person's
+24-hour access token lapses (Craig's lapses at 18:46 UTC on 23 Sep). A renewal's row is
+created in the same instant its predecessor is revoked.
+
+### Scheduled jobs never start — proposed fix, awaiting Craig's go
+Found on 23 Sep from read-only Railway logs. Both crons fire on time (03:00 and 08:00 UTC)
+and crash on import. `Settings()` refuses to start in production without
+`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and a non-localhost `FRONTEND_ORIGIN`.
+`.railway/railway.ts` passes none of them to the job services, and no job uses them: only
+`auth.py` and the CORS set-up in `main.py` read them. Every scheduled run has crashed.
+`scrape_runs` holds a single manual row, from 10 Sep.
+
+**Proposed:** a job profile. The job scripts declare themselves before importing settings,
+and the fail-closed check skips the web-only secrets for a job while still refusing an empty
+database URL. Tests prove the API still refuses to boot without them. Code only, no hosting
+change. **Switching it on starts the nightly shop price checks and the 08:00 reminder
+pushes for the first time.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High, because it edits the
+fail-closed configuration.
+
+### T2 — One search 🟡
+**Covers snags 4, 6, 14 and 10d.** Opus 5 · high / GPT-5.6 Sol · High. It merges two sources,
+and a missed or mislabelled owned film is wrong data that looks right.
+
+**Acceptance:**
+- Picking a result in the phone search sheet closes the sheet and shows the film. Tested.
+- Each owned result shows the signed-in person's own "Seen <date>" (their latest watch) or
+  "Not seen". `lastWatchedAt` ships in the API response and its zod schema together, and is
+  tested for two people with different histories.
+- Films not in the collection follow the owned ones, labelled "Not in the collection". They
+  never duplicate an owned film.
+- Unowned results show UK subscription streaming services where TMDB has them. Lookups are
+  limited to the first few results and cached. A failed lookup loses the provider line,
+  never the result.
+- Tapping an unowned film opens a film card with the overview, where to watch (stream, rent
+  or buy), "Add to Wanted", and "Suggest for movie night" when a night is open.
+- Movie night's "Suggest a film" uses the same live search.
+- Offline, owned results still come from the cache, and the TMDB half says it needs a
+  connection.
+- Gate green, and checked in a browser at 375×812.
+
+### T3 — Navigation and the Archive row 🟡
+**Covers snags 1, 2, 12, 13 and 10a.** Opus 5 · high / GPT-5.6 Sol · High. `DECISIONS.md` #201.
+
+**Acceptance:**
+- Below 1024px the bottom bar has five slots: Home · Archive · (+) Add · Movie night · Search.
+  Labels are at least 11px and none truncates at 375px, measured.
+- Below 1024px there's no slide-out menu: the top-left menu button and "More" are gone.
+  Desktop keeps its sidebar.
+- The phone top bar shows the page's title, a back arrow on sub-pages, and the person's
+  initial, which opens a "You" page.
+- The "You" page lists every destination not in the bar, and honours hide-when-empty (#154)
+  and admin-only items. A test proves every destination is reachable from the bar or the
+  "You" page.
+- On phones the kicker, title and description block isn't rendered, because the title is in
+  the top bar. Desktop keeps its page headers.
+- The Archive's controls are one row at every width: Filters with its active count, Sort,
+  the film count (once) and the layout switch.
+- Runtime filter: from and to minutes in the Filters panel, `runtimeMin` and `runtimeMax` in
+  the API and in smart collections, shown as a chip. Films with no runtime are excluded when
+  either bound is set, as the rating filter already does. Tested.
+- The command palette and keyboard shortcuts still reach every destination.
+- Gate green, and checked in a browser at 375×812 and at desktop width.
+
+### T4 — Movie night 🔴
+**Covers snags 10b, 10e and 11.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High, because a push
+that never arrives looks like no news (Batch 11's reason). Needs T2 and T3.
+
+**Acceptance:**
+- Opening a night shows the shortlist: every suggestion with its poster, title, who suggested
+  it and your own vote. "Start swiping" opens the deck at your first undecided film. Other
+  people's votes stay hidden until a match (#157).
+- The deck's buttons read "Skip" and "Add", with icons. Swiping and arrow keys are unchanged.
+- "Send to <other person>" adds them to the night and queues a push that opens
+  `/movie-night/<id>`. It honours notification preferences and quiet hours, and is
+  deduplicated per night.
+- "Share link" uses the phone's share sheet, with copying as the fallback. After sign-in, the
+  link lands on that night (tested: login returns to it).
+- The invited person sees the night in their list before opening anything.
+- **Owner check, not an agent's:** the push arrives on both phones and opens the night, on
+  Craig's iPhone and Mark's Android. This also closes Batch 11's open 6.2.
+- Gate green, and a browser pass.
+
+### T5 — Releases 🟡
+**Covers snag 9.** Opus 5 · high / GPT-5.6 Sol · High.
+
+**Acceptance:**
+- Ingestion asks TMDB's discover endpoint by release type for GB: physical (type 5) and
+  cinema (types 2 and 3), six months ahead. It reads each physical film's own GB type-5 date
+  and classifies 4K against Blu-ray as today. On 23 Sep TMDB listed **28** GB disc releases
+  to 31 Dec, where the current lookup finds none.
+- Disc releases aren't genre-filtered. Cinema dates keep §7.3's genres of interest.
+- "Coming to disc" lists the next releases from today, whichever month is on screen.
+- Home opens with the next few disc releases, hidden when there are none.
+- The calendar stays fresh without a schedule. When it's read (the page or the `.ics` feed)
+  and the last refresh is more than 24 hours old, a refresh runs in the background, one at a
+  time. This doesn't breach #60: nothing is scheduled in-process, and a read triggers
+  idempotent work.
+- A live run is recorded with its counts. A run that writes far fewer than TMDB lists is a
+  failure to investigate, not a coverage figure.
+- Gate green, and a browser pass.
+
+### T6 — Collection value 🟡
+**Covers snag 7.** Opus 5 · high / GPT-5.6 Sol · High.
+
+**Acceptance:**
+- A valuation run prices every live physical disc with the existing estimator, leaving out
+  downloads. It makes one eBay call per film and format, and stores each disc's price, sample
+  size, basis and date. The migration is reversible.
+- Runs are resumable and budgeted. Each stops at a set share of the 5,000-a-day allowance,
+  carries on next time, and records its counts.
+- A disc with too few matched listings is marked "not priced", never guessed.
+- Home shows the total "at current eBay asking prices", how many discs are priced, and the
+  date. A film's page shows its stored estimate beside the on-demand check.
+- **The first full live run is Craig's to authorise**, because it spends about 1,460 eBay
+  calls. Monthly refreshes need the scheduled jobs, plus eBay keys on the job service, which
+  is a hosting change and his.
+- Gate green.
+
+### T7 — Blu-ray.com backfill 🔴
+**Covers snag 3.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High. A wrong-edition match is wrong
+data that looks right (Batch 24's reason), and the work runs under a risk acceptance (#110).
+`DECISIONS.md` #202.
+
+**Acceptance:**
+- The 10 old spec records are restored onto the matching new discs, each one checked by its
+  source URL.
+- For each Blu-ray and 4K disc without specs, the outside search API proposes exact
+  Blu-ray.com release pages, and only URLs that pass #110's release-page predicate count. A
+  single strong match on title, year, format and UK edition is accepted. Anything else waits
+  in a confirm queue in the app.
+- Nothing is fetched until a page is accepted. Fetching runs in bounded nightly batches under
+  #110's pacing and halt rules, with provenance on every row.
+- Search spend is capped per run and counted.
+- The Dolby Vision, Atmos and Region-free filters stay hidden while no disc has specs
+  (#154's rule).
+- Coverage is reported against the ~1,250 Blu-ray and 4K discs.
+- **Owner steps first:** a Brave Search API account and key (a credential), and the job
+  service's environment.
+
+### T8 — Mark's eBay 🔴
+**Covers snag 8.** Opus 5 · max / GPT-5.6 Sol · Max. It's the first personal third-party
+account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
+
+**Acceptance:**
+- "Connect eBay" in settings uses eBay's authorization-code consent with the fewest scopes.
+  The token is encrypted at rest with a key from the environment, and disconnecting deletes
+  it. Only the account's owner sees their eBay data.
+- The app shows his watch list (Trading API `GetMyeBayBuying`) and his selling list
+  (`GetMyeBaySelling`, active and sold).
+- Price targets can be set on any watched item or saved search and are checked on a
+  schedule. When one is met, a push arrives with a one-tap link. For auctions, the alert
+  offers to set the target as a maximum bid on eBay, and eBay's own bidding takes over.
+- Deal scan: new GB 4K and Blu-ray listings well below the film's usual asking price. Films
+  on his Wanted list come first, and owned films are skipped unless the listing would be an
+  upgrade. Finds go to the Deals page and arrive as a push, within a set share of the eBay
+  allowance.
+- The app never stores his eBay password or drives eBay's website. Automatic purchase stays
+  off unless eBay grants Buy API access, which would be a separate decision.
+- **Owner steps first:** OAuth settings in eBay's developer portal (redirect URL and RuName),
+  the encryption key in Railway, and eBay keys on the job service.
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -1803,6 +1984,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
+| **T** | ~~T1~~ → **checkpoint: go on the jobs fix and the group** → T2 → T3 → T4 → T5 → T6 → **checkpoint: search API account** → T7 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Proposed, not approved** — only T1 shipped (as a fix, `aa112bd`). Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

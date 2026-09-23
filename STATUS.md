@@ -2,249 +2,44 @@
 
 ## Now
 
-**The collection refresh is done — 2026-09-18. 1,880 discs live, 0 watch rows lost.**
-The fresh spreadsheet replaced the April catalogue in one transaction. Verified against a
-full pre-run snapshot of `movies`, `collection_items` and `watch_log`:
+**23 Sep 2026: Craig's 14 new snags are reconciled, the sign-in bug is fixed, and Group T is
+waiting for his go.**
 
-| | before | after |
-|---|---|---|
-| live discs | 1,857 | **1,880** |
-| films | 1,854 | **1,888** (34 new) |
-| watch rows | 1,555 | **1,555** — none lost, none repointed |
-| films that lost a `tmdb_id` | — | **0** |
-| old items in Trash | 0 | **1,857**, all 10 Blu-ray.com spec rows among them |
+- **Sessions renew now (`aa112bd`, live).** Until now, every sign-in ended after 24 hours.
+  `/auth/refresh` split the token at the wrong dot and never matched a row: **30 sign-ins
+  and zero renewals** from 8 to 22 Sep. It shipped as a fix, not a batch, at Craig's word
+  (`DECISIONS.md` #200). **Live check owed:** a renewal row in `refresh_tokens` (created in
+  the same instant its predecessor is revoked) the next time either person's access token
+  lapses. Craig's lapses at 18:46 UTC on 23 Sep.
+- **The scheduled jobs have never run.** Both Railway crons start on time and crash on
+  import. `Settings()` refuses to start in production without the JWT secrets and
+  `FRONTEND_ORIGIN`, and `.railway/railway.ts` never passes those to the job services. A
+  code-only fix (a job profile) is written up in `docs/phase-batches.md` and waits for
+  Craig's go. **Switching it on starts the nightly shop checks and the morning reminder
+  pushes for the first time.** `OWNER-ACTIONS.md` item 1 is updated.
+- **The 23 Sep snags** are in `docs/owner-snags-2026-09-23.md`, with Craig's answers:
+  - navigation: five tabs (#201)
+  - Blu-ray.com: the full backfill, via an outside search API (#202)
+  - eBay: a hybrid of alerts and eBay's own automatic bidding (#203)
+- **Group T (T2–T8) is proposed in `docs/phase-batches.md` and not approved.** Craig's rule
+  is that a multi-batch run is shown whole and waits for his go.
+- **Two records were wrong and are now corrected.** §17 row 44 and this file's Group S
+  table said S6 wrote the first physical release rows. The live `release_calendar` holds
+  none, and nothing in it has been added or changed since 9 Sep.
 
-The 4K upgrades are live — *Inception*, *I Am Legend* and *Hacksaw Ridge* are all
-`4k_uhd` on Front 1st now — along with 25 new titles and the shelf moves.
+**Live numbers (23 Sep):**
+- **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
+  1,887 films (1,521 identified).
+- **`watch_log`:** 1,566 rows.
+- **`release_calendar`:** 32 rows (30 cinema dates up to 6 Oct, and 2 sale events).
+- **Discs with Blu-ray.com specs:** 0.
+- **Purchase prices:** 0.
 
-**7 watch rows sit on 4 films with no disc**, which is the accepted cost and was named
-before the run: *Misery* (2) and *Project Hail Mary* (2) were **already** disc-less
-beforehand, so the refresh took nothing from them; *The Secret Identity of Jack the
-Ripper* (2) was removed from the sheet deliberately; *Crime and Punishment* (1) is a TMDB
-duplicate — the same 1935 film exists twice there and the sheet row matched the other copy.
-Only the last two lost anything, which is exactly what Batch 42's guard predicted.
-
-**It took three batches on the day to make that safe**, and the middle one is the lesson.
-The first dry run against the fresh sheet would have duplicated **401 films and stranded
-587 watch rows in silence** — because Batch 40's identification run, done correctly and in
-the right order that morning, had given those films a `tmdb_id` and so broken the
-`title = %s AND tmdb_id IS NULL` lookup the importer used to reuse a film (#198). Batch 39's
-guard passed it: that guard counts *unidentified* films holding watches, and the answer was
-1. Batch 41 made unsettled rows attach to the film already held and added the guard that
-asks the question that matters — will every watched film still own a disc? Batch 42
-narrowed it to films that actually *lose* one, after it named two that were never at risk
-(#199).
-
-| batch | what | ships |
-|---|---|---|
-| 40 | identification reachable on a re-run | `78dc054` |
-| 41 | unsettled rows reuse the film we hold + orphan guard | `2d2858c` |
-| 42 | guard counts discs lost, not films ending disc-less | `00bdcd9` |
-
-**Next step: nothing is blocked.** `OWNER-ACTIONS.md` 1k and 1i are both closed. Worth
-doing when convenient: re-run the diary import, since ~25 newly catalogued films may pick
-up some of the 739 diary entries that previously matched nothing, and the 28 ambiguous
-entries should now mostly settle themselves on the years identification supplied.
-
-> **The command in 1i needs `TMDB_READ_TOKEN` exported as well as `DATABASE_URL`.** The
-> first attempt exported only the latter, `config.py` defaults the token to `""`, and all
-> 181 identifications failed with *"Illegal header value b'Bearer '"* — **while the script
-> exited 0**. Nothing was written and nothing was harmed, but a run that fails every
-> identification should not look like a success. Worth a guard.
-
-**Batch 39 — Collection refresh shipped on 2026-09-16 at `b1db470`.** Production
-`/api/v1/health` serves the full merge SHA with `db: ok`; migration **034** is applied.
-The importer now has an atomic, table-locked `--replace-items` path, a no-write dry run,
-and a guard that refuses while unidentified films hold watch history unless Craig names
-the consequence with `--accept-split`. CI's Postgres 17 run proves old items remain fully
-restorable, watches survive, identified films reuse their existing movie row, and derived
-ownership ignores the Trash rows.
-
-**No live collection refresh was run.** The collection remains at 1,857 active discs and
-the 10 active Blu-ray.com specs remain where they are. The eventual owner-run refresh will
-leave those specs on the old Trash rows and create replacements without them, which Craig
-accepted (#195). `OWNER-ACTIONS.md` 1k remains the go-live blocker: identify the watched
-unidentified films first, obtain the fresh spreadsheet, run the replacement dry run, then
-run the live replacement explicitly.
-
-**Group S is also complete.** All eight snag batches shipped on 2026-09-15, in order:
-S1 → S2 → S3 → S4 → S8 → S5 → S6 → S7.
-
-| | Batch | SHA | What it did |
-|---|---|---|---|
-| S1 | Remove Gift links | `43d1ecf` | 0 rows, 0 views — dropped entirely |
-| S2 | App-feel fixes | `baef542` | 16px controls, root `touch-action`, real Letterboxd links |
-| S3 | Navigation shape | `a3409f1` | 14 destinations → 8 |
-| S4 | Quick add within reach | `45ec4fa` | Mark can add a disc; a phone has somewhere to do it |
-| S8 | Watch history, backfill | `0a8c813` | importer + dry run; **live import waits** |
-| S5 | Watch history, ongoing | `834c3f1` | RSS sync; **first live fetch waits** |
-| S6 | Physical release dates | `b5b3796` | first physical rows ever written; **coverage 1%** |
-| S7 | Movie night rebuild | `804744f` | suggestions, films outside the Archive, "has he seen it" |
-
-### The watch history is in — 1,555 rows, imported 2026-09-15
-
-**Run at Craig's instruction after the group finished.** `watch_log` went from **0 rows to
-1,555** across **1,101 distinct films**, matching the dry runs exactly (#189).
-
-| | Craig | Mark |
-|---|---|---|
-| Watches | **593** | **962** |
-| Distinct films | 477 | 869 |
-| Rewatches | 112 | 85 |
-| Range | 2013-12-24 → 2026-09-05 | 2022-11-02 → 2026-09-14 |
-
-**Four features that were inert are live.** Most watched opens on *Jaws* and *The Muppet
-Christmas Carol* at 7 apiece; Worth a rewatch has 161 candidates; On this day already has
-something — they both watched *Touch of Evil* on 15 September 2023; and **245 films both of
-them have seen** is what S7's "has he seen it" reads, up from 0.
-
-**Idempotency is proved against production now, not fixtures.** A second run of the same
-file wrote **0** and reported all 593 already imported. **The 28 ambiguities were skipped
-rather than guessed**, and are in `.letterboxd-export/*-ambiguous.csv`.
-
-### ⛔ Go live is blocked on the owner-run spreadsheet refresh
-
-**Re-running `import_collection.py` over the live database will not refresh anything**
-(`DECISIONS.md` #192, `OWNER-ACTIONS.md` **1k**). Found on 2026-09-15 when Craig proposed a
-fresher import of his dad's spreadsheet before go live.
-
-Items deduplicate on `import_source_row` — **the spreadsheet line number** — and the 1,857
-discs occupy lines 2–1867 with exactly **9 gaps**, which are the 9 blank rows gotcha 0
-already records. **Every non-blank line is claimed**, so every disc is skipped however much
-its row changed. The *film* upsert runs independently of that check and is
-`ON CONFLICT (tmdb_id) DO NOTHING` — and **a NULL `tmdb_id` does not conflict** — so any
-title TMDB can now match gets a brand-new `movies` row **with no discs on it**, while the
-old row keeps the disc, the shelf and the watch history.
-
-> **#32's "re-running is safe" is true and was never the claim being relied on.** Safe means
-> it will not duplicate discs. It is not a claim that it will *update* them, and the two read
-> alike right up until somebody needs the second one.
-
-**Two things changed today and narrow the options.** 397 unidentified films now carry **586
-watch rows**, and they are precisely the messy-titled ones exact-title dedup will miss —
-`African Queen, The`, `39 Steps The (Robert Donat)`. And **a wipe-and-reload is no longer
-free**: `watch_log.movie_id` is `RESTRICT`, so those rows cannot be hard-deleted while
-watches point at them. That option was open this morning.
-
-**Craig chose on 2026-09-16: rebuild the discs, keep the films.** Soft-delete the 1,857
-items and re-import the fresh sheet; `movies` is never touched, so the watch history, the
-wanted list, the credits and the completion sets all survive, and the old items sit in
-Trash for 90 days if the new sheet turns out wrong.
-
-**The deciding measurement, corrected at Batch 39 start:** `collection_items` holds no
-app-created data apart from **10 Blu-ray.com spec records** — 0 photos, 0 notes, 0 prices,
-0 loans and 0 barcodes — and **nothing references a `collection_items.id`**:
-`box_set_items`, `loans` and `item_photos` are all empty, and the audit log has zero rows
-targeting an item. Craig accepted losing those 10 specs from the active collection; their
-old rows retain them in Trash for 90 days, while the new items start without them (#195).
-Transferring them by spreadsheet row would trust the unstable identity this batch exists
-to replace.
-
-**The code half is shipped as Batch 39 (`b1db470`).** The live-row dedup filter, atomic
-replacement, Trash restoration, movie/watch preservation, derived-field recalculation and
-history-split guard are proved in Postgres CI. The mechanism shipped without exercising it
-against live user data; the fresh spreadsheet does not exist yet and the eventual run is
-explicitly Craig's.
-
-**Deferring identification does not save duplicated work**, which was the premise worth
-correcting: the collection importer **cannot** back-fill a `tmdb_id` onto an existing row.
-Nothing identifies those 754 rows except 1i step 2 or the identify button.
-
-**`.letterboxd-export/` is load-bearing now** (#193). Two of the three paths rebuild the
-watch rows by re-running the diary import, which works only while those CSVs exist — and
-they live on one machine, gitignored, from a retrieval nothing in the product repeats.
-Worth a backup off that machine and out of the repo.
-
-### Two things still wait for Craig, and one new one
-
-1. **`OWNER-ACTIONS.md` 1i step 2 — identify the ~397 films. NOT RUN.** Deliberately: it
-   rewrites title, year, poster, runtime and cast on rows that already exist, and merges
-   two into one where the collection holds both, **deleting one** (#175). Step 1 running is
-   not authorisation for it. It also makes ~800 live TMDB calls. **It is what would settle
-   most of the 28 ambiguities** — nothing distinguishes two `Dunkirk`s while neither has a
-   year.
-2. **`OWNER-ACTIONS.md` 1j — press "Sync now" once.** One button press, and the first time
-   this app has ever talked to Letterboxd. It also settles the one thing the fixtures could
-   not: the feed's exact XML (#178). **Now more useful than it was this morning** — with
-   1,555 rows already in, a sync should report almost everything as *already logged*, which
-   is the sync working.
-3. **`OWNER-ACTIONS.md` 1h — two checks on the phone.** Does tapping a field still zoom,
-   does double-tapping, and does **pinch** still work (it should). And does a Letterboxd
-   link open the Letterboxd app (#163).
-
-> **⚠️ Two credentials were printed into a session transcript on 2026-09-15** — the Supabase
-> service-role key and the TMDB API key — by a careless `head -3` of `apps/api/.env.local`
-> while checking its quoting. Nothing was committed and nothing left the machine beyond that
-> transcript, but **both are worth rotating**, and the TMDB one has form: `STATUS.md` already
-> records an outage caused by that token going missing. Rotating is a hosting change and
-> therefore Craig's.
-
-### Four spec facts turned out to be wrong, and the code was right each time
-
-- **#160 said 6 ambiguities; the shipped matcher finds 28** (#174). #160's pass did not
-  collapse parenthetical disambiguators or rotate trailing articles, so `'Mummy, The
-  (Brendan Fraser)'` and its two siblings read as unrelated titles and *The Mummy* matched
-  **none** — scored "not in the collection" rather than offered as a question. **22 silent
-  misses became 22 explicit questions**, and 25 more watches found a home. 66% unchanged.
-- **The S4 criterion said "Retailers still refuses a viewer"** (#172). `GET /retailers` has
-  answered 200 for a viewer since Batch 18, deliberately. The criterion is true of the
-  *page*, not the endpoint; every retailer **write** is still admin-only.
-- **The S4 criterion named three endpoints; eight had to move** (#170). "List for sale"
-  does not call an eBay route — it writes through `PUT /collection/{id}/listing`, which
-  nothing named. Left admin-only, **every visible step would have worked** and the button
-  would have 403'd.
-- **The S6 row said "all 32 live rows are cinema dates"**; it is 30 theatrical plus 2
-  `sale_event`. The point stood — no physical row had ever existed.
-
-### The number S6 was told to report is 1%
-
-Measured against live TMDB: over three pages of `/movie/upcoming` GB, **1 of 58 forthcoming
-films had a GB physical date at all**. Across a 60-film sample of the collection, 11%,
-against 68% for cinema dates. **So the disc section leads and is usually empty, and the
-page states the number** rather than implying no discs are coming — which is exactly the
-failure mode that ledger row named. "A film with no physical date is still visible" is the
-load-bearing criterion, not a defensive afterthought: it is 99% of them (#181).
-
-### Six CI failures across eight batches, and what each was
-
-Every one was caught by CI and none reached `main`.
-
-- **S1, S4, S7-adjacent** — three fixture or assertion bugs in the batches' *own new
-  tests*, all invisible locally because the Postgres-backed tests skip on this machine
-  (gotcha 3). S4's was the dangerous shape: it passed a **409 duplicate** off as a role
-  check, and a looser assertion would have gone on passing after the widening was reverted
-  (#173).
-- **S5** — CI's mypy resolves `db.scalar(...)` as `Any` where this machine's does not;
-  gotcha 21, third time this session.
-- **S8** — the new ambiguity test constructed a tie the engine can legitimately break. The
-  code was right and the assertion wrong.
-- **S6** — **not a code failure at all.** `git add` was handed two already-deleted paths
-  alongside everything else; it **aborts the whole invocation** on a pathspec that matches
-  nothing, and `2>/dev/null` hid the error, so the commit carried only two deletions. S1
-  hit the identical trap and caught it before committing (#184).
-
-> **Staging explicitly is only half of `AGENTS.md`'s rule.** The other half is checking
-> `git diff --cached --name-only` before committing, and never suppressing `git add`'s
-> stderr. Worth making a habit rather than a lesson.
-
-### Nine test expectations changed, every one required by a criterion
-
-S3 (3): the command palette no longer indexes 'Stats'; `g s` goes to `/settings`.
-S4 (2): a viewer posting to `/collection` is a **201**, and listing a superseded disc a
-**200**. S6 (1): the sidebar is **7** destinations, not S3's 8, because S6 merged two more.
-S7 (3): a vote carries a `suggestionId`, and a card no longer vanishes when you swipe it.
-**None weakened an assertion** — S3's palette test was strengthened to prove 'Stats' and
-'Insights' are genuinely gone, and S7's kept the privacy property the old behaviour
-protected.
-
-### The collection is still 1,857 discs and `watch_log` still has 1,555 rows
-
-Batch 39 changed schema and code but did not run the live replacement. Group S's authorised
-diary import wrote the 1,555 watches recorded above; its other owner data operations still
-wait.
-
+**Next step:** Craig's go on the scheduled-jobs fix and on Group T, then T2.
 
 ## Next
+
+**For what comes next, read Group T in `docs/phase-batches.md`.** The list below is the 9 Sep overnight run, and all of it has shipped.
 
 **The overnight run of 2026-09-09 — eight batches, in this order.** The order is
 dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 32 needs 31.
@@ -645,6 +440,26 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (the 23 Sep snags reconciled, and sign-in renewal fixed, `aa112bd`)** — Craig
+  raised 14 snags. Each was checked against the code, live Neon (read-only) and live TMDB,
+  and the results are in `docs/owner-snags-2026-09-23.md`. Found along the way:
+  - **Session renewal had never worked:** 30 sign-ins and 0 renewals. Fixed on
+    `fix/session-renewal`. CI was green (1,175 passed, including the 4 new Postgres
+    tests), and production serves `aa112bd` with `db: ok`.
+  - **Both scheduled jobs crash on import every day,** because they're missing web-only
+    secrets.
+  - **`release_calendar` hasn't changed since 9 Sep** and holds no physical rows. That
+    contradicts S6's record, which is now corrected.
+
+  Craig's answers:
+  - fix the sign-in bug without making it a batch
+  - five-tab navigation (#201)
+  - Blu-ray.com option A (#202)
+  - an eBay alert and auto-buy hybrid (#203)
+  - diagnose the jobs
+
+  Group T is proposed and not approved.
 
 - **2026-09-20 (identification tidy-up — and Jack the Ripper got its disc back)** — Ran
   `--identify` over both diaries at Craig's instruction after the import above. **3 films

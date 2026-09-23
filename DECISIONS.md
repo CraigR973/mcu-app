@@ -3630,3 +3630,68 @@ contemporaneous.
      Measured on the same production dry run: **5 films / 9 watch rows → 3 films / 5 watch
      rows**, and each of the three is now a real one — a disc removed from the sheet, and
      two rows whose sheet title matches a different TMDB film than the one we hold.
+
+
+### 2026-09-23 — Sessions never renewed, and Craig's answers on the 23 Sep snags
+
+200. **Session renewal never worked. It does now (`aa112bd`), shipped as a fix rather than a
+     batch at Craig's word.** `/auth/refresh` split the refresh token at its *first* dot. The
+     token is `<jwt>.<opaque>` and a JWT carries two dots of its own, so the lookup hashed
+     `<payload>.<signature>.<opaque>`, matched no row, and every renewal became a sign-out.
+     Every session therefore ended when its 24-hour access token did: **30 sign-ins and zero
+     renewals between 8 and 22 Sep**, read from `refresh_tokens` (a renewal's row is created
+     in the same instant its predecessor is revoked; no row ever was). `/auth/logout` split
+     the same way and never revoked anything.
+
+     *The fix:* `split_refresh_token` takes the opaque half after the **last** dot and both
+     routes use it; `/auth/refresh` now also verifies the signed half against the refresh
+     secret and requires its `jti` and `sub` to name the row it found — which the comment in
+     `_issue_tokens` had always claimed and nothing did. The web client stops signing people
+     out when a renewal fails for a reason other than a refusal (#48's rule, which
+     `AuthProvider` kept and `refreshTokens` did not), and keeps the tokens another tab
+     rotated while its own renewal was in flight.
+
+     *Why nothing caught it:* no test ever renewed a session. Batch 3's suite proved each
+     primitive — minting, hashing, the separate secrets, the lockout — and never the chain.
+     `test_auth_refresh.py` now runs sign-in → renew → renew → replay → sign-out against
+     Postgres, and each new test was run against the old code first and failed.
+
+201. **Phones get five tabs and no slide-out menu. Craig, 23 Sep, replacing the six-slot bar
+     S3 and S4 built.** Bottom bar: Home · Archive · (+) · Movie night · Search — search keeps
+     the slot Craig asked for on 14 Sep. Top bar: a back arrow on sub-pages, the page's title,
+     and the person's initial opening a "You" page with every other destination. Page titles
+     move into the top bar on every phone page, and the Archive's controls become one row.
+     Desktop keeps its sidebar. *Why:* six slots forced 9px labels, two buttons opened the
+     same menu, and every page repeated its own title in a block above the content. #154's
+     merges and hide-when-empty rule are unchanged.
+
+202. **Blu-ray.com specs: the full backfill, finding each disc's page through an outside
+     search API. Craig, 23 Sep (option A of three).** #110 bars Blu-ray.com's own search, and
+     that is why only 10 discs ever had specs: the fetcher needs an exact release URL per disc.
+     A paid web-search API (Brave's, $5 per 1,000 queries with $5 of monthly credit, so
+     roughly £5–10 for ~1,250 Blu-ray and 4K discs) proposes candidate release pages; a single
+     strong match on title, year, format and UK edition is accepted and anything doubtful
+     waits for a person to confirm. Fetching stays inside #110's bounds unchanged. *The risk
+     is #110's at full volume*, which #110 already accepted for a one-time backfill; using an
+     outside search engine is the new part and is what this entry records. The account and
+     key are Craig's to create.
+
+203. **eBay: a hybrid of alerts and automatic buying, within what eBay allows. Craig,
+     23 Sep.** eBay's Order (checkout) and Offer (bidding) APIs are Limited Release —
+     select developers approved by eBay business units under contract — so this app cannot
+     place an order or a bid itself. The hybrid it can have:
+
+     - **Buy It Now:** an alert when a price meets the target, one tap to the listing, and
+       the person presses Buy.
+     - **Auctions:** the alert offers to set the target as a maximum bid on eBay, and eBay's
+       own proxy bidding then bids automatically up to it. That is the automatic half, done
+       by eBay.
+     - **True automatic purchase** only if eBay grants Buy API access, which would be
+       Craig's application to make. If it is ever granted: off by default, with per-item and
+       monthly caps.
+     - **Never** a bot driving eBay's website with Mark's password. It breaks eBay's terms,
+       puts his account at risk, and would mean storing his password.
+
+     Reading his watch list and selling list needs his consent through eBay's own sign-in
+     and a stored user token — the first personal third-party token this app holds, and the
+     thing #142 deliberately avoided for selling. That is why T8 is Deep · max.
