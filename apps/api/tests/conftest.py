@@ -45,3 +45,20 @@ async def db_conn(db_engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
             yield connection
         finally:
             await transaction.rollback()
+
+
+@pytest.fixture(autouse=True)
+def _no_background_calendar_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Batch T5: a stale calendar read starts a refresh on a session of its own.
+
+    In a test that session is a real one, outside the test's rolled-back transaction, so
+    a refresh would commit rows (the curated sale events) into the shared test database
+    and break whichever test counted them next. CI found exactly that. Tests that are
+    about the refresh replace this no-op with a recorder.
+    """
+    import src.routers.calendar as calendar_router
+
+    async def _skip() -> None:
+        return None
+
+    monkeypatch.setattr(calendar_router, "refresh_calendar_if_stale", _skip)
