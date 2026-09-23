@@ -164,3 +164,67 @@ class CalendarIngestResponse(BaseModel):
     total: int
     errors: list[str]
     dryRun: bool
+
+
+class MaybeOwnedResponse(BaseModel):
+    """An owned film with no TMDB id yet whose title reads the same as this result."""
+
+    movieId: uuid.UUID
+    title: str
+
+
+class BeyondResultResponse(BaseModel):
+    """A film the search found on TMDB that is not on the shelf — Batch T2."""
+
+    tmdbId: int
+    title: str
+    year: int | None = None
+    posterPath: str | None = None
+    overview: str = ""
+    #: A ``movies`` row with this TMDB id and **no** live disc: a film you have watched,
+    #: wanted or sold. Its own page exists, with its history.
+    movieId: uuid.UUID | None = None
+    #: The caller's latest watch, when that row carries one.
+    lastWatchedAt: date | None = None
+    #: Subscription services in the caller's region.
+    streamingOn: list[str] = []
+    #: Whether ``streamingOn`` was looked up at all. Only the first few results are, so an
+    #: empty list means "none" only when this is true.
+    streamingChecked: bool = False
+    #: Set when this may be an owned film that nothing has identified yet. **Flagged, not
+    #: hidden** — two films can share a title, and hiding the wrong one is worse.
+    maybeOwned: MaybeOwnedResponse | None = None
+
+
+class BeyondSearchResponse(BaseModel):
+    query: str
+    items: list[BeyondResultResponse]
+    #: TMDB could not be asked. Distinct from "asked, and found nothing" — see
+    #: :attr:`StreamingResponse.unavailable` for why this is a flag and not a 502.
+    unavailable: bool = False
+
+
+class ExternalFilmResponse(BaseModel):
+    """The film card for something the collection does not hold — Batch T2."""
+
+    tmdbId: int
+    title: str
+    year: int | None = None
+    posterPath: str | None = None
+    backdropPath: str | None = None
+    overview: str = ""
+    runtimeMinutes: int | None = None
+    genres: list[str] = []
+    cast: list[str] = []
+    directors: list[str] = []
+    #: A ``movies`` row with this TMDB id, if one exists.
+    movieId: uuid.UUID | None = None
+    #: True when that row has a live disc. The web app sends an owned film to its own page.
+    owned: bool = False
+    #: True when it is on the wanted list (active, not removed).
+    wanted: bool = False
+    region: str
+    #: TMDB's "where to watch" page for this film and region. Their terms require it
+    #: alongside their availability data.
+    link: str | None = None
+    offers: list[StreamingOfferResponse] = []

@@ -92,6 +92,18 @@ def _canonicalise(title: str) -> str:
     return _WHITESPACE_RE.sub(" ", no_punct).strip()
 
 
+def canonical_title(raw_title: str) -> tuple[str, int | None]:
+    """A title reduced to what two spellings of one film share, and any year it carried.
+
+    ``'Mummy, The (Brendan Fraser)'`` and ``'The Mummy'`` both come back as ``'the mummy'``:
+    the library-card article is rotated, the annotation dropped, punctuation and case
+    folded. Batch T2 uses it to notice that a TMDB result may be an owned film that has not
+    been identified yet.
+    """
+    cleaned, year = normalise_query(raw_title)
+    return _canonicalise(cleaned), year
+
+
 def title_similarity(a: str, b: str) -> float:
     """Return a similarity score in [0, 1] for two titles, ignoring case and punctuation.
 

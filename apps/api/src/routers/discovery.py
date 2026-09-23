@@ -14,23 +14,31 @@ state is real.
 
 from __future__ import annotations
 
+import asyncio
+import time
 import uuid
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Annotated
 
 import httpx
 import structlog
-from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import func, select, true
+from fastapi import APIRouter, HTTPException, Path, Query, status
+from sqlalchemy import exists, func, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
+from src.matching.engine import canonical_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.wanted import WantedItem
-from src.routers.movies import Database, TmdbClient
+from src.routers.movies import Database, TmdbClient, last_watched_by_movie
 from src.routers.stats import GENRE_NAMES
 from src.schemas.discovery import (
+    BeyondResultResponse,
+    BeyondSearchResponse,
+    ExternalFilmResponse,
+    MaybeOwnedResponse,
     NewReleaseListResponse,
     NewReleaseResponse,
     OfferKind,
@@ -41,6 +49,7 @@ from src.schemas.discovery import (
     StreamingResponse,
 )
 from src.services.movie_metadata import parse_year
+from src.tmdb import TMDBClient
 from src.tmdb.models import SearchResult, WatchProvider, WatchProviderCountry
 
 logger = structlog.get_logger()
@@ -323,4 +332,226 @@ async def new_releases(
     return NewReleaseListResponse(
         items=items,
         basedOnGenres=[GENRE_NAMES.get(g, str(g)) for g in genres],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Batch T2 — search beyond the shelf, and a card for a film we don't hold
+# ---------------------------------------------------------------------------
+
+#: How many results get a streaming lookup. Each one is a TMDB call, and this search runs
+#: while somebody types.
+STREAMING_LOOKUPS = 5
+#: How long one film's streaming line is reused: long enough to cover one search, while
+#: typing "the god", "the godf", "the godfa" asks about the same films three times. Kept
+#: short on purpose — `StreamingPanel` caches nothing, because a stale "on Netflix" is a
+#: wrong answer — so this is a search's worth of reuse, not a store.
+STREAMING_TTL_SECONDS = 30 * 60
+_STREAMING_CACHE_LIMIT = 2_000
+_streaming_cache: dict[tuple[int, str], tuple[float, list[str]]] = {}
+
+
+async def _cached_streaming_names(tmdb: TMDBClient, tmdb_id: int, region: str) -> list[str] | None:
+    """Subscription services for one film in one region, or ``None`` when TMDB failed.
+
+    **A failed lookup costs the line, never the result**, and is not cached, so the next
+    search asks again.
+    """
+    key = (tmdb_id, region)
+    now = time.monotonic()
+    cached = _streaming_cache.get(key)
+    if cached is not None and cached[0] > now:
+        return cached[1]
+    try:
+        providers = await tmdb.get_watch_providers(tmdb_id)
+    except Exception:  # noqa: BLE001 - see the docstring
+        logger.warning("tmdb_watch_providers_unavailable", tmdb_id=tmdb_id)
+        return None
+    country = providers.results.get(region)
+    names = [provider.provider_name for provider in (country.flatrate if country else [])][:4]
+    if len(_streaming_cache) >= _STREAMING_CACHE_LIMIT:
+        _streaming_cache.clear()
+    _streaming_cache[key] = (now + STREAMING_TTL_SECONDS, names)
+    return names
+
+
+async def _movie_rows_by_tmdb_id(db: AsyncSession, tmdb_ids: Sequence[int]) -> dict[int, uuid.UUID]:
+    """Any live ``movies`` row carrying these TMDB ids — owned, watched, wanted or sold."""
+    if not tmdb_ids:
+        return {}
+    rows = await db.execute(
+        select(Movie.tmdb_id, Movie.id).where(
+            Movie.tmdb_id.in_(list(tmdb_ids)), Movie.deleted_at.is_(None)
+        )
+    )
+    return {int(tmdb_id): movie_id for tmdb_id, movie_id in rows.all() if tmdb_id is not None}
+
+
+@dataclass(frozen=True)
+class _Unidentified:
+    movie_id: uuid.UUID
+    title: str
+    canonical: str
+    year: int | None
+
+
+async def _unidentified_owned(db: AsyncSession) -> list[_Unidentified]:
+    """Owned films nothing has matched to TMDB yet, with their titles made comparable.
+
+    A few hundred rows at most, and falling as identification proceeds.
+    """
+    has_disc = exists(
+        select(CollectionItem.id).where(CollectionItem.movie_id == Movie.id, owned_copy())
+    )
+    rows = await db.execute(
+        select(Movie.id, Movie.title, Movie.year).where(
+            Movie.tmdb_id.is_(None), Movie.deleted_at.is_(None), has_disc
+        )
+    )
+    films: list[_Unidentified] = []
+    for movie_id, title, year in rows.all():
+        canonical, title_year = canonical_title(title)
+        films.append(_Unidentified(movie_id, title, canonical, year or title_year))
+    return films
+
+
+def _lookalike(
+    films: Sequence[_Unidentified], title: str, year: int | None
+) -> _Unidentified | None:
+    canonical, _ = canonical_title(title)
+    for film in films:
+        if film.canonical != canonical:
+            continue
+        if film.year is None or year is None or film.year == year:
+            return film
+    return None
+
+
+@router.get("/search/beyond", response_model=BeyondSearchResponse)
+async def search_beyond(
+    user: CurrentUser,
+    db: Database,
+    tmdb: TmdbClient,
+    q: Annotated[str, Query(min_length=2, max_length=200)],
+) -> BeyondSearchResponse:
+    """Films that match a search and are **not** on the shelf — Batch T2, snag 14.
+
+    ``GET /search`` answers "do we own it, and where is it?". This answers the rest: what
+    else goes by that name, where it streams, and whether it might be one of ours that
+    nothing has identified yet. A film with a live disc never appears here; it is
+    ``/search``'s, and showing it twice would be the duplicate the criterion forbids.
+    """
+    query = q.strip()
+    if len(query) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Query too short"
+        )
+    try:
+        results = await tmdb.search_movie(query)
+    except Exception:  # noqa: BLE001 - "TMDB did not answer" is a state, not a 5xx
+        logger.warning("tmdb_search_unavailable")
+        return BeyondSearchResponse(query=query, items=[], unavailable=True)
+
+    top = results.results[:10]
+    ids = [result.id for result in top]
+    owned = await _owned_by_tmdb_id(db, ids)
+    rows = await _movie_rows_by_tmdb_id(db, ids)
+    last_watched = await last_watched_by_movie(db, user.id, list(rows.values()))
+    unidentified = await _unidentified_owned(db)
+    region = (user.streaming_region or "GB").upper()
+
+    beyond = [result for result in top if result.id not in owned]
+    looked_up = await asyncio.gather(
+        *(_cached_streaming_names(tmdb, r.id, region) for r in beyond[:STREAMING_LOOKUPS])
+    )
+
+    items: list[BeyondResultResponse] = []
+    for index, result in enumerate(beyond):
+        year = parse_year(result.release_date)
+        names = looked_up[index] if index < len(looked_up) else None
+        movie_id = rows.get(result.id)
+        lookalike = _lookalike(unidentified, result.title, year)
+        items.append(
+            BeyondResultResponse(
+                tmdbId=result.id,
+                title=result.title,
+                year=year,
+                posterPath=result.poster_path,
+                overview=result.overview,
+                movieId=movie_id,
+                lastWatchedAt=last_watched.get(movie_id) if movie_id else None,
+                streamingOn=names or [],
+                streamingChecked=names is not None,
+                maybeOwned=(
+                    MaybeOwnedResponse(movieId=lookalike.movie_id, title=lookalike.title)
+                    if lookalike
+                    else None
+                ),
+            )
+        )
+    return BeyondSearchResponse(query=query, items=items)
+
+
+@router.get("/films/tmdb/{tmdb_id}", response_model=ExternalFilmResponse)
+async def external_film(
+    tmdb_id: Annotated[int, Path(ge=1)],
+    user: CurrentUser,
+    db: Database,
+    tmdb: TmdbClient,
+) -> ExternalFilmResponse:
+    """A film card for something the collection does not hold — Batch T2.
+
+    One TMDB call: details, credits and watch providers arrive together through
+    ``append_to_response``. Says whether the film is owned, so the web app can send an
+    owned film to its own page instead of showing it as a stranger.
+    """
+    try:
+        film = await tmdb.get_movie_full(tmdb_id)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="TMDB has no film with that id"
+            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="TMDB didn't answer. Try again in a moment.",
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="TMDB didn't answer. Try again in a moment.",
+        ) from exc
+
+    region = (user.streaming_region or "GB").upper()
+    rows = await _movie_rows_by_tmdb_id(db, [tmdb_id])
+    owned = await _owned_by_tmdb_id(db, [tmdb_id])
+    wanted = await _wanted_tmdb_ids(db, [tmdb_id])
+    country = film.watch_providers.results.get(region) if film.watch_providers else None
+    cast_members = (
+        [member.name for member in sorted(film.credits.cast, key=lambda m: m.order)[:5]]
+        if film.credits
+        else []
+    )
+    directors = (
+        [member.name for member in film.credits.crew if member.job == "Director"][:2]
+        if film.credits
+        else []
+    )
+    return ExternalFilmResponse(
+        tmdbId=film.id,
+        title=film.title,
+        year=parse_year(film.release_date),
+        posterPath=film.poster_path,
+        backdropPath=film.backdrop_path,
+        overview=film.overview,
+        runtimeMinutes=film.runtime or None,
+        genres=[genre.name for genre in film.genres],
+        cast=cast_members,
+        directors=directors,
+        movieId=rows.get(tmdb_id),
+        owned=tmdb_id in owned,
+        wanted=tmdb_id in wanted,
+        region=region,
+        link=country.link if country else None,
+        offers=_offers(country) if country else [],
     )

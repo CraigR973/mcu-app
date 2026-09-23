@@ -6,6 +6,7 @@ import math
 import uuid
 from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass, replace
+from datetime import date
 from typing import Annotated, Literal, cast
 
 import httpx
@@ -224,22 +225,26 @@ async def _locations_by_movie(
     return grouped
 
 
-async def _watched_movie_ids(
+async def last_watched_by_movie(
     db: AsyncSession, user_id: uuid.UUID, movie_ids: Sequence[uuid.UUID]
-) -> set[uuid.UUID]:
-    """Which of these films the requesting user has logged a watch for."""
+) -> dict[uuid.UUID, date]:
+    """When the requesting user last watched each of these films, for those they have.
+
+    A film is *watched* exactly when it has an entry here, so this one grouped query
+    answers both ``watched`` and Batch T2's ``lastWatchedAt``.
+    """
     if not movie_ids:
-        return set()
+        return {}
     rows = await db.execute(
-        select(WatchLog.movie_id)
+        select(WatchLog.movie_id, func.max(WatchLog.watched_at))
         .where(
             WatchLog.user_id == user_id,
             WatchLog.movie_id.in_(movie_ids),
             WatchLog.deleted_at.is_(None),
         )
-        .distinct()
+        .group_by(WatchLog.movie_id)
     )
-    return set(rows.scalars().all())
+    return {movie_id: watched_at for movie_id, watched_at in rows.all()}
 
 
 def _movie_list_item(
@@ -247,7 +252,7 @@ def _movie_list_item(
     copy_count: int,
     *,
     locations: list[LocationResponse] | None = None,
-    watched: bool = False,
+    last_watched_at: date | None = None,
 ) -> MovieListItemResponse:
     return MovieListItemResponse(
         id=movie.id,
@@ -264,7 +269,8 @@ def _movie_list_item(
         identified=movie.tmdb_id is not None,
         copyCount=copy_count,
         locations=locations or [],
-        watched=watched,
+        watched=last_watched_at is not None,
+        lastWatchedAt=last_watched_at,
     )
 
 
@@ -276,13 +282,13 @@ async def _enrich_list_items(
     """Attach location and watched state to a page of films in two extra queries."""
     movie_ids = [movie.id for movie, _ in rows]
     locations = await _locations_by_movie(db, movie_ids)
-    watched = await _watched_movie_ids(db, user_id, movie_ids)
+    last_watched = await last_watched_by_movie(db, user_id, movie_ids)
     return [
         _movie_list_item(
             movie,
             copies,
             locations=locations.get(movie.id, []),
-            watched=movie.id in watched,
+            last_watched_at=last_watched.get(movie.id),
         )
         for movie, copies in rows
     ]

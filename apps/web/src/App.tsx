@@ -15,6 +15,7 @@ const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
+const ExternalFilmPage = lazy(() => import('./pages/ExternalFilmPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
 const TrashPage = lazy(() => import('./pages/TrashPage'))
@@ -99,7 +100,10 @@ function RouteTitle() {
     const item = [...navItems, ...adminNavItems]
       .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
       .sort((a, b) => b.path.length - a.path.length)[0]
-    const title = publicTitles[pathname] ?? item?.label ?? 'Page not found'
+    // Batch T2. Routes with no menu entry of their own, matched by prefix.
+    const unlistedTitles: Array<[prefix: string, title: string]> = [['/films/tmdb/', 'Film']]
+    const unlisted = unlistedTitles.find(([prefix]) => pathname.startsWith(prefix))?.[1]
+    const title = publicTitles[pathname] ?? item?.label ?? unlisted ?? 'Page not found'
     document.title = title === APP_NAME ? APP_NAME : `${title} · ${APP_NAME}`
   }, [pathname])
   return null
@@ -152,6 +156,11 @@ export default function App() {
             <Route
               path="/movies/:id"
               element={<AppShell><MovieDetailPage /></AppShell>}
+            />
+            {/* Batch T2. A film the collection does not hold, reached from search. */}
+            <Route
+              path="/films/tmdb/:tmdbId"
+              element={<AppShell><ExternalFilmPage /></AppShell>}
             />
             <Route
               path="/watchlist"

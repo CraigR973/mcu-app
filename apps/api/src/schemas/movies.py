@@ -74,6 +74,9 @@ class MovieListItemResponse(BaseModel):
     #: design: in a two-person app "have I seen it" and "has he seen it" are different
     #: questions and averaging them would answer neither.
     watched: bool = False
+    #: The requesting user's most recent watch, when there is one — Batch T2's "Seen
+    #: 12 Mar 2025". Per user for the same reason as ``watched``.
+    lastWatchedAt: date | None = None
 
 
 class MoviePageResponse(BaseModel):

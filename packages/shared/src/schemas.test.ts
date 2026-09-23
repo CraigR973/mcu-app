@@ -15,6 +15,9 @@ import {
   aiAnswerSchema,
   aiStatusSchema,
   aiUsageSchema,
+  beyondSearchResponseSchema,
+  externalFilmSchema,
+  movieListItemSchema,
   collectionFacetsSchema,
   movieNightSessionSchema,
   movieNightVoteResultSchema,
@@ -152,6 +155,8 @@ const movieListItem = {
   copyCount: 2,
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: false,
+  // Batch T2: the API sends this on every list item now, null when unwatched.
+  lastWatchedAt: null,
 }
 
 describe('Batch 5 collection schemas', () => {
@@ -1408,5 +1413,48 @@ describe('watch history sync schemas', () => {
 
   it('refuses a run whose counts are negative', () => {
     expect(syncRunSchema.safeParse({ ...run, written: -1 }).success).toBe(false)
+  })
+})
+
+describe('Batch T2 — one search', () => {
+  it('reads a last watch date, and still parses an item cached before the field existed', () => {
+    expect(movieListItemSchema.parse({ ...movieListItem, lastWatchedAt: '2025-03-12' }).lastWatchedAt).toBe('2025-03-12')
+    const { lastWatchedAt: _dropped, ...cachedBeforeT2 } = movieListItem
+    expect(movieListItemSchema.parse(cachedBeforeT2).lastWatchedAt).toBeNull()
+  })
+
+  it('accepts a film with no disc left, which the API has allowed since Batch 29', () => {
+    expect(movieListItemSchema.parse({ ...movieListItem, copyCount: 0 }).copyCount).toBe(0)
+    expect(() => movieListItemSchema.parse({ ...movieListItem, copyCount: -1 })).toThrow()
+  })
+
+  it('parses films beyond the shelf, with a flagged lookalike and an unchecked streaming line', () => {
+    const response = {
+      query: 'african queen',
+      unavailable: false,
+      items: [
+        {
+          tmdbId: 488, title: 'The African Queen', year: 1951, posterPath: '/aq.jpg', overview: '',
+          movieId: null, lastWatchedAt: null, streamingOn: ['MUBI'], streamingChecked: true,
+          maybeOwned: { movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3301', title: 'African Queen, The' },
+        },
+        {
+          tmdbId: 489, title: 'Queen of Africa', year: null, posterPath: null, overview: '',
+          movieId: null, lastWatchedAt: null, streamingOn: [], streamingChecked: false, maybeOwned: null,
+        },
+      ],
+    }
+    expect(beyondSearchResponseSchema.parse(response)).toEqual(response)
+  })
+
+  it('parses the film card', () => {
+    const card = {
+      tmdbId: 11050, title: 'The Card Player', year: 2004, posterPath: null, backdropPath: null,
+      overview: 'A film nobody here owns.', runtimeMinutes: 103, genres: ['Thriller'],
+      cast: ['Top Billed'], directors: ['Dario Argento'], movieId: null, owned: false,
+      wanted: false, region: 'GB', link: null,
+      offers: [{ providerId: 8, providerName: 'Netflix', logoPath: null, kind: 'flatrate' }],
+    }
+    expect(externalFilmSchema.parse(card)).toEqual(card)
   })
 })

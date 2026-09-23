@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Command, Menu, Plus } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
 import { FloatingChatButton } from '@/components/FloatingChatButton'
@@ -29,6 +29,14 @@ export default function AppLayout({ children }: Props) {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const closeSidebar = useCallback(() => setSidebarOpen(false), [])
+  const location = useLocation()
+
+  // Batch T2, snag 6. Picking a result navigates, and the sheet has to go with it: it used
+  // to stay over the film, dimmed, until somebody found Cancel. Keyed on the location's
+  // `key`, not its path, so picking the film already on screen still closes it.
+  useEffect(() => {
+    setSearchOpen(false)
+  }, [location.key])
 
   useKeyboardShortcuts({
     isAdmin,

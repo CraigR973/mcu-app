@@ -51,6 +51,7 @@ const MOVIE: MovieDetail = {
   copyCount: 1,
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: false,
+  lastWatchedAt: null,
   imdbId: 'tt0040725',
   overview: 'A ballerina must choose between love and art.',
   tagline: null,

@@ -64,6 +64,10 @@ import {
   loanSchema,
   purgePreviewSchema,
   searchResponseSchema,
+  beyondSearchResponseSchema,
+  externalFilmSchema,
+  type BeyondSearchResponse,
+  type ExternalFilm,
   smartCollectionListSchema,
   navSectionsSchema,
   syncResponseSchema,
@@ -168,7 +172,7 @@ import {
   type WatchLogEntry,
   type WatchLogPage,
 } from '@mcu/shared'
-import { z, type ZodType } from 'zod'
+import { z, type ZodType, type ZodTypeDef } from 'zod'
 
 import { authFetch } from './auth-tokens'
 
@@ -240,6 +244,9 @@ export type {
   Streaming,
   StreamingOffer,
   SearchResponse,
+  BeyondResult,
+  BeyondSearchResponse,
+  ExternalFilm,
   SectionFacet,
   ShelfFacet,
   SmartCollection,
@@ -353,14 +360,25 @@ async function errorMessage(response: Response): Promise<string> {
   return `HTTP ${response.status}`
 }
 
-async function parseResponse<T>(response: Response, schema: ZodType<T>): Promise<T> {
+/**
+ * `unknown` as the schema's *input* type, because that is what arrives: the body is
+ * parsed, not trusted. Typing it `ZodType<T>` quietly required input and output to match,
+ * which ruled out `.default()` — and Batch T2 needs one, so a response the service worker
+ * cached before a field existed still parses offline.
+ */
+type ResponseSchema<T> = ZodType<T, ZodTypeDef, unknown>
+
+async function parseResponse<T>(response: Response, schema: ResponseSchema<T>): Promise<T> {
   if (!response.ok) throw new Error(await errorMessage(response))
   const body: unknown = await response.json()
   return schema.parse(body)
 }
 
 /** As `parseResponse`, but a refused request raises a typed {@link ApiError}. */
-async function parseOrThrowApiError<T>(response: Response, schema: ZodType<T>): Promise<T> {
+async function parseOrThrowApiError<T>(
+  response: Response,
+  schema: ResponseSchema<T>,
+): Promise<T> {
   if (!response.ok) {
     let detail: unknown
     try {
@@ -493,6 +511,17 @@ export async function fetchCopies(
 export async function fetchSearch(q: string, limit = 20): Promise<SearchResponse> {
   const params = new URLSearchParams({ q, limit: String(limit) })
   return parseResponse(await authFetch(`/search?${params}`), searchResponseSchema)
+}
+
+/** Batch T2 — films matching a search that are *not* on the shelf, from TMDB. */
+export async function fetchSearchBeyond(q: string): Promise<BeyondSearchResponse> {
+  const params = new URLSearchParams({ q })
+  return parseResponse(await authFetch(`/search/beyond?${params}`), beyondSearchResponseSchema)
+}
+
+/** Batch T2 — the card for a film the collection does not hold. */
+export async function fetchExternalFilm(tmdbId: number): Promise<ExternalFilm> {
+  return parseResponse(await authFetch(`/films/tmdb/${tmdbId}`), externalFilmSchema)
 }
 
 export async function fetchCandidates(movieId: string, query?: string): Promise<CandidateList> {

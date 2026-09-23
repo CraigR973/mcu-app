@@ -24,6 +24,7 @@ describe('MovieCard', () => {
           copyCount: 2,
           locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
           watched: true,
+          lastWatchedAt: '2025-03-12',
         }} />
       </StaticRouter>,
     )

@@ -82,9 +82,16 @@ export const movieListItemSchema = z.object({
   bestHdrOwned: z.string().nullable(),
   bestAudioOwned: z.string().nullable(),
   identified: z.boolean(),
-  copyCount: z.number().int().positive(),
+  // Non-negative, as the API has been since Batch 29: a film whose only disc was sold keeps
+  // its page and its history with zero copies. `positive()` turned that page into a parse
+  // error — reachable from Batch T2's search, which links to films with no disc.
+  copyCount: z.number().int().nonnegative(),
   locations: z.array(locationSchema),
   watched: z.boolean(),
+  /** Batch T2 — the requesting person's latest watch, as `YYYY-MM-DD`. Defaulted rather
+   *  than required because the service worker serves cached API responses offline, and a
+   *  response cached before this field existed must still parse. */
+  lastWatchedAt: z.string().nullable().default(null),
 })
 
 export const moviePageSchema = z.object({
@@ -813,6 +820,57 @@ export const newReleaseListSchema = z.object({
   items: z.array(newReleaseSchema),
   basedOnGenres: z.array(z.string()),
 })
+
+// ---------------------------------------------------------------------------
+// Beyond the shelf, and the film card (Batch T2)
+// ---------------------------------------------------------------------------
+
+export const beyondResultSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  overview: z.string(),
+  /** A film with a page here but no disc — watched, wanted or sold. */
+  movieId: z.string().uuid().nullable(),
+  lastWatchedAt: z.string().nullable(),
+  streamingOn: z.array(z.string()),
+  /** Only the first few results are looked up, so an empty `streamingOn` means "none"
+   *  only when this is true. */
+  streamingChecked: z.boolean(),
+  /** An owned film nothing has identified yet whose title reads the same. */
+  maybeOwned: z.object({ movieId: z.string().uuid(), title: z.string().min(1) }).nullable(),
+})
+
+export const beyondSearchResponseSchema = z.object({
+  query: z.string(),
+  items: z.array(beyondResultSchema),
+  /** TMDB could not be asked — not the same as "asked, and found nothing". */
+  unavailable: z.boolean(),
+})
+
+export const externalFilmSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  backdropPath: z.string().nullable(),
+  overview: z.string(),
+  runtimeMinutes: z.number().int().positive().nullable(),
+  genres: z.array(z.string()),
+  cast: z.array(z.string()),
+  directors: z.array(z.string()),
+  movieId: z.string().uuid().nullable(),
+  owned: z.boolean(),
+  wanted: z.boolean(),
+  region: z.string().length(2),
+  link: z.string().nullable(),
+  offers: z.array(streamingOfferSchema),
+})
+
+export type BeyondResult = z.infer<typeof beyondResultSchema>
+export type BeyondSearchResponse = z.infer<typeof beyondSearchResponseSchema>
+export type ExternalFilm = z.infer<typeof externalFilmSchema>
 
 export type OfferKind = z.infer<typeof offerKindSchema>
 export type OwnershipState = z.infer<typeof ownershipStateSchema>
