@@ -20,6 +20,7 @@ import {
   collectionCopiesSchema,
   collectionFacetsSchema,
   collectionItemSchema,
+  collectionValueSchema,
   completionInsightsSchema,
   completionRefreshSchema,
   completionSetDetailSchema,
@@ -73,6 +74,7 @@ import {
   syncResponseSchema,
   watchHistoryStatusSchema,
   statsSchema,
+  valuationStartSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
   tmdbSearchResponseSchema,
@@ -90,6 +92,8 @@ import {
   type DealsRun,
   type EbayListingUrl,
   type EbayPriceEstimate,
+  type CollectionValue,
+  type ValuationStart,
   type AiAnswer,
   type AiConversation,
   type AiConversationDetail,
@@ -188,6 +192,10 @@ export type {
   EbayListingUrl,
   EbayPriceEstimate,
   EbayPriceSegment,
+  CollectionValue,
+  CopyValuation,
+  ValuationRun,
+  ValuationStart,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -1069,6 +1077,25 @@ export async function fetchNavSections(): Promise<NavSections> {
 // ---------------------------------------------------------------------------
 // Stats, activity and export (Batch 14) — §13.1–13.4
 // ---------------------------------------------------------------------------
+
+/**
+ * Batch T6 — the owned discs at their stored eBay asking prices, and how many have one.
+ * Reading spends nothing: the prices were stored by a valuation run.
+ */
+export async function fetchCollectionValue(): Promise<CollectionValue> {
+  return parseResponse(await authFetch('/collection/value'), collectionValueSchema)
+}
+
+/**
+ * Admin-only. Starts pricing whatever is due, within today's share of eBay's allowance.
+ * `outcome` says whether anything started; only `started` spends eBay calls.
+ */
+export async function startValuationRun(): Promise<ValuationStart> {
+  return parseOrThrowApiError(
+    await authFetch('/collection/value/refresh', { method: 'POST' }),
+    valuationStartSchema,
+  )
+}
 
 export async function fetchStats(): Promise<Stats> {
   return parseResponse(await authFetch('/collection/stats'), statsSchema)

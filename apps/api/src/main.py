@@ -37,6 +37,7 @@ from src.routers import (
     specs,
     stats,
     trash,
+    valuation,
     wanted,
     watch_history,
     watch_log,
@@ -141,3 +142,4 @@ app.include_router(specs.router)
 app.include_router(ebay.router)
 app.include_router(barcode.router)
 app.include_router(deals.router)
+app.include_router(valuation.router)

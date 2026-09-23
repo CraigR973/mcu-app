@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.schemas.valuation import CopyValuationResponse
 from src.schemas.wire import UtcDatetime
 
 
@@ -126,6 +127,9 @@ class CollectionCopyResponse(BaseModel):
     #: Carried so an edit started from this view — which is where every edit starts — can
     #: say which version it was based on when it is finally sent (Batch 8).
     updatedAt: UtcDatetime
+    #: Batch T6 — the disc's stored eBay asking price, when a valuation run has reached
+    #: its film and format. Null for a download, or before the first run.
+    valuation: CopyValuationResponse | None = None
 
 
 class SearchResponse(BaseModel):

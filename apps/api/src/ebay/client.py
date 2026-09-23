@@ -60,6 +60,9 @@ TOKEN_REFRESH_MARGIN = 300.0
 #: a page of results arrive promptly.
 DEFAULT_RATE = 2.0
 
+#: Retries after a 429, a 5xx or a revoked token. Each is a call against the allowance.
+DEFAULT_MAX_RETRIES = 2
+
 #: Browse caps ``limit`` at 200, and 200 is what the segmentation wants: #129's measurement
 #: needed the whole result set to show that a naive median was 149% high.
 MAX_LIMIT = 200
@@ -98,7 +101,7 @@ class EbayClient:
         client_secret: str | None = None,
         marketplace_id: str | None = None,
         *,
-        max_retries: int = 2,
+        max_retries: int = DEFAULT_MAX_RETRIES,
         rate: float = DEFAULT_RATE,
     ) -> None:
         self._client_id = client_id if client_id is not None else settings.ebay_client_id
@@ -112,6 +115,9 @@ class EbayClient:
         self._token: str | None = None
         self._token_expires_at = 0.0
         self._token_lock = asyncio.Lock()
+        #: Browse requests sent, retries included, because eBay counts every one against
+        #: the daily allowance. Batch T6's valuation run budgets on this.
+        self.search_calls = 0
 
     @property
     def marketplace_id(self) -> str:
@@ -120,6 +126,11 @@ class EbayClient:
     @property
     def configured(self) -> bool:
         return bool(self._client_id and self._client_secret)
+
+    @property
+    def attempts_per_search(self) -> int:
+        """The most Browse requests one :meth:`search` can send, counting its retries."""
+        return self._max_retries + 1
 
     async def __aenter__(self) -> EbayClient:
         self._client = httpx.AsyncClient(base_url=EBAY_API_BASE, timeout=30.0)
@@ -199,6 +210,7 @@ class EbayClient:
         for attempt in range(self._max_retries + 1):
             await self._rate_limiter.acquire()
             token = await self._access_token(force=attempt > 0 and last_status == 401)
+            self.search_calls += 1
             response = await client.get(
                 SEARCH_PATH,
                 params=params,

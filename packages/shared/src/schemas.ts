@@ -115,6 +115,21 @@ export const movieDetailSchema = movieListItemSchema.extend({
   mediaType: z.string().nullable(),
 })
 
+/** Batch T6 — a disc's stored eBay asking price: its film, on the format it is valued as.
+ *  `price` is null when fewer than `minSample` listings matched, which is an answer (too
+ *  few to say), not a missing value. */
+export const copyValuationSchema = z.object({
+  formatCode: z.string().min(1),
+  status: z.enum(['priced', 'not_priced']),
+  price: z.string().nullable(),
+  currency: z.string().min(1),
+  sampleSize: z.number().int().nonnegative(),
+  conditionLabel: z.string().nullable(),
+  checkedAt: z.string(),
+  basis: z.string().min(1),
+  minSample: z.number().int().positive(),
+})
+
 export const collectionCopySchema = z.object({
   id: z.string().uuid(),
   formats: z.array(z.string()),
@@ -143,6 +158,8 @@ export const collectionCopySchema = z.object({
   // Batch 8: the version an edit is based on. Sent back as `baseUpdatedAt` so a queued
   // offline edit cannot overwrite a change made after it.
   updatedAt: z.string(),
+  /** Batch T6. Defaulted, as #205 explains: copies cached offline before T6 have none. */
+  valuation: copyValuationSchema.nullable().default(null),
 })
 
 export const collectionCopiesSchema = z.array(collectionCopySchema)
@@ -1583,6 +1600,56 @@ export const ebayListingUrlSchema = z.object({
 export type EbayPriceSegment = z.infer<typeof ebayPriceSegmentSchema>
 export type EbayPriceEstimate = z.infer<typeof ebayPriceEstimateSchema>
 export type EbayListingUrl = z.infer<typeof ebayListingUrlSchema>
+
+// ---------------------------------------------------------------------------
+// The collection's value (Batch T6)
+// ---------------------------------------------------------------------------
+
+export const valuationRunSchema = z.object({
+  id: z.string().uuid(),
+  trigger: z.enum(['job', 'admin']),
+  status: z.enum(['running', 'finished', 'budget_spent', 'stopped', 'abandoned']),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  budget: z.number().int().nonnegative(),
+  calls: z.number().int().nonnegative(),
+  priced: z.number().int().nonnegative(),
+  notPriced: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  remaining: z.number().int().nonnegative().nullable(),
+  lastError: z.string().nullable(),
+})
+
+/** What the owned discs add up to at current eBay **asking** prices — never what they
+ *  would sell for (`DECISIONS.md` #16, #126). `basis` carries the words to show. */
+export const collectionValueSchema = z.object({
+  total: z.string().nullable(),
+  currency: z.string().min(1),
+  basis: z.string().min(1),
+  discs: z.number().int().nonnegative(),
+  pricedDiscs: z.number().int().nonnegative(),
+  notPricedDiscs: z.number().int().nonnegative(),
+  uncheckedDiscs: z.number().int().nonnegative(),
+  checkedFrom: z.string().nullable(),
+  checkedTo: z.string().nullable(),
+  due: z.number().int().nonnegative(),
+  budgetLeft: z.number().int().nonnegative(),
+  dailyShare: z.number().int().positive(),
+  minSample: z.number().int().positive(),
+  run: valuationRunSchema.nullable(),
+})
+
+export const valuationStartSchema = z.object({
+  outcome: z.enum(['started', 'running', 'budget_spent', 'nothing_due']),
+  run: valuationRunSchema.nullable(),
+  due: z.number().int().nonnegative(),
+  budgetLeft: z.number().int().nonnegative(),
+})
+
+export type CopyValuation = z.infer<typeof copyValuationSchema>
+export type ValuationRun = z.infer<typeof valuationRunSchema>
+export type CollectionValue = z.infer<typeof collectionValueSchema>
+export type ValuationStart = z.infer<typeof valuationStartSchema>
 
 // ---------------------------------------------------------------------------
 // Barcode scanning (Batch 24) — §3.3, §3.4

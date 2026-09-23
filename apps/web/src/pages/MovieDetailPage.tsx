@@ -20,6 +20,7 @@ import { LendButton } from '@/components/collection/LendButton'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { SpecBadges } from '@/components/collection/SpecBadges'
 import { SalePanel } from '@/components/collection/SalePanel'
+import { StoredValue } from '@/components/collection/StoredValue'
 import { UpgradePrompt } from '@/components/collection/UpgradePrompt'
 import { ValuePanel } from '@/components/collection/ValuePanel'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
@@ -211,18 +212,25 @@ function CopyCard({
         </div>
       )}
 
-      {canEdit && (
-        <div className="border-t border-border pt-3">
-          <h3 className="metadata-label mb-2">Value and resale</h3>
-          <ValuePanel
-            filmTitle={filmTitle}
-            year={year}
-            formatCode={bestFormat(item.formats)}
-            condition={item.condition}
-          />
-          <div className="mt-3 border-t border-border pt-3">
-            <SalePanel copy={item} movieId={movieId} />
-          </div>
+      {/* Batch T6: the stored value is for both people and costs nothing to show; the live
+          check beside it spends an eBay lookup, so it stays with the admin's tools. */}
+      {(canEdit || item.valuation) && (
+        <div className="space-y-3 border-t border-border pt-3">
+          <h3 className="metadata-label">{canEdit ? 'Value and resale' : 'Value'}</h3>
+          {item.valuation ? <StoredValue valuation={item.valuation} /> : null}
+          {canEdit && (
+            <>
+              <ValuePanel
+                filmTitle={filmTitle}
+                year={year}
+                formatCode={bestFormat(item.formats)}
+                condition={item.condition}
+              />
+              <div className="border-t border-border pt-3">
+                <SalePanel copy={item} movieId={movieId} />
+              </div>
+            </>
+          )}
         </div>
       )}
 

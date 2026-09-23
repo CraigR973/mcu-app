@@ -259,6 +259,10 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/deals/scrape",
         "/api/v1/ebay/price-estimate",
         "/api/v1/ebay/listing-url",
+        # Batch T6. The total is for both people and spends nothing. `/refresh` is
+        # admin-only: it spends a share of the same eBay allowance, capped per day.
+        "/api/v1/collection/value",
+        "/api/v1/collection/value/refresh",
         # Batch 24. Both are admin-only and structurally separate so a lookup can never
         # add or cache a guessed film. Only lookup is rate-limited: it can spend an eBay
         # quota call, while confirm is a local write after a person checks the candidate.

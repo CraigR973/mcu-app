@@ -86,6 +86,17 @@ const COPY: CollectionCopy = {
   ebayListingUrl: null,
   listingPrice: null,
   updatedAt: '2026-09-08T14:00:00Z',
+  valuation: {
+    formatCode: '4k_uhd',
+    status: 'priced',
+    price: '22.50',
+    currency: 'GBP',
+    sampleSize: 14,
+    conditionLabel: 'New',
+    checkedAt: '2026-09-24T03:05:00Z',
+    basis: 'current asking prices',
+    minSample: 3,
+  },
 }
 
 function renderPage() {
@@ -126,6 +137,27 @@ describe('MovieDetailPage collection answer', () => {
     expect(screen.getByText('The Criterion Collection')).not.toBeNull()
     expect(screen.getByText('Front 2nd shelf')).not.toBeNull()
     expect(screen.getByRole('tab', { name: /Owned copies/ }).getAttribute('aria-selected')).toBe('true')
+  })
+
+  it("shows a viewer the disc's stored value, with what it rests on", async () => {
+    renderPage()
+
+    expect(await screen.findByText('£22.50')).not.toBeNull()
+    expect(screen.getByText(/Last valued · current asking prices/)).not.toBeNull()
+    expect(screen.getByText(/median of 14 listings · New · checked 24 Sep 2026/)).not.toBeNull()
+    // The live check spends an eBay lookup, so it stays with the admin.
+    expect(screen.queryByRole('button', { name: /What is it worth/ })).toBeNull()
+  })
+
+  it('says a disc was not priced, and why, rather than showing a guess', async () => {
+    vi.mocked(fetchCopies).mockResolvedValue([
+      { ...COPY, valuation: { ...COPY.valuation!, status: 'not_priced', price: null, sampleSize: 2 } },
+    ])
+    renderPage()
+
+    expect(
+      await screen.findByText(/Not priced when checked on 24 Sep 2026: eBay had only 2 matching listings, and a price needs at least 3/),
+    ).not.toBeNull()
   })
 
   it('reports a copy request failure instead of claiming there are no copies', async () => {

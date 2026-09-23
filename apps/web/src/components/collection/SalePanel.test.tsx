@@ -34,6 +34,7 @@ const bluRay: CollectionCopy = {
   ebayListingUrl: null,
   listingPrice: null,
   updatedAt: '2026-09-12T09:00:00Z',
+  valuation: null,
 }
 
 const fourK: CollectionCopy = { ...bluRay, id: 'a-4k-disc', formats: ['4k_uhd'] }

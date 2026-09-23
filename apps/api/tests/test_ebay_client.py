@@ -198,3 +198,13 @@ async def test_the_payload_is_returned_verbatim() -> None:
     recorder = _Recorder()
     client = _client(recorder)
     assert await client.search("Jaws Blu-ray") == {"total": 1, "itemSummaries": []}
+
+
+async def test_every_request_is_counted_retries_included() -> None:
+    """Batch T6 budgets valuation runs on this count, and eBay charges each retry too."""
+    recorder = _Recorder(search_statuses=[500, 200])
+    client = _client(recorder, max_retries=2)
+    await client.search("Jaws Blu-ray")
+    await client.search("Heat Blu-ray")
+    assert client.search_calls == recorder.searches == 3
+    assert client.attempts_per_search == 3

@@ -55,6 +55,8 @@ import {
   watchHistoryStatusSchema,
   syncRunSchema,
   syncResponseSchema,
+  collectionValueSchema,
+  valuationStartSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -211,6 +213,7 @@ describe('Batch 5 collection schemas', () => {
       ebayListingUrl: null,
       listingPrice: null,
       updatedAt: '2026-09-08T14:00:00Z',
+      valuation: null,
     }]
     expect(collectionCopiesSchema.parse(copies)).toEqual(copies)
   })
@@ -1456,5 +1459,94 @@ describe('Batch T2 — one search', () => {
       offers: [{ providerId: 8, providerName: 'Netflix', logoPath: null, kind: 'flatrate' }],
     }
     expect(externalFilmSchema.parse(card)).toEqual(card)
+  })
+})
+
+describe('Batch T6 — the collection\'s value', () => {
+  const copy = {
+    id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+    formats: ['4k_uhd', 'blu_ray'],
+    location: null,
+    section: null,
+    shelf: null,
+    subCategory: null,
+    notes: null,
+    purchasePrice: null,
+    purchaseSource: null,
+    purchaseDate: null,
+    condition: null,
+    hasPlaybackIssues: false,
+    playbackNotes: null,
+    videoSpecs: null,
+    audioSpecs: null,
+    specialFeatures: null,
+    regionCode: null,
+    releaseLabel: null,
+    listingStatus: 'in_collection',
+    ebayListingUrl: null,
+    listingPrice: null,
+    updatedAt: '2026-09-12T09:00:00Z',
+  }
+  const valuation = {
+    formatCode: '4k_uhd',
+    status: 'priced',
+    price: '24.99',
+    currency: 'GBP',
+    sampleSize: 7,
+    conditionLabel: 'New',
+    checkedAt: '2026-09-24T03:05:00Z',
+    basis: 'current asking prices',
+    minSample: 3,
+  }
+
+  it('reads a copy cached before T6 as not valued yet (#205)', () => {
+    expect(collectionCopiesSchema.parse([copy])[0].valuation).toBeNull()
+  })
+
+  it("reads a copy's stored price, and keeps it a string", () => {
+    expect(collectionCopiesSchema.parse([{ ...copy, valuation }])[0].valuation).toEqual(valuation)
+    expect(() =>
+      collectionCopiesSchema.parse([{ ...copy, valuation: { ...valuation, price: 24.99 } }]),
+    ).toThrow()
+  })
+
+  it('reads the total with a run in progress', () => {
+    const value = {
+      total: '12345.60',
+      currency: 'GBP',
+      basis: 'current asking prices',
+      discs: 1457,
+      pricedDiscs: 1302,
+      notPricedDiscs: 103,
+      uncheckedDiscs: 52,
+      checkedFrom: '2026-09-23T03:00:00Z',
+      checkedTo: '2026-09-24T03:10:00Z',
+      due: 52,
+      budgetLeft: 438,
+      dailyShare: 750,
+      minSample: 3,
+      run: {
+        id: '00000000-0000-4000-8000-000000000001',
+        trigger: 'job',
+        status: 'running',
+        startedAt: '2026-09-24T03:00:00Z',
+        finishedAt: null,
+        budget: 750,
+        calls: 312,
+        priced: 280,
+        notPriced: 30,
+        failed: 2,
+        remaining: null,
+        lastError: null,
+      },
+    }
+    expect(collectionValueSchema.parse(value)).toEqual(value)
+    expect(collectionValueSchema.parse({ ...value, total: null, run: null }).total).toBeNull()
+  })
+
+  it('reads what the button did', () => {
+    const started = { outcome: 'nothing_due', run: null, due: 0, budgetLeft: 750 }
+    expect(valuationStartSchema.parse(started)).toEqual(started)
+    expect(() => valuationStartSchema.parse({ ...started, outcome: 'queued' })).toThrow()
   })
 })

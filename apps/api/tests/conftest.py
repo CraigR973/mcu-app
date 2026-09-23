@@ -62,3 +62,21 @@ def _no_background_calendar_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
         return None
 
     monkeypatch.setattr(calendar_router, "refresh_calendar_if_stale", _skip)
+
+
+@pytest.fixture(autouse=True)
+def _no_background_valuation_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Batch T6: the Home button's run carries on after the response, the same way.
+
+    It opens a real session and a real eBay client of its own, so in a test it would write
+    outside the rolled-back transaction and try to reach eBay. Tests about the button
+    replace this no-op with a recorder.
+    """
+    import uuid
+
+    import src.routers.valuation as valuation_router
+
+    async def _skip(run_id: uuid.UUID) -> None:
+        del run_id
+
+    monkeypatch.setattr(valuation_router, "continue_run_in_background", _skip)

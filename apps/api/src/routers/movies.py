@@ -21,7 +21,9 @@ from src.database import get_db
 from src.matching import MatchingEngine
 from src.models.collection_item import SECTIONS, SHELVED_SECTIONS, CollectionItem, owned_copy
 from src.models.movie import Movie, MovieCredit
+from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
+from src.routers.valuation import copy_valuation
 from src.schemas.movies import (
     CandidateListResponse,
     CandidateResponse,
@@ -40,7 +42,9 @@ from src.schemas.movies import (
     SectionFacetResponse,
     ShelfFacetResponse,
 )
+from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import apply_identification
+from src.services.valuation import valuations_for_movie, valued_format
 from src.tmdb import TMDBClient
 
 router = APIRouter(prefix="/api/v1", tags=["movies"])
@@ -663,6 +667,7 @@ async def get_movie_copies(
         .scalars()
         .all()
     )
+    prices = await valuations_for_movie(db, movie_id)
     return [
         CollectionCopyResponse(
             id=copy.id,
@@ -687,9 +692,19 @@ async def get_movie_copies(
             ebayListingUrl=copy.ebay_listing_url,
             listingPrice=(str(copy.listing_price) if copy.listing_price is not None else None),
             updatedAt=copy.updated_at,
+            valuation=_copy_valuation(prices, copy.formats),
         )
         for copy in copies
     ]
+
+
+def _copy_valuation(
+    prices: dict[str, DiscValuation], formats: list[str]
+) -> CopyValuationResponse | None:
+    """Batch T6: a disc's stored price is its film's, on the format it is valued as."""
+    code = valued_format(formats)
+    stored = prices.get(code) if code else None
+    return copy_valuation(stored) if stored else None
 
 
 @router.get("/search", response_model=SearchResponse)
