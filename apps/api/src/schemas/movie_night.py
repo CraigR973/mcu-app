@@ -16,6 +16,27 @@ class SessionCreateRequest(BaseModel):
     filters: dict[str, Any] = Field(default_factory=dict)
 
 
+class PersonResponse(BaseModel):
+    id: uuid.UUID
+    displayName: str
+
+
+class ParticipantResponse(PersonResponse):
+    #: Batch T4 — whether tonight was sent to this person as a push, so the page can say
+    #: "Sent to Mark" rather than offering to send it again.
+    invited: bool = False
+
+
+class SendRequest(BaseModel):
+    """Batch T4, snag 11 — who to send tonight to.
+
+    Omitted, it means everyone who is not in the night yet. In a two-person app that is
+    "the other person", which is the one-tap case the snag asked for.
+    """
+
+    userIds: list[uuid.UUID] | None = None
+
+
 class MovieNightSessionResponse(BaseModel):
     """One sitting.
 
@@ -30,6 +51,9 @@ class MovieNightSessionResponse(BaseModel):
     inviteToken: str
     invitePath: str
     participantCount: int = Field(ge=1)
+    #: Batch T4. Who is in tonight, and who could still be sent it (empty once it ends).
+    people: list[ParticipantResponse] = Field(default_factory=list)
+    invitable: list[PersonResponse] = Field(default_factory=list)
     createdAt: UtcDatetime
     endedAt: UtcDatetime | None = None
 

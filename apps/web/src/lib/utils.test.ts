@@ -30,6 +30,11 @@ describe('formatShortDate', () => {
     expect(formatShortDate('2025-01-01')).toBe('1 Jan 2025')
   })
 
+  it('writes September as "Sep", whatever the browser prefers', () => {
+    expect(formatShortDate('2026-09-23')).toBe('23 Sep 2026')
+    expect(formatShortDate('2026-09-23T18:00:00Z')).toBe('23 Sep 2026')
+  })
+
   it('gives back anything that is not a date unchanged', () => {
     expect(formatShortDate('someday')).toBe('someday')
   })

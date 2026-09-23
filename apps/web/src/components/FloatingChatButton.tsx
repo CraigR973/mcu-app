@@ -11,13 +11,17 @@ import { cn } from '@/lib/utils'
  * later" both impossible. Hidden on the chat itself, where it would cover the input, and
  * on the pages that have no shell — a floating action button on the login screen is just
  * a thing to mis-tap.
+ *
+ * **Batch T4: and on a movie night.** The swipe deck's Add button sits where this floats,
+ * and a movie night is the one screen where a mis-tap costs a vote.
  */
 export function FloatingChatButton() {
   const { pathname } = useLocation()
   const hidden =
     pathname.startsWith('/assistant') ||
     pathname.startsWith('/login') ||
-    pathname.startsWith('/welcome')
+    pathname.startsWith('/welcome') ||
+    pathname.startsWith('/movie-night/')
 
   if (hidden) return null
 

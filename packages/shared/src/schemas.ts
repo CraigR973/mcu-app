@@ -1402,6 +1402,11 @@ export type AiConversationDetail = z.infer<typeof aiConversationDetailSchema>
  *
  *  `inviteToken` comes back only to people already in the session — it is the whole
  *  credential for joining, the same as Batch 27's gift slug. */
+export const movieNightPersonSchema = z.object({
+  id: z.string().uuid(),
+  displayName: z.string().min(1),
+})
+
 export const movieNightSessionSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(['open', 'ended']),
@@ -1411,6 +1416,11 @@ export const movieNightSessionSchema = z.object({
   participantCount: z.number().int().positive(),
   createdAt: z.string(),
   endedAt: z.string().nullable(),
+  /** Batch T4 — who is in tonight, and whether each was sent it as a push. Defaulted, as
+   *  #205 explains, so a night cached before these existed still parses offline. */
+  people: z.array(movieNightPersonSchema.extend({ invited: z.boolean() })).default([]),
+  /** Who could still be sent it. Empty once the night ends. */
+  invitable: z.array(movieNightPersonSchema).default([]),
 })
 
 export const movieNightSessionListSchema = z.object({
@@ -1471,6 +1481,7 @@ export const movieNightVoteResultSchema = z.object({
 })
 
 export type MovieNightSession = z.infer<typeof movieNightSessionSchema>
+export type MovieNightPerson = z.infer<typeof movieNightPersonSchema>
 export type MovieNightSessionList = z.infer<typeof movieNightSessionListSchema>
 export type MovieNightCandidate = z.infer<typeof movieNightCandidateSchema>
 export type MovieNightCandidateList = z.infer<typeof movieNightCandidateListSchema>

@@ -1883,6 +1883,18 @@ export async function fetchMovieNight(id: string): Promise<MovieNightSession> {
   return parseResponse(await authFetch(`/movie-night/${id}`), movieNightSessionSchema)
 }
 
+/** Batch T4 — send tonight to the other person (everyone not in it, by default) as a push
+ *  that opens it. One push per person per night; sending again changes nothing. */
+export async function sendMovieNight(id: string, userIds?: string[]): Promise<MovieNightSession> {
+  return parseOrThrowApiError(
+    await authFetch(`/movie-night/${id}/send`, {
+      method: 'POST',
+      body: JSON.stringify(userIds ? { userIds } : {}),
+    }),
+    movieNightSessionSchema,
+  )
+}
+
 export async function endMovieNight(id: string): Promise<MovieNightSession> {
   return parseOrThrowApiError(
     await authFetch(`/movie-night/${id}/end`, { method: 'POST' }),
@@ -1929,7 +1941,7 @@ export async function suggestMovieNightFilm(
 }
 
 export interface MovieNightEvent {
-  kind: 'vote' | 'match' | 'joined' | 'ended'
+  kind: 'vote' | 'match' | 'joined' | 'ended' | 'suggestion'
   sessionId: string
   movieId?: string
   title?: string

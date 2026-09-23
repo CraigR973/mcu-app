@@ -14,6 +14,7 @@ and is the difference between a feature that grows and one that has a 2 baked in
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -33,7 +34,8 @@ from src.models.notification import NotificationCategory
 from src.models.profile import Profile
 from src.models.watch_log import WatchLog
 from src.services.movie_night.realtime import CHANNEL, encode
-from src.services.notifications import queue_notification
+from src.services.notifications import deliver_pending, queue_notification
+from src.services.push_transport import push_sender
 
 logger = structlog.get_logger(__name__)
 
@@ -224,6 +226,32 @@ async def _notify_match(
             dedupe_key=f"movie-night-match:{session.id}:{match.movie_id}:{user_id}",
             now=now,
         )
+
+
+def invite_key(session_id: uuid.UUID, user_id: uuid.UUID) -> str:
+    """The dedupe key for tonight's invite to one person — one push per person per night."""
+    return f"movie-night-invite:{session_id}:{user_id}"
+
+
+async def deliver_now(db: AsyncSession, user_ids: Iterable[uuid.UUID]) -> None:
+    """Send what was just queued for these people now, not at the next scheduled pass.
+
+    **Batch T4.** Until 2026-09-23 a movie-night notification was queued and nothing else:
+    only the reminder and scrape jobs deliver, and both crashed on import every night
+    (`DECISIONS.md` #204), so "It's a match" never reached a phone. Quiet hours still
+    hold: a notification deferred by them is not due yet and waits for the morning pass.
+
+    **A failed push never fails the request.** The vote, the invite and the rows are
+    already committed; the notification stays queued for the next pass to retry.
+    """
+    try:
+        async with push_sender() as sender:
+            for user_id in user_ids:
+                await deliver_pending(db, sender=sender, user_id=user_id)
+        await db.commit()
+    except Exception:  # noqa: BLE001 - see the docstring
+        logger.warning("movie_night_push_failed", exc_info=True)
+        await db.rollback()
 
 
 async def seeded_candidates(

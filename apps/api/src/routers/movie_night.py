@@ -20,7 +20,7 @@ from typing import Annotated
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from src.auth import CurrentUser
 from src.clock import utcnow
@@ -32,6 +32,7 @@ from src.models.movie_night import (
     MovieNightVote,
     new_invite_token,
 )
+from src.models.notification import Notification, NotificationCategory
 from src.models.profile import Profile
 from src.routers.movies import Database, TmdbClient
 from src.schemas.movie_night import (
@@ -40,6 +41,9 @@ from src.schemas.movie_night import (
     MatchResponse,
     MovieNightSessionListResponse,
     MovieNightSessionResponse,
+    ParticipantResponse,
+    PersonResponse,
+    SendRequest,
     SessionCreateRequest,
     SuggestionRequest,
     VoteRequest,
@@ -50,12 +54,16 @@ from src.services.movie_night.realtime import broadcaster
 from src.services.movie_night.sessions import (
     SuggestionRefused,
     add_suggestion,
+    deliver_now,
     ensure_seeded,
+    invite_key,
+    participants,
     publish,
     record_vote,
     session_suggestions,
     watched_by_others,
 )
+from src.services.notifications import queue_notification
 
 logger = structlog.get_logger(__name__)
 
@@ -91,14 +99,51 @@ async def _session_for(
     return session
 
 
+#: Who a movie night can be sent to: an active account that can actually sign in. A
+#: profile with no PIN yet — the state migration 002 seeds — would get a night in a list
+#: it cannot open.
+_CAN_BE_SENT = (
+    Profile.is_active.is_(True),
+    Profile.deleted_at.is_(None),
+    Profile.pin_hash.is_not(None),
+)
+
+
 async def _response(db: Database, session: MovieNightSession) -> MovieNightSessionResponse:
-    count = (
+    people = (
         await db.execute(
-            select(func.count())
-            .select_from(MovieNightParticipant)
+            select(Profile.id, Profile.display_name)
+            .join(MovieNightParticipant, MovieNightParticipant.user_id == Profile.id)
             .where(MovieNightParticipant.session_id == session.id)
+            .order_by(MovieNightParticipant.joined_at_utc)
         )
-    ).scalar_one()
+    ).all()
+    present = [person_id for person_id, _ in people]
+    sent = set(
+        (
+            await db.execute(
+                select(Notification.dedupe_key).where(
+                    Notification.dedupe_key.in_(
+                        [invite_key(session.id, person_id) for person_id in present]
+                    )
+                )
+            )
+        ).scalars()
+    )
+    others = (
+        (
+            await db.execute(
+                select(Profile.id, Profile.display_name)
+                .where(
+                    *_CAN_BE_SENT,
+                    Profile.id.not_in(present),
+                )
+                .order_by(Profile.display_name)
+            )
+        ).all()
+        if session.status == "open"
+        else []
+    )
     return MovieNightSessionResponse(
         id=session.id,
         status="open" if session.status == "open" else "ended",
@@ -108,9 +153,18 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
         # reason Batch 17 and 27 both settled on: the API cannot know its own public
         # origin without trusting the `Host` header.
         invitePath=f"/movie-night/join/{session.invite_token}",
-        participantCount=count,
+        participantCount=len(people),
         createdAt=session.created_at,
         endedAt=session.ended_at_utc,
+        people=[
+            ParticipantResponse(
+                id=person_id,
+                displayName=name,
+                invited=invite_key(session.id, person_id) in sent,
+            )
+            for person_id, name in people
+        ],
+        invitable=[PersonResponse(id=person_id, displayName=name) for person_id, name in others],
     )
 
 
@@ -270,6 +324,57 @@ async def end_session(
     return await _response(db, session)
 
 
+@router.post("/movie-night/{session_id}/send", response_model=MovieNightSessionResponse)
+async def send_session(
+    session_id: uuid.UUID, payload: SendRequest, user: CurrentUser, db: Database
+) -> MovieNightSessionResponse:
+    """Batch T4, snag 11 — one tap sends tonight to the other person.
+
+    It puts them in the night, so it is already in their list before they open anything,
+    and it pushes a notification that opens this night rather than the app's front page.
+    One push per person per night: sending twice does not buzz a phone twice. Their
+    notification settings and quiet hours apply, as to every other push.
+    """
+    session = await _session_for(db, session_id, user, must_be_open=True)
+    present = set(await participants(db, session.id))
+    query = select(Profile).where(*_CAN_BE_SENT, Profile.id != user.id)
+    if payload.userIds is not None:
+        wanted = set(payload.userIds) - {user.id}
+        query = query.where(Profile.id.in_(wanted))
+    recipients = list((await db.execute(query.order_by(Profile.display_name))).scalars().all())
+    if payload.userIds is not None and len(recipients) != len(wanted):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Not everyone named can be sent a movie night",
+        )
+
+    await ensure_seeded(db, session=session)
+    films = len(await session_suggestions(db, session=session))
+    now = utcnow()
+    for person in recipients:
+        if person.id not in present:
+            db.add(
+                MovieNightParticipant(
+                    id=uuid.uuid4(), session_id=session.id, user_id=person.id, joined_at_utc=now
+                )
+            )
+            await db.flush()
+            await publish(db, session.id, "joined", {"userId": str(person.id)})
+        await queue_notification(
+            db,
+            user_id=person.id,
+            category=NotificationCategory.movie_night,
+            title=f"{user.display_name} started a movie night",
+            body=f"{films} films to swipe. Tap to open it." if films else "Tap to open it.",
+            url=f"/movie-night/{session.id}",
+            dedupe_key=invite_key(session.id, person.id),
+            now=now,
+        )
+    await db.commit()
+    await deliver_now(db, [person.id for person in recipients])
+    return await _response(db, session)
+
+
 @router.get("/movie-night/{session_id}/candidates", response_model=CandidateListResponse)
 async def list_candidates(
     session_id: uuid.UUID,
@@ -411,6 +516,9 @@ async def cast_vote(
         db, session=session, user=user, suggestion=suggestion, liked=payload.liked
     )
     await db.commit()
+    if match is not None:
+        # Batch T4: "It's a match" goes out now. It used to wait for a job that never ran.
+        await deliver_now(db, await participants(db, session.id))
     return VoteResponse(
         recorded=True,
         match=(

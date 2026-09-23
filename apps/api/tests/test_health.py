@@ -217,6 +217,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/movie-night/join/{invite_token}",
         "/api/v1/movie-night/{session_id}",
         "/api/v1/movie-night/{session_id}/end",
+        # Batch T4. One tap sends tonight to the other person, as a push that opens it.
+        "/api/v1/movie-night/{session_id}/send",
         "/api/v1/movie-night/{session_id}/candidates",
         # Batch S7. Anyone in the session, not just the creator or an admin: a movie night
         # where one person may not name a film is not one (`DECISIONS.md` #157).

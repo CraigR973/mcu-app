@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Loader2, Popcorn, Square } from 'lucide-react'
+import { Link2, Loader2, Popcorn, Square } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -14,9 +14,12 @@ import {
   joinMovieNight,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { shareLink } from '@/lib/share'
+import { useAuth } from '@/context/auth'
 
 /** §8.3 — start a movie night, or join one somebody sent you. */
 export default function MovieNightPage() {
+  const { profile } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [decadeFrom, setDecadeFrom] = useState('')
@@ -41,14 +44,19 @@ export default function MovieNightPage() {
 
   const state = listState(sessions, (sessions.data?.items.length ?? 0) === 0)
 
-  async function copyInvite(invitePath: string, sessionId: string) {
+  // Batch T4: the phone's share sheet first, copying where there is none. Sending it to
+  // the other person as a push is one tap on the night itself.
+  async function shareInvite(invitePath: string, sessionId: string) {
     setCopyError(null)
     try {
-      if (!navigator.clipboard) throw new Error('Clipboard access is unavailable in this browser.')
-      await navigator.clipboard.writeText(`${window.location.origin}${invitePath}`)
-      setCopied(sessionId)
+      const outcome = await shareLink({
+        title: 'Movie night',
+        text: 'Help pick tonight’s film.',
+        url: `${window.location.origin}${invitePath}`,
+      })
+      setCopied(outcome === 'cancelled' ? null : sessionId)
     } catch (cause) {
-      setCopyError(queryErrorMessage(cause, 'The invite link could not be copied.'))
+      setCopyError(queryErrorMessage(cause, 'The invite link could not be shared.'))
     }
   }
 
@@ -57,7 +65,7 @@ export default function MovieNightPage() {
       <PageHeader
         eyebrow="Screening room"
         title="Movie night"
-        description="Both of you work through the same private shortlist. When you both choose a film, tonight is sorted."
+        description="Everyone works through the same shortlist. When you all add the same film, tonight is sorted."
       />
 
       <section className="archive-panel p-4 sm:p-5">
@@ -126,7 +134,7 @@ export default function MovieNightPage() {
             className="mt-3"
             tone="empty"
             title="No screenings yet"
-            description="Start one above, then share its private invite with the other person."
+            description="Start one above, then send it to the other person from the night itself."
           />
         ) : null}
         {finish.isError ? (
@@ -143,8 +151,10 @@ export default function MovieNightPage() {
                   to={`/movie-night/${session.id}`}
                   className="touch-target flex min-w-0 flex-1 items-center text-sm hover:underline"
                 >
-                  {new Date(session.createdAt).toLocaleString()} ·{' '}
-                  {session.participantCount === 1 ? 'just you' : `${session.participantCount} people`}
+                  {new Date(session.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} ·{' '}
+                  {session.people.length > 1
+                    ? `with ${session.people.filter((person) => person.id !== profile?.id).map((person) => person.displayName).join(', ')}`
+                    : session.participantCount === 1 ? 'just you' : `${session.participantCount} people`}
                   {session.status === 'ended' ? ' · ended' : ''}
                 </Link>
                 {session.status === 'open' ? (
@@ -152,10 +162,10 @@ export default function MovieNightPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => void copyInvite(session.invitePath, session.id)}
+                      onClick={() => void shareInvite(session.invitePath, session.id)}
                     >
-                      <Copy className="mr-1 h-3 w-3" aria-hidden />
-                      {copied === session.id ? 'Copied' : 'Invite'}
+                      <Link2 className="mr-1 h-3 w-3" aria-hidden />
+                      {copied === session.id ? 'Shared' : 'Share link'}
                     </Button>
                     <Button
                       size="sm"
