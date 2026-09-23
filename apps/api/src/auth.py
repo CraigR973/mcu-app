@@ -169,6 +169,24 @@ def generate_opaque_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def split_refresh_token(token: str) -> tuple[str, str] | None:
+    """Split a refresh token into its signed half and its opaque half.
+
+    A refresh token is ``<jwt>.<opaque>`` (see ``routers/auth._issue_tokens``), and a JWT
+    is itself three dot-separated segments, so **the opaque half is whatever follows the
+    last dot**. Both callers split at the *first* dot until 23 Sep 2026: that hashed
+    ``<payload>.<signature>.<opaque>``, matched no row, and turned every renewal into a
+    sign-out — 30 sign-ins and zero renewals in production (`DECISIONS.md` #200).
+
+    ``None`` for anything without both halves. The opaque half is URL-safe base64, which
+    has no dot, so a token this module issued always splits cleanly.
+    """
+    signed, separator, opaque = token.rpartition(".")
+    if not separator or not signed or not opaque:
+        return None
+    return signed, opaque
+
+
 def decode_access_token(token: str) -> dict[str, Any]:
     try:
         return jwt.decode(token, settings.jwt_access_secret, algorithms=["HS256"])

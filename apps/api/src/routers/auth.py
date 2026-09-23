@@ -26,10 +26,12 @@ from src.auth import (
     _utcnow,
     create_access_token,
     create_refresh_token,
+    decode_refresh_token,
     generate_opaque_token,
     hash_pin,
     hash_token,
     is_weak_pin,
+    split_refresh_token,
     verify_pin,
 )
 from src.database import get_db, get_limiter_db
@@ -218,20 +220,33 @@ async def refresh(
 
     Rotation on every use: the presented row is revoked before the replacement is
     issued, so a token used twice fails the second time even within its 30-day life.
+
+    **Both halves are checked.** The opaque half finds the row; the signed half must verify
+    against the refresh secret and name that same row and that same person. Until 23 Sep
+    2026 the signed half was never read, and the opaque half was read wrongly, so no
+    renewal ever succeeded (`DECISIONS.md` #200, :func:`src.auth.split_refresh_token`).
     """
-    raw = payload.refreshToken
-    _, _, opaque = raw.partition(".")
-    if not opaque:
+    parts = split_refresh_token(payload.refreshToken)
+    if parts is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
+    signed, opaque = parts
+    claims = decode_refresh_token(signed)
 
     result = await db.execute(
         select(RefreshToken).where(RefreshToken.token_hash == hash_token(opaque))
     )
     record = result.scalar_one_or_none()
     now = _utcnow()
-    if record is None or record.revoked_at_utc is not None or record.expires_at_utc <= now:
+    if (
+        record is None
+        or record.revoked_at_utc is not None
+        or record.expires_at_utc <= now
+        # A valid signature on *another* row's claims is still not this row's token.
+        or claims.get("jti") != str(record.id)
+        or claims.get("sub") != str(record.user_id)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
@@ -251,10 +266,17 @@ async def logout(
     payload: LogoutRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    """Revoke a refresh token. Idempotent — an unknown token is not an error."""
-    _, _, opaque = payload.refreshToken.partition(".")
-    if not opaque:
+    """Revoke a refresh token. Idempotent — an unknown token is not an error.
+
+    Only the opaque half is needed to find the row, and the signed half is deliberately
+    not verified: signing out must still revoke a token whose signature has expired.
+    Until 23 Sep 2026 this split at the first dot, like ``refresh``, so it never found a
+    row and no sign-out ever revoked anything (`DECISIONS.md` #200).
+    """
+    parts = split_refresh_token(payload.refreshToken)
+    if parts is None:
         return
+    _, opaque = parts
     result = await db.execute(
         select(RefreshToken).where(RefreshToken.token_hash == hash_token(opaque))
     )

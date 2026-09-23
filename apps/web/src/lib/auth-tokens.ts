@@ -9,6 +9,8 @@
 
 import { tokenPairSchema } from '@mcu/shared'
 
+import { shouldEndSession } from './session'
+
 const ACCESS_KEY = 'mcu.accessToken'
 const REFRESH_KEY = 'mcu.refreshToken'
 
@@ -49,32 +51,64 @@ export function clearTokens(): void {
   }
 }
 
-/** In-flight refresh, shared so concurrent 401s trigger one rotation rather than many. */
-let refreshInFlight: Promise<boolean> | null = null
+/**
+ * What a renewal attempt came to.
+ *
+ * - `renewed`: fresh tokens are in storage — from this attempt, or from another tab that
+ *   rotated them while this one was in flight.
+ * - `refused`: the server examined the refresh token and rejected it. The session is over.
+ * - `unavailable`: nobody examined it — a 5xx during a deploy, a 429, a gateway. The
+ *   session is intact and the tokens are kept (`DECISIONS.md` #48, #200).
+ */
+type RefreshOutcome =
+  | { kind: 'renewed' }
+  | { kind: 'refused' }
+  | { kind: 'unavailable'; status: number }
 
-async function refreshTokens(): Promise<boolean> {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) return false
+/** In-flight refresh, shared so concurrent 401s trigger one rotation rather than many. */
+let refreshInFlight: Promise<RefreshOutcome> | null = null
+
+async function refreshTokens(): Promise<RefreshOutcome> {
+  const presented = getRefreshToken()
+  if (!presented) return { kind: 'refused' }
 
   const response = await fetch(`${API_BASE}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    body: JSON.stringify({ refreshToken: presented }),
   })
   if (!response.ok) {
+    // This used to clear the tokens on *any* failure, so a renewal that met a restarting
+    // server signed the person out — the rule `AuthProvider` already refuses to break.
+    if (!shouldEndSession(response.status)) return { kind: 'unavailable', status: response.status }
+    // Tokens rotate on every use. If another tab renewed while this request was in flight,
+    // the server refused ours *because* it had just issued its successor — and clearing
+    // storage now would throw that successor away and sign out both tabs.
+    if (getRefreshToken() !== presented) return { kind: 'renewed' }
     clearTokens()
-    return false
+    return { kind: 'refused' }
   }
 
   try {
     const body: unknown = await response.json()
     const tokens = tokenPairSchema.parse(body)
     storeTokens(tokens.accessToken, tokens.refreshToken)
-    return true
+    return { kind: 'renewed' }
   } catch {
+    // The server rotated — the token we presented is revoked — and we cannot read its
+    // replacement, so there is no session left to keep.
     clearTokens()
-    return false
+    return { kind: 'refused' }
   }
+}
+
+/** A fresh response per caller: concurrent requests share one refresh, and a body can
+ *  only be read once. */
+function renewalUnavailable(status: number): Response {
+  return new Response(
+    JSON.stringify({ detail: 'Your session could not be renewed just now. Try again in a moment.' }),
+    { status, headers: { 'Content-Type': 'application/json' } },
+  )
 }
 
 /**
@@ -107,8 +141,11 @@ export async function authFetch(path: string, options: RequestInit = {}): Promis
   refreshInFlight ??= refreshTokens().finally(() => {
     refreshInFlight = null
   })
-  const refreshed = await refreshInFlight
-  if (!refreshed) return response
+  const outcome = await refreshInFlight
+  if (outcome.kind === 'refused') return response
+  // Hand back the renewal's own status, not the original 401: a caller that sees a 401
+  // ends the session, and nothing examined these credentials and refused them.
+  if (outcome.kind === 'unavailable') return renewalUnavailable(outcome.status)
 
   return send()
 }
