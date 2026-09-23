@@ -1770,7 +1770,12 @@ change. **Switching it on starts the nightly shop price checks and the 08:00 rem
 pushes for the first time.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High, because it edits the
 fail-closed configuration.
 
-### T2 — One search 🟡
+### ~~T2 — One search~~ 🟡 **shipped 2026-09-23 (`fe409f3`)**
+**Acceptance: eight of eight met.** Browser check at 375×812 used the dev-only
+`VITE_SKIP_AUTH` and a scratch API stub, as #169 did; nothing from it is in the tree.
+There were no CI failures. Along the way: a zod/API mismatch that failed the page of any
+film with no disc left, and a duplicate native clear button on every search box (#205).
+
 **Covers snags 4, 6, 14 and 10d.** Opus 5 · high / GPT-5.6 Sol · High. It merges two sources,
 and a missed or mislabelled owned film is wrong data that looks right.
 
@@ -1989,7 +1994,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → T2 → T3 → T4 → T5 → T6 → **checkpoint: search API account** → T7 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Proposed, not approved** — only T1 shipped (as a fix, `aa112bd`). Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → T3 → T4 → T5 → T6 → **checkpoint: search API account** → T7 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Proposed, not approved** — only T1 shipped (as a fix, `aa112bd`). Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

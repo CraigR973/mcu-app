@@ -38,7 +38,8 @@ waiting for his go.**
 - **Discs with Blu-ray.com specs:** 0.
 - **Purchase prices:** 0.
 
-**Next step:** Group T is approved (23 Sep). T2 (one search) is under way; then T3 to T8 in order.
+**Group T progress:** T2 (one search) shipped as `fe409f3`. **Next: T3**, navigation and the
+Archive row. Then T4 to T8 in order.
 
 ## Next
 
@@ -443,6 +444,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-23 (Batch T2 — one search, `fe409f3`)** — Owned results say when *you* last
+  watched them. Films not in the collection follow them, from TMDB, with a UK streaming
+  line; an owned film nothing has identified is flagged rather than hidden. There's a film
+  card for strangers, with Add to Wanted and Suggest for movie night, and movie night's
+  suggest box uses the same live search. Picking a result on a phone now closes the
+  search sheet. Fixed on the way: the web schema rejected films with no disc (#205).
+  Green first time in CI (1,209 passed, the 19 new ones against Postgres), and
+  production serves `fe409f3` with `db: ok`.
 
 - **2026-09-23 (scheduled jobs fixed, `aeb87aa`; Group T approved)** — Craig said yes to the
   jobs fix and to Group T, and no to applying for eBay's Buy API. A job now runs without

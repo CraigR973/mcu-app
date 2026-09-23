@@ -3715,3 +3715,26 @@ contemporaneous.
 
      *Also decided 2026-09-23:* Craig will **not** apply for eBay's Buy API (#203's optional
      step). T8's automatic half is eBay's own maximum-bid bidding, and nothing more.
+
+205. **Batch T2's search: one search, two sources, and four choices made along the way.
+     Shipped 2026-09-23 (`fe409f3`).**
+
+     - **An owned film nothing has identified yet is *flagged* in the "not in the
+       collection" group, not hidden.** `GET /search/beyond` compares canonical titles
+       (article rotated, annotations dropped, case and punctuation folded) against the
+       owned films with no TMDB id. A match reads "Might be your copy of …". *Why not
+       hide it:* two films can share a title, and hiding the wrong one is worse than
+       asking. Tapping it opens the film card, which offers the shelf copy.
+     - **The streaming line is cached for 30 minutes, in-process, for the first five
+       results only.** One search types the same films several times over. `StreamingPanel`
+       deliberately caches nothing, because a stale "on Netflix" is a wrong answer, so this
+       is a search's worth of reuse, not a store. A failed lookup is never cached.
+     - **`lastWatchedAt` is defaulted in zod, not required.** The service worker serves
+       cached API responses offline, and a response cached before the field existed must
+       still parse. That meant widening the web client's `parseResponse` to accept a
+       schema whose *input* type differs from its output, which is what `.default()`
+       produces. It was typed `ZodType<T>`, which quietly forbade that.
+     - **`copyCount` may be 0 in the web schema, as it has been in the API since
+       Batch 29.** A film whose only disc was sold failed to parse on its own page. Search
+       now links to such films, which surfaced it.
+
