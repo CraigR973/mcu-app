@@ -299,7 +299,8 @@ async def abandon_stale_runs(db: AsyncSession, *, now: datetime) -> int:
 
 
 async def running_run(db: AsyncSession) -> ValuationRun | None:
-    return await db.scalar(select(ValuationRun).where(ValuationRun.status == "running"))
+    result = await db.execute(select(ValuationRun).where(ValuationRun.status == "running"))
+    return result.scalar_one_or_none()
 
 
 async def start_run(
@@ -507,9 +508,9 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
         )
     ).one()
     total_discs, priced_discs, not_priced_discs, total, first, last = row
-    latest = await db.scalar(
-        select(ValuationRun).order_by(ValuationRun.started_utc.desc()).limit(1)
-    )
+    latest = (
+        await db.execute(select(ValuationRun).order_by(ValuationRun.started_utc.desc()).limit(1))
+    ).scalar_one_or_none()
     return CollectionValue(
         total=total,
         discs=int(total_discs),
