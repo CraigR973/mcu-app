@@ -3844,7 +3844,8 @@ contemporaneous.
      of them for films in cinemas** such as *Aaram* and *Acharya*. Cinema dates stay on the
      calendar to be looked at. The rule's own comment always said "a disc coming out". About
      3 disc releases a week are expected to push. Mark got none only because his phone's
-     push registration had expired.
+     push registration had expired. **Craig kept every disc release on 24 Sep**, rather than
+     narrowing pushes to films he owns or wants; narrowing stays open if it proves noisy.
 
 211. **eBay network failures are retried, and the first valuation ran. 2026-09-24 (`e256d65`,
      at Craig's word).**

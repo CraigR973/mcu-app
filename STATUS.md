@@ -23,9 +23,10 @@ fixes shipped today.**
   expired on 24 Sep (`OWNER-ACTIONS.md` 16b).
 - **Session renewal is still unverified.** Neither person has renewed or signed in since the
   access tokens lapsed, so nobody has opened the app since (#200).
-- **Next: T7**, the Blu-ray.com backfill, which waits on Craig. On 24 Sep he asked why a
-  search API is needed: the fetcher needs each disc's exact page address, and #110 excludes
-  Blu-ray.com's own search (`OWNER-ACTIONS.md` 17). Then T8 (item 18).
+- **Next: T7**, the Blu-ray.com backfill. Craig confirmed the search API plan on 24 Sep; T7
+  starts when he says the Brave key is in Railway and `.env.local` (`OWNER-ACTIONS.md` 17).
+  The fetcher needs each disc's exact page address, and #110 excludes Blu-ray.com's own
+  search, which is why an outside search API is needed. Then T8 (item 18).
 - **The documented local mypy command was not strict** until T6 (#209). Use the one in
   `AGENTS.md`, which passes `--config-file`.
 - The 23 Sep snags, with Craig's answers, are in `docs/owner-snags-2026-09-23.md`.

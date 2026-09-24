@@ -901,9 +901,23 @@ both phones. This also closes Batch 11's open 6.2 (a push reaching two real devi
 
 ### 17. A Brave Search API account and key — for T7, the Blu-ray.com backfill
 
-This is `DECISIONS.md` #202. Brave charges $5 per 1,000 queries, with $5 of monthly credit,
-so expect roughly £5–10 for about 1,250 discs. The key goes into Railway, which is a
-credential change and yours.
+This is `DECISIONS.md` #202, and **Craig confirmed the plan on 24 Sep**. T7 waits for this.
+
+**Cost, checked on Brave's pricing page on 24 Sep:** the Search plan is $5 per 1,000 searches
+and includes $5 of free credit every month, so about 1,000 searches a month are free. One
+search per disc for about 1,250 discs comes to roughly £0–2. Brave asks for a card, which it
+says is not charged within the free credit.
+
+1. Sign up for the Brave Search API and choose the **Search** plan.
+2. Create an API key in its dashboard. If it offers a spending limit, set one.
+3. In Railway, add `BRAVE_SEARCH_API_KEY` to the **`api`** service's variables. The nightly
+   jobs take their secrets from `api` by reference, as they already do for the push keys.
+4. Add the same `BRAVE_SEARCH_API_KEY=…` line to `apps/api/.env.local` on your Mac, so the
+   agent can run and check T7's first batch from here, as with eBay.
+5. Tell the agent the key is in.
+
+When T7 ships, one more hosting step passes the key to the nightly job: a one-line change to
+`.railway/railway.ts`, applied by you. The agent will give the command then.
 
 ### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
 
