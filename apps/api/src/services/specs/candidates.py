@@ -105,6 +105,36 @@ _FORMAT_WORDS = frozenset(
     }
 )
 
+#: Brackets that name a publisher's line, or say "standard", rather than a special edition:
+#: "Up Blu-ray (PIXAR) (United Kingdom)", "(Indicator Series)", "(Standard Edition)". A
+#: bracket made only of these, and of format words, leaves a release plain.
+NEUTRAL_EDITIONS = frozenset(
+    {
+        "standard edition",
+        "pixar",
+        "disney",
+        "disney pixar",
+        "indicator series",
+        "arrow academy",
+        "arrow video",
+        "masters of cinema",
+        "the masters of cinema series",
+        "criterion collection",
+        "the criterion collection",
+        "eureka classics",
+        "vintage classics",
+        "cult classics",
+        "studiocanal collection",
+        "bfi",
+        "second sight",
+        "powerhouse films",
+        "101 films",
+        "network",
+        "sci-fi destination series",
+        "dual format",
+    }
+)
+
 _TRAILING_BRACKET = re.compile(r"\s*\(([^()]*)\)\s*$")
 _SITE_SUFFIX = re.compile(r"\s*[-|–]\s*blu-ray\.com\s*$", re.IGNORECASE)
 _WORD = re.compile(r"[a-z0-9]+")
@@ -128,10 +158,23 @@ class ReleaseTitle:
     #: plain release.
     editions: tuple[str, ...]
 
+    @property
+    def plain(self) -> bool:
+        """No special edition: no brackets beyond a publisher's line or "standard"."""
+        return all(is_neutral_edition(edition) for edition in self.editions)
+
 
 def _is_format_description(text: str) -> bool:
     words = _WORD.findall(text.lower())
     return bool(words) and all(word in _FORMAT_WORDS for word in words)
+
+
+def is_neutral_edition(bracket: str) -> bool:
+    """A bracket that names no special edition: a publisher's line, "standard", formats."""
+    parts = [part.strip().lower() for part in re.split(r"[|/]", bracket) if part.strip()]
+    return bool(parts) and all(
+        part in NEUTRAL_EDITIONS or _is_format_description(part) for part in parts
+    )
 
 
 def parse_release_title(raw: str) -> ReleaseTitle:
@@ -168,11 +211,22 @@ def parse_release_title(raw: str) -> ReleaseTitle:
     return ReleaseTitle(name=name, format_label=format_label, country=country, editions=editions)
 
 
+_LEADING_ARTICLE = re.compile(r"^(the|a|an)\s+")
+
+
+def _film_key(title: str) -> str:
+    """A title reduced as identification reduces it, with "&" read as "and" and any leading
+    article dropped: TMDB's "Angels & Demons" is Blu-ray.com's "Angels and Demons", and
+    "Bride of Frankenstein" is "The Bride of Frankenstein". The year check after the fetch
+    is what stops "The Thing" standing in for "Thing"."""
+    canonical, _ = canonical_title(title.replace("&", " and "))
+    return _LEADING_ARTICLE.sub("", canonical)
+
+
 def same_film(page_name: str, film_title: str) -> bool:
     """Equal once both are reduced the way identification reduces titles."""
-    page, _ = canonical_title(page_name)
-    film, _ = canonical_title(film_title)
-    return bool(page) and page == film
+    page = _film_key(page_name)
+    return bool(page) and page == _film_key(film_title)
 
 
 @dataclass(frozen=True)
@@ -203,7 +257,7 @@ class Candidate:
 
     @property
     def plain(self) -> bool:
-        return not self.release.editions
+        return self.release.plain
 
 
 def judge(hits: list[SearchHit], disc: Disc) -> list[Candidate]:
@@ -259,7 +313,7 @@ def decide(candidates: list[Candidate], disc: Disc) -> Verdict:
         return Verdict(
             "needs_you",
             None,
-            "No UK page for this film on this format was found. Pick one, paste a link, or skip.",
+            "No UK page matched this film's name and format. Pick one, paste a link, or skip.",
         )
 
     chosen: Candidate | None = None

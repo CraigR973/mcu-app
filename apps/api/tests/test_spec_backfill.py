@@ -321,6 +321,73 @@ async def test_a_4k_box_gets_the_uk_4k_page_and_its_hdr(db: AsyncSession) -> Non
     assert (disc.video_specs or {}).get("resolution") == "2160p"
 
 
+async def _queued_with(
+    db: AsyncSession, film: Movie, note: str, hits: list[tuple[str, str]]
+) -> SpecLookup:
+    disc = await _disc(db, film, "blu_ray")
+    lookup = SpecLookup(
+        id=uuid.uuid4(), collection_item_id=disc.id, status="needs_you", note=note, attempts=0
+    )
+    db.add(lookup)
+    await db.flush()
+    for rank, (url, title) in enumerate(hits):
+        db.add(
+            SpecCandidate(
+                id=uuid.uuid4(), lookup_id=lookup.id, url=url, title=title, rank=rank, matches=True
+            )
+        )
+    await db.commit()
+    return lookup
+
+
+async def test_a_second_look_settles_what_the_sharper_matcher_can(db: AsyncSession) -> None:
+    """Up was left for Craig on 24 Sep with four UK editions; one of them is plain PIXAR."""
+    film = await _film(db, "Up", year=1999, tmdb_id=990_014_160)
+    plain = "https://www.blu-ray.com/movies/Up-Blu-ray/3/"
+    lookup = await _queued_with(
+        db,
+        film,
+        "4 UK editions match. Pick the one on the shelf.",
+        [
+            (
+                "https://www.blu-ray.com/movies/Up-Blu-ray/1/",
+                "Up Blu-ray (PIXAR / Combi Pack) (United Kingdom)",
+            ),
+            (plain, "Up Blu-ray (PIXAR) (United Kingdom)"),
+        ],
+    )
+    # A batch starts only when there is something to search for or fetch.
+    await _disc(db, await _film(db, "Filler Film", year=2000, tmdb_id=990_009_999), "blu_ray")
+    brave = FakeBrave()
+    site = FakeBlurayCom({"/movies/Up-Blu-ray/3/": FIGHT_CLUB_PAGE})
+
+    run = await _run(db, brave, site)
+
+    # Up was settled from its stored results: only the filler was searched.
+    assert brave.queries == ["site:blu-ray.com Filler Film Blu-ray United Kingdom"]
+    assert (run.accepted, run.applied) == (1, 1)
+    await db.refresh(lookup)
+    assert (lookup.status, lookup.how, lookup.accepted_url) == ("done", "auto", plain)
+
+
+async def test_a_page_that_failed_its_year_check_is_not_chosen_again(db: AsyncSession) -> None:
+    film = await _film(db, "Up", year=2009, tmdb_id=990_014_160)
+    lookup = await _queued_with(
+        db,
+        film,
+        "The page is for a 1999 film and this one is from 2009, so its specs were not used.",
+        [("https://www.blu-ray.com/movies/Up-Blu-ray/3/", "Up Blu-ray (PIXAR) (United Kingdom)")],
+    )
+    await _disc(db, await _film(db, "Filler Film", year=2000, tmdb_id=990_009_999), "blu_ray")
+    site = FakeBlurayCom({})
+
+    await _run(db, FakeBrave(), site, now=NOW)
+
+    await db.refresh(lookup)
+    assert lookup.status == "needs_you"
+    assert site.requested == []
+
+
 # ---------------------------------------------------------------------------
 # Budgets
 # ---------------------------------------------------------------------------

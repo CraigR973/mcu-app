@@ -460,6 +460,68 @@ async def search_phase(
     return PhaseEnd("budget" if cut_short else "done")
 
 
+async def redecide_queue(db: AsyncSession, run: SpecRun, *, clock: Callable[[], datetime]) -> int:
+    """Look again at discs the matcher left for Craig, with the matcher as it is now.
+
+    No new searches: the stored results are judged again. Only the matcher's own reasons are
+    reconsidered (several UK editions, no UK page matched). A disc Craig has acted on, or
+    one whose page failed its year check, stays where it is, so a rejected page is never
+    chosen again by this.
+    """
+    fmt, conditions = _in_scope()
+    rows = (
+        await db.execute(
+            select(SpecLookup, CollectionItem, Movie, fmt)
+            .join(CollectionItem, CollectionItem.id == SpecLookup.collection_item_id)
+            .join(Movie, Movie.id == CollectionItem.movie_id)
+            .where(
+                SpecLookup.status == "needs_you",
+                SpecLookup.decided_by.is_(None),
+                CollectionItem.specs_source_url.is_(None),
+                *conditions,
+            )
+        )
+    ).all()
+    settled = 0
+    for lookup, item, movie, code in rows:
+        note = lookup.note or ""
+        if not (note.startswith("No UK page") or "UK editions match" in note):
+            continue
+        stored = list(
+            (
+                await db.scalars(
+                    select(SpecCandidate)
+                    .where(SpecCandidate.lookup_id == lookup.id, SpecCandidate.origin == "search")
+                    .order_by(SpecCandidate.rank)
+                )
+            ).all()
+        )
+        row = DiscRow(
+            item_id=item.id,
+            movie_id=movie.id,
+            title=movie.title,
+            identified=movie.tmdb_id is not None,
+            year=movie.year,
+            format_code=code,
+            grouping=item.sub_category,
+        )
+        judged = judge([SearchHit(c.url, c.title, c.snippet or "") for c in stored], row.disc)
+        verdicts = {candidate.url: candidate.matches for candidate in judged}
+        for candidate in stored:
+            candidate.matches = verdicts.get(candidate.url, candidate.matches)
+        verdict = decide(judged, row.disc)
+        if verdict.decision == "accepted":
+            lookup.status = "accepted"
+            lookup.accepted_url = verdict.url
+            lookup.how = "auto"
+            lookup.decided_utc = clock()
+            lookup.note = "Matched on a second look at the same search results."
+            settled += 1
+    run.accepted += settled
+    await db.commit()
+    return settled
+
+
 # ---------------------------------------------------------------------------
 # Fetching
 # ---------------------------------------------------------------------------
@@ -588,6 +650,7 @@ async def work_run(
     if run is None or run.status != "running":
         raise ValueError(f"spec run {run_id} is not running")
     try:
+        await redecide_queue(db, run, clock=clock)
         searching = await search_phase(db, run, searcher, clock=clock)
         fetching = await fetch_phase(db, run, client, clock=clock, pause=pause)
 

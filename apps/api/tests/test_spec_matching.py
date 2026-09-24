@@ -29,6 +29,7 @@ from src.services.specs.candidates import (
     decide,
     judge,
     parse_release_title,
+    same_film,
     search_query,
 )
 from src.services.specs.search import (
@@ -502,3 +503,63 @@ def test_a_halted_integration_refuses_to_start_and_says_so(
 ) -> None:
     assert report(StartOutcome("halted", None), None, COVERAGE) == 1
     assert "halted" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# Sharper matching, from the first live batches (24 Sep)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("page", "film"),
+    [
+        ("Angels and Demons", "Angels & Demons"),
+        ("Batman and Robin", "Batman & Robin"),
+        ("The Bride of Frankenstein", "Bride of Frankenstein"),
+    ],
+)
+def test_ampersands_and_a_leading_article_do_not_hide_a_match(page: str, film: str) -> None:
+    """Three of the first batches' misses. The year check after the fetch guards the rest."""
+    assert same_film(page, film)
+
+
+def test_a_sequel_is_still_another_film() -> None:
+    assert not same_film("Blade Runner", "Blade Runner 2049")
+
+
+UP_HITS = [
+    SearchHit(f"https://www.blu-ray.com/movies/Up-Blu-ray/{index}/", title, "")
+    for index, title in enumerate(
+        [
+            "Up Blu-ray (PIXAR / Combi Pack) (United Kingdom)",
+            "Up Blu-ray (PIXAR / Superset) (United Kingdom)",
+            "Up Blu-ray (PIXAR) (United Kingdom)",
+            "Up Blu-ray (PIXAR / Promotional Copy) (United Kingdom)",
+        ],
+        start=1,
+    )
+]
+
+
+def test_a_publishers_line_is_the_standard_release() -> None:
+    """Up's four UK Blu-rays all say PIXAR; the one that says nothing more is the plain one."""
+    up = Disc(title="Up", year=2009, format_code="blu_ray")
+    verdict = decide(judge(UP_HITS, up), up)
+    assert verdict.url == "https://www.blu-ray.com/movies/Up-Blu-ray/3/"
+
+
+@pytest.mark.parametrize(
+    ("bracket", "plain"),
+    [
+        ("Indicator Series", True),
+        ("Indicator Series | Standard Edition", True),
+        ("Standard Edition", True),
+        ("Arrow Academy", True),
+        ("Indicator Series | Limited Edition", False),
+        ("Remastered | Arrow Academy", False),
+        ("Zavvi Exclusive SteelBook", False),
+    ],
+)
+def test_which_brackets_leave_a_release_plain(bracket: str, plain: bool) -> None:
+    release = parse_release_title(f"10 Rillington Place Blu-ray ({bracket}) (United Kingdom)")
+    assert release.plain is plain
