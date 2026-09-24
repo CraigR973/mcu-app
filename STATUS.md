@@ -439,9 +439,23 @@ it renders — and report what was observed rather than what passed.
     ambient shell is not a command worth writing into a doc.** Test it under
     `env -i HOME="$HOME" PATH=/usr/bin:/bin bash -lc '…'` before handing it to anyone.
 
+30. **The first version's data is no longer in the old Supabase project.** That project's
+   `public` schema held it: 27 tables at Alembic `0017`, last written 27 Apr 2026, with rows
+   only in `movies` (1,697), `collection_items` (1,830) and `movie_credits` (69,421). On
+   2026-09-24 it was archived to
+   `~/garmin-coach-snapshots/2026-09-24-mcu-v1-public-schema/` on Craig's Mac, as a
+   gzipped `pg_dump` with a README giving the row counts, checksum and restore steps. It
+   was then dropped to free space for Garmin Coach (garmin-coach `DECISIONS.md` #349).
+   Nothing live used it, because this app has run on Neon since #17. **Restore it only into
+   an empty database or a scratch schema**, because its table names are the same as this
+   app's.
+
 
 ## Log
 
+- **2026-09-24 (the old Supabase data)** — Garmin Coach needed the space, so the first
+  version's tables in the shared Supabase project were archived to Craig's Mac and dropped
+  (Gotcha 30). This app's code, data and hosting did not change.
 - **2026-09-24 (fixes, and T6's first valuation)** — The scheduled jobs' first real runs:
   the shop check at 03:04 UTC and the reminders at 08:04 UTC. The reminders pushed Craig 27
   releases, 23 of them cinema dates; release pushes are now disc releases only (`59808f4`,
