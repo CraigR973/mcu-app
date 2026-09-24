@@ -209,17 +209,35 @@ class EbayClient:
         last_status: int | None = None
         for attempt in range(self._max_retries + 1):
             await self._rate_limiter.acquire()
-            token = await self._access_token(force=attempt > 0 and last_status == 401)
-            self.search_calls += 1
-            response = await client.get(
-                SEARCH_PATH,
-                params=params,
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "X-EBAY-C-MARKETPLACE-ID": self._marketplace_id,
-                    "Accept": "application/json",
-                },
-            )
+            try:
+                token = await self._access_token(force=attempt > 0 and last_status == 401)
+                self.search_calls += 1
+                response = await client.get(
+                    SEARCH_PATH,
+                    params=params,
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "X-EBAY-C-MARKETPLACE-ID": self._marketplace_id,
+                        "Accept": "application/json",
+                    },
+                )
+            except httpx.TransportError as exc:
+                # A dropped connection or a timeout says nothing about the query, so it is
+                # retried like a 5xx. Before 24 Sep it escaped as a raw httpx error: the
+                # film page answered 500, and the first valuation run died at call 574 of 750.
+                last_status = None
+                if attempt < self._max_retries:
+                    wait = 2**attempt
+                    logger.warning(
+                        "ebay_search_network_retrying",
+                        error=type(exc).__name__,
+                        attempt=attempt,
+                        wait=wait,
+                    )
+                    await asyncio.sleep(wait)
+                    continue
+                logger.error("ebay_search_network_failed", error=type(exc).__name__)
+                raise EbayError(f"eBay could not be reached ({type(exc).__name__})") from exc
             last_status = response.status_code
 
             if response.status_code == 200:

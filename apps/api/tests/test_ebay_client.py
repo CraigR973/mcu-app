@@ -38,7 +38,7 @@ class _Recorder:
         self,
         *,
         token_expires_in: int = 7200,
-        search_statuses: list[int] | None = None,
+        search_statuses: list[int | Exception] | None = None,
         token_status: int = 200,
     ) -> None:
         self.token_mints = 0
@@ -65,6 +65,8 @@ class _Recorder:
             self.searches += 1
             self.search_headers.append(request.headers)
             status = self._statuses.pop(0) if self._statuses else 200
+            if isinstance(status, Exception):
+                raise status
             if status != 200:
                 return httpx.Response(status, json={"errors": []})
             return httpx.Response(200, json={"total": 1, "itemSummaries": []})
@@ -208,3 +210,23 @@ async def test_every_request_is_counted_retries_included() -> None:
     await client.search("Heat Blu-ray")
     assert client.search_calls == recorder.searches == 3
     assert client.attempts_per_search == 3
+
+
+async def test_a_dropped_connection_is_retried() -> None:
+    """The first valuation run died at call 574 of 750 on one of these (24 Sep)."""
+    recorder = _Recorder(search_statuses=[httpx.ReadError("connection reset"), 200])
+    client = _client(recorder)
+    payload = await client.search("Jaws Blu-ray")
+    assert payload["total"] == 1
+    assert client.search_calls == recorder.searches == 2
+
+
+async def test_a_connection_that_keeps_dropping_is_an_ebay_error() -> None:
+    """Named, so callers that handle eBay failing handle this too, rather than a 500."""
+    recorder = _Recorder(search_statuses=[httpx.ConnectTimeout("slow")] * 3)
+    client = _client(recorder, max_retries=2)
+    with pytest.raises(EbayError) as caught:
+        await client.search("Jaws Blu-ray")
+    assert caught.value.status_code is None
+    assert "ConnectTimeout" in str(caught.value)
+    assert recorder.searches == 3
