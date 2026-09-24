@@ -32,7 +32,11 @@ from src.models.loan import Loan
 from src.models.movie import Movie
 from src.models.notification import NotificationCategory
 from src.models.profile import Profile, UserRole
-from src.models.release_calendar import RELEASE_TYPE_LABELS, ReleaseCalendarEntry
+from src.models.release_calendar import (
+    DISC_RELEASE_TYPES,
+    RELEASE_TYPE_LABELS,
+    ReleaseCalendarEntry,
+)
 from src.services.notifications import queue_notification
 from src.services.sale_seasons import SALE_EVENT_TYPE, seed_year
 
@@ -124,14 +128,21 @@ async def notify_upcoming_sales(
 async def notify_upcoming_releases(
     db: AsyncSession, *, as_of: date, now: datetime, summary: ReminderSummary
 ) -> None:
-    """§7.3's calendar entries that are about to happen — everything except a sale."""
+    """A 4K or Blu-ray about to go on sale: a week's warning, one push per disc.
+
+    **Discs only.** Cinema dates are on the calendar to be looked at, not pushed. This rule
+    used to cover every entry except a sale, and was harmless while the calendar was nearly
+    empty. Batch T5 filled it with six months of cinema dates, and the first real run, at
+    08:04 UTC on 24 Sep, sent Craig 27 pushes, 23 of them for films in cinemas
+    (`DECISIONS.md` #210).
+    """
     horizon = as_of + timedelta(days=RELEASE_LEAD_DAYS)
     entries = list(
         (
             await db.execute(
                 select(ReleaseCalendarEntry)
                 .where(
-                    ReleaseCalendarEntry.release_type != SALE_EVENT_TYPE,
+                    ReleaseCalendarEntry.release_type.in_(DISC_RELEASE_TYPES),
                     ReleaseCalendarEntry.notified.is_(False),
                     ReleaseCalendarEntry.release_date >= as_of,
                     ReleaseCalendarEntry.release_date <= horizon,

@@ -1011,3 +1011,53 @@ class TestReleaseReminders:
         )
         assert row.title == "Nosferatu — 4K UHD"
         assert sender.sent
+
+    async def test_a_cinema_date_is_on_the_calendar_but_not_pushed(
+        self,
+        client: AsyncClient,
+        api_session: AsyncSession,
+        admin: Profile,
+        sender: RecordingSender,
+    ) -> None:
+        """#210. The first real run after T5 filled the calendar pushed 23 cinema dates at once."""
+        await _register(client, "phone")
+        as_of = date(2026, 4, 1)
+        disc = ReleaseCalendarEntry(
+            id=uuid.uuid4(),
+            title="Nosferatu",
+            release_type="blu_ray_release",
+            release_date=as_of + timedelta(days=2),
+            region="GB",
+        )
+        cinema = ReleaseCalendarEntry(
+            id=uuid.uuid4(),
+            title="Aaram",
+            release_type="theatrical",
+            release_date=as_of + timedelta(days=2),
+            region="GB",
+        )
+        api_session.add_all([disc, cinema])
+        await api_session.flush()
+
+        summary = await run_reminders(api_session, as_of=as_of, seed_seasons=False)
+        await deliver_pending(api_session, sender=sender)
+
+        assert summary.releases == 1
+        titles = (
+            (
+                await api_session.execute(
+                    select(Notification.title).where(
+                        Notification.category == "releases",
+                        Notification.user_id == admin.id,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert titles == ["Nosferatu — Blu-ray"]
+        # Left unmarked, so the rule can change again without the calendar having to forget.
+        cinema_marked = await api_session.scalar(
+            select(ReleaseCalendarEntry.notified).where(ReleaseCalendarEntry.id == cinema.id)
+        )
+        assert cinema_marked is False

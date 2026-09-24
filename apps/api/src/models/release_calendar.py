@@ -29,6 +29,9 @@ RELEASE_TYPES = (
     "sale_event",
 )
 
+#: The types that are a disc going on sale: what a release reminder is for.
+DISC_RELEASE_TYPES = ("4k_uhd_release", "blu_ray_release")
+
 #: How each type reads in a calendar app, where the event title is all there is.
 RELEASE_TYPE_LABELS = {
     "4k_uhd_release": "4K UHD",
