@@ -2,44 +2,32 @@
 
 ## Now
 
-**24 Sep 2026: T7 is built and waits for Craig's Brave key; the collection is half valued;
-two live fixes shipped today.**
+**24 Sep 2026: T7 has shipped and is backfilling specs; Group T now waits at the eBay
+checkpoint before T8.**
 
-- **Group T was approved on 23 Sep**, and each batch closes out on a green gate:
-  - T2, one search: `fe409f3`.
-  - T3, five tabs and the title in the top bar: `90d6994`.
-  - T4, movie night: `99b04c0`. Its two-phone check is Craig's (`OWNER-ACTIONS.md` 16b).
-  - T5, the release calendar: `1e08f40`, with 28 disc releases and 131 cinema dates.
-  - T6, the collection value: `9acd0ee`.
-- **The first valuation ran on 24 Sep, at Craig's word:** 641 of 1,457 discs priced,
-  £11,844.31 at current asking prices. 707 films are due on 25 Sep, which one day's share
-  covers (`OWNER-ACTIONS.md` 19).
-- **Two fixes shipped on 24 Sep:** release pushes are disc releases only (`59808f4`, #210),
-  after the first reminder run pushed Craig 23 cinema dates; and a dropped eBay connection is
-  now retried (`e256d65`, #211), after one stopped the first valuation run.
-- **The scheduled jobs work:** the shop check ran at 03:04 UTC and the reminders at 08:04 UTC
-  on 24 Sep (#204).
-- **Mark's phone gets no pushes** until he turns notifications back on. Its registration
-  expired on 24 Sep (`OWNER-ACTIONS.md` 16b).
-- **Session renewal is still unverified.** Neither person has renewed or signed in since the
-  access tokens lapsed, so nobody has opened the app since (#200).
-- **T7, the Blu-ray.com backfill, is built but not merged**: branch
-  `feat/t7-bluray-backfill` (`829737f`), CI green, 54 new tests. It waits for Craig's Brave
-  key (`OWNER-ACTIONS.md` 17). Then merge it, run one batch by hand and check it, and Craig
-  applies the nightly job. **Do not rebuild it** (#212). Then T8 (item 18).
-- **The valuation's second day (707 films) is due from 25 Sep**: Craig presses Update values
-  on Home, or tells the agent (`OWNER-ACTIONS.md` 19).
-- **The documented local mypy command was not strict** until T6 (#209). Use the one in
-  `AGENTS.md`, which passes `--config-file`.
-- The 23 Sep snags, with Craig's answers, are in `docs/owner-snags-2026-09-23.md`.
+- **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
+  **T7 `160f842` with sharper matching `bfc28e7`**. Next is T8, Mark's eBay, which waits
+  for Craig's eBay sign-in settings and an encryption key (`OWNER-ACTIONS.md` 18).
+- **Disc specs:** 178 of 1,250 Blu-ray and 4K discs have specs after three watched batches.
+  **136 wait for Craig** on the Disc specs page (`OWNER-ACTIONS.md` 20). 936 are not searched
+  yet; they go in nightly batches once Craig adds `BRAVE_SEARCH_API_KEY` to Railway's `api`
+  service and applies the config (`OWNER-ACTIONS.md` 17). Until then only the key in
+  `.env.local` exists, so batches can run only from a Mac.
+- **The valuation:** 641 of 1,457 discs priced (£11,844.31 at asking prices). The last 707
+  films are due from 25 Sep (`OWNER-ACTIONS.md` 19).
+- **Live fixes on 24 Sep:** release pushes are disc releases only (#210); dropped eBay
+  connections are retried (#211).
+- **The scheduled jobs work** (03:04 and 08:04 UTC on 24 Sep). **Mark's phone gets no
+  pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b). **Session renewal
+  is still unverified**: nobody has opened the app since the tokens lapsed (#200).
+- **Two local-gate gaps were closed on 24 Sep**: mypy now uses the project config (#209), and
+  the shared package's type-check and build are in the gate (#212).
 
 **Live numbers (24 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
   1,887 films (1,521 identified).
-- **`watch_log`:** 1,566 rows (23 Sep).
 - **`release_calendar`:** 172 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 0.
-- **Disc valuations:** 747 films and formats checked, 639 priced and 108 not priced.
+- **Discs with Blu-ray.com specs:** 178. **Disc valuations:** 639 priced, 108 not priced.
 
 ## Next
 
@@ -455,6 +443,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-24 (Batch T7 shipped, `160f842`, `bfc28e7`)** — T7 merged once Craig's Brave
+  key was in. Three watched batches: 314 searches, 188 pages fetched, 178 discs with
+  specs, no halts. None of the 10 Sep pages was a UK edition, so none was copied. The
+  year check caught 10 remakes and 2 doubtful identifications. A matcher fix ("&",
+  leading articles, publisher brackets) and a second look at the queue settled 10 more.
+  136 discs wait for Craig. Nightly batches wait for the key in Railway and a config
+  apply (#213).
 
 - **2026-09-24 (Batch T7 built, not merged)** — Brave search proposes each disc's
   Blu-ray.com page; one UK page for the right film and format is accepted, the rest wait

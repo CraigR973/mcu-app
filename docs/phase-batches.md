@@ -1905,10 +1905,15 @@ connection stopped the first of the day's two runs at call 574, fixed in `e256d6
   is a hosting change and his.
 - Gate green.
 
-### T7 — Blu-ray.com backfill 🔴
-**Built 2026-09-24 on `feat/t7-bluray-backfill` (`829737f`), CI green, not merged.** It waits
-for Craig's Brave key (`OWNER-ACTIONS.md` 17). Then: merge, run one batch by hand and check
-it, and Craig applies the nightly job. **Do not rebuild it** (#212).
+### ~~T7 — Blu-ray.com backfill~~ 🔴 **shipped 2026-09-24 (`160f842`; sharper matching `bfc28e7`)**
+**Acceptance: met, with the nightly job waiting on Craig's hosting step** (`OWNER-ACTIONS.md`
+17). Three batches were run by hand and checked on 24 Sep: 314 Brave searches (about $1.57,
+inside the month's free credit), 188 pages fetched five seconds apart, **178 discs with
+specs**, and no halts or failures. **The 10 Sep records were all checked against their pages
+and none was a UK edition**, so none was copied; 9 of those 10 discs got UK specs fetched
+fresh, and Fight Club waits for Craig. The year check caught 10 pages for remakes and 2
+doubtful identifications. **136 discs wait for Craig**, 43% of those searched (#213). CI
+failed once, on the shared package's type-check, which the local gate lacked (#212).
 
 **Covers snag 3.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High. A wrong-edition match is wrong
 data that looks right (Batch 24's reason), and the work runs under a risk acceptance (#110).
@@ -2029,7 +2034,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → **checkpoint: search API account** → T7 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`) and T2–T6 shipped. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`) and T2–T7 shipped. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

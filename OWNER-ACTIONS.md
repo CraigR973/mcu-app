@@ -901,6 +901,10 @@ both phones. This also closes Batch 11's open 6.2 (a push reaching two real devi
 
 ### 17. A Brave Search API account and key — for T7, the Blu-ray.com backfill
 
+> **Updated 24 Sep: the key is in `.env.local` and three batches have run from a Mac.**
+> **Still to do:** step 3 below (the key is **not** in Railway's `api` service yet), then
+> the `config plan` and `config apply` at the end, which start the nightly batches.
+
 This is `DECISIONS.md` #202, and **Craig confirmed the plan on 24 Sep**. T7 waits for this.
 
 **Cost, checked on Brave's pricing page on 24 Sep:** the Search plan is $5 per 1,000 searches
@@ -935,6 +939,21 @@ PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20
 
 `plan` is read-only. Before applying, check its `Plan:` line: it should add one service and
 destroy nothing. If anything is to be destroyed, stop (#124).
+
+### 20. Work through the Disc specs queue — T7
+
+**136 discs wait for you** on Admin → Disc specs (24 Sep), and about 540 will by the end of
+the backfill: a disc waits when the search found several UK editions, no UK page matched,
+the film has no year, it sits in a box set, or its page was for a remake. Each takes one tap:
+**Use this page**, paste a Blu-ray.com link, or **Skip this disc**. The next batch fetches
+what you choose.
+
+Two of them look like the app matched the wrong film, not the wrong page: **Band of Brothers**
+is recorded as 2019 and **Bad Neighbours** as 2026. Fix the film on its page first (Identify),
+then pick the page.
+
+The biggest saving would be identifying the ~244 films never matched to TMDB. They are 56 of
+the 136 waiting, and every undated one.
 
 ### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
 

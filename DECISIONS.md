@@ -3898,3 +3898,28 @@ contemporaneous.
      - **The documented local gate missed two CI steps**, `pnpm --filter @mcu/shared
        typecheck` and `... build`. A duplicate import passed every local check and failed
        CI. `AGENTS.md` and `batch-verify.md` now list both.
+
+213. **Batch T7 live: three watched batches, and sharper matching. 2026-09-24 (`160f842`,
+     `bfc28e7`).**
+
+     - **Three batches, run by hand and checked:** 314 Brave searches, 188 Blu-ray.com pages
+       fetched five seconds apart, 178 discs with specs, and no halts or failures. Brave's
+       real responses matched its documentation. The accepted pages were checked by hand
+       against their films; all were the UK edition of the right film and format.
+     - **The 10 Sep records were checked page by page, and none was a UK edition**, so none
+       was copied. Nine of those ten discs now have UK specs fetched fresh; Kick-Ass, for
+       one, went from region A to region-free.
+     - **The year check earned its place.** It stopped 10 pages for remakes (Ben-Hur 2016
+       for 1959, Cape Fear 1962 for 1991) and flagged two films whose TMDB match looks
+       wrong: Band of Brothers recorded as 2019, Bad Neighbours as 2026.
+     - **Sharper matching (`bfc28e7`).** "&" reads as "and" (Angels & Demons), a leading
+       article is ignored (Bride of Frankenstein), and a bracket that only names a
+       publisher's line or says "Standard Edition" leaves a release plain ("Up Blu-ray
+       (PIXAR)", "(Indicator Series)"). Each batch also takes a second look at discs the
+       matcher left for Craig, from the stored results and without searching again; it
+       settled 10 on its first run. A page that failed its year check is never chosen
+       again by it.
+     - **43% of discs searched still need Craig** (136 of 314): no UK page matched 52,
+       several UK editions 32, no year 28, box sets 14, remakes 10. Films never matched to
+       TMDB are 56 of the 136, and all 28 undated ones. Identifying them is the largest
+       lever left; the matcher is not.
