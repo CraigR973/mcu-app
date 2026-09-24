@@ -37,6 +37,14 @@ export default defineRailway(() => {
       VAPID_PRIVATE_KEY: preserve(),
       VAPID_SUBJECT: preserve(),
       EBAY_VERIFICATION_TOKEN: preserve(),
+      // Batch 28's Browse keyset, set in the console on 2026-09-12 and never declared, so
+      // `apply` would have removed it (`OWNER-ACTIONS.md` 1b). Batch T7 declares it
+      // because its own change needs an `apply`.
+      EBAY_CLIENT_ID: preserve(),
+      EBAY_CLIENT_SECRET: preserve(),
+      // Batch T7 (`DECISIONS.md` #202). Brave's web search key, set in the console by
+      // Craig; the nightly spec batch takes it from here by reference.
+      BRAVE_SEARCH_API_KEY: preserve(),
       // **A literal, not `preserve()` — the one env var here that is not a secret.**
       // eBay hashes the URL *it* has on file into every validation challenge, so ours
       // must match byte for byte or validation fails with no diagnosable error. Pinning
@@ -101,8 +109,29 @@ export default defineRailway(() => {
     },
   })
 
+  /**
+   * Batch T7 — the Blu-ray.com backfill (`DECISIONS.md` #202, within #110).
+   *
+   * Up to 150 Brave searches, then up to 150 page fetches five seconds apart, and a
+   * `403` or `429` from Blu-ray.com halts it for good. `NEVER` restarts, like the others:
+   * a batch that failed should not be retried into the site that refused it.
+   */
+  const specs = service('cron-specs', {
+    ...cronDefaults,
+    env: {
+      ...cronDefaults.env,
+      BRAVE_SEARCH_API_KEY: api.env.BRAVE_SEARCH_API_KEY,
+    },
+    deploy: {
+      // 02:00 UTC — overnight, and clear of the shop check at 03:00.
+      cronSchedule: '0 2 * * *',
+      startCommand: 'python -m src.scripts.spec_backfill',
+      restartPolicyType: 'NEVER',
+    },
+  })
+
   return project('mcu-app', {
     environments: ['production'],
-    resources: [api, scrape, reminders],
+    resources: [api, scrape, reminders, specs],
   })
 })

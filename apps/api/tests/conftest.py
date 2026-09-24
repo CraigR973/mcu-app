@@ -80,3 +80,20 @@ def _no_background_valuation_run(monkeypatch: pytest.MonkeyPatch) -> None:
         del run_id
 
     monkeypatch.setattr(valuation_router, "continue_run_in_background", _skip)
+
+
+@pytest.fixture(autouse=True)
+def _no_background_spec_batch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Batch T7: the Disc specs page's batch runs after the response, on real clients.
+
+    It would search Brave and fetch Blu-ray.com from a test. Tests about the button replace
+    this no-op with a recorder.
+    """
+    import uuid
+
+    import src.routers.specs as specs_router
+
+    async def _skip(run_id: uuid.UUID) -> None:
+        del run_id
+
+    monkeypatch.setattr(specs_router, "continue_run_in_background", _skip)

@@ -48,7 +48,7 @@ def test_the_container_can_run_the_cron_commands() -> None:
     # not just the modules uvicorn happens to reach.
     assert "COPY apps/api/src/ ./src/" in dockerfile
 
-    for module in ("daily_scrape", "run_reminders"):
+    for module in ("daily_scrape", "run_reminders", "spec_backfill"):
         assert (REPO_ROOT / "apps" / "api" / "src" / "scripts" / f"{module}.py").is_file()
         # The command in OWNER-ACTIONS.md, spelled out so the two cannot drift apart.
         assert f"python -m src.scripts.{module}" in (REPO_ROOT / "OWNER-ACTIONS.md").read_text(

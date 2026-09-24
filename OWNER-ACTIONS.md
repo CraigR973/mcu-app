@@ -916,8 +916,25 @@ says is not charged within the free credit.
    agent can run and check T7's first batch from here, as with eBay.
 5. Tell the agent the key is in.
 
-When T7 ships, one more hosting step passes the key to the nightly job: a one-line change to
-`.railway/railway.ts`, applied by you. The agent will give the command then.
+**Then the agent runs the first batch where it can be watched**: it merges T7, runs one
+batch from here, and checks the searches, the matches and the pages fetched before anything
+runs unattended.
+
+**Only after that, one hosting step starts the nightly batches.** T7 declares a new job,
+`cron-specs`, in `.railway/railway.ts`: it runs `python -m src.scripts.spec_backfill` at
+02:00 UTC and takes the Brave key from `api` by reference. The same change declares
+`BRAVE_SEARCH_API_KEY`, `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` as preserved, so this
+apply also closes item 1b. **The key must be in step 3 first**, then run:
+
+```
+PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config plan
+```
+```
+PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20.20.2/bin/railway" config apply
+```
+
+`plan` is read-only. Before applying, check its `Plan:` line: it should add one service and
+destroy nothing. If anything is to be destroyed, stop (#124).
 
 ### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
 

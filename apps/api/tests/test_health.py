@@ -239,6 +239,13 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/specs/state",
         "/api/v1/specs/halt",
         "/api/v1/specs/fetch",
+        # Batch T7. Admin-only, all five. The queue takes Craig's choices; only the next
+        # batch fetches anything, and `/backfill/run` starts one within the same budgets.
+        "/api/v1/specs/backfill",
+        "/api/v1/specs/backfill/run",
+        "/api/v1/specs/queue",
+        "/api/v1/specs/queue/{lookup_id}/accept",
+        "/api/v1/specs/queue/{lookup_id}/skip",
         # Batch 28's prerequisite, and the **second** unauthenticated route in this app
         # after Batch 17's `.ics` feed. *It was the third* until Batch S1 removed
         # Batch 27's `/gift/{slug}`, which sat between them. eBay holds no

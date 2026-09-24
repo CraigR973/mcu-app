@@ -198,6 +198,9 @@ class CollectionFacetsResponse(BaseModel):
     #: Films with no year at all — every one of them unidentified. A decade filter
     #: cannot include them, and saying so is better than letting the totals not add up.
     undatedMovieCount: int = Field(ge=0)
+    #: Batch T7 — owned discs with Blu-ray.com specs. The Dolby Vision, Atmos and
+    #: Region-free filters stay hidden while it is 0, because nothing could match them.
+    discsWithSpecs: int = Field(default=0, ge=0)
 
 
 # ---------------------------------------------------------------------------

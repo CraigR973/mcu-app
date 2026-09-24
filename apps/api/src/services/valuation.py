@@ -44,7 +44,7 @@ from src.database import AsyncSessionLocal
 from src.ebay.client import DEFAULT_MAX_RETRIES, EbayClient, EbayError, EbayNotConfigured
 from src.ebay.estimate import EbaySearch, estimate_price, search_query
 from src.ebay.pricing import ASKING_PRICES, PriceEstimate
-from src.matching.engine import normalise_query
+from src.matching.engine import searchable_title as search_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.valuation import VALUED_FORMATS, DiscValuation, ValuationRun
@@ -97,19 +97,6 @@ def _valued_format_sql() -> ColumnElement[str | None]:
         *((CollectionItem.formats.contains([code]), code) for code in VALUED_FORMATS),
         else_=None,
     )
-
-
-def search_title(title: str, *, identified: bool) -> str:
-    """The film's name as eBay sellers would write it.
-
-    An identified film has TMDB's title. An unidentified one still has the spreadsheet's,
-    with notes such as "(Sidney Poitier)" and library order such as "Mummy, The", which
-    no listing contains, so it is cleaned the way the identification search cleans it.
-    """
-    if identified:
-        return title
-    cleaned, _year = normalise_query(title)
-    return cleaned or title
 
 
 @dataclass(frozen=True)

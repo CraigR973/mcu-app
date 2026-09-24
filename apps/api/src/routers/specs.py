@@ -8,16 +8,48 @@ So this endpoint exists, is tested against fixture HTML, and is invoked by a per
 
 from __future__ import annotations
 
+import uuid
+from typing import Annotated, Literal
+
 import httpx
 import structlog
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from sqlalchemy import func, select
 
 from src.auth import AdminUser
 from src.clock import utcnow
+from src.config import settings
 from src.models.collection_item import CollectionItem
+from src.models.specs_backfill import SpecLookup, SpecRun
 from src.routers.movies import Database
-from src.schemas.specs import SpecsFetchRequest, SpecsRunResponse, SpecsStateResponse
+from src.schemas.specs import (
+    SpecAcceptRequest,
+    SpecBackfillResponse,
+    SpecBackfillStartResponse,
+    SpecCandidateResponse,
+    SpecCoverageResponse,
+    SpecDecisionResponse,
+    SpecQueueItemResponse,
+    SpecQueueResponse,
+    SpecRunResponse,
+    SpecsFetchRequest,
+    SpecsRunResponse,
+    SpecsStateResponse,
+)
+from src.services.specs.backfill import (
+    FETCHES_PER_RUN,
+    MONTHLY_SEARCH_CEILING,
+    SEARCHES_PER_RUN,
+    QueueError,
+    accept_page,
+    continue_run_in_background,
+    coverage,
+    latest_run,
+    queue,
+    searches_this_month,
+    skip_disc,
+    start_run,
+)
 from src.services.specs.runner import get_state, halt, run_specs_fetch
 
 logger = structlog.get_logger(__name__)
@@ -145,3 +177,181 @@ async def forget_all_specs(_user: AdminUser, db: Database) -> SpecsStateResponse
     await db.commit()
     logger.warning("specs_deleted", rows=len(rows))
     return await _state_response(db)
+
+
+# ---------------------------------------------------------------------------
+# The backfill (Batch T7, `DECISIONS.md` #202)
+# ---------------------------------------------------------------------------
+
+_RUN_STATUSES: dict[
+    str, Literal["running", "finished", "budget_spent", "stopped", "halted", "abandoned"]
+] = {
+    "running": "running",
+    "finished": "finished",
+    "budget_spent": "budget_spent",
+    "stopped": "stopped",
+    "halted": "halted",
+    "abandoned": "abandoned",
+}
+_LOOKUP_STATUSES: dict[str, Literal["needs_you", "no_match", "accepted", "done", "skipped"]] = {
+    "needs_you": "needs_you",
+    "no_match": "no_match",
+    "accepted": "accepted",
+    "done": "done",
+    "skipped": "skipped",
+}
+_HOW: dict[str, Literal["auto", "confirmed", "pasted", "restored"]] = {
+    "auto": "auto",
+    "confirmed": "confirmed",
+    "pasted": "pasted",
+    "restored": "restored",
+}
+
+
+def _run_response(run: SpecRun) -> SpecRunResponse:
+    return SpecRunResponse(
+        id=run.id,
+        trigger="admin" if run.trigger == "admin" else "job",
+        status=_RUN_STATUSES[run.status],
+        startedAt=run.started_utc,
+        finishedAt=run.finished_utc,
+        searchBudget=run.search_budget,
+        searches=run.searches,
+        searched=run.searched,
+        accepted=run.accepted,
+        queued=run.queued,
+        noMatch=run.no_match,
+        restored=run.restored,
+        fetchBudget=run.fetch_budget,
+        fetched=run.fetched,
+        applied=run.applied,
+        sentBack=run.sent_back,
+        fetchFailed=run.fetch_failed,
+        lastError=run.last_error,
+    )
+
+
+def _decision(lookup: SpecLookup) -> SpecDecisionResponse:
+    return SpecDecisionResponse(
+        lookupId=lookup.id,
+        status=_LOOKUP_STATUSES[lookup.status],
+        acceptedUrl=lookup.accepted_url,
+        how=_HOW[lookup.how] if lookup.how else None,
+    )
+
+
+@router.get("/specs/backfill", response_model=SpecBackfillResponse)
+async def read_backfill(_user: AdminUser, db: Database) -> SpecBackfillResponse:
+    """How far the backfill has got across the ~1,250 Blu-ray and 4K discs, and its spend."""
+    state = await get_state(db)
+    counts = await coverage(db)
+    run = await latest_run(db)
+    return SpecBackfillResponse(
+        searchConfigured=bool(settings.brave_search_api_key),
+        halted=state.halted,
+        haltedReason=state.halted_reason,
+        coverage=SpecCoverageResponse(
+            discs=counts.discs,
+            withSpecs=counts.with_specs,
+            accepted=counts.accepted,
+            needsYou=counts.needs_you,
+            noMatch=counts.no_match,
+            skipped=counts.skipped,
+            notSearched=counts.not_searched,
+        ),
+        run=_run_response(run) if run else None,
+        searchesThisMonth=await searches_this_month(db, now=utcnow()),
+        monthlyCeiling=MONTHLY_SEARCH_CEILING,
+        searchesPerRun=SEARCHES_PER_RUN,
+        fetchesPerRun=FETCHES_PER_RUN,
+    )
+
+
+@router.get("/specs/queue", response_model=SpecQueueResponse)
+async def read_queue(
+    _user: AdminUser,
+    db: Database,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> SpecQueueResponse:
+    """Discs waiting for Craig to pick a page, paste one, or skip."""
+    entries, total = await queue(db, limit=limit)
+    return SpecQueueResponse(
+        items=[
+            SpecQueueItemResponse(
+                lookupId=entry.lookup.id,
+                collectionItemId=entry.item.id,
+                movieId=entry.movie.id,
+                filmTitle=entry.movie.title,
+                year=entry.movie.year,
+                formatCode=entry.format_code,
+                location=entry.item.location,
+                status="no_match" if entry.lookup.status == "no_match" else "needs_you",
+                note=entry.lookup.note,
+                searchQuery=entry.lookup.search_query,
+                candidates=[
+                    SpecCandidateResponse(
+                        url=candidate.url,
+                        title=candidate.title,
+                        country=candidate.country,
+                        edition=candidate.edition,
+                        matches=candidate.matches,
+                        origin="restored" if candidate.origin == "restored" else "search",
+                    )
+                    for candidate in entry.candidates
+                ],
+            )
+            for entry in entries
+        ],
+        total=total,
+    )
+
+
+@router.post("/specs/queue/{lookup_id}/accept", response_model=SpecDecisionResponse)
+async def accept_queued_page(
+    lookup_id: uuid.UUID, payload: SpecAcceptRequest, user: AdminUser, db: Database
+) -> SpecDecisionResponse:
+    """Craig's choice of page for one disc. Nothing is fetched now: the next batch does it."""
+    try:
+        lookup = await accept_page(db, lookup_id, payload.url, by=user.id)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except QueueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return _decision(lookup)
+
+
+@router.post("/specs/queue/{lookup_id}/skip", response_model=SpecDecisionResponse)
+async def skip_queued_disc(
+    lookup_id: uuid.UUID, user: AdminUser, db: Database
+) -> SpecDecisionResponse:
+    """No specs for this disc."""
+    try:
+        lookup = await skip_disc(db, lookup_id, by=user.id)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except QueueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return _decision(lookup)
+
+
+@router.post("/specs/backfill/run", response_model=SpecBackfillStartResponse)
+async def run_backfill_now(
+    user: AdminUser, db: Database, background_tasks: BackgroundTasks
+) -> SpecBackfillStartResponse:
+    """One batch now, rather than tonight: the same budgets, rules and halt as the job.
+
+    Claimed before the response, so ``started`` means this batch exists. It then searches
+    and fetches after the response, which can take a quarter of an hour.
+    """
+    outcome = await start_run(
+        db,
+        trigger="admin",
+        search_configured=bool(settings.brave_search_api_key),
+        started_by=user.id,
+    )
+    if outcome.run is not None:
+        background_tasks.add_task(continue_run_in_background, outcome.run.id)
+    return SpecBackfillStartResponse(
+        outcome=outcome.reason,
+        run=_run_response(outcome.run) if outcome.run else None,
+    )

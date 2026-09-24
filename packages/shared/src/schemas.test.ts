@@ -57,6 +57,10 @@ import {
   syncResponseSchema,
   collectionValueSchema,
   valuationStartSchema,
+  collectionFacetsSchema,
+  specBackfillSchema,
+  specDecisionSchema,
+  specQueueSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -265,6 +269,7 @@ describe('Batch 6 location and watch-log schemas', () => {
       unsectionedItemCount: 2,
       decades: [{ decade: 1940, movieCount: 203 }],
       undatedMovieCount: 757,
+      discsWithSpecs: 0,
     }
     expect(collectionFacetsSchema.parse(facets)).toEqual(facets)
   })
@@ -1550,3 +1555,63 @@ describe('Batch T6 — the collection\'s value', () => {
     expect(() => valuationStartSchema.parse({ ...started, outcome: 'queued' })).toThrow()
   })
 })
+
+describe('Batch T7 — the Blu-ray.com backfill', () => {
+  it('reads facets cached before T7 as no disc having specs (#205)', () => {
+    const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }
+    expect(collectionFacetsSchema.parse(facets).discsWithSpecs).toBe(0)
+    expect(collectionFacetsSchema.parse({ ...facets, discsWithSpecs: 12 }).discsWithSpecs).toBe(12)
+  })
+
+  it('reads a queued disc with its candidates', () => {
+    const queue = {
+      total: 1,
+      items: [
+        {
+          lookupId: '00000000-0000-4000-8000-000000000011',
+          collectionItemId: '00000000-0000-4000-8000-000000000012',
+          movieId: '00000000-0000-4000-8000-000000000013',
+          filmTitle: 'Fight Club',
+          year: 1999,
+          formatCode: 'blu_ray',
+          location: null,
+          status: 'needs_you',
+          note: '3 UK editions match.',
+          searchQuery: 'site:blu-ray.com Fight Club Blu-ray United Kingdom',
+          candidates: [
+            {
+              url: 'https://www.blu-ray.com/movies/Fight-Club-Blu-ray/114797/',
+              title: 'Fight Club Blu-ray (MetalPak) (United Kingdom)',
+              country: 'United Kingdom',
+              edition: 'MetalPak',
+              matches: true,
+              origin: 'search',
+            },
+          ],
+        },
+      ],
+    }
+    expect(specQueueSchema.parse(queue)).toEqual(queue)
+  })
+
+  it('reads the coverage with no batch yet', () => {
+    const backfill = {
+      searchConfigured: false,
+      halted: false,
+      haltedReason: null,
+      coverage: { discs: 1250, withSpecs: 0, accepted: 0, needsYou: 0, noMatch: 0, skipped: 0, notSearched: 1250 },
+      run: null,
+      searchesThisMonth: 0,
+      monthlyCeiling: 1500,
+      searchesPerRun: 150,
+      fetchesPerRun: 150,
+    }
+    expect(specBackfillSchema.parse(backfill)).toEqual(backfill)
+  })
+
+  it('refuses a decision it does not know', () => {
+    const decision = { lookupId: '00000000-0000-4000-8000-000000000011', status: 'accepted', acceptedUrl: null, how: 'guessed' }
+    expect(() => specDecisionSchema.parse(decision)).toThrow()
+  })
+})
+

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bot, Boxes, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
+import { Bot, Boxes, Disc3, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -74,6 +74,8 @@ export const adminNavItems: NavItem[] = [
   { label: 'Retailers', path: '/retailers', icon: Store },
   // Batch S3. Moved here from the foot of the old Stats page.
   { label: 'Export', path: '/export', icon: Download },
+  // Batch T7. Where Craig settles the Blu-ray.com pages the matcher would not.
+  { label: 'Disc specs', path: '/specs', icon: Disc3 },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 

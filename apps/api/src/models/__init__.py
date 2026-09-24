@@ -84,6 +84,14 @@ from src.models.smart_collection import (
     SMART_COLLECTION_SORTS,
     SmartCollection,
 )
+from src.models.specs_backfill import (
+    ACCEPTED_HOW,
+    LOOKUP_STATUSES,
+    SPEC_RUN_STATUSES,
+    SpecCandidate,
+    SpecLookup,
+    SpecRun,
+)
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.valuation import (
     RUN_STATUSES,
@@ -184,6 +192,12 @@ __all__ = [
     "SmartCollection",
     "SINGLETON_ID",
     "SpecsIntegrationState",
+    "ACCEPTED_HOW",
+    "LOOKUP_STATUSES",
+    "SPEC_RUN_STATUSES",
+    "SpecCandidate",
+    "SpecLookup",
+    "SpecRun",
     "TimestampMixin",
     "UpdatedAtMixin",
     "UUIDPrimaryKeyMixin",

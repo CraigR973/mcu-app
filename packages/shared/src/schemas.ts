@@ -214,6 +214,8 @@ export const collectionFacetsSchema = z.object({
   unsectionedItemCount: z.number().int().nonnegative(),
   decades: z.array(decadeFacetSchema),
   undatedMovieCount: z.number().int().nonnegative(),
+  /** Batch T7. The spec filters hide while this is 0. Defaulted, as #205 explains. */
+  discsWithSpecs: z.number().int().nonnegative().default(0),
 })
 
 export const watchLogEntrySchema = z.object({
@@ -1645,6 +1647,103 @@ export const valuationStartSchema = z.object({
   due: z.number().int().nonnegative(),
   budgetLeft: z.number().int().nonnegative(),
 })
+
+// ---------------------------------------------------------------------------
+// The Blu-ray.com backfill (Batch T7) — DECISIONS.md #202, within #110
+// ---------------------------------------------------------------------------
+
+export const specCoverageSchema = z.object({
+  discs: z.number().int().nonnegative(),
+  withSpecs: z.number().int().nonnegative(),
+  accepted: z.number().int().nonnegative(),
+  needsYou: z.number().int().nonnegative(),
+  noMatch: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  notSearched: z.number().int().nonnegative(),
+})
+
+export const specRunSchema = z.object({
+  id: z.string().uuid(),
+  trigger: z.enum(['job', 'admin']),
+  status: z.enum(['running', 'finished', 'budget_spent', 'stopped', 'halted', 'abandoned']),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  searchBudget: z.number().int().nonnegative(),
+  searches: z.number().int().nonnegative(),
+  searched: z.number().int().nonnegative(),
+  accepted: z.number().int().nonnegative(),
+  queued: z.number().int().nonnegative(),
+  noMatch: z.number().int().nonnegative(),
+  restored: z.number().int().nonnegative(),
+  fetchBudget: z.number().int().nonnegative(),
+  fetched: z.number().int().nonnegative(),
+  applied: z.number().int().nonnegative(),
+  sentBack: z.number().int().nonnegative(),
+  fetchFailed: z.number().int().nonnegative(),
+  lastError: z.string().nullable(),
+})
+
+export const specBackfillSchema = z.object({
+  searchConfigured: z.boolean(),
+  halted: z.boolean(),
+  haltedReason: z.string().nullable(),
+  coverage: specCoverageSchema,
+  run: specRunSchema.nullable(),
+  searchesThisMonth: z.number().int().nonnegative(),
+  monthlyCeiling: z.number().int().nonnegative(),
+  searchesPerRun: z.number().int().nonnegative(),
+  fetchesPerRun: z.number().int().nonnegative(),
+})
+
+/** One Blu-ray.com page the search proposed. `matches`: same film, format, UK edition. */
+export const specCandidateSchema = z.object({
+  url: z.string().min(1),
+  title: z.string().min(1),
+  country: z.string().nullable(),
+  edition: z.string().nullable(),
+  matches: z.boolean(),
+  origin: z.enum(['search', 'restored']),
+})
+
+export const specQueueItemSchema = z.object({
+  lookupId: z.string().uuid(),
+  collectionItemId: z.string().uuid(),
+  movieId: z.string().uuid(),
+  filmTitle: z.string().min(1),
+  year: z.number().int().nullable(),
+  formatCode: z.string().min(1),
+  location: z.string().nullable(),
+  status: z.enum(['needs_you', 'no_match']),
+  note: z.string().nullable(),
+  searchQuery: z.string().nullable(),
+  candidates: z.array(specCandidateSchema),
+})
+
+export const specQueueSchema = z.object({
+  items: z.array(specQueueItemSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const specDecisionSchema = z.object({
+  lookupId: z.string().uuid(),
+  status: z.enum(['needs_you', 'no_match', 'accepted', 'done', 'skipped']),
+  acceptedUrl: z.string().nullable(),
+  how: z.enum(['auto', 'confirmed', 'pasted', 'restored']).nullable(),
+})
+
+export const specBatchStartSchema = z.object({
+  outcome: z.enum(['started', 'running', 'halted', 'nothing_due']),
+  run: specRunSchema.nullable(),
+})
+
+export type SpecCoverage = z.infer<typeof specCoverageSchema>
+export type SpecRun = z.infer<typeof specRunSchema>
+export type SpecBackfill = z.infer<typeof specBackfillSchema>
+export type SpecCandidate = z.infer<typeof specCandidateSchema>
+export type SpecQueueItem = z.infer<typeof specQueueItemSchema>
+export type SpecQueue = z.infer<typeof specQueueSchema>
+export type SpecDecision = z.infer<typeof specDecisionSchema>
+export type SpecBatchStart = z.infer<typeof specBatchStartSchema>
 
 export type CopyValuation = z.infer<typeof copyValuationSchema>
 export type ValuationRun = z.infer<typeof valuationRunSchema>

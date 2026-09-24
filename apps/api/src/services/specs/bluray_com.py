@@ -146,6 +146,18 @@ def is_release_url(url: str) -> bool:
     return bool(_RELEASE_PATH.match(path))
 
 
+def canonical_release_url(url: str) -> str:
+    """One spelling for a release page — `https://www.blu-ray.com/movies/<Slug>/<id>/`.
+
+    Search engines and people write the same page with and without `www.`, `https` or the
+    trailing slash. Stored addresses are held to this form so two spellings of one page are
+    one page, and so the tables' release-path CHECK accepts them.
+    """
+    require_in_bounds(url)
+    path = urlsplit(url).path.rstrip("/") + "/"
+    return f"https://www.{ALLOWED_HOST}{path}"
+
+
 def require_in_bounds(url: str) -> None:
     """Raise unless the URL is one #110 allows. Called before any request."""
     if not is_release_url(url):
@@ -350,6 +362,29 @@ def _release_label(soup: BeautifulSoup) -> str | None:
             text = link.get_text(" ", strip=True)
             if text:
                 return text
+    return None
+
+
+#: The year link in the grey studio line: `movies.php?year=1999`.
+_YEAR_LINK = re.compile(r"movies\.php\?year=(\d{4})")
+
+
+def extract_year(html: str) -> int | None:
+    """The film's year, from the page's grey studio/year line — Batch T7.
+
+    Read from the year **link**, as the studio is, rather than by splitting that line on
+    `|`. It is how an automatically chosen page is checked after fetching: a remake shares
+    its title with the original, but not its year.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for heading in _subheadings(soup):
+        if "grey" not in (heading.get("class") or []):
+            continue
+        link = heading.find("a", href=_YEAR_LINK)
+        if isinstance(link, Tag):
+            match = _YEAR_LINK.search(str(link.get("href") or ""))
+            if match:
+                return int(match.group(1))
     return None
 
 

@@ -75,6 +75,10 @@ import {
   watchHistoryStatusSchema,
   statsSchema,
   valuationStartSchema,
+  specBackfillSchema,
+  specBatchStartSchema,
+  specDecisionSchema,
+  specQueueSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
   tmdbSearchResponseSchema,
@@ -94,6 +98,10 @@ import {
   type EbayPriceEstimate,
   type CollectionValue,
   type ValuationStart,
+  type SpecBackfill,
+  type SpecBatchStart,
+  type SpecDecision,
+  type SpecQueue,
   type AiAnswer,
   type AiConversation,
   type AiConversationDetail,
@@ -196,6 +204,14 @@ export type {
   CopyValuation,
   ValuationRun,
   ValuationStart,
+  SpecBackfill,
+  SpecBatchStart,
+  SpecCandidate,
+  SpecCoverage,
+  SpecDecision,
+  SpecQueue,
+  SpecQueueItem,
+  SpecRun,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -1095,6 +1111,36 @@ export async function startValuationRun(): Promise<ValuationStart> {
     await authFetch('/collection/value/refresh', { method: 'POST' }),
     valuationStartSchema,
   )
+}
+
+/** Batch T7 — how far the Blu-ray.com backfill has got, and its Brave spend. Admin only. */
+export async function fetchSpecBackfill(): Promise<SpecBackfill> {
+  return parseResponse(await authFetch('/specs/backfill'), specBackfillSchema)
+}
+
+/** Discs waiting for Craig to pick a Blu-ray.com page, paste one, or skip. */
+export async function fetchSpecQueue(limit = 20): Promise<SpecQueue> {
+  return parseResponse(await authFetch(`/specs/queue?limit=${String(limit)}`), specQueueSchema)
+}
+
+/** Craig's choice of page. Nothing is fetched now: the next batch does it. */
+export async function acceptSpecPage(lookupId: string, url: string): Promise<SpecDecision> {
+  return parseOrThrowApiError(
+    await authFetch(`/specs/queue/${lookupId}/accept`, { method: 'POST', body: JSON.stringify({ url }) }),
+    specDecisionSchema,
+  )
+}
+
+export async function skipSpecDisc(lookupId: string): Promise<SpecDecision> {
+  return parseOrThrowApiError(
+    await authFetch(`/specs/queue/${lookupId}/skip`, { method: 'POST' }),
+    specDecisionSchema,
+  )
+}
+
+/** One batch now rather than tonight, within the same budgets. Only `started` does anything. */
+export async function startSpecBatch(): Promise<SpecBatchStart> {
+  return parseOrThrowApiError(await authFetch('/specs/backfill/run', { method: 'POST' }), specBatchStartSchema)
 }
 
 export async function fetchStats(): Promise<Stats> {

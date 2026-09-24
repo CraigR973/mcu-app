@@ -92,6 +92,20 @@ def _canonicalise(title: str) -> str:
     return _WHITESPACE_RE.sub(" ", no_punct).strip()
 
 
+def searchable_title(title: str, *, identified: bool) -> str:
+    """A film's name as sellers and other sites write it — Batches T6 and T7.
+
+    An identified film has TMDB's title. An unidentified one still has the spreadsheet's,
+    with notes such as "(Sidney Poitier)" and library order such as "Mummy, The", which no
+    listing or page title contains, so it is cleaned the way the identification search
+    cleans it.
+    """
+    if identified:
+        return title
+    cleaned, _year = normalise_query(title)
+    return cleaned or title
+
+
 def canonical_title(raw_title: str) -> tuple[str, int | None]:
     """A title reduced to what two spellings of one film share, and any year it carried.
 

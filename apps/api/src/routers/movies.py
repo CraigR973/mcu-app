@@ -620,6 +620,17 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
         ).scalar_one()
     )
 
+    # Batch T7: the spec filters hide while nothing could match them (#154's rule).
+    with_specs = int(
+        (
+            await db.execute(
+                select(func.count(CollectionItem.id)).where(
+                    owned_copy(), CollectionItem.specs_source_url.is_not(None)
+                )
+            )
+        ).scalar_one()
+    )
+
     return CollectionFacetsResponse(
         sections=sections,
         unsectionedItemCount=int(unsectioned),
@@ -628,6 +639,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
             for value, count in decade_rows
         ],
         undatedMovieCount=undated,
+        discsWithSpecs=with_specs,
     )
 
 

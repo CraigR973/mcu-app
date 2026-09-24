@@ -8,7 +8,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   fetchFacets: vi.fn().mockResolvedValue({ sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }),
 }))
 
-import type { MovieFilters } from '@/lib/api'
+import { fetchFacets, type MovieFilters } from '@/lib/api'
 
 import { FilterBar } from './FilterBar'
 
@@ -73,3 +73,24 @@ describe('FilterBar — Batch T3', () => {
     expect(onChange).toHaveBeenCalledWith({ runtimeMin: undefined, runtimeMax: undefined })
   })
 })
+
+describe('FilterBar — Batch T7', () => {
+  const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }
+
+  it('hides the spec filters while no disc has specs, because nothing could match them', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, discsWithSpecs: 0 })
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    await screen.findByRole('group', { name: /runtime/i })
+    expect(screen.queryByRole('group', { name: 'Technical specification filters' })).toBeNull()
+  })
+
+  it('shows them once a disc has specs', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, discsWithSpecs: 12 })
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    const group = await screen.findByRole('group', { name: 'Technical specification filters' })
+    expect(within(group).getByRole('button', { name: 'Dolby Vision' })).not.toBeNull()
+  })
+})
+

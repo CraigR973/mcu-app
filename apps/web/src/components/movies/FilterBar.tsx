@@ -153,6 +153,8 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
   const selectedSection = sections.find((section) => section.section === filters.section)
   const shelves = selectedSection?.shelves ?? []
   const supportsLiveOnly = context === 'browse'
+  // Batch T7, #154's rule: the spec filters hide until a disc has specs to match them.
+  const specsAvailable = (facetsQuery.data?.discsWithSpecs ?? 0) > 0
 
   const activeFilters = useMemo(() => {
     const active: Array<{ key: string; label: string; clear: () => void }> = []
@@ -351,7 +353,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
               <RuntimeRange filters={filters} onChange={onChange} />
             </div>
 
-            {supportsLiveOnly && (
+            {supportsLiveOnly && specsAvailable && (
               <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Technical specification filters">
                 {SPEC_TOGGLES.map((toggle) => {
                   const active = toggle.isActive(filters)

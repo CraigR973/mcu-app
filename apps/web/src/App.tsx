@@ -35,6 +35,7 @@ const DealsPage = lazy(() => import('./pages/DealsPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const ExportPage = lazy(() => import('./pages/ExportPage'))
+const SpecsPage = lazy(() => import('./pages/SpecsPage'))
 const AiChatPage = lazy(() => import('./pages/AiChatPage'))
 const MovieNightPage = lazy(() => import('./pages/MovieNightPage'))
 const MovieNightJoinPage = lazy(() =>
@@ -252,6 +253,11 @@ export default function App() {
             <Route
               path="/export"
               element={<AdminShell><ExportPage /></AdminShell>}
+            />
+            {/* Batch T7. Admin-only, like the API behind it. */}
+            <Route
+              path="/specs"
+              element={<AdminShell><SpecsPage /></AdminShell>}
             />
             {/* Batch S3. Notifications and AI settings are one page with two tabs.
                 Both belong to whoever is signed in — each person has their own devices

@@ -125,6 +125,11 @@ class Settings(BaseSettings):
     #: and it is what #126 and #129 measured against.
     ebay_marketplace_id: str = "EBAY_GB"
 
+    # Brave's web search (Batch T7, `DECISIONS.md` #202): it finds each disc's Blu-ray.com
+    # release page, because #110 bars the site's own search. Optional at boot and checked
+    # at use, like eBay above; the Disc specs page says when it is missing.
+    brave_search_api_key: str = ""
+
     # Web Push (Batch 11). Set in Railway on 2026-09-09; the names here are fixed by
     # what is already there. Absent locally and in CI, where every send is stubbed.
     #
