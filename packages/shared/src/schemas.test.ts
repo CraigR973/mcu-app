@@ -57,7 +57,6 @@ import {
   syncResponseSchema,
   collectionValueSchema,
   valuationStartSchema,
-  collectionFacetsSchema,
   specBackfillSchema,
   specDecisionSchema,
   specQueueSchema,
