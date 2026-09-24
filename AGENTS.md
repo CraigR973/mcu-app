@@ -76,6 +76,8 @@ PYTHONPATH=apps/api apps/api/.venv/bin/mypy --config-file apps/api/pyproject.tom
 Frontend / shared (Node 20):
 ```
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm -r test
+PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/shared typecheck
+PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/shared build
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web lint
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web typecheck
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web build

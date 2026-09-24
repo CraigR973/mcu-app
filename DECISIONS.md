@@ -3861,3 +3861,40 @@ contemporaneous.
        films. Their spreadsheet titles carry typos (*Captain Ameica*) and mid-title articles
        (*Godfather, The Part III*) that no listing contains. Identifying those films is the
        fix, not the valuation.
+
+212. **Batch T7's Blu-ray.com backfill: the choices. Built 2026-09-24 on
+     `feat/t7-bluray-backfill` (`829737f`), CI green, not merged until Craig's Brave key
+     is in (`OWNER-ACTIONS.md` 17).**
+
+     - **Brave proposes the pages; Blu-ray.com's own search stays barred (#110).** Only an
+       exact release URL counts, checked by #110's predicate in code and by a CHECK on
+       both tables that store addresses.
+     - **What "one strong match" means.** Same film (titles reduced as identification
+       reduces them), same format ("4K Blu-ray" or "Blu-ray", never 3D) and a UK edition.
+       Blu-ray.com ends a non-US release title with its country, as in "Fight Club Blu-ray
+       (MetalPak) (United Kingdom)"; no country is the US. One such page is accepted. When
+       several UK editions match, the one plain release is accepted if there is exactly
+       one: no disc records its edition, and a steelbook usually holds the same disc.
+     - **Never accepted automatically:** a film with no year (245 of the 1,250 discs) and a
+       disc whose grouping reads like a box set ("Box Set", "Collection", "#2"). They wait
+       for Craig.
+     - **The year is checked after the fetch**, from the page's year link, within one year.
+       A page that fails goes back to Craig with the reason, and its specs are not used.
+       Pages Craig chose himself are not second-guessed.
+     - **Budgets:** 150 searches and 150 page fetches a batch, and 1,500 searches a calendar
+       month, all counted per batch. Fetching keeps #110's five-second spacing and its halt.
+     - **The 10 Sep specs were mostly US pages.** Kick-Ass and Up are region A, and Blade
+       Runner 2049's page (189774) and Fight Club's (5587) are the US editions. So those
+       specs are copied onto the new discs only when the search shows their page is the UK
+       edition of the right film and format. Otherwise the old page is offered to Craig,
+       flagged.
+     - **The Dolby Vision, Atmos and Region-free filters hide until a disc has specs** (#154).
+     - **Nightly batches need a new job, `cron-specs` at 02:00 UTC**, declared in
+       `.railway/railway.ts` with the Brave key by reference. The same change preserves the
+       Brave key and the eBay keyset, which closes item 1b on apply. Craig applies it only
+       after a first batch has been run and checked by hand.
+     - **Not yet verified:** a real Brave response. The client follows Brave's documentation,
+       and the first live search is the check.
+     - **The documented local gate missed two CI steps**, `pnpm --filter @mcu/shared
+       typecheck` and `... build`. A duplicate import passed every local check and failed
+       CI. `AGENTS.md` and `batch-verify.md` now list both.

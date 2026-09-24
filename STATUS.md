@@ -2,8 +2,8 @@
 
 ## Now
 
-**24 Sep 2026: Group T is paused before T7, the collection is half valued, and two live
-fixes shipped today.**
+**24 Sep 2026: T7 is built and waits for Craig's Brave key; the collection is half valued;
+two live fixes shipped today.**
 
 - **Group T was approved on 23 Sep**, and each batch closes out on a green gate:
   - T2, one search: `fe409f3`.
@@ -23,10 +23,12 @@ fixes shipped today.**
   expired on 24 Sep (`OWNER-ACTIONS.md` 16b).
 - **Session renewal is still unverified.** Neither person has renewed or signed in since the
   access tokens lapsed, so nobody has opened the app since (#200).
-- **Next: T7**, the Blu-ray.com backfill. Craig confirmed the search API plan on 24 Sep; T7
-  starts when he says the Brave key is in Railway and `.env.local` (`OWNER-ACTIONS.md` 17).
-  The fetcher needs each disc's exact page address, and #110 excludes Blu-ray.com's own
-  search, which is why an outside search API is needed. Then T8 (item 18).
+- **T7, the Blu-ray.com backfill, is built but not merged**: branch
+  `feat/t7-bluray-backfill` (`829737f`), CI green, 54 new tests. It waits for Craig's Brave
+  key (`OWNER-ACTIONS.md` 17). Then merge it, run one batch by hand and check it, and Craig
+  applies the nightly job. **Do not rebuild it** (#212). Then T8 (item 18).
+- **The valuation's second day (707 films) is due from 25 Sep**: Craig presses Update values
+  on Home, or tells the agent (`OWNER-ACTIONS.md` 19).
 - **The documented local mypy command was not strict** until T6 (#209). Use the one in
   `AGENTS.md`, which passes `--config-file`.
 - The 23 Sep snags, with Craig's answers, are in `docs/owner-snags-2026-09-23.md`.
@@ -453,6 +455,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-24 (Batch T7 built, not merged)** — Brave search proposes each disc's
+  Blu-ray.com page; one UK page for the right film and format is accepted, the rest wait
+  on a new Disc specs page. Nightly batches fetch under #110's rules, and the page's year
+  is checked. The 10 Sep specs were mostly US pages, so they are copied only when the
+  search confirms a UK edition. Branch `feat/t7-bluray-backfill` (`829737f`), CI green.
+  It waits for the Brave key. The local gate gained the shared type-check and build
+  after CI caught what they miss (#212).
 
 - **2026-09-24 (the old Supabase data)** — Garmin Coach needed the space, so the first
   version's tables in the shared Supabase project were archived to Craig's Mac and dropped

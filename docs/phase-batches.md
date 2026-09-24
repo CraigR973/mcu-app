@@ -1906,6 +1906,10 @@ connection stopped the first of the day's two runs at call 574, fixed in `e256d6
 - Gate green.
 
 ### T7 — Blu-ray.com backfill 🔴
+**Built 2026-09-24 on `feat/t7-bluray-backfill` (`829737f`), CI green, not merged.** It waits
+for Craig's Brave key (`OWNER-ACTIONS.md` 17). Then: merge, run one batch by hand and check
+it, and Craig applies the nightly job. **Do not rebuild it** (#212).
+
 **Covers snag 3.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High. A wrong-edition match is wrong
 data that looks right (Batch 24's reason), and the work runs under a risk acceptance (#110).
 `DECISIONS.md` #202.
