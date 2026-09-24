@@ -25,6 +25,10 @@ maps onto this file.*
 > 08:00 UTC on 24 Sep. The *same cause* was first found on 13 Sep (below) and parked as a
 > Railway change. What's still yours in this item: the real-device push check, and the
 > `restartPolicyType` drift.
+>
+> **Proven on 24 Sep:** the shop check ran at 03:04 UTC (23 checked, 7 prices written) and
+> the reminders at 08:04 UTC. That first reminder run pushed 27 releases to Craig, 23 of them
+> cinema dates; release pushes are now disc releases only (#210).
 
 **Batch 20 shipped on 2026-09-10 and Group F is complete.** The scraper acceptance run was
 done on 2026-09-09 (`DECISIONS.md` #111); the code that runs nightly, alerts on price drops
@@ -886,6 +890,10 @@ unless his session was already cleared before the fix.
 
 ### 16b. Send a movie night to Mark, on both phones — T4's last criterion
 
+**First, Mark must turn notifications back on** (Settings → Notifications on his phone).
+His phone's push registration expired, and the push service reported it gone at 08:04 UTC
+on 24 Sep, so the app deleted it. Until he re-enables, nothing reaches his phone.
+
 `99b04c0` is live. On your iPhone, open a movie night and tap **Send to Mark**. On Mark's
 Android, a notification should arrive, and tapping it should open that night, not the
 front page. Then both of you tap **Add** on the same film: "It's a match" should arrive on
@@ -903,14 +911,15 @@ This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consen
 eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.
 ~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
 
-### 19. Start the first collection valuation — T6
+### 19. Finish the first collection valuation — T6
 
-`9acd0ee` is live, and **no disc is priced yet**. A full valuation spends about 1,454 eBay
-calls at 750 a day, so it takes two days. Either:
+**Day one ran on 24 Sep, at Craig's word:** 641 of 1,457 discs priced, £11,844.31 at
+current asking prices. **707 films are due on 25 Sep**, which fits in one day's share of
+750 eBay calls. On or after 25 Sep, either:
 
-- **On Home, press "Value the collection".** You see it; Mark won't until there is a
-  total. It prices up to 750 today; press **Update values** tomorrow for the rest.
-- **Or tell the agent to run it** from here, which does the same thing.
+- **On Home, press "Update values"** under "What it's worth". Until midnight UTC on 24 Sep
+  it says the day's share is used.
+- **Or tell the agent to run it**, which does the same thing.
 
 Afterwards, open a couple of films and compare the stored value with **What is it
 worth?**. They should match, because they use the same estimator.

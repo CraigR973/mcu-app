@@ -2,35 +2,41 @@
 
 ## Now
 
-**23 Sep 2026: Group T is running. T2 to T6 have shipped. T7 waits for Craig's search API
-key.**
+**24 Sep 2026: Group T is paused before T7, the collection is half valued, and two live
+fixes shipped today.**
 
 - **Group T was approved on 23 Sep**, and each batch closes out on a green gate:
   - T2, one search: `fe409f3`.
   - T3, five tabs and the title in the top bar: `90d6994`.
   - T4, movie night: `99b04c0`. Its two-phone check is Craig's (`OWNER-ACTIONS.md` 16b).
-  - T5, the release calendar: `1e08f40`. Its first live run wrote **28 disc releases** and
-    131 cinema dates.
-  - **T6, the collection value: `9acd0ee`.** Live, but **no disc is priced yet**: the first
-    full run spends about 1,454 eBay calls over two days and is Craig's to start
-    (`OWNER-ACTIONS.md` 19). He can press **Value the collection** on Home.
-- **Next: T7**, the Blu-ray.com backfill. It waits for a Brave Search API key
-  (`OWNER-ACTIONS.md` 17). Then T8, which waits on item 18.
-- **Sessions renew now (`aa112bd`).** Live check owed: a renewal row in `refresh_tokens`
-  after 18:46 UTC on 23 Sep, when Craig's access token lapses (#200).
-- **The scheduled jobs are fixed (`aeb87aa`).** Their first real runs are at 03:00 and 08:00
-  UTC on 24 Sep. The proof is a `scrape_runs` row with `trigger=cron` (#204).
+  - T5, the release calendar: `1e08f40`, with 28 disc releases and 131 cinema dates.
+  - T6, the collection value: `9acd0ee`.
+- **The first valuation ran on 24 Sep, at Craig's word:** 641 of 1,457 discs priced,
+  £11,844.31 at current asking prices. 707 films are due on 25 Sep, which one day's share
+  covers (`OWNER-ACTIONS.md` 19).
+- **Two fixes shipped on 24 Sep:** release pushes are disc releases only (`59808f4`, #210),
+  after the first reminder run pushed Craig 23 cinema dates; and a dropped eBay connection is
+  now retried (`e256d65`, #211), after one stopped the first valuation run.
+- **The scheduled jobs work:** the shop check ran at 03:04 UTC and the reminders at 08:04 UTC
+  on 24 Sep (#204).
+- **Mark's phone gets no pushes** until he turns notifications back on. Its registration
+  expired on 24 Sep (`OWNER-ACTIONS.md` 16b).
+- **Session renewal is still unverified.** Neither person has renewed or signed in since the
+  access tokens lapsed, so nobody has opened the app since (#200).
+- **Next: T7**, the Blu-ray.com backfill, which waits on Craig. On 24 Sep he asked why a
+  search API is needed: the fetcher needs each disc's exact page address, and #110 excludes
+  Blu-ray.com's own search (`OWNER-ACTIONS.md` 17). Then T8 (item 18).
 - **The documented local mypy command was not strict** until T6 (#209). Use the one in
   `AGENTS.md`, which passes `--config-file`.
 - The 23 Sep snags, with Craig's answers, are in `docs/owner-snags-2026-09-23.md`.
 
-**Live numbers (23 Sep):**
+**Live numbers (24 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
   1,887 films (1,521 identified).
-- **`watch_log`:** 1,566 rows.
+- **`watch_log`:** 1,566 rows (23 Sep).
 - **`release_calendar`:** 172 rows, 28 of them 4K or Blu-ray releases.
 - **Discs with Blu-ray.com specs:** 0.
-- **Purchase prices:** 0. **Disc valuations:** 0, until the first run.
+- **Disc valuations:** 747 films and formats checked, 639 priced and 108 not priced.
 
 ## Next
 
@@ -435,6 +441,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-24 (fixes, and T6's first valuation)** — The scheduled jobs' first real runs:
+  the shop check at 03:04 UTC and the reminders at 08:04 UTC. The reminders pushed Craig 27
+  releases, 23 of them cinema dates; release pushes are now disc releases only (`59808f4`,
+  #210). The first valuation ran at Craig's word: 641 of 1,457 discs priced, £11,844.31 at
+  asking prices. A dropped eBay connection stopped the first of its two runs at call 574;
+  such failures are now retried (`e256d65`, #211). Mark's push registration expired. No
+  session renewal yet, because nobody has opened the app since the tokens lapsed.
 
 - **2026-09-23 (Batch T6 — collection value, `9acd0ee`)** — A valuation run prices each
   owned disc at current eBay asking prices with the film page's own estimator: one search

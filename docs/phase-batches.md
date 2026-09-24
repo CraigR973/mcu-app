@@ -1885,7 +1885,9 @@ at most 750 calls per UTC day, carry on next time and record their counts. Fewer
 three listings is "not priced". Home shows the total; each copy shows its stored value
 beside the live check. Gate: 1,271 API tests in CI, none skipped, and a browser pass at
 375px. **CI failed once:** strict mypy, which the documented local command never ran
-(#209).
+(#209). **First live run, 24 Sep, at Craig's word:** 748 calls, 639 films and formats priced,
+108 not priced, 707 due on 25 Sep; 641 of 1,457 discs priced, £11,844.31. A dropped
+connection stopped the first of the day's two runs at call 574, fixed in `e256d65` (#211).
 
 **Covers snag 7.** Opus 5 · high / GPT-5.6 Sol · High.
 

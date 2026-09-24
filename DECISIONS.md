@@ -3835,3 +3835,28 @@ contemporaneous.
        it never loaded `apps/api/pyproject.toml`, so strict mode was off, and CI caught a
        query result returned as `Any`. `AGENTS.md` and `batch-verify.md` now pass
        `--config-file`.
+
+210. **Release reminders push 4K and Blu-ray releases only, never cinema dates. Shipped
+     2026-09-24 as a fix (`59808f4`).** The rule covered every calendar entry except a sale,
+     which was harmless while the calendar was nearly empty and the reminder job never ran.
+     Batch T5 filled the calendar with six months of cinema dates, the jobs fix (#204) made
+     the job run, and the first real run, at 08:04 UTC on 24 Sep, sent Craig **27 pushes, 23
+     of them for films in cinemas** such as *Aaram* and *Acharya*. Cinema dates stay on the
+     calendar to be looked at. The rule's own comment always said "a disc coming out". About
+     3 disc releases a week are expected to push. Mark got none only because his phone's
+     push registration had expired.
+
+211. **eBay network failures are retried, and the first valuation ran. 2026-09-24 (`e256d65`,
+     at Craig's word).**
+
+     - **A dropped connection or a timeout is now retried like a 5xx**, and raised as an
+       `EbayError` if it persists. It used to escape as a raw `httpx` error: the film page's
+       check answered 500, and the first valuation run stopped at call 574 of 750. Nothing
+       was lost, because each film is committed as it is priced.
+     - **Day one, 24 Sep:** 748 of the day's 750 calls; 639 films and formats priced, 108 not
+       priced, 0 failed; 707 due on 25 Sep. **641 of 1,457 discs priced, £11,844.31 at current
+       asking prices.** Medians so far: 4K £28.84, Blu-ray £15.76, DVD £7.15.
+     - **Films never matched to TMDB price far worse:** 29% not priced, against 7.5% for matched
+       films. Their spreadsheet titles carry typos (*Captain Ameica*) and mid-title articles
+       (*Godfather, The Part III*) that no listing contains. Identifying those films is the
+       fix, not the valuation.
