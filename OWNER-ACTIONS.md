@@ -957,7 +957,9 @@ is recorded as 2019 and **Bad Neighbours** as 2026. Fix the film on its page fir
 then pick the page.
 
 The biggest saving would be identifying the ~244 films never matched to TMDB. They are 56 of
-the 136 waiting, and every undated one.
+the 136 waiting, and every undated one. **T9 does that (item 21)**: after its live run, T7's
+second look re-decides the discs whose film gained a year, so wait for it before working
+through this queue.
 
 ### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
 
@@ -984,6 +986,34 @@ values** on Home then, or add the cron below.
 running `python -m src.scripts.value_collection` nightly, with `EBAY_CLIENT_ID` and
 `EBAY_CLIENT_SECRET` on it. Without it, press **Update values** whenever you want fresh
 prices: anything older than 30 days is due again.
+
+### 21. Read T9's dry run and say go — T9, identifying the unmatched films
+
+**New 25 Sep.** The dry run looked at every film with a disc and no TMDB match, and wrote
+nothing. Its report says what the live run would do to each: identify it (with the
+evidence), wait for you on the new **Identify films** page (with the films offered and
+why), or set it aside as a TV series or not a film. Nothing merges on its own.
+
+Read the report the agent sent, then say **go** (or name anything to change). On your go the
+agent merges T9, which deploys it, runs the live run from the same plan, then runs T7's
+second look and reports the numbers before and after. Afterwards the films that wait for
+you are on **You → Identify films**; each is one tap, and any identification can be undone
+from the same page.
+
+### 22. Rotate the Neon database password — recommended, your call
+
+**New 25 Sep.** An agent broke the repo's never-`cd` rule once. Autoenv then printed
+`apps/api/.env`, which holds the **live Neon connection string with its password** (the
+file's own comment says it should hold no secrets). The file is gitignored and was never
+committed, and the agent deleted the log it landed in, but the password is in that session's
+transcript.
+
+1. In Neon, reset the password for the `neondb_owner` role.
+2. Put the new connection string in Railway's `api` service (`DATABASE_URL`) and in
+   `apps/api/.env.local` on your Mac.
+3. Remove the connection string from `apps/api/.env`, so a `cd` can never print it again.
+
+This is a credential change, so no agent does it. Until it is done, nothing is broken.
 
 ---
 ## Deprioritised by owner decision — not blocking

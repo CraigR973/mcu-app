@@ -2,33 +2,44 @@
 
 ## Now
 
-**24 Sep 2026: T7 has shipped and is backfilling specs; Group T now waits at the eBay
-checkpoint before T8.**
+**25 Sep 2026: T9 is built and its dry run waits for Craig's go; the first valuation is
+complete.**
 
-- **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  **T7 `160f842` with sharper matching `bfc28e7`**. Next is T8, Mark's eBay, which waits
-  for Craig's eBay sign-in settings and an encryption key (`OWNER-ACTIONS.md` 18).
-- **Disc specs:** 178 of 1,250 Blu-ray and 4K discs have specs after three watched batches.
-  **136 wait for Craig** on the Disc specs page (`OWNER-ACTIONS.md` 20). 936 are not searched
-  yet; they go in nightly batches once Craig adds `BRAVE_SEARCH_API_KEY` to Railway's `api`
-  service and applies the config (`OWNER-ACTIONS.md` 17). Until then only the key in
-  `.env.local` exists, so batches can run only from a Mac.
+- **T9, identifying the unmatched films:** built on `feat/t9-identify-films` (`c964235`), CI
+  green, not merged. The dry run against production wrote nothing. Of the **357 films with a
+  disc and no TMDB match** it would identify **156** (98 of them Blu-ray or 4K), leave **166**
+  for Craig on a new Identify films page (**10** would merge into a film he already has),
+  and set aside **35** (34 TV, 1 test row). It used 26 Brave searches. The report is with
+  Craig (`OWNER-ACTIONS.md` 21). **On his go:** merge, run the live run from the dry run's
+  plan with `--earlier-searches 54`, then T7's second look and the re-pricing, and report
+  before and after. The plan it applies is committed on the branch as
+  `docs/t9/identify-plan-2026-09-25.json`, beside the report Craig read.
 - **The first valuation is complete (25 Sep):** all 1,457 discs checked, 1,262 priced,
   **£22,810.28 at current eBay asking prices**. 195 could not be priced: 31% of the discs of
   films never matched to TMDB, against 9% of matched films' discs, which is T9's to fix.
   Prices fall due again from 24 Oct (`OWNER-ACTIONS.md` 19).
+- **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
+  T7 `160f842` with `bfc28e7`. After T9 comes T8, Mark's eBay. **Craig has been asked
+  whether to split it:** price alerts and the deal scan first, which need no sign-in; then
+  "Connect eBay", which alone waits on `OWNER-ACTIONS.md` 18. T8 does not start before he
+  answers.
+- **Disc specs:** 178 of 1,250 Blu-ray and 4K discs have specs. **136 wait for Craig**
+  (`OWNER-ACTIONS.md` 20); T9's live run will re-decide some of them. 936 are not searched
+  yet. **No nightly batch has run**: nothing at 02:00 UTC on 25 Sep, because the Brave key is
+  still only in `.env.local`, not Railway (`OWNER-ACTIONS.md` 17).
+- **Brave this month:** 314 searches by T7's batches and about 80 by T9's three dry runs.
+  Only the plan that is applied records its searches, so the live run adds the other two
+  runs' 54 by hand. The ceiling is 1,500.
+- **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
+  autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
+  (`OWNER-ACTIONS.md` 22).
 - **Live fixes on 24 Sep:** release pushes are disc releases only (#210); dropped eBay
-  connections are retried (#211).
-- **Session renewal works live:** Craig's renewed silently at 14:19 UTC on 24 Sep (#200).
-- **T9, identifying the 366 unmatched films, is written up and waits for Craig's go.**
-- **The scheduled jobs work** (03:04 and 08:04 UTC on 24 Sep). **Mark's phone gets no
-  pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b).
-- **Two local-gate gaps were closed on 24 Sep**: mypy now uses the project config (#209), and
-  the shared package's type-check and build are in the gate (#212).
+  connections are retried (#211). **Session renewal works live** (#200). **Mark's phone gets
+  no pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b).
 
-**Live numbers (24 Sep):**
+**Live numbers (25 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
-  1,887 films (1,521 identified).
+  1,887 films (1,521 identified, 366 not).
 - **`release_calendar`:** 172 rows, 28 of them 4K or Blu-ray releases.
 - **Discs with Blu-ray.com specs:** 178. **Disc valuations (25 Sep):** 1,454 films and
   formats checked, 1,259 priced and 195 not; medians 4K £29.86, Blu-ray £15.74, DVD £6.00.
@@ -447,6 +458,17 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-25 (T9 built; dry run with Craig)** — T9 is built on `feat/t9-identify-films`:
+  a title reader, a matcher that uses TMDB, its alternative titles and TV index, then one
+  Brave search, an audited identification whose merges carry every row and can be undone,
+  and the Identify films page. CI failed twice on the page's tests, which shared one session
+  across requests, and passed on the third. The first dry run made two wrong calls, both
+  fixed: a 2007 film for "The Devil and Daniel Webster" (the 1941 film holds that title only
+  as an alternative one) and "Munch" set aside as TV off an unrelated series. The second
+  lost its plan when Neon dropped a connection held through the searches; the dry run now
+  holds none. The third: 156 identify, 166 for Craig, 35 set aside, 26 Brave searches. No
+  nightly spec batch has run.
 
 - **2026-09-25 (the first valuation finished)** — Day two, at Craig's 24 Sep word: 707 eBay
   calls, 620 films and formats priced, 87 not priced, none failed, nothing left due. All

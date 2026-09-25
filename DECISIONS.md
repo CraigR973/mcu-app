@@ -3923,3 +3923,83 @@ contemporaneous.
        several UK editions 32, no year 28, box sets 14, remakes 10. Films never matched to
        TMDB are 56 of the 136, and all 28 undated ones. Identifying them is the largest
        lever left; the matcher is not.
+
+
+### 2026-09-25 — Batch T9, identifying the unmatched films: the choices
+
+214. **T9 is built on `feat/t9-identify-films`, CI green. A dry run against production
+     writes nothing; the live run waits for Craig's go.** These are the choices made on his
+     behalf, each open to overrule.
+
+     - **"The same title" includes TMDB's obscure namesakes, as the ledger's rule says.**
+       TMDB holds 15 films called "Speed", 50 called "Emma" and 64 called "The Letter",
+       mostly unrated shorts. So a one-word title with no year and no name waits for Craig,
+       with the best-known film offered first: one tap. *Why not treat unknown namesakes as
+       no rival:* TMDB's own ranking cannot be trusted to put the real rivals first. Its
+       search for "Seven" does not show "Se7en" in twenty results.
+     - **A title that is ours plus a subtitle is not a namesake**, or "Death on the Nile:
+       Making of Featurette" hides the 1978 year that decides "Death on the Nile [1978]".
+       Matching one side of a colon is allowed but weak: the start of TMDB's title ("Dr.
+       Strangelove") is taken only with a year or a name agreeing, and the end of it ("INXS:
+       Live Baby Live") never, because that is also how a documentary about a film is named.
+       An early version took "Unseen + Untold: National Lampoon's Animal House" for the film.
+     - **Alternative titles count only as the same title, in any language.** They are how
+       "Marie Walewska" (French) finds Conquest (1937) and "Ice Age 3" finds Dawn of the
+       Dinosaurs. A number on one side of a colon in one is not evidence: Furious 7's Spanish
+       title "A todo gas: 7" was taken for "Seven" by an early version.
+     - **A rival known by the title only as an alternative title is still a rival.** The
+       first dry run took Shortcut to Happiness (2007) for "The Devil and Daniel Webster":
+       TMDB lists the 1941 film as "All That Money Can Buy", so the rival check, which read
+       only display titles, never saw it. The alternative titles of up to eight films the
+       title's own search returns are now read before "no other film of this title" is said.
+     - **The disc's grouping counts as a name, like one in brackets, but weaker.** Craig's
+       shelf headings name the director or star ("Clint Eastwood", "Powell & Pressburger",
+       "Hitchcock Early Collection"). A grouping name that TMDB confirms on exactly one film
+       of the title decides it; one that confirms none is no objection. A name in the title's
+       own brackets must be confirmed, or the film waits. A name after a dash ("Indiana
+       Jones", "INXS") is weak, like a grouping: it is often a franchise or a band.
+     - **A full name is checked against the person's own films, a surname against each
+       namesake's credits.** The person's films cover every namesake, however many ("The
+       Letter", Bette Davis, 64 namesakes). A surname ("Hitchcock") can decide among up to
+       40 namesakes; past that it cannot, because they were not all checked.
+     - **One Brave search at most per title, for its TMDB page, after TMDB's own searches,
+       alternative titles and TV index have all failed.** Each page it finds is fetched from
+       TMDB and counts only if TMDB's record matches. Budget 60 a run, inside the monthly
+       ceiling T7 shares; calibration needed 24.
+     - **TV is set aside on the words a box of episodes is sold under** ("Complete Series",
+       "Series 1 - 3", "Seasons", "(TV)"), **on Craig's "TV" grouping, or when only TMDB's TV
+       index knows the title.** "Season 2" alone is not enough: "Open Season 2" is a film.
+       A film that shares its name with a better-known series waits for Craig unless a year
+       or name backs it. A web search whose first TMDB page is a series counts only when the
+       series has this title: the first dry run set "Munch - Our Greatest Hits" aside as TV
+       because Brave led with an unrelated series called "Munch".
+     - **The dry run writes a plan file and a report; the live run applies that exact plan**,
+       re-checking each film first (live, unidentified, same title, still on the shelf, not
+       already decided by Craig). What Craig reads is what happens, and Brave is not paid
+       twice. The dry run reads the collection in a short read-only transaction, so Postgres
+       refuses any write, and ends it before TMDB is asked anything: the second 25 Sep dry run
+       held it through half an hour of searches, Neon closed the connection, and the finished
+       plan was lost on the rollback. *Its Brave searches are recorded by the live run*,
+       because the dry run writes nothing; until then they are in the plan and the report.
+       Dry runs never applied are added with `--earlier-searches` (about 54 on 25 Sep).
+     - **A merge carries every row that points at a film** — discs, watches, wanted rows,
+       movie-night suggestions and votes, calendar entries, barcode lookups, deals — and
+       drops only a duplicate the kept film already has (one person's second vote on the
+       same film in one night). Before this, a merge of any film someone had suggested for a
+       movie night failed on a foreign key, and its votes vanished. 14 unmatched films had
+       suggestions. **Nothing merges into a film in the Trash.**
+     - **Every identification is audited and can be undone, merges included**, from the
+       Identify films page. The audit keeps the title replaced, the row's old metadata and
+       credits, and, for a merge, the merged-away row and the ids of every row moved. Rows a
+       merge dropped as duplicates stay dropped on undo. The film page's own Identify goes
+       through the same audited path, still merging as it always has.
+     - **The title identification replaces is kept as an alias, and the collection refresh
+       resolves sheet titles against aliases too.** Without it #198's guard would stop
+       working for every typo T9 fixes: the sheet still says "Peepiing Tom", no
+       normalisation reaches "Peeping Tom", and the refresh would mint the typo again and hang
+       the disc on it.
+     - **A valuation taken before its film was identified falls due**, because the stored
+       value was searched under the old title and no longer agrees with the film page's check
+       (#209). Nothing falls due today; only identifications from now on trigger it.
+     - **T7's second look now also reconsiders a disc left for having no year**, once its
+       film has one. It judges the stored search results again; it does not search again.

@@ -1936,6 +1936,9 @@ data that looks right (Batch 24's reason), and the work runs under a risk accept
   service's environment.
 
 ### T9 — Identify the unmatched films 🔴
+**Status 25 Sep: built on `feat/t9-identify-films`, CI green; the dry run against production
+has run and its report is with Craig. Merge and live run wait for his go.** Choices: #214.
+
 **Craig's request, 25 Sep**, after T7 showed these films are 41% of the Disc specs queue.
 Opus 5 · xhigh / GPT-5.6 Sol · Extra High. It rewrites the film identities that discs and
 watches hang off, and #194, #198 and #199 are the silent failures this area has already
