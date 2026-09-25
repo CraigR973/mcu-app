@@ -611,21 +611,23 @@ async def test_a_choice_that_merges_needs_saying_so(
     held = await _film(db, "Goodbye, Mr. Chips", tmdb_id=tmdb_id, year=1939)
     waiting = await _film(db, "Goodbye Mr Chips")
     await _disc(db, waiting, "dvd")
-    # A refusal rolls the route's work back; the films must be committed to survive it.
+    # A refusal rolls the route's work back; the films must be committed to survive it, and
+    # their ids taken now, because the rollback expires every object this session holds.
     await db.commit()
+    waiting_id, held_id = waiting.id, held.id
 
     refused = await client.post(
-        f"/api/v1/identify/films/{waiting.id}/identify", json={"tmdbId": tmdb_id}
+        f"/api/v1/identify/films/{waiting_id}/identify", json={"tmdbId": tmdb_id}
     )
     assert refused.status_code == 409
     assert "merges" in refused.json()["detail"]
 
     merged = await client.post(
-        f"/api/v1/identify/films/{waiting.id}/identify", json={"tmdbId": tmdb_id, "merge": True}
+        f"/api/v1/identify/films/{waiting_id}/identify", json={"tmdbId": tmdb_id, "merge": True}
     )
     assert merged.status_code == 200
     assert merged.json() == {
-        "movieId": str(held.id),
+        "movieId": str(held_id),
         "outcome": "merged",
         "title": "Goodbye, Mr. Chips",
     }
