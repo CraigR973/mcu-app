@@ -13,8 +13,10 @@ checkpoint before T8.**
   yet; they go in nightly batches once Craig adds `BRAVE_SEARCH_API_KEY` to Railway's `api`
   service and applies the config (`OWNER-ACTIONS.md` 17). Until then only the key in
   `.env.local` exists, so batches can run only from a Mac.
-- **The valuation:** 641 of 1,457 discs priced (£11,844.31 at asking prices). The last 707
-  films are due from 25 Sep (`OWNER-ACTIONS.md` 19).
+- **The first valuation is complete (25 Sep):** all 1,457 discs checked, 1,262 priced,
+  **£22,810.28 at current eBay asking prices**. 195 could not be priced: 31% of the discs of
+  films never matched to TMDB, against 9% of matched films' discs, which is T9's to fix.
+  Prices fall due again from 24 Oct (`OWNER-ACTIONS.md` 19).
 - **Live fixes on 24 Sep:** release pushes are disc releases only (#210); dropped eBay
   connections are retried (#211).
 - **Session renewal works live:** Craig's renewed silently at 14:19 UTC on 24 Sep (#200).
@@ -28,7 +30,8 @@ checkpoint before T8.**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
   1,887 films (1,521 identified).
 - **`release_calendar`:** 172 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 178. **Disc valuations:** 639 priced, 108 not priced.
+- **Discs with Blu-ray.com specs:** 178. **Disc valuations (25 Sep):** 1,454 films and
+  formats checked, 1,259 priced and 195 not; medians 4K £29.86, Blu-ray £15.74, DVD £6.00.
 
 ## Next
 
@@ -444,6 +447,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-25 (the first valuation finished)** — Day two, at Craig's 24 Sep word: 707 eBay
+  calls, 620 films and formats priced, 87 not priced, none failed, nothing left due. All
+  1,457 physical discs are now checked: 1,262 priced, **£22,810.28 at current asking prices**.
+  Not priced: 98 of the 319 discs of unmatched films, 97 of the 1,138 of matched ones.
 
 - **2026-09-25 (T9 written up; checks)** — Craig's session renewed silently on 24 Sep, so
   #200's fix is proven live. The 25 Sep reminder run sent no cinema pushes (#210). The

@@ -965,18 +965,20 @@ This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consen
 eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.
 ~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
 
-### 19. Finish the first collection valuation — T6
+### 19. ~~Finish the first collection valuation — T6~~ — **done 25 Sep**
 
-**Day one ran on 24 Sep, at Craig's word:** 641 of 1,457 discs priced, £11,844.31 at
-current asking prices. **707 films are due on 25 Sep**, which fits in one day's share of
-750 eBay calls. On or after 25 Sep, either:
+> **Done by the agent on 25 Sep, at Craig's 24 Sep word.** Day two used 707 of the day's 750
+> eBay calls: 620 films and formats priced, 87 not priced, none failed, nothing left due.
+> **All 1,457 physical discs are checked: 1,262 priced, £22,810.28 at current asking
+> prices**, and 195 not priced (too few matching listings). Medians: 4K £29.86, Blu-ray
+> £15.74, DVD £6.00. Films never matched to TMDB price worst: 98 of their 319 discs are not
+> priced, against 97 of the 1,138 discs of matched films. T9 addresses that.
 
-- **On Home, press "Update values"** under "What it's worth". Until midnight UTC on 24 Sep
-  it says the day's share is used.
-- **Or tell the agent to run it**, which does the same thing.
+**Still worth a look:** open a couple of films and compare the stored value with **What is
+it worth?**. They should match, because they use the same estimator.
 
-Afterwards, open a couple of films and compare the stored value with **What is it
-worth?**. They should match, because they use the same estimator.
+**Prices fall due again from 24 Oct**, 30 days after they were taken. Press **Update
+values** on Home then, or add the cron below.
 
 **Optional, and a hosting change:** to re-price monthly on its own, add a Railway cron
 running `python -m src.scripts.value_collection` nightly, with `EBAY_CLIENT_ID` and
