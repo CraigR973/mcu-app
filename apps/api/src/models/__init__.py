@@ -35,6 +35,15 @@ from src.models.completion_set import (
     member_display,
 )
 from src.models.deal import DEALS_TABLE, Deal
+from src.models.identify import (
+    IDENTIFIED_HOW,
+    IDENTIFY_LOOKUP_STATUSES,
+    IDENTIFY_RUN_STATUSES,
+    SET_ASIDE_AS,
+    IdentifyLookup,
+    IdentifyRun,
+    MovieTitleAlias,
+)
 from src.models.item_photo import (
     ALLOWED_CONTENT_TYPES,
     MAX_PHOTOS_PER_ITEM,
@@ -198,6 +207,13 @@ __all__ = [
     "SpecCandidate",
     "SpecLookup",
     "SpecRun",
+    "IDENTIFIED_HOW",
+    "IDENTIFY_LOOKUP_STATUSES",
+    "IDENTIFY_RUN_STATUSES",
+    "SET_ASIDE_AS",
+    "IdentifyLookup",
+    "IdentifyRun",
+    "MovieTitleAlias",
     "TimestampMixin",
     "UpdatedAtMixin",
     "UUIDPrimaryKeyMixin",

@@ -43,7 +43,7 @@ from src.schemas.movies import (
     ShelfFacetResponse,
 )
 from src.schemas.valuation import CopyValuationResponse
-from src.services.identification import apply_identification
+from src.services.identification import IdentifyError, identify_film
 from src.services.valuation import valuations_for_movie, valued_format
 from src.tmdb import TMDBClient
 
@@ -805,7 +805,7 @@ async def get_movie_candidates(
 async def identify_movie(
     movie_id: uuid.UUID,
     payload: IdentifyMovieRequest,
-    _user: CurrentUser,
+    user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
 ) -> MovieDetailResponse:
@@ -822,8 +822,17 @@ async def identify_movie(
 
     # Batch S8 moved the body to `services/identification.py` so an import script can
     # reuse it. The commit moved out with it — the service flushes, the caller decides
-    # when to commit — so this endpoint keeps its previous behaviour exactly.
-    target = await apply_identification(db, source, tmdb_movie)
+    # when to commit. Batch T9 audits it, as every identification now is, keeps the old
+    # title for the collection refresh, and lets it be undone from the Identify films page.
+    # A pick here that merges two films still merges them, as it always has.
+    try:
+        identified = await identify_film(
+            db, source, tmdb_movie, by=user.id, how="film_page", allow_merge=True
+        )
+    except IdentifyError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    target = identified.film
     await db.commit()
     await db.refresh(target)
     return await _movie_detail(db, target)
