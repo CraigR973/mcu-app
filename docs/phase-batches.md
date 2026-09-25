@@ -1935,9 +1935,17 @@ data that looks right (Batch 24's reason), and the work runs under a risk accept
 - **Owner steps first:** a Brave Search API account and key (a credential), and the job
   service's environment.
 
-### T9 — Identify the unmatched films 🔴
-**Status 25 Sep: built on `feat/t9-identify-films`, CI green; the dry run against production
-has run and its report is with Craig. Merge and live run wait for his go.** Choices: #214.
+### ~~T9 — Identify the unmatched films~~ 🔴 **shipped 2026-09-25 (`4d16723`)**
+**Acceptance: nine of nine met.** Craig read the dry run and said go on 25 Sep. The live run
+applied his approved plan once: **156 identified, 166 for Craig, 35 set aside** (34 TV, 1
+test row), 0 left alone and 0 failed. 80 Brave searches were recorded: the plan's 26 and the
+54 of two unapplied dry runs. Films with a disc and no TMDB match went from 357 to 201.
+Nothing merged; the 10 would-be merges wait on the Identify films page, which was checked in
+a browser against the live data. **Knock-ons:** T7's second look settled 9 discs of
+identified films, all now with specs. The Disc specs queue went from 136 to 197, because the
+same batch searched 148 new discs. 133 valuations fell due, 41 were re-priced with the day's
+last eBay calls, and 92 stay due. Local gate and CI green on the branch and on `main`; there
+were no failures at close-out. Choices: #214. Live results: #215.
 
 **Craig's request, 25 Sep**, after T7 showed these films are 41% of the Disc specs queue.
 Opus 5 · xhigh / GPT-5.6 Sol · Extra High. It rewrites the film identities that discs and
@@ -2078,7 +2086,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → T9 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`) and T2–T7 shipped. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. T8 waits on Craig's answer about splitting it. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

@@ -2,34 +2,35 @@
 
 ## Now
 
-**25 Sep 2026: T9 is built and its dry run waits for Craig's go; the first valuation is
-complete.**
+**25 Sep 2026: T9 has shipped (`4d16723`) and its live run is done. Group T waits on Craig's
+answer about splitting T8.**
 
-- **T9, identifying the unmatched films:** built on `feat/t9-identify-films` (`c964235`), CI
-  green, not merged. The dry run against production wrote nothing. Of the **357 films with a
-  disc and no TMDB match** it would identify **156** (98 of them Blu-ray or 4K), leave **166**
-  for Craig on a new Identify films page (**10** would merge into a film he already has),
-  and set aside **35** (34 TV, 1 test row). It used 26 Brave searches. The report is with
-  Craig (`OWNER-ACTIONS.md` 21). **On his go:** merge, run the live run from the dry run's
-  plan with `--earlier-searches 54`, then T7's second look and the re-pricing, and report
-  before and after. The plan it applies is committed on the branch as
-  `docs/t9/identify-plan-2026-09-25.json`, beside the report Craig read.
-- **The first valuation is complete (25 Sep):** all 1,457 discs checked, 1,262 priced,
-  **£22,810.28 at current eBay asking prices**. 195 could not be priced: 31% of the discs of
-  films never matched to TMDB, against 9% of matched films' discs, which is T9's to fix.
-  Prices fall due again from 24 Oct (`OWNER-ACTIONS.md` 19).
+- **T9, identifying the unmatched films, is live.** The live run applied the approved plan
+  (`docs/t9/identify-plan-2026-09-25.json`) once, 16:59–17:03 UTC: **156 identified, 166 for
+  Craig, 35 set aside** (34 TV, 1 test row), 0 left alone, 0 failed. Films with a disc and no
+  TMDB match went from 357 to 201. **166 wait on You → Identify films** (`OWNER-ACTIONS.md`
+  21). 10 of them would merge into a film already held. One is "Kingsman": it is offered
+  The King's Man (2021) first, but the 4K is probably Kingsman: The Secret Service, second
+  in the list. Any identification can be undone on that page. Migration 038 is applied.
+- **The knock-ons ran once each (#215).** In one spec batch, T7's second look settled **9
+  discs of T9-identified films**, and all 9 now have specs. The batch's 148 searches found
+  85 pages, 78 of them now with specs, and left 63 discs for Craig. One valuation pass used
+  the 43 eBay calls left on 25 Sep. It re-priced 41 films and formats (32 priced, 9 not).
+  **92 are still due**, and the next run can price them from 00:00 UTC on 26 Sep. Nothing
+  runs it on its own: press **Update values** on Home (`OWNER-ACTIONS.md` 19).
+- **Disc specs:** 265 of 1,250 Blu-ray and 4K discs have specs. **197 wait for Craig**
+  (`OWNER-ACTIONS.md` 20). Of those, 61 are discs of films waiting on Identify films, so
+  settling those films first lets the next second look decide more. 788 are not searched
+  yet. **No nightly batch has run.** The Brave key is still only in `.env.local`, not
+  Railway (`OWNER-ACTIONS.md` 17).
+- **Brave this month: 542 of 1,500.** Spec batches used 462 and T9's dry runs 80.
+- **Collection value: £22,951.01** at current eBay asking prices, with 1,271 of 1,457 discs
+  priced.
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  T7 `160f842` with `bfc28e7`. After T9 comes T8, Mark's eBay. **Craig has been asked
-  whether to split it:** price alerts and the deal scan first, which need no sign-in; then
-  "Connect eBay", which alone waits on `OWNER-ACTIONS.md` 18. T8 does not start before he
-  answers.
-- **Disc specs:** 178 of 1,250 Blu-ray and 4K discs have specs. **136 wait for Craig**
-  (`OWNER-ACTIONS.md` 20); T9's live run will re-decide some of them. 936 are not searched
-  yet. **No nightly batch has run**: nothing at 02:00 UTC on 25 Sep, because the Brave key is
-  still only in `.env.local`, not Railway (`OWNER-ACTIONS.md` 17).
-- **Brave this month:** 314 searches by T7's batches and about 80 by T9's three dry runs.
-  Only the plan that is applied records its searches, so the live run adds the other two
-  runs' 54 by hand. The ceiling is 1,500.
+  T7 `160f842` with `bfc28e7`, **T9 `4d16723`**. Next is T8, Mark's eBay. **Craig has been
+  asked whether to split it.** Price alerts and the deal scan would come first; they need no
+  sign-in. "Connect eBay" would come later, and only it waits on `OWNER-ACTIONS.md` 18. T8
+  does not start before he answers.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -37,12 +38,13 @@ complete.**
   connections are retried (#211). **Session renewal works live** (#200). **Mark's phone gets
   no pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b).
 
-**Live numbers (25 Sep):**
+**Live numbers (25 Sep, after T9):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
-  1,887 films (1,521 identified, 366 not).
-- **`release_calendar`:** 172 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 178. **Disc valuations (25 Sep):** 1,454 films and
-  formats checked, 1,259 priced and 195 not; medians 4K £29.86, Blu-ray £15.74, DVD £6.00.
+  1,887 films: 1,677 identified and 210 not (166 waiting for Craig, 35 set aside, 9 with no
+  disc).
+- **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
+- **Discs with Blu-ray.com specs:** 265. **Disc valuations:** 1,454 films and formats
+  checked, 1,268 priced and 186 not; medians 4K £29.85, Blu-ray £15.73, DVD £6.00.
 
 ## Next
 
@@ -458,6 +460,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-25 (Batch T9 shipped, `4d16723`: live run and knock-ons)** — At Craig's go, main
+  was merged into the branch, and the local gate and CI were green. Production serves
+  `4d16723` with `db: ok` and migration 038. The live run applied the approved plan once:
+  156 identified, 166 for Craig, 35 set aside, 0 left alone, 0 failed, 80 Brave searches
+  recorded. In one spec batch the second look settled 9 discs of identified films, and 87
+  discs gained specs; the queue went from 136 to 197. One valuation pass re-priced 41
+  films and formats, and 92 remain due. The Identify films page was checked in a browser
+  against the live data. No failures on the way.
 
 - **2026-09-25 (T9 built; dry run with Craig)** — T9 is built on `feat/t9-identify-films`:
   a title reader, a matcher that uses TMDB, its alternative titles and TV index, then one

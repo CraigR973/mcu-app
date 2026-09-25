@@ -4003,3 +4003,44 @@ contemporaneous.
        (#209). Nothing falls due today; only identifications from now on trigger it.
      - **T7's second look now also reconsiders a disc left for having no year**, once its
        film has one. It judges the stored search results again; it does not search again.
+
+
+### 2026-09-25 — Batch T9 live: the run, and what followed it
+
+215. **T9 shipped (`4d16723`), and its live run applied Craig's approved plan once. 25 Sep,
+     at his go.** Production serves `4d16723` with `db: ok`, and migration 038 is applied.
+
+     - **The live run did what the report said.** 156 identified, 166 waiting on You →
+       Identify films, 35 set aside (34 TV, 1 test row), 0 left alone and 0 failed, in four
+       minutes. Every identified film now has a year. 120 replaced titles are kept as
+       aliases; the other 36 already read as TMDB's title. There are 191 audit rows, one per
+       film changed. **Nothing merged.** The 10 would-be merges wait for Craig with both
+       films shown. One is "Kingsman", offered The King's Man (2021) first, though the 4K is
+       probably Kingsman: The Secret Service. The films whose titles have better-known
+       namesakes (Mr & Mrs Smith, The Ring, Mutiny on the Bounty, Lolita, Last Holiday, The
+       Rookie) were each decided by the disc's shelf grouping, confirmed in TMDB's credits.
+     - **Brave was counted once.** The run recorded the plan's 26 searches plus the 54 of the
+       two dry runs never applied, 80 in all. After the day's spec batch the month stands at
+       542 of 1,500.
+     - **The second look settled 9 of the 18 queued discs of identified films.** All 9 were
+       fetched and kept their specs; the year check sent none back. 4 had waited for having
+       no year and 5 for "no UK page". The other 9 still wait, because the second look judges
+       the stored results of a search made under the old title and never searches again.
+       The same batch searched 148 discs nobody had searched before, 19 of them of
+       identified films; 14 of those now have specs.
+     - **The Disc specs queue grew from 136 to 197.** Of the 148 new searches, 63 were left
+       for Craig, and 7 accepted pages failed the year check. 61 of the 197 are discs of
+       films still waiting on Identify films, so identifying those first lets the next
+       second look decide more. 7 are discs of TV series T9 set aside (Game of Thrones Season
+       1, Blue Planet II); with no year, they always wait for Craig.
+     - **Valuations.** Identifying 156 films made 133 films and formats due again (#214). The
+       pass had only the 43 eBay calls left on 25 Sep after the first valuation's second day.
+       It re-priced 41 (32 priced, 9 not), a net 9 more priced, taking the total to
+       £22,951.01 (up £140.73). 92 stay due until the next run, which can start from 00:00 UTC
+       on 26 Sep. Nothing schedules it.
+     - **The browser check used #169's method.** The dev server ran with `VITE_SKIP_AUTH`
+       against a scratch stub. The stub served the page's responses as the real routes
+       produce them from production, read in a read-only transaction. At 375 px and 1280 px,
+       reached from You, the page showed the overview, the first 20 waiting films with their
+       candidates and merge warnings, and 20 recent identifications, each with Undo. There
+       was no horizontal scroll. Nothing from the harness is in the tree.

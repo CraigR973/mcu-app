@@ -946,20 +946,24 @@ destroy nothing. If anything is to be destroyed, stop (#124).
 
 ### 20. Work through the Disc specs queue — T7
 
-**136 discs wait for you** on Admin → Disc specs (24 Sep), and about 540 will by the end of
-the backfill: a disc waits when the search found several UK editions, no UK page matched,
-the film has no year, it sits in a box set, or its page was for a remake. Each takes one tap:
-**Use this page**, paste a Blu-ray.com link, or **Skip this disc**. The next batch fetches
-what you choose.
+> **Updated 25 Sep, after T9's live run: 197 discs wait for you** (136 on 24 Sep). The day's
+> batch searched 148 discs nobody had searched before: 63 of them wait, and 7 pages failed
+> the year check. T7's second look settled 9 discs of films T9 identified.
+
+**Best order: Identify films first (item 21), then this queue.** 61 of the 197 are discs of
+films still waiting on You → Identify films. Once you identify a film, the next batch's
+second look re-decides its discs with the film's year, so some settle without you. 7 are TV
+series T9 set aside (Game of Thrones Season 1, Blue Planet II): skip them, or pick their
+pages by hand.
+
+The queue is on You → Disc specs. A disc waits when the search found several UK editions, no
+UK page matched, the film has no year, it sits in a box set, or its page was for a remake.
+Each takes one tap: **Use this page**, paste a Blu-ray.com link, or **Skip this disc**. The
+next batch fetches what you choose. About 540 will wait by the end of the backfill.
 
 Two of them look like the app matched the wrong film, not the wrong page: **Band of Brothers**
 is recorded as 2019 and **Bad Neighbours** as 2026. Fix the film on its page first (Identify),
 then pick the page.
-
-The biggest saving would be identifying the ~244 films never matched to TMDB. They are 56 of
-the 136 waiting, and every undated one. **T9 does that (item 21)**: after its live run, T7's
-second look re-decides the discs whose film gained a year, so wait for it before working
-through this queue.
 
 ### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
 
@@ -979,6 +983,11 @@ eBay's developer portal, and put an encryption key for Mark's stored eBay token 
 **Still worth a look:** open a couple of films and compare the stored value with **What is
 it worth?**. They should match, because they use the same estimator.
 
+**Updated 25 Sep: 92 films and formats are due now.** Identifying 156 films in T9 made 133
+of them due, because their prices were searched under the old titles. The day's last 43 eBay
+calls re-priced 41. Press **Update values** on Home any time after 01:00 BST on 26 Sep, when
+a new day's 750 calls begin. Pricing the 92 takes about 92 calls.
+
 **Prices fall due again from 24 Oct**, 30 days after they were taken. Press **Update
 values** on Home then, or add the cron below.
 
@@ -987,18 +996,18 @@ running `python -m src.scripts.value_collection` nightly, with `EBAY_CLIENT_ID` 
 `EBAY_CLIENT_SECRET` on it. Without it, press **Update values** whenever you want fresh
 prices: anything older than 30 days is due again.
 
-### 21. Read T9's dry run and say go — T9, identifying the unmatched films
+### 21. ~~Read T9's dry run and say go — T9, identifying the unmatched films~~ — **done 25 Sep**
 
-**New 25 Sep.** The dry run looked at every film with a disc and no TMDB match, and wrote
-nothing. Its report says what the live run would do to each: identify it (with the
-evidence), wait for you on the new **Identify films** page (with the films offered and
-why), or set it aside as a TV series or not a film. Nothing merges on its own.
+> **Craig said go on 25 Sep, and the live run applied the plan he read** (`DECISIONS.md`
+> #215): 156 identified, 166 waiting for you, 35 set aside as TV or not a film, and nothing
+> failed. Nothing merged.
 
-Read the report the agent sent, then say **go** (or name anything to change). On your go the
-agent merges T9, which deploys it, runs the live run from the same plan, then runs T7's
-second look and reports the numbers before and after. Afterwards the films that wait for
-you are on **You → Identify films**; each is one tap, and any identification can be undone
-from the same page.
+**Still yours: the 166 films on You → Identify films.** Each is one tap: pick a film, search
+again with a corrected title, mark it a TV series or not a film, or skip it. 10 would merge
+into a film you already have, and the page says so before you choose. **Start with
+"Kingsman"**: the page offers The King's Man (2021) first, but your 4K is probably
+Kingsman: The Secret Service, second in the list. Any identification, the 156 automatic ones
+included, can be undone from "Recently identified" on the same page.
 
 ### 22. Rotate the Neon database password — recommended, your call
 
