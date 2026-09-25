@@ -881,7 +881,11 @@ whose shipped members are all drawn artwork.
 
 None of these is needed yet. Each gates one batch of Group T (`docs/phase-batches.md`).
 
-### 16. Check the sign-in fix on your phone
+### 16. ~~Check the sign-in fix on your phone~~ — **verified 25 Sep**
+
+> **Seen in the database:** Craig's session renewed silently at 14:19 UTC on 24 Sep, a new
+> refresh token created in the same instant its predecessor was revoked. Mark has not opened
+> the app since 21 Sep, so his renewal is still to be seen.
 
 `aa112bd` is live. Your current session was issued at 18:46 UTC on 22 Sep, so the first time
 you open the app after 18:46 UTC on 23 Sep it should renew silently instead of asking for

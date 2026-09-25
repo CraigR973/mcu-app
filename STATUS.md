@@ -17,9 +17,10 @@ checkpoint before T8.**
   films are due from 25 Sep (`OWNER-ACTIONS.md` 19).
 - **Live fixes on 24 Sep:** release pushes are disc releases only (#210); dropped eBay
   connections are retried (#211).
+- **Session renewal works live:** Craig's renewed silently at 14:19 UTC on 24 Sep (#200).
+- **T9, identifying the 366 unmatched films, is written up and waits for Craig's go.**
 - **The scheduled jobs work** (03:04 and 08:04 UTC on 24 Sep). **Mark's phone gets no
-  pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b). **Session renewal
-  is still unverified**: nobody has opened the app since the tokens lapsed (#200).
+  pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b).
 - **Two local-gate gaps were closed on 24 Sep**: mypy now uses the project config (#209), and
   the shared package's type-check and build are in the gate (#212).
 
@@ -443,6 +444,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-25 (T9 written up; checks)** — Craig's session renewed silently on 24 Sep, so
+  #200's fix is proven live. The 25 Sep reminder run sent no cinema pushes (#210). The
+  Brave key is still not in Railway. T9, identifying the 366 unmatched films, is defined
+  in `docs/phase-batches.md` and waits for Craig's go.
 
 - **2026-09-24 (Batch T7 shipped, `160f842`, `bfc28e7`)** — T7 merged once Craig's Brave
   key was in. Three watched batches: 314 searches, 188 pages fetched, 178 discs with

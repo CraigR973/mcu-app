@@ -1935,6 +1935,47 @@ data that looks right (Batch 24's reason), and the work runs under a risk accept
 - **Owner steps first:** a Brave Search API account and key (a credential), and the job
   service's environment.
 
+### T9 — Identify the unmatched films 🔴
+**Craig's request, 25 Sep**, after T7 showed these films are 41% of the Disc specs queue.
+Opus 5 · xhigh / GPT-5.6 Sol · Extra High. It rewrites the film identities that discs and
+watches hang off, and #194, #198 and #199 are the silent failures this area has already
+produced.
+
+**Today (25 Sep):** 366 live films have no TMDB match. 357 own a disc, 244 of them Blu-ray
+or 4K; 1 has watch history; none has a year. The titles fall into kinds:
+- typos: "Peepiing Tom", "Beaue Geste (1939)";
+- remakes with nothing to choose between them: "Lolita", "Emma", "Mutiny on The Bounty";
+- notes the search cannot use: "Kingdom of the Crystal Skull, The - Indiana Jones",
+  "Enforcer, The (Humphrey Bogart}";
+- a year outside brackets: "Murder by Decree 1979";
+- TV series: "Steptoe & Son - Complete Series", "Dynasties";
+- at least one test row: "Test 15.04.26".
+
+**Acceptance:**
+- A **dry run** classifies every unidentified film with a live disc and writes nothing:
+  identify (with the evidence), ask Craig (with the candidates and why), or set aside (a TV
+  series or not a film).
+- The matcher uses what a title carries: a year in or out of brackets; a person named in
+  brackets, checked against each candidate's TMDB credits; a series name after a dash; and
+  brackets that do not close.
+- A title TMDB cannot find gets **one** Brave web search for its TMDB page. The page's id is
+  then confirmed through TMDB's own API. These searches count against Brave's monthly
+  ceiling.
+- **Automatic only when one TMDB film is a strong match**, and a year or a person agrees
+  whenever TMDB holds another film of the same title. A match that would merge into a film
+  the collection already has is never automatic: it waits for Craig with both films shown.
+- Everything else waits on an **Identify films** page. Craig can pick a candidate, search
+  again with a corrected title, mark the row as a TV series or not a film, or skip it. Each
+  is one tap.
+- Every identification is audited with the title it replaced, so it can be undone. Watch
+  history moves with the film, as `apply_identification` already does, and #194/#198's
+  guards hold.
+- **The live run is Craig's to authorise** after he has read the dry run.
+- Afterwards, T7's second look re-decides the discs whose film now has a year, and
+  valuations that failed on a messy title are due again. Report films identified, and the
+  Disc specs queue before and after.
+- Gate green.
+
 ### T8 — Mark's eBay 🔴
 **Covers snag 8.** Opus 5 · max / GPT-5.6 Sol · Max. It's the first personal third-party
 account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
@@ -2034,7 +2075,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`) and T2–T7 shipped. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → T9 → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`) and T2–T7 shipped. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
