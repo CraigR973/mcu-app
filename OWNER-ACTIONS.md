@@ -965,7 +965,12 @@ Two of them look like the app matched the wrong film, not the wrong page: **Band
 is recorded as 2019 and **Bad Neighbours** as 2026. Fix the film on its page first (Identify),
 then pick the page.
 
-### 18. eBay sign-in settings and an encryption key — for T8, Mark's eBay
+### 18. eBay sign-in settings and an encryption key — for T8b, Connect eBay
+
+> **26 Sep: T8 is split (`DECISIONS.md` #216).** Only T8b, "Connect eBay" for Mark's
+> watch and selling lists, waits for this. T8a (price alerts and the deal scan) does not.
+> Its schedule needs only a Railway config apply, and if item 17's apply has not happened
+> by then, one apply starts both.
 
 This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consent settings in
 eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.

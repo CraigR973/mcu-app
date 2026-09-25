@@ -1987,7 +1987,31 @@ or 4K; 1 has watch history; none has a year. The titles fall into kinds:
   Disc specs queue before and after.
 - Gate green.
 
-### T8 — Mark's eBay 🔴
+### T10 — Search again for discs whose film was identified 🟢
+**Proposed 26 Sep at Craig's word (#216); the plan waits for his go.** Opus 5 · high /
+GPT-5.6 Sol · High. Small, but it spends Brave searches and moves discs in Craig's queue.
+**Criteria authored 2026-09-26**, so `DECISIONS.md` #54 does not apply.
+
+**Why:** T9's live run identified 156 films. T7's second look settled 9 of the 18 queued
+discs of those films. The other 9 still wait, because their saved search results came from
+the old, misspelt titles and the second look never searches again (#213, #215). The 61
+queued discs of films still waiting on Identify films will be in the same position once
+Craig identifies them.
+
+**Acceptance:**
+- A spec batch searches again, once, each queued disc (waiting for Craig, without specs,
+  and not decided by him) whose film was identified after the disc was searched. The search
+  uses the film's corrected title, and the matcher judges the new results as for any disc.
+- "Once": a disc searched after its film's latest identification is not searched again.
+  A page that failed its year check for a disc is never accepted for it again.
+- These searches count in the batch's 150 and the month's 1,500, and go before discs never
+  searched. The batch report says how many discs were searched again and how many settled.
+- A disc Craig has decided on, or one with specs, is never searched again.
+- Tests ship with it. Gate green.
+
+### ~~T8 — Mark's eBay~~ **split on 2026-09-26 into T8a and T8b at Craig's word** (#216)
+*Kept as the record of what was split. T8a and T8b below carry every criterion.*
+
 **Covers snag 8.** Opus 5 · max / GPT-5.6 Sol · Max. It's the first personal third-party
 account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
 
@@ -2008,6 +2032,49 @@ account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
   off unless eBay grants Buy API access, which would be a separate decision.
 - **Owner steps first:** OAuth settings in eBay's developer portal (redirect URL and RuName),
   the encryption key in Railway, and eBay keys on the job service.
+
+### T8a — eBay price alerts and the deal scan 🟡
+**Proposed 26 Sep: Craig chose to split T8 (#216); the plan waits for his go.** Opus 5 ·
+xhigh / GPT-5.6 Sol · Extra High. It spends a daily share of the eBay allowance on its own
+and pushes to both phones. It signs nobody in and holds no personal token, which is why it is
+not T8's max. **Criteria authored 2026-09-26 from T8's.** Covers the half of snag 8 that
+needs no sign-in. `DECISIONS.md` #203.
+
+**Acceptance:**
+- A price target can be set on any eBay listing (a pasted link, or a listing from the film
+  page's eBay check) or on a saved search (a film and a format). Targets are checked on a
+  schedule with the app's own eBay access. When one is met, a push arrives with a one-tap
+  link. For an auction, the alert offers the target as a maximum bid to set on eBay, and
+  eBay's own bidding takes over (#203).
+- Deal scan: new GB 4K and Blu-ray listings well below the film's usual asking price. Films
+  on the Wanted list come first, and owned films are skipped unless the listing would be an
+  upgrade. Finds go to the Deals page and arrive as a push. The scan keeps to a set daily
+  share of the eBay allowance that leaves the valuation's 750 calls and the film page's
+  checks untouched.
+- The app never asks for an eBay password or drives eBay's website. Automatic purchase
+  stays off (#204).
+- **Owner step:** the schedule is a job declared in `.railway/railway.ts` with the eBay keys
+  by reference. Craig applies it, because that is a hosting change, so the merge waits for
+  his OK, as T7's did. If `OWNER-ACTIONS.md` 17's apply has not happened by then, one apply
+  starts both.
+- Gate green.
+
+### T8b — Connect eBay: Mark's watch and selling lists 🔴
+**Proposed 26 Sep (#216); starts after the eBay checkpoint.** Opus 5 · max / GPT-5.6 Sol ·
+Max. It's the first personal third-party account token this app holds (#142). **Criteria
+authored 2026-09-26 from T8's.**
+
+**Acceptance:**
+- "Connect eBay" in settings uses eBay's authorization-code consent with the fewest scopes.
+  The token is encrypted at rest with a key from the environment, and disconnecting deletes
+  it. Only the account's owner sees their eBay data.
+- The app shows his watch list (Trading API `GetMyeBayBuying`) and his selling list
+  (`GetMyeBaySelling`, active and sold).
+- T8a's price targets can also be set on his watched items and his eBay saved searches.
+- The app never stores his eBay password or drives eBay's website.
+- **Owner steps first** (`OWNER-ACTIONS.md` 18): OAuth settings in eBay's developer portal
+  (redirect URL and RuName) and the encryption key in Railway.
+- Gate green.
 
 ## Post-launch — sequenced, not scheduled
 
@@ -2086,7 +2153,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8 | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. T8 waits on Craig's answer about splitting it. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8 |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → T10 → T8a → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**: T10 and T8a first, T8b after the checkpoint. The plan waits for his go. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

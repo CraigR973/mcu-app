@@ -4044,3 +4044,23 @@ contemporaneous.
        reached from You, the page showed the overview, the first 20 waiting films with their
        candidates and merge warnings, and 20 recent identifications, each with Undo. There
        was no horizontal scroll. Nothing from the harness is in the tree.
+
+
+### 2026-09-26 — T8 split, and discs searched again after identification
+
+216. **Craig's answers of 26 Sep, on T9's report.**
+
+     - **T8 is split.** T8a, price alerts and the deal scan, comes first. It uses the app's
+       own eBay access, signs nobody in and stores no personal token. T8b, "Connect eBay"
+       for Mark's watch and selling lists, follows once Craig has set up eBay sign-in and the
+       encryption key (`OWNER-ACTIONS.md` 18). *Why:* only T8b needs the first personal token
+       this app would hold (#142), and only T8b waits on Craig. T8a still has one owner step:
+       its schedule is a Railway job, which Craig applies.
+     - **A queued disc whose film was identified after its search is searched again, once
+       (T10).** T7's second look judges stored results and never searches again (#213). A
+       disc searched under a misspelt title therefore stays stuck, as 9 of the 18 queued
+       discs of films T9 identified did (#215). About 70 discs qualify now or will as Craig
+       works through Identify films: under £1 of Brave searches, inside the free credit.
+     - **Order:** T10, then T8a, then the eBay checkpoint, then T8b. Effort: T10 high, T8a
+       xhigh and T8b max, each open to overrule. Nothing starts before Craig's go on this
+       plan.

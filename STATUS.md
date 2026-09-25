@@ -2,8 +2,8 @@
 
 ## Now
 
-**25 Sep 2026: T9 has shipped (`4d16723`) and its live run is done. Group T waits on Craig's
-answer about splitting T8.**
+**26 Sep 2026: T9 has shipped (`4d16723`) and its live run is done. Craig has split T8; the
+plan for T10, T8a and T8b waits for his go.**
 
 - **T9, identifying the unmatched films, is live.** The live run applied the approved plan
   (`docs/t9/identify-plan-2026-09-25.json`) once, 16:59–17:03 UTC: **156 identified, 166 for
@@ -27,10 +27,11 @@ answer about splitting T8.**
 - **Collection value: £22,951.01** at current eBay asking prices, with 1,271 of 1,457 discs
   priced.
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  T7 `160f842` with `bfc28e7`, **T9 `4d16723`**. Next is T8, Mark's eBay. **Craig has been
-  asked whether to split it.** Price alerts and the deal scan would come first; they need no
-  sign-in. "Connect eBay" would come later, and only it waits on `OWNER-ACTIONS.md` 18. T8
-  does not start before he answers.
+  T7 `160f842` with `bfc28e7`, **T9 `4d16723`**. **Craig chose on 26 Sep (#216)** to split
+  T8 and to add T10. The order is T10 (search again for discs whose film was identified),
+  then T8a (eBay price alerts and the deal scan, no sign-in), then the eBay checkpoint
+  (`OWNER-ACTIONS.md` 18), then T8b ("Connect eBay"). **Nothing starts before his go on
+  this plan.**
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -460,6 +461,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (T8 split; T10 added)** — Craig chose to split T8: T8a, price alerts and the
+  deal scan, first; T8b, "Connect eBay", after his eBay set-up. He also chose T10: a queued
+  disc whose film was identified after its search is searched again, once. All three are in
+  `docs/phase-batches.md` (#216) and wait for his go on the plan.
 
 - **2026-09-25 (Batch T9 shipped, `4d16723`: live run and knock-ons)** — At Craig's go, main
   was merged into the branch, and the local gate and CI were green. Production serves
