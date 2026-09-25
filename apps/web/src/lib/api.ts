@@ -79,6 +79,11 @@ import {
   specBatchStartSchema,
   specDecisionSchema,
   specQueueSchema,
+  identifyDecisionSchema,
+  identifyOverviewSchema,
+  identifyQueueSchema,
+  identifySearchSchema,
+  recentIdentificationsSchema,
   smartCollectionResultsSchema,
   smartCollectionSchema,
   tmdbSearchResponseSchema,
@@ -102,6 +107,11 @@ import {
   type SpecBatchStart,
   type SpecDecision,
   type SpecQueue,
+  type IdentifyDecision,
+  type IdentifyOverview,
+  type IdentifyQueue,
+  type IdentifySearch,
+  type RecentIdentifications,
   type AiAnswer,
   type AiConversation,
   type AiConversationDetail,
@@ -212,6 +222,16 @@ export type {
   SpecQueue,
   SpecQueueItem,
   SpecRun,
+  FilmInCollection,
+  IdentifyCandidate,
+  IdentifyDecision,
+  IdentifyOverview,
+  IdentifyQueue,
+  IdentifyQueueItem,
+  IdentifyRun,
+  IdentifySearch,
+  RecentIdentification,
+  RecentIdentifications,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -1141,6 +1161,59 @@ export async function skipSpecDisc(lookupId: string): Promise<SpecDecision> {
 /** One batch now rather than tonight, within the same budgets. Only `started` does anything. */
 export async function startSpecBatch(): Promise<SpecBatchStart> {
   return parseOrThrowApiError(await authFetch('/specs/backfill/run', { method: 'POST' }), specBatchStartSchema)
+}
+
+/** Batch T9 — how many unmatched films wait, and what became of the rest. Admin only. */
+export async function fetchIdentifyOverview(): Promise<IdentifyOverview> {
+  return parseResponse(await authFetch('/identify/overview'), identifyOverviewSchema)
+}
+
+/** Films waiting for Craig, with the films offered and why each waits. */
+export async function fetchIdentifyQueue(limit = 20): Promise<IdentifyQueue> {
+  return parseResponse(await authFetch(`/identify/queue?limit=${String(limit)}`), identifyQueueSchema)
+}
+
+/** TMDB's films for a corrected title. Nothing is saved until one is picked. */
+export async function searchIdentify(movieId: string, query: string): Promise<IdentifySearch> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/films/${movieId}/search?query=${encodeURIComponent(query)}`),
+    identifySearchSchema,
+  )
+}
+
+/** Craig's choice. `merge` says he has seen both films and means to join them. */
+export async function identifyFilm(
+  movieId: string,
+  tmdbId: number,
+  options: { merge?: boolean; searched?: boolean } = {},
+): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/films/${movieId}/identify`, {
+      method: 'POST',
+      body: JSON.stringify({ tmdbId, merge: options.merge ?? false, searched: options.searched ?? false }),
+    }),
+    identifyDecisionSchema,
+  )
+}
+
+export async function setFilmAside(movieId: string, kind: 'tv' | 'not_film'): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/films/${movieId}/set-aside`, { method: 'POST', body: JSON.stringify({ kind }) }),
+    identifyDecisionSchema,
+  )
+}
+
+export async function skipFilm(movieId: string): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(await authFetch(`/identify/films/${movieId}/skip`, { method: 'POST' }), identifyDecisionSchema)
+}
+
+export async function fetchRecentIdentifications(limit = 20): Promise<RecentIdentifications> {
+  return parseResponse(await authFetch(`/identify/recent?limit=${String(limit)}`), recentIdentificationsSchema)
+}
+
+/** Put a film back as it was before that identification, merges included. */
+export async function undoIdentification(actionId: string): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(await authFetch(`/identify/recent/${actionId}/undo`, { method: 'POST' }), identifyDecisionSchema)
 }
 
 export async function fetchStats(): Promise<Stats> {

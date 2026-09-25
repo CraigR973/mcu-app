@@ -60,6 +60,11 @@ import {
   specBackfillSchema,
   specDecisionSchema,
   specQueueSchema,
+  identifyDecisionSchema,
+  identifyOverviewSchema,
+  identifyQueueSchema,
+  identifySearchSchema,
+  recentIdentificationsSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -1614,3 +1619,89 @@ describe('Batch T7 — the Blu-ray.com backfill', () => {
   })
 })
 
+describe('Batch T9 — identifying the unmatched films', () => {
+  it('reads a waiting film with a choice that would merge into one already owned', () => {
+    const queue = {
+      total: 1,
+      items: [
+        {
+          movieId: '00000000-0000-4000-8000-000000000021',
+          title: 'Dunkirk',
+          discs: [{ label: '4K · Front' }],
+          watches: 0,
+          note: 'TMDB holds another film of this title (1958).',
+          proposedTmdbId: 374720,
+          candidates: [
+            {
+              tmdbId: 374720,
+              title: 'Dunkirk',
+              year: 2017,
+              posterPath: null,
+              overview: '',
+              votes: 18007,
+              notes: ['18,007 TMDB votes'],
+              inCollection: null,
+            },
+            {
+              tmdbId: 36265,
+              title: 'Dunkirk',
+              year: 1958,
+              posterPath: '/dunkirk.jpg',
+              overview: 'The 1958 film.',
+              votes: 77,
+              notes: [],
+              inCollection: {
+                movieId: '00000000-0000-4000-8000-000000000022',
+                title: 'Dunkirk',
+                year: 1958,
+                discs: 1,
+                watches: 0,
+              },
+            },
+          ],
+        },
+      ],
+    }
+    expect(identifyQueueSchema.parse(queue)).toEqual(queue)
+  })
+
+  it('reads the overview before any run', () => {
+    const overview = {
+      unidentified: 357,
+      waiting: 357,
+      setAsideTv: 0,
+      setAsideNotFilm: 0,
+      skipped: 0,
+      identified: 0,
+      run: null,
+    }
+    expect(identifyOverviewSchema.parse(overview)).toEqual(overview)
+  })
+
+  it('reads a search again and the recent list', () => {
+    const search = { query: 'Peeping Tom', candidates: [] }
+    expect(identifySearchSchema.parse(search)).toEqual(search)
+    const recent = {
+      items: [
+        {
+          actionId: '00000000-0000-4000-8000-000000000023',
+          at: '2026-09-25T12:00:00+00:00',
+          by: 'Craig',
+          movieId: '00000000-0000-4000-8000-000000000024',
+          replaced: 'Peepiing Tom',
+          title: 'Peeping Tom',
+          year: 1960,
+          how: 'auto',
+          merged: false,
+          undone: false,
+        },
+      ],
+    }
+    expect(recentIdentificationsSchema.parse(recent)).toEqual(recent)
+  })
+
+  it('refuses an outcome it does not know', () => {
+    const decision = { movieId: '00000000-0000-4000-8000-000000000025', outcome: 'guessed', title: 'X' }
+    expect(() => identifyDecisionSchema.parse(decision)).toThrow()
+  })
+})

@@ -1736,6 +1736,110 @@ export const specBatchStartSchema = z.object({
   run: specRunSchema.nullable(),
 })
 
+// ---------------------------------------------------------------------------
+// Identifying the unmatched films (Batch T9)
+// ---------------------------------------------------------------------------
+
+export const identifyRunSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(['running', 'finished', 'stopped', 'abandoned']),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  films: z.number().int().nonnegative(),
+  identified: z.number().int().nonnegative(),
+  queued: z.number().int().nonnegative(),
+  setAside: z.number().int().nonnegative(),
+  unchanged: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  searches: z.number().int().nonnegative(),
+  lastError: z.string().nullable(),
+})
+
+export const identifyOverviewSchema = z.object({
+  unidentified: z.number().int().nonnegative(),
+  waiting: z.number().int().nonnegative(),
+  setAsideTv: z.number().int().nonnegative(),
+  setAsideNotFilm: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  identified: z.number().int().nonnegative(),
+  run: identifyRunSchema.nullable(),
+})
+
+/** The film a choice would merge into, shown beside the one waiting. */
+export const filmInCollectionSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  discs: z.number().int().nonnegative(),
+  watches: z.number().int().nonnegative(),
+})
+
+export const identifyCandidateSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  overview: z.string(),
+  votes: z.number().int().nonnegative(),
+  notes: z.array(z.string()),
+  /** Set when the collection already has this film: choosing it merges the two. */
+  inCollection: filmInCollectionSchema.nullable(),
+})
+
+export const identifyQueueItemSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string(),
+  discs: z.array(z.object({ label: z.string() })),
+  watches: z.number().int().nonnegative(),
+  note: z.string().nullable(),
+  proposedTmdbId: z.number().int().nullable(),
+  candidates: z.array(identifyCandidateSchema),
+})
+
+export const identifyQueueSchema = z.object({
+  items: z.array(identifyQueueItemSchema),
+  total: z.number().int().nonnegative(),
+})
+
+export const identifySearchSchema = z.object({
+  query: z.string(),
+  candidates: z.array(identifyCandidateSchema),
+})
+
+export const identifyDecisionSchema = z.object({
+  movieId: z.string().uuid(),
+  outcome: z.enum(['identified', 'merged', 'set_aside', 'skipped', 'waiting']),
+  title: z.string(),
+})
+
+export const recentIdentificationSchema = z.object({
+  actionId: z.string().uuid(),
+  at: z.string(),
+  by: z.string().nullable(),
+  movieId: z.string().uuid(),
+  replaced: z.string(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  how: z.string(),
+  merged: z.boolean(),
+  undone: z.boolean(),
+})
+
+export const recentIdentificationsSchema = z.object({
+  items: z.array(recentIdentificationSchema),
+})
+
+export type IdentifyRun = z.infer<typeof identifyRunSchema>
+export type IdentifyOverview = z.infer<typeof identifyOverviewSchema>
+export type FilmInCollection = z.infer<typeof filmInCollectionSchema>
+export type IdentifyCandidate = z.infer<typeof identifyCandidateSchema>
+export type IdentifyQueueItem = z.infer<typeof identifyQueueItemSchema>
+export type IdentifyQueue = z.infer<typeof identifyQueueSchema>
+export type IdentifySearch = z.infer<typeof identifySearchSchema>
+export type IdentifyDecision = z.infer<typeof identifyDecisionSchema>
+export type RecentIdentification = z.infer<typeof recentIdentificationSchema>
+export type RecentIdentifications = z.infer<typeof recentIdentificationsSchema>
+
 export type SpecCoverage = z.infer<typeof specCoverageSchema>
 export type SpecRun = z.infer<typeof specRunSchema>
 export type SpecBackfill = z.infer<typeof specBackfillSchema>
