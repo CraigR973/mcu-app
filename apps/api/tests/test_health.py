@@ -246,6 +246,18 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/specs/queue",
         "/api/v1/specs/queue/{lookup_id}/accept",
         "/api/v1/specs/queue/{lookup_id}/skip",
+        # Batch T9. Admin-only, all nine. The Identify films page: what waits, a search for
+        # a corrected title, Craig's five choices, and the recent list with its undo. The
+        # live run itself is a command, not a route.
+        "/api/v1/identify/overview",
+        "/api/v1/identify/queue",
+        "/api/v1/identify/films/{movie_id}/search",
+        "/api/v1/identify/films/{movie_id}/identify",
+        "/api/v1/identify/films/{movie_id}/set-aside",
+        "/api/v1/identify/films/{movie_id}/skip",
+        "/api/v1/identify/films/{movie_id}/put-back",
+        "/api/v1/identify/recent",
+        "/api/v1/identify/recent/{action_id}/undo",
         # Batch 28's prerequisite, and the **second** unauthenticated route in this app
         # after Batch 17's `.ics` feed. *It was the third* until Batch S1 removed
         # Batch 27's `/gift/{slug}`, which sat between them. eBay holds no

@@ -42,6 +42,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from src.clock import utcnow
 from src.matching.engine import searchable_title
 from src.models.collection_item import CollectionItem, owned_copy
+from src.models.identify import IdentifyRun
 from src.models.movie import Movie
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
 from src.services.specs.bluray_com import (
@@ -216,12 +217,19 @@ def month_start(now: datetime) -> datetime:
 
 
 async def searches_this_month(db: AsyncSession, *, now: datetime) -> int:
+    """Brave searches billed this calendar month, by these batches and by Batch T9's
+    identification runs, which share the ceiling."""
     spent = await db.scalar(
         select(func.coalesce(func.sum(SpecRun.searches), 0)).where(
             SpecRun.started_utc >= month_start(now)
         )
     )
-    return int(spent or 0)
+    identifying = await db.scalar(
+        select(func.coalesce(func.sum(IdentifyRun.searches), 0)).where(
+            IdentifyRun.started_utc >= month_start(now)
+        )
+    )
+    return int(spent or 0) + int(identifying or 0)
 
 
 async def accepted_waiting(db: AsyncSession) -> int:
@@ -464,9 +472,9 @@ async def redecide_queue(db: AsyncSession, run: SpecRun, *, clock: Callable[[], 
     """Look again at discs the matcher left for Craig, with the matcher as it is now.
 
     No new searches: the stored results are judged again. Only the matcher's own reasons are
-    reconsidered (several UK editions, no UK page matched). A disc Craig has acted on, or
-    one whose page failed its year check, stays where it is, so a rejected page is never
-    chosen again by this.
+    reconsidered (several UK editions, no UK page matched, and, once identification has given
+    the film one, no year). A disc Craig has acted on, or one whose page failed its year
+    check, stays where it is, so a rejected page is never chosen again by this.
     """
     fmt, conditions = _in_scope()
     rows = (
@@ -485,7 +493,10 @@ async def redecide_queue(db: AsyncSession, run: SpecRun, *, clock: Callable[[], 
     settled = 0
     for lookup, item, movie, code in rows:
         note = lookup.note or ""
-        if not (note.startswith("No UK page") or "UK editions match" in note):
+        # Batch T9: a film identified since its disc was searched has a year now, and often
+        # a corrected title, so the matcher's "no year" reason is worth another look too.
+        undated_then = note.startswith("This film has no year") and movie.year is not None
+        if not (note.startswith("No UK page") or "UK editions match" in note or undated_then):
             continue
         stored = list(
             (

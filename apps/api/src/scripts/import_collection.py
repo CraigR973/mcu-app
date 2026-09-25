@@ -313,6 +313,11 @@ class LiveFilmIndex:
     **More than one match is a question, not a guess.** Seven titles match two live films
     each — two `Dunkirk`s, two `Ghostbusters`, two `Titanic`s — and nothing in a
     spreadsheet row says which. Those mint a new row, as before, and are reported.
+
+    **A film's old titles count too (Batch T9).** Identification retitles "Peepiing Tom" as
+    "Peeping Tom", which no normalisation undoes, and the spreadsheet keeps its spelling. So
+    each title identification replaced is kept in ``movie_title_aliases`` and indexed here,
+    or the refresh would mint "Peepiing Tom" again and hang the disc on it.
     """
 
     def __init__(self, rows: list[tuple[uuid.UUID, str]]) -> None:
@@ -324,12 +329,26 @@ class LiveFilmIndex:
     @classmethod
     def load(cls, conn: Any) -> LiveFilmIndex:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, title FROM movies WHERE deleted_at IS NULL")
+            cur.execute(
+                """
+                SELECT id, title FROM movies WHERE deleted_at IS NULL
+                UNION ALL
+                SELECT a.movie_id, a.title
+                FROM movie_title_aliases a
+                JOIN movies m ON m.id = a.movie_id
+                WHERE m.deleted_at IS NULL
+                """
+            )
             return cls([(uuid.UUID(str(r[0])), r[1] or "") for r in cur.fetchall()])
 
     def add(self, movie_id: uuid.UUID, title: str) -> None:
-        self.by_exact[(title or "").strip()].append(movie_id)
-        self.by_normalised[normalise_title(title or "")].append(movie_id)
+        # One film answers to a title once, however many of its names reduce to it.
+        for key, index in (
+            ((title or "").strip(), self.by_exact),
+            (normalise_title(title or ""), self.by_normalised),
+        ):
+            if movie_id not in index[key]:
+                index[key].append(movie_id)
 
     def resolve(self, title: str) -> tuple[uuid.UUID | None, str]:
         """Find the one live film this title names, or say why there isn't one.

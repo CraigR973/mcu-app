@@ -117,7 +117,18 @@ def _owned_discs() -> tuple[ColumnElement[str | None], list[ColumnElement[bool]]
 
 
 def _due_condition(now: datetime) -> ColumnElement[bool]:
-    return or_(DiscValuation.id.is_(None), DiscValuation.checked_utc < now - REVALUE_AFTER)
+    """Never priced, priced over 30 days ago, or priced before the film was last identified.
+
+    The last is Batch T9's. A film priced under its spreadsheet title ("Captain Ameica") was
+    searched for under that title; once identified, the search the film page would run is
+    different, so the stored value no longer agrees with it (#209's reason for the shared
+    estimator). ``last_tmdb_sync_utc`` is written only when a film is identified.
+    """
+    return or_(
+        DiscValuation.id.is_(None),
+        DiscValuation.checked_utc < now - REVALUE_AFTER,
+        DiscValuation.checked_utc < Movie.last_tmdb_sync_utc,
+    )
 
 
 def _film_formats() -> Subquery:
@@ -160,6 +171,7 @@ async def count_due(db: AsyncSession, *, now: datetime) -> int:
     total = await db.scalar(
         select(func.count())
         .select_from(pairs)
+        .join(Movie, Movie.id == pairs.c.movie_id)
         .outerjoin(
             DiscValuation,
             and_(

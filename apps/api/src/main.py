@@ -25,6 +25,7 @@ from src.routers import (
     ebay,
     export,
     health,
+    identify,
     insights,
     memories,
     movie_night,
@@ -143,3 +144,4 @@ app.include_router(ebay.router)
 app.include_router(barcode.router)
 app.include_router(deals.router)
 app.include_router(valuation.router)
+app.include_router(identify.router)
