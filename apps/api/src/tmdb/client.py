@@ -12,8 +12,10 @@ from ..config import settings
 from .models import (
     Movie,
     PersonMovieCredits,
+    PersonSearchResults,
     ReleaseDates,
     SearchResults,
+    TvSearchResults,
     WatchProviders,
 )
 
@@ -263,3 +265,22 @@ class TMDBClient:
             params["year"] = year
         data = await self._get("/search/movie", params=params)
         return SearchResults.model_validate(data)
+
+    async def search_tv(
+        self, query: str, page: int = 1, language: str = "en-US"
+    ) -> TvSearchResults:
+        """Search TMDB's TV index — Batch T9.
+
+        Used only to recognise a TV series among the films TMDB's movie index cannot match,
+        so "Dynasties" is set aside as TV rather than asked about as a film.
+        """
+        params: dict[str, Any] = {"query": query, "page": page, "language": language}
+        data = await self._get("/search/tv", params=params)
+        return TvSearchResults.model_validate(data)
+
+    async def search_person(self, query: str, page: int = 1) -> PersonSearchResults:
+        """Search TMDB's people — Batch T9, to read the films of a name a title carries."""
+        data = await self._get(
+            "/search/person", {"query": query, "page": page, "include_adult": "false"}
+        )
+        return PersonSearchResults.model_validate(data)

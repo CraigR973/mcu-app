@@ -51,6 +51,23 @@ class Credits(BaseModel):
     crew: list[CrewMember] = Field(default_factory=list)
 
 
+class AlternativeTitle(BaseModel):
+    """A title the film is also known by in one country — Batch T9.
+
+    "Avengers Assemble" is The Avengers' GB title and "Sicario 2: Soldado" is one of Sicario:
+    Day of the Soldado's. TMDB's search already matches these; identification needs them to
+    see *why* a result came back.
+    """
+
+    title: str
+    iso_3166_1: str = ""
+    type: str = ""
+
+
+class AlternativeTitles(BaseModel):
+    titles: list[AlternativeTitle] = Field(default_factory=list)
+
+
 class Video(BaseModel):
     id: str
     key: str
@@ -165,6 +182,51 @@ class SearchResults(BaseModel):
     total_results: int = 0
 
 
+class TvSearchResult(BaseModel):
+    """One show from ``/search/tv`` — Batch T9 sets TV series aside rather than matching them
+    to a film of the same name."""
+
+    id: int
+    name: str
+    original_name: str = ""
+    first_air_date: str | None = None
+    popularity: float = 0.0
+    vote_count: int = 0
+
+    @property
+    def year(self) -> int | None:
+        if not self.first_air_date:
+            return None
+        try:
+            return int(self.first_air_date.split("-", 1)[0])
+        except (ValueError, IndexError):
+            return None
+
+
+class PersonSearchResult(BaseModel):
+    """One person from ``/search/person`` — Batch T9 checks a name the title or a disc's
+    grouping gives against that person's films."""
+
+    id: int
+    name: str
+    known_for_department: str | None = None
+    popularity: float = 0.0
+
+
+class PersonSearchResults(BaseModel):
+    page: int = 1
+    results: list[PersonSearchResult] = Field(default_factory=list)
+    total_pages: int = 0
+    total_results: int = 0
+
+
+class TvSearchResults(BaseModel):
+    page: int = 1
+    results: list[TvSearchResult] = Field(default_factory=list)
+    total_pages: int = 0
+    total_results: int = 0
+
+
 class Movie(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -197,6 +259,7 @@ class Movie(BaseModel):
     credits: Credits | None = None
     videos: Videos | None = None
     watch_providers: WatchProviders | None = Field(None, alias="watch/providers")
+    alternative_titles: AlternativeTitles | None = None
 
 
 class PersonMovieCredit(BaseModel):
