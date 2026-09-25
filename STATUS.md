@@ -12,8 +12,8 @@ complete.**
   and set aside **35** (34 TV, 1 test row). It used 26 Brave searches. The report is with
   Craig (`OWNER-ACTIONS.md` 21). **On his go:** merge, run the live run from the dry run's
   plan with `--earlier-searches 54`, then T7's second look and the re-pricing, and report
-  before and after. The plan file sits in the session scratchpad; a new session runs a fresh
-  dry run and compares its counts with these before applying anything.
+  before and after. The plan it applies is committed on the branch as
+  `docs/t9/identify-plan-2026-09-25.json`, beside the report Craig read.
 - **The first valuation is complete (25 Sep):** all 1,457 discs checked, 1,262 priced,
   **£22,810.28 at current eBay asking prices**. 195 could not be priced: 31% of the discs of
   films never matched to TMDB, against 9% of matched films' discs, which is T9's to fix.
