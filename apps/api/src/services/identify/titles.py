@@ -286,6 +286,7 @@ _TV_TAIL = re.compile(
     r"\s*\b(?:the\s+)?(?:complete\b|series\s+\d|seasons?\s+\d|\d+(?:st|nd|rd|th)\s+season).*$",
     re.I,
 )
+_LEADING_COMPLETE = re.compile(r"^(?:the\s+)?complete\s+(?=\w)", re.I)
 _TEST_ROW = re.compile(r"^test\b.*\d", re.I)
 
 _COMPANION = re.compile(r"^(?:box\s*set\s+)?with\s+", re.I)
@@ -640,6 +641,11 @@ def parse_title(raw: str, grouping: str | None = None) -> ParsedTitle:
     tv_title = main
     if tv or tv_hint:
         tv_title = _TV_TAIL.sub("", cleaned[0] if cleaned else main).strip() or main
+    # "The Complete Fingerbobs" is a box of episodes of "Fingerbobs".
+    leading_complete = _LEADING_COMPLETE.match(main)
+    if leading_complete is not None:
+        tv_hint = tv_hint or "'Complete' in the title"
+        tv_title = main[leading_complete.end() :].strip() or main
     return ParsedTitle(
         raw=raw,
         main=main,

@@ -189,9 +189,10 @@ def _movie(film: Film) -> TmdbMovie:
 
 
 class FakeBrave:
-    """Brave, answering by the words after the site filter. Counts every call."""
+    """Brave, answering by the words after the site filter. Counts every call. A page is an
+    address, or an address and the page's title."""
 
-    def __init__(self, pages: dict[str, list[str]] | None = None) -> None:
+    def __init__(self, pages: dict[str, list[str | tuple[str, str]]] | None = None) -> None:
         self.pages = pages or {}
         self.queries: list[str] = []
         self.search_calls = 0
@@ -204,9 +205,14 @@ class FakeBrave:
         del count, country
         self.search_calls += 1
         self.queries.append(query)
-        for words, urls in self.pages.items():
+        for words, pages in self.pages.items():
             if words in query:
-                return [SearchHit(url=url, title="", description="") for url in urls]
+                return [
+                    SearchHit(url=page, title="", description="")
+                    if isinstance(page, str)
+                    else SearchHit(url=page[0], title=page[1], description="")
+                    for page in pages
+                ]
         return []
 
 
@@ -514,3 +520,68 @@ async def test_a_surname_matches_only_the_people_who_made_the_film() -> None:
     assert found is not None and found.name == "Michael Powell"
     assert person_credited("Powell", (Credit("Sam Powell", "catering"),)) is None
     assert person_credited("Alec Guiness", (Credit("Alec Guinness", "cast", 0),)) is not None
+
+
+async def test_a_film_known_by_the_title_only_as_an_alternative_one_is_still_a_namesake() -> None:
+    """TMDB calls the 1941 film "All That Money Can Buy"; its alternative title is the one a
+    2007 film was once called. An early version took the 2007 film."""
+    tmdb = FakeTmdb(
+        [
+            Film(
+                29451,
+                "All That Money Can Buy",
+                1941,
+                votes=101,
+                alt=("The Devil and Daniel Webster",),
+            ),
+            Film(
+                33932,
+                "Shortcut to Happiness",
+                2007,
+                votes=193,
+                alt=("The Devil and Daniel Webster",),
+            ),
+        ]
+    )
+    brave = FakeBrave({"Danierl": ["https://www.themoviedb.org/movie/33932-shortcut-to-happiness"]})
+
+    proposal, _ = await _identify(tmdb, "Devil and Danierl Webster, The", brave=brave)
+
+    assert proposal.outcome == "ask"
+    assert {c.year for c in proposal.candidates} == {1941, 2007}
+
+
+async def test_a_web_search_led_by_an_unrelated_series_does_not_make_a_title_tv() -> None:
+    brave = FakeBrave(
+        {
+            "Munch": [
+                (
+                    "https://www.themoviedb.org/tv/67890-munch",
+                    "Munch (TV Series 2016-2019) — The Movie Database",
+                ),
+            ]
+        }
+    )
+
+    proposal, _ = await _identify(
+        FakeTmdb([]), "Munch - Our Greatest Hits - The Beautiful South", brave=brave
+    )
+
+    assert proposal.outcome == "ask"
+
+
+async def test_a_complete_box_of_a_series_is_found_in_the_tv_index_by_the_series_name() -> None:
+    tmdb = FakeTmdb([], shows=[Show(1, "Fingerbobs", 1972)])
+
+    proposal, _ = await _identify(tmdb, "Complete Fingerbobs, The", budget=0)
+
+    assert proposal.outcome == "set_aside"
+    assert proposal.set_aside_as == "tv"
+
+
+async def test_a_series_number_in_a_film_title_is_not_checked_as_a_shorter_series() -> None:
+    tmdb = FakeTmdb([Film(1, "Open Season 2", 2008, votes=1344)], shows=[Show(1, "Open", 2019)])
+
+    proposal, _ = await _identify(tmdb, "Open Season 2")
+
+    assert proposal.outcome == "identify", proposal.reason

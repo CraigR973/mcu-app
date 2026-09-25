@@ -220,6 +220,13 @@ def test_a_series_number_alone_is_only_a_hint_because_films_have_them_too() -> N
     assert game.tv_title == "Game of Thrones"
 
 
+def test_a_title_starting_complete_is_a_box_of_a_series() -> None:
+    parsed = parse_title("Complete Fingerbobs, The")
+    assert parsed.tv is None
+    assert parsed.tv_hint is not None
+    assert parsed.tv_title == "Fingerbobs"
+
+
 def test_craigs_tv_grouping_means_tv() -> None:
     assert parse_title("Charles II", "TV").tv is not None
     assert parse_title("Charles II", "Television classics").tv is None

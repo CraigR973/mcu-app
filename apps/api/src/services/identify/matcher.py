@@ -86,6 +86,9 @@ KNOWN_VOTES = 50
 
 _TMDB_MOVIE_PAGE = re.compile(r"themoviedb\.org/(?:[a-z]{2}(?:-[A-Z]{2})?/)?movie/(\d+)")
 _TMDB_TV_PAGE = re.compile(r"themoviedb\.org/(?:[a-z]{2}(?:-[A-Z]{2})?/)?tv/(\d+)")
+#: Where a TMDB page's title stops naming the show: "Fingerbobs (TV Series 1972-1972) — The
+#: Movie Database (TMDB)".
+_PAGE_TITLE_TAIL = re.compile(r"\s+\((?:TV|\d{4})|\s+[\u2014|-]\s+|\s+\|\s+")
 
 #: Where a name came from, in the words Craig reads.
 TITLE_SOURCE = "named in the title"
@@ -492,12 +495,16 @@ class Identifier:
         year: int | None,
         origin: str,
         pages: int = 1,
+        seen: list[int] | None = None,
     ) -> bool:
-        """Add a search's results to ``found``. True when every page was read."""
+        """Add a search's results to ``found``, and their ids to ``seen`` in TMDB's order.
+        True when every page was read."""
         page = 1
         while True:
             results = await self._search(query, year, page)
             for rank, result in enumerate(results.results):
+                if seen is not None and result.id not in seen:
+                    seen.append(result.id)
                 if result.id not in found:
                     found[result.id] = Candidate.from_search(
                         result, origin=origin, rank=(page - 1) * 20 + rank
@@ -507,18 +514,22 @@ class Identifier:
             page += 1
 
     async def _scan_namesakes(
-        self, found: dict[int, Candidate], title: str, year: int | None
+        self, found: dict[int, Candidate], title: str, year: int | None, seen: list[int]
     ) -> bool:
         """Every TMDB film of this title we can see, and whether we saw them all.
 
         Without a year, up to :data:`MAX_PAGES` pages of results. With one, the searches for
         that year and the years either side are complete on their own, because a namesake
-        from another year cannot share it.
+        from another year cannot share it. ``seen`` collects what the searches returned.
         """
-        complete = await self._gather(found, title, year=None, origin="rivals", pages=MAX_PAGES)
+        complete = await self._gather(
+            found, title, year=None, origin="rivals", pages=MAX_PAGES, seen=seen
+        )
         if year is not None and not complete:
             for near in (year - 1, year, year + 1):
-                await self._gather(found, title, year=near, origin="rivals", pages=MAX_PAGES)
+                await self._gather(
+                    found, title, year=near, origin="rivals", pages=MAX_PAGES, seen=seen
+                )
             return True
         return complete
 
@@ -545,7 +556,12 @@ class Identifier:
                 if tmdb_id not in ids:
                     ids.append(tmdb_id)
             elif index == 0 and _TMDB_TV_PAGE.search(hit.url):
-                tv_first = True
+                # Only a page for a show of this very title says TV. The first page Brave
+                # gave for "Munch - Our Greatest Hits" was an unrelated series called "Munch".
+                show = _PAGE_TITLE_TAIL.split(hit.title, maxsplit=1)[0].strip()
+                tv_first = bool(show) and any(
+                    compare(title, show).same_title for title in (parsed.main, parsed.tv_title)
+                )
         return query, ids[:BRAVE_PAGES], tv_first
 
     @staticmethod
@@ -640,9 +656,16 @@ class Identifier:
 
         return await self._decide(parsed, found, fits, proposal, held=held)
 
-    async def _tv_show(self, parsed: ParsedTitle) -> tuple[str, int | None, int] | None:
-        """A show in TMDB's TV index with this title: (name, first year, votes)."""
-        titles = [parsed.tv_title or parsed.main]
+    async def _tv_show(
+        self, parsed: ParsedTitle, *, whole_title_only: bool = False
+    ) -> tuple[str, int | None, int] | None:
+        """A show in TMDB's TV index with this title: (name, first year, votes).
+
+        The title without its TV words ("Game of Thrones" for "... Season 1") is tried too,
+        except once a film has matched: then only the whole title counts, or "Open Season
+        2" would meet a series called "Open".
+        """
+        titles = [parsed.main] if whole_title_only else [parsed.tv_title or parsed.main]
         if parsed.main not in titles:
             titles.append(parsed.main)
         for title in titles:
@@ -738,7 +761,8 @@ class Identifier:
         first = self._rank(parsed, [c for c in near if fits[c.tmdb_id].tier == best_tier], fits)[0]
         title = fits[first.tmdb_id].matched_title
         # The title as TMDB writes it finds namesakes a typo'd reading cannot.
-        complete = await self._scan_namesakes(found, title, parsed.year)
+        scanned: list[int] = []
+        complete = await self._scan_namesakes(found, title, parsed.year, scanned)
         fits = self._fits(found, parsed)
 
         def namesake(candidate: Candidate) -> bool:
@@ -749,6 +773,19 @@ class Identifier:
                 return True
             return any(compare(title, other).same_title for other, _ in candidate.titles)
 
+        # A film the search returned for this title without carrying it as its own may carry
+        # it as an alternative title: TMDB lists The Devil and Daniel Webster (1941) as "All
+        # That Money Can Buy", and an early version took a 2007 film of that working title.
+        unexplained = [
+            found[tmdb_id]
+            for tmdb_id in scanned
+            if tmdb_id != first.tmdb_id
+            and found[tmdb_id].alt_titles is None
+            and not namesake(found[tmdb_id])
+        ]
+        for candidate in unexplained[:ALT_TITLE_LOOKS]:
+            await self._fill(candidate)
+        fits = self._fits(found, parsed)
         namesakes = [c for c in found.values() if namesake(c)]
         credited, checked_all = await self._people_evidence(parsed, first, namesakes, found, title)
         fits = self._fits(found, parsed)
@@ -833,7 +870,7 @@ class Identifier:
             )
 
         if not blockers and not agrees and not people:
-            show = await self._tv_show(parsed)
+            show = await self._tv_show(parsed, whole_title_only=True)
             if show is not None and (
                 leader.vote_count < KNOWN_VOTES or show[2] >= leader.vote_count
             ):
