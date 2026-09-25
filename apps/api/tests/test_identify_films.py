@@ -823,8 +823,10 @@ async def test_identified_films_keep_their_run_counted(db: AsyncSession) -> None
         brave_budget=0,
         items=[],
     )
-    run = await start_run(db, plan)
+    run = await start_run(db, plan, earlier_searches=54)
     assert run.status == "running"
+    # Dry runs whose plans were never applied spent Brave searches too; the ceiling sees them.
+    assert run.searches == 54
     stale = await db.get(IdentifyRun, run.id)
     assert stale is not None
     stale.heartbeat_utc = NOW - timedelta(hours=2)

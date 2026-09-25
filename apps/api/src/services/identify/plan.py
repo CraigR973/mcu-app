@@ -278,9 +278,27 @@ async def make_plan(
 ) -> Plan:
     """Propose an outcome for every unidentified film with a live disc. Writes nothing."""
     films = await unidentified_films(db)
+    held = await held_films(db)
+    return await propose(films, held, identifier, now=now, only=only, progress=progress)
+
+
+async def propose(
+    films: list[Film],
+    held: dict[int, MergeTarget],
+    identifier: Identifier,
+    *,
+    now: datetime,
+    only: set[str] | None = None,
+    progress: Callable[[int, int, Item], None] | None = None,
+) -> Plan:
+    """The plan for films already read from the collection. Touches no database.
+
+    Separate from reading, so the dry run holds no connection through half an hour of TMDB
+    and Brave calls: the second 25 Sep dry run held one, Neon closed it, and the finished plan
+    was lost on the rollback.
+    """
     if only:
         films = [film for film in films if film.movie_id in only or film.title in only]
-    held = await held_films(db)
     # A film this plan identifies is one a later film would merge into.
     planned: dict[int, MergeTarget] = {}
 

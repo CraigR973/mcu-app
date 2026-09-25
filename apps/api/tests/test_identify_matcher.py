@@ -15,11 +15,14 @@ the check of those, and its report is what Craig approves.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 
 import httpx
 import pytest
 
 from src.services.identify.matcher import Credit, Holder, Identifier, Proposal, person_credited
+from src.services.identify.plan import Disc, propose
+from src.services.identify.plan import Film as FilmRow
 from src.services.identify.titles import fold, parse_title
 from src.services.specs.search import SearchHit
 from src.tmdb.models import (
@@ -585,3 +588,19 @@ async def test_a_series_number_in_a_film_title_is_not_checked_as_a_shorter_serie
     proposal, _ = await _identify(tmdb, "Open Season 2")
 
     assert proposal.outcome == "identify", proposal.reason
+
+
+async def test_two_rows_that_are_one_film_do_not_both_take_it() -> None:
+    """The plan identifies the first; the second would merge into it, so it waits."""
+    tmdb = FakeTmdb([Film(693134, "Dune: Part Two", 2024, votes=8609, alt=("Dune 2",))])
+    films = [
+        FilmRow("row-1", "Dune 2", [Disc("4k_uhd", None, "Front")], 0),
+        FilmRow("row-2", "Dune: Part Two", [Disc("blu_ray", None, "Back")], 0),
+    ]
+
+    plan = await propose(films, {}, Identifier(tmdb), now=datetime(2026, 9, 25))
+
+    first, second = plan.items
+    assert first.outcome == "identify"
+    assert second.outcome == "ask"
+    assert second.merge_into is not None and second.merge_into.movie_id == "row-1"

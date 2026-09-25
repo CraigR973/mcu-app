@@ -6,16 +6,18 @@
     PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.identify_films \\
         --plan-out plan.json --report-out report.html
 
-It runs inside a read-only transaction, so Postgres itself refuses a write, and it reads no
-table the batch's migration adds, so it can run before the merge that applies it.
+It reads the collection in a short read-only transaction, so Postgres itself refuses a
+write, and closes it before asking TMDB anything, so no connection sits idle for Neon to drop.
+It reads no table the batch's migration adds, so it can run before the merge that applies it.
 
 **Then, after Craig has read the report and said go, the live run applies that plan:**
 
     PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.identify_films \\
         --apply plan.json
 
-The live run records the Brave searches the dry run spent. It **exits non-zero** if it
-stopped on errors.
+The live run records the Brave searches the dry run spent, and ``--earlier-searches`` adds
+those of dry runs this month that were never applied. It **exits non-zero** if it stopped on
+errors.
 """
 
 from __future__ import annotations
@@ -33,7 +35,14 @@ from src.database import AsyncSessionLocal
 from src.models.specs_backfill import SpecRun
 from src.services.identify.apply import RunInProgress, apply_plan, start_run
 from src.services.identify.matcher import Identifier
-from src.services.identify.plan import Item, Plan, make_plan, table_exists
+from src.services.identify.plan import (
+    Item,
+    Plan,
+    held_films,
+    propose,
+    table_exists,
+    unidentified_films,
+)
 from src.services.identify.report import render_report
 from src.services.specs.backfill import MONTHLY_SEARCH_CEILING, month_start
 from src.services.specs.search import BraveSearch
@@ -78,18 +87,20 @@ def _progress(index: int, total: int, item: Item) -> None:
 
 
 async def dry_run(plan_out: Path, report_out: Path, *, budget: int, only: set[str]) -> int:
-    async with (
-        TMDBClient(rate=TMDB_RATE) as tmdb,
-        BraveSearch() as brave,
-        AsyncSessionLocal() as db,
-    ):
+    async with AsyncSessionLocal() as db:
         # Postgres refuses any write in this transaction: "writes nothing" is enforced, not
-        # promised.
+        # promised. It is over before TMDB is asked anything, so no connection is held
+        # through the searches for Neon to close.
         await db.execute(text("SET TRANSACTION READ ONLY"))
         left = max(MONTHLY_SEARCH_CEILING - await brave_spent_this_month(db), 0)
-        identifier = Identifier(tmdb, brave, brave_budget=min(budget, left))
-        plan = await make_plan(db, identifier, now=utcnow(), only=only or None, progress=_progress)
+        films = await unidentified_films(db)
+        held = await held_films(db)
         await db.rollback()
+    async with TMDBClient(rate=TMDB_RATE) as tmdb, BraveSearch() as brave:
+        identifier = Identifier(tmdb, brave, brave_budget=min(budget, left))
+        plan = await propose(
+            films, held, identifier, now=utcnow(), only=only or None, progress=_progress
+        )
     plan.save(plan_out)
     report_out.write_text(render_report(plan, ceiling_left=left), encoding="utf-8")
     print("dry run finished; nothing was written")
@@ -104,11 +115,11 @@ async def dry_run(plan_out: Path, report_out: Path, *, budget: int, only: set[st
     return 0
 
 
-async def live_run(plan_path: Path) -> int:
+async def live_run(plan_path: Path, *, earlier_searches: int = 0) -> int:
     plan = Plan.load(plan_path)
     async with TMDBClient() as tmdb, AsyncSessionLocal() as db:
         try:
-            run = await start_run(db, plan)
+            run = await start_run(db, plan, earlier_searches=earlier_searches)
         except RunInProgress as exc:
             print(str(exc))
             return 1
@@ -133,9 +144,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--brave-budget", type=int, default=DEFAULT_BRAVE_BUDGET)
     parser.add_argument("--only", action="append", default=[], help="A title or film id")
     parser.add_argument("--apply", type=Path, help="Live run: the plan Craig approved")
+    parser.add_argument(
+        "--earlier-searches",
+        type=int,
+        default=0,
+        help="Live run: Brave searches spent by dry runs this month whose plans were not "
+        "applied, so the monthly ceiling counts them too",
+    )
     args = parser.parse_args(argv)
     if args.apply:
-        return asyncio.run(live_run(args.apply))
+        return asyncio.run(live_run(args.apply, earlier_searches=args.earlier_searches))
     if not args.plan_out or not args.report_out:
         parser.error("a dry run needs --plan-out and --report-out")
     return asyncio.run(

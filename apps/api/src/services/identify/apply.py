@@ -73,9 +73,15 @@ async def _abandon_stale(db: AsyncSession, now: datetime) -> None:
 
 
 async def start_run(
-    db: AsyncSession, plan: Plan, *, trigger: str = "job", by: uuid.UUID | None = None
+    db: AsyncSession,
+    plan: Plan,
+    *,
+    trigger: str = "job",
+    by: uuid.UUID | None = None,
+    earlier_searches: int = 0,
 ) -> IdentifyRun:
-    """Claim the one running slot and record the plan's Brave spend."""
+    """Claim the one running slot and record the plan's Brave spend, with any spent by
+    earlier dry runs that were never applied, so the monthly ceiling sees all of it."""
     now = utcnow()
     await _abandon_stale(db, now)
     run = IdentifyRun(
@@ -86,7 +92,7 @@ async def start_run(
         started_utc=now,
         heartbeat_utc=now,
         planned_utc=datetime.fromisoformat(plan.made_utc),
-        searches=plan.brave_searches,
+        searches=plan.brave_searches + max(earlier_searches, 0),
         films=len(plan.items),
         identified=0,
         queued=0,
