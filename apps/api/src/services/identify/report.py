@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 from collections.abc import Callable, Sequence
+from datetime import datetime
 
 from src.services.identify.plan import Item, Offered, Plan
 
@@ -71,7 +72,7 @@ def _identify(item: Item) -> str:
     evidence = "".join(f"<li>{_e(line)}</li>" for line in item.evidence)
     return (
         f'<div class="film"><h3>{_e(item.title)} <span class="arrow">→</span> '
-        f'{_film_label(item.chosen)}<span class="tag ok">identify</span></h3>'
+        f'{_film_label(item.chosen)}<span class="tag ok">identified</span></h3>'
         f'<p class="muted">{_discs(item)}</p><ul>{evidence}</ul></div>'
     )
 
@@ -94,7 +95,7 @@ def _ask(item: Item) -> str:
             "</div></div>"
         )
     return (
-        f'<div class="film"><h3>{_e(item.title)}<span class="tag warn">ask Craig</span></h3>'
+        f'<div class="film"><h3>{_e(item.title)}<span class="tag warn">waits for you</span></h3>'
         f'<p class="muted">{_discs(item)}</p><p>{_e(item.reason)}</p>{merge}'
         f'<p class="muted">Offered, best first:</p><ul>{offered}</ul></div>'
     )
@@ -115,9 +116,11 @@ def render_report(plan: Plan, *, ceiling_left: int | None = None) -> str:
     aside = [item for item in plan.items if item.outcome == "set_aside"]
     merges = [item for item in ask if item.merge_into is not None]
     tv = sum(1 for item in aside if item.set_aside_as == "tv")
+    made = datetime.fromisoformat(plan.made_utc)
+    when = f"{made.day} {made:%b %Y}, {made:%H:%M} UTC"
     brave = f"{plan.brave_searches} Brave searches"
     if ceiling_left is not None:
-        brave += f" ({ceiling_left} left under this month's ceiling before them)"
+        brave += f"; {ceiling_left:,} of this month's allowance were left before them"
 
     def listing(items: Sequence[Item], render: Callable[[Item], str]) -> str:
         return "".join(render(item) for item in items)
@@ -128,8 +131,8 @@ def render_report(plan: Plan, *, ceiling_left: int | None = None) -> str:
         "<title>Identify films — dry run</title>",
         f"<style>{_STYLE}</style></head><body><main>",
         "<h1>Identifying the unmatched films — dry run</h1>",
-        f"<p class='muted'>Made {_e(plan.made_utc)} UTC. Nothing has been written. "
-        f"{plan.tmdb_calls:,} TMDB calls, {_e(brave)}.</p>",
+        f"<p class='muted'>Made {_e(when)}. Nothing has been written. "
+        f"{plan.tmdb_calls:,} TMDB calls and {_e(brave)}.</p>",
         "<div class='counts'>",
         f"<div class='count'><b>{plan.films}</b>films with a disc and no TMDB match</div>",
         f"<div class='count'><b class='ok'>{len(identify)}</b>identified automatically</div>",
@@ -161,6 +164,12 @@ def render_report(plan: Plan, *, ceiling_left: int | None = None) -> str:
     )
     parts.append(
         f"<details><summary>All {len(ask)} waiting for you</summary>{listing(ask, _ask)}</details>"
+    )
+    parts.append(
+        "<h2>On your go</h2><p>The branch is merged, which deploys it, and the live run applies "
+        "exactly this plan, after checking each film has not changed since. The films that "
+        "wait for you then appear on You → Identify films, one tap each, and every "
+        "identification can be undone there.</p>"
     )
     parts.append("</main></body></html>")
     return "".join(parts)
