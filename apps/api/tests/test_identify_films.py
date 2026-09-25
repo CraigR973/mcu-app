@@ -554,6 +554,9 @@ async def page(db: AsyncSession) -> AsyncIterator[tuple[AsyncClient, Profile, Fa
         yield db
 
     async def override_user() -> Profile:
+        # Every request shares this session, so a route's rollback expires the profile the
+        # next request is handed. A real request loads its own; this reloads it.
+        await db.refresh(craig)
         return craig
 
     async def override_tmdb() -> AsyncIterator[FakeTmdb]:
