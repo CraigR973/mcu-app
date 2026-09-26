@@ -177,3 +177,21 @@ describe('MovieDetailPage collection answer', () => {
     expect(screen.queryByText('No live copies in the collection')).toBeNull()
   })
 })
+
+describe('MovieDetailPage tabs', () => {
+  // Batch U3's browser check, at 375 px on a touch screen: `touch-target`'s 44px minimum
+  // width replaced the flex item's automatic one, so the tabs shrank below their labels and
+  // the copy count spilled onto "Overview". No layout here to measure; this pins the fix.
+  it('never shrinks a tab below its label, so the strip scrolls instead', async () => {
+    renderPage()
+    await screen.findByText('Criterion Collection')
+
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs.length).toBeGreaterThan(1)
+    for (const tab of tabs) {
+      expect(tab.className).toMatch(/(^|\s)shrink-0(\s|$)/)
+      expect(tab.className).toContain('whitespace-nowrap')
+    }
+    expect(screen.getByRole('tablist', { name: 'Film details' }).className).toContain('overflow-x-auto')
+  })
+})

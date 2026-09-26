@@ -175,7 +175,7 @@ export default function AppLayout({ children }: Props) {
             </button>
             {/* Batch U3. The floating button floated here too, over the page's corner; its
                 replacement is the same top-bar link at every width. */}
-            <AssistantLink className="touch-target flex items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-muted-foreground hover:border-ring hover:text-foreground aria-[current=page]:border-primary/30 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
+            <AssistantLink className="touch-target flex items-center gap-2 rounded-md border border-input bg-card px-3 py-0.5 text-sm font-semibold text-muted-foreground hover:border-ring hover:text-foreground aria-[current=page]:border-primary/30 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
             {/* Batch S4. The `isAdmin &&` is gone with #155, and `hidden sm:inline-flex`
                 stays on purpose: below 640px the bottom bar carries the add slot, so a
                 second one here would be two controls for one job in the scarcest space

@@ -472,6 +472,10 @@ export default function MovieDetailPage() {
 
         <div className="mt-8 grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,24rem)]">
           <section className="min-w-0" aria-label="Film record">
+            {/* Each tab is `shrink-0` (Batch U3's browser check). On a touch screen
+                `touch-target`'s 44px minimum width replaces a flex item's automatic one, so
+                at 375px the tabs shrank below their labels and each count spilled onto the
+                next tab. Now the strip scrolls instead. */}
             <div
               role="tablist"
               aria-label="Film details"
@@ -488,7 +492,7 @@ export default function MovieDetailPage() {
                   tabIndex={tab === key ? 0 : -1}
                   onClick={() => setTab(key)}
                   onKeyDown={(event) => moveTab(event, index)}
-                  className={`touch-target -mb-px min-h-11 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${tab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  className={`touch-target -mb-px min-h-11 shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${tab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
                   {label}
                   {count !== undefined && count > 0 ? (

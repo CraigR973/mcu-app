@@ -69,7 +69,13 @@ const CATEGORIES: Array<{
   },
 ]
 
-function Toggle({
+/**
+ * **The knob is anchored to the track's left edge** (Batch U3's browser check). Without
+ * `left-0` an absolute child of a `<button>` starts where the button centres its content,
+ * so at 375 px the knob of every switch that was on sat past the end of its track and over
+ * the card's edge. The two translations assume that anchor.
+ */
+export function Toggle({
   checked,
   onChange,
   disabled,
@@ -95,7 +101,7 @@ function Toggle({
     >
       <span
         className={cn(
-          'absolute top-0.5 h-5 w-5 rounded-full border border-input bg-background shadow transition-transform',
+          'absolute left-0 top-0.5 h-5 w-5 rounded-full border border-input bg-background shadow transition-transform',
           checked ? 'translate-x-5' : 'translate-x-0.5',
         )}
       />
