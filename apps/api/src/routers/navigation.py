@@ -22,8 +22,9 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 
 from src.auth import CurrentUser
+from src.clock import utcnow
 from src.models.box_set import BoxSet
-from src.models.deal import Deal
+from src.models.deal import Deal, live_deal
 from src.models.loan import Loan
 from src.models.smart_collection import SmartCollection
 from src.routers.movies import Database
@@ -46,7 +47,7 @@ async def nav_sections(user: CurrentUser, db: Database) -> NavSectionsResponse:
         select(func.count(SmartCollection.id)).where(SmartCollection.user_id == user.id)
     )
     # The same filter `GET /deals` applies, so the two cannot disagree.
-    deals = await db.scalar(select(func.count(Deal.id)).where(Deal.dismissed_at_utc.is_(None)))
+    deals = await db.scalar(select(func.count(Deal.id)).where(live_deal(utcnow())))
     # No filter: `GET /loans` lists returned loans alongside open ones.
     loans = await db.scalar(select(func.count(Loan.id)))
 

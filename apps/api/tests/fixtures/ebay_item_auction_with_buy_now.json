@@ -1,0 +1,55 @@
+{
+ "itemId": "v1|168722516953|0",
+ "legacyItemId": "168722516953",
+ "title": "THE BRAZEN BULL (NICTOPHOBIA) - Dvd  -",
+ "price": {
+  "value": "6.99",
+  "currency": "GBP"
+ },
+ "currentBidPrice": {
+  "value": "4.99",
+  "currency": "GBP"
+ },
+ "minimumPriceToBid": {
+  "value": "4.99",
+  "currency": "GBP"
+ },
+ "buyingOptions": [
+  "FIXED_PRICE",
+  "AUCTION"
+ ],
+ "itemEndDate": "2026-10-03T09:06:39.000Z",
+ "itemCreationDate": "2026-09-26T09:06:39.000Z",
+ "image": {
+  "imageUrl": "https://i.ebayimg.com/images/g/OywAAeSwqchqt4tc/s-l1600.jpg",
+  "width": 897,
+  "height": 1289
+ },
+ "condition": "New",
+ "conditionId": "1000",
+ "estimatedAvailabilities": [
+  {
+   "estimatedAvailabilityStatus": "IN_STOCK",
+   "estimatedAvailableQuantity": 1
+  }
+ ],
+ "categoryId": "617",
+ "categoryPath": "Films & TV|DVDs & Blu-rays",
+ "uniqueBidderCount": 0,
+ "itemWebUrl": "https://www.ebay.co.uk/itm/168722516953",
+ "itemLocation": {
+  "country": "GB"
+ },
+ "shippingOptions": [
+  {
+   "shippingServiceCode": "Royal Mail 2nd Class",
+   "type": "Economy Delivery",
+   "shippingCostType": "FIXED",
+   "shippingCost": {
+    "value": "0.00",
+    "currency": "GBP"
+   }
+  }
+ ],
+ "note": "Captured 26 Sep 2026 with get_item_by_legacy_id: an auction with Buy It Now. Seller, description and location detail removed."
+}

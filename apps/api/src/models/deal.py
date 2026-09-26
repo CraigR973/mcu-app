@@ -4,9 +4,10 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, and_, func, or_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.elements import ColumnElement
 
 from src.models.base import Base, UUIDPrimaryKeyMixin
 
@@ -64,6 +65,21 @@ class Deal(Base, UUIDPrimaryKeyMixin):
     dismissed_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
     )
+    #: Batch T8a. An eBay find sells or ends within days, and nothing re-checks it, so it
+    #: leaves the feed at this time. A retailer's deal has none: its page is scraped
+    #: again, which is what says whether it is still there.
+    expires_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<Deal {self.retailer_name_snapshot} {self.title_snapshot!r} {self.price}>"
+
+
+def live_deal(now: datetime) -> ColumnElement[bool]:
+    """A deal the feed shows: not dismissed, and not an eBay find past its expiry.
+
+    One definition for the feed, its count and the menu's badge, so they cannot disagree.
+    """
+    return and_(
+        Deal.dismissed_at_utc.is_(None),
+        or_(Deal.expires_at_utc.is_(None), Deal.expires_at_utc > now),
+    )

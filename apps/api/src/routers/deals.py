@@ -21,7 +21,7 @@ from sqlalchemy import func, select
 
 from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
-from src.models.deal import Deal
+from src.models.deal import Deal, live_deal
 from src.models.movie import Movie
 from src.routers.movies import Database
 from src.schemas.deals import (
@@ -97,7 +97,7 @@ async def list_deals(
         await db.execute(
             select(Deal, Movie)
             .outerjoin(Movie, Movie.id == Deal.movie_id)
-            .where(Deal.dismissed_at_utc.is_(None))
+            .where(live_deal(utcnow()))
             .order_by(Deal.discount_percent.desc().nullslast(), Deal.last_seen_at_utc.desc())
             .limit(MAX_LIMIT)
         )
@@ -210,5 +210,5 @@ async def scrape_deals(
 @router.get("/deals/count", response_model=dict[str, int])
 async def deals_count(_user: CurrentUser, db: Database) -> dict[str, int]:
     """How many live deals there are, for the nav badge."""
-    total = await db.scalar(select(func.count(Deal.id)).where(Deal.dismissed_at_utc.is_(None)))
+    total = await db.scalar(select(func.count(Deal.id)).where(live_deal(utcnow())))
     return {"count": int(total or 0)}

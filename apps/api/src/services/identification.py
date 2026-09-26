@@ -42,6 +42,7 @@ from src.models.admin_action import AdminAction
 from src.models.barcode import BarcodeLookup
 from src.models.collection_item import CollectionItem
 from src.models.deal import Deal
+from src.models.ebay_watch import EbayTarget
 from src.models.identify import IdentifyLookup, MovieTitleAlias
 from src.models.movie import Movie, MovieCredit
 from src.models.movie_night import MovieNightSuggestion, MovieNightVote
@@ -282,6 +283,32 @@ async def move_references(db: AsyncSession, source_id: uuid.UUID, target_id: uui
     merge.moved["release_calendar"] = await move(ReleaseCalendarEntry)
     merge.moved["barcode_lookups"] = await move(BarcodeLookup)
     merge.moved["deals"] = await move(Deal)
+
+    # Price alerts (Batch T8a): one live saved search per person per film and format. If the
+    # target film already has one, the merged-away film's is binned, as a Wanted row is.
+    theirs_target = aliased(EbayTarget)
+    clash = exists().where(
+        theirs_target.owner_id == EbayTarget.owner_id,
+        theirs_target.format_code == EbayTarget.format_code,
+        theirs_target.movie_id == target_id,
+        theirs_target.kind == "search",
+        theirs_target.deleted_at.is_(None),
+    )
+    binned_targets = await db.execute(
+        update(EbayTarget)
+        .where(
+            EbayTarget.movie_id == source_id,
+            EbayTarget.kind == "search",
+            EbayTarget.deleted_at.is_(None),
+            clash,
+        )
+        .values(deleted_at=utcnow())
+        .returning(EbayTarget.id)
+    )
+    merge.dropped["ebay_targets"] = [
+        {"id": target_id_} for target_id_ in _ids(binned_targets.scalars())
+    ]
+    merge.moved["ebay_targets"] = await move(EbayTarget)
 
     # Old titles go with the film, bar any the target already answers to.
     target_aliases = select(MovieTitleAlias.title).where(MovieTitleAlias.movie_id == target_id)
@@ -658,6 +685,7 @@ async def _move_back(
         "barcode_lookups": BarcodeLookup,
         "deals": Deal,
         "movie_title_aliases": MovieTitleAlias,
+        "ebay_targets": EbayTarget,
     }
     for table, model in models.items():
         ids = [uuid.UUID(value) for value in moved.get(table, [])]
