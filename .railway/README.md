@@ -10,7 +10,7 @@ Public URL: `https://api-production-a8fe.up.railway.app`.
 
 ## The scheduled jobs
 
-Three cron services share the API's image and run a different entry point (`DECISIONS.md`
+Four cron services share the API's image and run a different entry point (`DECISIONS.md`
 #60, #119). They are separate services because a Railway cron runs the service's own start
 command and expects it to **exit** — `api` runs uvicorn, which never does, so a schedule on
 `api` would restart the API on a timer instead of scraping anything.
@@ -20,13 +20,15 @@ command and expects it to **exit** — `api` runs uvicorn, which never does, so 
 | `cron-scrape` | `python -m src.scripts.daily_scrape` | `0 3 * * *` |
 | `cron-reminders` | `python -m src.scripts.run_reminders` | `0 8 * * *` |
 | `cron-specs` | `python -m src.scripts.spec_backfill` | `0 2 * * *` |
+| `cron-ebay` | `python -m src.scripts.ebay_watch` | `20 */2 * * *` |
 
-All three take `DATABASE_URL` and the three VAPID variables **by reference** from `api`, so
+All four take `DATABASE_URL` and the three VAPID variables **by reference** from `api`, so
 there is one copy of each secret. `restartPolicyType` is `NEVER`: these make live requests
 to real shops, and retrying a failed night automatically would turn one bad night into
 three. Railway skips a scheduled run whose previous run is still going, and the minimum
 interval it accepts is five minutes. `cron-specs` also takes `BRAVE_SEARCH_API_KEY` from
-`api` the same way (Batch T7).
+`api` the same way (Batch T7), and `cron-ebay` takes `EBAY_CLIENT_ID` and
+`EBAY_CLIENT_SECRET` (Batch T8a).
 
 ## Two things that will bite
 

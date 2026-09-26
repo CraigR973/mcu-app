@@ -130,8 +130,32 @@ export default defineRailway(() => {
     },
   })
 
+  /**
+   * Batch T8a — eBay price alerts and the deal scan (`DECISIONS.md` #203, #216).
+   *
+   * Every two hours: the price targets people have set, then the newest UK Blu-ray and 4K
+   * listings, within 500 of eBay's 5,000 calls a day (10%, beside the valuation's 750). It
+   * takes the eBay keyset from `api` by reference, as `cron-specs` takes the Brave key, and
+   * the push keys from `cronDefaults`. It signs nobody in and holds no personal token.
+   * `NEVER` restarts, like the others: a pass eBay refused waits for the next one.
+   */
+  const ebay = service('cron-ebay', {
+    ...cronDefaults,
+    env: {
+      ...cronDefaults.env,
+      EBAY_CLIENT_ID: api.env.EBAY_CLIENT_ID,
+      EBAY_CLIENT_SECRET: api.env.EBAY_CLIENT_SECRET,
+    },
+    deploy: {
+      // Twenty past every second hour, clear of the other jobs, which start on the hour.
+      cronSchedule: '20 */2 * * *',
+      startCommand: 'python -m src.scripts.ebay_watch',
+      restartPolicyType: 'NEVER',
+    },
+  })
+
   return project('mcu-app', {
     environments: ['production'],
-    resources: [api, scrape, reminders, specs],
+    resources: [api, scrape, reminders, specs, ebay],
   })
 })
