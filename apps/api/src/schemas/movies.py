@@ -78,6 +78,10 @@ class MovieListItemResponse(BaseModel):
     #: The requesting user's most recent watch, when there is one — Batch T2's "Seen
     #: 12 Mar 2025". Per user for the same reason as ``watched``.
     lastWatchedAt: date | None = None
+    #: Batch U2 — the distinct editions of this film's owned copies, "SteelBook" or
+    #: "Masters of Cinema"; empty when none records one. Read for a whole page of films in
+    #: one grouped query, as ``locations`` is, never once per film.
+    editions: list[str] = Field(default_factory=list)
 
 
 class MoviePageResponse(BaseModel):
@@ -108,6 +112,8 @@ class CollectionCopyResponse(BaseModel):
     section: str | None = None
     shelf: str | None = None
     subCategory: str | None = None
+    #: Batch U2.
+    edition: str | None = None
     notes: str | None = None
     purchasePrice: str | None = None
     purchaseSource: str | None = None

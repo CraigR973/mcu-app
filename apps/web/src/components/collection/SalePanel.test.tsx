@@ -18,6 +18,7 @@ const bluRay: CollectionCopy = {
   section: 'Back',
   shelf: '6th',
   subCategory: null,
+  edition: null,
   notes: null,
   purchasePrice: null,
   purchaseSource: null,

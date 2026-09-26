@@ -1393,3 +1393,76 @@ class TestUpgradePath:
         ).scalar_one()
         assert entry.changes is not None
         assert entry.changes["duplicate_reason"] == "upgrade"
+
+
+# ---------------------------------------------------------------------------
+# Batch U2 — each copy's edition, set and corrected on the copy form
+# ---------------------------------------------------------------------------
+
+
+class TestEdition:
+    async def test_a_disc_is_added_with_its_edition_and_the_copy_shows_it(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        movie = await _a_film(api_session, title="A SteelBook", tmdb_id=930201)
+
+        created = await client.post(
+            "/api/v1/collection",
+            json=_body(movieId=str(movie.id), edition="  Zavvi Exclusive SteelBook  "),
+        )
+
+        assert created.status_code == 201, created.text
+        assert created.json()["edition"] == "Zavvi Exclusive SteelBook"
+        copies = await client.get(f"/api/v1/movies/{movie.id}/copies")
+        assert copies.json()[0]["edition"] == "Zavvi Exclusive SteelBook"
+
+    async def test_an_edition_is_corrected_and_cleared_and_each_change_is_logged(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        movie = await _a_film(api_session, title="A Corrected Edition", tmdb_id=930202)
+        item = await _a_disc(api_session, movie)
+        item.edition = "SteelBook"
+        await api_session.flush()
+        item_id = item.id
+
+        corrected = await client.put(
+            f"/api/v1/collection/{item_id}", json=_body(edition="Masters of Cinema")
+        )
+        cleared = await client.put(f"/api/v1/collection/{item_id}", json=_body(edition="   "))
+
+        assert corrected.json()["edition"] == "Masters of Cinema"
+        assert cleared.status_code == 200, cleared.text
+        assert cleared.json()["edition"] is None
+        changes = [entry.changes for entry in await _audit_rows(api_session, item_id)]
+        assert changes == [
+            {"edition": {"from": "SteelBook", "to": "Masters of Cinema"}},
+            {"edition": {"from": "Masters of Cinema", "to": None}},
+        ]
+
+    async def test_an_edit_from_a_client_that_never_knew_editions_keeps_one(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        """A cached app or an edit queued offline sends no `edition`; that is not "cleared"."""
+        movie = await _a_film(api_session, title="An Older Client", tmdb_id=930203)
+        item = await _a_disc(api_session, movie)
+        item.edition = "Indicator Series"
+        await api_session.flush()
+
+        response = await client.put(
+            f"/api/v1/collection/{item.id}", json=_body(notes="Edited on an old build")
+        )
+
+        assert response.status_code == 200, response.text
+        assert response.json()["edition"] == "Indicator Series"
+        assert response.json()["notes"] == "Edited on an old build"
+
+    async def test_an_edition_longer_than_the_column_is_refused(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        movie = await _a_film(api_session, title="A Long Edition", tmdb_id=930204)
+
+        response = await client.post(
+            "/api/v1/collection", json=_body(movieId=str(movie.id), edition="x" * 101)
+        )
+
+        assert response.status_code == 422

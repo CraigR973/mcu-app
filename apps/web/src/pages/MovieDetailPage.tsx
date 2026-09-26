@@ -102,18 +102,29 @@ function CopyCard({
         )}
       </div>
 
-      {(item.subCategory || item.releaseLabel) && (
+      {(item.edition || item.subCategory || item.releaseLabel) && (
         <div className="rounded-md border border-accent/35 bg-accent/10 px-3 py-2.5">
-          {item.subCategory ? (
+          {/* Batch U2: the edition is what makes one copy of a film unlike another. */}
+          {item.edition ? (
             <div>
-              <p className="metadata-label">Collector edition</p>
+              <p className="metadata-label">Edition</p>
               <p className="mt-0.5 font-display text-lg font-semibold text-foreground">
-                {item.subCategory}
+                {item.edition}
               </p>
             </div>
           ) : null}
+          {item.subCategory ? (
+            <div className={item.edition ? 'mt-2 border-t border-accent/25 pt-2' : ''}>
+              <p className="metadata-label">Sub-category</p>
+              <p className="metadata-value mt-0.5">{item.subCategory}</p>
+            </div>
+          ) : null}
           {item.releaseLabel ? (
-            <div className={item.subCategory ? 'mt-2 border-t border-accent/25 pt-2' : ''}>
+            <div
+              className={
+                item.edition || item.subCategory ? 'mt-2 border-t border-accent/25 pt-2' : ''
+              }
+            >
               <p className="metadata-label">Release label</p>
               <p className="metadata-value mt-0.5">{item.releaseLabel}</p>
             </div>

@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user
@@ -776,3 +776,82 @@ async def test_identifying_a_film_keeps_the_watch_history_it_already_had(
         .all()
     )
     assert len(moved) == 1
+
+
+# ---------------------------------------------------------------------------
+# Batch U2 — each copy's edition, shown while browsing
+# ---------------------------------------------------------------------------
+
+
+async def test_browsing_shows_each_films_editions_in_one_query_whatever_the_page(
+    client: AsyncClient, api_session: AsyncSession, db_conn: AsyncConnection
+) -> None:
+    """The distinct editions of a film's owned copies, alphabetical; none is an empty list.
+    Read for the whole page in one grouped query: a longer page costs no more queries."""
+    wanted: dict[str, list[str]] = {}
+    for number, editions in enumerate(
+        (["SteelBook", "SteelBook"], ["SteelBook", "Masters of Cinema"], [])
+    ):
+        movie, item = await _add_owned_movie(
+            api_session, title=f"An Edition Film {number}", tmdb_id=920100 + number, year=1902
+        )
+        item.edition = editions[0] if editions else None
+        for extra in editions[1:]:
+            api_session.add(
+                CollectionItem(
+                    id=uuid.uuid4(),
+                    movie_id=movie.id,
+                    formats=["4k_uhd"],
+                    condition="good",
+                    edition=extra,
+                )
+            )
+        if not editions:
+            # A sold disc's edition is not on the shelf any more.
+            api_session.add(
+                CollectionItem(
+                    id=uuid.uuid4(),
+                    movie_id=movie.id,
+                    formats=["dvd"],
+                    condition="good",
+                    edition="Criterion Collection",
+                    listing_status="sold",
+                )
+            )
+        wanted[str(movie.id)] = sorted(set(editions))
+    await api_session.flush()
+
+    statements: list[str] = []
+
+    def counted(*args: Any) -> None:
+        statements.append(str(args[2]))
+
+    connection = db_conn.sync_connection
+    assert connection is not None
+    event.listen(connection, "before_cursor_execute", counted)
+    try:
+        one = await client.get("/api/v1/movies", params={"year": 1902, "perPage": 1})
+        for_one = len(statements)
+        statements.clear()
+        three = await client.get("/api/v1/movies", params={"year": 1902, "perPage": 3})
+        for_three = len(statements)
+    finally:
+        event.remove(connection, "before_cursor_execute", counted)
+
+    assert one.status_code == 200 and three.status_code == 200
+    assert for_one == for_three
+    assert {item["id"]: item["editions"] for item in three.json()["items"]} == wanted
+
+
+async def test_a_films_page_and_its_copies_carry_the_edition(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    movie, item = await _add_owned_movie(api_session, title="An Indicator Film", tmdb_id=920110)
+    item.edition = "Indicator Series"
+    await api_session.flush()
+
+    detail = await client.get(f"/api/v1/movies/{movie.id}")
+    copies = await client.get(f"/api/v1/movies/{movie.id}/copies")
+
+    assert detail.json()["editions"] == ["Indicator Series"]
+    assert copies.json()[0]["edition"] == "Indicator Series"

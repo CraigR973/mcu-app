@@ -43,6 +43,7 @@ export function MovieCompactView({ movies, isLoading }: Props) {
 
           const movie = movies[virtualRow.index]
           const locations = movie.locations.map((location) => location.label).join(' · ')
+          const editions = movie.editions.join(' · ')
           return (
             <Link key={movie.id} to={`/movies/${movie.id}`} style={positioning} className="group flex items-center gap-2 border-b border-border/80 px-3 transition-colors hover:bg-muted/65 focus-visible:z-10 sm:gap-3 sm:px-4">
               <span className="hidden w-7 shrink-0 text-right font-mono text-[0.6875rem] tabular-nums text-muted-foreground sm:block">{virtualRow.index + 1}</span>
@@ -54,6 +55,8 @@ export function MovieCompactView({ movies, isLoading }: Props) {
                 <span className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs font-medium text-foreground">
                   <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
                   <span className="truncate">{locations || 'Location not recorded'}</span>
+                  {/* Batch U2: the edition, after the shelf. */}
+                  {editions && <span className="min-w-0 truncate font-normal text-muted-foreground" title={editions}>· {editions}</span>}
                 </span>
               </span>
               {movie.copyCount > 1 && <span className="hidden items-center gap-1 text-xs text-muted-foreground md:inline-flex"><Copy className="h-3.5 w-3.5" aria-hidden />{movie.copyCount}</span>}

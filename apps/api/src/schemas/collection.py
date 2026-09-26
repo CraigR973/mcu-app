@@ -58,6 +58,12 @@ class CollectionItemFieldsMixin(BaseModel):
     section: str | None = Field(default=None, max_length=100)
     shelf: str | None = Field(default=None, max_length=50)
     subCategory: str | None = Field(default=None, max_length=255)
+    #: Batch U2 — which edition this disc is: "SteelBook", "Masters of Cinema". Free text,
+    #: like the Wanted list's ``preferredEdition``, and the same length. **Unlike every
+    #: other field here, leaving it out of an edit keeps it**: a client built before
+    #: editions existed (a cached app, an edit queued offline) never sends one, and must not
+    #: clear what the spec batch or a person wrote.
+    edition: str | None = Field(default=None, max_length=100)
     notes: str | None = Field(default=None, max_length=5000)
     condition: Condition | None = None
     hasPlaybackIssues: bool = False
@@ -83,6 +89,13 @@ class CollectionItemFieldsMixin(BaseModel):
                 raise ValueError(f"Duplicate format: {code}")
             seen.append(code)
         return seen
+
+    @field_validator("edition")
+    @classmethod
+    def _edition_or_nothing(cls, value: str | None) -> str | None:
+        """Browsing shows it, so blank is no edition rather than an invisible one."""
+        text = (value or "").strip()
+        return text or None
 
     @field_validator("purchaseDate")
     @classmethod
@@ -166,6 +179,8 @@ class CollectionItemResponse(BaseModel):
     shelf: str | None = None
     locationLabel: str
     subCategory: str | None = None
+    #: Batch U2.
+    edition: str | None = None
     notes: str | None = None
     condition: str | None = None
     conditionUpdatedAt: UtcDatetime | None = None

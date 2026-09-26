@@ -50,6 +50,7 @@ from src.services.specs.backfill import (
     skip_disc,
     start_run,
 )
+from src.services.specs.editions import page_edition
 from src.services.specs.runner import get_state, halt, run_specs_fetch
 
 logger = structlog.get_logger(__name__)
@@ -155,7 +156,8 @@ async def forget_all_specs(_user: AdminUser, db: Database) -> SpecsStateResponse
     makes it possible to find them.
 
     Only rows that actually came from there are touched: a spec typed in by hand has no
-    source URL and is left alone.
+    source URL and is left alone. **An edition goes only when it is the one the page names**
+    (Batch U2): one typed or corrected by hand stays.
     """
     rows = list(
         (
@@ -167,6 +169,12 @@ async def forget_all_specs(_user: AdminUser, db: Database) -> SpecsStateResponse
         .all()
     )
     for item in rows:
+        if item.edition is not None:
+            lookup = await db.scalar(
+                select(SpecLookup).where(SpecLookup.collection_item_id == item.id)
+            )
+            if lookup is not None and item.edition == await page_edition(db, lookup):
+                item.edition = None
         item.video_specs = None
         item.audio_specs = None
         item.special_features = None

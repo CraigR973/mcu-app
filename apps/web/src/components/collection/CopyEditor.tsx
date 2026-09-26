@@ -31,6 +31,7 @@ export function fieldsFrom(copy: CollectionCopy): CollectionItemFields {
     section: copy.section,
     shelf: copy.shelf,
     subCategory: copy.subCategory,
+    edition: copy.edition,
     notes: copy.notes,
     condition: (copy.condition as Condition | null) ?? null,
     hasPlaybackIssues: copy.hasPlaybackIssues,

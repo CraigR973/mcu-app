@@ -59,6 +59,12 @@ export const MovieCard = memo(function MovieCard({ movie }: Props) {
             {movie.locations.map((l) => l.label).join(' · ')}
           </p>
         )}
+        {/* Batch U2: which edition is on the shelf, for a film whose copies record one. */}
+        {movie.editions.length > 0 && (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground" title={movie.editions.join(' · ')}>
+            {movie.editions.join(' · ')}
+          </p>
+        )}
       </div>
     </Link>
   )

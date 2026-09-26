@@ -134,7 +134,14 @@ class CollectionItem(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: no shelves, such as Garage or Digital.
     shelf: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
 
+    #: The spreadsheet's "Sub Category": a grouping such as "Hitchcock" or "The James Bond
+    #: Collection Box Set". **Not an edition**, whatever the form once called it (Batch U2).
     sub_category: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    #: Which edition this disc is: "SteelBook", "Masters of Cinema". Free text, as the
+    #: Wanted list's ``preferred_edition`` is. Set by hand on the copy form, or from the
+    #: disc's Blu-ray.com page when that page is certainly this copy (Batch U2, #220).
+    edition: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     #: Genuine notes only. Before Batch 4 this column held the raw location string for
     #: every imported row and real notes for anything added by hand, with nothing to

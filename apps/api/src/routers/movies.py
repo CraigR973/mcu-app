@@ -239,6 +239,34 @@ async def _locations_by_movie(
     return grouped
 
 
+async def _editions_by_movie(
+    db: AsyncSession, movie_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[str]]:
+    """The distinct editions of each film's owned copies — Batch U2.
+
+    One grouped query for the whole page, as :func:`_locations_by_movie` is: fetching each
+    film's copies instead would be one query per film across the whole catalogue.
+    """
+    if not movie_ids:
+        return {}
+    rows = (
+        await db.execute(
+            select(CollectionItem.movie_id, CollectionItem.edition)
+            .where(
+                CollectionItem.movie_id.in_(movie_ids),
+                owned_copy(),
+                CollectionItem.edition.is_not(None),
+            )
+            .group_by(CollectionItem.movie_id, CollectionItem.edition)
+            .order_by(CollectionItem.edition)
+        )
+    ).all()
+    grouped: dict[uuid.UUID, list[str]] = {}
+    for movie_id, edition in rows:
+        grouped.setdefault(movie_id, []).append(edition)
+    return grouped
+
+
 async def last_watched_by_movie(
     db: AsyncSession, user_id: uuid.UUID, movie_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, date]:
@@ -267,6 +295,7 @@ def _movie_list_item(
     *,
     locations: list[LocationResponse] | None = None,
     last_watched_at: date | None = None,
+    editions: list[str] | None = None,
 ) -> MovieListItemResponse:
     return MovieListItemResponse(
         id=movie.id,
@@ -285,6 +314,7 @@ def _movie_list_item(
         locations=locations or [],
         watched=last_watched_at is not None,
         lastWatchedAt=last_watched_at,
+        editions=editions or [],
     )
 
 
@@ -293,16 +323,19 @@ async def _enrich_list_items(
     user_id: uuid.UUID,
     rows: Sequence[tuple[Movie, int]],
 ) -> list[MovieListItemResponse]:
-    """Attach location and watched state to a page of films in two extra queries."""
+    """Attach location, watched state and editions to a page of films in three extra
+    queries, whatever the page's size."""
     movie_ids = [movie.id for movie, _ in rows]
     locations = await _locations_by_movie(db, movie_ids)
     last_watched = await last_watched_by_movie(db, user_id, movie_ids)
+    editions = await _editions_by_movie(db, movie_ids)
     return [
         _movie_list_item(
             movie,
             copies,
             locations=locations.get(movie.id, []),
             last_watched_at=last_watched.get(movie.id),
+            editions=editions.get(movie.id, []),
         )
         for movie, copies in rows
     ]
@@ -374,8 +407,9 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
         if isinstance(genre.get("id"), int) and isinstance(genre.get("name"), str)
     ]
 
+    editions = (await _editions_by_movie(db, [movie.id])).get(movie.id, [])
     return MovieDetailResponse(
-        **_movie_list_item(movie, copy_count).model_dump(),
+        **_movie_list_item(movie, copy_count, editions=editions).model_dump(),
         imdbId=movie.imdb_id,
         overview=movie.overview,
         tagline=movie.tagline,
@@ -688,6 +722,7 @@ async def get_movie_copies(
             section=copy.section,
             shelf=copy.shelf,
             subCategory=copy.sub_category,
+            edition=copy.edition,
             notes=copy.notes,
             purchasePrice=(str(copy.purchase_price) if copy.purchase_price is not None else None),
             purchaseSource=copy.purchase_source,

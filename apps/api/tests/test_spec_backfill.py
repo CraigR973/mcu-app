@@ -45,6 +45,8 @@ from src.services.specs.backfill import (
     NOT_CONFIGURED,
     accept_page,
     coverage,
+    editions_to_fill,
+    fill_editions,
     start_run,
     work_run,
 )
@@ -1145,3 +1147,199 @@ async def test_the_archive_is_told_whether_any_disc_has_specs(db: AsyncSession) 
 
     assert (before, after) == (0, 1)
     assert await db.scalar(select(func.count()).select_from(SpecLookup)) == 0
+
+
+# ---------------------------------------------------------------------------
+# Editions — Batch U2, `DECISIONS.md` #220
+# ---------------------------------------------------------------------------
+
+FIGHT_CLUB_STEELBOOK = "https://www.blu-ray.com/movies/Fight-Club-Blu-ray/41252/"
+HEAT_UK = "https://www.blu-ray.com/movies/Heat-Blu-ray/7000/"
+
+
+def _one_uk(title: str = "Fight Club Blu-ray (MetalPak) (United Kingdom)") -> list[SearchHit]:
+    """One UK edition of the film on Blu-ray, and a US one beside it."""
+    return [hit(FIGHT_CLUB_UK, title), hit(FIGHT_CLUB_US, "Fight Club Blu-ray (10th Anniversary)")]
+
+
+async def test_the_one_uk_edition_the_search_found_gives_the_disc_its_edition(
+    db: AsyncSession,
+) -> None:
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    site = FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE})
+
+    run = await _run(db, FakeBrave({"Fight Club": _one_uk()}), site)
+
+    assert run.applied == 1
+    await db.refresh(disc)
+    assert disc.edition == "MetalPak"
+
+
+async def test_the_plain_one_among_several_uk_editions_gives_none(db: AsyncSession) -> None:
+    """#212's bet is good enough for specs, and says nothing about which box is on the shelf,
+    even when the page it settles on names a publisher's line."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    hits = [
+        hit(FIGHT_CLUB_UK, "Fight Club Blu-ray (Masters of Cinema) (United Kingdom)"),
+        hit(FIGHT_CLUB_STEELBOOK, "Fight Club Blu-ray (SteelBook) (United Kingdom)"),
+    ]
+    site = FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE})
+
+    run = await _run(db, FakeBrave({"Fight Club": hits}), site)
+
+    assert (run.accepted, run.applied) == (1, 1)
+    await db.refresh(disc)
+    assert (disc.specs_source_url, disc.edition) == (FIGHT_CLUB_UK, None)
+
+
+async def test_craigs_choice_from_the_list_gives_the_edition_he_chose(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_THREE_UK})
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/41252/": FIGHT_CLUB_PAGE})
+    await _run(db, brave, site)
+    lookup = await _lookup(db, disc)
+    await accept_page(db, lookup.id, FIGHT_CLUB_STEELBOOK, by=craig.id)
+
+    run = await _run(db, brave, site, now=NOW + timedelta(days=1))
+
+    assert run.applied == 1
+    await db.refresh(disc)
+    assert disc.edition == "Play Exclusive SteelBook"
+
+
+async def test_a_page_craig_pasted_that_the_search_never_offered_gives_none(
+    db: AsyncSession,
+) -> None:
+    """It is certainly the copy, but nothing says what the page is called."""
+    craig = await _person(db, UserRole.admin)
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_THREE_UK})
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/99999/": FIGHT_CLUB_PAGE})
+    await _run(db, brave, site)
+    lookup = await _lookup(db, disc)
+    await accept_page(
+        db, lookup.id, "https://www.blu-ray.com/movies/Fight-Club-Blu-ray/99999/", by=craig.id
+    )
+
+    run = await _run(db, brave, site, now=NOW + timedelta(days=1))
+
+    assert run.applied == 1
+    await db.refresh(lookup)
+    assert lookup.how == "pasted"
+    await db.refresh(disc)
+    assert disc.edition is None
+
+
+async def test_an_edition_already_on_the_disc_is_never_replaced(db: AsyncSession) -> None:
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray", edition="Bought in Fopp, the tin one")
+    site = FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE})
+
+    await _run(db, FakeBrave({"Fight Club": _one_uk()}), site)
+
+    await db.refresh(disc)
+    assert disc.edition == "Bought in Fopp, the tin one"
+
+
+async def test_a_page_that_moved_gives_no_edition_from_its_old_name(db: AsyncSession) -> None:
+    """Batch U1: a renamed page keeps its number, not necessarily what its old name said."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    site = FakeBlurayCom(
+        {FIGHT_CLUB_RENAMED_PATH: FIGHT_CLUB_PAGE},
+        moved={FIGHT_CLUB_UK_PATH: FIGHT_CLUB_RENAMED_PATH},
+    )
+
+    run = await _run(db, FakeBrave({"Fight Club": _one_uk()}), site)
+
+    assert run.applied == 1
+    await db.refresh(disc)
+    assert (disc.specs_source_url, disc.edition) == (FIGHT_CLUB_RENAMED, None)
+
+
+async def test_a_result_cut_short_before_its_country_leaves_the_edition_blank(
+    db: AsyncSession,
+) -> None:
+    """ "I, Robot Blu-ray (Zavvi Exclusive SteelBook ..." was a result on 26 Sep: it could be a
+    second UK edition, so the one the matcher accepted may not be the box on the shelf."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    hits = [
+        hit(FIGHT_CLUB_UK, "Fight Club Blu-ray (MetalPak) (United Kingdom)"),
+        hit(FIGHT_CLUB_STEELBOOK, "Fight Club Blu-ray (Zavvi Exclusive SteelBook ..."),
+    ]
+    site = FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE})
+
+    run = await _run(db, FakeBrave({"Fight Club": hits}), site)
+
+    assert run.applied == 1
+    await db.refresh(disc)
+    assert (disc.specs_source_url, disc.edition) == (FIGHT_CLUB_UK, None)
+
+
+async def test_the_one_off_fills_discs_settled_before_editions_existed(db: AsyncSession) -> None:
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    await _run(
+        db,
+        FakeBrave({"Fight Club": _one_uk()}),
+        FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE}),
+    )
+    # As the 430 discs settled before Batch U2 were.
+    disc.edition = None
+    await db.commit()
+
+    found = await editions_to_fill(db)
+    written = await fill_editions(db, found)
+    again = await editions_to_fill(db)
+
+    assert [(entry.item_id, entry.kind, entry.edition) for entry in found] == [
+        (disc.id, "only_uk_edition", "MetalPak")
+    ]
+    assert written == 1
+    await db.refresh(disc)
+    assert disc.edition == "MetalPak"
+    assert again == []
+
+
+async def test_forgetting_blu_ray_com_takes_its_editions_and_leaves_typed_ones(
+    db: AsyncSession,
+) -> None:
+    """#110: everything derived from the site can be removed. A corrected edition is Craig's."""
+    craig = await _person(db, UserRole.admin)
+    fight_club = await _disc(
+        db, await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550), "blu_ray"
+    )
+    heat = await _disc(db, await _film(db, "Heat", year=1999, tmdb_id=990_000_949), "blu_ray")
+    brave = FakeBrave(
+        {
+            "Fight Club": _one_uk(),
+            "Heat": [hit(HEAT_UK, "Heat Blu-ray (SteelBook) (United Kingdom)")],
+        }
+    )
+    site = FakeBlurayCom(
+        {FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE, "/movies/Heat-Blu-ray/7000/": FIGHT_CLUB_PAGE}
+    )
+    await _run(db, brave, site)
+    await db.refresh(heat)
+    assert heat.edition == "SteelBook"
+    heat.edition = "Ultimate Hi-Def Edition"
+    await db.commit()
+    fight_club_id, heat_id = fight_club.id, heat.id
+
+    async with _as(db, craig) as client:
+        response = await client.delete("/api/v1/specs")
+
+    assert response.status_code == 200, response.text
+    forgotten = await db.get(CollectionItem, fight_club_id)
+    kept = await db.get(CollectionItem, heat_id)
+    assert forgotten is not None and kept is not None
+    await db.refresh(forgotten)
+    await db.refresh(kept)
+    assert (forgotten.specs_source_url, forgotten.edition) == (None, None)
+    assert (kept.specs_source_url, kept.edition) == (None, "Ultimate Hi-Def Edition")

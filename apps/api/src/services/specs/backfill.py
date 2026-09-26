@@ -56,6 +56,7 @@ from src.services.specs.bluray_com import (
     is_release_url,
 )
 from src.services.specs.candidates import Candidate, Disc, decide, judge, search_query
+from src.services.specs.editions import EditionKind, SettledEdition, settled_edition
 from src.services.specs.runner import (
     MIN_INTERVAL_SECONDS,
     IntegrationHalted,
@@ -797,12 +798,109 @@ async def fetch_phase(
             lookup.fetched_utc = now
             lookup.last_error = None
             run.applied += 1
+            # Batch U2: the page names the disc's edition only when it is certainly the copy.
+            await fill_edition(db, lookup, item)
         else:
             _send_back(lookup, "That page had no specs to read. Pick another, or skip.")
             run.sent_back += 1
         run.heartbeat_utc = now
         await db.commit()
     return PhaseEnd("budget" if over_budget else "done")
+
+
+# ---------------------------------------------------------------------------
+# Editions — Batch U2, `DECISIONS.md` #220
+# ---------------------------------------------------------------------------
+
+
+def _looked_up_as(item: CollectionItem) -> str | None:
+    """The format a disc is looked up as, as :func:`_format_sql` says: 4K before Blu-ray."""
+    return next((code for code in BACKFILL_FORMATS if code in (item.formats or [])), None)
+
+
+async def fill_edition(
+    db: AsyncSession, lookup: SpecLookup, item: CollectionItem
+) -> SettledEdition | None:
+    """Write a disc's edition from its settled page, when that page is certainly the copy and
+    names one. Never over an edition already there, typed or filled."""
+    code = _looked_up_as(item)
+    movie = await db.get(Movie, item.movie_id)
+    if item.edition is not None or code is None or movie is None:
+        return None
+    row = DiscRow(
+        item_id=item.id,
+        movie_id=movie.id,
+        title=movie.title,
+        identified=movie.tmdb_id is not None,
+        year=movie.year,
+        format_code=code,
+        grouping=item.sub_category,
+    )
+    found = await settled_edition(db, lookup, row.disc)
+    if found is None or found.edition is None:
+        return None
+    item.edition = found.edition
+    logger.info("edition_filled", item_id=str(item.id), kind=found.kind, edition=found.edition)
+    return found
+
+
+@dataclass(frozen=True)
+class EditionFound:
+    """A settled disc with no edition whose page is certainly the copy."""
+
+    item_id: uuid.UUID
+    title: str
+    format_code: str
+    kind: EditionKind
+    #: ``None`` when the page is a plain release, or its name is not known.
+    edition: str | None
+
+
+async def editions_to_fill(db: AsyncSession) -> list[EditionFound]:
+    """Every settled disc without an edition whose page is certainly the copy. Reads only.
+
+    Batch U2's one-off backfill, for the discs settled before editions existed; each batch
+    since fills its own as it settles them.
+    """
+    fmt, conditions = _in_scope()
+    rows = (
+        await db.execute(
+            select(SpecLookup, CollectionItem, Movie, fmt)
+            .join(CollectionItem, CollectionItem.id == SpecLookup.collection_item_id)
+            .join(Movie, Movie.id == CollectionItem.movie_id)
+            .where(SpecLookup.status == "done", CollectionItem.edition.is_(None), *conditions)
+            .order_by(Movie.title, CollectionItem.id)
+        )
+    ).all()
+    found: list[EditionFound] = []
+    for lookup, item, movie, code in rows:
+        row = DiscRow(
+            item_id=item.id,
+            movie_id=movie.id,
+            title=movie.title,
+            identified=movie.tmdb_id is not None,
+            year=movie.year,
+            format_code=code,
+            grouping=item.sub_category,
+        )
+        settled = await settled_edition(db, lookup, row.disc)
+        if settled is not None:
+            found.append(EditionFound(item.id, movie.title, code, settled.kind, settled.edition))
+    return found
+
+
+async def fill_editions(db: AsyncSession, found: list[EditionFound]) -> int:
+    """Write the editions :func:`editions_to_fill` found, into blanks only."""
+    written = 0
+    for entry in found:
+        if entry.edition is None:
+            continue
+        item = await db.get(CollectionItem, entry.item_id)
+        if item is not None and item.edition is None:
+            item.edition = entry.edition
+            written += 1
+    await db.commit()
+    return written
 
 
 async def work_run(

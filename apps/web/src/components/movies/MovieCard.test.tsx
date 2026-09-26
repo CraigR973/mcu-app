@@ -25,6 +25,7 @@ describe('MovieCard', () => {
           locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
           watched: true,
           lastWatchedAt: '2025-03-12',
+          editions: ['Masters of Cinema', 'SteelBook'],
         }} />
       </StaticRouter>,
     )
@@ -36,5 +37,7 @@ describe('MovieCard', () => {
     // Batch 6: where it is, and that it has been seen.
     expect(markup).toContain('Front 2nd')
     expect(markup).toContain('Watched')
+    // Batch U2: which editions are on the shelf.
+    expect(markup).toContain('Masters of Cinema · SteelBook')
   })
 })

@@ -93,6 +93,7 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
 
             const movie = movies[virtualRow.index]
             const locations = movie.locations.map((location) => location.label).join(' · ')
+            const editions = movie.editions.join(' · ')
             return (
               <Link key={movie.id} to={`/movies/${movie.id}`} style={positioning} className="group flex items-center gap-3 border-b border-border px-4 transition-colors hover:bg-muted/70 focus-visible:z-10">
                 <Poster path={movie.posterPath} title={movie.title} size="w92" decorative className="h-12 w-8 shrink-0 rounded-sm" />
@@ -101,7 +102,10 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
                   <span className="mt-1 flex min-w-0 items-center gap-2 text-xs text-muted-foreground lg:hidden">
                     {movie.bestFormatOwned && <FormatBadge format={movie.bestFormatOwned} />}
                     <span className="inline-flex min-w-0 items-center gap-1 truncate font-medium text-foreground"><MapPin className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />{locations || 'Location not recorded'}</span>
+                    {/* Batch U2: the edition, after the shelf, on a phone. */}
+                    {editions && <span className="min-w-0 shrink truncate" title={editions}>{editions}</span>}
                   </span>
+                  {editions && <span className="mt-0.5 hidden truncate text-xs text-muted-foreground lg:block" title={editions}>{editions}</span>}
                   {!movie.identified && <span className="block text-xs font-semibold text-warning">Needs identification</span>}
                 </span>
                 {colDefs.map((column) => <span key={column.key} className="hidden w-24 shrink-0 text-right text-sm lg:block">{renderCell(movie, column.key)}</span>)}

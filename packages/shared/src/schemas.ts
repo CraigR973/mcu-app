@@ -92,6 +92,10 @@ export const movieListItemSchema = z.object({
    *  than required because the service worker serves cached API responses offline, and a
    *  response cached before this field existed must still parse. */
   lastWatchedAt: z.string().nullable().default(null),
+  /** Batch U2 — the distinct editions of the film's owned copies ("SteelBook", "Masters of
+   *  Cinema"); empty when none records one. Defaulted, as `lastWatchedAt` is: a list cached
+   *  offline before editions existed must still parse. */
+  editions: z.array(z.string()).default([]),
 })
 
 export const moviePageSchema = z.object({
@@ -137,6 +141,8 @@ export const collectionCopySchema = z.object({
   section: z.string().nullable(),
   shelf: z.string().nullable(),
   subCategory: z.string().nullable(),
+  /** Batch U2 — which edition this disc is. Defaulted: copies cached before it have none. */
+  edition: z.string().nullable().default(null),
   notes: z.string().nullable(),
   purchasePrice: z.string().nullable(),
   purchaseSource: z.string().nullable(),
@@ -312,6 +318,8 @@ export const collectionItemSchema = z.object({
   // Composed server-side, like `locationSchema.label`, so every surface says it identically.
   locationLabel: z.string().min(1),
   subCategory: z.string().nullable(),
+  /** Batch U2. Defaulted, like the copies' own. */
+  edition: z.string().nullable().default(null),
   notes: z.string().nullable(),
   condition: z.string().nullable(),
   conditionUpdatedAt: z.string().nullable(),

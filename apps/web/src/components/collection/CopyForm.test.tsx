@@ -24,7 +24,11 @@ describe('CopyForm', () => {
     expect(html).toContain('Blu-ray')
     expect(html).toContain('Section')
     expect(html).toContain('Condition')
-    expect(html).toContain('Collector edition')
+    // Batch U2: the copy's edition, and the spreadsheet's grouping under its own name. The
+    // grouping was labelled "Collector edition" until editions had a field of their own.
+    expect(html).toContain('Edition')
+    expect(html).toContain('Sub-category')
+    expect(html).not.toContain('Collector edition')
     expect(html).toContain('Price paid')
     expect(html).toContain('Notes')
   })
@@ -50,6 +54,14 @@ describe('CopyForm', () => {
     const html = markup({ ...EMPTY_COPY, formats: ['4k_uhd', 'download'] })
     // Three of the four are unpressed; the two chosen are not.
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(2)
+  })
+
+  it('holds the edition it is given, and caps it at the column’s 100 characters — Batch U2', () => {
+    const html = markup({ ...EMPTY_COPY, edition: 'Zavvi Exclusive SteelBook' })
+
+    expect(html).toContain('value="Zavvi Exclusive SteelBook"')
+    expect(html).toContain('maxLength="100"')
+    expect(EMPTY_COPY.edition).toBeNull()
   })
 
   it('will not offer a purchase date in the future', () => {

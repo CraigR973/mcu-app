@@ -685,6 +685,8 @@ export interface CollectionItemFields {
   section?: string | null
   shelf?: string | null
   subCategory?: string | null
+  /** Batch U2. Left out, the API keeps what is there, so an older build cannot clear it. */
+  edition?: string | null
   notes?: string | null
   condition?: Condition | null
   hasPlaybackIssues: boolean

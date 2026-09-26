@@ -4239,3 +4239,69 @@ contemporaneous.
        that had moved. The batch: 148 Brave searches, 88 accepted, 89 pages fetched, 83 with
        specs, 6 sent back (all the year check), no failures. 430 of 1,250 discs have specs,
        323 wait for Craig, and Brave stands at 838 of the month's 1,500.
+
+
+### 2026-09-26 — Batch U2: each copy's edition
+
+220. **Each copy can hold an edition, filled from its Blu-ray.com page only where that page
+     is certainly the copy. Built 26 Sep on `feat/u2-copy-editions`, at Craig's go on U1 →
+     U2, which included his yes to the new column. Replaces `OWNER-ACTIONS.md` 12.** These
+     are the choices made on his behalf, each open to overrule.
+
+     - **The column.** `collection_items.edition` (migration 041): free text, nullable, 100
+       characters, like the Wanted list's `preferred_edition`. Set and corrected on the copy
+       form, for a new disc and an old one; a blank one is no edition. Changes are in the
+       copy's history like any other field.
+     - **An edit that leaves it out keeps it.** Every other field on the edit body is a full
+       replacement (Batch 8), but a client built before editions existed (an app cached on a
+       phone, an edit queued offline) never sends one, and must not clear it.
+     - **Which pages are certainly the copy.** Craig chose it from the list, or pasted it; or
+       the search found exactly one UK edition of the film on that format, by the verdicts
+       stored at the time and by today's matcher alike, and no result whose title was cut off
+       before its country (such a result could be a second UK edition: "I, Robot Blu-ray
+       (Zavvi Exclusive SteelBook ..." was one). **The plain release among several UK
+       editions (#212) gives none:** it is a sound bet for specs and no evidence of which box
+       is on the shelf.
+     - **The name comes from the page's title as the search saw it**, the only name stored.
+       Blu-ray.com brackets everything that is not the film's name, so only the parts that
+       name an edition are kept: an edition, cut, package, shop exclusive or publisher's line
+       ("SteelBook", "Extended Cut", "HMV Exclusive", "Masters of Cinema"). Alternative titles
+       ("MIB", "Twelve Angry Men"), packs of formats ("Triple Play", "Combi Pack"), a studio's
+       brand ("PIXAR") and "Standard Edition" give none. Several parts are joined with " · ";
+       a name longer than the column is left out rather than cut short.
+     - **Two cases give no name, and the edition stays blank for Craig:** a page that has
+       moved since the search (U1, #219), since its old name may no longer be its name; and
+       a page Craig pasted that the search never offered. Nothing is read from the page
+       itself: no real page's title markup has been captured, and fetching one to learn it
+       would be a request #110's batches do not need.
+     - **When.** A spec batch fills a disc's edition as it settles it, and never over one
+       already there. A one-off script (`python -m src.scripts.fill_editions`, a read-only
+       dry run unless `--apply`) fills the discs settled before editions existed. Nothing
+       re-fills later, so an edition Craig clears stays cleared.
+     - **Browsing.** Each film in the archive list carries `editions`: the distinct editions
+       of its owned copies, alphabetical, read for the whole page in one grouped query as its
+       shelves are, never one query per film. The film page's detail carries it too, and each
+       copy its own `edition`. The zod schemas default both, so a list or a copy cached
+       offline before editions existed still parses. The grid card shows editions under the
+       shelf; the list view after the shelf on a phone and under the title on a desktop; the
+       compact view after the shelf; the film page leads each copy's card with its edition.
+     - **"Forget everything from Blu-ray.com" takes the editions it wrote** (#110: all derived
+       data can be removed): one equal to what the disc's page names goes, one Craig typed or
+       corrected stays.
+     - **"Collector edition" is now "Sub-category", in three places** (the copy form, the
+       film page, the history). The field is the spreadsheet's "Sub Category", and it holds
+       groupings, not editions: "Clint Eastwood" on 64 discs, "Hitchcock" on 30, "The James
+       Bond Collection Box Set" on 20. Beside a real Edition field the old label would have
+       invited editions into the wrong box. The two tests that pinned the old label now pin
+       the new one; the film page's test fixture had put "Criterion Collection" in that field
+       and now puts it in the edition. Craig's to overrule.
+     - **The dry run, read-only against production before the merge:** of 430 settled discs
+       (all chosen by the matcher; none by Craig yet), 233 are certainly the copy and 83 of
+       those name an edition; the other 150 name none, most being plain releases. 197 are
+       not certain (the plain one among several UK editions, or a result cut short).
+     - **The browser check used #169's method**, with the archive list, a film page and its
+       copy form captured read-only from production through main's own routes, and the 83
+       editions the backfill would write added. At 375 px and 1,280 px: the grid card, the
+       list and compact views and the film page's copy card showed the edition, and the copy
+       form held it beside the relabelled Sub-category. No horizontal scroll, no parse errors.
+       It found one thing, fixed: the Sub-category placeholder ran off a phone's field.

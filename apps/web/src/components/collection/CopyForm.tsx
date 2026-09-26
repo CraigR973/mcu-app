@@ -159,15 +159,29 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
             ))}
           </select>
         </Field>
-        <Field label="Collector edition">
+        {/* Batch U2: which edition the disc is. The spec batch fills it only where the
+            disc's Blu-ray.com page is certainly this copy; anything else is typed here. */}
+        <Field label="Edition">
           <Input
             disabled={disabled}
-            value={value.subCategory ?? ''}
-            placeholder="Criterion, Arrow, SteelBook…"
-            onChange={(event) => set('subCategory', event.target.value || null)}
+            maxLength={100}
+            value={value.edition ?? ''}
+            placeholder="SteelBook, Masters of Cinema…"
+            onChange={(event) => set('edition', event.target.value || null)}
           />
         </Field>
       </div>
+
+      {/* The spreadsheet's "Sub Category": a grouping such as "Hitchcock" or a box set.
+          It was labelled "Collector edition" until editions existed (Batch U2). */}
+      <Field label="Sub-category">
+        <Input
+          disabled={disabled}
+          value={value.subCategory ?? ''}
+          placeholder="Hitchcock, Bond box set…"
+          onChange={(event) => set('subCategory', event.target.value || null)}
+        />
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Price paid (£)">
@@ -242,6 +256,7 @@ export const EMPTY_COPY: CollectionItemFields = {
   section: null,
   shelf: null,
   subCategory: null,
+  edition: null,
   notes: null,
   condition: null,
   hasPlaybackIssues: false,

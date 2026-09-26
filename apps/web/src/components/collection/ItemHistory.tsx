@@ -24,7 +24,9 @@ const FIELD_LABELS: Record<string, string> = {
   location: 'Location',
   section: 'Section',
   shelf: 'Shelf',
-  sub_category: 'Collector edition',
+  // The spreadsheet's grouping; "Collector edition" until Batch U2 gave editions their own.
+  sub_category: 'Sub-category',
+  edition: 'Edition',
   notes: 'Notes',
   condition: 'Condition',
   has_playback_issues: 'Playback issues',

@@ -130,6 +130,7 @@ def _item_response(item: CollectionItem, movie_title: str) -> CollectionItemResp
         shelf=item.shelf,
         locationLabel=location_label(item.section, item.shelf),
         subCategory=item.sub_category,
+        edition=item.edition,
         notes=item.notes,
         condition=item.condition,
         conditionUpdatedAt=item.condition_updated_at_utc,
@@ -160,6 +161,9 @@ def _apply_fields(item: CollectionItem, payload: CollectionItemFieldsMixin) -> N
     item.section = section
     item.shelf = shelf
     item.sub_category = payload.subCategory
+    if "edition" in payload.model_fields_set:
+        # Batch U2: only when the body carries it, so an older client cannot clear it.
+        item.edition = payload.edition
     item.notes = payload.notes
     item.condition = payload.condition
     item.has_playback_issues = payload.hasPlaybackIssues

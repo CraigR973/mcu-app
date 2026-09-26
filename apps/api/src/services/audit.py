@@ -31,6 +31,8 @@ AUDITED_ITEM_FIELDS = (
     "section",
     "shelf",
     "sub_category",
+    # Batch U2. Filled by the spec batch or typed; a correction is worth a line in history.
+    "edition",
     "notes",
     "condition",
     "has_playback_issues",

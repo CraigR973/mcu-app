@@ -168,6 +168,8 @@ const movieListItem = {
   watched: false,
   // Batch T2: the API sends this on every list item now, null when unwatched.
   lastWatchedAt: null,
+  // Batch U2: and this, empty when no copy records an edition.
+  editions: [],
 }
 
 describe('Batch 5 collection schemas', () => {
@@ -206,6 +208,7 @@ describe('Batch 5 collection schemas', () => {
       section: 'Front',
       shelf: '2nd',
       subCategory: null,
+      edition: 'SteelBook',
       notes: null,
       purchasePrice: null,
       purchaseSource: null,
@@ -225,6 +228,41 @@ describe('Batch 5 collection schemas', () => {
       valuation: null,
     }]
     expect(collectionCopiesSchema.parse(copies)).toEqual(copies)
+  })
+
+  it('parses a film with editions, and a list or copy cached before editions existed — Batch U2', () => {
+    const withEditions = { ...movieListItem, editions: ['Masters of Cinema', 'SteelBook'] }
+    expect(movieListItemSchema.parse(withEditions).editions).toEqual(['Masters of Cinema', 'SteelBook'])
+
+    const { editions: _none, ...cachedItem } = movieListItem
+    expect(movieListItemSchema.parse(cachedItem).editions).toEqual([])
+    expect(() => movieListItemSchema.parse({ ...movieListItem, editions: 'SteelBook' })).toThrow()
+
+    const copy = collectionCopiesSchema.parse([{
+      id: '08cb0e0b-4f14-470c-96d7-385d4b11ab03',
+      formats: ['blu_ray'],
+      location: null,
+      section: null,
+      shelf: null,
+      subCategory: null,
+      notes: null,
+      purchasePrice: null,
+      purchaseSource: null,
+      purchaseDate: null,
+      condition: null,
+      hasPlaybackIssues: false,
+      playbackNotes: null,
+      videoSpecs: null,
+      audioSpecs: null,
+      specialFeatures: null,
+      regionCode: null,
+      releaseLabel: null,
+      listingStatus: 'in_collection',
+      ebayListingUrl: null,
+      listingPrice: null,
+      updatedAt: '2026-09-08T14:00:00Z',
+    }])[0]
+    expect(copy.edition).toBeNull()
   })
 
   it('requires candidate context for an informed identification', () => {
@@ -330,6 +368,7 @@ const collectionItem = {
   shelf: '2nd',
   locationLabel: 'Front 2nd',
   subCategory: null,
+  edition: null,
   notes: null,
   condition: 'good',
   conditionUpdatedAt: '2026-09-08T14:00:00Z',

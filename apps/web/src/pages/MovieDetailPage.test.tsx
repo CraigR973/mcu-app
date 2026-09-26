@@ -52,6 +52,7 @@ const MOVIE: MovieDetail = {
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: false,
   lastWatchedAt: null,
+  editions: ['Criterion Collection'],
   imdbId: 'tt0040725',
   overview: 'A ballerina must choose between love and art.',
   tagline: null,
@@ -69,7 +70,10 @@ const COPY: CollectionCopy = {
   location: 'Front 2nd shelf',
   section: 'Front',
   shelf: '2nd',
-  subCategory: 'Criterion Collection',
+  // Batch U2: the spreadsheet's grouping, and the copy's own edition beside it. The grouping
+  // held "Criterion Collection" here while it was labelled "Collector edition".
+  subCategory: 'Powell & Pressburger',
+  edition: 'Criterion Collection',
   notes: null,
   purchasePrice: '24.99',
   purchaseSource: 'BFI Shop',
@@ -128,11 +132,15 @@ afterEach(() => {
 })
 
 describe('MovieDetailPage collection answer', () => {
-  it('opens on owned copies and surfaces the collector edition, label and shelf', async () => {
+  it('opens on owned copies and surfaces the edition, sub-category, label and shelf', async () => {
     renderPage()
 
     expect(await screen.findByText('Criterion Collection')).not.toBeNull()
-    expect(screen.getByText('Collector edition')).not.toBeNull()
+    expect(screen.getByText('Edition')).not.toBeNull()
+    // Batch U2: the grouping is called what the spreadsheet calls it, not "Collector edition".
+    expect(screen.getByText('Sub-category')).not.toBeNull()
+    expect(screen.getByText('Powell & Pressburger')).not.toBeNull()
+    expect(screen.queryByText('Collector edition')).toBeNull()
     expect(screen.getByText('Release label')).not.toBeNull()
     expect(screen.getByText('The Criterion Collection')).not.toBeNull()
     expect(screen.getByText('Front 2nd shelf')).not.toBeNull()
