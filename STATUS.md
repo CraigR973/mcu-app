@@ -29,9 +29,13 @@ first runs are 12:20 UTC (eBay) and 02:00 UTC on 27 Sep (specs). T8b waits on hi
   wrong), and the apply created `cron-specs`.
 - **Brave this month: 690 of 1,500.**
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  T7 `160f842` with `bfc28e7`, T9 `4d16723`, T10 `db75229`, **T8a `e2142b7`**. Next is the
-  eBay checkpoint (`OWNER-ACTIONS.md` 18: sign-in settings and an encryption key), then T8b,
-  "Connect eBay" for Mark's watch and selling lists (Opus · max).
+  T7 `160f842` with `bfc28e7`, T9 `4d16723`, T10 `db75229`, **T8a `e2142b7`**. T8b, "Connect
+  eBay", waits on the eBay checkpoint (`OWNER-ACTIONS.md` 18).
+- **Everything left is batched as Group U, proposed 26 Sep and not yet approved**
+  (`docs/phase-batches.md`, "What is left — Group U"): U1 moved Blu-ray.com pages, U2 editions,
+  U3 the assistant button and `/debug`, U4 scheduled re-pricing, U5 brand assets, then 21
+  (from 30 Sep), T8b and 38. U1 needs nothing; U2–U5 each wait on one of Craig's calls.
+  Craig's own items are listed by sitting at the top of `OWNER-ACTIONS.md`.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -461,6 +465,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (the remaining work batched)** — At Craig's request: owner items 1b and 1i marked
+  done (both were finished but read as open), and everything left written up as Group U with
+  its gates. Found while planning: no copy records an edition, so item 12 needs a column
+  first (U2). The Blu-ray.com moved-page task became U1. Waits for Craig's go.
 
 - **2026-09-26 (the first scheduled eBay pass)** — `cron-ebay` ran at 12:21 UTC and finished:
   15 calls of 500, 363 new UK Blu-ray and 4K listings, 13 upgrades priced, 3 deals, 3 pushes

@@ -4,10 +4,24 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-23**,
-after the sign-in fix (`aa112bd`) and the scheduled-jobs diagnosis. *Numbers changed at
-the 2026-09-09 review; the old ones are noted in brackets so an earlier conversation still
-maps onto this file.*
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-26**,
+after T8a and the Railway config apply. *Numbers changed at the 2026-09-09 review; the old
+ones are noted in brackets so an earlier conversation still maps onto this file.*
+
+## What is left for you, by sitting *(26 Sep)*
+
+- **Accounts, at a computer (about 20 minutes):** 22 rotate the Neon password; 18 eBay
+  sign-in settings and an encryption key, which unblocks T8b; 9 revoke the dead April GitHub
+  token.
+- **A phone session (about 15 minutes):** 16b Mark turns notifications on, then a movie night
+  on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
+  Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?".
+- **The two queues, whenever:** 166 films on You → Identify films (from 21), then 257 discs on
+  You → Disc specs (20).
+- **One live run:** 1e, the retailer deals scrape.
+- **Calls that unblock Group U** (`docs/phase-batches.md`): U2 yes or no; picks for 11 and
+  13; U4 yes or no; a pick for 15; and whether to close 14.
+- **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
 
 ---
 
@@ -169,13 +183,17 @@ not blocking; it is one command away whenever you next run `apply`.
 it expected rows ≈ wanted items × enabled retailers; the run proved that wrong — 6 rows from 35
 pairs, with all 29 gaps correct, because no shop stocks every film.
 
-### 1b. Preserve the live eBay keyset in Railway *(updated — Batch 24, 2026-09-12)*
+### 1b. ~~Preserve the live eBay keyset in Railway~~ — **done 26 Sep**
+
+> **Done.** Batch T7 declared both keys `preserve()` in `.railway/railway.ts`, and Craig's
+> config apply on 26 Sep planned `0 to destroy` and kept them; production still reports
+> `ebay: configured`, and the new `cron-ebay` job takes both from `api` by reference.
 
 - [x] **Set `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` in the Railway `api` service.**
       Done by 2026-09-12; Batch 24's production readiness check reports
       **`ebay: configured`**.
-- [ ] **Add `preserve()` declarations for both variables before the next
-      `.railway/railway.ts` config apply.**
+- [x] **Add `preserve()` declarations for both variables before the next
+      `.railway/railway.ts` config apply.** Declared in Batch T7; applied 26 Sep.
 
 **The runtime blocker is cleared.** Production served Batch 24's exact merge SHA with
 `db: ok` and `ebay: configured`; the eBay-backed Batch 28 and Batch 24 surfaces no longer
@@ -373,7 +391,7 @@ the *cause* and not the *behaviour*, and a green gate was not allowed to stand i
       that searches is not a failure of this fix** — it is a film waiting to be identified,
       which is what S8's import is for.
 
-### 1i. ~~Run the watch-history import~~ — **step 1 done 2026-09-15, step 2 waiting**
+### 1i. ~~Run the watch-history import~~ — **done: step 1 on 2026-09-15, step 2 on 2026-09-17**
 
 - [x] **Step 1 ran on 2026-09-15 at Craig's instruction. 1,555 watches are in.**
       Craig 593, Mark 962 — exactly what the dry runs predicted. `watch_log` went from
@@ -785,6 +803,9 @@ are in `docs/ui-redesign/VERIFICATION.md` §3–§5; #15 is new here, not in tha
 
 ### 11. The floating assistant button covers a control on mobile
 
+> **26 Sep: now Group U's batch U3, waiting for your pick.** A sixth tab below conflicts
+> with your five (#201); the proposal is an assistant icon in the top bar instead.
+
 Reproduced at 375px on `/settings/notifications`: the FAB — fixed, 48×48, `z-index: 20` —
 overlaps the **"Upcoming releases" switch**, so taps on the switch's right portion open the
 assistant instead. Any right-aligned control can fall under it at some scroll position, so
@@ -798,6 +819,10 @@ Three ways out, and choosing between them is information architecture, not styli
 
 ### 12. Edition is still invisible while browsing
 
+> **26 Sep: now Group U's batch U2, waiting for your yes.** Found while planning it: no copy
+> records an edition at all, so U2 adds one, filled only where the Blu-ray.com page is
+> certainly the copy, and editable.
+
 Unchanged from the audit, and not a styling gap: the list contract has no edition field, and
 fetching copies per film would be an **N+1 across 1,843 rows**. Making it visible means an
 **additive list field** — an array of distinct edition labels — which is an API-contract
@@ -805,9 +830,15 @@ change and therefore its own batch.
 
 ### 13. `/debug` remains production-reachable
 
+> **26 Sep: now Group U's batch U3, waiting for your pick.** Its one button throws an error
+> to test error reporting; the proposal is development builds only.
+
 Whether it should be development-only is a deployment decision.
 
 ### 14. The before/after screenshots — nine before, three after
+
+> **26 Sep: proposed for closing.** Batch T3 replaced that navigation (#201), so the pair
+> would record a design that is gone.
 
 **This is the redesign's one incomplete deliverable.** Every surface was verified and
 measured live; what is missing is the saved image files. Two things stopped the capture, and
@@ -834,6 +865,9 @@ in that window** for the surfaces that need real catalogue data. `.claude/launch
 gained a `web-dist` entry, which serves the built bundle rather than the dev server.
 
 ### 15. The brand assets are untracked — 56 MB, and a copyright call
+
+> **26 Sep: now Group U's batch U5, waiting for your pick.** The proposal is option 1
+> below: the generator and the vector masters, about 60 kB.
 
 `docs/brand/` holds **189 files, 56 MB** and is **not in git**. The committed
 `VERIFICATION.md` §5 calls the `logo-system/stack-family/` set "approved" and the UI reserves
@@ -1000,7 +1034,7 @@ priced). **£23,636.80** at current asking prices, with 1,303 of 1,457 discs pri
 **Prices fall due again from 24 Oct**, 30 days after they were taken. Press **Update
 values** on Home then, or add the cron below.
 
-**Optional, and a hosting change:** to re-price monthly on its own, add a Railway cron
+**Optional, and a hosting change (26 Sep: proposed as Group U's batch U4):** to re-price monthly on its own, add a Railway cron
 running `python -m src.scripts.value_collection` nightly, with `EBAY_CLIENT_ID` and
 `EBAY_CLIENT_SECRET` on it. Without it, press **Update values** whenever you want fresh
 prices: anything older than 30 days is due again.
