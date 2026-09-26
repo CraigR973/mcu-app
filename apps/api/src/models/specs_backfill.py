@@ -88,6 +88,11 @@ class SpecRun(Base, UUIDPrimaryKeyMixin):
     queued: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     no_match: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     restored: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: Batch T10: queued discs searched once more because their film was identified after
+    #: their search, and how many of those the matcher then accepted. Both are also counted
+    #: in ``searched`` and in its outcomes above.
+    searched_again: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    settled_again: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     #: Blu-ray.com pages this batch may fetch, and what the fetches did.
     fetch_budget: Mapped[int] = mapped_column(Integer, nullable=False)

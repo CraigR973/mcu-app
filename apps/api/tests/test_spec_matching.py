@@ -474,6 +474,8 @@ def _run(**fields: Any) -> SpecRun:
         "queued": 0,
         "no_match": 0,
         "restored": 0,
+        "searched_again": 0,
+        "settled_again": 0,
         "fetch_budget": 150,
         "fetched": 0,
         "applied": 0,
@@ -496,6 +498,15 @@ def test_a_finished_batch_reports_coverage(capsys: pytest.CaptureFixture[str]) -
     out = capsys.readouterr().out
     assert "10 of 1250 Blu-ray and 4K discs have specs" in out
     assert "23 for Craig" in out
+
+
+def test_the_report_says_how_many_discs_were_searched_again(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Batch T10: discs whose film was identified since their first search."""
+    run = _run(searches=12, searched=12, accepted=7, queued=5, searched_again=4, settled_again=3)
+    assert report(StartOutcome("started", run), run, COVERAGE) == 0
+    assert "again:        4, film identified since; 3 of them accepted" in capsys.readouterr().out
 
 
 def test_a_halted_integration_refuses_to_start_and_says_so(

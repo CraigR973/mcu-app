@@ -40,6 +40,10 @@ def report(outcome: StartOutcome, run: SpecRun | None, counts: Coverage) -> int:
         print(f"spec batch {run.status}")
         print(f"  Brave searches: {run.searches} of {run.search_budget}")
         print(f"  discs searched: {run.searched}")
+        print(
+            f"    again:        {run.searched_again}, film identified since; "
+            f"{run.settled_again} of them accepted"
+        )
         print(f"    accepted:     {run.accepted}")
         print(f"    for Craig:    {run.queued}")
         print(f"    nothing:      {run.no_match}")

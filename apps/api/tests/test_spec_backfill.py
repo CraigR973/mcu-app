@@ -6,7 +6,10 @@ must show the film's year; Craig's own choice is fetched as he made it; a 403 ha
 whole integration and it stays halted; searches stop at the batch's budget and the month's
 ceiling, and the next batch carries on; the 10 Sep specs are copied across only when the
 search confirms their page is the UK edition; the queue, the coverage, the button and the
-Archive's filter switch.
+Archive's filter switch. Batch T10: a queued disc whose film was identified since its search
+is searched once more, first and inside the budget, and a disc Craig decided, one searched
+since, one whose words are unchanged, one whose page failed its year check and one whose
+film is still unidentified are not.
 
 **What it does not:** a live search or a live fetch. Brave is a scripted searcher, and
 Blu-ray.com is the two captured pages (Fight Club, 1999; Blade Runner 2049 4K, 2017).
@@ -386,6 +389,202 @@ async def test_a_page_that_failed_its_year_check_is_not_chosen_again(db: AsyncSe
     await db.refresh(lookup)
     assert lookup.status == "needs_you"
     assert site.requested == []
+
+
+# ---------------------------------------------------------------------------
+# Searched again once the film is identified — Batch T10
+# ---------------------------------------------------------------------------
+
+NO_UK_PAGE = "No UK page matched this film's name and format. Pick one, paste a link, or skip."
+FIGHT_CLUB_QUERY = "site:blu-ray.com Fight Club Blu-ray United Kingdom"
+FILLER_QUERY = "site:blu-ray.com Filler Film Blu-ray United Kingdom"
+
+
+async def _identified(db: AsyncSession, title: str, *, year: int, tmdb_id: int) -> Movie:
+    """A film identified an hour before the batch, as T9's live run or Craig did."""
+    film = await _film(db, title, year=year, tmdb_id=tmdb_id)
+    film.last_tmdb_sync_utc = NOW - timedelta(hours=1)
+    await db.flush()
+    return film
+
+
+async def _searched_earlier(
+    db: AsyncSession,
+    film: Movie,
+    *,
+    query: str,
+    note: str = NO_UK_PAGE,
+    searched: datetime = NOW - timedelta(days=2),
+    decided_by: uuid.UUID | None = None,
+    hits: tuple[tuple[str, str], ...] = (),
+) -> tuple[CollectionItem, SpecLookup]:
+    """A disc a batch searched and left for Craig, with what that search found."""
+    disc = await _disc(db, film, "blu_ray")
+    lookup = SpecLookup(
+        id=uuid.uuid4(),
+        collection_item_id=disc.id,
+        status="needs_you",
+        note=note,
+        search_query=query,
+        searched_utc=searched,
+        decided_by=decided_by,
+        attempts=0,
+    )
+    db.add(lookup)
+    await db.flush()
+    for rank, (url, title) in enumerate(hits):
+        db.add(
+            SpecCandidate(
+                id=uuid.uuid4(),
+                lookup_id=lookup.id,
+                url=url,
+                title=title,
+                rank=rank,
+                matches=False,
+                origin="search",
+            )
+        )
+    await db.commit()
+    return disc, lookup
+
+
+async def _filler(db: AsyncSession, title: str = "Filler Film", tmdb_id: int = 990_009_999) -> None:
+    """A disc never searched, so a batch has something of its own to do."""
+    await _disc(db, await _film(db, title, year=2000, tmdb_id=tmdb_id), "blu_ray")
+
+
+async def test_a_disc_searched_under_a_misspelt_title_is_searched_again_once_identified(
+    db: AsyncSession,
+) -> None:
+    """Captain Ameica, 25 Sep: its results came from the spreadsheet's spelling."""
+    film = await _identified(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc, lookup = await _searched_earlier(
+        db,
+        film,
+        query="site:blu-ray.com Fight Clubb Blu-ray United Kingdom",
+        hits=(
+            (
+                "https://www.blu-ray.com/movies/Fight-Night-Blu-ray/1/",
+                "Fight Night Blu-ray (United Kingdom)",
+            ),
+        ),
+    )
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK})
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    run = await _run(db, brave, site)
+
+    assert brave.queries == [FIGHT_CLUB_QUERY]
+    assert (run.searched, run.searched_again, run.settled_again, run.applied) == (1, 1, 1, 1)
+    await db.refresh(lookup)
+    await db.refresh(disc)
+    assert (lookup.status, lookup.how, lookup.accepted_url) == ("done", "auto", FIGHT_CLUB_UK)
+    assert (lookup.search_query, lookup.searched_utc, lookup.run_id) == (
+        FIGHT_CLUB_QUERY,
+        NOW,
+        run.id,
+    )
+    assert disc.specs_source_url == FIGHT_CLUB_UK
+    # The old title's result is gone; the new search's are what Craig would see.
+    kept = await db.scalars(select(SpecCandidate.url).where(SpecCandidate.lookup_id == lookup.id))
+    assert set(kept.all()) == {FIGHT_CLUB_UK, FIGHT_CLUB_US}
+
+
+async def test_a_disc_is_searched_again_only_once(db: AsyncSession) -> None:
+    film = await _identified(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    _disc_row, lookup = await _searched_earlier(
+        db, film, query="site:blu-ray.com Fight Clubb Blu-ray United Kingdom"
+    )
+    await _filler(db)
+    # Three UK editions: the second search leaves it for Craig too.
+    first = await _run(db, FakeBrave({"Fight Club": FIGHT_CLUB_THREE_UK}), FakeBlurayCom({}))
+    assert (first.searched_again, first.settled_again) == (1, 0)
+    await db.refresh(lookup)
+    assert lookup.status == "needs_you"
+    assert "3 UK editions match" in (lookup.note or "")
+    await _filler(db, "Second Filler", 990_009_998)
+
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK})
+    second = await _run(db, brave, FakeBlurayCom({}), now=NOW + timedelta(days=1))
+
+    assert FIGHT_CLUB_QUERY not in brave.queries
+    assert second.searched_again == 0
+
+
+async def test_discs_not_to_search_again_are_left_as_they_are(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    before = await _identified(db, "Identified Before", year=2001, tmdb_id=990_003_001)
+    # Identified an hour before the batch, but searched after that, under its own title.
+    _a, searched_since = await _searched_earlier(
+        db,
+        before,
+        query="site:blu-ray.com Identified Before Blu-ray United Kingdom",
+        searched=NOW - timedelta(minutes=30),
+    )
+    # The kept film of a merge: identified again, but its words have not changed.
+    same = await _identified(db, "Same Words", year=2002, tmdb_id=990_003_002)
+    _b, same_words = await _searched_earlier(
+        db, same, query="site:blu-ray.com Same Words Blu-ray United Kingdom"
+    )
+    # Craig chose this disc's page himself, and it would not load.
+    chosen = await _identified(db, "Craigs Choice", year=2003, tmdb_id=990_003_003)
+    _c, decided = await _searched_earlier(
+        db,
+        chosen,
+        query="site:blu-ray.com Craigs Chioce Blu-ray United Kingdom",
+        note="The page would not load after 3 tries.",
+        decided_by=craig.id,
+    )
+    # Its page failed the year check: searching again could accept that page anew.
+    remake = await _identified(db, "Year Checked", year=2004, tmdb_id=990_003_004)
+    _d, year_failed = await _searched_earlier(
+        db,
+        remake,
+        query="site:blu-ray.com Year Chekced Blu-ray United Kingdom",
+        note="The page is for a 1960 film and this one is from 2004, so its specs were not used.",
+    )
+    # Still unidentified: nothing new to search under.
+    unmatched = await _film(db, "Still Unmatched", year=None, tmdb_id=None)
+    _e, not_identified = await _searched_earlier(
+        db, unmatched, query="site:blu-ray.com Still Unmatchd Blu-ray United Kingdom"
+    )
+    await _filler(db)
+    brave = FakeBrave()
+
+    run = await _run(db, brave, FakeBlurayCom({}))
+
+    assert brave.queries == [FILLER_QUERY]
+    assert run.searched_again == 0
+    for lookup in (searched_since, same_words, decided, year_failed, not_identified):
+        searched_utc = lookup.searched_utc
+        await db.refresh(lookup)
+        assert (lookup.status, lookup.searched_utc) == ("needs_you", searched_utc)
+
+
+async def test_discs_searched_again_come_first_and_count_in_the_budget(
+    db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(backfill, "SEARCHES_PER_RUN", 1)
+    film = await _identified(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    await _searched_earlier(db, film, query="site:blu-ray.com Fight Clubb Blu-ray United Kingdom")
+    await _filler(db)
+    brave = FakeBrave()
+
+    run = await _run(db, brave, FakeBlurayCom({}))
+
+    assert brave.queries == [FIGHT_CLUB_QUERY]
+    assert (run.status, run.searches, run.searched_again) == ("budget_spent", 1, 1)
+
+
+async def test_a_batch_starts_when_only_a_search_again_is_due(db: AsyncSession) -> None:
+    film = await _identified(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    await _searched_earlier(db, film, query="site:blu-ray.com Fight Clubb Blu-ray United Kingdom")
+    brave = FakeBrave()
+
+    run = await _run(db, brave, FakeBlurayCom({}))
+
+    assert brave.queries == [FIGHT_CLUB_QUERY]
+    assert (run.searched, run.searched_again, run.no_match) == (1, 1, 1)
 
 
 # ---------------------------------------------------------------------------

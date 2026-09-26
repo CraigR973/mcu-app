@@ -4,7 +4,9 @@
 
 1. **Search, on Brave.** Up to :data:`SEARCHES_PER_RUN` Blu-ray and 4K discs without specs
    are searched for, one search each. The matcher (``candidates.py``) either accepts one
-   page or leaves the disc for Craig with the candidates and a reason.
+   page or leaves the disc for Craig with the candidates and a reason. A disc left for
+   Craig whose film has been identified since its search is searched once more, first,
+   under the film's own title (Batch T10).
 2. **Fetch, from Blu-ray.com.** Up to :data:`FETCHES_PER_RUN` accepted pages are fetched by
    the existing runner's rules: exact release URLs only, five seconds apart, and a 403 or
    429 halts the whole integration until an owner decision. A page the matcher chose must
@@ -34,7 +36,7 @@ from urllib.parse import urlsplit
 
 import httpx
 import structlog
-from sqlalchemy import case, func, select, update
+from sqlalchemy import case, delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
@@ -182,6 +184,75 @@ async def discs_to_search(
     ]
 
 
+#: How the fetch words a page that failed its year check. A disc sent back with one stays
+#: with Craig, as the second look leaves it, so searching again cannot accept that page anew.
+_YEAR_CHECK_FAILED = (
+    "The page is for a ",
+    "The page shows no year",
+    "The film has no year to check",
+)
+
+
+async def discs_to_search_again(
+    db: AsyncSession, *, limit: int
+) -> list[tuple[SpecLookup, DiscRow]]:
+    """Queued discs whose film was identified after the disc was searched — Batch T10.
+
+    A disc searched under the spreadsheet's title ("Captain Ameica - Civil War") stays stuck:
+    the second look judges those results again and never searches. Once the film is
+    identified, the words a search would use differ, so the disc is searched once more.
+
+    **Once needs no flag.** Identifying a film writes ``last_tmdb_sync_utc`` and nothing else
+    does to a film that already exists, and the new search is later than that. A merge
+    rewrites the kept film's too, which is why the words must differ as well: the kept
+    film's own discs were searched under its title already. A disc Craig has decided on,
+    one with specs, and one whose page failed its year check are left as they are.
+    """
+    fmt, conditions = _in_scope()
+    rows = await db.execute(
+        select(
+            SpecLookup,
+            CollectionItem.id,
+            CollectionItem.movie_id,
+            Movie.title,
+            Movie.year,
+            fmt,
+            CollectionItem.sub_category,
+        )
+        .join(CollectionItem, CollectionItem.id == SpecLookup.collection_item_id)
+        .join(Movie, Movie.id == CollectionItem.movie_id)
+        .where(
+            *conditions,
+            SpecLookup.status.in_(("needs_you", "no_match")),
+            SpecLookup.decided_by.is_(None),
+            SpecLookup.searched_utc.is_not(None),
+            CollectionItem.specs_source_url.is_(None),
+            Movie.tmdb_id.is_not(None),
+            Movie.last_tmdb_sync_utc > SpecLookup.searched_utc,
+        )
+        .order_by(Movie.title, CollectionItem.id)
+    )
+    found: list[tuple[SpecLookup, DiscRow]] = []
+    for lookup, item_id, movie_id, title, year, code, grouping in rows:
+        if (lookup.note or "").startswith(_YEAR_CHECK_FAILED):
+            continue
+        row = DiscRow(
+            item_id=item_id,
+            movie_id=movie_id,
+            title=title,
+            identified=True,
+            year=year,
+            format_code=code,
+            grouping=grouping,
+        )
+        if search_query(row.disc.title, row.format_code) == lookup.search_query:
+            continue
+        found.append((lookup, row))
+        if len(found) >= limit:
+            break
+    return found
+
+
 async def trashed_specs(db: AsyncSession) -> dict[tuple[uuid.UUID, str], CollectionItem]:
     """The 10 Sep test's spec rows, now in the Trash, by film and format."""
     fmt = _format_sql()
@@ -288,7 +359,9 @@ async def start_run(
         return StartOutcome("halted", None)
     if await running_run(db) is not None:
         return StartOutcome("running", None)
-    to_search = search_configured and bool(await discs_to_search(db, limit=1))
+    to_search = search_configured and (
+        bool(await discs_to_search(db, limit=1)) or bool(await discs_to_search_again(db, limit=1))
+    )
     if not to_search and await accepted_waiting(db) == 0:
         return StartOutcome("nothing_due", None)
 
@@ -307,6 +380,8 @@ async def start_run(
         queued=0,
         no_match=0,
         restored=0,
+        searched_again=0,
+        settled_again=0,
         fetch_budget=FETCHES_PER_RUN,
         fetched=0,
         applied=0,
@@ -419,30 +494,88 @@ async def record_search(
             "film's UK edition, so its specs were not copied."
         )
 
+    _count_outcome(run, lookup)
+    return lookup
+
+
+def _count_outcome(run: SpecRun, lookup: SpecLookup) -> None:
     if lookup.status == "accepted":
         run.accepted += 1
     elif lookup.status == "no_match":
         run.no_match += 1
     else:
         run.queued += 1
+
+
+async def record_search_again(
+    db: AsyncSession,
+    run: SpecRun,
+    lookup: SpecLookup,
+    row: DiscRow,
+    query: str,
+    hits: list[SearchHit],
+    now: datetime,
+) -> SpecLookup:
+    """Judge a queued disc's second search and settle it as a first search would — T10.
+
+    The first search's candidates came from the old title, so they are replaced. A page the
+    10 Sep test used stays offered, and is not offered twice.
+    """
+    candidates = judge(hits, row.disc)
+    verdict = decide(candidates, row.disc)
+    await db.execute(
+        delete(SpecCandidate).where(
+            SpecCandidate.lookup_id == lookup.id, SpecCandidate.origin == "search"
+        )
+    )
+    kept = (
+        await db.scalars(select(SpecCandidate.url).where(SpecCandidate.lookup_id == lookup.id))
+    ).all()
+    for candidate in candidates:
+        if not any(same_page(candidate.url, url) for url in kept):
+            db.add(_candidate_row(lookup.id, candidate))
+
+    lookup.status = verdict.decision
+    lookup.search_query = query
+    lookup.searched_utc = now
+    lookup.run_id = run.id
+    lookup.note = verdict.note
+    if verdict.decision == "accepted":
+        lookup.accepted_url = verdict.url
+        lookup.how = "auto"
+        lookup.decided_utc = now
+        run.settled_again += 1
+    else:
+        lookup.accepted_url = None
+        lookup.how = None
+    run.searched += 1
+    run.searched_again += 1
+    _count_outcome(run, lookup)
     return lookup
 
 
 async def search_phase(
     db: AsyncSession, run: SpecRun, searcher: Searcher, *, clock: Callable[[], datetime]
 ) -> PhaseEnd:
-    """Search for discs until the budget or the list runs out."""
+    """Search for discs until the budget or the list runs out.
+
+    Discs whose film was identified since their search go first (Batch T10): there are few,
+    and each is a disc Craig would otherwise have to settle by hand.
+    """
     if not searcher.configured:
         return PhaseEnd("not_configured", NOT_CONFIGURED)
     trashed = await trashed_specs(db)
     # One more than the budget could reach, to know whether the budget cut the list.
-    rows = await discs_to_search(
-        db, limit=run.search_budget + 1, first={movie_id for movie_id, _ in trashed}
+    reach = run.search_budget + 1
+    again = await discs_to_search_again(db, limit=reach)
+    fresh = await discs_to_search(
+        db, limit=max(reach - len(again), 0), first={movie_id for movie_id, _ in trashed}
     )
-    cut_short = len(rows) > run.search_budget
-    rows = rows[: run.search_budget]
+    work: list[tuple[SpecLookup | None, DiscRow]] = [*again, *((None, row) for row in fresh)]
+    cut_short = len(work) > run.search_budget
+    work = work[: run.search_budget]
     failures_in_a_row = 0
-    for row in rows:
+    for lookup, row in work:
         if searcher.search_calls + searcher.attempts_per_search > run.search_budget:
             return PhaseEnd("budget")
         query = search_query(row.disc.title, row.format_code)
@@ -459,9 +592,12 @@ async def search_phase(
                 return PhaseEnd("failed", run.last_error)
             continue
         failures_in_a_row = 0
-        await record_search(
-            db, run, row, query, hits, trashed.get((row.movie_id, row.format_code)), clock()
-        )
+        if lookup is None:
+            await record_search(
+                db, run, row, query, hits, trashed.get((row.movie_id, row.format_code)), clock()
+            )
+        else:
+            await record_search_again(db, run, lookup, row, query, hits, clock())
         run.searches = searcher.search_calls
         run.heartbeat_utc = clock()
         await db.commit()
