@@ -11,7 +11,8 @@ on `feat/t8a-ebay-alerts` and waits for Craig's OK to merge (`OWNER-ACTIONS.md` 
   price. New: a Price alerts page for both people, an alert panel on the film page, eBay
   finds on Deals. Its merge waits for Craig because it declares a Railway job, `cron-ebay`;
   the schedule starts with his config apply, the same one item 17 needs. Mark's sidebar grows
-  from seven destinations to eight (#218 says why; his to overrule).
+  from seven destinations to eight (#218 says why; his to overrule). A read-only dry pass over
+  the previous six hours found 859 new listings, 21 upgrades and 2 deals, for 25 eBay calls.
 
 - **T10, searching again after identification, is live (#217).** A spec batch now searches
   once more, first, any queued disc whose film was identified after its search and whose

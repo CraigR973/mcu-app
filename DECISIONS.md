@@ -4173,5 +4173,11 @@ contemporaneous.
        T8a:** a card was as wide as its longest title, so on a phone its right side was cut
        off. No deal has ever been stored, so nobody had seen it; an eBay title is 80
        characters. Fixed with `min-w-0` on the card.
+     - **A dry pass against live eBay and the real catalogue, writing nothing (26 Sep, the
+       previous six hours):** 859 new UK Blu-ray and 4K listings in 5 pages; 21 were a Wanted
+       film or an upgrade (all upgrades, as none of the 8 Wanted films was listed); 2 were
+       deals: *When Harry Met Sally...* on 4K at £16.00 against a usual £29.99, and *Batman v
+       Superman* on 4K at £27.99 against £39.99. 25 eBay calls. At that rate a day brings about
+       eight finds, which the cap of five pushes a person keeps from being noise.
      - **Not yet seen live:** a scheduled pass (it needs the apply) and a push on a phone
        (Mark's notifications are off, `OWNER-ACTIONS.md` 16b).
