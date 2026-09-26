@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
+import { BellRing, Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -53,6 +53,9 @@ export const navItems: NavItem[] = [
   { label: 'Releases', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
   { label: 'Deals', path: '/deals', icon: Tag, showWhen: 'deals' },
+  // Batch T8a. Each person's eBay price alerts; nothing to hide when empty, since the
+  // page is where the first one is set.
+  { label: 'Price alerts', path: '/price-alerts', icon: BellRing },
   // Batch S3: Home now *is* Stats and Insights. `/stats` and `/insights` redirect here
   // rather than 404, because they are in people's history and in the command palette.
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
@@ -105,7 +108,10 @@ export const navGroups: NavGroup[] = [
     label: 'Plan a screening',
     items: [byPath('/movie-night'), byPath('/calendar')],
   },
-  { label: 'Explore', items: [byPath('/deals'), byPath('/dashboard'), byPath('/loans')] },
+  {
+    label: 'Explore',
+    items: [byPath('/deals'), byPath('/price-alerts'), byPath('/dashboard'), byPath('/loans')],
+  },
   { label: 'Personal', items: [byPath('/assistant'), byPath('/settings')] },
 ]
 

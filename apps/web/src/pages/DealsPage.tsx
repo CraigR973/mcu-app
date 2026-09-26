@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils'
 /** §5.10's discount filter, as thresholds rather than a slider — the question is
  *  "anything worth looking at?", not "exactly 37%". */
 const DISCOUNT_STEPS = [10, 25, 50] as const
+/** Batch T8a's finds, named so by the API (`services/ebay_watch/scan.py`). */
+const EBAY = 'eBay'
 
 function DealCard({ deal }: { deal: Deal }) {
   const queryClient = useQueryClient()
@@ -30,8 +32,12 @@ function DealCard({ deal }: { deal: Deal }) {
     },
   })
 
+  const isEbay = deal.retailer === EBAY
+
   return (
-    <article className="archive-panel flex gap-3 p-3 sm:p-4">
+    // `min-w-0`: a grid item is otherwise as wide as its longest unbroken line, and an eBay
+    // title is 80 characters (Batch T8a). The truncated title then ran off the card.
+    <article className="archive-panel flex min-w-0 gap-3 p-3 sm:p-4">
       <div className="w-16 shrink-0 sm:w-20">
         <Poster path={deal.posterPath} title={deal.title} className="w-full" />
       </div>
@@ -59,7 +65,12 @@ function DealCard({ deal }: { deal: Deal }) {
           <span className="font-display text-xl font-semibold text-foreground">
             £{deal.price}
           </span>
-          {deal.wasPrice ? (
+          {/* Batch T8a. An eBay find's price includes postage, and what it is compared with
+              is the film's usual asking price on eBay, not a price it was ever sold at. */}
+          {deal.wasPrice && isEbay ? (
+            <span className="text-sm text-muted-foreground">with postage, usually £{deal.wasPrice}</span>
+          ) : null}
+          {deal.wasPrice && !isEbay ? (
             <span className="text-sm text-muted-foreground line-through">£{deal.wasPrice}</span>
           ) : null}
           {deal.formatCode ? <FormatBadge format={deal.formatCode} /> : null}

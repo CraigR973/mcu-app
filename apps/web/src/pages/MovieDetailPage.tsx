@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
 import ItemHistory from '@/components/collection/ItemHistory'
 import IdentifyPanel from '@/components/movies/IdentifyPanel'
+import PriceAlertPanel from '@/components/movies/PriceAlertPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
 import { useAuth } from '@/context/auth'
 import { imdbUrl, letterboxdUrl } from '@/lib/external-links'
@@ -651,6 +652,8 @@ export default function MovieDetailPage() {
 
           <aside className="min-w-0 space-y-4" aria-label="Personal film tools">
             <WatchPanel movieId={movie.id} />
+            {/* Batch T8a. Anyone's, on the film: its real title is what eBay is searched for. */}
+            {movie.identified ? <PriceAlertPanel movieId={movie.id} title={movie.title} /> : null}
             {/* Admin-only: `GET /admin/audit` is, so a viewer would only watch it fail. */}
             {canEdit ? <ItemHistory movieId={movie.id} /> : null}
           </aside>

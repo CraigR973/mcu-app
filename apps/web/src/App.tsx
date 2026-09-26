@@ -37,6 +37,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const ExportPage = lazy(() => import('./pages/ExportPage'))
 const SpecsPage = lazy(() => import('./pages/SpecsPage'))
 const IdentifyFilmsPage = lazy(() => import('./pages/IdentifyFilmsPage'))
+const PriceAlertsPage = lazy(() => import('./pages/PriceAlertsPage'))
 const AiChatPage = lazy(() => import('./pages/AiChatPage'))
 const MovieNightPage = lazy(() => import('./pages/MovieNightPage'))
 const MovieNightJoinPage = lazy(() =>
@@ -163,6 +164,11 @@ export default function App() {
             <Route
               path="/you"
               element={<AppShell><YouPage /></AppShell>}
+            />
+            {/* Batch T8a. Each person's own eBay price alerts. */}
+            <Route
+              path="/price-alerts"
+              element={<AppShell><PriceAlertsPage /></AppShell>}
             />
             {/* Batch T2. A film the collection does not hold, reached from search. */}
             <Route

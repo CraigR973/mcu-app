@@ -4,6 +4,7 @@ import {
   activitySchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
+  ebayTargetsSchema,
   ebayPriceSegmentSchema,
   auditEntrySchema,
   auditFieldChangeSchema,
@@ -1703,5 +1704,48 @@ describe('Batch T9 — identifying the unmatched films', () => {
   it('refuses an outcome it does not know', () => {
     const decision = { movieId: '00000000-0000-4000-8000-000000000025', outcome: 'guessed', title: 'X' }
     expect(() => identifyDecisionSchema.parse(decision)).toThrow()
+  })
+})
+
+describe('Batch T8a — eBay price alerts', () => {
+  const listing = {
+    id: '00000000-0000-4000-8000-000000000061',
+    kind: 'listing',
+    status: 'met',
+    title: 'THE BRAZEN BULL (NICTOPHOBIA) - Dvd  -',
+    movieId: null,
+    formatCode: null,
+    targetPrice: '7.00',
+    currency: 'GBP',
+    url: 'https://www.ebay.co.uk/itm/168722516953',
+    imageUrl: 'https://i.ebayimg.com/images/g/OywAAeSwqchqt4tc/s-l1600.jpg',
+    isAuction: false,
+    currentPrice: '6.99',
+    currentPostage: '0.00',
+    currentUrl: 'https://www.ebay.co.uk/itm/168722516953',
+    endsAt: '2026-10-03T09:06:39Z',
+    lastCheckedAt: '2026-09-26T10:00:00Z',
+    metAt: '2026-09-26T10:00:00Z',
+    lastError: null,
+    createdAt: '2026-09-25T10:00:00Z',
+  }
+
+  it('reads the alerts and the latest pass, or none', () => {
+    const run = {
+      status: 'budget_spent',
+      startedAt: '2026-09-26T10:20:00Z',
+      finishedAt: '2026-09-26T10:21:00Z',
+      targetsChecked: 2,
+      dealsFound: 1,
+    }
+    expect(ebayTargetsSchema.parse({ items: [listing], lastRun: run })).toEqual({ items: [listing], lastRun: run })
+    expect(ebayTargetsSchema.parse({ items: [], lastRun: null }).lastRun).toBeNull()
+  })
+
+  it('refuses a status or a format it does not know', () => {
+    expect(() => ebayTargetsSchema.parse({ items: [{ ...listing, status: 'sold' }], lastRun: null })).toThrow()
+    expect(() =>
+      ebayTargetsSchema.parse({ items: [{ ...listing, kind: 'search', formatCode: 'vhs' }], lastRun: null }),
+    ).toThrow()
   })
 })

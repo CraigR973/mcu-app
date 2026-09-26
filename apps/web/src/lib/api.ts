@@ -79,6 +79,8 @@ import {
   specBatchStartSchema,
   specDecisionSchema,
   specQueueSchema,
+  ebayTargetSchema,
+  ebayTargetsSchema,
   identifyDecisionSchema,
   identifyOverviewSchema,
   identifyQueueSchema,
@@ -107,6 +109,8 @@ import {
   type SpecBatchStart,
   type SpecDecision,
   type SpecQueue,
+  type EbayTarget,
+  type EbayTargets,
   type IdentifyDecision,
   type IdentifyOverview,
   type IdentifyQueue,
@@ -222,6 +226,9 @@ export type {
   SpecQueue,
   SpecQueueItem,
   SpecRun,
+  EbayTarget,
+  EbayTargets,
+  EbayWatchRun,
   FilmInCollection,
   IdentifyCandidate,
   IdentifyDecision,
@@ -1214,6 +1221,57 @@ export async function fetchRecentIdentifications(limit = 20): Promise<RecentIden
 /** Put a film back as it was before that identification, merges included. */
 export async function undoIdentification(actionId: string): Promise<IdentifyDecision> {
   return parseOrThrowApiError(await authFetch(`/identify/recent/${actionId}/undo`, { method: 'POST' }), identifyDecisionSchema)
+}
+
+// ---------------------------------------------------------------------------
+// eBay price alerts (Batch T8a)
+// ---------------------------------------------------------------------------
+
+/** The react-query key every price-alert list shares, so one change refreshes them all. */
+export const EBAY_TARGETS_KEY = ['ebay-targets'] as const
+
+/** The signed-in person's price alerts, and when the schedule last checked them. */
+export async function fetchEbayTargets(movieId?: string): Promise<EbayTargets> {
+  const query = movieId ? `?movieId=${encodeURIComponent(movieId)}` : ''
+  return parseResponse(await authFetch(`/ebay/targets${query}`), ebayTargetsSchema)
+}
+
+/** An alert on one listing, from the address copied from eBay. Reads the listing once. */
+export async function createListingTarget(address: string, targetPrice: string): Promise<EbayTarget> {
+  return parseOrThrowApiError(
+    await authFetch('/ebay/targets/listing', {
+      method: 'POST',
+      body: JSON.stringify({ address, targetPrice }),
+    }),
+    ebayTargetSchema,
+  )
+}
+
+/** An alert on any UK Buy It Now copy of a film on a format. */
+export async function createSearchTarget(
+  movieId: string,
+  formatCode: 'blu_ray' | '4k_uhd' | 'dvd',
+  targetPrice: string,
+): Promise<EbayTarget> {
+  return parseOrThrowApiError(
+    await authFetch('/ebay/targets/search', {
+      method: 'POST',
+      body: JSON.stringify({ movieId, formatCode, targetPrice }),
+    }),
+    ebayTargetSchema,
+  )
+}
+
+export async function changeTargetPrice(id: string, targetPrice: string): Promise<EbayTarget> {
+  return parseOrThrowApiError(
+    await authFetch(`/ebay/targets/${id}`, { method: 'PATCH', body: JSON.stringify({ targetPrice }) }),
+    ebayTargetSchema,
+  )
+}
+
+export async function removeTarget(id: string): Promise<void> {
+  const response = await authFetch(`/ebay/targets/${id}`, { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
 }
 
 export async function fetchStats(): Promise<Stats> {

@@ -6,6 +6,8 @@ import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { CacheFirst, NetworkFirst } from 'workbox-strategies'
 
+import { opensInApp } from './lib/notification-target'
+
 // vite-plugin-pwa replaces `self.__WB_MANIFEST` with the precache manifest at build time.
 declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: Array<{ url: string; revision: string | null } | string>
@@ -213,6 +215,10 @@ self.addEventListener('push', (event) => {
  * `clients.matchAll` first: on a phone the app is usually already open behind the
  * notification shade, and `openWindow` there leaves the person with two instances and an
  * offline queue split across both.
+ *
+ * **Batch T8a: a link elsewhere opens elsewhere.** A price alert's link is the eBay listing,
+ * one tap to Buy (#203). Navigating the app's window there would replace the app, so it
+ * opens in a window of its own and the app stays where it was.
  */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
@@ -220,6 +226,10 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     (async () => {
+      if (!opensInApp(target, self.location.origin)) {
+        await self.clients.openWindow(target)
+        return
+      }
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       for (const client of windows) {
         if (new URL(client.url).origin === self.location.origin) {

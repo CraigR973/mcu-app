@@ -2019,3 +2019,53 @@ export const syncResponseSchema = z.object({
 export type SyncRun = z.infer<typeof syncRunSchema>
 export type WatchHistoryStatus = z.infer<typeof watchHistoryStatusSchema>
 export type SyncResponse = z.infer<typeof syncResponseSchema>
+
+// ---------------------------------------------------------------------------
+// eBay price alerts (Batch T8a) — `DECISIONS.md` #203, #216
+// ---------------------------------------------------------------------------
+
+/** One person's price alert: on one eBay listing, or on any UK Buy It Now copy of a film on
+ *  a format. Money arrives as strings, as everywhere else. */
+export const ebayTargetSchema = z.object({
+  id: z.string().uuid(),
+  kind: z.enum(['listing', 'search']),
+  /** `met`: a listing reached its target and is not checked again until the target
+   *  changes. A saved search stays `watching`. `ended`: eBay no longer has the listing. */
+  status: z.enum(['watching', 'met', 'ended']),
+  title: z.string(),
+  movieId: z.string().uuid().nullable(),
+  formatCode: z.enum(['4k_uhd', 'blu_ray', 'dvd']).nullable(),
+  targetPrice: z.string(),
+  currency: z.string(),
+  url: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  /** An auction with no Buy It Now: `currentPrice` is the current bid. */
+  isAuction: z.boolean(),
+  currentPrice: z.string().nullable(),
+  currentPostage: z.string().nullable(),
+  /** The listing the last check found: for a saved search, the cheapest copy. */
+  currentUrl: z.string().nullable(),
+  endsAt: z.string().nullable(),
+  lastCheckedAt: z.string().nullable(),
+  metAt: z.string().nullable(),
+  lastError: z.string().nullable(),
+  createdAt: z.string(),
+})
+
+/** The latest scheduled pass. Null until the schedule is switched on. */
+export const ebayWatchRunSchema = z.object({
+  status: z.enum(['running', 'finished', 'budget_spent', 'stopped', 'abandoned']),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  targetsChecked: z.number().int().nonnegative(),
+  dealsFound: z.number().int().nonnegative(),
+})
+
+export const ebayTargetsSchema = z.object({
+  items: z.array(ebayTargetSchema),
+  lastRun: ebayWatchRunSchema.nullable(),
+})
+
+export type EbayTarget = z.infer<typeof ebayTargetSchema>
+export type EbayWatchRun = z.infer<typeof ebayWatchRunSchema>
+export type EbayTargets = z.infer<typeof ebayTargetsSchema>
