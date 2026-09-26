@@ -19,8 +19,8 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 257 discs on
   You → Disc specs (20).
 - **One live run:** 1e, the retailer deals scrape.
-- **Calls that unblock Group U** (`docs/phase-batches.md`): U2 yes or no; picks for 11 and
-  13; U4 yes or no; a pick for 15; and whether to close 14.
+- **Calls that unblock Group U** (`docs/phase-batches.md`): U2 yes or no; picks for 11, 13
+  and 15, which all go in U3; U4 yes or no; and whether to close 14.
 - **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
 
 ---
@@ -866,8 +866,8 @@ gained a `web-dist` entry, which serves the built bundle rather than the dev ser
 
 ### 15. The brand assets are untracked — 56 MB, and a copyright call
 
-> **26 Sep: now Group U's batch U5, waiting for your pick.** The proposal is option 1
-> below: the generator and the vector masters, about 60 kB.
+> **26 Sep: now part of Group U's batch U3, waiting for your pick.** The proposal is option
+> 1 below: the generator and the vector masters, about 60 kB.
 
 `docs/brand/` holds **189 files, 56 MB** and is **not in git**. The committed
 `VERIFICATION.md` §5 calls the `logo-system/stack-family/` set "approved" and the UI reserves

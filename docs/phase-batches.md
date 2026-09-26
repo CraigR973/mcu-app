@@ -2084,7 +2084,8 @@ needs no sign-in. `DECISIONS.md` #203.
 - Gate green.
 
 ### T8b — Connect eBay: Mark's watch and selling lists 🔴
-**Proposed 26 Sep (#216); starts after the eBay checkpoint.** Opus 5 · max / GPT-5.6 Sol ·
+**Proposed 26 Sep (#216); starts after the eBay checkpoint. Group U, step 5: if it is ready
+before 24 Oct, its Railway change shares one config apply with U4's.** Opus 5 · max / GPT-5.6 Sol ·
 Max. It's the first personal third-party account token this app holds (#142). **Criteria
 authored 2026-09-26 from T8's.**
 
@@ -2102,24 +2103,38 @@ authored 2026-09-26 from T8's.**
 
 ## What is left — Group U, planned 26 Sep
 
-**Proposed 2026-09-26 at Craig's request ("batch up all the remaining work"); nothing starts
-before his go.** Criteria authored 2026-09-26, so `DECISIONS.md` #54 does not apply. This
-section is the whole remaining sequence: the new U batches, the three older batches still
-open (21, T8b, 38), the two parked ones (33, 34), and one item to close.
+**Proposed 2026-09-26 at Craig's request ("batch up all the remaining work"), and regrouped at
+his word the same day. Nothing starts before his go.** Criteria authored 2026-09-26, so
+`DECISIONS.md` #54 does not apply. This section is the whole remaining sequence: the new U
+batches, the three older batches still open (21, T8b, 38), the two parked ones (33, 34), and
+one item to close.
 
 **The order, and what gates each:**
 
 | Step | Batch | Gate |
 |---|---|---|
-| 1 | U1 — Blu-ray.com pages that have moved | none; code only |
-| 2 | U2 — Record and show each copy's edition | Craig's yes (it adds a column) |
-| 3 | U3 — The assistant button, and `/debug` | Craig's two picks (`OWNER-ACTIONS.md` 11, 13) |
-| 4 | U4 — Re-price the collection on its own | Craig's yes; his config apply starts it |
-| 5 | U5 — The brand assets into the repo | Craig's pick (`OWNER-ACTIONS.md` 15) |
-| 6 | 21 — Price history charts | the calendar: seven days of scheduled scrapes by 30 Sep |
-| 7 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
-| 8 | 38 — The end-to-end suite | last, so it pins the flows as they end up |
+| 1 | U1 → U2 — moved Blu-ray.com pages, then editions | U1 none; U2 Craig's yes (it adds a column) |
+| 2 | U3 — three small calls: the assistant button, `/debug`, the brand assets | Craig's picks (`OWNER-ACTIONS.md` 11, 13, 15) |
+| 3 | U4 — re-price the collection on its own | Craig's yes, then one config apply (shared with T8b's if timing allows) |
+| 4 | 21 — price history charts | the calendar only; a go now lets it start itself on 30 Sep |
+| 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
+| 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
 | — | 33 → 34 — Email | parked with `OWNER-ACTIONS.md` 7 |
+
+**How they are grouped, and why** (Craig's word, 26 Sep):
+
+- **U1 then U2, back to back on one go.** Both work from the Blu-ray.com page each disc settled
+  on. U1 first means U2 fills editions from pages already corrected, and one live spec batch
+  checks both. They stay two batches with two close-outs.
+- **U3 carries three small calls in one batch.** The brand assets were U5; they joined the
+  assistant button and `/debug` because all three are small, all wait on a pick Craig can make
+  in one sitting, and one browser check verifies them. One close-out instead of two. This is a
+  merge, which the grouping rule below does not grant on its own; Craig chose it.
+- **U4 and T8b share a Railway config apply when the timing allows.** Both need one. If Craig's
+  eBay set-up (item 18) happens before prices fall due on 24 Oct, one apply covers both; if not,
+  U4 ships alone before 24 Oct.
+- **21, T8b and 38 stay alone.** 21 waits only on the calendar, T8b is the one at max effort
+  with a personal token, and 38 must be last.
 
 **To close rather than build:** `OWNER-ACTIONS.md` 14, the before/after screenshots of the
 10 Sep redesign. Batch T3 has since replaced that navigation (#201), so the pair would record
@@ -2168,8 +2183,9 @@ the matcher took the plain one (#212).
   parses.
 - Tests ship with it. Gate green.
 
-### U3 — The assistant button, and `/debug` 🟢
-**Proposed 26 Sep; waits for Craig's two picks.** Sonnet 5 · medium / GPT-5.6 Terra · Medium.
+### U3 — Three small calls: the assistant button, `/debug`, the brand assets 🟢
+**Proposed 26 Sep; waits for Craig's three picks. Carries what was U5.** Sonnet 5 · medium /
+GPT-5.6 Terra · Medium.
 
 - **The floating assistant button still covers controls on a phone** (`OWNER-ACTIONS.md`
   11; seen again on 26 Sep over the Price alerts page). The item's three ways out predate the
@@ -2178,16 +2194,25 @@ the matcher took the plain one (#212).
 - **`/debug` is public in production** (`OWNER-ACTIONS.md` 13). Its one button throws an
   error to test error reporting. **Proposed: development builds only**, the way
   `VITE_SKIP_AUTH` is compiled out.
+- **The brand assets are not in the repo** (`OWNER-ACTIONS.md` 15). **Proposed: the first of
+  its three ways**, the generator and the vector masters, about 60 kB of text.
 
-**Acceptance:** Craig's two choices, built; at 375 px no control on Settings, Price alerts,
-Identify films or a film page sits under anything; tests; gate green.
+**Acceptance:**
+- Craig's three choices, built.
+- At 375 px no control on Settings, Price alerts, Identify films or a film page sits under
+  anything.
+- The chosen brand files are tracked, `docs/brand/source-images/` is ignored, no film still or
+  photograph enters history, and the shipped icons regenerate from a clean clone as far as
+  the choice allows.
+- Tests. Gate green.
 
 ### U4 — Re-price the collection on its own 🟢
 **Proposed 26 Sep; needs Craig's yes, and his config apply starts it.** Sonnet 5 · medium /
 GPT-5.6 Terra · Medium. `OWNER-ACTIONS.md` 19's optional cron.
 
 Prices fall due 30 days after they were taken, the first on 24 Oct. Today only the Home button
-re-prices them.
+re-prices them. **If T8b is ready before 24 Oct, its Railway change and this one go in one
+apply;** otherwise this ships alone before 24 Oct.
 
 **Acceptance:**
 - A `cron-values` job in `.railway/railway.ts` runs `python -m src.scripts.value_collection`
@@ -2196,15 +2221,6 @@ re-prices them.
 - The merge waits for Craig's OK, as T8a's did; the plan should add one service and destroy
   nothing.
 - Gate green.
-
-### U5 — The brand assets into the repo 🟢
-**Proposed 26 Sep; waits for Craig's pick of the three in `OWNER-ACTIONS.md` 15.** Sonnet 5 ·
-medium / GPT-5.6 Terra · Medium. **Proposed: the first**, the generator and the vector masters,
-about 60 kB of text.
-
-**Acceptance:** the chosen files tracked; `docs/brand/source-images/` ignored; no film still
-or photograph enters history; the pipeline regenerates the shipped icons from a clean
-clone as far as the choice allows; gate green.
 
 ## Post-launch — sequenced, not scheduled
 
@@ -2284,7 +2300,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | U1 → **checkpoint: Craig's calls** (U2 yes; 11 and 13; U4 yes; 15) → U2 → U3 → U4 → U5 → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, not approved.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above: five small batches and the three older ones still open. Ordered by gate, not dependency: U1 needs nothing, U2–U5 each wait on one of Craig's calls, 21 on the calendar, T8b on his eBay set-up, and 38 goes last to pin the flows. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | U1 → U2 (U2 after Craig's yes) → U3 (after his three picks) → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day; not approved.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
