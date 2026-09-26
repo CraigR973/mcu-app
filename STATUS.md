@@ -2,31 +2,33 @@
 
 ## Now
 
-**26 Sep 2026: Group U's first step is done. U1 (`cb1111f`) follows a Blu-ray.com page that
-moved; U2 (`52fcced`) records each copy's edition and shows it while browsing. Production
-serves U2 with `db: ok` and migration 041. The first scheduled spec batch is 02:00 UTC on
-27 Sep, and it is the first to run U1 and U2 on a schedule.**
+**26 Sep 2026, evening: Group U's second step is done. U3 (`e116ef2`) put the assistant in the
+top bar, made `/debug` development-only, and stopped tracking the third-party brand images, at
+Craig's three picks. Production serves it with `db: ok`. The first scheduled spec batch is
+02:00 UTC on 27 Sep, and it is the first to run U1 and U2 on a schedule.**
 
-- **U2 is live (#220).** Each copy has a free-text edition, set on the copy form. It is filled
-  only where the disc's Blu-ray.com page is certainly the copy: Craig chose or pasted it, or
-  the search found exactly one UK edition. **The backfill wrote 83**, all of the last kind.
-  The archive's grid, list and compact views and the film page show them. The field labelled
-  "Collector edition" is now "Sub-category": it holds the spreadsheet's groupings ("Clint
-  Eastwood", "Hitchcock"). Craig kept that label on 26 Sep. The live web app carries it.
-- **U1 is live (#219).** A redirect is followed once, only to the same release number, five
-  seconds after the first request; anywhere else sends the disc straight back to Craig.
-  Dr. Strangelove's disc settled on the first batch after the merge (14:37 UTC).
-- **T8a is live (#218):** `cron-ebay` every two hours at twenty past; 3 deals on its first
-  pass. **T10 (#217) and T9 (#215) are live.** 166 films wait on You → Identify films
-  (`OWNER-ACTIONS.md` 21).
+- **U3 is live (#221).** No floating assistant button: a robot icon sits in the top bar beside
+  the person's initial on a phone, and between Commands and "Add a disc" on a desktop. `/debug`
+  exists in development builds only; a test builds the production bundle to prove it, and
+  proves the `VITE_SKIP_AUTH` bypass is compiled out, which nothing had proved before. 25
+  third-party images are untracked and ignored, still on disk and in older history. At 375 px
+  nothing on Settings, Price alerts, Identify films, the Archive or a film page sits under
+  anything; the browser check found and fixed two older faults (Settings' switch knobs, the
+  film page's tab counts). Owner items 11, 13 and 15 are done.
+- **Craig's call, not blocking: 36 tracked images built from stills or posters** (#221 lists
+  them). Four ship, and the live site serves them to anyone: two photographic heroes no page
+  uses, and the personalised poster icons the onboarding welcome shows.
+- **U1 and U2 are live (#219, #220).** 83 copies have an edition; "Sub-category" kept.
+- **T8a is live (#218):** `cron-ebay` every two hours at twenty past. **T10 (#217) and T9
+  (#215) are live.** 166 films wait on You → Identify films (`OWNER-ACTIONS.md` 21).
 - **Valuations are all current (26 Sep):** £23,636.80, 1,303 of 1,457 discs priced. Due again
   from 24 Oct (`OWNER-ACTIONS.md` 19).
 - **Disc specs:** 430 of 1,250 have specs; **323 wait for Craig** (`OWNER-ACTIONS.md` 20);
   497 not searched. `cron-specs` runs nightly at 02:00 UTC; its first run is 27 Sep.
 - **Brave this month: 838 of 1,500.** A batch searches at most 150.
-- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): U3 waits on Craig's
-  picks (`OWNER-ACTIONS.md` 11, 13, 15); U4 on his yes; 21 from 30 Sep; T8b on
-  `OWNER-ACTIONS.md` 18; 38 last.
+- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): U4 on Craig's yes, then
+  one config apply (shared with T8b's if `OWNER-ACTIONS.md` 18 is done before 24 Oct); 21 from
+  30 Sep; T8b on 18; 38 last. Item 14 waits on his word on closing it.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -457,6 +459,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Batch U3 shipped, `e116ef2`)** — Craig's three picks (#221): the assistant is
+  a top-bar icon beside the initial and the floating button is gone; `/debug` exists in
+  development builds only; the 25 third-party brand images are untracked and ignored, still on
+  disk. Local gate and CI green first time (1,593 API tests against Postgres, 408 web).
+  Production serves `e116ef2` with `db: ok`; the live web bundle has no `/debug` route or page.
+  `main` was fast-forwarded without being checked out, because checking out the old `main`
+  and merging would have deleted the images from disk. Browser check at 375 px: nothing on
+  Settings, Price alerts, Identify films, the Archive or a film page sits under anything;
+  two older faults found and fixed (switch knobs, film tab counts). Left for Craig: 36 tracked
+  images built from stills, four served by the live site. The first scheduled `cron-specs`
+  run (02:00 UTC, 27 Sep) had not happened yet, so there was nothing to check.
 
 - **2026-09-26 (owner item 15 corrected)** — While writing the prompt for U3: the brand files
   are not untracked. All 195 under `docs/brand/` (56 MB), third-party stills and posters

@@ -2115,7 +2115,7 @@ one item to close.
 | Step | Batch | Gate |
 |---|---|---|
 | 1 | ~~U1 → U2~~ — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. **Both shipped:** U1 `cb1111f`, U2 `52fcced` |
-| 2 | U3 — three small calls: the assistant button, `/debug`, the brand assets | Craig's picks (`OWNER-ACTIONS.md` 11, 13, 15) |
+| 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | U4 — re-price the collection on its own | Craig's yes, then one config apply (shared with T8b's if timing allows) |
 | 4 | 21 — price history charts | the calendar only; a go now lets it start itself on 30 Sep |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
@@ -2203,7 +2203,20 @@ the matcher took the plain one (#212).
   parses.
 - Tests ship with it. Gate green.
 
-### U3 — Three small calls: the assistant button, `/debug`, the brand assets 🟢
+### ~~U3 — Three small calls: the assistant button, `/debug`, the brand assets~~ 🟢 **shipped 2026-09-26 (`e116ef2`)**
+**Acceptance: four of four met.** Craig's picks, built (#221): no floating assistant button,
+a top-bar icon beside the person's initial instead (and a top-bar link on a desktop), the five
+bottom tabs still five; `/debug` in development builds only, proved by a test that builds the
+production bundle, which proves the `VITE_SKIP_AUTH` bypass compiled out too; and pick B for
+the brand files, 25 third-party images untracked and ignored, still on disk, with tests that
+fail if one is tracked again. At 375 px nothing on Settings, Price alerts, Identify films, the
+Archive (grid, list, compact) or a film page (four tabs) sits under anything, hit-tested
+control by control; the check found and fixed two older faults (Settings' switch knobs, the
+film page's tab counts). The shipped icons rebuild from a clean clone: every SVG byte for byte,
+38 of 42 PNGs pixel for pixel, four within 2 of 255 levels. **Left for Craig, not blocking:**
+36 tracked images built from stills or posters, four of which the live site serves (#221).
+Local gate and CI green first time (1,593 API tests against Postgres, 408 web tests).
+
 **Proposed 26 Sep; waits for Craig's three picks. Carries what was U5.** Sonnet 5 · medium /
 GPT-5.6 Terra · Medium.
 
@@ -2324,7 +2337,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → ~~U2~~ → U3 (after his three picks) → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

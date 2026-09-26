@@ -5,7 +5,7 @@ someone else's website, a device, or a choice that isn't an agent's to make. Age
 **read this and stop**, not work around anything on it.
 
 Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-26**,
-after T8a and the Railway config apply. *Numbers changed at the 2026-09-09 review; the old
+after U3. *Numbers changed at the 2026-09-09 review; the old
 ones are noted in brackets so an earlier conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(26 Sep)*
@@ -19,9 +19,11 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 323 discs on
   You → Disc specs (20).
 - **One live run:** 1e, the retailer deals scrape.
-- **Calls that unblock Group U** (`docs/phase-batches.md`): picks for 11, 13 and 15, which
-  all go in U3; U4 yes or no; and whether to close 14. (U2's yes was given on 26 Sep, and U1
-  and U2 have shipped.)
+- **Calls that unblock Group U** (`docs/phase-batches.md`): U4 yes or no, and whether to close
+  14. (Your picks for 11, 13 and 15 were built as U3 on 26 Sep; U1 and U2 shipped the same
+  day.)
+- **One copyright call, not blocking:** whether the 36 tracked images built from stills or
+  posters stay, four of which the live site serves to anyone (15, `DECISIONS.md` #221).
 - **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
 
 ---
@@ -802,10 +804,16 @@ number a setting rather than a shape, which is what stops it being annoying to r
 they are here because each is a call an agent should not take alone. Detail and repro steps
 are in `docs/ui-redesign/VERIFICATION.md` §3–§5; #15 is new here, not in that file.
 
-### 11. The floating assistant button covers a control on mobile
+### 11. ~~The floating assistant button covers a control on mobile~~ — **done 26 Sep (Batch U3, `e116ef2`)**
 
-> **26 Sep: now Group U's batch U3, waiting for your pick.** A sixth tab below conflicts
-> with your five (#201); the proposal is an assistant icon in the top bar instead.
+> **Done 26 Sep, as you picked:** no floating button anywhere. A robot icon sits in the top
+> bar beside your initial on a phone (and between Commands and "Add a disc" on a desktop),
+> on every page, the chat and a movie night included; the five bottom tabs stay five. At
+> 375 px nothing on Settings, Price alerts, Identify films, the Archive or a film page sits
+> under anything (#221). The rest of this item is the history.
+
+> **26 Sep, before the pick:** a sixth tab below conflicted with your five (#201); the
+> proposal was an assistant icon in the top bar instead.
 
 Reproduced at 375px on `/settings/notifications`: the FAB — fixed, 48×48, `z-index: 20` —
 overlaps the **"Upcoming releases" switch**, so taps on the switch's right portion open the
@@ -831,10 +839,15 @@ fetching copies per film would be an **N+1 across 1,843 rows**. Making it visibl
 **additive list field** — an array of distinct edition labels — which is an API-contract
 change and therefore its own batch.
 
-### 13. `/debug` remains production-reachable
+### 13. ~~`/debug` remains production-reachable~~ — **done 26 Sep (Batch U3, `e116ef2`)**
 
-> **26 Sep: now Group U's batch U3, waiting for your pick.** Its one button throws an error
-> to test error reporting; the proposal is development builds only.
+> **Done 26 Sep, as you picked:** development builds only. A production build contains
+> neither the route nor the page, and a test builds one to prove it; the same test now
+> proves the `VITE_SKIP_AUTH` sign-in bypass is compiled out too, which nothing had proved
+> before (#221). In development its button still throws its test error.
+
+> **26 Sep, before the pick:** its one button throws an error to test error reporting; the
+> proposal was development builds only.
 
 Whether it should be development-only is a deployment decision.
 
@@ -867,7 +880,21 @@ So the only thing between you and the redesign's missing files is **signing in y
 in that window** for the surfaces that need real catalogue data. `.claude/launch.json` also
 gained a `web-dist` entry, which serves the built bundle rather than the dev server.
 
-### 15. The brand assets — 56 MB in git since 10 Sep, and a copyright call
+### 15. ~~The brand assets — 56 MB in git since 10 Sep, and a copyright call~~ — **done 26 Sep (Batch U3, `e116ef2`), one call left**
+
+> **Done 26 Sep, your pick B:** the 25 third-party images (18 in `source-images/`, the six
+> posters in `concepts/catalogue-frame-v2/sources/`, `poster-source-grid.png`) are no longer
+> tracked, their folders and any JPEG under `docs/brand/` are ignored, and they are still on
+> disk. History before U3 still holds them; removing them from it (C) stays yours to run. The
+> shipped icons rebuild from a clean clone (#221).
+>
+> **One call left, not blocking anything:** 36 tracked images are *built from* those stills
+> and posters, so pick B did not cover them: the personalised poster edition, the concept
+> master it comes from, the photographic heroes and the photo-logo concepts (#221 lists
+> them). **Four ship, and the live site serves them to anyone, signed in or not:**
+> `hero-photo-five-v3.png` and `hero-photo-v3.png` (no page uses either) and
+> `personalised-poster-icon-{512,1024}.png` (the onboarding welcome). Leave them, or say
+> which to stop shipping or tracking.
 
 > **Corrected 26 Sep, evening: these files are already in git.** All 195 files under
 > `docs/brand/` (56 MB) went into history on 10 Sep in `fb6ecbd` and are on GitHub; the
@@ -880,7 +907,7 @@ gained a `web-dist` entry, which serves the built bundle rather than the dev ser
 > them, a force push to every branch that only you can run. **Proposed: B**, because the
 > repository is private and a rewrite touches every branch and clone.
 >
-> **26 Sep: now part of Group U's batch U3, waiting for your pick.** (The earlier proposal,
+> **26 Sep: then part of Group U's batch U3, waiting for your pick.** (The earlier proposal,
 > option 1 below, assumed the files were untracked.)
 
 `docs/brand/` holds **189 files, 56 MB** and is **not in git**. The committed
