@@ -2114,7 +2114,7 @@ one item to close.
 
 | Step | Batch | Gate |
 |---|---|---|
-| 1 | ~~U1~~ → U2 — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. U1 shipped (`cb1111f`) |
+| 1 | ~~U1 → U2~~ — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. **Both shipped:** U1 `cb1111f`, U2 `52fcced` |
 | 2 | U3 — three small calls: the assistant button, `/debug`, the brand assets | Craig's picks (`OWNER-ACTIONS.md` 11, 13, 15) |
 | 3 | U4 — re-price the collection on its own | Craig's yes, then one config apply (shared with T8b's if timing allows) |
 | 4 | 21 — price history charts | the calendar only; a go now lets it start itself on 30 Sep |
@@ -2174,7 +2174,16 @@ then sent back to Craig.
 - A `DECISIONS.md` entry says why this stays inside #110.
 - Tests ship with it. Gate green.
 
-### U2 — Record and show each copy's edition 🟡
+### ~~U2 — Record and show each copy's edition~~ 🟡 **shipped 2026-09-26 (`52fcced`)**
+**Acceptance: four of four met.** Migration 041 adds a free-text edition to each copy, set and
+corrected on the copy form. It is filled only where the settled page is certainly the copy
+(#220); the backfill wrote **83 editions, all from pages that were the one UK edition the
+search found** (none yet from pages Craig chose or pasted), matching the dry run exactly. The
+archive list carries each film's editions in one grouped query (6 queries for all 1,866 films,
+as for 20), with zod defaults for cached responses. "Collector edition" is relabelled
+"Sub-category", since it holds the spreadsheet's groupings. Browser check at 375 and 1,280 px;
+local gate and CI green first time (1,593 API tests against Postgres).
+
 **Proposed 26 Sep; needs Craig's yes, because it adds a column.** Opus 5 · high / GPT-5.6
 Sol · High. Replaces `OWNER-ACTIONS.md` 12.
 
@@ -2311,7 +2320,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → U2 → U3 (after his three picks) → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) shipped 2026-09-26.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → U3 (after his three picks) → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

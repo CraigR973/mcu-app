@@ -4305,3 +4305,11 @@ contemporaneous.
        list and compact views and the film page's copy card showed the edition, and the copy
        form held it beside the relabelled Sub-category. No horizontal scroll, no parse errors.
        It found one thing, fixed: the Sub-category placeholder ran off a phone's field.
+     - **Shipped as `52fcced` on 26 Sep; migration 041 applied.** Local gate and CI green
+       first time (1,593 API tests against Postgres). **The backfill wrote 83 editions**, all
+       to copies whose page was the one UK edition the search found (none chosen or pasted by
+       Craig yet), one copy per film, and identical, id for id, to the dry run made before
+       the merge: HMV Exclusive 17, Masters of Cinema 10, Vintage Classics 10, SteelBook 8,
+       Zavvi Exclusive SteelBook 4, Arrow Academy 3, and 31 others. Read through the real
+       list route afterwards: 83 of 1,866 films carry editions, and the list takes 6 queries
+       for the whole catalogue, as for a page of 20.

@@ -2,33 +2,31 @@
 
 ## Now
 
-**26 Sep 2026: Craig said go on Group U's first step, U1 → U2, with his yes to U2's column.
-U1 has shipped (`cb1111f`): a Blu-ray.com page that moved is followed to its new address.
-U2, each copy's edition, is next. The first scheduled spec batch is 02:00 UTC on 27 Sep.**
+**26 Sep 2026: Group U's first step is done. U1 (`cb1111f`) follows a Blu-ray.com page that
+moved; U2 (`52fcced`) records each copy's edition and shows it while browsing. Production
+serves U2 with `db: ok` and migration 041. The first scheduled spec batch is 02:00 UTC on
+27 Sep, and it is the first to run U1 and U2 on a schedule.**
 
-- **U1 is live (#219).** A redirect from Blu-ray.com is followed once, and only when the new
-  address is the same release (same number, #110's predicate), five seconds after the first
-  request; a `403` or `429` to it halts everything. Anywhere else sends the disc straight
-  back to Craig with the address. **Checked live:** a batch run by hand at 14:35 UTC settled
-  Dr. Strangelove's disc at 14:37, at its new address. That batch: 148 Brave searches, 88
-  accepted, 89 pages fetched, 83 with specs, 6 sent back by the year check, no failures.
-- **U2, next:** a free-text edition on each copy (migration 041), filled only where the
-  settled Blu-ray.com page is certainly the copy, shown while browsing. Replaces
-  `OWNER-ACTIONS.md` 12.
-- **T8a, eBay price alerts and the deal scan, is live (#218).** `cron-ebay` runs every two
-  hours at twenty past. Its first pass (12:21 UTC, 26 Sep) found 3 deals, and all 3 pushes
-  reached Craig; Mark's were held for want of a device.
-- **T10 is live (#217); T9 is live (#215).** 166 films wait on You → Identify films
+- **U2 is live (#220).** Each copy has a free-text edition, set on the copy form. It is filled
+  only where the disc's Blu-ray.com page is certainly the copy: Craig chose or pasted it, or
+  the search found exactly one UK edition. **The backfill wrote 83**, all of the last kind.
+  The archive's grid, list and compact views and the film page show them. The field labelled
+  "Collector edition" is now "Sub-category": it holds the spreadsheet's groupings ("Clint
+  Eastwood", "Hitchcock"). Craig can overrule the label.
+- **U1 is live (#219).** A redirect is followed once, only to the same release number, five
+  seconds after the first request; anywhere else sends the disc straight back to Craig.
+  Dr. Strangelove's disc settled on the first batch after the merge (14:37 UTC).
+- **T8a is live (#218):** `cron-ebay` every two hours at twenty past; 3 deals on its first
+  pass. **T10 (#217) and T9 (#215) are live.** 166 films wait on You → Identify films
   (`OWNER-ACTIONS.md` 21).
-- **Valuations are all current (26 Sep):** £23,636.80 at current eBay asking prices, 1,303
-  of 1,457 discs priced. Due again from 24 Oct (`OWNER-ACTIONS.md` 19).
+- **Valuations are all current (26 Sep):** £23,636.80, 1,303 of 1,457 discs priced. Due again
+  from 24 Oct (`OWNER-ACTIONS.md` 19).
 - **Disc specs:** 430 of 1,250 have specs; **323 wait for Craig** (`OWNER-ACTIONS.md` 20);
-  497 not searched. **`cron-specs` runs nightly at 02:00 UTC; its first run is 27 Sep.**
+  497 not searched. `cron-specs` runs nightly at 02:00 UTC; its first run is 27 Sep.
 - **Brave this month: 838 of 1,500.** A batch searches at most 150.
-- **Group U** (`docs/phase-batches.md`, "What is left — Group U"): ~~U1~~ → U2 on Craig's
-  go; then U3 (his picks, `OWNER-ACTIONS.md` 11, 13, 15), U4 (his yes), 21 (from 30 Sep),
-  T8b (`OWNER-ACTIONS.md` 18) and 38. Craig's own items are listed by sitting at the top of
-  `OWNER-ACTIONS.md`.
+- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): U3 waits on Craig's
+  picks (`OWNER-ACTIONS.md` 11, 13, 15); U4 on his yes; 21 from 30 Sep; T8b on
+  `OWNER-ACTIONS.md` 18; 38 last.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -40,8 +38,9 @@ U2, each copy's edition, is next. The first scheduled spec batch is 02:00 UTC on
   1,887 films: 1,677 identified and 210 not (166 waiting for Craig, 35 set aside, 9 with no
   disc).
 - **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 430. **Disc valuations:** 1,454 films and formats
-  checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD £5.95.
+- **Discs with Blu-ray.com specs:** 430; **with an edition:** 83. **Disc valuations:** 1,454
+  films and formats checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD
+  £5.95.
 - **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass.
 
 ## Next
@@ -458,6 +457,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Batch U2 shipped, `52fcced`)** — Each copy's edition (migration 041), filled
+  only where its Blu-ray.com page is certainly the copy, and shown while browsing (#220). Local
+  gate and CI green first time; production serves `52fcced` with `db: ok`. The backfill wrote
+  83 editions, all from pages that were the one UK edition the search found, identical to the
+  dry run. "Collector edition" became "Sub-category". Browser check at 375 and 1,280 px.
+  Owner item 12 is done.
 
 - **2026-09-26 (Batch U1 shipped, `cb1111f`)** — At Craig's go on U1 → U2. A moved
   Blu-ray.com page is followed once, to the same release only (#219). Local gate and CI green

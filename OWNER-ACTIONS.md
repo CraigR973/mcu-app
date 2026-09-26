@@ -19,8 +19,9 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 323 discs on
   You → Disc specs (20).
 - **One live run:** 1e, the retailer deals scrape.
-- **Calls that unblock Group U** (`docs/phase-batches.md`): U2 yes or no; picks for 11, 13
-  and 15, which all go in U3; U4 yes or no; and whether to close 14.
+- **Calls that unblock Group U** (`docs/phase-batches.md`): picks for 11, 13 and 15, which
+  all go in U3; U4 yes or no; and whether to close 14. (U2's yes was given on 26 Sep, and U1
+  and U2 have shipped.)
 - **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
 
 ---
@@ -817,11 +818,13 @@ Three ways out, and choosing between them is information architecture, not styli
 - **hide the FAB** on routes with edge-aligned controls;
 - **reserve a right gutter**, at the cost of ~64px on a 375px screen.
 
-### 12. Edition is still invisible while browsing
+### 12. ~~Edition is still invisible while browsing~~ — **done 26 Sep (Batch U2, `52fcced`)**
 
-> **26 Sep: now Group U's batch U2, waiting for your yes.** Found while planning it: no copy
-> records an edition at all, so U2 adds one, filled only where the Blu-ray.com page is
-> certainly the copy, and editable.
+> **Done 26 Sep.** Each copy now has an edition, set on the copy form; 83 were filled from
+> Blu-ray.com pages that were certainly the copy, and the archive's grid, list and compact
+> views and the film page show them (#220). The field that was labelled "Collector edition"
+> is now "Sub-category", because it holds your spreadsheet's groupings ("Clint Eastwood",
+> "Hitchcock"); say if you want the old label back. The rest of this item is the history.
 
 Unchanged from the audit, and not a styling gap: the list contract has no edition field, and
 fetching copies per film would be an **N+1 across 1,843 rows**. Making it visible means an
