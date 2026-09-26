@@ -116,12 +116,18 @@ async def _person(db: AsyncSession, role: UserRole) -> Profile:
     return person
 
 
-def _as(db: AsyncSession, person: Profile, ebay: FakeEbay | None = None) -> AsyncClient:
+def _as(db: AsyncSession, person_id: uuid.UUID, ebay: FakeEbay | None = None) -> AsyncClient:
+    # By id, and the profile read again on each request, as a real request does: a refused
+    # request rolls the shared session back, which expires every object in it, and reading
+    # an expired one outside a request is IO the test cannot do (T9 met this first).
+
     async def override_db() -> AsyncIterator[AsyncSession]:
         yield db
 
     async def override_user() -> Profile:
-        return person
+        fresh = await db.get(Profile, person_id)
+        assert fresh is not None
+        return fresh
 
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_current_user] = override_user
@@ -198,9 +204,10 @@ async def _notes(db: AsyncSession, person: Profile, prefix: str) -> list[Notific
 async def test_a_person_sets_a_listing_alert_and_only_they_see_it(db: AsyncSession) -> None:
     craig = await _person(db, UserRole.admin)
     mark = await _person(db, UserRole.viewer)
+    craig_id, mark_id = craig.id, mark.id
     address = "https://www.ebay.co.uk/itm/168722516953?hash=item274861:g:OywAAeSwqchqt4tc"
 
-    async with _as(db, mark, FakeEbay(item=ITEM)) as client:
+    async with _as(db, mark_id, FakeEbay(item=ITEM)) as client:
         made = await client.post(
             "/api/v1/ebay/targets/listing", json={"address": address, "targetPrice": "4.00"}
         )
@@ -222,12 +229,12 @@ async def test_a_person_sets_a_listing_alert_and_only_they_see_it(db: AsyncSessi
         assert [item["id"] for item in mine.json()["items"]] == [body["id"]]
         assert mine.json()["lastRun"] is None
 
-    async with _as(db, craig) as client:
+    async with _as(db, craig_id) as client:
         assert (await client.get("/api/v1/ebay/targets")).json()["items"] == []
         refused = await client.delete(f"/api/v1/ebay/targets/{body['id']}")
         assert refused.status_code == 404
 
-    async with _as(db, mark) as client:
+    async with _as(db, mark_id) as client:
         changed = await client.patch(
             f"/api/v1/ebay/targets/{body['id']}", json={"targetPrice": "6.50"}
         )
@@ -240,7 +247,8 @@ async def test_a_listing_already_under_its_target_is_saved_as_met_without_a_push
     db: AsyncSession,
 ) -> None:
     mark = await _person(db, UserRole.viewer)
-    async with _as(db, mark, FakeEbay(item=ITEM)) as client:
+    mark_id = mark.id
+    async with _as(db, mark_id, FakeEbay(item=ITEM)) as client:
         made = await client.post(
             "/api/v1/ebay/targets/listing",
             json={"address": "168722516953", "targetPrice": "10.00"},
@@ -253,8 +261,9 @@ async def test_an_address_that_is_not_a_listing_is_refused_before_eBay_is_asked(
     db: AsyncSession,
 ) -> None:
     mark = await _person(db, UserRole.viewer)
+    mark_id = mark.id
     ebay = FakeEbay(item=ITEM)
-    async with _as(db, mark, ebay) as client:
+    async with _as(db, mark_id, ebay) as client:
         refused = await client.post(
             "/api/v1/ebay/targets/listing",
             json={"address": "https://ebay.us/m/AbCdEf", "targetPrice": "5.00"},
@@ -268,12 +277,15 @@ async def test_a_saved_search_needs_an_identified_film_and_one_per_format(
     db: AsyncSession,
 ) -> None:
     mark = await _person(db, UserRole.viewer)
+    mark_id = mark.id
     film = await _film(db, "Star Wars: The Last Jedi", tmdb_id=990_181_808)
     unmatched = await _film(db, "Star Wars Ep VIII", tmdb_id=None)
-    async with _as(db, mark) as client:
+    # Taken before a refused request rolls the session back and expires both films.
+    film_id, unmatched_id = str(film.id), str(unmatched.id)
+    async with _as(db, mark_id) as client:
         made = await client.post(
             "/api/v1/ebay/targets/search",
-            json={"movieId": str(film.id), "formatCode": "4k_uhd", "targetPrice": "12"},
+            json={"movieId": film_id, "formatCode": "4k_uhd", "targetPrice": "12"},
         )
         assert made.status_code == 201, made.text
         assert (made.json()["kind"], made.json()["formatCode"], made.json()["targetPrice"]) == (
@@ -283,17 +295,17 @@ async def test_a_saved_search_needs_an_identified_film_and_one_per_format(
         )
         twice = await client.post(
             "/api/v1/ebay/targets/search",
-            json={"movieId": str(film.id), "formatCode": "4k_uhd", "targetPrice": "10"},
+            json={"movieId": film_id, "formatCode": "4k_uhd", "targetPrice": "10"},
         )
         assert twice.status_code == 422
         other_format = await client.post(
             "/api/v1/ebay/targets/search",
-            json={"movieId": str(film.id), "formatCode": "blu_ray", "targetPrice": "6"},
+            json={"movieId": film_id, "formatCode": "blu_ray", "targetPrice": "6"},
         )
         assert other_format.status_code == 201
         unidentified = await client.post(
             "/api/v1/ebay/targets/search",
-            json={"movieId": str(unmatched.id), "formatCode": "4k_uhd", "targetPrice": "6"},
+            json={"movieId": unmatched_id, "formatCode": "4k_uhd", "targetPrice": "6"},
         )
         assert unidentified.status_code == 422
         missing = await client.post(
@@ -301,7 +313,7 @@ async def test_a_saved_search_needs_an_identified_film_and_one_per_format(
             json={"movieId": str(uuid.uuid4()), "formatCode": "4k_uhd", "targetPrice": "6"},
         )
         assert missing.status_code == 404
-        by_film = await client.get(f"/api/v1/ebay/targets?movieId={film.id}")
+        by_film = await client.get(f"/api/v1/ebay/targets?movieId={film_id}")
         assert len(by_film.json()["items"]) == 2
 
 
@@ -419,6 +431,8 @@ async def test_deal_pushes_stop_at_five_a_person_a_day(db: AsyncSession) -> None
                 user_id=craig.id,
                 category="deals",
                 status="sent",
+                sent_at_utc=NOW - timedelta(hours=1),
+                delivered_count=1,
                 title="An earlier deal",
                 body="",
                 dedupe_key=f"ebay-deal:earlier-{index}:{craig.id}",
@@ -474,7 +488,7 @@ async def test_a_pass_starts_only_inside_the_days_share_and_one_at_a_time(
 async def test_an_expired_ebay_deal_leaves_the_feed_its_count_and_the_badge(
     db: AsyncSession,
 ) -> None:
-    mark = await _person(db, UserRole.viewer)
+    mark_id = (await _person(db, UserRole.viewer)).id
     for suffix, expires in (("1", datetime(2020, 1, 1)), ("2", datetime(2099, 1, 1))):
         db.add(
             Deal(
@@ -491,7 +505,7 @@ async def test_an_expired_ebay_deal_leaves_the_feed_its_count_and_the_badge(
             )
         )
     await db.commit()
-    async with _as(db, mark) as client:
+    async with _as(db, mark_id) as client:
         feed = (await client.get("/api/v1/deals")).json()
         count = (await client.get("/api/v1/deals/count")).json()
         badge = (await client.get("/api/v1/nav/sections")).json()
