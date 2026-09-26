@@ -946,9 +946,10 @@ destroy nothing. If anything is to be destroyed, stop (#124).
 
 ### 20. Work through the Disc specs queue — T7
 
-> **Updated 25 Sep, after T9's live run: 197 discs wait for you** (136 on 24 Sep). The day's
-> batch searched 148 discs nobody had searched before: 63 of them wait, and 7 pages failed
-> the year check. T7's second look settled 9 discs of films T9 identified.
+> **Updated 26 Sep: 257 discs wait for you** (197 on 25 Sep, 136 on 24 Sep). Each batch
+> searches about 145 discs nobody has searched before, and about 40% of them wait. Since
+> T10 (#217), a disc whose film you identify after its search is searched again once,
+> under the corrected title, when the words differ.
 
 **Best order: Identify films first (item 21), then this queue.** 61 of the 197 are discs of
 films still waiting on You → Identify films. Once you identify a film, the next batch's
@@ -988,10 +989,9 @@ eBay's developer portal, and put an encryption key for Mark's stored eBay token 
 **Still worth a look:** open a couple of films and compare the stored value with **What is
 it worth?**. They should match, because they use the same estimator.
 
-**Updated 25 Sep: 92 films and formats are due now.** Identifying 156 films in T9 made 133
-of them due, because their prices were searched under the old titles. The day's last 43 eBay
-calls re-priced 41. Press **Update values** on Home any time after 01:00 BST on 26 Sep, when
-a new day's 750 calls begin. Pricing the 92 takes about 92 calls.
+**Updated 26 Sep: nothing is due.** Identifying 156 films in T9 made 133 films and formats
+due, because their prices were searched under the old titles. All 133 are re-priced (117
+priced). **£23,636.80** at current asking prices, with 1,303 of 1,457 discs priced.
 
 **Prices fall due again from 24 Oct**, 30 days after they were taken. Press **Update
 values** on Home then, or add the cron below.

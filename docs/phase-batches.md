@@ -1987,8 +1987,14 @@ or 4K; 1 has watch history; none has a year. The titles fall into kinds:
   Disc specs queue before and after.
 - Gate green.
 
-### T10 — Search again for discs whose film was identified 🟢
-**Proposed 26 Sep at Craig's word (#216); the plan waits for his go.** Opus 5 · high /
+### ~~T10 — Search again for discs whose film was identified~~ 🟢 **shipped 2026-09-26 (`db75229`)**
+**Acceptance: five of five met.** A batch run by hand on 26 Sep searched the 5 qualifying
+discs first; 2 settled (The Fellowship of the Ring got specs; Dr. Strangelove's page is
+accepted, its fetch answered 301). The run recorded both numbers. Local gate and CI green
+first time; migration 039 applied. Only 5 discs qualified, not ~70: most cleaned titles
+already read as TMDB's (#217).
+
+**Proposed 26 Sep at Craig's word (#216), who said go the same day.** Opus 5 · high /
 GPT-5.6 Sol · High. Small, but it spends Brave searches and moves discs in Craig's queue.
 **Criteria authored 2026-09-26**, so `DECISIONS.md` #54 does not apply.
 
@@ -2034,7 +2040,7 @@ account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
   the encryption key in Railway, and eBay keys on the job service.
 
 ### T8a — eBay price alerts and the deal scan 🟡
-**Proposed 26 Sep: Craig chose to split T8 (#216); the plan waits for his go.** Opus 5 ·
+**Proposed 26 Sep: Craig chose to split T8 (#216), and said go the same day.** Opus 5 ·
 xhigh / GPT-5.6 Sol · Extra High. It spends a daily share of the eBay allowance on its own
 and pushes to both phones. It signs nobody in and holds no personal token, which is why it is
 not T8's max. **Criteria authored 2026-09-26 from T8's.** Covers the half of snag 8 that
@@ -2153,7 +2159,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → T10 → T8a → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**: T10 and T8a first, T8b after the checkpoint. The plan waits for his go. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → T8a → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 shipped (`db75229`, 2026-09-26)**; T8a is next and its merge waits for his OK; T8b after the checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

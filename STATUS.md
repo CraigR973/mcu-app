@@ -2,36 +2,34 @@
 
 ## Now
 
-**26 Sep 2026: T9 has shipped (`4d16723`) and its live run is done. Craig has split T8; the
-plan for T10, T8a and T8b waits for his go.**
+**26 Sep 2026: T10 has shipped (`db75229`). T8a, eBay price alerts and the deal scan, is being
+built and stops before its merge for Craig's OK.**
 
-- **T9, identifying the unmatched films, is live.** The live run applied the approved plan
-  (`docs/t9/identify-plan-2026-09-25.json`) once, 16:59–17:03 UTC: **156 identified, 166 for
-  Craig, 35 set aside** (34 TV, 1 test row), 0 left alone, 0 failed. Films with a disc and no
-  TMDB match went from 357 to 201. **166 wait on You → Identify films** (`OWNER-ACTIONS.md`
-  21). 10 of them would merge into a film already held. One is "Kingsman": it is offered
-  The King's Man (2021) first, but the 4K is probably Kingsman: The Secret Service, second
-  in the list. Any identification can be undone on that page. Migration 038 is applied.
-- **The knock-ons ran once each (#215).** In one spec batch, T7's second look settled **9
-  discs of T9-identified films**, and all 9 now have specs. The batch's 148 searches found
-  85 pages, 78 of them now with specs, and left 63 discs for Craig. One valuation pass used
-  the 43 eBay calls left on 25 Sep. It re-priced 41 films and formats (32 priced, 9 not).
-  **92 are still due**, and the next run can price them from 00:00 UTC on 26 Sep. Nothing
-  runs it on its own: press **Update values** on Home (`OWNER-ACTIONS.md` 19).
-- **Disc specs:** 265 of 1,250 Blu-ray and 4K discs have specs. **197 wait for Craig**
-  (`OWNER-ACTIONS.md` 20). Of those, 61 are discs of films waiting on Identify films, so
-  settling those films first lets the next second look decide more. 788 are not searched
-  yet. **No nightly batch has run.** The Brave key is still only in `.env.local`, not
-  Railway (`OWNER-ACTIONS.md` 17).
-- **Brave this month: 542 of 1,500.** Spec batches used 462 and T9's dry runs 80.
-- **Collection value: £22,951.01** at current eBay asking prices, with 1,271 of 1,457 discs
-  priced.
+- **T10, searching again after identification, is live (#217).** A spec batch now searches
+  once more, first, any queued disc whose film was identified after its search and whose
+  search words would now differ. The batch run by hand on 26 Sep searched 5 such discs
+  again. 2 settled: The Fellowship of the Ring now has specs, and Dr. Strangelove's page is
+  accepted but answered 301 (moved), so it waits for the next batch. Only 5 qualified, not
+  the ~70 estimated: most discs' cleaned titles already read as TMDB's. Migration 039 is
+  applied.
+- **T9 is live (#215).** 156 films identified, **166 wait on You → Identify films**
+  (`OWNER-ACTIONS.md` 21), 35 set aside. 10 of the waiting films would merge into a film
+  already held. One is "Kingsman": it is offered The King's Man (2021) first, but the 4K is
+  probably Kingsman: The Secret Service, second in the list. Any identification can be
+  undone on that page.
+- **Valuations are all current (26 Sep).** The 92 films and formats T9 made due were priced
+  at Craig's word: 85 priced, 7 not, 0 failed. **£23,636.80** at current eBay asking prices,
+  with 1,303 of 1,457 discs priced. Prices fall due again from 24 Oct (`OWNER-ACTIONS.md`
+  19).
+- **Disc specs:** 347 of 1,250 Blu-ray and 4K discs have specs. **257 wait for Craig**
+  (`OWNER-ACTIONS.md` 20). 645 are not searched yet. **No nightly batch has run.** The Brave
+  key is still only in `.env.local`, not Railway (`OWNER-ACTIONS.md` 17).
+- **Brave this month: 690 of 1,500.** Spec batches used 610 and T9's dry runs 80.
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  T7 `160f842` with `bfc28e7`, **T9 `4d16723`**. **Craig chose on 26 Sep (#216)** to split
-  T8 and to add T10. The order is T10 (search again for discs whose film was identified),
-  then T8a (eBay price alerts and the deal scan, no sign-in), then the eBay checkpoint
-  (`OWNER-ACTIONS.md` 18), then T8b ("Connect eBay"). **Nothing starts before his go on
-  this plan.**
+  T7 `160f842` with `bfc28e7`, T9 `4d16723`, **T10 `db75229`**. Craig split T8 on 26 Sep
+  (#216) and said go on the plan: **T8a is next** (eBay price alerts and the deal scan, no
+  sign-in). Its merge waits for his OK, because its schedule is a Railway job. Then the eBay
+  checkpoint (`OWNER-ACTIONS.md` 18), then T8b ("Connect eBay").
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -39,13 +37,13 @@ plan for T10, T8a and T8b waits for his go.**
   connections are retried (#211). **Session renewal works live** (#200). **Mark's phone gets
   no pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b).
 
-**Live numbers (25 Sep, after T9):**
+**Live numbers (26 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
   1,887 films: 1,677 identified and 210 not (166 waiting for Craig, 35 set aside, 9 with no
   disc).
 - **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 265. **Disc valuations:** 1,454 films and formats
-  checked, 1,268 priced and 186 not; medians 4K £29.85, Blu-ray £15.73, DVD £6.00.
+- **Discs with Blu-ray.com specs:** 347. **Disc valuations:** 1,454 films and formats
+  checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD £5.95.
 
 ## Next
 
@@ -461,6 +459,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Batch T10 shipped, `db75229`; valuations current)** — Craig said go on the
+  plan. T10 searches again, once, a queued disc whose film was identified since its search.
+  Local gate and CI green first time (1,467 passed); production serves `db75229` with
+  migration 039. A batch run by hand searched 5 discs again and settled 2, and gave 82 discs
+  specs in all; the queue went from 197 to 257 because 143 discs were searched for the first
+  time. The 92 valuations T9 made due were priced: 85 priced, 7 not. Total £23,636.80.
 
 - **2026-09-26 (T8 split; T10 added)** — Craig chose to split T8: T8a, price alerts and the
   deal scan, first; T8b, "Connect eBay", after his eBay set-up. He also chose T10: a queued

@@ -4064,3 +4064,39 @@ contemporaneous.
      - **Order:** T10, then T8a, then the eBay checkpoint, then T8b. Effort: T10 high, T8a
        xhigh and T8b max, each open to overrule. Nothing starts before Craig's go on this
        plan.
+
+
+### 2026-09-26 — Batch T10: discs searched again after identification
+
+217. **T10 shipped (`db75229`, migration 039), and a batch run by hand proved it. 26 Sep, at
+     Craig's go (#216).**
+
+     - **Which discs.** A queued disc (waiting for Craig, without specs, not decided by him)
+       whose film was identified after the disc was searched, and whose search words would
+       now differ. Identification is the only thing that rewrites `last_tmdb_sync_utc` on a
+       film that already exists. A merge rewrites the kept film's too, which is why the words
+       must differ as well: the kept film's own discs were searched under its title already.
+       A disc whose page failed its year check stays with Craig, as the second look leaves
+       it, so no page is accepted anew that way.
+     - **Once, without a flag.** The new search is later than the identification and uses
+       the film's words, so neither condition holds afterwards. Identifying the film again,
+       after an undo say, makes the disc eligible once more.
+     - **First, and inside the budgets.** Discs searched again go before discs never
+       searched, and count in the batch's 150 and the month's 1,500. The new search's
+       candidates replace the old ones; a page the 10 Sep test used stays offered. Each batch
+       records how many discs it searched again and how many the matcher then accepted
+       (`spec_runs.searched_again`, `settled_again`).
+     - **Only 5 discs qualified, not the ~70 #216 estimated.** The estimate counted every
+       queued disc of a film identified or waiting to be. Most discs left from T9 had cleaned
+       spreadsheet titles that already read as TMDB's, so a second search would send the same
+       words. The 61 discs of films waiting on Identify films qualify only where
+       identification changes the words.
+     - **Live, 26 Sep: 148 Brave searches, the 5 first.** The Fellowship of the Ring got its
+       specs. Dr. Strangelove's page was accepted, but Blu-ray.com answered 301 (moved), so it
+       waits for the next batch. The other 3 now show Craig 2 or 3 UK editions, or no UK page,
+       from the right title. In all, 82 discs gained specs, 347 of 1,250 have them, and the
+       queue grew from 197 to 257 because 143 discs were searched for the first time. CI
+       passed first time.
+     - **Found, and not changed here:** the fetcher treats a 301 from Blu-ray.com as a failed
+       load. A page whose address moved is tried in three batches and then sent back to
+       Craig. Following a redirect is #110's ground, so it is a separate decision.
