@@ -7,7 +7,8 @@ conditions map one-to-one onto code here:
 |---|---|
 | exact release URLs only, never the search routes | `require_in_bounds`, before every request |
 | requests sequential and rate-limited | one at a time, `MIN_INTERVAL_SECONDS` apart |
-| no images, scripts or advertising | one `GET` for the HTML; nothing follows |
+| no images, scripts or advertising | one `GET` for the HTML; nothing else is requested |
+| (a page that moved, Batch U1, #219) | followed once, only to the same release, spaced |
 | a `403`/`429`/objection halts **the whole integration** | `halt`, persisted |
 | resuming requires a new owner decision | nothing here clears the halt |
 | results cached indefinitely, not refreshed | `refresh=False` skips a row that already has specs |
@@ -34,7 +35,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.clock import utcnow
 from src.models.collection_item import CollectionItem
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
-from src.services.specs.bluray_com import OutOfBounds, extract, require_in_bounds
+from src.services.specs.bluray_com import (
+    OutOfBounds,
+    canonical_release_url,
+    extract,
+    release_number,
+    require_in_bounds,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -59,6 +66,32 @@ HALT_STATUSES = frozenset({401, 403, 429, 451})
 
 class IntegrationHalted(Exception):
     """The integration is stopped and only an owner decision restarts it."""
+
+
+class PageMoved(Exception):
+    """Blu-ray.com sent a page somewhere this fetcher will not follow — Batch U1, #219.
+
+    Only a move to the same release, under #110's predicate, is followed, and only once.
+    ``reason`` is written for Craig, who is shown it with the disc.
+    """
+
+    def __init__(self, url: str, location: str, reason: str) -> None:
+        super().__init__(reason)
+        self.url = url
+        self.location = location
+        self.reason = reason
+
+
+@dataclass(frozen=True)
+class FetchedPage:
+    """A release page, and the address it was read from.
+
+    ``url`` differs from the address asked for only when Blu-ray.com had moved the page to a
+    new address for the same release and the fetch followed it (Batch U1).
+    """
+
+    url: str
+    html: str
 
 
 @dataclass
@@ -99,30 +132,90 @@ async def halt(db: AsyncSession, reason: str) -> SpecsIntegrationState:
     return state
 
 
-async def fetch_page(client: httpx.AsyncClient, url: str, db: AsyncSession) -> str:
+def _location(response: httpx.Response) -> str:
+    """Where a redirect points, as an absolute address. A relative one is read against the
+    address that answered."""
+    location = str(response.headers.get("location", ""))
+    try:
+        return str(response.url.join(location))
+    except (httpx.InvalidURL, ValueError):
+        return location
+
+
+def moved_to(url: str, response: httpx.Response) -> str:
+    """The new address of a moved page, if the fetch may follow it — Batch U1, #219.
+
+    Only when it passes #110's release-page predicate **for the same release number**:
+    Blu-ray.com renames a release by changing its slug and keeping its number. Anywhere
+    else — another release, a search route, a sign-in page, another site — raises
+    :class:`PageMoved` and is never requested.
+    """
+    target = _location(response)
+    number = release_number(url)
+    if number is None or release_number(target) != number:
+        raise PageMoved(
+            url,
+            target,
+            f"Blu-ray.com sent this page to {target[:200]}, which is not the same release "
+            "page, so it was not followed.",
+        )
+    return target
+
+
+async def _request(client: httpx.AsyncClient, url: str, db: AsyncSession) -> httpx.Response:
+    """One `GET`, and a halt if Blu-ray.com says stop."""
+    require_in_bounds(url)
+    response = await client.get(
+        url,
+        headers={"User-Agent": USER_AGENT, "Accept": "text/html"},
+        timeout=REQUEST_TIMEOUT,
+        # #110 forbids evasion, and httpx would follow a redirect anywhere. A moved page is
+        # judged by `moved_to` instead, before anything is requested from its new address.
+        follow_redirects=False,
+    )
+    if response.status_code in HALT_STATUSES:
+        await halt(db, f"Blu-ray.com answered {response.status_code} for {url}")
+        raise IntegrationHalted(f"HTTP {response.status_code}")
+    return response
+
+
+async def fetch_page(
+    client: httpx.AsyncClient,
+    url: str,
+    db: AsyncSession,
+    *,
+    pause: float = MIN_INTERVAL_SECONDS,
+) -> FetchedPage:
     """One page, or a halt.
 
     Raises :class:`IntegrationHalted` for anything #110 treats as being told to stop, after
     recording it. Raises :class:`httpx.HTTPError` for an ordinary transport failure, which
     is not a refusal and does not halt anything.
+
+    **A page that moved (Batch U1, #219)** is followed once, to the same release only, and
+    the second request waits ``pause`` like any other: it is a request under #110's spacing,
+    and a `403` or `429` to it halts everything too. A redirect anywhere else, or a second
+    redirect, raises :class:`PageMoved`.
     """
     require_in_bounds(url)
     state = await get_state(db)
     if state.halted:
         raise IntegrationHalted(state.halted_reason or "halted")
 
-    response = await client.get(
-        url,
-        headers={"User-Agent": USER_AGENT, "Accept": "text/html"},
-        timeout=REQUEST_TIMEOUT,
-        # #110 forbids evasion; following a redirect off the release path would also take
-        # the fetch somewhere `require_in_bounds` never approved.
-        follow_redirects=False,
-    )
-
-    if response.status_code in HALT_STATUSES:
-        await halt(db, f"Blu-ray.com answered {response.status_code} for {url}")
-        raise IntegrationHalted(f"HTTP {response.status_code}")
+    read_from = url
+    response = await _request(client, url, db)
+    if response.is_redirect:
+        read_from = moved_to(url, response)
+        if pause:
+            await asyncio.sleep(pause)
+        response = await _request(client, read_from, db)
+        if response.is_redirect:
+            raise PageMoved(
+                url,
+                _location(response),
+                f"Blu-ray.com moved this page to {read_from[:200]} and then sent that "
+                f"address to {_location(response)[:200]}, so it was not followed again.",
+            )
     response.raise_for_status()
 
     body = response.text
@@ -132,7 +225,7 @@ async def fetch_page(client: httpx.AsyncClient, url: str, db: AsyncSession) -> s
     state.fetch_count += 1
     state.last_fetch_at_utc = utcnow()
     await db.flush()
-    return body
+    return FetchedPage(url=read_from, html=body)
 
 
 async def apply_specs(
@@ -209,19 +302,24 @@ async def run_specs_fetch(
             await asyncio.sleep(pause)
 
         try:
-            html = await fetch_page(client, url, db)
+            page = await fetch_page(client, url, db, pause=pause)
         except IntegrationHalted as exc:
             result.halted = True
             result.halt_reason = str(exc)
             # Everything stops, including whatever is left in `pairs`. That is what
             # "halts the whole integration" means.
             break
+        except PageMoved as exc:
+            result.failed.append({"url": url, "reason": exc.reason})
+            continue
         except httpx.HTTPError as exc:
             result.failed.append({"url": url, "reason": str(exc)[:200]})
             continue
 
-        result.fetched.append(url)
-        if await apply_specs(db, item, html, url=url, now=now):
+        result.fetched.append(page.url)
+        # A page that moved is recorded at its new address (Batch U1).
+        source = url if page.url == url else canonical_release_url(page.url)
+        if await apply_specs(db, item, page.html, url=source, now=now):
             result.updated += 1
         else:
             result.failed.append({"url": url, "reason": "no specs found on the page"})

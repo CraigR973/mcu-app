@@ -10,7 +10,9 @@
 2. **Fetch, from Blu-ray.com.** Up to :data:`FETCHES_PER_RUN` accepted pages are fetched by
    the existing runner's rules: exact release URLs only, five seconds apart, and a 403 or
    429 halts the whole integration until an owner decision. A page the matcher chose must
-   show the film's year before its specs are written; a page Craig chose is his call.
+   show the film's year before its specs are written; a page Craig chose is his call. A
+   page that moved to a new address for the same release is followed once and kept at its
+   new address; one sent anywhere else goes straight back to Craig (Batch U1).
 
 **Nothing is fetched until a page is accepted**, and nothing here searches Blu-ray.com.
 
@@ -57,6 +59,7 @@ from src.services.specs.candidates import Candidate, Disc, decide, judge, search
 from src.services.specs.runner import (
     MIN_INTERVAL_SECONDS,
     IntegrationHalted,
+    PageMoved,
     apply_specs,
     fetch_page,
     get_state,
@@ -727,7 +730,7 @@ async def fetch_phase(
         requested = True
 
         try:
-            page = await fetch_page(client, url, db)
+            page = await fetch_page(client, url, db, pause=pause)
         except IntegrationHalted as exc:
             run.last_error = f"The Blu-ray.com integration is halted: {exc}"
             await db.commit()
@@ -735,6 +738,20 @@ async def fetch_phase(
         except OutOfBounds:
             _send_back(lookup, "That address is not a Blu-ray.com release page.")
             await db.commit()
+            continue
+        except PageMoved as exc:
+            # Batch U1: a page sent anywhere but its own new address goes straight back to
+            # Craig, rather than after three batches. It still counts towards stopping the
+            # batch, so a site sending every page elsewhere costs five discs, not 150.
+            _send_back(lookup, f"{exc.reason} Pick the right page, or skip.")
+            lookup.last_error = exc.reason[:500]
+            run.sent_back += 1
+            failures_in_a_row += 1
+            run.heartbeat_utc = clock()
+            await db.commit()
+            if failures_in_a_row >= MAX_FAILURES_IN_A_ROW:
+                message = f"Blu-ray.com failed {failures_in_a_row} times in a row."
+                return PhaseEnd("failed", message)
             continue
         except httpx.HTTPError as exc:
             lookup.attempts += 1
@@ -752,10 +769,15 @@ async def fetch_phase(
         failures_in_a_row = 0
         run.fetched += 1
         now = clock()
+        if page.url != url:
+            # Batch U1: the page moved to a new address for the same release. That address
+            # is the disc's page from now on, and its specs' source.
+            url = canonical_release_url(page.url)
+            lookup.accepted_url = url
         if lookup.how == "auto":
             movie = await db.get(Movie, item.movie_id)
             film_year = movie.year if movie is not None else None
-            page_year = extract_year(page)
+            page_year = extract_year(page.html)
             reason: str | None = None
             if film_year is None:
                 reason = "The film has no year to check the page against"
@@ -770,7 +792,7 @@ async def fetch_phase(
                 await db.commit()
                 continue
 
-        if await apply_specs(db, item, page, url=url, now=now):
+        if await apply_specs(db, item, page.html, url=url, now=now):
             lookup.status = "done"
             lookup.fetched_utc = now
             lookup.last_error = None

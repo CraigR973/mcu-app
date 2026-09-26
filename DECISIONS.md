@@ -4186,3 +4186,48 @@ contemporaneous.
      - **The first scheduled pass, 12:21 UTC on 26 Sep, after Craig's config apply:** 15 eBay
        calls, 363 new listings, 13 upgrades given a usual price, and 3 deals, 32% to 40% under
        it. The 3 pushes reached Craig; Mark's were suppressed, as he has no device registered.
+
+
+### 2026-09-26 — Batch U1: Blu-ray.com pages that have moved
+
+219. **A moved Blu-ray.com page is followed once, and only to the same release. Built 26 Sep
+     on `feat/u1-moved-bluray-pages`, at Craig's go on Group U's first step.** Until now a
+     redirect counted as a failed load, so a page whose address changed (Dr. Strangelove's,
+     accepted on 26 Sep, #217) was tried in three batches and then sent back to Craig.
+
+     - **What a redirect does now.** A `301`, `302`, `303`, `307` or `308` is read, not
+       followed by the HTTP client (`follow_redirects` stays off). Its address is judged by
+       #110's release-page predicate **and must carry the same release number**: Blu-ray.com
+       renames a release by changing the name in `/movies/<name>/<number>/` and keeping the
+       number. Only then is one more request made, and only once; a second redirect is not
+       followed. The disc's accepted page and its specs' source become the new address, in
+       the stored form (`https://www.blu-ray.com/movies/<name>/<number>/`).
+     - **Why this stays inside #110.** #110 accepts requests for exact release pages,
+       sequential and spaced, and nothing else. The one extra request is for exactly such a
+       page: the same release the disc was matched to, at the address the site now gives it,
+       which the fetcher would have requested directly had the search seen the new name. It
+       is checked by the same predicate before it is sent, it waits the same five seconds as
+       any request, and a `403` or `429` to it halts the whole integration as the first
+       request's would. Nothing new becomes reachable: not the search routes, not another
+       release, not another site, not images or scripts, and no redirect is ever followed
+       blind. #110's own words, "exact release URLs" and "evade an access control", are met
+       rather than stretched: the address is exact, and a site that sends a page elsewhere
+       is not followed there.
+     - **Anywhere else goes straight back to Craig**, at once rather than after three
+       batches, with the address it pointed to in the note; that address is never
+       requested. Five in a row stop the batch, as five failed loads do, so a site sending
+       every page to a sign-in or CAPTCHA page costs five discs rather than a batch. That is
+       not a halt, since #110 names `403` and `429`; the notes show Craig where the pages
+       went, and the Halt button is his.
+     - **What is counted.** The integration's fetch count still counts pages read, so a
+       followed move adds one, and a batch's `fetched` counts the page once. A move sent
+       elsewhere counts in the batch's `sent_back`.
+     - **The same rule holds for the admin's `POST /specs/fetch`**, which shares the fetcher:
+       a page that moved is stored at its new address, and one sent elsewhere is reported as
+       failed with the reason.
+     - **Tests:** which moves are followed (every redirect status, a relative address,
+       another release, a search route, a sign-in page, another site), without a request;
+       and against Postgres in CI, a renamed page settling in one batch, Craig's own page
+       kept at its new address, one sent elsewhere going straight back, a `429` from the new
+       address halting everything, the five-second spacing before the second request and
+       the next disc's, a second redirect not followed, and five in a row stopping a batch.

@@ -21,6 +21,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
@@ -94,18 +95,34 @@ class FakeBrave:
 
 
 class FakeBlurayCom:
-    """Blu-ray.com: the captured pages by path, or a refusal."""
+    """Blu-ray.com: the captured pages by path, pages that moved, or a refusal."""
 
-    def __init__(self, pages: dict[str, str], *, status: int = 200) -> None:
+    def __init__(
+        self,
+        pages: dict[str, str],
+        *,
+        status: int = 200,
+        moved: dict[str, str] | None = None,
+        refusing: frozenset[str] = frozenset(),
+    ) -> None:
         self.pages = pages
         self.status = status
+        #: Path → where a `301` sends it (Batch U1).
+        self.moved = moved or {}
+        #: Paths answered with a `429`.
+        self.refusing = refusing
         self.requested: list[str] = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
         self.requested.append(str(request.url))
         if self.status != 200:
             return httpx.Response(self.status, text="refused")
-        page = self.pages.get(request.url.path)
+        path = request.url.path
+        if path in self.moved:
+            return httpx.Response(301, headers={"Location": self.moved[path]})
+        if path in self.refusing:
+            return httpx.Response(429, text="slow down")
+        page = self.pages.get(path)
         return httpx.Response(200, text=page) if page else httpx.Response(404, text="none")
 
     def client(self) -> httpx.AsyncClient:
@@ -389,6 +406,216 @@ async def test_a_page_that_failed_its_year_check_is_not_chosen_again(db: AsyncSe
     await db.refresh(lookup)
     assert lookup.status == "needs_you"
     assert site.requested == []
+
+
+# ---------------------------------------------------------------------------
+# Pages that moved — Batch U1, `DECISIONS.md` #219
+# ---------------------------------------------------------------------------
+
+FIGHT_CLUB_UK_PATH = "/movies/Fight-Club-Blu-ray/6715/"
+#: The same release, 6715, under a new name, as Dr. Strangelove's page was renamed on 26 Sep.
+FIGHT_CLUB_RENAMED_PATH = "/movies/Fight-Club-10th-Anniversary-Blu-ray/6715/"
+FIGHT_CLUB_RENAMED = "https://www.blu-ray.com" + FIGHT_CLUB_RENAMED_PATH
+
+
+async def _accepted(
+    db: AsyncSession,
+    film: Movie,
+    url: str,
+    *,
+    how: str = "auto",
+    attempts: int = 0,
+    decided: datetime = NOW - timedelta(hours=18),
+) -> tuple[CollectionItem, SpecLookup]:
+    """A disc whose page an earlier batch accepted, and which has not loaded yet."""
+    disc = await _disc(db, film, "blu_ray")
+    lookup = SpecLookup(
+        id=uuid.uuid4(),
+        collection_item_id=disc.id,
+        status="accepted",
+        accepted_url=url,
+        how=how,
+        decided_utc=decided,
+        note="One UK page matched the film and format.",
+        attempts=attempts,
+        last_error="Redirect response '301 Moved Permanently'" if attempts else None,
+    )
+    db.add(lookup)
+    await db.commit()
+    return disc, lookup
+
+
+async def test_a_page_renamed_on_the_site_settles_in_one_batch(db: AsyncSession) -> None:
+    """Dr. Strangelove's, 26 Sep: accepted, then answered `301` to a new name for the same
+    release. It had one of its three tries left over from that batch."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc, lookup = await _accepted(db, film, FIGHT_CLUB_UK, attempts=1)
+    site = FakeBlurayCom(
+        {FIGHT_CLUB_RENAMED_PATH: FIGHT_CLUB_PAGE},
+        moved={FIGHT_CLUB_UK_PATH: FIGHT_CLUB_RENAMED_PATH},
+    )
+
+    run = await _run(db, FakeBrave(), site)
+
+    assert site.requested == [FIGHT_CLUB_UK, FIGHT_CLUB_RENAMED]
+    assert (run.status, run.fetched, run.applied, run.fetch_failed, run.sent_back) == (
+        "finished",
+        1,
+        1,
+        0,
+        0,
+    )
+    await db.refresh(lookup)
+    assert (lookup.status, lookup.accepted_url, lookup.last_error) == (
+        "done",
+        FIGHT_CLUB_RENAMED,
+        None,
+    )
+    await db.refresh(disc)
+    assert disc.specs_source_url == FIGHT_CLUB_RENAMED
+    assert disc.video_specs and disc.audio_specs
+
+
+async def test_craigs_own_page_that_moved_is_kept_at_its_new_address(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    film = await _film(db, "Fight Club (Brad Pitt)", year=None, tmdb_id=None)
+    disc, lookup = await _accepted(db, film, FIGHT_CLUB_UK, how="pasted")
+    lookup.decided_by = craig.id
+    await db.commit()
+    site = FakeBlurayCom(
+        {FIGHT_CLUB_RENAMED_PATH: FIGHT_CLUB_PAGE},
+        moved={FIGHT_CLUB_UK_PATH: FIGHT_CLUB_RENAMED},
+    )
+
+    run = await _run(db, FakeBrave(), site)
+
+    assert run.applied == 1
+    await db.refresh(lookup)
+    assert (lookup.status, lookup.how, lookup.accepted_url) == (
+        "done",
+        "pasted",
+        FIGHT_CLUB_RENAMED,
+    )
+    await db.refresh(disc)
+    assert disc.specs_source_url == FIGHT_CLUB_RENAMED
+
+
+async def test_a_page_sent_anywhere_else_goes_straight_back_to_craig(db: AsyncSession) -> None:
+    """Not after three batches, and the other address is never requested."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc, lookup = await _accepted(db, film, FIGHT_CLUB_UK)
+    site = FakeBlurayCom(
+        {"/movies/Fight-Club-Blu-ray/5587/": FIGHT_CLUB_PAGE},
+        moved={FIGHT_CLUB_UK_PATH: FIGHT_CLUB_US},
+    )
+
+    run = await _run(db, FakeBrave(), site)
+
+    assert site.requested == [FIGHT_CLUB_UK]
+    assert (run.fetched, run.applied, run.sent_back, run.fetch_failed) == (0, 0, 1, 0)
+    await db.refresh(lookup)
+    assert (lookup.status, lookup.accepted_url, lookup.how, lookup.attempts) == (
+        "needs_you",
+        None,
+        None,
+        0,
+    )
+    assert FIGHT_CLUB_US in (lookup.note or "")
+    assert "not the same release page" in (lookup.note or "")
+    await db.refresh(disc)
+    assert disc.specs_source_url is None
+    assert (await get_state(db)).halted is False
+
+
+async def test_a_429_from_the_new_address_halts_the_integration(db: AsyncSession) -> None:
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    _disc_row, lookup = await _accepted(db, film, FIGHT_CLUB_UK)
+    site = FakeBlurayCom(
+        {},
+        moved={FIGHT_CLUB_UK_PATH: FIGHT_CLUB_RENAMED_PATH},
+        refusing=frozenset({FIGHT_CLUB_RENAMED_PATH}),
+    )
+
+    run = await _run(db, FakeBrave(), site)
+
+    assert run.status == "halted"
+    assert (await get_state(db)).halted is True
+    await db.refresh(lookup)
+    assert (lookup.status, lookup.accepted_url) == ("accepted", FIGHT_CLUB_UK)
+
+
+async def test_the_new_address_waits_its_turn_like_any_request(
+    db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#110's five seconds come before the second request, and before the next disc's."""
+    import src.services.specs.runner as runner
+
+    events: list[str] = []
+
+    async def sleep(seconds: float) -> None:
+        events.append(f"pause {seconds}")
+
+    monkeypatch.setattr(runner, "asyncio", SimpleNamespace(sleep=sleep))
+    monkeypatch.setattr(backfill, "asyncio", SimpleNamespace(sleep=sleep))
+    first = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    second = await _film(db, "Fight Club Again", year=1999, tmdb_id=990_000_551)
+    await _accepted(db, first, FIGHT_CLUB_UK)
+    other = "https://www.blu-ray.com/movies/Fight-Club-Again-Blu-ray/7000/"
+    # Fetched in the order they were accepted.
+    await _accepted(db, second, other, decided=NOW - timedelta(hours=17))
+    site = FakeBlurayCom(
+        {
+            FIGHT_CLUB_RENAMED_PATH: FIGHT_CLUB_PAGE,
+            "/movies/Fight-Club-Again-Blu-ray/7000/": FIGHT_CLUB_PAGE,
+        },
+        moved={FIGHT_CLUB_UK_PATH: FIGHT_CLUB_RENAMED_PATH},
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        events.append(f"GET {request.url}")
+        return site.handler(request)
+
+    outcome = await start_run(db, trigger="job", search_configured=False, now=NOW)
+    assert outcome.run is not None
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        run = await work_run(
+            db, outcome.run.id, searcher=FakeBrave(), client=client, clock=lambda: NOW, pause=5.0
+        )
+
+    assert run.applied == 2
+    assert events == [
+        f"GET {FIGHT_CLUB_UK}",
+        "pause 5.0",
+        f"GET {FIGHT_CLUB_RENAMED}",
+        "pause 5.0",
+        f"GET {other}",
+    ]
+
+
+async def test_five_pages_sent_elsewhere_in_a_row_stop_the_batch(db: AsyncSession) -> None:
+    """A site sending every page elsewhere costs five discs, not a whole batch of them."""
+    for number in range(6):
+        film = await _film(db, f"Moved Film {number}", year=1999, tmdb_id=990_100_000 + number)
+        await _accepted(
+            db, film, f"https://www.blu-ray.com/movies/Moved-Film-{number}-Blu-ray/{8000 + number}/"
+        )
+    site = FakeBlurayCom(
+        {},
+        moved={
+            f"/movies/Moved-Film-{number}-Blu-ray/{8000 + number}/": "/community/login.php"
+            for number in range(6)
+        },
+    )
+
+    run = await _run(db, FakeBrave(), site)
+
+    assert run.status == "stopped"
+    assert len(site.requested) == 5
+    assert run.sent_back == 5
+    still_accepted = await db.scalar(
+        select(func.count()).select_from(SpecLookup).where(SpecLookup.status == "accepted")
+    )
+    assert still_accepted == 1
 
 
 # ---------------------------------------------------------------------------

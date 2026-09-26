@@ -17,6 +17,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -33,12 +34,15 @@ from src.services.specs.bluray_com import (
     assert_no_price_fields,
     extract,
     is_release_url,
+    release_number,
     require_in_bounds,
 )
 from src.services.specs.runner import (
+    PageMoved,
     apply_specs,
     get_state,
     halt,
+    moved_to,
     run_specs_fetch,
 )
 
@@ -532,3 +536,162 @@ class TestASecondRealPage:
 
     def test_the_page_carries_its_provenance(self) -> None:
         assert "Captured verbatim from https://www.blu-ray.com/" in self.PAGE_4K
+
+
+# ---------------------------------------------------------------------------
+# Pages that moved — Batch U1, `DECISIONS.md` #219
+# ---------------------------------------------------------------------------
+
+#: Dr. Strangelove's page on 26 Sep: accepted at one name, answered `301` to another name for
+#: the same release, 117642.
+MOVED_FROM = (
+    "https://www.blu-ray.com/movies/Dr-Strangelove-or-How-I-Learned-to-Stop-Worrying-and-"
+    "Love-the-Bomb-Gallery-1988-Range-Blu-ray/117642/"
+)
+MOVED_TO = (
+    "https://www.blu-ray.com/movies/Dr-Strangelove-or-How-I-Learned-to-Stop-Worrying-and-"
+    "Love-the-Bomb-Blu-ray/117642/"
+)
+
+
+def _moved(url: str, location: str, status: int = 301) -> httpx.Response:
+    return httpx.Response(status, headers={"Location": location}, request=httpx.Request("GET", url))
+
+
+class TestWhichMovesAreFollowed:
+    """#110's predicate, for the same release number, and nothing else. No requests."""
+
+    def test_the_release_number_is_read_from_the_path(self) -> None:
+        assert release_number(MOVED_FROM) == 117642
+        assert release_number("https://blu-ray.com/movies/Heat/12345") == 12345
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://www.blu-ray.com/search/?quicksearch=heat",
+            "https://www.blu-ray.com/dvd/Heat-DVD/12345/",
+            "https://blu-ray.com.evil.example/movies/Heat/12345/",
+        ],
+    )
+    def test_nothing_outside_110_has_a_release_number(self, url: str) -> None:
+        assert release_number(url) is None
+
+    def test_a_new_name_for_the_same_release_is_followed(self) -> None:
+        assert moved_to(MOVED_FROM, _moved(MOVED_FROM, MOVED_TO)) == MOVED_TO
+
+    @pytest.mark.parametrize("status", [301, 302, 303, 307, 308])
+    def test_every_kind_of_redirect_is_judged_the_same_way(self, status: int) -> None:
+        response = _moved(MOVED_FROM, MOVED_TO, status)
+
+        assert response.is_redirect
+        assert moved_to(MOVED_FROM, response) == MOVED_TO
+
+    def test_a_relative_address_is_read_against_the_page_that_answered(self) -> None:
+        location = MOVED_TO.removeprefix("https://www.blu-ray.com")
+
+        assert moved_to(MOVED_FROM, _moved(MOVED_FROM, location)) == MOVED_TO
+
+    @pytest.mark.parametrize(
+        "location",
+        [
+            # Another release, however alike its name.
+            "https://www.blu-ray.com/movies/Dr-Strangelove-Blu-ray/117643/",
+            "https://www.blu-ray.com/search/?quicksearch=strangelove",
+            "https://www.blu-ray.com/login.php",
+            "https://www.blu-ray.com/",
+            "https://example.com/movies/Dr-Strangelove-Blu-ray/117642/",
+            "/",
+        ],
+    )
+    def test_anywhere_else_is_refused_and_named(self, location: str) -> None:
+        with pytest.raises(PageMoved) as caught:
+            moved_to(MOVED_FROM, _moved(MOVED_FROM, location))
+
+        assert "not the same release page" in caught.value.reason
+        assert caught.value.location in caught.value.reason
+
+
+class TestMovedPagesFetched:
+    """What a fetch does with a moved page: one more request, spaced, and a halt halts."""
+
+    async def test_a_moved_page_is_read_from_its_new_address_after_the_pause(
+        self, db: AsyncSession, item: CollectionItem, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The second request is a request under #110's spacing, like any other."""
+        import src.services.specs.runner as runner
+
+        events: list[str] = []
+
+        async def sleep(seconds: float) -> None:
+            events.append(f"pause {seconds}")
+
+        monkeypatch.setattr(runner, "asyncio", SimpleNamespace(sleep=sleep))
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            events.append(f"GET {request.url}")
+            if str(request.url) == MOVED_FROM:
+                return httpx.Response(301, headers={"Location": MOVED_TO})
+            return httpx.Response(200, text=PAGE)
+
+        before = (await get_state(db)).fetch_count
+        async with _client(handler) as client:
+            result = await run_specs_fetch(db, [(item.id, MOVED_FROM)], client=client, pause=5.0)
+
+        assert events == [f"GET {MOVED_FROM}", "pause 5.0", f"GET {MOVED_TO}"]
+        assert (result.fetched, result.updated, result.failed) == ([MOVED_TO], 1, [])
+        assert item.specs_source_url == MOVED_TO
+        assert (await get_state(db)).fetch_count == before + 1
+
+    async def test_a_move_anywhere_else_is_never_requested(
+        self, db: AsyncSession, item: CollectionItem
+    ) -> None:
+        calls: list[str] = []
+        elsewhere = "https://www.blu-ray.com/movies/Something-Else-Blu-ray/99/"
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(str(request.url))
+            return httpx.Response(301, headers={"Location": elsewhere})
+
+        async with _client(handler) as client:
+            result = await run_specs_fetch(db, [(item.id, MOVED_FROM)], client=client, pause=0)
+
+        assert calls == [MOVED_FROM]
+        assert result.fetched == []
+        assert elsewhere in result.failed[0]["reason"]
+        assert item.specs_source_url is None
+        assert (await get_state(db)).halted is False
+
+    async def test_a_429_from_the_new_address_halts_everything(
+        self, db: AsyncSession, item: CollectionItem
+    ) -> None:
+        def handler(request: httpx.Request) -> httpx.Response:
+            if str(request.url) == MOVED_FROM:
+                return httpx.Response(301, headers={"Location": MOVED_TO})
+            return httpx.Response(429, text="slow down")
+
+        async with _client(handler) as client:
+            result = await run_specs_fetch(db, [(item.id, MOVED_FROM)], client=client, pause=0)
+
+        assert result.halted is True
+        state = await get_state(db)
+        assert state.halted is True
+        assert MOVED_TO in (state.halted_reason or "")
+
+    async def test_a_page_that_moves_again_is_not_followed_again(
+        self, db: AsyncSession, item: CollectionItem
+    ) -> None:
+        """Once means once: a second redirect is reported, not requested."""
+        calls: list[str] = []
+        third = "https://www.blu-ray.com/movies/Dr-Strangelove-Blu-ray/117642/"
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(str(request.url))
+            target = MOVED_TO if str(request.url) == MOVED_FROM else third
+            return httpx.Response(301, headers={"Location": target})
+
+        async with _client(handler) as client:
+            result = await run_specs_fetch(db, [(item.id, MOVED_FROM)], client=client, pause=0)
+
+        assert calls == [MOVED_FROM, MOVED_TO]
+        assert "not followed again" in result.failed[0]["reason"]
+        assert item.specs_source_url is None

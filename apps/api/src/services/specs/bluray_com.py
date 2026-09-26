@@ -42,8 +42,8 @@ ALLOWED_HOST = "blu-ray.com"
 DISALLOWED_PATH_PREFIXES = ("/search/", "/movies/search.php", "/search")
 
 #: A release page: `/movies/<Slug>/<id>/`. Anything else — a person's profile, a forum
-#: thread, a review — is out of bounds.
-_RELEASE_PATH = re.compile(r"^/movies/[^/]+/\d+/?$")
+#: thread, a review — is out of bounds. The number is the release; the slug is its name.
+_RELEASE_PATH = re.compile(r"^/movies/[^/]+/(\d+)/?$")
 
 #: What the video block can say. Order matters: "Native 4K" must be tested before "4K".
 _RESOLUTION_PATTERNS = (
@@ -144,6 +144,19 @@ def is_release_url(url: str) -> bool:
     if any(path.lower().startswith(prefix) for prefix in DISALLOWED_PATH_PREFIXES):
         return False
     return bool(_RELEASE_PATH.match(path))
+
+
+def release_number(url: str) -> int | None:
+    """The release a page is for — the number in `/movies/<Slug>/<id>/` — Batch U1.
+
+    ``None`` for anything :func:`is_release_url` refuses. Blu-ray.com renames a release by
+    changing its slug and keeping its number, which is how a moved page is told apart from
+    a different one (`DECISIONS.md` #219).
+    """
+    if not is_release_url(url):
+        return None
+    match = _RELEASE_PATH.match(urlsplit(url).path)
+    return int(match.group(1)) if match else None
 
 
 def canonical_release_url(url: str) -> str:
