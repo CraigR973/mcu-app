@@ -258,6 +258,10 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/identify/films/{movie_id}/put-back",
         "/api/v1/identify/recent",
         "/api/v1/identify/recent/{action_id}/undo",
+        "/api/v1/ebay/targets",
+        "/api/v1/ebay/targets/listing",
+        "/api/v1/ebay/targets/search",
+        "/api/v1/ebay/targets/{target_id}",
         # Batch 28's prerequisite, and the **second** unauthenticated route in this app
         # after Batch 17's `.ics` feed. *It was the third* until Batch S1 removed
         # Batch 27's `/gift/{slug}`, which sat between them. eBay holds no
