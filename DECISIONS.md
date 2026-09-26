@@ -4315,3 +4315,81 @@ contemporaneous.
        for the whole catalogue, as for a page of 20.
      - **Craig kept "Sub-category" on 26 Sep**, after the merge. The live web app serves U2's
        build: the copy form and film page carry the Edition field and the new label.
+
+
+### 2026-09-26 — Batch U3: the assistant button, `/debug`, the brand files
+
+221. **Craig's three picks, built: the assistant moves into the top bar, `/debug` exists in
+     development builds only, and the third-party brand images are untracked and ignored
+     (pick B). Built 26 Sep on `feat/u3-assistant-debug-brand`. Closes `OWNER-ACTIONS.md`
+     11, 13 and 15.** The choices made on his behalf, each open to overrule:
+
+     - **The assistant (11).** No floating button anywhere. Below 1,024 px the top bar
+       carries a robot icon beside the person's initial, 44 px to tap on a touch screen, on
+       every page of the shell: the chat itself (marked as the current page) and a movie night
+       (where the floating button had to hide) included. On a desktop, whose top bar has no
+       initial, the same link sits between Commands and "Add a disc", labelled "Assistant"
+       from 1,280 px, and the sidebar keeps its entry. *Why a desktop link too:* the floating
+       button floated there as well, and the pick was that it goes. The five bottom tabs stay
+       five (#201); the You page still lists the assistant.
+     - **`/debug` (13).** Its route, its page and its title sit behind `import.meta.env.DEV`.
+       `production-build.test.ts` builds the app for production as Vercel does and reads
+       every script it ships: no `/debug` route and none of the page's words. The live bundle
+       before U3 had both. In development the page still renders, and its button still throws
+       "This is your first error!", uncaught, which is where Sentry's global handler reports
+       it from.
+     - **The premise about `VITE_SKIP_AUTH` was wrong, and is now true.** No test proved the
+       sign-in bypass compiled out; a comment said so. The same test now proves it, and had to
+       be built with care: built *without* the flag, the bypass compiles away even with its
+       guard deleted (its condition becomes `undefined === 'true'`), so a check would prove
+       nothing. The test builds **with the flag on**, as a stray variable on a deployment
+       would, and checks that the sign-in check's two panels survive; with the bypass compiled
+       in, its early `return` makes them unreachable and the bundler drops them. Deleting
+       either guard fails the test (both tried). It adds about 18 seconds to the web tests.
+     - **The brand files (15), pick B.** 25 files untracked with `git rm --cached`: the 18
+       photographs and stills in `docs/brand/source-images/`, the six film posters in
+       `logo-system/concepts/catalogue-frame-v2/sources/`, and that concept's
+       `poster-source-grid.png`. They are on disk, unchanged (checksums compared), and in
+       history before U3; nothing was rewritten. `.gitignore` covers those folders, every
+       `concepts/*/sources/`, and any JPEG under `docs/brand/`, the form a photograph arrives
+       in. The brand tests fail if one is tracked again (a forced add was tried), pin the
+       generator and every master it reads as tracked, and compare every file in
+       `apps/web/public/brand/` with its tracked source byte for byte: `brand-sync --check`,
+       now in CI. `docs/brand/` is 40 MB in the tree, from 56 MB.
+     - **The merge does not check out `main`.** `main` before U3 tracks the 25 images, so
+       `git checkout main && git merge --ff-only` would have deleted them from the disk as it
+       untracked them. `main` was fast-forwarded without being checked out, which is the same
+       merge. The same trap waits in any checkout that moves from a commit before U3 to one
+       after: the images leave that working tree, and history still has them.
+     - **What a clean clone rebuilds** (sharp 0.35.4). The generator ran on the tree as
+       committed, with none of the 25 present: every SVG byte for byte, 38 of its 42 PNGs pixel
+       for pixel, and the other four, the 180 and 192 px resamples, within 2 of 255 levels, a
+       newer image library's rounding. The two photographic heroes in `apps/web/public/brand/`
+       cannot be rebuilt: one builder reads `source-images/`, the other was never committed.
+     - **Not decided: 36 tracked images built from stills or posters.** Pick B named the
+       third-party images; these are made from them, so they stay tracked for Craig's call:
+       the personalised poster edition (`stack-family/personalised-poster-*`, 5 files, and
+       `identity-overview.png`, which shows it); the concept master it is built from,
+       `concepts/poster-stack-v2/poster-stack-actual-posters-v1.png`, which the generator
+       reads, with its three small sizes, comparison and small-size test; the same set for the
+       catalogue frame (`catalogue-frame-actual-posters-v1.png`); the ten photographic heroes
+       in `logo-system/` and the older photographic social card in `responsive/`; and the three
+       photo-logo concepts at the top of `docs/brand/`. **Four of them ship:**
+       `apps/web/public/brand/hero-photo-five-v3.png` and `hero-photo-v3.png` (no page uses
+       either) and `personalised-poster-icon-{512,1024}.png` (the onboarding welcome). The
+       live site serves all four to anyone, signed in or not; the repository being private
+       does not cover them.
+     - **The browser check** used #169's method, as Craig at 375 px on a touch screen, with
+       every read captured read-only from production through main's own routes: Settings'
+       three tabs, Price alerts, Identify films, the Archive's grid, list and compact views,
+       and a film page's four tabs. A script scrolled each control into view and hit-tested
+       it, about 450 in all: nothing sits under anything, the bottom tabs are the only fixed
+       layer left, no page scrolls sideways, and each Archive view's last film ends 93 px clear
+       of the tabs. It found two older faults, both fixed with a test: in Settings every switch
+       that was on drew its knob 18 px past its track (no left anchor, so it started where the
+       button centres its content); and the film page's tabs shrank below their labels on a
+       touch screen, because `touch-target`'s 44 px minimum width replaces a flex item's
+       automatic one, so the copy count spilled onto "Overview". The top bar was checked at 768
+       and 1,280 px too. *Caveat:* the browser pane was hidden, which stops resize observers,
+       scroll events and screenshots, so the Archive's rows were settled by calling the
+       grid's own measure, and no screenshots were taken.
