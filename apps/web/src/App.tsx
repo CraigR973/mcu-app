@@ -61,6 +61,14 @@ function AdminPage() {
   )
 }
 
+/**
+ * **Development builds only** — Batch U3, `DECISIONS.md` #221. Its button throws an error
+ * on purpose, to test error reporting; that is a tool, not a page anyone should reach on
+ * the live site, where it was public. Its route and its title are behind
+ * `import.meta.env.DEV`, which a production build compiles to `false`, so the bundler
+ * drops them and this component with them, rather than shipping them unreached.
+ * `production-build.test.ts` builds the app to prove it.
+ */
 function DebugPage() {
   return (
     <main className="page-shell-narrow space-y-4">
@@ -99,7 +107,7 @@ function RouteTitle() {
       '/welcome': 'Welcome',
       '/unauthorized': 'Access denied',
       '/offline': 'Offline',
-      '/debug': 'Debug tools',
+      ...(import.meta.env.DEV ? { '/debug': 'Debug tools' } : {}),
     }
     const item = [...navItems, ...adminNavItems]
       .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
@@ -141,7 +149,8 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
-            <Route path="/debug" element={<DebugPage />} />
+            {/* Development builds only (Batch U3); a production build has no such route. */}
+            {import.meta.env.DEV && <Route path="/debug" element={<DebugPage />} />}
             {/* Public: it has to render when the API is unreachable, and requiring a
                 session check would be the one thing guaranteed to fail offline. */}
             <Route path="/offline" element={<OfflinePage />} />

@@ -1,10 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Command, Plus } from 'lucide-react'
+import { ArrowLeft, Bot, Command, Plus } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
-import { FloatingChatButton } from '@/components/FloatingChatButton'
 import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import OfflineBanner from '@/components/OfflineBanner'
@@ -23,12 +22,40 @@ interface Props {
   children: ReactNode
 }
 
+const ASSISTANT_PATH = '/assistant'
+
+/**
+ * The assistant, from the top bar — Batch U3, `DECISIONS.md` #221.
+ *
+ * **It replaces §9.3's floating chat button.** Fixed over the page's bottom-right corner,
+ * that button sat on whatever control scrolled under it: the "Upcoming releases" switch in
+ * Settings, a button on Price alerts. A sixth bottom tab would break the five Craig chose
+ * (#201), so the way in moved up here, beside the person's initial, where nothing scrolls
+ * under it. It shows on every page of the shell, the chat itself included, and marks it.
+ */
+function AssistantLink({ className }: { className: string }) {
+  const { pathname } = useLocation()
+  const here = pathname === ASSISTANT_PATH || pathname.startsWith(`${ASSISTANT_PATH}/`)
+  return (
+    <Link
+      to={ASSISTANT_PATH}
+      aria-label="Ask the assistant"
+      aria-current={here ? 'page' : undefined}
+      className={className}
+    >
+      <Bot className="h-5 w-5 shrink-0" aria-hidden />
+      <span className="hidden xl:inline">Assistant</span>
+    </Link>
+  )
+}
+
 /**
  * The phone's top bar — Batch T3, `DECISIONS.md` #201.
  *
  * **The page's name, where the app's name used to be.** A back arrow on anything below a
  * destination, and the person's initial, which opens the "You" page: everything the five
  * bottom tabs do not carry. It replaces the slide-out menu, and the menu button with it.
+ * Since Batch U3 the assistant sits beside the initial.
  *
  * The back arrow goes back through history when there is some, and otherwise to the
  * page's parent — a page opened from a notification or a shared link has nowhere to go
@@ -71,6 +98,7 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
       >
         <Command className="h-4 w-4" aria-hidden />
       </button>
+      <AssistantLink className="touch-target flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
       <Link
         to={YOU_ITEM.path}
         aria-label="You: every other page, and your account"
@@ -145,6 +173,9 @@ export default function AppLayout({ children }: Props) {
               <span className="hidden xl:inline">Commands</span>
               <kbd className="hidden rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground md:inline">⌘K</kbd>
             </button>
+            {/* Batch U3. The floating button floated here too, over the page's corner; its
+                replacement is the same top-bar link at every width. */}
+            <AssistantLink className="touch-target flex items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-muted-foreground hover:border-ring hover:text-foreground aria-[current=page]:border-primary/30 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
             {/* Batch S4. The `isAdmin &&` is gone with #155, and `hidden sm:inline-flex`
                 stays on purpose: below 640px the bottom bar carries the add slot, so a
                 second one here would be two controls for one job in the scarcest space
@@ -164,10 +195,6 @@ export default function AppLayout({ children }: Props) {
           </ErrorBoundary>
         </main>
       </div>
-
-      {/* §9.3's "floating chat button on every page". On the shell rather than on each
-          page, which is what "every page" means — and it hides itself on the chat. */}
-      <FloatingChatButton />
 
       {/* Batch S3, snag 1. Search left the mobile header's second row — a permanent band
           of chrome above every page, on the smallest screen — and became a slot in the

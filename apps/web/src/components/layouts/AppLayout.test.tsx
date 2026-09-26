@@ -110,3 +110,48 @@ describe('AppLayout phone top bar — Batch T3', () => {
     expect(you.getAttribute('href')).toBe('/you')
   })
 })
+
+describe('AppLayout assistant — Batch U3', () => {
+  it("puts the assistant in the top bar, beside the person's initial", () => {
+    renderShell('/movies')
+    const topBar = within(screen.getByRole('banner', { name: 'Top bar' }))
+
+    // Two rows share the top bar, the phone's and the desktop's; CSS shows one of them.
+    const links = topBar.getAllByRole('link', { name: 'Ask the assistant' })
+    expect(links).toHaveLength(2)
+    for (const link of links) expect(link.getAttribute('href')).toBe('/assistant')
+
+    const you = topBar.getByRole('link', { name: /^You/ })
+    expect(you.previousElementSibling).toBe(links[0])
+  })
+
+  it('has no floating button: the top bar is the only way in from the shell', () => {
+    renderShell('/settings')
+    const topBar = screen.getByRole('banner', { name: 'Top bar' })
+
+    for (const link of screen.getAllByRole('link', { name: 'Ask the assistant' })) {
+      expect(topBar.contains(link)).toBe(true)
+      expect(link.className).not.toMatch(/(^|\s)fixed(\s|$)/)
+    }
+  })
+
+  it('keeps the five bottom tabs five', () => {
+    renderShell('/movies')
+    const bar = within(screen.getByRole('navigation', { name: 'Primary mobile navigation' }))
+    expect([...bar.getAllByRole('link'), ...bar.getAllByRole('button')]).toHaveLength(5)
+    expect(bar.queryByRole('link', { name: /assistant/i })).toBeNull()
+  })
+
+  it('shows on a movie night, where the floating button had to hide, and marks the chat', () => {
+    renderShell('/movie-night/3f2504e0-4f89-41d3-9a0c-0305e82c3401', <p>A night</p>)
+    for (const link of screen.getAllByRole('link', { name: 'Ask the assistant' })) {
+      expect(link.getAttribute('aria-current')).toBeNull()
+    }
+    cleanup()
+
+    renderShell('/assistant', <p>The chat</p>)
+    for (const link of screen.getAllByRole('link', { name: 'Ask the assistant' })) {
+      expect(link.getAttribute('aria-current')).toBe('page')
+    }
+  })
+})
