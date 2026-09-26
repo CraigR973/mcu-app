@@ -89,6 +89,10 @@ outage of 2026-09-09 exactly. `DECISIONS.md` #124.
 already set is declared `preserve()` — which names the variable without putting its value in
 this repository. A healthy plan for a variable change reads `0 to destroy`.
 
+**One line that stays after an apply (seen 26 Sep):** `~ Update api deploy.restartPolicyType
+(null → "ON_FAILURE")`. The file declares Railway's default explicitly and Railway appears to
+store its default as unset, so every plan lists it. It changes nothing; read past it.
+
 Sealed variables cannot be read back to compare, so declaring one as a generated value makes
 every plan report it as changing. The two JWT secrets are `preserve()` for that reason:
 applying a regenerated secret would sign both people out.

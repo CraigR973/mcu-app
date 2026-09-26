@@ -2,17 +2,17 @@
 
 ## Now
 
-**26 Sep 2026: T10 (`db75229`) and T8a (`e2142b7`) have shipped. T8a's eBay checks and the
-nightly spec batches both wait on one Railway config apply by Craig. T8b waits on his eBay
-set-up.**
+**26 Sep 2026: T10 (`db75229`) and T8a (`e2142b7`) have shipped, and Craig applied the Railway
+config at about 10:25 UTC: `cron-ebay` and `cron-specs` exist and their images built. Their
+first runs are 12:20 UTC (eBay) and 02:00 UTC on 27 Sep (specs). T8b waits on his eBay set-up.**
 
 - **T8a, eBay price alerts and the deal scan, is live (#218).** Each person sets alerts on
   one listing (by its address) or on any UK Buy It Now copy of a film on a format, on the
   Price alerts page or the film page. A scan reads eBay's newest UK Blu-ray and 4K listings
   and puts Wanted films and upgrades 30% or more under their usual price on Deals, with
-  pushes capped at five a person a day. **Nothing is checked until Craig's config apply**
-  starts `cron-ebay` (`OWNER-ACTIONS.md` 23). A read-only dry pass over six hours found 2
-  deals for 25 eBay calls. Migration 040 is applied.
+  pushes capped at five a person a day. `cron-ebay` runs every two hours at twenty past;
+  **its first pass (12:20 UTC on 26 Sep) is still to be checked**. A read-only dry pass over
+  six hours found 2 deals for 25 eBay calls. Migration 040 is applied.
 - **T10 is live (#217).** A queued disc whose film was identified since its search is
   searched once more under the corrected title. Its first batch settled 2 of 5.
 - **T9 is live (#215).** 156 films identified; **166 wait on You → Identify films**
@@ -21,8 +21,9 @@ set-up.**
 - **Valuations are all current (26 Sep):** £23,636.80 at current eBay asking prices, 1,303
   of 1,457 discs priced. Due again from 24 Oct (`OWNER-ACTIONS.md` 19).
 - **Disc specs:** 347 of 1,250 have specs; **257 wait for Craig** (`OWNER-ACTIONS.md` 20);
-  645 not searched. **No nightly batch has run:** the Brave key is still only in
-  `.env.local`, not Railway (`OWNER-ACTIONS.md` 17).
+  645 not searched. **The nightly batch starts at 02:00 UTC on 27 Sep:** the Brave key was
+  in Railway's `api` all along (checked by name on 26 Sep; the notes saying otherwise were
+  wrong), and the apply created `cron-specs`.
 - **Brave this month: 690 of 1,500.**
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
   T7 `160f842` with `bfc28e7`, T9 `4d16723`, T10 `db75229`, **T8a `e2142b7`**. Next is the
@@ -457,6 +458,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Railway config applied)** — The agent ran `config plan` read-only at Craig's
+  request: 2 to add (`cron-specs`, `cron-ebay`), 1 to change (the API's restart policy, unset
+  to `ON_FAILURE`), 0 to destroy. The Brave key was already on `api`. Craig applied at about
+  10:25 UTC; both jobs were created and built. A plan afterwards still lists the restart
+  policy line alone: Railway seems to keep its default as unset. The API stayed on
+  `cc0c593` with `db: ok`.
 
 - **2026-09-26 (Batch T8a shipped, `e2142b7`)** — Craig said OK to merge and to keep Price
   alerts always in the menu. Production serves `e2142b7` with `db: ok`; migration 040 is

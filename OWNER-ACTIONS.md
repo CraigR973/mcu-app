@@ -903,7 +903,11 @@ Android, a notification should arrive, and tapping it should open that night, no
 front page. Then both of you tap **Add** on the same film: "It's a match" should arrive on
 both phones. This also closes Batch 11's open 6.2 (a push reaching two real devices).
 
-### 17. A Brave Search API account and key — for T7, the Blu-ray.com backfill
+### 17. ~~A Brave Search API account and key — for T7, the Blu-ray.com backfill~~ — **done 26 Sep**
+
+> **Done 26 Sep.** The key was on Railway's `api` already (the earlier note here was wrong),
+> and Craig ran `config apply` at about 10:25 UTC, which created `cron-specs` (02:00 UTC
+> nightly) and `cron-ebay` (item 23). The first nightly batch is on 27 Sep.
 
 > **Updated 24 Sep: the key is in `.env.local` and three batches have run from a Mac.**
 > **Still to do:** step 3 below (the key is **not** in Railway's `api` service yet), then
@@ -1014,10 +1018,10 @@ into a film you already have, and the page says so before you choose. **Start wi
 Kingsman: The Secret Service, second in the list. Any identification, the 156 automatic ones
 included, can be undone from "Recently identified" on the same page.
 
-### 23. ~~Say OK to merge T8a~~, then switch its schedule on — T8a, eBay price alerts
+### 23. ~~Say OK to merge T8a, then switch its schedule on — T8a, eBay price alerts~~ — **done 26 Sep**
 
-> **26 Sep: OK given, and T8a is live (`e2142b7`).** Step 2 is what is left: until the apply,
-> alerts can be set but nothing checks them.
+> **26 Sep: OK given, T8a is live (`e2142b7`), and the config apply created `cron-ebay`**,
+> every two hours at twenty past UTC. Nothing more is needed from you here.
 
 **New 26 Sep.** T8a is built on `feat/t8a-ebay-alerts`: price alerts on a listing or on a film
 and format, and a deal scan of eBay's newest UK Blu-ray and 4K listings (`DECISIONS.md`
