@@ -4183,3 +4183,6 @@ contemporaneous.
        (Mark's notifications are off, `OWNER-ACTIONS.md` 16b).
      - **Craig said OK to merge on 26 Sep, and chose to keep Price alerts always shown.** It
        shipped as `e2142b7`; migration 040 is applied.
+     - **The first scheduled pass, 12:21 UTC on 26 Sep, after Craig's config apply:** 15 eBay
+       calls, 363 new listings, 13 upgrades given a usual price, and 3 deals, 32% to 40% under
+       it. The 3 pushes reached Craig; Mark's were suppressed, as he has no device registered.

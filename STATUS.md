@@ -10,9 +10,12 @@ first runs are 12:20 UTC (eBay) and 02:00 UTC on 27 Sep (specs). T8b waits on hi
   one listing (by its address) or on any UK Buy It Now copy of a film on a format, on the
   Price alerts page or the film page. A scan reads eBay's newest UK Blu-ray and 4K listings
   and puts Wanted films and upgrades 30% or more under their usual price on Deals, with
-  pushes capped at five a person a day. `cron-ebay` runs every two hours at twenty past;
-  **its first pass (12:20 UTC on 26 Sep) is still to be checked**. A read-only dry pass over
-  six hours found 2 deals for 25 eBay calls. Migration 040 is applied.
+  pushes capped at five a person a day. `cron-ebay` runs every two hours at twenty past.
+  **Its first pass worked (12:21 UTC, 26 Sep):** 15 eBay calls, 363 new listings, 13
+  upgrades priced, 3 deals (*Fantastic Voyage* Blu-ray £11.87, usually £17.49; *Kill Bill:
+  Vol. 1* 4K £15.78, usually £25.49; *Catch Me If You Can* 4K steelbook £15.98, usually
+  £26.78). All 3 reached Craig's phone; Mark's were held for want of a device. Migration 040
+  is applied.
 - **T10 is live (#217).** A queued disc whose film was identified since its search is
   searched once more under the corrected title. Its first batch settled 2 of 5.
 - **T9 is live (#215).** 156 films identified; **166 wait on You → Identify films**
@@ -42,7 +45,7 @@ first runs are 12:20 UTC (eBay) and 02:00 UTC on 27 Sep (specs). T8b waits on hi
 - **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
 - **Discs with Blu-ray.com specs:** 347. **Disc valuations:** 1,454 films and formats
   checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD £5.95.
-- **eBay alerts:** none set yet; no scheduled pass has run.
+- **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass.
 
 ## Next
 
@@ -458,6 +461,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (the first scheduled eBay pass)** — `cron-ebay` ran at 12:21 UTC and finished:
+  15 calls of 500, 363 new UK Blu-ray and 4K listings, 13 upgrades priced, 3 deals, 3 pushes
+  sent to Craig (Mark's suppressed: no subscription). No alerts are set yet.
 
 - **2026-09-26 (Railway config applied)** — The agent ran `config plan` read-only at Craig's
   request: 2 to add (`cron-specs`, `cron-ebay`), 1 to change (the API's restart policy, unset
