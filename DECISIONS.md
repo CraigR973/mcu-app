@@ -4100,3 +4100,78 @@ contemporaneous.
      - **Found, and not changed here:** the fetcher treats a 301 from Blu-ray.com as a failed
        load. A page whose address moved is tried in three batches and then sent back to
        Craig. Following a redirect is #110's ground, so it is a separate decision.
+
+
+### 2026-09-26 — Batch T8a, eBay price alerts and the deal scan: the choices
+
+218. **T8a is built on `feat/t8a-ebay-alerts`. Its merge waits for Craig's OK, because it
+     declares a Railway job (`.railway/railway.ts`), and the schedule starts only with his
+     config apply.** These are the choices made on his behalf, each open to overrule.
+
+     - **The deal scan reads eBay's newest listings, not the films one by one.** Measured on
+       26 Sep: about 200 new UK Blu-ray and 4K Buy It Now listings every two to three hours,
+       so reading all of them costs a few calls a pass. Searching the ~1,300 films that
+       could be bought better, one by one, would cost that many a pass and still see each
+       film only now and then. A pass reads newest first back to where the last one stopped,
+       ten pages at most; in a flood the older ones are skipped.
+     - **A listing is a film only when the film's title opens the listing's title**, after at
+       most four seller's words ("NEW", "4K UHD", a studio such as "Lionsgate"). The film
+       page's matcher then judges it as it judges its own searches: sequels, subtitles, box
+       sets, accessories and formats. Two catalogue films of one title make no match. *Why:*
+       the matcher alone accepts a title anywhere, and "Up" is a word in thousands of
+       listings.
+     - **Which films:** those on the Wanted list, on any format unless it names one; and
+       owned films, when the listing's format beats the best one on the shelf (Batch 22's
+       rule). About 1,300 owned films qualify. A DVD is never a deal.
+     - **"Well below" means 30% or more under the usual asking price, postage included.**
+       The usual price is the film page's own median for the film on that format, compared
+       within the listing's condition when three or more listings stand behind it, else the
+       headline. It is kept for a fortnight. With fewer than three listings there is no
+       yardstick and no deal.
+     - **Finds go on the Deals page as "eBay", reading "with postage, usually £X", for three
+       days.** Nothing re-checks them, so they expire rather than linger as sold listings.
+     - **Pushes are in the `deals` category.** A target tells only the person who set it. A
+       deal tells both people, as the Wanted list's price drops do: Wanted-list finds first,
+       then the biggest discounts, **at most five deal pushes a person a day**. With ~1,300
+       upgradeable films, more would be noise; the rest wait on the Deals page. Pushes go at
+       the end of each pass, and quiet hours still hold.
+     - **A listing target** starts from the listing's address (a bare number works; a short
+       `ebay.us` link does not carry the number and is refused with directions). Buy It Now
+       counts with postage. An auction's current bid counts alone, and the push offers the
+       target as a maximum bid for eBay's own bidding (#203). Met once, then left alone
+       until its target changes. One already at or under its target is saved as met,
+       without a push.
+     - **A saved search** is a film on a format: any UK Buy It Now copy at or under the
+       target, postage included. Auctions are left out, because a week-early opening bid is
+       not a price. It stays watching, and each listing is told once.
+     - **The film page's panel sets a saved search; a listing is added by its address.** The
+       criterion written on 26 Sep said a target could come from "a listing from the film
+       page's eBay check". That check shows medians, not listings, so the premise was wrong.
+       The film page instead has an alert panel for both people, since the check itself is
+       an admin tool.
+     - **The budget:** a pass every two hours at twenty past, within 500 eBay calls a UTC day
+       (10%), beside the valuation's 750. One pass at a time; a pass silent for 30 minutes is
+       abandoned.
+     - **Each person sees only their own alerts**, and both can set them. Price alerts sits in
+       the Explore group and is always shown, since it is where the first alert is set.
+     - **A tapped push that links off the app opens in its own window.** The service worker
+       used to steer the app's window to any link, which for an eBay listing would replace
+       the app.
+     - **A merge carries saved searches to the kept film** and drops a duplicate, as it does
+       Wanted rows (#214). An undo moves them back.
+     - **Checked live on 26 Sep:** the newest-first search with its filters, one listing by
+       number, and a listing number eBay does not have, which answers 404 (error 11003) and
+       marks a target ended. A listing that has ended is taken to answer the same, or to show
+       a past end date or no stock, and each of those ends the target too.
+     - **The sidebar grows from seven to eight** for someone who is not an admin, with Price
+       alerts always shown. The navigation test pinned seven and now pins eight, with the
+       reason. This is Craig's to overrule: the alternative hides it until the first alert,
+       which leaves only the film page's panel as a way in.
+     - **The browser check** used #169's method, as Mark, at 375 px: the Price alerts page and
+       its form, the film page's panel (film data captured read-only from production through
+       the real routes), the Deals card and the You page. **It found a Deals bug older than
+       T8a:** a card was as wide as its longest title, so on a phone its right side was cut
+       off. No deal has ever been stored, so nobody had seen it; an eBay title is 80
+       characters. Fixed with `min-w-0` on the card.
+     - **Not yet seen live:** a scheduled pass (it needs the apply) and a push on a phone
+       (Mark's notifications are off, `OWNER-ACTIONS.md` 16b).

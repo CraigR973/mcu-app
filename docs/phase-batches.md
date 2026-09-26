@@ -2040,6 +2040,10 @@ account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
   the encryption key in Railway, and eBay keys on the job service.
 
 ### T8a — eBay price alerts and the deal scan 🟡
+**Status 26 Sep: built on `feat/t8a-ebay-alerts`. Its merge waits for Craig's OK, because it
+declares a Railway job; the schedule starts with his config apply (`OWNER-ACTIONS.md` 23).**
+Choices: #218.
+
 **Proposed 26 Sep: Craig chose to split T8 (#216), and said go the same day.** Opus 5 ·
 xhigh / GPT-5.6 Sol · Extra High. It spends a daily share of the eBay allowance on its own
 and pushes to both phones. It signs nobody in and holds no personal token, which is why it is
@@ -2047,8 +2051,9 @@ not T8's max. **Criteria authored 2026-09-26 from T8's.** Covers the half of sna
 needs no sign-in. `DECISIONS.md` #203.
 
 **Acceptance:**
-- A price target can be set on any eBay listing (a pasted link, or a listing from the film
-  page's eBay check) or on a saved search (a film and a format). Targets are checked on a
+- A price target can be set on any eBay listing (a pasted link; ~~or a listing from the
+  film page's eBay check~~, which shows medians and not listings, so the film page sets a
+  saved search instead, #218) or on a saved search (a film and a format). Targets are checked on a
   schedule with the app's own eBay access. When one is met, a push arrives with a one-tap
   link. For an auction, the alert offers the target as a maximum bid to set on eBay, and
   eBay's own bidding takes over (#203).

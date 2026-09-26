@@ -2,8 +2,16 @@
 
 ## Now
 
-**26 Sep 2026: T10 has shipped (`db75229`). T8a, eBay price alerts and the deal scan, is being
-built and stops before its merge for Craig's OK.**
+**26 Sep 2026: T10 has shipped (`db75229`). T8a, eBay price alerts and the deal scan, is built
+on `feat/t8a-ebay-alerts` and waits for Craig's OK to merge (`OWNER-ACTIONS.md` 23).**
+
+- **T8a is built, not merged (#218).** Price alerts on one eBay listing (by its address) or
+  on any UK Buy It Now copy of a film on a format, and a deal scan of eBay's newest UK
+  Blu-ray and 4K listings for Wanted films and upgrades, 30% or more under their usual
+  price. New: a Price alerts page for both people, an alert panel on the film page, eBay
+  finds on Deals. Its merge waits for Craig because it declares a Railway job, `cron-ebay`;
+  the schedule starts with his config apply, the same one item 17 needs. Mark's sidebar grows
+  from seven destinations to eight (#218 says why; his to overrule).
 
 - **T10, searching again after identification, is live (#217).** A spec batch now searches
   once more, first, any queued disc whose film was identified after its search and whose
@@ -27,8 +35,7 @@ built and stops before its merge for Craig's OK.**
 - **Brave this month: 690 of 1,500.** Spec batches used 610 and T9's dry runs 80.
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
   T7 `160f842` with `bfc28e7`, T9 `4d16723`, **T10 `db75229`**. Craig split T8 on 26 Sep
-  (#216) and said go on the plan: **T8a is next** (eBay price alerts and the deal scan, no
-  sign-in). Its merge waits for his OK, because its schedule is a Railway job. Then the eBay
+  (#216) and said go on the plan. **T8a is built and waits for his OK.** Then the eBay
   checkpoint (`OWNER-ACTIONS.md` 18), then T8b ("Connect eBay").
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
@@ -459,6 +466,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Batch T8a built, not merged)** — eBay price alerts and the deal scan, on
+  `feat/t8a-ebay-alerts`. Probing eBay live shaped it: about 200 new UK Blu-ray and 4K listings
+  every two or three hours, so the scan reads them all for a few calls a pass. The browser
+  check, as Mark, found an older Deals bug (a long title widened the card past a phone's
+  edge), fixed. The merge waits for Craig because it declares a Railway job (#218).
 
 - **2026-09-26 (Batch T10 shipped, `db75229`; valuations current)** — Craig said go on the
   plan. T10 searches again, once, a queued disc whose film was identified since its search.

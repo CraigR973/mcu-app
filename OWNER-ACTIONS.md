@@ -1014,6 +1014,23 @@ into a film you already have, and the page says so before you choose. **Start wi
 Kingsman: The Secret Service, second in the list. Any identification, the 156 automatic ones
 included, can be undone from "Recently identified" on the same page.
 
+### 23. Say OK to merge T8a, then switch its schedule on — T8a, eBay price alerts
+
+**New 26 Sep.** T8a is built on `feat/t8a-ebay-alerts`: price alerts on a listing or on a film
+and format, and a deal scan of eBay's newest UK Blu-ray and 4K listings (`DECISIONS.md`
+#218). It needs no eBay sign-in and stores no personal token. Its merge waits for you only
+because it declares a Railway job, `cron-ebay`, every two hours with the eBay keys by
+reference.
+
+1. Say **OK** (or name anything to change). The agent then merges it, which deploys the
+   pages and the API; nothing is checked on a schedule yet.
+2. Then run the same `config plan` and `config apply` as item 17. Its `Plan:` line should add
+   `cron-ebay` (and `cron-specs`, if item 17's apply has not happened yet) and destroy
+   nothing. One apply starts both.
+
+Until the apply, alerts can be set but nothing checks them, and the Price alerts page says
+so.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **New 25 Sep.** An agent broke the repo's never-`cd` rule once. Autoenv then printed
