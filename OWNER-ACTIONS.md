@@ -867,10 +867,21 @@ So the only thing between you and the redesign's missing files is **signing in y
 in that window** for the surfaces that need real catalogue data. `.claude/launch.json` also
 gained a `web-dist` entry, which serves the built bundle rather than the dev server.
 
-### 15. The brand assets are untracked — 56 MB, and a copyright call
+### 15. The brand assets — 56 MB in git since 10 Sep, and a copyright call
 
-> **26 Sep: now part of Group U's batch U3, waiting for your pick.** The proposal is option
-> 1 below: the generator and the vector masters, about 60 kB.
+> **Corrected 26 Sep, evening: these files are already in git.** All 195 files under
+> `docs/brand/` (56 MB) went into history on 10 Sep in `fb6ecbd` and are on GitHub; the
+> repository is private. That includes the third-party images: 18 photographs and film stills
+> in `source-images/`, and film posters and stills in `logo-system/concepts/*/sources/` and
+> `concepts/catalogue-frame-v2/poster-source-grid.png`. The generator's edits are committed
+> too. So the three ways out below no longer apply. The choice is now: **(A)** leave it;
+> **(B)** stop tracking the third-party images from the next commit and ignore their folders,
+> which leaves them in history and on disk; or **(C)** B, and also rewrite history to remove
+> them, a force push to every branch that only you can run. **Proposed: B**, because the
+> repository is private and a rewrite touches every branch and clone.
+>
+> **26 Sep: now part of Group U's batch U3, waiting for your pick.** (The earlier proposal,
+> option 1 below, assumed the files were untracked.)
 
 `docs/brand/` holds **189 files, 56 MB** and is **not in git**. The committed
 `VERIFICATION.md` §5 calls the `logo-system/stack-family/` set "approved" and the UI reserves

@@ -458,6 +458,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-09-26 (owner item 15 corrected)** — While writing the prompt for U3: the brand files
+  are not untracked. All 195 under `docs/brand/` (56 MB), third-party stills and posters
+  included, went into git on 10 Sep (`fb6ecbd`) and are on GitHub (a private repository). Item
+  15 and U3's brand criterion now say so; the choice is leave them, stop tracking the images,
+  or also rewrite history.
+
 - **2026-09-26 (Craig kept "Sub-category")** — His answer on U2's one open call. Checked the
   same evening: the live web app (`mcu-app-fawn.vercel.app`) serves U2's build, with the Edition
   field and "Sub-category" in the copy form and film page, and no "Collector edition" left.

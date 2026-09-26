@@ -2214,16 +2214,20 @@ GPT-5.6 Terra · Medium.
 - **`/debug` is public in production** (`OWNER-ACTIONS.md` 13). Its one button throws an
   error to test error reporting. **Proposed: development builds only**, the way
   `VITE_SKIP_AUTH` is compiled out.
-- **The brand assets are not in the repo** (`OWNER-ACTIONS.md` 15). **Proposed: the first of
-  its three ways**, the generator and the vector masters, about 60 kB of text.
+- **The brand assets are in the repo after all** (`OWNER-ACTIONS.md` 15, corrected 26 Sep):
+  all 195 files, 56 MB, since `fb6ecbd` on 10 Sep, third-party stills and posters included;
+  the repository is private. **Proposed: stop tracking the third-party images and ignore
+  their folders (B).** Rewriting history to remove them (C) is Craig's to run.
 
 **Acceptance:**
 - Craig's three choices, built.
 - At 375 px no control on Settings, Price alerts, Identify films or a film page sits under
   anything.
-- The chosen brand files are tracked, `docs/brand/source-images/` is ignored, no film still or
-  photograph enters history, and the shipped icons regenerate from a clean clone as far as
-  the choice allows.
+- The third-party images are handled as Craig picks. With B: they are no longer tracked,
+  their folders are ignored, they stay on disk, no new still or photograph can be committed,
+  and the shipped icons still regenerate from a clean clone as far as the concept masters
+  allow. *(Corrected 26 Sep: this line said "no film still or photograph enters history",
+  which has not been possible since 10 Sep.)*
 - Tests. Gate green.
 
 ### U4 — Re-price the collection on its own 🟢
