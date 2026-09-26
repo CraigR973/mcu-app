@@ -4181,3 +4181,5 @@ contemporaneous.
        eight finds, which the cap of five pushes a person keeps from being noise.
      - **Not yet seen live:** a scheduled pass (it needs the apply) and a push on a phone
        (Mark's notifications are off, `OWNER-ACTIONS.md` 16b).
+     - **Craig said OK to merge on 26 Sep, and chose to keep Price alerts always shown.** It
+       shipped as `e2142b7`; migration 040 is applied.

@@ -2039,10 +2039,14 @@ account token this app holds (#142), and it spends money. `DECISIONS.md` #203.
 - **Owner steps first:** OAuth settings in eBay's developer portal (redirect URL and RuName),
   the encryption key in Railway, and eBay keys on the job service.
 
-### T8a — eBay price alerts and the deal scan 🟡
-**Status 26 Sep: built on `feat/t8a-ebay-alerts`. Its merge waits for Craig's OK, because it
-declares a Railway job; the schedule starts with his config apply (`OWNER-ACTIONS.md` 23).**
-Choices: #218.
+### ~~T8a — eBay price alerts and the deal scan~~ 🟡 **shipped 2026-09-26 (`e2142b7`)**
+**Acceptance: met, with the schedule waiting on Craig's config apply** (`OWNER-ACTIONS.md` 23).
+Targets on a listing or on a film and format; a deal scan of eBay's newest UK Blu-ray and 4K
+listings; no password or sign-in; Craig's OK given on 26 Sep. A read-only dry pass against live
+eBay found 2 deals in the previous six hours for 25 calls. The film-page clause of the first
+criterion was wrong and is amended below. CI failed once, on three new database tests that
+read objects a refused request had expired (T9's lesson), then passed. The browser check found
+and fixed an older Deals bug. Choices: #218.
 
 **Proposed 26 Sep: Craig chose to split T8 (#216), and said go the same day.** Opus 5 ·
 xhigh / GPT-5.6 Sol · Extra High. It spends a daily share of the eBay allowance on its own
@@ -2164,7 +2168,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 40 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | Unblocks 1i step 2 and therefore 39's live run (`DECISIONS.md` #197). Solo: one function in the diary importer, and it must land before any identification run. 🟢 by size, `xhigh` by what it re-enables — ~396 live `movies` rows rewritten, 582 watches behind them |
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
-| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → T8a → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 shipped (`db75229`, 2026-09-26)**; T8a is next and its merge waits for his OK; T8b after the checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
+| **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

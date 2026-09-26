@@ -1014,7 +1014,10 @@ into a film you already have, and the page says so before you choose. **Start wi
 Kingsman: The Secret Service, second in the list. Any identification, the 156 automatic ones
 included, can be undone from "Recently identified" on the same page.
 
-### 23. Say OK to merge T8a, then switch its schedule on — T8a, eBay price alerts
+### 23. ~~Say OK to merge T8a~~, then switch its schedule on — T8a, eBay price alerts
+
+> **26 Sep: OK given, and T8a is live (`e2142b7`).** Step 2 is what is left: until the apply,
+> alerts can be set but nothing checks them.
 
 **New 26 Sep.** T8a is built on `feat/t8a-ebay-alerts`: price alerts on a listing or on a film
 and format, and a deal scan of eBay's newest UK Blu-ray and 4K listings (`DECISIONS.md`

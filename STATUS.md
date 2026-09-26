@@ -2,48 +2,37 @@
 
 ## Now
 
-**26 Sep 2026: T10 has shipped (`db75229`). T8a, eBay price alerts and the deal scan, is built
-on `feat/t8a-ebay-alerts` and waits for Craig's OK to merge (`OWNER-ACTIONS.md` 23).**
+**26 Sep 2026: T10 (`db75229`) and T8a (`e2142b7`) have shipped. T8a's eBay checks and the
+nightly spec batches both wait on one Railway config apply by Craig. T8b waits on his eBay
+set-up.**
 
-- **T8a is built, not merged (#218).** Price alerts on one eBay listing (by its address) or
-  on any UK Buy It Now copy of a film on a format, and a deal scan of eBay's newest UK
-  Blu-ray and 4K listings for Wanted films and upgrades, 30% or more under their usual
-  price. New: a Price alerts page for both people, an alert panel on the film page, eBay
-  finds on Deals. Its merge waits for Craig because it declares a Railway job, `cron-ebay`;
-  the schedule starts with his config apply, the same one item 17 needs. Mark's sidebar grows
-  from seven destinations to eight (#218 says why; his to overrule). A read-only dry pass over
-  the previous six hours found 859 new listings, 21 upgrades and 2 deals, for 25 eBay calls.
-
-- **T10, searching again after identification, is live (#217).** A spec batch now searches
-  once more, first, any queued disc whose film was identified after its search and whose
-  search words would now differ. The batch run by hand on 26 Sep searched 5 such discs
-  again. 2 settled: The Fellowship of the Ring now has specs, and Dr. Strangelove's page is
-  accepted but answered 301 (moved), so it waits for the next batch. Only 5 qualified, not
-  the ~70 estimated: most discs' cleaned titles already read as TMDB's. Migration 039 is
-  applied.
-- **T9 is live (#215).** 156 films identified, **166 wait on You → Identify films**
-  (`OWNER-ACTIONS.md` 21), 35 set aside. 10 of the waiting films would merge into a film
-  already held. One is "Kingsman": it is offered The King's Man (2021) first, but the 4K is
-  probably Kingsman: The Secret Service, second in the list. Any identification can be
-  undone on that page.
-- **Valuations are all current (26 Sep).** The 92 films and formats T9 made due were priced
-  at Craig's word: 85 priced, 7 not, 0 failed. **£23,636.80** at current eBay asking prices,
-  with 1,303 of 1,457 discs priced. Prices fall due again from 24 Oct (`OWNER-ACTIONS.md`
-  19).
-- **Disc specs:** 347 of 1,250 Blu-ray and 4K discs have specs. **257 wait for Craig**
-  (`OWNER-ACTIONS.md` 20). 645 are not searched yet. **No nightly batch has run.** The Brave
-  key is still only in `.env.local`, not Railway (`OWNER-ACTIONS.md` 17).
-- **Brave this month: 690 of 1,500.** Spec batches used 610 and T9's dry runs 80.
+- **T8a, eBay price alerts and the deal scan, is live (#218).** Each person sets alerts on
+  one listing (by its address) or on any UK Buy It Now copy of a film on a format, on the
+  Price alerts page or the film page. A scan reads eBay's newest UK Blu-ray and 4K listings
+  and puts Wanted films and upgrades 30% or more under their usual price on Deals, with
+  pushes capped at five a person a day. **Nothing is checked until Craig's config apply**
+  starts `cron-ebay` (`OWNER-ACTIONS.md` 23). A read-only dry pass over six hours found 2
+  deals for 25 eBay calls. Migration 040 is applied.
+- **T10 is live (#217).** A queued disc whose film was identified since its search is
+  searched once more under the corrected title. Its first batch settled 2 of 5.
+- **T9 is live (#215).** 156 films identified; **166 wait on You → Identify films**
+  (`OWNER-ACTIONS.md` 21). One is "Kingsman": it is offered The King's Man (2021) first, but
+  the 4K is probably Kingsman: The Secret Service, second in the list.
+- **Valuations are all current (26 Sep):** £23,636.80 at current eBay asking prices, 1,303
+  of 1,457 discs priced. Due again from 24 Oct (`OWNER-ACTIONS.md` 19).
+- **Disc specs:** 347 of 1,250 have specs; **257 wait for Craig** (`OWNER-ACTIONS.md` 20);
+  645 not searched. **No nightly batch has run:** the Brave key is still only in
+  `.env.local`, not Railway (`OWNER-ACTIONS.md` 17).
+- **Brave this month: 690 of 1,500.**
 - **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  T7 `160f842` with `bfc28e7`, T9 `4d16723`, **T10 `db75229`**. Craig split T8 on 26 Sep
-  (#216) and said go on the plan. **T8a is built and waits for his OK.** Then the eBay
-  checkpoint (`OWNER-ACTIONS.md` 18), then T8b ("Connect eBay").
+  T7 `160f842` with `bfc28e7`, T9 `4d16723`, T10 `db75229`, **T8a `e2142b7`**. Next is the
+  eBay checkpoint (`OWNER-ACTIONS.md` 18: sign-in settings and an encryption key), then T8b,
+  "Connect eBay" for Mark's watch and selling lists (Opus · max).
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
-- **Live fixes on 24 Sep:** release pushes are disc releases only (#210); dropped eBay
-  connections are retried (#211). **Session renewal works live** (#200). **Mark's phone gets
-  no pushes** until he turns notifications back on (`OWNER-ACTIONS.md` 16b).
+- **Mark's phone gets no pushes** until he turns notifications back on (`OWNER-ACTIONS.md`
+  16b), so T8a's pushes reach Craig only, for now.
 
 **Live numbers (26 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
@@ -52,6 +41,7 @@ on `feat/t8a-ebay-alerts` and waits for Craig's OK to merge (`OWNER-ACTIONS.md` 
 - **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
 - **Discs with Blu-ray.com specs:** 347. **Disc valuations:** 1,454 films and formats
   checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD £5.95.
+- **eBay alerts:** none set yet; no scheduled pass has run.
 
 ## Next
 
@@ -467,6 +457,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Batch T8a shipped, `e2142b7`)** — Craig said OK to merge and to keep Price
+  alerts always in the menu. Production serves `e2142b7` with `db: ok`; migration 040 is
+  applied. CI failed once, on three new database tests reading objects a refused request had
+  expired, and passed after the fix. The schedule waits on Craig's config apply.
 
 - **2026-09-26 (Batch T8a built, not merged)** — eBay price alerts and the deal scan, on
   `feat/t8a-ebay-alerts`. Probing eBay live shaped it: about 200 new UK Blu-ray and 4K listings
