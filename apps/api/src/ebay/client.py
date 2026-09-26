@@ -47,6 +47,8 @@ from ..tmdb.client import RateLimiter
 EBAY_API_BASE = "https://api.ebay.com"
 TOKEN_PATH = "/identity/v1/oauth2/token"  # noqa: S105 - a URL path, not a credential
 SEARCH_PATH = "/buy/browse/v1/item_summary/search"
+#: One listing by the number in its web address — Batch T8a's price targets.
+ITEM_BY_LEGACY_ID_PATH = "/buy/browse/v1/item/get_item_by_legacy_id"
 
 #: The only scope a client-credentials token can hold, and all Browse needs.
 APP_SCOPE = "https://api.ebay.com/oauth/api_scope"
@@ -193,6 +195,9 @@ class EbayClient:
         *,
         limit: int = MAX_LIMIT,
         category_ids: str | None = None,
+        sort: str | None = None,
+        filter: str | None = None,  # noqa: A002 - Browse's own parameter name
+        offset: int = 0,
     ) -> dict[str, Any]:
         """One ``item_summary/search`` call, returned verbatim.
 
@@ -200,12 +205,48 @@ class EbayClient:
         against captured copies of it, so this layer must not reshape anything on the way
         past. Reshaping here is how ``test_specs.py``'s invented fixture happened — the
         test agreed with the parser and neither agreed with the site (`DECISIONS.md` #122).
+
+        ``sort``, ``filter`` and ``offset`` are Batch T8a's: the deal scan reads the newest
+        UK listings first (``sort=newlyListed``) a page at a time.
         """
-        client = self._require()
         params: dict[str, Any] = {"q": query, "limit": str(min(limit, MAX_LIMIT))}
         if category_ids:
             params["category_ids"] = category_ids
+        if sort:
+            params["sort"] = sort
+        if filter:
+            params["filter"] = filter
+        if offset:
+            params["offset"] = str(offset)
+        payload = await self._get(SEARCH_PATH, params, what="search")
+        if payload is None:  # pragma: no cover - a search never answers 404
+            raise EbayError("eBay search failed (HTTP 404)", 404)
+        return payload
 
+    async def get_item_by_legacy_id(self, legacy_item_id: str) -> dict[str, Any] | None:
+        """One listing, by the number in its web address — Batch T8a's price targets.
+
+        ``None`` when eBay answers 404: the listing has ended or been removed, which is an
+        answer about the listing rather than a failure. Returned verbatim, like
+        :meth:`search`.
+        """
+        return await self._get(
+            ITEM_BY_LEGACY_ID_PATH,
+            {"legacy_item_id": legacy_item_id},
+            what="item",
+            not_found_is_none=True,
+        )
+
+    async def _get(
+        self,
+        path: str,
+        params: dict[str, Any],
+        *,
+        what: str,
+        not_found_is_none: bool = False,
+    ) -> dict[str, Any] | None:
+        """One Browse GET with the token, the retries and the count every call shares."""
+        client = self._require()
         last_status: int | None = None
         for attempt in range(self._max_retries + 1):
             await self._rate_limiter.acquire()
@@ -213,7 +254,7 @@ class EbayClient:
                 token = await self._access_token(force=attempt > 0 and last_status == 401)
                 self.search_calls += 1
                 response = await client.get(
-                    SEARCH_PATH,
+                    path,
                     params=params,
                     headers={
                         "Authorization": f"Bearer {token}",
@@ -229,20 +270,23 @@ class EbayClient:
                 if attempt < self._max_retries:
                     wait = 2**attempt
                     logger.warning(
-                        "ebay_search_network_retrying",
+                        f"ebay_{what}_network_retrying",
                         error=type(exc).__name__,
                         attempt=attempt,
                         wait=wait,
                     )
                     await asyncio.sleep(wait)
                     continue
-                logger.error("ebay_search_network_failed", error=type(exc).__name__)
+                logger.error(f"ebay_{what}_network_failed", error=type(exc).__name__)
                 raise EbayError(f"eBay could not be reached ({type(exc).__name__})") from exc
             last_status = response.status_code
 
             if response.status_code == 200:
                 payload: dict[str, Any] = response.json()
                 return payload
+
+            if response.status_code == 404 and not_found_is_none:
+                return None
 
             if response.status_code == 401 and attempt < self._max_retries:
                 # The clock said the token was good and eBay disagrees. Mint once more
@@ -254,7 +298,7 @@ class EbayClient:
             if retryable and attempt < self._max_retries:
                 wait = 2**attempt
                 logger.warning(
-                    "ebay_search_retrying",
+                    f"ebay_{what}_retrying",
                     status=response.status_code,
                     attempt=attempt,
                     wait=wait,
@@ -262,7 +306,7 @@ class EbayClient:
                 await asyncio.sleep(wait)
                 continue
 
-            logger.error("ebay_search_failed", status=response.status_code)
-            raise EbayError(f"eBay search failed (HTTP {response.status_code})", last_status)
+            logger.error(f"ebay_{what}_failed", status=response.status_code)
+            raise EbayError(f"eBay {what} failed (HTTP {response.status_code})", last_status)
 
-        raise EbayError(f"eBay search failed (HTTP {last_status})", last_status)
+        raise EbayError(f"eBay {what} failed (HTTP {last_status})", last_status)

@@ -21,6 +21,7 @@ import httpx
 import pytest
 
 from src.ebay.client import (
+    ITEM_BY_LEGACY_ID_PATH,
     SEARCH_PATH,
     TOKEN_PATH,
     EbayClient,
@@ -230,3 +231,85 @@ async def test_a_connection_that_keeps_dropping_is_an_ebay_error() -> None:
     assert caught.value.status_code is None
     assert "ConnectTimeout" in str(caught.value)
     assert recorder.searches == 3
+
+
+# ---------------------------------------------------------------------------
+# Batch T8a — one listing by number, and the newest-first search
+# ---------------------------------------------------------------------------
+
+
+class _ItemRecorder:
+    """eBay answering ``get_item_by_legacy_id`` with scripted statuses."""
+
+    def __init__(self, statuses: list[int]) -> None:
+        self.statuses = statuses
+        self.calls: list[httpx.Request] = []
+
+    def handler(self, request: httpx.Request) -> httpx.Response:
+        if request.url.path == TOKEN_PATH:
+            return httpx.Response(200, json={"access_token": "token", "expires_in": 7200})
+        if request.url.path == ITEM_BY_LEGACY_ID_PATH:
+            self.calls.append(request)
+            status = self.statuses.pop(0)
+            if status == 200:
+                return httpx.Response(200, json={"legacyItemId": "168722516953"})
+            return httpx.Response(status, json={"errors": [{"errorId": 11001}]})
+        raise AssertionError(f"unexpected request to {request.url}")
+
+
+def _item_client(recorder: _ItemRecorder) -> EbayClient:
+    client = EbayClient(client_id="id", client_secret="secret", rate=1000.0)
+    client._client = httpx.AsyncClient(  # noqa: SLF001 - injecting the transport is the point
+        base_url="https://api.ebay.com", transport=httpx.MockTransport(recorder.handler)
+    )
+    return client
+
+
+async def test_a_listing_is_read_by_its_number() -> None:
+    recorder = _ItemRecorder([200])
+    client = _item_client(recorder)
+    assert await client.get_item_by_legacy_id("168722516953") == {"legacyItemId": "168722516953"}
+    assert recorder.calls[0].url.params["legacy_item_id"] == "168722516953"
+    assert recorder.calls[0].headers["X-EBAY-C-MARKETPLACE-ID"] == "EBAY_GB"
+
+
+async def test_a_listing_eBay_no_longer_has_is_none_not_an_error() -> None:
+    client = _item_client(_ItemRecorder([404]))
+    assert await client.get_item_by_legacy_id("168722516953") is None
+    assert client.search_calls == 1
+
+
+async def test_a_listing_lookup_is_retried_and_counted_like_a_search() -> None:
+    recorder = _ItemRecorder([503, 200])
+    client = _item_client(recorder)
+    assert await client.get_item_by_legacy_id("168722516953") is not None
+    assert client.search_calls == len(recorder.calls) == 2
+
+
+async def test_the_newest_first_search_sends_its_sort_filter_and_page() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == TOKEN_PATH:
+            return httpx.Response(200, json={"access_token": "token", "expires_in": 7200})
+        seen.append(request)
+        return httpx.Response(200, json={"itemSummaries": []})
+
+    client = EbayClient(client_id="id", client_secret="secret", rate=1000.0)
+    client._client = httpx.AsyncClient(  # noqa: SLF001 - injecting the transport is the point
+        base_url="https://api.ebay.com", transport=httpx.MockTransport(handler)
+    )
+    await client.search(
+        "(blu-ray,bluray,4k,uhd)",
+        category_ids="617",
+        sort="newlyListed",
+        filter="itemLocationCountry:GB,buyingOptions:{FIXED_PRICE}",
+        offset=400,
+    )
+    params = seen[0].url.params
+    assert (params["sort"], params["offset"], params["category_ids"]) == (
+        "newlyListed",
+        "400",
+        "617",
+    )
+    assert params["filter"] == "itemLocationCountry:GB,buyingOptions:{FIXED_PRICE}"
