@@ -12,7 +12,7 @@ serves U2 with `db: ok` and migration 041. The first scheduled spec batch is 02:
   the search found exactly one UK edition. **The backfill wrote 83**, all of the last kind.
   The archive's grid, list and compact views and the film page show them. The field labelled
   "Collector edition" is now "Sub-category": it holds the spreadsheet's groupings ("Clint
-  Eastwood", "Hitchcock"). Craig can overrule the label.
+  Eastwood", "Hitchcock"). Craig kept that label on 26 Sep. The live web app carries it.
 - **U1 is live (#219).** A redirect is followed once, only to the same release number, five
   seconds after the first request; anywhere else sends the disc straight back to Craig.
   Dr. Strangelove's disc settled on the first batch after the merge (14:37 UTC).
@@ -457,6 +457,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Craig kept "Sub-category")** — His answer on U2's one open call. Checked the
+  same evening: the live web app (`mcu-app-fawn.vercel.app`) serves U2's build, with the Edition
+  field and "Sub-category" in the copy form and film page, and no "Collector edition" left.
 
 - **2026-09-26 (Batch U2 shipped, `52fcced`)** — Each copy's edition (migration 041), filled
   only where its Blu-ray.com page is certainly the copy, and shown while browsing (#220). Local

@@ -4313,3 +4313,5 @@ contemporaneous.
        Zavvi Exclusive SteelBook 4, Arrow Academy 3, and 31 others. Read through the real
        list route afterwards: 83 of 1,866 films carry editions, and the list takes 6 queries
        for the whole catalogue, as for a page of 20.
+     - **Craig kept "Sub-category" on 26 Sep**, after the merge. The live web app serves U2's
+       build: the copy form and film page carry the Edition field and the new label.

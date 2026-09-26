@@ -824,7 +824,7 @@ Three ways out, and choosing between them is information architecture, not styli
 > Blu-ray.com pages that were certainly the copy, and the archive's grid, list and compact
 > views and the film page show them (#220). The field that was labelled "Collector edition"
 > is now "Sub-category", because it holds your spreadsheet's groupings ("Clint Eastwood",
-> "Hitchcock"); say if you want the old label back. The rest of this item is the history.
+> "Hitchcock"); you kept that label on 26 Sep. The rest of this item is the history.
 
 Unchanged from the audit, and not a styling gap: the list contract has no edition field, and
 fetching copies per film would be an **N+1 across 1,843 rows**. Making it visible means an
