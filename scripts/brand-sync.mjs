@@ -7,16 +7,17 @@
  * files it actually references — the rest of the family (masters, proofs, the personalised
  * poster edition, the photographic heroes) stays in the design system.
  *
- * This script exists because the two directories are versioned differently:
- * `apps/web/public/brand/` is committed, and `docs/brand/` currently is not
- * (`OWNER-ACTIONS.md` #15 — 56 MB of binaries and a copyright call that is the owner's).
- * Without a recorded mapping the shipped assets would have no traceable origin at all.
+ * This script exists so the shipped assets have a traceable origin. Both directories are
+ * committed: `docs/brand/` went into git on 10 Sep (`fb6ecbd`), and since Batch U3 the
+ * third-party stills and posters in it are untracked and ignored (`OWNER-ACTIONS.md` 15,
+ * `DECISIONS.md` #221). The generator's inputs are all still tracked.
  *
  *   node scripts/brand-sync.mjs           copy the manifest into apps/web/public/brand
  *   node scripts/brand-sync.mjs --check   report drift; exit 1 if anything differs
  *
- * `--check` needs the design system present, so it is a local tool, not a CI gate: CI
- * clones a repo that does not contain `docs/brand/`.
+ * The web tests run the same comparison as `--check` in CI, over every file in
+ * `apps/web/public/brand/`, including the four photographic files shipped outside this
+ * manifest (`brand-integration.test.ts`).
  */
 
 import { createHash } from 'node:crypto'
@@ -65,7 +66,7 @@ function main() {
 
   if (!existsSync(SOURCE)) {
     console.error(`Design system not found at ${SOURCE}.`)
-    console.error('See OWNER-ACTIONS.md #15 — docs/brand/ is not tracked in this repository.')
+    console.error('It is tracked in git; see docs/brand-integration.md.')
     process.exit(2)
   }
 

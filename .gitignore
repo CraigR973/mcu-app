@@ -56,3 +56,13 @@ supabase/.temp/
 # Build artifacts
 apps/web/tsconfig.tsbuildinfo
 .letterboxd-export/
+
+# Third-party film stills, posters and photographs, gathered as art-direction reference
+# for the brand and never cleared for redistribution. Untracked in Batch U3 at Craig's
+# pick (OWNER-ACTIONS.md 15, DECISIONS.md #221): they stay on disk, and in history before
+# that commit. A photograph arrives as a JPEG, so none is tracked anywhere under docs/brand.
+docs/brand/source-images/
+docs/brand/logo-system/concepts/*/sources/
+docs/brand/logo-system/concepts/catalogue-frame-v2/poster-source-grid.png
+docs/brand/**/*.jpg
+docs/brand/**/*.jpeg
