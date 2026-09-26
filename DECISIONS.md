@@ -4231,3 +4231,11 @@ contemporaneous.
        kept at its new address, one sent elsewhere going straight back, a `429` from the new
        address halting everything, the five-second spacing before the second request and
        the next disc's, a second redirect not followed, and five in a row stopping a batch.
+     - **Shipped as `cb1111f` on 26 Sep, and proved live the same day.** Local gate and CI
+       green first time. A batch run by hand at 14:35 UTC settled Dr. Strangelove's disc at
+       14:37: its accepted page answered `301` to a new name for release 117642, the fetcher
+       followed it five seconds later, and the disc's page and its specs' source are now the
+       new address (region-free, 1080p, Sony Pictures). It was the only page in the batch
+       that had moved. The batch: 148 Brave searches, 88 accepted, 89 pages fetched, 83 with
+       specs, 6 sent back (all the year check), no failures. 430 of 1,250 discs have specs,
+       323 wait for Craig, and Brave stands at 838 of the month's 1,500.

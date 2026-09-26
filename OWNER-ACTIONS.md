@@ -16,7 +16,7 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **A phone session (about 15 minutes):** 16b Mark turns notifications on, then a movie night
   on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
   Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?".
-- **The two queues, whenever:** 166 films on You → Identify films (from 21), then 257 discs on
+- **The two queues, whenever:** 166 films on You → Identify films (from 21), then 323 discs on
   You → Disc specs (20).
 - **One live run:** 1e, the retailer deals scrape.
 - **Calls that unblock Group U** (`docs/phase-batches.md`): U2 yes or no; picks for 11, 13
@@ -984,10 +984,12 @@ destroy nothing. If anything is to be destroyed, stop (#124).
 
 ### 20. Work through the Disc specs queue — T7
 
-> **Updated 26 Sep: 257 discs wait for you** (197 on 25 Sep, 136 on 24 Sep). Each batch
-> searches about 145 discs nobody has searched before, and about 40% of them wait. Since
-> T10 (#217), a disc whose film you identify after its search is searched again once,
-> under the corrected title, when the words differ.
+> **Updated 26 Sep, after U1's batch: 323 discs wait for you** (257 that morning, 197 on
+> 25 Sep, 136 on 24 Sep). Each batch searches about 145 discs nobody has searched before, and
+> about 40% of them wait. Since T10 (#217), a disc whose film you identify after its search is
+> searched again once, under the corrected title, when the words differ. Since U1 (#219), a
+> page Blu-ray.com has renamed is followed to its new address; one it sends anywhere else
+> comes straight back to you, with where it pointed.
 
 **Best order: Identify films first (item 21), then this queue.** 61 of the 197 are discs of
 films still waiting on You → Identify films. Once you identify a film, the next batch's

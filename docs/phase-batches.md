@@ -2104,7 +2104,8 @@ authored 2026-09-26 from T8's.**
 ## What is left — Group U, planned 26 Sep
 
 **Proposed 2026-09-26 at Craig's request ("batch up all the remaining work"), and regrouped at
-his word the same day. Nothing starts before his go.** Criteria authored 2026-09-26, so
+his word the same day. He said go on U1 → U2 the same day, with his yes to U2's column; the
+rest still waits on the gates below.** Criteria authored 2026-09-26, so
 `DECISIONS.md` #54 does not apply. This section is the whole remaining sequence: the new U
 batches, the three older batches still open (21, T8b, 38), the two parked ones (33, 34), and
 one item to close.
@@ -2113,7 +2114,7 @@ one item to close.
 
 | Step | Batch | Gate |
 |---|---|---|
-| 1 | U1 → U2 — moved Blu-ray.com pages, then editions | U1 none; U2 Craig's yes (it adds a column) |
+| 1 | ~~U1~~ → U2 — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. U1 shipped (`cb1111f`) |
 | 2 | U3 — three small calls: the assistant button, `/debug`, the brand assets | Craig's picks (`OWNER-ACTIONS.md` 11, 13, 15) |
 | 3 | U4 — re-price the collection on its own | Craig's yes, then one config apply (shared with T8b's if timing allows) |
 | 4 | 21 — price history charts | the calendar only; a go now lets it start itself on 30 Sep |
@@ -2144,7 +2145,17 @@ a design that is gone.
 sitting: accounts (22, 18, 9), a phone session (16b, 3, 1d, 1h, 1j, 1c), the two queues
 (Identify films, Disc specs), and one live run (1e).
 
-### U1 — Blu-ray.com pages that have moved 🟢
+### ~~U1 — Blu-ray.com pages that have moved~~ 🟢 **shipped 2026-09-26 (`cb1111f`)**
+**Acceptance: six of six met.** A redirect is followed once, only to the same release number,
+five seconds after the first request, and a `403` or `429` to it halts everything; anywhere
+else, or a second redirect, sends the disc straight back to Craig with the address (#219).
+Local gate and CI green first time (1,547 API tests against Postgres). **Live, 26 Sep:** a
+batch run by hand at 14:35 UTC settled Dr. Strangelove's disc at 14:37: its page answered
+`301` to a new name for release 117642, the fetcher followed it, and the disc's page and its
+specs' source are now the new address. The batch: 148 Brave searches, 88 accepted, 89 pages
+fetched, 83 with specs, 6 sent back (all the year check), no failures. 430 of 1,250 discs have
+specs; 323 wait for Craig.
+
 **Proposed 26 Sep.** Opus 5 · xhigh / GPT-5.6 Sol · Extra High: small, but it is #110's
 ground, what the fetcher may request. Replaces the separate task offered on 26 Sep.
 
@@ -2300,7 +2311,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | U1 → U2 (U2 after Craig's yes) → U3 (after his three picks) → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day; not approved.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → U2 → U3 (after his three picks) → U4 (after his yes; one apply, shared with T8b's if timing allows) → 21 (from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) shipped 2026-09-26.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

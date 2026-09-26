@@ -2,41 +2,33 @@
 
 ## Now
 
-**26 Sep 2026: T10 (`db75229`) and T8a (`e2142b7`) have shipped, and Craig applied the Railway
-config at about 10:25 UTC: `cron-ebay` and `cron-specs` exist and their images built. Their
-first runs are 12:20 UTC (eBay) and 02:00 UTC on 27 Sep (specs). T8b waits on his eBay set-up.**
+**26 Sep 2026: Craig said go on Group U's first step, U1 → U2, with his yes to U2's column.
+U1 has shipped (`cb1111f`): a Blu-ray.com page that moved is followed to its new address.
+U2, each copy's edition, is next. The first scheduled spec batch is 02:00 UTC on 27 Sep.**
 
-- **T8a, eBay price alerts and the deal scan, is live (#218).** Each person sets alerts on
-  one listing (by its address) or on any UK Buy It Now copy of a film on a format, on the
-  Price alerts page or the film page. A scan reads eBay's newest UK Blu-ray and 4K listings
-  and puts Wanted films and upgrades 30% or more under their usual price on Deals, with
-  pushes capped at five a person a day. `cron-ebay` runs every two hours at twenty past.
-  **Its first pass worked (12:21 UTC, 26 Sep):** 15 eBay calls, 363 new listings, 13
-  upgrades priced, 3 deals (*Fantastic Voyage* Blu-ray £11.87, usually £17.49; *Kill Bill:
-  Vol. 1* 4K £15.78, usually £25.49; *Catch Me If You Can* 4K steelbook £15.98, usually
-  £26.78). All 3 reached Craig's phone; Mark's were held for want of a device. Migration 040
-  is applied.
-- **T10 is live (#217).** A queued disc whose film was identified since its search is
-  searched once more under the corrected title. Its first batch settled 2 of 5.
-- **T9 is live (#215).** 156 films identified; **166 wait on You → Identify films**
-  (`OWNER-ACTIONS.md` 21). One is "Kingsman": it is offered The King's Man (2021) first, but
-  the 4K is probably Kingsman: The Secret Service, second in the list.
+- **U1 is live (#219).** A redirect from Blu-ray.com is followed once, and only when the new
+  address is the same release (same number, #110's predicate), five seconds after the first
+  request; a `403` or `429` to it halts everything. Anywhere else sends the disc straight
+  back to Craig with the address. **Checked live:** a batch run by hand at 14:35 UTC settled
+  Dr. Strangelove's disc at 14:37, at its new address. That batch: 148 Brave searches, 88
+  accepted, 89 pages fetched, 83 with specs, 6 sent back by the year check, no failures.
+- **U2, next:** a free-text edition on each copy (migration 041), filled only where the
+  settled Blu-ray.com page is certainly the copy, shown while browsing. Replaces
+  `OWNER-ACTIONS.md` 12.
+- **T8a, eBay price alerts and the deal scan, is live (#218).** `cron-ebay` runs every two
+  hours at twenty past. Its first pass (12:21 UTC, 26 Sep) found 3 deals, and all 3 pushes
+  reached Craig; Mark's were held for want of a device.
+- **T10 is live (#217); T9 is live (#215).** 166 films wait on You → Identify films
+  (`OWNER-ACTIONS.md` 21).
 - **Valuations are all current (26 Sep):** £23,636.80 at current eBay asking prices, 1,303
   of 1,457 discs priced. Due again from 24 Oct (`OWNER-ACTIONS.md` 19).
-- **Disc specs:** 347 of 1,250 have specs; **257 wait for Craig** (`OWNER-ACTIONS.md` 20);
-  645 not searched. **The nightly batch starts at 02:00 UTC on 27 Sep:** the Brave key was
-  in Railway's `api` all along (checked by name on 26 Sep; the notes saying otherwise were
-  wrong), and the apply created `cron-specs`.
-- **Brave this month: 690 of 1,500.**
-- **Group T progress:** T2 `fe409f3`, T3 `90d6994`, T4 `99b04c0`, T5 `1e08f40`, T6 `9acd0ee`,
-  T7 `160f842` with `bfc28e7`, T9 `4d16723`, T10 `db75229`, **T8a `e2142b7`**. T8b, "Connect
-  eBay", waits on the eBay checkpoint (`OWNER-ACTIONS.md` 18).
-- **Everything left is batched as Group U, proposed 26 Sep, regrouped at Craig's word, and
-  not yet approved** (`docs/phase-batches.md`, "What is left — Group U"): U1 → U2 (moved
-  Blu-ray.com pages, then editions) on one go; U3 three small calls (the assistant button,
-  `/debug`, the brand assets); U4 scheduled re-pricing, sharing T8b's Railway apply if the
-  timing allows; then 21 (from 30 Sep), T8b and 38. Craig's own items are listed by sitting at
-  the top of `OWNER-ACTIONS.md`.
+- **Disc specs:** 430 of 1,250 have specs; **323 wait for Craig** (`OWNER-ACTIONS.md` 20);
+  497 not searched. **`cron-specs` runs nightly at 02:00 UTC; its first run is 27 Sep.**
+- **Brave this month: 838 of 1,500.** A batch searches at most 150.
+- **Group U** (`docs/phase-batches.md`, "What is left — Group U"): ~~U1~~ → U2 on Craig's
+  go; then U3 (his picks, `OWNER-ACTIONS.md` 11, 13, 15), U4 (his yes), 21 (from 30 Sep),
+  T8b (`OWNER-ACTIONS.md` 18) and 38. Craig's own items are listed by sitting at the top of
+  `OWNER-ACTIONS.md`.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -48,7 +40,7 @@ first runs are 12:20 UTC (eBay) and 02:00 UTC on 27 Sep (specs). T8b waits on hi
   1,887 films: 1,677 identified and 210 not (166 waiting for Craig, 35 set aside, 9 with no
   disc).
 - **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 347. **Disc valuations:** 1,454 films and formats
+- **Discs with Blu-ray.com specs:** 430. **Disc valuations:** 1,454 films and formats
   checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD £5.95.
 - **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass.
 
@@ -466,6 +458,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-26 (Batch U1 shipped, `cb1111f`)** — At Craig's go on U1 → U2. A moved
+  Blu-ray.com page is followed once, to the same release only (#219). Local gate and CI green
+  first time; production serves `cb1111f` with `db: ok`. A batch run by hand at 14:35 UTC
+  settled Dr. Strangelove's disc at its new address: 148 searches, 83 discs gained specs, 6
+  sent back by the year check, no failures. 430 have specs, 323 wait for Craig, Brave 838.
 
 - **2026-09-26 (Group U regrouped)** — At Craig's word: U1 and U2 run back to back on one go;
   the brand assets (was U5) join U3's two small calls; U4 shares a Railway apply with T8b's
