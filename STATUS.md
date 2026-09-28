@@ -31,10 +31,10 @@ free monthly credit ran out on 28 Sep.** U3 (`e116ef2`) is live since 26 Sep.
 - **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20);
   335 not searched. `cron-specs` runs nightly at 02:00 UTC.
 - **Brave this month: 1,005 searches**, past the free credit; the app's own ceiling is 1,500.
-- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): U4, re-pricing every
-  fortnight, whose merge waits for Craig's OK and then one config apply before 24 Oct (shared
-  with T8b's if `OWNER-ACTIONS.md` 18 is done first); 21 starts itself after the 30 Sep scrape;
-  T8b on 18; 38 last.
+- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): **U4 is built** on
+  `feat/u4-fortnightly-revaluation` (#223) and waits for Craig's OK, then his config apply
+  before 24 Oct (`OWNER-ACTIONS.md` 24); 21 starts itself after the 30 Sep scrape; T8b on 18;
+  38 last.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -465,6 +465,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-28 (Batch U4 built, not merged)** — `cron-values` re-prices the collection at 04:00
+  UTC on the 1st, 2nd, 15th and 16th, the Home button's run on a schedule, with the eBay keys by
+  reference (#223). Two mornings a fortnight because a day's share prices about half the
+  collection. The merge waits for Craig's OK; his config apply starts it.
 
 - **2026-09-28 (Craig's answers on Group U; the first scheduled spec batches)** — U4 yes,
   re-pricing every fortnight; 21 go, starting itself after the 30 Sep scrape; item 14 closed;

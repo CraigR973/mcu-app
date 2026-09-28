@@ -4420,3 +4420,34 @@ contemporaneous.
        T3 replaced (#201).
      - **The 36 tracked images built from stills or posters stay for now** (#221), the four
        the live site serves included.
+
+
+### 2026-09-28 — Batch U4: the collection re-priced on its own
+
+223. **A `cron-values` job re-prices the collection every fortnight, on two mornings. Built
+     28 Sep on `feat/u4-fortnightly-revaluation` at Craig's yes (#222). The merge waits for
+     his OK, because it declares a Railway job, and his `config apply` starts it.**
+
+     - **What it runs:** `python -m src.scripts.value_collection`, the Home button's own run.
+       It prices every film and format whose price is 30 days old, within the valuation's 750
+       of eBay's 5,000 calls a day, and spends nothing when nothing is due. The valuation
+       itself is unchanged.
+     - **When:** 04:00 UTC on the 1st, 2nd, 15th and 16th. The collection was priced on 24–26
+       Sep, so it falls due on 24–26 Oct and the first run with work is 1 Nov: about 750 that
+       morning and the rest on the 2nd. One morning a fortnight would leave half the
+       collection two more weeks. After that each price is replaced at the first window after
+       its 30 days, so it is 30 to about 45 days old when it goes. **Update values** on Home
+       still re-prices whatever is due, at any time.
+     - **Why 04:00:** after the spec batch (02:00) and the shop check (03:00), and clear of
+       `cron-ebay` at twenty past. The valuation's 750 and `cron-ebay`'s 500 are separate
+       slices of eBay's 5,000.
+     - **Its environment:** `cronDefaults` (the database and the push keys) and the eBay keyset
+       by reference from `api`, as `cron-ebay` has it; `NEVER` restarts. Without the keys it
+       exits 1 and says so, so a job left without them shows red.
+     - **Tests:** the declaration (schedule, command, keys by reference, and listed in the
+       project's resources, since a service left out is never created), and a launch with the
+       job's environment and no eBay keys, which passes the imports that broke every job in
+       #204 and exits 1 with its message.
+     - **What the apply should show:** one service to add, `cron-values`, and nothing to
+       destroy. Nothing runs on a schedule until then.
+

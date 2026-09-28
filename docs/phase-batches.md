@@ -2247,7 +2247,8 @@ GPT-5.6 Terra · Medium.
 **Proposed 26 Sep; needs Craig's yes, and his config apply starts it.** Sonnet 5 · medium /
 GPT-5.6 Terra · Medium. `OWNER-ACTIONS.md` 19's optional cron.
 
-**Craig's yes, 28 Sep, with a change (#222): fortnightly, not daily.** "Repricing bi weekly is
+**Built 28 Sep on `feat/u4-fortnightly-revaluation` (#223); the merge waits for Craig's OK
+(`OWNER-ACTIONS.md` 24).** **Craig's yes, 28 Sep, with a change (#222): fortnightly, not daily.** "Repricing bi weekly is
 enough." The first criterion below is amended to match: the job runs at 04:00 UTC on the 1st,
 2nd, 15th and 16th, two mornings a fortnight, because a day's share prices about half the
 collection and the whole of it falls due together.
