@@ -48,9 +48,34 @@ def test_the_container_can_run_the_cron_commands() -> None:
     # not just the modules uvicorn happens to reach.
     assert "COPY apps/api/src/ ./src/" in dockerfile
 
-    for module in ("daily_scrape", "run_reminders", "spec_backfill"):
+    for module in ("daily_scrape", "run_reminders", "spec_backfill", "value_collection"):
         assert (REPO_ROOT / "apps" / "api" / "src" / "scripts" / f"{module}.py").is_file()
         # The command in OWNER-ACTIONS.md, spelled out so the two cannot drift apart.
         assert f"python -m src.scripts.{module}" in (REPO_ROOT / "OWNER-ACTIONS.md").read_text(
             encoding="utf-8"
         )
+
+
+def _service_block(railway: str, name: str) -> str:
+    start = railway.index(f"service('{name}', {{")
+    return railway[start : railway.index("\n  })\n", start)]
+
+
+def test_the_collection_is_re_priced_every_fortnight() -> None:
+    """Batch U4 — `DECISIONS.md` #222, #223.
+
+    Craig chose every fortnight over every night. Two mornings each time, because the whole
+    collection falls due together and a day's eBay share prices about half of it.
+    """
+    railway = (REPO_ROOT / ".railway" / "railway.ts").read_text(encoding="utf-8")
+    values = _service_block(railway, "cron-values")
+
+    assert "cronSchedule: '0 4 1,2,15,16 * *'" in values
+    assert "startCommand: 'python -m src.scripts.value_collection'" in values
+    assert "restartPolicyType: 'NEVER'" in values
+    # The keyset by reference from `api`, as `cron-ebay` takes it: one copy of each secret.
+    assert "EBAY_CLIENT_ID: api.env.EBAY_CLIENT_ID" in values
+    assert "EBAY_CLIENT_SECRET: api.env.EBAY_CLIENT_SECRET" in values
+    assert "...cronDefaults.env" in values
+    # Declared is not deployed: a service left out of the project is never created.
+    assert "resources: [api, scrape, reminders, specs, ebay, values]" in railway

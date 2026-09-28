@@ -58,7 +58,7 @@ export default defineRailway(() => {
   })
 
   /**
-   * The two scheduled jobs — `DECISIONS.md` #60 and #119.
+   * The scheduled jobs — `DECISIONS.md` #60 and #119.
    *
    * **Separate services, not a schedule on `api`.** A Railway cron runs the service's own
    * start command and expects the process to exit; `api` runs uvicorn, which never does.
@@ -154,8 +154,35 @@ export default defineRailway(() => {
     },
   })
 
+  /**
+   * Batch U4 — the collection re-priced on its own (`DECISIONS.md` #222, #223).
+   *
+   * A price falls due 30 days after it was taken. This prices whatever is due within the
+   * valuation's 750 of eBay's 5,000 calls a day, the Home button's own run, and spends
+   * nothing when nothing is due. **Every fortnight, not every night: Craig's choice.** Two
+   * mornings each time, because the whole collection was priced within three days, so it
+   * falls due together, and a day's share prices about half of it. It takes the eBay keyset
+   * from `api` by reference, as `cron-ebay` does. `NEVER` restarts, like the others: a run
+   * eBay refused carries on at the next one.
+   */
+  const values = service('cron-values', {
+    ...cronDefaults,
+    env: {
+      ...cronDefaults.env,
+      EBAY_CLIENT_ID: api.env.EBAY_CLIENT_ID,
+      EBAY_CLIENT_SECRET: api.env.EBAY_CLIENT_SECRET,
+    },
+    deploy: {
+      // 04:00 UTC on the 1st, 2nd, 15th and 16th: after the specs (02:00) and the shops
+      // (03:00), and clear of the eBay pass at twenty past.
+      cronSchedule: '0 4 1,2,15,16 * *',
+      startCommand: 'python -m src.scripts.value_collection',
+      restartPolicyType: 'NEVER',
+    },
+  })
+
   return project('mcu-app', {
     environments: ['production'],
-    resources: [api, scrape, reminders, specs, ebay],
+    resources: [api, scrape, reminders, specs, ebay, values],
   })
 })

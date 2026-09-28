@@ -4,9 +4,12 @@ The same run as the Home button's, for a scheduled job or a first run by hand:
 
     PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.value_collection
 
-It needs ``DATABASE_URL``, ``EBAY_CLIENT_ID`` and ``EBAY_CLIENT_SECRET``. Run nightly, it
-spends nothing on nights when nothing is due, and a full valuation of 1,454 films and
-formats completes over two nights, then refreshes every 30 days.
+It needs ``DATABASE_URL``, ``EBAY_CLIENT_ID`` and ``EBAY_CLIENT_SECRET``. It spends nothing
+when nothing is due, and a full valuation of about 1,450 films and formats takes two runs,
+because a day's share is 750 calls; each price falls due again 30 days after it was taken.
+Railway's ``cron-values`` runs it at 04:00 UTC on the 1st, 2nd, 15th and 16th: every
+fortnight, at Craig's choice, on two mornings so the whole collection fits (Batch U4,
+``DECISIONS.md`` #222).
 
 It **exits non-zero** when eBay is not configured, or when a run stopped without pricing a
 single film, so a job that quietly did nothing does not look like a quiet night.

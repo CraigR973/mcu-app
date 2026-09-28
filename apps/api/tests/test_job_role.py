@@ -59,6 +59,23 @@ def test_each_cron_job_starts_with_the_environment_railway_gives_it(script: str)
     assert "usage" in result.stdout.lower()
 
 
+def test_the_valuation_job_starts_as_a_job_and_says_when_ebay_is_missing() -> None:
+    """Batch U4's `cron-values`, launched the way Railway launches it.
+
+    It has no `--help`, so this runs it with the eBay keys emptied: past the imports that
+    crashed every job in #204, it stops at its first check, before any database or eBay
+    request, and exits non-zero so a job without its keys shows red rather than quiet.
+    """
+    result = _launch(
+        "-m",
+        "src.scripts.value_collection",
+        extra={"EBAY_CLIENT_ID": "", "EBAY_CLIENT_SECRET": ""},
+    )
+
+    assert result.returncode == 1, result.stderr
+    assert "EBAY_CLIENT_ID and EBAY_CLIENT_SECRET are not set" in result.stdout
+
+
 def test_the_web_server_still_refuses_that_environment() -> None:
     result = _launch("-c", "import src.config")
 
