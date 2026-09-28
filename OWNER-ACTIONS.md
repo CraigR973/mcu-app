@@ -19,9 +19,8 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 385 discs on
   You → Disc specs (20).
 - **One live run:** 1e, the retailer deals scrape.
-- **Group U** (`docs/phase-batches.md`): U4, re-pricing every fortnight, is built and needs
-  your OK to merge and then one `railway config apply` (item 24). You answered the rest on 28 Sep (#222): 21 starts
-  itself after the 30 Sep scrape, 14 is closed, the photographic images stay.
+- **Group U** (`docs/phase-batches.md`): nothing waits on you. U4 is live since 28 Sep
+  (item 24); 21 starts itself after the 30 Sep scrape; T8b waits on 18; 38 comes last.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1085,7 +1084,7 @@ priced). **£23,636.80** at current asking prices, with 1,303 of 1,457 discs pri
 **Prices fall due again from 24 Oct**, 30 days after they were taken. Press **Update
 values** on Home then, or add the cron below.
 
-**28 Sep: yes, every fortnight; built as U4 and waiting for your OK (item 24).** **Optional, and a hosting change (26 Sep: proposed as Group U's batch U4):** to re-price monthly on its own, add a Railway cron
+**28 Sep: live as U4, every fortnight (item 24): nothing to press unless you want fresher prices.** **Optional, and a hosting change (26 Sep: proposed as Group U's batch U4):** to re-price monthly on its own, add a Railway cron
 running `python -m src.scripts.value_collection` nightly, with `EBAY_CLIENT_ID` and
 `EBAY_CLIENT_SECRET` on it. Without it, press **Update values** whenever you want fresh
 prices: anything older than 30 days is due again.
@@ -1123,7 +1122,12 @@ reference.
 Until the apply, alerts can be set but nothing checks them, and the Price alerts page says
 so.
 
-### 24. Say OK to merge U4, then switch its schedule on — U4, re-pricing every fortnight
+### 24. ~~Say OK to merge U4, then switch its schedule on — U4, re-pricing every fortnight~~ — **done 28 Sep**
+
+> **28 Sep: OK given, U4 is live (`3974733`), and the config apply created `cron-values`** at
+> your word, run by the agent: 1 service added, nothing destroyed (#223). It first runs at
+> 04:00 UTC on 1 Oct, with nothing due; the first run with work is 1 Nov. Nothing more is
+> needed from you here.
 
 **New 28 Sep.** U4 is built on `feat/u4-fortnightly-revaluation`: a Railway job, `cron-values`,
 that re-prices the collection at 04:00 UTC on the 1st, 2nd, 15th and 16th, with the eBay keys

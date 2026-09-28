@@ -2084,8 +2084,8 @@ needs no sign-in. `DECISIONS.md` #203.
 - Gate green.
 
 ### T8b — Connect eBay: Mark's watch and selling lists 🔴
-**Proposed 26 Sep (#216); starts after the eBay checkpoint. Group U, step 5: if it is ready
-before 24 Oct, its Railway change shares one config apply with U4's.** Opus 5 · max / GPT-5.6 Sol ·
+**Proposed 26 Sep (#216); starts after the eBay checkpoint. Group U, step 5. U4 was applied on its own on 28 Sep, so T8b's Railway change gets its own
+apply.** Opus 5 · max / GPT-5.6 Sol ·
 Max. It's the first personal third-party account token this app holds (#142). **Criteria
 authored 2026-09-26 from T8's.**
 
@@ -2116,7 +2116,7 @@ one item to close.
 |---|---|---|
 | 1 | ~~U1 → U2~~ — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. **Both shipped:** U1 `cb1111f`, U2 `52fcced` |
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
-| 3 | U4 — re-price the collection on its own | **yes given 28 Sep, fortnightly (#222)**; the merge waits for his OK, then one config apply (shared with T8b's if timing allows) |
+| 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
 | 4 | 21 — price history charts | **go given 28 Sep**; starts itself after the seventh scheduled scrape, 30 Sep |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
 | 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
@@ -2243,7 +2243,14 @@ GPT-5.6 Terra · Medium.
   which has not been possible since 10 Sep.)*
 - Tests. Gate green.
 
-### U4 — Re-price the collection on its own 🟢
+### ~~U4 — Re-price the collection on its own~~ 🟢 **shipped 2026-09-28 (`3974733`)**
+**Acceptance: three of three met** (#223). `cron-values` runs the Home button's valuation at 04:00
+UTC on the 1st, 2nd, 15th and 16th, fortnightly at Craig's word (#222), with the eBay keys by
+reference; it spends nothing when nothing is due and stays inside the day's 750 calls. The
+merge waited for Craig's OK; the agent then ran the pinned plan (1 to add, 1 known change,
+0 to destroy) and applied it at his word. Local gate and CI green first time (1,595 API tests
+against Postgres). First run 1 Oct with nothing due; first with work 1 Nov.
+
 **Proposed 26 Sep; needs Craig's yes, and his config apply starts it.** Sonnet 5 · medium /
 GPT-5.6 Terra · Medium. `OWNER-ACTIONS.md` 19's optional cron.
 
@@ -2344,7 +2351,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → U4 (yes given 28 Sep, fortnightly; the merge waits for his OK and one apply, shared with T8b's if timing allows) → 21 (go given 28 Sep; from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → 21 (go given 28 Sep; from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

@@ -4450,4 +4450,11 @@ contemporaneous.
        #204 and exits 1 with its message.
      - **What the apply should show:** one service to add, `cron-values`, and nothing to
        destroy. Nothing runs on a schedule until then.
+     - **Shipped as `3974733` on 28 Sep and applied the same evening, at Craig's word** ("merge
+       and run those commands"). The agent wrote `config plan` to a pinned plan and read it: 1 to
+       add (`cron-values`), 1 to change (`api`'s restart policy, the line Railway has shown since
+       26 Sep), 0 to destroy, not destructive, every secret by reference, built from `main`.
+       It then applied exactly that plan at 21:23 UTC; a plan afterwards has nothing to add.
+       Production serves `3974733` with `db: ok`. The first scheduled run is 04:00 UTC on 1 Oct,
+       with nothing due yet; the first with work is 1 Nov.
 

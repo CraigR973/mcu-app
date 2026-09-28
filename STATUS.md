@@ -2,10 +2,10 @@
 
 ## Now
 
-**28 Sep 2026: Craig answered Group U's open calls. U4 goes ahead with re-pricing every
-fortnight rather than daily, 21 starts itself after the 30 Sep scrape, item 14 is closed and
-the photographic brand images stay for now (#222). The nightly spec search is paused: Brave's
-free monthly credit ran out on 28 Sep.** U3 (`e116ef2`) is live since 26 Sep.
+**28 Sep 2026, evening: U4 is live (`3974733`). `cron-values` re-prices the collection every
+fortnight, at Craig's word, and his OK let the agent run the config apply: 1 service added,
+nothing destroyed (#223). 21 starts itself on 30 Sep. The nightly spec search is paused:
+Brave's free monthly credit ran out on 28 Sep.** Craig's other answers are in #222.
 
 - **U3 is live (#221).** No floating assistant button: a robot icon sits in the top bar beside
   the person's initial on a phone, and between Commands and "Add a disc" on a desktop. `/debug`
@@ -31,10 +31,11 @@ free monthly credit ran out on 28 Sep.** U3 (`e116ef2`) is live since 26 Sep.
 - **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20);
   335 not searched. `cron-specs` runs nightly at 02:00 UTC.
 - **Brave this month: 1,005 searches**, past the free credit; the app's own ceiling is 1,500.
-- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): **U4 is built** on
-  `feat/u4-fortnightly-revaluation` (#223) and waits for Craig's OK, then his config apply
-  before 24 Oct (`OWNER-ACTIONS.md` 24); 21 starts itself after the 30 Sep scrape; T8b on 18;
-  38 last.
+- **U4 is live (#223):** `cron-values` at 04:00 UTC on the 1st, 2nd, 15th and 16th. Its first
+  run (1 Oct) has nothing due; prices fall due from 24 Oct, so the first with work is 1 Nov.
+- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): 21 starts itself from a
+  one-off scheduled session at 09:00 BST on 30 Sep, after the seventh scheduled scrape; T8b on
+  `OWNER-ACTIONS.md` 18; 38 last. Nothing in Group U waits on Craig.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
@@ -465,6 +466,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-28 (Batch U4 shipped and applied, `3974733`)** — At Craig's word ("merge and run
+  those commands"): merged after CI green (1,595 API tests); production serves `3974733` with
+  `db: ok`. The agent wrote the Railway plan to a pinned file and read it (1 to add, the known
+  `api` restart-policy change, 0 to destroy), then applied exactly that plan at 21:23 UTC;
+  `cron-values` exists and built from `main`. A one-off scheduled session starts 21 at 09:00
+  BST on 30 Sep.
 
 - **2026-09-28 (Batch U4 built, not merged)** — `cron-values` re-prices the collection at 04:00
   UTC on the 1st, 2nd, 15th and 16th, the Home button's run on a schedule, with the eBay keys by
