@@ -4,11 +4,11 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-26**,
-after U3. *Numbers changed at the 2026-09-09 review; the old
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-28**,
+after Craig's answers on Group U. *Numbers changed at the 2026-09-09 review; the old
 ones are noted in brackets so an earlier conversation still maps onto this file.*
 
-## What is left for you, by sitting *(26 Sep)*
+## What is left for you, by sitting *(28 Sep)*
 
 - **Accounts, at a computer (about 20 minutes):** 22 rotate the Neon password; 18 eBay
   sign-in settings and an encryption key, which unblocks T8b; 9 revoke the dead April GitHub
@@ -16,14 +16,15 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **A phone session (about 15 minutes):** 16b Mark turns notifications on, then a movie night
   on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
   Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?".
-- **The two queues, whenever:** 166 films on You → Identify films (from 21), then 323 discs on
+- **The two queues, whenever:** 166 films on You → Identify films (from 21), then 385 discs on
   You → Disc specs (20).
 - **One live run:** 1e, the retailer deals scrape.
-- **Calls that unblock Group U** (`docs/phase-batches.md`): U4 yes or no, and whether to close
-  14. (Your picks for 11, 13 and 15 were built as U3 on 26 Sep; U1 and U2 shipped the same
-  day.)
-- **One copyright call, not blocking:** whether the 36 tracked images built from stills or
-  posters stay, four of which the live site serves to anyone (15, `DECISIONS.md` #221).
+- **Group U** (`docs/phase-batches.md`): U4, re-pricing every fortnight, needs your OK to
+  merge and then one `railway config apply`. You answered the rest on 28 Sep (#222): 21 starts
+  itself after the 30 Sep scrape, 14 is closed, the photographic images stay.
+- **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
+  waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
+  discs left for about £1.30 (item 20).
 - **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
 
 ---
@@ -851,10 +852,10 @@ change and therefore its own batch.
 
 Whether it should be development-only is a deployment decision.
 
-### 14. The before/after screenshots — nine before, three after
+### 14. ~~The before/after screenshots — nine before, three after~~ — **closed 28 Sep at your word**
 
-> **26 Sep: proposed for closing.** Batch T3 replaced that navigation (#201), so the pair
-> would record a design that is gone.
+> **Closed 28 Sep (#222).** Batch T3 replaced that navigation (#201), so the pair would have
+> recorded a design that is gone. The rest of this item is the history.
 
 **This is the redesign's one incomplete deliverable.** Every surface was verified and
 measured live; what is missing is the saved image files. Two things stopped the capture, and
@@ -880,7 +881,7 @@ So the only thing between you and the redesign's missing files is **signing in y
 in that window** for the surfaces that need real catalogue data. `.claude/launch.json` also
 gained a `web-dist` entry, which serves the built bundle rather than the dev server.
 
-### 15. ~~The brand assets — 56 MB in git since 10 Sep, and a copyright call~~ — **done 26 Sep (Batch U3, `e116ef2`), one call left**
+### 15. ~~The brand assets — 56 MB in git since 10 Sep, and a copyright call~~ — **done 26 Sep (Batch U3, `e116ef2`); the photographic images kept 28 Sep**
 
 > **Done 26 Sep, your pick B:** the 25 third-party images (18 in `source-images/`, the six
 > posters in `concepts/catalogue-frame-v2/sources/`, `poster-source-grid.png`) are no longer
@@ -888,13 +889,13 @@ gained a `web-dist` entry, which serves the built bundle rather than the dev ser
 > disk. History before U3 still holds them; removing them from it (C) stays yours to run. The
 > shipped icons rebuild from a clean clone (#221).
 >
-> **One call left, not blocking anything:** 36 tracked images are *built from* those stills
-> and posters, so pick B did not cover them: the personalised poster edition, the concept
+> **Kept for now, your word on 28 Sep (#222):** 36 tracked images are *built from* those
+> stills and posters, so pick B did not cover them: the personalised poster edition, the concept
 > master it comes from, the photographic heroes and the photo-logo concepts (#221 lists
 > them). **Four ship, and the live site serves them to anyone, signed in or not:**
 > `hero-photo-five-v3.png` and `hero-photo-v3.png` (no page uses either) and
-> `personalised-poster-icon-{512,1024}.png` (the onboarding welcome). Leave them, or say
-> which to stop shipping or tracking.
+> `personalised-poster-icon-{512,1024}.png` (the onboarding welcome). They stay tracked and
+> shipped until you say otherwise.
 
 > **Corrected 26 Sep, evening: these files are already in git.** All 195 files under
 > `docs/brand/` (56 MB) went into history on 10 Sep in `fb6ecbd` and are on GitHub; the
@@ -1024,6 +1025,13 @@ PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" "$HOME/.nvm/versions/node/v20
 destroy nothing. If anything is to be destroyed, stop (#124).
 
 ### 20. Work through the Disc specs queue — T7
+
+> **Updated 28 Sep: 385 discs wait for you; 530 have specs, 335 are not searched yet.** The
+> first two scheduled batches ran on 27 and 28 Sep. **The nightly search is paused by Brave:**
+> its free monthly credit, about 1,000 searches, ran out on 28 Sep, and it answers "payment
+> required" until the credit renews (probably 1 Oct). Nothing is charged, and the batches carry
+> on by themselves when it renews. To finish sooner, raise Brave's spending limit in its
+> dashboard: the 335 left would cost about $1.70 (£1.30). Your call; nothing waits on it.
 
 > **Updated 26 Sep, after U1's batch: 323 discs wait for you** (257 that morning, 197 on
 > 25 Sep, 136 on 24 Sep). Each batch searches about 145 discs nobody has searched before, and

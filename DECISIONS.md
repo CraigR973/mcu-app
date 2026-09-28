@@ -4239,6 +4239,15 @@ contemporaneous.
        that had moved. The batch: 148 Brave searches, 88 accepted, 89 pages fetched, 83 with
        specs, 6 sent back (all the year check), no failures. 430 of 1,250 discs have specs,
        323 wait for Craig, and Brave stands at 838 of the month's 1,500.
+     - **The first scheduled batches, 27 and 28 Sep** (checked read-only on 28 Sep). 27 Sep,
+       02:02–02:13 UTC: 148 searched, 93 accepted and 55 queued for Craig, 93 pages fetched,
+       91 given specs, 2 sent back by the year check, no failed loads; it stopped at its
+       150-search cap. No page had moved, so nothing was followed or refused; 15 of the discs
+       it settled now carry an edition (#220). 28 Sep, 02:02–02:03: stopped after 14 discs
+       (9 given specs, 2 editions) because Brave answered `402`, payment required. Its free
+       monthly credit, about 1,000 searches, was spent at 1,005 by the app's count; the app's
+       own ceiling is 1,500. Every batch stops at its first search until the credit renews or
+       Craig raises the spending limit, and nothing is charged meanwhile.
 
 
 ### 2026-09-26 — Batch U2: each copy's edition
@@ -4393,3 +4402,21 @@ contemporaneous.
        and 1,280 px too. *Caveat:* the browser pane was hidden, which stops resize observers,
        scroll events and screenshots, so the Archive's rows were settled by calling the
        grid's own measure, and no screenshots were taken.
+
+
+### 2026-09-28 — Craig's answers on Group U
+
+222. **Craig's answers on 28 Sep to Group U's open calls.**
+
+     - **U4 re-prices every fortnight, not daily.** His words: "repricing bi weekly is
+       enough", read as every two weeks. A price still falls due 30 days after it was taken;
+       the schedule sets how soon after that it is re-priced. The job runs at 04:00 UTC on the
+       1st, 2nd, 15th and 16th: two mornings a fortnight, because a day's eBay share (750
+       calls) prices about half of the ~1,450 films and formats, and the whole collection
+       was priced within three days, so it falls due together. U4's own entry records the build.
+     - **21 goes, and starts itself** once the seventh scheduled scrape is in (30 Sep, 03:00
+       UTC): a one-off scheduled session on 30 Sep checks `scrape_runs` before building.
+     - **Owner item 14 is closed.** The before/after screenshots would record a navigation
+       T3 replaced (#201).
+     - **The 36 tracked images built from stills or posters stay for now** (#221), the four
+       the live site serves included.

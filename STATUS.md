@@ -2,10 +2,10 @@
 
 ## Now
 
-**26 Sep 2026, evening: Group U's second step is done. U3 (`e116ef2`) put the assistant in the
-top bar, made `/debug` development-only, and stopped tracking the third-party brand images, at
-Craig's three picks. Production serves it with `db: ok`. The first scheduled spec batch is
-02:00 UTC on 27 Sep, and it is the first to run U1 and U2 on a schedule.**
+**28 Sep 2026: Craig answered Group U's open calls. U4 goes ahead with re-pricing every
+fortnight rather than daily, 21 starts itself after the 30 Sep scrape, item 14 is closed and
+the photographic brand images stay for now (#222). The nightly spec search is paused: Brave's
+free monthly credit ran out on 28 Sep.** U3 (`e116ef2`) is live since 26 Sep.
 
 - **U3 is live (#221).** No floating assistant button: a robot icon sits in the top bar beside
   the person's initial on a phone, and between Commands and "Add a disc" on a desktop. `/debug`
@@ -15,32 +15,38 @@ Craig's three picks. Production serves it with `db: ok`. The first scheduled spe
   nothing on Settings, Price alerts, Identify films, the Archive or a film page sits under
   anything; the browser check found and fixed two older faults (Settings' switch knobs, the
   film page's tab counts). Owner items 11, 13 and 15 are done.
-- **Craig's call, not blocking: 36 tracked images built from stills or posters** (#221 lists
-  them). Four ship, and the live site serves them to anyone: two photographic heroes no page
-  uses, and the personalised poster icons the onboarding welcome shows.
+- **The nightly spec search is paused by Brave, not by the app.** Brave gives about 1,000 free
+  searches a month; this month's reached 1,005 on 28 Sep, and it answers `402` (payment
+  required) since. The 28 Sep batch stopped after 14 discs; each night's batch will stop at its
+  first search until the credit renews (probably 1 Oct) or Craig raises the spending limit.
+  Nothing is charged. The first scheduled batch, 27 Sep, ran clean: 148 searched, 91 given
+  specs, 15 editions filled, no page had moved (#219).
+- **The 36 photographic brand images stay for now** (Craig, 28 Sep, #222); four of them are
+  served by the live site.
 - **U1 and U2 are live (#219, #220).** 83 copies have an edition; "Sub-category" kept.
 - **T8a is live (#218):** `cron-ebay` every two hours at twenty past. **T10 (#217) and T9
   (#215) are live.** 166 films wait on You → Identify films (`OWNER-ACTIONS.md` 21).
 - **Valuations are all current (26 Sep):** £23,636.80, 1,303 of 1,457 discs priced. Due again
   from 24 Oct (`OWNER-ACTIONS.md` 19).
-- **Disc specs:** 430 of 1,250 have specs; **323 wait for Craig** (`OWNER-ACTIONS.md` 20);
-  497 not searched. `cron-specs` runs nightly at 02:00 UTC; its first run is 27 Sep.
-- **Brave this month: 838 of 1,500.** A batch searches at most 150.
-- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): U4 on Craig's yes, then
-  one config apply (shared with T8b's if `OWNER-ACTIONS.md` 18 is done before 24 Oct); 21 from
-  30 Sep; T8b on 18; 38 last. Item 14 waits on his word on closing it.
+- **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20);
+  335 not searched. `cron-specs` runs nightly at 02:00 UTC.
+- **Brave this month: 1,005 searches**, past the free credit; the app's own ceiling is 1,500.
+- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): U4, re-pricing every
+  fortnight, whose merge waits for Craig's OK and then one config apply before 24 Oct (shared
+  with T8b's if `OWNER-ACTIONS.md` 18 is done first); 21 starts itself after the 30 Sep scrape;
+  T8b on 18; 38 last.
 - **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
   autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
   (`OWNER-ACTIONS.md` 22).
 - **Mark's phone gets no pushes** until he turns notifications back on (`OWNER-ACTIONS.md`
   16b), so T8a's pushes reach Craig only, for now.
 
-**Live numbers (26 Sep):**
+**Live numbers (26 Sep; specs and editions 28 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
   1,887 films: 1,677 identified and 210 not (166 waiting for Craig, 35 set aside, 9 with no
   disc).
 - **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 430; **with an edition:** 83. **Disc valuations:** 1,454
+- **Discs with Blu-ray.com specs:** 530; **with an edition:** 100 (28 Sep). **Disc valuations:** 1,454
   films and formats checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD
   £5.95.
 - **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass.
@@ -459,6 +465,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-28 (Craig's answers on Group U; the first scheduled spec batches)** — U4 yes,
+  re-pricing every fortnight; 21 go, starting itself after the 30 Sep scrape; item 14 closed;
+  the 36 photographic brand images kept (#222). The first scheduled spec batch (27 Sep, 02:02
+  UTC) ran clean: 148 searched, 91 given specs, 15 editions filled, no page had moved. The
+  second (28 Sep) stopped after 14 discs: Brave answered `402` once this month's searches
+  reached 1,005, past its ~1,000 free. Batches wait for the credit to renew, or a higher
+  spending limit (Craig's call, optional). 530 discs have specs, 385 wait, 335 unsearched.
 
 - **2026-09-26 (Batch U3 shipped, `e116ef2`)** — Craig's three picks (#221): the assistant is
   a top-bar icon beside the initial and the floating button is gone; `/debug` exists in
