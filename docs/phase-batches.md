@@ -1024,6 +1024,47 @@ enabled and verified**, and 4 were ruled out permanently by page-shape checks on
 it selects the wrong node and stores a plausible wrong discount, which then feeds the feed.
 Batch 19's `check_shape` is the pattern; extend it rather than adding a bare success counter.
 
+### Batch 22b — Retailer sale pages that work 🟡
+**Proposed and started 28 Sep at Craig's word, for `OWNER-ACTIONS.md` 1e. Group U, step 3b.**
+Opus 5 · high / GPT-5.6 Sol · High: scraper selectors against live markup, where Batches 19
+and 22 each found real defects. Criteria authored 28 Sep, before any code, so `DECISIONS.md`
+#54 is met rather than waived.
+
+**Found 13 Sep** (`STATUS.md` Log): Batch 22's sale-page scrape has never written a row.
+Zavvi's deals URL (`/sale.list`) 404s; its real page is `/c/offers/flash-deals/film/`, with
+Current price / RRP pairs. Second Sight's sale collection has real Regular/Sale pairs (Dog
+Soldiers £24.99 → £17.99), but the selector does not match that theme, so `check_page_shape`
+rightly refused the whole page. Arrow and Powerhouse offer only bundles ("2 for £40", "3 for
+20% off"). 101 Films had nothing on sale. And nothing on screen runs the scrape:
+`runDealsScrape` is in the web client, but no page calls it.
+
+**Craig's choice (28 Sep):** fix Zavvi and Second Sight, and add a button so he can run the
+scrape from his phone. Arrow and Powerhouse stay as they are: the feed holds one disc's
+was/now price, and a bundle has none, so no bundle extraction is built. 101 Films stays as it
+is: correct, with nothing on sale.
+
+**Acceptance:**
+- Zavvi's deals URL is its live flash-deals film page, and its selectors read that page's
+  price pair.
+- Second Sight's selectors read its sale collection's Regular/Sale pair.
+- Both are proven by tests against trimmed copies of the real pages, saved as fixtures
+  beside `zavvi_search_two_price_shapes.html`.
+- `check_page_shape` is not weakened.
+- Arrow, Powerhouse and 101 Films are unchanged.
+- An admin-only "Check sale pages" on the Retailers page previews (a dry run, which writes
+  nothing) and shows the three numbers and each shop's found, kept and reasons. "Save deals"
+  appears only after a preview. The response parses through a zod schema in
+  `packages/shared`.
+- Production's retailer rows carry the new configuration after the deploy.
+- Tests. Gate green.
+
+**The live requests, and their bounds** (Craig's go, 28 Sep): read-only fetches of Zavvi's
+flash-deals film page and Second Sight's sale collection, and their second pages only if the
+fix needs pagination. A handful, at least 5 seconds apart, with the scraper's own
+User-Agent; stop at a 403, a 429, a bot wall or a CAPTCHA. Everything else runs against the
+fixtures. **§5.9's live acceptance (≥ 20 deals from ≥ 3 retailers) stays Craig's run**, from
+the new button.
+
 ### Batch 24 — Barcode scan + lookup 🟡
 **Covers Phases 3.3 and 3.4:**
 
@@ -2117,6 +2158,7 @@ one item to close.
 | 1 | ~~U1 → U2~~ — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. **Both shipped:** U1 `cb1111f`, U2 `52fcced` |
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
+| 3b | 22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button) | **go given 28 Sep**, for `OWNER-ACTIONS.md` 1e; its criteria are under Batch 22 above. The live run stays Craig's |
 | 4 | 21 — price history charts | **go given 28 Sep**; starts itself after the seventh scheduled scrape, 30 Sep |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
 | 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
