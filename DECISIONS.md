@@ -4496,6 +4496,11 @@ contemporaneous.
        endpoint: a dry run showing the three numbers and each shop's found, kept and reasons;
        "Save deals" appears only after a check and asks the shops again, so what is saved is
        what the pages show then. First on the page, so it is in reach on a phone.
+     - **Shipped as `eb51568` on 30 Sep**, after a red CI dependency audit (PyJWT's advisories,
+       published after 28 Sep) was fixed on its own branch first (`6a8197b`). Production serves
+       it with `db: ok`, and its retailer rows carry this configuration: apply-built-ins at
+       13:44 UTC changed three values (Zavvi's sale page and `was`, Second Sight's `was`), none
+       of them set by hand.
 
 225. **Three faults in Batch 22's pipeline stood between these pages and a deal, and each was
      fixed where it lives, none by loosening a check.** `check_page_shape` is unchanged.

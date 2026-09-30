@@ -4,11 +4,11 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-28**,
-after Craig's answers on Group U. *Numbers changed at the 2026-09-09 review; the old
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-30**,
+after Batch 22b. *Numbers changed at the 2026-09-09 review; the old
 ones are noted in brackets so an earlier conversation still maps onto this file.*
 
-## What is left for you, by sitting *(28 Sep)*
+## What is left for you, by sitting *(30 Sep)*
 
 - **Accounts, at a computer (about 20 minutes):** 22 rotate the Neon password; 18 eBay
   sign-in settings and an encryption key, which unblocks T8b; 9 revoke the dead April GitHub
@@ -18,9 +18,12 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
   Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?".
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 385 discs on
   You → Disc specs (20).
-- **One live run:** 1e, the retailer deals scrape.
-- **Group U** (`docs/phase-batches.md`): nothing waits on you. U4 is live since 28 Sep
-  (item 24); 21 starts itself after the 30 Sep scrape; T8b waits on 18; 38 comes last.
+- **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
+  numbers, then **Save deals**.
+- **Group U** (`docs/phase-batches.md`): 21 waits on your call. Its session on 30 Sep found
+  only 2 wanted items priced by more than one shop, against the 3 its criterion needs: add
+  1–2 wanted titles two shops both stock, change the criterion, or wait. U4 and 22b are
+  live; T8b waits on 18; 38 comes last.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -262,69 +265,44 @@ deferred; they remain open acceptance, not waived criteria (`DECISIONS.md` #149)
 The implementation and fixture decoder are green; only these physical/live observations
 remain. Record the barcode, phone/browser and measured time in `STATUS.md` when done.
 
-### 1e. Run the deals scrape — §5.9's acceptance *(new — Batch 22, 2026-09-12)*
+### 1e. Check the sale pages, then save them — §5.9's acceptance *(two taps since Batch 22b, 30 Sep)*
 
-- [ ] **Run a live deals scrape and check the three numbers it reports back.**
+- [ ] **On /retailers: tap Check sale pages, read the three numbers, then tap Save deals.**
 
 Phase 5.9's acceptance in full: *"Deals scraper run against live retailer pages populates
 the `deals` table with ≥ 20 rows from ≥ 3 retailers; UI renders them with posters; 'skip
 already-owned' verified against the real `collection_items` table."* A live run against
-somebody else's website is yours, not an agent's — the same footing as Batch 19's
-checkpoint and Batch 23's §3.7 (`docs/agent-commands/group-start.md`).
+somebody else's website is yours, not an agent's.
 
-**The endpoint is dry by default, deliberately.** A dry run fetches the pages and reports
-what it *would* have written without writing anything, so do that first:
+**The two taps, from your phone:**
 
-```
-POST /api/v1/deals/scrape?dryRun=true
-```
+1. **Check sale pages**, at the top of /retailers. It asks each enabled shop for its sale
+   page and **saves nothing**. Read the three numbers (*deals to save*, *shops with deals*,
+   *already owned, skipped*) and each shop's line: what it found and kept, or why it kept
+   nothing.
+2. **Save deals** appears once the check is back. Tap it and confirm: it asks the shops again
+   and saves what passes. /deals then shows them, with posters where the film is catalogued.
 
-then, if the numbers look sane:
+**What to expect.** From the pages as captured on 28–30 Sep, against your real collection:
+**about 5 deals from 2 shops, 7 skipped as already owned.** Zavvi's "2 for £30 4K" listing
+gives Ambulance, The Forever Purge, Us and Black Widow in 4K (you own the other seven); Second
+Sight gives Dog Soldiers 4K. The live pages will have moved since. Arrow and Powerhouse keep
+nothing by design: their offers are bundles, which the feed cannot hold (#224). 101 Films
+keeps whatever it has on sale, which was nothing on 13 Sep.
 
-```
-POST /api/v1/deals/scrape?dryRun=false
-```
+**§5.9 will not be met by this run, and that is known.** ≥ 20 rows needs more than the first
+page of each shop's sale, and ≥ 3 retailers needs 101 Films to have a sale on. Two calls are
+yours: whether 2 shops can count, and whether the check should read more than one page per
+shop (Zavvi's listing runs to seven, Second Sight's to five).
 
-**The response is shaped so you can read the criterion straight off it** — `written`,
-`retailersWithDeals` and `skippedOwned` are the criterion's own three numbers, and
-`outcomes` breaks them down per shop. `/deals` then renders the feed with posters.
+**If a line says "The page answered 429"**, that shop is refusing requests for now: on 30 Sep
+the 03:00 UTC shop check got `429` from Second Sight, 101 Films and Powerhouse. Try later.
 
-**Expect the first run to find problems, and that is what it is for.** The sale-page
-**selectors** are the ones Batch 19 verified live, but the **URLs are guesses** — four of
-the five enabled shops had no `deals_url` at all before this batch, so the new ones are
-the conventional Shopify `/collections/sale` path. All five ship marked unverified
-(`DECISIONS.md` #152). Batch 19's equivalent run found three real defects (#91, #92, #94).
-
-**What a broken selector looks like in the response**, rather than as silence: a page
-whose cards all show the same discount, or none of which has a struck-through price, is
-refused wholesale and `pageReasons` says why. A shop reporting `found: 40, kept: 0` with a
-`pageReasons` entry is a selector problem; `found: 0` is a wrong URL.
-
-**If a URL is wrong**, fix it on `/retailers` — each shop's deals URL is editable there,
-and the built-in configuration can be re-applied.
-
-> **Attempted live 2026-09-13, not met — real defects found, not just guesses to
-> re-check.** `apply-built-ins` had never been re-run against production since `493f031`,
-> so all 4 non-Zavvi retailers had `dealsUrl: null`; re-running it (idempotent, no writes to
-> `deals`) populated all 5. The second dry run then found each retailer needs its own fix,
-> checked live against real site markup:
-> - **101 Films** — URL correct, sale collection genuinely has 0 items today. Not a bug.
-> - **Arrow Video** — `/collections/sale` 404s; no equivalent page exists. Real discounts
->   are `/c/offers/multibuy/...` bundles ("2 for £40"), not a per-item was/now price — the
->   scraper's extraction model may not fit this site at all.
-> - **Powerhouse Films** — real sale page exists (14 pages) but shows only "Regular price"
->   per item; its discount is a "3 for 20%" bundle badge, same shape problem as Arrow.
-> - **Second Sight** — real sale collection, and some items genuinely do carry a
->   Regular/Sale price pair (e.g. Dog Soldiers, £24.99→£17.99), but the selector isn't
->   matching that markup on this theme — `check_page_shape` correctly refused the page
->   rather than risk 80 false discounts. Fixable with a corrected selector.
-> - **Zavvi** — configured URL 404s; the real page is `/c/offers/flash-deals/film/` and
->   has genuine discount pairs across dozens of items. Fixable with the corrected URL.
->
-> **Getting to ≥ 20 rows / ≥ 3 retailers needs real selector/URL fixes**, not another live
-> run — and Arrow/Powerhouse may need a different extraction shape entirely for bundle
-> discounts. Left for a dedicated pass rather than patched blind; see `STATUS.md`'s
-> 2026-09-13 log entry for the full detail.
+> **History.** Batch 22 shipped the endpoint on 12 Sep with guessed sale-page addresses. The
+> 13 Sep dry run found Zavvi's address 404ing, Second Sight's selector reading the card's
+> own price twice, Arrow and Powerhouse selling only bundles, and 101 Films with nothing on
+> sale. Batch 22b (30 Sep) fixed Zavvi and Second Sight against captured pages, fixed three
+> faults in the pipeline, and added the two buttons (`DECISIONS.md` #224–#226).
 
 ### 1f. ~~Two Letterboxd usernames, and two public diaries~~ — **done 2026-09-14**
 

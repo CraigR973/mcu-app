@@ -2,45 +2,40 @@
 
 ## Now
 
-**28 Sep 2026, evening: U4 is live (`3974733`). `cron-values` re-prices the collection every
-fortnight, at Craig's word, and his OK let the agent run the config apply: 1 service added,
-nothing destroyed (#223). 21 starts itself on 30 Sep. The nightly spec search is paused:
-Brave's free monthly credit ran out on 28 Sep.** Craig's other answers are in #222.
+**30 Sep 2026: 22b is live (`eb51568`). Zavvi's and Second Sight's sale pages read correctly, and
+"Check sale pages" on /retailers runs the deals check from a phone: a preview that saves
+nothing, then "Save deals". Those two taps are Craig's (`OWNER-ACTIONS.md` 1e). 21 did not
+start: its scheduled session found 2 wanted items with prices from more than one shop, not the
+3 its criterion needs, and asks Craig how to go on.**
 
-- **U3 is live (#221).** No floating assistant button: a robot icon sits in the top bar beside
-  the person's initial on a phone, and between Commands and "Add a disc" on a desktop. `/debug`
-  exists in development builds only; a test builds the production bundle to prove it, and
-  proves the `VITE_SKIP_AUTH` bypass is compiled out, which nothing had proved before. 25
-  third-party images are untracked and ignored, still on disk and in older history. At 375 px
-  nothing on Settings, Price alerts, Identify films, the Archive or a film page sits under
-  anything; the browser check found and fixed two older faults (Settings' switch knobs, the
-  film page's tab counts). Owner items 11, 13 and 15 are done.
-- **The nightly spec search is paused by Brave, not by the app.** Brave gives about 1,000 free
-  searches a month; this month's reached 1,005 on 28 Sep, and it answers `402` (payment
-  required) since. The 28 Sep batch stopped after 14 discs; each night's batch will stop at its
-  first search until the credit renews (probably 1 Oct) or Craig raises the spending limit.
-  Nothing is charged. The first scheduled batch, 27 Sep, ran clean: 148 searched, 91 given
-  specs, 15 editions filled, no page had moved (#219).
-- **The 36 photographic brand images stay for now** (Craig, 28 Sep, #222); four of them are
-  served by the live site.
-- **U1 and U2 are live (#219, #220).** 83 copies have an edition; "Sub-category" kept.
-- **T8a is live (#218):** `cron-ebay` every two hours at twenty past. **T10 (#217) and T9
-  (#215) are live.** 166 films wait on You → Identify films (`OWNER-ACTIONS.md` 21).
-- **Valuations are all current (26 Sep):** £23,636.80, 1,303 of 1,457 discs priced. Due again
-  from 24 Oct (`OWNER-ACTIONS.md` 19).
-- **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20);
-  335 not searched. `cron-specs` runs nightly at 02:00 UTC.
-- **Brave this month: 1,005 searches**, past the free credit; the app's own ceiling is 1,500.
-- **U4 is live (#223):** `cron-values` at 04:00 UTC on the 1st, 2nd, 15th and 16th. Its first
-  run (1 Oct) has nothing due; prices fall due from 24 Oct, so the first with work is 1 Nov.
-- **Group U next** (`docs/phase-batches.md`, "What is left — Group U"): 21 starts itself from a
-  one-off scheduled session at 09:00 BST on 30 Sep, after the seventh scheduled scrape; T8b on
-  `OWNER-ACTIONS.md` 18; 38 last. Nothing in Group U waits on Craig.
-- **A credential was exposed in an agent session on 25 Sep:** a `cd` into `apps/api` made
-  autoenv print `apps/api/.env`, which holds the live Neon password. Rotation is Craig's call
-  (`OWNER-ACTIONS.md` 22).
-- **Mark's phone gets no pushes** until he turns notifications back on (`OWNER-ACTIONS.md`
-  16b), so T8a's pushes reach Craig only, for now.
+- **22b (#224–#226).** Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
+  flash-deals page had become six discs, five owned); Second Sight the first page of its sale
+  collection. Three Batch 22 faults fixed on the way: the same-site guard failed every one of
+  Second Sight's and 101 Films' own listings; a card at a single price counted as a deal; the
+  film matcher missed titles with a shop's word or a remake's year. Production's retailer rows
+  carry the new configuration (applied 13:44 UTC; three values changed, none set by hand).
+- **What a check should show today** (from the captured pages against the real collection):
+  **5 deals from 2 shops, 7 already owned.** §5.9 wants ≥ 20 from ≥ 3, out of reach from the
+  first page of two shops; whether 2 shops can count, and whether to read more pages, are
+  Craig's calls.
+- **PyJWT 2.13.0 → 2.15.1 (`6a8197b`), on its own `fix/` branch first.** Ten advisories
+  published after 28 Sep turned the CI dependency audit red on every branch. The app's
+  exposure was low (HS256, no JWKS); production answers 401 to forged and malformed tokens.
+- **The 30 Sep 03:00 UTC shop check was mostly refused:** 21 of 33 checks answered `429` from
+  Second Sight, 101 Films and Powerhouse (all Shopify); the six nights before had none. All
+  five shops are still enabled. If it recurs, a sale-page check will say so on Second Sight's
+  line. Batch 21's session offered to look into it on a `fix/` branch (Craig's call).
+- **21 waits on Craig:** add 1–2 wanted titles two shops both stock, change its criterion, or
+  wait (Batch 21's session report, 30 Sep).
+- **The nightly spec search is paused by Brave, not by the app:** the free monthly credit ran
+  out on 28 Sep (1,005 searches); it renews around 1 Oct, or Craig raises the limit.
+  **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20).
+- **Live since 26–28 Sep:** U4 `cron-values` (#223; first run with work 1 Nov), U3 (#221),
+  U1 and U2 (#219, #220), T8a (#218), T10 (#217), T9 (#215). 166 films wait on You → Identify
+  films (`OWNER-ACTIONS.md` 21). Valuations all current (26 Sep), due again from 24 Oct.
+- **Craig's open items:** the Neon password exposed on 25 Sep (22), eBay sign-in settings and
+  an encryption key (18), Mark turning notifications back on (16b), the phone session, and
+  the two queues.
 
 **Live numbers (26 Sep; specs and editions 28 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
@@ -50,7 +45,8 @@ Brave's free monthly credit ran out on 28 Sep.** Craig's other answers are in #2
 - **Discs with Blu-ray.com specs:** 530; **with an edition:** 100 (28 Sep). **Disc valuations:** 1,454
   films and formats checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD
   £5.95.
-- **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass.
+- **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass. **Retailer
+  deals:** none saved yet; the first save is Craig's (1e).
 
 ## Next
 
@@ -466,6 +462,27 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (Batch 22b shipped, `eb51568`)** — Zavvi reads its "2 for £30 4K" listing, at
+  Craig's pick (its flash-deals page had become six discs, five owned); Second Sight reads its
+  sale collection's compare-at price; "Check sale pages" and then "Save deals" on /retailers
+  (#224). Three Batch 22 faults fixed: the same-site guard, single-price cards kept as deals,
+  and the film matcher's shop words and years (#225); #153's premise corrected (#226). Five
+  read-only page fetches, all `200`. Local gate and CI green (5 of 5 after the PyJWT fix).
+  Production serves `eb51568` with `db: ok`; the retailer rows carry the new configuration
+  (apply-built-ins at 13:44 UTC, three values changed, nothing set by hand). Browser check at
+  375 and 1,280 px from a captured real dry run (pane hidden, so measured, not screenshotted).
+  The live check and save are Craig's (1e).
+
+- **2026-09-30 (PyJWT 2.13.0 → 2.15.1, `6a8197b`)** — Ten advisories published after 28 Sep
+  turned the CI dependency audit red on every branch, `main` included. Fixed on its own `fix/`
+  branch and closed out ahead of 22b: CI green, production serves `6a8197b` with `db: ok`, and
+  answers `401` to forged and malformed tokens. Only PyJWT moved in either lock.
+
+- **2026-09-30 (Batch 21 did not start)** — Its scheduled session (08:00 UTC) found the seven
+  scheduled scrapes in, but only 2 wanted items priced by more than one shop, against the 3 its
+  criterion needs; it built nothing and asked Craig. It also found the 03:00 UTC shop check
+  mostly refused: 21 of 33 checks answered `429` (Second Sight, 101 Films, Powerhouse).
 
 - **2026-09-28 (Batch U4 shipped and applied, `3974733`)** — At Craig's word ("merge and run
   those commands"): merged after CI green (1,595 API tests); production serves `3974733` with

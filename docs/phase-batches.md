@@ -1024,7 +1024,26 @@ enabled and verified**, and 4 were ruled out permanently by page-shape checks on
 it selects the wrong node and stores a plausible wrong discount, which then feeds the feed.
 Batch 19's `check_shape` is the pattern; extend it rather than adding a bare success counter.
 
-### Batch 22b — Retailer sale pages that work 🟡
+### ~~Batch 22b — Retailer sale pages that work~~ 🟡 **shipped 2026-09-30 (`eb51568`)**
+**Acceptance: eight of eight met; §5.9's own acceptance stays Craig's run** (`OWNER-ACTIONS.md`
+1e). Zavvi reads its "2 for £30 4K" listing, at Craig's pick (the criterion below is
+amended to say so), and Second Sight its sale collection's compare-at price, both proved
+against three trimmed captures of the real pages (#224). `check_page_shape` is unchanged,
+line for line. Arrow's, Powerhouse's and 101 Films' configs are unchanged and pinned by a
+test. "Check sale pages" and "Save deals" are on /retailers, admin-only, the response
+parsed by `dealsRunSchema`; browser check at 375 and 1,280 px from a captured real dry run.
+Production's retailer rows carry the new configuration (apply-built-ins, 13:44 UTC: three
+values changed, none set by hand). Local gate and CI green, after a pre-existing red
+(PyJWT's advisories) was fixed on its own branch first (`6a8197b`).
+
+**Found on the way, fixed where they live (#225, #226):** the deals runner handed the
+same-site guard a URL, which failed every one of Second Sight's and 101 Films' own
+listings; a card at a single price was kept as a deal; the film matcher missed titles with
+a shop's word ("includes", "download") or a remake's year ("The Mummy (2017)"); and
+#153's "Zavvi's title is a heading" came from a test helper. **What a check should show
+today**, from the captures against the real collection: 5 deals from 2 shops, 7 already
+owned. §5.9's ≥ 20 from ≥ 3 is out of reach from the first page of two shops.
+
 **Proposed and started 28 Sep at Craig's word, for `OWNER-ACTIONS.md` 1e. Group U, step 3b.**
 Opus 5 · high / GPT-5.6 Sol · High: scraper selectors against live markup, where Batches 19
 and 22 each found real defects. Criteria authored 28 Sep, before any code, so `DECISIONS.md`
@@ -2162,8 +2181,8 @@ one item to close.
 | 1 | ~~U1 → U2~~ — moved Blu-ray.com pages, then editions | **go given 26 Sep**, U2's column included. **Both shipped:** U1 `cb1111f`, U2 `52fcced` |
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
-| 3b | 22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button) | **go given 28 Sep**, for `OWNER-ACTIONS.md` 1e; its criteria are under Batch 22 above. The live run stays Craig's |
-| 4 | 21 — price history charts | **go given 28 Sep**; starts itself after the seventh scheduled scrape, 30 Sep |
+| 3b | ~~22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button)~~ | **shipped 30 Sep** `eb51568` (#224–#226); the live check and save are Craig's, `OWNER-ACTIONS.md` 1e |
+| 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against the 3 required, and waits on Craig's call |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
 | 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
 | — | 33 → 34 — Email | parked with `OWNER-ACTIONS.md` 7 |
@@ -2397,7 +2416,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → 21 (go given 28 Sep; from 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 21 (go given 28 Sep; waits on Craig's call since 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
