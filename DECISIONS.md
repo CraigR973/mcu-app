@@ -4458,3 +4458,78 @@ contemporaneous.
        Production serves `3974733` with `db: ok`. The first scheduled run is 04:00 UTC on 1 Oct,
        with nothing due yet; the first with work is 1 Nov.
 
+
+
+### 2026-09-30 — Batch 22b: retailer sale pages that work
+
+224. **What each enabled shop's sale page now does, and why Arrow and Powerhouse stay out.**
+     Craig's choice on 28 Sep, with his pick for Zavvi on 30 Sep. Owner item 1e.
+
+     - **Zavvi reads its "2 for £30 4K" listing** (`/c/offers/2-for-30-4k/`). `/sale.list`
+       404s. The flash-deals film page the 13 Sep notes named had become a landing page of two
+       carousels, six discs, five of them already owned, and the same six 10 hours
+       later. Craig chose to read the two listings it leads to and take the larger: this
+       one, 169 discs over seven pages, twelve on the page as served, each with its own
+       price and RRP. The other ("Awards Winners") held two. The feed stores each disc's
+       price against its RRP; the multibuy itself is not stored. `was` reads THG's tagged RRP
+       span; Batch 22's selector matched nothing on any Zavvi page.
+     - **Second Sight reads the first page of its sale collection.** `was` reads Dawn's
+       struck-through compare-at price, which Batch 22's selector never reached: it read the
+       card's own price twice. On 28 Sep one card of sixteen was discounted (Dog Soldiers 4K,
+       £24.99 → £17.99); the collection runs to five pages, and only the first is read.
+     - **Both are marked verified** against trimmed copies of the pages, captured read-only
+       with the scraper's own fetcher and User-Agent: 5 requests in all, at least 6 seconds
+       apart, every one answered 200, no bot wall.
+     - **101 Films is as it was:** right, with nothing on sale on 13 Sep. Its sale cards
+       would have failed the same-site guard, though (#225), which is now fixed.
+     - **Arrow and Powerhouse stay out.** Their offers are bundles ("2 for £40", "3 for 20%
+       off") with no discounted price for one disc, and the feed holds one disc's price
+       against its previous price. No bundle extraction is built (Craig, 28 Sep). Their
+       configs, and 101 Films', are pinned by a test, so a change is a decision.
+     - **What a check would report today**, computed in-process from the captures against
+       the real collection, read-only and with no live request: 5 deals from 2 shops, 7
+       skipped as already owned (Zavvi 12 found, 4 kept, 7 owned, 1 at a single price;
+       Second Sight 16 found, 1 kept, 15 at a single price). §5.9's "≥ 20 rows from ≥ 3
+       retailers" is not reachable from these two first pages, and 101 Films is the only
+       possible third shop.
+     - **The button**, "Check sale pages" on /retailers, admin-only like the page and the
+       endpoint: a dry run showing the three numbers and each shop's found, kept and reasons;
+       "Save deals" appears only after a check and asks the shops again, so what is saved is
+       what the pages show then. First on the page, so it is in reach on a phone.
+
+225. **Three faults in Batch 22's pipeline stood between these pages and a deal, and each was
+     fixed where it lives, none by loosening a check.** `check_page_shape` is unchanged.
+
+     - **The same-site guard was handed a URL where it expected a host.** The deals runner
+       (and §5.4's Test button) passed the retailer's whole `base_url`; with no `www.` the
+       scheme stayed glued to the first label, so every one of Second Sight's and 101 Films'
+       own listings failed. `_same_site` now reads a host or a URL, and the runner passes a
+       host as the price runner does. Another `.co.uk` shop is still refused.
+     - **A card at a single price was kept as a deal with no discount.** Fifteen of Second
+       Sight's sixteen would have counted towards "≥ 20 rows". Such a card is now counted as
+       not discounted, apart from `rejected`, which stays a failed check (#125's lesson). A
+       page where no card has a `was` is still refused whole, a `was` no higher than the price
+       is still rejected, and a card with no price at all is still rejected. The first few
+       rejected cards' reasons now reach the screen.
+     - **The film matcher narrowed on the single longest word and ignored years.** A shop's
+       word ("includes", "anniversary", "download") hid Spectre, The Deer Hunter and The
+       Mummy, so an owned copy was not skipped. It now tries every word a title could hold and
+       keeps the best match. And "The Mummy (2017)" matched the 1999 film, owned on Blu-ray,
+       so it came through as an upgrade while the 2017 film sits on the shelf in 4K: a year in
+       brackets now rules out a film of a different known year. Only bracketed years count,
+       because "2001", "Blade Runner 2049" and "1917" are titles.
+
+226. **#153's premise was an artifact, and one Batch 22 test asserted a broken selector.**
+
+     - #153 found that Zavvi's `product-title` "is a heading, not a link". It is a link. The
+       test helper merged the whole sale-page entry, whose `url` is the page's address, over
+       the card's `url` selector; an address matches nothing, so the anchor fallback ran.
+       The fallback stays, for a theme whose title is not a link, with a test of its own. The
+       merge now has one definition, `applied_scraper_config`, used by `apply-built-ins` and
+       by the tests, so they cannot drift again.
+     - `test_a_page_where_no_card_has_a_was_price_is_refused` was fired by the Zavvi search
+       fixture "because its cards carry no struck-through price". Its first card carries an
+       RRP, which Batch 22's selector could not see. The test now fires on the three real
+       sale captures with Batch 22's selectors, the 13 Sep refusal reproduced; a new one pins
+       what the search fixture really holds. Changing a test's expectation is a decision to
+       report, and this is that report.
