@@ -5,7 +5,7 @@ someone else's website, a device, or a choice that isn't an agent's to make. Age
 **read this and stop**, not work around anything on it.
 
 Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-30**,
-after Batch 22b. *Numbers changed at the 2026-09-09 review; the old
+after Batch 22b and the 30 Sep snags. *Numbers changed at the 2026-09-09 review; the old
 ones are noted in brackets so an earlier conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
@@ -24,6 +24,10 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
   sale)**, both written 30 Sep. 21 starts once 3 wants have prices from two shops on two
   days, 2 Oct at the earliest: Bad Lieutenant and Dog Soldiers (4K) were added to Wanted
   for it on 30 Sep, and you can remove them afterwards. T8b waits on 18; 38 comes last.
+- **Group V** (`docs/phase-batches.md`, your 30 Sep snags): go given 30 Sep for an overnight
+  run, a pull request per batch. **Before you start it: allow
+  `api-production-a8fe.up.railway.app` in the cloud environment's network settings** (item 25).
+  Everything else you do for Group V happens inside its batches.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1138,6 +1142,28 @@ by reference (`DECISIONS.md` #223). Its merge waits for you only because it decl
 
 Do both before 24 Oct, when prices start falling due; the first run with work is then 1 Nov.
 Until the apply, **Update values** on Home does the same by hand.
+
+### 25. Allow the production API host, then start Group V's overnight run — the 30 Sep snags
+
+**New 30 Sep.** Your nine snags of 30 Sep are planned as Group V in `docs/phase-batches.md`
+(`DECISIONS.md` #228, #229, #230): six sittings, each batch with its model tier and effort, and
+the reasoning in `docs/owner-snags-2026-09-30.md`.
+
+1. ~~Say **go** on sitting 1, or name anything to change.~~ **Go given 30 Sep** for an
+   overnight run of V1 → V3 → V4 → V5 → V6 (#230). The `urllib3` fix
+   ([#4](https://github.com/CraigR973/mcu-app/pull/4)) and the plan itself landed first, that
+   evening, at your word ("can we commit and merge this to main").
+2. ~~Say whether a cloud session may open a pull request per batch and merge it when CI is
+   green.~~ **Yes, 30 Sep** (#230).
+3. **Allow `api-production-a8fe.up.railway.app`** in the cloud environment's network settings
+   (Network access, allowed domains) before starting the run, so it can confirm each deploy.
+   Without it the run stops before its first merge.
+4. Start a new cloud session on this repo with one line: **"Read and follow
+   `docs/group-v-overnight.md` on `main`, unattended, to the end."** Top tier model at `xhigh`.
+
+Your other Group V steps come inside the batches, when each is built: the bid trial and your
+pick (sitting 2), and allowing blu-ray.com and avforums.com, with Brave's limit only if its
+credit is out (sitting 3).
 
 ### 22. Rotate the Neon database password — recommended, your call
 

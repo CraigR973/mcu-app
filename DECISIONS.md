@@ -4566,3 +4566,101 @@ contemporaneous.
        `api`; T8b declares both with `preserve()`, since an undeclared variable is deleted
        by the next apply (#124). The privacy-policy page eBay asks for is T8b's to add. No
        eBay password is ever given to the app or an agent.
+
+
+### 2026-09-30 — the 30 Sep snags, and Craig's answers
+
+228. **Craig's answers of 30 Sep on his nine snags** (`docs/owner-snags-2026-09-30.md`), and
+     the plan they give: Group V in `docs/phase-batches.md`, **proposed, not approved.** He
+     asked for the full plan to be reconciled before anything goes further.
+
+     - **Sold prices stay out of reach, signed in or not.** A sign-in gives an app one
+       person's own account: T8b's gets Mark's watch list and his selling list, his own sold
+       items included. Market-wide sold prices are only in Marketplace Insights, which eBay
+       grants to approved apps and has closed to new ones (#16, #126); no person's sign-in
+       changes what the app is allowed. Reading eBay's sold listings from the website with
+       someone's account is ruled out by #203 and by eBay's terms. The app links to eBay's own
+       sold listings instead, which open in the person's browser (V8).
+     - **The collection's value: a trial first** (V6). It prices a sample from live bids and
+       saves nothing; blend or bids only is his pick after its report (V7).
+     - **The Deals "usual" price becomes an average of eBay's figure and the shops' prices**
+       (V8). He asked for eBay's sold prices in it; eBay's part is V7's figure instead. The app
+       holds shop prices only for Wanted films, so for other films the figure is eBay's alone,
+       and the card says which.
+     - **Loans is always listed, for Mark and Craig.** Supersedes #154 for Loans only; Box
+       sets, Collections and Deals still hide while empty. Lending stays admin-only (V2).
+     - **Movie night keeps the list and drops the swipe deck.** Retires Phase 8.4's
+       "swipe-like UI" and #207's arrow-key rule; #157's hidden votes stand (V3).
+     - **"Craig's house" becomes a section**, one place without shelves, its discs counted
+       like any other in the value, the stats and "already owned" ("Craig's house is fine").
+       The last two points were proposed to him and taken as accepted (V4).
+     - **Reviews: all three options**, found with Brave (#202): links, Brave's one-line
+       description, and the review's scores (V9, V10). **The scores widen #110** to one more
+       thing: Blu-ray.com's own review scores for a release, read from an exact page address.
+       Everything else in #110 is unchanged: exact addresses only, no search routes,
+       sequential and paced requests, a 403 or 429 halts the integration, and every stored
+       row names its source so it can be removed. Taken from "All" after he was told the
+       scores need this; open to overrule. **AVForums' scores wait on reading its terms**,
+       which this session could not reach.
+     - **Highlights: a mix of all**: top rated, most rewatched, most valuable, and best
+       reviewed once V10 brings scores (V5).
+
+     *Found on the way, and V1's reason:* the top bar has had no background since 10 Sep
+     (`9afc173`). `bg-background/94` names an opacity step Tailwind 3 does not have, so the
+     class is never built; 20 classes in 10 files share the fault. Proved by building the
+     stylesheet with the app's own config and Tailwind 3.4.19.
+
+229. **The plan's shape, at Craig's word (30 Sep): six sittings, two merges, and his steps
+     inside the batches.** "Just write into the plan, including model and thinking effort for
+     each batch." Group V in `docs/phase-batches.md` carries it; nothing starts before his go.
+
+     - **His three steps move into the batches** rather than coming first. The bid trial and
+       his pick happen inside sitting 2, once V6 is live. Allowing blu-ray.com and
+       avforums.com starts V9, which asks for a higher Brave limit only if the month's credit
+       has run out by then.
+     - **Two merges, his choice, as U5 into U3:** V2 into V1, since both change the top bar and
+       one browser check covers them; V10 into V9, since with his steps inside nothing
+       separates them and they build one feature on one set of data. V2 and V10 are retired
+       names.
+     - **Six sittings plus 21:** V1 → V3 → V4 → V5; V6 → his pick → V7 → V8; V9; 20b → 22c;
+       T8b; 38 last. Each batch keeps its own close-out. 21 still starts itself.
+     - **Each batch's model and effort are in Group V**, named by the ledger's two model tiers:
+       the models on Group U's row and on Batch 21's row.
+     - **Open before sitting 1: how a batch lands from a cloud session.** CI runs only for
+       `main`, `feat/**`, `fix/**`, `chore/**` and pull requests, and a cloud session may push
+       only its own `claude/…` branch. Proposed: a pull request per batch, merged when CI is
+       green. The post-merge health check needs `api-production-a8fe.up.railway.app`, which
+       the 30 Sep session could not reach.
+
+230. **Craig's go, 30 Sep: an overnight run, one pull request per batch.** "Yes you can do per
+     batch" (a pull request per batch, merged when CI is green), then "write a prompt to run
+     these batches in order overnight. I want to wake up to them being complete."
+
+     - **How a batch lands from a cloud session:** its own `feat/` (or `fix/`) branch from
+       `main`, a pull request, CI green, then the session merges it with a merge commit, so
+       the batch's small commits stay in `main`'s history and the merge commit is what
+       deploys. It then verifies production and lands the close-out's docs through a second
+       pull request, as `phase-closeout.md` does with a push. Answers #229's open question.
+     - **The overnight run is V1 → V3 → V4 → V5 → V6.** The two things it needed first, fixing
+       `main`'s red and merging the plan, were done that evening in the planning session at
+       Craig's word ("can we commit and merge this to main"): the fix as #4, then the plan with
+       the run's prompt, `docs/group-v-overnight.md`, through its own pull request. **Not in it, and why:** V7 and V8 wait on
+       Craig's trial run and pick (V6 builds the trial; the run is his, as #228 says); V9
+       starts with live requests to two outside sites, which `group-start.md` keeps out of an
+       unattended run, and with his network step; 20b and 22c wait on his go after the 1 Oct
+       03:00 UTC check, whose results a cloud session cannot read without database access;
+       21 starts itself; T8b waits on owner item 18; 38 is last.
+     - **`main` was red when the run was written.** The 19:26 UTC run on `8e4c6a2` failed the
+       dependency audit: `urllib3` 2.7.0 carries CVE-2026-97687, -97688 and -97689, fixed in
+       2.8.0. As with PyJWT that morning (`6a8197b`), it was fixed on its own `fix/` branch and
+       closed out before any batch (#4). `uv pip compile … --upgrade-package urllib3` on both locks
+       moves `urllib3` alone, checked on 30 Sep.
+     - **A cloud session can run the whole gate.** On 30 Sep: the locked Python dependencies
+       and the pnpm workspace installed; with a throwaway local Postgres 16 the API suite ran
+       **1,634 passed, none skipped**, and `upgrade head` → `downgrade base` → `upgrade head`
+       ran clean; the web and shared checks passed on the container's Node 22 (the engines
+       floor is 20.18). CI's Postgres 17 and Node 20 stay the authority. Gotcha 15's "no local
+       Postgres" holds on Craig's Mac, not in a cloud container.
+     - **The one step before the run is Craig's:** allowing
+       `api-production-a8fe.up.railway.app` in the cloud environment's network settings, so
+       the run can confirm each deploy. Without it the run stops before its first merge.
