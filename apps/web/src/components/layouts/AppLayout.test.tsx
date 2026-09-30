@@ -34,12 +34,14 @@ function Where() {
   return <output aria-label="Current page">{useLocation().pathname}</output>
 }
 
-function renderShell(path: string, page: React.ReactNode = <GoToFilm />) {
+/** The shell at `path`, or at the last of several paths with the others as its history. */
+function renderShell(path: string | string[], page: React.ReactNode = <GoToFilm />) {
+  const entries = typeof path === 'string' ? [path] : path
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
-        <MemoryRouter initialEntries={[path]}>
+        <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1}>
           <AppLayout>
             <Routes>
               <Route path="*" element={page} />
@@ -103,6 +105,39 @@ describe('AppLayout phone top bar — Batch T3', () => {
     await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/movie-night'))
   })
 
+  it('gives Wanted, Deals and Settings a back arrow on a phone — Batch V1, snag 5', () => {
+    // They are reached from You, so until V1 a phone had no way back from any of them but
+    // the initial again. Only the four bottom tabs and You go without one now.
+    for (const path of ['/wanted', '/deals', '/settings', '/loans', '/admin']) {
+      renderShell(path, <p>A page</p>)
+      expect(screen.getByRole('button', { name: 'Back' }), path).not.toBeNull()
+      cleanup()
+    }
+    for (const path of ['/dashboard', '/movies', '/collection/add', '/movie-night', '/you']) {
+      renderShell(path, <p>A page</p>)
+      expect(screen.queryByRole('button', { name: 'Back' }), path).toBeNull()
+      cleanup()
+    }
+  })
+
+  it('returns to You from a page opened there', async () => {
+    renderShell(['/you', '/wanted'], <p>Wanted</p>)
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/you'))
+  })
+
+  it('goes to You from a page You lists when there is no history, as from a notification', async () => {
+    renderShell('/deals', <p>Deals</p>)
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/you'))
+  })
+
+  it('returns a film opened from Deals to Deals', async () => {
+    renderShell(['/you', '/deals', '/movies/some-film'], <p>A film</p>)
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/deals'))
+  })
+
   it("opens the You page from the person's initial", () => {
     renderShell('/movies')
     const you = screen.getByRole('link', { name: /^You/ })
@@ -153,5 +188,18 @@ describe('AppLayout assistant — Batch U3', () => {
     for (const link of screen.getAllByRole('link', { name: 'Ask the assistant' })) {
       expect(link.getAttribute('aria-current')).toBe('page')
     }
+  })
+})
+
+describe('AppLayout sidebar — Batch V1', () => {
+  it('lists Loans with no loan made yet, while Box sets, Collections and Deals still hide', async () => {
+    // The mocked counts are all zero, the state that hid Loans from #154 until V1 (#228).
+    renderShell('/movies')
+    const sidebar = within(screen.getByRole('navigation', { name: 'Application destinations' }))
+    expect(sidebar.getByRole('link', { name: /Loans/ }).getAttribute('href')).toBe('/loans')
+    await waitFor(() => expect(sidebar.queryByRole('link', { name: /Box sets/ })).toBeNull())
+    expect(sidebar.queryByRole('link', { name: /Collections/ })).toBeNull()
+    expect(sidebar.queryByRole('link', { name: /Deals/ })).toBeNull()
+    expect(sidebar.getByRole('link', { name: /Loans/ })).not.toBeNull()
   })
 })

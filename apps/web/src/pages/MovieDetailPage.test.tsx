@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MovieDetailPage from './MovieDetailPage'
@@ -193,5 +193,50 @@ describe('MovieDetailPage tabs', () => {
       expect(tab.className).toContain('whitespace-nowrap')
     }
     expect(screen.getByRole('tablist', { name: 'Film details' }).className).toContain('overflow-x-auto')
+  })
+})
+
+function Where() {
+  return <output aria-label="Current page">{useLocation().pathname}</output>
+}
+
+/** The film page with `entries` as its history, the film last. */
+function renderPageFrom(entries: string[]) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, networkMode: 'always' } } })
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1}>
+        <Routes>
+          <Route path="/movies/:id" element={<MovieDetailPage />} />
+          <Route path="*" element={<p>Somewhere else</p>} />
+        </Routes>
+        <Where />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
+
+describe('MovieDetailPage back button — Batch V1, snag 5', () => {
+  it('returns to where the film was opened from, not always to the Archive', async () => {
+    // Snag 5: a film opened from Deals went "Back to collection", wherever it came from.
+    renderPageFrom(['/deals', `/movies/${MOVIE_ID}`])
+    fireEvent.click(await screen.findByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/deals'))
+  })
+
+  it('goes to the Archive when there is no history behind the film', async () => {
+    // Opened from a notification or a link: going back would leave the app.
+    renderPageFrom([`/movies/${MOVIE_ID}`])
+    fireEvent.click(await screen.findByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/movies'))
+  })
+
+  it('is hidden below 1024px, where the top bar carries the arrow', async () => {
+    // No layout engine here to measure; the classes are the whole of the rule.
+    renderPageFrom([`/movies/${MOVIE_ID}`])
+    const back = await screen.findByRole('button', { name: 'Back' })
+    expect(back.className).toMatch(/(^|\s)hidden(\s|$)/)
+    expect(back.className).toContain('lg:inline-flex')
+    expect(screen.queryByRole('link', { name: /Back to collection/ })).toBeNull()
   })
 })

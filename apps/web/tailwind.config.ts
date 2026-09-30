@@ -144,6 +144,24 @@ const config: Config = {
         soft: '0 16px 45px -28px hsl(var(--shadow-colour) / 0.45)',
         lift: '0 18px 50px -24px hsl(var(--shadow-colour) / 0.55)',
       },
+      /**
+       * The steps the redesign's classes name that Tailwind's scale (0, 5, 10 … 95, 100)
+       * does not have — Batch V1, `DECISIONS.md` #228.
+       *
+       * Tailwind builds `bg-background/94` only when 94 is a key here, and drops the class
+       * without a word when it is not. From 10 Sep to V1 twenty classes were dropped that
+       * way: the top bar (`/94`) and the bottom tab bar (`/96`) had no background at all,
+       * the tinted badges and notices (`/12`) and the format badges (`/14`) had no tint,
+       * and the filled buttons (`/88`) no hover shade. `theme/opacity-steps.test.ts` fails
+       * on any class naming a step this scale lacks.
+       */
+      opacity: {
+        12: '0.12',
+        14: '0.14',
+        88: '0.88',
+        94: '0.94',
+        96: '0.96',
+      },
     },
   },
   plugins: [],

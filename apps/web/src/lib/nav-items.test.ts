@@ -22,13 +22,15 @@ function labels(sections: NavSections | undefined): string[] {
 }
 
 describe('the sidebar a signed-in non-admin sees', () => {
-  it('is exactly eight destinations while the four conditional tables are empty', () => {
+  it('is exactly nine destinations while the three conditional tables are empty', () => {
     // **Batch S3 made this eight; Batch S6 made it seven**, by merging Calendar and
     // Coming soon into one Releases screen — its own criterion, and the same two-sources-
     // one-question argument `DECISIONS.md` #154 made about Home, Stats and Insights.
     // Fourteen → eight → seven. **Batch T8a made it eight again** with Price alerts,
     // which is always shown: it is where a first alert is set, so hiding it while empty
-    // would hide the only way in (#218).
+    // would hide the only way in (#218). **Batch V1 made it nine** with Loans, always
+    // shown for Mark and Craig at Craig's word (#228): where a disc went is worth being
+    // able to look up whether or not a loan has been made yet.
     //
     // Asserted as the whole list rather than a count, so a swap that keeps the total
     // still fails.
@@ -39,12 +41,13 @@ describe('the sidebar a signed-in non-admin sees', () => {
       'Releases',
       'Price alerts',
       'Home',
+      'Loans',
       'Assistant',
       'Settings',
     ])
   })
 
-  it('grows to twelve once all four have rows — the un-hide half', () => {
+  it('grows to twelve once all three have rows — the un-hide half', () => {
     // **A hide that never un-hides is the failure mode.** It looks right on this
     // database, where all four tables are empty, and stays wrong forever.
     expect(labels(FULL)).toEqual([
@@ -63,13 +66,20 @@ describe('the sidebar a signed-in non-admin sees', () => {
     ])
   })
 
-  it('shows each destination independently, not all four together', () => {
-    // The tables fill at different times — a first box set says nothing about loans —
+  it('shows each destination independently, not all three together', () => {
+    // The tables fill at different times — a first box set says nothing about deals —
     // so a single "is anything non-empty" flag would be wrong in both directions.
-    expect(labels({ ...EMPTY, loans: 1 })).toContain('Loans')
-    expect(labels({ ...EMPTY, loans: 1 })).not.toContain('Deals')
+    expect(labels({ ...EMPTY, boxSets: 1 })).toContain('Box sets')
+    expect(labels({ ...EMPTY, boxSets: 1 })).not.toContain('Deals')
     expect(labels({ ...EMPTY, deals: 4 })).toContain('Deals')
     expect(labels({ ...EMPTY, deals: 4 })).not.toContain('Box sets')
+  })
+
+  it('always lists Loans, with no loan made yet or with one — Batch V1 (#228)', () => {
+    // Loans hid itself while the table was empty from Batch S3 (#154) until V1.
+    expect(labels({ ...EMPTY, loans: 0 })).toContain('Loans')
+    expect(labels({ ...EMPTY, loans: 1 })).toContain('Loans')
+    expect(navItems.find((item) => item.path === '/loans')?.showWhen).toBeUndefined()
   })
 
   it('shows everything when the counts have not arrived', () => {
@@ -159,20 +169,37 @@ describe('Batch T3 — the phone top bar', () => {
     expect(titleForPath('/nowhere')).toBeNull()
   })
 
-  it('gives a back arrow to pages below a destination, and none to destinations', () => {
-    for (const path of [...navItems, ...adminNavItems, YOU_ITEM].map((item) => item.path)) {
-      expect(isTopLevel(path), path).toBe(true)
+  it('gives a back arrow to every page but the four bottom tabs and You — Batch V1', () => {
+    // Until V1 every menu destination counted as top-level, so Wanted, Deals, Settings and
+    // the rest had no arrow on a phone though the only way to them was through You (snag 5).
+    const topLevel = new Set<string>([...BOTTOM_BAR_PATHS, YOU_ITEM.path])
+    for (const path of topLevel) expect(isTopLevel(path), path).toBe(true)
+    for (const path of [...navItems, ...adminNavItems].map((item) => item.path)) {
+      expect(isTopLevel(path), path).toBe(topLevel.has(path))
+    }
+    for (const path of ['/wanted', '/deals', '/settings', '/loans', '/calendar', '/admin']) {
+      expect(isTopLevel(path), path).toBe(false)
     }
     expect(isTopLevel('/movies/abc')).toBe(false)
     expect(isTopLevel('/films/tmdb/1')).toBe(false)
     expect(isTopLevel('/settings/ai')).toBe(false)
   })
 
-  it('sends a page with no history back to its parent', () => {
+  it('sends a page with no history to You when You lists it, and to its parent otherwise', () => {
+    // Opened from a notification or a link, a page You lists goes where it would have been
+    // opened from; a page below a destination goes to that destination.
+    for (const path of ['/wanted', '/deals', '/settings', '/loans', '/price-alerts', '/retailers']) {
+      expect(parentPath(path), path).toBe('/you')
+    }
     expect(parentPath('/movies/abc')).toBe('/movies')
     expect(parentPath('/movie-night/abc')).toBe('/movie-night')
     expect(parentPath('/films/tmdb/1')).toBe('/movies')
+    expect(parentPath('/box-sets/abc')).toBe('/box-sets')
     expect(parentPath('/somewhere/else')).toBe('/dashboard')
+  })
+
+  it('never sends a bottom-tab page to You, since You does not list one', () => {
+    for (const path of BOTTOM_BAR_PATHS) expect(parentPath(path), path).not.toBe('/you')
   })
 
   it('keeps four destinations in the bottom bar, every one a real page', () => {
