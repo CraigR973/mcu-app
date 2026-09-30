@@ -236,6 +236,21 @@ def test_a_subdomain_of_the_same_co_uk_shop_is_still_fine() -> None:
     assert verdict.ok, verdict.reasons
 
 
+@pytest.mark.parametrize("base", ["https://secondsightfilms.co.uk", "https://101-films-store.com"])
+def test_the_test_button_passes_a_base_url_and_the_shops_own_listing_still_matches(
+    base: str,
+) -> None:
+    """§5.4's Test button sends the retailer's `baseUrl` as `expectedHost`. With no `www.`
+    the scheme stayed glued to the first label, so these two shops' own listings failed the
+    guard (found in Batch 22b). Another `.co.uk` shop is still refused."""
+    assert check_shape(_candidate(url=f"{base}/products/heat"), retailer_host=base).ok
+
+    elsewhere = check_shape(
+        _candidate(url="https://someoneelse.co.uk/products/heat"), retailer_host=base
+    )
+    assert not elsewhere.ok
+
+
 def test_every_reason_is_collected_not_just_the_first() -> None:
     """A scraper that has gone wrong is usually wrong in several ways at once, and the
     person reading the report needs all of them."""

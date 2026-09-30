@@ -62,9 +62,14 @@ class RetailerDealsOutcomeResponse(BaseModel):
     skippedOwned: int
     rejected: int
     matched: int
+    #: Batch 22b. Cards on the sale page at a single price: listed, not discounted, and
+    #: counted apart from `rejected`, which is a card that failed a check.
+    notDiscounted: int = 0
     #: Why the page as a whole was refused. A page-level failure discards every card, so
     #: this is what separates "a quiet sale" from "the selectors have moved".
     pageReasons: list[str] = Field(default_factory=list)
+    #: Why the first few rejected cards were rejected (Batch 22b).
+    rejectedReasons: list[str] = Field(default_factory=list)
     error: str | None = None
 
 

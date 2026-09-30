@@ -5,10 +5,11 @@ Three things happen per retailer, in this order, and the order is the point:
 1. **Fetch and extract**, through Batch 19's `fetcher` — so the SSRF guard, the rate
    limiting and the honest user agent all apply unchanged. A deals page is still somebody
    else's website.
-2. **Judge**, per card and then per page (`deals.check_deal_shape`, `check_page_shape`).
+2. **Judge**, per page and then per card (`deals.check_page_shape`, `judge_cards`).
    A page that fails its population check has **every** card discarded, not just the bad
    ones: if the `was` selector is reading a banner, each individual discount is wrong in
-   exactly the way that looks right.
+   exactly the way that looks right. On a page that passes, a card at a single price is
+   counted as not discounted and a card that fails a check as rejected (Batch 22b).
 3. **Match and write**, skipping anything already owned.
 
 **"Skip already-owned" is format-aware, and the criterion does not say so.** §5.9 says
@@ -23,6 +24,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
+from urllib.parse import urlparse
 
 import structlog
 from sqlalchemy import select
@@ -35,12 +37,12 @@ from src.models.movie import Movie
 from src.models.wanted import Retailer
 from src.services.scraping.deals import (
     DealCandidate,
-    check_deal_shape,
     check_page_shape,
     deal_format,
     extract_deals,
+    judge_cards,
 )
-from src.services.scraping.extract import _normalise
+from src.services.scraping.extract import TITLE_NOISE, YEAR_PATTERN, _normalise
 from src.services.scraping.fetcher import FetchError, UnsafeUrlError, fetch_page
 
 logger = structlog.get_logger()
@@ -57,9 +59,15 @@ class RetailerDealsOutcome:
     skipped_owned: int = 0
     rejected: int = 0
     matched: int = 0
+    #: Batch 22b. Cards on the sale page at a single price: listed, not discounted, and
+    #: not a failure (`deals.judge_cards`).
+    not_discounted: int = 0
     #: Why the page as a whole was refused, when it was. A page-level failure discards
     #: every card, so this is the difference between "a quiet sale" and "broken".
     page_reasons: list[str] = field(default_factory=list)
+    #: Why the first few rejected cards were rejected, so a page that passed but kept
+    #: little says why.
+    rejected_reasons: list[str] = field(default_factory=list)
     error: str | None = None
 
 
@@ -124,6 +132,25 @@ async def already_owned(db: AsyncSession, movie_id: uuid.UUID, format_code: str 
     return FORMAT_RANK.index(format_code) >= best_owned
 
 
+def narrowing_word(title: str) -> str | None:
+    """The word :func:`match_to_film` narrows its SQL on: the longest that could be in a
+    film's title.
+
+    **Not simply the longest word** (Batch 22b). A shop's own words are often the longest
+    in a listing, and no film's title contains them: on Zavvi's captured page "Spectre - 4K
+    Ultra HD (Includes 2D Blu-ray)" narrowed on *includes* and "The Deer Hunter - 40th
+    Anniversary Edition" on *anniversary*, so neither found its film, an owned copy was not
+    skipped and the deal had no poster. The words the price scraper already treats as a
+    shop's (`TITLE_NOISE`) and bare years are passed over. Ties go alphabetically, so the
+    choice does not depend on set order.
+    """
+    words = _normalise(title)
+    if not words:
+        return None
+    telling = {word for word in words if word not in TITLE_NOISE and not YEAR_PATTERN.match(word)}
+    return max(sorted(telling or words), key=len)
+
+
 async def match_to_film(db: AsyncSession, title: str) -> Movie | None:
     """The catalogued film a deal's title names, or ``None``.
 
@@ -138,17 +165,17 @@ async def match_to_film(db: AsyncSession, title: str) -> Movie | None:
     written against.
     """
     words = _normalise(title)
-    if not words:
+    narrow = narrowing_word(title)
+    if not words or narrow is None:
         return None
 
     # Candidate films share at least one significant word. Narrowing in SQL first keeps
     # this from loading 1,843 rows per card.
-    longest = max(words, key=len)
     candidates = (
         (
             await db.execute(
                 select(Movie)
-                .where(Movie.deleted_at.is_(None), Movie.title.ilike(f"%{longest}%"))
+                .where(Movie.deleted_at.is_(None), Movie.title.ilike(f"%{narrow}%"))
                 .limit(50)
             )
         )
@@ -200,16 +227,19 @@ async def scrape_retailer_deals(
         )
         return outcome
 
-    host = retailer.base_url
-    now = utcnow()
-    for candidate in candidates:
-        verdict = check_deal_shape(
-            candidate, expected_currency=retailer.currency, retailer_host=host
-        )
-        if not verdict.ok:
-            outcome.rejected += 1
-            continue
+    # A hostname, as the price runner passes it. Batch 22 passed the whole base URL, which
+    # failed every one of Second Sight's and 101 Films' own listings (`extract._host_of`).
+    judged = judge_cards(
+        candidates,
+        expected_currency=retailer.currency,
+        retailer_host=urlparse(retailer.base_url).hostname,
+    )
+    outcome.not_discounted = judged.not_discounted
+    outcome.rejected = judged.rejected
+    outcome.rejected_reasons = judged.rejected_reasons
 
+    now = utcnow()
+    for candidate in judged.deals:
         format_code = deal_format(candidate)
         movie = await match_to_film(db, candidate.title or "")
         if movie is not None:
@@ -229,6 +259,7 @@ async def scrape_retailer_deals(
         found=outcome.found,
         kept=outcome.kept,
         skipped_owned=outcome.skipped_owned,
+        not_discounted=outcome.not_discounted,
         rejected=outcome.rejected,
     )
     return outcome

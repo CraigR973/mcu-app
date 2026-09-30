@@ -668,10 +668,26 @@ def _registrable_domain(host: str) -> str:
     return ".".join(parts[-2:])
 
 
+def _host_of(value: str) -> str:
+    """A hostname, whether it arrives as one or as a whole URL.
+
+    Callers disagree. The price runner passes ``urlparse(base_url).hostname``; the deals
+    runner and §5.4's test tool passed the retailer's ``base_url`` itself. Read as a
+    hostname, ``https://secondsightfilms.co.uk`` keeps its scheme glued to its first label,
+    so it matched none of that shop's own listings, and nor did ``https://101-films-store.com``.
+    ``https://www.zavvi.com`` hid the fault only because its last two labels survive
+    (Batch 22b).
+    """
+    if "://" in value:
+        return urlparse(value).hostname or value
+    return value
+
+
 def _same_site(host: str, expected: str) -> bool:
     """Same registrable domain. ``www.hmv.com`` and ``store.hmv.com`` are one shop.
 
     ``secondsightfilms.co.uk`` and ``someoneelse.co.uk`` are **not**, which is the whole
     point: a listing URL that leaves the retailer is how a plausible wrong number gets in.
+    Either side may be a hostname or a URL (:func:`_host_of`).
     """
-    return _registrable_domain(host) == _registrable_domain(expected)
+    return _registrable_domain(_host_of(host)) == _registrable_domain(_host_of(expected))

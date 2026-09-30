@@ -199,7 +199,9 @@ async def scrape_deals(
                 skippedOwned=outcome.skipped_owned,
                 rejected=outcome.rejected,
                 matched=outcome.matched,
+                notDiscounted=outcome.not_discounted,
                 pageReasons=outcome.page_reasons,
+                rejectedReasons=outcome.rejected_reasons,
                 error=outcome.error,
             )
             for outcome in summary.outcomes

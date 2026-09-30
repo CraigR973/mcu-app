@@ -69,6 +69,10 @@ MAX_DISCOUNT_PERCENT = 95
 #: Below this, "every card has the same discount" is a coincidence rather than a signal.
 MIN_CARDS_FOR_POPULATION_CHECKS = 5
 
+#: How many rejected cards' reasons one shop's outcome carries: enough to say why a page
+#: that passed as a whole kept little, without one bad page flooding the report.
+REJECTED_REASON_EXAMPLES = 3
+
 
 @dataclass(frozen=True)
 class DealCandidate:
@@ -159,16 +163,14 @@ def _card_to_candidate(card: Tag, config: dict[str, object], *, page_url: str) -
     href = link.get("href") if isinstance(link, Tag) else None
     if not href:
         # **The configured `url` selector often points at the title, and a title is not
-        # always a link.** Measured against the captured Zavvi cards: `product-title` is a
-        # heading, so the configured selector yields no href and every deal from that shop
-        # would have arrived with no URL — unclickable, and all colliding on `''` under the
-        # `(retailer_id, url)` uniqueness key.
+        # always a link.** A deal with no URL is unclickable, and every such deal from one
+        # shop would collide on `''` under the `(retailer_id, url)` uniqueness key.
         #
-        # A wanted-item scrape survives that (it has a price and a title, and the
-        # same-site guard simply does not run), which is why it was never noticed. A deal
-        # does not. So: the card's own href if it is an anchor, else the first anchor
-        # inside it — the same "a card can be its own match" reasoning `_select_one`
-        # already applies.
+        # So: the card's own href if it is an anchor, else the first anchor inside it —
+        # the same "a card can be its own match" reasoning `_select_one` already applies.
+        # *Corrected in Batch 22b:* this was added believing Zavvi's `product-title` is a
+        # heading. It is a link; a test helper had put the sale page's address where the
+        # `url` selector belongs. The fallback stays, for a theme whose title is not a link.
         anchor = card if card.name == "a" and card.get("href") else card.select_one("a[href]")
         href = anchor.get("href") if isinstance(anchor, Tag) else None
     # Retailer cards carry relative links. Resolving against the page makes the stored
@@ -313,6 +315,62 @@ def check_page_shape(candidates: list[DealCandidate]) -> PageVerdict:
         verdict.fail("no card on the page yielded a title")
 
     return verdict
+
+
+@dataclass
+class JudgedCards:
+    """A sale page's cards after the per-card judgement, before any database work."""
+
+    deals: list[DealCandidate] = field(default_factory=list)
+    not_discounted: int = 0
+    rejected: int = 0
+    #: The first reason of each of the first few rejected cards.
+    rejected_reasons: list[str] = field(default_factory=list)
+
+
+def judge_cards(
+    candidates: list[DealCandidate],
+    *,
+    expected_currency: str = "GBP",
+    retailer_host: str | None = None,
+) -> JudgedCards:
+    """Which cards on a page that passed :func:`check_page_shape` are deals.
+
+    **A card with a price and no struck-through price is not discounted, so it is not a
+    deal** (Batch 22b). A shop's sale collection is not only discounts: on 28 Sep fifteen
+    of the sixteen cards on Second Sight's first sale page were at a single price. Kept,
+    they would have gone into the feed with no discount and counted towards §5.9's "≥ 20
+    rows" as deals they are not.
+
+    **They are counted apart from `rejected`**, which is a card that failed a check. A
+    listing at its normal price is a normal answer, and reporting it as a failure is the
+    mistake #125 corrected for the price scraper.
+
+    Neither part of that loosens a check:
+
+    - A page on which **no** card has a `was` price is still refused whole, by
+      :func:`check_page_shape`, before any card is judged. That is what a moved `was`
+      selector looks like, so it still reads as broken rather than as a quiet sale.
+    - A card whose `was` is **not above** its price is still rejected, because that is
+      the same node read twice. Only a `was` that is absent entirely counts as undiscounted.
+    - A card with **no price at all** still goes to :func:`check_deal_shape`, which rejects
+      it: that is a broken read, not a listing at its normal price.
+    """
+    judged = JudgedCards()
+    for candidate in candidates:
+        if candidate.price is not None and candidate.was_price is None:
+            judged.not_discounted += 1
+            continue
+        verdict = check_deal_shape(
+            candidate, expected_currency=expected_currency, retailer_host=retailer_host
+        )
+        if not verdict.ok:
+            judged.rejected += 1
+            if len(judged.rejected_reasons) < REJECTED_REASON_EXAMPLES:
+                judged.rejected_reasons.append(verdict.reasons[0])
+            continue
+        judged.deals.append(candidate)
+    return judged
 
 
 def deal_format(candidate: DealCandidate) -> str | None:

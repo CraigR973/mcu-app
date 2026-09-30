@@ -47,7 +47,8 @@ DEFAULT_RETAILERS: tuple[dict[str, str], ...] = (
     {
         "name": "Zavvi",
         "base_url": "https://www.zavvi.com",
-        "deals_url": "https://www.zavvi.com/sale.list",
+        # Batch 22b: `/sale.list` 404s. The same address as the built-in's sale page.
+        "deals_url": "https://www.zavvi.com/c/offers/flash-deals/film/",
     },
     {"name": "Amazon UK", "base_url": "https://www.amazon.co.uk"},
     {"name": "Blu-ray.com", "base_url": "https://www.blu-ray.com"},

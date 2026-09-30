@@ -65,13 +65,21 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "A database rather than a shop — prices are third-party and may be absent.",
     },
     "Zavvi": {
-        # Already seeded by Batch 18 and the only deals URL that existed before this
-        # batch. The card selectors are Batch 19's, verified live.
+        # **Batch 22b, checked against the live page captured 28 Sep.** `/sale.list` 404s
+        # (found 13 Sep); Zavvi's film offers live at the flash-deals address. That evening
+        # it was a landing page of two product carousels, six discs, where 13 Sep had found
+        # a long list: Zavvi rotates what the page holds, and the preview says how many.
+        #
+        # The cards are THG's own product card, as on the search page, so Batch 19's card
+        # selectors read them unchanged. The RRP is a span of its own, tagged
+        # `data-product-price="rrp"` ("RRP: £29.99"). Batch 22's `.product-price__rrp, .rrp`
+        # matched nothing on any Zavvi page, so the right address would still have been
+        # refused as "no card has a 'was' price".
         "deals": {
-            "url": "https://www.zavvi.com/sale.list",
-            "was": "[data-testid='product-price'] .product-price__rrp, .rrp",
+            "url": "https://www.zavvi.com/c/offers/flash-deals/film/",
+            "was": "[data-product-price='rrp']",
             "image": "img",
-            "verified": False,
+            "verified": True,
         },
         "base": "https://www.zavvi.com",
         # `{format}` is not a refinement here. A bare title redirects to a franchise
@@ -150,11 +158,17 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "Verified against the live UK storefront on 2026-09-09.",
     },
     "Second Sight": {
+        # **Batch 22b, checked against the live page captured 28 Sep** (Shopify's Dawn
+        # theme). Dawn prints `.price-item--regular` twice on every card: first the price
+        # the card sells at, then, inside `<s>`, the compare-at price, which is empty unless
+        # the product is discounted, and only then does the `.price` wrapper carry
+        # `price--on-sale`. Batch 22's selector read the first, so every card's "was" was
+        # its own price and the page was refused (13 Sep).
         "deals": {
             "url": "https://secondsightfilms.co.uk/collections/sale",
-            "was": ".price-item--regular, s .money",
+            "was": ".price--on-sale s.price-item--regular",
             "image": "img",
-            "verified": False,
+            "verified": True,
         },
         "base": "https://secondsightfilms.co.uk",
         "search": "https://secondsightfilms.co.uk/search?q={query}&type=product",
@@ -191,22 +205,50 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
 def deals_config_for(name: str) -> dict[str, Any] | None:
     """The sale-page configuration for a seeded retailer — Batch 22, Phase 5.9.
 
-    **The selectors are verified; the URLs are not, and the distinction matters.** Each
-    `item`/`title`/`price`/`url` selector is the one Batch 19 checked against that shop's
-    live markup on 2026-09-09, and it applies unchanged here because a Shopify collection
-    page renders the same product card as a Shopify search page. What is new is the `was`
-    selector and the sale-page URL, and **neither has been run against the live site** —
-    `verified: False` on every one of them says so.
+    **The card selectors are verified; a sale page is verified only once someone has read
+    it.** Each `item`/`title`/`price`/`url` selector is the one Batch 19 checked against
+    that shop's live markup on 2026-09-09, and it applies unchanged here because a sale
+    page renders the same product card as a search page. What is new is the `was` selector
+    and the sale-page URL.
 
-    That is deliberate rather than lazy. `docs/agent-commands/group-start.md` puts live
-    retailer requests in the owner's hands, so the run that proves these is the same run
-    that satisfies §5.9's acceptance. Batch 19 shipped on exactly this footing and its
-    owner-run checkpoint found real defects (`DECISIONS.md` #91, #92, #94) — which is the
-    argument for the arrangement, not against it.
+    Batch 22 shipped all five of those unverified, because live retailer requests are the
+    owner's (`docs/agent-commands/group-start.md`). The owner's first dry run (13 Sep)
+    found both halves wrong for Zavvi and the `was` selector wrong for Second Sight, as
+    Batch 19's checkpoint had found defects before it (`DECISIONS.md` #91, #92, #94).
+    **Batch 22b fixed those two against pages captured on 28 Sep at Craig's word**, and
+    they are marked verified. Arrow, Powerhouse and 101 Films are as Batch 22 left them:
+    the first two sell bundles rather than one disc at a lower price, and 101 Films had
+    nothing on sale to check against.
     """
     entry = BUILT_IN_SCRAPERS.get(name)
     deals = entry.get("deals") if entry else None
     return dict(deals) if isinstance(deals, dict) else None
+
+
+#: The sale-page keys `apply-built-ins` copies into a retailer's `scraper_config`. The rest
+#: of a `deals` entry is about the page, not the card: `url` is the page's address, and
+#: copied over the card's `url` selector it would match nothing.
+DEALS_CARD_KEYS = frozenset({"was", "image"})
+
+
+def applied_scraper_config(name: str) -> dict[str, Any] | None:
+    """The `scraper_config` `apply-built-ins` writes for a seeded retailer.
+
+    The search card's selectors, plus the sale page's `was` and `image`: a sale card and a
+    search card are the same markup, so the deals extractor reads `item`/`title`/`price`/
+    `url` from the selectors Batch 19 verified and only needs the struck-through price
+    adding. **One definition, used by the endpoint and by the tests**, because a test
+    helper that merged the whole sale-page entry once put the page's address where the
+    card's `url` selector belongs (Batch 22b; `DECISIONS.md` #153 was drawn from it).
+    """
+    entry = BUILT_IN_SCRAPERS.get(name)
+    if entry is None:
+        return None
+    config = dict(entry["config"])
+    deals = deals_config_for(name)
+    if deals:
+        config.update({key: value for key, value in deals.items() if key in DEALS_CARD_KEYS})
+    return config
 
 
 def unverified_deals_names() -> list[str]:
