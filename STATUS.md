@@ -8,15 +8,18 @@ nothing, then "Save deals". Those two taps are Craig's (`OWNER-ACTIONS.md` 1e). 
 start: its scheduled session found 2 wanted items with prices from more than one shop, not the
 3 its criterion needs, and asks Craig how to go on.**
 
-- **`main` is red: the dependency audit refuses `urllib3` 2.7.0** (CVE-2026-97687, -97688,
-  -97689; fixed in 2.8.0), found on the 19:26 UTC run of `8e4c6a2`. The overnight run fixes it
-  first, on its own `fix/` branch (#230).
+- **`main` is green again: `urllib3` 2.7.0 → 2.8.0**
+  ([#4](https://github.com/CraigR973/mcu-app/pull/4), merged as `037d4e8` at 21:58 UTC). The
+  dependency audit had refused 2.7.0 (CVE-2026-97687, -97688, -97689) since the 19:26 UTC run of
+  `8e4c6a2`. **Production's `commitSha` is not yet confirmed**: the planning session cannot reach
+  the Railway host, so Craig checks `/api/v1/health`.
 - **Group V: go given for an overnight run (30 Sep evening, #228–#230).** Craig's nine new
   snags, reconciled in `docs/owner-snags-2026-09-30.md`; eight batches (V1, V3–V9, after two
   merges) in `docs/phase-batches.md`, each with its model tier and effort, in six sittings
-  plus 21. The run: the `urllib3` fix, the plan's own merge, then V1 → V3 → V4 → V5 → V6, one
-  pull request per batch. It needs `api-production-a8fe.up.railway.app` allowed first
-  (`OWNER-ACTIONS.md` 25). V1 fixes a real bug: the top bar has had no background since 10 Sep.
+  plus 21. The run is V1 → V3 → V4 → V5 → V6, one pull request per batch, started with one
+  line: "Read and follow `docs/group-v-overnight.md` on `main`, unattended, to the end." It needs
+  `api-production-a8fe.up.railway.app` allowed first (`OWNER-ACTIONS.md` 25). V1 fixes a real
+  bug: the top bar has had no background since 10 Sep.
 - **22b (#224–#226).** Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
   flash-deals page had become six discs, five owned); Second Sight the first page of its sale
   collection. Three Batch 22 faults fixed on the way: the same-site guard failed every one of
@@ -477,6 +480,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (`urllib3` 2.8.0, [#4](https://github.com/CraigR973/mcu-app/pull/4),
+  `037d4e8`)** — `main`'s dependency audit went red at 19:26 UTC on `8e4c6a2`: `urllib3` 2.7.0,
+  three CVEs, fixed in 2.8.0. Fixed on its own `fix/` branch, the first change to land through a
+  pull request from a cloud session (#230). Only `urllib3` moved in either lock. Locally:
+  `pip-audit` clean, the pnpm audit under its threshold, 1,634 API tests against a local
+  Postgres 16, web and shared green. CI green on the push and pull-request runs. Production's
+  `commitSha` not confirmed from the session (the Railway host is blocked); Craig to check.
 
 - **2026-09-30 (Craig's nine snags reconciled; Group V planned)** — No code. Checked against
   `8e4c6a2` in `docs/owner-snags-2026-09-30.md`; his answers are #228 and the plan's shape #229
