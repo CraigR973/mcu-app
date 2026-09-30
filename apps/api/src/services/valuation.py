@@ -131,6 +131,22 @@ def _due_condition(now: datetime) -> ColumnElement[bool]:
     )
 
 
+def owned_valued_discs() -> Subquery:
+    """Each owned physical disc and the format it is valued as — the discs the value counts.
+
+    One row per disc, so two copies of a film count twice. Shared by the collection's total
+    and Home's most valuable discs (Batch V5), so the two cannot disagree about which discs
+    stand behind a price.
+    """
+    fmt, conditions = _owned_discs()
+    return (
+        select(CollectionItem.id, CollectionItem.movie_id, fmt.label("format_code"))
+        .join(Movie, Movie.id == CollectionItem.movie_id)
+        .where(*conditions, fmt.is_not(None))
+        .subquery()
+    )
+
+
 def _film_formats() -> Subquery:
     """Each owned film and the format its discs are valued as, once."""
     fmt, conditions = _owned_discs()
@@ -478,13 +494,7 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
     """
     now = now or utcnow()
     await abandon_stale_runs(db, now=now)
-    fmt, conditions = _owned_discs()
-    discs = (
-        select(CollectionItem.id, CollectionItem.movie_id, fmt.label("format_code"))
-        .join(Movie, Movie.id == CollectionItem.movie_id)
-        .where(*conditions, fmt.is_not(None))
-        .subquery()
-    )
+    discs = owned_valued_discs()
     priced = DiscValuation.status == "priced"
     row = (
         await db.execute(
