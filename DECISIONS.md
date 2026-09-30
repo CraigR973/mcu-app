@@ -4689,3 +4689,20 @@ contemporaneous.
        to a fallback (You for a page You lists, else the parent; the Archive for a film).
        React Router's `default` location key is the test for "no history".
 
+### 2026-09-30 — Group V, batch V3
+
+232. **V3: taking a vote back is a vote of `false`, and the push names the shortlist.**
+
+     - **No new endpoint for "un-add".** `record_vote` already replaces a person's vote on a
+       suggestion, so Added → Add sends `liked: false`, and the film reads "Add" again. A
+       `false` vote was the deck's Skip; on the list it simply means "not added", which is the
+       only thing a match reads. A match is still announced once: `announced_at_utc` is set on
+       the first, so a take-back and re-add does not announce it again (checked on the rig with
+       two people, #231).
+     - **The one server string that described the deck changed.** The push that sends a night
+       said "N films to swipe" ("1 films" for one); it says "N films on the shortlist" now.
+       V3's criterion "the API does not change" is about the vote: no endpoint, schema or
+       vote logic moved. Comments on the server that still say "swipe" were left as the history they are.
+     - **Several films can be open at once.** Choosing means comparing (the snag's own
+       argument for the list), so opening one film's details does not close another's.
+
