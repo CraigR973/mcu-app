@@ -54,6 +54,7 @@ import {
   dailyRunSchema,
   recommendationListSchema,
   rewatchSuggestionsSchema,
+  highlightsSchema,
   streamingSchema,
   profileResponseSchema,
   pushSubscriptionListSchema,
@@ -161,6 +162,7 @@ import {
   type OfferKind,
   type RecommendationList,
   type RewatchSuggestion,
+  type Highlights,
   type RetailerList,
   type RetailerRow,
   type BuiltInScraperList,
@@ -255,6 +257,10 @@ export type {
   CandidateList,
   CollectionCopy,
   CollectionFacets,
+  Highlights,
+  RewatchedFilm,
+  TopRatedFilm,
+  ValuableDisc,
   CollectionItem,
   CompletionFilm,
   CompletionInsights,
@@ -537,6 +543,11 @@ export async function fetchOnThisDayMemories(): Promise<OnThisDayMemory[]> {
 }
 
 /** Batch 37: personally highly rated films not watched recently. */
+/** Home's Highlights, three rows in one request — Batch V5. */
+export async function fetchHighlights(): Promise<Highlights> {
+  return parseResponse(await authFetch('/highlights'), highlightsSchema)
+}
+
 export async function fetchRewatchSuggestions(): Promise<RewatchSuggestion[]> {
   return parseResponse(
     await authFetch('/memories/rewatch-suggestions'),

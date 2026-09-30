@@ -9,6 +9,7 @@ import { ArchiveStats } from '@/components/dashboard/ArchiveStats'
 import { CollectionValue } from '@/components/dashboard/CollectionValue'
 import { Button } from '@/components/ui/button'
 import { CompletionSets } from '@/components/dashboard/CompletionSets'
+import { Highlights } from '@/components/dashboard/Highlights'
 import { PageHeader } from '@/components/ui/page-header'
 import { ComingToDisc } from '@/components/releases/ComingToDisc'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -159,6 +160,10 @@ export default function DashboardPage() {
           </ul>
         </section>
       ) : null}
+
+      {/* Batch V5, snag 9: top rated, most rewatched and most valuable, one request. Each
+          row hides while it has nothing in it, and the panel with them. */}
+      <Highlights />
 
       {/* Batch T6, snag 7: the collection at current eBay asking prices. Hidden from a
           viewer until there is a total; an admin sees it earlier, to start the first run. */}
