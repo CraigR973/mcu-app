@@ -30,6 +30,7 @@ from anthropic.types.tool_param import ToolParam
 from fastapi import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.collection_item import SECTIONS
 from src.models.profile import Profile, UserRole
 
 logger = structlog.get_logger(__name__)
@@ -95,7 +96,9 @@ READ_TOOLS: list[ToolParam] = [
             },
             "section": {
                 "type": "string",
-                "description": "Where it is shelved — Front, Back, Lounge, Garage, Digital.",
+                # From the vocabulary itself, so a new place reaches the assistant with the
+                # model: the hand-written list stopped at the five §3.4 names (Batch V4).
+                "description": f"Where it is shelved — one of {', '.join(SECTIONS)}.",
             },
             "shelf": {"type": "string", "description": "Which shelf, e.g. '2nd'."},
             "decadeFrom": {"type": "integer", "description": "Earliest release year."},
