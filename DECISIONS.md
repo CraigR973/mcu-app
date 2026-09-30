@@ -4664,3 +4664,28 @@ contemporaneous.
      - **The one step before the run is Craig's:** allowing
        `api-production-a8fe.up.railway.app` in the cloud environment's network settings, so
        the run can confirm each deploy. Without it the run stops before its first merge.
+
+### 2026-09-30 — Group V, batch V1
+
+231. **V1's choices: a real-API browser rig, `nav/sections` left alone, and one rule for "back".**
+
+     - **The browser check ran the real API, not a stub.** #169's method with one change: the
+       Vite dev server talked to the app's own FastAPI, started in the session against a
+       throwaway local Postgres 16 (`mcu_browser`) migrated to head and seeded with 14 films,
+       their discs, 3 shop deals and a movie night, and both people given a rig-only PIN. The
+       pages then parse real responses from real queries, and the sign-in is real, so no
+       `VITE_SKIP_AUTH`. It needs no credential and sends nothing to a third party: the API ran
+       with no TMDB, eBay, Brave or Anthropic keys. The rig (seed script, launcher, Playwright
+       script) lives in the session scratchpad; only the gitignored `apps/web/.env.local`
+       touched the checkout, and it is deleted after the run. The login limit (5 per 15 minutes)
+       is durable in Postgres, so the rig clears `rate_limit_counters` in its own database
+       before each sign-in.
+     - **The API still counts loans in `nav/sections`**, though nothing reads that count now
+       that Loans is always listed (#228). Dropping the field would make an older web build
+       fail to parse the response in the minutes when Vercel and Railway have deployed
+       different commits. A later change can remove it with its schema, once.
+     - **"Back" is one hook, `useGoBack`**, shared by the phone's top bar and the film page, so
+       the two controls cannot disagree: through history when the app has some, and otherwise
+       to a fallback (You for a page You lists, else the parent; the Archive for a film).
+       React Router's `default` location key is the test for "no history".
+

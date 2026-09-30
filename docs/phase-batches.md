@@ -2493,7 +2493,20 @@ V7's eBay figure, so it follows V7 rather than being built twice. Sitting 3 wait
 but its first step is Craig's. Group U's 20b and 22c keep their gate and slot in when it
 clears. 38 moves from after T8b to the very end, so it pins the flows sittings 1 and 2 change.
 
-### V1 — Top bar, tints, back arrows and Loans 🟡
+### ~~V1 — Top bar, tints, back arrows and Loans~~ 🟡 **shipped 2026-09-30 (`13791c2`, [#6](https://github.com/CraigR973/mcu-app/pull/6))**
+**Acceptance: all met.** The five steps (12, 14, 88, 94, 96) are in the theme and all 20
+classes in the built stylesheet; `theme/opacity-steps.test.ts` fails on any step the theme
+lacks, naming file and line, and with the theme change reverted it lists exactly the 20. On a
+phone only the four bottom tabs and You are top-level; every other page has the arrow, which
+falls back to You for a page You lists and to the parent otherwise. The film page's Back
+returns to where it was opened from (the Archive with no history) and hides below 1024 px.
+Loans is always listed, for both; the navigation test moved from eight to nine. Browser check
+at 375 and 1280 px, light and dark, against the real API on a throwaway local Postgres (#231).
+Local gate and CI green first time (1,634 API tests, web 428, shared 114). **Nothing is left
+open.** The bars are 94% and 96% opaque as the redesign asked, so a faint shadow of the page
+shows through the bottom bar in the light theme; fully solid is a one-class change if Craig
+wants it.
+
 **Covers snags 7, 5 and 3. Carries what was V2 (#229).** Mid tier · high / mid tier · High.
 Sitting 1, first. **The top bar has had no background since 10 Sep (`9afc173`):**
 `bg-background/94` names an opacity step Tailwind 3 does not have, so the class is never built,
@@ -2742,7 +2755,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
-| **V · 1** | V1 → V3 → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
+| **V · 1** | ~~V1~~ → V3 → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | V6 → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 is in the 30 Sep overnight run (#230); V7 and V8 wait on Craig's pick.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 
