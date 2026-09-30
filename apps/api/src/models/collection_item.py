@@ -43,6 +43,12 @@ from src.models.base import Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
 #: matches nothing — "(In with The Killing)" — keeps its raw text in
 #: :attr:`CollectionItem.location` and leaves ``section`` NULL rather than being forced
 #: into a bucket it does not belong to.
+#:
+#: "Craig's house" joined in Batch V4 at Craig's word (`DECISIONS.md` #228): one place with
+#: no shelves, counted like any other disc. It is the first name with an apostrophe, which
+#: is why migration 042 escapes the names it writes into the CHECK.
+CRAIGS_HOUSE = "Craig's house"
+
 SECTIONS = (
     "Front",
     "Back",
@@ -53,6 +59,7 @@ SECTIONS = (
     "Top Small Cabinet",
     "Fish Room Cabinet",
     "Black Box",
+    CRAIGS_HOUSE,
 )
 
 #: The subset of :data:`SECTIONS` that has numbered shelves. The rest — Digital, the

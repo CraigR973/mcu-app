@@ -222,6 +222,10 @@ export const collectionFacetsSchema = z.object({
   undatedMovieCount: z.number().int().nonnegative(),
   /** Batch T7. The spec filters hide while this is 0. Defaulted, as #205 explains. */
   discsWithSpecs: z.number().int().nonnegative().default(0),
+  /** Batch V4. Every section, populated or not, for the copy form's picker: a new place has
+   *  no disc until the first is moved there. The filter bar keeps reading `sections`.
+   *  Defaulted, as #205 explains: an older cached response has no such field. */
+  allSections: z.array(z.string().min(1)).default([]),
 })
 
 export const watchLogEntrySchema = z.object({

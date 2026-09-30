@@ -25,6 +25,7 @@ from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
 from src.models.ai import AiConversation, AiMessage, AiToolCall
+from src.models.collection_item import SECTIONS
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.wanted import WantedItem
@@ -187,6 +188,15 @@ class TestToolFiltering:
 
     def test_the_two_lists_actually_differ(self) -> None:
         assert len(tools_for(UserRole.admin)) > len(tools_for(UserRole.viewer))
+
+    async def test_the_browse_tool_names_every_section_the_collection_has(self) -> None:
+        """Batch V4: "Craig's house" and the cabinets, spelt as the filter expects them."""
+        tools = {tool["name"]: tool for tool in tools_for(UserRole.viewer)}
+        schema = tools["browse_collection"]["input_schema"]
+        described = schema["properties"]["section"]["description"]
+
+        for name in SECTIONS:
+            assert name in described
 
     def test_every_tool_declares_a_strict_schema(self) -> None:
         """`strict` is what keeps a malformed argument out of a confirmed write."""

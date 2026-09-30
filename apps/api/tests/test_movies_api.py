@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
-from src.models.collection_item import CollectionItem
+from src.models.collection_item import SECTIONS, CollectionItem
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
@@ -744,6 +744,32 @@ async def test_facets_are_served_from_the_data(
     # Films with no year cannot appear in any decade, and the count says so rather
     # than leaving the totals quietly short.
     assert body["undatedMovieCount"] >= 1
+
+
+async def test_facets_offer_every_section_to_the_form_and_filled_ones_to_the_filter(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Batch V4: a new place has no disc yet, so only the form's list can offer it."""
+    empty = (await client.get("/api/v1/collection/facets")).json()
+    assert empty["allSections"] == list(SECTIONS)
+    assert "Craig's house" in empty["allSections"]
+    assert "Craig's house" not in [section["section"] for section in empty["sections"]]
+
+    await _add_owned_movie(
+        api_session,
+        title="Moved Round",
+        tmdb_id=920083,
+        section="Craig's house",
+        shelf=None,
+        location="Craig's house",
+    )
+    filled = (await client.get("/api/v1/collection/facets")).json()
+    sections = {section["section"]: section for section in filled["sections"]}
+    assert sections["Craig's house"]["itemCount"] == 1
+    # One place, with no shelves.
+    assert sections["Craig's house"]["shelves"] == []
+    assert filled["allSections"] == list(SECTIONS)
 
 
 async def test_identifying_a_film_keeps_the_watch_history_it_already_had(

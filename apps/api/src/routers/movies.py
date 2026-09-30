@@ -674,6 +674,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
         ],
         undatedMovieCount=undated,
         discsWithSpecs=with_specs,
+        allSections=list(SECTIONS),
     )
 
 

@@ -207,6 +207,11 @@ class CollectionFacetsResponse(BaseModel):
     #: Batch T7 — owned discs with Blu-ray.com specs. The Dolby Vision, Atmos and
     #: Region-free filters stay hidden while it is 0, because nothing could match them.
     discsWithSpecs: int = Field(default=0, ge=0)
+    #: Batch V4 — every section in the vocabulary, in ``SECTIONS`` order, whether or not a
+    #: disc is there yet. The copy form offers all of them, so a disc can be the first in a
+    #: new place (Craig's house held none when it was added); ``sections`` above, which the
+    #: Archive's filter reads, still lists only the places that hold a disc.
+    allSections: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

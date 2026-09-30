@@ -38,11 +38,18 @@ const selectClass =
  * source Batch 6's filter bar uses, so the form cannot offer a shelf that does not
  * exist or miss one a new disc has just created. Choosing "Somewhere else" hands over
  * to the free-text box, which the API parses with the importer's own `parse_location`.
+ *
+ * **The Section picker offers every section, including one with no disc yet** — Batch V4.
+ * Craig's house held nothing when it was added, and a picker built from the places that
+ * hold a disc could never offer it. `allSections` is the whole vocabulary; an older cached
+ * response without it falls back to the populated ones, as the form did before.
  */
 export default function CopyForm({ value, onChange, disabled }: Props) {
   const facetsQuery = useQuery({ queryKey: ['facets'], queryFn: fetchFacets })
-  const sections = facetsQuery.data?.sections ?? []
-  const shelves = sections.find((entry) => entry.section === value.section)?.shelves ?? []
+  const populated = facetsQuery.data?.sections ?? []
+  const allSections = facetsQuery.data?.allSections ?? []
+  const sectionNames = allSections.length > 0 ? allSections : populated.map((entry) => entry.section)
+  const shelves = populated.find((entry) => entry.section === value.section)?.shelves ?? []
 
   function set<K extends keyof CollectionItemFields>(key: K, next: CollectionItemFields[K]) {
     onChange({ ...value, [key]: next })
@@ -105,9 +112,9 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
             onChange={(event) => chooseSection(event.target.value)}
           >
             <option value={FREE_TEXT}>Somewhere else…</option>
-            {sections.map((section) => (
-              <option key={section.section} value={section.section}>
-                {section.section}
+            {sectionNames.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </select>

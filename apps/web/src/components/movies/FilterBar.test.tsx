@@ -75,7 +75,7 @@ describe('FilterBar — Batch T3', () => {
 })
 
 describe('FilterBar — Batch T7', () => {
-  const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }
+  const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0, allSections: [] }
 
   it('hides the spec filters while no disc has specs, because nothing could match them', async () => {
     vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, discsWithSpecs: 0 })
@@ -94,3 +94,22 @@ describe('FilterBar — Batch T7', () => {
   })
 })
 
+describe('FilterBar — Batch V4', () => {
+  it("lists only the sections that hold a disc, not the whole vocabulary the form gets", async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({
+      sections: [{ section: 'Front', movieCount: 3, itemCount: 3, shelves: [] }],
+      unsectionedItemCount: 0,
+      decades: [],
+      undatedMovieCount: 0,
+      discsWithSpecs: 0,
+      allSections: ['Front', 'Back', "Craig's house"],
+    })
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    const select = await screen.findByRole('combobox', { name: 'Filter by section' })
+    await within(select).findByRole('option', { name: 'Front (3)' })
+    const options = within(select).getAllByRole('option').map((option) => option.textContent)
+    expect(options).toEqual(['All locations', 'Front (3)'])
+  })
+})
