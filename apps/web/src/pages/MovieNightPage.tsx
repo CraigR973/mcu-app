@@ -95,7 +95,8 @@ export default function MovieNightPage() {
             ) : (
               <Popcorn className="mr-2 h-4 w-4" aria-hidden />
             )}
-            Start swiping
+            {/* Batch V3: a night is the shortlist now, with no deck to swipe (#228). */}
+            Start movie night
           </Button>
         </form>
         {start.isError ? (

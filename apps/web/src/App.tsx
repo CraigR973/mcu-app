@@ -298,7 +298,7 @@ export default function App() {
               element={<AppShell><AiChatPage /></AppShell>}
             />
             {/* Batch 35. Both people vote, so none of these is admin-gated — a movie
-                night where one of them may not swipe is not one. */}
+                night where one of them may not vote is not one. */}
             <Route
               path="/movie-night"
               element={<AppShell><MovieNightPage /></AppShell>}
