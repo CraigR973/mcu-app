@@ -1150,14 +1150,16 @@ Until the apply, **Update values** on Home does the same by hand.
 the reasoning in `docs/owner-snags-2026-09-30.md`.
 
 1. ~~Say **go** on sitting 1, or name anything to change.~~ **Go given 30 Sep** for an
-   overnight run: the `urllib3` fix, the plan's own merge, then V1 → V3 → V4 → V5 → V6 (#230).
+   overnight run of V1 → V3 → V4 → V5 → V6 (#230). The `urllib3` fix
+   ([#4](https://github.com/CraigR973/mcu-app/pull/4)) and the plan itself landed first, that
+   evening, at your word ("can we commit and merge this to main").
 2. ~~Say whether a cloud session may open a pull request per batch and merge it when CI is
    green.~~ **Yes, 30 Sep** (#230).
 3. **Allow `api-production-a8fe.up.railway.app`** in the cloud environment's network settings
    (Network access, allowed domains) before starting the run, so it can confirm each deploy.
    Without it the run stops before its first merge.
-4. Start a new session with the overnight prompt (in the 30 Sep conversation, and summarised
-   under Group V in the ledger).
+4. Start a new cloud session on this repo with one line: **"Read and follow
+   `docs/group-v-overnight.md` on `main`, unattended, to the end."** Top tier model at `xhigh`.
 
 Your other Group V steps come inside the batches, when each is built: the bid trial and your
 pick (sitting 2), and allowing blu-ray.com and avforums.com, with Brave's limit only if its

@@ -4641,8 +4641,10 @@ contemporaneous.
        the batch's small commits stay in `main`'s history and the merge commit is what
        deploys. It then verifies production and lands the close-out's docs through a second
        pull request, as `phase-closeout.md` does with a push. Answers #229's open question.
-     - **The overnight run is V1 → V3 → V4 → V5 → V6**, after two things it must do first:
-       fix `main`'s red, and merge the plan itself. **Not in it, and why:** V7 and V8 wait on
+     - **The overnight run is V1 → V3 → V4 → V5 → V6.** The two things it needed first, fixing
+       `main`'s red and merging the plan, were done that evening in the planning session at
+       Craig's word ("can we commit and merge this to main"): the fix as #4, then the plan with
+       the run's prompt, `docs/group-v-overnight.md`, through its own pull request. **Not in it, and why:** V7 and V8 wait on
        Craig's trial run and pick (V6 builds the trial; the run is his, as #228 says); V9
        starts with live requests to two outside sites, which `group-start.md` keeps out of an
        unattended run, and with his network step; 20b and 22c wait on his go after the 1 Oct
@@ -4650,8 +4652,8 @@ contemporaneous.
        21 starts itself; T8b waits on owner item 18; 38 is last.
      - **`main` was red when the run was written.** The 19:26 UTC run on `8e4c6a2` failed the
        dependency audit: `urllib3` 2.7.0 carries CVE-2026-97687, -97688 and -97689, fixed in
-       2.8.0. As with PyJWT that morning (`6a8197b`), it is fixed on its own `fix/` branch and
-       closed out before any batch. `uv pip compile … --upgrade-package urllib3` on both locks
+       2.8.0. As with PyJWT that morning (`6a8197b`), it was fixed on its own `fix/` branch and
+       closed out before any batch (#4). `uv pip compile … --upgrade-package urllib3` on both locks
        moves `urllib3` alone, checked on 30 Sep.
      - **A cloud session can run the whole gate.** On 30 Sep: the locked Python dependencies
        and the pnpm workspace installed; with a throwaway local Postgres 16 the API suite ran

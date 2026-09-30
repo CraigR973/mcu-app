@@ -2413,9 +2413,10 @@ apply;** otherwise this ships alone before 24 Oct.
 `docs/owner-snags-2026-09-30.md`, with his answers of the same evening (#228) and his shape
 for the plan (#229). **Criteria authored 2026-09-30**, so `DECISIONS.md` #54 does not apply.
 **Status: written into the plan at Craig's word ("just write into the plan"); go given 30 Sep
-for an overnight run of V1 → V3 → V4 → V5 → V6, one pull request per batch (#230).** The run
-first fixes `main`'s red (`urllib3`, #230) and merges this plan. V7 onwards wait as the table
-says.
+for an overnight run of V1 → V3 → V4 → V5 → V6, one pull request per batch (#230).** Its
+prompt is `docs/group-v-overnight.md`. `main`'s red (`urllib3`) was fixed and this plan merged
+the same evening, before the run ([#4](https://github.com/CraigR973/mcu-app/pull/4)). V7 onwards
+wait as the table says.
 
 **Model tiers.** This section names models by the tiers this ledger already uses: **top tier**
 is the two models on Group U's row in "Batch groups" (Claude Code's and Codex's), **mid tier**
