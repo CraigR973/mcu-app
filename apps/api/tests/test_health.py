@@ -99,6 +99,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # Batch 37. Both are private, caller-scoped views over watch history.
         "/api/v1/memories/on-this-day",
         "/api/v1/memories/rewatch-suggestions",
+        # Batch V5. Home's Highlights, read by both people: top rated, most rewatched and most
+        # valuable, in one request.
+        "/api/v1/highlights",
         "/api/v1/movies/{movie_id}/candidates",
         "/api/v1/movies/{movie_id}/identify",
         "/api/v1/search",

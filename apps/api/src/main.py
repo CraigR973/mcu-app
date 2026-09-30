@@ -26,6 +26,7 @@ from src.routers import (
     ebay_watch,
     export,
     health,
+    highlights,
     identify,
     insights,
     memories,
@@ -123,6 +124,7 @@ app.include_router(auth.router)
 app.include_router(movies.router)
 app.include_router(watch_log.router)
 app.include_router(memories.router)
+app.include_router(highlights.router)
 app.include_router(collection.router)
 app.include_router(box_sets.router)
 app.include_router(smart_collections.router)
