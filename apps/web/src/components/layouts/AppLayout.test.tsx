@@ -155,3 +155,16 @@ describe('AppLayout assistant — Batch U3', () => {
     }
   })
 })
+
+describe('AppLayout sidebar — Batch V1', () => {
+  it('lists Loans with no loan made yet, while Box sets, Collections and Deals still hide', async () => {
+    // The mocked counts are all zero, the state that hid Loans from #154 until V1 (#228).
+    renderShell('/movies')
+    const sidebar = within(screen.getByRole('navigation', { name: 'Application destinations' }))
+    expect(sidebar.getByRole('link', { name: /Loans/ }).getAttribute('href')).toBe('/loans')
+    await waitFor(() => expect(sidebar.queryByRole('link', { name: /Box sets/ })).toBeNull())
+    expect(sidebar.queryByRole('link', { name: /Collections/ })).toBeNull()
+    expect(sidebar.queryByRole('link', { name: /Deals/ })).toBeNull()
+    expect(sidebar.getByRole('link', { name: /Loans/ })).not.toBeNull()
+  })
+})

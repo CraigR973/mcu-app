@@ -13,7 +13,7 @@ export interface NavItem {
    * Absent means "always shown". Present means **hidden while that count is 0** and
    * visible the moment it is not — `DECISIONS.md` #154. Measured on 2026-09-14, all four
    * of these tables held zero rows, so five of fourteen destinations led to a page with
-   * nothing on it.
+   * nothing on it. Since Batch V1 Loans is always shown (#228), so three items carry it.
    */
   showWhen?: keyof NavSections
 }
@@ -38,11 +38,13 @@ export const HOME_ITEM: NavItem = { label: 'Archive shortcut', path: '/', icon: 
  *   `/dashboard`; Notifications and AI settings are one `/settings` page. Four items
  *   become two, and `/settings/ai` stops being a destination reachable only from the
  *   header — it was defined here but placed in no group at all.
- * - **Hid what is empty.** Box sets, Collections, Deals and Loans carry `showWhen` and
- *   stay out of the menu until their table has a row.
+ * - **Hid what is empty.** Box sets, Collections and Deals carry `showWhen` and stay out of
+ *   the menu until their table has a row. Loans did too until Batch V1: Craig asked for it
+ *   always, for Mark and for him (#228), so where a disc went can be looked up before the
+ *   first loan as well as after.
  *
- * With all four empty — the state of the database today — **a signed-in non-admin sees
- * eight destinations**, down from fourteen.
+ * With those three empty **a signed-in non-admin sees nine destinations**, down from
+ * fourteen.
  */
 export const navItems: NavItem[] = [
   { label: 'Movies', path: '/movies', icon: Film },
@@ -59,7 +61,11 @@ export const navItems: NavItem[] = [
   // Batch S3: Home now *is* Stats and Insights. `/stats` and `/insights` redirect here
   // rather than 404, because they are in people's history and in the command palette.
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Loans', path: '/loans', icon: HandHeart, showWhen: 'loans' },
+  // Batch V1: always shown, for both (#228). Lending and "Mark returned" stay admin-only,
+  // on the film page and on Loans itself. The API still counts loans in `nav/sections`;
+  // nothing reads that count now, and leaving the response alone keeps an older web build
+  // parsing it while Vercel and Railway deploy at different moments.
+  { label: 'Loans', path: '/loans', icon: HandHeart },
   // Batch 35. Both people swipe, so it is an ordinary sidebar item.
   { label: 'Movie night', path: '/movie-night', icon: Popcorn },
   // Batch 31. The chat itself.

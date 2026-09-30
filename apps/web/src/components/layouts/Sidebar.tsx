@@ -33,8 +33,9 @@ export default function Sidebar() {
   })
   const saved = collections?.items ?? []
 
-  // Batch S3, snag 5. Four destinations hide while their table is empty
-  // (`DECISIONS.md` #154). Four `COUNT(*)`s in one round trip, cached for five minutes —
+  // Batch S3, snag 5. Box sets, Collections and Deals hide while their table is empty
+  // (`DECISIONS.md` #154); Loans did too until Batch V1, and is always listed now (#228).
+  // Four `COUNT(*)`s in one round trip, cached for five minutes —
   // the menu is drawn on every page, and a count that is one navigation stale costs
   // nothing, while a request per page would cost something on a phone.
   //

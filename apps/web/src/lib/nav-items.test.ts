@@ -22,13 +22,15 @@ function labels(sections: NavSections | undefined): string[] {
 }
 
 describe('the sidebar a signed-in non-admin sees', () => {
-  it('is exactly eight destinations while the four conditional tables are empty', () => {
+  it('is exactly nine destinations while the three conditional tables are empty', () => {
     // **Batch S3 made this eight; Batch S6 made it seven**, by merging Calendar and
     // Coming soon into one Releases screen — its own criterion, and the same two-sources-
     // one-question argument `DECISIONS.md` #154 made about Home, Stats and Insights.
     // Fourteen → eight → seven. **Batch T8a made it eight again** with Price alerts,
     // which is always shown: it is where a first alert is set, so hiding it while empty
-    // would hide the only way in (#218).
+    // would hide the only way in (#218). **Batch V1 made it nine** with Loans, always
+    // shown for Mark and Craig at Craig's word (#228): where a disc went is worth being
+    // able to look up whether or not a loan has been made yet.
     //
     // Asserted as the whole list rather than a count, so a swap that keeps the total
     // still fails.
@@ -39,12 +41,13 @@ describe('the sidebar a signed-in non-admin sees', () => {
       'Releases',
       'Price alerts',
       'Home',
+      'Loans',
       'Assistant',
       'Settings',
     ])
   })
 
-  it('grows to twelve once all four have rows — the un-hide half', () => {
+  it('grows to twelve once all three have rows — the un-hide half', () => {
     // **A hide that never un-hides is the failure mode.** It looks right on this
     // database, where all four tables are empty, and stays wrong forever.
     expect(labels(FULL)).toEqual([
@@ -63,13 +66,20 @@ describe('the sidebar a signed-in non-admin sees', () => {
     ])
   })
 
-  it('shows each destination independently, not all four together', () => {
-    // The tables fill at different times — a first box set says nothing about loans —
+  it('shows each destination independently, not all three together', () => {
+    // The tables fill at different times — a first box set says nothing about deals —
     // so a single "is anything non-empty" flag would be wrong in both directions.
-    expect(labels({ ...EMPTY, loans: 1 })).toContain('Loans')
-    expect(labels({ ...EMPTY, loans: 1 })).not.toContain('Deals')
+    expect(labels({ ...EMPTY, boxSets: 1 })).toContain('Box sets')
+    expect(labels({ ...EMPTY, boxSets: 1 })).not.toContain('Deals')
     expect(labels({ ...EMPTY, deals: 4 })).toContain('Deals')
     expect(labels({ ...EMPTY, deals: 4 })).not.toContain('Box sets')
+  })
+
+  it('always lists Loans, with no loan made yet or with one — Batch V1 (#228)', () => {
+    // Loans hid itself while the table was empty from Batch S3 (#154) until V1.
+    expect(labels({ ...EMPTY, loans: 0 })).toContain('Loans')
+    expect(labels({ ...EMPTY, loans: 1 })).toContain('Loans')
+    expect(navItems.find((item) => item.path === '/loans')?.showWhen).toBeUndefined()
   })
 
   it('shows everything when the counts have not arrived', () => {
