@@ -20,6 +20,9 @@ import {
   externalFilmSchema,
   movieListItemSchema,
   collectionFacetsSchema,
+  highlightRatingSchema,
+  highlightsSchema,
+  rewatchedFilmSchema,
   movieNightSessionSchema,
   movieNightVoteResultSchema,
   notificationPreferenceSchema,
@@ -1837,5 +1840,38 @@ describe('Batch 22b — checking the sale pages', () => {
   it('refuses a negative count', () => {
     const outcome = { ...captured.outcomes[0], notDiscounted: -1 }
     expect(() => dealsRunSchema.parse({ ...captured, outcomes: [outcome] })).toThrow()
+  })
+})
+
+describe('Batch V5 — Home\u2019s Highlights', () => {
+  const film = { movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3401', title: 'Heat', year: 1995, posterPath: null }
+
+  it('reads the three rows, each saying whose it is or what it rests on', () => {
+    const highlights = {
+      topRated: {
+        items: [{ ...film, ratings: [{ personName: 'Craig', rating: 4.5 }] }],
+        ratedBy: ['Craig'],
+        notRatedBy: ['Mark'],
+      },
+      mostRewatched: [{ ...film, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 2 }, { personName: 'Mark', viewings: 1 }] }],
+      mostValuable: [
+        {
+          ...film,
+          formatCode: '4k_uhd',
+          price: '34.99',
+          currency: 'GBP',
+          basis: 'current asking prices',
+          sampleSize: 7,
+          checkedAt: '2026-09-26T03:00:00Z',
+          copies: 1,
+        },
+      ],
+    }
+    expect(highlightsSchema.parse(highlights)).toEqual(highlights)
+  })
+
+  it('refuses a rating off the half-star scale and a "rewatch" seen once', () => {
+    expect(() => highlightRatingSchema.parse({ personName: 'Craig', rating: 6 })).toThrow()
+    expect(() => rewatchedFilmSchema.parse({ ...film, viewings: 1, byPerson: [] })).toThrow()
   })
 })
