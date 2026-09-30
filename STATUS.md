@@ -2,25 +2,27 @@
 
 ## Now
 
-**30 Sep 2026: 22b is live (`eb51568`). Zavvi's and Second Sight's sale pages read correctly, and
-"Check sale pages" on /retailers runs the deals check from a phone: a preview that saves
-nothing, then "Save deals". Those two taps are Craig's (`OWNER-ACTIONS.md` 1e). 21 did not
-start: its scheduled session found 2 wanted items with prices from more than one shop, not the
-3 its criterion needs, and asks Craig how to go on.**
+**30 Sep 2026, 23:00 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
+#230). V1 is live (`13791c2`, [#6](https://github.com/CraigR973/mcu-app/pull/6)).** The top bar
+and the bottom tab bar have their background again, every tint is built, a phone has a back
+arrow on every page below the four tabs and You, the film page's Back returns to where the film
+was opened from, and Loans is always listed. Next: V3 → V4 → V5 → V6, a pull request each.
 
-- **`main` is green again: `urllib3` 2.7.0 → 2.8.0**
-  ([#4](https://github.com/CraigR973/mcu-app/pull/4), merged as `037d4e8` at 21:58 UTC). The
-  dependency audit had refused 2.7.0 (CVE-2026-97687, -97688, -97689) since the 19:26 UTC run of
-  `8e4c6a2`. **Production's `commitSha` is not yet confirmed**: the planning session cannot reach
-  the Railway host, so Craig checks `/api/v1/health`.
-- **Group V: go given for an overnight run (30 Sep evening, #228–#230).** Craig's nine new
-  snags, reconciled in `docs/owner-snags-2026-09-30.md`; eight batches (V1, V3–V9, after two
-  merges) in `docs/phase-batches.md`, each with its model tier and effort, in six sittings
-  plus 21. The run is V1 → V3 → V4 → V5 → V6, one pull request per batch, started with one
-  line: "Read and follow `docs/group-v-overnight.md` on `main`, unattended, to the end." It needs
-  `api-production-a8fe.up.railway.app` allowed first (`OWNER-ACTIONS.md` 25). V1 fixes a real
-  bug: the top bar has had no background since 10 Sep.
-- **22b (#224–#226).** Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
+- **The run so far:**
+  - **Preflight passed at 22:20 UTC:** production reachable from the cloud session
+    (`OWNER-ACTIONS.md` 25, step 3 done) and `main` green at `8447dea`. Local API suite
+    against a throwaway Postgres 16: 1,634 passed, none skipped.
+  - **V1:** [#6](https://github.com/CraigR973/mcu-app/pull/6), merged as `13791c2`.
+    Production reported `13791c2` at 22:48 UTC with `db: ok`, and the live web serves the
+    stylesheet with `bg-background/94` built. Local gate and CI green first time; browser check
+    at 375 and 1280 px, light and dark. Nothing left open. **Failures on the way:** the new
+    opacity test first caught its own deliberate bad examples, and one `tsc` error in it; both
+    fixed before the push.
+- **`main` is green:** `urllib3` 2.8.0 ([#4](https://github.com/CraigR973/mcu-app/pull/4)),
+  then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1.
+- **22b is live (`eb51568`, #224–#226).** "Check sale pages" on /retailers runs the deals check
+  from a phone (a preview that saves nothing), then "Save deals": both taps are Craig's
+  (`OWNER-ACTIONS.md` 1e). Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
   flash-deals page had become six discs, five owned); Second Sight the first page of its sale
   collection. Three Batch 22 faults fixed on the way: the same-site guard failed every one of
   Second Sight's and 101 Films' own listings; a card at a single price counted as a deal; the
@@ -480,6 +482,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (V1, [#6](https://github.com/CraigR973/mcu-app/pull/6), `13791c2`)** — The top
+  bar's background and every tint, back arrows, Loans always listed. The five opacity steps the
+  redesign's classes named (12, 14, 88, 94, 96) joined the Tailwind theme; a test reads every
+  colour class in `apps/web/src` and fails on a step the theme lacks (it lists exactly the 20
+  without the fix). On a phone only the four tabs and You are top-level; the film page's Back
+  goes back through history; Loans no longer hides while empty (#228). Browser check against
+  the real API on a local Postgres (#231). Gate and CI green first time; production reported
+  the merge SHA at 22:48 UTC with `db: ok`.
 
 - **2026-09-30 (`urllib3` 2.8.0, [#4](https://github.com/CraigR973/mcu-app/pull/4),
   `037d4e8`)** — `main`'s dependency audit went red at 19:26 UTC on `8e4c6a2`: `urllib3` 2.7.0,
