@@ -4566,3 +4566,46 @@ contemporaneous.
        `api`; T8b declares both with `preserve()`, since an undeclared variable is deleted
        by the next apply (#124). The privacy-policy page eBay asks for is T8b's to add. No
        eBay password is ever given to the app or an agent.
+
+
+### 2026-09-30 — the 30 Sep snags, and Craig's answers
+
+228. **Craig's answers of 30 Sep on his nine snags** (`docs/owner-snags-2026-09-30.md`), and
+     the plan they give: Group V in `docs/phase-batches.md`, **proposed, not approved.** He
+     asked for the full plan to be reconciled before anything goes further.
+
+     - **Sold prices stay out of reach, signed in or not.** A sign-in gives an app one
+       person's own account: T8b's gets Mark's watch list and his selling list, his own sold
+       items included. Market-wide sold prices are only in Marketplace Insights, which eBay
+       grants to approved apps and has closed to new ones (#16, #126); no person's sign-in
+       changes what the app is allowed. Reading eBay's sold listings from the website with
+       someone's account is ruled out by #203 and by eBay's terms. The app links to eBay's own
+       sold listings instead, which open in the person's browser (V8).
+     - **The collection's value: a trial first** (V6). It prices a sample from live bids and
+       saves nothing; blend or bids only is his pick after its report (V7).
+     - **The Deals "usual" price becomes an average of eBay's figure and the shops' prices**
+       (V8). He asked for eBay's sold prices in it; eBay's part is V7's figure instead. The app
+       holds shop prices only for Wanted films, so for other films the figure is eBay's alone,
+       and the card says which.
+     - **Loans is always listed, for Mark and Craig.** Supersedes #154 for Loans only; Box
+       sets, Collections and Deals still hide while empty. Lending stays admin-only (V2).
+     - **Movie night keeps the list and drops the swipe deck.** Retires Phase 8.4's
+       "swipe-like UI" and #207's arrow-key rule; #157's hidden votes stand (V3).
+     - **"Craig's house" becomes a section**, one place without shelves, its discs counted
+       like any other in the value, the stats and "already owned" ("Craig's house is fine").
+       The last two points were proposed to him and taken as accepted (V4).
+     - **Reviews: all three options**, found with Brave (#202): links, Brave's one-line
+       description, and the review's scores (V9, V10). **The scores widen #110** to one more
+       thing: Blu-ray.com's own review scores for a release, read from an exact page address.
+       Everything else in #110 is unchanged: exact addresses only, no search routes,
+       sequential and paced requests, a 403 or 429 halts the integration, and every stored
+       row names its source so it can be removed. Taken from "All" after he was told the
+       scores need this; open to overrule. **AVForums' scores wait on reading its terms**,
+       which this session could not reach.
+     - **Highlights: a mix of all**: top rated, most rewatched, most valuable, and best
+       reviewed once V10 brings scores (V5).
+
+     *Found on the way, and V1's reason:* the top bar has had no background since 10 Sep
+     (`9afc173`). `bg-background/94` names an opacity step Tailwind 3 does not have, so the
+     class is never built; 20 classes in 10 files share the fault. Proved by building the
+     stylesheet with the app's own config and Tailwind 3.4.19.

@@ -8,6 +8,10 @@ nothing, then "Save deals". Those two taps are Craig's (`OWNER-ACTIONS.md` 1e). 
 start: its scheduled session found 2 wanted items with prices from more than one shop, not the
 3 its criterion needs, and asks Craig how to go on.**
 
+- **Group V proposed, not approved (30 Sep evening, #228).** Craig's nine new snags, reconciled
+  in `docs/owner-snags-2026-09-30.md`; ten batches (V1–V10) in `docs/phase-batches.md`, whose
+  Group V table is now the whole remaining sequence. Nothing starts before his go. V1 fixes a
+  real bug: the top bar has had no background since 10 Sep.
 - **22b (#224–#226).** Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
   flash-deals page had become six discs, five owned); Second Sight the first page of its sale
   collection. Three Batch 22 faults fixed on the way: the same-site guard failed every one of
@@ -468,6 +472,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (Craig's nine snags reconciled; Group V proposed)** — No code. Checked against
+  `8e4c6a2` in `docs/owner-snags-2026-09-30.md`; his answers are #228; the plan is Group V in
+  `docs/phase-batches.md`, proposed and not approved. One bug found: the top bar has had no
+  background since 10 Sep (`bg-background/94` is not a Tailwind 3 step; 20 classes share the
+  fault), V1's fix. Pushed to `claude/collection-valuation-ui-ix0oww`, not `main`.
 
 - **2026-09-30 (Craig's answers on 22b)** — §5.9 not met with two shops; 22c (every page of a
   sale) and 20b (shops answering `429`) written with criteria, waiting for his go; Bad

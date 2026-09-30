@@ -2238,7 +2238,8 @@ his word the same day. He said go on U1 → U2 the same day, with his yes to U2'
 rest still waits on the gates below.** Criteria authored 2026-09-26, so
 `DECISIONS.md` #54 does not apply. This section is the whole remaining sequence: the new U
 batches, the three older batches still open (21, T8b, 38), the two parked ones (33, 34), and
-one item to close.
+one item to close. **Since 30 Sep, Group V's table is the whole remaining sequence**; it keeps
+every gate below and moves 38 to the very end.
 
 **The order, and what gates each:**
 
@@ -2406,6 +2407,215 @@ apply;** otherwise this ships alone before 24 Oct.
   nothing.
 - Gate green.
 
+## Group V — the 30 Sep snags, proposed 30 Sep
+
+**Proposed 2026-09-30 from Craig's nine snags of that day**, reconciled against the code in
+`docs/owner-snags-2026-09-30.md`, with his answers of the same evening (#228). **Criteria
+authored 2026-09-30**, so `DECISIONS.md` #54 does not apply. **Status: proposed, not
+approved.** Craig asked for the full plan to be reconciled before anything goes further; no V
+batch starts before his go.
+
+**This table is now the whole remaining sequence**, Group U's open batches included with
+their gates unchanged:
+
+| Step | Batch | Gate |
+|---|---|---|
+| 1 | V1 — top bar and tints (a fix) | Craig's go on the plan |
+| 2 | V2 — back arrows, and Loans always shown | After V1, which changes the same top bar |
+| 3 | V3 — movie night on one screen | None |
+| 4 | V4 — Craig's house | None |
+| 5 | V5 — Highlights on Home | None |
+| 6 | V6 — trial: pricing from live bids | None to build; Craig runs it |
+| 7 | 20b — shops that answer 429 | Craig's go, after the 1 Oct 03:00 UTC check (Group U) |
+| 8 | 21 — price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U) |
+| 9 | 22c — every page of a sale | Craig's go, after 20b (Group U) |
+| 10 | V7 — value from live bids | Craig's pick, after V6's report |
+| 11 | V8 — the Deals "usual" price | After V7, whose eBay figure it averages |
+| 12 | V9 — review links | Brave credit, and a cap of its own |
+| 13 | V10 — review scores | Real pages captured; AVForums' terms read |
+| 14 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 (Group U) |
+| 15 | 38 — the end-to-end suite | Last, after every V batch |
+| — | 33 → 34 — Email | Parked (`OWNER-ACTIONS.md` 7) |
+
+**Why this order.** V1–V5 need nothing from anyone and are what Craig sees every day; V1
+precedes V2 because both change `AppLayout.tsx`'s top bar. V6 spends a few hundred eBay calls
+and nothing else, so its report can be ready when the pick is due. V8 averages V7's eBay
+figure, so it waits for V7 rather than being built twice. V9 waits on Brave's credit, which
+the spec backfill spends each month (#202). V10 waits on pages no session has captured yet.
+38 moves from after T8b to the very end, so it pins the flows V2, V3 and V5 change.
+
+**Effort:** V1–V5, V8 and V9 high; V6, V7 and V10 extra high.
+
+### V1 — Top bar and tints 🟢
+**Covers snag 7. Effort: high.** A fix to shipped code, run as a batch so its browser check is
+recorded. **The top bar has had no background since 10 Sep (`9afc173`):** `bg-background/94`
+names an opacity step Tailwind 3 does not have, so the class is never built, and only the blur
+is left. 20 classes in 10 files share the fault: the bottom tab bar (`/96`), every tinted badge
+and notice (`/12`), the format badges (`/14`) and the filled buttons' hover (`/88`).
+
+**Acceptance:**
+- The missing steps (12, 14, 88, 94, 96) are added to the Tailwind theme, so all 20 classes
+  are built as written. Proved by the built stylesheet containing them.
+- A test fails when any class in `apps/web/src` names an opacity step the theme lacks, so a
+  dropped class cannot recur silently.
+- Browser check at 375 px, light and dark: the top and bottom bars are opaque with content
+  scrolled under them; the Deals discount badge, a movie-night vote chip and a format badge
+  show their tint.
+- Gate green.
+
+### V2 — Back arrows, and Loans always shown 🟡
+**Covers snags 5 and 3. Effort: high. After V1.**
+
+**Acceptance:**
+- On a phone the top-level pages are the four bottom-tab pages (Home, Archive, Add, Movie
+  night) and You. Every other page shows the top bar's back arrow. It goes back through
+  history; with none (a notification, a link) it goes to You for a page listed there, and to
+  the page's parent otherwise.
+- The film page's back button returns to where the person came from, and to the Archive when
+  there is no history. Below 1024 px it is hidden, since the top bar's arrow does that job.
+- **Loans is always listed, for Mark and Craig** (#228), in the sidebar and on the You page.
+  Box sets, Collections and Deals keep hiding while empty (#154). The navigation test's count
+  moves, with the reason beside it. Lending and "Mark returned" stay admin-only.
+- Browser check at 375 px: Wanted, Deals and Settings opened from You show the arrow and return
+  to You; a film opened from Deals returns to Deals, at 375 px and at 1280 px.
+- Gate green.
+
+### V3 — Movie night on one screen 🟡
+**Covers snag 4. Effort: high.** Craig chose the list over the swipe deck (#228), which retires
+Phase 8.4's "swipe-like UI" and #207's arrow-key rule.
+
+**Acceptance:**
+- A night is one screen, the shortlist. Each film has one Add / Added control; tapping Added
+  takes the vote back. The swipe deck, its gestures, its arrow keys and its "N of M" count are
+  removed, and "Start swiping" is renamed where it starts a night.
+- Tapping a film opens its details in the row: synopsis, runtime, genres, cast, who else has
+  seen it and when, where it streams, and a link to its page.
+- A match is still everyone adding the same film, announced once, with its push. The other
+  person's votes stay hidden (#157). The API does not change: `record_vote` already replaces
+  a vote.
+- The deck's tests are replaced by tests of voting on the list, and the close-out names each
+  test removed and why: a feature removed, not a test weakened.
+- Browser check at 375 px and 1280 px. The two-phone match check is Craig's, as T4's was.
+- Gate green.
+
+### V4 — Craig's house 🟡
+**Covers snag 6. Effort: high.** "Craig's house is fine" (#228): that name, one place with no
+shelves, counted like any other disc.
+
+**Acceptance:**
+- "Craig's house" is a section: in `SECTIONS`, in the location parser (typing "Craig's house"
+  or "Craigs house" lands there), and in the `ck_collection_items_section` CHECK through a
+  reversible migration. The apostrophe is escaped in the SQL, with a test: migration 007's
+  `_check_clause` pastes names inside quotes and would break on it.
+- The copy form's Section picker offers every section, including one with no discs yet. The
+  Archive's section filter still lists only sections that hold a disc.
+- The migration writes no rows. Its downgrade clears `section` on rows using the new name
+  before narrowing the CHECK, and leaves `location` alone, as 007's does.
+- Browser check at 375 px: a disc moved to Craig's house, then found by the section filter.
+- Gate green.
+
+### V5 — Highlights on Home 🟡
+**Covers snag 9. Effort: high.** "A mix of all" (#228).
+
+**Acceptance:**
+- Home gains a Highlights panel of short poster rows, each film opening its page:
+  - **Top rated:** films on the shelf rated 4½ or 5 stars, with whose rating it is. Craig rates
+    on Letterboxd and Mark does not (#159), so the row says so rather than implying both.
+  - **Most rewatched**, across both diaries.
+  - **Most valuable discs**, at their stored value, with its basis.
+  - **Best reviewed** is V10's to add, once review scores exist.
+- A row with nothing in it is not shown.
+- One request for the panel, its query plan read against the real row counts.
+- Browser check at 375 px.
+- Gate green.
+
+### V6 — Trial: pricing from live bids 🟡
+**Covers snag 2, first step. Effort: extra high.** "Lets trial first" (#228). Sold prices stay
+out of reach, signed in or not (#16, #126, #228).
+
+**Acceptance:**
+- An admin-only "Try bid prices" on Home searches eBay once per film and format for a sample
+  of up to 100 priced films across 4K, Blu-ray and DVD, asking for Buy It Now and auctions
+  together (`buyingOptions:{FIXED_PRICE|AUCTION}`). Its calls count against the day's
+  valuation share (#209). **It saves no prices.**
+- An auction counts only with at least one bid, and passes the same matcher: standard edition,
+  the right film and format, a UK seller.
+- The report says, by format: how many films had three or more auctions with bids; for those,
+  the bid median against the asking median; how many of those auctions end within 24 hours;
+  whether sharing the 200 results with auctions cost Buy It Now listings; and what the sampled
+  discs total on each basis.
+- The report is kept where a later session can read it, not only shown once.
+- Gate green. The run is Craig's, and his pick of blend or bids only follows it.
+
+### V7 — Value from live bids 🔴
+**Covers snag 2. Effort: extra high. Waits on Craig's pick after V6.** Written for a blend; a
+pick of bids only changes the second point.
+
+**Acceptance:**
+- The valuation's one search per film and format reads Buy It Now and auctions together.
+  Auctions count only with a bid, and only within the time-to-end window V6's report supports.
+- A disc is valued on current bids when three or more auctions with bids stand behind it, and
+  on asking prices otherwise. Each stored value records its basis and sample size; the
+  migration is reversible.
+- Home shows the total split by basis ("£X from bids on N discs, £Y from asking prices on M
+  discs"), and each disc's value says which.
+- The Deals "usual" figure (`ebay_price_refs`) follows the same rule, so the two cannot
+  disagree.
+- Every disc is re-priced on the new basis within two of the fortnightly mornings, at 750
+  calls a day (#223), or sooner from Home's Update values.
+- Gate green.
+
+### V8 — The Deals "usual" price 🟡
+**Covers snag 1. Effort: high. After V7.**
+
+**Acceptance:**
+- An eBay find's "usually" is the average of eBay's figure for the film and format (V7's) and
+  the latest price from each watched shop that stocks it, from the nightly check within the
+  last 7 days. With no shop price, eBay's figure alone. Sold prices are not part of it (#228).
+- The card says what the figure is: "£P with postage · usually £U", and beneath it where £U
+  comes from ("eBay £A before postage · Zavvi £B").
+- The 70% rule (`DEAL_RATIO`) compares with the new figure.
+- The eBay deal card and the film page's value each link to eBay's own sold listings for the
+  film and format. They open in the person's browser, where eBay asks for a sign-in.
+- Shop prices exist only for Wanted films, because the nightly check reads only the Wanted
+  list. Asking the shops about every eBay find is left out: it multiplies requests to shops
+  already answering 429 (20b).
+- Gate green.
+
+### V9 — Review links, found with Brave 🟡
+**Covers snag 8, options A and B. Effort: high. Waits on Brave credit.**
+
+**Acceptance:**
+- When a film is added to Wanted, and once for those already there, Brave is searched for its
+  review on Blu-ray.com and on AVForums. A result is kept only if it is that site's review of
+  that film, and of that format on Blu-ray.com.
+- Each Wanted item and film page shows "Reviews: Blu-ray.com · AVForums" as links, with
+  Brave's one-line description of each.
+- No request goes to either site. Searches count towards the month's Brave total (#202) under
+  a cap of their own; a failed search leaves the want as it was, to try again.
+- Gate green.
+
+### V10 — Review scores 🔴
+**Covers snag 8, option C, and V5's fourth row. Effort: extra high.** Needs #228's widening of
+#110, and two checks before any code.
+
+**Acceptance:**
+- **Before any code:** a Blu-ray.com review page and an AVForums review page captured as real
+  fixtures (the 30 Sep session could not reach either site), and AVForums' terms and
+  robots.txt read. If AVForums forbids automated access, it stays links-only and the app says
+  so; its scores would then need another decision.
+- The review's scores (Blu-ray.com's out of 5, AVForums' out of 10, each under the site's own
+  headings) are read once per review, stored with the page address and the time, and shown
+  beside the link.
+- **#110's other bounds hold unchanged:** exact page addresses only, no search routes,
+  sequential and paced, a 403 or 429 halts the integration, and every stored row names its
+  source so it can be removed.
+- For owned films, Blu-ray.com's scores come from the release pages already found for specs,
+  if the capture shows the review lives there, paced like the spec batch and needing no
+  searches. AVForums' for owned films only if Craig raises Brave's budget.
+- V5's Highlights gains its "Best reviewed" row.
+- Gate green.
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -2485,6 +2695,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **V** | V1 → V2 → V3 → V4 → V5 → V6 → **checkpoint: Craig's pick of blend or bids only** → V7 → V8 → **checkpoint: Brave credit and cap** → V9 → **checkpoint: pages captured, AVForums' terms read** → V10; Group U's 20b, 21 and 22c slot in as their gates clear, and 38 moves to the end | **extra high** (V1–V5, V8, V9 high) | **Extra High** (V1–V5, V8, V9 High) | **Proposed 2026-09-30, not approved.** The 30 Sep snags, in "Group V — the 30 Sep snags, proposed 30 Sep" above, with Craig's answers (#228). V1 precedes V2 because both change the top bar; V8 averages V7's eBay figure; V10 needs pages the 30 Sep session could not reach. `extra high` is derived from V6, V7 and V10 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
