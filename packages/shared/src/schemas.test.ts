@@ -66,6 +66,7 @@ import {
   identifyQueueSchema,
   identifySearchSchema,
   recentIdentificationsSchema,
+  dealsRunSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -1786,5 +1787,44 @@ describe('Batch T8a — eBay price alerts', () => {
     expect(() =>
       ebayTargetsSchema.parse({ items: [{ ...listing, kind: 'search', formatCode: 'vhs' }], lastRun: null }),
     ).toThrow()
+  })
+})
+
+describe('Batch 22b — checking the sale pages', () => {
+  // Captured on 30 Sep from the real route, run in-process against production read-only,
+  // over the Zavvi and Second Sight sale pages captured on 28-30 Sep. The other three
+  // shops' lines are left out: their pages were not captured.
+  const captured = {
+    dryRun: true,
+    written: 5,
+    retailersWithDeals: 2,
+    skippedOwned: 7,
+    outcomes: [
+      { retailer: 'Second Sight', ok: true, found: 16, kept: 1, skippedOwned: 0, rejected: 0, matched: 0, notDiscounted: 15, pageReasons: [], rejectedReasons: [], error: null },
+      { retailer: 'Zavvi', ok: true, found: 12, kept: 4, skippedOwned: 7, rejected: 0, matched: 7, notDiscounted: 1, pageReasons: [], rejectedReasons: [], error: null },
+    ],
+  }
+
+  it("reads a check's three numbers and each shop's counts", () => {
+    const run = dealsRunSchema.parse(captured)
+    expect(run).toEqual(captured)
+    expect([run.written, run.retailersWithDeals, run.skippedOwned]).toEqual([5, 2, 7])
+  })
+
+  it('reads a check from an API a deploy behind as nothing undiscounted and no card reasons', () => {
+    const older = {
+      ...captured,
+      outcomes: captured.outcomes.map(({ notDiscounted: _nd, rejectedReasons: _rr, ...rest }) => rest),
+    }
+    const run = dealsRunSchema.parse(older)
+    expect(run.outcomes.map((outcome) => [outcome.notDiscounted, outcome.rejectedReasons])).toEqual([
+      [0, []],
+      [0, []],
+    ])
+  })
+
+  it('refuses a negative count', () => {
+    const outcome = { ...captured.outcomes[0], notDiscounted: -1 }
+    expect(() => dealsRunSchema.parse({ ...captured, outcomes: [outcome] })).toThrow()
   })
 })

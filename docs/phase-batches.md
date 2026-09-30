@@ -1044,8 +1044,12 @@ was/now price, and a bundle has none, so no bundle extraction is built. 101 Film
 is: correct, with nothing on sale.
 
 **Acceptance:**
-- Zavvi's deals URL is its live flash-deals film page, and its selectors read that page's
-  price pair.
+- ~~Zavvi's deals URL is its live flash-deals film page~~ Zavvi's deals URL is its "2 for
+  £30 4K" listing, and its selectors read that page's price pair. *Amended at Craig's word,
+  30 Sep:* on 28-30 Sep the flash-deals page was a landing page of two carousels, six discs,
+  five of them already owned. He chose to read the two listings its carousels lead to and
+  take the larger: "2 for £30 4K", 169 discs with each disc's own price and RRP (the other,
+  "Awards Winners", held two).
 - Second Sight's selectors read its sale collection's Regular/Sale pair.
 - Both are proven by tests against trimmed copies of the real pages, saved as fixtures
   beside `zavvi_search_two_price_shapes.html`.

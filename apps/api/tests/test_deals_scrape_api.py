@@ -1,4 +1,4 @@
-"""`POST /deals/scrape` against Postgres, over the two sale pages captured on 28 Sep —
+"""`POST /deals/scrape` against Postgres, over the two sale pages captured on 28-30 Sep —
 Batch 22b. These run in CI.
 
 **What this proves:** a viewer is refused before any shop is asked; `apply-built-ins` is
@@ -37,10 +37,10 @@ from src.services.scraping.fetcher import FetchedPage, FetchError
 pytestmark = pytest.mark.asyncio
 
 FIXTURES = Path(__file__).parent / "fixtures"
-ZAVVI_URL = "https://www.zavvi.com/c/offers/flash-deals/film/"
+ZAVVI_URL = "https://www.zavvi.com/c/offers/2-for-30-4k/"
 SECOND_SIGHT_URL = "https://secondsightfilms.co.uk/collections/sale"
 PAGES = {
-    ZAVVI_URL: (FIXTURES / "zavvi_flash_deals_film.html").read_text(),
+    ZAVVI_URL: (FIXTURES / "zavvi_2_for_30_4k.html").read_text(),
     SECOND_SIGHT_URL: (FIXTURES / "secondsight_sale_collection.html").read_text(),
 }
 
@@ -126,13 +126,15 @@ async def _shops(db: AsyncSession) -> None:
     await db.flush()
 
 
-async def _owned(db: AsyncSession, title: str, formats: list[str]) -> None:
+async def _owned(
+    db: AsyncSession, title: str, formats: list[str], *, year: int | None = None
+) -> None:
     film = Movie(
         id=uuid.uuid4(),
         tmdb_id=None,
         title=title,
         original_title=title,
-        year=2000,
+        year=year,
         media_type="film",
     )
     db.add(film)
@@ -171,15 +173,15 @@ async def test_the_preview_reads_both_pages_and_saves_nothing(
     assert response.status_code == 200
     body = response.json()
     assert body["dryRun"] is True
-    # Six Zavvi discs and Second Sight's one discount; nothing owned in this database.
-    assert (body["written"], body["retailersWithDeals"], body["skippedOwned"]) == (7, 2, 0)
+    # Eleven Zavvi discounts and Second Sight's one; nothing owned in this database.
+    assert (body["written"], body["retailersWithDeals"], body["skippedOwned"]) == (12, 2, 0)
 
     outcomes = {outcome["retailer"]: outcome for outcome in body["outcomes"]}
     zavvi, second_sight = outcomes["Zavvi"], outcomes["Second Sight"]
     assert (zavvi["found"], zavvi["kept"], zavvi["notDiscounted"], zavvi["rejected"]) == (
-        6,
-        6,
-        0,
+        12,
+        11,
+        1,
         0,
     )
     assert (
@@ -201,16 +203,19 @@ async def test_the_preview_reads_both_pages_and_saves_nothing(
 async def test_saving_skips_what_is_owned_keeps_an_upgrade_and_does_not_duplicate(
     db: AsyncSession, fetches: list[str]
 ) -> None:
-    """Jurassic World is owned on 4K and The Deer Hunter on Blu-ray, the formats on offer,
-    so both are skipped. Spectre is owned on DVD, so the 4K is an upgrade and is kept.
+    """Jurassic World and the 2017 Mummy are owned on 4K, the format on offer, so both are
+    skipped. Spectre is owned on DVD, so the 4K is an upgrade and is kept.
 
-    The Deer Hunter and Spectre are the titles whose longest word is the shop's own
-    (*anniversary*, *includes*); before Batch 22b neither found its film at all.
+    The Mummy and Spectre are titles whose longest word is the shop's own (*download*,
+    *includes*); before Batch 22b neither found its film at all. And the 1999 Mummy, owned
+    on Blu-ray, must not take the 2017 listing: by its words alone it would, and the deal
+    would come through as an upgrade of a film already on the shelf in 4K.
     """
     admin_id = await _person(db, UserRole.admin)
     await _shops(db)
     await _owned(db, "Jurassic World", ["4k_uhd"])
-    await _owned(db, "The Deer Hunter", ["blu_ray"])
+    await _owned(db, "The Mummy", ["blu_ray"], year=1999)
+    await _owned(db, "The Mummy", ["4k_uhd"], year=2017)
     await _owned(db, "Spectre", ["dvd"])
 
     async with _as(db, admin_id) as client:
@@ -220,15 +225,16 @@ async def test_saving_skips_what_is_owned_keeps_an_upgrade_and_does_not_duplicat
         feed = (await client.get("/api/v1/deals")).json()
 
     assert saved["dryRun"] is False
-    assert (saved["written"], saved["retailersWithDeals"], saved["skippedOwned"]) == (5, 2, 2)
-    assert await _deal_count(db) == 5
-    # A second run refreshes the same rows rather than adding five more.
-    assert again["written"] == 5
-    assert await _deal_count(db) == 5
+    assert (saved["written"], saved["retailersWithDeals"], saved["skippedOwned"]) == (10, 2, 2)
+    assert await _deal_count(db) == 10
+    # A second run refreshes the same rows rather than adding ten more.
+    assert again["written"] == 10
+    assert await _deal_count(db) == 10
 
     titles = {item["title"]: item for item in feed["items"]}
     assert "Jurassic World - Ultra HD 4K" not in titles
-    assert "The Deer Hunter - 40th Anniversary Edition" not in titles
+    assert "The Mummy (2017) - 4K Ultra HD (Includes Digital Download)" not in titles
+    assert "Harvey 4K Ultra HD" not in titles
     spectre = titles["Spectre - 4K Ultra HD (Includes 2D Blu-ray)"]
     assert (spectre["formatCode"], spectre["discountPercent"]) == ("4k_uhd", 47)
     assert spectre["movieId"] is not None

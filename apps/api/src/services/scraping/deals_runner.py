@@ -21,6 +21,7 @@ offer is **not better than** what is already owned, using the same `FORMAT_RANK`
 
 from __future__ import annotations
 
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -132,23 +133,34 @@ async def already_owned(db: AsyncSession, movie_id: uuid.UUID, format_code: str 
     return FORMAT_RANK.index(format_code) >= best_owned
 
 
-def narrowing_word(title: str) -> str | None:
-    """The word :func:`match_to_film` narrows its SQL on: the longest that could be in a
-    film's title.
+#: A year a listing names in brackets, the way a shop tells a remake from its original:
+#: "The Mummy (2017)". Brackets only, because a bare number is often the title itself:
+#: "2001: A Space Odyssey", "Blade Runner 2049", "1917".
+BRACKETED_YEAR = re.compile(r"[(\[]((?:19|20)\d{2})[)\]]")
 
-    **Not simply the longest word** (Batch 22b). A shop's own words are often the longest
-    in a listing, and no film's title contains them: on Zavvi's captured page "Spectre - 4K
-    Ultra HD (Includes 2D Blu-ray)" narrowed on *includes* and "The Deer Hunter - 40th
-    Anniversary Edition" on *anniversary*, so neither found its film, an owned copy was not
-    skipped and the deal had no poster. The words the price scraper already treats as a
-    shop's (`TITLE_NOISE`) and bare years are passed over. Ties go alphabetically, so the
-    choice does not depend on set order.
+
+def title_year(title: str) -> int | None:
+    """The one year a listing names in brackets, or ``None`` for none or several."""
+    years = {int(year) for year in BRACKETED_YEAR.findall(title)}
+    return years.pop() if len(years) == 1 else None
+
+
+def narrowing_words(title: str) -> list[str]:
+    """The words :func:`match_to_film` narrows its SQL on, longest first.
+
+    **Every word that could be in a film's title, not the single longest** (Batch 22b).
+    Batch 22 narrowed on the longest word alone, and a shop's own words are often the
+    longest in a listing: on Zavvi's captured pages "Spectre - 4K Ultra HD (Includes 2D
+    Blu-ray)" narrowed on *includes*, "The Deer Hunter - 40th Anniversary Edition" on
+    *anniversary* and "The Mummy (2017) - 4K Ultra HD (Includes Digital Download)" on
+    *download*. None found its film, so an owned copy was not skipped and the deal had no
+    poster. The words the price scraper already treats as a shop's (`TITLE_NOISE`) and bare
+    years are left out; what remains is tried in full, because no fixed list of a shop's
+    words is ever complete. Ties go alphabetically, so the order never depends on set order.
     """
     words = _normalise(title)
-    if not words:
-        return None
-    telling = {word for word in words if word not in TITLE_NOISE and not YEAR_PATTERN.match(word)}
-    return max(sorted(telling or words), key=len)
+    telling = [word for word in words if word not in TITLE_NOISE and not YEAR_PATTERN.match(word)]
+    return sorted(telling or words, key=lambda word: (-len(word), word))
 
 
 async def match_to_film(db: AsyncSession, title: str) -> Movie | None:
@@ -165,30 +177,38 @@ async def match_to_film(db: AsyncSession, title: str) -> Movie | None:
     written against.
     """
     words = _normalise(title)
-    narrow = narrowing_word(title)
-    if not words or narrow is None:
+    if not words:
         return None
+    # A film of a different known year is not this listing's film, whatever its words: on
+    # Zavvi's captured page "The Mummy (2017)" otherwise matched the 1999 film, owned on
+    # Blu-ray, and came through as an upgrade of it while the 2017 film sat on the shelf in
+    # 4K (Batch 22b). With no match left the deal is kept unmatched, as #151 prefers.
+    year = title_year(title)
 
     # Candidate films share at least one significant word. Narrowing in SQL first keeps
-    # this from loading 1,843 rows per card.
-    candidates = (
-        (
-            await db.execute(
-                select(Movie)
-                .where(Movie.deleted_at.is_(None), Movie.title.ilike(f"%{narrow}%"))
-                .limit(50)
-            )
-        )
-        .scalars()
-        .all()
-    )
-
+    # this from loading 1,843 rows per card; one narrow query per telling word (a handful)
+    # keeps a shop's word from hiding the film, and the best match across all of them wins,
+    # so a one-word film named like a shop's word cannot beat the film the title names.
     best: Movie | None = None
     best_size = 0
-    for movie in candidates:
-        film_words = _normalise(movie.title)
-        if film_words and film_words <= words and len(film_words) > best_size:
-            best, best_size = movie, len(film_words)
+    for word in narrowing_words(title):
+        candidates = (
+            (
+                await db.execute(
+                    select(Movie)
+                    .where(Movie.deleted_at.is_(None), Movie.title.ilike(f"%{word}%"))
+                    .limit(50)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for movie in candidates:
+            if year is not None and movie.year is not None and movie.year != year:
+                continue
+            film_words = _normalise(movie.title)
+            if film_words and film_words <= words and len(film_words) > best_size:
+                best, best_size = movie, len(film_words)
     return best
 
 

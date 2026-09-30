@@ -65,10 +65,12 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         "note": "A database rather than a shop — prices are third-party and may be absent.",
     },
     "Zavvi": {
-        # **Batch 22b, checked against the live page captured 28 Sep.** `/sale.list` 404s
-        # (found 13 Sep); Zavvi's film offers live at the flash-deals address. That evening
-        # it was a landing page of two product carousels, six discs, where 13 Sep had found
-        # a long list: Zavvi rotates what the page holds, and the preview says how many.
+        # **Batch 22b, checked against live pages captured 28-30 Sep.** `/sale.list` 404s
+        # (found 13 Sep). The flash-deals film page 13 Sep pointed to had become a landing
+        # page of two carousels, six discs, five of them already owned. Craig chose to read
+        # the two listings its carousels lead to and take the larger (30 Sep): "2 for £30
+        # 4K", 169 discs over seven pages, twelve on the page as served, each with its own
+        # price and RRP. The feed stores that pair; the multibuy itself is not stored.
         #
         # The cards are THG's own product card, as on the search page, so Batch 19's card
         # selectors read them unchanged. The RRP is a span of its own, tagged
@@ -76,7 +78,7 @@ BUILT_IN_SCRAPERS: dict[str, dict[str, Any]] = {
         # matched nothing on any Zavvi page, so the right address would still have been
         # refused as "no card has a 'was' price".
         "deals": {
-            "url": "https://www.zavvi.com/c/offers/flash-deals/film/",
+            "url": "https://www.zavvi.com/c/offers/2-for-30-4k/",
             "was": "[data-product-price='rrp']",
             "image": "img",
             "verified": True,
@@ -215,7 +217,7 @@ def deals_config_for(name: str) -> dict[str, Any] | None:
     owner's (`docs/agent-commands/group-start.md`). The owner's first dry run (13 Sep)
     found both halves wrong for Zavvi and the `was` selector wrong for Second Sight, as
     Batch 19's checkpoint had found defects before it (`DECISIONS.md` #91, #92, #94).
-    **Batch 22b fixed those two against pages captured on 28 Sep at Craig's word**, and
+    **Batch 22b fixed those two against pages captured on 28-30 Sep at Craig's word**, and
     they are marked verified. Arrow, Powerhouse and 101 Films are as Batch 22 left them:
     the first two sell bundles rather than one disc at a lower price, and 101 Films had
     nothing on sale to check against.

@@ -10,11 +10,12 @@ Inventing one would have been worse: `DECISIONS.md` #122 is the standing account
 invented fixture costs — eleven tests passing for weeks against markup a site had never
 served.
 
-**Batch 22b has two, captured read-only on 28 Sep at Craig's word** with the scraper's own
-fetcher: Zavvi's film offers (`zavvi_flash_deals_film.html`) and the first page of Second
-Sight's sale collection (`secondsight_sale_collection.html`). Each file's header says what
-was trimmed. Both reproduce the 13 Sep refusal with Batch 22's selectors and are read
-correctly with 22b's.
+**Batch 22b has three, captured read-only on 28-30 Sep at Craig's word** with the scraper's
+own fetcher: the first page of Zavvi's "2 for £30 4K" listing (`zavvi_2_for_30_4k.html`),
+which is Zavvi's sale page now; Zavvi's flash-deals landing page it replaced
+(`zavvi_flash_deals_film.html`); and the first page of Second Sight's sale collection
+(`secondsight_sale_collection.html`). Each file's header says what was trimmed. They
+reproduce the 13 Sep refusal with Batch 22's selectors and are read correctly with 22b's.
 
 - :func:`extract_deals` is also tested against `zavvi_search_two_price_shapes.html`,
   verbatim captured markup from a Zavvi search page.
@@ -46,14 +47,16 @@ from src.services.scraping.deals import (
     extract_deals,
     judge_cards,
 )
-from src.services.scraping.deals_runner import narrowing_word
+from src.services.scraping.deals_runner import narrowing_words, title_year
 
 FIXTURES = Path(__file__).parent / "fixtures"
 ZAVVI_HTML = (FIXTURES / "zavvi_search_two_price_shapes.html").read_text()
-ZAVVI_DEALS_HTML = (FIXTURES / "zavvi_flash_deals_film.html").read_text()
+ZAVVI_DEALS_HTML = (FIXTURES / "zavvi_2_for_30_4k.html").read_text()
+ZAVVI_FLASH_HTML = (FIXTURES / "zavvi_flash_deals_film.html").read_text()
 SECOND_SIGHT_DEALS_HTML = (FIXTURES / "secondsight_sale_collection.html").read_text()
 
-ZAVVI_DEALS_URL = "https://www.zavvi.com/c/offers/flash-deals/film/"
+ZAVVI_DEALS_URL = "https://www.zavvi.com/c/offers/2-for-30-4k/"
+ZAVVI_FLASH_URL = "https://www.zavvi.com/c/offers/flash-deals/film/"
 SECOND_SIGHT_DEALS_URL = "https://secondsightfilms.co.uk/collections/sale"
 
 #: The `was` selectors Batch 22 shipped, kept so the captured pages can show they fail.
@@ -154,17 +157,66 @@ def test_a_page_with_no_card_selector_yields_nothing_rather_than_guessing() -> N
 
 
 # ---------------------------------------------------------------------------
-# Batch 22b — the two sale pages as captured on 28 Sep
+# Batch 22b — the sale pages as captured on 28-30 Sep
 # ---------------------------------------------------------------------------
 
 
-def test_zavvis_film_offers_are_read_with_their_rrp() -> None:
-    """Six discs, each with the Current price / RRP pair the page showed.
+def test_zavvis_sale_page_is_its_2_for_30_4k_listing() -> None:
+    """Craig's pick, 30 Sep: the larger of the two listings the flash-deals carousels lead
+    to. The flash-deals page itself had become six discs, five of them already owned."""
+    deals = deals_config_for("Zavvi")
+    assert deals is not None
+    assert deals["url"] == ZAVVI_DEALS_URL
 
-    The cards are THG's own product card, so Batch 19's card selectors read them
-    unchanged; the RRP is the span tagged `data-product-price="rrp"`.
-    """
+
+def test_zavvis_listing_is_read_with_each_discs_price_and_rrp() -> None:
+    """Twelve discs as served, eleven with a Current price / RRP pair and one (Harvey) at a
+    single price. The cards are THG's own product card, so Batch 19's card selectors read
+    them unchanged; the RRP is the span tagged `data-product-price="rrp"`."""
     cards = extract_deals(ZAVVI_DEALS_HTML, _applied("Zavvi"), page_url=ZAVVI_DEALS_URL)
+
+    assert [(card.price, card.was_price) for card in cards] == [
+        (Decimal(price), Decimal(was) if was else None)
+        for price, was in (
+            ("22.99", "29.99"),
+            ("17.99", "34.99"),
+            ("17.99", "33.99"),
+            ("22.99", "39.99"),
+            ("22.99", "34.99"),
+            ("19.99", "29.99"),
+            ("22.99", None),
+            ("19.99", "29.99"),
+            ("19.99", "26.99"),
+            ("21.99", "26.99"),
+            ("19.99", "26.99"),
+            ("19.99", "29.99"),
+        )
+    ]
+    assert cards[0].title == "Jurassic World - Ultra HD 4K"
+    assert cards[6].title == "Harvey 4K Ultra HD"
+    assert all(card.currency == "GBP" for card in cards)
+    assert all(card.url and card.url.startswith("https://www.zavvi.com/p/4k/") for card in cards)
+    assert len({card.url for card in cards}) == len(cards)
+    assert all(
+        card.image_url and card.image_url.startswith("https://www.zavvi.com/images?url=")
+        for card in cards
+    )
+
+
+def test_zavvis_listing_passes_the_page_check_and_its_single_price_disc_is_no_deal() -> None:
+    cards = extract_deals(ZAVVI_DEALS_HTML, _applied("Zavvi"), page_url=ZAVVI_DEALS_URL)
+
+    assert check_page_shape(cards).ok
+    judged = judge_cards(cards, retailer_host="www.zavvi.com")
+    assert (len(judged.deals), judged.not_discounted, judged.rejected) == (11, 1, 0)
+    assert "Harvey 4K Ultra HD" not in {card.title for card in judged.deals}
+
+
+def test_zavvis_flash_deals_carousels_read_the_same_way() -> None:
+    """The page Zavvi's check read until Craig's pick. Its carousel cards are the same THG
+    card, so the same selectors read all six pairs: if that page is ever pasted back on
+    /retailers, it works."""
+    cards = extract_deals(ZAVVI_FLASH_HTML, _applied("Zavvi"), page_url=ZAVVI_FLASH_URL)
 
     assert [(card.title, card.price, card.was_price, card.discount_percent) for card in cards] == [
         ("Jurassic World - Ultra HD 4K", Decimal("22.99"), Decimal("29.99"), 23),
@@ -174,18 +226,6 @@ def test_zavvis_film_offers_are_read_with_their_rrp() -> None:
         ("Fantastic Beasts and Where To Find Them", Decimal("9.99"), Decimal("26.99"), 63),
         ("The Deer Hunter - 40th Anniversary Edition", Decimal("9.99"), Decimal("22.99"), 57),
     ]
-    assert all(card.currency == "GBP" for card in cards)
-    assert cards[0].url == "https://www.zavvi.com/p/4k/jurassic-world-ultra-hd-4k/11714317/"
-    assert len({card.url for card in cards}) == len(cards)
-    assert all(
-        card.image_url and card.image_url.startswith("https://www.zavvi.com/images?url=")
-        for card in cards
-    )
-
-
-def test_zavvis_film_offers_pass_the_page_check_and_every_disc_is_a_deal() -> None:
-    cards = extract_deals(ZAVVI_DEALS_HTML, _applied("Zavvi"), page_url=ZAVVI_DEALS_URL)
-
     assert check_page_shape(cards).ok
     judged = judge_cards(cards, retailer_host="www.zavvi.com")
     assert (len(judged.deals), judged.not_discounted, judged.rejected) == (6, 0, 0)
@@ -255,24 +295,46 @@ def test_a_listing_on_another_co_uk_site_is_still_refused_given_a_url() -> None:
 
 
 @pytest.mark.parametrize(
-    ("title", "word"),
+    ("title", "words"),
     [
-        # Every title on the two captured pages whose longest word is the shop's own.
-        ("Spectre - 4K Ultra HD (Includes 2D Blu-ray)", "spectre"),
-        ("The Deer Hunter - 40th Anniversary Edition", "hunter"),
-        ("Life of Pi - 4K Ultra HD", "life"),
-        ("Dog Soldiers Standard Edition 4K UHD", "soldiers"),
-        # And ones that were already right.
-        ("Jurassic World - Ultra HD 4K", "jurassic"),
-        ("Fantastic Beasts and Where To Find Them", "fantastic"),
-        ("Bad Lieutenant (1992) (4K-UHD)", "lieutenant"),
+        # Titles on the captured pages whose longest word is the shop's own.
+        ("Spectre - 4K Ultra HD (Includes 2D Blu-ray)", ["spectre"]),
+        ("The Deer Hunter - 40th Anniversary Edition", ["hunter", "40th", "deer"]),
+        ("Life of Pi - 4K Ultra HD", ["life"]),
+        ("Dog Soldiers Standard Edition 4K UHD", ["soldiers", "dog"]),
+        # A shop's word no list names ("download"): tried, then passed over for "mummy".
+        (
+            "The Mummy (2017) - 4K Ultra HD (Includes Digital Download)",
+            ["download", "digital", "mummy"],
+        ),
+        # And one that was already right.
+        ("Jurassic World - Ultra HD 4K", ["jurassic", "world"]),
     ],
 )
-def test_the_film_search_narrows_on_a_word_a_title_could_hold(title: str, word: str) -> None:
-    """Batch 22 narrowed on the longest word, which for these was *includes*,
-    *anniversary*, *ultra* or *standard*: no film matched, so an owned copy was not skipped
-    and the deal had no poster."""
-    assert narrowing_word(title) == word
+def test_the_film_search_tries_every_word_a_title_could_hold(title: str, words: list[str]) -> None:
+    """Batch 22 narrowed on the longest word alone, which for these was *includes*,
+    *anniversary*, *ultra*, *standard* or *download*: no film matched, so an owned copy was
+    not skipped and the deal had no poster."""
+    assert narrowing_words(title) == words
+
+
+@pytest.mark.parametrize(
+    ("title", "year"),
+    [
+        ("The Mummy (2017) - 4K Ultra HD (Includes Digital Download)", 2017),
+        ("Bad Lieutenant (1992) (4K-UHD)", 1992),
+        ("Heat [1995] [Blu-ray]", 1995),
+        # A bare number is often the title itself, so only a bracketed year counts.
+        ("2001: A Space Odyssey", None),
+        ("Blade Runner 2049 - 4K Ultra HD", None),
+        ("1917 (2019)", 2019),
+        # Two different years say nothing about which film.
+        ("Double Feature (1999) (2001)", None),
+    ],
+)
+def test_a_year_in_brackets_tells_a_remake_from_its_original(title: str, year: int | None) -> None:
+    """Zavvi's "The Mummy (2017)" matched the 1999 film by its words alone (Batch 22b)."""
+    assert title_year(title) == year
 
 
 def test_a_card_at_a_single_price_is_not_discounted_not_rejected() -> None:
@@ -314,11 +376,16 @@ def test_a_rejected_cards_reason_is_reported_and_capped() -> None:
 @pytest.mark.parametrize(
     ("fixture", "old_config", "page_url"),
     [
-        # Batch 22's Zavvi `was` selector matched nothing on THG's card.
+        # Batch 22's Zavvi `was` selector matched nothing on THG's card, on either page.
+        (
+            "zavvi_2_for_30_4k.html",
+            {**BUILT_IN_SCRAPERS["Zavvi"]["config"], "was": BATCH_22_ZAVVI_WAS},
+            ZAVVI_DEALS_URL,
+        ),
         (
             "zavvi_flash_deals_film.html",
             {**BUILT_IN_SCRAPERS["Zavvi"]["config"], "was": BATCH_22_ZAVVI_WAS},
-            ZAVVI_DEALS_URL,
+            ZAVVI_FLASH_URL,
         ),
         # Batch 22's Second Sight `was` selector read the card's own price a second time.
         (
@@ -332,7 +399,7 @@ def test_a_page_where_no_card_has_a_was_price_is_refused(
     fixture: str, old_config: dict[str, object], page_url: str
 ) -> None:
     """Fired by **real markup**: the 13 Sep refusal, reproduced on the pages captured on
-    28 Sep with the selectors Batch 22 shipped.
+    28-30 Sep with the selectors Batch 22 shipped.
 
     On a sale page that is the shape of the sale-price selector having moved, which turns
     a sale page into a price list and makes every discount null. Every individual card
@@ -496,7 +563,7 @@ def test_only_the_sale_pages_checked_against_live_markup_are_verified() -> None:
 
     Batch 22 shipped all five unverified: the run that checks them was the owner's, and
     it found defects, as Batch 19's checkpoint had (#91, #92, #94). Batch 22b fixed Zavvi
-    and Second Sight against pages captured on 28 Sep, and the tests above read those
+    and Second Sight against pages captured on 28-30 Sep, and the tests above read those
     captures. The other three are as Batch 22 left them.
     """
     assert set(unverified_deals_names()) == {"Arrow Video", "101 Films", "Powerhouse Films"}
