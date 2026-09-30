@@ -34,6 +34,7 @@ from src.models.movie_night import (
 )
 from src.models.notification import Notification, PushSubscription
 from src.models.profile import Profile, UserRole
+from src.routers.movie_night import _invite_body
 from src.services.movie_night.sessions import invite_key
 from src.services.notifications import (
     DeliveryOutcome,
@@ -172,6 +173,39 @@ async def test_one_tap_puts_them_in_the_night_and_pushes_it_now(
     async with _as(db, mark) as client:
         listed = (await client.get("/api/v1/movie-night")).json()
     assert str(night.id) in {session["id"] for session in listed["items"]}
+
+
+async def test_the_invite_names_the_shortlist_not_a_deck_to_swipe(
+    db: AsyncSession, pushes: RecordingSender
+) -> None:
+    """Batch V3: a night is its shortlist now (#228), so the push says so — and counts right."""
+    craig, mark = await _person(db, "Craig"), await _person(db, "Mark")
+    await _phone(db, mark)
+    night = await _night(db, craig)
+    for tmdb_id, title in ((11050, "The Card Player"), (8321, "In Bruges")):
+        db.add(
+            MovieNightSuggestion(
+                id=uuid.uuid4(),
+                session_id=night.id,
+                suggested_by=craig.id,
+                tmdb_id=tmdb_id,
+                title=title,
+            )
+        )
+    await db.flush()
+
+    async with _as(db, craig) as client:
+        response = await client.post(f"/api/v1/movie-night/{night.id}/send", json={})
+
+    assert response.status_code == 200, response.text
+    (invite,) = await _invites(db, night, mark)
+    assert invite.body == "2 films on the shortlist. Tap to open it."
+    assert "swipe" not in invite.body
+
+
+async def test_the_invite_says_one_film_not_one_films() -> None:
+    assert _invite_body(1) == "1 film on the shortlist. Tap to open it."
+    assert _invite_body(0) == "Tap to open it."
 
 
 async def test_sending_twice_does_not_buzz_a_phone_twice(

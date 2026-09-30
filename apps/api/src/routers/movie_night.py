@@ -324,6 +324,17 @@ async def end_session(
     return await _response(db, session)
 
 
+def _invite_body(films: int) -> str:
+    """What the push that sends a night says — Batch V3.
+
+    A night is its shortlist since V3 (#228), with no deck to swipe, so the push names the
+    list. It used to say "N films to swipe", and "1 films" for one.
+    """
+    if films == 0:
+        return "Tap to open it."
+    return f"{films} film{'' if films == 1 else 's'} on the shortlist. Tap to open it."
+
+
 @router.post("/movie-night/{session_id}/send", response_model=MovieNightSessionResponse)
 async def send_session(
     session_id: uuid.UUID, payload: SendRequest, user: CurrentUser, db: Database
@@ -365,7 +376,7 @@ async def send_session(
             user_id=person.id,
             category=NotificationCategory.movie_night,
             title=f"{user.display_name} started a movie night",
-            body=f"{films} films to swipe. Tap to open it." if films else "Tap to open it.",
+            body=_invite_body(films),
             url=f"/movie-night/{session.id}",
             dedupe_key=invite_key(session.id, person.id),
             now=now,
