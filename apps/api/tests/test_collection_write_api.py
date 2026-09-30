@@ -864,6 +864,42 @@ async def test_explicit_pickers_win_over_the_typed_text(
     assert body["location"] == "Back 3rd shelf"
 
 
+async def test_a_disc_can_be_moved_to_craigs_house_from_the_picker(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Batch V4. Through the API to Postgres, so the CHECK is the one that allows it."""
+    movie = await _a_film(api_session, title="Lent Long Term", tmdb_id=930063)
+
+    response = await client.post(
+        "/api/v1/collection",
+        json=_body(movieId=str(movie.id), section="Craig's house", shelf=None, location=None),
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert (body["section"], body["shelf"]) == ("Craig's house", None)
+    assert body["location"] == "Craig's house"
+
+
+@pytest.mark.parametrize("typed", ["Craigs house", "Craig\u2019s house"])
+async def test_typing_craigs_house_files_the_disc_there(
+    client: AsyncClient,
+    api_session: AsyncSession,
+    typed: str,
+) -> None:
+    movie = await _a_film(api_session, title=f"Typed {typed}", tmdb_id=None)
+
+    response = await client.post(
+        "/api/v1/collection",
+        json=_body(movieId=str(movie.id), location=typed, section=None, shelf=None),
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["section"] == "Craig's house"
+    assert response.json()["location"] == typed
+
+
 async def test_an_unknown_section_is_refused_before_it_reaches_the_check_constraint(
     client: AsyncClient,
     api_session: AsyncSession,

@@ -81,6 +81,11 @@ _SECTION_PREFIXES: list[tuple[str, str]] = [
     ("Top Small Cabinet", "top small cabinet"),
     ("Fish Room Cabinet", "left hand side small cabinet fish room"),
     ("Black Box", "black box next to cabinet"),
+    # Batch V4 (`DECISIONS.md` #228). With the apostrophe or without, and with a phone's
+    # curly one (U+2019), which iOS types for a straight apostrophe by default.
+    ("Craig's house", "craig's house"),
+    ("Craig's house", "craig\u2019s house"),
+    ("Craig's house", "craigs house"),
 ]
 
 # A shelf is an ordinal — "2nd" — or a bare digit that is *followed by the word shelf*.
@@ -110,6 +115,7 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
         "E:\\Movies"             → ("Digital", None)
         "Top Big Cabinet"       → ("Top Big Cabinet", None)
         "Black Box next to cabinet" → ("Black Box", None)
+        "Craigs house"          → ("Craig's house", None)
         ""                      → (None, None)
 
     A location that still matches nothing — "(In with The Killing)" — returns ``None``.
