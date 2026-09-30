@@ -20,10 +20,10 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
   You → Disc specs (20).
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
   numbers, then **Save deals**.
-- **Group U** (`docs/phase-batches.md`): 21 waits on your call. Its session on 30 Sep found
-  only 2 wanted items priced by more than one shop, against the 3 its criterion needs: add
-  1–2 wanted titles two shops both stock, change the criterion, or wait. U4 and 22b are
-  live; T8b waits on 18; 38 comes last.
+- **Group U** (`docs/phase-batches.md`): **say go on 20b (the 429s) and 22c (every page of a
+  sale)**, both written 30 Sep. 21 starts once 3 wants have prices from two shops on two
+  days, 2 Oct at the earliest: Bad Lieutenant and Dog Soldiers (4K) were added to Wanted
+  for it on 30 Sep, and you can remove them afterwards. T8b waits on 18; 38 comes last.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1032,16 +1032,36 @@ Two of them look like the app matched the wrong film, not the wrong page: **Band
 is recorded as 2019 and **Bad Neighbours** as 2026. Fix the film on its page first (Identify),
 then pick the page.
 
-### 18. eBay sign-in settings and an encryption key — for T8b, Connect eBay
+### 18. eBay sign-in settings and an encryption key — for T8b, Connect eBay *(values fixed 30 Sep)*
 
 > **26 Sep: T8 is split (`DECISIONS.md` #216).** Only T8b, "Connect eBay" for Mark's
-> watch and selling lists, waits for this. T8a (price alerts and the deal scan) does not.
-> Its schedule needs only a Railway config apply, and if item 17's apply has not happened
-> by then, one apply starts both.
+> watch and selling lists, waits for this. **30 Sep: the values below are fixed** (#227), so
+> this can be done before T8b is built; T8b uses exactly these.
 
-This is `DECISIONS.md` #203. You'd set an OAuth redirect URL (RuName) and consent settings in
-eBay's developer portal, and put an encryption key for Mark's stored eBay token in Railway.
-~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
+- [ ] **In eBay's developer portal, add the sign-in page (the RuName).** Signed in at
+      developer.ebay.com: **Application Keysets** → the **Production** keyset → **User
+      Tokens** → **Get a Token from eBay via Your Application** → **Add eBay Redirect URL**,
+      and choose **OAuth** rather than Auth'n'Auth. Enter exactly:
+      - Display title: `The Real MCU`
+      - Privacy policy URL: `https://mcu-app-fawn.vercel.app/privacy`
+      - Auth accepted URL: `https://mcu-app-fawn.vercel.app/settings/ebay/connected`
+      - Auth declined URL: `https://mcu-app-fawn.vercel.app/settings/ebay/declined`
+
+      Save, then copy the **RuName** eBay shows for it (a name like
+      `Your_Name-YourName-TheRea-abcdefgh`, not a URL). The labels may differ slightly from
+      these; the four values are what matter.
+- [ ] **In Railway, two variables on the `api` service** (Variables → New Variable):
+      - `EBAY_RUNAME`: the RuName you copied.
+      - `EBAY_TOKEN_KEY`: what `openssl rand -base64 32` prints in Terminal on your Mac.
+        Paste it here and nowhere else.
+
+      Railway restarts `api` when they are added. Nothing reads them until T8b.
+- **Don't run a Railway config apply until T8b ships.** A variable set in the console but
+  not declared in `.railway/railway.ts` is deleted by the next apply (#124); T8b declares
+  both.
+- **No eBay password goes to the app, or to an agent.** None of this uses one. Once T8b
+  ships, Mark presses Connect eBay in Settings and signs in on eBay's own page.
+- ~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
 
 ### 19. ~~Finish the first collection valuation — T6~~ — **done 25 Sep**
 

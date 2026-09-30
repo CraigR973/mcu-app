@@ -4538,3 +4538,31 @@ contemporaneous.
        sale captures with Batch 22's selectors, the 13 Sep refusal reproduced; a new one pins
        what the search fixture really holds. Changing a test's expectation is a decision to
        report, and this is that report.
+
+
+### 2026-09-30 — Craig's answers on 22b's report
+
+227. **Craig's answers of 30 Sep, and the eBay values they needed.**
+
+     - **§5.9 does not count as met with two shops.** It stays open; it is also short of 20
+       deals, so the shop count is not the deciding question yet.
+     - **The sale-page check reads more than one page (22c).** Written into the ledger with
+       its criteria; it builds at his go, after 20b, because it adds requests to the same
+       shops that answered `429`.
+     - **The `429`s get a batch (20b).** Written with its criteria. Its first step is the
+       diagnosis, and its first evidence is the 1 Oct 03:00 UTC check.
+     - **Batch 21's third multi-shop item: the agent adds wants that two shops will
+       match.** Added that evening through the app's own route: **Bad Lieutenant (1992) in
+       4K**, an upgrade on the owned Blu-ray (101 Films' own 4K plus Zavvi, the pattern of
+       Castle Freak), and **Dog Soldiers (2002) in 4K**, not catalogued before (Second Sight's
+       own 4K plus Zavvi, the pattern of Dead Man's Shoes). No price limit, so no alerts. Both
+       were chosen from evidence rather than guessed: the only pairs that have ever produced
+       two shops' prices are a boutique label's release that Zavvi also sells.
+     - **eBay sign-in (owner item 18) gets its values now, before T8b is built,** because
+       Craig is setting it up. The RuName returns to web routes
+       (`/settings/ebay/connected`, `/settings/ebay/declined` on `mcu-app-fawn.vercel.app`,
+       the only origin the API accepts), so the page receiving eBay's code already holds the
+       person's session. `EBAY_RUNAME` and `EBAY_TOKEN_KEY` (32 random bytes, base64) go on
+       `api`; T8b declares both with `preserve()`, since an undeclared variable is deleted
+       by the next apply (#124). The privacy-policy page eBay asks for is T8b's to add. No
+       eBay password is ever given to the app or an agent.

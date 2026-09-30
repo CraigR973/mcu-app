@@ -25,8 +25,14 @@ start: its scheduled session found 2 wanted items with prices from more than one
   Second Sight, 101 Films and Powerhouse (all Shopify); the six nights before had none. All
   five shops are still enabled. If it recurs, a sale-page check will say so on Second Sight's
   line. Batch 21's session offered to look into it on a `fix/` branch (Craig's call).
-- **21 waits on Craig:** add 1–2 wanted titles two shops both stock, change its criterion, or
-  wait (Batch 21's session report, 30 Sep).
+- **21 starts once 3 wants have prices from two shops on two days** (2 Oct at the earliest).
+  At Craig's word (#227), Bad Lieutenant and Dog Soldiers, both 4K, were added to Wanted on
+  30 Sep for it: each is a boutique label's release that Zavvi also sells, the only pattern
+  that has produced two shops' prices. 10 active wants now, so 1 Oct's check asks ~50.
+- **Two batches written at Craig's word, waiting for his go** (#227): **20b**, shops that
+  answer `429` (after the 1 Oct 03:00 check), then **22c**, every page of a sale.
+- **eBay sign-in values are fixed** (`OWNER-ACTIONS.md` 18, #227), so Craig can set them up
+  before T8b is built. No Railway config apply until T8b declares the two new variables.
 - **The nightly spec search is paused by Brave, not by the app:** the free monthly credit ran
   out on 28 Sep (1,005 searches); it renews around 1 Oct, or Craig raises the limit.
   **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20).
@@ -462,6 +468,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (Craig's answers on 22b)** — §5.9 not met with two shops; 22c (every page of a
+  sale) and 20b (shops answering `429`) written with criteria, waiting for his go; Bad
+  Lieutenant (1992) and Dog Soldiers (2002), both 4K, added to Wanted through the app's own
+  route for Batch 21 (no price limit); owner item 18's eBay values fixed (#227).
 
 - **2026-09-30 (Batch 22b shipped, `eb51568`)** — Zavvi reads its "2 for £30 4K" listing, at
   Craig's pick (its flash-deals page had become six discs, five owned); Second Sight reads its

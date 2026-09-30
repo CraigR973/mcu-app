@@ -817,6 +817,32 @@ second category for the feed** if it wants one; it must not quietly reuse this o
 created it. Its acceptance ("after backdating test data") is fully provable in CI, unlike the
 other two.
 
+### Batch 20b — Shops that answer 429 🟡
+**Written 30 Sep at Craig's word ("yes, write a batch for this"); builds at his go, after the
+1 Oct 03:00 UTC shop check, which is its first evidence.** Opus 5 · high / GPT-5.6 Sol ·
+High: request pacing against live shops. Criteria authored 30 Sep, before any code (#54).
+
+**Found 30 Sep** (Batch 21's session): the 03:00 UTC shop check got `429 Too Many Requests` on
+21 of 33 checks, from Second Sight, 101 Films and Powerhouse, the three Shopify shops. Zavvi
+and Arrow answered normally, and the six nights before had no `429` at all. 101 Films and
+Powerhouse each took a consecutive failure, and **three such nights would switch a working
+shop off**. The run asked 33 questions against 22 on earlier nights, with one second between
+requests to the same shop; two wants added on 30 Sep (Batch 21's) take 1 Oct's to about 50.
+
+**Acceptance:**
+- Diagnosis first, read-only, written into this section before code: which shops answered
+  `429`, after how many requests and how quickly, and whether they sent `Retry-After`, from
+  `scrape_runs`, the Railway logs and the fetcher.
+- Requests to one shop are spaced so that a night's check is not refused: a per-shop pause
+  set from that diagnosis. A `429` is retried at most once, after `Retry-After` when the shop
+  sends one (bounded), and otherwise reported.
+- A `429` is a refusal, not a broken scraper: it never counts towards auto-disable, and the
+  run's record names the shops that refused.
+- The sale-page check (22b, and 22c after it) keeps the same pacing.
+- The first scheduled check after the merge is read back from `scrape_runs`: no shop is left
+  without prices because of `429`s, or the refusals that remain are named.
+- Tests. Gate green.
+
 ### Batch 35 — Movie night 🔴
 **Covers Phases 8.3 and 8.4:**
 
@@ -1087,6 +1113,34 @@ fix needs pagination. A handful, at least 5 seconds apart, with the scraper's ow
 User-Agent; stop at a 403, a 429, a bot wall or a CAPTCHA. Everything else runs against the
 fixtures. **§5.9's live acceptance (≥ 20 deals from ≥ 3 retailers) stays Craig's run**, from
 the new button.
+
+### Batch 22c — Every page of a sale 🟡
+**Written 30 Sep at Craig's word ("2) yes"); builds at his go, after 20b, whose pacing it
+uses.** Opus 5 · high / GPT-5.6 Sol · High: selectors against live markup again. Criteria
+authored 30 Sep, before any code (#54).
+
+**Found 30 Sep** (22b): the sale-page check reads the first page of each shop's sale.
+Zavvi's "2 for £30 4K" listing runs to 169 discs over seven pages, twelve served on each,
+and Second Sight's sale collection to 80 over five. From the first pages a check finds about
+5 new deals, against §5.9's 20.
+
+**Acceptance:**
+- The check follows each shop's next-page link until the last page, a page with no cards,
+  or 10 pages a shop, whichever comes first. The link is a per-shop selector in the built-in
+  sale config; both pages captured for 22b carry it as `a[aria-label='Next page']`.
+- Requests to one shop keep 20b's pacing, at least 5 seconds apart. A `403` or `429` stops
+  that shop, keeps what its earlier pages found, and says so on its line.
+- `check_page_shape` judges each page; a page it refuses stops that shop there and is
+  reported. It is not weakened.
+- Each shop's line says how many pages were read. The new field parses through the zod
+  schema, defaulted for an API a deploy behind.
+- Arrow, Powerhouse and 101 Films are unchanged: no next-page selector, so one page.
+- Proven by tests against trimmed captures of real later pages, each shop's last page among
+  them. The live requests are bounded as 22b's were: a handful, at least 5 seconds apart,
+  the scraper's own User-Agent, stopping at a `403`, a `429`, a bot wall or a CAPTCHA.
+- A check still finishes within two minutes.
+- Production's retailer rows carry the new configuration after the deploy.
+- Tests. Gate green.
 
 ### Batch 24 — Barcode scan + lookup 🟡
 **Covers Phases 3.3 and 3.4:**
@@ -2163,6 +2217,18 @@ authored 2026-09-26 from T8's.**
 - The app never stores his eBay password or drives eBay's website.
 - **Owner steps first** (`OWNER-ACTIONS.md` 18): OAuth settings in eBay's developer portal
   (redirect URL and RuName) and the encryption key in Railway.
+- **The owner steps' values, fixed 30 Sep** so Craig could set them before T8b is built
+  (#227). T8b uses these rather than choosing its own:
+  - the RuName's Auth accepted URL `https://mcu-app-fawn.vercel.app/settings/ebay/connected`
+    and Auth declined URL `https://mcu-app-fawn.vercel.app/settings/ebay/declined`: web
+    routes, so the page that receives eBay's code already holds the person's session and
+    hands the code to the API with it;
+  - the Privacy policy URL `https://mcu-app-fawn.vercel.app/privacy`, a public page T8b adds;
+  - `EBAY_RUNAME` on `api`, the RuName eBay generates, sent as the `redirect_uri`;
+  - `EBAY_TOKEN_KEY` on `api`, 32 random bytes in base64 (`openssl rand -base64 32`), from
+    which T8b derives the key that encrypts the stored token.
+- **Both variables are declared with `preserve()` in `.railway/railway.ts`.** Set in the
+  console but undeclared, the next `config apply` would delete them (#124).
 - Gate green.
 
 ## What is left — Group U, planned 26 Sep
@@ -2182,7 +2248,9 @@ one item to close.
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
 | 3b | ~~22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button)~~ | **shipped 30 Sep** `eb51568` (#224–#226); the live check and save are Craig's, `OWNER-ACTIONS.md` 1e |
-| 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against the 3 required, and waits on Craig's call |
+| 3c | 20b — shops that answer 429 | **written 30 Sep at Craig's word**; builds at his go, after the 1 Oct 03:00 UTC check. Criteria under Batch 20 |
+| 3d | 22c — every page of a sale | **written 30 Sep at Craig's word**; builds at his go, after 20b. Criteria under Batch 22 |
+| 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against 3. **Craig chose to add wants (30 Sep):** Bad Lieutenant and Dog Soldiers, both 4K, added that evening (#227). Starts once 3 wants have prices from two shops on two days or more, 2 Oct at the earliest |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
 | 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
 | — | 33 → 34 — Email | parked with `OWNER-ACTIONS.md` 7 |
@@ -2416,7 +2484,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 21 (go given 28 Sep; waits on Craig's call since 30 Sep) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
