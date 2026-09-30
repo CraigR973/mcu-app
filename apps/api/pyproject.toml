@@ -23,7 +23,9 @@ dependencies = [
     # tokens, slowapi for the in-process limits that sit in front of the durable
     # Postgres counters.
     "bcrypt>=4.1.3",
-    "pyjwt>=2.9.0",
+    # 2.14.0 at least: 2.13.0 carries ten advisories published after 28 Sep 2026 (JWK,
+    # JWKS and malformed-token handling), which the CI dependency audit refuses.
+    "pyjwt>=2.14.0",
     "slowapi>=0.1.9",
     # Batch 19 — the scraper framework's CSS selectors. beautifulsoup4 with Python's own
     # `html.parser`, deliberately **not** lxml: lxml needs libxml2 and libxslt in the
