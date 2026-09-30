@@ -8,12 +8,15 @@ nothing, then "Save deals". Those two taps are Craig's (`OWNER-ACTIONS.md` 1e). 
 start: its scheduled session found 2 wanted items with prices from more than one shop, not the
 3 its criterion needs, and asks Craig how to go on.**
 
-- **Group V written into the plan, not started (30 Sep evening, #228, #229).** Craig's nine new
+- **`main` is red: the dependency audit refuses `urllib3` 2.7.0** (CVE-2026-97687, -97688,
+  -97689; fixed in 2.8.0), found on the 19:26 UTC run of `8e4c6a2`. The overnight run fixes it
+  first, on its own `fix/` branch (#230).
+- **Group V: go given for an overnight run (30 Sep evening, #228–#230).** Craig's nine new
   snags, reconciled in `docs/owner-snags-2026-09-30.md`; eight batches (V1, V3–V9, after two
-  merges) in `docs/phase-batches.md`, each with its model tier and effort. Its table is now the
-  whole remaining sequence: six sittings plus 21. Nothing starts before his go, and how a batch
-  lands from a cloud session is still his to confirm. V1 fixes a real bug: the top bar has had
-  no background since 10 Sep.
+  merges) in `docs/phase-batches.md`, each with its model tier and effort, in six sittings
+  plus 21. The run: the `urllib3` fix, the plan's own merge, then V1 → V3 → V4 → V5 → V6, one
+  pull request per batch. It needs `api-production-a8fe.up.railway.app` allowed first
+  (`OWNER-ACTIONS.md` 25). V1 fixes a real bug: the top bar has had no background since 10 Sep.
 - **22b (#224–#226).** Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
   flash-deals page had become six discs, five owned); Second Sight the first page of its sale
   collection. Three Batch 22 faults fixed on the way: the same-site guard failed every one of
@@ -478,9 +481,12 @@ it renders — and report what was observed rather than what passed.
 - **2026-09-30 (Craig's nine snags reconciled; Group V planned)** — No code. Checked against
   `8e4c6a2` in `docs/owner-snags-2026-09-30.md`; his answers are #228 and the plan's shape #229
   (six sittings, V2 merged into V1 and V10 into V9, his steps inside the batches, a model tier
-  and effort per batch). One bug found: the top bar has had no background since 10 Sep
-  (`bg-background/94` is not a Tailwind 3 step; 20 classes share the fault), V1's fix. Pushed
-  to `claude/collection-valuation-ui-ix0oww`, not `main`.
+  and effort per batch), and his go on an overnight run, a pull request per batch, #230. One
+  bug found: the top bar has had no background since 10 Sep (`bg-background/94` is not a
+  Tailwind 3 step; 20 classes share the fault), V1's fix. Also found: `main` red on the
+  `urllib3` audit. A cloud session ran the whole gate, the API suite against a local
+  Postgres 16 (1,634 passed, none skipped). Pushed to `claude/collection-valuation-ui-ix0oww`,
+  not `main`.
 
 - **2026-09-30 (Craig's answers on 22b)** — §5.9 not met with two shops; 22c (every page of a
   sale) and 20b (shops answering `429`) written with criteria, waiting for his go; Bad

@@ -4631,3 +4631,34 @@ contemporaneous.
        only its own `claude/…` branch. Proposed: a pull request per batch, merged when CI is
        green. The post-merge health check needs `api-production-a8fe.up.railway.app`, which
        the 30 Sep session could not reach.
+
+230. **Craig's go, 30 Sep: an overnight run, one pull request per batch.** "Yes you can do per
+     batch" (a pull request per batch, merged when CI is green), then "write a prompt to run
+     these batches in order overnight. I want to wake up to them being complete."
+
+     - **How a batch lands from a cloud session:** its own `feat/` (or `fix/`) branch from
+       `main`, a pull request, CI green, then the session merges it with a merge commit, so
+       the batch's small commits stay in `main`'s history and the merge commit is what
+       deploys. It then verifies production and lands the close-out's docs through a second
+       pull request, as `phase-closeout.md` does with a push. Answers #229's open question.
+     - **The overnight run is V1 → V3 → V4 → V5 → V6**, after two things it must do first:
+       fix `main`'s red, and merge the plan itself. **Not in it, and why:** V7 and V8 wait on
+       Craig's trial run and pick (V6 builds the trial; the run is his, as #228 says); V9
+       starts with live requests to two outside sites, which `group-start.md` keeps out of an
+       unattended run, and with his network step; 20b and 22c wait on his go after the 1 Oct
+       03:00 UTC check, whose results a cloud session cannot read without database access;
+       21 starts itself; T8b waits on owner item 18; 38 is last.
+     - **`main` was red when the run was written.** The 19:26 UTC run on `8e4c6a2` failed the
+       dependency audit: `urllib3` 2.7.0 carries CVE-2026-97687, -97688 and -97689, fixed in
+       2.8.0. As with PyJWT that morning (`6a8197b`), it is fixed on its own `fix/` branch and
+       closed out before any batch. `uv pip compile … --upgrade-package urllib3` on both locks
+       moves `urllib3` alone, checked on 30 Sep.
+     - **A cloud session can run the whole gate.** On 30 Sep: the locked Python dependencies
+       and the pnpm workspace installed; with a throwaway local Postgres 16 the API suite ran
+       **1,634 passed, none skipped**, and `upgrade head` → `downgrade base` → `upgrade head`
+       ran clean; the web and shared checks passed on the container's Node 22 (the engines
+       floor is 20.18). CI's Postgres 17 and Node 20 stay the authority. Gotcha 15's "no local
+       Postgres" holds on Craig's Mac, not in a cloud container.
+     - **The one step before the run is Craig's:** allowing
+       `api-production-a8fe.up.railway.app` in the cloud environment's network settings, so
+       the run can confirm each deploy. Without it the run stops before its first merge.

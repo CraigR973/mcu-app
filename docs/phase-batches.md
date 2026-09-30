@@ -2412,8 +2412,10 @@ apply;** otherwise this ships alone before 24 Oct.
 **Planned 2026-09-30 from Craig's nine snags of that day**, reconciled against the code in
 `docs/owner-snags-2026-09-30.md`, with his answers of the same evening (#228) and his shape
 for the plan (#229). **Criteria authored 2026-09-30**, so `DECISIONS.md` #54 does not apply.
-**Status: written into the plan at Craig's word ("just write into the plan"); not started.**
-No V batch starts before his go.
+**Status: written into the plan at Craig's word ("just write into the plan"); go given 30 Sep
+for an overnight run of V1 → V3 → V4 → V5 → V6, one pull request per batch (#230).** The run
+first fixes `main`'s red (`urllib3`, #230) and merges this plan. V7 onwards wait as the table
+says.
 
 **Model tiers.** This section names models by the tiers this ledger already uses: **top tier**
 is the two models on Group U's row in "Batch groups" (Claude Code's and Codex's), **mid tier**
@@ -2430,7 +2432,7 @@ batches keep their gates unchanged.
 
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
-| 1 | V1 top bar, tints, back arrows, Loans → V3 movie night → V4 Craig's house → V5 Highlights | Craig's go on the plan (`OWNER-ACTIONS.md` 25) | top tier · high (from V4) | top tier · High |
+| 1 | V1 top bar, tints, back arrows, Loans → V3 movie night → V4 Craig's house → V5 Highlights | **Go given 30 Sep** for the overnight run, with V6 after it (#230); the production host allowed first (`OWNER-ACTIONS.md` 25) | top tier · high (from V4) | top tier · High |
 | 2 | V6 bid trial → **Craig runs it and picks** → V7 value from bids → V8 Deals "usual" price | None to start; the pick stops it mid-way | top tier · xhigh (from V6, V7) | top tier · Extra High |
 | 3 | V9 reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max | top tier · Max |
 | 4 | 20b shops that answer 429 → 22c every page of a sale | Craig's go, after the 1 Oct 03:00 UTC check (Group U) | top tier · high | top tier · High |
@@ -2467,17 +2469,21 @@ scrapers did at `max`. The rest is interface work with clear criteria.
   raise Brave's monthly limit only if the month's credit has run out when it gets there.
 - **Sitting 1:** the two-phone match check for V3 is still Craig's, as T4's was.
 
-**Running a sitting from a cloud session** (checked 30 Sep; how batches land is still open):
+**Running a sitting from a cloud session** (checked 30 Sep, #230):
 
-- CI runs on pushes to `main`, `feat/**`, `fix/**` and `chore/**`, and on pull requests. A
-  cloud session's own branch (`claude/…`) matches none, so its work reaches CI through a pull
-  request.
-- Such a session may push only its own branch, while a close-out merges to `main`, which
-  deploys. **Whether it may open a pull request per batch and merge it when CI is green is
-  Craig's to confirm** before sitting 1 (`OWNER-ACTIONS.md` 25).
-- The close-out's health check needs `api-production-a8fe.up.railway.app`, which the 30 Sep
-  session's network policy refused. Allow it with the two review sites, or Craig confirms
-  production after each merge.
+- **Each batch lands through a pull request.** Its own `feat/` (or `fix/`) branch from `main`,
+  a pull request, CI green, then the session merges it with a merge commit, verifies
+  production, and lands the close-out's docs through a second pull request. Craig said yes on
+  30 Sep. CI runs on pushes to `main`, `feat/**`, `fix/**` and `chore/**`, and on pull
+  requests.
+- **The whole gate runs in the container.** `/usr/bin/python3.12 -m venv apps/api/.venv`, then
+  `pip install --require-hashes -r apps/api/requirements-dev.lock`; `pnpm install
+  --frozen-lockfile` on the container's Node 22. A throwaway local Postgres 16
+  (`/usr/lib/postgresql/16/bin`, run as the `postgres` user) takes the API suite from 583
+  skipped to none: 1,634 passed on 30 Sep. CI's Postgres 17 stays the authority.
+- **The close-out's health check needs `api-production-a8fe.up.railway.app`**, which the
+  30 Sep session's network policy refused. Craig allows it before a run
+  (`OWNER-ACTIONS.md` 25); without it a run stops before its first merge.
 
 **Why this order.** Sitting 1 needs nothing from anyone and is what Craig sees every day; V1
 comes first because it fixes a fault visible on every page, and V1's back arrows change the
@@ -2735,8 +2741,8 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
-| **V · 1** | V1 → V3 → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word; not started** (#229). The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
-| **V · 2** | V6 → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V, not started.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
+| **V · 1** | V1 → V3 → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
+| **V · 2** | V6 → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 is in the 30 Sep overnight run (#230); V7 and V8 wait on Craig's pick.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
