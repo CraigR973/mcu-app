@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Bot, Command, Plus } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import CommandPalette from '@/components/CommandPalette'
 import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
@@ -9,6 +9,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import OfflineBanner from '@/components/OfflineBanner'
 import SearchBar from '@/components/SearchBar'
 import { useAuth } from '@/context/auth'
+import { useGoBack } from '@/hooks/useGoBack'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { startAutoFlush } from '@/lib/sync'
 import { MobileTabBar } from './MobileTabBar'
@@ -59,11 +60,12 @@ function AssistantLink({ className }: { className: string }) {
  *
  * The back arrow goes back through history when there is some, and otherwise to the
  * page's parent — a page opened from a notification or a shared link has nowhere to go
- * "back" to, and `navigate(-1)` would leave the app.
+ * "back" to, and `navigate(-1)` would leave the app. Since Batch V1 every page but the four
+ * bottom tabs and You has one, and a page the You page lists falls back to You.
  */
 function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
-  const { pathname, key } = useLocation()
-  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const goBack = useGoBack(parentPath(pathname))
   const { profile } = useAuth()
   const announced = usePageChromeTitle()
   const title = announced ?? titleForPath(pathname) ?? 'The Real MCU'
@@ -74,7 +76,7 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
       {subPage ? (
         <button
           type="button"
-          onClick={() => (key === 'default' ? navigate(parentPath(pathname)) : navigate(-1))}
+          onClick={goBack}
           className="touch-target -ml-1 flex shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="Back"
         >

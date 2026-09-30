@@ -36,6 +36,7 @@ import PriceAlertPanel from '@/components/movies/PriceAlertPanel'
 import WatchPanel from '@/components/movies/WatchPanel'
 import { useAuth } from '@/context/auth'
 import { imdbUrl, letterboxdUrl } from '@/lib/external-links'
+import { useGoBack } from '@/hooks/useGoBack'
 import { useRecentItems } from '@/hooks/useRecentItems'
 import {
   backdropUrl,
@@ -263,6 +264,7 @@ function CopyCard({
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const goBack = useGoBack('/movies')
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<Tab>('copies')
   const [correcting, setCorrecting] = useState(false)
@@ -410,8 +412,18 @@ export default function MovieDetailPage() {
           <img src={backdrop} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45" />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-brand-ink/25" />
-        <Button asChild size="sm" variant="secondary" className="absolute left-4 top-4 sm:left-6 lg:left-8">
-          <Link to="/movies"><ArrowLeft aria-hidden /> Back to collection</Link>
+        {/* Batch V1, snag 5. Back to wherever the film was opened from (Deals, Wanted, a
+            movie night, search), and to the Archive only with no history behind it. It used
+            to go to the Archive every time. Hidden below 1024px, where the top bar's arrow
+            does the same job: two back controls on a phone was the snag. */}
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={goBack}
+          className="absolute left-4 top-4 hidden sm:left-6 lg:left-8 lg:inline-flex"
+        >
+          <ArrowLeft aria-hidden /> Back
         </Button>
       </div>
 

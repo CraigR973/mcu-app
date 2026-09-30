@@ -169,20 +169,37 @@ describe('Batch T3 — the phone top bar', () => {
     expect(titleForPath('/nowhere')).toBeNull()
   })
 
-  it('gives a back arrow to pages below a destination, and none to destinations', () => {
-    for (const path of [...navItems, ...adminNavItems, YOU_ITEM].map((item) => item.path)) {
-      expect(isTopLevel(path), path).toBe(true)
+  it('gives a back arrow to every page but the four bottom tabs and You — Batch V1', () => {
+    // Until V1 every menu destination counted as top-level, so Wanted, Deals, Settings and
+    // the rest had no arrow on a phone though the only way to them was through You (snag 5).
+    const topLevel = new Set<string>([...BOTTOM_BAR_PATHS, YOU_ITEM.path])
+    for (const path of topLevel) expect(isTopLevel(path), path).toBe(true)
+    for (const path of [...navItems, ...adminNavItems].map((item) => item.path)) {
+      expect(isTopLevel(path), path).toBe(topLevel.has(path))
+    }
+    for (const path of ['/wanted', '/deals', '/settings', '/loans', '/calendar', '/admin']) {
+      expect(isTopLevel(path), path).toBe(false)
     }
     expect(isTopLevel('/movies/abc')).toBe(false)
     expect(isTopLevel('/films/tmdb/1')).toBe(false)
     expect(isTopLevel('/settings/ai')).toBe(false)
   })
 
-  it('sends a page with no history back to its parent', () => {
+  it('sends a page with no history to You when You lists it, and to its parent otherwise', () => {
+    // Opened from a notification or a link, a page You lists goes where it would have been
+    // opened from; a page below a destination goes to that destination.
+    for (const path of ['/wanted', '/deals', '/settings', '/loans', '/price-alerts', '/retailers']) {
+      expect(parentPath(path), path).toBe('/you')
+    }
     expect(parentPath('/movies/abc')).toBe('/movies')
     expect(parentPath('/movie-night/abc')).toBe('/movie-night')
     expect(parentPath('/films/tmdb/1')).toBe('/movies')
+    expect(parentPath('/box-sets/abc')).toBe('/box-sets')
     expect(parentPath('/somewhere/else')).toBe('/dashboard')
+  })
+
+  it('never sends a bottom-tab page to You, since You does not list one', () => {
+    for (const path of BOTTOM_BAR_PATHS) expect(parentPath(path), path).not.toBe('/you')
   })
 
   it('keeps four destinations in the bottom bar, every one a real page', () => {

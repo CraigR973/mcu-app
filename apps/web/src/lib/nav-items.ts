@@ -165,12 +165,21 @@ export const YOU_ITEM: NavItem = { label: 'You', path: '/you', icon: UserRound }
  */
 export const BOTTOM_BAR_PATHS = ['/dashboard', '/movies', '/collection/add', '/movie-night'] as const
 
-const TOP_LEVEL_PATHS = new Set<string>([
-  '/',
-  YOU_ITEM.path,
-  ...navItems.map(({ path }) => path),
-  ...adminNavItems.map(({ path }) => path),
-])
+const IN_THE_BAR = new Set<string>(BOTTOM_BAR_PATHS)
+
+/**
+ * The phone's top-level pages: the four bottom tabs and You — Batch V1, snag 5.
+ *
+ * Until V1 every menu destination counted, so Wanted, Deals, Settings and the rest had no
+ * back arrow on a phone though the only way to them was through You. Now a page is
+ * top-level only when the bottom bar or the person's initial reaches it directly.
+ */
+const TOP_LEVEL_PATHS = new Set<string>(['/', YOU_ITEM.path, ...BOTTOM_BAR_PATHS])
+
+/** The destinations the You page lists: every one the bottom bar does not carry. */
+const LISTED_ON_YOU = new Set<string>(
+  [...navItems, ...adminNavItems].map(({ path }) => path).filter((path) => !IN_THE_BAR.has(path)),
+)
 
 /** Pages below a destination, named by what they show rather than where they sit. */
 const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
@@ -182,8 +191,8 @@ const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
   ['/settings/', 'Settings'],
 ]
 
-/** A destination's own page, as opposed to something opened from it. Sub-pages get a
- *  back arrow in the top bar; destinations do not. */
+/** A bottom tab or You, as opposed to anything reached from one. Everything else gets a back
+ *  arrow in the phone's top bar. */
 export function isTopLevel(pathname: string): boolean {
   return TOP_LEVEL_PATHS.has(pathname)
 }
@@ -201,8 +210,10 @@ export function titleForPath(pathname: string): string | null {
 }
 
 /** Where the back arrow goes when there is no history to go back through — a page opened
- *  from a notification or a shared link. */
+ *  from a notification or a shared link. A page the You page lists goes to You, where the
+ *  person would have opened it from; anything below a destination goes to that destination. */
 export function parentPath(pathname: string): string {
+  if (LISTED_ON_YOU.has(pathname)) return YOU_ITEM.path
   if (pathname.startsWith('/films/')) return '/movies'
   const parent = [...navItems, ...adminNavItems]
     .filter(({ path }) => pathname.startsWith(`${path}/`))
