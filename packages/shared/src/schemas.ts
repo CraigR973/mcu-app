@@ -1953,9 +1953,14 @@ export const dealsRunSchema = z.object({
       skippedOwned: z.number().int().nonnegative(),
       rejected: z.number().int().nonnegative(),
       matched: z.number().int().nonnegative(),
+      /** Batch 22b. Cards on the sale page at a single price: listed, not discounted, and
+       *  not a failure. Defaulted so an API a deploy behind still parses. */
+      notDiscounted: z.number().int().nonnegative().default(0),
       /** Why the page as a whole was refused. A page-level failure discards every card,
        *  so this separates "a quiet sale" from "the selectors have moved". */
       pageReasons: z.array(z.string()),
+      /** Batch 22b. Why the first few rejected cards were rejected. */
+      rejectedReasons: z.array(z.string()).default([]),
       error: z.string().nullable(),
     }),
   ),

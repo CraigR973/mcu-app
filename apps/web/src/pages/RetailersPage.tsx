@@ -12,11 +12,12 @@ import {
   Trash2,
   TriangleAlert,
 } from 'lucide-react'
-import type { RetailerRow } from '@mcu/shared'
+import type { DealsRun, RetailerRow } from '@mcu/shared'
 
 import { ScraperTester } from '@/components/ScraperTester'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/context/auth'
 import {
   addRetailer,
   applyBuiltInScrapers,
@@ -26,6 +27,7 @@ import {
   formatLabel,
   fetchScrapeRuns,
   runDailyScrape,
+  runDealsScrape,
   runScrapers,
   scrapeRunVerdict,
   seedRetailers,
@@ -165,6 +167,187 @@ function RunPanel() {
                     </span>
                   ) : null}
                 </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+/** One shop's line in a sale-page check: what it found and kept, or why it kept nothing. */
+function SalePageOutcome({ outcome }: { outcome: DealsRun['outcomes'][number] }) {
+  const counts = [
+    `${String(outcome.found)} found`,
+    `${String(outcome.kept)} kept`,
+    outcome.skippedOwned > 0 ? `${String(outcome.skippedOwned)} already owned` : null,
+    outcome.notDiscounted > 0 ? `${String(outcome.notDiscounted)} not discounted` : null,
+    outcome.rejected > 0 ? `${String(outcome.rejected)} rejected` : null,
+  ].filter(Boolean)
+  // A refused page carries its reasons twice, joined into `error` as well; show them once.
+  const reasons = outcome.ok
+    ? outcome.rejectedReasons
+    : outcome.pageReasons.length > 0
+      ? outcome.pageReasons
+      : [outcome.error ?? 'no usable result']
+
+  return (
+    <li
+      className={cn(
+        'rounded-md border px-2 py-1.5 break-words',
+        outcome.kept > 0 ? 'border-primary/30' : 'border-border',
+      )}
+    >
+      <p className="font-medium text-foreground">{outcome.retailer}</p>
+      {outcome.ok || outcome.found > 0 ? (
+        <p className="text-muted-foreground">{counts.join(' · ')}</p>
+      ) : null}
+      {reasons.length > 0 ? (
+        <ul className="mt-0.5 space-y-0.5 text-muted-foreground">
+          {reasons.map((reason, index) => (
+            <li key={`${String(index)}-${reason}`} className="flex items-start gap-1">
+              <TriangleAlert className="mt-0.5 h-3 w-3 shrink-0 text-warning" aria-hidden />
+              <span className="min-w-0">{reason}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  )
+}
+
+/**
+ * §5.9's run from the phone — Batch 22b, owner item 1e.
+ *
+ * **Two taps, and the first saves nothing.** "Check sale pages" is the endpoint's dry run:
+ * it asks each enabled shop for its sale page and reports what it would save. "Save deals"
+ * appears only once a check has come back, and it asks the shops again rather than saving
+ * the check, so what is saved is what the pages show at that moment.
+ *
+ * The three figures are §5.9's own (deals, shops with deals, deals skipped as already
+ * owned), so the acceptance is read off the screen rather than inferred. Admin-only, like
+ * the page and the endpoint.
+ */
+function SalePagesPanel() {
+  const { profile } = useAuth()
+  const queryClient = useQueryClient()
+  const save = useMutation({
+    mutationFn: () => runDealsScrape(false),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['deals'] })
+      void queryClient.invalidateQueries({ queryKey: ['nav-sections'] })
+    },
+  })
+  const check = useMutation({
+    mutationFn: () => runDealsScrape(true),
+    onMutate: () => save.reset(),
+  })
+
+  if (profile?.role !== 'admin') return null
+
+  const result = save.data ?? check.data
+  const busy = check.isPending || save.isPending
+  const figures = result
+    ? [
+        { label: result.dryRun ? 'deals to save' : 'deals saved', value: result.written },
+        { label: 'shops with deals', value: result.retailersWithDeals },
+        { label: 'already owned, skipped', value: result.skippedOwned },
+      ]
+    : []
+
+  return (
+    <section
+      aria-labelledby="sale-pages-title"
+      className="space-y-3 rounded-lg border border-border bg-card p-4"
+    >
+      <div>
+        <h2 id="sale-pages-title" className="text-sm font-semibold text-foreground">
+          Sale pages
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Reads each enabled shop’s sale page for discounted discs. Checking asks the shops
+          but saves nothing.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          onClick={() => check.mutate()}
+        >
+          {check.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+          Check sale pages
+        </Button>
+        {check.data && !save.isSuccess ? (
+          <Button
+            type="button"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              if (window.confirm('Check the sale pages again and save the deals that pass?')) {
+                save.mutate()
+              }
+            }}
+          >
+            {save.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            Save deals
+          </Button>
+        ) : null}
+      </div>
+
+      {check.isPending ? (
+        <p className="text-xs text-muted-foreground">Asking each shop for its sale page…</p>
+      ) : null}
+      {check.isError ? (
+        <p className="text-xs text-destructive">
+          {queryErrorMessage(check.error, 'The sale pages could not be checked.')}
+        </p>
+      ) : null}
+      {save.isError ? (
+        <p className="text-xs text-destructive">
+          {queryErrorMessage(save.error, 'The deals could not be saved.')}
+        </p>
+      ) : null}
+
+      {result ? (
+        <div className="space-y-2 text-xs">
+          <p className="font-medium text-foreground">
+            {result.dryRun ? 'Checked. Nothing is saved yet.' : 'Saved.'}
+          </p>
+          <dl className="grid grid-cols-3 gap-2">
+            {figures.map((figure) => (
+              <div
+                key={figure.label}
+                className="flex min-w-0 flex-col-reverse rounded-md border border-border px-2 py-1.5"
+              >
+                <dt className="text-[11px] leading-tight text-muted-foreground">
+                  {figure.label}
+                </dt>
+                <dd className="text-lg font-semibold tabular-nums text-foreground">
+                  {figure.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {result.outcomes.length === 0 ? (
+            <p className="text-muted-foreground">
+              No shop was asked. Enable a retailer that has a sale page.
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {result.outcomes.map((outcome) => (
+                <SalePageOutcome key={outcome.retailer} outcome={outcome} />
               ))}
             </ul>
           )}
@@ -600,6 +783,9 @@ export default function RetailersPage() {
       </div>
 
       {creating ? <NewRetailerForm onDone={() => setCreating(false)} /> : null}
+
+      {/* First, so it is in reach on a phone without scrolling past the built-ins. */}
+      <SalePagesPanel />
 
       <BuiltInPanel />
 
