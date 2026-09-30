@@ -314,6 +314,8 @@ describe('Batch 6 location and watch-log schemas', () => {
       decades: [{ decade: 1940, movieCount: 203 }],
       undatedMovieCount: 757,
       discsWithSpecs: 0,
+      // Batch V4: the whole vocabulary rides along for the copy form's picker.
+      allSections: ['Front', 'Back', 'Top Big Cabinet', "Craig's house"],
     }
     expect(collectionFacetsSchema.parse(facets)).toEqual(facets)
   })
@@ -1606,6 +1608,15 @@ describe('Batch T7 — the Blu-ray.com backfill', () => {
     const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }
     expect(collectionFacetsSchema.parse(facets).discsWithSpecs).toBe(0)
     expect(collectionFacetsSchema.parse({ ...facets, discsWithSpecs: 12 }).discsWithSpecs).toBe(12)
+  })
+
+  it('reads facets cached before V4 as having no vocabulary, so the form falls back (#205)', () => {
+    const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }
+    expect(collectionFacetsSchema.parse(facets).allSections).toEqual([])
+    expect(collectionFacetsSchema.parse({ ...facets, allSections: ["Craig's house"] }).allSections).toEqual([
+      "Craig's house",
+    ])
+    expect(() => collectionFacetsSchema.parse({ ...facets, allSections: [''] })).toThrow()
   })
 
   it('reads a queued disc with its candidates', () => {

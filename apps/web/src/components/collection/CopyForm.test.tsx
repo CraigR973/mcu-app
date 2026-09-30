@@ -3,11 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import CopyForm, { EMPTY_COPY } from './CopyForm'
-import type { CollectionItemFields } from '@/lib/api'
+import type { CollectionFacets, CollectionItemFields } from '@/lib/api'
 
-function markup(value: CollectionItemFields) {
+function markup(value: CollectionItemFields, facets?: CollectionFacets) {
   // A fresh client per render so one test's cache cannot decide another's output.
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  if (facets) client.setQueryData(['facets'], facets)
   return renderToStaticMarkup(
     <QueryClientProvider client={client}>
       <CopyForm value={value} onChange={() => {}} />
@@ -67,5 +68,52 @@ describe('CopyForm', () => {
   it('will not offer a purchase date in the future', () => {
     const today = new Date().toISOString().slice(0, 10)
     expect(markup(EMPTY_COPY)).toContain(`max="${today}"`)
+  })
+
+  it('offers every section, including one with no disc yet — Batch V4', () => {
+    // Craig's house held nothing when it was added; a picker built from the places that
+    // hold a disc could never offer it.
+    const html = markup(EMPTY_COPY, {
+      sections: [{ section: 'Front', movieCount: 1, itemCount: 1, shelves: [] }],
+      unsectionedItemCount: 0,
+      decades: [],
+      undatedMovieCount: 0,
+      discsWithSpecs: 0,
+      allSections: ['Front', 'Back', "Craig's house"],
+    })
+
+    expect(html).toContain('<option value="Craig&#x27;s house">Craig&#x27;s house</option>')
+    expect(html).toContain('<option value="Back">Back</option>')
+  })
+
+  it('offers the places that hold a disc when an older cached answer has no vocabulary', () => {
+    const html = markup(EMPTY_COPY, {
+      sections: [{ section: 'Front', movieCount: 1, itemCount: 1, shelves: [] }],
+      unsectionedItemCount: 0,
+      decades: [],
+      undatedMovieCount: 0,
+      discsWithSpecs: 0,
+      allSections: [],
+    })
+
+    expect(html).toContain('<option value="Front">Front</option>')
+    expect(html).not.toContain('Craig')
+  })
+
+  it('shows a disc already in Craig\u2019s house as chosen, with no shelf picker', () => {
+    const html = markup(
+      { ...EMPTY_COPY, section: "Craig's house", location: "Craig's house" },
+      {
+        sections: [{ section: "Craig's house", movieCount: 1, itemCount: 1, shelves: [] }],
+        unsectionedItemCount: 0,
+        decades: [],
+        undatedMovieCount: 0,
+        discsWithSpecs: 0,
+        allSections: ['Front', "Craig's house"],
+      },
+    )
+
+    expect(html).toMatch(/<option value="Craig&#x27;s house" selected="">/)
+    expect(html).not.toContain('No particular shelf')
   })
 })
