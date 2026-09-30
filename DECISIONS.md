@@ -4706,3 +4706,28 @@ contemporaneous.
      - **Several films can be open at once.** Choosing means comparing (the snag's own
        argument for the list), so opening one film's details does not close another's.
 
+### 2026-09-30 — Group V, batch V4
+
+233. **V4: Craig's house, and how a CHECK with an apostrophe is written and proved.**
+
+     - **Names inside a CHECK are SQL literals, quotes doubled.** Migration 042 carries its own
+       `_literal()`; 007's `_check_clause` pasted names inside quotes and stays as it was, since
+       its names have none. Any later migration that writes the vocabulary into SQL should copy
+       042's, not 007's.
+     - **The downgrade is proved against a real row, not only an empty schema.** The test runs
+       042's `downgrade()` and `upgrade()` through Alembic's `Operations` on the test's own
+       connection, inside the transaction the fixture rolls back, with a disc in Craig's house:
+       section cleared, `location` kept, the name refused until the upgrade. Postgres DDL is
+       transactional, so nothing leaks into the shared test database. It is the check gotcha 18
+       says CI's migration job cannot make, and a pattern for the next migration that narrows a
+       constraint.
+     - **The form gets the whole vocabulary from the facets, not from a copy in the web app.**
+       `allSections` rides on `GET /collection/facets`, defaulted in zod per #205. A list typed
+       into the web app would drift from `SECTIONS` the first time a place is added.
+     - **Craig's house behaves as the cabinets do.** One place, no shelves: the parser still
+       returns a shelf if someone types "Craig's house 2nd shelf", as it does for a cabinet, and
+       the shelf picker and the filter offer none for it. Changing that for every unshelved place
+       is outside V4.
+     - **The spellings the parser accepts** are "Craig's house", "Craigs house" and the curly
+       apostrophe an iPhone types by default; "Craig house" is not filed there.
+

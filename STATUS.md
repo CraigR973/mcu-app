@@ -2,12 +2,14 @@
 
 ## Now
 
-**30 Sep 2026, 23:15 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
-#230). V1 and V3 are live.** V1 (`13791c2`): the top bar and bottom tab bar have their
+**30 Sep 2026, 23:40 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
+#230). V1, V3 and V4 are live.** V1 (`13791c2`): the top bar and bottom tab bar have their
 background again, every tint is built, a phone has a back arrow on every page below the four
 tabs and You, the film page's Back returns to where the film was opened from, and Loans is
 always listed. V3 (`0b29e58`): a movie night is one screen, the shortlist, with one Add / Added
-control per film and its details in the row; the swipe deck is gone. Next: V4 → V5 → V6.
+control per film and its details in the row; the swipe deck is gone. V4 (`f7a66f8`): "Craig's
+house" is a section, offered by the copy form and found by the Archive's filter once a disc is
+there. Next: V5 → V6.
 
 - **The run so far:**
   - **Preflight passed at 22:20 UTC:** production reachable from the cloud session
@@ -27,10 +29,19 @@ control per film and its details in the row; the swipe deck is gone. Next: V4 �
     were removed with the deck and are named in the ledger. **Failures on the way:** a test
     name with an apostrophe, a test that matched the title twice, and one new pytest warning;
     all fixed before the push.
+  - **V4:** [#10](https://github.com/CraigR973/mcu-app/pull/10), merged as `f7a66f8`.
+    Production reported `f7a66f8` at 23:38 UTC with `db: ok`, so migration 042 applied (the
+    container runs `alembic upgrade head` before it starts); the live bundle carries the form's
+    `allSections`. Local gate and CI green first time (1,655 API tests, web 439, shared 115);
+    browser check at 375 px on the rig. Nothing left open; no disc is in Craig's house until
+    Craig moves one. **Failures on the way:** a curly apostrophe written literally into the
+    parser, two long lines, a test aimed at the wrong assistant tool, one new pytest warning;
+    all fixed before the push.
 - **`main` is green:** `urllib3` 2.8.0 ([#4](https://github.com/CraigR973/mcu-app/pull/4)),
   then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1 and its close-out
   ([#6](https://github.com/CraigR973/mcu-app/pull/6), [#7](https://github.com/CraigR973/mcu-app/pull/7)),
-  then V3 ([#8](https://github.com/CraigR973/mcu-app/pull/8)).
+  then V3 and its close-out ([#8](https://github.com/CraigR973/mcu-app/pull/8),
+  [#9](https://github.com/CraigR973/mcu-app/pull/9)), then V4 ([#10](https://github.com/CraigR973/mcu-app/pull/10)).
 - **22b is live (`eb51568`, #224–#226).** "Check sale pages" on /retailers runs the deals check
   from a phone (a preview that saves nothing), then "Save deals": both taps are Craig's
   (`OWNER-ACTIONS.md` 1e). Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
@@ -493,6 +504,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (V4, [#10](https://github.com/CraigR973/mcu-app/pull/10), `f7a66f8`)** —
+  "Craig's house" is a section (#228): in `SECTIONS`, the parser ("Craigs house" and an iPhone's
+  curly apostrophe too) and the CHECK, through migration 042, which escapes the apostrophe 007's
+  pasting would have broken on, writes no rows, and reverses by clearing `section` first. Its
+  downgrade was proved against a real row in a rolled-back transaction (#233). The copy form
+  offers every section (`allSections` on the facets); the filter lists only places with a disc.
+  The assistant's browse tool names every section. Gate and CI green first time; production
+  reported the merge SHA at 23:38 UTC with `db: ok`.
 
 - **2026-09-30 (V3, [#8](https://github.com/CraigR973/mcu-app/pull/8), `0b29e58`)** — Movie
   night on one screen. The shortlist is the whole night: one Add / Added control per film (Added
