@@ -4609,3 +4609,25 @@ contemporaneous.
      (`9afc173`). `bg-background/94` names an opacity step Tailwind 3 does not have, so the
      class is never built; 20 classes in 10 files share the fault. Proved by building the
      stylesheet with the app's own config and Tailwind 3.4.19.
+
+229. **The plan's shape, at Craig's word (30 Sep): six sittings, two merges, and his steps
+     inside the batches.** "Just write into the plan, including model and thinking effort for
+     each batch." Group V in `docs/phase-batches.md` carries it; nothing starts before his go.
+
+     - **His three steps move into the batches** rather than coming first. The bid trial and
+       his pick happen inside sitting 2, once V6 is live. Allowing blu-ray.com and
+       avforums.com starts V9, which asks for a higher Brave limit only if the month's credit
+       has run out by then.
+     - **Two merges, his choice, as U5 into U3:** V2 into V1, since both change the top bar and
+       one browser check covers them; V10 into V9, since with his steps inside nothing
+       separates them and they build one feature on one set of data. V2 and V10 are retired
+       names.
+     - **Six sittings plus 21:** V1 → V3 → V4 → V5; V6 → his pick → V7 → V8; V9; 20b → 22c;
+       T8b; 38 last. Each batch keeps its own close-out. 21 still starts itself.
+     - **Each batch's model and effort are in Group V**, named by the ledger's two model tiers:
+       the models on Group U's row and on Batch 21's row.
+     - **Open before sitting 1: how a batch lands from a cloud session.** CI runs only for
+       `main`, `feat/**`, `fix/**`, `chore/**` and pull requests, and a cloud session may push
+       only its own `claude/…` branch. Proposed: a pull request per batch, merged when CI is
+       green. The post-merge health check needs `api-production-a8fe.up.railway.app`, which
+       the 30 Sep session could not reach.

@@ -20,9 +20,11 @@ this session's network policy refuses both hosts.
 | Value: blend of bids and asking prices, or bids only? | Trial first | #228, V6 then V7 |
 | Movie night: keep the list, drop the swipe deck? | Yes | #228, V3 |
 | Craig's house: name, shelves, counted everywhere? | "Craig's house is fine" | #228, V4 |
-| Reviews: links, links and a line, or scores? | All three | #228, V9 and V10 |
+| Reviews: links, links and a line, or scores? | All three | #228, V9 |
 | Highlights: which rows? | A mix of all | #228, V5 |
 | Top bar fix, back arrows and Loans: go? | Reconcile the full plan first | This section and Group V |
+| The trial, Brave's limit, the two sites: before the batches? | Inside the batches, when they are built | #229 |
+| Can batches be grouped? | Six sittings, V2 into V1, V10 into V9: "just write into the plan, including model and thinking effort for each batch" | #229, Group V |
 
 **Taken from "All" and "is fine", open to overrule:** the review scores widen #110 to read
 Blu-ray.com's own review scores (nothing else in #110 changes); Craig's house has no shelves,
@@ -51,7 +53,7 @@ ruled out by #203 and by eBay's terms. **What the app can do:** a link to eBay's
 listings for the film and format. It opens in your browser, where you are signed in, so you
 see them in one tap (V8).
 
-**3. Loans always shown, for both.** Yes (V2). The menu and the You page list Loans for Mark
+**3. Loans always shown, for both.** Yes (V1). The menu and the You page list Loans for Mark
 and Craig whether or not a loan exists. Both can already read loans (`GET /loans`);
 lending and "Mark returned" stay Craig's, as now.
 
@@ -64,7 +66,7 @@ one per site, at about $5 per 1,000. Two things follow:
   and restarts on the renewal around 1 Oct, when it will use it up again. Reviews need a cap
   of their own, and Craig raising Brave's monthly limit, or they wait for each new month.
 - **Brave only finds pages.** The scores (option C) mean reading the review page itself
-  (V10). Blu-ray.com's comes under #110, widened by "All". AVForums' terms are read first.
+  (V9). Blu-ray.com's comes under #110, widened by "All". AVForums' terms are read first.
 
 ---
 
@@ -187,7 +189,7 @@ sets and Collections leave the menu while their table is empty (`lib/nav-items.t
 
 **Proposed:** show Loans always. Its empty page already says how to lend a disc.
 
-**Answer (30 Sep):** always shown, for Mark and Craig (V2).
+**Answer (30 Sep):** always shown, for Mark and Craig (V1).
 
 ### 4. Movie night: swiping or the shortlist
 
@@ -306,8 +308,9 @@ silently. Then look again at whether the bar should be fully opaque.
 
 **Recommended:** B now; C only if Craig widens #110.
 
-**Answer (30 Sep):** all three, found with Brave (follow-up question 8). A and B are V9; C is
-V10, and widens #110 to Blu-ray.com's review scores (#228).
+**Answer (30 Sep):** all three, found with Brave (follow-up question 8). All three are V9 (C
+was V10 until Craig merged the two, #229), and C widens #110 to Blu-ray.com's review scores
+(#228).
 
 ### 9. Top reviews / highlights
 
@@ -331,54 +334,53 @@ V10, and widens #110 to Blu-ray.com's review scores (#228).
 from 8?
 
 **Answer (30 Sep):** a mix of all: the four rows, your ratings and the critics' both (V5; the
-reviews row arrives with V10).
+reviews row arrives with V9).
 
 ---
 
-## The full plan: for approval, not started
+## The full plan: written in, not started
 
-**Everything left, in one order:** the ten Group V batches from these snags, and Group U's
-open batches with their gates unchanged. The criteria are in `docs/phase-batches.md`, under
-"Group V". The V numbers were re-cut after Craig's answers, so they follow the order and
-differ from the first draft of this document.
+**Everything left, in six sittings plus Batch 21**, written into `docs/phase-batches.md` under
+"Group V" at Craig's word ("just write into the plan", #229). Each batch's criteria are there.
+Group U's open batches keep their gates. Nothing starts before Craig's go.
 
-| Step | Batch | Covers | Gate |
+**Two merges, Craig's choice:** V2 (back arrows, Loans) is part of V1, and V10 (review
+scores) part of V9. So Group V is eight batches: V1, V3 to V9.
+
+**Models** are named by the ledger's two tiers: the top tier is the pair of models on Group
+U's row in "Batch groups", the mid tier the pair on Batch 21's row.
+
+| Sitting | Batches, in order | Gate | Model · effort |
 |---|---|---|---|
-| 1 | **V1** Top bar and tints (a fix) | 7 | Craig's go on this plan |
-| 2 | **V2** Back arrows, and Loans always shown | 5, 3 | After V1, which changes the same top bar |
-| 3 | **V3** Movie night on one screen | 4 | None |
-| 4 | **V4** Craig's house | 6 | None |
-| 5 | **V5** Highlights on Home, three rows | 9 | None |
-| 6 | **V6** Trial: pricing from live bids | 2 | Built without a gate; Craig runs it from Home |
-| 7 | 20b Shops that answer `429` | — | Craig's go, after the 1 Oct 03:00 UTC check (Group U) |
-| 8 | 21 Price history charts | — | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U) |
-| 9 | 22c Every page of a sale | — | Craig's go, after 20b (Group U) |
-| 10 | **V7** Value from live bids | 2 | Craig's pick, after V6's report |
-| 11 | **V8** The Deals "usual" price, and the sold-listings link | 1 | After V7, whose eBay figure it averages |
-| 12 | **V9** Review links, found with Brave | 8 | Brave credit, and a cap of its own |
-| 13 | **V10** Review scores, and Highlights' fourth row | 8, 9 | Real pages captured; AVForums' terms read |
-| 14 | T8b Connect eBay | — | `OWNER-ACTIONS.md` 18 (Group U) |
-| 15 | 38 The end-to-end suite | — | Last, after every V batch, so it pins the flows as they end up |
-| — | 33 → 34 Email | — | Parked (`OWNER-ACTIONS.md` 7) |
+| 1 | **V1** top bar, tints, back arrows, Loans → **V3** movie night → **V4** Craig's house → **V5** Highlights | Craig's go | top tier · high (V1, V3, V5 alone: mid tier · high) |
+| 2 | **V6** bid trial → Craig runs it and picks → **V7** value from bids → **V8** Deals "usual" price | None to start | top tier · xhigh (V8 alone: top tier · high) |
+| 3 | **V9** reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max |
+| 4 | 20b shops that answer `429` → 22c every page of a sale | Craig's go, after the 1 Oct 03:00 UTC check | top tier · high |
+| — | 21 price history charts | Starts itself, 2 Oct at the earliest | mid tier · medium |
+| 5 | T8b Connect eBay | `OWNER-ACTIONS.md` 18 | top tier · max |
+| 6 | 38 the end-to-end suite | Last | mid tier · high |
+| — | 33 → 34 Email | Parked (`OWNER-ACTIONS.md` 7) | top tier · max |
 
-**Why this order.** V1 to V5 need nothing from anyone and are what Craig sees every day, so
-they go first; V1 goes before V2 because both change the top bar. V6 costs a few hundred eBay
-calls and nothing else, so its report can be waiting when the pick is due. Steps 7 to 9 keep
-Group U's gates and slot in whenever those clear. V8 averages V7's eBay figure, so it waits
-for V7 rather than being built twice. V9 waits for Brave's credit, and V10 for pages that this
-session could not reach.
+**Why these efforts.** V4 writes a migration against a live table's CHECK, where this repo's
+green local gates have hidden faults before. V6 and V7 change what the collection's value
+means and spend live eBay calls. V9 opens a new scraping surface under #110 as widened, as
+Group F's scrapers did at `max`. The rest is interface work with clear criteria.
 
-**What Craig does, and when:**
+**Craig's steps, now inside the batches (#229):**
 
-- **Now:** say go on the plan, or change it.
-- **V6:** press "Try bid prices" on Home, then pick blend or bids only from its report.
-- **V9:** raise Brave's monthly limit, or accept that reviews wait for each month's credit
-  once the spec backfill has used it.
-- **V10:** let the building session reach blu-ray.com and avforums.com (this one could not),
-  so the pages are captured and AVForums' terms read before any code.
-- **V3:** the two-phone match check, as for T4.
+- **Sitting 2:** once V6 is live, it stops and asks him to tap "Try bid prices" on Home and to
+  pick a blend or bids only. About a minute.
+- **Sitting 3:** V9 starts by asking him to allow blu-ray.com and avforums.com in the
+  environment's network settings, and asks for a higher Brave limit only if the month's credit
+  has run out by then.
+- **Sitting 1:** the two-phone check of V3's movie night, as for T4.
 
-**Effort:** V1 to V5, V8 and V9 high; V6, V7 and V10 extra high. Sizes are in the ledger.
+**Still open, before sitting 1:** how a batch lands from a cloud session. CI runs only on
+pushes to `main`, `feat/**`, `fix/**` and `chore/**` and on pull requests, and a cloud session
+may push only its own `claude/…` branch, while a close-out merges to `main`, which deploys.
+Proposed: one pull request per batch, merged when CI is green. The post-merge health check
+needs `api-production-a8fe.up.railway.app`, refused here on 30 Sep; allowed with the two
+review sites, or Craig confirms production after each merge.
 
 ---
 

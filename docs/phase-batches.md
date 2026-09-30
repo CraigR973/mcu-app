@@ -2407,66 +2407,98 @@ apply;** otherwise this ships alone before 24 Oct.
   nothing.
 - Gate green.
 
-## Group V — the 30 Sep snags, proposed 30 Sep
+## Group V — the 30 Sep snags, planned 30 Sep
 
-**Proposed 2026-09-30 from Craig's nine snags of that day**, reconciled against the code in
-`docs/owner-snags-2026-09-30.md`, with his answers of the same evening (#228). **Criteria
-authored 2026-09-30**, so `DECISIONS.md` #54 does not apply. **Status: proposed, not
-approved.** Craig asked for the full plan to be reconciled before anything goes further; no V
-batch starts before his go.
+**Planned 2026-09-30 from Craig's nine snags of that day**, reconciled against the code in
+`docs/owner-snags-2026-09-30.md`, with his answers of the same evening (#228) and his shape
+for the plan (#229). **Criteria authored 2026-09-30**, so `DECISIONS.md` #54 does not apply.
+**Status: written into the plan at Craig's word ("just write into the plan"); not started.**
+No V batch starts before his go.
 
-**This table is now the whole remaining sequence**, Group U's open batches included with
-their gates unchanged:
+**Model tiers.** This section names models by the tiers this ledger already uses: **top tier**
+is the two models on Group U's row in "Batch groups" (Claude Code's and Codex's), **mid tier**
+the two on Batch 21's row. Only the models are taken from those rows; each batch sets its own
+effort, written as each tool spells it: Claude Code `medium`, `high`, `xhigh`, `max`; Codex
+Medium, High, Extra High, Max.
 
-| Step | Batch | Gate |
-|---|---|---|
-| 1 | V1 — top bar and tints (a fix) | Craig's go on the plan |
-| 2 | V2 — back arrows, and Loans always shown | After V1, which changes the same top bar |
-| 3 | V3 — movie night on one screen | None |
-| 4 | V4 — Craig's house | None |
-| 5 | V5 — Highlights on Home | None |
-| 6 | V6 — trial: pricing from live bids | None to build; Craig runs it |
-| 7 | 20b — shops that answer 429 | Craig's go, after the 1 Oct 03:00 UTC check (Group U) |
-| 8 | 21 — price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U) |
-| 9 | 22c — every page of a sale | Craig's go, after 20b (Group U) |
-| 10 | V7 — value from live bids | Craig's pick, after V6's report |
-| 11 | V8 — the Deals "usual" price | After V7, whose eBay figure it averages |
-| 12 | V9 — review links | Brave credit, and a cap of its own |
-| 13 | V10 — review scores | Real pages captured; AVForums' terms read |
-| 14 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 (Group U) |
-| 15 | 38 — the end-to-end suite | Last, after every V batch |
-| — | 33 → 34 — Email | Parked (`OWNER-ACTIONS.md` 7) |
+**Two merges, Craig's choice (#229):** V2 is merged into V1, and V10 into V9, as U5 was into U3.
+V2 and V10 are retired as batch names; their criteria are carried in V1 and V9 below.
 
-**Why this order.** V1–V5 need nothing from anyone and are what Craig sees every day; V1
-precedes V2 because both change `AppLayout.tsx`'s top bar. V6 spends a few hundred eBay calls
-and nothing else, so its report can be ready when the pick is due. V8 averages V7's eBay
-figure, so it waits for V7 rather than being built twice. V9 waits on Brave's credit, which
-the spec backfill spends each month (#202). V10 waits on pages no session has captured yet.
-38 moves from after T8b to the very end, so it pins the flows V2, V3 and V5 change.
+**This table is now the whole remaining sequence**, in six sittings plus 21. A sitting runs
+its batches back to back, and each batch keeps its own gate and close-out. Group U's open
+batches keep their gates unchanged.
 
-**Effort:** V1–V5, V8 and V9 high; V6, V7 and V10 extra high.
+| Sitting | Batches, in order | Gate | Claude Code | Codex |
+|---|---|---|---|---|
+| 1 | V1 top bar, tints, back arrows, Loans → V3 movie night → V4 Craig's house → V5 Highlights | Craig's go on the plan (`OWNER-ACTIONS.md` 25) | top tier · high (from V4) | top tier · High |
+| 2 | V6 bid trial → **Craig runs it and picks** → V7 value from bids → V8 Deals "usual" price | None to start; the pick stops it mid-way | top tier · xhigh (from V6, V7) | top tier · Extra High |
+| 3 | V9 reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max | top tier · Max |
+| 4 | 20b shops that answer 429 → 22c every page of a sale | Craig's go, after the 1 Oct 03:00 UTC check (Group U) | top tier · high | top tier · High |
+| — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U) | mid tier · medium | mid tier · Medium |
+| 5 | T8b Connect eBay | `OWNER-ACTIONS.md` 18 (Group U) | top tier · max | top tier · Max |
+| 6 | 38 the end-to-end suite | Last, after every V batch | mid tier · high | mid tier · High |
+| — | 33 → 34 Email | Parked (`OWNER-ACTIONS.md` 7) | top tier · max | top tier · Max |
 
-### V1 — Top bar and tints 🟢
-**Covers snag 7. Effort: high.** A fix to shipped code, run as a batch so its browser check is
-recorded. **The top bar has had no background since 10 Sep (`9afc173`):** `bg-background/94`
-names an opacity step Tailwind 3 does not have, so the class is never built, and only the blur
-is left. 20 classes in 10 files share the fault: the bottom tab bar (`/96`), every tinted badge
-and notice (`/12`), the format badges (`/14`) and the filled buttons' hover (`/88`).
+**Each batch on its own** (what a batch needs if it is run outside its sitting):
+
+| Batch | Covers | Size | Claude Code | Codex |
+|---|---|---|---|---|
+| V1 | Snags 7, 5 and 3: the top bar's background and the tints, back arrows, Loans always shown | 🟡 | mid tier · high | mid tier · High |
+| V3 | Snag 4: movie night on one screen | 🟡 | mid tier · high | mid tier · High |
+| V4 | Snag 6: Craig's house | 🟡 | top tier · high | top tier · High |
+| V5 | Snag 9: Highlights on Home | 🟡 | mid tier · high | mid tier · High |
+| V6 | Snag 2, step one: the bid trial | 🟡 | top tier · xhigh | top tier · Extra High |
+| V7 | Snag 2: value from live bids | 🔴 | top tier · xhigh | top tier · Extra High |
+| V8 | Snag 1: the Deals "usual" price | 🟡 | top tier · high | top tier · High |
+| V9 | Snag 8, and V5's fourth row: reviews | 🔴 | top tier · max | top tier · Max |
+
+*Why those efforts.* V4 writes a migration against a live table's CHECK, and migrations are
+where this repo's green local gates have hidden faults (gotchas 15 and 18). V6 and V7 change
+what the collection's value means for 1,457 discs and spend live eBay calls. V9 opens a new
+scraping surface under a widened risk acceptance (#110, #228), the kind of work Group F's
+scrapers did at `max`. The rest is interface work with clear criteria.
+
+**Craig's steps, inside the batches** (#229), not before them:
+
+- **Sitting 2:** once V6 is live, the sitting stops and asks Craig to tap "Try bid prices" on
+  Home, then to choose a blend or bids only from its report. It carries on to V7 with his pick.
+- **Sitting 3:** V9 starts by asking Craig to allow blu-ray.com and avforums.com in the
+  environment's network settings (the 30 Sep session could reach neither). It asks him to
+  raise Brave's monthly limit only if the month's credit has run out when it gets there.
+- **Sitting 1:** the two-phone match check for V3 is still Craig's, as T4's was.
+
+**Running a sitting from a cloud session** (checked 30 Sep; how batches land is still open):
+
+- CI runs on pushes to `main`, `feat/**`, `fix/**` and `chore/**`, and on pull requests. A
+  cloud session's own branch (`claude/…`) matches none, so its work reaches CI through a pull
+  request.
+- Such a session may push only its own branch, while a close-out merges to `main`, which
+  deploys. **Whether it may open a pull request per batch and merge it when CI is green is
+  Craig's to confirm** before sitting 1 (`OWNER-ACTIONS.md` 25).
+- The close-out's health check needs `api-production-a8fe.up.railway.app`, which the 30 Sep
+  session's network policy refused. Allow it with the two review sites, or Craig confirms
+  production after each merge.
+
+**Why this order.** Sitting 1 needs nothing from anyone and is what Craig sees every day; V1
+comes first because it fixes a fault visible on every page, and V1's back arrows change the
+same top bar. Sitting 2's trial is quick to build, so the pick can be made early. V8 averages
+V7's eBay figure, so it follows V7 rather than being built twice. Sitting 3 waits on nothing,
+but its first step is Craig's. Group U's 20b and 22c keep their gate and slot in when it
+clears. 38 moves from after T8b to the very end, so it pins the flows sittings 1 and 2 change.
+
+### V1 — Top bar, tints, back arrows and Loans 🟡
+**Covers snags 7, 5 and 3. Carries what was V2 (#229).** Mid tier · high / mid tier · High.
+Sitting 1, first. **The top bar has had no background since 10 Sep (`9afc173`):**
+`bg-background/94` names an opacity step Tailwind 3 does not have, so the class is never built,
+and only the blur is left. 20 classes in 10 files share the fault: the bottom tab bar (`/96`),
+every tinted badge and notice (`/12`), the format badges (`/14`) and the filled buttons' hover
+(`/88`). The back arrows change the same top bar, which is why V2 joined it.
 
 **Acceptance:**
 - The missing steps (12, 14, 88, 94, 96) are added to the Tailwind theme, so all 20 classes
   are built as written. Proved by the built stylesheet containing them.
 - A test fails when any class in `apps/web/src` names an opacity step the theme lacks, so a
   dropped class cannot recur silently.
-- Browser check at 375 px, light and dark: the top and bottom bars are opaque with content
-  scrolled under them; the Deals discount badge, a movie-night vote chip and a format badge
-  show their tint.
-- Gate green.
-
-### V2 — Back arrows, and Loans always shown 🟡
-**Covers snags 5 and 3. Effort: high. After V1.**
-
-**Acceptance:**
 - On a phone the top-level pages are the four bottom-tab pages (Home, Archive, Add, Movie
   night) and You. Every other page shows the top bar's back arrow. It goes back through
   history; with none (a notification, a link) it goes to You for a page listed there, and to
@@ -2476,13 +2508,18 @@ and notice (`/12`), the format badges (`/14`) and the filled buttons' hover (`/8
 - **Loans is always listed, for Mark and Craig** (#228), in the sidebar and on the You page.
   Box sets, Collections and Deals keep hiding while empty (#154). The navigation test's count
   moves, with the reason beside it. Lending and "Mark returned" stay admin-only.
-- Browser check at 375 px: Wanted, Deals and Settings opened from You show the arrow and return
-  to You; a film opened from Deals returns to Deals, at 375 px and at 1280 px.
+- Browser check at 375 px, light and dark: the top and bottom bars are opaque with content
+  scrolled under them; the Deals discount badge, a movie-night vote chip and a format badge
+  show their tint; Wanted, Deals and Settings opened from You show the arrow and return to You;
+  a film opened from Deals returns to Deals, at 375 px and at 1280 px.
 - Gate green.
 
+### ~~V2 — Back arrows, and Loans always shown~~ **merged into V1 at Craig's word, 30 Sep (#229)**
+Its criteria are V1's now. The name is retired, as U5's was.
+
 ### V3 — Movie night on one screen 🟡
-**Covers snag 4. Effort: high.** Craig chose the list over the swipe deck (#228), which retires
-Phase 8.4's "swipe-like UI" and #207's arrow-key rule.
+**Covers snag 4.** Mid tier · high / mid tier · High. Sitting 1, second. Craig chose the list
+over the swipe deck (#228), which retires Phase 8.4's "swipe-like UI" and #207's arrow-key rule.
 
 **Acceptance:**
 - A night is one screen, the shortlist. Each film has one Add / Added control; tapping Added
@@ -2499,8 +2536,8 @@ Phase 8.4's "swipe-like UI" and #207's arrow-key rule.
 - Gate green.
 
 ### V4 — Craig's house 🟡
-**Covers snag 6. Effort: high.** "Craig's house is fine" (#228): that name, one place with no
-shelves, counted like any other disc.
+**Covers snag 6.** Top tier · high / top tier · High. Sitting 1, third. "Craig's house is
+fine" (#228): that name, one place with no shelves, counted like any other disc.
 
 **Acceptance:**
 - "Craig's house" is a section: in `SECTIONS`, in the location parser (typing "Craig's house"
@@ -2515,7 +2552,7 @@ shelves, counted like any other disc.
 - Gate green.
 
 ### V5 — Highlights on Home 🟡
-**Covers snag 9. Effort: high.** "A mix of all" (#228).
+**Covers snag 9.** Mid tier · high / mid tier · High. Sitting 1, last. "A mix of all" (#228).
 
 **Acceptance:**
 - Home gains a Highlights panel of short poster rows, each film opening its page:
@@ -2523,15 +2560,17 @@ shelves, counted like any other disc.
     on Letterboxd and Mark does not (#159), so the row says so rather than implying both.
   - **Most rewatched**, across both diaries.
   - **Most valuable discs**, at their stored value, with its basis.
-  - **Best reviewed** is V10's to add, once review scores exist.
+  - **Best reviewed** is V9's to add, once review scores exist.
 - A row with nothing in it is not shown.
 - One request for the panel, its query plan read against the real row counts.
 - Browser check at 375 px.
 - Gate green.
 
 ### V6 — Trial: pricing from live bids 🟡
-**Covers snag 2, first step. Effort: extra high.** "Lets trial first" (#228). Sold prices stay
-out of reach, signed in or not (#16, #126, #228).
+**Covers snag 2, first step.** Top tier · xhigh / top tier · Extra High. Sitting 2, first.
+"Lets trial first" (#228). Sold prices stay out of reach, signed in or not (#16, #126, #228).
+**The sitting stops here** once V6 is live: Craig taps "Try bid prices" on Home and picks a
+blend or bids only from its report (#229).
 
 **Acceptance:**
 - An admin-only "Try bid prices" on Home searches eBay once per film and format for a sample
@@ -2548,8 +2587,8 @@ out of reach, signed in or not (#16, #126, #228).
 - Gate green. The run is Craig's, and his pick of blend or bids only follows it.
 
 ### V7 — Value from live bids 🔴
-**Covers snag 2. Effort: extra high. Waits on Craig's pick after V6.** Written for a blend; a
-pick of bids only changes the second point.
+**Covers snag 2.** Top tier · xhigh / top tier · Extra High. Sitting 2, after Craig's pick.
+Written for a blend; a pick of bids only changes the second point.
 
 **Acceptance:**
 - The valuation's one search per film and format reads Buy It Now and auctions together.
@@ -2566,7 +2605,8 @@ pick of bids only changes the second point.
 - Gate green.
 
 ### V8 — The Deals "usual" price 🟡
-**Covers snag 1. Effort: high. After V7.**
+**Covers snag 1.** Top tier · high / top tier · High. Sitting 2, last: it averages V7's eBay
+figure.
 
 **Acceptance:**
 - An eBay find's "usually" is the average of eBay's figure for the film and format (V7's) and
@@ -2582,39 +2622,39 @@ pick of bids only changes the second point.
   already answering 429 (20b).
 - Gate green.
 
-### V9 — Review links, found with Brave 🟡
-**Covers snag 8, options A and B. Effort: high. Waits on Brave credit.**
+### V9 — Reviews: links, lines and scores 🔴
+**Covers snag 8 (all three options) and V5's fourth row. Carries what was V10 (#229).** Top
+tier · max / top tier · Max. Sitting 3, alone. It opens a new scraping surface under #110 as
+widened by #228, which is why it runs at Group F's effort.
 
 **Acceptance:**
-- When a film is added to Wanted, and once for those already there, Brave is searched for its
-  review on Blu-ray.com and on AVForums. A result is kept only if it is that site's review of
-  that film, and of that format on Blu-ray.com.
-- Each Wanted item and film page shows "Reviews: Blu-ray.com · AVForums" as links, with
-  Brave's one-line description of each.
-- No request goes to either site. Searches count towards the month's Brave total (#202) under
-  a cap of their own; a failed search leaves the want as it was, to try again.
-- Gate green.
-
-### V10 — Review scores 🔴
-**Covers snag 8, option C, and V5's fourth row. Effort: extra high.** Needs #228's widening of
-#110, and two checks before any code.
-
-**Acceptance:**
-- **Before any code:** a Blu-ray.com review page and an AVForums review page captured as real
-  fixtures (the 30 Sep session could not reach either site), and AVForums' terms and
-  robots.txt read. If AVForums forbids automated access, it stays links-only and the app says
-  so; its scores would then need another decision.
-- The review's scores (Blu-ray.com's out of 5, AVForums' out of 10, each under the site's own
-  headings) are read once per review, stored with the page address and the time, and shown
-  beside the link.
+- **Craig's steps come first, inside the batch (#229).** The session asks Craig to allow
+  blu-ray.com and avforums.com in the environment's network settings (the 30 Sep session could
+  reach neither). It asks him to raise Brave's monthly limit only if the month's credit has run
+  out when it gets there.
+- **Before any code:** a Blu-ray.com review page and an AVForums review page are captured as
+  real fixtures, and AVForums' terms and robots.txt are read. If AVForums forbids automated
+  access, it stays links-only and the app says so; its scores would then need another decision.
+- **Finding:** when a film is added to Wanted, and once for those already there, Brave is
+  searched for its review on Blu-ray.com and on AVForums. A result is kept only if it is that
+  site's review of that film, and of that format on Blu-ray.com. Finding a review sends no
+  request to either site. Searches count towards the month's Brave total (#202) under a cap of
+  their own, and a failed search leaves the want as it was, to try again.
+- **Showing:** each Wanted item and film page shows "Reviews: Blu-ray.com · AVForums" as links,
+  with Brave's one-line description of each and, once read, the review's scores.
+- **Scores:** Blu-ray.com's out of 5 and AVForums' out of 10, each under the site's own
+  headings, read once per review and stored with the page address and the time.
 - **#110's other bounds hold unchanged:** exact page addresses only, no search routes,
   sequential and paced, a 403 or 429 halts the integration, and every stored row names its
   source so it can be removed.
-- For owned films, Blu-ray.com's scores come from the release pages already found for specs,
-  if the capture shows the review lives there, paced like the spec batch and needing no
+- **For owned films,** Blu-ray.com's scores come from the release pages already found for
+  specs, if the capture shows the review lives there, paced like the spec batch and needing no
   searches. AVForums' for owned films only if Craig raises Brave's budget.
 - V5's Highlights gains its "Best reviewed" row.
 - Gate green.
+
+### ~~V10 — Review scores~~ **merged into V9 at Craig's word, 30 Sep (#229)**
+Its criteria are V9's now. The name is retired.
 
 ## Post-launch — sequenced, not scheduled
 
@@ -2695,7 +2735,9 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
-| **V** | V1 → V2 → V3 → V4 → V5 → V6 → **checkpoint: Craig's pick of blend or bids only** → V7 → V8 → **checkpoint: Brave credit and cap** → V9 → **checkpoint: pages captured, AVForums' terms read** → V10; Group U's 20b, 21 and 22c slot in as their gates clear, and 38 moves to the end | **extra high** (V1–V5, V8, V9 high) | **Extra High** (V1–V5, V8, V9 High) | **Proposed 2026-09-30, not approved.** The 30 Sep snags, in "Group V — the 30 Sep snags, proposed 30 Sep" above, with Craig's answers (#228). V1 precedes V2 because both change the top bar; V8 averages V7's eBay figure; V10 needs pages the 30 Sep session could not reach. `extra high` is derived from V6, V7 and V10 |
+| **V · 1** | V1 → V3 → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word; not started** (#229). The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
+| **V · 2** | V6 → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V, not started.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
+| — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
