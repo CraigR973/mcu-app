@@ -66,7 +66,7 @@ export const navItems: NavItem[] = [
   // nothing reads that count now, and leaving the response alone keeps an older web build
   // parsing it while Vercel and Railway deploy at different moments.
   { label: 'Loans', path: '/loans', icon: HandHeart },
-  // Batch 35. Both people swipe, so it is an ordinary sidebar item.
+  // Batch 35. Both people vote, so it is an ordinary sidebar item.
   { label: 'Movie night', path: '/movie-night', icon: Popcorn },
   // Batch 31. The chat itself.
   { label: 'Assistant', path: '/assistant', icon: Bot },
