@@ -84,11 +84,21 @@ function renderPage(withNearbyInput = false) {
 beforeEach(() => {
   mocks.fetchMovieNight.mockReset().mockResolvedValue(NIGHT)
   mocks.fetchMovieNightCandidates.mockReset().mockResolvedValue({
-    // Batch S7: a card is a *suggestion*, and `myVote: null` is "not swiped yet", which is
-    // what puts it in the deck.
+    // Batch S7: a card is a *suggestion*, and `myVote: null` is "not voted yet". Since V3
+    // there is no deck: every film is on the one list, with its own Add / Added control.
     items: [
       RED_SHOES,
-      { ...RED_SHOES, suggestionId: VOTED_ID, movieId: null, tmdbId: 11050, title: 'The Card Player', suggestedBy: 'Mark', streamingOn: ['MUBI'], myVote: true },
+      {
+        ...RED_SHOES,
+        suggestionId: VOTED_ID,
+        movieId: null,
+        tmdbId: 11050,
+        title: 'The Card Player',
+        suggestedBy: 'Mark',
+        streamingOn: ['MUBI'],
+        watchedBy: [{ personName: 'Mark', watchedAt: '2026-08-14' }],
+        myVote: true,
+      },
     ],
     total: 2,
   })
@@ -117,45 +127,114 @@ describe('MovieNightSessionPage', () => {
     expect(screen.queryByText('No films on the list yet')).toBeNull()
   })
 
-  it('opens on the shortlist, with your own vote on each film — Batch T4, snag 10b', async () => {
+  it('opens on the shortlist, one Add / Added control per film — Batch V3 (#228)', async () => {
     renderPage()
 
     const list = within(await screen.findByRole('region', { name: /Tonight's shortlist/ }))
-    expect(list.getByText('The Red Shoes')).not.toBeNull()
-    expect(list.getByText('Not voted')).not.toBeNull()
-    expect(list.getByText('Added')).not.toBeNull()
+    expect(list.getByRole('button', { name: /The Red Shoes 1948/, expanded: false })).not.toBeNull()
     expect(list.getByText(/Suggested by Mark · on MUBI/)).not.toBeNull()
-    expect(list.getByRole('link', { name: /The Card Player/ }).getAttribute('href')).toBe('/films/tmdb/11050')
-    expect(screen.getByRole('button', { name: 'Start swiping (1)' })).not.toBeNull()
-    // The deck is one tap away, not the first thing shown.
-    expect(screen.queryByRole('button', { name: 'Add' })).toBeNull()
+    // Your own vote, and only yours (#157): the film you added reads "Added", pressed.
+    const add = list.getByRole('button', { name: 'Add The Red Shoes' })
+    const added = list.getByRole('button', { name: 'Added The Card Player' })
+    expect(add.getAttribute('aria-pressed')).toBe('false')
+    expect(added.getAttribute('aria-pressed')).toBe('true')
+    expect(list.getAllByRole('button', { name: /^Add(ed)? / })).toHaveLength(2)
   })
 
-  it('says "Skip" and "Add" in the deck — snag 10e', async () => {
+  it('has no deck: no "Start swiping", no Skip, no "N of M" count (#228)', async () => {
+    // Retired with the deck: Phase 8.4's swipe-like UI and #207's arrow-key rule.
     renderPage()
-    fireEvent.click(await screen.findByRole('button', { name: 'Start swiping (1)' }))
+    await screen.findByRole('region', { name: /Tonight's shortlist/ })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.queryByRole('button', { name: /Start swiping/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull()
+    expect(screen.queryByRole('group', { name: /Swipe right/ })).toBeNull()
+    expect(screen.queryByText(/^\d+ of \d+$/)).toBeNull()
+  })
+
+  it('votes for a film with Add, and takes the vote back with Added', async () => {
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Add The Red Shoes' }))
 
     await waitFor(() => expect(mocks.castMovieNightVote).toHaveBeenCalledWith(SESSION_ID, SUGGESTION_ID, true))
-    expect(screen.queryByRole('button', { name: 'Like' })).toBeNull()
+    const added = await screen.findByRole('button', { name: 'Added The Red Shoes' })
+    expect(added.getAttribute('aria-pressed')).toBe('true')
+
+    // The API replaces a vote (`record_vote`), so taking it back is a vote of false.
+    fireEvent.click(added)
+    await waitFor(() => expect(mocks.castMovieNightVote).toHaveBeenLastCalledWith(SESSION_ID, SUGGESTION_ID, false))
+    expect(await screen.findByRole('button', { name: 'Add The Red Shoes' })).not.toBeNull()
+    expect(mocks.castMovieNightVote).toHaveBeenCalledTimes(2)
   })
 
-  it('leaves arrow keys with an editable field and votes only from the deck', async () => {
-    renderPage(true)
-    fireEvent.click(await screen.findByRole('button', { name: 'Start swiping (1)' }))
-    expect(await screen.findByRole('group', { name: /The Red Shoes/ })).not.toBeNull()
+  it("opens a film's details in its row when the film is tapped", async () => {
+    renderPage()
+    const film = await screen.findByRole('button', { name: /The Red Shoes/, expanded: false })
+    expect(screen.queryByText('A ballerina is torn between art and life.')).toBeNull()
 
-    const input = screen.getByLabelText('Nearby editor')
-    input.focus()
-    fireEvent.keyDown(input, { key: 'ArrowRight' })
+    fireEvent.click(film)
+
+    expect(film.getAttribute('aria-expanded')).toBe('true')
+    const details = within(document.getElementById(film.getAttribute('aria-controls') ?? '') as HTMLElement)
+    expect(details.getByText('A ballerina is torn between art and life.')).not.toBeNull()
+    expect(details.getByText('2h 15m · Drama')).not.toBeNull()
+    expect(details.getByText('Moira Shearer')).not.toBeNull()
+    expect(details.getByRole('link', { name: 'Open its page' }).getAttribute('href')).toBe(`/movies/${MOVIE_ID}`)
+    // Opening a film is not a vote.
     expect(mocks.castMovieNightVote).not.toHaveBeenCalled()
+  })
 
-    fireEvent.keyDown(window, { key: 'ArrowRight' })
-    await waitFor(() => {
-      // Batch S7: **a vote is cast on a suggestion, not on a film.**
-      expect(mocks.castMovieNightVote).toHaveBeenCalledWith(SESSION_ID, SUGGESTION_ID, true)
+  it('says in the row who else has seen a film, when, and where it streams', async () => {
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /The Card Player/, expanded: false }))
+
+    expect(await screen.findByText(/Mark saw this on/)).not.toBeNull()
+    expect(screen.getByText('MUBI', { exact: false, selector: 'p' })).not.toBeNull()
+    expect(screen.getByRole('link', { name: 'Open its page' }).getAttribute('href')).toBe('/films/tmdb/11050')
+  })
+
+  it('announces a match from the list, once the vote completes one', async () => {
+    mocks.castMovieNightVote.mockResolvedValueOnce({
+      recorded: true,
+      match: { movieId: MOVIE_ID, title: 'The Red Shoes', posterPath: null },
     })
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Add The Red Shoes' }))
+
+    const banner = await screen.findByRole('status')
+    expect(within(banner).getByText("It's a match")).not.toBeNull()
+    expect(within(banner).getByText('The Red Shoes')).not.toBeNull()
+  })
+
+  it('says so when a vote does not register, and leaves the film as it was', async () => {
+    mocks.castMovieNightVote.mockRejectedValueOnce(new Error('The vote service is unavailable.'))
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Add The Red Shoes' }))
+
+    expect(await screen.findByRole('alert')).not.toBeNull()
+    expect(screen.getByText('The vote service is unavailable.')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Add The Red Shoes' }).getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it("keeps the other person's votes hidden when one arrives live (#157)", async () => {
+    // The stream says only that *a* vote happened. Nothing on the list may move for it.
+    mocks.streamMovieNightEvents.mockImplementation(async function* () {
+      yield { kind: 'vote', suggestionId: SUGGESTION_ID }
+    })
+    renderPage()
+    expect(await screen.findByRole('button', { name: 'Add The Red Shoes' })).not.toBeNull()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    expect(screen.getByRole('button', { name: 'Add The Red Shoes' }).getAttribute('aria-pressed')).toBe('false')
+    expect(mocks.fetchMovieNightCandidates).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows an ended night read-only', async () => {
+    mocks.fetchMovieNight.mockResolvedValue({ ...NIGHT, status: 'ended', endedAt: '2026-09-23T22:00:00Z' })
+    renderPage()
+
+    const add = await screen.findByRole('button', { name: 'Add The Red Shoes' })
+    await waitFor(() => expect((add as HTMLButtonElement).disabled).toBe(true))
   })
 
   it('does not vote from the list with an arrow key', async () => {
