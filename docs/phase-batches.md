@@ -2537,7 +2537,22 @@ every tinted badge and notice (`/12`), the format badges (`/14`) and the filled 
 ### ~~V2 — Back arrows, and Loans always shown~~ **merged into V1 at Craig's word, 30 Sep (#229)**
 Its criteria are V1's now. The name is retired, as U5's was.
 
-### V3 — Movie night on one screen 🟡
+### ~~V3 — Movie night on one screen~~ 🟡 **shipped 2026-09-30 (`0b29e58`, [#8](https://github.com/CraigR973/mcu-app/pull/8))**
+**Acceptance: all met but the two-phone check, which is Craig's** (`OWNER-ACTIONS.md` 16b, as
+T4's was). A night is the shortlist alone: each film has one Add / Added control, and Added takes
+the vote back as a vote of `false` (#232). The deck, its gestures, its arrow keys and its "N of
+M" count are gone; "Start swiping" is "Start movie night". Tapping a film opens its synopsis,
+runtime, genres, cast, who else in the night has seen it and when, where it streams, and a link
+to its page, in the row. The API's vote and match logic is unchanged; the one server string that
+still said swipe, the push that sends a night, now names the shortlist. **Tests removed, and
+why:** "says 'Skip' and 'Add' in the deck" (the deck and Skip are gone), "leaves arrow keys with
+an editable field and votes only from the deck" (the arrow keys went with the deck), and "opens
+on the shortlist, with your own vote on each film" (rewritten for the list); nine list tests,
+one page test and two API tests replace them. Browser check at 375 and 1280 px on the rig (#231),
+with a two-person match across two browser contexts: announced to both, 2 pushes queued, and not
+announced again after a take-back and re-add. Local gate and CI green first time (1,636 API
+tests, web 435).
+
 **Covers snag 4.** Mid tier · high / mid tier · High. Sitting 1, second. Craig chose the list
 over the swipe deck (#228), which retires Phase 8.4's "swipe-like UI" and #207's arrow-key rule.
 
@@ -2755,7 +2770,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
-| **V · 1** | ~~V1~~ → V3 → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
+| **V · 1** | ~~V1~~ → ~~V3~~ → V4 → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | V6 → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 is in the 30 Sep overnight run (#230); V7 and V8 wait on Craig's pick.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 

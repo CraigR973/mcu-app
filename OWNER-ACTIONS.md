@@ -958,6 +958,9 @@ on 24 Sep, so the app deleted it. Until he re-enables, nothing reaches his phone
 Android, a notification should arrive, and tapping it should open that night, not the
 front page. Then both of you tap **Add** on the same film: "It's a match" should arrive on
 both phones. This also closes Batch 11's open 6.2 (a push reaching two real devices).
+**Since V3 (30 Sep) a night is one list:** **Add** is on each film's row (no deck, no swiping),
+**Added** takes your vote back, and tapping a film opens its details in the row. This check is
+V3's last criterion too.
 
 ### 17. ~~A Brave Search API account and key — for T7, the Blu-ray.com backfill~~ — **done 26 Sep**
 

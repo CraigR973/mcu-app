@@ -2,11 +2,12 @@
 
 ## Now
 
-**30 Sep 2026, 23:00 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
-#230). V1 is live (`13791c2`, [#6](https://github.com/CraigR973/mcu-app/pull/6)).** The top bar
-and the bottom tab bar have their background again, every tint is built, a phone has a back
-arrow on every page below the four tabs and You, the film page's Back returns to where the film
-was opened from, and Loans is always listed. Next: V3 → V4 → V5 → V6, a pull request each.
+**30 Sep 2026, 23:15 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
+#230). V1 and V3 are live.** V1 (`13791c2`): the top bar and bottom tab bar have their
+background again, every tint is built, a phone has a back arrow on every page below the four
+tabs and You, the film page's Back returns to where the film was opened from, and Loans is
+always listed. V3 (`0b29e58`): a movie night is one screen, the shortlist, with one Add / Added
+control per film and its details in the row; the swipe deck is gone. Next: V4 → V5 → V6.
 
 - **The run so far:**
   - **Preflight passed at 22:20 UTC:** production reachable from the cloud session
@@ -18,8 +19,18 @@ was opened from, and Loans is always listed. Next: V3 → V4 → V5 → V6, a pu
     at 375 and 1280 px, light and dark. Nothing left open. **Failures on the way:** the new
     opacity test first caught its own deliberate bad examples, and one `tsc` error in it; both
     fixed before the push.
+  - **V3:** [#8](https://github.com/CraigR973/mcu-app/pull/8), merged as `0b29e58`.
+    Production reported `0b29e58` at 23:13 UTC with `db: ok`; the live movie night chunk says
+    "Start movie night" and has no swipe card. Local gate and CI green first time (1,636 API
+    tests, web 435); browser check at 375 and 1280 px with a two-person match on the rig.
+    **Open, Craig's:** the two-phone match check (`OWNER-ACTIONS.md` 16b). Three deck tests
+    were removed with the deck and are named in the ledger. **Failures on the way:** a test
+    name with an apostrophe, a test that matched the title twice, and one new pytest warning;
+    all fixed before the push.
 - **`main` is green:** `urllib3` 2.8.0 ([#4](https://github.com/CraigR973/mcu-app/pull/4)),
-  then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1.
+  then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1 and its close-out
+  ([#6](https://github.com/CraigR973/mcu-app/pull/6), [#7](https://github.com/CraigR973/mcu-app/pull/7)),
+  then V3 ([#8](https://github.com/CraigR973/mcu-app/pull/8)).
 - **22b is live (`eb51568`, #224–#226).** "Check sale pages" on /retailers runs the deals check
   from a phone (a preview that saves nothing), then "Save deals": both taps are Craig's
   (`OWNER-ACTIONS.md` 1e). Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
@@ -482,6 +493,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-09-30 (V3, [#8](https://github.com/CraigR973/mcu-app/pull/8), `0b29e58`)** — Movie
+  night on one screen. The shortlist is the whole night: one Add / Added control per film (Added
+  takes the vote back as a vote of `false`, #232), details in the row, the swipe deck, its
+  gestures, arrow keys and "N of M" count removed (#228), "Start movie night" for "Start
+  swiping". The push that sends a night says "N films on the shortlist". Three deck tests
+  removed with the deck, named in the ledger. Two-person match on the rig: announced once to
+  both, 2 pushes queued. Gate and CI green first time; production reported the merge SHA at
+  23:13 UTC with `db: ok`. The two-phone check is Craig's (16b).
 
 - **2026-09-30 (V1, [#6](https://github.com/CraigR973/mcu-app/pull/6), `13791c2`)** — The top
   bar's background and every tint, back arrows, Loans always listed. The five opacity steps the
