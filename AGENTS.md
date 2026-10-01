@@ -46,7 +46,31 @@ Hosting: Neon (Postgres) + Railway (API) + Vercel (web) — live since Batch 2.
 - **Python is 3.12.** The system python is 3.7 — always use `apps/api/.venv/bin/python3.12`.
 - **Node 20 via nvm.** The system node is v14. Prefix with
   `PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"`.
-- `DATABASE_URL` lives in `apps/api/.env.local` (gitignored) — the live Neon connection.
+- `DATABASE_URL` lives in `apps/api/.env.local` (gitignored) — the live Neon connection —
+  **on the Mac.** In a cloud session it is the throwaway test database (next section).
+
+## Cloud sessions (`DECISIONS.md` #236)
+
+- **The startup hook readies the gate** (`.claude/hooks/session-start.sh`, cloud only): the
+  API venv, the pnpm workspace, Postgres 16 on `localhost:5433` with `mcu_test` at head, and
+  `DATABASE_URL` pointing at it for the session. The Mac's paths above do not apply there:
+  Python 3.12 and Node 22 are on `PATH`.
+- **No Postgres connection leaves a cloud container**; its proxy carries HTTPS only. Read the
+  live database with `PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m
+  src.scripts.live_sql "<one SELECT>"` (`--explain` for a plan, `--json` for rows), which
+  uses the read-only role in `NEON_READONLY_URL`. Never print that variable. Writes to live
+  data are not a cloud session's to make: they go through the app, or a Railway job, at
+  Craig's word.
+- **The read-only role, `mcu_readonly`, has no default privileges**, so a new table stays
+  unreadable until its migration grants it, guarded so CI's database (which has no such
+  role) still migrates: `DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname =
+  'mcu_readonly') THEN GRANT SELECT ON <table> TO mcu_readonly; END IF; END $$`. Never grant
+  a table or column that holds a credential.
+- **Railway:** with `RAILWAY_TOKEN` set (or `RAILWAY_API_TOKEN`, after `railway link -p
+  "$RAILWAY_PROJECT_ID" -e production`), `railway config plan` runs from the repo root.
+  `config apply` still waits for Craig's word in the chat ("Still explicit", below).
+- Still Craig's, wherever the session runs: his phones, his word on hosting and data
+  changes, and the environment's settings. The one-off setup is `docs/mac-cloud-setup.md`.
 
 ## Conventions
 
