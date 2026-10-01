@@ -2,58 +2,63 @@
 
 ## Now
 
-**1 Oct 2026, 00:10 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
-#230). V1, V3, V4 and V5 are live.** V1 (`13791c2`): the top bar and bottom tab bar have their
-background again, every tint is built, a phone has a back arrow on every page below the four
-tabs and You, the film page's Back returns to where the film was opened from, and Loans is
-always listed. V3 (`0b29e58`): a movie night is one screen, the shortlist, with one Add / Added
-control per film and its details in the row; the swipe deck is gone. V4 (`f7a66f8`): "Craig's
-house" is a section, offered by the copy form and found by the Archive's filter once a disc is
-there. V5 (`f1b497c`): Home has Highlights, three short poster rows (top rated, most rewatched,
-most valuable discs) from one request. Next: V6.
+**1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
+#230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
+written: V7, V8, V9, 20b, 22c, 21, T8b and 38 were not started.** V1 (`13791c2`): the top bar
+and tab bar have their background, every tint is built, back arrows on every page below the
+tabs, Loans always listed. V3 (`0b29e58`): a movie night is one screen, the shortlist. V4
+(`f7a66f8`): "Craig's house" is a section. V5 (`f1b497c`): Highlights on Home. V6 (`153d45b`):
+an admin-only "Try bid prices" on Home that saves no prices.
 
-- **The run so far:**
-  - **Preflight passed at 22:20 UTC:** production reachable from the cloud session
-    (`OWNER-ACTIONS.md` 25, step 3 done) and `main` green at `8447dea`. Local API suite
-    against a throwaway Postgres 16: 1,634 passed, none skipped.
-  - **V1:** [#6](https://github.com/CraigR973/mcu-app/pull/6), merged as `13791c2`.
-    Production reported `13791c2` at 22:48 UTC with `db: ok`, and the live web serves the
-    stylesheet with `bg-background/94` built. Local gate and CI green first time; browser check
-    at 375 and 1280 px, light and dark. Nothing left open. **Failures on the way:** the new
-    opacity test first caught its own deliberate bad examples, and one `tsc` error in it; both
-    fixed before the push.
-  - **V3:** [#8](https://github.com/CraigR973/mcu-app/pull/8), merged as `0b29e58`.
-    Production reported `0b29e58` at 23:13 UTC with `db: ok`; the live movie night chunk says
-    "Start movie night" and has no swipe card. Local gate and CI green first time (1,636 API
-    tests, web 435); browser check at 375 and 1280 px with a two-person match on the rig.
-    **Open, Craig's:** the two-phone match check (`OWNER-ACTIONS.md` 16b). Three deck tests
-    were removed with the deck and are named in the ledger. **Failures on the way:** a test
-    name with an apostrophe, a test that matched the title twice, and one new pytest warning;
-    all fixed before the push.
-  - **V4:** [#10](https://github.com/CraigR973/mcu-app/pull/10), merged as `f7a66f8`.
-    Production reported `f7a66f8` at 23:38 UTC with `db: ok`, so migration 042 applied (the
-    container runs `alembic upgrade head` before it starts); the live bundle carries the form's
-    `allSections`. Local gate and CI green first time (1,655 API tests, web 439, shared 115);
-    browser check at 375 px on the rig. Nothing left open; no disc is in Craig's house until
-    Craig moves one. **Failures on the way:** a curly apostrophe written literally into the
-    parser, two long lines, a test aimed at the wrong assistant tool, one new pytest warning;
-    all fixed before the push.
-  - **V5:** [#12](https://github.com/CraigR973/mcu-app/pull/12), merged as `f1b497c`.
-    Production reported `f1b497c` at 00:04 UTC with `db: ok`; `/highlights` answers 401 without
-    a session, and the live Home chunk carries the panel and its caption. Local gate and CI
-    green first time (1,662 API tests, web 448, shared 117); browser check at 375 px, light and
-    dark, on the rig. **Open, for a session with the live database (Craig's Mac):** the query
-    plans against production's own rows; on a scratch Postgres at production's counts the
-    endpoint took 22 ms (#234). **Failures on the way:** an edit that matched two lines, two
-    new lint warnings, one long line, the rig serving a stale shared package; all fixed before
-    the push.
+- **Craig's next steps, in order:**
+  1. **Tap "Try bid prices" on Home, read the report, then say "blend" or "bids only"**
+     (`OWNER-ACTIONS.md` 26). About 100 of the day's 750 lookups. That starts V7, then V8.
+  2. **The two-phone check of V3's movie night**, with Mark's notifications on (16b).
+  3. **Allow blu-ray.com and avforums.com** in the environment's network settings before V9.
+  4. **Your go on 20b and 22c**, after reading the 1 Oct 03:00 UTC shop check.
+- **The run, item by item** (every pull request merged with a merge commit; production's
+  `/api/v1/health` reported each batch's merge SHA and `/health/ready` said `db: ok`, and the
+  image runs `alembic upgrade head` before it serves, so 042 and 043 applied; local gate and
+  CI green first time on every pull request, so nothing was pushed twice):
+  - **Preflight, 30 Sep 22:20 UTC:** production reachable from the cloud session
+    (`OWNER-ACTIONS.md` 25, step 3) and `main` green at `8447dea`; local API suite 1,634
+    passed, none skipped.
+  - **V1:** [#6](https://github.com/CraigR973/mcu-app/pull/6) → `13791c2`, live 22:48 UTC;
+    close-out [#7](https://github.com/CraigR973/mcu-app/pull/7). Browser check at 375 and
+    1280 px, light and dark. Nothing left open. *On the way:* the new opacity test first
+    caught its own deliberate bad examples, and one `tsc` error in it.
+  - **V3:** [#8](https://github.com/CraigR973/mcu-app/pull/8) → `0b29e58`, live 23:13 UTC;
+    close-out [#9](https://github.com/CraigR973/mcu-app/pull/9). Two-person match on the rig at
+    375 and 1280 px. Three deck tests were removed with the deck, the one planned exception,
+    named in the ledger. **Open, Craig's:** the two-phone check (16b). *On the way:* a test
+    name with an apostrophe, a test that matched the title twice, one new pytest warning.
+  - **V4:** [#10](https://github.com/CraigR973/mcu-app/pull/10) → `f7a66f8`, live 23:38 UTC
+    with migration 042 applied; close-out [#11](https://github.com/CraigR973/mcu-app/pull/11).
+    Nothing left open; no disc is in Craig's house until Craig moves one. *On the way:* a curly
+    apostrophe written literally, two long lines, a test aimed at the wrong assistant tool, one
+    new pytest warning.
+  - **V5:** [#12](https://github.com/CraigR973/mcu-app/pull/12) → `f1b497c`, live 00:04 UTC;
+    close-out [#13](https://github.com/CraigR973/mcu-app/pull/13). Query plans read on a scratch
+    Postgres at production's counts (endpoint 22 ms, #234). **Open, for a session with the live
+    database (Craig's Mac):** the same plans on production's own rows. *On the way:* an edit
+    that matched two lines, two new lint warnings, one long line, the rig serving a stale
+    shared package.
+  - **V6:** [#14](https://github.com/CraigR973/mcu-app/pull/14) → `153d45b`, live 00:39 UTC
+    with migration 043 applied; close-out [#15](https://github.com/CraigR973/mcu-app/pull/15).
+    No live eBay request: tests and the 375 px rig check used saved eBay data (#235). **Open,
+    Craig's:** the run and the pick (26). *On the way:* a typo in the bid median line, an
+    import from the wrong module, three long lines, a share-out test that expected 45/45 and
+    got 46/44 (the share-out was made fairer), five tests that drew asyncio warnings, auction
+    end dates tied to the real clock, and one report line reworded after the browser check.
+  - **The 02:45–03:45 pause was not needed:** the run's last merge, this close-out, landed
+    before 01:00 UTC. The rig was stopped and its `apps/web/.env.local` deleted.
+- **Final API gate:** 1,683 tests passed, none skipped, warnings unchanged at 177; web 458,
+  shared 119; migrations 43 steps each way.
 - **`main` is green:** `urllib3` 2.8.0 ([#4](https://github.com/CraigR973/mcu-app/pull/4)),
   then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1 and its close-out
   ([#6](https://github.com/CraigR973/mcu-app/pull/6), [#7](https://github.com/CraigR973/mcu-app/pull/7)),
-  then V3 and its close-out ([#8](https://github.com/CraigR973/mcu-app/pull/8),
-  [#9](https://github.com/CraigR973/mcu-app/pull/9)), then V4 and its close-out
-  ([#10](https://github.com/CraigR973/mcu-app/pull/10), [#11](https://github.com/CraigR973/mcu-app/pull/11)),
-  then V5 ([#12](https://github.com/CraigR973/mcu-app/pull/12)).
+  then V3, V4, V5 and V6, each with its close-out
+  ([#8](https://github.com/CraigR973/mcu-app/pull/8) to [#15](https://github.com/CraigR973/mcu-app/pull/15)).
 - **22b is live (`eb51568`, #224–#226).** "Check sale pages" on /retailers runs the deals check
   from a phone (a preview that saves nothing), then "Save deals": both taps are Craig's
   (`OWNER-ACTIONS.md` 1e). Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
@@ -87,9 +92,10 @@ most valuable discs) from one request. Next: V6.
 - **Live since 26–28 Sep:** U4 `cron-values` (#223; first run with work 1 Nov), U3 (#221),
   U1 and U2 (#219, #220), T8a (#218), T10 (#217), T9 (#215). 166 films wait on You → Identify
   films (`OWNER-ACTIONS.md` 21). Valuations all current (26 Sep), due again from 24 Oct.
-- **Craig's open items:** the Neon password exposed on 25 Sep (22), eBay sign-in settings and
-  an encryption key (18), Mark turning notifications back on (16b), the phone session, and
-  the two queues.
+- **Craig's open items:** "Try bid prices" and his pick (26), the Neon password exposed on
+  25 Sep (22), eBay sign-in settings and an encryption key (18), Mark turning notifications
+  back on and the two-phone movie night (16b), allowing blu-ray.com and avforums.com before
+  V9, the phone session, and the two queues.
 
 **Live numbers (26 Sep; specs and editions 28 Sep):**
 - **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
@@ -516,6 +522,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-01 (V6, [#14](https://github.com/CraigR973/mcu-app/pull/14), `153d45b`)** — "Try
+  bid prices" on Home (#228, "trial first"): admin only, up to 100 priced films a third per
+  format, one Buy It Now and auctions search each, out of the day's valuation share through a
+  `valuation_runs` row with trigger `trial` (migration 043). An auction counts with a bid and
+  past the valuation's own matcher; the report, kept on the run row, compares bids with the
+  same search's asking prices and totals stored, asking, bids and blend (#235). It saves no
+  prices; no live eBay request was made building it. Gate and CI green first time; production
+  reported the merge SHA at 00:39 UTC with `db: ok`. The overnight run stopped here, as
+  written.
 
 - **2026-10-01 (V5, [#12](https://github.com/CraigR973/mcu-app/pull/12), `f1b497c`)** —
   Highlights on Home (#228, "a mix of all"): top rated on the shelf at 4½ or 5 with whose rating
