@@ -5,13 +5,14 @@ someone else's website, a device, or a choice that isn't an agent's to make. Age
 **read this and stop**, not work around anything on it.
 
 Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-01**,
-after Group V's overnight run (V1, V3, V4, V5, V6). *Numbers changed at the 2026-09-09 review; the old
-ones are noted in brackets so an earlier conversation still maps onto this file.*
+after the first cloud session with the live database (27 done, the trial read). *Numbers
+changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
+conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **At your Mac, once (about 15 minutes):** 27, the cloud setup, after which cloud sessions
-  need nothing from the Mac.
+- ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
+  sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer (about 20 minutes):** 22 rotate the Neon password; 18 eBay
   sign-in settings and an encryption key, which unblocks T8b; 9 revoke the dead April GitHub
   token.
@@ -23,12 +24,16 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
   numbers, then **Save deals**.
 - **Group U** (`docs/phase-batches.md`): **say go on 20b (the 429s) and 22c (every page of a
-  sale)**, both written 30 Sep. 21 starts once 3 wants have prices from two shops on two
-  days, 2 Oct at the earliest: Bad Lieutenant and Dog Soldiers (4K) were added to Wanted
-  for it on 30 Sep, and you can remove them afterwards. T8b waits on 18; 38 comes last.
+  sale)**, both written 30 Sep. **The 1 Oct check was worse** (29 of 42 refused, every
+  Shopify shop from its first request), and **101 Films and Powerhouse are one failed night
+  from being switched off**: the next check is 03:00 UTC on 2 Oct. 21 starts once 3 wants have
+  prices from two shops on two days; on 1 Oct only 2 had, and the third needs a Shopify shop
+  to answer. Bad Lieutenant and Dog Soldiers (4K) were added to Wanted for it on 30 Sep, and
+  you can remove them afterwards. T8b waits on 18; 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
-  shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **Next is yours: 26, tap "Try bid
-  prices" on Home and pick a blend or bids only**, which starts V7 and then V8. Also yours:
+  shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **Next is yours: 26, the
+  pick.** You ran the trial on 1 Oct and no film had a bid price, so a blend changes nothing
+  today and bids only values nothing. The pick starts V7 and then V8. Also yours:
   the two-phone movie night check for V3 (16b), and allowing blu-ray.com and avforums.com in
   the environment's network settings before V9.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
@@ -1176,6 +1181,12 @@ credit is out (sitting 3).
 
 ### 26. Tap "Try bid prices" on Home, then pick a blend or bids only — V6, snag 2
 
+**Trial run 1 Oct, 14:14 UTC; the pick is yours.** 100 films, eBay answered for all of them.
+**No film has a bid price, in any format:** 13 matching auctions had bids (4K 10, Blu-ray 3,
+DVD 0), the most on one film was 2, and a price needs 3. So **blend equals today's asking
+prices** (£1,903.34 on 100 discs, against £1,867.32 stored) and **bids only values nothing**.
+The report is in `docs/phase-batches.md`, under V7.
+
 **New 1 Oct.** V6 is live (`153d45b`, `DECISIONS.md` #235). The trial searches eBay once for
 each of up to 100 of your priced films, a third each on 4K, Blu-ray and DVD, asking for Buy It
 Now and auctions together, and **saves no prices**. It uses about 100 of the day's 750
@@ -1191,7 +1202,15 @@ valuation lookups. Nobody has run it yet: building it used saved eBay data only.
    prices otherwise) or **"bids only"** (most discs would then show no value). That starts V7,
    then V8.
 
-### 27. The one-off cloud setup on your Mac — so cloud sessions need nothing from it
+### 27. ~~The one-off cloud setup on your Mac — so cloud sessions need nothing from it~~ — **done 1 Oct**
+
+**Checked from a cloud session, 1 Oct afternoon:** the startup hook found `NEON_READONLY_URL`
+and `RAILWAY_TOKEN`. `live_sql` answers as `mcu_readonly`, read-only, with 1,888 films. The
+role reads 44 tables whole; the six credential columns (`pin_hash`, `invite_token`, the two
+`token_hash`, `auth`, `p256dh`) are unreadable, and it holds no write grant. Railway's CLI is
+5.63.1 and `config plan` reads `0 to add, 1 to change, 0 to destroy`, the count every plan has
+shown since 26 Sep for the API's restart-policy line, with `.railway/` unchanged since 28 Sep
+(the session's safety check would not let it display the plan's lines, which can hold values).
 
 **New 1 Oct** (`DECISIONS.md` #236, your "yes to all"). Cloud sessions can already test,
 ship, merge and check production; this gives them read-only access to the live database and

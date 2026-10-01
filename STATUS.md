@@ -2,6 +2,15 @@
 
 ## Now
 
+**1 Oct 2026, afternoon: the first cloud session with the live database
+(`docs/next-cloud-session.md`).** The cloud setup is checked and recorded (`OWNER-ACTIONS.md`
+27, done). V5's plans on production's rows closed its open check. **Waiting on Craig:**
+(1) blend or bids only, after a trial in which no film had a bid price; (2) his go on 20b,
+after a 1 Oct check in which every Shopify shop refused from its first request. **101 Films
+and Powerhouse are one refused night from auto-disable: the next check is 2 Oct, 03:00 UTC.**
+21 has 2 of the 3 wants it needs, and only those shops can supply the third. Details: the
+Log's first line, and 20b, 21 and V7 in `docs/phase-batches.md`.
+
 **1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
 #230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
 written: V7, V8, V9, 20b, 22c, 21, T8b and 38 were not started.** V1 (`13791c2`): the top bar
@@ -11,13 +20,12 @@ tabs, Loans always listed. V3 (`0b29e58`): a movie night is one screen, the shor
 an admin-only "Try bid prices" on Home that saves no prices.
 
 - **Craig's next steps, in order:**
-  1. **Tap "Try bid prices" on Home, read the report, then say "blend" or "bids only"**
-     (`OWNER-ACTIONS.md` 26). About 100 of the day's 750 lookups. That starts V7, then V8.
+  1. ~~**Tap "Try bid prices" on Home**~~ (run 1 Oct, 14:14 UTC), **then say "blend" or
+     "bids only"** (`OWNER-ACTIONS.md` 26). That starts V7, then V8.
   2. **The two-phone check of V3's movie night**, with Mark's notifications on (16b).
   3. **Allow blu-ray.com and avforums.com** in the environment's network settings before V9.
   4. **Your go on 20b and 22c**, after reading the 1 Oct 03:00 UTC shop check.
-  5. **The one-off cloud setup on your Mac** (`OWNER-ACTIONS.md` 27): after it, cloud sessions
-     need nothing from the Mac.
+  5. ~~**The one-off cloud setup on your Mac** (`OWNER-ACTIONS.md` 27)~~ — done 1 Oct.
 - **Cloud sessions, 1 Oct (#236):** a startup hook now readies the gate in every cloud
   session; `src.scripts.live_sql` reads the live database read-only over HTTPS once
   `NEON_READONLY_URL` exists; the Railway CLI is installed for `config plan`. Both
@@ -528,6 +536,19 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-01 (the cloud setup checked, and the checks that waited for the database)** —
+  `OWNER-ACTIONS.md` 27 is done: from a cloud session, `live_sql` answers as `mcu_readonly`,
+  read-only, 1,888 films; the six credential columns are unreadable (proved from the
+  privilege catalogue: the session's own safety check refused a `SELECT pin_hash`, rightly);
+  Railway 5.63.1, `config plan` at its resting `0 to add, 1 to change, 0 to destroy`. **V5's
+  open check is closed:** production's plans ran at 3.5, 0.8, 2.9 and 10.3 ms with the scratch
+  run's shapes. **The 1 Oct shop check was worse than 30 Sep's:** 29 of 42 refused with `429`,
+  every Shopify shop from its first request, so pacing is unlikely to be the cure; 101 Films
+  and Powerhouse are one refused night from auto-disable (diagnosis in 20b's section). **21's
+  condition:** 8 scheduled days, but 2 of 3 wants. **Craig ran the bid trial at 14:14 UTC:** no
+  film has a bid price (13 auctions with bids across 100 films, at most 2 on one), so a blend
+  equals asking prices. The pick, and the go on 20b, are Craig's.
 
 - **2026-10-01 (cloud sessions, #236)** — At Craig's "yes to all": a startup hook readies the
   gate in every cloud session (venv, pnpm, Postgres 16 with `mcu_test` at head, Railway CLI

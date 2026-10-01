@@ -829,6 +829,33 @@ Powerhouse each took a consecutive failure, and **three such nights would switch
 shop off**. The run asked 33 questions against 22 on earlier nights, with one second between
 requests to the same shop; two wants added on 30 Sep (Batch 21's) take 1 Oct's to about 50.
 
+**Diagnosis, 1 Oct (read-only: `scrape_runs`, `retailers`, the `cron-scrape` logs of both
+nights, and the fetcher).** This is the first criterion below, written before any code.
+
+| Night | Refused | 101 Films | Powerhouse | Second Sight | Zavvi, Arrow |
+|---|---|---|---|---|---|
+| 30 Sep, 8 wants | 21 of 33 | 8 of 8 | 7 of 8 | 6 of 8 | none |
+| 1 Oct, 10 wants | 29 of 42 | 10 of 10 | 10 of 10 | 9 of 10 | none |
+
+- **Which shops:** the three Shopify shops, every failure a `429`. No other reason appeared.
+- **After how many requests: none.** The run goes shop by shop, so a shop's first request of
+  the night comes after a quiet day, and both nights each Shopify shop refused that first
+  request and its retry two seconds later. The few that got through came mid-list (1 Oct:
+  only Second Sight's Romper Stomper). So **this run's own pace is not what trips the limit**,
+  and a longer pause alone is unlikely to cure it. Something changed between the 29 and 30
+  Sep checks: perhaps Railway's shared outbound address, perhaps the shops' platform now
+  refusing a client that names itself a price checker (`USER_AGENT`). The logs cannot say.
+- **How quickly:** 1 Oct's run took 125 s. Powerhouse 03:02:43–03:03:15, Zavvi to 03:03:31,
+  101 Films to 03:04:03, Arrow to 03:04:16, Second Sight to 03:04:48. A refused want costs
+  two requests two seconds apart, then the one-second pause: about 3 s a want, ~30 s a shop.
+- **`Retry-After`: unknown.** The fetcher raises on any status from 400 with the code alone
+  (`fetcher.py`, "The page answered 429") and keeps no headers, and the job logs only its
+  summary, never a request. The batch has to record it.
+- **Auto-disable is one night away:** 101 Films and Powerhouse stand at 2 consecutive
+  failures and Second Sight at 1, so a third refused night (2 Oct, 03:00 UTC) switches 101
+  Films and Powerhouse off.
+- **It also holds up Batch 21**, whose third want needs a Shopify shop's price.
+
 **Acceptance:**
 - Diagnosis first, read-only, written into this section before code: which shops answered
   `429`, after how many requests and how quickly, and whether they sent `Retry-After`, from
@@ -989,6 +1016,13 @@ criterion, that is recorded *underneath* the quote, never folded into it.
 ran at 03:04 UTC that day, after the jobs fix (#204), and had three days by 26 Sep; the
 seventh is the 30 Sep run. The check below still applies: count `trigger=cron` days in
 `scrape_runs` before starting, not the calendar.
+
+**Checked 1 Oct (`live_sql`): the days hold, the breadth does not.** Eight `trigger=cron` days
+(24 Sep–1 Oct), none errored. **Two** wants have prices from two shops on two days or more:
+Castle Freak (101 Films 8 days, Zavvi 8) and Dead Man's Shoes (Second Sight 9, Zavvi 8). Dog
+Soldiers has Zavvi on one day and Bad Lieutenant nothing; Zavvi and Arrow found no more of
+them, so the shops left to price them are the Shopify ones, refusing since 30 Sep (20b). So
+21 does not start on 2 Oct unless those shops answer.
 
 **Covers Phase 5.7:**
 
@@ -2249,9 +2283,9 @@ every gate below and moves 38 to the very end.
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
 | 3b | ~~22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button)~~ | **shipped 30 Sep** `eb51568` (#224–#226); the live check and save are Craig's, `OWNER-ACTIONS.md` 1e |
-| 3c | 20b — shops that answer 429 | **written 30 Sep at Craig's word**; builds at his go, after the 1 Oct 03:00 UTC check. Criteria under Batch 20 |
+| 3c | 20b — shops that answer 429 | **written 30 Sep at Craig's word**; builds at his go. The 1 Oct check is read: 29 of 42 refused, each Shopify shop from its first request, and 101 Films and Powerhouse one night from auto-disable (diagnosis under Batch 20b). Criteria under Batch 20 |
 | 3d | 22c — every page of a sale | **written 30 Sep at Craig's word**; builds at his go, after 20b. Criteria under Batch 22 |
-| 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against 3. **Craig chose to add wants (30 Sep):** Bad Lieutenant and Dog Soldiers, both 4K, added that evening (#227). Starts once 3 wants have prices from two shops on two days or more, 2 Oct at the earliest |
+| 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against 3. **Craig chose to add wants (30 Sep):** Bad Lieutenant and Dog Soldiers, both 4K, added that evening (#227). Starts once 3 wants have prices from two shops on two days or more, 2 Oct at the earliest. **1 Oct: 2 of 3**; the third needs a Shopify shop, refusing since 30 Sep (20b) |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
 | 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
 | — | 33 → 34 — Email | parked with `OWNER-ACTIONS.md` 7 |
@@ -2437,7 +2471,7 @@ batches keep their gates unchanged.
 | 2 | V6 bid trial → **Craig runs it and picks** → V7 value from bids → V8 Deals "usual" price | None to start; the pick stops it mid-way | top tier · xhigh (from V6, V7) | top tier · Extra High |
 | 3 | V9 reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max | top tier · Max |
 | 4 | 20b shops that answer 429 → 22c every page of a sale | Craig's go, after the 1 Oct 03:00 UTC check (Group U) | top tier · high | top tier · High |
-| — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U) | mid tier · medium | mid tier · Medium |
+| — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U); 2 of 3 on 1 Oct, the third waits on 20b's shops | mid tier · medium | mid tier · Medium |
 | 5 | T8b Connect eBay | `OWNER-ACTIONS.md` 18 (Group U) | top tier · max | top tier · Max |
 | 6 | 38 the end-to-end suite | Last, after every V batch | mid tier · high | mid tier · High |
 | — | 33 → 34 Email | Parked (`OWNER-ACTIONS.md` 7) | top tier · max | top tier · Max |
@@ -2600,7 +2634,17 @@ fine" (#228): that name, one place with no shelves, counted like any other disc.
 - Gate green.
 
 ### ~~V5 — Highlights on Home~~ 🟡 **shipped 2026-10-01 (`f1b497c`, [#12](https://github.com/CraigR973/mcu-app/pull/12))**
-**Acceptance: met, with one check left open.** Home has a Highlights panel after "Worth a
+**Acceptance: met; the open check closed on 1 Oct.** The four statements, captured from
+`highlights()` as #234 did, ran under `EXPLAIN (ANALYZE, BUFFERS)` on production's own rows
+through `live_sql`, four times each: medians **3.5, 0.8, 2.9 and 10.3 ms** (planning 1.7, 0.2,
+0.7 and 2.9 ms more), against the scratch run's 3.1, 0.8, 1.9 and 8.4. **The same shapes:**
+sequential scans at ~2,000 rows, index scans on the joins, every page a shared-buffer hit.
+Most rewatched's extra millisecond is mostly its sequential scan of production's `movies`,
+13 MB for 1,888 rows (1.4 ms); most valuable joins 1,303 priced discs to `movies` twice by
+index, against a planner estimate of 7. About 23 ms of database time for the endpoint, so
+still no cache (§17 row 33).
+
+**As shipped:** Home has a Highlights panel after "Worth a
 rewatch": up to 12 posters a row, each opening its film, from one request,
 `GET /api/v1/highlights`. **Top rated** is films on the shelf (`owned_copy()`) at 4½ or 5 stars
 by each person's highest rating, each poster naming whose; the row says "Rated 4½ or 5 stars by
@@ -2613,9 +2657,8 @@ three are empty. **The query plans were read at production's counts, not on its 
 `EXPLAIN (ANALYZE, BUFFERS)` on the endpoint's own SQL against a scratch Postgres seeded to
 `STATUS.md`'s figures gave 3.1, 0.8, 1.9 and 8.4 ms, the endpoint 22 ms median (#234). Browser
 check at 375 px, light and dark, on the rig. Local gate and CI green first time (1,662 API
-tests, web 448, shared 117). **Open: the same plans against production's own rows**, for a
-session holding the live database's connection (Craig's Mac); nothing in the app waits on it.
-"Best reviewed" stays V9's.
+tests, web 448, shared 117). ~~Open: the same plans against production's own rows~~ — read on
+1 Oct, above. "Best reviewed" stays V9's.
 
 **Covers snag 9.** Mid tier · high / mid tier · High. Sitting 1, last. "A mix of all" (#228).
 
@@ -2669,6 +2712,31 @@ blend or bids only from its report (#229).
 ### V7 — Value from live bids 🔴
 **Covers snag 2.** Top tier · xhigh / top tier · Extra High. Sitting 2, after Craig's pick.
 Written for a blend; a pick of bids only changes the second point.
+
+**V6's trial, run by Craig on 1 Oct at 14:14 UTC** (read with `live_sql` from
+`valuation_runs.report`, run `6edadb88`). eBay answered all 100 searches. **No film has a bid
+price:** 12 films had any matching auction with a bid, the most on one film was 2 (The Da
+Vinci Code, 4K), and a price needs 3.
+
+| | 4K | Blu-ray | DVD | All |
+|---|---|---|---|---|
+| Films searched | 34 | 33 | 33 | 100 |
+| With a bid price | 0 | 0 | 0 | 0 |
+| Matching auctions with a bid | 10 | 3 | 0 | 13 |
+| … ending within 24 hours | 0 | 1 | 0 | 1 |
+| Matching auctions, no bid | 8 | 31 | 71 | 110 |
+| Auctions the matcher turned away | 47 | 86 | 65 | 198 |
+| Searches cut at 200 | 5 | 8 | 13 | 26 |
+| Places auction-only listings took in them | 29 | 81 | 88 | 198 |
+| Films that lost their asking price | 0 | 0 | 0 | 0 |
+| Stored (asking, last run) | £1,054.73 | £527.19 | £285.40 | £1,867.32 |
+| Today's asking | £1,057.60 | £546.12 | £299.62 | £1,903.34 |
+| Bids only | £0, 0 discs | £0 | £0 | £0 |
+| Blend | all asking | all asking | all asking | £1,903.34 |
+
+**Bids against asking** cannot be compared: no film has both. **What it means for the pick:**
+today a blend values every disc exactly as asking prices do, and bids only values none.
+Sharing the 200 places cost no film its asking price.
 
 **Acceptance:**
 - The valuation's one search per film and format reads Buy It Now and auctions together.
