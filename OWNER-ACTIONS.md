@@ -23,17 +23,17 @@ conversation still maps onto this file.*
   You → Disc specs (20).
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
   numbers, then **Save deals**.
-- **Group U** (`docs/phase-batches.md`): **say go on 20b (the 429s) and 22c (every page of a
-  sale)**, both written 30 Sep. **The 1 Oct check was worse** (29 of 42 refused, every
-  Shopify shop from its first request), and **101 Films and Powerhouse are one failed night
-  from being switched off**: the next check is 03:00 UTC on 2 Oct. 21 starts once 3 wants have
+- **Group U** (`docs/phase-batches.md`): **20b's first half is live (1 Oct, `548160f`)** at your
+  "2) yes": a `429` no longer counts towards switching a shop off, and each refusal records what
+  the shop sent back. The second half (pacing) and 22c wait for two nights of that evidence;
+  your go comes after it. 101 Films and Powerhouse keep the 2 failures counted on 30 Sep and
+  1 Oct under the old rule; a night with a price clears them. 21 starts once 3 wants have
   prices from two shops on two days; on 1 Oct only 2 had, and the third needs a Shopify shop
   to answer. Bad Lieutenant and Dog Soldiers (4K) were added to Wanted for it on 30 Sep, and
   you can remove them afterwards. T8b waits on 18; 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
-  shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **Next is yours: 26, the
-  pick.** You ran the trial on 1 Oct and no film had a bid price, so a blend changes nothing
-  today and bids only values nothing. The pick starts V7 and then V8. Also yours:
+  shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **26 is done:** you ran
+  the trial and picked neither, so V7 is shelved and V8 runs on asking prices. Also yours:
   the two-phone movie night check for V3 (16b), and allowing blu-ray.com and avforums.com in
   the environment's network settings before V9.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
@@ -1179,9 +1179,12 @@ Your other Group V steps come inside the batches, when each is built: the bid tr
 pick (sitting 2), and allowing blu-ray.com and avforums.com, with Brave's limit only if its
 credit is out (sitting 3).
 
-### 26. Tap "Try bid prices" on Home, then pick a blend or bids only — V6, snag 2
+### 26. ~~Tap "Try bid prices" on Home, then pick a blend or bids only — V6, snag 2~~ — **done 1 Oct: "neither"**
 
-**Trial run 1 Oct, 14:14 UTC; the pick is yours.** 100 films, eBay answered for all of them.
+**Your pick, 1 Oct: neither.** Values stay on asking prices, V7 is shelved, and V8 runs on asking
+prices (`DECISIONS.md` #237). The trial stays on Home if you ever want to run it again.
+
+**Trial run 1 Oct, 14:14 UTC.** 100 films, eBay answered for all of them.
 **No film has a bid price, in any format:** 13 matching auctions had bids (4K 10, Blu-ray 3,
 DVD 0), the most on one film was 2, and a price needs 3. So **blend equals today's asking
 prices** (£1,903.34 on 100 discs, against £1,867.32 stored) and **bids only values nothing**.

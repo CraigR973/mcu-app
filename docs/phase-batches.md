@@ -817,7 +817,17 @@ second category for the feed** if it wants one; it must not quietly reuse this o
 created it. Its acceptance ("after backdating test data") is fully provable in CI, unlike the
 other two.
 
-### Batch 20b — Shops that answer 429 🟡
+### Batch 20b — Shops that answer 429 🟡 — **first half shipped 2026-10-01 (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19))**
+**As shipped (first half):** the fetcher raises a refusal for a `429`, carrying `Retry-After`,
+`cf-mitigated`, `server` and the page's title; the runner logs each refused request
+(`scrape_refused`), keeps refusals out of the auto-disable count, and records a shop that only
+refused as `blocked`, its count left alone. A genuine failure beside refusals still counts.
+No migration: Batch 16's CHECK already allowed `blocked`. Local gate and CI green first time
+(1,719 API tests, warnings unchanged at 178; web 458, shared 119). **Open:** the 2 Oct
+03:00 UTC check read back (the last first-half criterion), then the second half from two
+nights of evidence (#238). 101 Films and Powerhouse still carry the 2 failures counted on 30
+Sep and 1 Oct, under the old rule.
+
 **Written 30 Sep at Craig's word ("yes, write a batch for this"); builds at his go, after the
 1 Oct 03:00 UTC shop check, which is its first evidence.** Opus 5 · high / GPT-5.6 Sol ·
 High: request pacing against live shops. Criteria authored 30 Sep, before any code (#54).
@@ -2300,7 +2310,7 @@ every gate below and moves 38 to the very end.
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
 | 3b | ~~22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button)~~ | **shipped 30 Sep** `eb51568` (#224–#226); the live check and save are Craig's, `OWNER-ACTIONS.md` 1e |
-| 3c | 20b — shops that answer 429 | **written 30 Sep at Craig's word**; builds at his go. The 1 Oct check is read: 29 of 42 refused, each Shopify shop from its first request, and 101 Films and Powerhouse one night from auto-disable (diagnosis under Batch 20b). Criteria under Batch 20 |
+| 3c | 20b — shops that answer 429 | **written 30 Sep at Craig's word; first half shipped 1 Oct (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19))**, at his "2) yes": a `429` no longer counts towards auto-disable, and each refusal records what the shop sent. The second half (pacing) and 22c wait for two nights of that evidence (#238). Criteria under Batch 20b |
 | 3d | 22c — every page of a sale | **written 30 Sep at Craig's word**; builds at his go, after 20b. Criteria under Batch 22 |
 | 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against 3. **Craig chose to add wants (30 Sep):** Bad Lieutenant and Dog Soldiers, both 4K, added that evening (#227). Starts once 3 wants have prices from two shops on two days or more, 2 Oct at the earliest. **1 Oct: 2 of 3**; the third needs a Shopify shop, refusing since 30 Sep (20b) |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
@@ -2485,9 +2495,9 @@ batches keep their gates unchanged.
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
 | 1 | V1 top bar, tints, back arrows, Loans → V3 movie night → V4 Craig's house → V5 Highlights | **Go given 30 Sep** for the overnight run, with V6 after it (#230); the production host allowed first (`OWNER-ACTIONS.md` 25) | top tier · high (from V4) | top tier · High |
-| 2 | V6 bid trial → **Craig runs it and picks** → V7 value from bids → V8 Deals "usual" price | None to start; the pick stops it mid-way | top tier · xhigh (from V6, V7) | top tier · Extra High |
+| 2 | ~~V6 bid trial~~ → **Craig ran it and picked neither (1 Oct, #237)** → ~~V7 value from bids~~ (shelved) → V8 Deals "usual" price, on asking prices | Nothing more: V8 starts on its own | top tier · xhigh (from V6, V7) | top tier · Extra High |
 | 3 | V9 reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max | top tier · Max |
-| 4 | 20b shops that answer 429 → 22c every page of a sale | Craig's go, after the 1 Oct 03:00 UTC check (Group U) | top tier · high | top tier · High |
+| 4 | 20b shops that answer 429 (first half shipped 1 Oct, `548160f`) → 20b's second half → 22c every page of a sale | The second half and 22c wait for two nights of the refusals' evidence (Group U, #238) | top tier · high | top tier · High |
 | — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U); 2 of 3 on 1 Oct, the third waits on 20b's shops | mid tier · medium | mid tier · Medium |
 | 5 | T8b Connect eBay | `OWNER-ACTIONS.md` 18 (Group U) | top tier · max | top tier · Max |
 | 6 | 38 the end-to-end suite | Last, after every V batch | mid tier · high | mid tier · High |
@@ -2502,7 +2512,7 @@ batches keep their gates unchanged.
 | V4 | Snag 6: Craig's house | 🟡 | top tier · high | top tier · High |
 | V5 | Snag 9: Highlights on Home | 🟡 | mid tier · high | mid tier · High |
 | V6 | Snag 2, step one: the bid trial | 🟡 | top tier · xhigh | top tier · Extra High |
-| V7 | Snag 2: value from live bids | 🔴 | top tier · xhigh | top tier · Extra High |
+| ~~V7~~ | ~~Snag 2: value from live bids~~ **shelved 1 Oct, #237** | 🔴 | top tier · xhigh | top tier · Extra High |
 | V8 | Snag 1: the Deals "usual" price | 🟡 | top tier · high | top tier · High |
 | V9 | Snag 8, and V5's fourth row: reviews | 🔴 | top tier · max | top tier · Max |
 
@@ -2540,7 +2550,8 @@ scrapers did at `max`. The rest is interface work with clear criteria.
 **Why this order.** Sitting 1 needs nothing from anyone and is what Craig sees every day; V1
 comes first because it fixes a fault visible on every page, and V1's back arrows change the
 same top bar. Sitting 2's trial is quick to build, so the pick can be made early. V8 averages
-V7's eBay figure, so it follows V7 rather than being built twice. Sitting 3 waits on nothing,
+V7's eBay figure, so it follows V7 rather than being built twice. *(V7 was shelved on 1 Oct,
+#237, so V8 averages today's eBay figure, the asking prices.)* Sitting 3 waits on nothing,
 but its first step is Craig's. Group U's 20b and 22c keep their gate and slot in when it
 clears. 38 moves from after T8b to the very end, so it pins the flows sittings 1 and 2 change.
 
@@ -2726,7 +2737,11 @@ blend or bids only from its report (#229).
 - The report is kept where a later session can read it, not only shown once.
 - Gate green. The run is Craig's, and his pick of blend or bids only follows it.
 
-### V7 — Value from live bids 🔴
+### ~~V7 — Value from live bids~~ 🔴 **shelved 2026-10-01 at Craig's word ("1) neither", #237)**
+**Shelved:** V6's trial (below) found no film with a bid price, so a blend would equal
+today's asking prices and bids only would value nothing. Values stay on asking prices. The
+criteria stay below, unbuilt, in case bids are ever thick enough to be worth a second look.
+
 **Covers snag 2.** Top tier · xhigh / top tier · Extra High. Sitting 2, after Craig's pick.
 Written for a blend; a pick of bids only changes the second point.
 
@@ -2770,11 +2785,12 @@ Sharing the 200 places cost no film its asking price.
 - Gate green.
 
 ### V8 — The Deals "usual" price 🟡
-**Covers snag 1.** Top tier · high / top tier · High. Sitting 2, last: it averages V7's eBay
-figure.
+**Covers snag 1.** Top tier · high / top tier · High. Sitting 2, last. **V7 is shelved (#237),
+so eBay's figure is today's: the asking-price median in `ebay_price_refs`.**
 
 **Acceptance:**
-- An eBay find's "usually" is the average of eBay's figure for the film and format (V7's) and
+- An eBay find's "usually" is the average of eBay's figure for the film and format (asking
+  prices, V7 being shelved) and
   the latest price from each watched shop that stocks it, from the nightly check within the
   last 7 days. With no shop price, eBay's figure alone. Sold prices are not part of it (#228).
 - The card says what the figure is: "£P with postage · usually £U", and beneath it where £U
@@ -2899,9 +2915,9 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b (first half `548160f`, 1 Oct; the second half after two nights of evidence, #238) → 22c (after 20b) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 | **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
-| **V · 2** | ~~V6~~ → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); V7 and V8 wait on Craig's run of it and his pick.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
+| **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237) and V8 runs on asking prices.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
