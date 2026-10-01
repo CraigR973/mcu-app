@@ -13,8 +13,10 @@ check production. Two things still need the Mac, because the credentials live on
 - **Railway's CLI.** `config plan` needs a token. Applying stays Craig's word, as now
   (`CLAUDE.md`, "Still explicit").
 
-On 1 Oct a cloud session reached `neon.tech` and Railway's API (`backboard.railway.com`)
-through its proxy, so no network setting should need changing.
+On 1 Oct a cloud session reached both through its proxy, so no network setting should need
+changing: Railway's API (`backboard.railway.com`) answered "Unauthorized" to a made-up token,
+and Neon's SQL endpoint answered "password authentication failed" to a made-up user, which
+is Neon reading the request, not the proxy refusing it.
 
 ## Rules for this session
 
