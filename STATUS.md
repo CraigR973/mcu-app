@@ -2,14 +2,15 @@
 
 ## Now
 
-**30 Sep 2026, 23:40 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
-#230). V1, V3 and V4 are live.** V1 (`13791c2`): the top bar and bottom tab bar have their
+**1 Oct 2026, 00:10 UTC: Group V's overnight run is under way (`docs/group-v-overnight.md`,
+#230). V1, V3, V4 and V5 are live.** V1 (`13791c2`): the top bar and bottom tab bar have their
 background again, every tint is built, a phone has a back arrow on every page below the four
 tabs and You, the film page's Back returns to where the film was opened from, and Loans is
 always listed. V3 (`0b29e58`): a movie night is one screen, the shortlist, with one Add / Added
 control per film and its details in the row; the swipe deck is gone. V4 (`f7a66f8`): "Craig's
 house" is a section, offered by the copy form and found by the Archive's filter once a disc is
-there. Next: V5 → V6.
+there. V5 (`f1b497c`): Home has Highlights, three short poster rows (top rated, most rewatched,
+most valuable discs) from one request. Next: V6.
 
 - **The run so far:**
   - **Preflight passed at 22:20 UTC:** production reachable from the cloud session
@@ -37,11 +38,22 @@ there. Next: V5 → V6.
     Craig moves one. **Failures on the way:** a curly apostrophe written literally into the
     parser, two long lines, a test aimed at the wrong assistant tool, one new pytest warning;
     all fixed before the push.
+  - **V5:** [#12](https://github.com/CraigR973/mcu-app/pull/12), merged as `f1b497c`.
+    Production reported `f1b497c` at 00:04 UTC with `db: ok`; `/highlights` answers 401 without
+    a session, and the live Home chunk carries the panel and its caption. Local gate and CI
+    green first time (1,662 API tests, web 448, shared 117); browser check at 375 px, light and
+    dark, on the rig. **Open, for a session with the live database (Craig's Mac):** the query
+    plans against production's own rows; on a scratch Postgres at production's counts the
+    endpoint took 22 ms (#234). **Failures on the way:** an edit that matched two lines, two
+    new lint warnings, one long line, the rig serving a stale shared package; all fixed before
+    the push.
 - **`main` is green:** `urllib3` 2.8.0 ([#4](https://github.com/CraigR973/mcu-app/pull/4)),
   then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1 and its close-out
   ([#6](https://github.com/CraigR973/mcu-app/pull/6), [#7](https://github.com/CraigR973/mcu-app/pull/7)),
   then V3 and its close-out ([#8](https://github.com/CraigR973/mcu-app/pull/8),
-  [#9](https://github.com/CraigR973/mcu-app/pull/9)), then V4 ([#10](https://github.com/CraigR973/mcu-app/pull/10)).
+  [#9](https://github.com/CraigR973/mcu-app/pull/9)), then V4 and its close-out
+  ([#10](https://github.com/CraigR973/mcu-app/pull/10), [#11](https://github.com/CraigR973/mcu-app/pull/11)),
+  then V5 ([#12](https://github.com/CraigR973/mcu-app/pull/12)).
 - **22b is live (`eb51568`, #224–#226).** "Check sale pages" on /retailers runs the deals check
   from a phone (a preview that saves nothing), then "Save deals": both taps are Craig's
   (`OWNER-ACTIONS.md` 1e). Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
@@ -504,6 +516,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-01 (V5, [#12](https://github.com/CraigR973/mcu-app/pull/12), `f1b497c`)** —
+  Highlights on Home (#228, "a mix of all"): top rated on the shelf at 4½ or 5 with whose rating
+  (the caption says Mark has rated none, from the data, #159), most rewatched across both
+  diaries, most valuable discs at their stored value through the total's own
+  `owned_valued_discs()`. One request, `GET /highlights`; its plans read at production's counts
+  on a scratch database, 22 ms for the endpoint, so no cache (#234). Gate and CI green first
+  time; production reported the merge SHA at 00:04 UTC with `db: ok`.
 
 - **2026-09-30 (V4, [#10](https://github.com/CraigR973/mcu-app/pull/10), `f7a66f8`)** —
   "Craig's house" is a section (#228): in `SECTIONS`, the parser ("Craigs house" and an iPhone's

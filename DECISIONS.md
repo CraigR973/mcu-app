@@ -4731,3 +4731,30 @@ contemporaneous.
      - **The spellings the parser accepts** are "Craig's house", "Craigs house" and the curly
        apostrophe an iPhone types by default; "Craig house" is not filed there.
 
+
+### 2026-10-01 — Group V, batch V5
+
+234. **V5: the Highlights are the collection's, and how their plans were read without production.**
+
+     - **Not caller-scoped.** Unlike Batch 37's memories, both people see the same three rows,
+       and each rating and viewing names whose it is. The snag asked for the collection's
+       highlights; a Mark-only "Top rated" would be empty (#159).
+     - **Top rated reads each person's highest rating of a film**, as "Worth a rewatch" does, on
+       the shelf only (`owned_copy()`). The caption comes from who has rated anything
+       (`ratedBy`, `notRatedBy`), so it says "Mark has not rated any films" today and corrects
+       itself the day Mark rates one, with no code change.
+     - **Most rewatched is not limited to the shelf.** The criterion says "across both
+       diaries", and a film watched four times is a highlight even if its disc was sold or it
+       was streamed. Limiting it is one `where` clause if Craig wants it.
+     - **Most valuable shares the total's subquery.** `owned_valued_discs()` is what
+       `collection_value` built inline, so a disc that counts towards the value is exactly a
+       disc that can appear in the row: a combo counts once at its best format, a download
+       never. The price shown is one copy's stored value; copies are shown beside it.
+     - **The plans were read on a scratch database at production's counts.** No session here
+       holds the live connection, so a local Postgres was seeded to `STATUS.md`'s figures
+       (1,887 films, 1,880 discs, 1,606 viewings, 1,454 valuations, 1,300 priced), the
+       endpoint's own SQL was captured with a `before_cursor_execute` listener, and each
+       statement was run under `EXPLAIN (ANALYZE, BUFFERS)`. Sequential scans at ~2,000 rows
+       and index scans on the joins; 22 ms median for the endpoint, so no server cache (§17
+       row 33). The same run against production's own rows is open.
+     - **Twelve to a row**: enough to scroll on a phone, few enough to take in.
