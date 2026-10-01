@@ -53,6 +53,7 @@ from src.services.scraping.extract import (
 )
 from src.services.scraping.fetcher import (
     FetchError,
+    RefusedError,
     UnsafeUrlError,
     fetch_page,
 )
@@ -108,6 +109,11 @@ class ScrapeOutcome:
     #: auto-disable arithmetic — and a retailer answering this way for *every* want in a
     #: run is flagged, because that is what a broken selector looks like.
     no_results: bool = False
+    #: True when the shop **refused** the request, answering ``429`` (Batch 20b). Not a
+    #: failure for auto-disable either: a refusal says nothing about whether the scraper
+    #: works, and on 30 Sep and 1 Oct it was about to switch off shops that were not
+    #: broken. Still recorded with what the shop sent back, so a run says who refused.
+    refused: bool = False
     url: str | None = None
     #: Why a result was rejected. The important field — a scraper that has started
     #: matching the wrong node reports here rather than silently writing a number.
@@ -152,6 +158,11 @@ class ScrapeRunResult:
     @property
     def skipped(self) -> int:
         return sum(1 for outcome in self.outcomes if outcome.skipped)
+
+    @property
+    def refused(self) -> int:
+        """Counted within ``failed`` too: a refused request still brought no price back."""
+        return sum(1 for outcome in self.outcomes if outcome.refused)
 
 
 def apply_search_template(template: str, title: str, preferred_format: str | None = None) -> str:
@@ -224,7 +235,7 @@ async def scrape_one(
         outcome.error = "no search URL template configured"
         return None, outcome
 
-    last_error: str | None = None
+    last_error: FetchError | None = None
     for attempt in range(MAX_ATTEMPTS):
         try:
             page = await fetch_page(url, client=client)
@@ -234,11 +245,26 @@ async def scrape_one(
             outcome.error = f"refused: {exc}"
             return None, outcome
         except FetchError as exc:
-            last_error = str(exc)
+            last_error = exc
+            if isinstance(exc, RefusedError):
+                # One line per refused request, with its time: the evidence 20b's second
+                # half waits for (after how many requests, and what the shop asked for).
+                logger.warning(
+                    "scrape_refused",
+                    retailer=retailer.name,
+                    wanted=title,
+                    attempt=attempt + 1,
+                    status=exc.status,
+                    retry_after=exc.retry_after,
+                    evidence=exc.evidence,
+                )
             if attempt + 1 < MAX_ATTEMPTS:
                 await asyncio.sleep(RETRY_PAUSE_SECONDS)
     else:
-        outcome.error = last_error or "could not be fetched"
+        outcome.error = str(last_error) if last_error else "could not be fetched"
+        # Judged by the last answer: a shop that refused once and then timed out has a
+        # problem a person should see, and that one still counts.
+        outcome.refused = isinstance(last_error, RefusedError)
         return None, outcome
 
     candidate = extract(
@@ -323,6 +349,21 @@ def _record_no_results(retailer: Retailer, count: int) -> None:
     logger.info("retailer_no_results", retailer=retailer.name, wants=count)
 
 
+def _record_refused(retailer: Retailer, refused: list[ScrapeOutcome]) -> None:
+    """The shop refused every request it did not answer with a "no". Say so; do not count it.
+
+    **Batch 20b.** `blocked` is the status Batch 16 declared for this and nothing used.
+    `consecutive_failures` is **left alone**, as `_record_no_results` leaves it: a refusal
+    is neither a failure nor a success, and the scraper behind it is untested either way.
+    """
+    retailer.last_scrape_status = "blocked"
+    retailer.last_scrape_error = (
+        f"{len(refused)} request(s) refused. The last: {refused[-1].error}"
+    )[:2000]
+    retailer.last_scraped_at = utcnow()
+    logger.warning("retailer_refused", retailer=retailer.name, wants=len(refused))
+
+
 def _record_success(retailer: Retailer) -> None:
     # Reset, not decrement: three failures *in a row* is the signal. A shop that fails on
     # Monday and works on Tuesday has not accumulated anything.
@@ -397,8 +438,11 @@ async def run_scrape(
         if not dry_run:
             mine = [o for o in result.outcomes if o.retailer == retailer.name]
             attempted = [
-                o for o in mine if not o.skipped and not o.not_stocked and not o.no_results
+                o
+                for o in mine
+                if not o.skipped and not o.not_stocked and not o.no_results and not o.refused
             ]
+            refused = [o for o in mine if o.refused]
             empty = [o for o in mine if o.no_results]
             if any_success:
                 _record_success(retailer)
@@ -406,6 +450,10 @@ async def run_scrape(
                 message = "; ".join(o.error or "; ".join(o.reasons) for o in attempted)[:2000]
                 if await _record_failure(db, retailer, message or "no usable result"):
                     result.disabled.append(retailer.name)
+            elif refused:
+                # **Never a failure** (Batch 20b). Before it, three refused nights would
+                # have switched off shops whose scrapers were fine.
+                _record_refused(retailer, refused)
             elif empty:
                 # **Flagged, never disabled** (`DECISIONS.md` #125). Every want this shop
                 # was asked came back with an empty page and nothing came back priced.

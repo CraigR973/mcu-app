@@ -856,15 +856,32 @@ nights, and the fetcher).** This is the first criterion below, written before an
   Films and Powerhouse off.
 - **It also holds up Batch 21**, whose third want needs a Shopify shop's price.
 
-**Acceptance:**
+**Split in two at Craig's word, 1 Oct ("2) yes"), after that diagnosis.** The first half
+ships before the 2 Oct check, so no shop is switched off by refusals; the pacing half, and
+22c after it, wait for two nights of the evidence the first half records.
+
+**First half — acceptance:**
+- A `429` is a refusal, not a broken scraper: it never counts towards auto-disable. A shop
+  whose requests were all refused or answered "not here" is recorded as `blocked` (a status
+  Batch 16 declared and nothing used), its failure count left as it was.
+- Each refusal records what the shop sent back: `Retry-After`, `cf-mitigated`, `server` and
+  the page's title, in the run's failure record and in a log line per refused request.
+- The run's record still names every shop and want refused, and the job's summary counts
+  them.
+- Tests. Gate green.
+- The first scheduled check after the merge is read back from `scrape_runs` and the job's
+  log: no shop switched off by `429`s, and what the refusals carried.
+
+**Second half — acceptance, to be rewritten from that evidence** (as written 30 Sep, before
+the diagnosis showed refusals from the first request):
 - Diagnosis first, read-only, written into this section before code: which shops answered
   `429`, after how many requests and how quickly, and whether they sent `Retry-After`, from
-  `scrape_runs`, the Railway logs and the fetcher.
+  `scrape_runs`, the Railway logs and the fetcher. *(Done 1 Oct, above.)*
 - Requests to one shop are spaced so that a night's check is not refused: a per-shop pause
   set from that diagnosis. A `429` is retried at most once, after `Retry-After` when the shop
   sends one (bounded), and otherwise reported.
-- A `429` is a refusal, not a broken scraper: it never counts towards auto-disable, and the
-  run's record names the shops that refused.
+- ~~A `429` is a refusal, not a broken scraper: it never counts towards auto-disable, and the
+  run's record names the shops that refused.~~ *(Moved to the first half.)*
 - The sale-page check (22b, and 22c after it) keeps the same pacing.
 - The first scheduled check after the merge is read back from `scrape_runs`: no shop is left
   without prices because of `429`s, or the refusals that remain are named.
