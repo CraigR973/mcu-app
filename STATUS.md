@@ -16,6 +16,12 @@ an admin-only "Try bid prices" on Home that saves no prices.
   2. **The two-phone check of V3's movie night**, with Mark's notifications on (16b).
   3. **Allow blu-ray.com and avforums.com** in the environment's network settings before V9.
   4. **Your go on 20b and 22c**, after reading the 1 Oct 03:00 UTC shop check.
+  5. **The one-off cloud setup on your Mac** (`OWNER-ACTIONS.md` 27): after it, cloud sessions
+     need nothing from the Mac.
+- **Cloud sessions, 1 Oct (#236):** a startup hook now readies the gate in every cloud
+  session; `src.scripts.live_sql` reads the live database read-only over HTTPS once
+  `NEON_READONLY_URL` exists; the Railway CLI is installed for `config plan`. Both
+  credentials come from item 27.
 - **The run, item by item** (every pull request merged with a merge commit; production's
   `/api/v1/health` reported each batch's merge SHA and `/health/ready` said `db: ok`, and the
   image runs `alembic upgrade head` before it serves, so 042 and 043 applied; local gate and
@@ -522,6 +528,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-01 (cloud sessions, #236)** — At Craig's "yes to all": a startup hook readies the
+  gate in every cloud session (venv, pnpm, Postgres 16 with `mcu_test` at head, Railway CLI
+  5.63.1); `src.scripts.live_sql` reads the live database over Neon's HTTPS endpoint with a
+  read-only role; `docs/mac-cloud-setup.md` is the one-off Mac session that makes the role
+  and tests a Railway token (`OWNER-ACTIONS.md` 27). From the cloud, Neon's endpoint and
+  Railway's API both answered made-up credentials, so only the real ones are missing.
 
 - **2026-10-01 (V6, [#14](https://github.com/CraigR973/mcu-app/pull/14), `153d45b`)** — "Try
   bid prices" on Home (#228, "trial first"): admin only, up to 100 priced films a third per

@@ -10,6 +10,8 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **At your Mac, once (about 15 minutes):** 27, the cloud setup, after which cloud sessions
+  need nothing from the Mac.
 - **Accounts, at a computer (about 20 minutes):** 22 rotate the Neon password; 18 eBay
   sign-in settings and an encryption key, which unblocks T8b; 9 revoke the dead April GitHub
   token.
@@ -1188,6 +1190,22 @@ valuation lookups. Nobody has run it yet: building it used saved eBay data only.
 3. Tell the next session **"blend"** (bids where three or more auctions have them, asking
    prices otherwise) or **"bids only"** (most discs would then show no value). That starts V7,
    then V8.
+
+### 27. The one-off cloud setup on your Mac — so cloud sessions need nothing from it
+
+**New 1 Oct** (`DECISIONS.md` #236, your "yes to all"). Cloud sessions can already test,
+ship, merge and check production; this gives them read-only access to the live database and
+Railway's `config plan`.
+
+1. In a **local** Claude Code session on your Mac, in the repo: **"Read and follow
+   `docs/mac-cloud-setup.md` on `main`."** It makes a read-only database login and puts it
+   on your clipboard without showing it. It asks you to create one Railway token (two clicks)
+   and tests it with a read-only plan.
+2. In any cloud session: the environment menu in the title bar → **Edit** → environment
+   variables. Add `NEON_READONLY_URL` and `RAILWAY_TOKEN` (pasted from your clipboard, never
+   into a chat).
+3. Start a new cloud session with: **"Check the cloud setup (`OWNER-ACTIONS.md` 27) and record
+   it."** It also runs V5's open check, on production's own rows.
 
 ### 22. Rotate the Neon database password — recommended, your call
 

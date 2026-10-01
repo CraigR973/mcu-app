@@ -4798,3 +4798,34 @@ contemporaneous.
        built from the captured Blade Runner 2049 search; its one auction had no bids, so
        every auction with bids is an edited copy of it, and the tests say so. The rig's API
        had no eBay keys, so its button could only answer 503.
+
+### 2026-10-01 — cloud sessions without the Mac
+
+236. **Cloud sessions do everything but Craig's own steps: a startup hook, a read-only role
+     over HTTPS, and a Railway token.** Craig's word, 1 Oct: "yes to all", after asking how to
+     stop rerunning things on his Mac.
+
+     - **A startup hook readies the gate in every cloud session**
+       (`.claude/hooks/session-start.sh`): the steps the overnight run did by hand (#230),
+       now automatic and idempotent, with `DATABASE_URL` exported as the throwaway test
+       database, so nothing in a cloud session points at production by default. Cloud only;
+       the Mac's sessions are unchanged.
+     - **The live database is read over HTTPS, read-only.** A cloud container's proxy carries
+       HTTPS only, so no Postgres connection leaves it: copying `.env.local`'s URL into the
+       cloud would not work even if it were wise. Neon answers SQL over HTTPS;
+       `src.scripts.live_sql` uses that with `mcu_readonly`, a role made once on the Mac
+       (`docs/mac-cloud-setup.md`), set read-only, with credential columns withheld
+       (`profiles.pin_hash`: a four-digit PIN's bcrypt hash falls to 10,000 guesses) and **no
+       default privileges**, so a new table stays unreadable until its migration grants it.
+       Unreadable by default fails safe; readable by default would expose a credential table
+       the day a migration forgot to revoke it.
+     - **Writes to live data stay out of cloud sessions.** The scripts that write use asyncpg,
+       which cannot connect from the cloud, and a read-write credential there would let any
+       session change production. A write that is still script-only becomes an admin action
+       or a Railway job when it is next needed.
+     - **Railway's CLI runs in the cloud with a token**, pinned at 5.63.1: `config plan`
+       whenever useful, `config apply` only on Craig's word, as before. A project token for
+       `production` is tried first, as the narrowest that works.
+     - **Checked from the cloud on 1 Oct:** Railway's API answered "Unauthorized" to a made-up
+       token, and Neon's SQL endpoint "password authentication failed" to a made-up user, so
+       both are reachable through the proxy and only the credentials are missing.

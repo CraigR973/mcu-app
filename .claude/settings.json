@@ -13,13 +13,23 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "cd /Users/craigrobinson/mcu_app 2>/dev/null && B=$(git rev-parse --abbrev-ref HEAD) && [ \"$B\" != \"main\" ] && [ -z \"$(git status --porcelain)\" ] && [ -z \"$(git log @{u}.. 2>/dev/null)\" ] && echo 'Branch clean and pushed - run /phase-closeout <id> only when the user asks' || true"
+            "command": "R=\"$CLAUDE_PROJECT_DIR\"; B=$(git -C \"$R\" rev-parse --abbrev-ref HEAD 2>/dev/null) && [ \"$B\" != \"main\" ] && [ -z \"$(git -C \"$R\" status --porcelain)\" ] && [ -z \"$(git -C \"$R\" log @{u}.. 2>/dev/null)\" ] && echo 'Branch clean and pushed - close out once the gate is green (DECISIONS.md #24)' || true"
           }
         ]
       }
