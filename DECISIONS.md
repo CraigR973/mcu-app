@@ -4829,3 +4829,42 @@ contemporaneous.
      - **Checked from the cloud on 1 Oct:** Railway's API answered "Unauthorized" to a made-up
        token, and Neon's SQL endpoint "password authentication failed" to a made-up user, so
        both are reachable through the proxy and only the credentials are missing.
+
+### 2026-10-01 — the bid trial's answer, and shops that refuse
+
+237. **Values stay on asking prices; V7 is shelved.** Craig's word, 1 Oct: "1) neither", after
+     V6's trial, which he ran at 14:14 UTC.
+
+     - **The trial found no film with a bid price.** 100 films, eBay answering all of them: 13
+       matching auctions had a bid (4K 10, Blu-ray 3, DVD 0), 12 films had any, and the most on
+       one film was 2, against the 3 a price needs (#129). 110 matching auctions had no bid.
+     - **So a blend equals today's asking prices** (£1,903.34 on the sample's 100 discs, against
+       £1,867.32 stored), and bids only values nothing. V7, a migration and a re-price of every
+       disc, would have changed nothing anyone could see.
+     - **V8 goes ahead on asking prices:** its "eBay's figure" is the asking-price median in
+       `ebay_price_refs`, as the Deals page already uses. V7's criteria stay in the plan,
+       unbuilt; the trial stays on Home and can be run again if bids ever look thicker. One
+       Wednesday-afternoon snapshot is the evidence, and it would take tenfold more bids to
+       price even a tenth of the collection.
+
+238. **A `429` is a refusal, never a step towards auto-disable; 20b is split in two.** Craig's
+     word, 1 Oct: "2) yes", after the read-only diagnosis (`docs/phase-batches.md`, 20b).
+
+     - **Why split.** On 30 Sep and 1 Oct each Shopify shop refused its first request of the
+       night, so this run's own pace is not what trips them, and the planned cure (a longer
+       pause) is unlikely to work. What would is unknown: nothing recorded `Retry-After` or
+       what the refusal looked like. Meanwhile 101 Films and Powerhouse stood one refused
+       night from being switched off. So the first half stops refusals counting and records
+       the evidence; the second half is rewritten from two nights of it, and 22c waits too.
+     - **`blocked`, with the count left alone.** A shop that only refused, or answered "not
+       here", is recorded as `blocked`, the status Batch 16 declared for exactly this and
+       nothing used, so no migration. Its `consecutive_failures` is neither raised nor reset,
+       as `no_results` leaves it (#125): a refusal tests nothing, and resetting would let a
+       broken shop launder its failures. A genuine failure beside refusals still counts.
+     - **Still a failure in the run's record**, with the evidence in its reason, and the job
+       still exits 1: a refused night is not a clean night. The summary counts refusals.
+     - **Judged by the last answer.** A refusal then a timeout is a failure: the shop has a
+       problem a person should see.
+     - **The two nights already counted stay counted.** 101 Films and Powerhouse sit at 2,
+       under the old rule. Resetting them is a write to live data, which no cloud session
+       makes; a night with a price resets them anyway.

@@ -2,14 +2,16 @@
 
 ## Now
 
-**1 Oct 2026, afternoon: the first cloud session with the live database
-(`docs/next-cloud-session.md`).** The cloud setup is checked and recorded (`OWNER-ACTIONS.md`
-27, done). V5's plans on production's rows closed its open check. **Waiting on Craig:**
-(1) blend or bids only, after a trial in which no film had a bid price; (2) his go on 20b,
-after a 1 Oct check in which every Shopify shop refused from its first request. **101 Films
-and Powerhouse are one refused night from auto-disable: the next check is 2 Oct, 03:00 UTC.**
-21 has 2 of the 3 wants it needs, and only those shops can supply the third. Details: the
-Log's first line, and 20b, 21 and V7 in `docs/phase-batches.md`.
+**1 Oct 2026, evening: Craig answered "1) neither 2) yes".** **20b's first half is live
+(`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19)), verified in production at 19:26
+UTC:** a `429` no longer counts towards switching a shop off; a shop that only refused is
+`blocked`, its count left alone, and each refusal records what the shop sent back (#238). The
+`cron-scrape` job redeployed with it, so the 2 Oct 03:00 UTC check runs on it. **V7 is shelved**
+(#237): the trial found no film with a bid price, so values stay on asking prices. **Next: V8**
+(the Deals "usual" price, on asking prices), then the 2 Oct check read back. Earlier the same
+day: the cloud setup checked (`OWNER-ACTIONS.md` 27, done) and V5's plans read on production.
+**Open:** 101 Films and Powerhouse keep the 2 failures counted before the fix; 21 has 2 of the 3
+wants it needs, and only the refusing shops can supply the third.
 
 **1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
 #230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
@@ -536,6 +538,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-01 (20b's first half, [#19](https://github.com/CraigR973/mcu-app/pull/19), `548160f`)** —
+  At Craig's "2) yes": a `429` is a refusal, never a step towards auto-disable (#238). The
+  fetcher raises a refusal carrying `Retry-After`, `cf-mitigated`, `server` and the page's title;
+  the runner logs each refused request, records a shop that only refused as `blocked` (Batch 16's
+  status, no migration) with its count untouched, and a genuine failure beside refusals still
+  counts. Gate and CI green first time (1,719 API tests, warnings unchanged at 178); production
+  reported the merge SHA at 19:26 UTC with `db: ok`. **And "1) neither":** V7 shelved, values stay
+  on asking prices, V8 next on them (#237).
 
 - **2026-10-01 (the cloud setup checked, and the checks that waited for the database)** —
   `OWNER-ACTIONS.md` 27 is done: from a cloud session, `live_sql` answers as `mcu_readonly`,
