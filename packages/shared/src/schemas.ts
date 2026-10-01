@@ -274,7 +274,72 @@ export const rewatchSuggestionSchema = z.object({
 
 export const rewatchSuggestionsSchema = z.array(rewatchSuggestionSchema)
 
+// ---------------------------------------------------------------------------
+// Home's Highlights (Batch V5, #228: "a mix of all")
+// ---------------------------------------------------------------------------
+
+/** One person's rating of a film: their highest, as "Worth a rewatch" reads it. */
+export const highlightRatingSchema = z.object({
+  personName: z.string().min(1),
+  rating: z.number().min(0.5).max(5),
+})
+
+export const topRatedFilmSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  ratings: z.array(highlightRatingSchema),
+})
+
+/** Films on the shelf rated 4½ or 5, and whose ratings those are: only Craig rates (#159). */
+export const topRatedRowSchema = z.object({
+  items: z.array(topRatedFilmSchema),
+  ratedBy: z.array(z.string()),
+  notRatedBy: z.array(z.string()),
+})
+
+export const personViewingsSchema = z.object({
+  personName: z.string().min(1),
+  viewings: z.number().int().positive(),
+})
+
+/** A film watched twice or more, across both diaries. */
+export const rewatchedFilmSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  viewings: z.number().int().min(2),
+  byPerson: z.array(personViewingsSchema),
+})
+
+/** An owned film and format at its stored value, with the basis the value rests on. */
+export const valuableDiscSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  formatCode: z.string().min(1),
+  price: z.string().min(1),
+  currency: z.string().min(1),
+  basis: z.string().min(1),
+  sampleSize: z.number().int().nonnegative(),
+  checkedAt: z.string(),
+  copies: z.number().int().positive(),
+})
+
+export const highlightsSchema = z.object({
+  topRated: topRatedRowSchema,
+  mostRewatched: z.array(rewatchedFilmSchema),
+  mostValuable: z.array(valuableDiscSchema),
+})
+
 export type UserRole = z.infer<typeof userRoleSchema>
+export type Highlights = z.infer<typeof highlightsSchema>
+export type TopRatedFilm = z.infer<typeof topRatedFilmSchema>
+export type RewatchedFilm = z.infer<typeof rewatchedFilmSchema>
+export type ValuableDisc = z.infer<typeof valuableDiscSchema>
 export type TokenPair = z.infer<typeof tokenPairSchema>
 export type ProfileResponse = z.infer<typeof profileResponseSchema>
 export type Genre = z.infer<typeof genreSchema>
