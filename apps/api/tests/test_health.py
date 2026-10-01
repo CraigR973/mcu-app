@@ -289,6 +289,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # admin-only: it spends a share of the same eBay allowance, capped per day.
         "/api/v1/collection/value",
         "/api/v1/collection/value/refresh",
+        # Batch V6. Admin-only, both: starting a bid trial spends the same eBay share as
+        # `/refresh` and saves no prices; reading its report is for Craig's pick.
+        "/api/v1/collection/value/bid-trial",
         # Batch 24. Both are admin-only and structurally separate so a lookup can never
         # add or cache a guessed film. Only lookup is rate-limited: it can spend an eBay
         # quota call, while confirm is a local write after a person checks the candidate.

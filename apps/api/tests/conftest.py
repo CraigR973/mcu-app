@@ -83,6 +83,23 @@ def _no_background_valuation_run(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _no_background_bid_trial(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Batch V6: "Try bid prices" carries on after the response, as the valuation run does.
+
+    It would search eBay from a test and commit outside the rolled-back transaction. Tests
+    about the button replace this no-op with a recorder.
+    """
+    import uuid
+
+    import src.routers.valuation as valuation_router
+
+    async def _skip(run_id: uuid.UUID) -> None:
+        del run_id
+
+    monkeypatch.setattr(valuation_router, "continue_trial_in_background", _skip)
+
+
+@pytest.fixture(autouse=True)
 def _no_background_spec_batch(monkeypatch: pytest.MonkeyPatch) -> None:
     """Batch T7: the Disc specs page's batch runs after the response, on real clients.
 

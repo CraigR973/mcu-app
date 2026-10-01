@@ -4,6 +4,9 @@ Two routes. Reading the total is for both people and spends nothing. Starting a 
 admin-only, because it spends a share of the eBay allowance the film page's checks also
 use; the share, the one-at-a-time claim and the monthly clock all live in
 ``services/valuation.py``, so the button cannot spend more than a scheduled run would.
+
+Batch V6 adds the bid trial's two, both admin-only: starting one spends the same share, and
+its report is Craig's to read before he picks a blend or bids only (#228).
 """
 
 from __future__ import annotations
@@ -14,10 +17,12 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
+from src.clock import utcnow
 from src.database import get_db
 from src.ebay.client import EbayClient
 from src.ebay.pricing import ASKING_PRICES
 from src.models.valuation import DiscValuation, ValuationRun
+from src.schemas.bid_trial import BidTrialReport, BidTrialResponse, BidTrialStartResponse
 from src.schemas.valuation import (
     CollectionValueResponse,
     CopyValuationResponse,
@@ -25,10 +30,18 @@ from src.schemas.valuation import (
     ValuationRunResponse,
     ValuationStartResponse,
 )
+from src.services.bid_trial import (
+    ENDING_SOON,
+    SAMPLE_SIZE,
+    continue_trial_in_background,
+    latest_trial,
+    start_trial,
+)
 from src.services.valuation import (
     CURRENCY,
     DAILY_SHARE,
     MIN_SAMPLE,
+    abandon_stale_runs,
     collection_value,
     continue_run_in_background,
     start_run,
@@ -63,6 +76,25 @@ def run_response(run: ValuationRun) -> ValuationRunResponse:
         failed=run.failed,
         remaining=run.remaining,
         lastError=run.last_error,
+    )
+
+
+def trial_response(run: ValuationRun) -> BidTrialResponse:
+    return BidTrialResponse(
+        id=run.id,
+        status=_RUN_STATUSES[run.status],
+        startedAt=run.started_utc,
+        finishedAt=run.finished_utc,
+        budget=run.budget,
+        calls=run.calls,
+        failed=run.failed,
+        lastError=run.last_error,
+        sampleSize=SAMPLE_SIZE,
+        minSample=MIN_SAMPLE,
+        endingWindowHours=int(ENDING_SOON.total_seconds() // 3600),
+        dailyShare=DAILY_SHARE,
+        currency=CURRENCY,
+        report=BidTrialReport.model_validate(run.report) if run.report is not None else None,
     )
 
 
@@ -102,6 +134,16 @@ async def get_collection_value(_user: CurrentUser, db: Database) -> CollectionVa
     )
 
 
+def _require_ebay() -> None:
+    if not EbayClient().configured:
+        # Refused before a run row exists, rather than recorded as a run that stopped at
+        # once: the missing keyset is the deployment's problem, not the run's.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="eBay is not configured in this deployment.",
+        )
+
+
 @router.post("/collection/value/refresh", response_model=ValuationStartResponse)
 async def refresh_collection_value(
     user: AdminUser, db: Database, background_tasks: BackgroundTasks
@@ -111,13 +153,7 @@ async def refresh_collection_value(
     The run is claimed before the response, so the answer is definite: ``started`` means a
     run exists and is this one. Anything else starts nothing and spends nothing.
     """
-    if not EbayClient().configured:
-        # Refused before a run row exists, rather than recorded as a run that stopped at
-        # once: the missing keyset is the deployment's problem, not the run's.
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="eBay is not configured in this deployment.",
-        )
+    _require_ebay()
     outcome = await start_run(db, trigger="admin", started_by=user.id)
     if outcome.run is not None:
         background_tasks.add_task(continue_run_in_background, outcome.run.id)
@@ -125,5 +161,30 @@ async def refresh_collection_value(
         outcome=outcome.reason,
         run=run_response(outcome.run) if outcome.run else None,
         due=outcome.due,
+        budgetLeft=outcome.budget_left,
+    )
+
+
+@router.get("/collection/value/bid-trial", response_model=BidTrialResponse | None)
+async def get_bid_trial(_admin: AdminUser, db: Database) -> BidTrialResponse | None:
+    """The latest bid trial and its report, finished or not; null before the first."""
+    await abandon_stale_runs(db, now=utcnow())
+    run = await latest_trial(db)
+    return trial_response(run) if run is not None else None
+
+
+@router.post("/collection/value/bid-trial", response_model=BidTrialStartResponse)
+async def start_bid_trial(
+    user: AdminUser, db: Database, background_tasks: BackgroundTasks
+) -> BidTrialStartResponse:
+    """Start a bid trial within today's share, after the response. It saves no prices."""
+    _require_ebay()
+    outcome = await start_trial(db, started_by=user.id)
+    if outcome.run is not None:
+        background_tasks.add_task(continue_trial_in_background, outcome.run.id)
+    return BidTrialStartResponse(
+        outcome=outcome.reason,
+        trial=trial_response(outcome.run) if outcome.run is not None else None,
+        sampled=outcome.sampled,
         budgetLeft=outcome.budget_left,
     )

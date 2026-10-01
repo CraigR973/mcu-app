@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { ActivityFeed } from '@/components/ActivityFeed'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { ArchiveStats } from '@/components/dashboard/ArchiveStats'
+import { BidTrial } from '@/components/dashboard/BidTrial'
 import { CollectionValue } from '@/components/dashboard/CollectionValue'
 import { Button } from '@/components/ui/button'
 import { CompletionSets } from '@/components/dashboard/CompletionSets'
@@ -168,6 +169,10 @@ export default function DashboardPage() {
       {/* Batch T6, snag 7: the collection at current eBay asking prices. Hidden from a
           viewer until there is a total; an admin sees it earlier, to start the first run. */}
       <CollectionValue />
+
+      {/* Batch V6, snag 2's first step: "Try bid prices", admin only. It saves no prices;
+          its report is for Craig's pick of a blend or bids only. */}
+      <BidTrial />
 
       {/* The old Stats page. Never empty — 1,857 discs make four of its six charts real —
           so it has no hidden state of its own; the two charts that have no data are

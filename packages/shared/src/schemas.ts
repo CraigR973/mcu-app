@@ -1726,6 +1726,100 @@ export const valuationStartSchema = z.object({
 })
 
 // ---------------------------------------------------------------------------
+// The bid trial (Batch V6, #228: "trial first")
+// ---------------------------------------------------------------------------
+
+/** One film and format in the trial's sample, and what its one search found. Null
+ *  `results`, `asking` and `bids` mean eBay did not answer for it, and `error` says why. */
+export const trialFilmSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  formatCode: z.string().min(1),
+  copies: z.number().int().positive(),
+  stored: z.object({ price: z.string().min(1), sampleSize: z.number().int().nonnegative() }),
+  results: z
+    .object({
+      total: z.number().int().nonnegative().nullable(),
+      returned: z.number().int().nonnegative(),
+      buyItNow: z.number().int().nonnegative(),
+      auctionOnly: z.number().int().nonnegative(),
+    })
+    .nullable(),
+  asking: z.object({ price: z.string().nullable(), sampleSize: z.number().int().nonnegative() }).nullable(),
+  bids: z
+    .object({
+      counted: z.number().int().nonnegative(),
+      withoutBids: z.number().int().nonnegative(),
+      rejected: z.number().int().nonnegative(),
+      price: z.string().nullable(),
+      endingSoon: z.number().int().nonnegative(),
+    })
+    .nullable(),
+  error: z.string().nullable().default(null),
+})
+
+const trialTotalSchema = z.object({
+  total: z.string().min(1),
+  discs: z.number().int().nonnegative(),
+})
+
+/** The trial's answer for one format, or for all of them (`formatCode` null). */
+export const trialSummarySchema = z.object({
+  formatCode: z.string().nullable(),
+  films: z.number().int().nonnegative(),
+  withBids: z.number().int().nonnegative(),
+  withBidsEndingSoon: z.number().int().nonnegative(),
+  auctionsCounted: z.number().int().nonnegative(),
+  endingSoon: z.number().int().nonnegative(),
+  compared: z.number().int().nonnegative(),
+  bidToAskingPercent: z.number().int().nonnegative().nullable(),
+  cut: z.number().int().nonnegative(),
+  auctionOnlyPlaces: z.number().int().nonnegative(),
+  askingSample: z.number().int().nonnegative(),
+  storedSample: z.number().int().nonnegative(),
+  askingLost: z.number().int().nonnegative(),
+  stored: trialTotalSchema,
+  asking: trialTotalSchema,
+  bids: trialTotalSchema,
+  blend: trialTotalSchema.extend({
+    fromBids: z.number().int().nonnegative(),
+    fromAsking: z.number().int().nonnegative(),
+  }),
+})
+
+export const bidTrialReportSchema = z.object({
+  sampled: z.number().int().nonnegative(),
+  films: z.array(trialFilmSchema),
+  formats: z.array(trialSummarySchema),
+  overall: trialSummarySchema,
+})
+
+/** The latest bid trial: its run and its report so far. It saves no prices. */
+export const bidTrialSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(['running', 'finished', 'budget_spent', 'stopped', 'abandoned']),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  budget: z.number().int().nonnegative(),
+  calls: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  lastError: z.string().nullable(),
+  sampleSize: z.number().int().positive(),
+  minSample: z.number().int().positive(),
+  endingWindowHours: z.number().int().positive(),
+  dailyShare: z.number().int().positive(),
+  currency: z.string().min(1),
+  report: bidTrialReportSchema.nullable(),
+})
+
+export const bidTrialStartSchema = z.object({
+  outcome: z.enum(['started', 'running', 'budget_spent', 'nothing_to_sample']),
+  trial: bidTrialSchema.nullable(),
+  sampled: z.number().int().nonnegative(),
+  budgetLeft: z.number().int().nonnegative(),
+})
+
+// ---------------------------------------------------------------------------
 // The Blu-ray.com backfill (Batch T7) — DECISIONS.md #202, within #110
 // ---------------------------------------------------------------------------
 
@@ -1930,6 +2024,11 @@ export type CopyValuation = z.infer<typeof copyValuationSchema>
 export type ValuationRun = z.infer<typeof valuationRunSchema>
 export type CollectionValue = z.infer<typeof collectionValueSchema>
 export type ValuationStart = z.infer<typeof valuationStartSchema>
+export type TrialFilm = z.infer<typeof trialFilmSchema>
+export type TrialSummary = z.infer<typeof trialSummarySchema>
+export type BidTrialReport = z.infer<typeof bidTrialReportSchema>
+export type BidTrial = z.infer<typeof bidTrialSchema>
+export type BidTrialStart = z.infer<typeof bidTrialStartSchema>
 
 // ---------------------------------------------------------------------------
 // Barcode scanning (Batch 24) — §3.3, §3.4

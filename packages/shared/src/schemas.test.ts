@@ -20,6 +20,8 @@ import {
   externalFilmSchema,
   movieListItemSchema,
   collectionFacetsSchema,
+  bidTrialSchema,
+  bidTrialStartSchema,
   highlightRatingSchema,
   highlightsSchema,
   rewatchedFilmSchema,
@@ -1873,5 +1875,85 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
   it('refuses a rating off the half-star scale and a "rewatch" seen once', () => {
     expect(() => highlightRatingSchema.parse({ personName: 'Craig', rating: 6 })).toThrow()
     expect(() => rewatchedFilmSchema.parse({ ...film, viewings: 1, byPerson: [] })).toThrow()
+  })
+})
+
+describe('Batch V6 — the bid trial', () => {
+  const total = (amount: string, discs: number) => ({ total: amount, discs })
+  const summary = {
+    formatCode: 'blu_ray',
+    films: 1,
+    withBids: 1,
+    withBidsEndingSoon: 0,
+    auctionsCounted: 3,
+    endingSoon: 1,
+    compared: 1,
+    bidToAskingPercent: 60,
+    cut: 1,
+    auctionOnlyPlaces: 8,
+    askingSample: 27,
+    storedSample: 25,
+    askingLost: 0,
+    stored: total('23.00', 2),
+    asking: total('19.98', 2),
+    bids: total('12.00', 2),
+    blend: { ...total('12.00', 2), fromBids: 2, fromAsking: 0 },
+  }
+  const trial = {
+    id: '3f2504e0-4f89-41d3-9a0c-0305e82c3410',
+    status: 'finished',
+    startedAt: '2026-10-01T09:00:00Z',
+    finishedAt: '2026-10-01T09:02:10Z',
+    budget: 750,
+    calls: 2,
+    failed: 1,
+    lastError: 'Heat (4k_uhd): eBay search failed (HTTP 500)',
+    sampleSize: 100,
+    minSample: 3,
+    endingWindowHours: 24,
+    dailyShare: 750,
+    currency: 'GBP',
+    report: {
+      sampled: 2,
+      films: [
+        {
+          movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3401',
+          title: 'Blade Runner 2049',
+          formatCode: 'blu_ray',
+          copies: 2,
+          stored: { price: '11.50', sampleSize: 25 },
+          results: { total: 304, returned: 200, buyItNow: 192, auctionOnly: 8 },
+          asking: { price: '9.99', sampleSize: 27 },
+          bids: { counted: 3, withoutBids: 2, rejected: 4, price: '6.00', endingSoon: 1 },
+          error: null,
+        },
+        {
+          movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3402',
+          title: 'Heat',
+          formatCode: '4k_uhd',
+          copies: 1,
+          stored: { price: '20.00', sampleSize: 9 },
+          results: null,
+          asking: null,
+          bids: null,
+          error: 'eBay search failed (HTTP 500)',
+        },
+      ],
+      formats: [summary],
+      overall: { ...summary, formatCode: null },
+    },
+  }
+
+  it('reads a trial and its report, with a film eBay did not answer for', () => {
+    expect(bidTrialSchema.parse(trial)).toEqual(trial)
+    const started = { outcome: 'started', trial: { ...trial, status: 'running', report: null }, sampled: 2, budgetLeft: 750 }
+    expect(bidTrialStartSchema.parse(started)).toEqual(started)
+  })
+
+  it('reads a film written before it carried an error, and refuses an unknown outcome', () => {
+    const { error: _error, ...older } = trial.report.films[0]
+    const parsed = bidTrialSchema.parse({ ...trial, report: { ...trial.report, films: [older] } })
+    expect(parsed.report?.films[0]?.error).toBeNull()
+    expect(() => bidTrialStartSchema.parse({ outcome: 'nothing_due', trial: null, sampled: 0, budgetLeft: 0 })).toThrow()
   })
 })

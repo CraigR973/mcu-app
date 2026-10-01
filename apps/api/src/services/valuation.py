@@ -212,7 +212,8 @@ def day_start(now: datetime) -> datetime:
 async def budget_left(db: AsyncSession, *, now: datetime) -> int:
     """Calls a run may still make today, UTC, or 0 if too few to start one.
 
-    Runs in progress count what they have spent so far.
+    Runs in progress count what they have spent so far, and a bid trial's calls (Batch V6)
+    count like any run's.
     """
     spent = await db.scalar(
         select(func.coalesce(func.sum(ValuationRun.calls), 0)).where(
@@ -517,8 +518,14 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
         )
     ).one()
     total_discs, priced_discs, not_priced_discs, total, first, last = row
+    # A bid trial (Batch V6) prices nothing, so it is not "the last run" of the value.
     latest = (
-        await db.execute(select(ValuationRun).order_by(ValuationRun.started_utc.desc()).limit(1))
+        await db.execute(
+            select(ValuationRun)
+            .where(ValuationRun.trigger != "trial")
+            .order_by(ValuationRun.started_utc.desc())
+            .limit(1)
+        )
     ).scalar_one_or_none()
     return CollectionValue(
         total=total,
