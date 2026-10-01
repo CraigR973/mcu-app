@@ -21,7 +21,7 @@ an admin-only "Try bid prices" on Home that saves no prices.
 - **Cloud sessions, 1 Oct (#236):** a startup hook now readies the gate in every cloud
   session; `src.scripts.live_sql` reads the live database read-only over HTTPS once
   `NEON_READONLY_URL` exists; the Railway CLI is installed for `config plan`. Both
-  credentials come from item 27.
+  credentials come from item 27; the session after it follows `docs/next-cloud-session.md`.
 - **The run, item by item** (every pull request merged with a merge commit; production's
   `/api/v1/health` reported each batch's merge SHA and `/health/ready` said `db: ok`, and the
   image runs `alembic upgrade head` before it serves, so 042 and 043 applied; local gate and

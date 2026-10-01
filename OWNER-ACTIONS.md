@@ -1204,8 +1204,10 @@ Railway's `config plan`.
 2. In any cloud session: the environment menu in the title bar → **Edit** → environment
    variables. Add `NEON_READONLY_URL` and `RAILWAY_TOKEN` (pasted from your clipboard, never
    into a chat).
-3. Start a new cloud session with: **"Check the cloud setup (`OWNER-ACTIONS.md` 27) and record
-   it."** It also runs V5's open check, on production's own rows.
+3. Start a new cloud session with: **"Read and follow `docs/next-cloud-session.md` on `main`."**
+   It checks and records the setup, runs the checks that waited for the database (V5's plans,
+   the 1 Oct shop check, your trial's report if you have run it), then asks your decisions
+   and carries on with what you approve.
 
 ### 22. Rotate the Neon database password — recommended, your call
 

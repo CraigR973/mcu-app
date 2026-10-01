@@ -111,8 +111,8 @@ A **new** cloud session picks the variables up; its startup hook says which it f
 
 ## Step 4 — hand back
 
-Tell Craig to start a new cloud session with: **"Check the cloud setup (`OWNER-ACTIONS.md`
-27) and record it."** That session runs a read-only count and an `EXPLAIN` through
-`src.scripts.live_sql`, a `railway config plan`, and records the result in `STATUS.md` and
-`OWNER-ACTIONS.md`. It also runs V5's open check: the Highlights query plans on production's
-own rows.
+Tell Craig to start a new cloud session with: **"Read and follow `docs/next-cloud-session.md`
+on `main`."** That session checks this setup from the cloud (a read-only count, a refused
+`pin_hash`, a `railway config plan`) and records it, runs the checks that waited for the
+database (V5's plans on production's rows, the 1 Oct shop check, the bid trial's report),
+then asks Craig his decisions and carries on with what he approves.
