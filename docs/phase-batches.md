@@ -2599,7 +2599,24 @@ fine" (#228): that name, one place with no shelves, counted like any other disc.
 - Browser check at 375 px: a disc moved to Craig's house, then found by the section filter.
 - Gate green.
 
-### V5 — Highlights on Home 🟡
+### ~~V5 — Highlights on Home~~ 🟡 **shipped 2026-10-01 (`f1b497c`, [#12](https://github.com/CraigR973/mcu-app/pull/12))**
+**Acceptance: met, with one check left open.** Home has a Highlights panel after "Worth a
+rewatch": up to 12 posters a row, each opening its film, from one request,
+`GET /api/v1/highlights`. **Top rated** is films on the shelf (`owned_copy()`) at 4½ or 5 stars
+by each person's highest rating, each poster naming whose; the row says "Rated 4½ or 5 stars by
+Craig. Mark has not rated any films.", built from who has rated anything, so it stays true when
+Mark starts. **Most rewatched** counts viewings in both diaries, twice or more, and says whose
+("Craig 3 · Mark 1"). **Most valuable discs** are owned physical discs at their stored
+film-and-format value, through the `owned_valued_discs()` the collection's total now shares,
+with the basis, listings and date. A row with nothing in it is not shown, nor the panel when all
+three are empty. **The query plans were read at production's counts, not on its rows:**
+`EXPLAIN (ANALYZE, BUFFERS)` on the endpoint's own SQL against a scratch Postgres seeded to
+`STATUS.md`'s figures gave 3.1, 0.8, 1.9 and 8.4 ms, the endpoint 22 ms median (#234). Browser
+check at 375 px, light and dark, on the rig. Local gate and CI green first time (1,662 API
+tests, web 448, shared 117). **Open: the same plans against production's own rows**, for a
+session holding the live database's connection (Craig's Mac); nothing in the app waits on it.
+"Best reviewed" stays V9's.
+
 **Covers snag 9.** Mid tier · high / mid tier · High. Sitting 1, last. "A mix of all" (#228).
 
 **Acceptance:**
@@ -2783,7 +2800,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
 | **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b → 22c (both at Craig's go) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
-| **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → V5 | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
+| **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | V6 → **checkpoint: Craig taps "Try bid prices" and picks blend or bids only** → V7 → V8 | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 is in the 30 Sep overnight run (#230); V7 and V8 wait on Craig's pick.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 
