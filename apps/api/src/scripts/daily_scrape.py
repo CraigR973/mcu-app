@@ -52,6 +52,9 @@ def report(summary: DailyRunSummary, *, dry_run: bool) -> int:
     print(f"  attempted:     {attempted}")
     print(f"  written:       {result.written}")
     print(f"  not stocked:   {result.not_stocked}")
+    # Batch 20b: refusals are among the failures below, but never count towards a shop
+    # being switched off. The count says how many of them were the shop saying no.
+    print(f"  refused:       {result.refused}")
     print(f"  skipped:       {result.skipped}")
     print(f"  alerts queued: {summary.alerts_queued}")
     print(f"  pushes sent:   {summary.pushes_sent}")

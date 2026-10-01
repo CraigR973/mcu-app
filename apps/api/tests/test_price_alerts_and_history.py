@@ -519,10 +519,15 @@ class TestDailyRun:
     """§5.5 — the nightly pass and the record it leaves."""
 
     async def _run(
-        self, db: AsyncSession, page: str, *, dry_run: bool = False
+        self,
+        db: AsyncSession,
+        page: str,
+        *,
+        dry_run: bool = False,
+        transport: httpx.MockTransport | None = None,
     ) -> tuple[object, StubSender]:
         sender = StubSender()
-        transport = httpx.MockTransport(lambda request: httpx.Response(200, text=page))
+        transport = transport or httpx.MockTransport(lambda request: httpx.Response(200, text=page))
         async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
             summary = await run_daily_scrape(
                 db,
@@ -657,6 +662,70 @@ class TestDailyRun:
         assert retailer.last_scrape_status == "no_results"
         assert retailer.enabled is True
         assert retailer.consecutive_failures == 0
+
+    async def test_a_shop_refusing_every_want_is_blocked_not_switched_off(
+        self, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Batch 20b. On 1 Oct two refused nights had left 101 Films and Powerhouse one
+        night from being switched off; a third must not do it, and the run's record says
+        what the shop sent back."""
+        monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        await _profile(db)
+        await _want(db, await _movie(db))
+        refused_twice = await _retailer(db, "101 Films", config=CARD_CONFIG)
+        refused_twice.consecutive_failures = 2
+        await db.flush()
+        refusing = httpx.MockTransport(
+            lambda request: httpx.Response(429, headers={"Retry-After": "120"})
+        )
+
+        summary, _ = await self._run(db, "", transport=refusing)
+
+        run = (
+            (await db.execute(select(ScrapeRun).where(ScrapeRun.id == uuid.UUID(summary.run_id))))  # type: ignore[attr-defined]
+            .scalars()
+            .one()
+        )
+        assert run.failed == 1, "still a request that brought no price"
+        assert run.failures == [
+            {
+                "retailer": "101 Films",
+                "wanted": "Heat",
+                "reason": "The page answered 429 (retry-after 120)",
+            }
+        ]
+        assert run.disabled_retailers == []
+        retailer = (await db.execute(select(Retailer))).scalars().one()
+        assert retailer.enabled is True
+        assert retailer.consecutive_failures == 2
+        # Also proves Batch 16's CHECK constraint accepts the status.
+        assert retailer.last_scrape_status == "blocked"
+
+    async def test_a_real_failure_beside_refusals_still_counts(
+        self, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A refusal must not launder a shop that is also genuinely failing."""
+        monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        await _profile(db)
+        await _want(db, await _movie(db, "Heat"))
+        await _want(db, await _movie(db, "Ronin"))
+        failing = await _retailer(db, "Second Sight", config=CARD_CONFIG)
+        failing.consecutive_failures = 2
+        await db.flush()
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if "Ronin" in str(request.url):
+                return httpx.Response(503, text="down")
+            return httpx.Response(429)
+
+        summary, _ = await self._run(db, "", transport=httpx.MockTransport(handler))
+
+        assert summary.scrape.disabled == ["Second Sight"]  # type: ignore[attr-defined]
+        retailer = (await db.execute(select(Retailer))).scalars().one()
+        assert retailer.enabled is False
+        assert retailer.consecutive_failures == 3
+        # Only the genuine failure is named as the reason; the refusal is not one.
+        assert retailer.last_scrape_error == "The page answered 503"
 
     async def test_a_dry_run_writes_nothing(self, db: AsyncSession) -> None:
         await _profile(db)

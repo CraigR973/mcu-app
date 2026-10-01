@@ -23,7 +23,9 @@ is refused whatever it is called.
 from __future__ import annotations
 
 import asyncio
+import html
 import ipaddress
+import re
 import socket
 from dataclasses import dataclass
 from urllib.parse import urlparse
@@ -56,6 +58,57 @@ class UnsafeUrlError(Exception):
 
 class FetchError(Exception):
     """The page could not be retrieved. Distinct from "retrieved and unparseable"."""
+
+
+#: Answers that are the shop turning the request away, not the page being broken (20b).
+REFUSAL_STATUSES = frozenset({429})
+
+#: What a refusal keeps of the response: enough to tell a rate limit, which says when to
+#: come back, from a block, which serves a challenge page (`docs/phase-batches.md`, 20b).
+EVIDENCE_HEADERS = ("retry-after", "cf-mitigated", "server")
+
+_TITLE = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+
+
+class RefusedError(FetchError):
+    """The shop answered, and refused: ``429 Too Many Requests`` (Batch 20b).
+
+    A refusal is not a broken scraper, so the runner keeps it out of auto-disable. It
+    carries what the shop sent back, because whether a shop is limiting the rate or
+    blocking the requester decides what would cure it.
+    """
+
+    def __init__(self, status: int, *, retry_after: str | None, evidence: str) -> None:
+        self.status = status
+        self.retry_after = retry_after
+        self.evidence = evidence
+        detail = f" ({evidence})" if evidence else ""
+        super().__init__(f"The page answered {status}{detail}")
+
+
+def _clip(value: str, limit: int = 80) -> str:
+    flat = " ".join(value.split())
+    return flat if len(flat) <= limit else flat[: limit - 1] + "…"
+
+
+def refusal_from(response: httpx.Response) -> RefusedError:
+    """What a refused response said, as one short line: headers first, then its title."""
+    parts = [
+        f"{name} {_clip(response.headers[name])}"
+        for name in EVIDENCE_HEADERS
+        if response.headers.get(name)
+    ]
+    # Only the head of the page: a challenge page names itself in its title, and the
+    # rest of a refusal is of no use.
+    title = _TITLE.search(response.content[:20_000].decode("utf-8", errors="replace"))
+    if title and title.group(1).strip():
+        parts.append(f'title "{_clip(html.unescape(title.group(1)))}"')
+    retry_after = response.headers.get("retry-after")
+    return RefusedError(
+        response.status_code,
+        retry_after=_clip(retry_after) if retry_after else None,
+        evidence="; ".join(parts),
+    )
 
 
 @dataclass(frozen=True)
@@ -148,6 +201,8 @@ async def fetch_page(url: str, *, client: httpx.AsyncClient | None = None) -> Fe
                 current = str(httpx.URL(current).join(location))
                 continue
 
+            if response.status_code in REFUSAL_STATUSES:
+                raise refusal_from(response)
             if response.status_code >= 400:
                 raise FetchError(f"The page answered {response.status_code}")
 

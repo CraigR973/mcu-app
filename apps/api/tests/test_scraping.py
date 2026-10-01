@@ -37,11 +37,18 @@ from src.services.scraping.extract import (
     select_one_text,
     split_selectors,
 )
-from src.services.scraping.fetcher import UnsafeUrlError, assert_fetchable, fetch_page
+from src.services.scraping.fetcher import (
+    FetchError,
+    RefusedError,
+    UnsafeUrlError,
+    assert_fetchable,
+    fetch_page,
+)
 from src.services.scraping.runner import (
     ScrapeOutcome,
     ScrapeRunResult,
     _record_failure,
+    _record_refused,
     _record_success,
     apply_search_template,
     scrape_one,
@@ -1376,3 +1383,175 @@ class TestAnEmptyResultsPageIsNeitherAFailureNorAClaim:
         # Only the genuine one. Before #125 this read 3, and three runs of it disabled
         # a shop that was merely carrying different films.
         assert result.failed == 1
+
+
+#: What Cloudflare serves a client it has decided to challenge: the shape a block takes,
+#: as against a rate limit, which would say when to come back.
+CHALLENGE_PAGE = "<html><head><title>Just a moment...</title></head><body></body></html>"
+
+
+def _refusing(*, headers: dict[str, str] | None = None, text: str = "") -> httpx.MockTransport:
+    return httpx.MockTransport(lambda request: httpx.Response(429, headers=headers, text=text))
+
+
+class _Recorder:
+    """Stands in for the runner's logger: structlog caches loggers on first use, so
+    capturing its output would depend on which test ran first."""
+
+    def __init__(self) -> None:
+        self.events: list[tuple[str, dict[str, object]]] = []
+
+    def warning(self, event: str, **fields: object) -> None:
+        self.events.append((event, fields))
+
+    info = warning
+
+
+class TestARefusalIsNotAFailure:
+    """Batch 20b's first half — a `429` is the shop saying no, not the scraper breaking.
+
+    On 30 Sep and 1 Oct the three Shopify shops answered `429` to their first request of
+    the night, and two of them were one night from being switched off (`docs/phase-batches.md`,
+    20b's diagnosis). Nothing recorded whether they sent `Retry-After`.
+    """
+
+    async def test_a_429_raises_a_refusal_carrying_what_the_shop_sent(self) -> None:
+        transport = _refusing(
+            headers={"Retry-After": "120", "cf-mitigated": "challenge", "Server": "cloudflare"},
+            text=CHALLENGE_PAGE,
+        )
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            with pytest.raises(RefusedError) as raised:
+                await fetch_page("https://93.184.216.34/search?q=heat", client=client)
+
+        refusal = raised.value
+        assert refusal.status == 429
+        assert refusal.retry_after == "120"
+        assert refusal.evidence == (
+            'retry-after 120; cf-mitigated challenge; server cloudflare; title "Just a moment..."'
+        )
+        # The old wording leads, so a reader of earlier runs' records still recognises it.
+        assert str(refusal).startswith("The page answered 429 (retry-after 120;")
+        # Still a fetch failure to everything that catches one, the sale-page check included.
+        assert isinstance(refusal, FetchError)
+
+    async def test_a_bare_refusal_is_still_named(self) -> None:
+        async with httpx.AsyncClient(transport=_refusing(), follow_redirects=False) as client:
+            with pytest.raises(RefusedError) as raised:
+                await fetch_page("https://93.184.216.34/search?q=heat", client=client)
+
+        assert raised.value.retry_after is None
+        assert raised.value.evidence == ""
+        assert str(raised.value) == "The page answered 429"
+
+    async def test_evidence_is_kept_short(self) -> None:
+        """A refusal is recorded in a JSONB column and a log line per request; a long
+        header or title must not turn either into a page dump."""
+        transport = _refusing(
+            headers={"Server": "x" * 500},
+            text=f"<title>{'Busy ' * 200}</title>",
+        )
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            with pytest.raises(RefusedError) as raised:
+                await fetch_page("https://93.184.216.34/search?q=heat", client=client)
+
+        assert len(raised.value.evidence) < 200
+        assert raised.value.evidence.endswith('…"')
+
+    async def test_a_server_error_is_not_a_refusal(self) -> None:
+        transport = httpx.MockTransport(lambda request: httpx.Response(503, text="down"))
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            with pytest.raises(FetchError) as raised:
+                await fetch_page("https://93.184.216.34/search?q=heat", client=client)
+
+        assert not isinstance(raised.value, RefusedError)
+        assert str(raised.value) == "The page answered 503"
+
+    async def test_a_refused_want_is_marked_and_each_refused_request_logged(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        recorder = _Recorder()
+        monkeypatch.setattr("src.services.scraping.runner.logger", recorder)
+        attempts = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            del request
+            attempts["n"] += 1
+            return httpx.Response(429, headers={"Retry-After": "60"})
+
+        transport = httpx.MockTransport(handler)
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            candidate, outcome = await scrape_one(
+                _retailer(name="Powerhouse Films"), "Near Dark", client=client
+            )
+
+        assert candidate is None
+        assert attempts["n"] == 2, "still retried once, as before: the pacing is the second half"
+        assert outcome.refused
+        assert not outcome.ok
+        assert outcome.error == "The page answered 429 (retry-after 60)"
+        refused = [fields for event, fields in recorder.events if event == "scrape_refused"]
+        assert [fields["attempt"] for fields in refused] == [1, 2]
+        assert refused[0]["retailer"] == "Powerhouse Films"
+        assert refused[0]["wanted"] == "Near Dark"
+        assert refused[0]["retry_after"] == "60"
+
+    async def test_a_refusal_then_a_timeout_is_a_failure(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Judged by the last answer: a shop that went on to time out has a problem a
+        person should see, and that still counts towards auto-disable."""
+        monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        attempts = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            del request
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                return httpx.Response(429)
+            raise httpx.ConnectTimeout("then it timed out")
+
+        transport = httpx.MockTransport(handler)
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Near Dark", client=client)
+
+        assert not outcome.refused
+        assert outcome.error is not None and "could not be reached" in outcome.error
+
+    async def test_refusals_are_counted_and_still_bring_no_price(self) -> None:
+        result = ScrapeRunResult(
+            outcomes=[
+                ScrapeOutcome(retailer="101 Films", wanted_title="A", ok=False, refused=True),
+                ScrapeOutcome(retailer="101 Films", wanted_title="B", ok=False, refused=True),
+                ScrapeOutcome(retailer="Zavvi", wanted_title="A", ok=True),
+            ]
+        )
+
+        assert result.refused == 2
+        # Within `failed`: the run's record still names them, and the job still exits 1.
+        assert result.failed == 2
+
+    async def test_a_refused_shop_is_blocked_and_its_count_left_alone(self) -> None:
+        """Where 1 Oct left 101 Films and Powerhouse: two counted nights. A third refused
+        night must not make it three."""
+        retailer = _retailer(consecutive_failures=2, enabled=True)
+        refused = [
+            ScrapeOutcome(
+                retailer="Test Shop",
+                wanted_title=title,
+                ok=False,
+                refused=True,
+                error="The page answered 429 (retry-after 60)",
+            )
+            for title in ("Deep Red", "Sorcerer")
+        ]
+
+        _record_refused(retailer, refused)
+
+        assert retailer.consecutive_failures == 2
+        assert retailer.enabled is True
+        assert retailer.last_scrape_status == "blocked"
+        assert retailer.last_scrape_error == (
+            "2 request(s) refused. The last: The page answered 429 (retry-after 60)"
+        )
