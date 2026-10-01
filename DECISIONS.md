@@ -4758,3 +4758,43 @@ contemporaneous.
        and index scans on the joins; 22 ms median for the endpoint, so no server cache (§17
        row 33). The same run against production's own rows is open.
      - **Twelve to a row**: enough to scroll on a phone, few enough to take in.
+
+### 2026-10-01 — Group V, batch V6
+
+235. **V6: the bid trial is a valuation run that saves nothing, and what its report means.**
+
+     - **It claims a `valuation_runs` row, trigger `trial`** (migration 043), rather than a
+       ledger of its own. Its calls then count against the day's 750-call share by the sum
+       `budget_left` already takes, it can never overlap a valuation run (the one-running
+       index), and a dead one is abandoned after 30 minutes like any run. The value's "last
+       run" skips trials, which price nothing. The downgrade turns trial rows into `admin`
+       runs rather than deleting them, so a day's spent calls stay counted.
+     - **The sample is priced, owned films, a third per format.** Even shares rather than the
+       collection's mix, because the report is by format; one place at a time to the format
+       with the fewest so far, so a short format's places go to the others; random within a
+       format. "Priced" means a stored value to compare against.
+     - **An auction counts with at least one bid and past the valuation's own matcher** (the
+       right film and format, a UK seller, a standard edition). Its current bid becomes the
+       listing's price, so `match()` and `median()` are unchanged. Three or more make a bid
+       price, their median **in any condition**: bids are thin, and splitting them by
+       condition as the asking headline is split would leave almost none.
+     - **"Asking" in the report is today's, from the same search**, by `valuation_from`, so
+       bids and asking prices are from the same minute; the stored price is reported beside
+       it. **Blend** is a film's bid price when it has one and today's asking price
+       otherwise; **bids only** is a bid price or nothing. Each total says how many discs.
+     - **What sharing the 200 places cost is bounded, not measured.** Knowing exactly would
+       take a second, Buy-It-Now-only search per film, doubling the calls. The report gives
+       the searches whose 200 places were full, the places auction-only listings took in
+       them (the most Buy It Now listings that can have been displaced), Buy It Now listings
+       matched now against when stored, and films that fell under three.
+     - **Ending within 24 hours** is counted for every auction behind a bid price, with the
+       films that would keep one counting only those: the evidence V7's time-to-end window
+       needs.
+     - **The report is the API's own model**, stored as JSON on the run row and written after
+       every film, so a stopped trial keeps what it found and a later session reads exactly
+       what Craig read: `SELECT report FROM valuation_runs WHERE trigger = 'trial' ORDER BY
+       started_utc DESC LIMIT 1`, or `GET /api/v1/collection/value/bid-trial` as an admin.
+     - **No live eBay request was made building it.** Tests and the browser rig used payloads
+       built from the captured Blade Runner 2049 search; its one auction had no bids, so
+       every auction with bids is an edited copy of it, and the tests say so. The rig's API
+       had no eBay keys, so its button could only answer 503.

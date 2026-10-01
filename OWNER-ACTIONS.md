@@ -4,8 +4,8 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-09-30**,
-after Batch 22b and the 30 Sep snags. *Numbers changed at the 2026-09-09 review; the old
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-01**,
+after Group V's overnight run (V1, V3, V4, V5, V6). *Numbers changed at the 2026-09-09 review; the old
 ones are noted in brackets so an earlier conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
@@ -24,9 +24,11 @@ ones are noted in brackets so an earlier conversation still maps onto this file.
   sale)**, both written 30 Sep. 21 starts once 3 wants have prices from two shops on two
   days, 2 Oct at the earliest: Bad Lieutenant and Dog Soldiers (4K) were added to Wanted
   for it on 30 Sep, and you can remove them afterwards. T8b waits on 18; 38 comes last.
-- **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run started 30 Sep
-  at 22:19 UTC, with the production host allowed (item 25). V1 is live. Everything else you do
-  for Group V happens inside its batches.
+- **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
+  shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **Next is yours: 26, tap "Try bid
+  prices" on Home and pick a blend or bids only**, which starts V7 and then V8. Also yours:
+  the two-phone movie night check for V3 (16b), and allowing blu-ray.com and avforums.com in
+  the environment's network settings before V9.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1163,11 +1165,29 @@ the reasoning in `docs/owner-snags-2026-09-30.md`.
    reached `/api/v1/health` at 22:20 UTC and confirmed each deploy from there.
 4. ~~Start a new cloud session on this repo with one line: **"Read and follow
    `docs/group-v-overnight.md` on `main`, unattended, to the end."** Top tier model at `xhigh`.~~
-   **Started 30 Sep, 22:19 UTC.**
+   **Started 30 Sep, 22:19 UTC; finished 1 Oct with V6 live at 00:39 UTC** (five batches, each
+   verified in production).
 
 Your other Group V steps come inside the batches, when each is built: the bid trial and your
 pick (sitting 2), and allowing blu-ray.com and avforums.com, with Brave's limit only if its
 credit is out (sitting 3).
+
+### 26. Tap "Try bid prices" on Home, then pick a blend or bids only — V6, snag 2
+
+**New 1 Oct.** V6 is live (`153d45b`, `DECISIONS.md` #235). The trial searches eBay once for
+each of up to 100 of your priced films, a third each on 4K, Blu-ray and DVD, asking for Buy It
+Now and auctions together, and **saves no prices**. It uses about 100 of the day's 750
+valuation lookups. Nobody has run it yet: building it used saved eBay data only.
+
+1. On Home, under "What it's worth", tap **Try bid prices**. It takes a minute or two and
+   counts as it goes. If a valuation is running it says so; try again later.
+2. Read the report, "All formats" first, then each format: how many films bids can price, bids
+   against the asking price, how many of those auctions end within a day, whether auctions
+   cost Buy It Now listings their places, and what the sampled discs total on each basis
+   (stored asking, today's asking, bids only, blend).
+3. Tell the next session **"blend"** (bids where three or more auctions have them, asking
+   prices otherwise) or **"bids only"** (most discs would then show no value). That starts V7,
+   then V8.
 
 ### 22. Rotate the Neon database password — recommended, your call
 
