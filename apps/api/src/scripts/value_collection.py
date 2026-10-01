@@ -26,7 +26,7 @@ from src.models.valuation import ValuationRun
 from src.services.valuation import StartOutcome, start_run, work_run
 
 _NOT_STARTED = {
-    "running": "Another valuation run is in progress; nothing was done.",
+    "running": "Another valuation run or a bid trial is in progress; nothing was done.",
     "nothing_due": "Every film was priced in the last 30 days; nothing was done.",
     "budget_spent": "Today's eBay share is spent; the next run carries on.",
 }

@@ -9,12 +9,14 @@ over rows rather than 1,454 live searches.
   exactly that. Two Blu-rays of *Heat* are one search and one price, counted twice in the
   total, because they are two discs.
 - :class:`ValuationRun`: one row per run, with its budget and counts, so "did last night's
-  run finish?" is a query. ``scrape_runs`` is the precedent.
+  run finish?" is a query. ``scrape_runs`` is the precedent. Batch V6's bid trial claims one
+  too (trigger ``trial``), so its eBay calls come out of the same day's share.
 """
 
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import (
     CheckConstraint,
@@ -28,7 +30,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base, UUIDPrimaryKeyMixin
@@ -41,8 +43,9 @@ VALUED_FORMATS = ("4k_uhd", "blu_ray", "dvd")
 #: carries none. There is no third state that guesses.
 VALUATION_STATUSES = ("priced", "not_priced")
 
-#: ``job`` is the scheduled command; ``admin`` is the button on Home.
-RUN_TRIGGERS = ("job", "admin")
+#: ``job`` is the scheduled command; ``admin`` is the button on Home. ``trial`` is Home's "Try
+#: bid prices" (Batch V6): it spends the same share and saves no prices.
+RUN_TRIGGERS = ("job", "admin", "trial")
 
 #: ``budget_spent`` and ``stopped`` both leave films still to price, and the next run
 #: carries on from them. ``abandoned`` is a run whose process died: nothing heard from it
@@ -55,7 +58,7 @@ class ValuationRun(Base, UUIDPrimaryKeyMixin):
 
     __tablename__ = "valuation_runs"
     __table_args__ = (
-        CheckConstraint("trigger IN ('job', 'admin')", name="ck_valuation_runs_trigger"),
+        CheckConstraint("trigger IN ('job', 'admin', 'trial')", name="ck_valuation_runs_trigger"),
         CheckConstraint(
             "status IN ('running', 'finished', 'budget_spent', 'stopped', 'abandoned')",
             name="ck_valuation_runs_status",
@@ -87,13 +90,18 @@ class ValuationRun(Base, UUIDPrimaryKeyMixin):
     budget: Mapped[int] = mapped_column(Integer, nullable=False)
     #: Browse calls actually made, retries included, because eBay counts those too.
     calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: For a trial: films with three or more auctions with bids, and films searched without.
     priced: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     not_priced: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     #: Films eBay did not answer for. Their old price, if any, is kept.
     failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    #: Films still due a price when the run ended. Zero means it finished the job.
+    #: Films still due a price when the run ended. Zero means it finished the job. For a
+    #: trial: films in its sample it did not search.
     remaining: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: A trial's report (``schemas.bid_trial.BidTrialReport``), written as it goes, so a
+    #: later session can read what it found. Null for a valuation run.
+    report: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
 
 class DiscValuation(Base, UUIDPrimaryKeyMixin):
