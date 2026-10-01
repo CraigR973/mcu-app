@@ -20,6 +20,8 @@ import {
   collectionCopiesSchema,
   collectionFacetsSchema,
   collectionItemSchema,
+  bidTrialSchema,
+  bidTrialStartSchema,
   collectionValueSchema,
   completionInsightsSchema,
   completionRefreshSchema,
@@ -104,6 +106,8 @@ import {
   type DealsRun,
   type EbayListingUrl,
   type EbayPriceEstimate,
+  type BidTrial,
+  type BidTrialStart,
   type CollectionValue,
   type ValuationStart,
   type SpecBackfill,
@@ -216,7 +220,11 @@ export type {
   EbayListingUrl,
   EbayPriceEstimate,
   EbayPriceSegment,
+  BidTrial,
+  BidTrialStart,
   CollectionValue,
+  TrialFilm,
+  TrialSummary,
   CopyValuation,
   ValuationRun,
   ValuationStart,
@@ -1150,6 +1158,25 @@ export async function startValuationRun(): Promise<ValuationStart> {
   return parseOrThrowApiError(
     await authFetch('/collection/value/refresh', { method: 'POST' }),
     valuationStartSchema,
+  )
+}
+
+/**
+ * Batch V6 — the latest bid trial and its report, or null before the first. Admin only.
+ * Reading spends nothing.
+ */
+export async function fetchBidTrial(): Promise<BidTrial | null> {
+  return parseResponse(await authFetch('/collection/value/bid-trial'), bidTrialSchema.nullable())
+}
+
+/**
+ * Admin-only. Starts a bid trial within today's share of eBay's allowance: one search each for
+ * up to 100 priced films, Buy It Now and auctions together. It saves no prices.
+ */
+export async function startBidTrial(): Promise<BidTrialStart> {
+  return parseOrThrowApiError(
+    await authFetch('/collection/value/bid-trial', { method: 'POST' }),
+    bidTrialStartSchema,
   )
 }
 
