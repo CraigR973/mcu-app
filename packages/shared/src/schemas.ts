@@ -132,6 +132,9 @@ export const copyValuationSchema = z.object({
   checkedAt: z.string(),
   basis: z.string().min(1),
   minSample: z.number().int().positive(),
+  /** Batch V8. eBay's own sold listings for the same search, opened in the person's
+   *  browser. Defaulted so a page served before the API carries it still parses. */
+  soldListingsUrl: z.string().min(1).nullable().default(null),
 })
 
 export const collectionCopySchema = z.object({
@@ -2094,6 +2097,15 @@ export const dealSchema = z.object({
   genres: z.array(z.string()),
   firstSeenAt: z.string(),
   lastSeenAt: z.string(),
+  /** Batch V8, eBay finds only: the parts `wasPrice` averages, eBay's figure (asking
+   *  prices, before postage) first, then each shop's recent price. Null for a shop's own
+   *  deal. Defaulted, as is the next, so the page parses an API without them yet. */
+  usualSources: z
+    .array(z.object({ source: z.string().min(1), price: z.string().min(1) }))
+    .nullable()
+    .default(null),
+  /** eBay's own sold listings for the find's film and format. */
+  soldListingsUrl: z.string().min(1).nullable().default(null),
 })
 
 export const dealListSchema = z.object({

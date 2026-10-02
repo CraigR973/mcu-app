@@ -37,7 +37,9 @@ from src.models.deal import Deal
 from src.models.ebay_watch import EbayPriceRef, EbayTarget, EbayWatchRun
 from src.models.movie import Movie
 from src.models.notification import Notification
+from src.models.price_check import PriceCheck
 from src.models.profile import Profile, UserRole
+from src.models.wanted import WantedItem
 from src.routers.ebay_watch import get_ebay_client_factory
 from src.services.ebay_watch.runs import DAILY_SHARE, start_run, work_run
 from src.services.identification import _move_back, move_references
@@ -513,6 +515,130 @@ async def test_an_expired_ebay_deal_leaves_the_feed_its_count_and_the_badge(
     assert titles == ["An eBay find 2"]
     assert count["count"] == feed["total"]
     assert badge["deals"] == feed["total"]
+
+
+# ---------------------------------------------------------------------------
+# Batch V8 — "usually" is eBay's figure averaged with the shops'
+# ---------------------------------------------------------------------------
+
+
+async def _wanted_with_shop_prices(db: AsyncSession, film: Movie) -> None:
+    """The film wanted on 4K, and what the nightly check found at the shops this week."""
+    want = WantedItem(id=uuid.uuid4(), movie_id=film.id, preferred_format="4k_uhd", currency="GBP")
+    db.add(want)
+    await db.flush()
+    checks = [
+        # Zavvi's latest standard 4K: the one shop price that counts.
+        ("Zavvi", "20.00", "Star Wars: The Last Jedi 4K Ultra HD", timedelta(days=1)),
+        # Zavvi's earlier price: only each shop's latest counts.
+        ("Zavvi", "25.00", "Star Wars: The Last Jedi 4K Ultra HD", timedelta(days=3)),
+        # A limited edition is not what eBay's figure measures.
+        ("Second Sight", "45.00", "The Last Jedi Limited Edition 4K Ultra HD", timedelta(days=1)),
+        # Not the find's format.
+        ("Arrow Video", "9.00", "Star Wars: The Last Jedi Blu-ray", timedelta(days=1)),
+        # Older than the nightly check's last week.
+        ("HMV", "5.00", "Star Wars: The Last Jedi 4K Ultra HD", timedelta(days=8)),
+    ]
+    for index, (shop, price, title, age) in enumerate(checks):
+        db.add(
+            PriceCheck(
+                id=uuid.uuid4(),
+                wanted_id=want.id,
+                retailer_id=None,
+                retailer_name_snapshot=shop,
+                price=Decimal(price),
+                currency="GBP",
+                title_snapshot=title,
+                url=f"https://shop.test/last-jedi/{index}",
+                checked_at=NOW - age,
+            )
+        )
+    await db.commit()
+
+
+async def test_the_usual_price_averages_in_the_shops_like_for_like(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    film = await _last_jedi_owned_on_blu_ray(db)
+    await _wanted_with_shop_prices(db, film)
+
+    run = await _pass(db, FakeEbay(pages=[NEWEST]))
+
+    assert run.deals_found == 1
+    deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
+    assert deal is not None
+    # (eBay £16.00 + Zavvi £20.00) / 2. The limited edition, the Blu-ray, Zavvi's earlier
+    # price and HMV's of eight days ago are left out.
+    assert deal.was_price == Decimal("18.00")
+    assert deal.usual_sources == [
+        {"source": "eBay", "price": "16.00"},
+        {"source": "Zavvi", "price": "20.00"},
+    ]
+    # (£18.00 - £4.75) / £18.00 = 73.6%.
+    assert deal.discount_percent == 74
+    (note,) = await _notes(db, craig, "ebay-deal:")
+    assert "74% under its usual £18.00" in note.body
+
+    # The pass ran on the test's clock, so its three days ended long ago; the feed is read now.
+    deal.expires_at_utc = datetime(2099, 1, 1)
+    await db.commit()
+    async with _as(db, craig.id) as client:
+        feed = (await client.get("/api/v1/deals")).json()
+    (item,) = [item for item in feed["items"] if item["retailer"] == "eBay"]
+    assert item["wasPrice"] == "18.00"
+    assert item["usualSources"] == [
+        {"source": "eBay", "price": "16.00"},
+        {"source": "Zavvi", "price": "20.00"},
+    ]
+    assert item["soldListingsUrl"] == (
+        "https://www.ebay.co.uk/sch/i.html"
+        "?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1"
+    )
+
+
+async def test_an_earlier_find_reads_as_ebay_alone_and_a_shops_deal_has_no_parts(
+    db: AsyncSession,
+) -> None:
+    """A find stored before V8 kept eBay's figure in ``was_price`` and recorded no parts."""
+    mark_id = (await _person(db, UserRole.viewer)).id
+    db.add_all(
+        [
+            Deal(
+                id=uuid.uuid4(),
+                retailer_id=None,
+                retailer_name_snapshot="eBay",
+                title_snapshot="An earlier eBay find",
+                url="https://www.ebay.co.uk/itm/990000000009",
+                price=Decimal("4.75"),
+                was_price=Decimal("16.00"),
+                currency="GBP",
+                discount_percent=70,
+                expires_at_utc=datetime(2099, 1, 1),
+            ),
+            Deal(
+                id=uuid.uuid4(),
+                retailer_id=None,
+                retailer_name_snapshot="Zavvi",
+                title_snapshot="A disc in Zavvi's sale",
+                url="https://www.zavvi.com/p/v8-test",
+                price=Decimal("10.00"),
+                was_price=Decimal("20.00"),
+                currency="GBP",
+                discount_percent=50,
+            ),
+        ]
+    )
+    await db.commit()
+
+    async with _as(db, mark_id) as client:
+        feed = (await client.get("/api/v1/deals")).json()
+
+    by_title = {item["title"]: item for item in feed["items"]}
+    earlier = by_title["An earlier eBay find"]
+    assert earlier["usualSources"] == [{"source": "eBay", "price": "16.00"}]
+    # Matched to no film, so there is no film and format to search sold listings for.
+    assert earlier["soldListingsUrl"] is None
+    sale = by_title["A disc in Zavvi's sale"]
+    assert (sale["usualSources"], sale["soldListingsUrl"]) == (None, None)
 
 
 # ---------------------------------------------------------------------------

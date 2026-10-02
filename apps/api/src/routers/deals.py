@@ -21,6 +21,8 @@ from sqlalchemy import func, select
 
 from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
+from src.ebay.estimate import search_query, sold_listings_url
+from src.matching.engine import searchable_title
 from src.models.deal import Deal, live_deal
 from src.models.movie import Movie
 from src.routers.movies import Database
@@ -30,8 +32,10 @@ from src.schemas.deals import (
     DealResponse,
     DealsRunResponse,
     RetailerDealsOutcomeResponse,
+    UsualSourceResponse,
 )
 from src.services.audit import record_action
+from src.services.ebay_watch.scan import EBAY
 from src.services.scraping.deals_runner import run_deals_scrape
 
 router = APIRouter(prefix="/api/v1", tags=["deals"])
@@ -48,6 +52,31 @@ def _genres(movie: Movie | None) -> list[str]:
     if movie is None or not movie.genres:
         return []
     return [str(entry.get("name")) for entry in movie.genres if entry.get("name")]
+
+
+def _is_ebay_find(deal: Deal) -> bool:
+    return deal.retailer_id is None and deal.retailer_name_snapshot == EBAY
+
+
+def _usual_sources(deal: Deal) -> list[UsualSourceResponse] | None:
+    """An eBay find's usual price and its parts (Batch V8).
+
+    A find stored before V8 has no parts recorded, and its ``was_price`` was eBay's figure
+    alone, so that is what it says.
+    """
+    if not _is_ebay_find(deal) or deal.was_price is None:
+        return None
+    if deal.usual_sources:
+        return [UsualSourceResponse(**source) for source in deal.usual_sources]
+    return [UsualSourceResponse(source=EBAY, price=str(deal.was_price))]
+
+
+def _sold_listings_url(deal: Deal, movie: Movie | None) -> str | None:
+    """eBay's sold listings for the find's film and format, searched as its usual price was."""
+    if not _is_ebay_find(deal) or movie is None or deal.format_code is None:
+        return None
+    title = searchable_title(movie.title, identified=movie.tmdb_id is not None)
+    return sold_listings_url(search_query(title, deal.format_code))
 
 
 def _to_response(deal: Deal, movie: Movie | None) -> DealResponse:
@@ -68,6 +97,8 @@ def _to_response(deal: Deal, movie: Movie | None) -> DealResponse:
         genres=_genres(movie),
         firstSeenAt=deal.first_seen_at_utc,
         lastSeenAt=deal.last_seen_at_utc,
+        usualSources=_usual_sources(deal),
+        soldListingsUrl=_sold_listings_url(deal, movie),
     )
 
 

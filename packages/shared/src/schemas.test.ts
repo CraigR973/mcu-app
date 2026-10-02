@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   activitySchema,
+  dealSchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
   ebayTargetsSchema,
@@ -1554,6 +1555,8 @@ describe('Batch T6 — the collection\'s value', () => {
     checkedAt: '2026-09-24T03:05:00Z',
     basis: 'current asking prices',
     minSample: 3,
+    soldListingsUrl:
+      'https://www.ebay.co.uk/sch/i.html?_nkw=Heat+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
   }
 
   it('reads a copy cached before T6 as not valued yet (#205)', () => {
@@ -1565,6 +1568,14 @@ describe('Batch T6 — the collection\'s value', () => {
     expect(() =>
       collectionCopiesSchema.parse([{ ...copy, valuation: { ...valuation, price: 24.99 } }]),
     ).toThrow()
+  })
+
+  it('reads a stored price from an API before V8 as having no sold-listings link', () => {
+    const { soldListingsUrl: _dropped, ...before } = valuation
+    expect(collectionCopiesSchema.parse([{ ...copy, valuation: before }])[0].valuation).toEqual({
+      ...before,
+      soldListingsUrl: null,
+    })
   })
 
   it('reads the total with a run in progress', () => {
@@ -1955,5 +1966,47 @@ describe('Batch V6 — the bid trial', () => {
     const parsed = bidTrialSchema.parse({ ...trial, report: { ...trial.report, films: [older] } })
     expect(parsed.report?.films[0]?.error).toBeNull()
     expect(() => bidTrialStartSchema.parse({ outcome: 'nothing_due', trial: null, sampled: 0, budgetLeft: 0 })).toThrow()
+  })
+})
+
+describe('Batch V8 — where an eBay find\'s "usually" comes from', () => {
+  const find = {
+    id: '00000000-0000-4000-8000-000000000081',
+    retailer: 'eBay',
+    title: 'Star Wars The Last Jedi 4K UHD + Blu-ray',
+    url: 'https://www.ebay.co.uk/itm/298708357566',
+    imageUrl: null,
+    formatCode: '4k_uhd',
+    price: '4.75',
+    wasPrice: '18.00',
+    currency: 'GBP',
+    discountPercent: 74,
+    movieId: '00000000-0000-4000-8000-000000000082',
+    tmdbId: 181808,
+    posterPath: null,
+    genres: [],
+    firstSeenAt: '2026-10-01T20:00:00Z',
+    lastSeenAt: '2026-10-01T20:00:00Z',
+    usualSources: [
+      { source: 'eBay', price: '16.00' },
+      { source: 'Zavvi', price: '20.00' },
+    ],
+    soldListingsUrl:
+      'https://www.ebay.co.uk/sch/i.html?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
+  }
+
+  it('reads the parts of the usual price and the sold-listings link', () => {
+    expect(dealSchema.parse(find)).toEqual(find)
+  })
+
+  it('reads a deal from an API before V8 as having neither', () => {
+    const { usualSources: _parts, soldListingsUrl: _sold, ...before } = find
+    expect(dealSchema.parse(before)).toMatchObject({ usualSources: null, soldListingsUrl: null })
+  })
+
+  it('keeps each part a string, as money is everywhere', () => {
+    expect(() =>
+      dealSchema.parse({ ...find, usualSources: [{ source: 'eBay', price: 16 }] }),
+    ).toThrow()
   })
 })

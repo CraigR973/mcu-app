@@ -603,4 +603,8 @@ async def test_a_copy_carries_its_stored_price(db: AsyncSession) -> None:
         "priced",
     )
     assert priced["basis"] == "current asking prices"
+    # Batch V8: eBay's own sold listings, searched with the words the value was.
+    assert priced["soldListingsUrl"] == (
+        "https://www.ebay.co.uk/sch/i.html?_nkw=Heat+4k_uhd&_sacat=617&LH_Sold=1&LH_Complete=1"
+    )
     assert copies[str(digital.id)]["valuation"] is None

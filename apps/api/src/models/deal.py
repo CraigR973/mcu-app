@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, and_, func, or_
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.elements import ColumnElement
 
@@ -39,6 +39,11 @@ class Deal(Base, UUIDPrimaryKeyMixin):
 
     price: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     was_price: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    #: Batch V8. An eBay find's ``was_price`` is its usual price, the average of eBay's
+    #: figure and the shops' recent prices; these are its parts, each
+    #: ``{"source": …, "price": …}``, eBay first. Null for a retailer's deal, whose "was"
+    #: price is its own, and for eBay finds stored before V8, which were eBay's alone.
+    usual_sources: Mapped[list[dict[str, str]] | None] = mapped_column(JSONB, nullable=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="GBP")
 
     #: **Derived from the two prices, never read off the page.** The batch's risk note is

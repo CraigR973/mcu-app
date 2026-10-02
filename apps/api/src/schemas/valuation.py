@@ -81,3 +81,6 @@ class CopyValuationResponse(BaseModel):
     checkedAt: UtcDatetime
     basis: str
     minSample: int
+    #: Batch V8. eBay's own sold listings for the same search, opened in the person's
+    #: browser: what discs went for, beside the asking prices the value is built from.
+    soldListingsUrl: str
