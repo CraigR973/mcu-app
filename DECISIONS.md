@@ -4868,3 +4868,28 @@ contemporaneous.
      - **The two nights already counted stay counted.** 101 Films and Powerhouse sit at 2,
        under the old rule. Resetting them is a write to live data, which no cloud session
        makes; a night with a price resets them anyway.
+
+### 2026-10-02 — Group V, batch V8
+
+239. **V8: an eBay find's "usually" averages eBay with the shops, like for like.** Craig's
+     answer to snag 1 (#228), built on asking prices since V7 is shelved (#237).
+
+     - **Like for like is this batch's call, open to Craig's overrule.** A shop's price counts
+       only when it is the same format, read off the listing it priced (`primary_format`, as
+       the nightly check reads it), and a standard edition by the eBay matcher's own
+       `classify_edition`, because eBay's figure is standard editions only. On 1 Oct the shops'
+       week held £39.99 and £49.99 limited editions of Dead Man's Shoes: averaged into an
+       ordinary disc's usual price, they would make a normal listing look like a deal.
+     - **Condition is not matched.** A used eBay listing is still averaged with new shop
+       prices, as the snag asked for an average with the shops; eBay's own part stays
+       condition-matched as T8a built it.
+     - **The latest per shop from the last seven days**, of any want for the film, so a want
+       for each format counts on its own format. eBay's figure alone where no shop has one,
+       which is most finds: upgrades on owned films, which no shop is asked about.
+     - **The parts are stored with the deal** (`deals.usual_sources`), so the card says what
+       it was judged against even after the shops' prices change. A find stored before V8
+       reads as eBay alone, which is what its `was_price` was.
+     - **The sold-listings link searches with the words the asking prices were searched
+       with**: the valuation's stored `search_query` on the film page, and the film's title
+       and format on a deal. It opens eBay in the person's browser; the app reads nothing
+       from it (#16, #126).

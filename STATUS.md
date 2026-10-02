@@ -2,17 +2,24 @@
 
 ## Now
 
-**1 Oct 2026, evening: Craig answered "1) neither 2) yes".** **20b's first half is live
-(`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19)), verified in production at 19:26
-UTC:** a `429` no longer counts towards switching a shop off; a shop that only refused is
-`blocked`, its count left alone, and each refusal records what the shop sent back (#238). The
-`cron-scrape` job redeployed with it, so the 2 Oct 03:00 UTC check runs on it. **V7 is shelved**
-(#237): the trial found no film with a bid price, so values stay on asking prices. **Next: V8**
-(the Deals "usual" price, on asking prices). **The 2 Oct check, read back:** no shop
-switched off, and every refusal asked for 60 seconds (the Log's first line). Earlier the same
-day: the cloud setup checked (`OWNER-ACTIONS.md` 27, done) and V5's plans read on production.
-**Open:** 101 Films and Powerhouse keep the 2 failures counted before the fix; 21 has 2 of the 3
-wants it needs, and only the refusing shops can supply the third.
+**2 Oct 2026, 03:40 UTC: Craig's "1) neither 2) yes" is carried out, and the session's plan
+(`docs/next-cloud-session.md`) is done.** Each item verified in production:
+- **20b, first half** ([#19](https://github.com/CraigR973/mcu-app/pull/19), `548160f`): a `429`
+  never counts towards auto-disable; a shop that only refused is `blocked`; each refusal
+  records what the shop sent back (#238). **Its first night, 2 Oct:** no shop switched off
+  (101 Films and Powerhouse got prices again); every refusal said `retry-after 60`, Cloudflare,
+  "Too many requests": a rate limit asking for a minute, still refusing each Shopify shop's
+  first request of the night ([#21](https://github.com/CraigR973/mcu-app/pull/21)).
+- **V7 shelved** (#237): the trial found no film with a bid price.
+- **V8** ([#22](https://github.com/CraigR973/mcu-app/pull/22), `37e7c0a`): an eBay find's
+  "usually" averages eBay's asking price with the shops' recent like-for-like prices and says
+  so on the card; eBay's sold listings are linked from the card and the film page (#239).
+
+**Next:** 20b's second half (honour the 60-second `Retry-After` before the one retry) after a
+second night's evidence and Craig's go, then 22c. 21 starts itself once a third want has two
+shops' prices on two days (2 of 3 on 2 Oct). **Craig's:** the go on 20b's second half; the
+like-for-like rule if he wants it otherwise (#239); V9 needs blu-ray.com and avforums.com
+allowed; T8b needs item 18; 38 is last. 101 Films and Powerhouse are back to 0 failures.
 
 **1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
 #230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
@@ -27,7 +34,8 @@ an admin-only "Try bid prices" on Home that saves no prices.
      "bids only"** (`OWNER-ACTIONS.md` 26). That starts V7, then V8.
   2. **The two-phone check of V3's movie night**, with Mark's notifications on (16b).
   3. **Allow blu-ray.com and avforums.com** in the environment's network settings before V9.
-  4. **Your go on 20b and 22c**, after reading the 1 Oct 03:00 UTC shop check.
+  4. ~~**Your go on 20b**~~ (first half live 1 Oct); **your go on its second half and 22c**,
+     after a second night of the refusals' evidence.
   5. ~~**The one-off cloud setup on your Mac** (`OWNER-ACTIONS.md` 27)~~ — done 1 Oct.
 - **Cloud sessions, 1 Oct (#236):** a startup hook now readies the gate in every cloud
   session; `src.scripts.live_sql` reads the live database read-only over HTTPS once
@@ -539,6 +547,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-02 (V8, [#22](https://github.com/CraigR973/mcu-app/pull/22), `37e7c0a`)** — An eBay
+  find's "usually" is the average of eBay's asking price and each shop's latest like-for-like
+  price from the nightly check's last week (same format, standard edition; #239), eBay's alone
+  where no shop has one; the 70% rule compares with it, and its parts are stored
+  (`deals.usual_sources`, migration 044). The card says "with postage · usually £U" over
+  "eBay £A before postage · Zavvi £B"; "Sold on eBay" and the film page's "Sold listings on
+  eBay" open eBay's sold listings. Browser check at 375 px, light and dark, against the real
+  API on the throwaway test database. Gate and CI green first time (1,724 API tests; web 463,
+  shared 123); production reported the merge SHA at 03:36 UTC with `db: ok`, at migration 044.
 
 - **2026-10-02 (the first shop check under 20b's first half)** — 03:04 UTC: no shop switched
   off. 101 Films and Powerhouse each got a price and went back to 0 failures; Second Sight was
