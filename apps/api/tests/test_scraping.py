@@ -16,6 +16,7 @@ success/fail counter cannot see that. Each check below is one way it has actuall
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -25,6 +26,7 @@ from bs4 import BeautifulSoup
 
 from src.models.wanted import Retailer
 from src.services.scraping.builtins import BUILT_IN_SCRAPERS, unverified_names
+from src.services.scraping.daily import refusal_records
 from src.services.scraping.extract import (
     MAX_PLAUSIBLE,
     ScrapeCandidate,
@@ -38,13 +40,16 @@ from src.services.scraping.extract import (
     split_selectors,
 )
 from src.services.scraping.fetcher import (
+    RETRY_AFTER_LIMIT_SECONDS,
     FetchError,
     RefusedError,
     UnsafeUrlError,
     assert_fetchable,
     fetch_page,
+    retry_wait,
 )
 from src.services.scraping.runner import (
+    RefusalRetry,
     ScrapeOutcome,
     ScrapeRunResult,
     _record_failure,
@@ -1471,6 +1476,9 @@ class TestARefusalIsNotAFailure:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        # Since 20b's second half the retry waits the minute the shop asks for: recorded
+        # here rather than slept, and asserted below.
+        waits = _stand_in_for_the_clock(monkeypatch)
         recorder = _Recorder()
         monkeypatch.setattr("src.services.scraping.runner.logger", recorder)
         attempts = {"n": 0}
@@ -1496,6 +1504,7 @@ class TestARefusalIsNotAFailure:
         assert refused[0]["retailer"] == "Powerhouse Films"
         assert refused[0]["wanted"] == "Near Dark"
         assert refused[0]["retry_after"] == "60"
+        assert waits == [60.0], "the one retry came after the minute the shop asked for"
 
     async def test_a_refusal_then_a_timeout_is_a_failure(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1555,3 +1564,240 @@ class TestARefusalIsNotAFailure:
         assert retailer.last_scrape_error == (
             "2 request(s) refused. The last: The page answered 429 (retry-after 60)"
         )
+
+
+def _stand_in_for_the_clock(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """Record the runner's waits instead of sleeping through them (20b's second half)."""
+    waits: list[float] = []
+
+    async def pause(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr("src.services.scraping.runner._pause", pause)
+    return waits
+
+
+def _refusal(retry_after: str | None) -> RefusedError:
+    return RefusedError(429, retry_after=retry_after, evidence="")
+
+
+class TestARefusedRequestWaitsForTheShop:
+    """Batch 20b, second half: a refused request waits for the shop's ``Retry-After``,
+    bounded at 90 seconds, before its one retry, and says whether the retry got through.
+
+    On 2 Oct every refusal asked for 60 seconds and got a retry two seconds later; 4 of 29
+    of those got through (`docs/phase-batches.md`, 20b).
+    """
+
+    async def test_what_2_oct_asked_for_is_waited_for(self) -> None:
+        wait = retry_wait(_refusal("60"), usual_pause=2.0)
+        assert wait.seconds == 60
+        assert wait.asked == "60"
+        assert wait.note == "waited 60 s, as asked"
+
+    async def test_the_limit_is_ninety_seconds_and_it_is_honoured_up_to_it(self) -> None:
+        assert RETRY_AFTER_LIMIT_SECONDS == 90
+        assert retry_wait(_refusal("90"), usual_pause=2.0).seconds == 90
+
+    async def test_a_longer_wait_keeps_the_usual_pause_and_says_so(self) -> None:
+        wait = retry_wait(_refusal("91"), usual_pause=2.0)
+        assert wait.seconds == 2.0
+        assert wait.note == "waited 2 s: asked for 91 s, over the 90 s limit"
+
+    async def test_no_retry_after_keeps_the_usual_pause_and_says_so(self) -> None:
+        wait = retry_wait(_refusal(None), usual_pause=2.0)
+        assert (wait.seconds, wait.asked) == (2.0, None)
+        assert wait.note == "waited 2 s: no Retry-After"
+
+    async def test_a_wait_shorter_than_the_usual_pause_is_never_rushed(self) -> None:
+        assert retry_wait(_refusal("0"), usual_pause=2.0).seconds == 2.0
+
+    async def test_an_http_date_is_read_as_the_seconds_until_it(self) -> None:
+        now = datetime(2026, 10, 3, 3, 0, 0, tzinfo=UTC)
+        wait = retry_wait(_refusal("Sat, 03 Oct 2026 03:00:45 GMT"), usual_pause=2.0, now=now)
+        assert wait.seconds == 45
+        past = retry_wait(_refusal("Sat, 03 Oct 2026 02:59:00 GMT"), usual_pause=2.0, now=now)
+        assert past.seconds == 2.0
+
+    async def test_a_value_that_is_not_understood_keeps_the_usual_pause(self) -> None:
+        wait = retry_wait(_refusal("soon"), usual_pause=2.0)
+        assert wait.seconds == 2.0
+        assert wait.note == "waited 2 s: Retry-After 'soon' not understood"
+
+    async def test_a_run_from_the_app_does_not_wait(self) -> None:
+        wait = retry_wait(_refusal("60"), usual_pause=2.0, limit=0)
+        assert wait.seconds == 2.0
+        assert wait.note == "waited 2 s: asked for 60 s, not waited for in a run from the app"
+
+    async def test_a_retry_after_the_wait_that_gets_through_is_recorded(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        waits = _stand_in_for_the_clock(monkeypatch)
+        answers = iter(
+            [
+                httpx.Response(429, headers={"Retry-After": "60"}),
+                httpx.Response(200, text=RUNNER_PAGE),
+            ]
+        )
+        transport = httpx.MockTransport(lambda request: next(answers))
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            candidate, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert waits == [60.0]
+        assert candidate is not None and outcome.ok
+        assert not outcome.refused
+        assert outcome.retry is not None
+        assert (outcome.retry.asked, outcome.retry.waited, outcome.retry.result) == (
+            "60",
+            60.0,
+            "got through",
+        )
+        assert outcome.retry.note == "waited 60 s, as asked"
+
+    async def test_a_retry_refused_again_is_recorded_and_stays_a_refusal(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        waits = _stand_in_for_the_clock(monkeypatch)
+        recorder = _Recorder()
+        monkeypatch.setattr("src.services.scraping.runner.logger", recorder)
+        transport = _refusing(headers={"Retry-After": "60"})
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert waits == [60.0]
+        assert outcome.refused
+        assert outcome.retry is not None and outcome.retry.result == "refused again"
+        refused = [fields for event, fields in recorder.events if event == "scrape_refused"]
+        # The first refusal's line says what it was given; the last had no retry after it.
+        assert [fields["wait"] for fields in refused] == ["waited 60 s, as asked", None]
+        retried = [fields for event, fields in recorder.events if event == "scrape_retried"]
+        assert retried == [
+            {"retailer": "Test Shop", "wanted": "Heat", "waited": 60.0, "result": "refused again"}
+        ]
+
+    async def test_a_retry_that_fails_another_way_is_recorded_as_failed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _stand_in_for_the_clock(monkeypatch)
+        attempts = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            del request
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                return httpx.Response(429, headers={"Retry-After": "60"})
+            raise httpx.ConnectTimeout("then it timed out")
+
+        transport = httpx.MockTransport(handler)
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert not outcome.refused, "judged by the last answer, as before"
+        assert outcome.retry is not None and outcome.retry.result == "failed"
+
+    async def test_a_shop_asking_for_too_long_gets_the_usual_pause(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        waits = _stand_in_for_the_clock(monkeypatch)
+        transport = _refusing(headers={"Retry-After": "300"})
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert waits == [2.0]
+        assert outcome.retry is not None
+        assert outcome.retry.note == "waited 2 s: asked for 300 s, over the 90 s limit"
+
+    async def test_run_now_in_the_app_keeps_the_usual_pause(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        waits = _stand_in_for_the_clock(monkeypatch)
+        transport = _refusing(headers={"Retry-After": "60"})
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Heat", client=client, retry_after_limit=0)
+
+        assert waits == [2.0]
+        assert outcome.retry is not None
+        assert "not waited for in a run from the app" in outcome.retry.note
+
+    async def test_a_timeout_is_still_retried_after_the_usual_pause(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Only a refusal is waited for: a transport failure keeps the two seconds, and it
+        leaves no refusal record."""
+        waits = _stand_in_for_the_clock(monkeypatch)
+        attempts = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            del request
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                raise httpx.ConnectTimeout("slow")
+            return httpx.Response(200, text=RUNNER_PAGE)
+
+        transport = httpx.MockTransport(handler)
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert waits == [2.0]
+        assert outcome.ok
+        assert outcome.retry is None
+
+    async def test_an_answer_first_time_waits_for_nothing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        waits = _stand_in_for_the_clock(monkeypatch)
+        async with httpx.AsyncClient(transport=_ok_transport(), follow_redirects=False) as client:
+            _, outcome = await scrape_one(_retailer(), "Heat", client=client)
+
+        assert waits == []
+        assert outcome.retry is None
+
+    async def test_the_run_counts_the_retries_and_those_that_got_through(self) -> None:
+        def retried(result: str) -> ScrapeOutcome:
+            outcome = ScrapeOutcome(retailer="101 Films", wanted_title=result, ok=False)
+            outcome.retry = RefusalRetry(asked="60", waited=60.0, note="n", result=result)
+            return outcome
+
+        result = ScrapeRunResult(
+            outcomes=[
+                retried("got through"),
+                retried("refused again"),
+                retried("got through"),
+                ScrapeOutcome(retailer="Zavvi", wanted_title="Heat", ok=True),
+            ]
+        )
+
+        assert [o.wanted_title for o in result.retried] == [
+            "got through",
+            "refused again",
+            "got through",
+        ]
+        assert result.got_through == 2
+
+    async def test_the_runs_record_names_each_refusal_and_its_retry(self) -> None:
+        outcome = ScrapeOutcome(retailer="Powerhouse Films", wanted_title="Romper Stomper", ok=True)
+        outcome.retry = RefusalRetry(
+            asked="60", waited=60.0, note="waited 60 s, as asked", result="got through"
+        )
+
+        assert refusal_records(ScrapeRunResult(outcomes=[outcome])) == [
+            {
+                "retailer": "Powerhouse Films",
+                "wanted": "Romper Stomper",
+                "asked": "60",
+                "waited": 60.0,
+                "note": "waited 60 s, as asked",
+                "retry": "got through",
+            }
+        ]
+
+    async def test_the_apps_own_runs_do_not_wait(self) -> None:
+        """ "Run now" and the scrape tool are requests from the phone: a refused night would
+        hold one open for half an hour. Asserted against the source, as the cron's trigger
+        is (`test_cron_scripts.py`): the value is a literal in the one call each makes."""
+        import inspect
+
+        from src.routers import scraping as router
+
+        assert "retry_after_limit=0" in inspect.getsource(router.run_daily)
+        assert "retry_after_limit=0" in inspect.getsource(router.run_scrapers)

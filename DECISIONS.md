@@ -4893,3 +4893,18 @@ contemporaneous.
        with**: the valuation's stored `search_query` on the film page, and the film's title
        and format on a deal. It opens eBay in the person's browser; the app reads nothing
        from it (#16, #126).
+
+### 2026-10-02 — Batch 20b, second half
+
+240. **20b's second half is built from one night's evidence, not two, so that the 3 Oct check
+     is its first night.** Craig's word, 2 Oct 23:28 UTC, on his Mac ("20b now, merge by
+     02:45"), when the session opened before the 3 Oct check had run. Supersedes #238's "two
+     nights" for this half only; 22c still waits for this half's own read-back.
+
+     - **What it gives up:** a second night of the first half's evidence. 2 Oct's was
+       uniform (every refusal `429`, `retry-after 60`, Cloudflare, "Too many requests", no
+       `cf-mitigated`), and the record this half adds says more than a second night under the
+       old pause would have: whether a minute's wait gets through.
+     - **What it gains:** a day. The 3 Oct check is read back the same morning.
+     - **No merge between 02:45 and 03:45 UTC**, as on 1 Oct (#230): a deploy while the check
+       runs could cut it short.

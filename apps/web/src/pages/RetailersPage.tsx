@@ -307,7 +307,10 @@ function SalePagesPanel() {
       </div>
 
       {check.isPending ? (
-        <p className="text-xs text-muted-foreground">Asking each shop for its sale page…</p>
+        <p className="text-xs text-muted-foreground">
+          Asking each shop for its sale page… A shop that asks the app to wait can add up to a
+          minute and a half.
+        </p>
       ) : null}
       {check.isError ? (
         <p className="text-xs text-destructive">

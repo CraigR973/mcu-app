@@ -25,9 +25,12 @@ from __future__ import annotations
 import asyncio
 import html
 import ipaddress
+import math
 import re
 import socket
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from urllib.parse import urlparse
 
 import httpx
@@ -109,6 +112,75 @@ def refusal_from(response: httpx.Response) -> RefusedError:
         retry_after=_clip(retry_after) if retry_after else None,
         evidence="; ".join(parts),
     )
+
+
+#: The longest a refusal's ``Retry-After`` is waited for before the one retry (20b's second
+#: half). Every refusal on 2 Oct asked for 60 seconds; a shop asking for more is not going to
+#: be back within the night's run, and waiting would only make the run longer.
+RETRY_AFTER_LIMIT_SECONDS = 90
+
+
+@dataclass(frozen=True)
+class RetryWait:
+    """How long to wait before retrying a refused request, and why: the refusal's record."""
+
+    seconds: float
+    #: What the shop asked for, as it sent it, or ``None`` when it named no wait.
+    asked: str | None
+    note: str
+
+
+def _asked_seconds(value: str, now: datetime) -> float | None:
+    """``Retry-After`` in seconds: a number of seconds, or an HTTP date (RFC 9110 §10.2.3)."""
+    text = value.strip()
+    if text.isdigit():
+        return float(text)
+    try:
+        when = parsedate_to_datetime(text)
+    except (TypeError, ValueError, IndexError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, math.ceil((when - now).total_seconds()))
+
+
+def retry_wait(
+    refusal: RefusedError,
+    *,
+    usual_pause: float,
+    limit: float = RETRY_AFTER_LIMIT_SECONDS,
+    now: datetime | None = None,
+) -> RetryWait:
+    """The wait before a refused request's one retry (Batch 20b, second half).
+
+    The shop's ``Retry-After`` when it is within ``limit``, and never less than the usual
+    pause; otherwise the usual pause, and the note says why. A ``limit`` of 0 waits for
+    nothing a shop asks: "Run now" in the app passes it, because a run from the phone
+    cannot hold a request open for half an hour.
+    """
+    asked = refusal.retry_after
+    if asked is None:
+        return RetryWait(usual_pause, None, f"waited {usual_pause:g} s: no Retry-After")
+    seconds = _asked_seconds(asked, now or datetime.now(UTC))
+    if seconds is None:
+        return RetryWait(
+            usual_pause, asked, f"waited {usual_pause:g} s: Retry-After {asked!r} not understood"
+        )
+    if limit <= 0:
+        return RetryWait(
+            usual_pause,
+            asked,
+            f"waited {usual_pause:g} s: asked for {seconds:g} s, not waited for in a run "
+            "from the app",
+        )
+    if seconds > limit:
+        return RetryWait(
+            usual_pause,
+            asked,
+            f"waited {usual_pause:g} s: asked for {seconds:g} s, over the {limit:g} s limit",
+        )
+    waited = max(seconds, usual_pause)
+    return RetryWait(waited, asked, f"waited {waited:g} s, as asked")
 
 
 @dataclass(frozen=True)
