@@ -25,15 +25,18 @@ conversation still maps onto this file.*
   numbers, then **Save deals**.
 - **Group U** (`docs/phase-batches.md`): **20b's first half is live (1 Oct, `548160f`)** at your
   "2) yes": a `429` no longer counts towards switching a shop off, and each refusal records what
-  the shop sent back. The second half (pacing) and 22c wait for two nights of that evidence;
-  your go comes after it. 101 Films and Powerhouse keep the 2 failures counted on 30 Sep and
+  the shop sent back. **2 Oct: no shop switched off, and every refusal asked for 60 seconds**
+  (a rate limit, not a block). The second half (honour that wait) and 22c follow a second
+  night's evidence; your go comes after it. 101 Films and Powerhouse keep the 2 failures counted on 30 Sep and
   1 Oct under the old rule; a night with a price clears them. 21 starts once 3 wants have
   prices from two shops on two days; on 1 Oct only 2 had, and the third needs a Shopify shop
   to answer. Bad Lieutenant and Dog Soldiers (4K) were added to Wanted for it on 30 Sep, and
   you can remove them afterwards. T8b waits on 18; 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
   shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **26 is done:** you ran
-  the trial and picked neither, so V7 is shelved and V8 runs on asking prices. Also yours:
+  the trial and picked neither, so V7 is shelved. **V8 is live (2 Oct):** an eBay find's
+  "usually" averages eBay with the shops, like for like (`DECISIONS.md` #239, yours to
+  overrule), and sold listings are a tap away. Also yours:
   the two-phone movie night check for V3 (16b), and allowing blu-ray.com and avforums.com in
   the environment's network settings before V9.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
