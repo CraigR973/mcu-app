@@ -158,7 +158,9 @@ async def run_scrapers(
     writes should be the one you ask for rather than the one you get by forgetting a
     parameter. Running it for real is §5.3's acceptance and therefore an owner action.
     """
-    result = await run_scrape(db, dry_run=dry_run)
+    # A request from the app: a refusal keeps the usual pause rather than holding the
+    # phone for the minute a shop asks (Batch 20b, second half).
+    result = await run_scrape(db, dry_run=dry_run, retry_after_limit=0)
     return ScrapeRunResponse(
         outcomes=[
             ScrapeOutcomeResponse(
@@ -252,6 +254,9 @@ async def run_daily(
 ) -> DailyRunResponse:
     """§5.5's nightly pass — **the endpoint a Railway cron calls.**
 
+    *Since #119 the cron runs `src.scripts.daily_scrape` instead, so this is "Run now" on
+    /retailers, and it does not wait for a shop that asks (Batch 20b, second half).*
+
     Scrape, alert on anything that has just fallen to or below its `max_price`, deliver
     what is queued, then roll up whatever is now older than `retentionDays`.
 
@@ -270,6 +275,9 @@ async def run_daily(
             trigger=trigger,
             dry_run=dry_run,
             retention_days=retention_days,
+            # "Run now" on the phone: a refused night here would hold the request for half
+            # an hour, so it keeps the usual pause, and its record says so (Batch 20b).
+            retry_after_limit=0,
         )
     await db.commit()
 

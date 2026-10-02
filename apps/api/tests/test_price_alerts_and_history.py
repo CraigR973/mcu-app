@@ -727,6 +727,97 @@ class TestDailyRun:
         # Only the genuine failure is named as the reason; the refusal is not one.
         assert retailer.last_scrape_error == "The page answered 503"
 
+    async def test_each_refusal_its_wait_and_its_retry_are_recorded(
+        self, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Batch 20b, second half: the run's record says, for each refusal, what the shop
+        asked for, the wait it was given, and whether the retry got through. Also proves
+        migration 045's column."""
+        waits: list[float] = []
+
+        async def pause(seconds: float) -> None:
+            waits.append(seconds)
+
+        monkeypatch.setattr("src.services.scraping.runner._pause", pause)
+        await _profile(db)
+        await _want(db, await _movie(db, "Heat"))
+        await _want(db, await _movie(db, "Ronin"))
+        await _retailer(db, "Powerhouse Films")
+        asked: dict[str, int] = {}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            title = "Ronin" if "Ronin" in str(request.url) else "Heat"
+            asked[title] = asked.get(title, 0) + 1
+            if title == "Heat" and asked[title] == 2:
+                return httpx.Response(200, text=SHOP_PAGE)
+            return httpx.Response(429, headers={"Retry-After": "60"})
+
+        summary, _ = await self._run(db, "", transport=httpx.MockTransport(handler))
+
+        run = (
+            (await db.execute(select(ScrapeRun).where(ScrapeRun.id == uuid.UUID(summary.run_id))))  # type: ignore[attr-defined]
+            .scalars()
+            .one()
+        )
+        assert waits == [60.0, 60.0]
+        assert sorted(run.refusals, key=lambda record: str(record["wanted"])) == [
+            {
+                "retailer": "Powerhouse Films",
+                "wanted": "Heat",
+                "asked": "60",
+                "waited": 60.0,
+                "note": "waited 60 s, as asked",
+                "retry": "got through",
+            },
+            {
+                "retailer": "Powerhouse Films",
+                "wanted": "Ronin",
+                "asked": "60",
+                "waited": 60.0,
+                "note": "waited 60 s, as asked",
+                "retry": "refused again",
+            },
+        ]
+        # Ronin's is still a refusal in the failures, with the shop's own words.
+        assert [record["wanted"] for record in run.failures] == ["Ronin"]
+
+    async def test_no_transaction_is_open_while_the_run_waits(
+        self, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Batch 20b, second half. A refused night leaves the database untouched for minutes
+        at a time; a connection held through that can be dropped, losing the whole night.
+        The run row is committed before the first request, so a run that dies says so."""
+        open_during_waits: list[bool] = []
+
+        async def pause(seconds: float) -> None:
+            del seconds
+            open_during_waits.append(db.in_transaction())
+
+        monkeypatch.setattr("src.services.scraping.runner._pause", pause)
+        await _profile(db)
+        await _want(db, await _movie(db, "Heat"))
+        await _want(db, await _movie(db, "Ronin"))
+        await _retailer(db, "Second Sight")
+        await _retailer(db, "101 Films")
+        refusing = httpx.MockTransport(
+            lambda request: httpx.Response(429, headers={"Retry-After": "60"})
+        )
+
+        sender = StubSender()
+        async with httpx.AsyncClient(transport=refusing, follow_redirects=False) as client:
+            await run_daily_scrape(
+                db,
+                sender=sender,
+                client=client,
+                trigger="manual",
+                polite_pause=1.0,
+                now=datetime(2026, 4, 1, 3, 0),
+            )
+
+        # Two shops × two wants: a refusal's wait each, and the polite pause after each.
+        assert len(open_during_waits) == 8
+        assert not any(open_during_waits)
+
     async def test_a_dry_run_writes_nothing(self, db: AsyncSession) -> None:
         await _profile(db)
         want = await _want(db, await _movie(db))

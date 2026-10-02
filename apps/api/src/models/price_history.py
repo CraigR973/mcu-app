@@ -5,7 +5,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -96,6 +107,12 @@ class ScrapeRun(Base, UUIDPrimaryKeyMixin):
     #: §5.5's "failures logged with retailer + reason", as
     #: ``[{"retailer": ..., "reason": ...}]``.
     failures: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
+    #: Batch 20b, second half: each refused request that was retried, as ``{"retailer",
+    #: "wanted", "asked", "waited", "note", "retry"}``: what the shop asked for, the wait it
+    #: was given, and whether the retry got through. Migration 045.
+    refusals: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
     disabled_retailers: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
 
     #: Set when the run itself blew up, as opposed to individual scrapes failing.

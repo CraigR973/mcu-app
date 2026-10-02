@@ -21,6 +21,7 @@ offer is **not better than** what is already owned, using the same `FORMAT_RANK`
 
 from __future__ import annotations
 
+import asyncio
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -44,9 +45,25 @@ from src.services.scraping.deals import (
     judge_cards,
 )
 from src.services.scraping.extract import TITLE_NOISE, YEAR_PATTERN, _normalise
-from src.services.scraping.fetcher import FetchError, UnsafeUrlError, fetch_page
+from src.services.scraping.fetcher import (
+    FetchedPage,
+    FetchError,
+    RefusedError,
+    UnsafeUrlError,
+    fetch_page,
+    retry_wait,
+)
 
 logger = structlog.get_logger()
+
+#: The pause before retrying a refused sale page when the shop named no wait the check can
+#: give: the price check's, so both follow one rule (Batch 20b, second half).
+RETRY_PAUSE_SECONDS = 2.0
+
+
+async def _pause(seconds: float) -> None:
+    """The check's one wait, in one place, so a test can stand in for the clock."""
+    await asyncio.sleep(seconds)
 
 
 @dataclass
@@ -226,7 +243,7 @@ async def scrape_retailer_deals(
         return outcome
 
     try:
-        page = await fetch_page(retailer.deals_url)
+        page = await _fetch_sale_page(retailer.name, retailer.deals_url)
     except (FetchError, UnsafeUrlError) as exc:
         outcome.error = str(exc)
         return outcome
@@ -283,6 +300,44 @@ async def scrape_retailer_deals(
         rejected=outcome.rejected,
     )
     return outcome
+
+
+async def _fetch_sale_page(retailer: str, url: str) -> FetchedPage:
+    """A shop's sale page, asked once more after the wait a refusal asks for.
+
+    **Batch 20b, second half: the price check's rule.** A refused request waits for the
+    shop's ``Retry-After``, up to 90 seconds (or the usual pause), then is retried once. Any
+    other failure is not retried, as before. A refusal on the retry says how long it waited,
+    so the line on /retailers reads as a shop that would not answer, not as a broken page.
+    """
+    try:
+        return await fetch_page(url)
+    except RefusedError as refusal:
+        wait = retry_wait(refusal, usual_pause=RETRY_PAUSE_SECONDS)
+        logger.warning(
+            "deals_refused",
+            retailer=retailer,
+            retry_after=refusal.retry_after,
+            evidence=refusal.evidence,
+            wait=wait.note,
+        )
+    await _pause(wait.seconds)
+    try:
+        page = await fetch_page(url)
+    except RefusedError as again:
+        logger.warning("deals_retried", retailer=retailer, result="refused again")
+        raise RefusedError(
+            again.status,
+            retry_after=again.retry_after,
+            evidence=f"{again.evidence}; refused again, {wait.note}"
+            if again.evidence
+            else f"refused again, {wait.note}",
+        ) from again
+    except (FetchError, UnsafeUrlError):
+        logger.warning("deals_retried", retailer=retailer, result="failed")
+        raise
+    logger.info("deals_retried", retailer=retailer, result="got through")
+    return page
 
 
 async def _upsert(

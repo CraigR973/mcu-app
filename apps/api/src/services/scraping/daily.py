@@ -32,6 +32,7 @@ from src.models.price_history import RETENTION_DAYS, ScrapeRun
 from src.services.notifications import PushSender, deliver_pending
 from src.services.scraping.aggregate import AggregationResult, aggregate_old_checks
 from src.services.scraping.alerts import queue_price_drop_alerts
+from src.services.scraping.fetcher import RETRY_AFTER_LIMIT_SECONDS
 from src.services.scraping.runner import ScrapeRunResult, run_scrape
 
 logger = structlog.get_logger(__name__)
@@ -71,6 +72,29 @@ def failure_records(result: ScrapeRunResult) -> list[dict[str, str]]:
     return records
 
 
+def refusal_records(result: ScrapeRunResult) -> list[dict[str, object]]:
+    """For each refused request that was retried, the wait and whether the retry got
+    through (Batch 20b, second half), in the order the run asked."""
+    records: list[dict[str, object]] = []
+    for outcome in result.retried:
+        retry = outcome.retry
+        if retry is None:  # pragma: no cover - `retried` holds only these
+            continue
+        records.append(
+            {
+                "retailer": outcome.retailer,
+                "wanted": outcome.wanted_title,
+                "asked": retry.asked,
+                "waited": retry.waited,
+                "note": retry.note,
+                "retry": retry.result,
+            }
+        )
+        if len(records) >= MAX_RECORDED_FAILURES:
+            break
+    return records
+
+
 async def run_daily_scrape(
     db: AsyncSession,
     *,
@@ -82,8 +106,13 @@ async def run_daily_scrape(
     retention_days: int = RETENTION_DAYS,
     now: datetime | None = None,
     aggregate: bool = True,
+    retry_after_limit: float = RETRY_AFTER_LIMIT_SECONDS,
 ) -> DailyRunSummary:
-    """Scrape, alert, deliver and roll up. **Makes live requests unless ``dry_run``.**"""
+    """Scrape, alert, deliver and roll up. **Makes live requests unless ``dry_run``.**
+
+    ``retry_after_limit`` is how long a refused request may wait for the shop before its
+    retry: the scheduled check's 90 seconds, or 0 for "Run now" in the app (20b).
+    """
     now = now or utcnow()
     run = ScrapeRun(started_at_utc=now, trigger=trigger, dry_run=dry_run)
     db.add(run)
@@ -91,7 +120,13 @@ async def run_daily_scrape(
 
     kwargs = {} if polite_pause is None else {"polite_pause": polite_pause}
     try:
-        result = await run_scrape(db, client=client, dry_run=dry_run, **kwargs)
+        result = await run_scrape(
+            db,
+            client=client,
+            dry_run=dry_run,
+            retry_after_limit=retry_after_limit,
+            **kwargs,
+        )
     except Exception as exc:
         # The run row survives to say what happened; re-raising without it would leave
         # "the cron fired and nothing exists" indistinguishable from "the cron never fired".
@@ -125,6 +160,7 @@ async def run_daily_scrape(
     run.written = result.written
     run.alerts_queued = summary.alerts_queued
     run.failures = failure_records(result)
+    run.refusals = refusal_records(result)
     run.disabled_retailers = list(result.disabled)
     await db.flush()
 
@@ -135,6 +171,9 @@ async def run_daily_scrape(
         not_stocked=run.not_stocked,
         written=run.written,
         failed=run.failed,
+        refused=result.refused,
+        retried=len(result.retried),
+        got_through=result.got_through,
         alerts=summary.alerts_queued,
     )
     return summary

@@ -52,16 +52,19 @@ from src.services.scraping.extract import (
     primary_format,
 )
 from src.services.scraping.fetcher import (
+    RETRY_AFTER_LIMIT_SECONDS,
     FetchError,
     RefusedError,
     UnsafeUrlError,
     fetch_page,
+    retry_wait,
 )
 
 logger = structlog.get_logger()
 
 #: One retry. See the module docstring — retrying hard is how an IP gets blocked.
 MAX_ATTEMPTS = 2
+#: The pause before the retry, unless a refusal asked for a wait it is given (20b).
 RETRY_PAUSE_SECONDS = 2.0
 
 #: §5.3's "auto-disable after 3 fails".
@@ -70,6 +73,26 @@ FAILURE_LIMIT = 3
 #: A courtesy pause between requests to the same shop. Not a rate limiter — a manners
 #: setting, and the difference between a tool a retailer tolerates and one it blocks.
 POLITE_PAUSE_SECONDS = 1.0
+
+
+async def _pause(seconds: float) -> None:
+    """Every wait the runner makes, in one place, so a test can stand in for the clock."""
+    await asyncio.sleep(seconds)
+
+
+@dataclass
+class RefusalRetry:
+    """A refused request, the wait before its one retry, and what the retry got (20b).
+
+    ``result`` is ``"got through"`` when the shop answered the retry with a page, whatever
+    the page then held; ``"refused again"`` when it refused once more; ``"failed"`` when the
+    retry failed some other way.
+    """
+
+    asked: str | None
+    waited: float
+    note: str
+    result: str | None = None
 
 
 @dataclass
@@ -114,6 +137,9 @@ class ScrapeOutcome:
     #: works, and on 30 Sep and 1 Oct it was about to switch off shops that were not
     #: broken. Still recorded with what the shop sent back, so a run says who refused.
     refused: bool = False
+    #: Set when the first request was refused and retried: what the shop asked for, the
+    #: wait, and whether the retry got through (20b's second half).
+    retry: RefusalRetry | None = None
     url: str | None = None
     #: Why a result was rejected. The important field — a scraper that has started
     #: matching the wrong node reports here rather than silently writing a number.
@@ -164,6 +190,20 @@ class ScrapeRunResult:
         """Counted within ``failed`` too: a refused request still brought no price back."""
         return sum(1 for outcome in self.outcomes if outcome.refused)
 
+    @property
+    def retried(self) -> list[ScrapeOutcome]:
+        """The wants whose first request was refused, in order (20b's second half)."""
+        return [outcome for outcome in self.outcomes if outcome.retry is not None]
+
+    @property
+    def got_through(self) -> int:
+        """Of :attr:`retried`, how many the shop answered after the wait."""
+        return sum(
+            1
+            for outcome in self.retried
+            if outcome.retry is not None and outcome.retry.result == "got through"
+        )
+
 
 def apply_search_template(template: str, title: str, preferred_format: str | None = None) -> str:
     """Fill a search template's placeholders. **The only place that knows what they mean.**
@@ -203,6 +243,20 @@ def search_url_for(
     return apply_search_template(template, title, preferred_format)
 
 
+def _retry_ended(outcome: ScrapeOutcome, retailer: str, title: str, result: str) -> None:
+    """Record what a refused request's retry got, and log it once (20b's second half)."""
+    if outcome.retry is None:
+        return
+    outcome.retry.result = result
+    logger.info(
+        "scrape_retried",
+        retailer=retailer,
+        wanted=title,
+        waited=outcome.retry.waited,
+        result=result,
+    )
+
+
 async def scrape_one(
     retailer: Retailer,
     title: str,
@@ -210,12 +264,18 @@ async def scrape_one(
     preferred_format: str | None = None,
     preferred_edition: str | None = None,
     client: httpx.AsyncClient | None = None,
+    retry_after_limit: float = RETRY_AFTER_LIMIT_SECONDS,
 ) -> tuple[ScrapeCandidate | None, ScrapeOutcome]:
     """Fetch and extract one film's price at one shop. **Makes a live request.**
 
     Retries once on a transport failure. Does **not** retry a shape failure: a page that
     parsed into something implausible will parse the same way again, and asking a shop
     twice for the same wrong answer is just rudeness.
+
+    **A refused request waits for the shop's ``Retry-After`` before its retry** (Batch 20b,
+    second half), up to ``retry_after_limit``; past it, or with none sent, the usual pause.
+    Every refusal on 2 Oct asked for 60 seconds and got a retry two seconds later, of which
+    4 in 29 got through. ``retry_after_limit=0`` keeps the usual pause: "Run now" in the app.
     """
     outcome = ScrapeOutcome(retailer=retailer.name, wanted_title=title, ok=False)
 
@@ -243,12 +303,20 @@ async def scrape_one(
         except UnsafeUrlError as exc:
             # Never retried: the URL is not going to become safe.
             outcome.error = f"refused: {exc}"
+            _retry_ended(outcome, retailer.name, title, "failed")
             return None, outcome
         except FetchError as exc:
             last_error = exc
+            pause = RETRY_PAUSE_SECONDS
+            wait = None
+            if isinstance(exc, RefusedError) and attempt + 1 < MAX_ATTEMPTS:
+                wait = retry_wait(exc, usual_pause=RETRY_PAUSE_SECONDS, limit=retry_after_limit)
+                outcome.retry = RefusalRetry(asked=wait.asked, waited=wait.seconds, note=wait.note)
+                pause = wait.seconds
             if isinstance(exc, RefusedError):
                 # One line per refused request, with its time: the evidence 20b's second
-                # half waits for (after how many requests, and what the shop asked for).
+                # half was written from (after how many requests, and what the shop asked
+                # for), and now the wait it was given.
                 logger.warning(
                     "scrape_refused",
                     retailer=retailer.name,
@@ -257,15 +325,20 @@ async def scrape_one(
                     status=exc.status,
                     retry_after=exc.retry_after,
                     evidence=exc.evidence,
+                    wait=wait.note if wait else None,
                 )
             if attempt + 1 < MAX_ATTEMPTS:
-                await asyncio.sleep(RETRY_PAUSE_SECONDS)
+                await _pause(pause)
     else:
         outcome.error = str(last_error) if last_error else "could not be fetched"
         # Judged by the last answer: a shop that refused once and then timed out has a
         # problem a person should see, and that one still counts.
         outcome.refused = isinstance(last_error, RefusedError)
+        _retry_ended(
+            outcome, retailer.name, title, "refused again" if outcome.refused else "failed"
+        )
         return None, outcome
+    _retry_ended(outcome, retailer.name, title, "got through")
 
     candidate = extract(
         page.html,
@@ -373,18 +446,34 @@ def _record_success(retailer: Retailer) -> None:
     retailer.last_scraped_at = utcnow()
 
 
+async def _release(db: AsyncSession) -> None:
+    """End the session's transaction, so no connection is held while a shop is asked.
+
+    **Batch 20b, second half.** A refusal's wait can be a minute, and a refused night can
+    leave the database untouched for ten minutes at a time: longer than a network path
+    reliably keeps an idle connection, and one dropped mid-transaction would lose the whole
+    night. Committed, not rolled back: what is pending is the caller's run record and the
+    checks this run has written, and a run that dies halfway should keep both.
+    """
+    if db.in_transaction():
+        await db.commit()
+
+
 async def run_scrape(
     db: AsyncSession,
     *,
     client: httpx.AsyncClient | None = None,
     dry_run: bool = False,
     polite_pause: float = POLITE_PAUSE_SECONDS,
+    retry_after_limit: float = RETRY_AFTER_LIMIT_SECONDS,
 ) -> ScrapeRunResult:
     """Every enabled retailer × every active wanted item. **Makes live requests.**
 
-    Not called by any scheduled job — §5.5 is Batch 20 and a cron is a hosting change this
-    project keeps explicit (`DECISIONS.md` #60). This is what a schedule, or an owner
-    running the acceptance for §5.3, would call.
+    The nightly check's (`daily.py`), and "Run now" in the app's, which passes
+    ``retry_after_limit=0`` so a refusal does not hold the phone's request for a minute.
+
+    **No transaction is open while a shop is asked** (:func:`_release`), so a session whose
+    objects expire on commit cannot call this: every caller's session keeps them.
     """
     result = ScrapeRunResult()
 
@@ -408,12 +497,14 @@ async def run_scrape(
     for retailer in retailers:
         any_success = False
         for wanted, movie in wanted_rows:
+            await _release(db)
             candidate, outcome = await scrape_one(
                 retailer,
                 movie.title,
                 preferred_format=wanted.preferred_format,
                 preferred_edition=wanted.preferred_edition,
                 client=client,
+                retry_after_limit=retry_after_limit,
             )
             result.outcomes.append(outcome)
 
@@ -433,7 +524,8 @@ async def run_scrape(
                         )
 
             if polite_pause:
-                await asyncio.sleep(polite_pause)
+                await _release(db)
+                await _pause(polite_pause)
 
         if not dry_run:
             mine = [o for o in result.outcomes if o.retailer == retailer.name]

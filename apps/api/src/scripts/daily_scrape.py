@@ -55,6 +55,9 @@ def report(summary: DailyRunSummary, *, dry_run: bool) -> int:
     # Batch 20b: refusals are among the failures below, but never count towards a shop
     # being switched off. The count says how many of them were the shop saying no.
     print(f"  refused:       {result.refused}")
+    # Batch 20b, second half: each refused request waited for the shop before its retry,
+    # and this says how many of those retries the shop then answered.
+    print(f"  retried:       {len(result.retried)} after a wait, {result.got_through} got through")
     print(f"  skipped:       {result.skipped}")
     print(f"  alerts queued: {summary.alerts_queued}")
     print(f"  pushes sent:   {summary.pushes_sent}")
@@ -80,7 +83,9 @@ def report(summary: DailyRunSummary, *, dry_run: bool) -> int:
 
 
 async def _run(*, dry_run: bool, retention_days: int) -> int:
-    engine = create_async_engine(settings.database_url)
+    # Checked before reuse (Batch 20b): a refused night waits up to 90 seconds a want with
+    # no transaction open, and a pooled connection can be dropped in the quiet.
+    engine = create_async_engine(settings.database_url, pool_pre_ping=True)
     try:
         async with AsyncSession(engine, expire_on_commit=False) as db:
             async with push_sender() as sender:

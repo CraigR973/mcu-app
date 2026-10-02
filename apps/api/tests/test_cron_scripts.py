@@ -125,6 +125,49 @@ def test_the_run_is_recorded_as_a_cron_run() -> None:
     assert 'trigger="cron"' in source
 
 
+def test_the_cron_waits_for_a_refusal_and_checks_its_connection() -> None:
+    """Batch 20b, second half. The scheduled check takes the runner's default wait (90
+    seconds), which only "Run now" in the app turns off, and checks a pooled connection
+    before reusing it, because a refused night leaves it idle for minutes at a time.
+
+    Asserted against the source, as the trigger is above: both are literals in the one
+    call each, and a mock of the call would only re-state itself.
+    """
+    import inspect
+
+    from src.services.scraping.daily import run_daily_scrape
+    from src.services.scraping.fetcher import RETRY_AFTER_LIMIT_SECONDS
+
+    source = inspect.getsource(daily_scrape._run)
+    assert "pool_pre_ping=True" in source
+    assert "retry_after_limit" not in source
+    default = inspect.signature(run_daily_scrape).parameters["retry_after_limit"].default
+    assert default == RETRY_AFTER_LIMIT_SECONDS == 90
+
+
+def test_the_summary_says_how_many_retries_got_through(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from src.services.scraping.runner import RefusalRetry
+
+    def refused(title: str, result: str) -> ScrapeOutcome:
+        outcome = ScrapeOutcome(
+            retailer="101 Films", wanted_title=title, ok=result == "got through"
+        )
+        outcome.refused = result == "refused again"
+        outcome.retry = RefusalRetry(asked="60", waited=60.0, note="n", result=result)
+        return outcome
+
+    daily_scrape.report(
+        _summary(refused("Castle Freak", "got through"), refused("Dead & Buried", "refused again")),
+        dry_run=False,
+    )
+
+    out = capsys.readouterr().out
+    assert "refused:       1" in out
+    assert "retried:       2 after a wait, 1 got through" in out
+
+
 def test_a_nonsense_retention_window_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mirrors the endpoint's `ge=1`. Zero days would roll up today's own checks."""
     monkeypatch.setattr("sys.argv", ["daily_scrape", "--retention-days", "0"])

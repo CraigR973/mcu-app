@@ -638,3 +638,112 @@ def test_applying_the_built_ins_would_give_every_enabled_shop_a_sale_page() -> N
         # never lands on the `url` selector, and the wanted-item scraper reads what it did.
         assert {key: merged[key] for key in entry["config"]} == entry["config"], name
         assert merged["was"] == deals["was"], name
+
+
+# ---------------------------------------------------------------------------
+# Batch 20b, second half: a refused sale page waits for the shop, then is asked once more
+# ---------------------------------------------------------------------------
+
+
+class _SalePageAnswers:
+    """Stands in for `fetch_page`, answering each request with the next of its replies."""
+
+    def __init__(self, *replies: object) -> None:
+        self.replies = list(replies)
+        self.asked = 0
+
+    async def __call__(self, url: str) -> object:
+        del url
+        self.asked += 1
+        reply = self.replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+
+def _sale_page_clock(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    from src.services.scraping import deals_runner
+
+    waits: list[float] = []
+
+    async def pause(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr(deals_runner, "_pause", pause)
+    return waits
+
+
+def _sale_refusal(retry_after: str | None = "60") -> Exception:
+    from src.services.scraping.fetcher import RefusedError
+
+    evidence = f"retry-after {retry_after}" if retry_after else ""
+    return RefusedError(429, retry_after=retry_after, evidence=evidence)
+
+
+async def test_a_refused_sale_page_waits_for_the_shop_then_gets_through(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from src.services.scraping import deals_runner
+    from src.services.scraping.fetcher import FetchedPage
+
+    page = FetchedPage(url="u", status=200, html="<html></html>", final_url="u")
+    answers = _SalePageAnswers(_sale_refusal("60"), page)
+    monkeypatch.setattr(deals_runner, "fetch_page", answers)
+    waits = _sale_page_clock(monkeypatch)
+
+    assert await deals_runner._fetch_sale_page("Second Sight", "u") is page
+    assert answers.asked == 2
+    assert waits == [60.0]
+
+
+async def test_a_sale_page_refused_again_says_how_long_it_waited(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from src.services.scraping import deals_runner
+    from src.services.scraping.fetcher import RefusedError
+
+    answers = _SalePageAnswers(_sale_refusal("60"), _sale_refusal("60"))
+    monkeypatch.setattr(deals_runner, "fetch_page", answers)
+    waits = _sale_page_clock(monkeypatch)
+
+    with pytest.raises(RefusedError) as raised:
+        await deals_runner._fetch_sale_page("Second Sight", "u")
+
+    assert waits == [60.0]
+    assert answers.asked == 2, "one retry, as the price check"
+    assert str(raised.value) == (
+        "The page answered 429 (retry-after 60; refused again, waited 60 s, as asked)"
+    )
+
+
+async def test_a_sale_page_asking_for_too_long_gets_the_usual_pause(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from src.services.scraping import deals_runner
+    from src.services.scraping.fetcher import FetchedPage
+
+    page = FetchedPage(url="u", status=200, html="<html></html>", final_url="u")
+    monkeypatch.setattr(deals_runner, "fetch_page", _SalePageAnswers(_sale_refusal("600"), page))
+    waits = _sale_page_clock(monkeypatch)
+
+    await deals_runner._fetch_sale_page("Zavvi", "u")
+
+    assert waits == [deals_runner.RETRY_PAUSE_SECONDS]
+
+
+async def test_a_sale_page_that_fails_another_way_is_not_retried(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """As before 20b: only a refusal is asked again."""
+    from src.services.scraping import deals_runner
+    from src.services.scraping.fetcher import FetchError
+
+    answers = _SalePageAnswers(FetchError("The page answered 503"))
+    monkeypatch.setattr(deals_runner, "fetch_page", answers)
+    waits = _sale_page_clock(monkeypatch)
+
+    with pytest.raises(FetchError):
+        await deals_runner._fetch_sale_page("Zavvi", "u")
+
+    assert answers.asked == 1
+    assert waits == []
