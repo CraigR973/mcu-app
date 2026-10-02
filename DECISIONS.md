@@ -4874,7 +4874,7 @@ contemporaneous.
 239. **V8: an eBay find's "usually" averages eBay with the shops, like for like.** Craig's
      answer to snag 1 (#228), built on asking prices since V7 is shelved (#237).
 
-     - **Like for like is this batch's call, open to Craig's overrule.** A shop's price counts
+     - **Like for like is this batch's call, and Craig kept it on 2 Oct ("yes keep").** A shop's price counts
        only when it is the same format, read off the listing it priced (`primary_format`, as
        the nightly check reads it), and a standard edition by the eBay matcher's own
        `classify_edition`, because eBay's figure is standard editions only. On 1 Oct the shops'

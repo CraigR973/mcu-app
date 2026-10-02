@@ -2820,8 +2820,8 @@ beneath; a find stored before V8 reads as eBay alone. "Sold on eBay" on the eBay
 listings in a new tab, searched with the same words as the asking prices. Browser check at
 375 px, light and dark, against the real API on the throwaway test database (#169). Local
 gate and CI green first time (1,724 API tests, warnings 177; web 463, shared 123).
-Production reported the merge SHA at 03:36 UTC with `db: ok`. **Open, Craig's to
-overrule:** the like-for-like rule (#239).
+Production reported the merge SHA at 03:36 UTC with `db: ok`. The like-for-like rule (#239)
+kept at Craig's word, 2 Oct ("yes keep").
 
 **Covers snag 1.** Top tier · high / top tier · High. Sitting 2, last. **V7 is shelved (#237),
 so eBay's figure is today's: the asking-price median in `ebay_price_refs`.**
@@ -2842,6 +2842,9 @@ so eBay's figure is today's: the asking-price median in `ebay_price_refs`.**
 - Gate green.
 
 ### V9 — Reviews: links, lines and scores 🔴
+**Runs on Craig's Mac, at his word on 2 Oct** (`docs/next-mac-session.md`, after 20b's second
+half): the Mac reaches blu-ray.com and avforums.com, so the network step below is not needed.
+
 **Covers snag 8 (all three options) and V5's fourth row. Carries what was V10 (#229).** Top
 tier · max / top tier · Max. Sitting 3, alone. It opens a new scraping surface under #110 as
 widened by #228, which is why it runs at Group F's effort.

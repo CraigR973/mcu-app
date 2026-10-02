@@ -35,10 +35,10 @@ conversation still maps onto this file.*
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
   shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **26 is done:** you ran
   the trial and picked neither, so V7 is shelved. **V8 is live (2 Oct):** an eBay find's
-  "usually" averages eBay with the shops, like for like (`DECISIONS.md` #239, yours to
-  overrule), and sold listings are a tap away. Also yours:
-  the two-phone movie night check for V3 (16b), and allowing blu-ray.com and avforums.com in
-  the environment's network settings before V9.
+  "usually" averages eBay with the shops, like for like (`DECISIONS.md` #239, kept at your
+  word on 2 Oct), and sold listings are a tap away. **Next, on your Mac:** 20b's second half,
+  then V9, with one line: "Read and follow `docs/next-mac-session.md` on `main`." No network
+  step is needed there. Also yours: the two-phone movie night check for V3 (16b).
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
