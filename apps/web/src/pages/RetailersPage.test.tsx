@@ -97,6 +97,22 @@ describe('RetailersPage — checking the sale pages (Batch 22b)', () => {
     expect(asked(false)).toBe(false)
   })
 
+  it('says a shop that asks the app to wait can take a minute and a half (20b)', async () => {
+    // The check never comes back here, so the page stays on its waiting line.
+    const pending = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes('/deals/scrape')) return new Promise<Response>(() => {})
+      return new Response(JSON.stringify({ items: [], total: 0, enabledCount: 0, configuredCount: 0 }))
+    })
+    vi.stubGlobal('fetch', pending)
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Check sale pages' }))
+
+    expect(
+      await screen.findByText(/A shop that asks the app to wait can add up to a minute and a half/),
+    ).not.toBeNull()
+  })
+
   it('says why a shop kept nothing, once', async () => {
     stubDealsApi()
     renderPage()
