@@ -823,9 +823,9 @@ other two.
 (`scrape_refused`), keeps refusals out of the auto-disable count, and records a shop that only
 refused as `blocked`, its count left alone. A genuine failure beside refusals still counts.
 No migration: Batch 16's CHECK already allowed `blocked`. Local gate and CI green first time
-(1,719 API tests, warnings unchanged at 178; web 458, shared 119). **Open:** the 2 Oct
-03:00 UTC check read back (the last first-half criterion), then the second half from two
-nights of evidence (#238). 101 Films and Powerhouse still carry the 2 failures counted on 30
+(1,719 API tests, warnings unchanged at 178; web 458, shared 119). ~~**Open:** the 2 Oct
+03:00 UTC check read back~~ **read back 2 Oct: no shop switched off; every refusal a 60 s
+`Retry-After`** (below). **Open:** the second half, from that and a second night (#238). 101 Films and Powerhouse still carry the 2 failures counted on 30
 Sep and 1 Oct, under the old rule.
 
 **Written 30 Sep at Craig's word ("yes, write a batch for this"); builds at his go, after the
@@ -865,6 +865,29 @@ nights, and the fetcher).** This is the first criterion below, written before an
   failures and Second Sight at 1, so a third refused night (2 Oct, 03:00 UTC) switches 101
   Films and Powerhouse off.
 - **It also holds up Batch 21**, whose third want needs a Shopify shop's price.
+
+**The first night under the first half, 2 Oct 03:04 UTC (read back the same night; the
+first half's last criterion).** No shop was switched off: 101 Films and Powerhouse each got a
+price and went back to 0 failures, and Second Sight was recorded `blocked` with its count
+held at 1. 42 asked, 7 priced, 25 refused (Powerhouse 9, Second Sight 9, 101 Films 7), Zavvi
+and Arrow none. **Every refusal said the same: `retry-after 60; server cloudflare; title "Too
+many requests"`**, and none carried `cf-mitigated`. So it is a rate limit asking for a
+minute, not a challenge page or a block.
+
+- **Still refused from the first request.** Each Shopify shop's first request of the night
+  (Powerhouse 03:04:10, 101 Films 03:04:41, Second Sight 03:05:50) was refused, after a day
+  in which the app asked them nothing. Whatever fills the limit is not this run's pace:
+  most likely traffic sharing Railway's outbound address.
+- **The limit leaks.** 54 refused requests in all; 4 of the 29 retries two seconds later got
+  an answer (Powerhouse's Romper Stomper, priced; 101 Films' Castle Freak, priced, and two
+  more), and Second Sight answered Romper Stomper first time.
+- **What it suggests for the second half:** honour `Retry-After` (60 s, bounded) before the
+  one retry, instead of the 2 s pause. A refused night would take up to about 30 minutes
+  (29 refused wants × 60 s), unattended at 03:00. If refusals survive a minute's wait, the
+  limit is the shared address's, and only a different outbound address would cure it, a
+  Railway setting and Craig's call. 22c's extra pages would meet the same limit, so it
+  waits for that answer.
+- **Batch 21 is unchanged:** still 2 of the 3 wants (Dog Soldiers has Zavvi only).
 
 **Split in two at Craig's word, 1 Oct ("2) yes"), after that diagnosis.** The first half
 ships before the 2 Oct check, so no shop is switched off by refusals; the pacing half, and
