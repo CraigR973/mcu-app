@@ -20,6 +20,13 @@ const DISCOUNT_STEPS = [10, 25, 50] as const
 /** Batch T8a's finds, named so by the API (`services/ebay_watch/scan.py`). */
 const EBAY = 'eBay'
 
+/** Where an eBay find's "usually" comes from: "eBay £16.00 before postage · Zavvi £20.00". */
+function usualSourcesLine(sources: NonNullable<Deal['usualSources']>): string {
+  return sources
+    .map(({ source, price }) => `${source} £${price}${source === EBAY ? ' before postage' : ''}`)
+    .join(' · ')
+}
+
 function DealCard({ deal }: { deal: Deal }) {
   const queryClient = useQueryClient()
   const { profile } = useAuth()
@@ -65,16 +72,21 @@ function DealCard({ deal }: { deal: Deal }) {
           <span className="font-display text-xl font-semibold text-foreground">
             £{deal.price}
           </span>
-          {/* Batch T8a. An eBay find's price includes postage, and what it is compared with
-              is the film's usual asking price on eBay, not a price it was ever sold at. */}
+          {/* Batch T8a. An eBay find's price includes postage. Since V8 "usually" is eBay's
+              asking price averaged with the shops' recent prices, never a sold price; the
+              line beneath says which. */}
           {deal.wasPrice && isEbay ? (
-            <span className="text-sm text-muted-foreground">with postage, usually £{deal.wasPrice}</span>
+            <span className="text-sm text-muted-foreground">with postage · usually £{deal.wasPrice}</span>
           ) : null}
           {deal.wasPrice && !isEbay ? (
             <span className="text-sm text-muted-foreground line-through">£{deal.wasPrice}</span>
           ) : null}
           {deal.formatCode ? <FormatBadge format={deal.formatCode} /> : null}
         </div>
+
+        {isEbay && deal.usualSources ? (
+          <p className="break-words text-xs text-muted-foreground">{usualSourcesLine(deal.usualSources)}</p>
+        ) : null}
 
         {/* An unmatched deal is shown rather than hidden — it is the evidence the matcher
             needs work, and hiding it would make a broken matcher look like a quiet sale. */}
@@ -88,6 +100,15 @@ function DealCard({ deal }: { deal: Deal }) {
               View at {deal.retailer} <ExternalLink aria-hidden />
             </a>
           </Button>
+          {/* Batch V8: what the film actually sold for, which the app cannot read. eBay asks
+              the person to sign in, in their own browser. */}
+          {isEbay && deal.soldListingsUrl ? (
+            <Button asChild size="sm" variant="ghost">
+              <a href={deal.soldListingsUrl} target="_blank" rel="noopener noreferrer">
+                Sold on eBay <ExternalLink aria-hidden />
+              </a>
+            </Button>
+          ) : null}
           {canEdit && (
             <Button
               type="button"

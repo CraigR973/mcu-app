@@ -9,9 +9,11 @@ A pass reads the newest listings back to where the last pass stopped (at most
 :data:`MAX_PAGES` pages; in a flood the older ones are skipped for good). Each one that is
 a film on the Wanted list, or an upgrade on what is owned (`deals_runner.already_owned`'s
 rule: a better format than the best on the shelf), is compared with that film's usual
-price on that format (:mod:`refs`). **A deal is one that costs, postage included, no more
-than :data:`DEAL_RATIO` of the usual asking price.** Deals go on the Deals page, as
-"eBay", for :data:`DEAL_LIFETIME`, since nothing checks later whether one has sold.
+price on that format (:mod:`refs`), averaged since Batch V8 with the shops' recent prices
+for it where the nightly check has any (:mod:`usual`). **A deal is one that costs,
+postage included, no more than :data:`DEAL_RATIO` of that usual price.** Deals go on the
+Deals page, as "eBay", for :data:`DEAL_LIFETIME`, since nothing checks later whether
+one has sold.
 """
 
 from __future__ import annotations
@@ -33,6 +35,7 @@ from src.services.ebay_watch.catalogue import CatalogueFilm, load_catalogue
 from src.services.ebay_watch.client import WatchClient
 from src.services.ebay_watch.listings import ScanListing, scan_listing
 from src.services.ebay_watch.refs import Yardstick, fetch_ref, stored_ref, yardstick
+from src.services.ebay_watch.usual import ShopPrice, UsualPrice, shop_prices
 
 logger = structlog.get_logger(__name__)
 
@@ -51,7 +54,7 @@ PAGE_SIZE = 200
 MAX_PAGES = 10
 #: How far back the very first pass looks.
 FIRST_LOOK_BACK = timedelta(hours=3)
-#: A deal costs no more than this share of the usual asking price: 30% or more under it.
+#: A deal costs no more than this share of the usual price: 30% or more under it.
 DEAL_RATIO = Decimal("0.70")
 #: How long a deal stays on the Deals page.
 DEAL_LIFETIME = timedelta(days=3)
@@ -72,9 +75,17 @@ class Find:
     film: CatalogueFilm
     format_code: str
     listing: ScanListing
+    #: eBay's figure for the film and format.
     usual: Yardstick
     wanted: bool
     discount_percent: int
+    #: The shops' recent prices averaged into it (Batch V8); none for most finds.
+    shops: tuple[ShopPrice, ...] = ()
+
+    @property
+    def figure(self) -> UsualPrice:
+        """The usual price the find was judged against, and where it comes from."""
+        return UsualPrice(self.usual, self.shops)
 
 
 @dataclass
@@ -89,8 +100,8 @@ def _discount(usual: Decimal, price: Decimal) -> int:
     return int(share.to_integral_value(rounding=ROUND_HALF_UP))
 
 
-def is_deal(total: Decimal, usual: Yardstick) -> bool:
-    return total <= (usual.median * DEAL_RATIO).quantize(Decimal("0.01"))
+def is_deal(total: Decimal, usual: Decimal) -> bool:
+    return total <= (usual * DEAL_RATIO).quantize(Decimal("0.01"))
 
 
 async def read_new_listings(
@@ -153,7 +164,8 @@ async def _record_deal(db: AsyncSession, find: Find, *, now: datetime) -> None:
     )
     if existing is not None:
         existing.price = listing.total
-        existing.was_price = find.usual.median
+        existing.was_price = find.figure.amount
+        existing.usual_sources = find.figure.sources()
         existing.discount_percent = find.discount_percent
         existing.last_seen_at_utc = now
         existing.expires_at_utc = now + DEAL_LIFETIME
@@ -170,7 +182,8 @@ async def _record_deal(db: AsyncSession, find: Find, *, now: datetime) -> None:
             image_url=listing.image_url,
             format_code=find.format_code,
             price=listing.total,
-            was_price=find.usual.median,
+            was_price=find.figure.amount,
+            usual_sources=find.figure.sources(),
             currency="GBP",
             discount_percent=find.discount_percent,
             first_seen_at_utc=now,
@@ -239,18 +252,27 @@ async def scan(
             failures_in_a_row = 0
             run.refs_fetched += 1
         usual = yardstick(ref, candidate.listing.listing.condition_id)
-        if usual is not None and is_deal(candidate.listing.total, usual):
-            find = Find(
-                film=candidate.film,
+        if usual is not None:
+            shops = await shop_prices(
+                db,
+                movie_id=candidate.film.movie_id,
                 format_code=candidate.format_code,
-                listing=candidate.listing,
-                usual=usual,
-                wanted=candidate.wanted,
-                discount_percent=_discount(usual.median, candidate.listing.total),
+                now=now,
             )
-            await _record_deal(db, find, now=now)
-            finds.append(find)
-            run.deals_found += 1
+            figure = UsualPrice(usual, shops)
+            if is_deal(candidate.listing.total, figure.amount):
+                find = Find(
+                    film=candidate.film,
+                    format_code=candidate.format_code,
+                    listing=candidate.listing,
+                    usual=usual,
+                    wanted=candidate.wanted,
+                    discount_percent=_discount(figure.amount, candidate.listing.total),
+                    shops=shops,
+                )
+                await _record_deal(db, find, now=now)
+                finds.append(find)
+                run.deals_found += 1
         run.calls = client.search_calls
         run.heartbeat_utc = now
         await db.commit()

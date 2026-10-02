@@ -8,6 +8,7 @@ disc. Before T6 this lived in ``routers/ebay.py``, where only a request could re
 from __future__ import annotations
 
 from typing import Any, Protocol
+from urllib.parse import urlencode
 
 from ..services.scraping.extract import FORMAT_SEARCH_TERMS
 from .matching import listing_from_summary, match
@@ -42,6 +43,22 @@ def search_query(film_title: str, format_code: str | None) -> str:
     """
     term = FORMAT_SEARCH_TERMS.get(format_code or "", "Blu-ray")
     return f"{film_title} {term}"
+
+
+#: eBay UK's own search page. With ``LH_Sold`` it lists what sold, which the app can never
+#: read (#16, #126); a person signed in to eBay can, in their own browser (Batch V8).
+EBAY_SEARCH_PAGE = "https://www.ebay.co.uk/sch/i.html"
+
+#: "DVDs & Blu-rays", the leaf category nearly every disc listing sits in (`matching.py`).
+DISC_CATEGORY = "617"
+
+
+def sold_listings_url(query: str) -> str:
+    """eBay's sold listings for the same words the estimator searches, so a person can see
+    what discs actually went for beside the asking prices the app reads."""
+    return f"{EBAY_SEARCH_PAGE}?" + urlencode(
+        {"_nkw": query, "_sacat": DISC_CATEGORY, "LH_Sold": "1", "LH_Complete": "1"}
+    )
 
 
 async def estimate_price(

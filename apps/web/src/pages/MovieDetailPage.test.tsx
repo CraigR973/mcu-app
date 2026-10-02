@@ -100,6 +100,7 @@ const COPY: CollectionCopy = {
     checkedAt: '2026-09-24T03:05:00Z',
     basis: 'current asking prices',
     minSample: 3,
+    soldListingsUrl: null,
   },
 }
 

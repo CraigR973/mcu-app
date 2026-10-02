@@ -45,6 +45,27 @@ const deal: Deal = {
   genres: ['War'],
   firstSeenAt: '2026-09-12T09:00:00Z',
   lastSeenAt: '2026-09-12T09:00:00Z',
+  usualSources: null,
+  soldListingsUrl: null,
+}
+
+/** Batch V8: an eBay find, judged against eBay's figure averaged with Zavvi's price. */
+const ebayFind: Deal = {
+  ...deal,
+  id: '3f2504e0-4f89-11d3-9a0c-0305e82c3305',
+  retailer: 'eBay',
+  title: 'Star Wars The Last Jedi 4K UHD + Blu-ray',
+  url: 'https://www.ebay.co.uk/itm/298708357566',
+  formatCode: '4k_uhd',
+  price: '4.75',
+  wasPrice: '18.00',
+  discountPercent: 74,
+  usualSources: [
+    { source: 'eBay', price: '16.00' },
+    { source: 'Zavvi', price: '20.00' },
+  ],
+  soldListingsUrl:
+    'https://www.ebay.co.uk/sch/i.html?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
 }
 
 describe('DealsPage', () => {
@@ -84,6 +105,23 @@ describe('DealsPage', () => {
 
     expect(html).toContain('Not matched to a film in the archive')
     expect(html).toContain('Cross Of Iron')
+  })
+
+  it('says what an eBay find\'s "usually" is made of, and links to what it sold for', () => {
+    const html = markup(<DealsPage />, [ebayFind])
+
+    expect(html).toContain('with postage · usually £18.00')
+    expect(html).toContain('eBay £16.00 before postage · Zavvi £20.00')
+    expect(html).toContain('Sold on eBay')
+    // React escapes the ampersands in an attribute.
+    expect(html).toContain(ebayFind.soldListingsUrl?.replaceAll('&', '&amp;'))
+  })
+
+  it('gives a shop\'s own deal no sold-listings link and no parts', () => {
+    const html = markup(<DealsPage />, [deal])
+
+    expect(html).not.toContain('Sold on eBay')
+    expect(html).not.toContain('before postage')
   })
 
   it('tells the admin who has to run the scrape when the feed is empty', () => {

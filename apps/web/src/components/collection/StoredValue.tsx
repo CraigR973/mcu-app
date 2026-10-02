@@ -1,3 +1,5 @@
+import { ExternalLink } from 'lucide-react'
+
 import type { CopyValuation } from '@/lib/api'
 import { formatShortDate } from '@/lib/utils'
 
@@ -22,9 +24,12 @@ export function StoredValue({ valuation }: { valuation: CopyValuation }) {
     const found =
       valuation.sampleSize === 0 ? 'no matching listings' : `only ${listings(valuation.sampleSize, 'matching ')}`
     return (
-      <p className="text-sm leading-6 text-muted-foreground">
-        Not priced when checked on {checked}: eBay had {found}, and a price needs at least {valuation.minSample}.
-      </p>
+      <div>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Not priced when checked on {checked}: eBay had {found}, and a price needs at least {valuation.minSample}.
+        </p>
+        <SoldListingsLink url={valuation.soldListingsUrl} />
+      </div>
     )
   }
   return (
@@ -35,6 +40,26 @@ export function StoredValue({ valuation }: { valuation: CopyValuation }) {
         median of {listings(valuation.sampleSize)}
         {valuation.conditionLabel ? ` · ${valuation.conditionLabel}` : ''} · checked {checked}
       </p>
+      <SoldListingsLink url={valuation.soldListingsUrl} />
     </div>
+  )
+}
+
+/**
+ * Batch V8: what the film actually sold for on eBay, which the app cannot read (sold
+ * listings are closed to apps). It opens in the person's own browser, where eBay asks them
+ * to sign in.
+ */
+function SoldListingsLink({ url }: { url: string | null }) {
+  if (!url) return null
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+    >
+      Sold listings on eBay <ExternalLink className="h-3 w-3" aria-hidden />
+    </a>
   )
 }

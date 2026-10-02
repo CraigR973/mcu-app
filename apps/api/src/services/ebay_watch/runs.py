@@ -187,7 +187,7 @@ def deal_alert(find: Find, user_id: uuid.UUID) -> Alert:
         title=f"{short(find.film.title)} on {label}: {pounds(find.listing.total)}",
         body=(
             f"Listed on eBay just now at {pounds(find.listing.total)} with postage, "
-            f"{find.discount_percent}% under its usual {pounds(find.usual.median)}. {why}"
+            f"{find.discount_percent}% under its usual {pounds(find.figure.amount)}. {why}"
         ),
         url=find.listing.url,
         dedupe_key=f"{DEAL_KEY_PREFIX}{find.listing.legacy_id}:{user_id}",

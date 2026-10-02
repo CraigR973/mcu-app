@@ -13,6 +13,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.schemas.wire import UtcDatetime
 
 
+class UsualSourceResponse(BaseModel):
+    """One part of an eBay find's usual price (Batch V8): eBay's figure, or a shop's."""
+
+    source: str
+    price: str
+
+
 class DealResponse(BaseModel):
     """One discounted disc.
 
@@ -42,6 +49,12 @@ class DealResponse(BaseModel):
     #: How long it has been on offer, and whether it was still there at the last run.
     firstSeenAt: UtcDatetime
     lastSeenAt: UtcDatetime
+    #: Batch V8, eBay finds only. ``wasPrice`` is the find's usual price, the average of
+    #: these: eBay's figure (asking prices, before postage) first, then each shop's recent
+    #: price where the nightly check has one. Null for a retailer's own deal.
+    usualSources: list[UsualSourceResponse] | None = None
+    #: eBay's own sold listings for the film and format, to open in the person's browser.
+    soldListingsUrl: str | None = None
 
 
 class DealListResponse(BaseModel):

@@ -26,6 +26,7 @@ from typing import Any
 
 import pytest
 
+from src.ebay.estimate import search_query, sold_listings_url
 from src.ebay.matching import Listing
 from src.models.ebay_watch import EbayPriceRef, EbayTarget, EbayWatchRun
 from src.models.movie import Movie
@@ -37,6 +38,7 @@ from src.services.ebay_watch.refs import Yardstick, yardstick
 from src.services.ebay_watch.runs import StartOutcome, deal_alert
 from src.services.ebay_watch.scan import Find, is_deal, read_new_listings
 from src.services.ebay_watch.targets import check_listing, check_search
+from src.services.ebay_watch.usual import ShopPrice, UsualPrice
 
 pytestmark = pytest.mark.asyncio
 
@@ -290,9 +292,46 @@ async def test_no_yardstick_without_three_listings() -> None:
 
 
 async def test_a_deal_is_thirty_percent_or_more_under_the_usual_price() -> None:
-    usual = Yardstick(Decimal("20.00"), 12)
+    # The usual price itself since Batch V8, which may average in the shops' prices.
+    usual = Decimal("20.00")
     assert is_deal(Decimal("14.00"), usual)
     assert not is_deal(Decimal("14.01"), usual)
+
+
+async def test_the_usual_price_is_the_average_of_ebay_and_the_shops() -> None:
+    """Batch V8: eBay's figure alone with no shop price, else the average of all of them."""
+    ebay = Yardstick(Decimal("16.00"), 20)
+    assert UsualPrice(ebay).amount == Decimal("16.00")
+
+    two = UsualPrice(ebay, (ShopPrice("Zavvi", Decimal("20.00")),))
+    assert two.amount == Decimal("18.00")
+    assert two.sources() == [
+        {"source": "eBay", "price": "16.00"},
+        {"source": "Zavvi", "price": "20.00"},
+    ]
+
+    three = UsualPrice(
+        ebay, (ShopPrice("Arrow Video", Decimal("17.99")), ShopPrice("Zavvi", Decimal("19.99")))
+    )
+    # 53.98 / 3 = 17.9933…, to the penny.
+    assert three.amount == Decimal("17.99")
+
+
+async def test_a_deal_is_judged_against_the_averaged_price() -> None:
+    """V8's third criterion: the 70% rule compares with the new figure, not eBay's alone."""
+    figure = UsualPrice(Yardstick(Decimal("16.00"), 20), (ShopPrice("Zavvi", Decimal("10.00")),))
+    assert figure.amount == Decimal("13.00")
+    # Under eBay's £16.00 × 70% = £11.20, but not under £13.00 × 70% = £9.10.
+    assert is_deal(Decimal("11.00"), Decimal("16.00"))
+    assert not is_deal(Decimal("11.00"), figure.amount)
+
+
+async def test_the_sold_listings_link_searches_as_the_estimator_does() -> None:
+    """V8: eBay's own sold listings for the film and format, which only a signed-in
+    person can read (#16, #126), with the words the asking prices were searched with."""
+    assert sold_listings_url(search_query("Heat", "blu_ray")) == (
+        "https://www.ebay.co.uk/sch/i.html?_nkw=Heat+Blu-ray&_sacat=617&LH_Sold=1&LH_Complete=1"
+    )
 
 
 async def test_a_deal_push_says_why_it_matters() -> None:

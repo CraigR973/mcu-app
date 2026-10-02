@@ -20,6 +20,7 @@ from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
 from src.database import get_db
 from src.ebay.client import EbayClient
+from src.ebay.estimate import sold_listings_url
 from src.ebay.pricing import ASKING_PRICES
 from src.models.valuation import DiscValuation, ValuationRun
 from src.schemas.bid_trial import BidTrialReport, BidTrialResponse, BidTrialStartResponse
@@ -109,6 +110,7 @@ def copy_valuation(valuation: DiscValuation) -> CopyValuationResponse:
         checkedAt=valuation.checked_utc,
         basis=valuation.basis,
         minSample=MIN_SAMPLE,
+        soldListingsUrl=sold_listings_url(valuation.search_query),
     )
 
 
