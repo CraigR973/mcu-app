@@ -825,8 +825,9 @@ refused as `blocked`, its count left alone. A genuine failure beside refusals st
 No migration: Batch 16's CHECK already allowed `blocked`. Local gate and CI green first time
 (1,719 API tests, warnings unchanged at 178; web 458, shared 119). ~~**Open:** the 2 Oct
 03:00 UTC check read back~~ **read back 2 Oct: no shop switched off; every refusal a 60 s
-`Retry-After`** (below). **Open:** the second half, from that and a second night (#238). 101 Films and Powerhouse still carry the 2 failures counted on 30
-Sep and 1 Oct, under the old rule.
+`Retry-After`** (below). **The second half is built from that one night**, at Craig's word on
+2 Oct 23:28 UTC, so the 3 Oct check is its first night (#240). 101 Films and Powerhouse went
+back to 0 failures on 2 Oct.
 
 **Written 30 Sep at Craig's word ("yes, write a batch for this"); builds at his go, after the
 1 Oct 03:00 UTC shop check, which is its first evidence.** Opus 5 · high / GPT-5.6 Sol ·
@@ -905,20 +906,31 @@ ships before the 2 Oct check, so no shop is switched off by refusals; the pacing
 - The first scheduled check after the merge is read back from `scrape_runs` and the job's
   log: no shop switched off by `429`s, and what the refusals carried.
 
-**Second half — acceptance, to be rewritten from that evidence** (as written 30 Sep, before
-the diagnosis showed refusals from the first request):
-- Diagnosis first, read-only, written into this section before code: which shops answered
-  `429`, after how many requests and how quickly, and whether they sent `Retry-After`, from
-  `scrape_runs`, the Railway logs and the fetcher. *(Done 1 Oct, above.)*
-- Requests to one shop are spaced so that a night's check is not refused: a per-shop pause
-  set from that diagnosis. A `429` is retried at most once, after `Retry-After` when the shop
-  sends one (bounded), and otherwise reported.
-- ~~A `429` is a refusal, not a broken scraper: it never counts towards auto-disable, and the
-  run's record names the shops that refused.~~ *(Moved to the first half.)*
-- The sale-page check (22b, and 22c after it) keeps the same pacing.
-- The first scheduled check after the merge is read back from `scrape_runs`: no shop is left
-  without prices because of `429`s, or the refusals that remain are named.
-- Tests. Gate green.
+**Second half — acceptance, rewritten 2 Oct 23:40 UTC from the 2 Oct night, before any code
+(#54).** The proposal Craig said go to on 2 Oct, built from one night rather than two at his
+word, so the 3 Oct check is its first night (#240). It replaces the 30 Sep draft, whose
+per-shop pause the diagnosis ruled out: the shops refuse the first request of the night, so
+spacing this run's own requests cannot be the cure.
+- A refused request waits for the shop's `Retry-After` before its one retry, instead of two
+  seconds, bounded at 90 seconds; a missing or larger value keeps today's pause and says so
+  in the refusal's record. Still one retry, still sequential per shop.
+- The sale-page check (22b) follows the same rule.
+- The run's record says, for each refusal, whether the retry after the wait got through.
+- **The nightly run holds no database transaction while it waits, and checks a connection
+  before reusing it.** A refused night can leave the database untouched for ten minutes at a
+  time (one shop's ten wants), longer than a network path reliably keeps an idle connection;
+  a dropped connection would lose the whole night. *(Added from reading the runner: the
+  proposal did not cover it.)*
+- **"Run now" on /retailers keeps today's two-second pause**, and its record says it did: a
+  run from the phone cannot hold a request open for half an hour. Only the scheduled check
+  and the sale-page check wait.
+- The first scheduled check after the merge is read back: refusals that survive a minute's
+  wait are named. If most do, tell Craig, with the remaining option: a fixed outbound address
+  for Railway, a hosting change and his call.
+- Tests (a refused request's wait is bounded, honoured and reported). Gate green.
+
+*Its cost, as stated on 2 Oct:* a refused night may take up to about 30 minutes at 03:00,
+unattended (3 shops × 10 wants × a minute). 22c still waits for this half's read-back.
 
 ### Batch 35 — Movie night 🔴
 **Covers Phases 8.3 and 8.4:**
