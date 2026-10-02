@@ -15,11 +15,12 @@
   "usually" averages eBay's asking price with the shops' recent like-for-like prices and says
   so on the card; eBay's sold listings are linked from the card and the film page (#239).
 
-**Next:** 20b's second half (honour the 60-second `Retry-After` before the one retry) after a
-second night's evidence and Craig's go, then 22c. 21 starts itself once a third want has two
-shops' prices on two days (2 of 3 on 2 Oct). **Craig's:** the go on 20b's second half; the
-like-for-like rule if he wants it otherwise (#239); V9 needs blu-ray.com and avforums.com
-allowed; T8b needs item 18; 38 is last. 101 Films and Powerhouse are back to 0 failures.
+**Next, on Craig's Mac, at his word (2 Oct):** `docs/next-mac-session.md`: the shop checks
+since 2 Oct read back, 20b's second half (honour the 60-second `Retry-After` before the one
+retry), then V9 (the Mac reaches blu-ray.com and avforums.com). He kept V8's like-for-like
+rule (#239). 22c follows 20b's second half; 21 starts itself once a third want has two
+shops' prices on two days (2 of 3 on 2 Oct). **Craig's:** starting that session; T8b needs
+item 18; 38 is last. 101 Films and Powerhouse are back to 0 failures.
 
 **1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
 #230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
@@ -33,7 +34,8 @@ an admin-only "Try bid prices" on Home that saves no prices.
   1. ~~**Tap "Try bid prices" on Home**~~ (run 1 Oct, 14:14 UTC), **then say "blend" or
      "bids only"** (`OWNER-ACTIONS.md` 26). That starts V7, then V8.
   2. **The two-phone check of V3's movie night**, with Mark's notifications on (16b).
-  3. **Allow blu-ray.com and avforums.com** in the environment's network settings before V9.
+  3. ~~**Allow blu-ray.com and avforums.com**~~ — not needed: V9 runs on the Mac
+     (`docs/next-mac-session.md`).
   4. ~~**Your go on 20b**~~ (first half live 1 Oct); **your go on its second half and 22c**,
      after a second night of the refusals' evidence.
   5. ~~**The one-off cloud setup on your Mac** (`OWNER-ACTIONS.md` 27)~~ — done 1 Oct.
@@ -547,6 +549,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-02 (Craig's "yes keep", and the next Mac session)** — Craig kept V8's like-for-like
+  rule for shop prices (#239) and asked for a prompt to do 20b and the Blu-ray.com/AVForums work
+  on his Mac: `docs/next-mac-session.md` (the shop checks since 2 Oct, 20b's second half, then
+  V9; top tier at `max`). The cloud session's scheduled read-back of 3 Oct's check was cancelled
+  so two sessions do not edit 20b's section at once; the Mac session reads it back first.
 
 - **2026-10-02 (V8, [#22](https://github.com/CraigR973/mcu-app/pull/22), `37e7c0a`)** — An eBay
   find's "usually" is the average of eBay's asking price and each shop's latest like-for-like
