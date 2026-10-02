@@ -8,7 +8,8 @@ UTC:** a `429` no longer counts towards switching a shop off; a shop that only r
 `blocked`, its count left alone, and each refusal records what the shop sent back (#238). The
 `cron-scrape` job redeployed with it, so the 2 Oct 03:00 UTC check runs on it. **V7 is shelved**
 (#237): the trial found no film with a bid price, so values stay on asking prices. **Next: V8**
-(the Deals "usual" price, on asking prices), then the 2 Oct check read back. Earlier the same
+(the Deals "usual" price, on asking prices). **The 2 Oct check, read back:** no shop
+switched off, and every refusal asked for 60 seconds (the Log's first line). Earlier the same
 day: the cloud setup checked (`OWNER-ACTIONS.md` 27, done) and V5's plans read on production.
 **Open:** 101 Films and Powerhouse keep the 2 failures counted before the fix; 21 has 2 of the 3
 wants it needs, and only the refusing shops can supply the third.
@@ -538,6 +539,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-02 (the first shop check under 20b's first half)** — 03:04 UTC: no shop switched
+  off. 101 Films and Powerhouse each got a price and went back to 0 failures; Second Sight was
+  `blocked`, its count held at 1. 25 of 42 refused, every one `429` with `retry-after 60`,
+  `server cloudflare` and the title "Too many requests", no `cf-mitigated`: a rate limit asking
+  for a minute, not a block. Each Shopify shop refused its first request of the night, so the
+  limit is filled by something other than this run (most likely Railway's shared address);
+  4 of 29 retries two seconds later got through. Suggests the second half honours
+  `Retry-After` before its one retry (evidence in 20b's section). 21 still 2 of 3.
 
 - **2026-10-01 (20b's first half, [#19](https://github.com/CraigR973/mcu-app/pull/19), `548160f`)** —
   At Craig's "2) yes": a `429` is a refusal, never a step towards auto-disable (#238). The
