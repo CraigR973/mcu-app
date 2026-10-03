@@ -55,10 +55,11 @@ TMDB_RATE = 8.0
 
 
 async def brave_spent_this_month(db: AsyncSession) -> int:
-    """Brave searches billed this month by T7's batches and by identification runs.
+    """Brave searches billed this month by T7's batches, identification runs and V9's
+    review searches.
 
-    The same sum as T7's ``searches_this_month``, asking first whether the identification
-    table exists, because the dry run runs before the migration that adds it.
+    The same sum as T7's ``searches_this_month``, asking first whether each later table
+    exists, because the dry run can run before the migration that adds it.
     """
     start = month_start(utcnow())
     spent = int(
@@ -73,6 +74,16 @@ async def brave_spent_this_month(db: AsyncSession) -> int:
                 text(
                     "SELECT coalesce(sum(searches), 0) FROM identify_runs "
                     "WHERE started_utc >= :start"
+                ),
+                {"start": start},
+            )
+            or 0
+        )
+    if await table_exists(db, "review_runs"):
+        spent += int(
+            await db.scalar(
+                text(
+                    "SELECT coalesce(sum(searches), 0) FROM review_runs WHERE started_utc >= :start"
                 ),
                 {"start": start},
             )

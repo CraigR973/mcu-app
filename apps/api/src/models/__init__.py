@@ -96,6 +96,16 @@ from src.models.release_calendar import (
     CalendarRefreshState,
     ReleaseCalendarEntry,
 )
+from src.models.reviews import (
+    REVIEW_FORMATS,
+    REVIEW_FOUND_VIA,
+    REVIEW_RUN_STATUSES,
+    REVIEW_RUN_TRIGGERS,
+    REVIEW_SITES,
+    REVIEW_STATUSES,
+    FilmReview,
+    ReviewRun,
+)
 from src.models.smart_collection import (
     SMART_COLLECTION_ICONS,
     SMART_COLLECTION_ORDERS,
@@ -182,6 +192,14 @@ __all__ = [
     "NotificationStatus",
     "PushSubscription",
     "PriceCheck",
+    "REVIEW_FORMATS",
+    "REVIEW_FOUND_VIA",
+    "REVIEW_RUN_STATUSES",
+    "REVIEW_RUN_TRIGGERS",
+    "REVIEW_SITES",
+    "REVIEW_STATUSES",
+    "FilmReview",
+    "ReviewRun",
     "RETENTION_DAYS",
     "SCRAPE_TRIGGERS",
     "PriceHistoryDaily",
