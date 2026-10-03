@@ -2,6 +2,22 @@
 
 ## Now
 
+**3 Oct 2026, 22:47 UTC: V9 is live** ([#30](https://github.com/CraigR973/mcu-app/pull/30), `d1c3bf7`, migration 046), on Craig's Mac, after
+20b's second half (below). Verified in production: the merge SHA, `db: ok`, migration 046 at
+head, and the read-only role able to read both new tables.
+- **Reviews:** Wanted items and film pages show "Reviews: Blu-ray.com · AVForums" as links,
+  with Brave's line and, once read, Blu-ray.com's scores under its own headings; Home's
+  Highlights has "Best reviewed". AVForums is links only: its terms forbid automated access
+  (#241, Craig's word).
+- **First nightly run: 4 Oct, 02:00 UTC,** in `cron-specs` after the spec batch: Brave
+  searches for the 10 wants, a row for each owned film and format with a spec page (728 discs
+  have one), then up to 150 Blu-ray.com pages, five seconds apart, about ten nights in all
+  (#244). A `403` or `429` halts it and the spec backfill with it (#110). **Open:** reading
+  that run back.
+- **Next: T8b's plan, for Craig's go** (`docs/next-mac-session.md` section 5, #243): planned
+  in the chat, built only at his word.
+
+
 **3 Oct 2026, 13:20 UTC: item 18 is done, so T8b is unblocked; it starts after V9 merges
 (#243). A test time bomb is fixed (#242).**
 - **Item 18:** Craig added eBay's sign-in page and set `EBAY_RUNAME` and `EBAY_TOKEN_KEY` on
@@ -566,6 +582,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-03 (V9, [#30](https://github.com/CraigR973/mcu-app/pull/30), `d1c3bf7`)** — Reviews, found with Brave, on Wanted items and
+  film pages; Blu-ray.com's scores read within #110 as #228 widened it, owned films' by
+  following their spec page's link to the reviewed edition; AVForums links only (#241); Home's
+  "Best reviewed". Browser check at 375 px, light and dark; it found Brave's line unclamped,
+  fixed before the merge. CI's first run on 3 Oct failed two V9 tests on their own setup (a
+  halt with no time; a film read after a rollback) and two eBay tests on the expired
+  recording, fixed separately (#242). Gate and CI green (1,801 API tests, warnings unchanged at
+  178; web 475, shared 127); production reported the merge SHA at 22:47 UTC with `db: ok`.
 
 - **2026-10-03 (item 18 done; an expired eBay recording)** — Craig set eBay's sign-in page and
   both variables for T8b (`OWNER-ACTIONS.md` 18). They were checked by name and shape, with no
