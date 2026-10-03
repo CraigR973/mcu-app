@@ -26,6 +26,7 @@ import { ValuePanel } from '@/components/collection/ValuePanel'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
 import { FormatBadge } from '@/components/movies/FormatBadge'
+import { ReviewLinks } from '@/components/movies/ReviewLinks'
 import { Poster } from '@/components/movies/Poster'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -475,6 +476,8 @@ export default function MovieDetailPage() {
             </Button>
           ) : null}
         </div>
+
+        <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
 
         {(!movie.identified || correcting) ? (
           <div className="mt-8">

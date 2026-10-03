@@ -62,6 +62,7 @@ const MOVIE: MovieDetail = {
   trailerKey: null,
   letterboxdSlug: 'the-red-shoes',
   mediaType: 'film',
+  reviews: [],
 }
 
 const COPY: CollectionCopy = {
@@ -241,3 +242,45 @@ describe('MovieDetailPage back button — Batch V1, snag 5', () => {
     expect(screen.queryByRole('link', { name: /Back to collection/ })).toBeNull()
   })
 })
+
+describe('MovieDetailPage reviews (Batch V9)', () => {
+  it('shows the film\'s reviews above the tabs, whichever tab is open', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({
+      ...MOVIE,
+      reviews: [
+        {
+          site: 'bluray_com',
+          siteName: 'Blu-ray.com',
+          url: 'https://www.blu-ray.com/movies/The-Red-Shoes-4K-Blu-ray/300000/',
+          formatCode: '4k_uhd',
+          title: 'The Red Shoes 4K Blu-ray',
+          description: null,
+          scores: [
+            { heading: 'Movie', score: 5 },
+            { heading: 'Overall', score: 4.5 },
+          ],
+          overall: 4.5,
+          outOf: 5,
+          scoresReadAt: '2026-10-03T02:20:00Z',
+          note: null,
+        },
+      ],
+    })
+    renderPage()
+
+    const link = await screen.findByRole('link', { name: 'Blu-ray.com (4K UHD)' })
+    expect(link.getAttribute('href')).toBe('https://www.blu-ray.com/movies/The-Red-Shoes-4K-Blu-ray/300000/')
+    expect(screen.getByText('4.5/5')).not.toBeNull()
+    expect(screen.getByText('Movie 5.0')).not.toBeNull()
+    // Copies is the tab open on arrival, and the reviews are still on the page.
+    expect(screen.getByRole('tab', { selected: true }).textContent).toMatch(/Copies|Owned/)
+  })
+
+  it('shows no reviews line when none was found', async () => {
+    renderPage()
+
+    expect(await screen.findByText('Criterion Collection')).not.toBeNull()
+    expect(screen.queryByText('Reviews:')).toBeNull()
+  })
+})
+

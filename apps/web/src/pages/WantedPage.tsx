@@ -14,6 +14,7 @@ import { StatePanel } from '@/components/ui/state-panel'
 import { Badge } from '@/components/ui/badge'
 import { Poster } from '@/components/movies/Poster'
 import { FormatBadge } from '@/components/movies/FormatBadge'
+import { ReviewLinks } from '@/components/movies/ReviewLinks'
 import { useAuth } from '@/context/auth'
 import {
   addWanted,
@@ -261,6 +262,7 @@ function Card({ item }: { item: WantedItem }) {
         {!item.isActive ? (
           <p className="mt-1 text-xs text-muted-foreground">No longer looking</p>
         ) : null}
+        <ReviewLinks reviews={item.reviews} className="mt-2" />
         {saveBudget.isError ? (
           <p role="alert" className="mt-1 text-xs text-destructive">
             {queryErrorMessage(saveBudget.error, 'Could not save that limit.')}

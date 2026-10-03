@@ -306,6 +306,7 @@ async def search_phase(
         return PhaseEnd("done")
     if not searcher.configured:
         return PhaseEnd("not_configured", NOT_CONFIGURED)
+    run_id = run.id
     for index, (want, site) in enumerate(due):
         if searcher.search_calls + searcher.attempts_per_search > budget:
             return PhaseEnd("budget")
@@ -313,7 +314,7 @@ async def search_phase(
             row = await search_one(db, searcher, want, site, now=clock())
         except (BraveError, BraveNotConfigured) as exc:
             await db.rollback()
-            run = await _reload(db, run)
+            run = await _reload(db, run_id)
             run.searches = searcher.search_calls
             run.last_error = f"{want.title}: {exc}"[:500]
             run.heartbeat_utc = clock()
@@ -336,10 +337,12 @@ async def search_phase(
     return PhaseEnd("done")
 
 
-async def _reload(db: AsyncSession, run: ReviewRun) -> ReviewRun:
-    reloaded = await db.get(ReviewRun, run.id)
+async def _reload(db: AsyncSession, run_id: uuid.UUID) -> ReviewRun:
+    """The run, fetched again by id: after a rollback every loaded object is expired, and
+    reading an expired attribute in an async session is an error."""
+    reloaded = await db.get(ReviewRun, run_id)
     if reloaded is None:  # pragma: no cover - the run row was committed before any work
-        raise ValueError(f"review run {run.id} vanished")
+        raise ValueError(f"review run {run_id} vanished")
     return reloaded
 
 
@@ -351,7 +354,8 @@ async def _reload(db: AsyncSession, run: ReviewRun) -> ReviewRun:
 async def seed_owned(db: AsyncSession, *, now: datetime) -> int:
     """A Blu-ray.com row to read for each owned film and format with a spec page.
 
-    The format is the spec page's own, read from its address. Sends nothing.
+    The format is the spec page's own, read from its address. Sends nothing. A search that
+    found nothing for the same film and format gives way: the spec page is the disc's own.
     """
     pages = (
         await db.execute(
@@ -365,45 +369,43 @@ async def seed_owned(db: AsyncSession, *, now: datetime) -> int:
             .order_by(CollectionItem.specs_fetched_at_utc, CollectionItem.id)
         )
     ).all()
-    taken = {
-        (movie_id, format_code)
-        for movie_id, format_code in (
-            await db.execute(
-                select(FilmReview.movie_id, FilmReview.format_code).where(
-                    FilmReview.site == "bluray_com", FilmReview.status != "none"
-                )
-            )
-        ).all()
+    existing = {
+        (row.movie_id, row.format_code): row
+        for row in (
+            await db.execute(select(FilmReview).where(FilmReview.site == "bluray_com"))
+        ).scalars()
     }
     seeded = 0
     for movie_id, page in pages:
         if not page or not is_release_url(page):
             continue
         format_code = format_of(page)
-        if format_code is None or (movie_id, format_code) in taken:
+        if format_code is None:
             continue
-        taken.add((movie_id, format_code))
+        key = (movie_id, format_code)
+        held = existing.get(key)
+        if held is not None and held.status != "none":
+            continue
+        if held is not None:
+            await db.delete(held)
+            await db.flush()
         url = canonical_release_url(page)
-        db.add(
-            FilmReview(
-                id=uuid.uuid4(),
-                movie_id=movie_id,
-                site="bluray_com",
-                format_code=format_code,
-                status="found",
-                url=url,
-                found_via="spec_page",
-                found_url=url,
-                found_utc=now,
-            )
+        row = FilmReview(
+            id=uuid.uuid4(),
+            movie_id=movie_id,
+            site="bluray_com",
+            format_code=format_code,
+            status="found",
+            url=url,
+            found_via="spec_page",
+            found_url=url,
+            found_utc=now,
         )
+        db.add(row)
+        existing[key] = row
         seeded += 1
     if seeded:
-        try:
-            await db.commit()
-        except IntegrityError:  # pragma: no cover - a want's search took one meanwhile
-            await db.rollback()
-            return 0
+        await db.commit()
     return seeded
 
 
@@ -420,6 +422,11 @@ def _year_problem(page_year: int | None, film_year: int | None) -> str | None:
     if abs(page_year - film_year) > YEAR_TOLERANCE:
         return f"The page is for a {page_year} film and this one is from {film_year}"
     return None
+
+
+async def _pause(seconds: float) -> None:
+    """The batch's one wait between requests, in one place, so a test can stand in for it."""
+    await asyncio.sleep(seconds)
 
 
 @dataclass
@@ -441,7 +448,7 @@ async def _get(
     if pause:
         # Before every request, the first included: the spec batch may have fetched a page
         # a moment ago in the same job, and #110's spacing is between any two requests.
-        await asyncio.sleep(pause)
+        await _pause(pause)
     reading.requests += 1
     page = await fetch_page(client, url, db, pause=pause)
     return canonical_release_url(page.url), page.html
@@ -660,14 +667,15 @@ async def work_run(
     fetches_per_run: int = FETCHES_PER_RUN,
 ) -> ReviewRun:
     """The nightly batch: search, seed, read; then record how it ended."""
+    run_id = run.id
     try:
         now = clock()
         due = await wants_to_search(db, now=now)
         budget = await search_budget(db, now=now, per_run=searches_per_run)
         searching = await search_phase(db, run, searcher, due, budget=budget, clock=clock)
-        run = await _reload(db, run)
+        run = await _reload(db, run_id)
         await seed_owned(db, now=clock())
-        run = await _reload(db, run)
+        run = await _reload(db, run_id)
         reading = await read_phase(
             db, run, client, budget=fetches_per_run, clock=clock, pause=pause
         )
@@ -683,7 +691,7 @@ async def work_run(
         await db.commit()
     except Exception as exc:
         await db.rollback()
-        stopped = await db.get(ReviewRun, run.id)
+        stopped = await db.get(ReviewRun, run_id)
         if stopped is not None and stopped.status == "running":
             stopped.status = "stopped"
             stopped.finished_utc = clock()
@@ -727,8 +735,9 @@ async def search_for_want(
     run = await start_run(db, trigger="want_added", now=now)
     if run is None:  # pragma: no cover - only the nightly batch is held to one at a time
         return None
+    run_id = run.id
     searching = await search_phase(db, run, searcher, due, budget=budget, clock=clock)
-    run = await _reload(db, run)
+    run = await _reload(db, run_id)
     run.searches = searcher.search_calls
     run.status = "stopped" if searching.outcome == "failed" else "finished"
     run.last_error = searching.message if searching.outcome != "done" else None

@@ -118,6 +118,27 @@ function rows(data: HighlightsData): ReactNode[] {
       />,
     )
   }
+  if (data.bestReviewed.length > 0) {
+    built.push(
+      <PosterRow
+        key="best-reviewed"
+        id="highlights-best-reviewed"
+        title="Best reviewed"
+        caption="Blu-ray.com's overall score for the disc, on a format on the shelf."
+        cards={data.bestReviewed.map((film) => ({
+          movieId: film.movieId,
+          title: film.title,
+          posterPath: film.posterPath,
+          detail: (
+            <>
+              {film.overall.toFixed(1)}/{film.outOf}
+              {film.formatCode ? ` · ${formatLabel(film.formatCode)}` : ''}
+            </>
+          ),
+        }))}
+      />,
+    )
+  }
   return built
 }
 
@@ -125,9 +146,10 @@ function rows(data: HighlightsData): ReactNode[] {
  * Highlights on Home — Batch V5, snag 9 (`DECISIONS.md` #228: "a mix of all").
  *
  * Short poster rows, each film opening its page: top rated (with whose rating it is), most
- * rewatched across both diaries, and the most valuable discs at their stored value. "Best
- * reviewed" is V9's to add. **A row with nothing in it is not shown**, and nor is the panel
- * when every row is empty, as Home's other sections do. One request for the whole panel.
+ * rewatched across both diaries, the most valuable discs at their stored value, and since
+ * V9 the best reviewed, by Blu-ray.com's overall score. **A row with nothing in it is not
+ * shown**, and nor is the panel when every row is empty, as Home's other sections do. One
+ * request for the whole panel.
  */
 export function Highlights() {
   const query = useQuery({ queryKey: ['highlights'], queryFn: fetchHighlights })
