@@ -1,7 +1,10 @@
-# The next Mac session — 20b's second half, then V9
+# The next Mac session — 20b's second half, then V9, then T8b's plan
 
 **Start it with:** "Read and follow `docs/next-mac-session.md` on `main`." Top-tier model at
 `max` effort: V9 needs it (20b alone needs `high`). Pull `main` first.
+
+**Added 3 Oct, after this session had started:** merge `main` before V9's pull request
+(section 3), and after V9's close-out, give Craig T8b's plan for his go (section 5).
 
 **Craig's word, 2 Oct:** "give me a prompt to do 20b and the blurray,com/avforums work on a
 session on my mac". That is his go on 20b's second half and on V9, run on the Mac because the
@@ -78,6 +81,10 @@ Read V9's criteria in `docs/phase-batches.md`, #110 and #228, and build them. On
   `403` or `429` halts the integration, and every stored row names its source.
 - Browser check at 375 px, light and dark, by `DECISIONS.md` #169's method; delete
   `apps/web/.env.local` afterwards.
+- **Merge `main` into `feat/v9-reviews` before V9's pull request.** It carries the eBay test
+  clock fix (`0770bbc`, #242). Without it, two eBay alert tests fail on your branch, as they
+  did in CI on 3 Oct. The other two failures that run showed, in `test_reviews_batch.py`, are
+  V9's own. `STATUS.md`'s Now block may conflict: keep both entries.
 - Then the close-out, with V5's "Best reviewed" row in the result.
 
 ## 4. Close
@@ -86,6 +93,22 @@ Each batch keeps its own close-out (`docs/agent-commands/phase-closeout.md`). At
 `STATUS.md`'s Now block says where things stand; the final message to Craig says the same, with
 each pull request, its merge SHA and its production check, and what is still his.
 
-**Not in this session:** 22c (after 20b's second half shows the wait works), T8b
-(`OWNER-ACTIONS.md` 18), and 38, which is last. Batch 21 starts itself once a third want has
-two shops' prices on two days.
+**Not in this session:** 22c (after 20b's second half shows the wait works), building T8b
+(section 5 is its plan only), and 38, which is last. Batch 21 starts itself once a third want
+has two shops' prices on two days.
+
+## 5. After V9's close-out: T8b's plan, for Craig's go — top tier · max
+
+Craig's word on 3 Oct (#243): T8b starts after V9 merges. Its gate, `OWNER-ACTIONS.md` 18, is
+done. **Plan it here; build it only at his go.**
+
+- Read T8b's criteria in `docs/phase-batches.md`, with #142, #216 and #227. The values Craig
+  set are fixed: `EBAY_RUNAME` and `EBAY_TOKEN_KEY` on `api`, and the three web addresses.
+- T8b changes auth, adds a table holding Mark's eBay token, takes on eBay's sign-in contract,
+  and needs a Railway apply that only Craig runs. So the plan comes first, in the chat: what
+  changes, the option rejected and why, and what breaks if it goes wrong. Number the
+  decisions so he can reply "1) yes 2) no", and wait for his word.
+- **No Railway config apply until T8b declares both variables with `preserve()`.** An apply
+  without them deletes them (#124).
+- If this session is short of context by then, say so, and give Craig one line that starts a
+  fresh session on T8b's plan instead.
