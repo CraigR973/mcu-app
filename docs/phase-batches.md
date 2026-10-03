@@ -2556,7 +2556,7 @@ batches keep their gates unchanged.
 |---|---|---|---|---|
 | 1 | V1 top bar, tints, back arrows, Loans → V3 movie night → V4 Craig's house → V5 Highlights | **Go given 30 Sep** for the overnight run, with V6 after it (#230); the production host allowed first (`OWNER-ACTIONS.md` 25) | top tier · high (from V4) | top tier · High |
 | 2 | ~~V6 bid trial~~ → **Craig ran it and picked neither (1 Oct, #237)** → ~~V7 value from bids~~ (shelved) → ~~V8 Deals "usual" price~~ (shipped 2 Oct, `37e7c0a`) | **Done** | top tier · xhigh (from V6, V7) | top tier · Extra High |
-| 3 | V9 reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max | top tier · Max |
+| 3 | ~~V9 reviews: links, lines and scores~~ | **Shipped 3 Oct (`d1c3bf7`, [#30](https://github.com/CraigR973/mcu-app/pull/30))**, on Craig's Mac; AVForums links only and owned films followed to the reviewed edition, at his word (#241) | top tier · max | top tier · Max |
 | 4 | ~~20b shops that answer 429~~ (first half `548160f`, 1 Oct) → ~~20b's second half~~ (`abc17d6`, 2 Oct) → 22c every page of a sale | **20b done; 22c waits:** the 3 Oct read-back showed a minute's wait gets 2 of 27 past the limit, so 22c waits on Craig's call on a fixed outbound address (`OWNER-ACTIONS.md` 28) | top tier · high | top tier · High |
 | — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U); 2 of 3 on 1 Oct, the third waits on 20b's shops | mid tier · medium | mid tier · Medium |
 | 5 | T8b Connect eBay | `OWNER-ACTIONS.md` 18, done 3 Oct; after V9 merges (Group U, #243) | top tier · max | top tier · Max |
@@ -2574,7 +2574,7 @@ batches keep their gates unchanged.
 | V6 | Snag 2, step one: the bid trial | 🟡 | top tier · xhigh | top tier · Extra High |
 | ~~V7~~ | ~~Snag 2: value from live bids~~ **shelved 1 Oct, #237** | 🔴 | top tier · xhigh | top tier · Extra High |
 | ~~V8~~ | ~~Snag 1: the Deals "usual" price~~ **shipped 2 Oct (`37e7c0a`)** | 🟡 | top tier · high | top tier · High |
-| V9 | Snag 8, and V5's fourth row: reviews | 🔴 | top tier · max | top tier · Max |
+| ~~V9~~ | ~~Snag 8, and V5's fourth row: reviews~~ **shipped 3 Oct (`d1c3bf7`)** | 🔴 | top tier · max | top tier · Max |
 
 *Why those efforts.* V4 writes a migration against a live table's CHECK, and migrations are
 where this repo's green local gates have hidden faults (gotchas 15 and 18). V6 and V7 change
@@ -2878,7 +2878,22 @@ so eBay's figure is today's: the asking-price median in `ebay_price_refs`.**
   already answering 429 (20b).
 - Gate green.
 
-### V9 — Reviews: links, lines and scores 🔴
+### ~~V9 — Reviews: links, lines and scores~~ 🔴 — **shipped 2026-10-03 (`d1c3bf7`, [#30](https://github.com/CraigR973/mcu-app/pull/30))**
+**As shipped, live 22:47 UTC on 3 Oct with migration 046:** `film_reviews` holds each
+site's review of a film and format (its page, Brave's title and line, and for Blu-ray.com
+the review's scores under its own headings with when they were read); `review_runs` counts
+every Brave search into the month's total (#202). Adding a want searches both sites once
+the response has gone; the nightly `cron-specs` job, after the spec batch, searches the
+wants still without a review, seeds a row for each owned film and format from its spec
+page, and reads up to 150 Blu-ray.com pages five seconds apart, following a page's link to
+the edition that carries the review (#241). AVForums is links only, and the app says why.
+Wanted items and the film page show "Reviews: Blu-ray.com · AVForums" with Brave's line and
+the scores once read; Home's Highlights has its fourth row, "Best reviewed": owned films by
+Blu-ray.com's Overall, for a format on the shelf. Browser check at 375 px, light and dark
+(#169's method); it found Brave's line unclamped, fixed before the merge. **Open:** the
+first nightly run, 4 Oct 02:00 UTC, read back; AVForums' scores (forbidden; Craig chose
+links only) and AVForums for owned films (a higher Brave budget, Craig's call).
+
 **Runs on Craig's Mac, at his word on 2 Oct** (`docs/next-mac-session.md`, after 20b's second
 half): the Mac reaches blu-ray.com and avforums.com, so the network step below is not needed.
 

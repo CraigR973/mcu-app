@@ -4957,3 +4957,28 @@ contemporaneous.
      would renumber its migration and redo its checks, in the batch that holds Mark's eBay
      token. T8b's plan still goes to Craig for his go before it starts: it changes auth, adds
      a table and takes on eBay's sign-in contract.
+
+### 2026-10-03 — Group V, batch V9: the calls made while building it
+
+244. **V9 shipped (`d1c3bf7`, migration 046), and these were this session's calls, each open to
+     overrule.**
+
+     - **The reviews batch runs inside the nightly `cron-specs` job, after the spec batch.** No
+       new Railway service, so no hosting change, and every Blu-ray.com request, spec or
+       review, comes from one process, five seconds apart. Adding a want searches Brave at once
+       (after the response); its page is read that night.
+     - **A want with no format** keeps Blu-ray.com's 4K review if there is one, else its
+       Blu-ray review; on AVForums the want's own format first, then 4K, Blu-ray, the film's
+       review, DVD.
+     - **Searches have caps of their own:** 40 a night and 100 a month, inside the shared 1,500
+       ceiling (#202). A search that found nothing is tried again after 30 days. A page
+       without a review is not read again on its own: #110 caches results rather than
+       refreshing them.
+     - **"Best reviewed" ranks owned films by Blu-ray.com's Overall, for a format a copy is
+       on**, one entry a film, a tie going to 4K. A 4K review of a film owned only on DVD is
+       not the shelf's.
+     - **Blu-ray.com's Brave line is shown without its tagline** ("Blu-ray reviews, news,
+       specs, ratings…"), leaving the release date: the rest is the same on every page.
+     - **The owned films' volume is larger than #241 said:** 728 discs had a spec page on
+       3 Oct, not 530, so up to about 1,450 requests at 150 a night, about ten nights.
+

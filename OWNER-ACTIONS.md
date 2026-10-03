@@ -29,16 +29,18 @@ conversation still maps onto this file.*
   seconds. **Yours: 28**, whether `cron-scrape` gets a fixed outbound address, the only option
   left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. T8b
   starts after V9 merges, at your word on 3 Oct (`DECISIONS.md` #243); 38 comes last.
-- **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
-  shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **26 is done:** you ran
-  the trial and picked neither, so V7 is shelved. **V8 is live (2 Oct):** an eBay find's
-  "usually" averages eBay with the shops, like for like (`DECISIONS.md` #239, kept at your
-  word on 2 Oct), and sold listings are a tap away. **Next, on your Mac:** 20b's second half,
-  then V9, with one line: "Read and follow `docs/next-mac-session.md` on `main`." No network
-  step is needed there. Also yours: the two-phone movie night check for V3 (16b).
+- **Group V** (`docs/phase-batches.md`, your 30 Sep snags): V1, V3, V4, V5, V6 and V8 are
+  live and V7 is shelved. **V9 is live (3 Oct, `d1c3bf7`):** Wanted items and film pages show
+  "Reviews: Blu-ray.com · AVForums" as links, with Blu-ray.com's scores once read, and Home
+  has a "Best reviewed" row. AVForums is links only, as you chose; its scores need its
+  owner's written permission, if you ever want to ask (M2N Limited, via its contact page).
+  The first nightly read of Blu-ray.com's reviews is 4 Oct, 02:00 UTC. **Next: T8b's plan,
+  for your go.** Also yours: the two-phone movie night check for V3 (16b).
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
+- **Optional:** AVForums links for owned films too: one Brave search per owned film, about
+  1,450 once, roughly £5–6 beyond the free credit (V9, `DECISIONS.md` #241). Say if you want it.
 - **Optional:** 8 the calendar subscription; 10 Vercel preview deploys.
 
 ---
