@@ -149,8 +149,11 @@ async def _owned(db: AsyncSession, movie: Movie, formats: list[str], spec_page: 
     await db.flush()
 
 
-async def _reviews(db: AsyncSession, movie: Movie) -> dict[str, FilmReview]:
-    rows = (await db.execute(select(FilmReview).where(FilmReview.movie_id == movie.id))).scalars()
+async def _reviews(db: AsyncSession, film: Movie | uuid.UUID) -> dict[str, FilmReview]:
+    """A film's review rows by site and format. Pass the id after a batch that may roll
+    back: a rollback expires every loaded object, and reading one in an async session fails."""
+    movie_id = film if isinstance(film, uuid.UUID) else film.id
+    rows = (await db.execute(select(FilmReview).where(FilmReview.movie_id == movie_id))).scalars()
     return {f"{row.site}:{row.format_code}": row for row in rows}
 
 
@@ -266,7 +269,9 @@ class TestTheNightlyBatch:
         state = await db.get(SpecsIntegrationState, 1)
         assert state is not None
         state.halted = True
+        # Batch 23's CHECK: a halt names its reason and its time.
         state.halted_reason = "Blu-ray.com answered 403"
+        state.halted_at_utc = NOW
         movie = await _film(db)
         await _owned(db, movie, ["4k_uhd"], UK_4K)
         site = Site()
@@ -336,11 +341,13 @@ class TestTheNightlyBatch:
 
     async def test_a_failed_search_leaves_the_want_to_try_again(self, db: AsyncSession) -> None:
         movie = await _film(db)
+        movie_id = movie.id
         await _want(db, movie, "4k_uhd")
 
         run = await _nightly(db, FakeBrave(fail=True), Site())
 
-        assert await _reviews(db, movie) == {}
+        # Brave's failure rolled the session back, so the film is read by id.
+        assert await _reviews(db, movie_id) == {}
         assert run.status == "stopped"
         assert run.last_error == "Dog Soldiers: Brave search failed (HTTP 402)"
         assert run.searches == 1, "the failed request was billed and counted"
