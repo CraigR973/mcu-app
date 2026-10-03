@@ -59,7 +59,7 @@ export function ReviewLinks({ reviews, className }: { reviews: FilmReview[]; cla
                 </>
               ) : null}
               {review.description ? (
-                <span className="block line-clamp-2">{review.description}</span>
+                <span className="line-clamp-2">{review.description}</span>
               ) : null}
               {review.note ? <span className="block italic">{review.note}</span> : null}
             </li>
