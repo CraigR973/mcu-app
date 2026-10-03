@@ -23,15 +23,12 @@ conversation still maps onto this file.*
   You → Disc specs (20).
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
   numbers, then **Save deals**.
-- **Group U** (`docs/phase-batches.md`): **20b's first half is live (1 Oct, `548160f`)** at your
-  "2) yes": a `429` no longer counts towards switching a shop off, and each refusal records what
-  the shop sent back. **2 Oct: no shop switched off, and every refusal asked for 60 seconds**
-  (a rate limit, not a block). The second half (honour that wait) and 22c follow a second
-  night's evidence; your go comes after it. 101 Films and Powerhouse keep the 2 failures counted on 30 Sep and
-  1 Oct under the old rule; a night with a price clears them. 21 starts once 3 wants have
-  prices from two shops on two days; on 1 Oct only 2 had, and the third needs a Shopify shop
-  to answer. Bad Lieutenant and Dog Soldiers (4K) were added to Wanted for it on 30 Sep, and
-  you can remove them afterwards. T8b waits on 18; 38 comes last.
+- **Group U** (`docs/phase-batches.md`): **20b is done.** Its first half (1 Oct, `548160f`) stopped
+  refusals switching shops off; its second half (2 Oct, `abc17d6`) waits the minute a shop asks
+  before retrying. **3 Oct: the wait got 2 of 27 refused requests through**, no better than two
+  seconds. **Yours: 28**, whether `cron-scrape` gets a fixed outbound address, the only option
+  left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. T8b
+  waits on 18; 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
   shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **26 is done:** you ran
   the trial and picked neither, so V7 is shelved. **V8 is live (2 Oct):** an eBay find's
@@ -1233,6 +1230,27 @@ Railway's `config plan`.
    It checks and records the setup, runs the checks that waited for the database (V5's plans,
    the 1 Oct shop check, your trial's report if you have run it), then asks your decisions
    and carries on with what you approve.
+
+### 28. A fixed outbound address for the nightly shop check? — 20b, your call *(new 3 Oct)*
+
+**What happened.** Since 30 Sep the three Shopify shops (Second Sight, 101 Films, Powerhouse)
+refuse the app with `429 Too Many Requests` from Cloudflare, asking it to wait 60 seconds, and
+they refuse even the night's first request after a day of silence. On 3 Oct the app waited the
+full minute before each retry (20b's second half): **2 of 27 got through.** So whatever fills
+the limit is not this app's own pace, and most likely it is other traffic leaving Railway from
+the same shared address.
+
+**The option left: give `cron-scrape` a fixed outbound address** of its own, a Railway
+setting. It is a hosting change, so no agent makes it. It is not proved to cure the refusals,
+and Railway's plan and price for it should be checked first. It is reversible.
+
+**Or leave it.** Zavvi and Arrow keep answering; the Shopify shops price a want now and then.
+22c (every page of a sale) waits on this, since a sale's further pages would meet the same
+limit.
+
+Say "try a fixed address" (a session then prepares the change for your word) or "leave it".
+
+---
 
 ### 22. Rotate the Neon database password — recommended, your call
 

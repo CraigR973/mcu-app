@@ -2,25 +2,25 @@
 
 ## Now
 
-**2 Oct 2026, 03:40 UTC: Craig's "1) neither 2) yes" is carried out, and the session's plan
-(`docs/next-cloud-session.md`) is done.** Each item verified in production:
-- **20b, first half** ([#19](https://github.com/CraigR973/mcu-app/pull/19), `548160f`): a `429`
-  never counts towards auto-disable; a shop that only refused is `blocked`; each refusal
-  records what the shop sent back (#238). **Its first night, 2 Oct:** no shop switched off
-  (101 Films and Powerhouse got prices again); every refusal said `retry-after 60`, Cloudflare,
-  "Too many requests": a rate limit asking for a minute, still refusing each Shopify shop's
-  first request of the night ([#21](https://github.com/CraigR973/mcu-app/pull/21)).
-- **V7 shelved** (#237): the trial found no film with a bid price.
-- **V8** ([#22](https://github.com/CraigR973/mcu-app/pull/22), `37e7c0a`): an eBay find's
-  "usually" averages eBay's asking price with the shops' recent like-for-like prices and says
-  so on the card; eBay's sold listings are linked from the card and the film page (#239).
+**3 Oct 2026, 09:00 UTC: 20b is done and read back; V9 is being built on Craig's Mac**
+(`docs/next-mac-session.md`, run in the order Craig chose at 23:28 UTC on 2 Oct: "20b now,
+merge by 02:45", #240).
+- **20b, second half** ([#25](https://github.com/CraigR973/mcu-app/pull/25), `abc17d6`, live
+  2 Oct 23:51 UTC with migration 045): a refused request waits for the shop's `Retry-After`
+  (up to 90 s) before its one retry, and `scrape_runs.refusals` says whether the retry got
+  through. **Its first night, 3 Oct: 2 of 27 got through after a minute** (2 Oct's 2-second
+  retry: 4 of 29), every refusal still `429`, `retry-after 60`, Cloudflare, from each Shopify
+  shop's first request; the run took 28 minutes. No shop was switched off.
+- **So the one option left is Craig's:** a fixed outbound address for `cron-scrape`, a hosting
+  change, not proved to cure it (`OWNER-ACTIONS.md` 28). 22c waits on it.
+- **V9, in progress** (`feat/v9-reviews`): the capture is done (#241). AVForums forbids
+  automated access, so it is links only, at Craig's word; Blu-ray.com keeps a review on one
+  edition's page, so owned and wanted films follow the page's link to it ("Yes, follow the
+  link"). Tables, parser, Brave matching and the nightly batch are written; API, web, tests
+  and the browser check are next.
 
-**Next, on Craig's Mac, at his word (2 Oct):** `docs/next-mac-session.md`: the shop checks
-since 2 Oct read back, 20b's second half (honour the 60-second `Retry-After` before the one
-retry), then V9 (the Mac reaches blu-ray.com and avforums.com). He kept V8's like-for-like
-rule (#239). 22c follows 20b's second half; 21 starts itself once a third want has two
-shops' prices on two days (2 of 3 on 2 Oct). **Craig's:** starting that session; T8b needs
-item 18; 38 is last. 101 Films and Powerhouse are back to 0 failures.
+**Craig's:** 28 (the outbound address); 22 (Neon password), 18 (eBay sign-in, for T8b), 16b
+(the two-phone movie night), and the two queues. 21 starts itself; 38 is last.
 
 **1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
 #230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
@@ -549,6 +549,25 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-03 (20b's second half read back, and V9's capture)** — The 3 Oct shop check ran
+  under 20b's second half (`abc17d6`), 03:03–03:31 UTC: 27 refused requests waited the 60
+  seconds asked and 2 got through (Powerhouse's Romper Stomper, Second Sight's Bad Lieutenant);
+  25 were refused again (101 Films 9 of 9, Powerhouse 8, Second Sight 8). Every refusal `429`,
+  `retry-after 60`, Cloudflare, "Too many requests", no `cf-mitigated`, from each Shopify shop's
+  first request. A minute's wait does no better than two seconds did (4 of 29 on 2 Oct), so the
+  remaining option, a fixed outbound address, is Craig's (`OWNER-ACTIONS.md` 28). V9's capture:
+  AVForums' terms (§3.6) and `robots.txt` forbid automated access and it challenges the app's
+  client, so links only (Craig's word); Blu-ray.com's review lives on one edition's page, and
+  owned films follow the spec page's link to it (Craig's word, #241).
+
+- **2026-10-02 (20b, second half, [#25](https://github.com/CraigR973/mcu-app/pull/25), `abc17d6`)** —
+  At Craig's "20b now, merge by 02:45" (#240), from one night's evidence: a refused request
+  waits for `Retry-After` (bounded at 90 s) before its one retry, the sale-page check too;
+  `scrape_runs.refusals` (migration 045) records each refusal's wait and whether the retry got
+  through; the nightly run holds no transaction through a wait; "Run now" keeps 2 s. Gate and
+  CI green first time (1,750 API tests, warnings unchanged at 178; web 464, shared 123);
+  production reported the merge SHA at 23:51 UTC with `db: ok`, at migration 045.
 
 - **2026-10-02 (Craig's "yes keep", and the next Mac session)** — Craig kept V8's like-for-like
   rule for shop prices (#239) and asked for a prompt to do 20b and the Blu-ray.com/AVForums work
