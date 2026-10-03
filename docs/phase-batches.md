@@ -817,7 +817,31 @@ second category for the feed** if it wants one; it must not quietly reuse this o
 created it. Its acceptance ("after backdating test data") is fully provable in CI, unlike the
 other two.
 
-### Batch 20b — Shops that answer 429 🟡 — **first half shipped 2026-10-01 (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19))**
+### Batch 20b — Shops that answer 429 🟡 — **shipped: first half 2026-10-01 (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19)), second half 2026-10-02 (`abc17d6`, [#25](https://github.com/CraigR973/mcu-app/pull/25)); read back 3 Oct: a minute's wait does not get past the limit**
+**As shipped (second half), live 2 Oct 23:51 UTC with migration 045:** a refused request waits for the shop's
+`Retry-After` (up to 90 s, never less than the usual 2 s; a missing, unreadable or longer value
+keeps 2 s and says so) before its one retry; the sale-page check follows the same rule;
+`scrape_runs.refusals` records each refusal's ask, wait and whether the retry got through, and
+the job's summary counts them; the nightly run commits before each request and checks a pooled
+connection before reuse; "Run now" keeps 2 s. Local gate and CI green first time (1,750 API
+tests, warnings unchanged at 178; web 464, shared 123).
+
+**The first night under the second half, 3 Oct 03:03–03:31 UTC (read back the same morning;
+the second half's last criterion).** No shop switched off. 40 asked, 6 priced, 25 refused.
+**27 refused requests waited the 60 seconds asked; 2 got through** (Powerhouse's Romper
+Stomper, Second Sight's Bad Lieutenant) **and 25 were refused again**: 101 Films 9 of 9,
+Powerhouse 8 of 9, Second Sight 8 of 9. On 2 Oct the 2-second retry got 4 of 29 through, so
+waiting is no better. Every one of the 52 refused requests said `retry-after 60; server
+cloudflare; title "Too many requests"`, none `cf-mitigated`. Each Shopify shop refused its first
+request (Powerhouse 03:03:23, 101 Films 03:12:36, Second Sight 03:22:26), 101 Films after nine
+minutes in which the app asked it nothing. The run took 28 minutes, against 2.
+- **So the limit is not this app's to wait out: most refusals survive a minute.** The one option
+  left is a fixed outbound address for `cron-scrape`, a Railway setting and so a hosting
+  change: Craig's call (`OWNER-ACTIONS.md` 28). Whether a fixed address cures it is not proved.
+- **22c waits on that call:** a sale's further pages at Second Sight would meet the same limit.
+- 101 Films and Second Sight are `blocked` (Second Sight's count still 1); Powerhouse priced one
+  want and is `success`. Batch 21 is unchanged.
+
 **As shipped (first half):** the fetcher raises a refusal for a `429`, carrying `Retry-After`,
 `cf-mitigated`, `server` and the page's title; the runner logs each refused request
 (`scrape_refused`), keeps refusals out of the auto-disable count, and records a shop that only
@@ -2345,7 +2369,7 @@ every gate below and moves 38 to the very end.
 | 2 | ~~U3 — three small calls: the assistant button, `/debug`, the brand assets~~ | **picks given 26 Sep; shipped** `e116ef2` |
 | 3 | ~~U4 — re-price the collection on its own~~ | **shipped 28 Sep** `3974733`, fortnightly (#222, #223); applied the same evening |
 | 3b | ~~22b — retailer sale pages that work (Zavvi, Second Sight, a "Check sale pages" button)~~ | **shipped 30 Sep** `eb51568` (#224–#226); the live check and save are Craig's, `OWNER-ACTIONS.md` 1e |
-| 3c | 20b — shops that answer 429 | **written 30 Sep at Craig's word; first half shipped 1 Oct (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19))**, at his "2) yes": a `429` no longer counts towards auto-disable, and each refusal records what the shop sent. The second half (pacing) and 22c wait for two nights of that evidence (#238). Criteria under Batch 20b |
+| 3c | ~~20b — shops that answer 429~~ | **shipped:** first half 1 Oct (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19)), at his "2) yes": a `429` no longer counts towards auto-disable, and each refusal records what the shop sent; second half 2 Oct (`abc17d6`, [#25](https://github.com/CraigR973/mcu-app/pull/25)), from one night's evidence at his word (#240): a refusal waits for `Retry-After` before its retry. **Read back 3 Oct: 2 of 27 got through after a minute; the remaining option, a fixed outbound address, is Craig's** (`OWNER-ACTIONS.md` 28). Criteria under Batch 20b |
 | 3d | 22c — every page of a sale | **written 30 Sep at Craig's word**; builds at his go, after 20b. Criteria under Batch 22 |
 | 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against 3. **Craig chose to add wants (30 Sep):** Bad Lieutenant and Dog Soldiers, both 4K, added that evening (#227). Starts once 3 wants have prices from two shops on two days or more, 2 Oct at the earliest. **1 Oct: 2 of 3**; the third needs a Shopify shop, refusing since 30 Sep (20b) |
 | 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18 |
@@ -2532,7 +2556,7 @@ batches keep their gates unchanged.
 | 1 | V1 top bar, tints, back arrows, Loans → V3 movie night → V4 Craig's house → V5 Highlights | **Go given 30 Sep** for the overnight run, with V6 after it (#230); the production host allowed first (`OWNER-ACTIONS.md` 25) | top tier · high (from V4) | top tier · High |
 | 2 | ~~V6 bid trial~~ → **Craig ran it and picked neither (1 Oct, #237)** → ~~V7 value from bids~~ (shelved) → ~~V8 Deals "usual" price~~ (shipped 2 Oct, `37e7c0a`) | **Done** | top tier · xhigh (from V6, V7) | top tier · Extra High |
 | 3 | V9 reviews: links, lines and scores | None to start; Craig's steps inside | top tier · max | top tier · Max |
-| 4 | 20b shops that answer 429 (first half shipped 1 Oct, `548160f`) → 20b's second half → 22c every page of a sale | The second half and 22c wait for two nights of the refusals' evidence (Group U, #238) | top tier · high | top tier · High |
+| 4 | ~~20b shops that answer 429~~ (first half `548160f`, 1 Oct) → ~~20b's second half~~ (`abc17d6`, 2 Oct) → 22c every page of a sale | **20b done; 22c waits:** the 3 Oct read-back showed a minute's wait gets 2 of 27 past the limit, so 22c waits on Craig's call on a fixed outbound address (`OWNER-ACTIONS.md` 28) | top tier · high | top tier · High |
 | — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days, 2 Oct at the earliest (Group U); 2 of 3 on 1 Oct, the third waits on 20b's shops | mid tier · medium | mid tier · Medium |
 | 5 | T8b Connect eBay | `OWNER-ACTIONS.md` 18 (Group U) | top tier · max | top tier · Max |
 | 6 | 38 the end-to-end suite | Last, after every V batch | mid tier · high | mid tier · High |
@@ -2968,7 +2992,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | 41 · solo | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | The refresh's second silent failure mode, found by running 39's dry run for real (`DECISIONS.md` #198). Solo, and it must land before any `--replace-items`. 🟡 by size, `xhigh` by blast radius — 401 films and 587 watch rows were one command away from coming loose |
 | — | 42 · solo | **Opus 5 · high** | **GPT-5.6 Sol · High** | Precision fix to 41's guard (`DECISIONS.md` #199). Solo and small. 🟢 — but it protects the one thing standing in front of the 1,857-row replacement, and a guard that cries wolf is worse than none |
 | **T** | ~~T1~~ → ~~jobs fix~~ → ~~**checkpoint: go**~~ **given 2026-09-23** → ~~T2~~ → ~~T3~~ → ~~T4~~ → ~~T5~~ → ~~T6~~ → ~~**checkpoint: search API account**~~ → ~~T7~~ → ~~T9~~ → ~~T10~~ → ~~T8a~~ → **checkpoint: eBay OAuth set-up + encryption key** → T8b | **Opus 5 · max** | **GPT-5.6 Sol · Max** | The 2026-09-23 owner snags. **Approved 2026-09-23**; T1 (a fix, `aa112bd`), T2–T7 and **T9 (`4d16723`, 2026-09-25)** shipped. **Craig split T8 on 2026-09-26 and added T10 (#216)**, and said go the same day. **T10 (`db75229`) and T8a (`e2142b7`) shipped on 2026-09-26**; T8b follows the eBay checkpoint. Ordered by dependency: T4 needs T2's search and T3's top bar; T6 and T8 share the eBay client. `max` is derived from T8b |
-| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → 20b (first half `548160f`, 1 Oct; the second half after two nights of evidence, #238) → 22c (after 20b) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
+| **U** | ~~U1~~ → ~~U2~~ → ~~U3~~ → ~~U4~~ → ~~22b~~ → ~~20b~~ (first half `548160f`, 1 Oct; second half `abc17d6`, 2 Oct, read back 3 Oct) → 22c (waits on `OWNER-ACTIONS.md` 28) → 21 (go given 28 Sep; from 2 Oct at the earliest) → T8b (after `OWNER-ACTIONS.md` 18) → 38 | **Opus 5 · xhigh** | **GPT-5.6 Sol · Extra High** | **Proposed 2026-09-26, regrouped at Craig's word the same day. He said go on U1 → U2 the same day, U2's column included; U3 onwards wait on their gates. U1 (`cb1111f`) and U2 (`52fcced`) shipped 2026-09-26, and U3 (`e116ef2`) the same evening at his three picks. U4 (`3974733`) shipped and was applied on 28 Sep. 22b (`eb51568`), added at Craig's word on 28 Sep, shipped on 30 Sep.** Everything left after Group T, in "What is left — Group U, planned 26 Sep" above. U1 and U2 share the Blu-ray.com pages; U3 carries three small calls, the brand assets included (a merge Craig chose); U4 and T8b can share one Railway apply. `xhigh` is derived from U1; T8b keeps its own `max` |
 | **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
