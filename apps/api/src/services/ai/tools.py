@@ -283,6 +283,10 @@ async def execute_tool(
                     user,
                     db,
                     tmdb,
+                    # A task list nobody runs, as the calendar's above: the assistant's
+                    # answer should not wait on Brave, and the nightly batch searches for
+                    # the film's reviews anyway (Batch V9).
+                    BackgroundTasks(),
                 )
             return _truncate(created.model_dump())
 

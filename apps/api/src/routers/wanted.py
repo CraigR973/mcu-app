@@ -19,7 +19,7 @@ from decimal import Decimal
 from typing import Annotated, cast
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,7 @@ from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
+from src.models.reviews import FilmReview
 from src.models.wanted import (
     DEFAULT_RETAILERS,
     RETAILERS_TABLE,
@@ -51,6 +52,8 @@ from src.schemas.wanted import (
 )
 from src.services.audit import record_action
 from src.services.movie_metadata import credit_rows, movie_metadata_values
+from src.services.reviews.batch import search_for_want_in_background
+from src.services.reviews.read import for_want, review_response, reviews_by_movie
 
 router = APIRouter(prefix="/api/v1", tags=["wanted", "retailers"])
 
@@ -76,7 +79,9 @@ async def _owned_movie_ids(db: AsyncSession, movie_ids: list[uuid.UUID]) -> set[
     return set(rows.scalars().all())
 
 
-def _wanted_response(item: WantedItem, movie: Movie, *, owned: bool) -> WantedItemResponse:
+def _wanted_response(
+    item: WantedItem, movie: Movie, *, owned: bool, reviews: list[FilmReview] | None = None
+) -> WantedItemResponse:
     return WantedItemResponse(
         id=item.id,
         movieId=item.movie_id,
@@ -93,6 +98,7 @@ def _wanted_response(item: WantedItem, movie: Movie, *, owned: bool) -> WantedIt
         notes=item.notes,
         ownedAlready=owned,
         addedAt=item.added_at,
+        reviews=[review_response(row) for row in for_want(reviews or [], item.preferred_format)],
     )
 
 
@@ -116,7 +122,13 @@ async def list_wanted(
         )
     ).all()
     owned = await _owned_movie_ids(db, [item.movie_id for item, _ in rows])
-    items = [_wanted_response(item, movie, owned=item.movie_id in owned) for item, movie in rows]
+    reviews = await reviews_by_movie(db, [item.movie_id for item, _ in rows])
+    items = [
+        _wanted_response(
+            item, movie, owned=item.movie_id in owned, reviews=reviews.get(item.movie_id, [])
+        )
+        for item, movie in rows
+    ]
     return WantedListResponse(
         items=items,
         total=len(items),
@@ -183,9 +195,17 @@ async def _movie_for_wanted(
 
 @router.post("/wanted", response_model=WantedItemResponse, status_code=status.HTTP_201_CREATED)
 async def add_wanted(
-    payload: WantedCreateRequest, user: AdminUser, db: Database, tmdb: TmdbClient
+    payload: WantedCreateRequest,
+    user: AdminUser,
+    db: Database,
+    tmdb: TmdbClient,
+    background_tasks: BackgroundTasks,
 ) -> WantedItemResponse:
-    """§5.1's acceptance: "adding to wanted list from detail page ... works"."""
+    """§5.1's acceptance: "adding to wanted list from detail page ... works".
+
+    Batch V9: once the response has gone, Brave is searched for the film's reviews on
+    Blu-ray.com and AVForums, so the links are there when the list is next opened.
+    """
     if (payload.movieId is None) == (payload.tmdbId is None):
         # Both or neither. A `model_validator` would be the tidier home for this, and
         # `STATUS.md` gotcha 20 is why it is not a `field_validator`: one does not run for
@@ -229,7 +249,9 @@ async def add_wanted(
 
     await db.refresh(item)
     owned = await _owned_movie_ids(db, [movie.id])
-    return _wanted_response(item, movie, owned=movie.id in owned)
+    background_tasks.add_task(search_for_want_in_background, movie.id)
+    reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
+    return _wanted_response(item, movie, owned=movie.id in owned, reviews=reviews)
 
 
 @router.put("/wanted/{item_id}", response_model=WantedItemResponse)
@@ -271,7 +293,8 @@ async def update_wanted(
     if movie is None:  # pragma: no cover - RESTRICT guarantees it
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
     owned = await _owned_movie_ids(db, [movie.id])
-    return _wanted_response(item, movie, owned=movie.id in owned)
+    reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
+    return _wanted_response(item, movie, owned=movie.id in owned, reviews=reviews)
 
 
 @router.delete("/wanted/{item_id}", status_code=status.HTTP_204_NO_CONTENT)

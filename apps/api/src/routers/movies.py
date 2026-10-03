@@ -44,6 +44,7 @@ from src.schemas.movies import (
 )
 from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import IdentifyError, identify_film
+from src.services.reviews.read import review_response, reviews_by_movie
 from src.services.valuation import valuations_for_movie, valued_format
 from src.tmdb import TMDBClient
 
@@ -408,6 +409,7 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
     ]
 
     editions = (await _editions_by_movie(db, [movie.id])).get(movie.id, [])
+    reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
     return MovieDetailResponse(
         **_movie_list_item(movie, copy_count, editions=editions).model_dump(),
         imdbId=movie.imdb_id,
@@ -419,6 +421,7 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
         trailerKey=movie.trailer_key,
         letterboxdSlug=movie.letterboxd_slug,
         mediaType=movie.media_type,
+        reviews=[review_response(row) for row in reviews],
     )
 
 
