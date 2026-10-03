@@ -106,6 +106,14 @@ async def _clear_overrides() -> AsyncIterator[None]:
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(autouse=True)
+def _routes_read_the_capture_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    # ITEM is a real listing, and it ended at 09:06 UTC on 3 Oct 2026. Routes reading the
+    # wall clock saw it as ended from then on, and two tests failed on every branch. The
+    # routes read NOW instead, the capture's time, as every pass here already does.
+    monkeypatch.setattr("src.routers.ebay_watch.utcnow", lambda: NOW)
+
+
 async def _person(db: AsyncSession, role: UserRole) -> Profile:
     person = Profile(
         id=uuid.uuid4(),
