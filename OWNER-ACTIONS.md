@@ -13,9 +13,9 @@ conversation still maps onto this file.*
 
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
-- **Accounts, at a computer (about 20 minutes):** 22 rotate the Neon password; 18 eBay
-  sign-in settings and an encryption key, which unblocks T8b; 9 revoke the dead April GitHub
-  token.
+- **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub
+  token. ~~18 eBay sign-in settings and an encryption key~~ **done 3 Oct**, so T8b is
+  unblocked.
 - **A phone session (about 15 minutes):** 16b Mark turns notifications on, then a movie night
   on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
   Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?".
@@ -28,7 +28,7 @@ conversation still maps onto this file.*
   before retrying. **3 Oct: the wait got 2 of 27 refused requests through**, no better than two
   seconds. **Yours: 28**, whether `cron-scrape` gets a fixed outbound address, the only option
   left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. T8b
-  waits on 18; 38 comes last.
+  starts after V9 merges, at your word on 3 Oct (`DECISIONS.md` #243); 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): the overnight run (item 25)
   shipped V1, V3, V4, V5 and V6, the last live at 00:39 UTC on 1 Oct. **26 is done:** you ran
   the trial and picked neither, so V7 is shelved. **V8 is live (2 Oct):** an eBay find's
@@ -1047,13 +1047,19 @@ Two of them look like the app matched the wrong film, not the wrong page: **Band
 is recorded as 2019 and **Bad Neighbours** as 2026. Fix the film on its page first (Identify),
 then pick the page.
 
-### 18. eBay sign-in settings and an encryption key — for T8b, Connect eBay *(values fixed 30 Sep)*
+### 18. ~~eBay sign-in settings and an encryption key~~ — **done 3 Oct**, for T8b, Connect eBay
+
+> **Done 3 Oct.** Craig added the sign-in page in eBay's developer portal and both variables
+> on `api`, then deployed. They were checked by name and shape only, with no value printed:
+> `EBAY_RUNAME` is a 40-character name, not a URL, and `EBAY_TOKEN_KEY` decodes to 32 bytes.
+> Production stayed healthy on `fa18bfd`, with `db: ok` and `ebay: configured`. **The
+> config-apply warning below holds until T8b ships**, and T8b starts after V9 merges (#243).
 
 > **26 Sep: T8 is split (`DECISIONS.md` #216).** Only T8b, "Connect eBay" for Mark's
 > watch and selling lists, waits for this. **30 Sep: the values below are fixed** (#227), so
 > this can be done before T8b is built; T8b uses exactly these.
 
-- [ ] **In eBay's developer portal, add the sign-in page (the RuName).** Signed in at
+- [x] **In eBay's developer portal, add the sign-in page (the RuName).** Signed in at
       developer.ebay.com: **Application Keysets** → the **Production** keyset → **User
       Tokens** → **Get a Token from eBay via Your Application** → **Add eBay Redirect URL**,
       and choose **OAuth** rather than Auth'n'Auth. Enter exactly:
@@ -1065,7 +1071,7 @@ then pick the page.
       Save, then copy the **RuName** eBay shows for it (a name like
       `Your_Name-YourName-TheRea-abcdefgh`, not a URL). The labels may differ slightly from
       these; the four values are what matter.
-- [ ] **In Railway, two variables on the `api` service** (Variables → New Variable):
+- [x] **In Railway, two variables on the `api` service** (Variables → New Variable):
       - `EBAY_RUNAME`: the RuName you copied.
       - `EBAY_TOKEN_KEY`: what `openssl rand -base64 32` prints in Terminal on your Mac.
         Paste it here and nowhere else.
@@ -1249,6 +1255,10 @@ and Railway's plan and price for it should be checked first. It is reversible.
 limit.
 
 Say "try a fixed address" (a session then prepares the change for your word) or "leave it".
+
+**If it goes through a Railway config apply before T8b ships,** that change must also declare
+`EBAY_RUNAME` and `EBAY_TOKEN_KEY` with `preserve()`. Both have been set in the console since
+3 Oct (item 18) and are not declared until T8b, so an apply without them deletes them (#124).
 
 ---
 
