@@ -2,7 +2,8 @@
 
 Three short rows in one request: films on the shelf rated 4½ or 5 stars and whose ratings
 those are, the most rewatched films across both diaries, and the most valuable discs at
-their stored value. "Best reviewed" is V9's to add, once review scores exist.
+their stored value; and, since V9, the best reviewed: owned films by Blu-ray.com's
+review score for a format on the shelf.
 
 Unlike Batch 37's memories this is not caller-scoped: it is the collection's highlights,
 shared by both people, and each rating and viewing says whose it is.
@@ -22,10 +23,12 @@ from src.auth import CurrentUser
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.profile import Profile
+from src.models.reviews import FilmReview
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
 from src.routers.movies import Database
 from src.schemas.highlights import (
+    BestReviewedFilmResponse,
     HighlightRatingResponse,
     HighlightsResponse,
     PersonViewingsResponse,
@@ -212,11 +215,64 @@ async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
     ]
 
 
+async def _best_reviewed(db: AsyncSession) -> list[BestReviewedFilmResponse]:
+    """Owned films by their best Blu-ray.com review score, of a format a copy is on (V9).
+
+    One entry a film; a tie between its formats goes to 4K. AVForums has no scores (#241).
+    """
+    on_the_shelf = exists().where(
+        CollectionItem.movie_id == Movie.id,
+        owned_copy(),
+        CollectionItem.formats.has_key(FilmReview.format_code),
+    )
+    rows = (
+        await db.execute(
+            select(
+                Movie.id,
+                Movie.title,
+                Movie.year,
+                Movie.poster_path,
+                FilmReview.overall,
+                FilmReview.out_of,
+                FilmReview.format_code,
+            )
+            .join(FilmReview, FilmReview.movie_id == Movie.id)
+            .where(
+                Movie.deleted_at.is_(None),
+                FilmReview.site == "bluray_com",
+                FilmReview.status == "scored",
+                on_the_shelf,
+            )
+            .order_by(
+                FilmReview.overall.desc(),
+                (FilmReview.format_code == "4k_uhd").desc(),
+                Movie.title,
+            )
+            .limit(ROW_LENGTH * 3)
+        )
+    ).all()
+    films: dict[uuid.UUID, BestReviewedFilmResponse] = {}
+    for movie_id, title, year, poster_path, overall, out_of, format_code in rows:
+        if movie_id in films or overall is None or out_of is None:
+            continue
+        films[movie_id] = BestReviewedFilmResponse(
+            movieId=movie_id,
+            title=title,
+            year=year,
+            posterPath=poster_path,
+            overall=float(overall),
+            outOf=int(out_of),
+            formatCode=format_code,
+        )
+    return list(films.values())[:ROW_LENGTH]
+
+
 @router.get("/highlights", response_model=HighlightsResponse)
 async def highlights(_user: CurrentUser, db: Database) -> HighlightsResponse:
-    """Home's Highlights, three rows in one request. A row with nothing in it comes back empty."""
+    """Home's Highlights, four rows in one request. A row with nothing in it comes back empty."""
     return HighlightsResponse(
         topRated=await _top_rated(db),
         mostRewatched=await _most_rewatched(db),
         mostValuable=await _most_valuable(db),
+        bestReviewed=await _best_reviewed(db),
     )

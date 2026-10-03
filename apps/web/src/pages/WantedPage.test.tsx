@@ -199,3 +199,41 @@ describe('WantedPage', () => {
     })
   })
 })
+
+describe('WantedPage — reviews (Batch V9)', () => {
+  it("shows a want's reviews as links under it", async () => {
+    const reviewed = {
+      ...EXISTING,
+      reviews: [
+        {
+          site: 'bluray_com',
+          siteName: 'Blu-ray.com',
+          url: 'https://www.blu-ray.com/movies/The-Fall-Guy-4K-Blu-ray/350000/',
+          formatCode: '4k_uhd',
+          title: 'The Fall Guy 4K Blu-ray',
+          description: 'The Fall Guy 4K Blu-ray Release Date July 30, 2024.',
+          scores: [{ heading: 'Overall', score: 4.5 }],
+          overall: 4.5,
+          outOf: 5,
+          scoresReadAt: '2026-10-03T02:20:00Z',
+          note: null,
+        },
+      ],
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input).includes('/wanted')) {
+          return new Response(JSON.stringify({ items: [reviewed], total: 1, activeCount: 1 }))
+        }
+        return new Response(JSON.stringify({ items: [], total: 0, activeCount: 0 }))
+      }),
+    )
+    renderPage()
+
+    const link = await screen.findByRole('link', { name: 'Blu-ray.com (4K UHD)' })
+    expect(link.getAttribute('href')).toBe('https://www.blu-ray.com/movies/The-Fall-Guy-4K-Blu-ray/350000/')
+    expect(screen.getByText('4.5/5')).not.toBeNull()
+  })
+})
+

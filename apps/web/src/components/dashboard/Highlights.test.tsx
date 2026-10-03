@@ -41,9 +41,16 @@ const FULL: Data = {
       copies: 2,
     },
   ],
+  // V5's rows alone; V9's fourth is tested below.
+  bestReviewed: [],
 }
 
-const EMPTY: Data = { topRated: { items: [], ratedBy: [], notRatedBy: ['Craig', 'Mark'] }, mostRewatched: [], mostValuable: [] }
+const EMPTY: Data = {
+  topRated: { items: [], ratedBy: [], notRatedBy: ['Craig', 'Mark'] },
+  mostRewatched: [],
+  mostValuable: [],
+  bestReviewed: [],
+}
 
 function renderPanel(data: Data | Error) {
   if (data instanceof Error) fetchHighlightsMock.mockRejectedValue(data)
@@ -131,3 +138,42 @@ describe('Highlights on Home — Batch V5', () => {
     expect(screen.getByText('The highlights service is down.')).not.toBeNull()
   })
 })
+
+describe('Highlights on Home — Batch V9, the best reviewed', () => {
+  const REVIEWED: Data = {
+    ...FULL,
+    bestReviewed: [
+      { ...ALIEN, overall: 4.5, outOf: 5, formatCode: '4k_uhd' },
+      { ...HEAT, overall: 4, outOf: 5, formatCode: 'blu_ray' },
+    ],
+  }
+
+  it('ranks owned films by Blu-ray.com\'s overall score, each opening its page', async () => {
+    renderPanel(REVIEWED)
+    const row = within(await screen.findByRole('region', { name: 'Best reviewed' }))
+
+    expect(row.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+      `/movies/${ALIEN.movieId}`,
+      `/movies/${HEAT.movieId}`,
+    ])
+    expect(row.getByText("Blu-ray.com's overall score for the disc, on a format on the shelf.")).not.toBeNull()
+    expect(row.getByText('4.5/5 · 4K UHD')).not.toBeNull()
+    expect(row.getByText('4.0/5 · Blu-ray')).not.toBeNull()
+  })
+
+  it('is the fourth row, after the most valuable discs', async () => {
+    renderPanel(REVIEWED)
+    await screen.findByRole('region', { name: 'Best reviewed' })
+
+    const titles = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
+    expect(titles).toEqual(['Top rated', 'Most rewatched', 'Most valuable discs', 'Best reviewed'])
+  })
+
+  it('is left out until a review has been read', async () => {
+    renderPanel(FULL)
+    await screen.findByRole('region', { name: 'Top rated' })
+
+    expect(screen.queryByRole('region', { name: 'Best reviewed' })).toBeNull()
+  })
+})
+

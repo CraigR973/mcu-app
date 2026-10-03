@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.schemas.reviews import FilmReviewResponse
 from src.schemas.valuation import CopyValuationResponse
 from src.schemas.wire import UtcDatetime
 
@@ -103,6 +104,8 @@ class MovieDetailResponse(MovieListItemResponse):
     trailerKey: str | None = None
     letterboxdSlug: str | None = None
     mediaType: str | None = None
+    #: Batch V9: every review found for the film, Blu-ray.com's first.
+    reviews: list[FilmReviewResponse] = []
 
 
 class CollectionCopyResponse(BaseModel):

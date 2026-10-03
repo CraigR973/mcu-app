@@ -114,3 +114,20 @@ def _no_background_spec_batch(monkeypatch: pytest.MonkeyPatch) -> None:
         del run_id
 
     monkeypatch.setattr(specs_router, "continue_run_in_background", _skip)
+
+
+@pytest.fixture(autouse=True)
+def _no_background_review_search(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Batch V9: adding a want searches Brave for its reviews after the response.
+
+    It would search Brave from a test and commit outside the rolled-back transaction. Tests
+    about the search replace this no-op with a recorder.
+    """
+    import uuid
+
+    import src.routers.wanted as wanted_router
+
+    async def _skip(movie_id: uuid.UUID) -> None:
+        del movie_id
+
+    monkeypatch.setattr(wanted_router, "search_for_want_in_background", _skip)

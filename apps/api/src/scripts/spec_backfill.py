@@ -9,6 +9,11 @@ fetches pages Craig has chosen. It searches up to 150 discs, then fetches up to 
 pages five seconds apart, and **stops everything on a 403 or 429 from Blu-ray.com**, which
 only an owner decision undoes.
 
+**Then the reviews batch** (Batch V9, `DECISIONS.md` #241): Brave searches for wanted
+films' reviews on Blu-ray.com and AVForums, then up to 150 Blu-ray.com pages read for their
+review scores, owned films' from their spec pages. It runs in this process, after the spec
+batch, so no two requests to Blu-ray.com are ever less than five seconds apart.
+
 It **exits non-zero** when a batch stopped on errors or the integration is halted, so a job
 that quietly did nothing does not look like a quiet night.
 """
@@ -21,7 +26,9 @@ import sys
 import httpx
 
 from src.database import AsyncSessionLocal
+from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecRun
+from src.services.reviews import batch as reviews
 from src.services.specs.backfill import Coverage, StartOutcome, coverage, start_run, work_run
 from src.services.specs.search import BraveSearch
 
@@ -63,6 +70,22 @@ def report(outcome: StartOutcome, run: SpecRun | None, counts: Coverage) -> int:
     return 1 if failed else 0
 
 
+def report_reviews(run: ReviewRun | None) -> int:
+    """Print what the reviews batch did; return its exit code (V9)."""
+    if run is None:
+        print("reviews: another batch is running; nothing was done.")
+        return 0
+    print(f"review batch {run.status}")
+    print(f"  Brave searches: {run.searches}")
+    print(f"  reviews found:  {run.found}")
+    print(f"  pages read:     {run.fetched} of {reviews.FETCHES_PER_RUN}")
+    print(f"    scored:       {run.scored}")
+    print(f"    no review:    {run.no_review}")
+    if run.last_error:
+        print(f"  note: {run.last_error}")
+    return 1 if run.status in ("stopped", "halted") else 0
+
+
 async def main() -> int:
     async with BraveSearch() as brave, httpx.AsyncClient() as client, AsyncSessionLocal() as db:
         outcome = await start_run(db, trigger="job", search_configured=brave.configured)
@@ -72,7 +95,15 @@ async def main() -> int:
             else None
         )
         counts = await coverage(db)
-    return report(outcome, run, counts)
+        code = report(outcome, run, counts)
+        # Its own Brave client, so its run counts only its own searches.
+        async with BraveSearch() as review_brave:
+            review_run = await reviews.start_run(db, trigger="job")
+            if review_run is not None:
+                review_run = await reviews.work_run(
+                    db, review_run, searcher=review_brave, client=client
+                )
+    return max(code, report_reviews(review_run))
 
 
 if __name__ == "__main__":

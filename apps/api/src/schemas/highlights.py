@@ -69,9 +69,24 @@ class ValuableDiscResponse(BaseModel):
     copies: int = Field(ge=1)
 
 
+class BestReviewedFilmResponse(BaseModel):
+    """An owned film by its Blu-ray.com review's Overall score, on a format on the shelf (V9)."""
+
+    movieId: uuid.UUID
+    title: str
+    year: int | None = None
+    posterPath: str | None = None
+    overall: float = Field(gt=0, le=10)
+    outOf: int
+    #: The format the review is of: one this film is owned on.
+    formatCode: str | None = None
+
+
 class HighlightsResponse(BaseModel):
     """Everything the panel shows, in one request. An empty row is left for the page to hide."""
 
     topRated: TopRatedRowResponse
     mostRewatched: list[RewatchedFilmResponse]
     mostValuable: list[ValuableDiscResponse]
+    #: Batch V9. Empty until Blu-ray.com's reviews are read.
+    bestReviewed: list[BestReviewedFilmResponse] = []

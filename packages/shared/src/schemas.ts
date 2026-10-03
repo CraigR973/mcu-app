@@ -107,6 +107,33 @@ export const moviePageSchema = z.object({
   pages: z.number().int().nonnegative(),
 })
 
+// ---------------------------------------------------------------------------
+// A film's reviews (Batch V9, #228, #241): Blu-ray.com's and AVForums', found with Brave
+// ---------------------------------------------------------------------------
+
+/** One score under the site's own heading: "Movie", "Video 4K", "Overall". */
+export const reviewScoreSchema = z.object({
+  heading: z.string().min(1),
+  score: z.number().positive().max(10),
+})
+
+/** A site's review of a film: a link, Brave's one-line description, and Blu-ray.com's
+ *  scores once read. AVForums' never are: it forbids apps reading its pages (#241), and
+ *  `note` says so. */
+export const filmReviewSchema = z.object({
+  site: z.enum(['bluray_com', 'avforums']),
+  siteName: z.string().min(1),
+  url: z.string().url(),
+  formatCode: z.string().nullable(),
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  scores: z.array(reviewScoreSchema),
+  overall: z.number().positive().nullable(),
+  outOf: z.number().int().positive().nullable(),
+  scoresReadAt: z.string().nullable(),
+  note: z.string().nullable(),
+})
+
 export const movieDetailSchema = movieListItemSchema.extend({
   imdbId: z.string().nullable(),
   overview: z.string().nullable(),
@@ -117,6 +144,8 @@ export const movieDetailSchema = movieListItemSchema.extend({
   trailerKey: z.string().nullable(),
   letterboxdSlug: z.string().nullable(),
   mediaType: z.string().nullable(),
+  /** Batch V9. Defaulted, so the page parses an API without it yet. */
+  reviews: z.array(filmReviewSchema).default([]),
 })
 
 /** Batch T6 — a disc's stored eBay asking price: its film, on the format it is valued as.
@@ -332,10 +361,23 @@ export const valuableDiscSchema = z.object({
   copies: z.number().int().positive(),
 })
 
+/** An owned film by its Blu-ray.com review's Overall, on a format on the shelf (Batch V9). */
+export const bestReviewedFilmSchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string().min(1),
+  year: z.number().int().nullable(),
+  posterPath: z.string().nullable(),
+  overall: z.number().positive().max(10),
+  outOf: z.number().int().positive(),
+  formatCode: z.string().nullable(),
+})
+
 export const highlightsSchema = z.object({
   topRated: topRatedRowSchema,
   mostRewatched: z.array(rewatchedFilmSchema),
   mostValuable: z.array(valuableDiscSchema),
+  /** Batch V9. Defaulted, so the panel parses an API without it yet. */
+  bestReviewed: z.array(bestReviewedFilmSchema).default([]),
 })
 
 export type UserRole = z.infer<typeof userRoleSchema>
@@ -343,6 +385,9 @@ export type Highlights = z.infer<typeof highlightsSchema>
 export type TopRatedFilm = z.infer<typeof topRatedFilmSchema>
 export type RewatchedFilm = z.infer<typeof rewatchedFilmSchema>
 export type ValuableDisc = z.infer<typeof valuableDiscSchema>
+export type BestReviewedFilm = z.infer<typeof bestReviewedFilmSchema>
+export type FilmReview = z.infer<typeof filmReviewSchema>
+export type ReviewScore = z.infer<typeof reviewScoreSchema>
 export type TokenPair = z.infer<typeof tokenPairSchema>
 export type ProfileResponse = z.infer<typeof profileResponseSchema>
 export type Genre = z.infer<typeof genreSchema>
@@ -1075,6 +1120,9 @@ export const wantedItemSchema = z.object({
   /** Wanting a film you own is not an error — a DVD-to-4K upgrade is exactly that. */
   ownedAlready: z.boolean(),
   addedAt: z.string(),
+  /** Batch V9: one review per site, of the want's format where found. Defaulted, so the
+   *  page parses an API without it yet. */
+  reviews: z.array(filmReviewSchema).default([]),
 })
 
 export const wantedListSchema = z.object({

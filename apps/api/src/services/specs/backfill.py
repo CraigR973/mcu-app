@@ -48,6 +48,7 @@ from src.matching.engine import searchable_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.identify import IdentifyRun
 from src.models.movie import Movie
+from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
 from src.services.specs.bluray_com import (
     OutOfBounds,
@@ -292,8 +293,8 @@ def month_start(now: datetime) -> datetime:
 
 
 async def searches_this_month(db: AsyncSession, *, now: datetime) -> int:
-    """Brave searches billed this calendar month, by these batches and by Batch T9's
-    identification runs, which share the ceiling."""
+    """Brave searches billed this calendar month, by these batches, by Batch T9's
+    identification runs and by V9's review searches, which all share the ceiling."""
     spent = await db.scalar(
         select(func.coalesce(func.sum(SpecRun.searches), 0)).where(
             SpecRun.started_utc >= month_start(now)
@@ -304,7 +305,12 @@ async def searches_this_month(db: AsyncSession, *, now: datetime) -> int:
             IdentifyRun.started_utc >= month_start(now)
         )
     )
-    return int(spent or 0) + int(identifying or 0)
+    reviewing = await db.scalar(
+        select(func.coalesce(func.sum(ReviewRun.searches), 0)).where(
+            ReviewRun.started_utc >= month_start(now)
+        )
+    )
+    return int(spent or 0) + int(identifying or 0) + int(reviewing or 0)
 
 
 async def accepted_waiting(db: AsyncSession) -> int:

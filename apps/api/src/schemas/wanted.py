@@ -8,6 +8,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from src.schemas.reviews import FilmReviewResponse
 from src.schemas.wire import UtcDatetime
 
 
@@ -113,6 +114,8 @@ class WantedItemResponse(BaseModel):
     #: surfaced rather than refused.
     ownedAlready: bool
     addedAt: UtcDatetime
+    #: Batch V9: one review per site, Blu-ray.com's first, of the want's format where found.
+    reviews: list[FilmReviewResponse] = []
 
 
 class WantedListResponse(BaseModel):

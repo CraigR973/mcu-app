@@ -57,6 +57,8 @@ import {
   trashRowSchema,
   trashTableSchema,
   wantedItemSchema,
+  filmReviewSchema,
+  reviewScoreSchema,
   watchLogPageSchema,
   navSectionsSchema,
   watchHistoryStatusSchema,
@@ -205,6 +207,8 @@ describe('Batch 5 collection schemas', () => {
       trailerKey: null,
       letterboxdSlug: null,
       mediaType: 'film',
+      // Batch V9: the API sends the film's reviews with its detail.
+      reviews: [],
     }
     expect(movieDetailSchema.parse(detail)).toEqual(detail)
 
@@ -1879,6 +1883,8 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
           copies: 1,
         },
       ],
+      // Batch V9's fourth row, which the API now always sends.
+      bestReviewed: [{ ...film, overall: 4, outOf: 5, formatCode: '4k_uhd' }],
     }
     expect(highlightsSchema.parse(highlights)).toEqual(highlights)
   })
@@ -2008,5 +2014,91 @@ describe('Batch V8 — where an eBay find\'s "usually" comes from', () => {
     expect(() =>
       dealSchema.parse({ ...find, usualSources: [{ source: 'eBay', price: 16 }] }),
     ).toThrow()
+  })
+})
+
+describe('Batch V9 — a film\'s reviews', () => {
+  const blurayCom = {
+    site: 'bluray_com' as const,
+    siteName: 'Blu-ray.com',
+    url: 'https://www.blu-ray.com/movies/Dog-Soldiers-4K-Blu-ray/314666/',
+    formatCode: '4k_uhd',
+    title: 'Dog Soldiers 4K Blu-ray (4K Ultra HD + Blu-ray)',
+    description: 'Dog Soldiers 4K Blu-ray Release Date August 23, 2022.',
+    scores: [
+      { heading: 'Movie', score: 3.5 },
+      { heading: 'Overall', score: 4 },
+    ],
+    overall: 4,
+    outOf: 5,
+    scoresReadAt: '2026-10-03T02:20:00Z',
+    note: null,
+  }
+  const avforums = {
+    site: 'avforums' as const,
+    siteName: 'AVForums',
+    url: 'https://www.avforums.com/reviews/dog-soldiers-4k-blu-ray-review-dolby-vision.20024/',
+    formatCode: '4k_uhd',
+    title: 'Dog Soldiers 4K Blu-ray Review | AVForums',
+    description: 'The 4K image, with Dolby Vision, is stunning.',
+    scores: [],
+    overall: null,
+    outOf: null,
+    scoresReadAt: null,
+    note: 'AVForums does not allow apps to read its pages, so its scores are not shown.',
+  }
+
+  it('reads a scored Blu-ray.com review and an unscored AVForums link', () => {
+    expect(filmReviewSchema.parse(blurayCom)).toEqual(blurayCom)
+    expect(filmReviewSchema.parse(avforums)).toEqual(avforums)
+  })
+
+  it('refuses a site it does not know and a score out of range', () => {
+    expect(() => filmReviewSchema.parse({ ...avforums, site: 'imdb' })).toThrow()
+    expect(() => reviewScoreSchema.parse({ heading: 'Overall', score: 11 })).toThrow()
+    expect(() => reviewScoreSchema.parse({ heading: 'Overall', score: 0 })).toThrow()
+  })
+
+  it('reads an API without reviews yet as none, on every shape that carries them', () => {
+    const wanted = wantedItemSchema.parse({
+      id: '3f2504e0-4f89-41d3-9a0c-0305e82c3401',
+      movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3402',
+      movieTitle: 'Dog Soldiers',
+      year: 2002,
+      posterPath: null,
+      preferredFormat: '4k_uhd',
+      preferredEdition: null,
+      maxPrice: null,
+      currency: 'GBP',
+      isActive: true,
+      notes: null,
+      ownedAlready: false,
+      addedAt: '2026-09-30T12:00:00Z',
+    })
+    expect(wanted.reviews).toEqual([])
+    expect(
+      highlightsSchema.parse({ topRated: { items: [], ratedBy: [], notRatedBy: [] }, mostRewatched: [], mostValuable: [] })
+        .bestReviewed,
+    ).toEqual([])
+  })
+
+  it('keeps a want\'s reviews in the order the API sends them', () => {
+    const wanted = wantedItemSchema.parse({
+      id: '3f2504e0-4f89-41d3-9a0c-0305e82c3401',
+      movieId: '3f2504e0-4f89-41d3-9a0c-0305e82c3402',
+      movieTitle: 'Dog Soldiers',
+      year: 2002,
+      posterPath: null,
+      preferredFormat: '4k_uhd',
+      preferredEdition: null,
+      maxPrice: null,
+      currency: 'GBP',
+      isActive: true,
+      notes: null,
+      ownedAlready: false,
+      addedAt: '2026-09-30T12:00:00Z',
+      reviews: [blurayCom, avforums],
+    })
+    expect(wanted.reviews.map((review) => review.siteName)).toEqual(['Blu-ray.com', 'AVForums'])
   })
 })
