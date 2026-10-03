@@ -4908,3 +4908,28 @@ contemporaneous.
      - **What it gains:** a day. The 3 Oct check is read back the same morning.
      - **No merge between 02:45 and 03:45 UTC**, as on 1 Oct (#230): a deploy while the check
        runs could cut it short.
+
+### 2026-10-03 — Group V, batch V9: what the capture found, and Craig's two answers
+
+241. **AVForums is links only; owned films' Blu-ray.com scores come from the reviewed edition
+     their spec page links to.** Craig's word, 3 Oct about 00:25 UTC, after V9's capture
+     (`docs/phase-batches.md`, V9).
+
+     - **AVForums: "Links only".** Its terms (§3.6) forbid access "through automated or
+       programmatic means (such as through a content scraper) without prior permission", its
+       `robots.txt` says the same, and it shows the app's client a Cloudflare challenge.
+       Reading a score would mean evading that challenge, which #110 rules out whatever a risk
+       acceptance says, so #228's widening never reached AVForums. The app shows the link and
+       Brave's line, says why there are no scores, and sends AVForums nothing. Asked "so there
+       is no way for us to get this data?", Craig was told the legitimate routes (written
+       permission from M2N Limited, or typing a score in himself) and chose links only.
+     - **Owned films: "Yes, follow the link".** Blu-ray.com reviews one edition of a film per
+       format, usually the US one, and other editions' pages link to it. The page found for a
+       disc's specs is the UK release, so it rarely carries the review. Each owned film and
+       format costs up to two requests (its spec page, then the reviewed edition it links to),
+       about 1,060 in all at 150 a night, five seconds apart, no searches: #110's risk at full
+       volume, as accepted for the spec backfill (#202). It is what gives Home's "Best
+       reviewed" row the shelf to rank.
+     - **Wanted films follow the same link**, from the page Brave proposes, because Brave
+       cannot tell which edition's page carries the review. Finding still sends neither site
+       anything; the follow happens when the scores are read.

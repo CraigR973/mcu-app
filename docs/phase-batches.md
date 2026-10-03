@@ -2861,6 +2861,29 @@ half): the Mac reaches blu-ray.com and avforums.com, so the network step below i
 tier · max / top tier · Max. Sitting 3, alone. It opens a new scraping surface under #110 as
 widened by #228, which is why it runs at Group F's effort.
 
+**Before any code, 3 Oct 00:00–00:20 UTC, on the Mac (#241).** Two Brave searches for Dog
+Soldiers (4K) and two Blu-ray.com pages, one request each, saved as fixtures; AVForums'
+`robots.txt` (one request) and its terms (read in a browser after the app's client got a
+`403`).
+- **AVForums forbids automated access.** Its terms, §3.6: "You may not access these Services
+  through automated or programmatic means (such as through a content scraper) without prior
+  permission from us"; its `robots.txt` says the same of scraping; and it answers the app's
+  client with Cloudflare's "Just a moment…" challenge, an access control #110 forbids
+  evading. **Links only, at Craig's word ("Links only"), and the app says why.** Brave
+  finds its reviews directly: "Dog Soldiers 4K Blu-ray Review | AVForums" at
+  `/reviews/<slug>.<id>/`, its line a quote from the review.
+- **Blu-ray.com's review lives on one edition's page, and Brave cannot say which.** Brave
+  returns release pages, every one with the same boilerplate line. The UK 4K release's page
+  (315545) has no review: every score `0.0`, and "No review exists for this particular
+  release" above links to the editions that have one. The US 4K page (314666), Brave's first
+  hit, carries it: "Blu-ray review" scores Movie 3.5, Video 4K 4.0, Video 2K 4.5, Audio 3.5,
+  Extras 5.0, Overall 4.0, out of 5, beside a members' rating that is never read.
+- **So "for owned films … if the capture shows the review lives there" is false for the
+  page found for specs**, which is the UK release. At Craig's word ("Yes, follow the link"),
+  owned films follow that page's link to the reviewed edition of the same format: up to two
+  paced requests per film and format, about 1,060 in all, 150 a night, no searches. Wanted
+  films do the same from the page Brave proposes.
+
 **Acceptance:**
 - **Craig's steps come first, inside the batch (#229).** The session asks Craig to allow
   blu-ray.com and avforums.com in the environment's network settings (the 30 Sep session could
