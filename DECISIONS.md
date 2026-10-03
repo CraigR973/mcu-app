@@ -4908,3 +4908,27 @@ contemporaneous.
      - **What it gains:** a day. The 3 Oct check is read back the same morning.
      - **No merge between 02:45 and 03:45 UTC**, as on 1 Oct (#230): a deploy while the check
        runs could cut it short.
+
+### 2026-10-03 — an expired eBay recording, and T8b's place
+
+*Numbered after #241, which V9's branch holds.*
+
+242. **A test that sends a recorded payload with a real expiry through a route pins that
+     route's clock to the capture's time.** The listing behind the eBay alert tests, captured
+     on 26 Sep, ended at 09:06 UTC on 3 Oct. The routes read the wall clock, so from then on
+     two tests failed on every branch, `main` included (its last green run was at 08:55 UTC).
+     Fixed in `0770bbc` ([#27](https://github.com/CraigR973/mcu-app/pull/27)): an autouse
+     fixture in that file makes the eBay routes read `NOW`, as its passes already did.
+
+     - **Rejected: moving the recording's end date.** It makes the capture unfaithful and
+       only moves the failure to a later date.
+     - **The whole file, not only the two tests**, so the next test added there cannot meet
+       the same expiry.
+     - **Nothing else is close to expiring.** A scan of every other dated test and recorded
+       payload on 3 Oct found only explicit clocks and parsing checks.
+
+243. **T8b starts after V9 merges.** Craig's word on 3 Oct, once `OWNER-ACTIONS.md` 18 was
+     done. Both batches add a database migration. Run side by side, whichever merged second
+     would renumber its migration and redo its checks, in the batch that holds Mark's eBay
+     token. T8b's plan still goes to Craig for his go before it starts: it changes auth, adds
+     a table and takes on eBay's sign-in contract.

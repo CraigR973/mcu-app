@@ -2,6 +2,17 @@
 
 ## Now
 
+**3 Oct 2026, 13:20 UTC: item 18 is done, so T8b is unblocked; it starts after V9 merges
+(#243). A test time bomb is fixed (#242).**
+- **Item 18:** Craig added eBay's sign-in page and set `EBAY_RUNAME` and `EBAY_TOKEN_KEY` on
+  `api`. Both were checked by name and shape, with no value printed. **No Railway config apply
+  until T8b declares both**, or the apply deletes them (#124). Item 28 now says so too.
+- **The time bomb:** the recorded listing behind two eBay alert tests ended at 09:06 UTC on
+  3 Oct, which failed them on every branch, `main` included. Fixed in `0770bbc`
+  ([#27](https://github.com/CraigR973/mcu-app/pull/27), live 13:18 UTC): those routes read the
+  capture's time. V9's branch picks it up by merging `main`. The other two failures on V9's
+  branch, in the reviews batch tests, are V9's own.
+
 **3 Oct 2026, 09:00 UTC: 20b is done and read back; V9 is being built on Craig's Mac**
 (`docs/next-mac-session.md`, run in the order Craig chose at 23:28 UTC on 2 Oct: "20b now,
 merge by 02:45", #240).
@@ -19,8 +30,8 @@ merge by 02:45", #240).
   link"). Tables, parser, Brave matching and the nightly batch are written; API, web, tests
   and the browser check are next.
 
-**Craig's:** 28 (the outbound address); 22 (Neon password), 18 (eBay sign-in, for T8b), 16b
-(the two-phone movie night), and the two queues. 21 starts itself; 38 is last.
+**Craig's:** 28 (the outbound address); 22 (Neon password), 16b (the two-phone movie night),
+and the two queues. 21 starts itself; T8b follows V9 (#243); 38 is last.
 
 **1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
 #230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
@@ -546,10 +557,23 @@ it renders — and report what was observed rather than what passed.
    Nothing live used it, because this app has run on Neon since #17. **Restore it only into
    an empty database or a scratch schema**, because its table names are the same as this
    app's.
+31. **A recorded payload can carry a real expiry, and a route that reads the wall clock turns
+   it into a time bomb.** The eBay listing behind the alert tests ended at 09:06 UTC on 3 Oct
+   and failed two tests on every branch (#242). A test that sends a capture through a route
+   pins that route's clock to the capture's time; a service call takes `now=` explicitly. When
+   a test fails on a branch that did not touch its area, check whether `main` fails the same
+   way before blaming the branch.
 
 
 ## Log
 
+- **2026-10-03 (item 18 done; an expired eBay recording)** — Craig set eBay's sign-in page and
+  both variables for T8b (`OWNER-ACTIONS.md` 18). They were checked by name and shape, with no
+  value printed, and production stayed healthy. The recorded listing behind two eBay alert
+  tests ended at 09:06 UTC and failed them everywhere. `0770bbc`
+  ([#27](https://github.com/CraigR973/mcu-app/pull/27)) pins those routes' clock to the
+  capture's time (#242). CI: 1,750 passed, none skipped. Live 13:18 UTC with `db: ok`. Craig
+  chose to start T8b after V9 (#243).
 - **2026-10-03 (20b's second half read back, and V9's capture)** — The 3 Oct shop check ran
   under 20b's second half (`abc17d6`), 03:03–03:31 UTC: 27 refused requests waited the 60
   seconds asked and 2 got through (Powerhouse's Romper Stomper, Second Sight's Bad Lieutenant);
