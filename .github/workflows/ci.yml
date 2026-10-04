@@ -121,6 +121,64 @@ jobs:
       - name: Downgrade to base
         run: alembic downgrade base
 
+  # The image Railway deploys, built and booted the way production runs it. Until this job,
+  # CI never built the Dockerfile, so a broken image surfaced only at deploy time.
+  image:
+    name: Image — build · migrate · boot
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mcu_image
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build --tag mcu-api:ci .
+
+      - name: Import every cron job's module, as named in .railway/railway.ts
+        run: |
+          modules=$(grep -o 'python -m src\.scripts\.[a-z_]*' .railway/railway.ts | sed 's/^python -m //' | sort -u)
+          test -n "$modules"
+          for module in $modules; do
+            echo "import $module"
+            docker run --rm mcu-api:ci python -c "import $module"
+          done
+
+      - name: Boot it as production does, migrating first, until it is ready
+        run: |
+          docker run --detach --name api --network host \
+            --env ENVIRONMENT=production \
+            --env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mcu_image \
+            --env JWT_ACCESS_SECRET=ci-access-secret-with-at-least-32-characters \
+            --env JWT_REFRESH_SECRET=ci-refresh-secret-with-at-least-32-characters \
+            --env FRONTEND_ORIGIN=https://ci.example.invalid \
+            --env PORT=8000 \
+            mcu-api:ci
+          for second in $(seq 1 90); do
+            if curl --silent http://localhost:8000/api/v1/health/ready | grep -q '"db":"ok"'; then
+              echo "ready after ${second}s"
+              exit 0
+            fi
+            if [ "$(docker inspect --format '{{.State.Running}}' api)" != "true" ]; then
+              echo "the container stopped before it was ready"
+              break
+            fi
+            sleep 1
+          done
+          docker logs api
+          exit 1
+
   web:
     name: Web — lint · typecheck · test · build
     runs-on: ubuntu-latest

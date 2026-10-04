@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 import httpx
-import pytest
 
 from src.services.identify.matcher import Credit, Holder, Identifier, Proposal, person_credited
 from src.services.identify.plan import Disc, propose
@@ -41,8 +40,6 @@ from src.tmdb.models import (
     TvSearchResults,
 )
 from src.tmdb.models import Movie as TmdbMovie
-
-pytestmark = pytest.mark.asyncio
 
 
 @dataclass

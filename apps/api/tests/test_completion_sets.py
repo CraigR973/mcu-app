@@ -22,7 +22,6 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime
 
-import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -42,8 +41,6 @@ from src.services.completion import (
     refresh_sets,
 )
 from src.tmdb.models import PersonMovieCredit, PersonMovieCredits
-
-pytestmark = pytest.mark.asyncio
 
 ACTOR_HEADER = "x-test-actor"
 

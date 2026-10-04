@@ -13,7 +13,6 @@ from collections.abc import AsyncIterator
 from datetime import date, datetime
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
@@ -26,8 +25,6 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
-
-pytestmark = pytest.mark.asyncio
 
 
 @pytest_asyncio.fixture

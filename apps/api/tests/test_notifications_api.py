@@ -49,8 +49,6 @@ from src.services.notifications import (
 from src.services.reminders import SALE_LEAD_DAYS, run_reminders
 from src.services.sale_seasons import SALE_EVENT_TYPE, black_friday, seed_year
 
-pytestmark = pytest.mark.asyncio
-
 
 class RecordingSender:
     """A push service that records instead of sending.

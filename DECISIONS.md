@@ -5071,3 +5071,27 @@ contemporaneous.
      - **21 is not parked.** It still starts itself once a third want has two shops' prices on
        two days (2 of 3 on 4 Oct); the route that needs no hosting change is a want both Zavvi
        and Arrow sell, Craig's to add.
+
+### 2026-10-04 — Housekeeping: CI builds and boots the image, and the gate docs tell the truth
+
+248. **CI's sixth job builds the image Railway deploys and boots it as production runs it.**
+     Craig's word, 4 Oct: "yes do 1 -4 now", on a list that included it. Until now a broken
+     Dockerfile, a runtime dependency missing from `requirements.lock`, or a start command
+     that failed showed up only when Railway deployed (`AGENTS.md` said so). The job builds
+     from the Dockerfile, imports every cron job's module inside the image (the list is read
+     from `.railway/railway.ts`, so a new job is covered without editing CI), then runs the
+     image with `ENVIRONMENT=production` against a Postgres 17 service: the start command
+     migrates first, and the job waits up to 90 seconds for `/api/v1/health/ready` to say
+     `db: ok`, printing the container's log if it does not.
+
+     - **What it still does not prove:** production's variables (the boot uses CI's
+       throwaway values), the cron jobs running (they are imported, not run), and the web
+       bundle running in a browser (Batch 38's).
+     - **The gate docs no longer tell an agent to export the Mac's `DATABASE_URL`.**
+       `batch-verify.md` said to, "before trusting any migration change"; on Craig's Mac that
+       variable is production's. Tests run there with `env -u DATABASE_URL`, and migrations
+       are proved by CI.
+     - **Thirty-eight test modules lost a redundant `pytestmark = pytest.mark.asyncio`.**
+       `asyncio_mode = "auto"` already marks every async test, so the line only marked the
+       sync tests beside them, which drew 149 of the suite's 152 local warnings. Now there
+       are none, so a new warning is visible.

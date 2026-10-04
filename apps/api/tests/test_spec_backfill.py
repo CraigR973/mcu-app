@@ -53,8 +53,6 @@ from src.services.specs.backfill import (
 from src.services.specs.runner import get_state
 from src.services.specs.search import SearchHit
 
-pytestmark = pytest.mark.asyncio
-
 NOW = datetime(2026, 9, 24, 2, 0)
 FIXTURES = Path(__file__).parent / "fixtures"
 FIGHT_CLUB_PAGE = (FIXTURES / "bluray_com_release_page.html").read_text()

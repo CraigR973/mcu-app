@@ -11,7 +11,6 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -24,8 +23,6 @@ from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
-
-pytestmark = pytest.mark.asyncio
 
 
 @pytest_asyncio.fixture

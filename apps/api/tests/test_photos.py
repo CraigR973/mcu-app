@@ -128,9 +128,6 @@ class TestProcessing:
         assert at_sixty <= 60 * 1024
 
 
-pytestmark = pytest.mark.asyncio
-
-
 @pytest_asyncio.fixture
 async def db(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:
     session = AsyncSession(

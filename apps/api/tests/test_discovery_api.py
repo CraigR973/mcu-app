@@ -16,7 +16,6 @@ from collections.abc import AsyncIterator
 from datetime import datetime
 
 import httpx
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
@@ -36,8 +35,6 @@ from src.tmdb.models import (
     WatchProviderCountry,
     WatchProviders,
 )
-
-pytestmark = pytest.mark.asyncio
 
 
 def _provider(provider_id: int, name: str) -> WatchProvider:

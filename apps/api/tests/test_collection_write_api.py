@@ -43,8 +43,6 @@ from src.tmdb.models import (
     Movie as TmdbMovie,
 )
 
-pytestmark = pytest.mark.asyncio
-
 NEW_TMDB_ID = 920001
 
 

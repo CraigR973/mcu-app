@@ -36,8 +36,6 @@ from src.services.reviews import batch
 from src.services.specs.backfill import searches_this_month
 from src.services.specs.search import BraveError, SearchHit, hits_from_payload
 
-pytestmark = pytest.mark.asyncio
-
 FIXTURES = Path(__file__).parent / "fixtures"
 REVIEW_PAGE = (FIXTURES / "bluray_com_review_page_4k.html").read_text(encoding="utf-8")
 NO_REVIEW_PAGE = (FIXTURES / "bluray_com_release_page_no_review.html").read_text(encoding="utf-8")

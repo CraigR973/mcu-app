@@ -60,9 +60,6 @@ from src.services.scraping.runner import (
     search_url_for,
 )
 
-pytestmark = pytest.mark.asyncio
-
-
 # ---------------------------------------------------------------------------
 # Price parsing
 # ---------------------------------------------------------------------------

@@ -2,239 +2,51 @@
 
 ## Now
 
-**4 Oct 2026, 10:55 UTC: the fixed outbound address (`OWNER-ACTIONS.md` 28) is left for now,
-and 22c is parked with it**, at Craig's word (#247). Railway's static outbound addresses need
-its Pro plan (he is on Hobby) and may be shared with other customers, so the fix was never sure
-to work. The three Shopify shops stay mostly refused; Zavvi, Arrow and eBay still price the
-wants. 21 waits on a third want priced by two shops (2 of 3 on 4 Oct). **What is left for an
-agent is 38**, the end-to-end suite, at Craig's go.
+**4 Oct 2026: everything planned has shipped except four batches, and one of them is an
+agent's to start.** The sequence is Group V's table in `docs/phase-batches.md`.
 
-**4 Oct 2026, 10:28 UTC: T8b, Connect eBay, is live** ([#33](https://github.com/CraigR973/mcu-app/pull/33), `2995b26`, migration 047).
-Built at Craig's go of 4 Oct ("1) each person 2) go with recommended 3) recommended 4) build
-it", #245) and merged at his OK the same day, since it changes `.railway/railway.ts` (#246).
-Verified in production: the merge SHA, `db: ok`, migration 047 at head, the read-only role
-refused both new tables, and the live web build carrying `/privacy`, `/ebay` and eBay's two
-return pages. **Next: Craig connects his own eBay first, then Mark** (`OWNER-ACTIONS.md` 29).
-- **What it does:** Settings → eBay → Connect eBay sends a person to eBay's own sign-in, with
-  the fewest scopes, and eBay returns them to `/settings/ebay/connected`; the app swaps the
-  one-time code for two tokens, sealed with AES-256-GCM under a key derived from
-  `EBAY_TOKEN_KEY` and bound to that person. "Your eBay" (`/ebay`) reads their watch list,
-  saved searches and selling list from eBay when opened; a watched item or a saved search
-  becomes a T8a price alert. Disconnect deletes the tokens. A public `/privacy` page is the
-  one eBay's sign-in page links to.
-- **Proved:** local gate green with the database tests skipped (no Postgres on this Mac,
-  gotcha 15), and CI green with them: 1,832 API tests, the 10 new database tests among them,
-  warnings unchanged at 178. Browser check on a stub API at 375 and 1280 px, light
-  and dark: Settings' eBay tab, the return and declined pages, Your eBay with both alert
-  forms, the privacy page. The check and the code review around it found five faults, all
-  fixed: eBay thumbnails the production security policy would block, "Page not found" as two
-  pages' tab titles, a saved search unable to find a wanted film, and the eBay tab opening
-  scrolled out of sight.
-- **Not proved until a real sign-in:** which scope eBay's two list calls need. The token asks
-  for the base scope alone; if eBay refuses, Your eBay shows eBay's words and nothing else
-  breaks.
-- **`config plan` reads `0 to destroy`** with both variables declared. No apply is needed.
-- **This session broke the never-`cd` rule once:** autoenv printed `apps/api/.env`, with the
-  live Neon owner password, into the session's transcript. Nothing was sourced. Rotating it
-  is `OWNER-ACTIONS.md` 22, recommended since the same slip on 25 Sep.
+| Batch | State |
+|---|---|
+| 38, the end-to-end suite | at Craig's go; its "last" slot assumed 21 and 22c first |
+| 21, price history charts | starts itself once a third want has two shops' prices on two days (2 of 3 on 4 Oct, #247) |
+| 22c, every page of a sale | parked with `OWNER-ACTIONS.md` 28 (#247) |
+| 33 → 34, email | parked (`OWNER-ACTIONS.md` 7) |
 
-**3 Oct 2026, 22:47 UTC: V9 is live** ([#30](https://github.com/CraigR973/mcu-app/pull/30), `d1c3bf7`, migration 046), on Craig's Mac, after
-20b's second half (below). Verified in production: the merge SHA, `db: ok`, migration 046 at
-head, and the read-only role able to read both new tables.
-- **Reviews:** Wanted items and film pages show "Reviews: Blu-ray.com · AVForums" as links,
-  with Brave's line and, once read, Blu-ray.com's scores under its own headings; Home's
-  Highlights has "Best reviewed". AVForums is links only: its terms forbid automated access
-  (#241, Craig's word).
-- **First nightly run: 4 Oct, 02:00 UTC,** in `cron-specs` after the spec batch: Brave
-  searches for the 10 wants, a row for each owned film and format with a spec page (728 discs
-  have one), then up to 150 Blu-ray.com pages, five seconds apart, about ten nights in all
-  (#244). A `403` or `429` halts it and the spec backfill with it (#110). **Read back
-  4 Oct:** finished 02:16, no halt, 150 requests, 81 reviews scored, 651 owned rows to go.
-- **Next: T8b's plan, for Craig's go** (`docs/next-mac-session.md` section 5, #243): planned
-  in the chat, built only at his word.
+- **Latest batch: T8b, Connect eBay** ([#33](https://github.com/CraigR973/mcu-app/pull/33),
+  `2995b26`, 4 Oct). Each person connects their own eBay in Settings; Your eBay (`/ebay`)
+  reads their watch list, saved searches and selling list live, and a watched item or saved
+  search becomes a T8a price alert. **Unproved until Craig's first sign-in** (`OWNER-ACTIONS.md`
+  29): which scope eBay's two list calls need.
+- **The nightly jobs (UTC):** 02:00 `cron-specs`, the spec backfill and then V9's reviews
+  (about five more nights for owned films); 03:00 `cron-scrape`, the shop check (Zavvi and
+  Arrow answer; the three Shopify shops mostly refuse, left for now, #247); 08:00 reminders;
+  every two hours `cron-ebay`, T8a's alerts and deal scan; `cron-values`, fortnightly
+  re-pricing, due again from 24 Oct.
+- **The gate** is six CI jobs since #248, the image Railway deploys among them (`AGENTS.md`,
+  "What a green run currently proves"). Locally on the Mac: API 1,188 passed and 644 skipped
+  (no Postgres, gotcha 15) with no warnings, web 500, shared 131.
+- **Craig's open items** (`OWNER-ACTIONS.md`): 29 connect his own eBay, then Mark; 22 rotate
+  the Neon owner password (printed into two session transcripts, 25 Sep and 4 Oct); 16b the
+  two-phone movie night; the phone session (3, 1d, 1h, 1j, 1c); 1e check and save the sale
+  pages; the Identify films and Disc specs queues; "Correct match" on Dead Man's Shoes, which
+  is catalogued as the 1940 film.
 
+**Live numbers (4 Oct, read-only):**
+- **Collection:** 1,880 owned copies (1,457 physical discs, 422 downloads, 1 unlabelled);
+  1,888 films, 1,678 identified and 210 not.
+- **Specs:** 728 of 1,250 Blu-ray and 4K discs; 522 wait for Craig on Disc specs. **Reviews:**
+  81 scored on the first night, 651 owned films and formats to go.
+- **Wanted:** 10 active. **eBay price alerts:** none set. **Release calendar:** 217 rows.
 
-**3 Oct 2026, 13:20 UTC: item 18 is done, so T8b is unblocked; it starts after V9 merges
-(#243). A test time bomb is fixed (#242).**
-- **Item 18:** Craig added eBay's sign-in page and set `EBAY_RUNAME` and `EBAY_TOKEN_KEY` on
-  `api`. Both were checked by name and shape, with no value printed. **No Railway config apply
-  until T8b declares both**, or the apply deletes them (#124). Item 28 now says so too.
-- **The time bomb:** the recorded listing behind two eBay alert tests ended at 09:06 UTC on
-  3 Oct, which failed them on every branch, `main` included. Fixed in `0770bbc`
-  ([#27](https://github.com/CraigR973/mcu-app/pull/27), live 13:18 UTC): those routes read the
-  capture's time. V9's branch picks it up by merging `main`. The other two failures on V9's
-  branch, in the reviews batch tests, are V9's own.
-
-**3 Oct 2026, 09:00 UTC: 20b is done and read back; V9 is being built on Craig's Mac**
-(`docs/next-mac-session.md`, run in the order Craig chose at 23:28 UTC on 2 Oct: "20b now,
-merge by 02:45", #240).
-- **20b, second half** ([#25](https://github.com/CraigR973/mcu-app/pull/25), `abc17d6`, live
-  2 Oct 23:51 UTC with migration 045): a refused request waits for the shop's `Retry-After`
-  (up to 90 s) before its one retry, and `scrape_runs.refusals` says whether the retry got
-  through. **Its first night, 3 Oct: 2 of 27 got through after a minute** (2 Oct's 2-second
-  retry: 4 of 29), every refusal still `429`, `retry-after 60`, Cloudflare, from each Shopify
-  shop's first request; the run took 28 minutes. No shop was switched off.
-- **So the one option left is Craig's:** a fixed outbound address for `cron-scrape`, a hosting
-  change, not proved to cure it (`OWNER-ACTIONS.md` 28). 22c waits on it.
-- **V9, in progress** (`feat/v9-reviews`): the capture is done (#241). AVForums forbids
-  automated access, so it is links only, at Craig's word; Blu-ray.com keeps a review on one
-  edition's page, so owned and wanted films follow the page's link to it ("Yes, follow the
-  link"). Tables, parser, Brave matching and the nightly batch are written; API, web, tests
-  and the browser check are next.
-
-**Craig's:** 28 (the outbound address); 22 (Neon password), 16b (the two-phone movie night),
-and the two queues. 21 starts itself; T8b follows V9 (#243); 38 is last.
-
-**1 Oct 2026, 00:45 UTC: Group V's overnight run is finished (`docs/group-v-overnight.md`,
-#230). V1, V3, V4, V5 and V6 are live, each verified in production, and the run stopped as
-written: V7, V8, V9, 20b, 22c, 21, T8b and 38 were not started.** V1 (`13791c2`): the top bar
-and tab bar have their background, every tint is built, back arrows on every page below the
-tabs, Loans always listed. V3 (`0b29e58`): a movie night is one screen, the shortlist. V4
-(`f7a66f8`): "Craig's house" is a section. V5 (`f1b497c`): Highlights on Home. V6 (`153d45b`):
-an admin-only "Try bid prices" on Home that saves no prices.
-
-- **Craig's next steps, in order:**
-  1. ~~**Tap "Try bid prices" on Home**~~ (run 1 Oct, 14:14 UTC), **then say "blend" or
-     "bids only"** (`OWNER-ACTIONS.md` 26). That starts V7, then V8.
-  2. **The two-phone check of V3's movie night**, with Mark's notifications on (16b).
-  3. ~~**Allow blu-ray.com and avforums.com**~~ — not needed: V9 runs on the Mac
-     (`docs/next-mac-session.md`).
-  4. ~~**Your go on 20b**~~ (first half live 1 Oct); **your go on its second half and 22c**,
-     after a second night of the refusals' evidence.
-  5. ~~**The one-off cloud setup on your Mac** (`OWNER-ACTIONS.md` 27)~~ — done 1 Oct.
-- **Cloud sessions, 1 Oct (#236):** a startup hook now readies the gate in every cloud
-  session; `src.scripts.live_sql` reads the live database read-only over HTTPS once
-  `NEON_READONLY_URL` exists; the Railway CLI is installed for `config plan`. Both
-  credentials come from item 27; the session after it follows `docs/next-cloud-session.md`.
-- **The run, item by item** (every pull request merged with a merge commit; production's
-  `/api/v1/health` reported each batch's merge SHA and `/health/ready` said `db: ok`, and the
-  image runs `alembic upgrade head` before it serves, so 042 and 043 applied; local gate and
-  CI green first time on every pull request, so nothing was pushed twice):
-  - **Preflight, 30 Sep 22:20 UTC:** production reachable from the cloud session
-    (`OWNER-ACTIONS.md` 25, step 3) and `main` green at `8447dea`; local API suite 1,634
-    passed, none skipped.
-  - **V1:** [#6](https://github.com/CraigR973/mcu-app/pull/6) → `13791c2`, live 22:48 UTC;
-    close-out [#7](https://github.com/CraigR973/mcu-app/pull/7). Browser check at 375 and
-    1280 px, light and dark. Nothing left open. *On the way:* the new opacity test first
-    caught its own deliberate bad examples, and one `tsc` error in it.
-  - **V3:** [#8](https://github.com/CraigR973/mcu-app/pull/8) → `0b29e58`, live 23:13 UTC;
-    close-out [#9](https://github.com/CraigR973/mcu-app/pull/9). Two-person match on the rig at
-    375 and 1280 px. Three deck tests were removed with the deck, the one planned exception,
-    named in the ledger. **Open, Craig's:** the two-phone check (16b). *On the way:* a test
-    name with an apostrophe, a test that matched the title twice, one new pytest warning.
-  - **V4:** [#10](https://github.com/CraigR973/mcu-app/pull/10) → `f7a66f8`, live 23:38 UTC
-    with migration 042 applied; close-out [#11](https://github.com/CraigR973/mcu-app/pull/11).
-    Nothing left open; no disc is in Craig's house until Craig moves one. *On the way:* a curly
-    apostrophe written literally, two long lines, a test aimed at the wrong assistant tool, one
-    new pytest warning.
-  - **V5:** [#12](https://github.com/CraigR973/mcu-app/pull/12) → `f1b497c`, live 00:04 UTC;
-    close-out [#13](https://github.com/CraigR973/mcu-app/pull/13). Query plans read on a scratch
-    Postgres at production's counts (endpoint 22 ms, #234). **Open, for a session with the live
-    database (Craig's Mac):** the same plans on production's own rows. *On the way:* an edit
-    that matched two lines, two new lint warnings, one long line, the rig serving a stale
-    shared package.
-  - **V6:** [#14](https://github.com/CraigR973/mcu-app/pull/14) → `153d45b`, live 00:39 UTC
-    with migration 043 applied; close-out [#15](https://github.com/CraigR973/mcu-app/pull/15).
-    No live eBay request: tests and the 375 px rig check used saved eBay data (#235). **Open,
-    Craig's:** the run and the pick (26). *On the way:* a typo in the bid median line, an
-    import from the wrong module, three long lines, a share-out test that expected 45/45 and
-    got 46/44 (the share-out was made fairer), five tests that drew asyncio warnings, auction
-    end dates tied to the real clock, and one report line reworded after the browser check.
-  - **The 02:45–03:45 pause was not needed:** the run's last merge, this close-out, landed
-    before 01:00 UTC. The rig was stopped and its `apps/web/.env.local` deleted.
-- **Final API gate:** 1,683 tests passed, none skipped, warnings unchanged at 177; web 458,
-  shared 119; migrations 43 steps each way.
-- **`main` is green:** `urllib3` 2.8.0 ([#4](https://github.com/CraigR973/mcu-app/pull/4)),
-  then the plan ([#5](https://github.com/CraigR973/mcu-app/pull/5)), then V1 and its close-out
-  ([#6](https://github.com/CraigR973/mcu-app/pull/6), [#7](https://github.com/CraigR973/mcu-app/pull/7)),
-  then V3, V4, V5 and V6, each with its close-out
-  ([#8](https://github.com/CraigR973/mcu-app/pull/8) to [#15](https://github.com/CraigR973/mcu-app/pull/15)).
-- **22b is live (`eb51568`, #224–#226).** "Check sale pages" on /retailers runs the deals check
-  from a phone (a preview that saves nothing), then "Save deals": both taps are Craig's
-  (`OWNER-ACTIONS.md` 1e). Zavvi reads its "2 for £30 4K" listing, Craig's pick on 30 Sep (its
-  flash-deals page had become six discs, five owned); Second Sight the first page of its sale
-  collection. Three Batch 22 faults fixed on the way: the same-site guard failed every one of
-  Second Sight's and 101 Films' own listings; a card at a single price counted as a deal; the
-  film matcher missed titles with a shop's word or a remake's year. Production's retailer rows
-  carry the new configuration (applied 13:44 UTC; three values changed, none set by hand).
-- **What a check should show today** (from the captured pages against the real collection):
-  **5 deals from 2 shops, 7 already owned.** §5.9 wants ≥ 20 from ≥ 3, out of reach from the
-  first page of two shops; whether 2 shops can count, and whether to read more pages, are
-  Craig's calls.
-- **PyJWT 2.13.0 → 2.15.1 (`6a8197b`), on its own `fix/` branch first.** Ten advisories
-  published after 28 Sep turned the CI dependency audit red on every branch. The app's
-  exposure was low (HS256, no JWKS); production answers 401 to forged and malformed tokens.
-- **The 30 Sep 03:00 UTC shop check was mostly refused:** 21 of 33 checks answered `429` from
-  Second Sight, 101 Films and Powerhouse (all Shopify); the six nights before had none. All
-  five shops are still enabled. If it recurs, a sale-page check will say so on Second Sight's
-  line. Batch 21's session offered to look into it on a `fix/` branch (Craig's call).
-- **21 starts once 3 wants have prices from two shops on two days** (2 Oct at the earliest).
-  At Craig's word (#227), Bad Lieutenant and Dog Soldiers, both 4K, were added to Wanted on
-  30 Sep for it: each is a boutique label's release that Zavvi also sells, the only pattern
-  that has produced two shops' prices. 10 active wants now, so 1 Oct's check asks ~50.
-- **Two batches written at Craig's word, waiting for his go** (#227): **20b**, shops that
-  answer `429` (after the 1 Oct 03:00 check), then **22c**, every page of a sale.
-- **eBay sign-in values are fixed** (`OWNER-ACTIONS.md` 18, #227), so Craig can set them up
-  before T8b is built. No Railway config apply until T8b declares the two new variables.
-- **The nightly spec search is paused by Brave, not by the app:** the free monthly credit ran
-  out on 28 Sep (1,005 searches); it renews around 1 Oct, or Craig raises the limit.
-  **Disc specs:** 530 of 1,250 have specs; **385 wait for Craig** (`OWNER-ACTIONS.md` 20).
-- **Live since 26–28 Sep:** U4 `cron-values` (#223; first run with work 1 Nov), U3 (#221),
-  U1 and U2 (#219, #220), T8a (#218), T10 (#217), T9 (#215). 166 films wait on You → Identify
-  films (`OWNER-ACTIONS.md` 21). Valuations all current (26 Sep), due again from 24 Oct.
-- **Craig's open items:** "Try bid prices" and his pick (26), the Neon password exposed on
-  25 Sep (22), eBay sign-in settings and an encryption key (18), Mark turning notifications
-  back on and the two-phone movie night (16b), allowing blu-ray.com and avforums.com before
-  V9, the phone session, and the two queues.
-
-**Live numbers (26 Sep; specs and editions 28 Sep):**
-- **Collection:** 1,880 items (1,457 physical discs, 422 downloads and 1 unlabelled) and
-  1,887 films: 1,677 identified and 210 not (166 waiting for Craig, 35 set aside, 9 with no
-  disc).
-- **`release_calendar`:** 191 rows, 28 of them 4K or Blu-ray releases.
-- **Discs with Blu-ray.com specs:** 530; **with an edition:** 100 (28 Sep). **Disc valuations:** 1,454
-  films and formats checked, 1,300 priced and 154 not; medians 4K £29.12, Blu-ray £15.74, DVD
-  £5.95.
-- **eBay:** no alerts set yet; 3 eBay deals on the Deals page from the first pass. **Retailer
-  deals:** none saved yet; the first save is Craig's (1e).
+**The Now entries this block replaced** (1–4 Oct, with the 26 Sep numbers) are in git:
+`git show e23d716:STATUS.md`. The Log keeps a dated line for each.
 
 ## Next
 
-**For what comes next, read Group T in `docs/phase-batches.md`.** The list below is the 9 Sep overnight run, and all of it has shipped.
-
-**The overnight run of 2026-09-09 — eight batches, in this order.** The order is
-dependency-derived and must not be rearranged: 20 needs 11's push, 31 needs 30, 32 needs 31.
-
-| # | Batch | Closes fully? |
-|---|---|---|
-| ~~1~~ | ~~**11** Notifications + push (6.1, 6.2, 5.11)~~ | **shipped 2026-09-10** — 6.2 deferred, needs two real devices |
-| ~~2~~ | ~~**20** Price scraping + drop alerts (5.5, 5.6, 5.8)~~ | **shipped 2026-09-10** — cron is hosting; 5.6 needs a device |
-| ~~3~~ | ~~**30** AI assistant — client + caps (9.1, 9.7)~~ | **shipped 2026-09-10** — ⚠️ 9.1's live call is an owner action |
-| ~~4~~ | ~~**31** AI assistant — tools + chat (9.2, 9.3, 9.4)~~ | **shipped 2026-09-10** |
-| ~~5~~ | ~~**32** Voice input (9.5)~~ | **shipped 2026-09-10** — ❌ 9.5 still needs a human speaking |
-| ~~6~~ | ~~**35** Movie night (8.3, 8.4)~~ | **shipped 2026-09-10** — ⚠️ 8.4's push to a device is an owner action |
-| ~~7~~ | ~~**25** Photo uploads (3.10)~~ | **shipped 2026-09-10** |
-| ~~8~~ | ~~**23** Specs — scraper + display (3.7, 3.8, 3.9)~~ | **built 2026-09-10** — ❌ 3.7's live run is an owner action |
-
-**Every batch's criteria are in `docs/phase-batches.md`** under "Criteria recovered for the
-2026-09-09 overnight run", each with what the April spec no longer knows. Read that section
-rather than re-deriving from §16.
-
-*This sentence was wrong when it was written and is now true.* It claimed all eight were
-there; **only six were** — Batch 20's and Batch 35's were missing, and were recovered from
-`d94a6b8~1` on 2026-09-10 before either batch was built, as `DECISIONS.md` #54 requires.
-
-**Three hosting steps stop and wait for the owner**, per the close-out protocol:
-
-1. ~~`VITE_VAPID_PUBLIC_KEY` on Vercel~~ — **no longer needed.** Batch 11 serves the public
-   key from the API, derived from the private half (`DECISIONS.md` #114). What Batch 11 *does*
-   need is a daily cron calling `POST /api/v1/notifications/run-reminders`.
-2. **Two** Railway crons, in one visit — the nightly scrape and the reminder pass. `#60`
-   explains why an in-process scheduler is worse than nothing for either. **The endpoints
-   named here were not callable by a cron**; each job is now also a command, which is what
-   a Railway cron runs (`#119`). `OWNER-ACTIONS.md` carries the exact lines.
-3. ~~Nothing for Batch 35~~ — **correct, and now proved.** `LISTEN`/`NOTIFY` + SSE needed
-   no new service, credential or hosting step (`#113`). Batch 35 shipped without one.
+**The remaining sequence is Group V's table in `docs/phase-batches.md`**, summarised in the
+Now block above. **38 is the one batch an agent can start**, at Craig's go; read its criteria
+there first (Batch 38, "E2E suite"). The 9 Sep overnight run this section used to list has all
+shipped; its record is in the batch record and the Log.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -264,7 +76,8 @@ it renders — and report what was observed rather than what passed.
    `pip install --require-hashes -r requirements-dev.lock`; `pyproject.toml` alone is not
    enough. The command is in each lock file's own header.
 3. **The Postgres-backed tests cannot run on this machine** — no local server, no Docker — so
-   254 of them skip locally and run only in CI. Do **not** point them at production Neon to
+   644 of them skip locally (4 Oct) and run only in CI; run the suite with `env -u
+   DATABASE_URL`. Do **not** point them at production Neon to
    get local coverage. A test fixture bug on 2026-09-09 used an unresolvable host and was
    caught only because CI ran it against real Postgres; against Neon it would have passed and
    shipped hidden behind a green local run.
@@ -618,6 +431,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-04 (housekeeping)** — At Craig's word ("yes do 1 -4 now"), four tidy-ups:
+  STATUS's Now back to the current state (it had grown to about 200 lines of dated entries;
+  they are at `git show e23d716:STATUS.md`) and Next to the live sequence; reconciliation rows
+  34 (chat cost tracking, shipped in Batch 30) and 48 (rate limiting) brought up to date; 38
+  redundant asyncio marks removed from the API tests, local warnings 152 → 0; and a sixth CI
+  job that builds and boots the image Railway deploys (#248). The gate docs no longer tell an
+  agent to export the Mac's `DATABASE_URL`, which is production's.
 
 - **2026-10-04 (28 left for now)** — Craig asked what the fixed outbound address was for, and
   left it at that (#247): Railway's static addresses need Pro and may be shared, and Railway

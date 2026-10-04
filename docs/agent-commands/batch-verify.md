@@ -17,13 +17,15 @@ PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web typech
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web build
 ```
 
-**Know what this proves.** CI runs pytest against a real Postgres 17 service and proves
-`upgrade head` → `downgrade base`, so a missing database can no longer pass silently. The 13
-tests in `test_derived_field_triggers.py` still skip, but now because Batch 4 has not created
-`movies` and `collection_items` — they must **resume, not skip**, once it does. Locally,
-export `DATABASE_URL` from `apps/api/.env.local` before trusting any migration change, and
-say in the report that you did. The gate does **not** build the Docker image (Railway does)
-and does **not** run the web bundle it builds — a green web job is not evidence the app runs.
+**Know what this proves.** CI runs pytest against a real Postgres 17 service, proves
+`upgrade head` → `downgrade base`, and builds and boots the image Railway deploys (#248), so a
+missing database or a broken image can no longer pass silently. `test_derived_field_triggers.py`
+runs there with no skips. **On Craig's Mac, run pytest with `env -u DATABASE_URL`:** there is
+no local Postgres (STATUS gotcha 15), and the only database URL on the Mac, in
+`apps/api/.env.local`, is production's. Never point tests or migrations at it; the
+database-backed tests and migration changes are proved by CI, and the report says so. A cloud
+session has its own throwaway Postgres (`AGENTS.md`, "Cloud sessions"). The gate does **not**
+run the web bundle it builds in a browser: a green web job is not evidence the app runs.
 
 `pnpm -r test`, not `--filter @mcu/web test` — the filtered form never runs
 `packages/shared`.

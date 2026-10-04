@@ -50,8 +50,6 @@ from src.services.valuation import (
     work_run,
 )
 
-pytestmark = pytest.mark.asyncio
-
 NOW = datetime(2026, 9, 23, 12, 0)
 FIXTURES = Path(__file__).parent / "fixtures"
 BLADE_RUNNER = json.loads((FIXTURES / "ebay_browse_blade_runner_2049.json").read_text())

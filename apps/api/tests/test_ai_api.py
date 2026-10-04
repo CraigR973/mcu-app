@@ -13,7 +13,6 @@ from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -27,8 +26,6 @@ from src.models.profile import Profile, UserRole
 from src.routers.ai import set_ai_client
 from src.services.ai.caps import local_day_bounds, usage_today
 from src.services.ai.client import AiReply, ClaudeClient
-
-pytestmark = pytest.mark.asyncio
 
 
 class StubClaude(ClaudeClient):

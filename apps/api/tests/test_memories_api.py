@@ -19,8 +19,6 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest_asyncio.fixture
 async def api_session(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:

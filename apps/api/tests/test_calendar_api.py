@@ -12,7 +12,6 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import date, timedelta
 
-import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -26,8 +25,6 @@ from src.main import app
 from src.models.profile import Profile, UserRole
 from src.models.release_calendar import CalendarFeedToken, ReleaseCalendarEntry
 from src.services.calendar import hash_feed_token, new_feed_token
-
-pytestmark = pytest.mark.asyncio
 
 ACTOR_HEADER = "x-test-actor"
 
