@@ -2321,7 +2321,11 @@ needs no sign-in. `DECISIONS.md` #203.
   starts both.
 - Gate green.
 
-### T8b — Connect eBay: Mark's watch and selling lists 🔴
+### T8b — Connect eBay: Mark's watch and selling lists 🟡
+**Status 4 Oct: built on `feat/t8b-connect-ebay`, at Craig's go of 4 Oct (#245). Its merge
+waits for his OK, because it changes `.railway/railway.ts`; no config apply is needed for it
+to work (`OWNER-ACTIONS.md` 29).** Choices: #246.
+
 **Proposed 26 Sep (#216). The eBay checkpoint passed on 3 Oct (`OWNER-ACTIONS.md` 18); at
 Craig's word it starts after V9 merges, because both add a migration (#243). Group U, step 5. U4 was applied on its own on 28 Sep, so T8b's Railway change gets its own
 apply.** Opus 5 · max / GPT-5.6 Sol ·
@@ -2373,7 +2377,7 @@ every gate below and moves 38 to the very end.
 | 3c | ~~20b — shops that answer 429~~ | **shipped:** first half 1 Oct (`548160f`, [#19](https://github.com/CraigR973/mcu-app/pull/19)), at his "2) yes": a `429` no longer counts towards auto-disable, and each refusal records what the shop sent; second half 2 Oct (`abc17d6`, [#25](https://github.com/CraigR973/mcu-app/pull/25)), from one night's evidence at his word (#240): a refusal waits for `Retry-After` before its retry. **Read back 3 Oct: 2 of 27 got through after a minute; the remaining option, a fixed outbound address, is Craig's** (`OWNER-ACTIONS.md` 28). Criteria under Batch 20b |
 | 3d | 22c — every page of a sale | **written 30 Sep at Craig's word**; builds at his go, after 20b. Criteria under Batch 22 |
 | 4 | 21 — price history charts | **go given 28 Sep**; its 30 Sep session found only 2 wanted items priced by more than one shop, against 3. **Craig chose to add wants (30 Sep):** Bad Lieutenant and Dog Soldiers, both 4K, added that evening (#227). Starts once 3 wants have prices from two shops on two days or more, 2 Oct at the earliest. **1 Oct: 2 of 3**; the third needs a Shopify shop, refusing since 30 Sep (20b) |
-| 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18, **done 3 Oct**; starts after V9 merges (#243) |
+| 5 | T8b — Connect eBay | `OWNER-ACTIONS.md` 18, **done 3 Oct**; **built 4 Oct, merge waits for Craig's OK** (`OWNER-ACTIONS.md` 29) |
 | 6 | 38 — the end-to-end suite | last, so it pins the flows as they end up |
 | — | 33 → 34 — Email | parked with `OWNER-ACTIONS.md` 7 |
 

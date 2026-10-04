@@ -43,8 +43,11 @@ export default function ProtectedRoute({ children, role }: Props) {
     )
   }
 
+  // The query string goes too (Batch T8b): eBay sends a person back to
+  // `/settings/ebay/connected` with a one-time code on it, and a sign-in in between must
+  // not drop the code, or the person has to start connecting again.
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />
   }
 
   if (role && profile?.role !== role) {

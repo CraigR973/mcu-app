@@ -142,6 +142,11 @@ async def receive_notification() -> Response:
     an eBay account — so there is nothing to erase when one closes. Acknowledging is still
     mandatory: an endpoint that stops answering is an endpoint eBay reports as down.
 
+    **Still true since T8b** (`DECISIONS.md` #245). "Connect eBay" keeps each person's two
+    tokens, sealed, and no eBay identity: the account's name is read live and never stored,
+    so a notification names nothing this app could look up. A closed account's tokens stop
+    working, and the app deletes them the moment eBay refuses one.
+
     **The body is not read and the signature is not verified, because nothing acts on
     either.** eBay signs these with a key retrievable from its Notification API, and if
     this handler is ever given real work to do, verifying that signature is the first thing

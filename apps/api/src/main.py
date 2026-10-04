@@ -23,6 +23,7 @@ from src.routers import (
     deals,
     discovery,
     ebay,
+    ebay_account,
     ebay_watch,
     export,
     health,
@@ -145,6 +146,7 @@ app.include_router(photos.router)
 app.include_router(specs.router)
 app.include_router(ebay.router)
 app.include_router(ebay_watch.router)
+app.include_router(ebay_account.router)
 app.include_router(barcode.router)
 app.include_router(deals.router)
 app.include_router(valuation.router)

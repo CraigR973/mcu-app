@@ -265,6 +265,12 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/ebay/targets/listing",
         "/api/v1/ebay/targets/search",
         "/api/v1/ebay/targets/{target_id}",
+        # Batch T8b. Each person's own eBay connection and lists, all `CurrentUser`.
+        "/api/v1/ebay/account",
+        "/api/v1/ebay/account/connect",
+        "/api/v1/ebay/account/complete",
+        "/api/v1/ebay/account/watching",
+        "/api/v1/ebay/account/selling",
         # Batch 28's prerequisite, and the **second** unauthenticated route in this app
         # after Batch 17's `.ics` feed. *It was the third* until Batch S1 removed
         # Batch 27's `/gift/{slug}`, which sat between them. eBay holds no

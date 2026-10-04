@@ -4982,3 +4982,69 @@ contemporaneous.
      - **The owned films' volume is larger than #241 said:** 728 discs had a spec page on
        3 Oct, not 530, so up to about 1,450 requests at 150 a night, about ten nights.
 
+
+### 2026-10-04 — Batch T8b: Craig's go, and how it is built
+
+245. **T8b is built now, each person connecting their own eBay.** Craig's word, 4 Oct, on the
+     plan given the night before: "1) each person 2) go with recommended 3) recommended
+     4) build it".
+
+     - **Each person their own eBay.** Connecting is a person's own act and only they see
+       their lists; Craig can try it on his own account before Mark does.
+     - **A saved search becomes one of T8a's film alerts** once its owner picks the film and
+       format it is for. No new alert kind: T8a's matcher already judges a listing against a
+       film, its format and its edition, and a free-text alert could not.
+     - **eBay's XML is read with `defusedxml`.** The Trading API answers in XML; the standard
+       library's parser is open to entity-expansion tricks, and this is the first XML the
+       app reads.
+     - **From eBay's own documentation, read 4 Oct:** the consent page is
+       `auth.ebay.com/oauth2/authorize` (client id, the RuName as `redirect_uri`,
+       `response_type=code`, scopes, `state`, and `prompt=login`, which makes eBay ask who is
+       signing in, so a browser signed in to one person's eBay cannot connect it to the
+       other's profile); the code is swapped at `/identity/v1/oauth2/token` for a two-hour
+       access token and an 18-month refresh token; the Trading API takes the user token in
+       `X-EBAY-API-IAF-TOKEN`. **eBay documents no scope for the two Trading calls**, so the
+       token asks for the base scope alone, the fewest, and the first live connection proves
+       it is enough.
+     - **No eBay identity is stored.** Only the two tokens, sealed with AES-256-GCM under a
+       key derived from `EBAY_TOKEN_KEY` and bound to the person's profile. The eBay account
+       name is read live for display. So the account-deletion endpoint stays a no-op, as its
+       docstring requires while it has nothing to erase; a token eBay refuses (a closed
+       account, or access revoked on eBay) is deleted the moment the app next uses it.
+     - **The one-time `state` is single use, tied to the signed-in person, and lasts ten
+       minutes.** Neither table is granted to the read-only role.
+
+### 2026-10-04 — Batch T8b built: the calls made on Craig's behalf, and the OK it waits for
+
+246. **T8b is built on `feat/t8b-connect-ebay`; its merge waits for Craig's OK**, as T7's,
+     T8a's and U4's did, because it changes `.railway/railway.ts` (`AGENTS.md`, "Still
+     explicit"). The change only declares `EBAY_RUNAME` and `EBAY_TOKEN_KEY` with
+     `preserve()`; `config plan` then read `0 to add, 1 to change, 0 to destroy`, the one
+     change being the API's restart policy, pending since 26 Sep. **No apply is needed for
+     T8b to work**: both variables have been on `api` since 3 Oct, and the declaration only
+     stops a future apply deleting them (#124).
+
+     Calls made while building, each open to overrule:
+
+     - **No listing photos on "Your eBay".** The web app's content security policy allows
+       images from TMDB alone, so a thumbnail from eBay's image host would load in
+       development and break in production; T8a's pages show none either. Allowing eBay's
+       image host is a hosting-header change, Craig's to make if he wants thumbnails.
+     - **A saved search's film is looked for on Wanted as well as in the collection.** The
+       catalogue search finds owned films only, and a search on eBay is mostly for a film not
+       owned yet. Format words in the search ("4k", "blu ray", "dvd") choose the format and
+       leave the query, because the catalogue search matches every word it is given; edition
+       words ("steelbook") stay, since some are title words. Without a format word, a want's
+       own format is taken, else Blu-ray. The person can change the words and the format.
+     - **"Your eBay" (`/ebay`) has no menu entry.** It is reached from Settings → eBay and
+       from the page eBay returns to, and its back arrow goes to Settings. A menu entry would
+       show to both people whether connected or not; it is one line to add if wanted.
+     - **Signing in keeps the address's query string**, on every protected page. eBay returns
+       to `/settings/ebay/connected?code=…`, and a sign-in in between used to drop the code.
+     - **The Settings tab strip scrolls the chosen tab into view.** Four tabs overflow 375 px,
+       and T8b's own pages link to the last one.
+     - **Found by the browser check, fixed before review:** `/privacy` and `/ebay` titled
+       themselves "Page not found" in the browser tab.
+     - **The database tests ran in CI only.** This Mac has no Postgres (gotcha 15), so the
+       ten endpoint tests (sign-in, the state's three rules, each person seeing only their
+       own, refresh, a refused refresh, disconnect) are proved by CI's Postgres 17.

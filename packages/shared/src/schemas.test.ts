@@ -7,6 +7,10 @@ import {
   ebayPriceEstimateSchema,
   ebayTargetsSchema,
   ebayPriceSegmentSchema,
+  ebayAccountSchema,
+  ebayConnectStartSchema,
+  ebaySellingSchema,
+  ebayWatchingSchema,
   auditEntrySchema,
   auditFieldChangeSchema,
   boxSetDetailSchema,
@@ -1818,6 +1822,74 @@ describe('Batch T8a — eBay price alerts', () => {
     expect(() =>
       ebayTargetsSchema.parse({ items: [{ ...listing, kind: 'search', formatCode: 'vhs' }], lastRun: null }),
     ).toThrow()
+  })
+})
+
+describe('Batch T8b — Connect eBay', () => {
+  const listing = {
+    itemId: '226100000010',
+    title: 'Dog Soldiers 4K UHD Second Sight',
+    url: 'https://www.ebay.co.uk/itm/226100000010',
+    price: '24.99',
+    currency: 'GBP',
+    postage: '0.00',
+    isAuction: false,
+    bidCount: null,
+    endsAt: '2026-10-10T20:00:00Z',
+  }
+
+  it('reads a connection, and one that is not set up, by name only', () => {
+    const connected = {
+      configured: true,
+      missing: [],
+      connected: true,
+      accountName: 'mark_at_the_movies',
+      connectedAt: '2026-10-04T09:00:00Z',
+      note: null,
+    }
+    expect(ebayAccountSchema.parse(connected)).toEqual(connected)
+    const unset = { ...connected, configured: false, missing: ['EBAY_RUNAME'], connected: false, accountName: null, connectedAt: null }
+    expect(ebayAccountSchema.parse(unset).missing).toEqual(['EBAY_RUNAME'])
+  })
+
+  it("sends the browser only to eBay's own sign-in page", () => {
+    const consent = 'https://auth.ebay.com/oauth2/authorize?client_id=x&response_type=code&state=s'
+    expect(ebayConnectStartSchema.parse({ authorizeUrl: consent }).authorizeUrl).toBe(consent)
+    expect(() => ebayConnectStartSchema.parse({ authorizeUrl: 'https://auth.ebay.com.evil.example/oauth2' })).toThrow()
+    expect(() => ebayConnectStartSchema.parse({ authorizeUrl: 'http://auth.ebay.com/oauth2/authorize' })).toThrow()
+  })
+
+  it('reads the watch list with its saved searches, and the selling list with what sold', () => {
+    const watching = {
+      items: [listing, { ...listing, itemId: '226100000013', isAuction: true, bidCount: 3, postage: null }],
+      savedSearches: [{ name: 'dog soldiers 4k', keywords: 'dog soldiers 4k', url: null }],
+      totalItems: 2,
+      fetchedAt: '2026-10-04T09:00:00Z',
+    }
+    expect(ebayWatchingSchema.parse(watching)).toEqual(watching)
+    const selling = {
+      active: [listing],
+      sold: [
+        {
+          itemId: '226100000012',
+          title: 'Alien DVD',
+          url: 'https://www.ebay.co.uk/itm/226100000012',
+          price: '3.50',
+          currency: 'GBP',
+          soldAt: '2026-09-28T09:12:44Z',
+        },
+      ],
+      totalActive: 1,
+      totalSold: 1,
+      fetchedAt: '2026-10-04T09:00:00Z',
+    }
+    expect(ebaySellingSchema.parse(selling)).toEqual(selling)
+  })
+
+  it('refuses a listing without its link, or a negative count', () => {
+    const watching = { items: [listing], savedSearches: [], totalItems: 1, fetchedAt: '2026-10-04T09:00:00Z' }
+    expect(() => ebayWatchingSchema.parse({ ...watching, items: [{ ...listing, url: 'not a link' }] })).toThrow()
+    expect(() => ebayWatchingSchema.parse({ ...watching, totalItems: -1 })).toThrow()
   })
 })
 

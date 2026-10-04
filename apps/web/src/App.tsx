@@ -34,6 +34,10 @@ const WantedPage = lazy(() => import('./pages/WantedPage'))
 const DealsPage = lazy(() => import('./pages/DealsPage'))
 const RetailersPage = lazy(() => import('./pages/RetailersPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const EbayConnectedPage = lazy(() => import('./pages/EbayConnectedPage'))
+const EbayDeclinedPage = lazy(() => import('./pages/EbayDeclinedPage'))
+const YourEbayPage = lazy(() => import('./pages/YourEbayPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ExportPage = lazy(() => import('./pages/ExportPage'))
 const SpecsPage = lazy(() => import('./pages/SpecsPage'))
 const IdentifyFilmsPage = lazy(() => import('./pages/IdentifyFilmsPage'))
@@ -104,6 +108,7 @@ function RouteTitle() {
     const publicTitles: Record<string, string> = {
       '/': APP_NAME,
       '/login': 'Sign in',
+      '/privacy': 'Privacy',
       '/welcome': 'Welcome',
       '/unauthorized': 'Access denied',
       '/offline': 'Offline',
@@ -148,6 +153,9 @@ export default function App() {
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
+            {/* Batch T8b. Public: eBay links to it from its sign-in page, where the reader is
+                not signed in to this app (`DECISIONS.md` #227). */}
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             {/* Development builds only (Batch U3); a production build has no such route. */}
             {import.meta.env.DEV && <Route path="/debug" element={<DebugPage />} />}
@@ -288,6 +296,17 @@ export default function App() {
               path="/settings"
               element={<AppShell><SettingsPage /></AppShell>}
             />
+            {/* Batch T8b. The RuName's two addresses (`DECISIONS.md` #227): web routes, so the
+                page receiving eBay's code already holds the person's own session. */}
+            <Route
+              path="/settings/ebay/connected"
+              element={<AppShell><EbayConnectedPage /></AppShell>}
+            />
+            <Route
+              path="/settings/ebay/declined"
+              element={<AppShell><EbayDeclinedPage /></AppShell>}
+            />
+            <Route path="/ebay" element={<AppShell><YourEbayPage /></AppShell>} />
             <Route path="/settings/notifications" element={<Navigate to="/settings" replace />} />
             <Route path="/notifications" element={<Navigate to="/settings" replace />} />
             <Route path="/settings/ai" element={<Navigate to="/settings?tab=assistant" replace />} />

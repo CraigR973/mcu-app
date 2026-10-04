@@ -45,6 +45,12 @@ export default defineRailway(() => {
       // Batch T7 (`DECISIONS.md` #202). Brave's web search key, set in the console by
       // Craig; the nightly spec batch takes it from here by reference.
       BRAVE_SEARCH_API_KEY: preserve(),
+      // Batch T8b, "Connect eBay" (`DECISIONS.md` #227, #245). Set in the console by Craig
+      // on 3 Oct (`OWNER-ACTIONS.md` 18): the RuName eBay generated for the sign-in page,
+      // and the 32 bytes the sealing key for each person's eBay token is derived from.
+      // Until this declared them, `config plan` read "2 to destroy": these two.
+      EBAY_RUNAME: preserve(),
+      EBAY_TOKEN_KEY: preserve(),
       // **A literal, not `preserve()` — the one env var here that is not a secret.**
       // eBay hashes the URL *it* has on file into every validation challenge, so ours
       // must match byte for byte or validation fails with no diagnosable error. Pinning

@@ -26,7 +26,8 @@ import LoginPage from './LoginPage'
 const INVITE = '/movie-night/join/long-private-invite-token'
 
 function Where() {
-  return <output aria-label="Current page">{useLocation().pathname}</output>
+  const location = useLocation()
+  return <output aria-label="Current page">{location.pathname + location.search}</output>
 }
 
 afterEach(() => {
@@ -59,5 +60,35 @@ describe('an invite link reached while signed out — Batch T4, snag 11', () => 
 
     await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe(INVITE))
     expect(screen.getByText('The night')).not.toBeNull()
+  })
+})
+
+describe("eBay's return address reached while signed out — Batch T8b", () => {
+  it('keeps the one-time code through signing in', async () => {
+    const RETURN = '/settings/ebay/connected?state=the-state&code=v%5E1.1%23code'
+    auth.isAuthenticated = false
+    auth.signIn.mockImplementation(async () => {
+      auth.isAuthenticated = true
+      return { error: null }
+    })
+    render(
+      <ThemeProvider>
+        <MemoryRouter initialEntries={[RETURN]}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/settings/ebay/connected" element={<ProtectedRoute><p>Finishing</p></ProtectedRoute>} />
+          </Routes>
+          <Where />
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+    expect(screen.getByLabelText('Current page').textContent).toBe('/login')
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Mark' } })
+    fireEvent.change(screen.getByLabelText('PIN'), { target: { value: '8317' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enter the archive' }))
+
+    await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe(RETURN))
+    expect(screen.getByText('Finishing')).not.toBeNull()
   })
 })

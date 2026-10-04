@@ -169,6 +169,15 @@ describe('Batch T3 — the phone top bar', () => {
     expect(titleForPath('/nowhere')).toBeNull()
   })
 
+  it("names Your eBay, which has no menu entry, and sends it back to Settings — Batch T8b", () => {
+    expect(titleForPath('/ebay')).toBe('Your eBay')
+    expect(isTopLevel('/ebay')).toBe(false)
+    expect(parentPath('/ebay')).toBe('/settings')
+    // eBay's two return addresses sit below Settings, so they take its name and go back to it.
+    expect(titleForPath('/settings/ebay/connected')).toBe('Settings')
+    expect(parentPath('/settings/ebay/declined')).toBe('/settings')
+  })
+
   it('gives a back arrow to every page but the four bottom tabs and You — Batch V1', () => {
     // Until V1 every menu destination counted as top-level, so Wanted, Deals, Settings and
     // the rest had no arrow on a phone though the only way to them was through You (snag 5).

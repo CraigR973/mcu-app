@@ -379,6 +379,10 @@ cryptography==50.0.1 \
     --hash=sha256:fd3718b960d0b5dd213cdf03f3bcb7000e69dda0de8b956061947ff6bcff5558 \
     --hash=sha256:ff838d62ec1bfce4f9ba7fa16f4a7b554cd8d0c299e6be37502161a660c84eef
     # via mcu-api (apps/api/pyproject.toml)
+defusedxml==0.7.1 \
+    --hash=sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69 \
+    --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
+    # via mcu-api (apps/api/pyproject.toml)
 deprecated==1.3.1 \
     --hash=sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f \
     --hash=sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223
@@ -1491,6 +1495,10 @@ truststore==0.10.4 \
     # via
     #   httpcore2
     #   httpx2
+types-defusedxml==0.7.0.20260504 \
+    --hash=sha256:2ab2828a3f97111ba1c16cee273ad4124a831fc9198c41bf8368ff6ea48ad300 \
+    --hash=sha256:a959e3a0a43b93e464bd625d91ec9193a2703ddc10443bdd627792485fae0b10
+    # via mcu-api (apps/api/pyproject.toml)
 types-openpyxl==3.1.5.20260827 \
     --hash=sha256:94e176d871d12e3cbc34f8fb03dc14db2a4245a6690791daf16fc7b08fd67869 \
     --hash=sha256:be8b605fb99cfd7d5f5576d4a508e8ec44be2dd15b85157c559080de6384be34
@@ -1509,14 +1517,11 @@ typing-extensions==4.16.0 \
     #   asyncpg-stubs
     #   beautifulsoup4
     #   fastapi
-    #   httpx2
     #   limits
     #   mypy
     #   pydantic
     #   pydantic-core
-    #   pytest-asyncio
     #   sqlalchemy
-    #   starlette
     #   typing-inspection
 typing-inspection==0.4.4 \
     --hash=sha256:547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47 \

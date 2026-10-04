@@ -124,6 +124,13 @@ class Settings(BaseSettings):
     #: Which eBay site to search. `EBAY_GB` is the one the criterion's "UK median" means,
     #: and it is what #126 and #129 measured against.
     ebay_marketplace_id: str = "EBAY_GB"
+    #: Batch T8b, "Connect eBay" (`DECISIONS.md` #227, #245). The RuName eBay generated for
+    #: the app's sign-in page, sent as `redirect_uri`, and 32 random bytes in base64 from
+    #: which the key that seals each person's eBay token is derived. Optional at boot and
+    #: checked at use, like the pair above: without either, Settings says connecting is not
+    #: set up rather than sending anyone to eBay.
+    ebay_runame: str = ""
+    ebay_token_key: str = ""
 
     # Brave's web search (Batch T7, `DECISIONS.md` #202): it finds each disc's Blu-ray.com
     # release page, because #110 bars the site's own search. Optional at boot and checked

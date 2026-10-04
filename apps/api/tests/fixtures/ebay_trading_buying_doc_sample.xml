@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+eBay's documented sample output for GetMyeBayBuying, from the Trading API reference
+(https://developer.ebay.com/devzone/xml/docs/reference/ebay/GetMyeBayBuying.html, version
+1477, read 2026-10-04 for Batch T8b): the envelope, the WatchList and the FavoriteSearches,
+cut from its "Basic Call" sample. The bare "&" in three URLs is escaped as "&amp;" so the
+document is well-formed, as eBay's real responses are; nothing else is changed, and the
+masked IDs are eBay's. Not a capture: no real response could be read before someone had
+connected (DECISIONS.md #245).
+-->
+<GetMyeBayBuyingResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+  <Timestamp>2019-11-04T22:07:09.813Z</Timestamp>
+  <Ack>Success</Ack>
+  <Version>1125</Version>
+  <Build>E1125_CORE_API_19070409_R1</Build>
+  <WatchList>
+    <ItemArray>
+      <Item>
+        <ItemID>1**********4</ItemID>
+        <ListingDetails>
+          <StartTime>2019-10-20T01:59:27.000Z</StartTime>
+          <EndTime>2019-10-25T01:59:27.000Z</EndTime>
+          <ViewItemURL>http://example.com/ws/eBayISAPI.dll?ViewItem&amp;
+              item=1********4&amp;category=1****0</ViewItemURL>
+          <ViewItemURLForNaturalSearch>http://*******.***/Mint-Titleist-AP2-Iron
+              _W0QQitemZ*********4QQcategoryZ1****0QQcmdZViewItem
+              </ViewItemURLForNaturalSearch>
+        </ListingDetails>
+        <ListingType>Chinese</ListingType>
+        <Seller>
+          <FeedbackScore>713</FeedbackScore>
+          <FeedbackRatingStar>Purple</FeedbackRatingStar>
+          <UserID>j********k</UserID>
+        </Seller>
+        <SellingStatus>
+          <BidCount>12</BidCount>
+          <CurrentPrice currencyID="USD">227.5</CurrentPrice>
+          <HighBidder>
+            <FeedbackScore>2786</FeedbackScore>
+            <FeedbackRatingStar>Red</FeedbackRatingStar>
+            <UserID>s********n</UserID>
+          </HighBidder>
+        </SellingStatus>
+        <ShippingDetails>
+          <ShippingServiceOptions>
+            <ShippingServiceCost currencyID="USD">17.0</ShippingServiceCost>
+          </ShippingServiceOptions>
+        </ShippingDetails>
+        <Site>US</Site>
+        <StartPrice currencyID="USD">0.99</StartPrice>
+        <TimeLeft>PT2H21M11S</TimeLeft>
+        <Title>Mint Titleist AP2 Iron</Title>
+        <PictureDetails>
+          <PictureURL>https://t*********.com/*********/***1.jpg</PictureURL>
+        </PictureDetails>
+      </Item>
+      <Item>
+        <BuyItNowPrice currencyID="USD">64.99</BuyItNowPrice>
+        <ItemID>4*********7</ItemID>
+        <ListingDetails>
+          <StartTime>2018-10-06T20:26:15.000Z</StartTime>
+          <EndTime>2018-11-06T20:26:15.000Z</EndTime>
+          <ViewItemURL>http://example.com/ws/eBayISAPI.dll?ViewItem&amp;item=4**********7&amp;
+              category=1****0</ViewItemURL>
+          <ViewItemURLForNaturalSearch>http://*******.com/CLEVELAND-LAUNCHER
+              _W0QQitemZ4**********7QQcategoryZ1****0QQcmdZViewItem</ViewItemURLForNaturalSearch>
+        </ListingDetails>
+        <ListingType>FixedPriceItem</ListingType>
+        <Seller>
+          <FeedbackScore>43064</FeedbackScore>
+          <FeedbackRatingStar>TurquoiseShooting</FeedbackRatingStar>
+          <UserID>w********f</UserID>
+        </Seller>
+        <SellingStatus>
+          <CurrentPrice currencyID="USD">64.99</CurrentPrice>
+        </SellingStatus>
+        <ShippingDetails>
+          <ShippingServiceOptions>
+            <ShippingServiceCost currencyID="USD">9.95</ShippingServiceCost>
+          </ShippingServiceOptions>
+        </ShippingDetails>
+        <Site>US</Site>
+        <TimeLeft>P11DT20H47M59S</TimeLeft>
+        <Title>CLEVELAND LAUNCHER</Title>
+        <PictureDetails>
+          <PictureURL>https://t*********.com/*********/***1.jpg</PictureURL>
+        </PictureDetails>
+      </Item>
+    </ItemArray>
+    <PaginationResult>
+      <TotalNumberOfPages>1</TotalNumberOfPages>
+      <TotalNumberOfEntries>2</TotalNumberOfEntries>
+    </PaginationResult>
+  </WatchList>
+  <FavoriteSearches>
+    <TotalAvailable>2</TotalAvailable>
+    <FavoriteSearch>
+      <SearchName>koa, Taylor Completed listings</SearchName>
+      <SearchQuery><![CDATA[http://completed.shop.ebay.com/items/?Brand=TaylorLH_Complete=1_dmpt=Guitar_nkw=koa_sacat=33021_osacat=33021_trksid=m194]]></SearchQuery>
+      <QueryKeywords>koa</QueryKeywords>
+    </FavoriteSearch>
+    <FavoriteSearch>
+      <SearchName>titleist 735 irons, Iron Set</SearchName>
+      <SearchQuery>http://sporting-goods.shop.ebay.com/Clubs-/115280/i.html?Club%2520Type=Iron%2520Set&amp;_nkw=titleist%20735%20irons&amp;_dmpt=Golf_Clubs&amp;_fln=1&amp;_ssov=1&amp;_trksid=m194</SearchQuery>
+      <QueryKeywords>titleist 735 irons</QueryKeywords>
+    </FavoriteSearch>
+  </FavoriteSearches>
+</GetMyeBayBuyingResponse>

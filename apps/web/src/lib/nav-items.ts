@@ -191,6 +191,15 @@ const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
   ['/settings/', 'Settings'],
 ]
 
+/**
+ * Pages with no menu entry that sit below no destination's path, each with its name and the
+ * page it is opened from — Batch T8b. "Your eBay" is reached from Settings' eBay tab, so
+ * that is where its back arrow goes when there is no history to go back through.
+ */
+const OFF_MENU_PAGES: Record<string, { title: string; parent: string }> = {
+  '/ebay': { title: 'Your eBay', parent: '/settings' },
+}
+
 /** A bottom tab or You, as opposed to anything reached from one. Everything else gets a back
  *  arrow in the phone's top bar. */
 export function isTopLevel(pathname: string): boolean {
@@ -201,6 +210,8 @@ export function isTopLevel(pathname: string): boolean {
 export function titleForPath(pathname: string): string | null {
   const exact = [...navItems, ...adminNavItems, YOU_ITEM].find(({ path }) => path === pathname)
   if (exact) return exact.label
+  const offMenu = OFF_MENU_PAGES[pathname]
+  if (offMenu) return offMenu.title
   const sub = SUB_PAGE_TITLES.find(([prefix]) => pathname.startsWith(prefix))
   if (sub) return sub[1]
   const parent = [...navItems, ...adminNavItems]
@@ -214,6 +225,8 @@ export function titleForPath(pathname: string): string | null {
  *  person would have opened it from; anything below a destination goes to that destination. */
 export function parentPath(pathname: string): string {
   if (LISTED_ON_YOU.has(pathname)) return YOU_ITEM.path
+  const offMenu = OFF_MENU_PAGES[pathname]
+  if (offMenu) return offMenu.parent
   if (pathname.startsWith('/films/')) return '/movies'
   const parent = [...navItems, ...adminNavItems]
     .filter(({ path }) => pathname.startsWith(`${path}/`))
