@@ -5048,3 +5048,6 @@ contemporaneous.
      - **The database tests ran in CI only.** This Mac has no Postgres (gotcha 15), so the
        ten endpoint tests (sign-in, the state's three rules, each person seeing only their
        own, refresh, a refused refresh, disconnect) are proved by CI's Postgres 17.
+     - **Craig said OK to merge on 4 Oct** ("yes to 1 and 3": the merge, and Auto-fix on the
+       pull request), overruling none of the calls above. Merged as `2995b26`
+       ([#33](https://github.com/CraigR973/mcu-app/pull/33)), live at 10:28 UTC.

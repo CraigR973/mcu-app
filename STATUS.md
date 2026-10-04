@@ -2,10 +2,12 @@
 
 ## Now
 
-**4 Oct 2026, 10:00 UTC: T8b, Connect eBay, is built on `feat/t8b-connect-ebay` and waits
-for Craig's OK to merge** (`OWNER-ACTIONS.md` 29), because it changes `.railway/railway.ts`
-(#246). Built at his go of 4 Oct ("1) each person 2) go with recommended 3) recommended 4)
-build it", #245).
+**4 Oct 2026, 10:28 UTC: T8b, Connect eBay, is live** ([#33](https://github.com/CraigR973/mcu-app/pull/33), `2995b26`, migration 047).
+Built at Craig's go of 4 Oct ("1) each person 2) go with recommended 3) recommended 4) build
+it", #245) and merged at his OK the same day, since it changes `.railway/railway.ts` (#246).
+Verified in production: the merge SHA, `db: ok`, migration 047 at head, the read-only role
+refused both new tables, and the live web build carrying `/privacy`, `/ebay` and eBay's two
+return pages. **Next: Craig connects his own eBay first, then Mark** (`OWNER-ACTIONS.md` 29).
 - **What it does:** Settings → eBay → Connect eBay sends a person to eBay's own sign-in, with
   the fewest scopes, and eBay returns them to `/settings/ebay/connected`; the app swaps the
   one-time code for two tokens, sealed with AES-256-GCM under a key derived from
@@ -14,7 +16,8 @@ build it", #245).
   becomes a T8a price alert. Disconnect deletes the tokens. A public `/privacy` page is the
   one eBay's sign-in page links to.
 - **Proved:** local gate green with the database tests skipped (no Postgres on this Mac,
-  gotcha 15); CI's Postgres runs them. Browser check on a stub API at 375 and 1280 px, light
+  gotcha 15), and CI green with them: 1,832 API tests, the 10 new database tests among them,
+  warnings unchanged at 178. Browser check on a stub API at 375 and 1280 px, light
   and dark: Settings' eBay tab, the return and declined pages, Your eBay with both alert
   forms, the privacy page. The check and the code review around it found five faults, all
   fixed: eBay thumbnails the production security policy would block, "Page not found" as two
@@ -22,7 +25,7 @@ build it", #245).
   scrolled out of sight.
 - **Not proved until a real sign-in:** which scope eBay's two list calls need. The token asks
   for the base scope alone; if eBay refuses, Your eBay shows eBay's words and nothing else
-  breaks. Craig tries his own account first (29).
+  breaks.
 - **`config plan` reads `0 to destroy`** with both variables declared. No apply is needed.
 - **This session broke the never-`cd` rule once:** autoenv printed `apps/api/.env`, with the
   live Neon owner password, into the session's transcript. Nothing was sourced. Rotating it
@@ -608,6 +611,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-04 (T8b, [#33](https://github.com/CraigR973/mcu-app/pull/33), `2995b26`)** — Merged at Craig's OK ("yes to 1 and 3") and live at
+  10:28 UTC with migration 047; CI green first time, the 10 database tests run; production
+  checked as in the Now block. The first live sign-in is his (`OWNER-ACTIONS.md` 29).
 
 - **2026-10-04 (T8b built, not merged)** — Connect eBay, each person their own (#245): the
   sign-in with a single-use, ten-minute state tied to the person; two sealed tokens per
