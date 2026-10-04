@@ -122,20 +122,21 @@ PYTHONPATH=apps/api apps/api/.venv/bin/alembic --config apps/api/alembic.ini <cm
 
 ### What a green run currently proves — and does not
 
-Batch 2 replaced the old gate. CI is now five jobs — API lint/typecheck, API pytest
-**against a real Postgres 17 service**, `upgrade head` → `downgrade base` migration
-reversal, web lint/typecheck/test/build, and a Python + pnpm dependency audit. A green run
-proves the API boots, migrates, reverses cleanly, and that a database was genuinely
-reachable while the tests ran.
+Batch 2 replaced the old gate, and on 4 Oct a sixth job joined it (`DECISIONS.md` #248). CI
+is six jobs: API lint/typecheck, API pytest **against a real Postgres 17 service**, `upgrade
+head` → `downgrade base` migration reversal, **the image Railway deploys** (built from the
+Dockerfile, every cron job's module imported in it, then booted as production runs it,
+migrating first, until `/api/v1/health/ready` says `db: ok`), web lint/typecheck/test/build,
+and a Python + pnpm dependency audit. A green run proves the API migrates, reverses cleanly
+and boots from its real image, and that a database was genuinely reachable while the tests
+ran. `test_derived_field_triggers.py` runs in that job with no skips (16 tests on 4 Oct); a
+green run that skips them is a failure being hidden.
 
-**It still does not prove three things.** (1) `test_derived_field_triggers.py` (13 tests)
-continues to skip — no longer because the database is missing, but because Batch 4 has not
-created `movies` and `collection_items`. Those tests must **resume, not skip**, once Batch 4
-lands; a green run that still skips them afterwards is a failure being hidden. (2) The
-Docker image is built by Railway, not by CI, so a Dockerfile regression surfaces at deploy
-time. (3) CI builds the web bundle but never runs it — the deployed app currently
-white-screens on a missing Supabase env var and the build is still green. **A green web job
-is not evidence the app runs.**
+**It still does not prove three things.** (1) The image boots with CI's throwaway values,
+not production's variables, so a variable missing on Railway still surfaces only at deploy
+(STATUS's "Anything that lives only in a Railway variable has no test"). (2) The cron jobs
+are imported, not run. (3) CI builds the web bundle but never runs it in a browser; Batch 38
+is the batch that would. **A green web job is not evidence the app runs.**
 
 ## Close-out protocol — **automatic after a green gate**
 
