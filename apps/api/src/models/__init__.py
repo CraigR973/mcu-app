@@ -35,6 +35,7 @@ from src.models.completion_set import (
     member_display,
 )
 from src.models.deal import DEALS_TABLE, Deal
+from src.models.ebay_account import EbayAccount, EbayConnectState
 from src.models.ebay_watch import (
     TARGET_FORMATS,
     TARGET_KINDS,
@@ -212,6 +213,8 @@ __all__ = [
     "CalendarFeedToken",
     "CalendarRefreshState",
     "DiscValuation",
+    "EbayAccount",
+    "EbayConnectState",
     "EbayPriceRef",
     "EbayTarget",
     "EbayWatchRun",

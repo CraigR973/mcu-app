@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+**Built from eBay's field reference, not a sample**: GetMyeBaySelling's page prints no
+SoldList sample, so this follows its documented output structure (SoldList >
+OrderTransactionArray > OrderTransaction > Transaction, and the Order > TransactionArray
+form a multi-item order takes), read 2026-10-04 for Batch T8b. The film titles and prices
+are invented. The Buyer block is there to prove it is never read: the app shows no buyer.
+-->
+<GetMyeBaySellingResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+  <Timestamp>2026-10-04T09:00:00.000Z</Timestamp>
+  <Ack>Success</Ack>
+  <Version>1477</Version>
+  <SoldList>
+    <OrderTransactionArray>
+      <OrderTransaction>
+        <Transaction>
+          <Buyer>
+            <Email>buyer@example.invalid</Email>
+            <UserID>a_buyer_who_must_not_appear</UserID>
+            <BuyerInfo><ShippingAddress><PostalCode>ZZ1 1ZZ</PostalCode></ShippingAddress></BuyerInfo>
+          </Buyer>
+          <CreatedDate>2026-09-20T18:31:02.000Z</CreatedDate>
+          <Item>
+            <ItemID>226100000001</ItemID>
+            <ListingDetails><EndTime>2026-09-20T18:30:00.000Z</EndTime></ListingDetails>
+            <ListingType>FixedPriceItem</ListingType>
+            <SellingStatus><CurrentPrice currencyID="GBP">12.50</CurrentPrice></SellingStatus>
+            <Title>Heat Blu-ray 2-Disc Edition</Title>
+          </Item>
+          <TransactionPrice currencyID="GBP">12.50</TransactionPrice>
+        </Transaction>
+      </OrderTransaction>
+      <OrderTransaction>
+        <Order>
+          <OrderID>26-00000-00001</OrderID>
+          <TransactionArray>
+            <Transaction>
+              <Buyer><UserID>another_buyer_who_must_not_appear</UserID></Buyer>
+              <CreatedDate>2026-09-28T09:12:44.000Z</CreatedDate>
+              <Item>
+                <ItemID>226100000002</ItemID>
+                <SellingStatus><CurrentPrice currencyID="GBP">20.00</CurrentPrice></SellingStatus>
+                <Title>Alien 4K UHD</Title>
+              </Item>
+              <TransactionPrice currencyID="GBP">18.00</TransactionPrice>
+            </Transaction>
+          </TransactionArray>
+        </Order>
+      </OrderTransaction>
+    </OrderTransactionArray>
+    <PaginationResult>
+      <TotalNumberOfPages>1</TotalNumberOfPages>
+      <TotalNumberOfEntries>2</TotalNumberOfEntries>
+    </PaginationResult>
+  </SoldList>
+</GetMyeBaySellingResponse>

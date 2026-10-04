@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+eBay's documented sample output for GetMyeBaySelling, from the Trading API reference
+(https://developer.ebay.com/devzone/xml/docs/reference/ebay/GetMyeBaySelling.html, version
+1477, read 2026-10-04 for Batch T8b), its "Basic Call" sample, unchanged. It shows only the
+ActiveList; the SoldList is in ebay_trading_soldlist_from_field_reference.xml.
+-->
+<GetMyeBaySellingResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+  <Timestamp>2019-11-04T22:15:04.052Z</Timestamp>
+  <Ack>Success</Ack>
+  <Version>1131</Version>
+  <Build>E1131_CORE_APISELLING_19099826_R1</Build>
+  <ActiveList>
+    <ItemArray>
+      <Item>
+        <ItemID>1**********3</ItemID>
+        <ListingDetails>
+          <StartTime>2019-10-12T18:41:12.000Z</StartTime>
+        </ListingDetails>
+        <ListingType>Chinese</ListingType>
+        <Quantity>1</Quantity>
+        <ReservePrice currencyID="MYR">0.0</ReservePrice>
+        <SellingStatus>
+          <ConvertedCurrentPrice currencyID="USD">10.95</ConvertedCurrentPrice>
+          <CurrentPrice currencyID="MYR">11.0</CurrentPrice>
+          <ReserveMet>true</ReserveMet>
+        </SellingStatus>
+        <StartPrice currencyID="MYR">11.0</StartPrice>
+        <TimeLeft>PT28M17S</TimeLeft>
+        <Title>Test Auction Title</Title>
+        <QuantityAvailable>1</QuantityAvailable>
+      </Item>
+      <Item>
+        <ItemID>1**********9</ItemID>
+        <ListingDetails>
+          <StartTime>2019-10-13T17:23:04.000Z</StartTime>
+        </ListingDetails>
+        <ListingType>Chinese</ListingType>
+        <Quantity>1</Quantity>
+        <PrivateNotes>6:IDNew3My notes for Relist here (#*%$).</PrivateNotes>
+        <ReservePrice currencyID="USD">0.0</ReservePrice>
+        <SellingStatus>
+          <CurrentPrice currencyID="USD">1.0</CurrentPrice>
+          <ReserveMet>true</ReserveMet>
+        </SellingStatus>
+        <StartPrice currencyID="USD">1.0</StartPrice>
+        <TimeLeft>PT28M45S</TimeLeft>
+        <Title>Test for ExternalProductIdentifier</Title>
+        <QuantityAvailable>1</QuantityAvailable>
+      </Item>
+      <Item>
+        <ItemID>1**********2</ItemID>
+        <ListingDetails>
+          <StartTime>2019-10-14T11:44:56.000Z</StartTime>
+        </ListingDetails>
+        <ListingType>Chinese</ListingType>
+        <Quantity>1</Quantity>
+        <PrivateNotes>7:ID99999My notes here (#*%$).</PrivateNotes>
+        <ReservePrice currencyID="USD">0.0</ReservePrice>
+        <SellingStatus>
+          <CurrentPrice currencyID="USD">1.0</CurrentPrice>
+          <ReserveMet>true</ReserveMet>
+        </SellingStatus>
+        <StartPrice currencyID="USD">1.0</StartPrice>
+        <TimeLeft>PT29M35S</TimeLeft>
+        <Title>Test for ExternalProductIdentifier</Title>
+        <QuantityAvailable>1</QuantityAvailable>
+      </Item>
+    </ItemArray>
+    <PaginationResult>
+      <TotalNumberOfPages>1</TotalNumberOfPages>
+      <TotalNumberOfEntries>3</TotalNumberOfEntries>
+    </PaginationResult>
+  </ActiveList>
+</GetMyeBaySellingResponse>
