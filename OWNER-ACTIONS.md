@@ -5,7 +5,7 @@ someone else's website, a device, or a choice that isn't an agent's to make. Age
 **read this and stop**, not work around anything on it.
 
 Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-04**,
-when T8b was built (29 added). *Numbers
+when T8b shipped (29 added). *Numbers
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
@@ -28,8 +28,8 @@ conversation still maps onto this file.*
   before retrying. **3 Oct: the wait got 2 of 27 refused requests through**, no better than two
   seconds. **Yours: 28**, whether `cron-scrape` gets a fixed outbound address, the only option
   left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. **T8b
-  is built (4 Oct): yours is 29, OK to merge, then Connect eBay on your own account first**;
-  38 comes last.
+  is live (4 Oct, `2995b26`): yours is 29, Connect eBay on your own account first, then
+  Mark's**; 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): V1, V3, V4, V5, V6 and V8 are
   live and V7 is shelved. **V9 is live (3 Oct, `d1c3bf7`):** Wanted items and film pages show
   "Reviews: Blu-ray.com · AVForums" as links, with Blu-ray.com's scores once read, and Home
@@ -1055,8 +1055,8 @@ then pick the page.
 > **Done 3 Oct.** Craig added the sign-in page in eBay's developer portal and both variables
 > on `api`, then deployed. They were checked by name and shape only, with no value printed:
 > `EBAY_RUNAME` is a 40-character name, not a URL, and `EBAY_TOKEN_KEY` decodes to 32 bytes.
-> Production stayed healthy on `fa18bfd`, with `db: ok` and `ebay: configured`. **The
-> config-apply warning below holds until T8b ships**, and T8b starts after V9 merges (#243).
+> Production stayed healthy on `fa18bfd`, with `db: ok` and `ebay: configured`. The
+> config-apply warning below held until T8b shipped, **on 4 Oct (`2995b26`)**.
 
 > **26 Sep: T8 is split (`DECISIONS.md` #216).** Only T8b, "Connect eBay" for Mark's
 > watch and selling lists, waits for this. **30 Sep: the values below are fixed** (#227), so
@@ -1080,9 +1080,9 @@ then pick the page.
         Paste it here and nowhere else.
 
       Railway restarts `api` when they are added. Nothing reads them until T8b.
-- **Don't run a Railway config apply until T8b ships.** A variable set in the console but
-  not declared in `.railway/railway.ts` is deleted by the next apply (#124); T8b declares
-  both.
+- ~~**Don't run a Railway config apply until T8b ships.**~~ **Lifted 4 Oct:** T8b
+  (`2995b26`) declares both, and `config plan` reads `0 to destroy`. A variable set in the
+  console but not declared in `.railway/railway.ts` is deleted by the next apply (#124).
 - **No eBay password goes to the app, or to an agent.** None of this uses one. Once T8b
   ships, Mark presses Connect eBay in Settings and signs in on eBay's own page.
 - ~~Optional: apply to eBay for Buy API access.~~ **Declined by Craig on 2026-09-23** (#204).
@@ -1259,24 +1259,23 @@ limit.
 
 Say "try a fixed address" (a session then prepares the change for your word) or "leave it".
 
-**If it goes through a Railway config apply before T8b ships,** that change must also declare
-`EBAY_RUNAME` and `EBAY_TOKEN_KEY` with `preserve()`. Both have been set in the console since
-3 Oct (item 18) and are not declared until T8b, so an apply without them deletes them (#124).
+~~**If it goes through a Railway config apply before T8b ships,** that change must also
+declare `EBAY_RUNAME` and `EBAY_TOKEN_KEY`.~~ No longer applies: T8b declared both on 4 Oct.
 
 ---
 
-### 29. Say OK to merge T8b, then connect your own eBay first — T8b, Connect eBay *(new 4 Oct)*
+### 29. Connect your own eBay first, then Mark — T8b, Connect eBay *(new 4 Oct; merged at your OK the same day)*
 
-**New 4 Oct.** T8b is built on `feat/t8b-connect-ebay`: Connect eBay in Settings, each person
-their own; a "Your eBay" page with your watch list, saved searches and selling list (active,
-and sold in the last 60 days), read from eBay when opened; and T8a's price alerts set from a
-watched item or a saved search (`DECISIONS.md` #245, #246). Its merge waits for you only
-because it changes `.railway/railway.ts`: it declares `EBAY_RUNAME` and `EBAY_TOKEN_KEY` with
-`preserve()`, so a config apply can no longer delete them.
+**New 4 Oct.** T8b is live: Connect eBay in Settings, each person their own; a "Your eBay"
+page with your watch list, saved searches and selling list (active, and sold in the last 60
+days), read from eBay when opened; and T8a's price alerts set from a watched item or a saved
+search (`DECISIONS.md` #245, #246). Its merge waited for your OK because it changes
+`.railway/railway.ts`: it declares `EBAY_RUNAME` and `EBAY_TOKEN_KEY` with `preserve()`, so a
+config apply can no longer delete them.
 
-1. Say **OK** (or name anything to change). The agent merges it, which deploys the pages, the
-   API and migration 047 (two tables, neither readable by the read-only login). Connect eBay
-   works from then on: it reads the two variables Railway already holds.
+1. ~~Say **OK** (or name anything to change).~~ **Done 4 Oct:** merged as `2995b26` and live
+   at 10:28 UTC, with migration 047 (two tables, neither readable by the read-only login).
+   Connect eBay works now: it reads the two variables Railway already holds.
 2. **No Railway apply is needed for T8b.** `config plan` now reads `0 to add, 1 to change,
    0 to destroy`; the one change is the API's restart policy, pending since 26 Sep. Apply
    whenever you like, or not at all.
