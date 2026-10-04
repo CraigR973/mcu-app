@@ -5051,3 +5051,23 @@ contemporaneous.
      - **Craig said OK to merge on 4 Oct** ("yes to 1 and 3": the merge, and Auto-fix on the
        pull request), overruling none of the calls above. Merged as `2995b26`
        ([#33](https://github.com/CraigR973/mcu-app/pull/33)), live at 10:28 UTC.
+
+### 2026-10-04 — A fixed outbound address for the nightly shop check: left for now
+
+247. **`OWNER-ACTIONS.md` 28 is left for now, and 22c is parked with it.** Craig's word, 4 Oct:
+     "yes lets leave it for now", after asking what it was for: the nightly check prices each
+     Wanted film at five shops and pings a phone when one falls to its price, and since 30 Sep
+     the three Shopify label shops (Second Sight, 101 Films, Powerhouse) mostly refuse it,
+     leaving Zavvi and Arrow (and eBay, through T8a).
+
+     - **Why the fix was weaker than 28 said.** Railway's own docs, read 4 Oct: static
+       outbound addresses need the Pro plan (Craig is on Hobby), and "may be shared with other
+       customers"; Railway support says it offers no dedicated outbound address on any plan,
+       and points to paid proxies instead. So the option was a smaller shared pool, not "an
+       address of its own", and not proved to stop Cloudflare's refusals.
+     - **What leaving it costs:** price drops at those three shops' own stores mostly go
+       unnoticed; the check keeps trying them each night, and the odd price gets through (2 of
+       27 on 3 Oct). 22c's further sale pages at Second Sight would meet the same refusals.
+     - **21 is not parked.** It still starts itself once a third want has two shops' prices on
+       two days (2 of 3 on 4 Oct); the route that needs no hosting change is a want both Zavvi
+       and Arrow sell, Craig's to add.

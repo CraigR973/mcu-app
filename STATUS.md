@@ -2,6 +2,13 @@
 
 ## Now
 
+**4 Oct 2026, 10:55 UTC: the fixed outbound address (`OWNER-ACTIONS.md` 28) is left for now,
+and 22c is parked with it**, at Craig's word (#247). Railway's static outbound addresses need
+its Pro plan (he is on Hobby) and may be shared with other customers, so the fix was never sure
+to work. The three Shopify shops stay mostly refused; Zavvi, Arrow and eBay still price the
+wants. 21 waits on a third want priced by two shops (2 of 3 on 4 Oct). **What is left for an
+agent is 38**, the end-to-end suite, at Craig's go.
+
 **4 Oct 2026, 10:28 UTC: T8b, Connect eBay, is live** ([#33](https://github.com/CraigR973/mcu-app/pull/33), `2995b26`, migration 047).
 Built at Craig's go of 4 Oct ("1) each person 2) go with recommended 3) recommended 4) build
 it", #245) and merged at his OK the same day, since it changes `.railway/railway.ts` (#246).
@@ -611,6 +618,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-04 (28 left for now)** — Craig asked what the fixed outbound address was for, and
+  left it at that (#247): Railway's static addresses need Pro and may be shared, and Railway
+  offers no dedicated one. 22c parked with it; 21 still 2 of 3 by the 4 Oct count.
 
 - **2026-10-04 (T8b, [#33](https://github.com/CraigR973/mcu-app/pull/33), `2995b26`)** — Merged at Craig's OK ("yes to 1 and 3") and live at
   10:28 UTC with migration 047; CI green first time, the 10 database tests run; production
