@@ -30,8 +30,6 @@ from src.services.letterboxd.diary import DiaryEntry
 from src.services.letterboxd.importer import run_import
 from src.services.letterboxd.sync import SyncNotConfigured, sync_watch_history
 
-pytestmark = pytest.mark.asyncio
-
 FEED = (Path(__file__).parent / "fixtures" / "letterboxd_diary_rss.xml").read_text(encoding="utf-8")
 
 

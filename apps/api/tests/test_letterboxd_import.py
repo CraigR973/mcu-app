@@ -14,7 +14,6 @@ from collections.abc import AsyncIterator
 from datetime import date
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
@@ -27,8 +26,6 @@ from src.services.letterboxd.diary import DiaryEntry
 from src.services.letterboxd.importer import run_import
 from src.tmdb.models import Movie as TmdbMovie
 from src.tmdb.models import SearchResult, SearchResults
-
-pytestmark = pytest.mark.asyncio
 
 
 @pytest_asyncio.fixture

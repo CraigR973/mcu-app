@@ -44,8 +44,6 @@ from src.routers.ebay_watch import get_ebay_client_factory
 from src.services.ebay_watch.runs import DAILY_SHARE, start_run, work_run
 from src.services.identification import _move_back, move_references
 
-pytestmark = pytest.mark.asyncio
-
 FIXTURES = Path(__file__).parent / "fixtures"
 ITEM = json.loads((FIXTURES / "ebay_item_auction_with_buy_now.json").read_text())
 NEWEST = json.loads((FIXTURES / "ebay_newest_bluray_4k_gb.json").read_text())

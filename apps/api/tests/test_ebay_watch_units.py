@@ -40,8 +40,6 @@ from src.services.ebay_watch.scan import Find, is_deal, read_new_listings
 from src.services.ebay_watch.targets import check_listing, check_search
 from src.services.ebay_watch.usual import ShopPrice, UsualPrice
 
-pytestmark = pytest.mark.asyncio
-
 FIXTURES = Path(__file__).parent / "fixtures"
 ITEM = json.loads((FIXTURES / "ebay_item_auction_with_buy_now.json").read_text())
 NEWEST = json.loads((FIXTURES / "ebay_newest_bluray_4k_gb.json").read_text())

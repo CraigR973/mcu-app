@@ -39,8 +39,6 @@ from src.tmdb.models import (
     SearchResults,
 )
 
-pytestmark = pytest.mark.asyncio
-
 DISCS = "5"
 CINEMA = "2|3"
 

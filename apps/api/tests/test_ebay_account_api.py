@@ -32,8 +32,6 @@ from src.routers.ebay_account import get_ebay_http
 from src.services.ebay_account.accounts import state_hash
 from src.services.ebay_account.crypto import derive_key, open_sealed
 
-pytestmark = pytest.mark.asyncio
-
 FIXTURES = Path(__file__).parent / "fixtures"
 KEY_B64 = base64.b64encode(bytes(range(32))).decode()
 ACTOR = "x-test-actor"

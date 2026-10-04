@@ -29,8 +29,6 @@ from src.ebay.client import (
     EbayNotConfigured,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 class _Recorder:
     """A scripted eBay, counting what it was asked for."""

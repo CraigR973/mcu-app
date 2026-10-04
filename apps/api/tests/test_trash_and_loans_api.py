@@ -13,7 +13,6 @@ from collections.abc import AsyncIterator
 from datetime import date, datetime, timedelta
 from typing import Any
 
-import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -33,8 +32,6 @@ from src.models.profile import Profile, UserRole
 from src.models.wanted import Retailer, WantedItem
 from src.models.watch_log import WatchLog
 from src.services import trash as trash_service
-
-pytestmark = pytest.mark.asyncio
 
 ACTOR_HEADER = "x-test-actor"
 

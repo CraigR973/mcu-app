@@ -8,7 +8,6 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event, select
@@ -33,8 +32,6 @@ from src.tmdb.models import (
 from src.tmdb.models import (
     Movie as TmdbMovie,
 )
-
-pytestmark = pytest.mark.asyncio
 
 
 def _tmdb_movie(tmdb_id: int = 550) -> TmdbMovie:

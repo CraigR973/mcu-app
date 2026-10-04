@@ -33,8 +33,6 @@ from src.services.scraping.aggregate import aggregate_old_checks
 from src.services.scraping.alerts import AlertCandidate, queue_price_drop_alerts
 from src.services.scraping.daily import run_daily_scrape
 
-pytestmark = pytest.mark.asyncio
-
 
 class StubSender:
     """Records instead of pushing. Batch 11's tests carry the transport's own coverage."""

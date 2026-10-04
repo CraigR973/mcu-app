@@ -46,8 +46,6 @@ from src.services.movie_night.sessions import (
     watched_by_others,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest_asyncio.fixture
 async def db(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:

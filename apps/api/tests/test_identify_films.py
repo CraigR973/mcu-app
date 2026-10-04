@@ -71,8 +71,6 @@ from src.services.valuation import count_due
 from src.tmdb.models import CastMember, Credits, CrewMember, SearchResults
 from src.tmdb.models import Movie as TmdbMovie
 
-pytestmark = pytest.mark.asyncio
-
 NOW = datetime(2026, 9, 25, 12, 0)
 
 

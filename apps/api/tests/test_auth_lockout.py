@@ -34,8 +34,6 @@ from src.rate_limit import LOGIN_LIMIT, charge_durable_limit
 from src.routers.auth import _record_failed_attempt
 from tests.conftest import DATABASE_URL
 
-pytestmark = pytest.mark.asyncio
-
 
 def _load_migration(revision_prefix: str) -> ModuleType:
     """Load a migration module by its revision-numbered filename.

@@ -21,7 +21,6 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import date
 
-import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -35,8 +34,6 @@ from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.smart_collection import SmartCollection
 from src.models.watch_log import WatchLog
-
-pytestmark = pytest.mark.asyncio
 
 ACTOR_HEADER = "x-test-actor"
 

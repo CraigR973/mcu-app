@@ -15,7 +15,6 @@ from __future__ import annotations
 import uuid
 from collections.abc import AsyncIterator
 
-import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -30,8 +29,6 @@ from src.models.box_set import BOX_SETS_TABLE, BoxSet
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
-
-pytestmark = pytest.mark.asyncio
 
 ACTOR_HEADER = "x-test-actor"
 

@@ -236,9 +236,6 @@ class TestExtraction:
         assert specs.is_empty
 
 
-pytestmark = pytest.mark.asyncio
-
-
 @pytest_asyncio.fixture
 async def db(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:
     session = AsyncSession(

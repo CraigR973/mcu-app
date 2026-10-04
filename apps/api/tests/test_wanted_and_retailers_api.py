@@ -33,8 +33,6 @@ from src.services.scraping.runner import run_scrape
 from src.tmdb.models import Credits, Genre
 from src.tmdb.models import Movie as TmdbMovie
 
-pytestmark = pytest.mark.asyncio
-
 ACTOR_HEADER = "x-test-actor"
 WANTED_TMDB_ID = 940_001
 

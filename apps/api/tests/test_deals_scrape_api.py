@@ -34,8 +34,6 @@ from src.models.wanted import Retailer
 from src.services.scraping import deals_runner
 from src.services.scraping.fetcher import FetchedPage, FetchError
 
-pytestmark = pytest.mark.asyncio
-
 FIXTURES = Path(__file__).parent / "fixtures"
 ZAVVI_URL = "https://www.zavvi.com/c/offers/2-for-30-4k/"
 SECOND_SIGHT_URL = "https://secondsightfilms.co.uk/collections/sale"

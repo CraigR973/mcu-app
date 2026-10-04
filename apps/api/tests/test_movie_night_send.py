@@ -15,7 +15,6 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import timedelta
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -42,8 +41,6 @@ from src.services.notifications import (
     get_or_create_preferences,
 )
 from src.services.push_transport import set_push_sender
-
-pytestmark = pytest.mark.asyncio
 
 
 class RecordingSender:

@@ -15,7 +15,6 @@ import uuid
 from collections.abc import AsyncIterator
 from typing import Any
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -33,8 +32,6 @@ from src.routers.ai import set_ai_client
 from src.services.ai.chat import ChatEvent, resolve_tool_call, run_turn
 from src.services.ai.client import AiReply, ClaudeClient, TurnEvent
 from src.services.ai.tools import ADMIN_ONLY, is_write_tool, tools_for
-
-pytestmark = pytest.mark.asyncio
 
 
 class _Block:

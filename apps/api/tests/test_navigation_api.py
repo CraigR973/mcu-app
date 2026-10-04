@@ -12,7 +12,6 @@ from collections.abc import AsyncIterator
 from datetime import date
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -28,8 +27,6 @@ from src.models.loan import Loan
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.smart_collection import SmartCollection
-
-pytestmark = pytest.mark.asyncio
 
 ACTOR_HEADER = "x-test-actor"
 
