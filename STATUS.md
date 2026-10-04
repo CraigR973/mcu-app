@@ -12,8 +12,8 @@ head, and the read-only role able to read both new tables.
 - **First nightly run: 4 Oct, 02:00 UTC,** in `cron-specs` after the spec batch: Brave
   searches for the 10 wants, a row for each owned film and format with a spec page (728 discs
   have one), then up to 150 Blu-ray.com pages, five seconds apart, about ten nights in all
-  (#244). A `403` or `429` halts it and the spec backfill with it (#110). **Open:** reading
-  that run back.
+  (#244). A `403` or `429` halts it and the spec backfill with it (#110). **Read back
+  4 Oct:** finished 02:16, no halt, 150 requests, 81 reviews scored, 651 owned rows to go.
 - **Next: T8b's plan, for Craig's go** (`docs/next-mac-session.md` section 5, #243): planned
   in the chat, built only at his word.
 
@@ -582,6 +582,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-04 (V9's first night)** — `cron-specs` ran the reviews batch 02:01–02:16 UTC
+  after a spec batch with nothing due: 20 Brave searches, 16 reviews found (Blu-ray.com 10,
+  AVForums 6), 150 Blu-ray.com requests five seconds apart, 81 reviews scored (Bad
+  Lieutenant, Cross of Iron, Don't Look Now and The Third Man among the 5.0s), 3 with none,
+  1 another year's film (Dead Man's Shoes, catalogued as the 1940 film). No halt. 651 owned
+  films and formats wait, about five more nights. The spec backfill had nothing left to search:
+  728 of 1,250 Blu-ray and 4K discs have specs, and 522 wait for Craig on Disc specs.
 
 - **2026-10-03 (V9, [#30](https://github.com/CraigR973/mcu-app/pull/30), `d1c3bf7`)** — Reviews, found with Brave, on Wanted items and
   film pages; Blu-ray.com's scores read within #110 as #228 widened it, owned films' by

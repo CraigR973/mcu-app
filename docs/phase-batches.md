@@ -2890,9 +2890,13 @@ the edition that carries the review (#241). AVForums is links only, and the app 
 Wanted items and the film page show "Reviews: Blu-ray.com · AVForums" with Brave's line and
 the scores once read; Home's Highlights has its fourth row, "Best reviewed": owned films by
 Blu-ray.com's Overall, for a format on the shelf. Browser check at 375 px, light and dark
-(#169's method); it found Brave's line unclamped, fixed before the merge. **Open:** the
-first nightly run, 4 Oct 02:00 UTC, read back; AVForums' scores (forbidden; Craig chose
-links only) and AVForums for owned films (a higher Brave budget, Craig's call).
+(#169's method); it found Brave's line unclamped, fixed before the merge. **First nightly
+run, 4 Oct 02:01–02:16 UTC, read back at 02:40:** finished, no halt; 20 Brave searches
+found 16 reviews (Blu-ray.com 10 of 10 wants, AVForums 6), and 150 Blu-ray.com requests
+scored 81 reviews (8 wanted films', 73 owned), with 3 showing none and 1 another year's
+film (Dead Man's Shoes, catalogued as the 1940 film). 651 owned films and formats wait,
+about five more nights. **Open:** AVForums' scores (forbidden; Craig chose links only) and
+AVForums for owned films (a higher Brave budget, Craig's call).
 
 **Runs on Craig's Mac, at his word on 2 Oct** (`docs/next-mac-session.md`, after 20b's second
 half): the Mac reaches blu-ray.com and avforums.com, so the network step below is not needed.
