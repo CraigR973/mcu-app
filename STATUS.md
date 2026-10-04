@@ -2,6 +2,32 @@
 
 ## Now
 
+**4 Oct 2026, 10:00 UTC: T8b, Connect eBay, is built on `feat/t8b-connect-ebay` and waits
+for Craig's OK to merge** (`OWNER-ACTIONS.md` 29), because it changes `.railway/railway.ts`
+(#246). Built at his go of 4 Oct ("1) each person 2) go with recommended 3) recommended 4)
+build it", #245).
+- **What it does:** Settings → eBay → Connect eBay sends a person to eBay's own sign-in, with
+  the fewest scopes, and eBay returns them to `/settings/ebay/connected`; the app swaps the
+  one-time code for two tokens, sealed with AES-256-GCM under a key derived from
+  `EBAY_TOKEN_KEY` and bound to that person. "Your eBay" (`/ebay`) reads their watch list,
+  saved searches and selling list from eBay when opened; a watched item or a saved search
+  becomes a T8a price alert. Disconnect deletes the tokens. A public `/privacy` page is the
+  one eBay's sign-in page links to.
+- **Proved:** local gate green with the database tests skipped (no Postgres on this Mac,
+  gotcha 15); CI's Postgres runs them. Browser check on a stub API at 375 and 1280 px, light
+  and dark: Settings' eBay tab, the return and declined pages, Your eBay with both alert
+  forms, the privacy page. The check and the code review around it found five faults, all
+  fixed: eBay thumbnails the production security policy would block, "Page not found" as two
+  pages' tab titles, a saved search unable to find a wanted film, and the eBay tab opening
+  scrolled out of sight.
+- **Not proved until a real sign-in:** which scope eBay's two list calls need. The token asks
+  for the base scope alone; if eBay refuses, Your eBay shows eBay's words and nothing else
+  breaks. Craig tries his own account first (29).
+- **`config plan` reads `0 to destroy`** with both variables declared. No apply is needed.
+- **This session broke the never-`cd` rule once:** autoenv printed `apps/api/.env`, with the
+  live Neon owner password, into the session's transcript. Nothing was sourced. Rotating it
+  is `OWNER-ACTIONS.md` 22, recommended since the same slip on 25 Sep.
+
 **3 Oct 2026, 22:47 UTC: V9 is live** ([#30](https://github.com/CraigR973/mcu-app/pull/30), `d1c3bf7`, migration 046), on Craig's Mac, after
 20b's second half (below). Verified in production: the merge SHA, `db: ok`, migration 046 at
 head, and the read-only role able to read both new tables.
@@ -582,6 +608,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-04 (T8b built, not merged)** — Connect eBay, each person their own (#245): the
+  sign-in with a single-use, ten-minute state tied to the person; two sealed tokens per
+  person; Your eBay's watch, saved-search and selling lists read live; alerts from them via
+  T8a; `/privacy`; both eBay variables declared with `preserve()`. A session hit its spend
+  limit mid-gate on 4 Oct and this one finished it. The browser check and review found five
+  faults, all fixed; the saved-search picker now looks on Wanted too (#246). Merge waits for
+  Craig's OK (`OWNER-ACTIONS.md` 29). A `cd` printed the Neon password into the transcript
+  (22).
 
 - **2026-10-04 (V9's first night)** — `cron-specs` ran the reviews batch 02:01–02:16 UTC
   after a spec batch with nothing due: 20 Brave searches, 16 reviews found (Blu-ray.com 10,

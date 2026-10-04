@@ -4,8 +4,8 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-01**,
-after the first cloud session with the live database (27 done, the trial read). *Numbers
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-04**,
+when T8b was built (29 added). *Numbers
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
@@ -27,15 +27,16 @@ conversation still maps onto this file.*
   refusals switching shops off; its second half (2 Oct, `abc17d6`) waits the minute a shop asks
   before retrying. **3 Oct: the wait got 2 of 27 refused requests through**, no better than two
   seconds. **Yours: 28**, whether `cron-scrape` gets a fixed outbound address, the only option
-  left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. T8b
-  starts after V9 merges, at your word on 3 Oct (`DECISIONS.md` #243); 38 comes last.
+  left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. **T8b
+  is built (4 Oct): yours is 29, OK to merge, then Connect eBay on your own account first**;
+  38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): V1, V3, V4, V5, V6 and V8 are
   live and V7 is shelved. **V9 is live (3 Oct, `d1c3bf7`):** Wanted items and film pages show
   "Reviews: Blu-ray.com · AVForums" as links, with Blu-ray.com's scores once read, and Home
   has a "Best reviewed" row. AVForums is links only, as you chose; its scores need its
   owner's written permission, if you ever want to ask (M2N Limited, via its contact page).
-  The first nightly read of Blu-ray.com's reviews is 4 Oct, 02:00 UTC. **Next: T8b's plan,
-  for your go.** Also yours: the two-phone movie night check for V3 (16b).
+  The first nightly read, 4 Oct, scored 81 reviews with no halt. Also yours: the two-phone
+  movie night check for V3 (16b).
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1264,6 +1265,30 @@ Say "try a fixed address" (a session then prepares the change for your word) or 
 
 ---
 
+### 29. Say OK to merge T8b, then connect your own eBay first — T8b, Connect eBay *(new 4 Oct)*
+
+**New 4 Oct.** T8b is built on `feat/t8b-connect-ebay`: Connect eBay in Settings, each person
+their own; a "Your eBay" page with your watch list, saved searches and selling list (active,
+and sold in the last 60 days), read from eBay when opened; and T8a's price alerts set from a
+watched item or a saved search (`DECISIONS.md` #245, #246). Its merge waits for you only
+because it changes `.railway/railway.ts`: it declares `EBAY_RUNAME` and `EBAY_TOKEN_KEY` with
+`preserve()`, so a config apply can no longer delete them.
+
+1. Say **OK** (or name anything to change). The agent merges it, which deploys the pages, the
+   API and migration 047 (two tables, neither readable by the read-only login). Connect eBay
+   works from then on: it reads the two variables Railway already holds.
+2. **No Railway apply is needed for T8b.** `config plan` now reads `0 to add, 1 to change,
+   0 to destroy`; the one change is the API's restart policy, pending since 26 Sep. Apply
+   whenever you like, or not at all.
+3. **Try it on your own eBay first:** Settings → eBay → **Connect eBay**. eBay asks you to
+   sign in, then to agree, and sends you back to "eBay is connected as …". Then open **Your
+   eBay lists**. This is the first time the app's sign-in meets eBay: if eBay refuses the
+   lists, the page shows eBay's own words. Tell the agent; nothing else is affected.
+   Disconnect afterwards if you like.
+4. **Then Mark, on his phone,** the same way. Only he sees his lists.
+
+No eBay password goes to the app or to an agent: both of you type it on eBay's own page.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **New 25 Sep.** An agent broke the repo's never-`cd` rule once. Autoenv then printed
@@ -1271,6 +1296,11 @@ Say "try a fixed address" (a session then prepares the change for your word) or 
 file's own comment says it should hold no secrets). The file is gitignored and was never
 committed, and the agent deleted the log it landed in, but the password is in that session's
 transcript.
+
+**4 Oct: it happened again.** T8b's session ran a `cd` into `apps/api/tests/fixtures`, and
+autoenv printed the same file into that session's transcript. Nothing was sourced: the prompt
+read no answer and defaulted to No. The password is now in two transcripts, and step 3 is
+what stops a third.
 
 1. In Neon, reset the password for the `neondb_owner` role.
 2. Put the new connection string in Railway's `api` service (`DATABASE_URL`) and in
