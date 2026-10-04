@@ -82,8 +82,12 @@ import {
   specBatchStartSchema,
   specDecisionSchema,
   specQueueSchema,
+  ebayAccountSchema,
+  ebayConnectStartSchema,
+  ebaySellingSchema,
   ebayTargetSchema,
   ebayTargetsSchema,
+  ebayWatchingSchema,
   identifyDecisionSchema,
   identifyOverviewSchema,
   identifyQueueSchema,
@@ -203,6 +207,9 @@ import {
   type TrashTable,
   type WatchLogEntry,
   type WatchLogPage,
+  type EbayAccount,
+  type EbaySelling,
+  type EbayWatching,
 } from '@mcu/shared'
 import { z, type ZodType, type ZodTypeDef } from 'zod'
 
@@ -336,6 +343,12 @@ export type {
   WantedList,
   WatchLogEntry,
   WatchLogPage,
+  EbayAccount,
+  EbayListing,
+  EbaySavedSearch,
+  EbaySelling,
+  EbaySold,
+  EbayWatching,
 } from '@mcu/shared'
 
 /**
@@ -1312,6 +1325,48 @@ export async function changeTargetPrice(id: string, targetPrice: string): Promis
 export async function removeTarget(id: string): Promise<void> {
   const response = await authFetch(`/ebay/targets/${id}`, { method: 'DELETE' })
   if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+// ---------------------------------------------------------------------------
+// Connect eBay (Batch T8b) — each person's own eBay, `DECISIONS.md` #245
+// ---------------------------------------------------------------------------
+
+/** This person's connection, with the account's name read live from eBay. */
+export async function fetchEbayAccount(): Promise<EbayAccount> {
+  return parseResponse(await authFetch('/ebay/account'), ebayAccountSchema)
+}
+
+/** Start connecting: the API keeps a one-time state and answers eBay's consent address. */
+export async function startEbayConnect(): Promise<string> {
+  const started = await parseOrThrowApiError(
+    await authFetch('/ebay/account/connect', { method: 'POST' }),
+    ebayConnectStartSchema,
+  )
+  return started.authorizeUrl
+}
+
+/** Finish connecting with what eBay put on the address it sent the person back to. */
+export async function finishEbayConnect(code: string, state: string): Promise<EbayAccount> {
+  return parseOrThrowApiError(
+    await authFetch('/ebay/account/complete', {
+      method: 'POST',
+      body: JSON.stringify({ code, state }),
+    }),
+    ebayAccountSchema,
+  )
+}
+
+export async function disconnectEbay(): Promise<void> {
+  const response = await authFetch('/ebay/account', { method: 'DELETE' })
+  if (!response.ok) throw new Error(await errorMessage(response))
+}
+
+export async function fetchEbayWatching(): Promise<EbayWatching> {
+  return parseOrThrowApiError(await authFetch('/ebay/account/watching'), ebayWatchingSchema)
+}
+
+export async function fetchEbaySelling(): Promise<EbaySelling> {
+  return parseOrThrowApiError(await authFetch('/ebay/account/selling'), ebaySellingSchema)
 }
 
 export async function fetchStats(): Promise<Stats> {

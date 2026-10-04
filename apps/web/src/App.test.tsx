@@ -59,3 +59,16 @@ describe('/debug, in development', () => {
     expect(thrown).toContain('This is your first error!')
   })
 })
+
+/**
+ * The privacy policy — Batch T8b, `DECISIONS.md` #227. eBay links to it from its sign-in
+ * page, where the reader is not signed in here, so it is public and has its own title.
+ */
+describe('/privacy', () => {
+  it('opens without signing in, with its own title', async () => {
+    renderAt('/privacy')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Privacy' })).not.toBeNull()
+    await waitFor(() => expect(document.title).toBe('Privacy · The Real MCU'))
+  })
+})

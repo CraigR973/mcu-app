@@ -1,14 +1,15 @@
-import { useState } from 'react'
-import { Bell, Bot, Clapperboard } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Bell, Bot, Clapperboard, ShoppingBag } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
+import { EbayAccountPanel } from '@/components/settings/EbayAccountPanel'
 import { WatchHistoryPanel } from '@/components/settings/WatchHistoryPanel'
 import { PageHeader } from '@/components/ui/page-header'
 import { cn } from '@/lib/utils'
 import { AiSettings } from './AiSettingsPage'
 import { NotificationSettings } from './NotificationSettingsPage'
 
-type Tab = 'notifications' | 'assistant' | 'history'
+type Tab = 'notifications' | 'assistant' | 'history' | 'ebay'
 
 const TABS: { key: Tab; label: string; icon: typeof Bell }[] = [
   { key: 'notifications', label: 'Notifications', icon: Bell },
@@ -16,6 +17,8 @@ const TABS: { key: Tab; label: string; icon: typeof Bell }[] = [
   // your own account, which is what this page is for.
   { key: 'history', label: 'Watch history', icon: Clapperboard },
   { key: 'assistant', label: 'Assistant', icon: Bot },
+  // Batch T8b. Connecting your own eBay is a setting about your own account, like the rest.
+  { key: 'ebay', label: 'eBay', icon: ShoppingBag },
 ]
 
 /**
@@ -37,7 +40,10 @@ export default function SettingsPage() {
   const requested = params.get('tab')
   const [fallback, setFallback] = useState<Tab>('notifications')
   const active: Tab =
-    requested === 'assistant' || requested === 'notifications' || requested === 'history'
+    requested === 'assistant' ||
+    requested === 'notifications' ||
+    requested === 'history' ||
+    requested === 'ebay'
       ? requested
       : fallback
 
@@ -46,18 +52,35 @@ export default function SettingsPage() {
     setParams(tab === 'notifications' ? {} : { tab }, { replace: true })
   }
 
+  // A link to the last tab (eBay's pages send people to `?tab=ebay`) would otherwise open with
+  // the selected tab scrolled out of sight on a phone. `nearest` moves the strip only as far
+  // as it must, and the page not at all while the strip is in view.
+  const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({})
+  useEffect(() => {
+    tabRefs.current[active]?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+  }, [active])
+
   return (
     <div className="page-shell-narrow space-y-6">
       <PageHeader
         eyebrow="Your account"
         title="Settings"
-        description="Which alerts reach you and on which devices, how your watch history stays current, and what the assistant is allowed to spend."
+        description="Which alerts reach you and on which devices, how your watch history stays current, what the assistant is allowed to spend, and your eBay connection."
       />
 
-      <div role="tablist" aria-label="Settings sections" className="flex gap-1 border-b border-border">
+      {/* Four tabs overflow 375px, so the strip scrolls, each tab keeping its width, with the
+          film page's narrower padding on a phone (its fix from Batch U3's browser check). */}
+      <div
+        role="tablist"
+        aria-label="Settings sections"
+        className="flex gap-1 overflow-x-auto border-b border-border"
+      >
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
+            ref={(element) => {
+              tabRefs.current[key] = element
+            }}
             type="button"
             role="tab"
             id={`settings-tab-${key}`}
@@ -65,7 +88,7 @@ export default function SettingsPage() {
             aria-controls={`settings-panel-${key}`}
             onClick={() => select(key)}
             className={cn(
-              'touch-target -mb-px flex min-h-11 items-center gap-2 border-b-2 px-4 text-sm font-semibold transition-colors',
+              'touch-target -mb-px flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition-colors sm:px-4',
               active === key
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground',
@@ -86,6 +109,7 @@ export default function SettingsPage() {
         {active === 'notifications' ? <NotificationSettings /> : null}
         {active === 'history' ? <WatchHistoryPanel /> : null}
         {active === 'assistant' ? <AiSettings /> : null}
+        {active === 'ebay' ? <EbayAccountPanel /> : null}
       </div>
     </div>
   )

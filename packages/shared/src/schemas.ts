@@ -2310,3 +2310,73 @@ export const ebayTargetsSchema = z.object({
 export type EbayTarget = z.infer<typeof ebayTargetSchema>
 export type EbayWatchRun = z.infer<typeof ebayWatchRunSchema>
 export type EbayTargets = z.infer<typeof ebayTargetsSchema>
+
+// ---------------------------------------------------------------------------
+// Connect eBay (Batch T8b) — `DECISIONS.md` #216, #227, #245: each person's own eBay
+// ---------------------------------------------------------------------------
+
+/** Whether connecting is set up, whether this person is connected, and as whom. The
+ *  account's name is read live from eBay and never stored. */
+export const ebayAccountSchema = z.object({
+  configured: z.boolean(),
+  missing: z.array(z.string()),
+  connected: z.boolean(),
+  accountName: z.string().nullable(),
+  connectedAt: z.string().nullable(),
+  note: z.string().nullable(),
+})
+
+export const ebayConnectStartSchema = z.object({
+  /** eBay's own consent page: the browser goes there, never the API. */
+  authorizeUrl: z.string().url().startsWith('https://auth.ebay.com/'),
+})
+
+export const ebayListingSchema = z.object({
+  itemId: z.string().min(1),
+  title: z.string().min(1),
+  url: z.string().url(),
+  price: z.string().nullable(),
+  currency: z.string().nullable(),
+  postage: z.string().nullable(),
+  isAuction: z.boolean(),
+  bidCount: z.number().int().nonnegative().nullable(),
+  endsAt: z.string().nullable(),
+})
+
+export const ebaySavedSearchSchema = z.object({
+  name: z.string().min(1),
+  keywords: z.string().nullable(),
+  url: z.string().url().nullable(),
+})
+
+export const ebaySoldSchema = z.object({
+  itemId: z.string().min(1),
+  title: z.string().min(1),
+  url: z.string().url(),
+  price: z.string().nullable(),
+  currency: z.string().nullable(),
+  soldAt: z.string().nullable(),
+})
+
+export const ebayWatchingSchema = z.object({
+  items: z.array(ebayListingSchema),
+  savedSearches: z.array(ebaySavedSearchSchema),
+  totalItems: z.number().int().nonnegative(),
+  fetchedAt: z.string(),
+})
+
+export const ebaySellingSchema = z.object({
+  active: z.array(ebayListingSchema),
+  sold: z.array(ebaySoldSchema),
+  totalActive: z.number().int().nonnegative(),
+  totalSold: z.number().int().nonnegative(),
+  fetchedAt: z.string(),
+})
+
+export type EbayAccount = z.infer<typeof ebayAccountSchema>
+export type EbayConnectStart = z.infer<typeof ebayConnectStartSchema>
+export type EbayListing = z.infer<typeof ebayListingSchema>
+export type EbaySavedSearch = z.infer<typeof ebaySavedSearchSchema>
+export type EbaySold = z.infer<typeof ebaySoldSchema>
+export type EbayWatching = z.infer<typeof ebayWatchingSchema>
+export type EbaySelling = z.infer<typeof ebaySellingSchema>
