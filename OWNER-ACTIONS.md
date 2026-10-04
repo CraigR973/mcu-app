@@ -26,8 +26,9 @@ conversation still maps onto this file.*
 - **Group U** (`docs/phase-batches.md`): **20b is done.** Its first half (1 Oct, `548160f`) stopped
   refusals switching shops off; its second half (2 Oct, `abc17d6`) waits the minute a shop asks
   before retrying. **3 Oct: the wait got 2 of 27 refused requests through**, no better than two
-  seconds. **Yours: 28**, whether `cron-scrape` gets a fixed outbound address, the only option
-  left; 22c waits on it. 21 starts once 3 wants have prices from two shops on two days. **T8b
+  seconds. ~~28, a fixed outbound address~~ **left for now at your word (4 Oct)**, and 22c is
+  parked with it. 21 starts once 3 wants have prices from two shops on two days (2 of 3 on
+  4 Oct): optionally, add a want that both Zavvi and Arrow sell. **T8b
   is live (4 Oct, `2995b26`): yours is 29, Connect eBay on your own account first, then
   Mark's**; 38 comes last.
 - **Group V** (`docs/phase-batches.md`, your 30 Sep snags): V1, V3, V4, V5, V6 and V8 are
@@ -1240,7 +1241,14 @@ Railway's `config plan`.
    the 1 Oct shop check, your trial's report if you have run it), then asks your decisions
    and carries on with what you approve.
 
-### 28. A fixed outbound address for the nightly shop check? — 20b, your call *(new 3 Oct)*
+### 28. ~~A fixed outbound address for the nightly shop check?~~ — **left for now, 4 Oct, at your word** *(new 3 Oct)*
+
+> **Left for now, 4 Oct** ("yes lets leave it for now", `DECISIONS.md` #247). Checked that
+> day: Railway's static outbound addresses need its **Pro plan** (you are on Hobby), and its
+> docs say they **may be shared with other customers**; Railway offers no dedicated outbound
+> address on any plan. So the fix below was never "an address of its own", and it was not
+> sure to work. The nightly check keeps trying the three shops and gets the odd price
+> through; 22c is parked with this item. Reopen it if those shops' prices start to matter.
 
 **What happened.** Since 30 Sep the three Shopify shops (Second Sight, 101 Films, Powerhouse)
 refuse the app with `429 Too Many Requests` from Cloudflare, asking it to wait 60 seconds, and
@@ -1249,8 +1257,8 @@ full minute before each retry (20b's second half): **2 of 27 got through.** So w
 the limit is not this app's own pace, and most likely it is other traffic leaving Railway from
 the same shared address.
 
-**The option left: give `cron-scrape` a fixed outbound address** of its own, a Railway
-setting. It is a hosting change, so no agent makes it. It is not proved to cure the refusals,
+**The option left: give `cron-scrape` a fixed outbound address**, a Railway setting
+(*not* one of its own: see the note above). It is a hosting change, so no agent makes it. It is not proved to cure the refusals,
 and Railway's plan and price for it should be checked first. It is reversible.
 
 **Or leave it.** Zavvi and Arrow keep answering; the Shopify shops price a want now and then.
