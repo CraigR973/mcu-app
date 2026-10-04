@@ -65,6 +65,11 @@ dependencies = [
     # it and cost a third more bytes on a phone's upload, which is the connection least
     # able to spare them.
     "python-multipart>=0.0.9",
+    # Batch T8b — eBay's Trading API answers in XML, the first XML this app reads. The
+    # standard library's parsers are open to entity-expansion and external-entity tricks;
+    # defusedxml wraps the same parser with those refused (`DECISIONS.md` #245). Pure
+    # Python, so unlike the lxml case it adds nothing to the Railway image.
+    "defusedxml>=0.7.1",
 ]
 
 [project.optional-dependencies]
@@ -80,6 +85,9 @@ dev = [
     # would also stop checking every *use* of asyncpg, and a `LISTEN` connection is
     # exactly the code worth having typed.
     "asyncpg-stubs>=0.30.0",
+    # Batch T8b — defusedxml ships no `py.typed`; real stubs, for the reason asyncpg's
+    # are: an override would stop checking every use of the parser.
+    "types-defusedxml>=0.7.0",
 ]
 
 [build-system]
