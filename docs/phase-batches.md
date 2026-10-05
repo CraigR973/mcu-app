@@ -2989,7 +2989,7 @@ on Group U's row in "Batch groups", mid tier the two on Batch 21's row.
 
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
-| 1 | ~~W1 search and top bar~~ (`9dd6805`) → ~~W2 Home~~ (`0a87625`) → W3 lend and borrow | **Go given 5 Oct** (#249) | top tier · high (from W3) | top tier · High |
+| 1 | ~~W1 search and top bar~~ (`9dd6805`) → ~~W2 Home~~ (`0a87625`) → ~~W3 lend and borrow~~ (`3ad71eb`) | **Go given 5 Oct** (#249) | top tier · high (from W3) | top tier · High |
 
 **Each batch on its own:**
 
@@ -3103,7 +3103,20 @@ Pinned collections. Only Highlights' rows scroll sideways. Most watched repeats 
 - Browser check at 375 and 1,280 px, light and dark, with every row filled and with none.
 - Gate green.
 
-### W3 — Lend and borrow, from Loans with the scanner 🟡
+### ~~W3 — Lend and borrow, from Loans with the scanner~~ 🟡 **shipped 2026-10-05 (`3ad71eb`, [#42](https://github.com/CraigR973/mcu-app/pull/42))**
+**Acceptance: met; a live camera scan and the first real loans are Craig's (`OWNER-ACTIONS.md`
+30).** Either person lends, borrows and marks returned, in the API and on screen. Migration 048
+adds `loans.borrower_profile_id` (nullable, on delete set null), and a borrow names the person
+by it, the name read from the profile; exactly one way of naming a borrower, an unknown profile
+refused. Overdue reminders go to both people, the borrower in their own words. Loans' "Lend or
+borrow" finds the disc by a search of your own films or a barcode (camera or typed) that
+resolves to a film, then lists its discs; choosing the film remembers the code, and nothing
+writes a barcode onto a disc. "Mark returned" became "Returned"; loan dates read "5 Oct
+2026". Browser check at 375 and 1,280 px, light and dark, as Mark and as Craig, with a film's
+real data read read-only (#250). Local gate green (API 1,188 passed, 650 skipped without
+Postgres; web 524, shared 131); **CI ran the six new database tests for the first time, green**,
+and reversed migration 048; production reported the merge SHA at 16:53 UTC with `db: ok`.
+
 
 **Covers snag 2.** Top tier · high / top tier · High. Sitting 1, last. Craig's answer (#249):
 both lend and borrow.
@@ -3224,7 +3237,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
-| **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → W3 | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
+| **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

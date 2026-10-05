@@ -5167,3 +5167,28 @@ contemporaneous.
        showed every set. Found in the browser on 5 Oct, fixed and pinned by a test.
      - **Recent activity shows 10, not 20**, as the short list at the foot (#249's call, open to
        overrule). A set's back link names where it goes ("Home").
+
+### 2026-10-05 — Group W, batch W3
+
+252. **W3's choices: a borrower is named exactly one way, both people hear about an overdue loan,
+     and a scan names a film, never a disc.**
+
+     - **Exactly one way to name a borrower:** a name for anyone, or `borrowerProfileId` for one of
+       the people who use the app, whose name the server reads from the profile so the two cannot
+       disagree. Both, or neither, is a 422; an unknown or inactive profile a 404. The lookup
+       filters in SQL rather than reading `is_active` off the object: it is a server default, so on
+       a profile created in the same session it is not loaded, and an async session cannot load it.
+     - **Overdue reminders go to both people** (#249), the borrower, when one of them, reading
+       "You've had it since …". The recipients helper's admin-only switch had no other user and
+       went with it. Still once per loan (`reminder_sent`).
+     - **A scan on Loans names a film, and the person picks the disc.** No disc carried a barcode
+       on 5 Oct, so the lookup chain can only name the film; a candidate the catalogue does not
+       know is not offered. Choosing the film remembers the code through the existing confirm step,
+       and **no loan writes a barcode onto a disc**, so a wrong pick of copy cannot mislabel the
+       catalogue.
+     - **"Mark returned" is "Returned"**, since Mark is a person here, and loan dates read
+       "5 Oct 2026" as the rest of the app writes them.
+     - **Read on the live database after the deploy, read-only:** alembic at 048;
+       `loans.borrower_profile_id` is a nullable uuid; `mcu_readonly` can read it
+       (`has_column_privilege`), with no grant of its own; `loans` still holds 0 rows; every cron
+       job deployed the merge.

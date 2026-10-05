@@ -38,9 +38,9 @@ conversation still maps onto this file.*
   owner's written permission, if you ever want to ask (M2N Limited, via its contact page).
   The first nightly read, 4 Oct, scored 81 reviews with no halt. Also yours: the two-phone
   movie night check for V3 (16b).
-- **Group W** (`docs/phase-batches.md`, your 5 Oct snags): W1 → W2 → W3, going at your word
-  (#249). **30:** two iPhone checks once W1 is live, the search keyboard and the top bar, with
-  a screenshot if the bar still looks faded.
+- **Group W** (`docs/phase-batches.md`, your 5 Oct snags): **W1, W2 and W3 are live (5 Oct).**
+  **30:** on your iPhone, the search keyboard and the top bar (a screenshot if the bar still
+  looks faded), then a real scan on Loans' **Lend or borrow**.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1299,7 +1299,7 @@ config apply can no longer delete them.
 
 No eBay password goes to the app or to an agent: both of you type it on eBay's own page.
 
-### 30. Two iPhone checks — W1, the search keyboard and the top bar *(new 5 Oct)*
+### 30. Three phone checks — W1's keyboard and top bar, W3's scan *(new 5 Oct)*
 
 **New 5 Oct.** W1 changes two things only an iPhone can confirm (`docs/phase-batches.md`,
 Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
@@ -1313,6 +1313,11 @@ Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
    looks faded, send a screenshot and say light or dark.** In the light theme the cause may
    be the clock and battery, which iOS draws in white over a pale bar for this app; W1 does
    not change that.
+3. **Lend or borrow with the camera** (W3, live since 5 Oct): on Loans, **Lend or borrow**,
+   **Open camera**, and scan a disc's barcode. It should name the film, then list its discs
+   for **Lend** or **Borrow**. A disc's first scan asks eBay (one of the day's shared lookups);
+   the next is instant. Agents could only type a code into a stand-in for the API. Mark can
+   lend and borrow too now, from Loans or a film's page.
 
 ### 22. Rotate the Neon database password — recommended, your call
 
