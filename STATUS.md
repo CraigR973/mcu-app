@@ -2,13 +2,13 @@
 
 ## Now
 
-**5 Oct 2026: Craig's seven snags of 5 Oct are planned as Group W and running, W1 → W2 → W3**
-(#249, `docs/owner-snags-2026-10-05.md`). Before them, everything planned had shipped except
-four batches. The sequence is Group V's and Group W's tables in `docs/phase-batches.md`.
+**5 Oct 2026: Group W, Craig's seven snags of 5 Oct, has shipped: W1 → W2 → W3** (#249,
+`docs/owner-snags-2026-10-05.md`). What is left is the four batches before it, in Group V's
+table in `docs/phase-batches.md`, and Craig's checks for W (`OWNER-ACTIONS.md` 30).
 
 | Batch | State |
 |---|---|
-| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; **W1 shipped** (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38)); **W2 shipped** (`0a87625`, [#39](https://github.com/CraigR973/mcu-app/pull/39)); W3 next |
+| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; **W1 shipped** (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38)); **W2 shipped** (`0a87625`, [#39](https://github.com/CraigR973/mcu-app/pull/39)); **W3 shipped** (`3ad71eb`, [#42](https://github.com/CraigR973/mcu-app/pull/42)); Group W done |
 | 38, the end-to-end suite | at Craig's go, after Group W; its "last" slot assumed 21 and 22c first |
 | 21, price history charts | starts itself once a third want has two shops' prices on two days (2 of 3 on 4 Oct, #247) |
 | 22c, every page of a sale | parked with `OWNER-ACTIONS.md` 28 (#247) |
@@ -45,9 +45,9 @@ four batches. The sequence is Group V's and Group W's tables in `docs/phase-batc
 
 ## Next
 
-**The remaining sequence is Group W, then Group V's table, in `docs/phase-batches.md`**,
-summarised in the Now block above. **Group W is running (W1 → W2 → W3, #249)**; its criteria
-are under "Group W — the 5 Oct snags, planned 5 Oct". After it, **38 is the one batch an agent
+**The remaining sequence is Group V's table in `docs/phase-batches.md`**, summarised in the
+Now block above. **Group W shipped on 5 Oct (W1 → W2 → W3, #249)**; its record is under
+"Group W — the 5 Oct snags, planned 5 Oct". **38 is the one batch an agent
 can start**, at Craig's go; read its criteria there first (Batch 38, "E2E suite"). The 9 Sep overnight run this section used to list has all
 shipped; its record is in the batch record and the Log.
 
@@ -434,6 +434,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-05 (W3, [#42](https://github.com/CraigR973/mcu-app/pull/42), `3ad71eb`)** — Both people lend, borrow and mark returned. A borrow
+  names the person by their profile (migration 048, `loans.borrower_profile_id`, 0 rows to
+  backfill); overdue reminders go to both, the borrower reading "You've had it". Loans' "Lend or
+  borrow" finds a disc by search or barcode, then lists the film's discs. Gate and CI green, CI
+  running the six new database tests for the first time; production reported the merge SHA at
+  16:53 UTC with `db: ok`. **Group W is done**; Craig's are the iPhone checks and a real scan
+  (`OWNER-ACTIONS.md` 30).
 
 - **2026-10-05 (W2, [#39](https://github.com/CraigR973/mcu-app/pull/39), `0a87625`)** — Home is a page of rows that scroll sideways, the collection
   first (numbers, then charts), then disc releases, the four highlight rows, memories, Completion
