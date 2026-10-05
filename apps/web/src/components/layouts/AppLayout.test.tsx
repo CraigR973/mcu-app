@@ -69,6 +69,25 @@ describe('AppLayout search sheet', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search the archive' })).toBeNull())
   })
+
+  it("focuses the sheet's box while the tap is still being handled — Batch W1, snag 1", () => {
+    // iOS raises the keyboard only for a focus made inside the tap's own handling; a focus
+    // one animation frame later leaves it down, and Craig's iPhone needed a second tap. A
+    // listener on `window` runs at the end of the same click's dispatch, after React's own
+    // listener on the root, so what it sees is what iOS judges by.
+    renderShell('/movies')
+    let focusedDuringTap: Element | null = null
+    const onTap = () => {
+      focusedDuringTap = document.activeElement
+    }
+    window.addEventListener('click', onTap)
+    fireEvent.click(screen.getByRole('button', { name: 'Search the archive' }))
+    window.removeEventListener('click', onTap)
+
+    const sheet = screen.getByRole('dialog', { name: 'Search the archive' })
+    const box = within(sheet).getByRole('combobox', { name: 'Search films' })
+    expect(focusedDuringTap).toBe(box)
+  })
 })
 
 describe('AppLayout phone top bar — Batch T3', () => {
@@ -136,6 +155,25 @@ describe('AppLayout phone top bar — Batch T3', () => {
     renderShell(['/you', '/deals', '/movies/some-film'], <p>A film</p>)
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/deals'))
+  })
+
+  it("is drawn on the bottom bar's surface, not the page's colour — Batch W1, snag 5", () => {
+    // Nothing scrolls under the top bar, so the page's colour at any opacity reads as the
+    // page itself: that was the "faded" bar. The browser check measures the colours; this
+    // keeps the bar from drifting back to them.
+    renderShell('/movies/some-film', <p>A film</p>)
+    const topBar = screen.getByRole('banner', { name: 'Top bar' })
+    const bottomBar = screen.getByRole('navigation', { name: 'Primary mobile navigation' })
+    const surface = (element: Element) => element.className.split(/\s+/).find((name) => name.startsWith('bg-'))
+
+    expect(surface(topBar)).toBe('bg-popover')
+    expect(surface(bottomBar)?.startsWith('bg-popover')).toBe(true)
+    for (const control of [
+      within(topBar).getByRole('button', { name: 'Back' }),
+      within(topBar).getAllByRole('link', { name: 'Ask the assistant' })[0],
+    ]) {
+      expect(control.className).not.toMatch(/(^|\s)text-muted-foreground(\s|$)/)
+    }
   })
 
   it("opens the You page from the person's initial", () => {

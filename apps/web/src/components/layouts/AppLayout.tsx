@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { flushSync } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Bot, Command, Plus } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
@@ -77,7 +78,7 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
         <button
           type="button"
           onClick={goBack}
-          className="touch-target -ml-1 flex shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="touch-target -ml-1 flex shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted"
           aria-label="Back"
         >
           <ArrowLeft size={20} aria-hidden />
@@ -95,12 +96,12 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
       <button
         type="button"
         onClick={onOpenPalette}
-        className="touch-target hidden shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+        className="touch-target hidden shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted sm:flex"
         aria-label="Open command palette"
       >
         <Command className="h-4 w-4" aria-hidden />
       </button>
-      <AssistantLink className="touch-target flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
+      <AssistantLink className="touch-target flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
       <Link
         to={YOU_ITEM.path}
         aria-label="You: every other page, and your account"
@@ -158,7 +159,12 @@ export default function AppLayout({ children }: Props) {
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header aria-label="Top bar" className="relative z-20 border-b border-border bg-background/94 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        {/* Batch W1, snag 5. The bottom bar's raised surface and its shadow, mirrored. Until
+            W1 this was `bg-background/94` with a blur, which V1 made real, but nothing
+            scrolls under this bar (the page scrolls in `main`, below it), so 94% of the
+            page's colour over the page's colour was the page's colour: the bar read as part
+            of the page, its icons in the muted grey. */}
+        <header aria-label="Top bar" className="relative z-20 border-b border-border bg-popover pt-[env(safe-area-inset-top)] shadow-[0_12px_35px_-28px_hsl(var(--shadow-colour)/0.65)]">
           <PhoneTopBar onOpenPalette={() => setPaletteOpen(true)} />
           <div className="hidden min-h-[4.5rem] items-center gap-3 px-7 lg:flex">
           <div className="w-full max-w-2xl flex-1">
@@ -236,10 +242,14 @@ export default function AppLayout({ children }: Props) {
         </div>
       )}
 
+      {/* Batch W1, snag 1. iOS raises the keyboard only for a focus made while the tap is
+          still being handled. This used to focus the box an animation frame later, so an
+          iPhone needed a second tap on it. `flushSync` builds the sheet now, inside the tap,
+          and the box is focused before the handler returns. */}
       <MobileTabBar
         onOpenSearch={() => {
-          setSearchOpen(true)
-          requestAnimationFrame(() => window.dispatchEvent(new Event('mcu:focus-search')))
+          flushSync(() => setSearchOpen(true))
+          window.dispatchEvent(new Event('mcu:focus-search'))
         }}
       />
 
