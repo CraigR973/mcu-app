@@ -8,7 +8,7 @@ four batches. The sequence is Group V's and Group W's tables in `docs/phase-batc
 
 | Batch | State |
 |---|---|
-| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; **W1 shipped** (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38)); W2 next |
+| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; **W1 shipped** (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38)); **W2 shipped** (`0a87625`, [#39](https://github.com/CraigR973/mcu-app/pull/39)); W3 next |
 | 38, the end-to-end suite | at Craig's go, after Group W; its "last" slot assumed 21 and 22c first |
 | 21, price history charts | starts itself once a third want has two shops' prices on two days (2 of 3 on 4 Oct, #247) |
 | 22c, every page of a sale | parked with `OWNER-ACTIONS.md` 28 (#247) |
@@ -434,6 +434,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-05 (W2, [#39](https://github.com/CraigR973/mcu-app/pull/39), `0a87625`)** — Home is a page of rows that scroll sideways, the collection
+  first (numbers, then charts), then disc releases, the four highlight rows, memories, Completion
+  (fewest missing first, "All 40" to `/insights`) and Recent activity as a list. Gone from Home:
+  Most watched, its own Add a disc, and the bid trial with "Update values", now Admin's Collection
+  value. Found and fixed: tapping a completion set showed the whole list. Gate and CI green;
+  production reported the merge SHA at 16:41 UTC with `db: ok`.
 
 - **2026-10-05 (W1, [#38](https://github.com/CraigR973/mcu-app/pull/38), `9dd6805`)** — Search opens with the keyboard up: the sheet is built
   and its box focused inside the tap, which is what iOS asks before it shows a keyboard. The
