@@ -146,7 +146,8 @@ describe('loanDueLabel', () => {
   it('stops counting once the disc is back', () => {
     expect(
       loanDueLabel({ isOverdue: true, daysUntilDue: -30, returnedDate: '2026-09-09' }),
-    ).toBe('returned 2026-09-09')
+    // "9 Sep 2026" since W3, the app's way of writing a date; it was the ISO date before.
+    ).toBe('returned 9 Sep 2026')
   })
 })
 

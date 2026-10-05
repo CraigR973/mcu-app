@@ -28,6 +28,7 @@ from src.models.box_set import BoxSet
 from src.models.collection_item import CollectionItem
 from src.models.loan import LOANS_TABLE, Loan
 from src.models.movie import Movie
+from src.models.profile import Profile
 from src.models.wanted import Retailer, WantedItem
 from src.models.watch_log import WatchLog
 from src.routers.movies import Database, location_label
@@ -372,6 +373,7 @@ def _loan_response(loan: Loan, item: CollectionItem, movie: Movie) -> LoanRespon
         formats=item.formats or [],
         locationLabel=location_label(item.section, item.shelf),
         borrowerName=loan.borrower_name,
+        borrowerProfileId=loan.borrower_profile_id,
         lentDate=loan.lent_date,
         dueDate=loan.due_date,
         returnedDate=loan.returned_date,
@@ -424,9 +426,39 @@ async def list_loans(
     )
 
 
+async def _borrower(db: AsyncSession, payload: LoanCreateRequest) -> tuple[str, uuid.UUID | None]:
+    """The borrower's name and, for one of the app's people, their profile — Batch W3.
+
+    A profile's name is read from the profile rather than trusted from the client, so the two
+    cannot disagree. Only an active, undeleted profile can borrow.
+    """
+    if payload.borrowerProfileId is None:
+        assert payload.borrowerName is not None  # `LoanCreateRequest` allows exactly one
+        return payload.borrowerName.strip(), None
+    # Filtered in SQL, not read off the object: `is_active` is a server default, so on a
+    # profile created in this session it is not loaded, and an async session cannot load it.
+    person = (
+        await db.execute(
+            select(Profile).where(
+                Profile.id == payload.borrowerProfileId,
+                Profile.deleted_at.is_(None),
+                Profile.is_active.is_(True),
+            )
+        )
+    ).scalar_one_or_none()
+    if person is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Borrower not found")
+    return person.display_name, person.id
+
+
 @router.post("/loans", response_model=LoanResponse, status_code=status.HTTP_201_CREATED)
-async def lend_disc(payload: LoanCreateRequest, user: AdminUser, db: Database) -> LoanResponse:
+async def lend_disc(payload: LoanCreateRequest, user: CurrentUser, db: Database) -> LoanResponse:
     """§12.5's acceptance: "Lending a disc shows it in Loans".
+
+    **Either person lends or borrows** since Batch W3 (`DECISIONS.md` #249): Mark lends the
+    discs as much as Craig does, and Craig borrows them. A borrower who is one of the two is
+    named by ``borrowerProfileId`` and their name is filled in from it; anyone else is a
+    name. The audit row records who made the loan either way.
 
     **No push is sent from here, and that is deliberate.** §12.5's second clause is
     "overdue triggers a push" — a statement about a *due date passing*, not about a disc
@@ -455,10 +487,12 @@ async def lend_disc(payload: LoanCreateRequest, user: AdminUser, db: Database) -
             detail="dueDate cannot be before lentDate",
         )
 
+    borrower_name, borrower_profile_id = await _borrower(db, payload)
     loan = Loan(
         id=uuid.uuid4(),
         collection_item_id=item.id,
-        borrower_name=payload.borrowerName.strip(),
+        borrower_name=borrower_name,
+        borrower_profile_id=borrower_profile_id,
         lent_date=lent,
         due_date=payload.dueDate,
         notes=payload.notes,
@@ -470,7 +504,11 @@ async def lend_disc(payload: LoanCreateRequest, user: AdminUser, db: Database) -
         action_type="create",
         target_table=LOANS_TABLE,
         target_id=loan.id,
-        changes={"borrower": loan.borrower_name, "item": str(item.id)},
+        changes={
+            "borrower": loan.borrower_name,
+            "borrower_profile": str(borrower_profile_id) if borrower_profile_id else None,
+            "item": str(item.id),
+        },
     )
     try:
         await db.commit()
@@ -490,10 +528,10 @@ async def lend_disc(payload: LoanCreateRequest, user: AdminUser, db: Database) -
 async def return_disc(
     loan_id: uuid.UUID,
     payload: LoanReturnRequest,
-    user: AdminUser,
+    user: CurrentUser,
     db: Database,
 ) -> LoanResponse:
-    """Mark a disc as returned. §6.5's own verb for this."""
+    """Mark a disc as returned. §6.5's own verb for this. Either person, since Batch W3."""
     loan = await db.get(Loan, loan_id)
     if loan is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Loan not found")

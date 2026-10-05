@@ -9,6 +9,13 @@ import { PhotoGallery } from './PhotoGallery'
 import WatchPanel from '@/components/movies/WatchPanel'
 import { fetchItemPhotos, fetchLoans, fetchWatches } from '@/lib/api'
 
+// Since W3 the Lend control reads who is signed in, to offer Borrow; a viewer is enough.
+vi.mock('@/context/auth', () => ({
+  useAuth: () => ({
+    profile: { id: '3f2504e0-4f89-41d3-9a0c-0305e82c3001', displayName: 'Mark', role: 'viewer', hasPin: true, onboardingCompleted: true },
+  }),
+}))
+
 vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
   return {
