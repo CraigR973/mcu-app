@@ -4,8 +4,8 @@ Everything here is blocked on a person, not on an agent: a credential, a live ru
 someone else's website, a device, or a choice that isn't an agent's to make. Agents should
 **read this and stop**, not work around anything on it.
 
-Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-04**,
-when T8b shipped (29 added). *Numbers
+Tick a box when it's done and say so in `STATUS.md`'s Log. Last reviewed **2026-10-05**,
+when Group W was planned (30 added). *Numbers
 changed at the 2026-09-09 review; the old ones are noted in brackets so an earlier
 conversation still maps onto this file.*
 
@@ -38,6 +38,9 @@ conversation still maps onto this file.*
   owner's written permission, if you ever want to ask (M2N Limited, via its contact page).
   The first nightly read, 4 Oct, scored 81 reviews with no halt. Also yours: the two-phone
   movie night check for V3 (16b).
+- **Group W** (`docs/phase-batches.md`, your 5 Oct snags): W1 → W2 → W3, going at your word
+  (#249). **30:** two iPhone checks once W1 is live, the search keyboard and the top bar, with
+  a screenshot if the bar still looks faded.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1295,6 +1298,21 @@ config apply can no longer delete them.
 4. **Then Mark, on his phone,** the same way. Only he sees his lists.
 
 No eBay password goes to the app or to an agent: both of you type it on eBay's own page.
+
+### 30. Two iPhone checks — W1, the search keyboard and the top bar *(new 5 Oct)*
+
+**New 5 Oct.** W1 changes two things only an iPhone can confirm (`docs/phase-batches.md`,
+Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
+
+1. **Search opens with the keyboard up.** Tap Search on the bottom bar: the keyboard should
+   rise at once, with no second tap on the box. The box is now focused inside your tap, which
+   is what iOS asks before it shows a keyboard; a browser test proves the focus, but only your
+   phone proves the keyboard.
+2. **The top bar no longer looks faded.** It is now a raised panel, the bottom bar's surface
+   with a shadow, and its back arrow and assistant icon are at full strength. **If it still
+   looks faded, send a screenshot and say light or dark.** In the light theme the cause may
+   be the clock and battery, which iOS draws in white over a pale bar for this app; W1 does
+   not change that.
 
 ### 22. Rotate the Neon database password — recommended, your call
 
