@@ -107,7 +107,7 @@ afterEach(() => {
   cleanup()
 })
 
-describe('Try bid prices on Home — Batch V6', () => {
+describe('Try bid prices, on Admin since W2 — Batch V6', () => {
   it('is not shown to a viewer, who never asks for it', async () => {
     auth.role = 'viewer'
     renderIt()

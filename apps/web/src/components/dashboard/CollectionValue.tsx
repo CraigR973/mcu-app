@@ -42,7 +42,9 @@ const NOT_STARTED: Record<Exclude<ValuationStart['outcome'], 'started'>, string>
  * a disc with fewer than three matching listings is not priced rather than guessed.
  *
  * Hidden from Mark until there is a total, as Home hides every empty section. Craig sees it
- * before the first run, because the button that starts one lives here.
+ * before the first run, because the button that starts one lives here. **On Admin's
+ * "Collection value" since W2** (#249), so Home only reads: Home's collection row shows the
+ * total as its "Worth" card.
  */
 export function CollectionValue() {
   const { profile } = useAuth()

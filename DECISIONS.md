@@ -5134,3 +5134,20 @@ contemporaneous.
        `SET TRANSACTION READ ONLY` transaction from the Mac: 1,566 viewings (Craig 594, Mark
        972), 0 loans, 40 completion sets, 0 of 1,880 owned discs with a barcode, 1 barcode
        remembered.
+
+### 2026-10-05 — Group W, batch W1
+
+250. **The Mac's browser rig: production's data, read-only, through the API's own functions, and
+     no auth bypass.** #169's method, with two changes found running W1.
+
+     - **The stub's answers are production's own,** read by calling the API's router functions
+       (`highlights()`, `collection_stats()`, `on_this_day()` and the rest) in a scratch script, on
+       an engine whose every connection sets `default_transaction_read_only = on`. A function that
+       commits and carries on still cannot write: Postgres refuses a write in any transaction on
+       that connection, not just the first. Real titles, posters and counts make a layout check
+       mean something; the data stays in the session's scratchpad and is served to localhost only.
+     - **No `VITE_SKIP_AUTH`.** Two fake tokens in `localStorage` (`stub-Craig`, `stub-Mark`) make the
+       app ask the stub's `/auth/me`, which answers with that person, so both roles can be checked.
+       **And the flag must not be left in `apps/web/.env.local` while the gate runs:** Vitest loads
+       it, and `LoginPage.test.tsx`'s two redirect tests then fail, because `ProtectedRoute` lets them
+       through. Found on W1's first gate run, which was re-run without the file.
