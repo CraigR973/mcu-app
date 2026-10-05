@@ -2989,7 +2989,7 @@ on Group U's row in "Batch groups", mid tier the two on Batch 21's row.
 
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
-| 1 | W1 search and top bar → W2 Home → W3 lend and borrow | **Go given 5 Oct** (#249) | top tier · high (from W3) | top tier · High |
+| 1 | ~~W1 search and top bar~~ (`9dd6805`) → W2 Home → W3 lend and borrow | **Go given 5 Oct** (#249) | top tier · high (from W3) | top tier · High |
 
 **Each batch on its own:**
 
@@ -3010,7 +3010,21 @@ method). **Browser checks use #169's method:** the DEV-only auth bypass and a sc
 the API, both kept out of the tree, since the Mac has no local Postgres. **The iPhone is
 Craig's:** W1's keyboard and top bar go into `OWNER-ACTIONS.md` when W1 ships.
 
-### W1 — The search keyboard and the top bar 🟢
+### ~~W1 — The search keyboard and the top bar~~ 🟢 **shipped 2026-10-05 (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38))**
+**Acceptance: met; the iPhone checks are Craig's (`OWNER-ACTIONS.md` 30).** Search's sheet is
+built and its box focused inside the tap (`flushSync`); a test listening on `window` at the
+end of the same click finds the box focused, and failed against the old code. The top bar
+takes the bottom bar's surface and shadow, its back arrow and assistant icon at full
+strength: at 375 px dark `33,28,23` against the page's `18,15,13`, light `254,253,251`
+against `246,244,238`. 1,280 px checked in both themes. Browser check by #169's method with
+the stub's data read from production, read-only (#250). Local gate green (API 1,188 passed,
+644 skipped without Postgres; web 502, shared 131); CI green first time; production reported
+the merge SHA at 15:08 UTC with `db: ok`, 25 minutes after the merge: Railway's builds from GitHub were
+queuing (its incident that afternoon). cron-scrape's deployment failed at Railway's image push in
+the same incident; its previous one, with the same API code, stayed live, and the next merge
+redeploys it. **Open:** the keyboard and the bar's look on an
+iPhone, and Craig's screenshot if the bar still looks faded (the light theme's status bar).
+
 
 **Covers snags 1 and 5.** Mid tier · high / mid tier · High. Sitting 1, first.
 
@@ -3196,7 +3210,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
-| **W** | W1 → W2 → W3 | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
+| **W** | ~~W1~~ (`9dd6805`) → W2 → W3 | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

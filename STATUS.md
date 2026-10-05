@@ -8,7 +8,7 @@ four batches. The sequence is Group V's and Group W's tables in `docs/phase-batc
 
 | Batch | State |
 |---|---|
-| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; a pull request each, on Craig's Mac |
+| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; **W1 shipped** (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38)); W2 next |
 | 38, the end-to-end suite | at Craig's go, after Group W; its "last" slot assumed 21 and 22c first |
 | 21, price history charts | starts itself once a third want has two shops' prices on two days (2 of 3 on 4 Oct, #247) |
 | 22c, every page of a sale | parked with `OWNER-ACTIONS.md` 28 (#247) |
@@ -434,6 +434,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-05 (W1, [#38](https://github.com/CraigR973/mcu-app/pull/38), `9dd6805`)** — Search opens with the keyboard up: the sheet is built
+  and its box focused inside the tap, which is what iOS asks before it shows a keyboard. The
+  top bar is a raised panel, the bottom bar's surface and shadow, its icons at full strength;
+  V1's fix had been invisible because nothing scrolls under the top bar. Browser check at 375
+  and 1,280 px, light and dark, with Home's data read from production read-only (#250). Gate
+  and CI green; production reported the merge SHA with `db: ok` at 15:08 UTC, 25 minutes late
+  because Railway's GitHub builds were queuing (its incident). cron-scrape's deployment failed
+  at Railway's image push; the previous one, same API code, stays live until the next merge.
+  Craig's: the two iPhone checks (`OWNER-ACTIONS.md` 30).
 
 - **2026-10-05 (the 5 Oct snags, reconciled and planned)** — Craig raised seven snags: search
   needs a second tap for the keyboard, Craig borrowing and lending from Loans with the scanner,
