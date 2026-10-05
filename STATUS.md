@@ -2,12 +2,14 @@
 
 ## Now
 
-**4 Oct 2026: everything planned has shipped except four batches, and one of them is an
-agent's to start.** The sequence is Group V's table in `docs/phase-batches.md`.
+**5 Oct 2026: Craig's seven snags of 5 Oct are planned as Group W and running, W1 → W2 → W3**
+(#249, `docs/owner-snags-2026-10-05.md`). Before them, everything planned had shipped except
+four batches. The sequence is Group V's and Group W's tables in `docs/phase-batches.md`.
 
 | Batch | State |
 |---|---|
-| 38, the end-to-end suite | at Craig's go; its "last" slot assumed 21 and 22c first |
+| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; a pull request each, on Craig's Mac |
+| 38, the end-to-end suite | at Craig's go, after Group W; its "last" slot assumed 21 and 22c first |
 | 21, price history charts | starts itself once a third want has two shops' prices on two days (2 of 3 on 4 Oct, #247) |
 | 22c, every page of a sale | parked with `OWNER-ACTIONS.md` 28 (#247) |
 | 33 → 34, email | parked (`OWNER-ACTIONS.md` 7) |
@@ -43,9 +45,10 @@ agent's to start.** The sequence is Group V's table in `docs/phase-batches.md`.
 
 ## Next
 
-**The remaining sequence is Group V's table in `docs/phase-batches.md`**, summarised in the
-Now block above. **38 is the one batch an agent can start**, at Craig's go; read its criteria
-there first (Batch 38, "E2E suite"). The 9 Sep overnight run this section used to list has all
+**The remaining sequence is Group W, then Group V's table, in `docs/phase-batches.md`**,
+summarised in the Now block above. **Group W is running (W1 → W2 → W3, #249)**; its criteria
+are under "Group W — the 5 Oct snags, planned 5 Oct". After it, **38 is the one batch an agent
+can start**, at Craig's go; read its criteria there first (Batch 38, "E2E suite"). The 9 Sep overnight run this section used to list has all
 shipped; its record is in the batch record and the Log.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -431,6 +434,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-05 (the 5 Oct snags, reconciled and planned)** — Craig raised seven snags: search
+  needs a second tap for the keyboard, Craig borrowing and lending from Loans with the scanner,
+  Home as carousels with the collection first, Most watched repeated in Highlights, the top bar
+  still faded, Home's Add a disc, and the bid trial on Home. Each was checked against the code,
+  the live database (read-only) and a 375 px render (`docs/owner-snags-2026-10-05.md`). Two
+  findings mattered most: the search box is focused a frame after the tap, which iOS does not
+  honour with a keyboard; and V1's top-bar fix could not change the bar's look, since nothing
+  scrolls under it. His answers the same day (#249): both lend and borrow, the collection
+  first, the trial to Admin, go. Group W written into the ledger.
 
 - **2026-10-04 (housekeeping)** — At Craig's word ("yes do 1 -4 now"), four tidy-ups:
   STATUS's Now back to the current state (it had grown to about 200 lines of dated entries;
