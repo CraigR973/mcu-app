@@ -39,6 +39,8 @@ const EbayDeclinedPage = lazy(() => import('./pages/EbayDeclinedPage'))
 const YourEbayPage = lazy(() => import('./pages/YourEbayPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ExportPage = lazy(() => import('./pages/ExportPage'))
+const ValuationPage = lazy(() => import('./pages/ValuationPage'))
+const CompletionPage = lazy(() => import('./pages/CompletionPage'))
 const SpecsPage = lazy(() => import('./pages/SpecsPage'))
 const IdentifyFilmsPage = lazy(() => import('./pages/IdentifyFilmsPage'))
 const PriceAlertsPage = lazy(() => import('./pages/PriceAlertsPage'))
@@ -239,7 +241,11 @@ export default function App() {
                 and a 404 for a page that still exists under another name is the worst
                 of the three possible answers. */}
             <Route path="/stats" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/insights" element={<Navigate to="/dashboard" replace />} />
+            {/* Batch W2: the full Completion view again, behind Home's row of sets. */}
+            <Route
+              path="/insights"
+              element={<AppShell><CompletionPage /></AppShell>}
+            />
             <Route
               path="/dashboard"
               element={<AppShell><DashboardPage /></AppShell>}
@@ -274,6 +280,11 @@ export default function App() {
             />
             {/* Batch S3. Moved off the foot of Stats — it is a maintenance action, and
                 Stats is a section of Home now rather than a page it could sit under. */}
+            {/* Batch W2: the valuation's run and the bid trial, off Home (#249). */}
+            <Route
+              path="/valuation"
+              element={<AdminShell><ValuationPage /></AdminShell>}
+            />
             <Route
               path="/export"
               element={<AdminShell><ExportPage /></AdminShell>}

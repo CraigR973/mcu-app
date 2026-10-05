@@ -115,7 +115,8 @@ function Report({ trial }: { trial: Trial }) {
 }
 
 /**
- * Home's "Try bid prices" — Batch V6, snag 2's first step (#228: "trial first"). Admin only.
+ * "Try bid prices" — Batch V6, snag 2's first step (#228: "trial first"). Admin only. On
+ * Home until W2, and on Admin's "Collection value" since (#249), so Home only reads.
  *
  * One eBay search each for up to 100 priced films, Buy It Now and auctions together, out of
  * the same day's share as the value's runs. **It saves no prices**: the report says what bids

@@ -74,7 +74,10 @@ describe('Highlights on Home — Batch V5', () => {
   it('shows three short poster rows, each film opening its page', async () => {
     renderPanel(FULL)
 
-    expect(await screen.findByRole('heading', { name: 'Highlights' })).not.toBeNull()
+    // Since W2 each row is a section of Home in its own right, and the "Highlights" heading
+    // over them has gone (#249: "make all the sections look like highlights").
+    expect(await screen.findByRole('region', { name: 'Top rated' })).not.toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Highlights' })).toBeNull()
     for (const [row, films] of [
       ['Top rated', ['Heat', 'Alien']],
       ['Most rewatched', ['Alien']],
@@ -128,7 +131,8 @@ describe('Highlights on Home — Batch V5', () => {
     await vi.waitFor(() => expect(fetchHighlightsMock).toHaveBeenCalled())
     await new Promise((resolve) => setTimeout(resolve, 20))
 
-    expect(screen.queryByRole('heading', { name: 'Highlights' })).toBeNull()
+    expect(screen.queryAllByRole('region')).toHaveLength(0)
+    expect(screen.queryAllByRole('heading')).toHaveLength(0)
   })
 
   it('says so when the highlights cannot be read', async () => {
@@ -165,7 +169,8 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
     renderPanel(REVIEWED)
     await screen.findByRole('region', { name: 'Best reviewed' })
 
-    const titles = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
+    // Level 2 since W2, when the rows became peers of Home's other sections.
+    const titles = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
     expect(titles).toEqual(['Top rated', 'Most rewatched', 'Most valuable discs', 'Best reviewed'])
   })
 

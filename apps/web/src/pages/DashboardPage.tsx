@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, BarChart3, CalendarHeart, Pin, Plus, RotateCcw, Target } from 'lucide-react'
+import { Activity, CalendarHeart, Pin, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { ActivityFeed } from '@/components/ActivityFeed'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
-import { ArchiveStats } from '@/components/dashboard/ArchiveStats'
-import { BidTrial } from '@/components/dashboard/BidTrial'
-import { CollectionValue } from '@/components/dashboard/CollectionValue'
-import { Button } from '@/components/ui/button'
-import { CompletionSets } from '@/components/dashboard/CompletionSets'
+import { CollectionShelf } from '@/components/dashboard/CollectionShelf'
+import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
 import { Highlights } from '@/components/dashboard/Highlights'
+import { PosterCard, Shelf } from '@/components/dashboard/Shelf'
+import { CompletionSetPanel } from '@/components/insights/CompletionSetPanel'
 import { PageHeader } from '@/components/ui/page-header'
 import { ComingToDisc } from '@/components/releases/ComingToDisc'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -20,32 +19,34 @@ import {
   fetchRewatchSuggestions,
   fetchSmartCollections,
 } from '@/lib/api'
+import { stars } from '@/lib/highlights'
+import { yearsAgo } from '@/lib/home'
 import { queryErrorMessage } from '@/lib/query-state'
+import { formatShortDate } from '@/lib/utils'
 
 /**
- * Home — Batch S3's merge of the old Home, Stats and Insights (snag 5,
- * `DECISIONS.md` #154).
+ * Home — Batch S3's merge of the old Home, Stats and Insights (snag 5, `DECISIONS.md` #154),
+ * made a page of rows by Batch W2 (#249).
  *
- * **The capture argued the merge from organisation; the database argued something
- * stronger.** Measured 2026-09-14: `watch_log` 0 rows and `smart_collections` 0, so three
- * of old-Home's four sections — On this day, Worth a rewatch, pinned collections — were
- * *all* empty; Stats had four real charts and two empty ones; Insights had 40 genuine
- * completion sets. Three pages, one page of actual content.
+ * **Every section but Recent activity is a row that scrolls sideways**, as V5's Highlights
+ * rows did: Craig's "make all the sections look like highlights so it is a carousel". **The
+ * collection comes first** ("maybe also have the collection section at the top"), which
+ * replaces T5's "Home opens with the next few disc releases"; they come second.
  *
- * **So every section hides when it has nothing in it**, rather than rendering an empty
- * frame. That is the difference between a merge and a longer scroll: three empty panels
- * stacked on top of two more would have produced exactly the page Craig complained about,
- * only taller. What is left is short today and grows on its own — S8's watch-history
- * import is what fills the first two sections.
+ * **Every row still hides when it has nothing in it** (#154), and a failed request still
+ * shows its own panel. What W2 took away: Home's "Add a disc" (the bottom bar has Add below
+ * 1,024 px and the top bar its button above it), Most watched (8 of its 10 films repeated
+ * Most rewatched on 5 Oct), and the bid trial with "Update values", which are Admin's
+ * "Collection value" now, so Home only reads.
  *
- * `/stats` and `/insights` redirect here rather than 404: both are in browser history, in
- * the command palette's index, and in whatever links exist outside the app.
+ * `/stats` still redirects here; `/insights` is the full Completion view again.
  */
 export default function DashboardPage() {
-  // A completion set opens into a full-screen panel of its own. While it is open the rest
-  // of the page is hidden, because the panel *is* the page at that point — otherwise the
-  // reader loses their place in a long scroll on the way back.
-  const [setOpen, setSetOpen] = useState(false)
+  // A completion set opens in place of Home, because the panel *is* the page while it is
+  // open; otherwise the reader loses their place in a long page on the way back. Home owns
+  // which set is open (W2): when the list owned it, Home's swap to a second copy of the list
+  // lost it, and the first tap showed every set instead of the one tapped.
+  const [openSetId, setOpenSetId] = useState<string | null>(null)
 
   const memoriesQuery = useQuery({
     queryKey: ['memories', 'on-this-day'],
@@ -64,191 +65,139 @@ export default function DashboardPage() {
   const rewatchSuggestions = rewatchQuery.data ?? []
   const pinned = pinnedQuery.data?.items ?? []
 
-  if (setOpen) {
+  if (openSetId !== null) {
     return (
       <div className="page-shell-narrow">
-        <CompletionSets onOpenChange={setSetOpen} />
+        <CompletionSetPanel setId={openSetId} onBack={() => setOpenSetId(null)} backLabel="Home" />
       </div>
     )
   }
 
   return (
-    <div className="page-shell-narrow space-y-10">
+    <div className="page-shell-narrow">
+      {/* Outside the rows' spacing: on a phone the header is hidden (its title is in the top
+          bar), and a hidden first child would still leave the gap above the first row. */}
       <PageHeader
         eyebrow="Your archive"
         title="Home"
-        description="The shape of the collection, what you have been watching, and how close each set is to complete."
-        actions={(
-          /* Batch S4, snag 7. **Visible below 640px**, unlike the header's own "Add a
-             disc" which is `hidden sm:inline-flex`. Not role-gated: `DECISIONS.md` #155
-             makes adding a viewer's to do, and every endpoint behind the page moved in
-             the same commit. Home is where `/` lands since S3, so this is the first thing
-             on the first screen. */
-          <Button asChild>
-            <Link to="/collection/add">
-              <Plus className="h-4 w-4" aria-hidden />
-              Add a disc
-            </Link>
-          </Button>
-        )}
+        description="The collection at a glance, what is coming to disc, the highlights, and how close each set is to complete."
       />
 
-      {/* Batch T5, and #201's Home: the next disc releases lead, so buying is one tap from
-          the opening screen. Hidden when there are none. */}
-      <ComingToDisc limit={5} />
+      <div className="space-y-9">
+        <CollectionShelf />
 
-      {/* On this day — hidden entirely until there is a watch history to look back
-          through. Empty for both people today: `watch_log` holds 0 rows. */}
-      {memoriesQuery.isError ? (
-        <StatePanel
-          compact
-          tone="error"
-          title="Watch memories are unavailable"
-          description={queryErrorMessage(memoriesQuery.error, 'Could not load your watch memories.')}
-        />
-      ) : memories.length > 0 ? (
-        <section className="space-y-4" aria-labelledby="on-this-day-heading">
-          <div>
-            <h2 id="on-this-day-heading" className="section-heading flex items-center gap-2">
-              <CalendarHeart className="h-5 w-5 text-primary" aria-hidden />
-              On this day
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">A look back through your own watch history.</p>
-          </div>
-          <ul className="grid gap-3 sm:grid-cols-2">
+        {/* Batch T5's disc releases, second since W2. Hidden when there are none. */}
+        <ComingToDisc limit={12} />
+
+        {/* Batch V5 and V9's rows: top rated, most rewatched, most valuable, best reviewed. */}
+        <Highlights />
+
+        {/* On this day: the caller's own viewings from this date in earlier years. */}
+        {memoriesQuery.isError ? (
+          <StatePanel
+            compact
+            tone="error"
+            title="Watch memories are unavailable"
+            description={queryErrorMessage(memoriesQuery.error, 'Could not load your watch memories.')}
+          />
+        ) : memories.length > 0 ? (
+          <Shelf
+            id="home-on-this-day"
+            title="On this day"
+            icon={CalendarHeart}
+            caption="Films you watched on this date in earlier years."
+          >
             {memories.map((memory) => (
-              <li key={memory.id} className="archive-panel border-l-2 border-l-accent p-4">
-                <Link to={`/movies/${memory.movieId}`} className="font-display text-lg font-semibold text-foreground hover:text-primary">
-                  {memory.movieTitle}
-                </Link>
-                <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                  You watched this {memory.yearsAgo === 1 ? 'one year ago' : `${memory.yearsAgo} years ago`}.
-                </p>
-              </li>
+              <PosterCard
+                key={memory.id}
+                to={`/movies/${memory.movieId}`}
+                title={memory.movieTitle}
+                posterPath={memory.posterPath}
+                detail={yearsAgo(memory.yearsAgo)}
+              />
             ))}
-          </ul>
-        </section>
-      ) : null}
+          </Shelf>
+        ) : null}
 
-      {/* Worth a rewatch — same rule, same reason. It needs ratings as well as watches. */}
-      {rewatchQuery.isError ? (
-        <StatePanel
-          compact
-          tone="error"
-          title="Rewatch suggestions are unavailable"
-          description={queryErrorMessage(rewatchQuery.error, 'Could not load rewatch suggestions.')}
-        />
-      ) : rewatchSuggestions.length > 0 ? (
-        <section className="space-y-4" aria-labelledby="rewatch-heading">
-          <div>
-            <h2 id="rewatch-heading" className="section-heading flex items-center gap-2">
-              <RotateCcw className="h-5 w-5 text-primary" aria-hidden />
-              Worth a rewatch
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">Films you rated highly and have not seen for a while.</p>
-          </div>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Worth a rewatch: rated highly and not seen for six months. */}
+        {rewatchQuery.isError ? (
+          <StatePanel
+            compact
+            tone="error"
+            title="Rewatch suggestions are unavailable"
+            description={queryErrorMessage(rewatchQuery.error, 'Could not load rewatch suggestions.')}
+          />
+        ) : rewatchSuggestions.length > 0 ? (
+          <Shelf
+            id="home-rewatch"
+            title="Worth a rewatch"
+            icon={RotateCcw}
+            caption="Films you rated highly and have not seen for a while."
+          >
             {rewatchSuggestions.map((suggestion) => (
-              <li key={suggestion.movieId} className="archive-panel p-4">
-                <Link to={`/movies/${suggestion.movieId}`} className="font-semibold text-foreground hover:text-primary">
-                  {suggestion.movieTitle}
-                </Link>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                  <span className="text-foreground">{suggestion.personalRating}/5</span> from you · Last watched {suggestion.lastWatchedAt}
-                </p>
-              </li>
+              <PosterCard
+                key={suggestion.movieId}
+                to={`/movies/${suggestion.movieId}`}
+                title={suggestion.movieTitle}
+                posterPath={suggestion.posterPath}
+                detail={
+                  <>
+                    ★ {stars(suggestion.personalRating)}
+                    <span className="block">Last seen {formatShortDate(suggestion.lastWatchedAt)}</span>
+                  </>
+                }
+              />
             ))}
-          </ul>
-        </section>
-      ) : null}
+          </Shelf>
+        ) : null}
 
-      {/* Batch V5, snag 9: top rated, most rewatched and most valuable, one request. Each
-          row hides while it has nothing in it, and the panel with them. */}
-      <Highlights />
+        <CompletionShelf onOpen={setOpenSetId} />
 
-      {/* Batch T6, snag 7: the collection at current eBay asking prices. Hidden from a
-          viewer until there is a total; an admin sees it earlier, to start the first run. */}
-      <CollectionValue />
-
-      {/* Batch V6, snag 2's first step: "Try bid prices", admin only. It saves no prices;
-          its report is for Craig's pick of a blend or bids only. */}
-      <BidTrial />
-
-      {/* The old Stats page. Never empty — 1,857 discs make four of its six charts real —
-          so it has no hidden state of its own; the two charts that have no data are
-          handled inside it. */}
-      <section className="space-y-4" aria-labelledby="stats-heading">
-        <h2 id="stats-heading" className="section-heading flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" aria-hidden />
-          The collection
-        </h2>
-        <ArchiveStats />
-      </section>
-
-      {/* The old Insights page. 40 real sets, which is why the merge does not produce a
-          page of empty headings. */}
-      <section className="space-y-4" aria-labelledby="completion-heading">
-        <h2 id="completion-heading" className="section-heading flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" aria-hidden />
-          Completion
-        </h2>
-        <p className="-mt-2 text-sm text-muted-foreground">
-          How much of each director&rsquo;s and actor&rsquo;s work is on the shelf.
-        </p>
-        <CompletionSets onOpenChange={setSetOpen} />
-      </section>
-
-      {/* Recent activity is the one section that has never been empty — 41 admin actions
-          on the day this was measured — so it is always here. */}
-      <section className="space-y-4" aria-labelledby="activity-heading">
-        <h2 id="activity-heading" className="section-heading flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary" aria-hidden />
-          Recent activity
-        </h2>
-        <div className="archive-panel px-4 py-2 sm:px-5">
-          <ActivityFeed limit={20} />
-        </div>
-      </section>
-
-      {/* Pinned collections — hidden until something is pinned. `smart_collections` holds
-          0 rows, so this is invisible today; the Collections destination hides itself from
-          the menu on the same count. */}
-      {pinnedQuery.isError ? (
-        <StatePanel
-          compact
-          tone="error"
-          title="Pinned collections are unavailable"
-          description={queryErrorMessage(pinnedQuery.error, 'Could not load your pinned collections.')}
-        />
-      ) : pinned.length > 0 ? (
-        <section className="space-y-4" aria-labelledby="pinned-heading">
-          <h2 id="pinned-heading" className="section-heading flex items-center gap-2">
-            <Pin className="h-5 w-5 text-primary" aria-hidden />
-            Pinned collections
-          </h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Pinned collections: hidden until something is pinned. */}
+        {pinnedQuery.isError ? (
+          <StatePanel
+            compact
+            tone="error"
+            title="Pinned collections are unavailable"
+            description={queryErrorMessage(pinnedQuery.error, 'Could not load your pinned collections.')}
+          />
+        ) : pinned.length > 0 ? (
+          <Shelf id="home-pinned" title="Pinned collections" icon={Pin}>
             {pinned.map((collection) => {
               const Icon = COLLECTION_ICONS[collection.icon]
               return (
-                <li key={collection.id} className="archive-panel p-4">
+                <li key={collection.id} className="w-56 shrink-0 snap-start">
                   <Link
                     to={`/collections/${collection.id}`}
-                    className="flex min-h-11 items-center gap-3 font-semibold text-foreground hover:text-primary"
+                    className="flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-3 hover:border-primary/40"
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" aria-hidden />
+                    <span className="flex items-center gap-2 font-semibold text-foreground">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Icon className="h-4 w-4" aria-hidden />
+                      </span>
+                      <span className="min-w-0 truncate">{collection.name}</span>
                     </span>
-                    <span className="min-w-0 truncate">{collection.name}</span>
+                    <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">
+                      {describeFilters(collection.filters)}
+                    </span>
                   </Link>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                    {describeFilters(collection.filters)}
-                  </p>
                 </li>
               )
             })}
-          </ul>
+          </Shelf>
+        ) : null}
+
+        {/* Recent activity stays a list at the foot: a feed reads down, not across. */}
+        <section className="space-y-3" aria-labelledby="activity-heading">
+          <h2 id="activity-heading" className="section-heading flex items-center gap-2 text-lg">
+            <Activity className="h-5 w-5 text-primary" aria-hidden />
+            Recent activity
+          </h2>
+          <div className="archive-panel px-4 py-2 sm:px-5">
+            <ActivityFeed limit={10} />
+          </div>
         </section>
-      ) : null}
+      </div>
     </div>
   )
 }

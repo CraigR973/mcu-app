@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BellRing, Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
+import { BellRing, Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, PoundSterling, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -58,8 +58,9 @@ export const navItems: NavItem[] = [
   // Batch T8a. Each person's eBay price alerts; nothing to hide when empty, since the
   // page is where the first one is set.
   { label: 'Price alerts', path: '/price-alerts', icon: BellRing },
-  // Batch S3: Home now *is* Stats and Insights. `/stats` and `/insights` redirect here
-  // rather than 404, because they are in people's history and in the command palette.
+  // Batch S3: Home now *is* Stats and Insights. `/stats` redirects here rather than 404,
+  // because it is in people's history and in the command palette. `/insights` is the
+  // full Completion view again since W2, behind Home's row of sets.
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
   // Batch V1: always shown, for both (#228). Lending and "Mark returned" stay admin-only,
   // on the film page and on Loans itself. The API still counts loans in `nav/sections`;
@@ -87,6 +88,8 @@ export const adminNavItems: NavItem[] = [
   { label: 'Disc specs', path: '/specs', icon: Disc3 },
   // Batch T9. Where Craig settles the films TMDB never matched.
   { label: 'Identify films', path: '/identify', icon: FileQuestion },
+  // Batch W2. The valuation's run and the bid trial, moved off Home (#249).
+  { label: 'Collection value', path: '/valuation', icon: PoundSterling },
   { label: 'Admin', path: '/admin', icon: ShieldCheck },
 ]
 
@@ -198,6 +201,8 @@ const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
  */
 const OFF_MENU_PAGES: Record<string, { title: string; parent: string }> = {
   '/ebay': { title: 'Your eBay', parent: '/settings' },
+  // Batch W2. Every completion set, behind Home's row of the closest to complete.
+  '/insights': { title: 'Completion', parent: '/dashboard' },
 }
 
 /** A bottom tab or You, as opposed to anything reached from one. Everything else gets a back
