@@ -790,7 +790,9 @@ class TestSaleSeasons:
 class TestOverdueLoans:
     """§12.5's second clause — the debt Batch 15 left for this batch."""
 
-    async def _overdue_loan(self, session: AsyncSession, *, due: date) -> Loan:
+    async def _overdue_loan(
+        self, session: AsyncSession, *, due: date, borrower: Profile | None = None
+    ) -> Loan:
         movie = Movie(
             id=uuid.uuid4(),
             tmdb_id=None,
@@ -806,7 +808,8 @@ class TestOverdueLoans:
         loan = Loan(
             id=uuid.uuid4(),
             collection_item_id=item.id,
-            borrower_name="Dave",
+            borrower_name=borrower.display_name if borrower else "Dave",
+            borrower_profile_id=borrower.id if borrower else None,
             lent_date=due - timedelta(days=14),
             due_date=due,
         )
@@ -849,6 +852,50 @@ class TestOverdueLoans:
         assert row.title == "Heat is overdue"
         assert "Dave" in row.body
         assert sender.sent
+
+    async def _loan_reminders(
+        self, session: AsyncSession, *people: Profile
+    ) -> dict[uuid.UUID, str]:
+        rows = (
+            (
+                await session.execute(
+                    select(Notification).where(
+                        Notification.category == "loans",
+                        Notification.user_id.in_([person.id for person in people]),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return {row.user_id: row.body for row in rows}
+
+    async def test_the_reminder_goes_to_both_people(
+        self, api_session: AsyncSession, admin: Profile
+    ) -> None:
+        """Batch W3 (#249): either person lends now, so both hear. Until W3 only the admin."""
+        viewer = await _profile(api_session, UserRole.viewer)
+        as_of = date(2026, 3, 1)
+        await self._overdue_loan(api_session, due=as_of - timedelta(days=3))
+
+        await run_reminders(api_session, as_of=as_of, seed_seasons=False)
+
+        bodies = await self._loan_reminders(api_session, admin, viewer)
+        assert set(bodies) == {admin.id, viewer.id}
+        assert all(body.startswith("Dave has had it since") for body in bodies.values())
+
+    async def test_the_borrower_is_told_in_their_own_words(
+        self, api_session: AsyncSession, admin: Profile
+    ) -> None:
+        viewer = await _profile(api_session, UserRole.viewer)
+        as_of = date(2026, 3, 1)
+        await self._overdue_loan(api_session, due=as_of - timedelta(days=3), borrower=viewer)
+
+        await run_reminders(api_session, as_of=as_of, seed_seasons=False)
+
+        bodies = await self._loan_reminders(api_session, admin, viewer)
+        assert bodies[viewer.id] == ("You've had it since 12 February; it was due back 3 days ago.")
+        assert bodies[admin.id].startswith(f"{viewer.display_name} has had it since")
 
     async def test_a_loan_that_is_not_yet_due_is_left_alone(
         self, client: AsyncClient, api_session: AsyncSession

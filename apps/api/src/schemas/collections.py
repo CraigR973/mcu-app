@@ -348,13 +348,29 @@ class PurgePreviewResponse(BaseModel):
 
 
 class LoanCreateRequest(BaseModel):
+    """A loan names its borrower one of two ways — Batch W3 (#249).
+
+    ``borrowerName`` for anyone, as before; or ``borrowerProfileId`` for one of the people
+    who use the app ("I'm borrowing it"), whose name the server fills in. Exactly one.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     collectionItemId: uuid.UUID
-    borrowerName: Annotated[str, Field(min_length=1, max_length=255)]
+    borrowerName: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    borrowerProfileId: uuid.UUID | None = None
     lentDate: date | None = None
     dueDate: date | None = None
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def _one_borrower(self) -> LoanCreateRequest:
+        named = self.borrowerName is not None and self.borrowerName.strip() != ""
+        if named == (self.borrowerProfileId is not None):
+            raise ValueError(
+                "Give the borrower's name, or borrowerProfileId for one of you, not both"
+            )
+        return self
 
 
 class LoanReturnRequest(BaseModel):
@@ -372,6 +388,9 @@ class LoanResponse(BaseModel):
     formats: list[str]
     locationLabel: str
     borrowerName: str
+    #: Batch W3. The borrower's profile when they are one of the people who use the app;
+    #: null for a friend, and for every loan made before W3.
+    borrowerProfileId: uuid.UUID | None
     lentDate: date
     dueDate: date | None
     returnedDate: date | None

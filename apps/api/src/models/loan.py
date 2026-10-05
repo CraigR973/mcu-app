@@ -28,10 +28,21 @@ class Loan(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
         index=True,
     )
 
-    #: Free text, not a profile id. The people who borrow discs are friends and family,
-    #: not users of this app — there are exactly two of those and neither borrows from
-    #: the other.
+    #: The borrower's name as text, always — a friend's, or one of the two people's. It was
+    #: the only borrower column until Batch W3, on the reasoning that neither person borrows
+    #: from the other; Craig does (`DECISIONS.md` #249), so ``borrower_profile_id`` says when
+    #: the borrower is one of them.
     borrower_name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    #: Set when the borrower is one of the people who use the app — "I'm borrowing it" —
+    #: and null for anyone else. Migration 048. The reminder words itself to the borrower
+    #: from this ("You've had …"), which a name compared as text could not do safely.
+    borrower_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("profiles.id", ondelete="SET NULL", name="fk_loans_borrower_profile"),
+        nullable=True,
+        index=True,
+    )
 
     #: ``DATE``, like ``watch_log.watched_at`` and for the same reason: people remember
     #: lending something "last Saturday", not at an instant.

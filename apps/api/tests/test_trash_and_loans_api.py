@@ -685,19 +685,102 @@ async def test_a_disc_cannot_come_back_before_it_went_out(
     assert response.status_code == 422
 
 
-async def test_a_viewer_can_see_loans_but_not_create_one(
+async def test_a_viewer_can_lend_and_return_a_disc(
     viewer_client: AsyncClient, api_session: AsyncSession
 ) -> None:
-    """Knowing where a disc went is not an admin question, even though lending one is."""
-    _, item = await _disc(api_session, "A Disc Mark Can Ask About")
+    """Batch W3 (#249): Mark lends the discs as much as Craig does. Until W3 a viewer could
+    read Loans and nothing more; lending was refused with a 403."""
+    _, item = await _disc(api_session, "A Disc Mark Lends")
     await api_session.flush()
 
-    assert (await viewer_client.get("/api/v1/loans")).status_code == 200
-    refused = await viewer_client.post(
+    lent = await viewer_client.post(
         "/api/v1/loans",
         json={"collectionItemId": str(item.id), "borrowerName": "Mark's Friend"},
     )
-    assert refused.status_code == 403
+    assert lent.status_code == 201, lent.text
+    assert lent.json()["borrowerName"] == "Mark's Friend"
+    assert lent.json()["borrowerProfileId"] is None
+
+    returned = await viewer_client.put(f"/api/v1/loans/{lent.json()['id']}/return", json={})
+    assert returned.status_code == 200, returned.text
+    assert returned.json()["returnedDate"] == utc_today().isoformat()
+
+
+async def test_borrowing_records_the_person_and_their_name(
+    client: AsyncClient, api_session: AsyncSession, admin: Profile
+) -> None:
+    """ "I'm borrowing it": the borrower is the person, and the name comes from the profile,
+    so the two cannot disagree."""
+    _, item = await _disc(api_session, "A Disc Craig Borrows")
+    await api_session.flush()
+
+    borrowed = await client.post(
+        "/api/v1/loans",
+        json={"collectionItemId": str(item.id), "borrowerProfileId": str(admin.id)},
+    )
+    assert borrowed.status_code == 201, borrowed.text
+    assert borrowed.json()["borrowerProfileId"] == str(admin.id)
+    assert borrowed.json()["borrowerName"] == admin.display_name
+
+    listed = (await client.get("/api/v1/loans?openOnly=true")).json()
+    mine = next(loan for loan in listed["items"] if loan["id"] == borrowed.json()["id"])
+    assert mine["borrowerProfileId"] == str(admin.id)
+
+    row = await api_session.get(Loan, uuid.UUID(borrowed.json()["id"]))
+    assert row is not None and row.borrower_profile_id == admin.id
+
+
+async def test_a_viewer_can_borrow_too(
+    viewer_client: AsyncClient, api_session: AsyncSession, viewer: Profile
+) -> None:
+    _, item = await _disc(api_session, "A Disc Mark Borrows")
+    await api_session.flush()
+
+    borrowed = await viewer_client.post(
+        "/api/v1/loans",
+        json={"collectionItemId": str(item.id), "borrowerProfileId": str(viewer.id)},
+    )
+    assert borrowed.status_code == 201, borrowed.text
+    assert borrowed.json()["borrowerName"] == viewer.display_name
+
+
+async def test_a_loan_names_its_borrower_exactly_one_way(
+    client: AsyncClient, api_session: AsyncSession, admin: Profile
+) -> None:
+    _, item = await _disc(api_session, "A Disc With An Unclear Borrower")
+    await api_session.flush()
+
+    neither = await client.post("/api/v1/loans", json={"collectionItemId": str(item.id)})
+    assert neither.status_code == 422
+    blank = await client.post(
+        "/api/v1/loans", json={"collectionItemId": str(item.id), "borrowerName": "   "}
+    )
+    assert blank.status_code == 422
+    both = await client.post(
+        "/api/v1/loans",
+        json={
+            "collectionItemId": str(item.id),
+            "borrowerName": "A Friend",
+            "borrowerProfileId": str(admin.id),
+        },
+    )
+    assert both.status_code == 422
+
+
+async def test_a_borrower_who_is_not_one_of_us_is_refused(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    _, item = await _disc(api_session, "A Disc For Nobody")
+    await api_session.flush()
+
+    refused = await client.post(
+        "/api/v1/loans",
+        json={"collectionItemId": str(item.id), "borrowerProfileId": str(uuid.uuid4())},
+    )
+    assert refused.status_code == 404
+    assert (
+        await api_session.execute(select(Loan).where(Loan.collection_item_id == item.id))
+    ).first() is None
 
 
 async def test_destroying_a_disc_takes_its_loan_with_it(

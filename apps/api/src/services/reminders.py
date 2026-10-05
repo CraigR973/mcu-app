@@ -31,7 +31,7 @@ from src.models.collection_item import CollectionItem
 from src.models.loan import Loan
 from src.models.movie import Movie
 from src.models.notification import NotificationCategory
-from src.models.profile import Profile, UserRole
+from src.models.profile import Profile
 from src.models.release_calendar import (
     DISC_RELEASE_TYPES,
     RELEASE_TYPE_LABELS,
@@ -63,11 +63,10 @@ class ReminderSummary:
     queued: int = 0
 
 
-async def _recipients(db: AsyncSession, *, admin_only: bool = False) -> list[Profile]:
-    """Who hears about this. Both people, or just the admin for an admin-only fact."""
+async def _recipients(db: AsyncSession) -> list[Profile]:
+    """Who hears about this: both people. The admin-only case went with Batch W3, whose
+    overdue loans were its last user (`DECISIONS.md` #249)."""
     query = select(Profile).where(Profile.deleted_at.is_(None), Profile.is_active.is_(True))
-    if admin_only:
-        query = query.where(Profile.role == UserRole.admin)
     return list((await db.execute(query)).scalars().all())
 
 
@@ -181,9 +180,11 @@ async def notify_overdue_loans(
 ) -> None:
     """§12.5's missing half — *"overdue loan triggers a push"*.
 
-    Admin-only: lending a disc is an admin action and getting it back is an admin problem.
-    ``loans.reminder_sent`` is the column Batch 15 left for exactly this, and this is the
-    first code to write it.
+    **Both people, each in their own words**, since Batch W3 (`DECISIONS.md` #249): either
+    of them lends now, and Craig borrows. Until W3 only the admin heard, because lending was
+    an admin action. The borrower, when they are one of the two, reads "You've had …"; the
+    other reads the borrower's name, as everyone did before. ``loans.reminder_sent`` is the
+    column Batch 15 left for exactly this, and it still makes the reminder a one-off.
     """
     rows = list(
         (
@@ -204,18 +205,19 @@ async def notify_overdue_loans(
     if not rows:
         return
 
-    admins = await _recipients(db, admin_only=True)
+    people = await _recipients(db)
     for loan, _item, movie in rows:
         assert loan.due_date is not None  # guaranteed by the query's `is_not(None)`
         overdue_days = (as_of - loan.due_date).days
-        for person in admins:
+        for person in people:
+            who = "You've" if loan.borrower_profile_id == person.id else f"{loan.borrower_name} has"
             written = await queue_notification(
                 db,
                 user_id=person.id,
                 category=NotificationCategory.loans,
                 title=f"{movie.title} is overdue",
                 body=(
-                    f"{loan.borrower_name} has had it since {loan.lent_date:%-d %B}; "
+                    f"{who} had it since {loan.lent_date:%-d %B}; "
                     f"it was due back {overdue_days} day{'s' if overdue_days != 1 else ''} ago."
                 ),
                 url="/loans",
