@@ -3024,6 +3024,9 @@ queuing (its incident that afternoon). cron-scrape's deployment failed at Railwa
 the same incident; its previous one, with the same API code, stayed live, and the next merge
 redeploys it. **Open:** the keyboard and the bar's look on an
 iPhone, and Craig's screenshot if the bar still looks faded (the light theme's status bar).
+**Follow-up, 5 Oct** ([#44](https://github.com/CraigR973/mcu-app/pull/44)): Craig, dark theme, "still faded when i hit search". The search
+sheet covers the top bar while open and had kept the page's colour; it takes the bar's surface
+now, measured `33,28,23` for both at 375 px.
 
 
 **Covers snags 1 and 5.** Mid tier · high / mid tier · High. Sitting 1, first.

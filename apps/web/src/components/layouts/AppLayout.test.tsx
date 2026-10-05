@@ -176,6 +176,18 @@ describe('AppLayout phone top bar — Batch T3', () => {
     }
   })
 
+  it('keeps that surface when Search opens over the bar — W1 follow-up', () => {
+    // The search sheet is taller than the top bar and covers it, so it *is* the top bar while
+    // it is open. It kept the page's colour after W1, and Craig saw the faded bar again each
+    // time he tapped Search (dark theme, 5 Oct).
+    renderShell('/movies')
+    fireEvent.click(screen.getByRole('button', { name: 'Search the archive' }))
+    const sheet = screen.getByRole('dialog', { name: 'Search the archive' })
+    const surface = sheet.className.split(/\s+/).find((name) => name.startsWith('bg-'))
+
+    expect(surface).toBe('bg-popover')
+  })
+
   it("opens the You page from the person's initial", () => {
     renderShell('/movies')
     const you = screen.getByRole('link', { name: /^You/ })

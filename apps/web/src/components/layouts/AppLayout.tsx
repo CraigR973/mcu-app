@@ -224,7 +224,9 @@ export default function AppLayout({ children }: Props) {
             role="dialog"
             aria-modal="true"
             aria-label="Search the archive"
-            className="absolute inset-x-0 top-0 border-b border-border bg-background px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-lift"
+            // The top bar's surface (W1). Taller than the bar, the sheet covers it while open, so
+            // in the page's colour it brought the faded bar back on every tap of Search.
+            className="absolute inset-x-0 top-0 border-b border-border bg-popover px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-lift"
           >
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
