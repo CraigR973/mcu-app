@@ -435,6 +435,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-05 (W1 follow-up, [#44](https://github.com/CraigR973/mcu-app/pull/44))** — Craig, dark theme: the top bar was still faded with
+  Search open. The search sheet covers the bar while open and had kept the page's colour, so
+  every tap of Search brought the faded bar back; it takes the bar's surface now. A test opens
+  Search and checks it.
+
 - **2026-10-05 (W3, [#42](https://github.com/CraigR973/mcu-app/pull/42), `3ad71eb`)** — Both people lend, borrow and mark returned. A borrow
   names the person by their profile (migration 048, `loans.borrower_profile_id`, 0 rows to
   backfill); overdue reminders go to both, the borrower reading "You've had it". Loans' "Lend or

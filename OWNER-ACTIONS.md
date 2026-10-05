@@ -1308,9 +1308,12 @@ Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
    rise at once, with no second tap on the box. The box is now focused inside your tap, which
    is what iOS asks before it shows a keyboard; a browser test proves the focus, but only your
    phone proves the keyboard.
-2. **The top bar no longer looks faded.** It is now a raised panel, the bottom bar's surface
-   with a shadow, and its back arrow and assistant icon are at full strength. **If it still
-   looks faded, send a screenshot and say light or dark.** In the light theme the cause may
+2. **The top bar no longer looks faded, Search open or not.** It is now a raised panel, the
+   bottom bar's surface with a shadow, and its back arrow and assistant icon are at full
+   strength. On 5 Oct you saw it faded again with Search open, in the dark theme: the search
+   sheet covers the bar and had kept the page's colour; it takes the bar's surface since [#44](https://github.com/CraigR973/mcu-app/pull/44).
+   The page behind the sheet still dims, as behind any pop-up. **If it still looks faded,
+   send a screenshot and say light or dark.** In the light theme the cause may
    be the clock and battery, which iOS draws in white over a pale bar for this app; W1 does
    not change that.
 3. **Lend or borrow with the camera** (W3, live since 5 Oct): on Loans, **Lend or borrow**,
