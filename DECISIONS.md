@@ -5151,3 +5151,19 @@ contemporaneous.
        **And the flag must not be left in `apps/web/.env.local` while the gate runs:** Vitest loads
        it, and `LoginPage.test.tsx`'s two redirect tests then fail, because `ProtectedRoute` lets them
        through. Found on W1's first gate run, which was re-run without the file.
+
+### 2026-10-05 — Group W, batch W2
+
+251. **W2's choices: one row component, `/insights` restored, and Home owns the open set.**
+
+     - **One `Shelf` row for every Home section**, the poster card and the heading included, so the
+       rows cannot drift apart in look. On a phone a row runs to the screen's edges (negative margins
+       undoing the page's padding, `scroll-px` keeping the snap aligned), so the next card shows.
+     - **`/insights` is the full Completion view again**, behind the row's "All" link. It redirected
+       to Home from S3 (#154); the address was the old Insights page's, so old links land where they
+       meant to.
+     - **Home owns which completion set is open.** The list owned it before, and Home swapped in a
+       second copy of the list while a set was open, which started with nothing open: the first tap
+       showed every set. Found in the browser on 5 Oct, fixed and pinned by a test.
+     - **Recent activity shows 10, not 20**, as the short list at the foot (#249's call, open to
+       overrule). A set's back link names where it goes ("Home").
