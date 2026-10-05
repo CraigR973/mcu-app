@@ -2382,7 +2382,7 @@ rest still waits on the gates below.** Criteria authored 2026-09-26, so
 `DECISIONS.md` #54 does not apply. This section is the whole remaining sequence: the new U
 batches, the three older batches still open (21, T8b, 38), the two parked ones (33, 34), and
 one item to close. **Since 30 Sep, Group V's table is the whole remaining sequence**; it keeps
-every gate below and moves 38 to the very end.
+every gate below and moves 38 to the very end. **Since 5 Oct, Group W runs before 38** (#249).
 
 **The order, and what gates each:**
 
@@ -2582,7 +2582,7 @@ batches keep their gates unchanged.
 | 4 | ~~20b shops that answer 429~~ (first half `548160f`, 1 Oct) → ~~20b's second half~~ (`abc17d6`, 2 Oct) → 22c every page of a sale | **20b done; 22c parked:** the 3 Oct read-back showed a minute's wait gets 2 of 27 past the limit, and on 4 Oct Craig left the fixed outbound address for now (`OWNER-ACTIONS.md` 28, #247) | top tier · high | top tier · High |
 | — | 21 price history charts | Starts itself once 3 wants have two shops' prices on two days (Group U); **2 of 3 on 4 Oct**, the third waiting on a want Zavvi and Arrow both sell, since 28 is left for now (#247) | mid tier · medium | mid tier · Medium |
 | 5 | ~~T8b Connect eBay~~ | **Shipped 4 Oct (`2995b26`, [#33](https://github.com/CraigR973/mcu-app/pull/33))** at Craig's go and OK; the first live sign-in is his (`OWNER-ACTIONS.md` 29) | top tier · max | top tier · Max |
-| 6 | 38 the end-to-end suite | Last, after every V batch | mid tier · high | mid tier · High |
+| 6 | 38 the end-to-end suite | Last, after every V batch and Group W (#249) | mid tier · high | mid tier · High |
 | — | 33 → 34 Email | Parked (`OWNER-ACTIONS.md` 7) | top tier · max | top tier · Max |
 
 **Each batch on its own** (what a batch needs if it is run outside its sitting):
@@ -2979,6 +2979,141 @@ Soldiers (4K) and two Blu-ray.com pages, one request each, saved as fixtures; AV
 ### ~~V10 — Review scores~~ **merged into V9 at Craig's word, 30 Sep (#229)**
 Its criteria are V9's now. The name is retired.
 
+## Group W — the 5 Oct snags, planned 5 Oct
+
+**Planned 2026-10-05 from Craig's seven snags of that day**, reconciled against the code in
+`docs/owner-snags-2026-10-05.md`, with his answers the same day (#249). **Criteria authored
+2026-10-05**, so `DECISIONS.md` #54 does not apply. **Go given 5 Oct for W1 → W2 → W3, a pull
+request per batch**, run on Craig's Mac. Model tiers are Group V's: top tier is the two models
+on Group U's row in "Batch groups", mid tier the two on Batch 21's row.
+
+| Sitting | Batches, in order | Gate | Claude Code | Codex |
+|---|---|---|---|---|
+| 1 | W1 search and top bar → W2 Home → W3 lend and borrow | **Go given 5 Oct** (#249) | top tier · high (from W3) | top tier · High |
+
+**Each batch on its own:**
+
+| Batch | Covers | Size | Claude Code | Codex |
+|---|---|---|---|---|
+| W1 | Snags 1 and 5: the search keyboard, the top bar | 🟢 | mid tier · high | mid tier · High |
+| W2 | Snags 3, 4, 6 and 7: Home as rows, the collection first | 🟡 | mid tier · high | mid tier · High |
+| W3 | Snag 2: lend and borrow, from Loans with the scanner | 🟡 | top tier · high | top tier · High |
+
+*Why those efforts.* W3 writes a migration (one nullable column on `loans`, which held 0 rows
+on 5 Oct), widens who may write loans, and changes the reminder job; V4 ran its migration at
+top tier · high. W1 and W2 are interface work with clear criteria.
+
+**How each lands, on Craig's Mac:** its own `feat/` branch from `main`, a pull request, CI
+green, then a merge commit; production `/api/v1/health` must report the merge SHA and
+`/health/ready` `db: ok`; the close-out's docs land through a second pull request (#230's
+method). **Browser checks use #169's method:** the DEV-only auth bypass and a scratch stub of
+the API, both kept out of the tree, since the Mac has no local Postgres. **The iPhone is
+Craig's:** W1's keyboard and top bar go into `OWNER-ACTIONS.md` when W1 ships.
+
+### W1 — The search keyboard and the top bar 🟢
+
+**Covers snags 1 and 5.** Mid tier · high / mid tier · High. Sitting 1, first.
+
+**Snag 1.** The bottom bar's Search builds its sheet after the tap and focuses the box one
+animation frame later. iOS raises the keyboard only for a focus made while the tap is being
+handled, so Craig's iPhone needs a second tap on the box.
+
+**Snag 5.** V1's background is built, but the top bar sits above the page's scrolling region,
+not over it, so it shows the page's own colour either way: 94% of the page's colour over the
+page's colour is the page's colour. Measured at 375 px on 5 Oct in both themes. The bar reads
+as part of the page, its back arrow and assistant icon in the muted colour, while the bottom
+bar is a lighter panel with a shadow. Whether Craig's "faded" is that, or iOS drawing the clock
+and battery in white over the light theme's cream bar (`black-translucent`), waits on his
+screenshot (`docs/owner-snags-2026-10-05.md`, snag 5).
+
+**Acceptance:**
+- Tapping Search opens the sheet with its box focused **before the tap's handler returns**: a
+  test clicks Search and finds the box focused without running an animation frame. The
+  `mcu:focus-search` event stays the way in, as the `/` shortcut already uses it.
+- The phone's top bar is a raised panel, distinct from the page in both themes: the bottom
+  bar's surface (`popover`) and a shadow. Its back arrow and assistant icon are drawn at full
+  strength. Measured at 375 px, light and dark: the bar's colour differs from the page's.
+- At 1,280 px the top bar still sits correctly beside the sidebar (checked, not redesigned).
+- `OWNER-ACTIONS.md` gains Craig's iPhone check: Search opens with the keyboard up, and the top
+  bar no longer looks faded. If it still does, his screenshot settles the status-bar question.
+- Browser check at 375 and 1,280 px, light and dark.
+- Gate green.
+
+### W2 — Home: every section a row, the collection first 🟡
+
+**Covers snags 3, 4, 6 and 7.** Mid tier · high / mid tier · High. Sitting 1, second. Craig's
+answers (#249): the collection first, and the bid trial to Admin with "Update values".
+
+**Today (5 Oct):** eleven sections, top to bottom: Add a disc, Coming to disc, On this day,
+Worth a rewatch, Highlights (four poster rows), What it's worth, the bid trial (Craig only), The
+collection (tiles, charts and Most watched), Completion (all 40 sets), Recent activity (20) and
+Pinned collections. Only Highlights' rows scroll sideways. Most watched repeats Most rewatched:
+8 of its 10 films were in both on 5 Oct.
+
+**Acceptance:**
+- Home's order: **The collection** (number cards for films, discs, worth, watched and
+  identified, then chart cards for formats, where they live, genres, decades, and spend over
+  time when it has data) → Coming to disc → Top rated → Most rewatched → Most valuable discs →
+  Best reviewed → On this day → Worth a rewatch → Completion → Pinned collections → Recent
+  activity. **This replaces T5's "Home opens with the next few disc releases".**
+- Every section but Recent activity is a titled row that scrolls sideways and snaps, as
+  Highlights' rows do. Recent activity stays a short list at the foot.
+- Each row still hides while it has nothing in it (#154), and an error still shows its own
+  panel.
+- Coming to disc's cards are posters with the date and the format; a film on the shelf opens
+  its page; "All releases" stays.
+- Completion's cards run closest to complete first, and a link carrying the count opens
+  today's full view, filters included.
+- **Most watched is gone from Home**, with its "Not shown yet" line. The stats API is
+  unchanged, so an older web build still parses it.
+- **Home has no "Add a disc" at any width.** The bottom bar keeps its Add below 1,024 px and the
+  top bar its button from 1,024 px.
+- **The bid trial and "Update values" leave Home** for an admin-only Admin tool, "Collection
+  value", which carries both, the trial's report as today. Home's worth card shows the total to
+  both people and hides from a viewer until there is one, as today. #237's "the trial stays on
+  Home" is superseded; the trial can still be run again.
+- Browser check at 375 and 1,280 px, light and dark, with every row filled and with none.
+- Gate green.
+
+### W3 — Lend and borrow, from Loans with the scanner 🟡
+
+**Covers snag 2.** Top tier · high / top tier · High. Sitting 1, last. Craig's answer (#249):
+both lend and borrow.
+
+**Today (5 Oct):** a loan is one disc with a free-text borrower. Lending and "Mark returned" are
+admin-only in the API and on screen; Mark reads Loans and nothing more; there is no borrow, and
+Loans cannot start a loan. Overdue reminders go to the admin only. **0 loans have ever been
+recorded.** The scanner lives on Add a disc. **0 of 1,880 owned discs store a barcode** and 1
+code is remembered, so a disc's first scan resolves through eBay (one of the shared 5,000 calls
+a day, at most 60 an hour a person) to a film.
+
+**Acceptance:**
+- **Both people lend, borrow and mark returned.** `POST /loans` and `PUT /loans/{id}/return`
+  accept either signed-in person, and tests prove a viewer can do both. The API moves with the
+  screens, as #155 did.
+- **Borrow records the borrower as the person.** Migration 048 adds
+  `loans.borrower_profile_id`, nullable, a foreign key to `profiles`; `borrower_name` keeps the
+  name as text. A loan to anyone else leaves it null. Upgrade and downgrade are proved in CI;
+  `mcu_readonly`'s table-level grant already covers a new column.
+- `LoanResponse` gains `borrowerProfileId`. The shared schema defaults it to null, so a web
+  build ahead of the API still parses.
+- **Loans gets "Lend or borrow":** scan (camera or a typed code) or search your own films →
+  that film's discs on the shelf → pick one → "I'm borrowing it", or "Lend to …" with a name; a
+  due date is optional either way. A disc already out offers "Returned" instead. A scan that
+  matches nothing on the shelf says so. Choosing the film a scan found remembers the code
+  through the existing confirm step; **no loan writes a barcode onto a disc.**
+- The film page offers Lend and Borrow on each disc, and Returned on one that is out, to both
+  people.
+- **Overdue reminders go to both people**, each worded for them: a borrower who is one of them
+  reads "You've had *Heat* since 2 October; it was due back 3 days ago", and everyone else
+  reads today's wording, "Craig has had *Heat* since 2 October; …". Still once per loan
+  (`reminder_sent`).
+- "Mark returned" becomes "Returned", since Mark is a person here.
+- The model's comment that neither person borrows from the other is corrected.
+- Browser check at 375 px, light and dark: lend, borrow and return from Loans by typed code and
+  by search, and from the film page, as each person. A live camera scan is Craig's.
+- Gate green.
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -3061,6 +3196,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **V · 1** | ~~V1~~ → ~~V3~~ → ~~V4~~ → ~~V5~~ | top tier · high | top tier · High | **Sitting 1 of Group V, written into the plan 2026-09-30 at Craig's word (#229); go given for an overnight run, a pull request per batch (#230).** The 30 Sep snags, in "Group V — the 30 Sep snags, planned 30 Sep" above; V2 is merged into V1 (Craig's choice). No checkpoint; the two-phone check for V3 is Craig's. Same verification throughout, a browser check at 375 px; V1 carries the top-bar fix and the back arrows because they change the same file. `high` and the top tier are derived from V4; V1, V3 and V5 alone need only the mid tier. Model tiers are defined at the head of Group V |
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
+| **W** | W1 → W2 → W3 | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

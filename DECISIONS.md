@@ -5095,3 +5095,42 @@ contemporaneous.
        `asyncio_mode = "auto"` already marks every async test, so the line only marked the
        sync tests beside them, which drew 149 of the suite's 152 local warnings. Now there
        are none, so a new warning is visible.
+
+### 2026-10-05 — The 5 Oct snags: Craig's answers, and Group W
+
+249. **Both people lend and borrow; Home puts the collection first, in rows; the bid trial
+     moves to Admin; go for W1 → W2 → W3.** Craig's word, 5 Oct, by four clickable answers
+     after the reconciliation (`docs/owner-snags-2026-10-05.md`): "Both lend and borrow",
+     "Collection first", "Move to Admin", "Go".
+
+     - **Both people lend, borrow and mark returned** (W3). Supersedes the admin-only lending
+       of Batch 15 and V1's "Lending and 'Mark returned' stay admin-only" (#228). Borrow links
+       the loan to the person through a new nullable `loans.borrower_profile_id`, and overdue
+       reminders go to both people, each worded for them. *Rejected:* a Borrow that only types
+       the person's name into the free-text borrower. It needs no migration, but Mark still
+       could not lend and the reminder would stay Craig's alone. The table held 0 rows, so
+       the column costs nothing to add.
+     - **Home: the collection first, every section a row that scrolls sideways** (W2).
+       Supersedes T5's "Home opens with the next few disc releases". Recent activity stays a
+       short list at the foot, since a feed does not swipe well; that one is the agent's call,
+       open to overrule.
+     - **The bid trial moves to an admin-only Admin tool with "Update values"** (W2), so Home
+       only reads. Supersedes #237's "the trial stays on Home"; it can still be run again.
+       *Rejected:* deleting it, which would lose the way to re-check if bids thicken.
+     - **Most watched and Home's "Add a disc" go** (W2). On 5 Oct 8 of Most watched's 10 films
+       were also in Most rewatched; Add is on the bottom bar below 1,024 px and on the top bar
+       from 1,024 px.
+     - **Go for W1 → W2 → W3, a pull request per batch**, run on Craig's Mac and closing out
+       automatically after a green gate (#24).
+     - **Found on the way: V1's top-bar fix could not change how the top bar looks.** The class
+       was missing, as 30 Sep found, but nothing scrolls under the top bar: the page scrolls in
+       its own region below it. So the bar showed the page's own colour with its background or
+       without. The 30 Sep record's "a see-through bar with the page blurred behind it" was
+       true of the bottom bar only. W1 makes the top bar a raised panel.
+     - **Open:** Craig's screenshot of the faded bar, and whether he uses the light theme. If
+       he does, the cause may be iOS drawing the clock and battery in white over the cream bar
+       (`black-translucent`), which W1 does not change.
+     - **Measured read-only on the live database for the reconciliation**, with `SELECT`s in a
+       `SET TRANSACTION READ ONLY` transaction from the Mac: 1,566 viewings (Craig 594, Mark
+       972), 0 loans, 40 completion sets, 0 of 1,880 owned discs with a barcode, 1 barcode
+       remembered.
