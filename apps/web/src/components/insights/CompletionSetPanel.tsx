@@ -18,6 +18,8 @@ import { useAuth } from '@/context/auth'
 interface Props {
   setId: string
   onBack: () => void
+  /** Where the back control goes, in words: Home since W2, the list of sets otherwise. */
+  backLabel?: string
 }
 
 /**
@@ -88,7 +90,7 @@ function BulkAddMissing({ tmdbIds }: { tmdbIds: number[] }) {
  * `STATUS.md` gotcha 5 catalogues. Batch 18 built §3.5, so it is here now, doing what it
  * says.
  */
-export function CompletionSetPanel({ setId, onBack }: Props) {
+export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Props) {
   const { profile } = useAuth()
   const setQuery = useQuery({
     queryKey: ['completion-set', setId],
@@ -104,7 +106,7 @@ export function CompletionSetPanel({ setId, onBack }: Props) {
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        All sets
+        {backLabel}
       </button>
 
       {setQuery.isError ? (

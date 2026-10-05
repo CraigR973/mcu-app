@@ -3,6 +3,7 @@ import { Disc3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CalendarEntry } from '@mcu/shared'
 
+import { PosterCard, Shelf, ShelfLink } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchCalendar } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
@@ -52,7 +53,7 @@ function DiscRow({ entry }: { entry: CalendarEntry }) {
  *
  * **Not tied to a month.** Batch S6 drew this from whichever month the calendar was showing,
  * so it was empty unless a disc came out that month. `limit` makes it Home's short version,
- * which hides itself when there is nothing to show.
+ * which hides itself when there is nothing to show, and since W2 is a row of posters.
  */
 export function ComingToDisc({ limit }: { limit?: number }) {
   const query = useQuery({
@@ -65,21 +66,26 @@ export function ComingToDisc({ limit }: { limit?: number }) {
   const state = listState(query, discs.length === 0)
 
   if (limit) {
-    // Home's version says nothing rather than something empty or broken.
+    // Home's version says nothing rather than something empty or broken. Since W2 it is a
+    // row of posters, like Home's other rows, each with its date and format.
     if (state !== 'ready') return null
     return (
-      <section className="space-y-3" aria-labelledby="home-coming-to-disc">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="home-coming-to-disc" className="section-heading flex items-center gap-2">
-            <Disc3 className="h-5 w-5 text-primary" aria-hidden />
-            Coming to disc
-          </h2>
-          <Link to="/calendar" className="text-sm font-semibold text-primary hover:underline">All releases</Link>
-        </div>
-        <ul className="archive-panel divide-y divide-border px-4">
-          {shown.map((entry) => <DiscRow key={entry.id} entry={entry} />)}
-        </ul>
-      </section>
+      <Shelf
+        id="home-coming-to-disc"
+        title="Coming to disc"
+        icon={Disc3}
+        action={<ShelfLink to="/calendar">All releases</ShelfLink>}
+      >
+        {shown.map((entry) => (
+          <PosterCard
+            key={entry.id}
+            to={entry.movieId ? `/movies/${entry.movieId}` : null}
+            title={entry.title}
+            posterPath={entry.posterPath}
+            detail={`${formatShortDate(entry.releaseDate).replace(/ \d{4}$/, '')} · ${entry.typeLabel}`}
+          />
+        ))}
+      </Shelf>
     )
   }
 

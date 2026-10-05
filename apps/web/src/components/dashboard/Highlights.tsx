@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Award, Gem, Repeat, Star, type LucideIcon } from 'lucide-react'
 
-import { Poster } from '@/components/movies/Poster'
+import { PosterCard, Shelf } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchHighlights, formatLabel, type Highlights as HighlightsData } from '@/lib/api'
 import { stars, whoseRatings } from '@/lib/highlights'
@@ -21,34 +20,32 @@ interface Card {
   detail: ReactNode
 }
 
-/** One short row of posters, scrolling sideways on a phone; each film opens its page. */
-function PosterRow({ id, title, caption, cards }: { id: string; title: string; caption: string; cards: Card[] }) {
+/** One row of posters; each film opens its page. A peer of Home's other rows since W2. */
+function PosterRow({
+  id,
+  title,
+  icon,
+  caption,
+  cards,
+}: {
+  id: string
+  title: string
+  icon: LucideIcon
+  caption: string
+  cards: Card[]
+}) {
   return (
-    <section aria-labelledby={id} className="space-y-2">
-      <div>
-        <h3 id={id} className="text-sm font-semibold text-foreground">{title}</h3>
-        <p className="text-xs text-muted-foreground">{caption}</p>
-      </div>
-      <ul className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
-        {cards.map((card) => (
-          <li key={card.movieId} className="w-24 shrink-0 snap-start sm:w-28">
-            <Link to={`/movies/${card.movieId}`} className="group block rounded-md">
-              <Poster
-                path={card.posterPath}
-                title={card.title}
-                size="w154"
-                decorative
-                className="aspect-[2/3] w-full rounded-md border border-border object-cover"
-              />
-              <span className="mt-1.5 block line-clamp-2 text-xs font-semibold leading-4 text-foreground group-hover:text-primary">
-                {card.title}
-              </span>
-              <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">{card.detail}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <Shelf id={id} title={title} icon={icon} caption={caption}>
+      {cards.map((card) => (
+        <PosterCard
+          key={card.movieId}
+          to={`/movies/${card.movieId}`}
+          title={card.title}
+          posterPath={card.posterPath}
+          detail={card.detail}
+        />
+      ))}
+    </Shelf>
   )
 }
 
@@ -60,6 +57,7 @@ function rows(data: HighlightsData): ReactNode[] {
       <PosterRow
         key="top-rated"
         id="highlights-top-rated"
+        icon={Star}
         title="Top rated"
         caption={whoseRatings(top.ratedBy, top.notRatedBy)}
         cards={top.items.map((film) => ({
@@ -76,6 +74,7 @@ function rows(data: HighlightsData): ReactNode[] {
       <PosterRow
         key="most-rewatched"
         id="highlights-most-rewatched"
+        icon={Repeat}
         title="Most rewatched"
         caption="Watched two or more times, across both diaries."
         cards={data.mostRewatched.map((film) => ({
@@ -100,6 +99,7 @@ function rows(data: HighlightsData): ReactNode[] {
       <PosterRow
         key="most-valuable"
         id="highlights-most-valuable"
+        icon={Gem}
         title="Most valuable discs"
         caption={`At their stored value: eBay ${first.basis}, checked ${formatShortDate(first.checkedAt)}.`}
         cards={data.mostValuable.map((disc) => ({
@@ -123,6 +123,7 @@ function rows(data: HighlightsData): ReactNode[] {
       <PosterRow
         key="best-reviewed"
         id="highlights-best-reviewed"
+        icon={Award}
         title="Best reviewed"
         caption="Blu-ray.com's overall score for the disc, on a format on the shelf."
         cards={data.bestReviewed.map((film) => ({
@@ -148,8 +149,12 @@ function rows(data: HighlightsData): ReactNode[] {
  * Short poster rows, each film opening its page: top rated (with whose rating it is), most
  * rewatched across both diaries, the most valuable discs at their stored value, and since
  * V9 the best reviewed, by Blu-ray.com's overall score. **A row with nothing in it is not
- * shown**, and nor is the panel when every row is empty, as Home's other sections do. One
- * request for the whole panel.
+ * shown**, and nothing at all when every row is empty, as Home's other sections do. One
+ * request for all four.
+ *
+ * **Since W2 the rows are peers of Home's other rows** (#249: "make all the sections look
+ * like highlights"), so the "Highlights" heading over them has gone: each row is a section
+ * of its own, with its own heading.
  */
 export function Highlights() {
   const query = useQuery({ queryKey: ['highlights'], queryFn: fetchHighlights })
@@ -167,14 +172,5 @@ export function Highlights() {
   if (!query.data) return null
   const built = rows(query.data)
   if (built.length === 0) return null
-
-  return (
-    <section className="space-y-5" aria-labelledby="highlights-heading">
-      <h2 id="highlights-heading" className="section-heading flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" aria-hidden />
-        Highlights
-      </h2>
-      {built}
-    </section>
-  )
+  return <>{built}</>
 }
