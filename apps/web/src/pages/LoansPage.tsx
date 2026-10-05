@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { HandHeart, Loader2, Undo2 } from 'lucide-react'
+import { ArrowRightLeft, HandHeart, Loader2, Undo2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Loan } from '@mcu/shared'
 
+import { LoanStarter } from '@/components/collection/LoanStarter'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import { fetchLoans, formatLabel, loanDueLabel, posterUrl, returnLoan } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatShortDate } from '@/lib/utils'
 
 function Row({ loan }: { loan: Loan }) {
   const { profile } = useAuth()
@@ -46,7 +47,11 @@ function Row({ loan }: { loan: Loan }) {
         </Link>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
           <span className="font-medium text-foreground">{loan.formats.map((f) => formatLabel(f)).join(' + ')}</span>
-          {' · '}with <span className="text-foreground">{loan.borrowerName}</span> since {loan.lentDate}
+          {' · '}with{' '}
+          <span className="text-foreground">
+            {loan.borrowerProfileId !== null && loan.borrowerProfileId === profile?.id ? 'you' : loan.borrowerName}
+          </span>{' '}
+          since {formatShortDate(loan.lentDate)}
         </p>
         <p
           className={cn(
@@ -57,7 +62,9 @@ function Row({ loan }: { loan: Loan }) {
           {loanDueLabel(loan)}
         </p>
       </div>
-      {profile?.role === 'admin' && loan.returnedDate === null ? (
+      {/* Either person, since Batch W3 (#249). "Mark returned" read as a sentence about
+          Mark, who is a person here, so it is "Returned". */}
+      {loan.returnedDate === null ? (
         <Button
           type="button"
           variant="outline"
@@ -70,7 +77,7 @@ function Row({ loan }: { loan: Loan }) {
           ) : (
             <Undo2 className="h-4 w-4" />
           )}
-          Mark returned
+          Returned
         </Button>
       ) : null}
       {giveBack.isError ? (
@@ -96,6 +103,7 @@ function Row({ loan }: { loan: Loan }) {
  */
 export default function LoansPage() {
   const [openOnly, setOpenOnly] = useState(true)
+  const [starting, setStarting] = useState(false)
 
   const loansQuery = useQuery({
     queryKey: ['loans', openOnly],
@@ -116,7 +124,16 @@ export default function LoansPage() {
             {loansQuery.data.overdueCount} overdue
           </span>
         ) : undefined}
+        actions={(
+          <Button type="button" onClick={() => setStarting(true)} aria-expanded={starting}>
+            <ArrowRightLeft className="h-4 w-4" aria-hidden />
+            Lend or borrow
+          </Button>
+        )}
       />
+
+      {/* Batch W3 (#249): start a loan here, by scan or by search, as well as from a film. */}
+      {starting ? <LoanStarter onClose={() => setStarting(false)} /> : null}
 
       <div className="inline-flex rounded-lg border border-border bg-card p-1" aria-label="Loan history view">
         {[
@@ -155,7 +172,7 @@ export default function LoansPage() {
           tone="empty"
           icon={HandHeart}
           title={openOnly ? 'Every disc is home' : 'No loans have been recorded'}
-          description="Lend a disc from its film page, then choose the exact copy you are handing over."
+          description="Use Lend or borrow above, or a film's page, then choose the exact disc."
         />
       ) : (
         <ul className="space-y-3">

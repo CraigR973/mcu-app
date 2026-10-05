@@ -874,6 +874,10 @@ export const loanSchema = z.object({
   formats: z.array(z.string()),
   locationLabel: z.string().min(1),
   borrowerName: z.string().min(1),
+  /** Batch W3 (#249): the borrower's profile when they are one of the people who use the
+   *  app ("I'm borrowing it"); null for anyone else. Defaulted, so a web build that reaches
+   *  an API from before W3 still parses its loans. */
+  borrowerProfileId: z.string().uuid().nullable().default(null),
   lentDate: z.string(),
   dueDate: z.string().nullable(),
   returnedDate: z.string().nullable(),

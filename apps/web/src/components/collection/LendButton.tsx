@@ -1,9 +1,10 @@
 import { useId, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { HandHeart, Loader2, Undo2 } from 'lucide-react'
+import { HandHeart, HandHelping, Loader2, Undo2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/context/auth'
 import { fetchLoans, lendDisc, loanDueLabel, returnLoan } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
@@ -11,29 +12,36 @@ interface Props {
   collectionItemId: string
 }
 
+type Mode = 'idle' | 'lend' | 'borrow'
+
 /**
- * Lend this specific disc, or mark it returned — §12.5's "mark as lent / returned".
+ * Lend this specific disc, borrow it, or say it is back — §12.5's "mark as lent / returned",
+ * and Batch W3's borrowing (`DECISIONS.md` #249).
  *
  * **On the copy, not on the film.** A loan is about one physical object: owning *Heat* on
  * 4K and on DVD means two discs, and only one of them left the house. `loans` points at
  * `collection_item_id` for the same reason.
+ *
+ * **Both people, since W3.** Mark lends the discs as much as Craig does, and Craig borrows
+ * them: **Borrow** records the person as the borrower, by their profile, so the reminder can
+ * say "You've had it". **Lend** names anyone else. "Mark returned" became **Returned**, since
+ * Mark is a person here.
  */
 export function LendButton({ collectionItemId }: Props) {
+  const { profile } = useAuth()
   const queryClient = useQueryClient()
   const borrowerId = useId()
   const dueId = useId()
-  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<Mode>('idle')
   const [borrower, setBorrower] = useState('')
   const [due, setDue] = useState('')
 
-  // Every loan, so this control knows whether *this* disc is already out. `openOnly`
-  // keeps it to the ones that matter and the list is short by nature.
+  // Every open loan, so this control knows whether *this* disc is already out. `openOnly`
+  // keeps it to the ones that matter, and the list is short by nature.
   const loansQuery = useQuery({ queryKey: ['loans', true], queryFn: () => fetchLoans(true) })
   const loans = loansQuery.data?.items ?? []
   const state = listState(loansQuery, loans.length === 0)
-  const active = loans.find(
-    (loan) => loan.collectionItemId === collectionItemId,
-  )
+  const active = loans.find((loan) => loan.collectionItemId === collectionItemId)
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: ['loans'] })
@@ -41,14 +49,13 @@ export function LendButton({ collectionItemId }: Props) {
   }
 
   const lend = useMutation({
-    mutationFn: () =>
-      lendDisc({
-        collectionItemId,
-        borrowerName: borrower.trim(),
-        dueDate: due || null,
-      }),
+    mutationFn: () => {
+      const dueDate = due || null
+      if (mode === 'borrow' && profile) return lendDisc({ collectionItemId, borrowerProfileId: profile.id, dueDate })
+      return lendDisc({ collectionItemId, borrowerName: borrower.trim(), dueDate })
+    },
     onSuccess: () => {
-      setOpen(false)
+      setMode('idle')
       setBorrower('')
       setDue('')
       refresh()
@@ -59,6 +66,11 @@ export function LendButton({ collectionItemId }: Props) {
     mutationFn: () => returnLoan(active?.id ?? ''),
     onSuccess: refresh,
   })
+
+  function open(next: Mode) {
+    lend.reset()
+    setMode(next)
+  }
 
   if (state === 'loading') {
     return (
@@ -96,10 +108,18 @@ export function LendButton({ collectionItemId }: Props) {
   }
 
   if (active) {
+    const yours = active.borrowerProfileId !== null && active.borrowerProfileId === profile?.id
     return (
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          With <span className="text-foreground">{active.borrowerName}</span> ·{' '}
+          {yours ? (
+            <span className="text-foreground">With you</span>
+          ) : (
+            <>
+              With <span className="text-foreground">{active.borrowerName}</span>
+            </>
+          )}{' '}
+          ·{' '}
           <span className={active.isOverdue ? 'font-medium text-destructive' : ''}>
             {loanDueLabel(active)}
           </span>
@@ -116,7 +136,7 @@ export function LendButton({ collectionItemId }: Props) {
           ) : (
             <Undo2 className="h-3.5 w-3.5" />
           )}
-          Mark returned
+          Returned
         </Button>
         {giveBack.isError ? (
           <p role="alert" className="text-sm text-destructive">
@@ -127,42 +147,50 @@ export function LendButton({ collectionItemId }: Props) {
     )
   }
 
-  if (!open) {
+  if (mode === 'idle') {
     return (
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        onClick={() => {
-          lend.reset()
-          setOpen(true)
-        }}
-      >
-        <HandHeart className="h-3.5 w-3.5" />
-        Lend
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" variant="ghost" onClick={() => open('lend')}>
+          <HandHeart className="h-3.5 w-3.5" />
+          Lend
+        </Button>
+        {profile ? (
+          <Button type="button" size="sm" variant="ghost" onClick={() => open('borrow')}>
+            <HandHelping className="h-3.5 w-3.5" />
+            Borrow
+          </Button>
+        ) : null}
+      </div>
     )
   }
 
+  const borrowing = mode === 'borrow'
   return (
     <form
       className="space-y-3"
       aria-busy={lend.isPending}
+      aria-label={borrowing ? 'Borrow this disc' : 'Lend this disc'}
       onSubmit={(event) => {
         event.preventDefault()
-        if (borrower.trim()) lend.mutate()
+        if (borrowing || borrower.trim()) lend.mutate()
       }}
     >
-      <label htmlFor={borrowerId} className="block text-sm font-medium text-foreground">
-        Borrower
-      </label>
-      <Input
-        id={borrowerId}
-        value={borrower}
-        onChange={(event) => setBorrower(event.target.value)}
-        placeholder="Who has it?"
-        required
-      />
+      {borrowing ? (
+        <p className="text-sm text-muted-foreground">You are taking this disc home.</p>
+      ) : (
+        <>
+          <label htmlFor={borrowerId} className="block text-sm font-medium text-foreground">
+            Borrower
+          </label>
+          <Input
+            id={borrowerId}
+            value={borrower}
+            onChange={(event) => setBorrower(event.target.value)}
+            placeholder="Who has it?"
+            required
+          />
+        </>
+      )}
       <label htmlFor={dueId} className="block text-sm font-medium text-foreground">
         Due back <span className="font-normal text-muted-foreground">(optional)</span>
       </label>
@@ -181,17 +209,17 @@ export function LendButton({ collectionItemId }: Props) {
         <Button
           type="submit"
           size="sm"
-          disabled={lend.isPending || borrower.trim().length === 0}
+          disabled={lend.isPending || (!borrowing && borrower.trim().length === 0)}
         >
           {lend.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          Lend it
+          {borrowing ? 'I’m borrowing it' : 'Lend it'}
         </Button>
         <Button
           type="button"
           size="sm"
           variant="ghost"
           disabled={lend.isPending}
-          onClick={() => setOpen(false)}
+          onClick={() => setMode('idle')}
         >
           Cancel
         </Button>

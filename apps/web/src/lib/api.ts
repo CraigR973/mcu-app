@@ -214,6 +214,7 @@ import {
 import { z, type ZodType, type ZodTypeDef } from 'zod'
 
 import { authFetch } from './auth-tokens'
+import { formatShortDate } from './utils'
 
 export type {
   Activity,
@@ -1487,13 +1488,16 @@ export async function fetchLoans(openOnly = false): Promise<LoanList> {
   )
 }
 
-export interface LendInput {
+/**
+ * A loan names its borrower one way — Batch W3 (#249): a name for anyone, or the profile of
+ * one of the people who use the app ("I'm borrowing it"), whose name the API fills in.
+ */
+export type LendInput = {
   collectionItemId: string
-  borrowerName: string
   lentDate?: string
   dueDate?: string | null
   notes?: string | null
-}
+} & ({ borrowerName: string; borrowerProfileId?: never } | { borrowerProfileId: string; borrowerName?: never })
 
 export async function lendDisc(input: LendInput): Promise<Loan> {
   return parseOrThrowApiError(
@@ -1518,7 +1522,7 @@ export function loanDueLabel(loan: {
   daysUntilDue: number | null
   returnedDate: string | null
 }): string {
-  if (loan.returnedDate) return `returned ${loan.returnedDate}`
+  if (loan.returnedDate) return `returned ${formatShortDate(loan.returnedDate)}`
   if (loan.daysUntilDue === null) return 'no due date'
   if (loan.isOverdue) {
     const days = Math.abs(loan.daysUntilDue)

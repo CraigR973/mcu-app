@@ -220,11 +220,12 @@ function CopyCard({
         </div>
       )}
 
-      {canEdit && (
-        <div className="border-t border-border pt-3">
-          <LendButton collectionItemId={item.id} />
-        </div>
-      )}
+      {/* Batch W3 (#249): both people lend, borrow and say a disc is back. Editing the
+          copy stays the admin's, above. Only owned copies get a card, so a sold disc
+          never offers a loan. */}
+      <div className="border-t border-border pt-3">
+        <LendButton collectionItemId={item.id} />
+      </div>
 
       {/* Batch T6: the stored value is for both people and costs nothing to show; the live
           check beside it spends an eBay lookup, so it stays with the admin's tools. */}
