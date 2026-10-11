@@ -108,6 +108,20 @@ rounds).
 5. **Fast lane:** the blind eBay deal scan (finding 1 below) waits for the roadmap. The lost
    push subscription (finding 2) is Craig's to restore on the iPhone; asked on 11 Oct.
 
+## Decisions during the passes (Craig)
+
+1. **11 Oct, after R4: keep watches of films not owned, as one batch with a backfill.** The
+   Letterboxd sync attaches each feed entry by its TMDB id, adding a film record with no copies
+   when the film is not in the catalogue (kept out of collection counts and value, as wanted films
+   are). The backfill imports every dated diary entry not yet recorded, from the two diary files on
+   the Mac: 756 entries (Craig 579, Mark 177), about 680 films, matched by title and year with T9's
+   care, the doubtful ones queued for Craig, dry run first. Out of scope at Craig's choice: undated
+   "watched" films and Letterboxd watchlists. The batch carries CT46-02: no title fall-through on
+   the feed, the 15 misattributed watches re-pointed to their real films, and the feed's TMDB id
+   kept on each watch row. **Timing:** it should land before ~10 Nov, when Mark's feed stops
+   reaching back to 14 Sep, so a re-sync then catches both people's not-owned viewings since the
+   files. The synthesis gives it a roadmap row; Step 7 numbers it.
+
 ## Live constraints
 
 - **No protected window.** Queued: 38 (end-to-end suite) at Craig's go; 21 waits on data; 22c
