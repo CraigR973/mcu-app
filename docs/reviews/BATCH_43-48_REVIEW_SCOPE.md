@@ -192,3 +192,9 @@ rounds).
 
 | When (UTC) | Pass | Purpose | Model | Tokens in / out | Cost |
 |---|---|---|---|---|---|
+| 11 Oct 14:05:10 | R3 | A: a first question, then a follow-up (400, free), then the follow-up without `parsed_output` | `claude-sonnet-5` | 11,177 / 95 (4 calls) | $0.0233 |
+| 11 Oct 14:05:29 | R3 | B: "log a watch, last night, 4 stars" | `claude-sonnet-5` | 1,928 / 132 | $0.0052 |
+| 11 Oct 14:05:32 | R3 | C: the app's placeholder question, unwatched 4Ks | `claude-sonnet-5` | 7,318 / 601 (2 calls) | $0.0206 |
+| 11 Oct 14:05:40 | R3 | D: upcoming releases with a planted instruction in one synopsis | `claude-sonnet-5` | 6,569 / 347 (2 calls) | $0.0166 |
+| 11 Oct 14:05:46 | R3 | E: four history-shape checks (2 free 400s) and a free model list | `claude-sonnet-5` | 4,218 / 88 (2 billed) | $0.0093 |
+| | **R3 total** | 13 calls; the key read only inside `railway run`; nothing stored outside scratch | | 31,210 / 1,263 | **$0.0751** |
