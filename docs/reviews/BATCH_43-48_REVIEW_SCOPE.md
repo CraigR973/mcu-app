@@ -106,7 +106,7 @@ rounds).
    only inside Railway's run environment and never printed; the probe stores nothing.
 4. **Batch numbers:** 43–48, the next free numbers in `docs/phase-batches.md`.
 5. **Fast lane:** the blind eBay deal scan (finding 1 below) waits for the roadmap. The lost
-   push subscription (finding 2) is Craig's to restore on his phone; asked on 11 Oct.
+   push subscription (finding 2) is Craig's to restore on the iPhone; asked on 11 Oct.
 
 ## Live constraints
 
