@@ -21,6 +21,7 @@ from TMDB, imported from a spreadsheet.
 | `OWNER-ACTIONS.md` | **Everything blocked on Craig** — credentials, live runs, devices, choices that aren't an agent's to make. **Read it before picking work, and never work around an item on it.** |
 | `docs/phase-batches.md` | **The single batch source of record** — what each batch is, its acceptance criteria, which batches run together, and **which model and effort each needs**. Read it to choose what to work on. |
 | `docs/agent-commands/` | The real command procedures. `.claude/commands/` holds thin wrappers only. |
+| `docs/agent-commands/review-wave.md` | How a full review (a panel of expert passes) or a monthly delta review runs. Reports, scope notes and roadmaps live in `docs/reviews/`. |
 
 **Cross-tool rule:** the repo is the single source of truth. Claude Code has a private
 memory store; treat it as a convenience cache only — every durable fact must also live
