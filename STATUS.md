@@ -5,14 +5,14 @@
 **12 Oct 2026: the wave 1 full review is done, and its remediation is Group X** (#253,
 `docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
-planned 12 Oct", in five sittings (#255). **Sitting 1 is running as one group (`/group-start X
-· 1`): X1, the eBay scan, and X2, the daily check, shipped 12 Oct (`7979e19`, `857ee8f`); X3
-is next in that run.** Home's "Needs attention" row is live for Craig; the first check runs at
-08:00 UTC on 13 Oct, and until then the row says it has not run yet.
+planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
+check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
+Next: sitting 2, X7 → X8, at Craig's go.** Home's "Needs attention" row is live for Craig; the
+first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
 |---|---|
-| ~~X1~~ → ~~X2~~ → X3, sitting 1 | running as one group; X1 and X2 shipped 12 Oct (`7979e19` #258, `857ee8f` #259) |
+| ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
 | X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
@@ -44,9 +44,8 @@ The Log keeps a dated line for each.
 ## Next
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
-remediation, #253, in five sittings since #255), then 38. **Sitting 1 is running as one group
-(`/group-start X · 1`)**: X1 and X2 shipped 12 Oct; X3 ("Push that heals itself") follows in
-the same run, and the resume point is the first batch not struck.
+remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
+**sitting 2, X7 → X8, is next, at Craig's go** (`/group-start X · 2`).
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -434,6 +433,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-12 (X3 shipped, `adcae0d`, #260; sitting 1 done)** — A device the push service
+  refuses is kept as refused, and the app registers the phone again on its next open; Settings
+  says "on" only when the server holds the phone live, otherwise when it stopped; a banner stays
+  while a person's last device is refused; the eBay run counts pushes delivered. Migration 051.
+  Production reported the merge SHA at 23:06 UTC with `db: ok`. A real phone re-subscribing is
+  Craig's to see.
 
 - **2026-10-12 (X2 shipped, `857ee8f`, #259)** — A daily check inside the 08:00 reminders job
   records every job's heartbeat, the eBay scan, each person's notifications, readiness, the

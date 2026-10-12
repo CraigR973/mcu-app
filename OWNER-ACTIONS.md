@@ -27,7 +27,9 @@ conversation still maps onto this file.*
   unblocked.
 - **A phone session (about 15 minutes):** 16b Mark turns notifications on, then a movie night
   on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
-  Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?".
+  Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?"; and
+  (Batch X3, 12 Oct) open the app on each phone and check Settings says "Notifications are on
+  for this device", which the app now mends by itself after a refusal.
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 385 discs on
   You → Disc specs (20).
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three
