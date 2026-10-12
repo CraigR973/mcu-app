@@ -65,10 +65,18 @@ function Schedule({ run }: { run: EbayWatchRun | null }) {
     )
   }
   const stopped = run.status === 'stopped' || run.status === 'abandoned'
+  // Batch X2 (UX48-02): what the last check read. "Last check 19:20" alone stood above 45
+  // passes in a row that read nothing.
+  const read =
+    run.listingsSeen > 0
+      ? `read ${String(run.listingsSeen)} new listings`
+      : run.emptyInARow > 1
+        ? `read 0 new listings, ${String(run.emptyInARow)} checks in a row`
+        : 'read 0 new listings'
   return (
-    <p className="text-sm text-muted-foreground">
-      Checked every two hours. Last check {when(run.startedAt)}
-      {stopped ? ', which stopped early.' : '.'}
+    <p className={run.emptyInARow > 2 ? 'text-sm text-warning' : 'text-sm text-muted-foreground'}>
+      Checked every two hours. Last check {when(run.startedAt)} · {read}
+      {stopped ? ', and it stopped early.' : '.'}
     </p>
   )
 }

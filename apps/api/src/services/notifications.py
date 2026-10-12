@@ -47,6 +47,7 @@ logger = structlog.get_logger(__name__)
 #: Which preference column gates which category. A mapping rather than
 #: ``getattr(prefs, f"{category}_enabled")`` so a renamed column fails the typechecker
 #: instead of quietly returning ``True`` for a category nobody can switch off any more.
+#: ``attention`` (Batch X2) is absent on purpose: it has no toggle.
 _CATEGORY_COLUMNS: dict[NotificationCategory, str] = {
     NotificationCategory.deals: "deals_enabled",
     NotificationCategory.sale_events: "sale_events_enabled",
@@ -296,7 +297,8 @@ async def queue_notification(
         created_at_utc=now,
     )
 
-    if not getattr(preference, _CATEGORY_COLUMNS[category]):
+    column = _CATEGORY_COLUMNS.get(category)
+    if column is not None and not getattr(preference, column):
         notification.status = NotificationStatus.suppressed.value
         notification.suppressed_reason = SUPPRESSED_CATEGORY_DISABLED
     else:

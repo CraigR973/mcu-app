@@ -22,7 +22,7 @@ function labels(sections: NavSections | undefined): string[] {
 }
 
 describe('the sidebar a signed-in non-admin sees', () => {
-  it('is exactly nine destinations while the three conditional tables are empty', () => {
+  it('is exactly ten destinations while the two conditional tables are empty', () => {
     // **Batch S3 made this eight; Batch S6 made it seven**, by merging Calendar and
     // Coming soon into one Releases screen — its own criterion, and the same two-sources-
     // one-question argument `DECISIONS.md` #154 made about Home, Stats and Insights.
@@ -30,7 +30,9 @@ describe('the sidebar a signed-in non-admin sees', () => {
     // which is always shown: it is where a first alert is set, so hiding it while empty
     // would hide the only way in (#218). **Batch V1 made it nine** with Loans, always
     // shown for Mark and Craig at Craig's word (#228): where a disc went is worth being
-    // able to look up whether or not a loan has been made yet.
+    // able to look up whether or not a loan has been made yet. **Batch X2 made it ten** with
+    // Deals, always shown (#154 and #165 amended for Deals alone): hidden on empty, a blind
+    // eBay scan looked the same as a quiet day.
     //
     // Asserted as the whole list rather than a count, so a swap that keeps the total
     // still fails.
@@ -39,6 +41,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
       'Wanted',
       'Movie night',
       'Releases',
+      'Deals',
       'Price alerts',
       'Home',
       'Loans',
@@ -47,7 +50,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
     ])
   })
 
-  it('grows to twelve once all three have rows — the un-hide half', () => {
+  it('grows to twelve once both have rows — the un-hide half', () => {
     // **A hide that never un-hides is the failure mode.** It looks right on this
     // database, where all four tables are empty, and stays wrong forever.
     expect(labels(FULL)).toEqual([
@@ -70,9 +73,15 @@ describe('the sidebar a signed-in non-admin sees', () => {
     // The tables fill at different times — a first box set says nothing about deals —
     // so a single "is anything non-empty" flag would be wrong in both directions.
     expect(labels({ ...EMPTY, boxSets: 1 })).toContain('Box sets')
-    expect(labels({ ...EMPTY, boxSets: 1 })).not.toContain('Deals')
-    expect(labels({ ...EMPTY, deals: 4 })).toContain('Deals')
-    expect(labels({ ...EMPTY, deals: 4 })).not.toContain('Box sets')
+    expect(labels({ ...EMPTY, boxSets: 1 })).not.toContain('Collections')
+    expect(labels({ ...EMPTY, collections: 4 })).toContain('Collections')
+    expect(labels({ ...EMPTY, collections: 4 })).not.toContain('Box sets')
+  })
+
+  it('always lists Deals, with a deal on offer or none — Batch X2', () => {
+    expect(labels({ ...EMPTY, deals: 0 })).toContain('Deals')
+    expect(labels({ ...EMPTY, deals: 3 })).toContain('Deals')
+    expect(navItems.find((item) => item.path === '/deals')?.showWhen).toBeUndefined()
   })
 
   it('always lists Loans, with no loan made yet or with one — Batch V1 (#228)', () => {
@@ -106,9 +115,9 @@ describe('isVisible', () => {
   })
 
   it('hides a conditional destination on exactly zero and no other value', () => {
-    const deals = navItems.find((item) => item.path === '/deals')!
-    expect(isVisible(deals, { ...EMPTY, deals: 0 })).toBe(false)
-    expect(isVisible(deals, { ...EMPTY, deals: 1 })).toBe(true)
+    const collections = navItems.find((item) => item.path === '/collections')!
+    expect(isVisible(collections, { ...EMPTY, collections: 0 })).toBe(false)
+    expect(isVisible(collections, { ...EMPTY, collections: 1 })).toBe(true)
   })
 })
 

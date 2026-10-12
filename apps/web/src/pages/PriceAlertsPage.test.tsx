@@ -97,6 +97,8 @@ describe('PriceAlertsPage — Batch T8a', () => {
         finishedAt: '2026-09-26T09:21:00Z',
         targetsChecked: 2,
         dealsFound: 0,
+        listingsSeen: 120,
+        emptyInARow: 0,
       },
     } satisfies EbayTargets)
     renderPage()
@@ -109,7 +111,24 @@ describe('PriceAlertsPage — Batch T8a', () => {
     )
     expect(card.getByRole('link', { name: /Star Wars/ }).getAttribute('href')).toBe(`/movies/${FILM}`)
     expect(screen.getByText('Buy It Now: £6.99, free postage.')).toBeTruthy()
-    expect(screen.getByText(/Last check 26 Sep 2026, 10:20/)).toBeTruthy()
+    expect(screen.getByText(/Last check 26 Sep 2026, 10:20 · read 120 new listings\./)).toBeTruthy()
+  })
+
+  it('says how many checks in a row read nothing — Batch X2 (UX48-02)', async () => {
+    targetsMock.mockResolvedValue({
+      items: [],
+      lastRun: {
+        status: 'finished',
+        startedAt: '2026-10-12T18:20:00Z',
+        finishedAt: '2026-10-12T18:21:00Z',
+        targetsChecked: 0,
+        dealsFound: 0,
+        listingsSeen: 0,
+        emptyInARow: 33,
+      },
+    } satisfies EbayTargets)
+    renderPage()
+    expect(await screen.findByText(/read 0 new listings, 33 checks in a row\./)).toBeTruthy()
   })
 
   it('watches a listing from its address and the price typed', async () => {

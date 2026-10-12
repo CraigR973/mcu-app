@@ -20,6 +20,7 @@ import sys
 from src.database import AsyncSessionLocal
 from src.ebay.client import EbayClient
 from src.models.ebay_watch import EbayWatchRun
+from src.services import heartbeat
 from src.services.ebay_watch.runs import StartOutcome, deliver_now, start_run, work_run
 
 _NOT_STARTED = {
@@ -56,9 +57,16 @@ async def main() -> int:
         async with AsyncSessionLocal() as db:
             outcome = await start_run(db, trigger="job")
             if outcome.run is None:
+                # Batch X2: a beat when no pass starts, so idle reads differently from stopped.
+                await heartbeat.beat(db, heartbeat.EBAY, outcome.reason.replace("_", " "))
                 return report(outcome, None)
             result = await work_run(db, client, outcome.run.id)
             await deliver_now(db, result.told)
+            await heartbeat.beat(
+                db,
+                heartbeat.EBAY,
+                f"{result.run.status.replace('_', ' ')}, {result.run.listings_seen} listings read",
+            )
     return report(outcome, result.run)
 
 

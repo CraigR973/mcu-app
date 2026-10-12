@@ -752,6 +752,69 @@ async def test_an_expired_ebay_find_keeps_its_price_and_film_and_loses_the_listi
     )
 
 
+async def test_price_alerts_say_how_many_listings_the_last_checks_read(db: AsyncSession) -> None:
+    """X2 (UX48-02): "Last check 19:20" through 45 blind passes; now the count is there."""
+    mark_id = (await _person(db, UserRole.viewer)).id
+    await db.execute(EbayWatchRun.__table__.delete())
+    for hours, seen in ((8, 120), (6, 0), (4, 0), (2, 0)):
+        started = NOW - timedelta(hours=hours)
+        db.add(
+            EbayWatchRun(
+                id=uuid.uuid4(),
+                trigger="job",
+                status="finished",
+                started_utc=started,
+                heartbeat_utc=started,
+                finished_utc=started,
+                budget=50,
+                calls=1,
+                listings_seen=seen,
+            )
+        )
+    await db.commit()
+    async with _as(db, mark_id) as client:
+        last = (await client.get("/api/v1/ebay/targets")).json()["lastRun"]
+    assert (last["listingsSeen"], last["emptyInARow"]) == (0, 3)
+
+
+async def test_the_deals_page_says_when_each_source_last_answered(db: AsyncSession) -> None:
+    """X2 (UX48-02): an empty page said the sale pages had not been scraped while the eBay
+    scan, the main source, was blind."""
+    mark_id = (await _person(db, UserRole.viewer)).id
+    await db.execute(EbayWatchRun.__table__.delete())
+    db.add(
+        EbayWatchRun(
+            id=uuid.uuid4(),
+            trigger="job",
+            status="finished",
+            started_utc=NOW - timedelta(hours=2),
+            heartbeat_utc=NOW,
+            budget=50,
+            calls=1,
+            listings_seen=14,
+        )
+    )
+    db.add(
+        Deal(
+            id=uuid.uuid4(),
+            retailer_id=None,
+            retailer_name_snapshot="Zavvi",
+            title_snapshot="An old Zavvi deal",
+            url="https://www.zavvi.com/p/x2-old",
+            price=Decimal("10.00"),
+            currency="GBP",
+            first_seen_at_utc=datetime(2026, 9, 30, 19, 14),
+            last_seen_at_utc=datetime(2026, 9, 30, 19, 14),
+        )
+    )
+    await db.commit()
+    async with _as(db, mark_id) as client:
+        feed = (await client.get("/api/v1/deals")).json()
+    sources = {source["name"]: source["lastAnsweredAt"] for source in feed["sources"]}
+    assert sources["eBay"].startswith("2026-09-26T08:00")
+    assert sources["Zavvi"].startswith("2026-09-30T19:14")
+
+
 # ---------------------------------------------------------------------------
 # Batch V8, amended by X1 — a shop's price can lower a New listing's usual, never raise it
 # ---------------------------------------------------------------------------

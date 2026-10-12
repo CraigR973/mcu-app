@@ -18,6 +18,12 @@ so running twice sends nothing twice.
 seeded event triggers a reminder"* — and it is also how a missed day is caught up. It
 cannot be pushed past today: reminding somebody about a sale that has not been announced
 is not a feature.
+
+**Since Batch X2 it also runs the daily check** (`services/health_checks.py`): every job's
+heartbeat, the eBay scan, each person's notifications, readiness, the database's size, PIN
+locks and identification's doubts, each result recorded, and one push to Craig for each new
+problem, delivered with the morning's reminders. Problems found do not fail the job; the job
+fails only when it could not do its own work.
 """
 
 from __future__ import annotations
@@ -31,12 +37,21 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from src.clock import utc_today
 from src.config import settings
+from src.services import heartbeat
+from src.services.health_checks import CheckSummary, run_daily_check
 from src.services.notifications import deliver_pending
 from src.services.push_transport import push_sender
 from src.services.reminders import ReminderSummary, run_reminders
 
 
-def report(summary: ReminderSummary, *, delivered: int, failed: int, deliver: bool) -> int:
+def report(
+    summary: ReminderSummary,
+    *,
+    delivered: int,
+    failed: int,
+    deliver: bool,
+    check: CheckSummary | None = None,
+) -> int:
     """Print what the pass did and return the exit code the cron will see.
 
     Separated from the run for the same reason as `daily_scrape.report`: the exit code is
@@ -49,6 +64,10 @@ def report(summary: ReminderSummary, *, delivered: int, failed: int, deliver: bo
     print(f"  seasons seeded:  {summary.seasons_seeded}")
     print(f"  queued:          {summary.queued}")
     print(f"  delivered:       {delivered}" if deliver else "  delivered:       (skipped)")
+    if check is not None:
+        print(f"daily check:       {check.checked} checks, {check.problems} problems")
+        for message in check.new or []:
+            print(f"  new:             {message}")
 
     # Gotcha 16 again: a delivery failure must not hide behind the queued count above it.
     if failed:
@@ -62,6 +81,9 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
     try:
         async with AsyncSession(engine, expire_on_commit=False) as db:
             summary = await run_reminders(db, as_of=as_of)
+            # Batch X2: the daily check, queued before delivery so its pushes go out now.
+            check = await run_daily_check(db)
+            await db.commit()
             delivered = 0
             failed = 0
             if deliver:
@@ -70,9 +92,10 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
                     delivered = delivery.sent
                     failed = delivery.failed
             await db.commit()
+            await heartbeat.beat(db, heartbeat.REMINDERS, "ran")
     finally:
         await engine.dispose()
-    return report(summary, delivered=delivered, failed=failed, deliver=deliver)
+    return report(summary, delivered=delivered, failed=failed, deliver=deliver, check=check)
 
 
 def main() -> int:

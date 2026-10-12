@@ -78,7 +78,9 @@ describe('YouPage — Batch T3', () => {
     renderYou()
     await screen.findByRole('link', { name: /Wanted/ })
     await waitFor(() => expect(screen.queryByRole('link', { name: /Box sets/ })).toBeNull())
-    expect(screen.queryByRole('link', { name: /Deals/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Collections/ })).toBeNull()
+    // Batch X2: Deals stays, its empty page saying when each source last answered.
+    expect(screen.getByRole('link', { name: /Deals/ }).getAttribute('href')).toBe('/deals')
   })
 
   it('lists Loans with no loan made yet, for Mark as for Craig — Batch V1 (#228)', async () => {

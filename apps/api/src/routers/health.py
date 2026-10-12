@@ -89,6 +89,11 @@ def _push_status() -> Literal["configured", "not_configured", "invalid"]:
     return "configured"
 
 
+def readiness_fields() -> dict[str, str]:
+    """Push, the assistant and eBay as this deployment sees them, for the boot heartbeat."""
+    return {"push": _push_status(), "ai": _ai_status(), "ebay": _ebay_status()}
+
+
 @router.get("/ready", response_model=ReadinessResponse)
 async def ready(response: Response) -> ReadinessResponse:
     push = _push_status()

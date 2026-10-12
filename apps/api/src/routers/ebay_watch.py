@@ -86,14 +86,38 @@ def _target(target: EbayTarget) -> EbayTargetResponse:
     )
 
 
-def _run(run: EbayWatchRun) -> EbayWatchRunResponse:
+def _run(run: EbayWatchRun, empty_in_a_row: int) -> EbayWatchRunResponse:
     return EbayWatchRunResponse(
         status=run.status,
         startedAt=run.started_utc,
         finishedAt=run.finished_utc,
         targetsChecked=run.targets_checked,
         dealsFound=run.deals_found,
+        listingsSeen=run.listings_seen,
+        emptyInARow=empty_in_a_row,
     )
+
+
+#: How far back "in a row" counts: two days of two-hourly passes, plenty to say "many".
+EMPTY_RUNS_LOOKED_AT = 48
+
+
+async def _empty_in_a_row(db: AsyncSession) -> int:
+    """Passes in a row, newest first, that read no new listing (Batch X2)."""
+    seen = (
+        await db.scalars(
+            select(EbayWatchRun.listings_seen)
+            .where(EbayWatchRun.status != "running")
+            .order_by(EbayWatchRun.started_utc.desc())
+            .limit(EMPTY_RUNS_LOOKED_AT)
+        )
+    ).all()
+    count = 0
+    for listings in seen:
+        if listings:
+            break
+        count += 1
+    return count
 
 
 async def _own_target(db: AsyncSession, target_id: uuid.UUID, user_id: uuid.UUID) -> EbayTarget:
@@ -123,7 +147,8 @@ async def list_targets(
     targets = (await db.scalars(query.order_by(order, EbayTarget.created_at_utc.desc()))).all()
     run = await latest_run(db)
     return EbayTargetsResponse(
-        items=[_target(target) for target in targets], lastRun=_run(run) if run else None
+        items=[_target(target) for target in targets],
+        lastRun=_run(run, await _empty_in_a_row(db)) if run else None,
     )
 
 

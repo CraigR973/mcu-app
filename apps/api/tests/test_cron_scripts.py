@@ -282,3 +282,53 @@ def test_neither_script_imports_a_router() -> None:
     for module in (daily_scrape, run_reminders):
         source = inspect.getsource(module)
         assert "src.routers" not in source, f"{module.__name__} imports a router"
+
+
+# ---------------------------------------------------------------------------
+# Batch X2: a night of refusals alone exits 0 (#240: refusals are not failures)
+# ---------------------------------------------------------------------------
+
+
+def _refused(retailer: str) -> ScrapeOutcome:
+    return ScrapeOutcome(
+        retailer=retailer, wanted_title="Deep Red", ok=False, error="refused: 429", refused=True
+    )
+
+
+def test_a_night_when_shops_only_refused_exits_zero(capsys: pytest.CaptureFixture[str]) -> None:
+    """X2's guard: the job showed Crashed every night from 30 Sep, refusals alone."""
+    summary = _summary(
+        ScrapeOutcome(retailer="Zavvi", wanted_title="Cross of Iron", ok=True),
+        _refused("101 Films"),
+        _refused("Powerhouse"),
+    )
+    assert daily_scrape.report(summary, dry_run=False) == 0
+    # Still listed, so the log says who refused.
+    assert "101 Films" in capsys.readouterr().err
+    assert daily_scrape.outcome_word(summary) == "ran"
+
+
+def test_a_real_failure_beside_refusals_still_exits_nonzero() -> None:
+    summary = _summary(
+        _refused("101 Films"),
+        ScrapeOutcome(retailer="Arrow Video", wanted_title="Deep Red", ok=False, error="timeout"),
+    )
+    assert daily_scrape.report(summary, dry_run=False) == 1
+    assert daily_scrape.outcome_word(summary) == "ran, 1 failed"
+
+
+def test_the_reminders_job_reports_the_daily_check(capsys: pytest.CaptureFixture[str]) -> None:
+    from src.services.health_checks import CheckSummary
+
+    code = run_reminders.report(
+        ReminderSummary(),
+        delivered=1,
+        failed=0,
+        deliver=True,
+        check=CheckSummary(checked=14, problems=2, new=["The eBay scan hasn't run since 12 Oct."]),
+    )
+    # Problems found are not the job failing.
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "daily check:       14 checks, 2 problems" in out
+    assert "new:             The eBay scan hasn't run since 12 Oct." in out

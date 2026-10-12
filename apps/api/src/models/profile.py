@@ -72,6 +72,13 @@ class Profile(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     locked_until_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True
     )
+    #: Batch X2 (DS44-05): locks in a row, each within a day of the last, and when the last
+    #: began. Each further lock in a day lasts longer (``auth.LOCKOUT_STEPS``), and the daily
+    #: check names a lock in the last day to Craig.
+    lockout_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    last_lockout_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
 
     last_login_at_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True

@@ -1,6 +1,9 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 import sentry_sdk
+import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,11 +14,13 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from src.config import Environment, ProcessRole, docs_urls, settings
+from src.database import AsyncSessionLocal
 from src.logging_config import configure_logging
 from src.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from src.rate_limit import limiter
 from src.routers import (
     ai,
+    attention,
     auth,
     barcode,
     box_sets,
@@ -47,7 +52,10 @@ from src.routers import (
     watch_history,
     watch_log,
 )
+from src.services import heartbeat
 from src.tmdb.client import TMDB_DID_NOT_ANSWER, TMDBRefused
+
+log: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
 # **The web server never starts as a job** (`DECISIONS.md` #204). A job may run without the
 # session secrets, because it signs nothing; this process signs every session, and would
@@ -82,7 +90,26 @@ if settings.sentry_dsn_backend:
     )
 
 _docs = docs_urls(settings.environment)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """At boot, record the API's readiness for the daily check (Batch X2).
+
+    Push, the assistant and eBay depend on variables only this process holds, and the check
+    runs in the reminders job, which holds none of them. A boot that cannot reach the
+    database still starts: readiness says so, and the beat is skipped.
+    """
+    try:
+        async with AsyncSessionLocal() as db:
+            await heartbeat.beat(db, heartbeat.API, "booted", detail=health.readiness_fields())
+    except Exception:  # noqa: BLE001 - see the docstring
+        log.warning("boot_heartbeat_failed", exc_info=True)
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="MCU API",
     description="Mark's Cinematic Universe API",
     version="0.1.0",
@@ -148,6 +175,7 @@ app.include_router(stats.router)
 app.include_router(export.router)
 app.include_router(trash.router)
 app.include_router(navigation.router)
+app.include_router(attention.router)
 app.include_router(watch_history.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)
