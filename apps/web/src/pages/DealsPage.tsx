@@ -12,7 +12,7 @@ import { Poster } from '@/components/movies/Poster'
 import { useAuth } from '@/context/auth'
 import { dismissDeal, fetchDeals, FORMATS, type Deal, type DealFilters } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDayMonth } from '@/lib/utils'
 
 /** §5.10's discount filter, as thresholds rather than a slider — the question is
  *  "anything worth looking at?", not "exactly 37%". */
@@ -52,7 +52,15 @@ function DealCard({ deal }: { deal: Deal }) {
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="truncate font-display text-base font-semibold text-foreground">
+            {/* Batch X1: an eBay find's title is the listing's own, and it is the one tell
+                for a wrong product no rule can see ("… James Cameron"), so it wraps to three
+                lines rather than one. A shop's title is its own product name and stays one. */}
+            <h3
+              className={cn(
+                'font-display text-base font-semibold text-foreground',
+                isEbay ? 'line-clamp-3 break-words' : 'truncate',
+              )}
+            >
               {deal.movieId ? (
                 <Link to={`/movies/${deal.movieId}`} className="hover:underline">
                   {deal.title}
@@ -61,7 +69,13 @@ function DealCard({ deal }: { deal: Deal }) {
                 deal.title
               )}
             </h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">{deal.retailer}</p>
+            {/* Batch X1: what is for sale, in the listing's own words, and when its price
+                was last seen (eBay's licence asks for the age when it is not live). */}
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {[deal.retailer, deal.condition, `Seen ${formatDayMonth(deal.lastSeenAt)}`]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
           </div>
           {deal.discountPercent ? (
             <Badge tone="success">−{deal.discountPercent}%</Badge>
@@ -72,11 +86,14 @@ function DealCard({ deal }: { deal: Deal }) {
           <span className="font-display text-xl font-semibold text-foreground">
             £{deal.price}
           </span>
-          {/* Batch T8a. An eBay find's price includes postage. Since V8 "usually" is eBay's
-              asking price averaged with the shops' recent prices, never a sold price; the
-              line beneath says which. */}
+          {/* Batch T8a. An eBay find's price includes postage. "Usually" is eBay's asking
+              price, lowered to a shop's when a New listing's is cheaper (X1), never a sold
+              price; the line beneath says which, and how many listings stand behind it. */}
           {deal.wasPrice && isEbay ? (
-            <span className="text-sm text-muted-foreground">with postage · usually £{deal.wasPrice}</span>
+            <span className="text-sm text-muted-foreground">
+              with postage · usually £{deal.wasPrice}
+              {deal.usualListings ? ` (asking prices, ${String(deal.usualListings)} listings)` : ''}
+            </span>
           ) : null}
           {deal.wasPrice && !isEbay ? (
             <span className="text-sm text-muted-foreground line-through">£{deal.wasPrice}</span>

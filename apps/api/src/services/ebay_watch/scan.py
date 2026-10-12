@@ -12,8 +12,19 @@ rule: a better format than the best on the shelf), is compared with that film's 
 price on that format (:mod:`refs`), averaged since Batch V8 with the shops' recent prices
 for it where the nightly check has any (:mod:`usual`). **A deal is one that costs,
 postage included, no more than :data:`DEAL_RATIO` of that usual price.** Deals go on the
-Deals page, as "eBay", for :data:`DEAL_LIFETIME`, since nothing checks later whether
-one has sold.
+Deals page, as "eBay", for :data:`DEAL_LIFETIME`; a find is re-checked with one item
+call before it is pushed (`runs.py`), and nothing checks later whether one has sold.
+
+**Where the next pass starts is this pass's own clock, never a listing's date** (Batch X1,
+CR43-01). Until X1 the mark was the newest listing date seen, with no ceiling: one listing
+dated 12 days ahead, read on 9 Oct, set it to 21 Oct 16:35, and every pass after read one
+page, saw nothing newer, and recorded success. Now the mark is the pass's start less
+:data:`MARK_MARGIN`, for eBay's indexing, and reading it ignores anything later than the
+reading pass's start (`runs.scanned_up_to`), which also unblinds the stored 21 Oct row with
+no data write. A listing dated in the future is still read and judged.
+
+**The first pass after X1 also searches each Wanted film once** (:func:`search_wanted`),
+about ten calls, to recover what the blind days hid for the films that matter most.
 """
 
 from __future__ import annotations
@@ -29,9 +40,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ebay.client import EbayError
+from src.ebay.matching import CONDITION_LABELS
+from src.ebay.pricing import NEW_CONDITION_ID
+from src.matching.engine import searchable_title
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayWatchRun
-from src.services.ebay_watch.catalogue import CatalogueFilm, load_catalogue
+from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm, load_catalogue
 from src.services.ebay_watch.client import WatchClient
 from src.services.ebay_watch.listings import ScanListing, scan_listing
 from src.services.ebay_watch.refs import Yardstick, fetch_ref, stored_ref, yardstick
@@ -58,6 +72,14 @@ FIRST_LOOK_BACK = timedelta(hours=3)
 DEAL_RATIO = Decimal("0.70")
 #: How long a deal stays on the Deals page.
 DEAL_LIFETIME = timedelta(days=3)
+#: How far before its own start a pass sets the next one's mark: listings reach eBay's
+#: search a few minutes after they are created, so the next pass looks back this far.
+MARK_MARGIN = timedelta(minutes=10)
+
+
+def condition_label(condition_id: str) -> str:
+    """The listing's condition as eBay names it, for the card and the push."""
+    return CONDITION_LABELS.get(condition_id, "Condition not stated")
 
 
 @dataclass(frozen=True)
@@ -79,13 +101,18 @@ class Find:
     usual: Yardstick
     wanted: bool
     discount_percent: int
-    #: The shops' recent prices averaged into it (Batch V8); none for most finds.
+    #: The shops' recent prices that may lower a New listing's usual (Batch V8, X1); none
+    #: for most finds, and never for a used one.
     shops: tuple[ShopPrice, ...] = ()
 
     @property
     def figure(self) -> UsualPrice:
         """The usual price the find was judged against, and where it comes from."""
         return UsualPrice(self.usual, self.shops)
+
+    @property
+    def condition(self) -> str:
+        return condition_label(self.listing.listing.condition_id)
 
 
 @dataclass
@@ -115,10 +142,12 @@ async def read_new_listings(
     Pages are sorted newest first, so the pass stops at the first page whose last listing
     is not newer than ``since``. A promoted listing can sit at the top of a page out of
     order, which is why the last listing decides and not the first.
+
+    The next pass's mark is set only when this read finished: back to ``since``, or at the
+    page cap in a flood. One stopped by the budget leaves no mark, so the next pass reads
+    from the last one that did.
     """
     found: dict[str, ScanListing] = {}
-    # The next pass starts where this one got to, and never earlier than it started.
-    newest = max(run.newest_listing_utc or since, since)
     stopped: str | None = None
     for page in range(MAX_PAGES):
         if client.search_calls + client.attempts_per_search > run.budget:
@@ -138,7 +167,6 @@ async def read_new_listings(
             listing = scan_listing(summary)
             if listing is None or listing.listed_at is None:
                 continue
-            newest = max(newest, listing.listed_at)
             if listing.listed_at > since:
                 found.setdefault(listing.legacy_id, listing)
         last = scan_listing(summaries[-1]) if summaries else None
@@ -148,8 +176,51 @@ async def read_new_listings(
             or (last.listed_at is not None and last.listed_at <= since)
         ):
             break
-    run.newest_listing_utc = newest
+    if stopped is None:
+        run.newest_listing_utc = run.started_utc - MARK_MARGIN
     return list(found.values()), stopped
+
+
+async def wanted_searched_before(db: AsyncSession) -> bool:
+    """Whether a pass has already searched the Wanted list film by film."""
+    done = await db.scalar(
+        select(EbayWatchRun.id).where(EbayWatchRun.wanted_searched.is_not(None)).limit(1)
+    )
+    return done is not None
+
+
+async def search_wanted(
+    client: WatchClient, run: EbayWatchRun, catalogue: Catalogue
+) -> tuple[list[ScanListing], str | None]:
+    """Each Wanted film searched once by name, newest first — Batch X1.
+
+    The same UK, Buy It Now, disc-category search the scan reads, narrowed to the film's
+    title. What comes back goes through the same matcher and checks as any listing, so a
+    film's other namesakes are refused here as they are there. Records how many films were
+    searched on the run only when every one was, so a pass cut short tries again next time.
+    """
+    found: dict[str, ScanListing] = {}
+    wanted = [film for film in catalogue.films if film.wanted]
+    for film in wanted:
+        if client.search_calls + client.attempts_per_search > run.budget:
+            return list(found.values()), "budget"
+        try:
+            raw = await client.search(
+                f"{searchable_title(film.title, identified=True)} {SCAN_QUERY}",
+                category_ids=SCAN_CATEGORY,
+                sort="newlyListed",
+                filter=SCAN_FILTER,
+                limit=PAGE_SIZE,
+            )
+        except EbayError as exc:
+            run.last_error = f"Wanted search, {film.title}: {exc}"
+            logger.warning("ebay_wanted_search_failed", film=film.title, error=str(exc))
+            return list(found.values()), "failed"
+        for summary in raw.get("itemSummaries") or []:
+            if isinstance(summary, dict) and (listing := scan_listing(summary)) is not None:
+                found.setdefault(listing.legacy_id, listing)
+    run.wanted_searched = len(wanted)
+    return list(found.values()), None
 
 
 async def _record_deal(db: AsyncSession, find: Find, *, now: datetime) -> None:
@@ -166,6 +237,8 @@ async def _record_deal(db: AsyncSession, find: Find, *, now: datetime) -> None:
         existing.price = listing.total
         existing.was_price = find.figure.amount
         existing.usual_sources = find.figure.sources()
+        existing.usual_listings = find.usual.sample_size
+        existing.listing_condition = find.condition
         existing.discount_percent = find.discount_percent
         existing.last_seen_at_utc = now
         existing.expires_at_utc = now + DEAL_LIFETIME
@@ -184,6 +257,8 @@ async def _record_deal(db: AsyncSession, find: Find, *, now: datetime) -> None:
             price=listing.total,
             was_price=find.figure.amount,
             usual_sources=find.figure.sources(),
+            usual_listings=find.usual.sample_size,
+            listing_condition=find.condition,
             currency="GBP",
             discount_percent=find.discount_percent,
             first_seen_at_utc=now,
@@ -204,6 +279,10 @@ async def scan(
     """Read the new listings, find the deals, and put them on the Deals page."""
     catalogue = await load_catalogue(db)
     listings, stopped = await read_new_listings(client, run, since=since)
+    if stopped is None and not await wanted_searched_before(db):
+        searched, stopped = await search_wanted(client, run, catalogue)
+        seen = {listing.legacy_id for listing in listings}
+        listings += [listing for listing in searched if listing.legacy_id not in seen]
     run.listings_seen = len(listings)
     run.calls = client.search_calls
     await db.commit()
@@ -240,6 +319,7 @@ async def scan(
                     title=candidate.film.title,
                     format_code=candidate.format_code,
                     now=now,
+                    year=candidate.film.year,
                 )
             except EbayError as exc:
                 failures_in_a_row += 1
@@ -251,13 +331,19 @@ async def scan(
                 continue
             failures_in_a_row = 0
             run.refs_fetched += 1
-        usual = yardstick(ref, candidate.listing.listing.condition_id)
+        condition_id = candidate.listing.listing.condition_id
+        usual = yardstick(ref, condition_id)
         if usual is not None:
-            shops = await shop_prices(
-                db,
-                movie_id=candidate.film.movie_id,
-                format_code=candidate.format_code,
-                now=now,
+            # A shop sells new copies, so its price can only lower a New listing's usual.
+            shops = (
+                await shop_prices(
+                    db,
+                    movie_id=candidate.film.movie_id,
+                    format_code=candidate.format_code,
+                    now=now,
+                )
+                if condition_id == NEW_CONDITION_ID
+                else ()
             )
             figure = UsualPrice(usual, shops)
             if is_deal(candidate.listing.total, figure.amount):

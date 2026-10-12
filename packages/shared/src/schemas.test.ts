@@ -2071,6 +2071,8 @@ describe('Batch V8 — where an eBay find\'s "usually" comes from', () => {
     ],
     soldListingsUrl:
       'https://www.ebay.co.uk/sch/i.html?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
+    condition: 'New',
+    usualListings: 14,
   }
 
   it('reads the parts of the usual price and the sold-listings link', () => {
@@ -2080,6 +2082,11 @@ describe('Batch V8 — where an eBay find\'s "usually" comes from', () => {
   it('reads a deal from an API before V8 as having neither', () => {
     const { usualSources: _parts, soldListingsUrl: _sold, ...before } = find
     expect(dealSchema.parse(before)).toMatchObject({ usualSources: null, soldListingsUrl: null })
+  })
+
+  it('reads a deal from an API before X1 as having no condition or sample', () => {
+    const { condition: _condition, usualListings: _listings, ...before } = find
+    expect(dealSchema.parse(before)).toMatchObject({ condition: null, usualListings: null })
   })
 
   it('keeps each part a string, as money is everywhere', () => {

@@ -20,3 +20,10 @@ export function formatShortDate(isoDate: string): string {
   if (!year || !month || !day || month > 12) return isoDate
   return `${String(day)} ${MONTHS[month - 1]} ${String(year)}`
 }
+
+/** The same date without its year, for something recent: "30 Sep" (Batch X1's "Seen 30 Sep"). */
+export function formatDayMonth(isoDate: string): string {
+  const [year, month, day] = isoDate.slice(0, 10).split('-').map(Number)
+  if (!year || !month || !day || month > 12) return isoDate
+  return `${String(day)} ${MONTHS[month - 1]}`
+}

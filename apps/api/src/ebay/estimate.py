@@ -67,12 +67,16 @@ async def estimate_price(
     film_title: str,
     format_code: str | None,
     country: str | None = UK,
+    film_year: int | None = None,
 ) -> PriceEstimate:
     """Search eBay once and judge every listing that comes back.
 
     Raises whatever the client raises: :class:`~src.ebay.client.EbayNotConfigured` before
     any request, :class:`~src.ebay.client.EbayError` when eBay refuses. Callers decide what
     a failure means to them; a request answers 502, a valuation run counts it and moves on.
+
+    ``film_year`` turns on the matcher's year rule (Batch X1); the deal scan's usual price
+    passes it, so "Halloween (2018)" listings stay out of the 1978 film's median.
     """
     raw = await client.search(search_query(film_title, format_code))
     judged = []
@@ -85,7 +89,13 @@ async def estimate_price(
         judged.append(
             (
                 listing,
-                match(listing, film_title=film_title, format_code=format_code, country=country),
+                match(
+                    listing,
+                    film_title=film_title,
+                    format_code=format_code,
+                    country=country,
+                    film_year=film_year,
+                ),
             )
         )
 

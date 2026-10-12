@@ -9,6 +9,7 @@ import httpx
 import structlog
 
 from ..config import settings
+from ..services.scraping.fetcher import bounded_wait
 from .models import (
     Movie,
     PersonMovieCredits,
@@ -22,6 +23,18 @@ from .models import (
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 logger = structlog.get_logger()
+
+#: What a person reads when TMDB keeps refusing: the wording the discovery routes use.
+TMDB_DID_NOT_ANSWER = "TMDB didn't answer. Try again in a moment."
+
+
+class TMDBRefused(RuntimeError):
+    """TMDB answered ``429`` to the last try — Batch X1 (CR43-06).
+
+    Not an ``httpx`` error, so the routes that turn TMDB's errors into a 404 or a 502 let
+    it through, and the app answers it 503 with :data:`TMDB_DID_NOT_ANSWER` (`main.py`).
+    Before X1 it ended as a bare ``RuntimeError``, which reached the person as a 500.
+    """
 
 
 class RateLimiter:
@@ -88,10 +101,23 @@ class TMDBClient:
                 response = await self._client.get(path, params=params)
 
                 if response.status_code == 429:
-                    retry_after = int(response.headers.get("Retry-After", 1))
-                    wait = retry_after * (2**attempt)
-                    logger.warning("tmdb_rate_limited", path=path, wait=wait, attempt=attempt)
-                    await asyncio.sleep(wait)
+                    # The scraper's bounded rule (#238): TMDB's Retry-After up to 90 s, a
+                    # date read as one, never less than the usual backoff; past 90 s, the
+                    # backoff alone. Before X1 the wait was unbounded and doubled each try.
+                    if attempt >= self._max_retries:
+                        logger.warning("tmdb_refused", path=path, attempt=attempt)
+                        raise TMDBRefused(TMDB_DID_NOT_ANSWER)
+                    wait = bounded_wait(
+                        response.headers.get("Retry-After"), usual_pause=float(2**attempt)
+                    )
+                    logger.warning(
+                        "tmdb_rate_limited",
+                        path=path,
+                        wait=wait.seconds,
+                        note=wait.note,
+                        attempt=attempt,
+                    )
+                    await asyncio.sleep(wait.seconds)
                     continue
 
                 if response.status_code >= 500 and attempt < self._max_retries:

@@ -11,6 +11,10 @@ which is right for a search that named the film and wrong here: "Up" is a word i
 thousands of listings. The matcher then still has its say, rejecting sequels, subtitles,
 bundles, accessories and other formats as it does on the film page.
 
+**A year straight after the title must be the film's** (Batch X1): "Halloween (2018)" is
+not the 1978 film, though every word of the 1978 film's title opens it. Eight of the 25 wrong
+products the scan found between 26 Sep and 9 Oct were another film of the same name.
+
 **Two films named alike make no match.** If a listing opens with a title two catalogue films
 share, it is skipped rather than filed under either.
 """
@@ -83,6 +87,8 @@ class CatalogueFilm:
     movie_id: uuid.UUID
     tmdb_id: int | None
     title: str
+    #: TMDB's release year, for the matcher's year rule; ``None`` refuses no year.
+    year: int | None
     #: On the Wanted list and still looked for.
     wanted: bool
     #: The Wanted list's format, when one was asked for.
@@ -129,7 +135,9 @@ class Catalogue:
                 start = _opening_run(words, title_words)
                 if start is None:
                     continue
-                verdict = match(listing, film_title=" ".join(title_words), country="GB")
+                verdict = match(
+                    listing, film_title=" ".join(title_words), country="GB", film_year=film.year
+                )
                 if not verdict.ok or verdict.format_code not in SCAN_FORMATS:
                     continue
                 best = found.get(film.movie_id)
@@ -190,16 +198,17 @@ async def load_catalogue(db: AsyncSession) -> Catalogue:
     if not ids:
         return catalogue
     films = await db.execute(
-        select(Movie.id, Movie.tmdb_id, Movie.title).where(
+        select(Movie.id, Movie.tmdb_id, Movie.title, Movie.year).where(
             Movie.id.in_(ids), Movie.deleted_at.is_(None), Movie.tmdb_id.is_not(None)
         )
     )
-    for movie_id, tmdb_id, title in films:
+    for movie_id, tmdb_id, title, year in films:
         catalogue.add(
             CatalogueFilm(
                 movie_id=movie_id,
                 tmdb_id=tmdb_id,
                 title=title,
+                year=year,
                 wanted=movie_id in wanted,
                 preferred_format=wanted.get(movie_id),
                 best_owned=best.get(movie_id),

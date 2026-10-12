@@ -1,7 +1,7 @@
 """A discounted disc on a retailer's sale page — Batch 22, Phase 5.9."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, and_, func, or_
@@ -12,6 +12,9 @@ from sqlalchemy.sql.elements import ColumnElement
 from src.models.base import Base, UUIDPrimaryKeyMixin
 
 DEALS_TABLE = "deals"
+
+#: How long a shop's deal stays on the page after the scrape last saw it (Batch X1).
+SHOP_DEAL_FRESH_FOR = timedelta(days=2)
 
 
 class Deal(Base, UUIDPrimaryKeyMixin):
@@ -45,6 +48,11 @@ class Deal(Base, UUIDPrimaryKeyMixin):
     #: price is its own, and for eBay finds stored before V8, which were eBay's alone.
     usual_sources: Mapped[list[dict[str, str]] | None] = mapped_column(JSONB, nullable=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="GBP")
+    #: Batch X1, eBay finds only: the listing's own condition ("Very good"), and how many
+    #: asking prices stand behind ``was_price``. Null for a shop's deal; the condition is
+    #: cleared with the title and image once an eBay find expires (licence §8.1.2).
+    listing_condition: Mapped[str | None] = mapped_column(Text, nullable=True)
+    usual_listings: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     #: **Derived from the two prices, never read off the page.** The batch's risk note is
     #: that a layout change stores a plausible wrong discount; a number computed from two
@@ -72,7 +80,8 @@ class Deal(Base, UUIDPrimaryKeyMixin):
     )
     #: Batch T8a. An eBay find sells or ends within days, and nothing re-checks it, so it
     #: leaves the feed at this time. A retailer's deal has none: its page is scraped
-    #: again, which is what says whether it is still there.
+    #: again, and since Batch X1 it leaves the feed :data:`SHOP_DEAL_FRESH_FOR` after the
+    #: scrape last saw it, so a shop that stops answering cannot leave a stale price up.
     expires_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
@@ -80,11 +89,20 @@ class Deal(Base, UUIDPrimaryKeyMixin):
 
 
 def live_deal(now: datetime) -> ColumnElement[bool]:
-    """A deal the feed shows: not dismissed, and not an eBay find past its expiry.
+    """A deal the feed shows: not dismissed, and not past its expiry or its freshness.
 
-    One definition for the feed, its count and the menu's badge, so they cannot disagree.
+    An eBay find carries its own expiry. A shop's deal has none and leaves two days after
+    the scrape last saw it (Batch X1): the six Zavvi deals last seen on 30 Sep were still on
+    the page on 12 Oct, every scrape since having been refused. One definition for the feed,
+    its count and the menu's badge, so they cannot disagree.
     """
     return and_(
         Deal.dismissed_at_utc.is_(None),
-        or_(Deal.expires_at_utc.is_(None), Deal.expires_at_utc > now),
+        or_(
+            Deal.expires_at_utc > now,
+            and_(
+                Deal.expires_at_utc.is_(None),
+                Deal.last_seen_at_utc > now - SHOP_DEAL_FRESH_FOR,
+            ),
+        ),
     )

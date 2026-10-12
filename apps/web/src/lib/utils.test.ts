@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn, formatShortDate } from './utils'
+import { cn, formatDayMonth, formatShortDate } from './utils'
 
 describe('cn', () => {
   it('joins class names', () => {
@@ -17,6 +17,13 @@ describe('cn', () => {
   it('handles conditional classes', () => {
     const active = true
     expect(cn('base', active && 'active')).toBe('base active')
+  })
+})
+
+describe('formatDayMonth', () => {
+  it('writes a recent date as day and month, read off the string', () => {
+    expect(formatDayMonth('2026-09-30T19:14:57Z')).toBe('30 Sep')
+    expect(formatDayMonth('not a date')).toBe('not a date')
   })
 })
 

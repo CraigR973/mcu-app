@@ -172,10 +172,15 @@ class EbayWatchRun(Base, UUIDPrimaryKeyMixin):
     refs_fetched: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     deals_found: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     deals_pushed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    #: The newest listing this run read, so the next one starts after it.
+    #: Where the next run starts reading. Since Batch X1 the run's own start less
+    #: ``scan.MARK_MARGIN``, never a listing's date: one listing dated 12 days ahead, read on
+    #: 9 Oct, set it to 21 Oct and blinded every run after. The column keeps its old name.
     newest_listing_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True
     )
+    #: Batch X1: the Wanted films this run searched one by one. Set by one run only, the
+    #: first after X1's deploy, to recover what the blind scan of 9–12 Oct missed.
+    wanted_searched: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
