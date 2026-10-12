@@ -3196,7 +3196,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 |---|---|---|---|---|
 | 1 | X1 eBay scan → X2 failures reach Craig → X3 push heals itself | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
 | 2 | X7 assistant repair → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
-| 3 | X6 value as used copies → X4 weekly dump and restore drill → X5 watch history | X6: Craig's yes on the value basis (decision 3, #209), before 1 Nov 04:00. X4: his storage choice (decision 4) and credential steps. X5: after X4, by 31 Oct; its live data steps at his word. All three answers before 27 Oct (#255) | top tier · xhigh (from X4 and X5) | top tier · Extra High |
+| 3 | X6 value as used copies → X4 weekly dump and restore drill → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
@@ -3354,9 +3354,9 @@ hand on 11 Oct.
 - Tests. Gate green.
 
 ### X4 — Weekly dump and restore drill 🟢
-**Covers DS44-03 (High).** Top tier · xhigh. Sitting 3, after X6 (#255). **Waits for Craig's
-choice of storage (roadmap decision 4: GitHub Actions artifacts recommended, or Neon's paid
-plan) and lands before X5.** Its credential steps are Craig's.
+**Covers DS44-03 (High).** Top tier · xhigh. Sitting 3, after X6 (#255). **Storage: encrypted
+GitHub Actions artifacts, at Craig's word on 12 Oct (#257); lands before X5.** Its credential
+steps are Craig's, and the sitting stops for them.
 
 **Found 11 Oct:** Neon's free plan (1 GB cap) restores within 6 hours, keeps one manual
 snapshot and offers no scheduled backups; no dump, export or restore runbook exists
@@ -3418,9 +3418,9 @@ Letterboxd username stored; Craig synced once on 11 Oct (4 written, all right).
 - Tests. Gate green. Then both people press Sync now, or the first weekly run does it.
 
 ### X6 — Value the shelf as used copies 🟡
-**Covers MK47-03 (Medium).** Top tier · high. Sitting 3, first. **Waits for Craig's yes on the
-value basis (roadmap decision 3; #209 for reconsideration; #237's asking prices stand); lands
-before 1 Nov 04:00**, the first re-pricing with work since 26 Sep, or the new-copy values stand
+**Covers MK47-03 (Medium).** Top tier · high. Sitting 3, first. **Value basis: used copies, at
+Craig's word on 12 Oct (#256, amending #209; #237's asking prices stand); lands before 1 Nov
+04:00**, the first re-pricing with work since 26 Sep, or the new-copy values stand
 until about 1 Dec.
 
 **Found 11 Oct, re-checked 12 Oct:** 965 of the 1,300 priced discs, £21,843 of £23,604 (92.5%),
@@ -3438,7 +3438,7 @@ among them.
   titled "not 4K" on a 4K search; "Steelbooks" is not a standard edition.
 - Most valuable shows each value's listing count and range; the sale panel pre-fills from the
   used value.
-- A decision amends #209.
+- #256 amends #209 (12 Oct); X6's close-out cites it and needs no decision.
 - **Guard (CI):** R5's crafted titles never price a film.
 - Tests. Gate green.
 
@@ -3695,7 +3695,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 | **X · 1** | X1 → X2 → X3 | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
 | **X · 2** | X7 → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
-| **X · 3** | **checkpoint: Craig's yes on the value basis** → X6 → **checkpoint: his storage choice and credential steps** → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
+| **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → X6 → **checkpoint: his credential steps** (storage decided, #257) → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 
