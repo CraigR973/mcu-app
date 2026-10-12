@@ -11,6 +11,11 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **12 Oct, the wave 1 review:** its remediation is Group X (X1–X12) in
+  `docs/phase-batches.md`; you start X1, the eBay scan, before 21 Oct. Three choices are yours
+  (`docs/reviews/BATCH_43-48_ROADMAP.md`, section f): eBay's licence (by X1's close-out), the
+  value basis (before 1 Nov), and where the weekly backup goes (before X5, late Oct). You left
+  the other owner steps for now (12 Oct).
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub
@@ -532,6 +537,12 @@ be **exported explicitly**, as the commands above do. `set -a; source …` trunc
 
 ### 1j. Press "Sync now" once *(new — Batch S5, 2026-09-15)*
 
+**12 Oct (wave 1 review):** Craig's first sync ran on 11 Oct (50 read, 4 written, all right).
+Mark's username is not stored, and the app lets only him set it; Craig gave it again on 12 Oct
+and X5 stores it at his word. **Mark's Sync now waits for X5** (by 31 Oct), whose year rule
+stops a namesake attaching; his feed stops reaching back past 15 Sep around 10–19 Nov. The cron
+this item calls impossible is X5's weekly sync.
+
 **One button press, and it is the first time this app has ever talked to Letterboxd.**
 Everything up to it is tested against fixtures and ran unattended; the live fetch did not,
 because `docs/agent-commands/group-start.md` keeps live third-party requests out of
@@ -658,6 +669,9 @@ nothing because those films are not catalogued; a fuller sheet picks some of the
 re-running writes zero for everything already imported.
 
 ### 2. Ask the assistant one question *(new — Batch 30, 2026-09-10)*
+
+**12 Oct (wave 1 review):** a first question still works; any follow-up in the same chat fails
+(every stored answer carries a field the API refuses), until X7.
 
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is
       met. Two calls to `claude-sonnet-5` are in `ai_usage_log` with input and output
@@ -965,6 +979,10 @@ your PIN. If it asks, say so: the fix has a hole. Mark's next open works the sam
 unless his session was already cleared before the fix.
 
 ### 16b. Send a movie night to Mark, on both phones — T4's last criterion
+
+**12 Oct: done in effect.** Mark turned notifications on during a movie night on 11 Oct, and his
+first push ever (a match) arrived at 17:45 UTC; this morning's reminders reached both phones.
+Close it when you like. X3 stops a dropped phone going unnoticed again.
 
 **First, Mark must turn notifications back on** (Settings → Notifications on his phone).
 His phone's push registration expired, and the push service reported it gone at 08:04 UTC
@@ -1323,6 +1341,9 @@ Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
    lend and borrow too now, from Loans or a film's page.
 
 ### 22. Rotate the Neon database password — recommended, your call
+
+**12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database
+outside Neon's six hours until X4. Left for now at your word (12 Oct).
 
 **New 25 Sep.** An agent broke the repo's never-`cd` rule once. Autoenv then printed
 `apps/api/.env`, which holds the **live Neon connection string with its password** (the

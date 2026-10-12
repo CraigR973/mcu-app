@@ -2,54 +2,50 @@
 
 ## Now
 
-**5 Oct 2026: Group W, Craig's seven snags of 5 Oct, has shipped: W1 → W2 → W3** (#249,
-`docs/owner-snags-2026-10-05.md`). What is left is the four batches before it, in Group V's
-table in `docs/phase-batches.md`, and Craig's checks for W (`OWNER-ACTIONS.md` 30).
+**12 Oct 2026: the wave 1 full review is done, and its remediation is Group X** (#253,
+`docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
+roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
+planned 12 Oct". **Next: X1, the eBay scan, which must land before 21 Oct 16:35 UTC**; Craig
+starts it in a new session (`/batch-start X1`).
 
 | Batch | State |
 |---|---|
-| W1 → W2 → W3, the 5 Oct snags | go given 5 Oct; **W1 shipped** (`9dd6805`, [#38](https://github.com/CraigR973/mcu-app/pull/38)); **W2 shipped** (`0a87625`, [#39](https://github.com/CraigR973/mcu-app/pull/39)); **W3 shipped** (`3ad71eb`, [#42](https://github.com/CraigR973/mcu-app/pull/42)); Group W done |
-| 38, the end-to-end suite | at Craig's go, after Group W; its "last" slot assumed 21 and 22c first |
-| 21, price history charts | starts itself once a third want has two shops' prices on two days (2 of 3 on 4 Oct, #247) |
-| 22c, every page of a sale | parked with `OWNER-ACTIONS.md` 28 (#247) |
-| 33 → 34, email | parked (`OWNER-ACTIONS.md` 7) |
+| X1 → X2 → X3, sitting 1 | X1 next, before 21 Oct; then failures reach Craig; then push that heals itself |
+| X4, the weekly dump | waits for Craig's storage choice (roadmap decision 4); before X5 |
+| X7 → X8 · X6 → X5 · X9 → X10 · X11 → X12 | in that order; X6 waits for Craig's yes on the value basis and lands before 1 Nov; X5 by 31 Oct |
+| 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
+| 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
-- **Latest batch: T8b, Connect eBay** ([#33](https://github.com/CraigR973/mcu-app/pull/33),
-  `2995b26`, 4 Oct). Each person connects their own eBay in Settings; Your eBay (`/ebay`)
-  reads their watch list, saved searches and selling list live, and a watched item or saved
-  search becomes a T8a price alert. **Unproved until Craig's first sign-in** (`OWNER-ACTIONS.md`
-  29): which scope eBay's two list calls need.
-- **The nightly jobs (UTC):** 02:00 `cron-specs`, the spec backfill and then V9's reviews
-  (about five more nights for owned films); 03:00 `cron-scrape`, the shop check (Zavvi and
-  Arrow answer; the three Shopify shops mostly refuse, left for now, #247); 08:00 reminders;
-  every two hours `cron-ebay`, T8a's alerts and deal scan; `cron-values`, fortnightly
-  re-pricing, due again from 24 Oct.
-- **The gate** is six CI jobs since #248, the image Railway deploys among them (`AGENTS.md`,
-  "What a green run currently proves"). Locally on the Mac: API 1,188 passed and 644 skipped
-  (no Postgres, gotcha 15) with no warnings, web 500, shared 131.
-- **Craig's open items** (`OWNER-ACTIONS.md`): 29 connect his own eBay, then Mark; 22 rotate
-  the Neon owner password (printed into two session transcripts, 25 Sep and 4 Oct); 16b the
-  two-phone movie night; the phone session (3, 1d, 1h, 1j, 1c); 1e check and save the sale
-  pages; the Identify films and Disc specs queues; "Correct match" on Dead Man's Shoes, which
-  is catalogued as the 1940 film.
+- **Live faults (12 Oct, read-only):** the eBay deal scan has read 0 listings in 39 of 39 runs
+  since 9 Oct (stored mark 21 Oct 16:35); 30 copies are confidently the wrong film; every second
+  message to the assistant fails; no copy of the database exists outside Neon's six-hour
+  window. Pushes reach both phones again, re-registered by hand on 11 Oct.
+- **The nightly jobs (UTC):** 02:00 `cron-specs` (specs, then reviews); 03:00 `cron-scrape` (Zavvi
+  and Arrow answer, the Shopify shops refuse, #247; shown Crashed every night by design until
+  X2); 08:00 reminders; `cron-ebay` every two hours (blind until X1); `cron-values` on the 1st,
+  2nd, 15th and 16th, its first run with work on 1 Nov 04:00.
+- **The gate** is six CI jobs (#248). Locally: API 1,188 passed and 650 skipped without Postgres
+  (11 Oct), web 525, shared 131.
+- **Craig's open items** (`OWNER-ACTIONS.md`): the roadmap's three open choices (eBay's licence,
+  the value basis, backup storage); 29 connect eBay; 22 the Neon password (left for now,
+  12 Oct); the Identify films (165) and Disc specs (525) queues.
 
-**Live numbers (4 Oct, read-only):**
-- **Collection:** 1,880 owned copies (1,457 physical discs, 422 downloads, 1 unlabelled);
-  1,888 films, 1,678 identified and 210 not.
-- **Specs:** 728 of 1,250 Blu-ray and 4K discs; 522 wait for Craig on Disc specs. **Reviews:**
-  81 scored on the first night, 651 owned films and formats to go.
-- **Wanted:** 10 active. **eBay price alerts:** none set. **Release calendar:** 217 rows.
+**Live numbers (12 Oct, read-only):**
+- **Collection:** 1,889 live copies (1,466 discs, 422 downloads, 1 unlabelled); 1,891 films,
+  209 without a TMDB id.
+- **Identify:** 157 identified, 165 waiting, 35 set aside. **Disc specs:** 734 done, 525 waiting.
+- **Value:** £23,604 over 1,300 priced discs, 92.5% of it new-copy asking prices (X6).
+- **Watch history:** Craig synced once (11 Oct, 4 written); Mark has no username stored (X5).
 
-**The Now entries this block replaced** (1–4 Oct, with the 26 Sep numbers) are in git:
-`git show e23d716:STATUS.md`. The Log keeps a dated line for each.
+**The Now entries this block replaced** (5 Oct, Group W) are in git: `git show 527522d:STATUS.md`.
+The Log keeps a dated line for each.
 
 ## Next
 
-**The remaining sequence is Group V's table in `docs/phase-batches.md`**, summarised in the
-Now block above. **Group W shipped on 5 Oct (W1 → W2 → W3, #249)**; its record is under
-"Group W — the 5 Oct snags, planned 5 Oct". **38 is the one batch an agent
-can start**, at Craig's go; read its criteria there first (Batch 38, "E2E suite"). The 9 Sep overnight run this section used to list has all
-shipped; its record is in the batch record and the Log.
+**The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
+remediation, #253), then 38. **X1 is next** and must land before 21 Oct 16:35 UTC; read its
+criteria there first ("X1 — eBay: unblind the scan, name the right disc, say how fresh").
+Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
 a green gate imply otherwise. 6.2 (two devices) · 5.6 (a price-drop push received) · 9.5 (a
@@ -79,8 +75,10 @@ it renders — and report what was observed rather than what passed.
    `pip install --require-hashes -r requirements-dev.lock`; `pyproject.toml` alone is not
    enough. The command is in each lock file's own header.
 3. **The Postgres-backed tests cannot run on this machine** — no local server, no Docker — so
-   644 of them skip locally (4 Oct) and run only in CI; run the suite with `env -u
-   DATABASE_URL`. Do **not** point them at production Neon to
+   650 of them skip locally (11 Oct) and run only in CI; run the suite with `env -u
+   DATABASE_URL`. A throwaway local Postgres does work: `pgserver` 16.2 is in the API venv,
+   and the wave 1 review ran the 60 assistant tests against one (its scripts are in
+   `scratchpad/wave-1/r3/probes/`, gitignored). Do **not** point them at production Neon to
    get local coverage. A test fixture bug on 2026-09-09 used an unresolvable host and was
    caught only because CI ran it against real Postgres; against Neon it would have passed and
    shipped hidden behind a green local run.
@@ -434,6 +432,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-12 (wave 1 review, Batches 43–48, synthesis)** — Six passes at `527522d` found 44
+  findings (10 High); the roadmap (`docs/reviews/BATCH_43-48_ROADMAP.md`) groups them into 12 draft
+  batches X1–X12 and names 20 standing guards. Re-checked 12 Oct: the eBay scan still blind (39 of 39
+  runs since 9 Oct), 30 copies still the wrong film, pushes reaching both phones again after Craig's
+  and Mark's re-subscribes on 11 Oct. Craig's go the same day: Group X written into the ledger (#253) and the
+  review's pull request merged. X1 (the eBay scan) is next and should land before 21 Oct.
 
 - **2026-10-05 (W1 follow-up, [#44](https://github.com/CraigR973/mcu-app/pull/44))** — Craig, dark theme: the top bar was still faded with
   Search open. The search sheet covers the bar while open and had kept the page's colour, so

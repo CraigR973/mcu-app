@@ -66,3 +66,6 @@ docs/brand/logo-system/concepts/*/sources/
 docs/brand/logo-system/concepts/catalogue-frame-v2/poster-source-grid.png
 docs/brand/**/*.jpg
 docs/brand/**/*.jpeg
+
+# A review's working files (docs/agent-commands/review-wave.md): persistent, never committed.
+scratchpad/

@@ -10,5 +10,6 @@ this folder — **never duplicate the steps into a wrapper.**
 | `next-batch-prompt.md` | Emit a copy-ready prompt for the next unshipped batch |
 | `batch-start.md` | Start an implementation batch on a fresh branch |
 | `batch-verify.md` | Run the gate and report pass/fail per acceptance criterion |
-| `phase-closeout.md` | Close out a reviewed batch — **never automatic on this project** |
+| `phase-closeout.md` | Close out a batch — **automatic after a green gate** (`DECISIONS.md` #24, superseding #13) |
 | `handoff.md` | End a session in a state the next agent can pick up |
+| `review-wave.md` | Run a full review (a panel of expert passes) or a monthly delta review |

@@ -1098,6 +1098,11 @@ ledger exists to stop; the model each batch actually needs is in the table above
 criterion, that is recorded *underneath* the quote, never folded into it.
 
 ### Batch 21 — Price history charts 🟢
+**Wave 1 review, 12 Oct:** still two wants qualify (Castle Freak; Dead Man's Shoes), and Dog
+Soldiers stays one Second Sight day short while the Shopify shops refuse. **Dead Man's Shoes'
+want sits on the 1940 film while its shop prices are the 2004 film's** (R4, R5): settle it with
+the film page's Correct match before charting it.
+
 **Status 26 Sep (Group U, step 6): the clock started on 24 Sep.** The scheduled scrape first
 ran at 03:04 UTC that day, after the jobs fix (#204), and had three days by 26 Sep; the
 seventh is the 30 Sep run. The check below still applies: count `trigger=cron` days in
@@ -1242,6 +1247,10 @@ fixtures. **§5.9's live acceptance (≥ 20 deals from ≥ 3 retailers) stays Cr
 the new button.
 
 ### Batch 22c — Every page of a sale 🟡
+**Wave 1 review, 12 Oct:** with no job running it, the one manual run's six Zavvi deals of
+30 Sep stayed on the Deals page, undated, for 11 days. X1 expires a shop's deal two days
+after it was last seen, so a reopened 22c should schedule the check, not rely on the button.
+
 **Parked 4 Oct, with `OWNER-ACTIONS.md` 28, at Craig's word ("yes lets leave it for now",
 #247).** A sale's further pages at Second Sight meet the same refusals as the nightly check,
 and the one hosting fix Railway offers needs its Pro plan without being sure to work. It
@@ -1433,6 +1442,16 @@ command, as `daily_scrape` and `run_reminders` are.
 **`purchase_candidates` does not exist** — verified live on 2026-09-11.
 
 ### Batch 38 — E2E suite 🟢
+**Wave 1 review, 12 Oct (#253): six cases join the suite.** The offline replay that may have
+landed (CR43-05: deleting its "unconfirmed" step leaves all 525 web tests green); each cron
+job's entry point run on CI's Postgres with fake outside clients (CR43-07: the eBay,
+spec-and-review and valuation jobs' `main()` has never run in a test); the built bundle
+against a **cross-origin** API, production's shape and never the dev proxy (UX48-01); one
+version-drift case (a new enum value) and one missing-chunk case (UX48-03); a two-message
+chat against a recorded model (AI45-01); and the screens never used yet (photos, box sets,
+smart collections, eBay alerts and accounts). R6's rig (`scratchpad/wave-1/r6/probes/`,
+gitignored, on the Mac) is a ready start. Still last, after Group X.
+
 **Status 26 Sep (Group U, last step): all seven flows now exist**, since Batch 24 shipped the
 barcode scan, so the "six of seven" allowance below no longer applies. T8a's eBay price
 alert is a candidate eighth. It runs last so it pins the flows as they end up.
@@ -3158,6 +3177,437 @@ a day, at most 60 an hour a person) to a film.
   by search, and from the film page, as each person. A live camera scan is Craig's.
 - Gate green.
 
+## Group X — the wave 1 review, planned 12 Oct
+
+**Planned 2026-10-12 from the wave 1 full review** (Batches 43–48: six passes at `527522d`,
+`docs/reviews/BATCH_43-48_ROADMAP.md` and its packages X1–X12; each finding id points into
+its pass report in `docs/reviews/`). **Criteria authored 2026-10-12** from the roadmap, so
+`DECISIONS.md` #54 does not apply. **Written into the plan at Craig's word ("do rows and
+merge", 12 Oct, #253); each sitting starts at his go, and he starts X1 himself.** Numbers are
+as re-checked on 12 Oct: re-verify them, per `batch-start.md` step 3. Model tiers are Group
+V's: top tier is the two models on Group U's row in "Batch groups", mid tier the two on Batch
+21's row. **The cases X1, X5 and X9 test against are in `docs/reviews/BATCH_43-48_EVIDENCE.md`.**
+The review's other working files (`scratchpad/wave-1/`, gitignored) exist only on Craig's Mac,
+so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
+
+| Sitting | Batches, in order | Gate | Claude Code | Codex |
+|---|---|---|---|---|
+| 1 | X1 eBay scan → X2 failures reach Craig → X3 push heals itself | Craig's go; **X1 before 21 Oct 16:35 UTC** | top tier · high | top tier · High |
+| 2 | X4 weekly dump and restore drill | Craig's storage choice (roadmap decision 4) and his credential steps; **before X5** | top tier · xhigh | top tier · Extra High |
+| 3 | X7 assistant repair → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
+| 4 | X6 value as used copies → X5 watch history | X6: Craig's yes on the value basis (decision 3, #209), before 1 Nov 04:00. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X5) | top tier · Extra High |
+| 5 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
+| 6 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
+| — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
+
+**Each batch on its own:**
+
+| Batch | Covers | Size | Claude Code | Codex |
+|---|---|---|---|---|
+| X1 | CR43-01 ≡ MK47-02, MK47-01, MK47-06, MK47-07, CR43-06; MK47-04's steps | 🟡 | top tier · high | top tier · High |
+| X2 | DS44-01, DS44-05, UX48-02 (the screens) | 🟡 | top tier · high | top tier · High |
+| X3 | DS44-02, UX48-02 (Settings) | 🟢 | top tier · high | top tier · High |
+| X4 | DS44-03 | 🟢 | top tier · xhigh | top tier · Extra High |
+| X5 | Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share | 🔴 | top tier · xhigh | top tier · Extra High |
+| X6 | MK47-03 | 🟡 | top tier · high | top tier · High |
+| X7 | AI45-01 to AI45-08 | 🟡 | top tier · high | top tier · High |
+| X8 | UX48-01, UX48-03, CR43-04, DS44-04, DS44-07 | 🟡 | top tier · high | top tier · High |
+| X9 | CT46-01, CT46-03, CT46-05, CR43-02 | 🔴 | top tier · xhigh | top tier · Extra High |
+| X10 | CR43-03, CT46-04 | 🟢 | top tier · high | top tier · High |
+| X11 | MK47-05 | 🟡 | mid tier · high | mid tier · High |
+| X12 | UX48-05, UX48-06, UX48-07, CT46-06, CT46-07, DS44-06, the rest of CR43-08 | 🟡 | mid tier · high | mid tier · High |
+
+*Why those efforts.* `xhigh` where a batch writes live data or holds a credential: X4 (a dump
+role and a secret), X5 (a backfill of 756 diary entries and film records with no copies, as
+Batch 40 ran), X9 (identification on live rows, as 39–41 ran). X7 is top tier although R3
+proposed mid: it changes the write confirmation and the money caps. X11 and X12 are interface
+work with clear criteria.
+
+**How each lands:** as Group W did: its own `feat/` or `fix/` branch from `main`, a pull
+request, CI green, a merge commit, then production `/api/v1/health` reporting the merge SHA
+with `db: ok`. **Each batch ships its own guards** (the roadmap's section e lists all twenty).
+**Live data steps** (X5's backfill and re-pointing, X9's settling, X10's leftover rows) stop
+for Craig's word with the row count, as `group-start.md` requires.
+
+### X1 — eBay: unblind the scan, name the right disc, say how fresh 🟡
+**Covers CR43-01 ≡ MK47-02 (High), MK47-01 (High), MK47-06, MK47-07 and CR43-06 (Low), and
+MK47-04's freshness and deletion steps.** Top tier · high. Sitting 1, first. **Must land before
+21 Oct 16:35 UTC**, when the stored mark stops blinding the scan by itself and the gap since
+9 Oct can no longer be read.
+
+**Found 11 Oct, re-checked 12 Oct (`live_sql`):** every scan run from 9 Oct 02:21 to 12 Oct
+06:24 (39 of 39) read one page and 0 listings. The stored "newest listing" is 21 Oct 16:35:01,
+taken from one listing dated 12 days ahead by the 9 Oct 00:22 run: the scan keeps the newest
+listing date it sees with no ceiling, and reads from the maximum over every run ever.
+Separately, 25 of the 265 finds of 26 Sep–9 Oct were another product (14 another film, 7 a disc
+with no case, 2 a Blu-ray scored as 4K, 2 Region A), 14 of the 60 pushes delivered to Craig
+were among them, and 227 of the 265 were judged against the New median whatever the listing's
+condition (`BATCH_43_CODE_REVIEW.md`, `BATCH_47_PRICES_VALUE_DEALS_REVIEW.md`).
+
+**Acceptance:**
+- A run never stores a mark later than its own start: the mark is the run's start less a
+  margin (about 10 minutes, for eBay's indexing), never a listing's date. A listing dated in
+  the future is still read and judged; it cannot move the mark.
+- Reading the mark ignores any stored value later than the current run's start, so
+  production's 21 Oct row stops blinding the scan with no data write; the first run after the
+  deploy reads back as far as its page cap allows.
+- A four-digit year after the film's title, with nothing but brackets and format words
+  between, must be the film's year ±1: "Halloween (2018)", "Road House 1989", "Wonder Woman
+  1984" and "IF Blu-ray (2024)" are refused for the 1978, 1948, 2017 and 1968 films.
+- Incomplete items are refused ("disc only", "no case", "case only", "no disc", "empty"). A
+  Blu-ray titled "not a 4K", "not 4K" or "remastered in 4K" is not a 4K; a Region A or Region 1
+  Blu-ray is refused (Region B and region-free pass); a TV "complete series" or "season" is not
+  the film.
+- A used listing (Like new, Very good, Good, Acceptable) is judged only against used listings:
+  its own condition group when it has 3 or more, else the pooled used groups when they have 3
+  or more, else it is not a deal. Never against the New median, and never against a group whose
+  median is above New's (#239 amended).
+- A shop's price never raises a usual: it can lower a New listing's usual, as a ceiling, and
+  never enters a used listing's (MK47-06; #239 amended).
+- A deal push names the listing's own title and condition and says "asking prices, n
+  listings"; the Deals card shows the same. A find is re-checked with one item call before its
+  push; a find that has ended or sold out is not pushed and leaves the page.
+- Every deal card says when its price was last seen ("Seen 30 Sep"). A shop's deal expires two
+  days after it was last seen, so the six Zavvi deals of 30 Sep leave the page on the deploy.
+  An expired eBay deal keeps its price, dates and film and loses the listing's title and image
+  (eBay API licence §8.1.2, §3.1(b)).
+- The first fixed run also searches each wanted film once (about 10 calls), through the same
+  matcher and checks, to recover what the gap hid for the films that matter most.
+- The TMDB client's wait on a 429 follows the scraper's bounded rule (#238): `Retry-After`
+  honoured up to 90 seconds, dates parsed; a refusal on the last try is a 503 with the "TMDB
+  didn't answer" wording, not a 500.
+- MK47-04 is recorded as a decision at close-out, at Craig's word (roadmap decision 2: an
+  accepted risk, or a request to eBay); the steps above ship either way.
+- **Guards (CI):** a listing dated in the future never moves the mark, on write or on read;
+  titles crafted from the 25 wrong-product finds (`docs/reviews/BATCH_43-48_EVIDENCE.md`,
+  section 1) never match, except the three no title rule can tell apart (*Maggie* and the two
+  *Titanic* 3D sets), whose push and card must name the listing's own title and condition; a
+  used listing never meets the New median. Each fails when its fix is reverted.
+- **Seen in production:** the first scheduled run after the deploy reads listings
+  (`listings_seen > 0`), read with `live_sql`.
+- Tests. Gate green.
+
+### X2 — Failures reach Craig 🟡
+**Covers DS44-01 (High), UX48-02's screens (High) and DS44-05 (Low).** Top tier · high.
+Sitting 1, after X1.
+
+**Found 11 Oct:** none of the seven failures since 9 Sep reached anyone. Error reporting runs
+only with a DSN, and none is set; `cron-scrape` exits non-zero whenever a shop refuses, so
+Railway shows it Crashed every night; the spec, valuation and eBay jobs write no row when
+nothing is due, so idle and stopped look alike; Price alerts reported the blind scan as "Last
+check 19:20"; Deals leaves the menu when its source fails (`BATCH_44_…`, `BATCH_48_…`).
+
+**Acceptance:**
+- A daily check runs inside the 08:00 reminders job (no new Railway service), reads only tables
+  the app already writes, and records each result. Its checks: each job's last run or heartbeat
+  within its cadence; the eBay scan read listings in at least one of its last six runs; each
+  person holds a live device and their last three days of notifications are not all suppressed;
+  the spec integration is not halted; readiness reports every field configured; the database is
+  under half its cap; any profile locked in the last day; Identify proposals older than a
+  fortnight and identified films whose disc page or review names another year (CT46-03); no
+  deal older than its source's freshness (eBay 3 days, shops 2). X7 adds the assistant's
+  failure count.
+- A new problem reaches Craig two ways: a "Needs attention" row at the top of Home (admin),
+  naming it in words (R6's wording, UX48-02), and one push when it first appears, not every
+  morning it persists. The row works when push is what broke.
+- The spec, valuation and eBay jobs write a heartbeat row when nothing is due or no budget is
+  left.
+- `cron-scrape` exits 0 when every failure is a shop's refusal (#240: refusals are not
+  failures), and non-zero for anything else.
+- Price alerts shows how many listings the last checks read ("read 0 new listings, 33 checks
+  in a row"); the scan's run answer carries the count, through `packages/shared`.
+- Deals stays in the menu when empty, its empty state saying when each source last answered
+  (#154 and #165 amended for Deals alone; box sets and collections keep hide-when-empty).
+- Repeated PIN lockouts in a day escalate (15 minutes, 1 hour, 4 hours, 24 hours), and a
+  lockout appears in the attention row.
+- Any new table is granted to `mcu_readonly`, guarded, per `AGENTS.md`.
+- **Guards:** every check above has a test with crafted rows that trip it and rows that pass;
+  `cron-scrape`'s exit code on refusals alone.
+- Tests. Gate green.
+
+### X3 — Push that heals itself 🟢
+**Covers DS44-02 (High) and UX48-02's Settings line.** Top tier · high. Sitting 1, after X2.
+
+**Found 11 Oct:** Mark's phone was dropped on its first push (24 Sep) and Craig's on 8 Oct. A
+404 or 410 deletes the device with an info log; Settings reads the browser's own subscription,
+so it showed "Notifications are on for this device" above "No devices are registered yet";
+nothing registers a device again (the worker's comment says the page does; the hook only reads
+local state); the eBay run counts queued pushes as pushed. Both phones were re-registered by
+hand on 11 Oct.
+
+**Acceptance:**
+- On app open, and when the worker reports a subscription change, the page compares this
+  browser's subscription with the server's devices for the signed-in person. When the server
+  lacks it, or holds it as refused, the page registers this phone again, with a fresh
+  subscription when the old endpoint was refused. The worker's comment becomes true.
+- Settings says "Notifications are on for this device" only when the server holds this device
+  live; otherwise it says when they stopped ("This phone stopped getting notifications on
+  8 Oct. Turn them on again.") and offers Turn on.
+- A device the push service refuses is kept as revoked (`revoked_at_utc`), not deleted, and
+  registering the same endpoint again revives it. When a person's last device goes, they see a
+  banner in the app until they turn notifications on, and X2's row names it for Craig.
+- The eBay run records pushes delivered, not queued.
+- **Guards:** tests for re-registration when the server lacks the device or holds it as
+  refused, both Settings states, the refused-device path and the count.
+- Tests. Gate green.
+
+### X4 — Weekly dump and restore drill 🟢
+**Covers DS44-03 (High).** Top tier · xhigh. Sitting 2. **Waits for Craig's choice of storage
+(roadmap decision 4: GitHub Actions artifacts recommended, or Neon's paid plan) and lands
+before X5.** Its credential steps are Craig's.
+
+**Found 11 Oct:** Neon's free plan (1 GB cap) restores within 6 hours, keeps one manual
+snapshot and offers no scheduled backups; no dump, export or restore runbook exists
+(ARCHITECTURE §9.9's weekly dump never came across the re-scaffold). Craig left the manual
+snapshot for now on 12 Oct, which is why X4 precedes X5.
+
+**Acceptance (with Actions artifacts):**
+- A weekly GitHub Actions schedule dumps the database through a dedicated role that never
+  reads a credential (PIN hashes, refresh tokens, eBay tokens, push devices, invite tokens),
+  encrypts the dump to a public key in the repo (the private key stays with Craig), uploads it
+  as an artifact kept 90 days, and keeps the newest 8.
+- A monthly drill restores the newest dump into a throwaway Postgres in the runner, checks
+  Alembic is at head, and compares row counts per table with the dump's manifest; a failure
+  fails the workflow, which GitHub emails to Craig.
+- A restore runbook in `docs/` (restore into a Neon branch, check, switch) says a restore signs
+  both people out, asks for push again, and how sign-in is restored.
+- Craig's steps are listed and not done by an agent: the role's password, the repository
+  secret, the key pair. The role's grants land in a guarded migration, as `mcu_readonly`'s did.
+- Egress stays near 0.4 GB a month of Neon's free 5 GB.
+- **Guard:** the monthly drill.
+- Tests for any code (the manifest comparison). Gate green.
+
+### X5 — Watch history: films not owned, the backfill, the year rule 🔴
+**Covers Craig's decision of 11 Oct (`docs/reviews/BATCH_43-48_REVIEW_SCOPE.md`, "Decisions
+during the passes"), CT46-02 (Medium), UX48-04 (Medium) and CT46-01's diary share.** Top tier ·
+xhigh. Sitting 4, after X6. **After X4; by 31 Oct**, so a sync then still reaches back past
+14 Sep for Mark (his 50-entry feed stops reaching back around 10–19 Nov).
+
+**Found 11 Oct:** 15 imported watches sit on a different film of the same name (a 2013 film on
+the 1995 one; `docs/reviews/BATCH_43-48_EVIDENCE.md`, section 3); the diary matcher drops the leading
+article, and "the year breaks a tie, never excludes" (#158, #160) holds even when both years
+are known; the RSS sync falls back to titles when the feed's TMDB id is not owned; films not
+owned are skipped by design, and 756 dated diary entries were never recorded. Mark has no
+Letterboxd username stored; Craig synced once on 11 Oct (4 written, all right).
+
+**Acceptance:**
+- The sync attaches each feed entry by its TMDB id. A film not in the catalogue gets a film
+  record with no copies, kept out of collection counts and value as wanted films are, and the
+  watch goes on it. The feed never falls back to a title.
+- Wherever a title is matched (the diary file import, the backfill), a candidate whose year is
+  known and differs from the entry's by more than one is excluded; a row with no year keeps
+  #158's "never excludes" (#158 amended).
+- Each watch row keeps the feed's TMDB id (a new nullable column, granted to `mcu_readonly`).
+- The backfill imports every dated diary entry not yet recorded, from the two diary files on
+  the Mac (756 entries: Craig 579, Mark 177; about 680 films), matched with T9's care; doubtful
+  matches go to Craig, not into the table. **Dry run first; the live run at Craig's word, with
+  the row count.** Undated "watched" films and watchlists are out of scope (Craig's choice).
+- The 15 misattributed watches are re-pointed to their real films at Craig's word, from a
+  dry-run list.
+- The diary import no longer uses `MatchingEngine` (CT46-01's share).
+- Mark's Letterboxd username is stored (Craig gave it on 12 Oct; `OWNER-ACTIONS.md` 1j names
+  it). The app lets only each person set their own, so this is a one-row data step at Craig's
+  word (#253).
+- A weekly sync for each person with a username runs inside the 08:00 reminders job (no new
+  Railway service), recorded with `trigger=cron`.
+- The Watch history tab says "Letterboxd's feed holds your last 50 diary entries. The app syncs
+  weekly; last synced …".
+- **Guards:** a known, different year excludes a candidate (CI); the weekly sync.
+- Tests. Gate green. Then both people press Sync now, or the first weekly run does it.
+
+### X6 — Value the shelf as used copies 🟡
+**Covers MK47-03 (Medium).** Top tier · high. Sitting 4, first. **Waits for Craig's yes on the
+value basis (roadmap decision 3; #209 for reconsideration; #237's asking prices stand); lands
+before 1 Nov 04:00**, the first re-pricing with work since 26 Sep, or the new-copy values stand
+until about 1 Dec.
+
+**Found 11 Oct, re-checked 12 Oct:** 965 of the 1,300 priced discs, £21,843 of £23,604 (92.5%),
+are medians of New listings; where both exist, a used copy asks 0.48–0.71 of New; valued as
+used, the total is roughly £12,800–£17,200. 7 of 20 live re-searches mixed in another product
+(TV box sets, a sequel, "Spider Labyrinth" for *Labyrinth*), four of the six highest values
+among them.
+
+**Acceptance:**
+- An owned disc's value is the median of used listings when there are 3 or more; otherwise
+  New's median times the measured used-to-New factor for its format. Home and the film page
+  say "as used copies".
+- The estimator refuses a content word before the title (the deal scan's "title opens the
+  listing" rule), TV words (series, season, staffel) unless the film is a series, and a listing
+  titled "not 4K" on a 4K search; "Steelbooks" is not a standard edition.
+- Most valuable shows each value's listing count and range; the sale panel pre-fills from the
+  used value.
+- A decision amends #209.
+- **Guard (CI):** R5's crafted titles never price a film.
+- Tests. Gate green.
+
+### X7 — The assistant answers more than once 🟡
+**Covers AI45-01 (High), AI45-02 and AI45-03 (Med-High), AI45-04 (Medium) and AI45-05 to
+AI45-08 (Low).** Top tier · high (R3 proposed mid; raised for the write confirmation and the
+money caps). Sitting 3, first.
+
+**Found 11 Oct, re-checked 12 Oct:** every follow-up fails with a 400, because each answer is
+stored as the SDK's full block dump, whose text blocks carry the SDK-only `parsed_output`, and
+is replayed (all 5 stored answers carry it; proved by R3's paid probe and by SDK 1.4.0's own
+dump). The write tools cannot be completed from ordinary words; lists are cut at 6,000
+characters before their totals (the app's example question saw 13 of 162 films); a failed chat
+call leaves no usage row and tells the person to rephrase.
+
+**Acceptance:**
+- Stored and replayed assistant content carries only the API's request fields for each block
+  type, on write and on read, so the six stored conversations continue.
+- The write tools' descriptions and the system prompt say the app shows a Yes/No card, so the
+  model calls the tool directly; the prompt gives today's date (Europe/London) and who is
+  asking, and no stale disc count.
+- The input is disabled while a card waits; the server refuses a new message while a call is
+  pending, or closes the call as declined first.
+- Tool results are a compact view (title, year, formats, place, watched), totals first, with a
+  page argument; releases take a date window and a type filter; a cut-off says how many were
+  left out.
+- Every failed call is logged with its status and error type. 400, 402, 403, 404, 413 and a 429
+  with no retry-after read "The assistant isn't working right now; Craig has been told."; a
+  daily count feeds X2's check.
+- Caps are checked and reserved before every model call, resumes included; a blank or 0 cost
+  cap means "off" or is refused, and both caps have upper bounds; the last round is forced to
+  answer (`tool_choice: none`); tool calls per round are capped.
+- One confirmation writes once: the pending row is claimed in one guarded update before the
+  write, and a failed write is marked `failed`.
+- Decades are described as decades; add-to-wanted accepts a TMDB match as the web does; a
+  shared title passes the film id the model saw, or asks.
+- Cost is priced by the configured id; the 5.5 family is on the allow-list.
+- A decision records Part D 9.4's change: the model holds two write tools, behind a card.
+- **Guards:** real SDK blocks through store and replay, keys checked against the SDK's request
+  types (CI); each tool's visible text carries its total (CI); R3's probe
+  (`scratchpad/wave-1/r3/probes/`) kept as a monthly five-question canary, about $0.08, run at
+  Craig's word at each monthly delta review.
+- Tests. Gate green.
+
+### X8 — Offline, version drift and failure words 🟡
+**Covers UX48-01 (High), UX48-03 and DS44-04 (Medium), CR43-04 and DS44-07 (Low).** Top tier ·
+high. Sitting 3, after X7.
+
+**Found 11 Oct:** the worker caches API reads only when the request's origin is the page's
+own; production's API is on Railway and the page on Vercel, so it has never kept an answer,
+and offline the app shows "You can still browse" above "Failed to fetch" (Batch 8 was verified
+through the dev proxy, where they share an origin). A 500 arrives without CORS headers and
+reads as no signal; a newer API's enum value turns a page into raw JSON; a chunk missing after a
+deploy fails until a full reload; readiness omits TMDB and Brave; nothing compares the web
+build's commit with the API's; the CSP allows any Railway app and Supabase.
+
+**Acceptance:**
+- The worker caches API reads from the configured API origin, keeping each person's cache
+  apart and clearing it at sign-out; proved in a browser with the built bundle against a
+  cross-origin API (offline, a film read online opens from cache).
+- One error describer replaces raw error text: no signal ("No signal — showing what's saved"),
+  a server fault ("The archive had a problem. Try again in a minute."), out of date ("This
+  screen needs the newest version", with Reload).
+- A failed chunk load reloads the page once.
+- Error answers carry CORS headers, so a 500 is not read as no signal.
+- Readiness reports TMDB and Brave (presence only); the close-out procedure checks every
+  readiness field is configured and that the served web bundle's release is the merged commit.
+- A CI contract test compares the API's OpenAPI with the compiled shared schemas: enums,
+  nullability, minimums.
+- The CSP names the one API host and drops Supabase, and Sentry until it is on. It is a
+  `vercel.json` header change: say so in the close-out.
+- **Guards:** the cross-origin worker rule (CI, and a case in Batch 38); the contract test
+  (CI); the gate's two checks.
+- Tests. Gate green.
+
+### X9 — Catalogue truth 🔴
+**Covers CT46-01 (High), CT46-03 and CR43-02 (Medium) and CT46-05 (Low).** Top tier · xhigh.
+Sitting 5, first. Before any future sheet import or refresh, which would match with the old
+engine.
+
+**Found 11 Oct, re-checked 12 Oct:** 30 copies are confidently the wrong film (27 of 1,115
+matched by the 8 Sep import, 3 of 404 by the diary import, 0 of 156 by T9; all 29 film rows
+unchanged on 12 Oct; `docs/reviews/BATCH_43-48_EVIDENCE.md`, section 2). The old engine keeps a
+leading article, scores an exact namesake above the real film, floors any containing title at
+0.9 and reads one results page, so #31's tie never fires. 36 spec lookups carry "the page is
+for a 1957 film … pick the right page", 8 of them on these films. The identify run's error
+handler reads the run after a rollback and crashes on its first failure (`MissingGreenlet`).
+
+**Acceptance:**
+- The identify run takes its id before the loop and reloads by it after a rollback; a test
+  injects a TMDB error, and the run continues and records it. Each run loop (identify, specs,
+  reviews, valuation, eBay) has a failure-injection test.
+- A dry run of T9's `Identifier` over the films the old paths decided (1,109 import-matched,
+  397 diary-identified; no Brave; free TMDB calls, spread over nights if needed) puts every
+  disagreement into Identify with its evidence. All 30 of R4's known wrong copies appear, or
+  the batch says why one does not.
+- A copy can be moved to another film ("this copy is another film"), undoable and audited;
+  3 of the 30 share their film row with a right copy.
+- A disc page or review naming the copy's own sheet title in another year adds an Identify
+  proposal instead of "pick the right page", and the film page shows "identification in
+  doubt" while one is open.
+- An edition inferred by the spec job reads "probably …" with its source until a person
+  confirms it; release names are compared with T9's title rule (Vol./Volume, numerals).
+- `MatchingEngine` no longer decides or ranks in the collection refresh, the film page's
+  Correct match list or Identify's search (the diary import's use goes in X5).
+- Craig settles the queue with his taps; the batch stops before any bulk change for his word.
+- **Guards:** the failure-injection tests (CI); the engine's namesake and article cases (CI);
+  X2's daily counts of year conflicts and old proposals.
+- Tests. Gate green.
+
+### X10 — One title rule, and owned twins found 🟢
+**Covers CR43-03 and CT46-04 (Medium).** Top tier · high. Sitting 5, after X9.
+
+**Found 11 Oct:** four title rules (the catalogue matcher, T9, the Letterboxd matcher, review
+finding) disagree on 7 of 8 pairs and are patched per site; 5 films are split across two rows
+(*Sorcerer* wanted while owned as a download); the add form and the barcode flow mark "in
+collection" by TMDB id only, so an unidentified twin is invisible; two copies of one film were
+added under one barcode; 8 film rows with no copies were left by the 18 Sep refresh.
+
+**Acceptance:**
+- One title-key module with named strictness levels, built from T9's comparison (numerals,
+  both sides of a colon, "&" and "and", accents, leading articles), used by all four sites; the
+  per-site patches are gone; R1's pair table is its test.
+- An identify dry-run diff shows no identification moves, or lists each move for Craig.
+- The add form and the barcode flow use Search's lookalike check (unidentified owned titles)
+  for "you may already own this".
+- A barcode already on a copy warns before another copy is added (#101's combo).
+- The 8 leftover rows are removed at Craig's word, with the count shown first.
+- **Guard (CI):** the pair table.
+- Tests. Gate green.
+
+### X11 — Wanted: shop prices shown, alerts without a limit 🟡
+**Covers MK47-05 (Medium).** Mid tier · high. Sitting 6, first.
+
+**Found 11 Oct:** 1 of 10 wants has a price limit, and a shop alert needs one; shop prices are
+stored nightly and shown nowhere; the three Shopify shops answer Cloudflare 429s to every
+request, costing 28–31 minutes a night.
+
+**Acceptance:**
+- The Wanted page shows each want's latest price per shop, with its date.
+- A want with no price limit alerts on a shop price under the film's usual (V8's).
+- A shop that refused every request for a week is asked weekly, not nightly, until
+  `OWNER-ACTIONS.md` 28; a nightly run takes minutes, not half an hour.
+- Tests. Gate green.
+
+### X12 — Polish and terms 🟡
+**Covers UX48-05 (Medium), UX48-06, UX48-07, CT46-06, CT46-07, DS44-06 and the rest of CR43-08
+(Low).** Mid tier · high. Sitting 6, after X11.
+
+**Acceptance:**
+- Home's "Films owned" counts films with a copy (1,869 on 11 Oct, not 1,891); copies read
+  "1,889: 1,466 discs, 422 downloads"; the two "Digital" figures say what each counts.
+- One date helper ("11 Oct", "11 Oct 2026") across screens; the movie-night shortlist reads
+  title, year and poster from the film; a match is stored on the session and shown on the night
+  page; a copy's shelf is printed once.
+- Labels and badges at least 12 px; list links padded to 44 px; the dark primary button at
+  least 4.5:1; axe-core passes on the screens R6 measured.
+- JSON answers compressed; the Archive list selects only the columns it shows, and its first
+  screen renders before the rest.
+- TMDB's logo and "not endorsed" notice in Settings; the JustWatch credit under watch
+  providers.
+- A spec lookup's Brave results are deleted once it is decided (the accepted address kept);
+  TMDB fields older than 150 days are refreshed inside the calendar refresh, before 8 Mar 2027.
+- Completion sets count the top ten billed and drop shorts and compilations; the refresh is
+  re-run.
+- The dead Supabase-era `/migrations/001_profiles.sql` is deleted; `*.xlsx` is ignored by git;
+  `DECISIONS.md`'s duplicate #28 is noted; `group-start.md`'s "close-out is explicit (#13)"
+  is corrected to #24.
+- A "Tell Craig" line on Mark's You page lands in X2's attention row.
+- Tests. Gate green.
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
@@ -3241,6 +3691,12 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
+| **X · 1** | X1 → X2 → X3 | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253).** Craig starts X1 himself; it must land before 21 Oct 16:35 UTC. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
+| — | X4 · solo | top tier · xhigh | top tier · Extra High | Waits for Craig's storage choice and his credential steps; lands before X5, which writes live data |
+| **X · 3** | X7 → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
+| **X · 4** | X6 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing (at Craig's yes on the value basis), X5 by 31 Oct (after X4). `xhigh` from X5's live backfill |
+| **X · 5** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
+| **X · 6** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

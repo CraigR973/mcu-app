@@ -5192,3 +5192,39 @@ contemporaneous.
        `loans.borrower_profile_id` is a nullable uuid; `mcu_readonly` can read it
        (`has_column_privilege`), with no grant of its own; `loans` still holds 0 rows; every cron
        job deployed the merge.
+
+### 2026-10-12 — Wave 1 review, Batches 43–48
+
+253. **The wave 1 review's remediation is Group X, written into the plan at Craig's word ("do rows
+     and merge", 12 Oct).**
+
+     - **What:** twelve batches, X1–X12, from `docs/reviews/BATCH_43-48_ROADMAP.md` (six passes at
+       `527522d`, 44 findings, 10 High), in six sittings in `docs/phase-batches.md`, "Group X —
+       the wave 1 review, planned 12 Oct". Batch 38 gains six cases and stays last. Each sitting
+       starts at Craig's go; he starts X1 himself.
+     - **Why this order:** X1 first, because the eBay scan's stored mark (21 Oct 16:35) makes
+       the gap since 9 Oct unreadable after that date; then what reaches each person and what
+       tells Craig (X2, X3); X6 before the 1 Nov re-pricing; X5 by 31 Oct, while Mark's feed
+       still reaches back past 14 Sep; identification (X9, X10) once failures can be seen.
+     - **X4 lands before X5.** Craig left the owner steps for now (12 Oct), the free Neon
+       snapshot among them, so the weekly dump is the only copy outside Neon's six hours before
+       X5 writes live data.
+     - **Mark's Letterboxd username is stored by X5, at Craig's word.** The app lets only each
+       person set their own (`PUT /watch-history/username`, caller-scoped by design); Craig gave
+       it on 12 Oct (it matches `OWNER-ACTIONS.md` 1j), so X5 writes the one row. An exception
+       made by the owner, not a new admin route.
+     - **Still open, each gating one batch:** eBay's API licence (MK47-04; X1's close-out
+       records it), the value basis (#209; gates X6), backup storage (gates X4).
+     - **Two corrections made while writing the rows.** X1's year rule lets brackets and format
+       words sit between the title and the year ("IF Blu-ray (2024)"); without that, 6 of the 25
+       wrong-product finds get past every X1 rule, not 3. And X1's guard no longer promises that
+       all 25 are refused: three carry no year or other tell (*Maggie*, two *Titanic* 3D sets),
+       so for them the defence is a push that names the listing. R5's "category not none"
+       selected 32, not 25; the 25 are now listed.
+     - **The evidence lists X1, X5 and X9 test against** are in
+       `docs/reviews/BATCH_43-48_EVIDENCE.md`, described rather than extracted: no eBay listing
+       copied whole (MK47-04 is open), no watch naming who logged it. The scratch folder they came
+       from exists only on the Mac.
+     - **The review's own procedure** is `docs/agent-commands/review-wave.md`; its reports,
+       scope note, roadmap and follow-through live in `docs/reviews/`. The roadmap names twenty
+       standing guards; each batch ships its own.
