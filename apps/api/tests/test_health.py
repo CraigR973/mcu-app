@@ -191,6 +191,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/notifications/vapid-key",
         "/api/v1/notifications/preferences",
         "/api/v1/notifications/subscriptions",
+        # Batch X3: what the server holds for this browser, so the page can heal it.
+        "/api/v1/notifications/subscriptions/status",
         "/api/v1/notifications/subscriptions/{subscription_id}",
         "/api/v1/notifications/subscriptions/{subscription_id}/test",
         "/api/v1/notifications/run-reminders",

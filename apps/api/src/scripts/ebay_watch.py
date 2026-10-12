@@ -21,7 +21,13 @@ from src.database import AsyncSessionLocal
 from src.ebay.client import EbayClient
 from src.models.ebay_watch import EbayWatchRun
 from src.services import heartbeat
-from src.services.ebay_watch.runs import StartOutcome, deliver_now, start_run, work_run
+from src.services.ebay_watch.runs import (
+    StartOutcome,
+    deliver_now,
+    record_delivered,
+    start_run,
+    work_run,
+)
 
 _NOT_STARTED = {
     "running": "Another pass is running; nothing was done.",
@@ -62,6 +68,8 @@ async def main() -> int:
                 return report(outcome, None)
             result = await work_run(db, client, outcome.run.id)
             await deliver_now(db, result.told)
+            # Batch X3: "pushed" is what reached a phone, not what was queued.
+            await record_delivered(db, result.run)
             await heartbeat.beat(
                 db,
                 heartbeat.EBAY,

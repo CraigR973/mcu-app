@@ -1106,3 +1106,142 @@ class TestReleaseReminders:
             select(ReleaseCalendarEntry.notified).where(ReleaseCalendarEntry.id == cinema.id)
         )
         assert cinema_marked is False
+
+
+class TestPushThatHealsItself:
+    """Batch X3 (DS44-02): a refused phone is kept, said, and registered again.
+
+    Mark's phone was dropped on its first push (24 Sep) and Craig's on 8 Oct: a 404 or 410
+    deleted the device with an info log, Settings read only the browser's own subscription,
+    and nothing registered a device again.
+    """
+
+    async def _devices(self, session: AsyncSession, person: Profile) -> list[PushSubscription]:
+        return list(
+            (
+                await session.execute(
+                    select(PushSubscription).where(PushSubscription.user_id == person.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    async def test_a_refused_device_is_kept_as_revoked_not_deleted(
+        self,
+        client: AsyncClient,
+        api_session: AsyncSession,
+        admin: Profile,
+        sender: RecordingSender,
+    ) -> None:
+        await _register(client, "phone")
+        (device,) = await self._devices(api_session, admin)
+        sender.outcomes[device.endpoint] = DeliveryOutcome.gone
+        await queue_notification(
+            api_session,
+            user_id=admin.id,
+            category=NotificationCategory.deals,
+            title="A push the service refuses",
+            body="",
+        )
+
+        summary = await deliver_pending(api_session, sender=sender)
+
+        assert summary.subscriptions_removed == 1
+        (kept,) = await self._devices(api_session, admin)
+        assert kept.revoked_at_utc is not None and kept.revoked_reason == "refused"
+        listed = (await client.get("/api/v1/notifications/subscriptions")).json()
+        assert listed["total"] == 0
+        # The banner's date: the last device went, refused.
+        assert listed["stoppedAt"] is not None
+
+    async def test_registering_the_same_endpoint_again_revives_it(
+        self,
+        client: AsyncClient,
+        api_session: AsyncSession,
+        admin: Profile,
+        sender: RecordingSender,
+    ) -> None:
+        p256dh, auth = _subscription_keys()
+        body = {
+            "endpoint": f"https://fcm.googleapis.com/fcm/send/{uuid.uuid4().hex}",
+            "keys": {"p256dh": p256dh, "auth": auth},
+            "deviceLabel": "phone",
+        }
+        assert (
+            await client.post("/api/v1/notifications/subscriptions", json=body)
+        ).status_code == 201
+        (device,) = await self._devices(api_session, admin)
+        sender.outcomes[device.endpoint] = DeliveryOutcome.gone
+        await queue_notification(
+            api_session, user_id=admin.id, category=NotificationCategory.deals, title="x", body=""
+        )
+        await deliver_pending(api_session, sender=sender)
+
+        assert (
+            await client.post("/api/v1/notifications/subscriptions", json=body)
+        ).status_code == 201
+
+        (revived,) = await self._devices(api_session, admin)
+        await api_session.refresh(revived)
+        assert (revived.revoked_at_utc, revived.revoked_reason) == (None, None)
+        listed = (await client.get("/api/v1/notifications/subscriptions")).json()
+        assert (listed["total"], listed["stoppedAt"]) == (1, None)
+
+    async def test_the_page_can_ask_what_the_server_holds_for_this_browser(
+        self,
+        client: AsyncClient,
+        api_session: AsyncSession,
+        admin: Profile,
+        sender: RecordingSender,
+    ) -> None:
+        status_url = "/api/v1/notifications/subscriptions/status"
+        unknown = await client.post(status_url, json={"endpoint": "https://push.example/nobody"})
+        assert unknown.json() == {"state": "unknown", "revokedAt": None}
+
+        live = await _register(client, "phone")
+        refused = await _register(client, "old phone")
+        removed = await _register(client, "laptop")
+        devices = {device.id: device for device in await self._devices(api_session, admin)}
+        endpoint = {
+            key: devices[uuid.UUID(str(row["id"]))].endpoint
+            for key, row in (("live", live), ("refused", refused), ("removed", removed))
+        }
+
+        sender.outcomes[endpoint["refused"]] = DeliveryOutcome.gone
+        await queue_notification(
+            api_session, user_id=admin.id, category=NotificationCategory.deals, title="x", body=""
+        )
+        await deliver_pending(api_session, sender=sender)
+        assert (
+            await client.delete(f"/api/v1/notifications/subscriptions/{removed['id']}")
+        ).status_code == 204
+
+        answers = {
+            key: (await client.post(status_url, json={"endpoint": value})).json()
+            for key, value in endpoint.items()
+        }
+        assert answers["live"] == {"state": "live", "revokedAt": None}
+        assert answers["refused"]["state"] == "refused" and answers["refused"]["revokedAt"]
+        assert answers["removed"]["state"] == "removed" and answers["removed"]["revokedAt"]
+        # With a live device, no banner.
+        assert (await client.get("/api/v1/notifications/subscriptions")).json()["stoppedAt"] is None
+
+    async def test_another_persons_device_reads_as_unknown(
+        self, client: AsyncClient, api_session: AsyncSession
+    ) -> None:
+        other = await _profile(api_session, UserRole.viewer)
+        p256dh, auth = _subscription_keys()
+        theirs = PushSubscription(
+            id=uuid.uuid4(),
+            user_id=other.id,
+            endpoint=f"https://fcm.googleapis.com/fcm/send/{uuid.uuid4().hex}",
+            p256dh=p256dh,
+            auth=auth,
+        )
+        api_session.add(theirs)
+        await api_session.flush()
+        answer = await client.post(
+            "/api/v1/notifications/subscriptions/status", json={"endpoint": theirs.endpoint}
+        )
+        assert answer.json()["state"] == "unknown"

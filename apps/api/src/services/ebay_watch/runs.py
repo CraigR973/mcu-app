@@ -39,7 +39,7 @@ from src.ebay.client import DEFAULT_MAX_RETRIES, EbayError, EbayNotConfigured
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayWatchRun
 from src.models.movie import Movie
-from src.models.notification import Notification, NotificationCategory
+from src.models.notification import Notification, NotificationCategory, NotificationStatus
 from src.models.profile import Profile
 from src.services.ebay_watch.client import WatchClient
 from src.services.ebay_watch.listings import item_state
@@ -356,6 +356,25 @@ async def deliver_now(db: AsyncSession, user_ids: set[uuid.UUID]) -> None:
     except Exception:  # noqa: BLE001 - see the docstring
         logger.warning("ebay_watch_push_failed", exc_info=True)
         await db.rollback()
+
+
+async def record_delivered(db: AsyncSession, run: EbayWatchRun) -> int:
+    """Set the run's pushed count to finds actually delivered to a phone (Batch X3).
+
+    The pass counts what it queued; a push held by quiet hours, or meeting no live device,
+    was not delivered, and before X3 the run counted it anyway, so "5 pushed" could mean
+    nobody heard. Counted after delivery, by the finds whose push reached anyone.
+    """
+    delivered = await db.scalar(
+        select(func.count(func.distinct(func.split_part(Notification.dedupe_key, ":", 2)))).where(
+            Notification.dedupe_key.like(f"{DEAL_KEY_PREFIX}%"),
+            Notification.status == NotificationStatus.sent.value,
+            Notification.created_at_utc >= run.started_utc,
+        )
+    )
+    run.deals_pushed = int(delivered or 0)
+    await db.commit()
+    return run.deals_pushed
 
 
 # ---------------------------------------------------------------------------

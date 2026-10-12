@@ -8,6 +8,7 @@ import CommandPalette from '@/components/CommandPalette'
 import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import OfflineBanner from '@/components/OfflineBanner'
+import { PushHealthBanner } from '@/components/PushHealthBanner'
 import SearchBar from '@/components/SearchBar'
 import { useAuth } from '@/context/auth'
 import { useGoBack } from '@/hooks/useGoBack'
@@ -196,6 +197,8 @@ export default function AppLayout({ children }: Props) {
         </header>
 
         <OfflineBanner />
+        {/* Batch X3: mends this phone's notifications on open; says when they stopped. */}
+        <PushHealthBanner />
 
         <main id="main-content" className="min-h-0 flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0" tabIndex={-1}>
           <ErrorBoundary>

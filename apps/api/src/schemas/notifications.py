@@ -84,6 +84,28 @@ class PushSubscriptionResponse(BaseModel):
 class PushSubscriptionListResponse(BaseModel):
     items: list[PushSubscriptionResponse]
     total: int = Field(ge=0)
+    #: Batch X3: when the push service last refused one of this person's devices, while none
+    #: is live; null otherwise. The app shows a banner until notifications are on again.
+    stoppedAt: UtcDatetime | None = None
+
+
+class PushDeviceStatusRequest(BaseModel):
+    """Batch X3: "does the server hold this browser's subscription?" — by its endpoint."""
+
+    endpoint: str = Field(min_length=1, max_length=2000)
+
+
+class PushDeviceStatusResponse(BaseModel):
+    """What the server holds for this browser, for the signed-in person.
+
+    ``live``: it pushes here. ``refused``: the push service refused it, so the page registers
+    the phone again, with a fresh subscription. ``removed``: the person took it off their
+    list, so the page leaves it alone. ``unknown``: the server has no such device for this
+    person, so the page registers it.
+    """
+
+    state: Literal["live", "refused", "removed", "unknown"]
+    revokedAt: UtcDatetime | None = None
 
 
 class NotificationPreferenceResponse(BaseModel):

@@ -171,6 +171,7 @@ class EbayWatchRun(Base, UUIDPrimaryKeyMixin):
     candidates: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     refs_fetched: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     deals_found: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: Finds whose push reached a phone (Batch X3); queued but undelivered ones do not count.
     deals_pushed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     #: Where the next run starts reading. Since Batch X1 the run's own start less
     #: ``scan.MARK_MARGIN``, never a listing's date: one listing dated 12 days ahead, read on

@@ -60,6 +60,7 @@ import {
   highlightsSchema,
   streamingSchema,
   profileResponseSchema,
+  pushDeviceStatusSchema,
   pushSubscriptionListSchema,
   pushSubscriptionSchema,
   reminderRunSchema,
@@ -187,6 +188,7 @@ import {
   type ScraperType,
   type Streaming,
   type ProfileResponse,
+  type PushDeviceStatus,
   type PushSubscriptionList,
   type PushSubscriptionRecord,
   type ReminderRun,
@@ -1825,6 +1827,17 @@ export async function fetchVapidKey(): Promise<VapidKey> {
 
 export async function fetchPushSubscriptions(): Promise<PushSubscriptionList> {
   return parseResponse(await authFetch('/notifications/subscriptions'), pushSubscriptionListSchema)
+}
+
+/** Batch X3: what the server holds for this browser's subscription, by its endpoint. */
+export async function fetchPushDeviceStatus(endpoint: string): Promise<PushDeviceStatus> {
+  return parseResponse(
+    await authFetch('/notifications/subscriptions/status', {
+      method: 'POST',
+      body: JSON.stringify({ endpoint }),
+    }),
+    pushDeviceStatusSchema,
+  )
 }
 
 /**

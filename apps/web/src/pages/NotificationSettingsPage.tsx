@@ -27,7 +27,7 @@ import {
 } from '@/lib/api'
 import { usePushSubscription } from '@/hooks/usePushSubscription'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDayMonth } from '@/lib/utils'
 
 /** §6.1's categories, in the order they are worth reading. */
 const CATEGORIES: Array<{
@@ -116,7 +116,7 @@ export function Toggle({
  * than ship a button that did nothing (`DECISIONS.md` #50); the way not to repeat that is
  * for the UI to be able to say precisely which part is missing.
  */
-function DeviceSection() {
+export function DeviceSection() {
   const queryClient = useQueryClient()
   const push = usePushSubscription()
   const [label, setLabel] = useState('')
@@ -159,6 +159,15 @@ function DeviceSection() {
   })
 
   const state = listState(devices, (devices.data?.items.length ?? 0) === 0)
+  // Batch X3: when this phone stopped — the hook's answer, else the account's last refusal
+  // while no device is live. Either way Settings says so rather than "on".
+  const stoppedSince =
+    push.state === 'stopped'
+      ? (push.stoppedSince ?? devices.data?.stoppedAt ?? null)
+      : push.state === 'available'
+        ? (devices.data?.stoppedAt ?? null)
+        : null
+  const stopped = push.state === 'stopped' || stoppedSince !== null
 
   return (
     <section className="rounded-lg border border-border p-4">
@@ -194,7 +203,16 @@ function DeviceSection() {
         <p className="mt-3 text-sm text-destructive">{push.error}</p>
       )}
 
-      {(push.state === 'available' || push.state === 'checking') && (
+      {stopped && (
+        <p className="mt-3 flex items-start gap-2 rounded bg-warning/12 p-3 text-sm text-warning">
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          {stoppedSince
+            ? `This phone stopped getting notifications on ${formatDayMonth(stoppedSince)}. Turn them on again.`
+            : 'This phone stopped getting notifications. Turn them on again.'}
+        </p>
+      )}
+
+      {(push.state === 'available' || push.state === 'checking' || push.state === 'stopped') && (
         <div className="mt-4 flex flex-wrap items-end gap-2">
           <label className="text-sm">
             <span className="mb-1 block text-muted-foreground">
@@ -216,7 +234,7 @@ function DeviceSection() {
             ) : (
               <BellRing className="mr-2 h-4 w-4" aria-hidden />
             )}
-            Turn on for this device
+            {stopped ? 'Turn on again' : 'Turn on for this device'}
           </Button>
         </div>
       )}

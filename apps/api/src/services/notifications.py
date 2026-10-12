@@ -44,6 +44,10 @@ from src.services import webpush
 
 logger = structlog.get_logger(__name__)
 
+#: Why a device was revoked (Batch X3): the person removed it, or the push service refused it.
+REVOKED_REMOVED = "removed"
+REVOKED_REFUSED = "refused"
+
 #: Which preference column gates which category. A mapping rather than
 #: ``getattr(prefs, f"{category}_enabled")`` so a renamed column fails the typechecker
 #: instead of quietly returning ``True`` for a category nobody can switch off any more.
@@ -418,8 +422,8 @@ class FanOutResult:
     """One payload's fate across one person's devices."""
 
     delivered: int = 0
-    #: Subscriptions the push service reported gone. Deleted, and dropped from any
-    #: further sends in this pass — a deleted row must not be handed to `sender` again.
+    #: Subscriptions the push service reported gone. Revoked as refused (Batch X3), and
+    #: dropped from any further sends in this pass.
     removed: list[PushSubscription] = field(default_factory=list)
 
 
@@ -433,10 +437,14 @@ async def deliver_to_subscriptions(
 ) -> FanOutResult:
     """Push ``payload`` to every one of ``subscriptions``.
 
-    **A dead subscription is deleted, a failing one is only counted.** §6.2's "removing one
-    doesn't silence the other" depends on this loop treating each device independently —
-    one endpoint answering ``410`` must not stop the other from being tried, which is why
-    the result of each send is handled inside the loop rather than aborting it.
+    **A dead subscription is revoked as refused, a failing one is only counted.** Since
+    Batch X3 a 404 or 410 keeps the row (`revoked_at_utc`, ``revoked_reason="refused"``), so
+    Settings can say when the phone stopped and the app can register it again; before X3
+    the row was deleted with an info log, and two phones went silent with nobody told.
+    §6.2's "removing one doesn't silence the other" depends on this loop treating each
+    device independently — one endpoint answering ``410`` must not stop the other from
+    being tried, which is why the result of each send is handled inside the loop rather
+    than aborting it.
     """
     result = FanOutResult()
     for subscription in subscriptions:
@@ -446,9 +454,10 @@ async def deliver_to_subscriptions(
             subscription.failure_count = 0
             subscription.last_used_at_utc = now
         elif outcome.outcome is DeliveryOutcome.gone:
-            await db.delete(subscription)
+            subscription.revoked_at_utc = now
+            subscription.revoked_reason = REVOKED_REFUSED
             result.removed.append(subscription)
-            logger.info("push_subscription_gone", status_code=outcome.status_code)
+            logger.warning("push_subscription_refused", status_code=outcome.status_code)
         else:
             subscription.failure_count += 1
             logger.warning(
