@@ -3186,7 +3186,9 @@ its pass report in `docs/reviews/`). **Criteria authored 2026-10-12** from the r
 merge", 12 Oct, #253); each sitting starts at his go, and he starts X1 himself.** Numbers are
 as re-checked on 12 Oct: re-verify them, per `batch-start.md` step 3. Model tiers are Group
 V's: top tier is the two models on Group U's row in "Batch groups", mid tier the two on Batch
-21's row.
+21's row. **The cases X1, X5 and X9 test against are in `docs/reviews/BATCH_43-48_EVIDENCE.md`.**
+The review's other working files (`scratchpad/wave-1/`, gitignored) exist only on Craig's Mac,
+so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
@@ -3249,9 +3251,9 @@ condition (`BATCH_43_CODE_REVIEW.md`, `BATCH_47_PRICES_VALUE_DEALS_REVIEW.md`).
 - Reading the mark ignores any stored value later than the current run's start, so
   production's 21 Oct row stops blinding the scan with no data write; the first run after the
   deploy reads back as far as its page cap allows.
-- A four-digit year straight after the film's title must be the film's year ±1: "Halloween
-  (2018)", "Road House 1989" and "Wonder Woman 1984" are refused for the 1978, 1948 and 2017
-  films.
+- A four-digit year after the film's title, with nothing but brackets and format words
+  between, must be the film's year ±1: "Halloween (2018)", "Road House 1989", "Wonder Woman
+  1984" and "IF Blu-ray (2024)" are refused for the 1978, 1948, 2017 and 1968 films.
 - Incomplete items are refused ("disc only", "no case", "case only", "no disc", "empty"). A
   Blu-ray titled "not a 4K", "not 4K" or "remastered in 4K" is not a 4K; a Region A or Region 1
   Blu-ray is refused (Region B and region-free pass); a TV "complete series" or "season" is not
@@ -3277,9 +3279,10 @@ condition (`BATCH_43_CODE_REVIEW.md`, `BATCH_47_PRICES_VALUE_DEALS_REVIEW.md`).
 - MK47-04 is recorded as a decision at close-out, at Craig's word (roadmap decision 2: an
   accepted risk, or a request to eBay); the steps above ship either way.
 - **Guards (CI):** a listing dated in the future never moves the mark, on write or on read;
-  the 25 wrong-product titles (R5's list, `scratchpad/wave-1/r5/data/deals_classified.json`,
-  category not "none") never match; a used listing never meets the New median. Each fails when
-  its fix is reverted.
+  titles crafted from the 25 wrong-product finds (`docs/reviews/BATCH_43-48_EVIDENCE.md`,
+  section 1) never match, except the three no title rule can tell apart (*Maggie* and the two
+  *Titanic* 3D sets), whose push and card must name the listing's own title and condition; a
+  used listing never meets the New median. Each fails when its fix is reverted.
 - **Seen in production:** the first scheduled run after the deploy reads listings
   (`listings_seen > 0`), read with `live_sql`.
 - Tests. Gate green.
@@ -3381,7 +3384,7 @@ xhigh. Sitting 4, after X6. **After X4; by 31 Oct**, so a sync then still reache
 14 Sep for Mark (his 50-entry feed stops reaching back around 10–19 Nov).
 
 **Found 11 Oct:** 15 imported watches sit on a different film of the same name (a 2013 film on
-the 1995 one; R4's list in `scratchpad/wave-1/r4/`); the diary matcher drops the leading
+the 1995 one; `docs/reviews/BATCH_43-48_EVIDENCE.md`, section 3); the diary matcher drops the leading
 article, and "the year breaks a tie, never excludes" (#158, #160) holds even when both years
 are known; the RSS sync falls back to titles when the feed's TMDB id is not owned; films not
 owned are skipped by design, and 756 dated diary entries were never recorded. Mark has no
@@ -3516,7 +3519,7 @@ engine.
 
 **Found 11 Oct, re-checked 12 Oct:** 30 copies are confidently the wrong film (27 of 1,115
 matched by the 8 Sep import, 3 of 404 by the diary import, 0 of 156 by T9; all 29 film rows
-unchanged on 12 Oct; R4's list in `scratchpad/wave-1/r4/data/`). The old engine keeps a
+unchanged on 12 Oct; `docs/reviews/BATCH_43-48_EVIDENCE.md`, section 2). The old engine keeps a
 leading article, scores an exact namesake above the real film, floors any containing title at
 0.9 and reads one results page, so #31's tie never fires. 36 spec lookups carry "the page is
 for a 1957 film … pick the right page", 8 of them on these films. The identify run's error

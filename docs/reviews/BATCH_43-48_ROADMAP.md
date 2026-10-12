@@ -269,7 +269,7 @@ had 5 pushes delivered of 108, not 1 of 104.
 | Guard | Runs in | From |
 |---|---|---|
 | A future-dated listing never moves the scan's mark | CI | CR43-01 |
-| The 25 wrong products never match; used never meets the new median | CI | MK47-01 |
+| The 25 wrong products never match (22 by rule; the push names the other 3); used never meets the new median | CI | MK47-01 |
 | SDK blocks survive store-and-replay; tool text carries its total | CI | AI45-01, -03 |
 | Every run loop survives an injected failure | CI | CR43-02 |
 | The API's answers match the shared schemas | CI | CR43-04 |

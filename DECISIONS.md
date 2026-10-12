@@ -5215,6 +5215,16 @@ contemporaneous.
        made by the owner, not a new admin route.
      - **Still open, each gating one batch:** eBay's API licence (MK47-04; X1's close-out
        records it), the value basis (#209; gates X6), backup storage (gates X4).
+     - **Two corrections made while writing the rows.** X1's year rule lets brackets and format
+       words sit between the title and the year ("IF Blu-ray (2024)"); without that, 6 of the 25
+       wrong-product finds get past every X1 rule, not 3. And X1's guard no longer promises that
+       all 25 are refused: three carry no year or other tell (*Maggie*, two *Titanic* 3D sets),
+       so for them the defence is a push that names the listing. R5's "category not none"
+       selected 32, not 25; the 25 are now listed.
+     - **The evidence lists X1, X5 and X9 test against** are in
+       `docs/reviews/BATCH_43-48_EVIDENCE.md`, described rather than extracted: no eBay listing
+       copied whole (MK47-04 is open), no watch naming who logged it. The scratch folder they came
+       from exists only on the Mac.
      - **The review's own procedure** is `docs/agent-commands/review-wave.md`; its reports,
        scope note, roadmap and follow-through live in `docs/reviews/`. The roadmap names twenty
        standing guards; each batch ships its own.
