@@ -5264,3 +5264,38 @@ contemporaneous.
        but they make 4- and 4.5-day sittings, the first in X1's deadline week, and run X12's
        mid-tier work at top-tier cost. Also rejected, running two sittings at once: every
        close-out edits `STATUS.md`, the ledger and the decision numbers, and deploys from `main`.
+
+256. **Owned discs are valued as used copies (MK47-03), at Craig's word on 12 Oct. Amends #209;
+     #237's asking prices stand.**
+
+     - **What changes (X6):** a disc's value is the median asking price of its used listings
+       when there are three or more; otherwise New's median times the used-to-New factor
+       measured for its format. Home and the film page say "as used copies", and the sale panel
+       pre-fills from the used value.
+     - **Why:** #209's headline is the largest single-condition group, usually New, so 965 of
+       the 1,300 priced discs (92.5% of the £23,604) were valued as new copies. Where both
+       exist, a used copy asks 0.48–0.71 of New, and a used copy is what is on the shelf. The
+       total falls to roughly £12,800–£17,200.
+     - **Still asking prices, not sales:** market-wide sold prices stay out of reach (#16,
+       #228), and #237 keeps asking prices. A hand check of about 20 values against eBay's
+       sold listings, with Craig signed in, stays an option.
+     - **When:** X6 lands before the 1 Nov 04:00 re-pricing, the first with work since 26 Sep.
+       Until then the stored values are new-copy prices.
+
+257. **The weekly backup is kept as encrypted GitHub Actions artifacts (DS44-03), at Craig's
+     word on 12 Oct; not Neon's paid plan.**
+
+     - **What (X4):** a weekly Actions schedule dumps the database through a role that reads no
+       credential, encrypts it to a public key in the repo (the private key stays with Craig),
+       and keeps the newest 8 as artifacts, each held 90 days. A monthly drill restores the
+       newest into a throwaway Postgres and compares row counts.
+     - **Why:** no new account and no cost. Neon's free plan restores only within six hours and
+       keeps no scheduled backups; its paid plan would widen that window at Neon's price.
+       Weekly, not nightly, keeps the dump's egress near 0.4 GB of the free 5 GB a month.
+     - **Craig's, not an agent's:** the role's password, the repository secret and the key pair
+       (about 10 minutes, when X4 reaches them).
+     - **To watch:** the backup now runs on GitHub Actions. CI already uses about 3,000 minutes
+       a month, which may pass a free plan's allowance (unverified: the plan is not readable
+       with this repo's token). If Actions stops, the backup and its drill stop with CI, and
+       nothing in the app would show it. The one look at GitHub's plan (the roadmap's owner
+       step 5) is still Craig's.

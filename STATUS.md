@@ -12,7 +12,7 @@ the eBay scan, must land before 21 Oct 16:35 UTC.** Craig starts it in a new ses
 | Batch | State |
 |---|---|
 | X1 → X2 → X3, sitting 1 | next, as one group; X1 before 21 Oct; eBay's licence settled (#254), so X1's close-out does not stop |
-| X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3 needs Craig's yes on the value basis, his storage choice and X4's credential steps before 27 Oct; X6 before 1 Nov, X5 by 31 Oct |
+| X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -26,8 +26,8 @@ the eBay scan, must land before 21 Oct 16:35 UTC.** Craig starts it in a new ses
   2nd, 15th and 16th, its first run with work on 1 Nov 04:00.
 - **The gate** is six CI jobs (#248). Locally: API 1,188 passed and 650 skipped without Postgres
   (11 Oct), web 525, shared 131.
-- **Craig's open items** (`OWNER-ACTIONS.md`): before 27 Oct, the value basis, backup storage
-  and X4's credential steps (eBay's licence settled 12 Oct, #254); 29 connect eBay; 22 the Neon
+- **Craig's open items** (`OWNER-ACTIONS.md`): X4's credential steps when sitting 3 reaches
+  them (the roadmap's choices all made 12 Oct: #254, #256, #257); 29 connect eBay; 22 the Neon
   password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues.
 
 **Live numbers (12 Oct, read-only):**
@@ -433,6 +433,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-12 (X6 and X4 decided, #256, #257)** — Craig's answers: owned discs are valued as
+  used copies (X6, amending #209), and the weekly backup is kept as encrypted GitHub Actions
+  artifacts (X4). Sitting 3 now stops only for his credential steps in X4 and his word on X5's
+  live data. Docs only.
 
 - **2026-10-12 (Group X regrouped, #254, #255)** — Craig's answers the same evening: X4 joins
   the late-October sitting as X6 → X4 → X5, so Group X runs in five sittings, not six; sitting
