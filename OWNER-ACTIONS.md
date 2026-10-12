@@ -12,10 +12,13 @@ conversation still maps onto this file.*
 ## What is left for you, by sitting *(30 Sep)*
 
 - **12 Oct, the wave 1 review:** its remediation is Group X (X1–X12) in
-  `docs/phase-batches.md`; you start X1, the eBay scan, before 21 Oct. Three choices are yours
-  (`docs/reviews/BATCH_43-48_ROADMAP.md`, section f): eBay's licence (by X1's close-out), the
-  value basis (before 1 Nov), and where the weekly backup goes (before X5, late Oct). You left
-  the other owner steps for now (12 Oct).
+  `docs/phase-batches.md`, in five sittings (#255). You start sitting 1 (X1 → X2 → X3, as one
+  group, `/group-start X · 1`) so that X1, the eBay scan, lands before 21 Oct. eBay's licence:
+  ~~yours by X1's close-out~~ **decided 12 Oct, an accepted risk (#254).** Still yours before
+  sitting 3 starts on 27 Oct (`docs/reviews/BATCH_43-48_ROADMAP.md`, section f): the value
+  basis, where the weekly backup goes, and then X4's credential steps (about 10 minutes: the
+  dump role's password, a repository secret, a key pair). You left the other owner steps for
+  now (12 Oct).
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub

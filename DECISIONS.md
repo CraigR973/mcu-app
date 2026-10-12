@@ -5228,3 +5228,39 @@ contemporaneous.
      - **The review's own procedure** is `docs/agent-commands/review-wave.md`; its reports,
        scope note, roadmap and follow-through live in `docs/reviews/`. The roadmap names twenty
        standing guards; each batch ships its own.
+
+254. **eBay's API licence (MK47-04) is an owner-accepted risk, at Craig's word on 12 Oct.** The
+     licence (text dated 3 Sep 2025, read by the review on 11 Oct) bars using eBay content to
+     suggest or model prices for items listed on eBay without eBay's written consent (§9.5).
+     The app does exactly that: each owned disc's value, each deal's "usual" and discount, and
+     the sale panel's suggested price come from eBay listings. As #110 was for Blu-ray.com, this
+     is risk acceptance, not a finding that the use is permitted, and a reading of the licence,
+     not legal advice.
+
+     - **What Craig accepts:** most likely nothing; plausibly eBay suspending the keyset, which
+       serves the value, the deals and barcode lookups, with nothing in the app saying why.
+       Asking eBay for written consent stays open to him; a "no" would end the value and deal
+       features built on eBay data.
+     - **What bounds it** (X1's criteria; the acceptance does not cover dropping them): a find
+       re-checked with one item call before its push; every deal card saying when its price
+       was last seen (§8.1.3 asks for no more than six hours' lag, or the age shown); an expired
+       eBay deal losing its listing's title and image (§8.1.2, §3.1(b)).
+     - **Why now, not at X1's close-out:** an unanswered decision gate stops a group
+       (`group-start.md`), and sitting 1 now runs as one (#255).
+
+255. **Group X runs in five sittings: X4 joins the late-October one as X6 → X4 → X5, and
+     sitting 1 runs as one group. Supersedes #253's six sittings, at Craig's word on 12 Oct.**
+
+     - **What:** 1) X1 → X2 → X3, `/group-start X · 1`; 2) X7 → X8; 3) X6 → X4 → X5, at
+       `xhigh`; 4) X9 → X10; 5) X11 → X12; then 38. Each sitting still starts at his go.
+     - **Why X4 moved:** its one tie is a dependency, landing before X5 writes live data, so the
+       ledger's grouping rule allows it, and it removes the one sitting with no date. X6 goes
+       first because it has the hard date (before 1 Nov 04:00) and no tie to X4, so a stall on
+       X4's credential steps cannot hold it up.
+     - **What sitting 3 needs before 27 Oct to run without stopping:** Craig's yes on the value
+       basis (X6), his storage choice and X4's credential steps. X5's live data steps stop for
+       his word inside it either way.
+     - **Rejected:** X11 after X1 and X12 after X8. Both fit the grouping rule (shared files),
+       but they make 4- and 4.5-day sittings, the first in X1's deadline week, and run X12's
+       mid-tier work at top-tier cost. Also rejected, running two sittings at once: every
+       close-out edits `STATUS.md`, the ledger and the decision numbers, and deploys from `main`.
