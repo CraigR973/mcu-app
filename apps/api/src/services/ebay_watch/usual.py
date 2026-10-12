@@ -4,6 +4,11 @@ Before V8 it was eBay's figure alone: the median asking price of matching UK Buy
 listings (:mod:`refs`). Craig's answer to snag 1 (`DECISIONS.md` #228) was to average it
 with the shops' prices, and V7 being shelved (#237) leaves eBay's figure on asking prices.
 
+**Since Batch X1 a shop's price never raises the usual** (MK47-06; #239 amended). Averaged,
+a £24.99 shop price lifted a £12 eBay median to £18.50 and made a £12 listing a "35% off"
+deal. Now the cheapest shop price is a ceiling on a **New** listing's usual, which it can
+only lower, and a used listing's usual is eBay's used figure alone: a shop sells new copies.
+
 **The shops' part is thin by design.** The nightly check asks every watched shop about the
 Wanted list and nothing else, so a shop price exists only for a Wanted film. Asking the
 shops about every eBay find would multiply requests to the three that answer ``429``
@@ -57,10 +62,9 @@ class UsualPrice:
 
     @property
     def amount(self) -> Decimal:
-        """The average of eBay's figure and each shop's price: eBay's alone with none."""
-        prices = [self.ebay.median, *(shop.price for shop in self.shops)]
-        average = sum(prices, Decimal(0)) / len(prices)
-        return average.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        """eBay's figure, lowered to the cheapest shop's price when that is less."""
+        lowest = min([self.ebay.median, *(shop.price for shop in self.shops)])
+        return lowest.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def sources(self) -> list[dict[str, str]]:
         """Where the figure comes from, eBay first, as the Deals page lists it."""

@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import uuid
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -41,7 +41,7 @@ from src.models.price_check import PriceCheck
 from src.models.profile import Profile, UserRole
 from src.models.wanted import WantedItem
 from src.routers.ebay_watch import get_ebay_client_factory
-from src.services.ebay_watch.runs import DAILY_SHARE, start_run, work_run
+from src.services.ebay_watch.runs import DAILY_SHARE, clear_ended_finds, start_run, work_run
 from src.services.identification import _move_back, move_references
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -50,6 +50,24 @@ NEWEST = json.loads((FIXTURES / "ebay_newest_bluray_4k_gb.json").read_text())
 # An hour after the newest captured listing, so the first pass's three hours cover them all.
 NOW = datetime(2026, 9, 26, 10, 0)
 LAST_JEDI_4K = "https://www.ebay.co.uk/itm/298708357566"
+LAST_JEDI_TITLE = "Star Wars the Last Jedi 4K Ultra HD Blu-ray New Sealed"
+
+
+def _for_sale(legacy_id: str, *, available: bool = True) -> dict[str, Any]:
+    """An item call's answer for a find still for sale, or sold out (Batch X1's re-check)."""
+    return {
+        "legacyItemId": legacy_id,
+        "title": "A listing",
+        "price": {"value": "3.84", "currency": "GBP"},
+        "buyingOptions": ["FIXED_PRICE"],
+        "estimatedAvailabilities": [
+            {"estimatedAvailabilityStatus": "IN_STOCK" if available else "OUT_OF_STOCK"}
+        ],
+    }
+
+
+#: Every find in the captured page, still for sale when the pass re-checks it.
+ON_SALE = {"298708357566": _for_sale("298708357566")}
 
 
 class FakeEbay:
@@ -59,12 +77,19 @@ class FakeEbay:
     attempts_per_search = 1
 
     def __init__(
-        self, *, item: dict[str, Any] | None = None, pages: list[dict[str, Any]] | None = None
+        self,
+        *,
+        item: dict[str, Any] | None = None,
+        pages: list[dict[str, Any]] | None = None,
+        items: dict[str, dict[str, Any] | None] | None = None,
     ) -> None:
         self.item = item
+        #: Answers by listing number, before ``item``: the re-check before a deal's push.
+        self.items = dict(ON_SALE if items is None else items)
         self.pages = list(pages or [])
         self.search_calls = 0
         self.searched: list[dict[str, Any]] = []
+        self.looked_up: list[str] = []
 
     async def search(self, query: str, **params: Any) -> dict[str, Any]:
         self.search_calls += 1
@@ -73,6 +98,9 @@ class FakeEbay:
 
     async def get_item_by_legacy_id(self, legacy_item_id: str) -> dict[str, Any] | None:
         self.search_calls += 1
+        self.looked_up.append(legacy_item_id)
+        if legacy_item_id in self.items:
+            return self.items[legacy_item_id]
         return self.item
 
 
@@ -349,7 +377,7 @@ async def _last_jedi_owned_on_blu_ray(db: AsyncSession) -> Movie:
             status="priced",
             median=Decimal("16.00"),
             sample_size=20,
-            by_condition={"1000": {"median": "16.00", "n": 14}},
+            by_condition={"1000": {"median": "16.00", "n": 14}, "used": {"median": None, "n": 0}},
             checked_utc=NOW - timedelta(days=2),
         )
     )
@@ -374,8 +402,10 @@ async def test_a_pass_checks_targets_finds_a_deal_and_tells_the_right_people(
 
     assert (run.status, run.targets_checked, run.target_alerts) == ("finished", 2, 2)
     assert (run.pages, run.listings_seen, run.candidates, run.refs_fetched) == (1, 14, 1, 0)
-    assert (run.deals_found, run.deals_pushed, run.calls) == (1, 1, 3)
-    assert run.newest_listing_utc == datetime(2026, 9, 26, 9, 11, 56)
+    # The target's item and search, the scan's page, and the deal's re-check before its push.
+    assert (run.deals_found, run.deals_pushed, run.calls) == (1, 1, 4)
+    # Batch X1: the next pass starts ten minutes before this one did, not at a listing.
+    assert run.newest_listing_utc == NOW - timedelta(minutes=10)
 
     await db.refresh(listing_target)
     await db.refresh(search_target)
@@ -403,10 +433,19 @@ async def test_a_pass_checks_targets_finds_a_deal_and_tells_the_right_people(
         "4k_uhd",
         NOW + timedelta(days=3),
     )
+    assert (deal.title_snapshot, deal.listing_condition, deal.usual_listings) == (
+        LAST_JEDI_TITLE,
+        "New",
+        14,
+    )
     for person in (craig, mark):
         notes = await _notes(db, person, "ebay-deal:")
         assert [note.url for note in notes] == [LAST_JEDI_4K]
-        assert notes[0].title == "Star Wars: The Last Jedi on 4K: £4.75"
+        # Batch X1: the listing's own title and condition, and what "usual" is.
+        assert notes[0].title == LAST_JEDI_TITLE
+        assert notes[0].body.startswith("New, £4.75 with postage on eBay: 70% under the usual")
+        assert "(asking prices, 14 listings)" in notes[0].body
+        assert "Filed as Star Wars: The Last Jedi (2017) on 4K." in notes[0].body
 
 
 async def test_the_next_pass_reads_no_listing_twice_and_pushes_nothing_twice(
@@ -426,6 +465,100 @@ async def test_the_next_pass_reads_no_listing_twice_and_pushes_nothing_twice(
     assert (second.targets_checked, second.target_alerts) == (1, 0)
     assert len(await _notes(db, craig, "ebay-target:")) == 1
     assert len(await _notes(db, craig, "ebay-deal:")) == 1
+
+
+async def test_a_stored_mark_in_the_future_never_blinds_the_next_pass(db: AsyncSession) -> None:
+    """X1's guard (CR43-01), on read: production's row says 21 Oct 16:35, stored on 9 Oct
+    by a listing dated 12 days ahead. A pass ignores any mark later than its own start."""
+    await _person(db, UserRole.admin)
+    await _last_jedi_owned_on_blu_ray(db)
+    for mark in (NOW + timedelta(days=12), NOW - timedelta(hours=2)):
+        db.add(
+            EbayWatchRun(
+                id=uuid.uuid4(),
+                trigger="job",
+                status="finished",
+                started_utc=NOW - timedelta(days=1),
+                heartbeat_utc=NOW - timedelta(days=1),
+                finished_utc=NOW - timedelta(days=1),
+                budget=DAILY_SHARE,
+                calls=0,
+                newest_listing_utc=mark,
+            )
+        )
+    await db.commit()
+
+    run = await _pass(db, FakeEbay(pages=[NEWEST]))
+
+    # Read from two hours ago, so the whole captured page: before X1, nothing.
+    assert (run.listings_seen, run.deals_found) == (14, 1)
+    assert run.newest_listing_utc == NOW - timedelta(minutes=10)
+
+
+async def test_a_find_that_has_sold_out_is_not_pushed_and_leaves_the_page(
+    db: AsyncSession,
+) -> None:
+    """X1 (MK47-04's bound, #254): one item call before the push."""
+    craig = await _person(db, UserRole.admin)
+    await _last_jedi_owned_on_blu_ray(db)
+    ebay = FakeEbay(
+        pages=[NEWEST], items={"298708357566": _for_sale("298708357566", available=False)}
+    )
+
+    run = await _pass(db, ebay)
+
+    assert (run.deals_found, run.deals_pushed) == (1, 0)
+    assert ebay.looked_up == ["298708357566"]
+    assert await _notes(db, craig, "ebay-deal:") == []
+    deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
+    assert deal is not None
+    # Off the page now, and with the listing's own words gone (licence §8.1.2).
+    assert deal.expires_at_utc == NOW
+    assert (deal.title_snapshot, deal.image_url, deal.listing_condition) == (
+        "Star Wars: The Last Jedi",
+        None,
+        None,
+    )
+    assert (deal.price, deal.movie_id) == (Decimal("4.75"), deal.movie_id)
+
+
+async def test_a_find_that_ended_is_not_pushed(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    await _last_jedi_owned_on_blu_ray(db)
+
+    run = await _pass(db, FakeEbay(pages=[NEWEST], items={"298708357566": None}))
+
+    assert (run.deals_found, run.deals_pushed) == (1, 0)
+    assert await _notes(db, craig, "ebay-deal:") == []
+
+
+async def test_the_first_pass_after_x1_searches_each_wanted_film_once(db: AsyncSession) -> None:
+    """X1: about ten calls, once, to recover what the blind days of 9–12 Oct hid."""
+    await _person(db, UserRole.admin)
+    film = await _last_jedi_owned_on_blu_ray(db)
+    db.add(WantedItem(id=uuid.uuid4(), movie_id=film.id, preferred_format=None, currency="GBP"))
+    other = await _film(db, "Heat", tmdb_id=949)
+    db.add(WantedItem(id=uuid.uuid4(), movie_id=other.id, preferred_format=None, currency="GBP"))
+    await db.commit()
+    # A quiet newest-listings page; the Last Jedi listing comes back from its own search.
+    ebay = FakeEbay(pages=[{"itemSummaries": []}, NEWEST, {"itemSummaries": []}])
+
+    first = await _pass(db, ebay)
+
+    assert first.wanted_searched == 2
+    queries = sorted(search["q"] for search in ebay.searched[1:])
+    assert queries == [
+        "Heat (blu-ray,bluray,4k,uhd)",
+        "Star Wars: The Last Jedi (blu-ray,bluray,4k,uhd)",
+    ]
+    assert first.deals_found == 1
+    # The same matcher and checks: the Last Jedi's listing, and nothing else on the page.
+    assert first.candidates == 1
+
+    later = FakeEbay(pages=[{"itemSummaries": []}])
+    second = await _pass(db, later, now=NOW + timedelta(hours=2))
+    assert second.wanted_searched is None
+    assert len(later.searched) == 1
 
 
 async def test_deal_pushes_stop_at_five_a_person_a_day(db: AsyncSession) -> None:
@@ -523,19 +656,115 @@ async def test_an_expired_ebay_deal_leaves_the_feed_its_count_and_the_badge(
     assert badge["deals"] == feed["total"]
 
 
+async def test_a_shops_deal_leaves_the_page_two_days_after_it_was_last_seen(
+    db: AsyncSession,
+) -> None:
+    """X1: the six Zavvi deals last seen on 30 Sep were still on the page on 12 Oct."""
+    mark_id = (await _person(db, UserRole.viewer)).id
+    now = datetime.now(UTC).replace(tzinfo=None)
+    for name, seen in (
+        ("stale", now - timedelta(days=2, minutes=1)),
+        ("fresh", now - timedelta(days=1)),
+    ):
+        db.add(
+            Deal(
+                id=uuid.uuid4(),
+                retailer_id=None,
+                retailer_name_snapshot="Zavvi",
+                title_snapshot=f"A {name} Zavvi deal",
+                url=f"https://www.zavvi.com/p/x1-{name}",
+                price=Decimal("10.00"),
+                was_price=Decimal("20.00"),
+                currency="GBP",
+                discount_percent=50,
+                first_seen_at_utc=seen,
+                last_seen_at_utc=seen,
+            )
+        )
+    await db.commit()
+    async with _as(db, mark_id) as client:
+        feed = (await client.get("/api/v1/deals")).json()
+        count = (await client.get("/api/v1/deals/count")).json()
+    titles = [item["title"] for item in feed["items"] if item["retailer"] == "Zavvi"]
+    assert titles == ["A fresh Zavvi deal"]
+    assert count["count"] == feed["total"]
+    # Every card carries when its price was last seen.
+    assert all(item["lastSeenAt"] for item in feed["items"])
+
+
+async def test_an_expired_ebay_find_keeps_its_price_and_film_and_loses_the_listing(
+    db: AsyncSession,
+) -> None:
+    """X1 (eBay API licence §8.1.2, §3.1(b)): run at the start and end of every pass."""
+    film = await _film(db, "Heat", tmdb_id=949)
+    expired = Deal(
+        id=uuid.uuid4(),
+        retailer_id=None,
+        retailer_name_snapshot="eBay",
+        movie_id=film.id,
+        title_snapshot="HEAT 4K UHD Pacino De Niro mint",
+        url="https://www.ebay.co.uk/itm/990000000077",
+        image_url="https://i.ebayimg.com/heat.jpg",
+        listing_condition="Like new",
+        format_code="4k_uhd",
+        price=Decimal("6.00"),
+        was_price=Decimal("15.00"),
+        currency="GBP",
+        discount_percent=60,
+        first_seen_at_utc=NOW - timedelta(days=4),
+        last_seen_at_utc=NOW - timedelta(days=4),
+        expires_at_utc=NOW - timedelta(days=1),
+    )
+    live = Deal(
+        id=uuid.uuid4(),
+        retailer_id=None,
+        retailer_name_snapshot="eBay",
+        movie_id=film.id,
+        title_snapshot="Heat 4K UHD new",
+        url="https://www.ebay.co.uk/itm/990000000078",
+        image_url="https://i.ebayimg.com/heat2.jpg",
+        listing_condition="New",
+        price=Decimal("7.00"),
+        currency="GBP",
+        expires_at_utc=NOW + timedelta(days=1),
+    )
+    db.add_all([expired, live])
+    await db.commit()
+
+    await clear_ended_finds(db, now=NOW)
+
+    await db.refresh(expired)
+    await db.refresh(live)
+    assert (expired.title_snapshot, expired.image_url, expired.listing_condition) == (
+        "Heat",
+        None,
+        None,
+    )
+    assert (expired.price, expired.was_price, expired.movie_id, expired.first_seen_at_utc) == (
+        Decimal("6.00"),
+        Decimal("15.00"),
+        film.id,
+        NOW - timedelta(days=4),
+    )
+    assert (live.title_snapshot, live.image_url) == (
+        "Heat 4K UHD new",
+        "https://i.ebayimg.com/heat2.jpg",
+    )
+
+
 # ---------------------------------------------------------------------------
-# Batch V8 — "usually" is eBay's figure averaged with the shops'
+# Batch V8, amended by X1 — a shop's price can lower a New listing's usual, never raise it
 # ---------------------------------------------------------------------------
 
 
-async def _wanted_with_shop_prices(db: AsyncSession, film: Movie) -> None:
+async def _wanted_with_shop_prices(db: AsyncSession, film: Movie, *, zavvi: str) -> None:
     """The film wanted on 4K, and what the nightly check found at the shops this week."""
     want = WantedItem(id=uuid.uuid4(), movie_id=film.id, preferred_format="4k_uhd", currency="GBP")
     db.add(want)
     await db.flush()
     checks = [
         # Zavvi's latest standard 4K: the one shop price that counts.
-        ("Zavvi", "20.00", "Star Wars: The Last Jedi 4K Ultra HD", timedelta(days=1)),
+        ("Zavvi", zavvi, "Star Wars: The Last Jedi 4K Ultra HD", timedelta(days=1)),
         # Zavvi's earlier price: only each shop's latest counts.
         ("Zavvi", "25.00", "Star Wars: The Last Jedi 4K Ultra HD", timedelta(days=3)),
         # A limited edition is not what eBay's figure measures.
@@ -562,27 +791,29 @@ async def _wanted_with_shop_prices(db: AsyncSession, film: Movie) -> None:
     await db.commit()
 
 
-async def test_the_usual_price_averages_in_the_shops_like_for_like(db: AsyncSession) -> None:
+async def test_a_cheaper_shop_lowers_a_new_listings_usual_like_for_like(
+    db: AsyncSession,
+) -> None:
     craig = await _person(db, UserRole.admin)
     film = await _last_jedi_owned_on_blu_ray(db)
-    await _wanted_with_shop_prices(db, film)
+    await _wanted_with_shop_prices(db, film, zavvi="14.00")
 
     run = await _pass(db, FakeEbay(pages=[NEWEST]))
 
     assert run.deals_found == 1
     deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
     assert deal is not None
-    # (eBay £16.00 + Zavvi £20.00) / 2. The limited edition, the Blu-ray, Zavvi's earlier
-    # price and HMV's of eight days ago are left out.
-    assert deal.was_price == Decimal("18.00")
+    # Zavvi's £14.00 is under eBay's £16.00, so it is the ceiling. The limited edition, the
+    # Blu-ray, Zavvi's earlier price and HMV's of eight days ago are left out.
+    assert deal.was_price == Decimal("14.00")
     assert deal.usual_sources == [
         {"source": "eBay", "price": "16.00"},
-        {"source": "Zavvi", "price": "20.00"},
+        {"source": "Zavvi", "price": "14.00"},
     ]
-    # (£18.00 - £4.75) / £18.00 = 73.6%.
-    assert deal.discount_percent == 74
+    # (£14.00 - £4.75) / £14.00 = 66.1%.
+    assert deal.discount_percent == 66
     (note,) = await _notes(db, craig, "ebay-deal:")
-    assert "74% under its usual £18.00" in note.body
+    assert "66% under the usual £14.00" in note.body
 
     # The pass ran on the test's clock, so its three days ended long ago; the feed is read now.
     deal.expires_at_utc = datetime(2099, 1, 1)
@@ -590,15 +821,28 @@ async def test_the_usual_price_averages_in_the_shops_like_for_like(db: AsyncSess
     async with _as(db, craig.id) as client:
         feed = (await client.get("/api/v1/deals")).json()
     (item,) = [item for item in feed["items"] if item["retailer"] == "eBay"]
-    assert item["wasPrice"] == "18.00"
+    assert (item["wasPrice"], item["condition"], item["usualListings"]) == ("14.00", "New", 14)
     assert item["usualSources"] == [
         {"source": "eBay", "price": "16.00"},
-        {"source": "Zavvi", "price": "20.00"},
+        {"source": "Zavvi", "price": "14.00"},
     ]
     assert item["soldListingsUrl"] == (
         "https://www.ebay.co.uk/sch/i.html"
         "?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1"
     )
+
+
+async def test_a_dearer_shop_never_raises_the_usual(db: AsyncSession) -> None:
+    """MK47-06: averaged, Zavvi's £20.00 made eBay's £16.00 an £18.00 usual."""
+    await _person(db, UserRole.admin)
+    film = await _last_jedi_owned_on_blu_ray(db)
+    await _wanted_with_shop_prices(db, film, zavvi="20.00")
+
+    await _pass(db, FakeEbay(pages=[NEWEST]))
+
+    deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
+    assert deal is not None
+    assert (deal.was_price, deal.discount_percent) == (Decimal("16.00"), 70)
 
 
 async def test_an_earlier_find_reads_as_ebay_alone_and_a_shops_deal_has_no_parts(

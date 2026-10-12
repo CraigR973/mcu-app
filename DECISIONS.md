@@ -5299,3 +5299,51 @@ contemporaneous.
        with this repo's token). If Actions stops, the backup and its drill stop with CI, and
        nothing in the app would show it. The one look at GitHub's plan (the roadmap's owner
        step 5) is still Craig's.
+
+### 2026-10-12 — Group X, batch X1
+
+258. **X1's choices: the mark is the pass's own clock, a used copy is judged only against used
+     copies, a shop price is a ceiling, and a US import that states no region passes. Amends
+     #239.**
+
+     - **The mark is the pass's start less 10 minutes**, set only when the read finished (back to
+       the last mark, or at the page cap); a read cut short by the budget leaves none. Reading
+       ignores any mark later than the reading pass's start, so production's 21 Oct row stops
+       counting on the deploy with no data write. A listing dated in the future is read and
+       judged like any other.
+     - **The year rule reads a year only straight after the title, past format words**, and allows
+       ±1, since a UK disc's year is often its release, not the premiere. "Steelbook 2018" is not
+       read. It applies where a year is known: the scan and the scan's usual price pass TMDB's
+       year; the film page's estimator and the valuation pass none, so their answers are unchanged
+       (the captured fixtures give the same numbers).
+     - **A US import that states no region passes** (the evidence's open call). Many are
+       region-free, the push and card now name the listing's own title, and a stated "Region A"
+       or "Region 1" is refused. A 4K listing is never refused for its region: the 4K disc plays
+       here whatever its bundled Blu-ray is.
+     - **The new product rules live in the shared matcher** (incomplete, television, not-a-4K,
+       region), so the usual price and the valuation lose disc-only and Region A listings too;
+       none occurs in the captured fixtures, so no expected value moved. "Empty" and the
+       television words count only outside the film's own title ("The Empty Man").
+     - **Used is Like new, Used, Very good, Good and Acceptable.** New, Open box and "not stated"
+       keep T8a's rule (own group with three or more, else the headline). New's median bounds a
+       used group only when New has three or more listings. A usual price stored before X1 has no
+       used pool and is searched again when next needed, within the pass's budget.
+     - **A shop's price is a ceiling on a New listing's usual** (the cheapest shop, when under
+       eBay's figure) and enters no other listing's. #239's average is gone; its like-for-like
+       rule stays. The Deals card still lists every part.
+     - **The re-check is one item call per find, just before its first push**, within the pass's
+       budget: ended, sold out or past its end time, it is not pushed and expires now; not
+       checkable (no budget, eBay failed), it is not pushed and stays on the page.
+     - **An expired eBay find keeps its price, dates and film; its title becomes the film's**
+       (the column is required) and its image and condition go, at the start and end of every
+       pass. A shop's deal leaves the page two days after the scrape last saw it, by the feed's
+       one query, with no write.
+     - **The Wanted sweep runs once**: the first pass whose read finished searches each Wanted
+       film by name (10 on 12 Oct), records how many on the run, and no pass after does it again.
+       A sweep cut short records nothing and is tried by the next pass.
+     - **TMDB's 429 uses the scraper's wait** (now shared as `bounded_wait`): `Retry-After` up to
+       90 seconds, a date read as one, never less than the usual backoff. A refusal on the last
+       try raises `TMDBRefused`, which the app answers 503 "TMDB didn't answer. Try again in a
+       moment." with `Retry-After: 60`.
+     - **MK47-04 stands as accepted (#254)**; the re-check, the "Seen" line and the scrub above
+       are what bound it.

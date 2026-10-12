@@ -49,12 +49,18 @@ class DealResponse(BaseModel):
     #: How long it has been on offer, and whether it was still there at the last run.
     firstSeenAt: UtcDatetime
     lastSeenAt: UtcDatetime
-    #: Batch V8, eBay finds only. ``wasPrice`` is the find's usual price, the average of
-    #: these: eBay's figure (asking prices, before postage) first, then each shop's recent
-    #: price where the nightly check has one. Null for a retailer's own deal.
+    #: Batch V8, eBay finds only. ``wasPrice`` is the find's usual price: eBay's figure
+    #: (asking prices, before postage), lowered to the cheapest shop's recent price when a
+    #: New listing's is less (Batch X1). These are the parts, eBay first. Null for a
+    #: retailer's own deal.
     usualSources: list[UsualSourceResponse] | None = None
     #: eBay's own sold listings for the film and format, to open in the person's browser.
     soldListingsUrl: str | None = None
+    #: Batch X1, eBay finds only: the listing's own condition ("Very good"), and how many
+    #: asking prices stand behind ``wasPrice``. Null for a shop's deal, for an eBay find
+    #: stored before X1, and (the condition) once a find has expired.
+    condition: str | None = None
+    usualListings: int | None = None
 
 
 class DealListResponse(BaseModel):

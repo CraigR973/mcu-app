@@ -11,28 +11,39 @@ Wanted list's price drops do (Batch 20), Wanted-list finds first, and at most
 :data:`MAX_DEAL_PUSHES_PER_DAY` a person a day: about 1,300 owned films can be upgraded, and
 the rest wait on the Deals page. Both are in the ``deals`` category, sent at the end of the
 pass rather than at the next morning's, and quiet hours still hold.
+
+**A find is re-checked before it is pushed** (Batch X1, MK47-04's bound, #254): one item
+call, and a listing that has ended or sold out is not pushed and leaves the Deals page. The
+push names the listing's own title and condition, so a wrong product the matcher could not
+tell apart (*Maggie* for *The 'Maggie'*) reads as what it is.
+
+**An expired find loses the listing's title and image** (eBay API licence §8.1.2, §3.1(b)),
+keeping its price, dates and film: :func:`clear_ended_finds`, every pass.
 """
 
 from __future__ import annotations
 
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from typing import Literal
 
 import structlog
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
 from src.ebay.client import DEFAULT_MAX_RETRIES, EbayError, EbayNotConfigured
+from src.models.deal import Deal
 from src.models.ebay_watch import EbayWatchRun
+from src.models.movie import Movie
 from src.models.notification import Notification, NotificationCategory
 from src.models.profile import Profile
 from src.services.ebay_watch.client import WatchClient
-from src.services.ebay_watch.scan import FIRST_LOOK_BACK, Find, scan
+from src.services.ebay_watch.listings import item_state
+from src.services.ebay_watch.scan import EBAY, FIRST_LOOK_BACK, Find, scan
 from src.services.ebay_watch.targets import FORMAT_LABELS, Alert, check_targets, pounds, short
 from src.services.notifications import deliver_pending, queue_notification
 from src.services.push_transport import push_sender
@@ -93,13 +104,50 @@ async def latest_run(db: AsyncSession) -> EbayWatchRun | None:
     return result.scalar_one_or_none()
 
 
-async def scanned_up_to(db: AsyncSession) -> datetime | None:
-    """Where the last pass that read listings got to."""
+async def scanned_up_to(db: AsyncSession, *, before: datetime) -> datetime | None:
+    """Where the last pass that read listings got to, ignoring any mark after ``before``.
+
+    ``before`` is the reading pass's own start. A mark later than that cannot be a place a
+    pass got to; it is one a listing dated in the future set before Batch X1 (21 Oct 16:35,
+    stored on 9 Oct). Ignoring it is what lets the next pass read again, with no data write.
+    """
     return await db.scalar(
         select(func.max(EbayWatchRun.newest_listing_utc)).where(
-            EbayWatchRun.newest_listing_utc.is_not(None)
+            EbayWatchRun.newest_listing_utc.is_not(None),
+            EbayWatchRun.newest_listing_utc <= before,
         )
     )
+
+
+def _film_title_or_default() -> object:
+    return func.coalesce(
+        select(Movie.title).where(Movie.id == Deal.movie_id).scalar_subquery(), "eBay listing"
+    )
+
+
+async def clear_ended_finds(db: AsyncSession, *, now: datetime) -> None:
+    """An expired eBay find keeps its price, dates and film, and loses the listing's words.
+
+    eBay's API licence lets an app keep a listing's content only while it is current
+    (§8.1.2, §3.1(b)). The title becomes the film's, the image and condition go.
+    """
+    film_title = _film_title_or_default()
+    await db.execute(
+        update(Deal)
+        .where(
+            Deal.retailer_id.is_(None),
+            Deal.retailer_name_snapshot == EBAY,
+            Deal.expires_at_utc <= now,
+            or_(
+                Deal.image_url.is_not(None),
+                Deal.listing_condition.is_not(None),
+                Deal.title_snapshot != film_title,
+            ),
+        )
+        .values(title_snapshot=film_title, image_url=None, listing_condition=None)
+        .execution_options(synchronize_session=False)
+    )
+    await db.commit()
 
 
 async def start_run(
@@ -176,28 +224,88 @@ async def _deal_pushes_today(db: AsyncSession, user_id: uuid.UUID, *, now: datet
 
 
 def deal_alert(find: Find, user_id: uuid.UUID) -> Alert:
+    """The push: the listing's own title and condition first, then the film it was filed as.
+
+    Since Batch X1 the title is the listing's, not the film's: of the 60 deal pushes before
+    9 Oct, 14 were another product under a film's name, and three of those no title rule
+    can tell apart. The usual price says what it is: asking prices, and how many.
+    """
     label = FORMAT_LABELS.get(find.format_code, find.format_code)
     why = (
         "It's on the Wanted list."
         if find.wanted
         else "It would be an upgrade on the copy on the shelf."
     )
+    year = f" ({find.film.year})" if find.film.year else ""
     return Alert(
         user_id=user_id,
-        title=f"{short(find.film.title)} on {label}: {pounds(find.listing.total)}",
+        title=short(find.listing.listing.title, 80),
         body=(
-            f"Listed on eBay just now at {pounds(find.listing.total)} with postage, "
-            f"{find.discount_percent}% under its usual {pounds(find.figure.amount)}. {why}"
+            f"{find.condition}, {pounds(find.listing.total)} with postage on eBay: "
+            f"{find.discount_percent}% under the usual {pounds(find.figure.amount)} "
+            f"(asking prices, {find.usual.sample_size} listings). "
+            f"Filed as {short(find.film.title)}{year} on {label}. {why}"
         ),
         url=find.listing.url,
         dedupe_key=f"{DEAL_KEY_PREFIX}{find.listing.legacy_id}:{user_id}",
     )
 
 
-async def queue_deal_pushes(db: AsyncSession, finds: list[Find], *, now: datetime) -> int:
+#: Answers whether a find can still be bought: ``True``, ``False`` when it has ended or sold
+#: out, ``None`` when that could not be asked (no budget left, or eBay failed).
+Recheck = Callable[[Find], Awaitable[bool | None]]
+
+
+async def _already_told(db: AsyncSession, alert: Alert) -> bool:
+    found = await db.scalar(
+        select(Notification.id).where(Notification.dedupe_key == alert.dedupe_key).limit(1)
+    )
+    return found is not None
+
+
+async def end_find(db: AsyncSession, find: Find, *, now: datetime) -> None:
+    """Take a find that has ended or sold out off the Deals page now."""
+    await db.execute(
+        update(Deal)
+        .where(
+            Deal.retailer_id.is_(None),
+            Deal.retailer_name_snapshot == EBAY,
+            Deal.url == find.listing.url,
+        )
+        .values(expires_at_utc=now)
+        .execution_options(synchronize_session=False)
+    )
+
+
+def item_rechecker(
+    client: WatchClient, run: EbayWatchRun, *, clock: Callable[[], datetime]
+) -> Recheck:
+    """One item call per find, within the pass's budget."""
+
+    async def still_for_sale(find: Find) -> bool | None:
+        if client.search_calls + client.attempts_per_search > run.budget:
+            return None
+        try:
+            payload = await client.get_item_by_legacy_id(find.listing.legacy_id)
+        except EbayError as exc:
+            logger.warning("ebay_deal_recheck_failed", item=find.listing.legacy_id, error=str(exc))
+            return None
+        state = item_state(payload) if payload is not None else None
+        if state is None or not state.available:
+            return False
+        return state.ends_at is None or state.ends_at > clock()
+
+    return still_for_sale
+
+
+async def queue_deal_pushes(
+    db: AsyncSession, finds: list[Find], *, now: datetime, recheck: Recheck
+) -> int:
     """Tell both people about the best finds, within each one's daily limit.
 
-    Returns how many finds were pushed to anyone.
+    Each find is re-checked once, just before its first push: one that has ended or sold out
+    is not pushed and leaves the Deals page; one that could not be checked is not pushed and
+    stays there. Returns how many finds were pushed to anyone.
     """
     if not finds:
         return 0
@@ -210,14 +318,25 @@ async def queue_deal_pushes(db: AsyncSession, finds: list[Find], *, now: datetim
     )
     ordered = sorted(finds, key=lambda find: (not find.wanted, -find.discount_percent))
     pushed: set[str] = set()
+    checked: dict[str, bool | None] = {}
     for person in people:
         room = MAX_DEAL_PUSHES_PER_DAY - await _deal_pushes_today(db, person, now=now)
         for find in ordered:
             if room <= 0:
                 break
-            if await _queue_alert(db, deal_alert(find, person), now=now):
+            alert = deal_alert(find, person)
+            if await _already_told(db, alert):
+                continue
+            key = find.listing.legacy_id
+            if key not in checked:
+                checked[key] = await recheck(find)
+                if checked[key] is False:
+                    await end_find(db, find, now=now)
+            if not checked[key]:
+                continue
+            if await _queue_alert(db, alert, now=now):
                 room -= 1
-                pushed.add(find.listing.legacy_id)
+                pushed.add(key)
     return len(pushed)
 
 
@@ -277,9 +396,15 @@ async def work_run(
         elif stopped == "budget":
             outcome = "budget_spent"
         else:
-            since = await scanned_up_to(db) or (run.started_utc - FIRST_LOOK_BACK)
+            await clear_ended_finds(db, now=clock())
+            since = await scanned_up_to(db, before=run.started_utc) or (
+                run.started_utc - FIRST_LOOK_BACK
+            )
             ended = await scan(db, client, run, since=since, clock=clock)
-            run.deals_pushed = await queue_deal_pushes(db, ended.finds, now=clock())
+            run.deals_pushed = await queue_deal_pushes(
+                db, ended.finds, now=clock(), recheck=item_rechecker(client, run, clock=clock)
+            )
+            await clear_ended_finds(db, now=clock())
             if run.deals_pushed:
                 told |= set(
                     (

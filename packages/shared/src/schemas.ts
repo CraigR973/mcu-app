@@ -2158,6 +2158,11 @@ export const dealSchema = z.object({
     .default(null),
   /** eBay's own sold listings for the find's film and format. */
   soldListingsUrl: z.string().min(1).nullable().default(null),
+  /** Batch X1, eBay finds only: the listing's own condition ("Very good"), and how many
+   *  asking prices stand behind `wasPrice`. Null for a shop's deal and older finds;
+   *  defaulted so the page parses an API a deploy behind. */
+  condition: z.string().min(1).nullable().default(null),
+  usualListings: z.number().int().nonnegative().nullable().default(null),
 })
 
 export const dealListSchema = z.object({

@@ -158,6 +158,47 @@ _ACCESSORY_PHRASES: tuple[str, ...] = (
     "replacement case",
 )
 
+#: Phrases that say "this is not the whole thing" — Batch X1 (MK47-01). Seven of the 25
+#: wrong products the deal scan found between 26 Sep and 9 Oct were a disc with no case, all
+#: of them priced as the whole disc. Looked for **outside** the film's own title, so "The
+#: Empty Man" is still a film and only a listing that says it is empty is refused.
+_INCOMPLETE_PHRASES: tuple[str, ...] = (
+    "disc only",
+    "discs only",
+    "disk only",
+    "no case",
+    "without case",
+    "case only",
+    "no disc",
+    "no discs",
+    "empty",
+)
+
+#: Phrases that say "this is television, not the film": "The Complete Series", "Season 2".
+#: "Series" alone stays legitimate ("Universal 100th Anniversary Collector's Series"), so it
+#: counts only after "complete" or "tv", or before a number. Looked for outside the title.
+_TV_PHRASES: tuple[str, ...] = ("complete series", "tv series", "season", "seasons")
+_TV_SERIES_NUMBER = re.compile(r"\bseries \d")
+
+#: Words that say a Blu-ray is not a 4K, though a 4K is named — Batch X1. "A Clockwork Orange
+#: … Not a 4K Blu-ray release" and "Army of Darkness … REMASTERED IN 4K" were both filed as
+#: 4K, because the highest format named wins (`extract.primary_format`). Removed from the
+#: title before the format is read, so what remains decides.
+_NOT_A_4K = re.compile(
+    r"\bnot\s+(?:a\s+)?4\s*k\b"
+    r"|\b(?:remastered|restored|scanned|restoration|remaster)\s+(?:in|from)\s+(?:a\s+)?4\s*k\b"
+    r"|\b4\s*k\s+(?:restoration|remaster|remastered|restored|scan)\b",
+    re.IGNORECASE,
+)
+
+#: A region code after "region", "reg" or "zone": "Region A", "REGION A/B/C", "Region 1".
+_REGION_WORDS = frozenset({"region", "reg", "zone"})
+_REGION_CODES = frozenset({"a", "b", "c", "0", "1", "2", "3", "4", "5", "6", "free", "all"})
+#: The codes a UK player plays: Region B (Blu-ray), Region 2 (DVD), or no lock at all.
+_REGION_PLAYABLE = frozenset({"b", "2", "0", "free", "all"})
+#: The codes it does not, when nothing playable is named beside them.
+_REGION_LOCKED_OUT = frozenset({"a", "1"})
+
 #: Words that may legitimately sit between a film's title and the first format word:
 #: edition and packaging language, boutique labels, shop names, region and condition
 #: seller-speak. Anything *else* there is a **subtitle**, and a subtitle means a different
@@ -531,6 +572,43 @@ def _phrase_present(joined: str, phrases: tuple[str, ...]) -> str | None:
     return None
 
 
+def _year_after(listing_tokens: list[str], start: int) -> int | None:
+    """A four-digit year after the title, with only format words between — Batch X1.
+
+    Brackets are already gone (tokens are alphanumeric runs), so "Halloween (2018)",
+    "Road House 1989" and "IF Blu-ray (2024)" all reach a year here. Anything else first,
+    an edition word or a label, and the year is not read: "Steelbook 2018" may be when the
+    steelbook came out.
+    """
+    for token in listing_tokens[start:]:
+        if token in FORMAT_TOKENS:
+            continue
+        if YEAR_PATTERN.match(token):
+            return int(token)
+        return None
+    return None
+
+
+def _without_title(listing_tokens: list[str], start: int, length: int) -> str:
+    """The listing's words with the film's title taken out, joined for phrase searches."""
+    return " ".join(listing_tokens[:start] + listing_tokens[start + length :])
+
+
+def _region_locked_out(listing_tokens: list[str]) -> str | None:
+    """ "Region A" or "Region 1" when the listing names only regions a UK player cannot play."""
+    codes: set[str] = set()
+    for index, token in enumerate(listing_tokens):
+        if token not in _REGION_WORDS:
+            continue
+        for code in listing_tokens[index + 1 :]:
+            if code not in _REGION_CODES:
+                break
+            codes.add(code)
+    if codes & _REGION_PLAYABLE or not codes & _REGION_LOCKED_OUT:
+        return None
+    return "Region A" if "a" in codes else "Region 1"
+
+
 def classify_edition(title: str) -> str:
     """``"collector"`` when the title carries boutique-edition language, else ``"standard"``."""
     found = _phrase_present(" ".join(tokens(title)), _COLLECTOR_PHRASES)
@@ -586,6 +664,7 @@ def match(
     film_title: str,
     format_code: str | None = None,
     country: str | None = "GB",
+    film_year: int | None = None,
 ) -> MatchVerdict:
     """Is this listing the disc we asked for?
 
@@ -602,6 +681,10 @@ def match(
     the criterion asks for a *UK* median, eBay GB converts an overseas seller's price into
     GBP without saying what the import duty will be, and 52 of the 200 Blade Runner
     listings are shipping from Japan, Canada, the US, Germany or Australia.
+
+    ``film_year``, when given, refuses a listing whose title puts another year straight
+    after the film's (Batch X1): "Halloween (2018)" is not the 1978 film. ±1, because a
+    disc's year is often the UK release rather than the premiere.
     """
     if not listing.leaf_category_ids:
         return MatchVerdict(ok=False, reason="no category on the listing")
@@ -629,6 +712,16 @@ def match(
     if not starts:
         return MatchVerdict(ok=False, reason=f"title does not contain {film_title!r}")
 
+    rest = _without_title(listing_tokens, starts[0], len(wanted))
+    incomplete = _phrase_present(rest, _INCOMPLETE_PHRASES)
+    if incomplete:
+        return MatchVerdict(ok=False, reason=f"incomplete, not the whole disc ({incomplete!r})")
+    television = _phrase_present(rest, _TV_PHRASES) or (
+        "series" if _TV_SERIES_NUMBER.search(rest) else None
+    )
+    if television:
+        return MatchVerdict(ok=False, reason=f"television, not the film ({television!r})")
+
     # A title that names the film more than once is naming several of them: "Jaws, Jaws 2,
     # Jaws 3, Jaws the Revenge". So is one that repeats the series name before the number:
     # "Blade Runner: Final Cut (1982) Blade Runner 2049 (2017)".
@@ -650,12 +743,22 @@ def match(
                 ok=False,
                 reason=f"{film_title!r} followed by the subtitle {subtitle!r} is a different film",
             )
+        year = _year_after(listing_tokens, after)
+        if film_year is not None and year is not None and abs(year - film_year) > 1:
+            return MatchVerdict(
+                ok=False,
+                reason=f"{film_title!r} ({year}) is not the {film_year} film",
+            )
 
-    found_format = primary_format(listing.title)
+    found_format = primary_format(_NOT_A_4K.sub(" ", listing.title))
     if found_format is None:
         return MatchVerdict(ok=False, reason="the title names no disc format")
     if format_code and found_format != format_code:
         return MatchVerdict(ok=False, reason=f"is {found_format}, not {format_code}")
+    # A 4K disc plays anywhere; a Blu-ray or DVD locked to Region A or 1 does not play here.
+    locked = _region_locked_out(listing_tokens) if found_format != "4k_uhd" else None
+    if locked:
+        return MatchVerdict(ok=False, reason=f"{locked}, which a UK player cannot play")
 
     # It is the right product. Is its price comparable with the others?
     if listing.item_group_type == "SELLER_DEFINED_VARIATIONS":

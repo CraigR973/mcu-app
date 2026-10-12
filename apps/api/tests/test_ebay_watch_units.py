@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import uuid
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -27,14 +27,15 @@ from typing import Any
 import pytest
 
 from src.ebay.estimate import search_query, sold_listings_url
-from src.ebay.matching import Listing
+from src.ebay.matching import Listing, MatchVerdict
+from src.ebay.pricing import summarise
 from src.models.ebay_watch import EbayPriceRef, EbayTarget, EbayWatchRun
 from src.models.movie import Movie
 from src.scripts.ebay_watch import report
 from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm
 from src.services.ebay_watch.links import legacy_item_id, listing_url
 from src.services.ebay_watch.listings import item_state, scan_listing
-from src.services.ebay_watch.refs import Yardstick, yardstick
+from src.services.ebay_watch.refs import USED_POOL, Yardstick, _values, yardstick
 from src.services.ebay_watch.runs import StartOutcome, deal_alert
 from src.services.ebay_watch.scan import Find, is_deal, read_new_listings
 from src.services.ebay_watch.targets import check_listing, check_search
@@ -44,6 +45,24 @@ FIXTURES = Path(__file__).parent / "fixtures"
 ITEM = json.loads((FIXTURES / "ebay_item_auction_with_buy_now.json").read_text())
 NEWEST = json.loads((FIXTURES / "ebay_newest_bluray_4k_gb.json").read_text())
 NOW = datetime(2026, 9, 26, 10, 0)
+
+
+def _used_listing(price: str, condition_id: str) -> Listing:
+    return Listing(
+        item_id=f"v1|{price}|0",
+        title="Heat 4K Ultra HD",
+        price=Decimal(price),
+        currency="GBP",
+        condition_id=condition_id,
+        web_url="https://www.ebay.co.uk/itm/1",
+        leaf_category_ids=("617",),
+        country="GB",
+        item_group_type=None,
+    )
+
+
+def _ok_4k() -> MatchVerdict:
+    return MatchVerdict(ok=True, format_code="4k_uhd", edition="standard")
 
 
 def _summary(title_start: str) -> dict[str, Any]:
@@ -172,11 +191,14 @@ async def test_a_new_listing_is_read_with_its_postage_and_when_it_was_listed() -
 # ---------------------------------------------------------------------------
 
 
-def _film(title: str, *, wanted: bool = False, best_owned: int | None = None) -> CatalogueFilm:
+def _film(
+    title: str, *, wanted: bool = False, best_owned: int | None = None, year: int | None = None
+) -> CatalogueFilm:
     return CatalogueFilm(
         movie_id=uuid.uuid4(),
         tmdb_id=1,
         title=title,
+        year=year,
         wanted=wanted,
         preferred_format=None,
         best_owned=best_owned,
@@ -269,7 +291,11 @@ def _ref(**fields: Any) -> EbayPriceRef:
         "status": "priced",
         "median": Decimal("20.00"),
         "sample_size": 12,
-        "by_condition": {"1000": {"median": "24.00", "n": 9}, "3000": {"median": "15.00", "n": 2}},
+        "by_condition": {
+            "1000": {"median": "24.00", "n": 9},
+            "3000": {"median": "15.00", "n": 2},
+            "used": {"median": "14.00", "n": 5},
+        },
         "checked_utc": NOW,
     }
     values.update(fields)
@@ -278,8 +304,46 @@ def _ref(**fields: Any) -> EbayPriceRef:
 
 async def test_a_listing_is_compared_within_its_condition_when_enough_stand_behind_it() -> None:
     assert yardstick(_ref(), "1000") == Yardstick(Decimal("24.00"), 9)
-    # Two used listings are one seller's asking price: the headline stands in.
-    assert yardstick(_ref(), "3000") == Yardstick(Decimal("20.00"), 12)
+    # Two used listings are one seller's asking price: every used listing pooled stands in.
+    assert yardstick(_ref(), "3000") == Yardstick(Decimal("14.00"), 5)
+
+
+async def test_a_used_listing_never_meets_the_new_median() -> None:
+    """X1's guard (MK47-02): 227 of 265 finds were judged against New's median."""
+    thin = {"1000": {"median": "24.00", "n": 9}, "4000": {"median": "15.00", "n": 2}}
+    # Too few used listings, alone or pooled: no yardstick at all, never the New headline.
+    assert (
+        yardstick(_ref(by_condition={**thin, "used": {"median": "15.00", "n": 2}}), "4000") is None
+    )
+    assert yardstick(_ref(by_condition={**thin, "used": {"median": None, "n": 0}}), "4000") is None
+    # A used group dearer than New is passed over for the pool, and a dearer pool for nothing.
+    odd = {
+        "1000": {"median": "24.00", "n": 9},
+        "2750": {"median": "30.00", "n": 4},
+        "used": {"median": "18.00", "n": 7},
+    }
+    assert yardstick(_ref(by_condition=odd), "2750") == Yardstick(Decimal("18.00"), 7)
+    dearer = {**odd, "used": {"median": "26.00", "n": 7}}
+    assert yardstick(_ref(by_condition=dearer), "2750") is None
+    # With no New group to compare with, a used group of three is enough.
+    alone = {"5000": {"median": "8.00", "n": 3}, "used": {"median": "9.00", "n": 5}}
+    assert yardstick(_ref(by_condition=alone), "5000") == Yardstick(Decimal("8.00"), 3)
+
+
+async def test_a_usual_price_stored_before_x1_is_searched_again() -> None:
+    """Without the used pool, a stored usual cannot judge a used listing, so it is stale."""
+
+    estimate = summarise(
+        [(_used_listing(price, "4000"), _ok_4k()) for price in ("6.00", "8.00", "10.00")]
+        + [(_used_listing("12.00", "5000"), _ok_4k())],
+        film_title="Heat",
+        format_code="4k_uhd",
+        marketplace_id="EBAY_GB",
+    )
+    stored = _values(estimate, "4k_uhd")["by_condition"]
+    assert isinstance(stored, dict)
+    # 6, 8, 10 and 12 pooled: the median of the four prices, not of the two medians.
+    assert stored[USED_POOL] == {"median": "9.00", "n": 4}
 
 
 async def test_no_yardstick_without_three_listings() -> None:
@@ -296,28 +360,27 @@ async def test_a_deal_is_thirty_percent_or_more_under_the_usual_price() -> None:
     assert not is_deal(Decimal("14.01"), usual)
 
 
-async def test_the_usual_price_is_the_average_of_ebay_and_the_shops() -> None:
-    """Batch V8: eBay's figure alone with no shop price, else the average of all of them."""
+async def test_a_shop_price_is_a_ceiling_never_a_lift() -> None:
+    """Batch X1 (MK47-06, #239 amended): eBay's figure, lowered to the cheapest shop's."""
     ebay = Yardstick(Decimal("16.00"), 20)
     assert UsualPrice(ebay).amount == Decimal("16.00")
 
-    two = UsualPrice(ebay, (ShopPrice("Zavvi", Decimal("20.00")),))
-    assert two.amount == Decimal("18.00")
-    assert two.sources() == [
+    dearer = UsualPrice(ebay, (ShopPrice("Zavvi", Decimal("20.00")),))
+    assert dearer.amount == Decimal("16.00")
+    assert dearer.sources() == [
         {"source": "eBay", "price": "16.00"},
         {"source": "Zavvi", "price": "20.00"},
     ]
 
-    three = UsualPrice(
-        ebay, (ShopPrice("Arrow Video", Decimal("17.99")), ShopPrice("Zavvi", Decimal("19.99")))
+    cheaper = UsualPrice(
+        ebay, (ShopPrice("Arrow Video", Decimal("13.99")), ShopPrice("Zavvi", Decimal("19.99")))
     )
-    # 53.98 / 3 = 17.9933…, to the penny.
-    assert three.amount == Decimal("17.99")
+    assert cheaper.amount == Decimal("13.99")
 
 
-async def test_a_deal_is_judged_against_the_averaged_price() -> None:
-    """V8's third criterion: the 70% rule compares with the new figure, not eBay's alone."""
-    figure = UsualPrice(Yardstick(Decimal("16.00"), 20), (ShopPrice("Zavvi", Decimal("10.00")),))
+async def test_a_deal_is_judged_against_the_lowered_price() -> None:
+    """The 70% rule compares with the usual after the ceiling, not eBay's alone."""
+    figure = UsualPrice(Yardstick(Decimal("16.00"), 20), (ShopPrice("Zavvi", Decimal("13.00")),))
     assert figure.amount == Decimal("13.00")
     # Under eBay's £16.00 × 70% = £11.20, but not under £13.00 × 70% = £9.10.
     assert is_deal(Decimal("11.00"), Decimal("16.00"))
@@ -340,8 +403,11 @@ async def test_a_deal_push_says_why_it_matters() -> None:
     alert = deal_alert(
         Find(film, "4k_uhd", found, Yardstick(Decimal("16.00"), 20), False, 70), person
     )
-    assert alert.title == "Star Wars: The Last Jedi on 4K: £4.75"
-    assert "70% under its usual £16.00" in alert.body
+    # Batch X1: the listing's own title and condition, then what "usual" stands on.
+    assert alert.title == "Star Wars the Last Jedi 4K Ultra HD Blu-ray New Sealed"
+    assert alert.body.startswith("New, £4.75 with postage on eBay: 70% under the usual £16.00")
+    assert "(asking prices, 20 listings)" in alert.body
+    assert "Filed as Star Wars: The Last Jedi on 4K." in alert.body
     assert "upgrade" in alert.body
     assert alert.url == found.url
     assert alert.dedupe_key == f"ebay-deal:{found.legacy_id}:{person}"
@@ -463,7 +529,8 @@ async def test_the_reader_keeps_only_listings_since_the_last_pass() -> None:
         found.listed_at and found.listed_at > datetime(2026, 9, 26, 8, 30) for found in listings
     )
     assert len(listings) == 11
-    assert run.newest_listing_utc == datetime(2026, 9, 26, 9, 11, 56)
+    # Batch X1: the next pass starts ten minutes before this one did, not at a listing.
+    assert run.newest_listing_utc == NOW - timedelta(minutes=10)
     first = client.searched[0]
     assert (first["category_ids"], first["sort"], first["filter"]) == (
         "617",
@@ -472,12 +539,26 @@ async def test_the_reader_keeps_only_listings_since_the_last_pass() -> None:
     )
 
 
-async def test_a_quiet_night_never_moves_the_mark_backwards() -> None:
+async def test_a_quiet_night_still_moves_the_mark_to_its_own_start() -> None:
     run = _run()
     since = datetime(2026, 9, 26, 9, 30)
     listings, _ = await read_new_listings(FakeEbay(pages=[NEWEST]), run, since=since)
     assert listings == []
-    assert run.newest_listing_utc == since
+    assert run.newest_listing_utc == NOW - timedelta(minutes=10)
+
+
+async def test_a_listing_dated_in_the_future_is_read_but_never_moves_the_mark() -> None:
+    """X1's guard (CR43-01): on 9 Oct one listing dated 12 days ahead set the mark to
+    21 Oct 16:35, and every pass after read nothing. It is judged like any other."""
+    page = deepcopy(NEWEST)
+    page["itemSummaries"][0]["itemCreationDate"] = "2026-10-08T16:35:01.000Z"
+    run = _run()
+    listings, stopped = await read_new_listings(
+        FakeEbay(pages=[page]), run, since=datetime(2026, 9, 26, 8, 30)
+    )
+    assert stopped is None
+    assert datetime(2026, 10, 8, 16, 35, 1) in {found.listed_at for found in listings}
+    assert run.newest_listing_utc == NOW - timedelta(minutes=10)
 
 
 async def test_the_reader_stops_at_the_budget() -> None:
@@ -485,6 +566,8 @@ async def test_the_reader_stops_at_the_budget() -> None:
     client = FakeEbay(pages=[NEWEST])
     listings, stopped = await read_new_listings(client, run, since=datetime(2026, 9, 26, 8, 0))
     assert (listings, stopped, client.search_calls) == ([], "budget", 0)
+    # A read cut short leaves no mark, so the next pass reads from the last one that finished.
+    assert run.newest_listing_utc is None
 
 
 # ---------------------------------------------------------------------------

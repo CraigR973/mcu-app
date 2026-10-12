@@ -99,6 +99,8 @@ def _to_response(deal: Deal, movie: Movie | None) -> DealResponse:
         lastSeenAt=deal.last_seen_at_utc,
         usualSources=_usual_sources(deal),
         soldListingsUrl=_sold_listings_url(deal, movie),
+        condition=deal.listing_condition,
+        usualListings=deal.usual_listings,
     )
 
 

@@ -34,6 +34,12 @@ ASKING_PRICES = "current asking prices"
 
 _PENNY = Decimal("0.01")
 
+#: eBay's condition code for a new copy.
+NEW_CONDITION_ID = "1000"
+#: The codes of a used copy: Like new, Used, Very good, Good, Acceptable. Pooled when one of
+#: them alone is too few to have a median (Batch X1, MK47-02).
+USED_CONDITION_IDS = frozenset({"2750", "3000", "4000", "5000", "6000"})
+
 
 def _round(amount: Decimal) -> Decimal:
     return amount.quantize(_PENNY, rounding=ROUND_HALF_UP)
@@ -95,6 +101,9 @@ class PriceEstimate:
     #: eBay changing its response, not a noisy keyword search.
     unusable: int = 0
     basis: str = ASKING_PRICES
+    #: Every used listing's median and count together, per ``(format, edition)`` — Batch
+    #: X1. A median of medians would not be a median, so it is taken from the prices here.
+    used_pooled: dict[tuple[str, str], tuple[Decimal, int]] = field(default_factory=dict)
 
     def headline(
         self, *, format_code: str | None = None, condition_id: str | None = None
@@ -167,6 +176,13 @@ def summarise(
 
     segments.sort(key=lambda segment: (-segment.sample_size, segment.format_code, segment.edition))
 
+    used: dict[tuple[str, str], list[Decimal]] = {}
+    for (found_format, edition, condition_id), listings in grouped.items():
+        if condition_id in USED_CONDITION_IDS:
+            used.setdefault((found_format, edition), []).extend(
+                listing.price for listing in listings
+            )
+
     return PriceEstimate(
         film_title=film_title,
         format_code=format_code,
@@ -176,6 +192,7 @@ def summarise(
         segments=segments,
         rejected=dict(rejected.most_common()),
         unusable=unusable,
+        used_pooled={key: (median(prices), len(prices)) for key, prices in used.items()},
     )
 
 

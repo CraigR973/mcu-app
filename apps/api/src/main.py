@@ -3,6 +3,7 @@ from typing import Any
 import sentry_sdk
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.types import Event, Hint
@@ -46,6 +47,7 @@ from src.routers import (
     watch_history,
     watch_log,
 )
+from src.tmdb.client import TMDB_DID_NOT_ANSWER, TMDBRefused
 
 # **The web server never starts as a job** (`DECISIONS.md` #204). A job may run without the
 # session secrets, because it signs nothing; this process signs every session, and would
@@ -109,6 +111,18 @@ def _rate_limit_handler(request: Request, exc: Exception) -> Response:
 
 
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+
+
+def _tmdb_refused_handler(_request: Request, exc: Exception) -> Response:
+    """TMDB refused every try (Batch X1): a 503 in the discovery routes' words, not a 500."""
+    if not isinstance(exc, TMDBRefused):  # pragma: no cover - registered for one type
+        raise exc
+    return JSONResponse(
+        status_code=503, content={"detail": TMDB_DID_NOT_ANSWER}, headers={"Retry-After": "60"}
+    )
+
+
+app.add_exception_handler(TMDBRefused, _tmdb_refused_handler)
 
 app.add_middleware(
     CORSMiddleware,

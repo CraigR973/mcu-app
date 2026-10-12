@@ -158,7 +158,18 @@ def retry_wait(
     nothing a shop asks: "Run now" in the app passes it, because a run from the phone
     cannot hold a request open for half an hour.
     """
-    asked = refusal.retry_after
+    return bounded_wait(refusal.retry_after, usual_pause=usual_pause, limit=limit, now=now)
+
+
+def bounded_wait(
+    asked: str | None,
+    *,
+    usual_pause: float,
+    limit: float = RETRY_AFTER_LIMIT_SECONDS,
+    now: datetime | None = None,
+) -> RetryWait:
+    """:func:`retry_wait`'s rule on a bare ``Retry-After`` value — shared since Batch X1 with
+    the TMDB client, which waited however long TMDB asked, doubled each retry (CR43-06)."""
     if asked is None:
         return RetryWait(usual_pause, None, f"waited {usual_pause:g} s: no Retry-After")
     seconds = _asked_seconds(asked, now or datetime.now(UTC))

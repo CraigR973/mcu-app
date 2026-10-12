@@ -47,9 +47,11 @@ const deal: Deal = {
   lastSeenAt: '2026-09-12T09:00:00Z',
   usualSources: null,
   soldListingsUrl: null,
+  condition: null,
+  usualListings: null,
 }
 
-/** Batch V8: an eBay find, judged against eBay's figure averaged with Zavvi's price. */
+/** An eBay find (V8, X1): eBay's figure lowered to Zavvi's cheaper price, a used copy. */
 const ebayFind: Deal = {
   ...deal,
   id: '3f2504e0-4f89-11d3-9a0c-0305e82c3305',
@@ -58,11 +60,14 @@ const ebayFind: Deal = {
   url: 'https://www.ebay.co.uk/itm/298708357566',
   formatCode: '4k_uhd',
   price: '4.75',
-  wasPrice: '18.00',
-  discountPercent: 74,
+  wasPrice: '14.00',
+  discountPercent: 66,
+  lastSeenAt: '2026-09-30T19:14:57Z',
+  condition: 'Very good',
+  usualListings: 12,
   usualSources: [
     { source: 'eBay', price: '16.00' },
-    { source: 'Zavvi', price: '20.00' },
+    { source: 'Zavvi', price: '14.00' },
   ],
   soldListingsUrl:
     'https://www.ebay.co.uk/sch/i.html?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
@@ -110,11 +115,20 @@ describe('DealsPage', () => {
   it('says what an eBay find\'s "usually" is made of, and links to what it sold for', () => {
     const html = markup(<DealsPage />, [ebayFind])
 
-    expect(html).toContain('with postage · usually £18.00')
-    expect(html).toContain('eBay £16.00 before postage · Zavvi £20.00')
+    expect(html).toContain('with postage · usually £14.00 (asking prices, 12 listings)')
+    expect(html).toContain('eBay £16.00 before postage · Zavvi £14.00')
     expect(html).toContain('Sold on eBay')
     // React escapes the ampersands in an attribute.
     expect(html).toContain(ebayFind.soldListingsUrl?.replaceAll('&', '&amp;'))
+  })
+
+  it('names the listing\'s condition and when every deal\'s price was last seen', () => {
+    // Batch X1: "Seen 30 Sep" on every card, a shop's and an eBay find's alike.
+    const html = markup(<DealsPage />, [ebayFind, deal])
+
+    expect(html).toContain('eBay · Very good · Seen 30 Sep')
+    expect(html).toContain('Zavvi · Seen 12 Sep')
+    expect(html).toContain('Star Wars The Last Jedi 4K UHD + Blu-ray')
   })
 
   it('gives a shop\'s own deal no sold-listings link and no parts', () => {
