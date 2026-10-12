@@ -5,19 +5,18 @@
 **12 Oct 2026: the wave 1 full review is done, and its remediation is Group X** (#253,
 `docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
-planned 12 Oct", in five sittings (#255). **Next: sitting 1, X1 → X2 → X3, as one group; X1,
-the eBay scan, must land before 21 Oct 16:35 UTC.** Craig starts it in a new session
-(`/group-start X · 1`).
+planned 12 Oct", in five sittings (#255). **Sitting 1 is running as one group (`/group-start X
+· 1`): X1, the eBay scan, shipped 12 Oct (`7979e19`); X2 and X3 are next in that run.**
 
 | Batch | State |
 |---|---|
-| X1 → X2 → X3, sitting 1 | next, as one group; X1 before 21 Oct; eBay's licence settled (#254), so X1's close-out does not stop |
+| ~~X1~~ → X2 → X3, sitting 1 | running as one group; X1 shipped 12 Oct (`7979e19`, #258) |
 | X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
-- **Live faults (12 Oct, read-only):** the eBay deal scan has read 0 listings in 39 of 39 runs
-  since 9 Oct (stored mark 21 Oct 16:35); 30 copies are confidently the wrong film; every second
+- **Live faults (12 Oct, read-only):** the eBay deal scan read 0 listings in 45 of 45 runs
+  from 9 Oct until X1's deploy (stored mark 21 Oct 16:35); the first pass after X1's deploy (20:23 UTC) read 2,709 listings and found 21 deals; 30 copies are confidently the wrong film; every second
   message to the assistant fails; no copy of the database exists outside Neon's six-hour
   window. Pushes reach both phones again, re-registered by hand on 11 Oct.
 - **The nightly jobs (UTC):** 02:00 `cron-specs` (specs, then reviews); 03:00 `cron-scrape` (Zavvi
@@ -43,9 +42,9 @@ The Log keeps a dated line for each.
 ## Next
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
-remediation, #253, in five sittings since #255), then 38. **Sitting 1 is next, as one group
-(`/group-start X · 1`)**, and X1 must land before 21 Oct 16:35 UTC; read its criteria there
-first ("X1 — eBay: unblind the scan, name the right disc, say how fresh").
+remediation, #253, in five sittings since #255), then 38. **Sitting 1 is running as one group
+(`/group-start X · 1`)**: X1 shipped 12 Oct; X2 ("Failures reach Craig") and X3 ("Push that
+heals itself") follow in the same run, and the resume point is the first of them not struck.
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -433,6 +432,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-12 (X1 shipped, `7979e19`, #258)** — The eBay scan's mark is its own clock, so the
+  21 Oct row stopped blinding it on the deploy; the matcher refuses another year, incomplete
+  items, a Blu-ray named 4K, Region A/1 and television; a used listing meets only used listings
+  and a shop price only lowers a New listing's usual; a find is re-checked before its push, and
+  every deal card names its condition and when it was last seen. Migration 049. The first pass after the deploy read 2,709 listings and found 21 deals, 5 pushed. Production reported the merge SHA at 19:03 UTC with `db: ok`.
 
 - **2026-10-12 (X6 and X4 decided, #256, #257)** — Craig's answers: owned discs are valued as
   used copies (X6, amending #209), and the weekly backup is kept as encrypted GitHub Actions
