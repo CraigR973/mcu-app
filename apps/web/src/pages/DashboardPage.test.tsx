@@ -25,6 +25,8 @@ const api = vi.hoisted(() => ({
   fetchCompletionSet: vi.fn(),
   fetchSmartCollections: vi.fn(),
   fetchActivity: vi.fn(),
+  // Batch X2: Home's "Needs attention" row, for the admin. Nothing wrong here.
+  fetchAttention: vi.fn().mockResolvedValue({ items: [], checkedAt: null }),
 }))
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),

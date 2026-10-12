@@ -202,7 +202,7 @@ async def test_a_person_with_no_live_device_or_only_undelivered_notifications(
     await db.execute(
         PushSubscription.__table__.update()
         .where(PushSubscription.user_id == revoked.id)
-        .values(revoked_at_utc=NOW)
+        .values(revoked_at_utc=NOW, revoked_reason="refused")
     )
 
     found = _by_key(await health_checks.check_people(db, NOW))

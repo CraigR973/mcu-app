@@ -124,14 +124,19 @@ class PushSubscription(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     )
 
     #: Consecutive transient send failures. A push service answering 5xx is not evidence
-    #: the subscription is dead — only ``404``/``410`` are, and those delete the row.
+    #: the subscription is dead — only ``404``/``410`` are, and those revoke the row as
+    #: refused (Batch X3; before it, they deleted it).
     failure_count: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )
 
-    #: Set when the person removes this device. Soft, so §6.2's "removing one doesn't
-    #: silence the other" is answerable afterwards rather than merely observed once.
+    #: Set when the person removes this device, or (Batch X3) when the push service refuses
+    #: it. Soft, so §6.2's "removing one doesn't silence the other" is answerable afterwards
+    #: rather than merely observed once, and so Settings can say when a phone stopped.
     revoked_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+    #: Batch X3: ``removed`` (the person) or ``refused`` (a 404 or 410 from the push service).
+    #: A refused device is registered again by the app on its next open; a removed one is not.
+    revoked_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<PushSubscription {self.device_label or self.endpoint[:40]!r}>"

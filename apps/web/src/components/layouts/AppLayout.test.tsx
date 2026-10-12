@@ -17,6 +17,8 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   fetchSmartCollections: vi.fn().mockResolvedValue({ items: [], total: 0 }),
   fetchSearch: vi.fn().mockResolvedValue({ query: '', total: 0, items: [] }),
   fetchSearchBeyond: vi.fn().mockResolvedValue({ query: '', items: [], unavailable: false }),
+  // Batch X3: the shell reads this person's devices for the stopped-notifications banner.
+  fetchPushSubscriptions: vi.fn().mockResolvedValue({ items: [], total: 0, stoppedAt: null }),
 }))
 
 import { PageHeader } from '@/components/ui/page-header'

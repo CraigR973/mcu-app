@@ -5,6 +5,8 @@ import {
   attentionSchema,
   dealListSchema,
   dealSchema,
+  pushDeviceStatusSchema,
+  pushSubscriptionListSchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
   ebayTargetsSchema,
@@ -2222,5 +2224,22 @@ describe('Batch X2 — what needs attention, and where deals come from', () => {
     expect(dealListSchema.parse(list).sources).toEqual([])
     const sources = [{ name: 'eBay', lastAnsweredAt: null }]
     expect(dealListSchema.parse({ ...list, sources }).sources).toEqual(sources)
+  })
+})
+
+describe('Batch X3 — what the server holds for this phone', () => {
+  it('reads when the last device stopped, and none from an API before X3', () => {
+    expect(pushSubscriptionListSchema.parse({ items: [], total: 0 }).stoppedAt).toBeNull()
+    expect(
+      pushSubscriptionListSchema.parse({ items: [], total: 0, stoppedAt: '2026-10-08T00:21:00Z' })
+        .stoppedAt,
+    ).toBe('2026-10-08T00:21:00Z')
+  })
+
+  it('reads the four states of a device, and refuses another', () => {
+    for (const state of ['live', 'refused', 'removed', 'unknown'] as const) {
+      expect(pushDeviceStatusSchema.parse({ state, revokedAt: null }).state).toBe(state)
+    }
+    expect(() => pushDeviceStatusSchema.parse({ state: 'deleted', revokedAt: null })).toThrow()
   })
 })

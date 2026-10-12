@@ -10,7 +10,7 @@ seasons and running the reminder pass, both of which act on the whole app.
 from __future__ import annotations
 
 from datetime import date
-from typing import Annotated, cast
+from typing import Annotated, Literal, cast
 from urllib.parse import urlsplit
 
 import structlog
@@ -34,6 +34,8 @@ from src.schemas.notifications import (
     NotificationPreferenceUpdateRequest,
     NotificationResponse,
     NotificationStatusName,
+    PushDeviceStatusRequest,
+    PushDeviceStatusResponse,
     PushSubscriptionCreateRequest,
     PushSubscriptionListResponse,
     PushSubscriptionResponse,
@@ -43,6 +45,8 @@ from src.schemas.notifications import (
 )
 from src.services import webpush
 from src.services.notifications import (
+    REVOKED_REFUSED,
+    REVOKED_REMOVED,
     active_subscriptions,
     deliver_pending,
     deliver_to_subscriptions,
@@ -145,10 +149,47 @@ async def vapid_key(_user: CurrentUser) -> VapidKeyResponse:
 async def list_subscriptions(user: CurrentUser, db: Database) -> PushSubscriptionListResponse:
     """This person's registered devices — §6.2's per-device records."""
     subscriptions = await active_subscriptions(db, user.id)
+    stopped = None
+    if not subscriptions:
+        # Batch X3: their last device went because the push service refused it.
+        stopped = await db.scalar(
+            select(func.max(PushSubscription.revoked_at_utc)).where(
+                PushSubscription.user_id == user.id,
+                PushSubscription.revoked_reason == REVOKED_REFUSED,
+            )
+        )
     return PushSubscriptionListResponse(
         items=[_subscription_response(subscription) for subscription in subscriptions],
         total=len(subscriptions),
+        stoppedAt=stopped,
     )
+
+
+@router.post("/notifications/subscriptions/status", response_model=PushDeviceStatusResponse)
+async def device_status(
+    payload: PushDeviceStatusRequest, user: CurrentUser, db: Database
+) -> PushDeviceStatusResponse:
+    """Batch X3 (DS44-02): what the server holds for this browser's subscription.
+
+    The page asks on every open and when the worker reports a subscription change, and
+    registers the phone again when the answer is ``unknown`` or ``refused``. Before X3 the
+    page read only the browser's own subscription, so Settings said "Notifications are on
+    for this device" above "No devices are registered yet", and nothing ever re-registered.
+    A device of another person's reads ``unknown``: registering reassigns it, as it always has.
+    """
+    device = await db.scalar(
+        select(PushSubscription).where(
+            PushSubscription.endpoint == payload.endpoint, PushSubscription.user_id == user.id
+        )
+    )
+    if device is None:
+        return PushDeviceStatusResponse(state="unknown")
+    if device.revoked_at_utc is None:
+        return PushDeviceStatusResponse(state="live")
+    state: Literal["refused", "removed"] = (
+        "refused" if device.revoked_reason == REVOKED_REFUSED else "removed"
+    )
+    return PushDeviceStatusResponse(state=state, revokedAt=device.revoked_at_utc)
 
 
 @router.post(
@@ -193,9 +234,11 @@ async def register_subscription(
                 "auth": payload.keys.auth,
                 "device_label": payload.deviceLabel,
                 "user_agent": user_agent,
-                # A device coming back is a working device, whatever it did before.
+                # A device coming back is a working device, whatever it did before: a
+                # refused one revives here (Batch X3), as a removed one always did.
                 "failure_count": 0,
                 "revoked_at_utc": None,
+                "revoked_reason": None,
             },
         )
         .returning(PushSubscription)
@@ -228,6 +271,7 @@ async def remove_subscription(subscription_id: str, user: CurrentUser, db: Datab
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
     subscription.revoked_at_utc = utcnow()
+    subscription.revoked_reason = REVOKED_REMOVED
     await db.commit()
 
 

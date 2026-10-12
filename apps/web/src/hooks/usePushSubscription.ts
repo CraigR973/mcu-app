@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { fetchVapidKey, registerPushSubscription } from '@/lib/api'
+import { base64UrlToBytes, guessDeviceLabel, healPush } from '@/lib/push-health'
 
 /**
  * Turning browser push on and off for **this** device — §6.2's per-device half.
@@ -25,11 +26,17 @@ export type PushState =
   | 'denied'
   /** Supported, permitted or not yet asked, and not currently subscribed. */
   | 'available'
-  /** This device holds a live subscription. */
+  /** This device holds a subscription **the server holds live** (Batch X3: before X3 the
+   *  browser's word alone said so, above "No devices are registered yet"). */
   | 'subscribed'
+  /** This phone stopped getting notifications and could not be mended without a tap
+   *  (Batch X3). `stoppedSince` says when, when the server knows. */
+  | 'stopped'
 
 export interface UsePushSubscription {
   state: PushState
+  /** With `stopped`: when the push service refused this phone, if known. */
+  stoppedSince: string | null
   error: string | null
   busy: boolean
   subscribe: (deviceLabel: string) => Promise<void>
@@ -38,35 +45,9 @@ export interface UsePushSubscription {
   suggestedLabel: string
 }
 
-/** RFC 8292 keys travel as unpadded base64url; `applicationServerKey` wants raw bytes.
- *
- *  Built over an explicit `ArrayBuffer` rather than through `Uint8Array.from`, which since
- *  TypeScript 5.7 infers `Uint8Array<ArrayBufferLike>` — a type `applicationServerKey`
- *  rejects, because `ArrayBufferLike` admits a `SharedArrayBuffer` and `BufferSource` does
- *  not. */
-function base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> {
-  const padded = value.padEnd(value.length + ((4 - (value.length % 4)) % 4), '=')
-  const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
-  const bytes = new Uint8Array(new ArrayBuffer(binary.length))
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index)
-  }
-  return bytes
-}
-
-/** "iPhone", "Mac", "Windows PC" — a guess the person can overwrite. */
-function guessDeviceLabel(): string {
-  const agent = navigator.userAgent
-  if (/iPhone/.test(agent)) return 'iPhone'
-  if (/iPad/.test(agent)) return 'iPad'
-  if (/Android/.test(agent)) return 'Android phone'
-  if (/Macintosh/.test(agent)) return 'Mac'
-  if (/Windows/.test(agent)) return 'Windows PC'
-  return 'This device'
-}
-
 export function usePushSubscription(): UsePushSubscription {
   const [state, setState] = useState<PushState>('checking')
+  const [stoppedSince, setStoppedSince] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -87,7 +68,20 @@ export function usePushSubscription(): UsePushSubscription {
       }
       const registration = await navigator.serviceWorker.ready
       const existing = await registration.pushManager.getSubscription()
-      setState(existing ? 'subscribed' : 'available')
+      if (!existing) {
+        setState('available')
+        return
+      }
+      // Batch X3: the server's word, not the browser's, and mended where it can be.
+      const health = await healPush()
+      if (health.state === 'live') {
+        setState('subscribed')
+      } else if (health.state === 'stopped') {
+        setStoppedSince(health.since)
+        setState('stopped')
+      } else {
+        setState('available')
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not check notifications')
       setState('available')
@@ -100,7 +94,8 @@ export function usePushSubscription(): UsePushSubscription {
 
   /**
    * The service worker cannot re-register a rotated subscription on its own — the access
-   * token lives in the page, not in the worker — so it asks any open page to do it.
+   * token lives in the page, not in the worker — so it asks any open page to do it, and the
+   * refresh below does (Batch X3: before it, the refresh only re-read local state).
    */
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
@@ -133,15 +128,20 @@ export function usePushSubscription(): UsePushSubscription {
       }
 
       const registration = await navigator.serviceWorker.ready
-      const subscription =
-        (await registration.pushManager.getSubscription()) ??
-        (await registration.pushManager.subscribe({
-          // Required by every browser: a push that any server could send would be spam.
-          userVisibleOnly: true,
-          applicationServerKey: base64UrlToBytes(key.publicKey),
-        }))
+      let subscription = await registration.pushManager.getSubscription()
+      if (subscription && state === 'stopped') {
+        // Batch X3: the old endpoint was refused; it will never be delivered to again.
+        await subscription.unsubscribe()
+        subscription = null
+      }
+      subscription ??= await registration.pushManager.subscribe({
+        // Required by every browser: a push that any server could send would be spam.
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlToBytes(key.publicKey),
+      })
 
       await registerPushSubscription(subscription.toJSON(), deviceLabel)
+      setStoppedSince(null)
       setState('subscribed')
     } catch (cause) {
       // Safari throws here when the site is not an installed PWA, with a message that
@@ -150,7 +150,7 @@ export function usePushSubscription(): UsePushSubscription {
     } finally {
       setBusy(false)
     }
-  }, [])
+  }, [state])
 
   const unsubscribe = useCallback(async () => {
     setBusy(true)
@@ -172,7 +172,15 @@ export function usePushSubscription(): UsePushSubscription {
     }
   }, [])
 
-  return { state, error, busy, subscribe, unsubscribe, suggestedLabel: guessDeviceLabel() }
+  return {
+    state,
+    stoppedSince,
+    error,
+    busy,
+    subscribe,
+    unsubscribe,
+    suggestedLabel: guessDeviceLabel(),
+  }
 }
 
 // Exported for the tests. `base64UrlToBytes` is the one pure function in this file whose

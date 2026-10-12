@@ -1303,6 +1303,15 @@ export const pushSubscriptionSchema = z.object({
 export const pushSubscriptionListSchema = z.object({
   items: z.array(pushSubscriptionSchema),
   total: z.number().int().nonnegative(),
+  /** Batch X3: when the push service last refused one of this person's devices, while none
+   *  is live; null otherwise. Defaulted so the page parses an API a deploy behind. */
+  stoppedAt: z.string().nullable().default(null),
+})
+
+/** Batch X3: what the server holds for this browser's subscription. */
+export const pushDeviceStatusSchema = z.object({
+  state: z.enum(['live', 'refused', 'removed', 'unknown']),
+  revokedAt: z.string().nullable(),
 })
 
 export const notificationPreferenceSchema = z.object({
@@ -1366,6 +1375,7 @@ export const reminderRunSchema = z.object({
 export type VapidKey = z.infer<typeof vapidKeySchema>
 export type PushSubscriptionRecord = z.infer<typeof pushSubscriptionSchema>
 export type PushSubscriptionList = z.infer<typeof pushSubscriptionListSchema>
+export type PushDeviceStatus = z.infer<typeof pushDeviceStatusSchema>
 export type NotificationPreference = z.infer<typeof notificationPreferenceSchema>
 export type NotificationRecord = z.infer<typeof notificationSchema>
 export type NotificationList = z.infer<typeof notificationListSchema>

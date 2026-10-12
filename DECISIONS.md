@@ -5383,3 +5383,27 @@ contemporaneous.
      - **Deals is always in the menu**; Box sets and Collections still hide when empty. The empty
        page says when eBay was last read (the last scan that read listings) and when each shop's
        sale page last gave a deal.
+
+### 2026-10-12 — Group X, batch X3
+
+260. **X3's choices: a refused device is kept and says so, the shell heals on every open, and
+     a removed device is left alone.**
+
+     - **`revoked_reason` tells "refused" from "removed"** (migration 051, backfilled `removed`
+       for rows a person had revoked; none in production). Only a refused device is registered
+       again: healing a device the person took off their list would undo their choice.
+     - **The page asks the server, by this browser's endpoint** (`POST
+       /notifications/subscriptions/status`): `live`, `refused`, `removed` or `unknown`; another
+       person's device reads `unknown`, and registering reassigns it, as it always did.
+     - **Healing lives in the app shell**, on every open and on the worker's message, so it
+       happens without visiting Settings. It never asks for permission. A refused endpoint is
+       unsubscribed and a fresh one taken; where the browser will not subscribe without a tap
+       (Safari may not), Settings says when the phone stopped and offers "Turn on again".
+     - **The banner shows when a person has no live device and their last one was refused**,
+       on every page, until they turn notifications on; someone who never turned them on sees
+       none. X2's daily check names it to Craig.
+     - **"Pushed" on an eBay run is finds delivered to a phone**, counted after delivery from
+       the deal notifications sent since the run began; quiet hours or no live device mean
+       not delivered.
+     - **Settings says "on" only when the server holds this phone live.** When this browser
+       holds nothing but the account's last device was refused, it says when that was.

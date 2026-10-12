@@ -253,7 +253,10 @@ self.addEventListener('notificationclick', (event) => {
  * Browsers fire this rarely and without warning — the endpoint is replaced and every
  * future send to the old one answers `410`. The service worker cannot authenticate to the
  * API on its own (the access token lives in the page), so it tells any open page to
- * re-subscribe, and `usePushSubscription` re-registers on its next load regardless.
+ * re-subscribe. Since Batch X3 that is true: the shell's `PushHealthBanner` compares this
+ * browser's subscription with the server's devices on every open and on this message, and
+ * registers the phone again (`lib/push-health.ts`). Before X3 the page only re-read its
+ * own state, and nothing re-registered anything.
  */
 self.addEventListener('pushsubscriptionchange', (event) => {
   event.waitUntil(

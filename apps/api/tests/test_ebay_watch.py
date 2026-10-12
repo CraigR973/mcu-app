@@ -982,3 +982,53 @@ async def test_a_merge_carries_saved_searches_to_the_kept_film(db: AsyncSession)
     await _move_back(db, merge.moved, source_id=merged.id, target_id=kept.id)
     await db.refresh(marks)
     assert marks.movie_id == merged.id
+
+
+async def test_the_run_counts_pushes_delivered_not_queued(db: AsyncSession) -> None:
+    """X3: "5 pushed" counted pushes queued; one held or meeting no phone was not delivered."""
+    from src.services.ebay_watch.runs import record_delivered
+
+    craig = await _person(db, UserRole.admin)
+    mark = await _person(db, UserRole.viewer)
+    run = EbayWatchRun(
+        id=uuid.uuid4(),
+        trigger="job",
+        status="finished",
+        started_utc=NOW,
+        heartbeat_utc=NOW,
+        budget=50,
+        calls=1,
+        deals_pushed=3,
+    )
+    db.add(run)
+    rows = [
+        # One find reached both people: one find delivered.
+        (craig, "111", "sent"),
+        (mark, "111", "sent"),
+        # One reached nobody: no live device.
+        (craig, "222", "suppressed"),
+        # One is held by quiet hours.
+        (mark, "333", "queued"),
+        # One delivered before this run began.
+        (craig, "444", "sent"),
+    ]
+    for person, item, status in rows:
+        created = NOW - timedelta(hours=3) if item == "444" else NOW + timedelta(minutes=1)
+        db.add(
+            Notification(
+                id=uuid.uuid4(),
+                user_id=person.id,
+                category="deals",
+                status=status,
+                title="A deal",
+                body="",
+                dedupe_key=f"ebay-deal:{item}:{person.id}",
+                created_at_utc=created,
+                sent_at_utc=created if status == "sent" else None,
+                delivered_count=1 if status == "sent" else 0,
+            )
+        )
+    await db.commit()
+
+    assert await record_delivered(db, run) == 1
+    assert run.deals_pushed == 1
