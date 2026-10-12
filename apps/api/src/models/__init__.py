@@ -45,6 +45,7 @@ from src.models.ebay_watch import (
     EbayTarget,
     EbayWatchRun,
 )
+from src.models.health import HealthCheck, JobHeartbeat
 from src.models.identify import (
     IDENTIFIED_HOW,
     IDENTIFY_LOOKUP_STATUSES,
@@ -218,6 +219,8 @@ __all__ = [
     "EbayPriceRef",
     "EbayTarget",
     "EbayWatchRun",
+    "HealthCheck",
+    "JobHeartbeat",
     "TARGET_FORMATS",
     "TARGET_KINDS",
     "TARGET_STATUSES",

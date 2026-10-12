@@ -51,6 +51,10 @@ class NotificationCategory(StrEnum):
     releases = "releases"
     loans = "loans"
     movie_night = "movie_night"
+    #: Batch X2: the daily check telling Craig a problem has appeared. No toggle, and only
+    #: the admin receives it: switching off the one channel that says push broke would hide
+    #: the next failure the way the last seven were hidden.
+    attention = "attention"
 
 
 class NotificationStatus(StrEnum):

@@ -2165,9 +2165,16 @@ export const dealSchema = z.object({
   usualListings: z.number().int().nonnegative().nullable().default(null),
 })
 
+/** Batch X2: a source of deals and when it last answered, for the empty page's words. */
+export const dealSourceSchema = z.object({
+  name: z.string().min(1),
+  lastAnsweredAt: z.string().nullable(),
+})
+
 export const dealListSchema = z.object({
   items: z.array(dealSchema),
   total: z.number().int().nonnegative(),
+  sources: z.array(dealSourceSchema).default([]),
   /** The vocabulary present in the unfiltered feed, so §5.10's filters never offer a
    *  choice that matches nothing. */
   retailers: z.array(z.string()),
@@ -2309,6 +2316,10 @@ export const ebayWatchRunSchema = z.object({
   finishedAt: z.string().nullable(),
   targetsChecked: z.number().int().nonnegative(),
   dealsFound: z.number().int().nonnegative(),
+  /** Batch X2: new listings this pass read, and passes in a row (this one included) that
+   *  read none. Defaulted so the page parses an API a deploy behind. */
+  listingsSeen: z.number().int().nonnegative().default(0),
+  emptyInARow: z.number().int().nonnegative().default(0),
 })
 
 export const ebayTargetsSchema = z.object({
@@ -2389,3 +2400,24 @@ export type EbaySavedSearch = z.infer<typeof ebaySavedSearchSchema>
 export type EbaySold = z.infer<typeof ebaySoldSchema>
 export type EbayWatching = z.infer<typeof ebayWatchingSchema>
 export type EbaySelling = z.infer<typeof ebaySellingSchema>
+
+// ---------------------------------------------------------------------------
+// Needs attention (Batch X2) — DS44-01, UX48-02: what has stopped, for Craig
+// ---------------------------------------------------------------------------
+
+export const attentionItemSchema = z.object({
+  key: z.string().min(1),
+  /** The problem in words: "No eBay listings read in the last 6 scans (since 9 Oct)." */
+  message: z.string().min(1),
+  /** When it first appeared; null for one worked out as the row is read. */
+  since: z.string().nullable(),
+})
+
+export const attentionSchema = z.object({
+  items: z.array(attentionItemSchema),
+  /** When the daily check last ran; null before its first run. */
+  checkedAt: z.string().nullable(),
+})
+
+export type AttentionItem = z.infer<typeof attentionItemSchema>
+export type Attention = z.infer<typeof attentionSchema>

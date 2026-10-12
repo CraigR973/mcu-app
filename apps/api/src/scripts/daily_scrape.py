@@ -33,6 +33,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from src.config import settings
 from src.models.price_history import RETENTION_DAYS
+from src.services import heartbeat
 from src.services.push_transport import push_sender
 from src.services.scraping.daily import DailyRunSummary, failure_records, run_daily_scrape
 
@@ -77,9 +78,28 @@ def report(summary: DailyRunSummary, *, dry_run: bool) -> int:
         for record in failures:
             line = f"    - {record['retailer']}: {record['wanted']} — {record['reason']}"
             print(line, file=sys.stderr)
-        return 1
-    print("  failures:      0")
-    return 0
+    else:
+        print("  failures:      0")
+    # Batch X2 (DS44-01; #240: refusals are not failures). A night on which shops only said
+    # no exits 0, so Railway's "Crashed" means a crash again: before X2 the job showed
+    # Crashed every night from 30 Sep, and a real failure would have looked the same.
+    return 1 if real_failures(summary) else 0
+
+
+def real_failures(summary: DailyRunSummary) -> int:
+    """Failed requests that were not a shop refusing: what the exit code is about."""
+    return sum(
+        1
+        for outcome in summary.scrape.outcomes
+        if not (outcome.ok or outcome.skipped or outcome.not_stocked or outcome.no_results)
+        and not outcome.refused
+    )
+
+
+def outcome_word(summary: DailyRunSummary) -> str:
+    """The night in a few words, for the job's heartbeat."""
+    failed = real_failures(summary)
+    return f"ran, {failed} failed" if failed else "ran"
 
 
 async def _run(*, dry_run: bool, retention_days: int) -> int:
@@ -97,6 +117,8 @@ async def _run(*, dry_run: bool, retention_days: int) -> int:
                     retention_days=retention_days,
                 )
             await db.commit()
+            if not dry_run:
+                await heartbeat.beat(db, heartbeat.SCRAPE, outcome_word(summary))
     finally:
         await engine.dispose()
     return report(summary, dry_run=dry_run)

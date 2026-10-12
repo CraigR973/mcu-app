@@ -5347,3 +5347,39 @@ contemporaneous.
        moment." with `Retry-After: 60`.
      - **MK47-04 stands as accepted (#254)**; the re-check, the "Seen" line and the scrub above
        are what bound it.
+
+### 2026-10-12 — Group X, batch X2
+
+259. **X2's choices: one heartbeat table every job writes, the API's readiness recorded at boot,
+     one push per appearance, and Deals always in the menu. Amends #154 and #165 for Deals alone.**
+
+     - **A heartbeat row per job, not idle rows in each run table.** `job_heartbeats` holds one row
+       per Railway service (`cron-scrape`, `cron-specs`, `cron-ebay`, `cron-values`,
+       `cron-reminders`) and `api`, rewritten every run whatever it did ("ran", "nothing due",
+       "budget spent"). Run tables keep their meaning: a run row is a run. The check also reads
+       each run table's latest start, so a run started from the app counts, and a job's first
+       morning after the deploy is not flagged for having no beat yet.
+     - **Allowances:** daily jobs 26 hours, the two-hourly eBay scan 5 hours, the valuation
+       (1st, 2nd, 15th, 16th) 17 days. The reminders job runs the check, so it cannot see itself
+       stop; Home's row says so instead when the last check is more than 26 hours old.
+     - **Readiness comes from the API's own boot.** The check runs in `cron-reminders`, which
+       holds none of the AI or eBay variables; the API writes its readiness into its heartbeat
+       row at startup (a failed write never stops the boot). No new Railway variable.
+     - **One push per appearance, to the admin, in a new `attention` category with no toggle.**
+       A problem that clears and returns is pushed again. The category has no switch because
+       switching off the channel that says push broke would hide the next failure as the last
+       seven were hidden. Problems do not fail the reminders job.
+     - **"Not all suppressed" counts failed sends too**, over the last three days, ignoring
+       notifications still queued (quiet hours). The database's cap is Neon's free 1 GB, so the
+       check speaks at 512 MB.
+     - **Two identification checks fire on the first morning:** the 165 proposals waiting since
+       25 Sep and the films a disc page or review puts in another year. They are real (CT46-03)
+       and X9 is their remedy; each is pushed once.
+     - **PIN locks escalate within a day of the last** (15 minutes, 1 hour, 4 hours, 24 hours;
+       `profiles.lockout_count`, `last_lockout_utc`), and a lock more than a day after the last
+       starts again at 15 minutes. A wait over 90 minutes is said in hours.
+     - **`cron-scrape` exits 0 when every failure is a refusal** (#240) and 1 for anything else;
+       refusals are still listed in its log.
+     - **Deals is always in the menu**; Box sets and Collections still hide when empty. The empty
+       page says when eBay was last read (the last scan that read listings) and when each shop's
+       sale page last gave a deal.

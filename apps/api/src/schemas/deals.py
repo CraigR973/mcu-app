@@ -63,9 +63,21 @@ class DealResponse(BaseModel):
     usualListings: int | None = None
 
 
+class DealSourceResponse(BaseModel):
+    """Batch X2: where deals come from, and when it last answered (UX48-02)."""
+
+    #: "eBay", or a shop's name.
+    name: str
+    #: eBay: the start of the last scan that read listings. A shop: when its sale page last
+    #: gave a deal. Null when it never has.
+    lastAnsweredAt: UtcDatetime | None = None
+
+
 class DealListResponse(BaseModel):
     items: list[DealResponse]
     total: int = Field(ge=0)
+    #: Batch X2: each source and when it last answered, for the empty page's words.
+    sources: list[DealSourceResponse] = Field(default_factory=list)
     #: Every retailer and genre present in the *unfiltered* feed, so §5.10's filters can
     #: be populated without a second request and without offering a filter that matches
     #: nothing.

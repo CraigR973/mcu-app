@@ -26,7 +26,7 @@ import pytest_asyncio
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 
-from src.auth import LOCKOUT_DURATION, MAX_FAILED_ATTEMPTS, _utcnow, hash_pin
+from src.auth import LOCKOUT_DURATION, MAX_FAILED_ATTEMPTS, _utcnow, hash_pin, lockout_for
 from src.config import Settings
 from src.models.profile import Profile, UserRole
 from src.models.rate_limit import RateLimitCounter
@@ -303,3 +303,67 @@ async def test_migration_seeds_two_profiles_with_no_credential() -> None:
     # to the seeded columns.
     assert migration_002.SEEDED_PROFILE_COLUMNS == ("id", "display_name", "role")
     assert "pin_hash" not in migration_002.SEEDED_PROFILE_COLUMNS
+
+
+# ---------------------------------------------------------------------------
+# Batch X2 (DS44-05): a further lock within a day lasts longer
+# ---------------------------------------------------------------------------
+
+
+def test_each_further_lock_in_a_day_is_the_next_step() -> None:
+    assert [lockout_for(n) for n in (1, 2, 3, 4, 9)] == [
+        timedelta(minutes=15),
+        timedelta(hours=1),
+        timedelta(hours=4),
+        timedelta(hours=24),
+        timedelta(hours=24),
+    ]
+
+
+async def _lock(profile_id: uuid.UUID) -> Profile:
+    engine = _fresh_engine()
+    sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        for _ in range(MAX_FAILED_ATTEMPTS):
+            async with sessionmaker() as session:
+                await _record_failed_attempt(session, profile_id)
+    finally:
+        await engine.dispose()
+    return await _read_profile(profile_id)
+
+
+async def _set(profile_id: uuid.UUID, **values: object) -> None:
+    engine = _fresh_engine()
+    try:
+        async with async_sessionmaker(engine)() as session:
+            await session.execute(
+                Profile.__table__.update().where(Profile.id == profile_id).values(**values)
+            )
+            await session.commit()
+    finally:
+        await engine.dispose()
+
+
+async def test_a_second_lock_within_a_day_lasts_an_hour(profile_id: uuid.UUID) -> None:
+    first = await _lock(profile_id)
+    assert first.lockout_count == 1 and first.last_lockout_utc is not None
+
+    # The first lock has run out; five more wrong PINs within the day.
+    await _set(profile_id, locked_until_utc=None)
+    before = _utcnow()
+    second = await _lock(profile_id)
+    assert second.lockout_count == 2
+    assert second.locked_until_utc is not None
+    delta = second.locked_until_utc - before
+    assert timedelta(minutes=59) <= delta <= timedelta(minutes=61)
+
+
+async def test_a_lock_more_than_a_day_after_the_last_starts_again(profile_id: uuid.UUID) -> None:
+    await _set(
+        profile_id, lockout_count=3, last_lockout_utc=_utcnow() - timedelta(days=1, minutes=5)
+    )
+    before = _utcnow()
+    profile = await _lock(profile_id)
+    assert profile.lockout_count == 1
+    assert profile.locked_until_utc is not None
+    assert profile.locked_until_utc - before <= LOCKOUT_DURATION + timedelta(seconds=30)

@@ -23,6 +23,7 @@ import sys
 from src.database import AsyncSessionLocal
 from src.ebay.client import EbayClient
 from src.models.valuation import ValuationRun
+from src.services import heartbeat
 from src.services.valuation import StartOutcome, start_run, work_run
 
 _NOT_STARTED = {
@@ -58,6 +59,9 @@ async def main() -> int:
         async with AsyncSessionLocal() as db:
             outcome = await start_run(db, trigger="job")
             run = await work_run(db, client, outcome.run.id) if outcome.run else None
+            # Batch X2: a beat whatever happened, so "nothing due" reads differently from stopped.
+            done = run.status if run is not None else outcome.reason
+            await heartbeat.beat(db, heartbeat.VALUES, done.replace("_", " "))
     return report(outcome, run)
 
 

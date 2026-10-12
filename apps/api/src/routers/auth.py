@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import (
     ACCESS_TTL,
-    LOCKOUT_DURATION,
+    LOCKOUT_MEMORY,
     MAX_FAILED_ATTEMPTS,
     PIN_MAX_LENGTH,
     PIN_MIN_LENGTH,
@@ -31,6 +31,7 @@ from src.auth import (
     hash_pin,
     hash_token,
     is_weak_pin,
+    lockout_for,
     split_refresh_token,
     verify_pin,
 )
@@ -151,11 +152,25 @@ async def _record_failed_attempt(limiter_db: AsyncSession, profile_id: uuid.UUID
 
     profile.failed_login_count += 1
     if profile.failed_login_count >= MAX_FAILED_ATTEMPTS:
-        profile.locked_until_utc = _utcnow() + LOCKOUT_DURATION
+        now = _utcnow()
+        # Batch X2: a lock within a day of the last is the next step up (15 minutes, 1 hour,
+        # 4 hours, 24 hours); the daily check names any lock of the last day to Craig.
+        recent = profile.last_lockout_utc is not None and (
+            profile.last_lockout_utc > now - LOCKOUT_MEMORY
+        )
+        profile.lockout_count = profile.lockout_count + 1 if recent else 1
+        profile.last_lockout_utc = now
+        duration = lockout_for(profile.lockout_count)
+        profile.locked_until_utc = now + duration
         # Reset the count with the lock so the window after it starts clean rather than
         # locking again on the first subsequent mistake.
         profile.failed_login_count = 0
-        log.warning("profile locked", profile_id=str(profile_id), minutes=15)
+        log.warning(
+            "profile locked",
+            profile_id=str(profile_id),
+            minutes=int(duration.total_seconds() // 60),
+            lock_in_a_row=profile.lockout_count,
+        )
     await limiter_db.commit()
 
 
@@ -184,9 +199,12 @@ async def login(
     now = _utcnow()
     if profile.locked_until_utc is not None and profile.locked_until_utc > now:
         remaining = int((profile.locked_until_utc - now).total_seconds())
+        minutes = remaining // 60 + 1
+        # A lock can last a day since Batch X2, and "1441 minutes" is not an answer.
+        wait = f"{minutes} minutes" if minutes <= 90 else f"{-(-minutes // 60)} hours"
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
-            detail=f"Account locked. Try again in {remaining // 60 + 1} minutes.",
+            detail=f"Account locked. Try again in {wait}.",
             headers={"Retry-After": str(remaining)},
         )
 

@@ -10,7 +10,14 @@ import { StatePanel } from '@/components/ui/state-panel'
 import { FormatBadge } from '@/components/movies/FormatBadge'
 import { Poster } from '@/components/movies/Poster'
 import { useAuth } from '@/context/auth'
-import { dismissDeal, fetchDeals, FORMATS, type Deal, type DealFilters } from '@/lib/api'
+import {
+  dismissDeal,
+  fetchDeals,
+  FORMATS,
+  type Deal,
+  type DealFilters,
+  type DealList,
+} from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn, formatDayMonth } from '@/lib/utils'
 
@@ -25,6 +32,26 @@ function usualSourcesLine(sources: NonNullable<Deal['usualSources']>): string {
   return sources
     .map(({ source, price }) => `${source} £${price}${source === EBAY ? ' before postage' : ''}`)
     .join(' · ')
+}
+
+/**
+ * Batch X2 (UX48-02): when each source last answered, for the empty page. Before X2 it said
+ * "The sale pages have not been scraped yet" while the eBay scan, the main source, was blind.
+ */
+function sourcesLine(sources: DealList['sources']): string {
+  if (sources.length === 0) return 'No source has answered yet.'
+  return (
+    sources
+      .map(({ name, lastAnsweredAt }) => {
+        const verb = name === EBAY ? 'was last read' : "'s sale page last gave a deal"
+        const subject = name === EBAY ? 'eBay' : name
+        const glue = name === EBAY ? ' ' : ''
+        return lastAnsweredAt
+          ? `${subject}${glue}${verb} ${formatDayMonth(lastAnsweredAt)}`
+          : `${subject} has not answered yet`
+      })
+      .join('; ') + '.'
+  )
 }
 
 function DealCard({ deal }: { deal: Deal }) {
@@ -298,13 +325,13 @@ export default function DealsPage() {
         <StatePanel
           tone="empty"
           icon={Tag}
-          title={filtered ? 'Nothing matches those filters' : 'No deals recorded yet'}
+          title={filtered ? 'Nothing matches those filters' : 'Nothing on offer right now'}
           description={
             filtered
               ? 'Try widening the discount or clearing a filter.'
-              : canEdit
-                ? 'The sale pages have not been scraped yet. A live run against real shops is a manual step — start it from Retailers.'
-                : 'Craig has not run a deals scrape yet.'
+              : `${sourcesLine(data?.sources ?? [])}${
+                  canEdit ? ' A shop\'s sale page is checked from Retailers.' : ''
+                }`
           }
           action={
             filtered ? (

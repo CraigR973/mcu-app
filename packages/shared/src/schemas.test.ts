@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   activitySchema,
+  attentionSchema,
+  dealListSchema,
   dealSchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
@@ -1812,9 +1814,25 @@ describe('Batch T8a — eBay price alerts', () => {
       finishedAt: '2026-09-26T10:21:00Z',
       targetsChecked: 2,
       dealsFound: 1,
+      listingsSeen: 0,
+      emptyInARow: 33,
     }
     expect(ebayTargetsSchema.parse({ items: [listing], lastRun: run })).toEqual({ items: [listing], lastRun: run })
     expect(ebayTargetsSchema.parse({ items: [], lastRun: null }).lastRun).toBeNull()
+  })
+
+  it('reads a pass from an API before X2 as having read nothing in a row of none', () => {
+    const before = {
+      status: 'finished',
+      startedAt: '2026-09-26T10:20:00Z',
+      finishedAt: null,
+      targetsChecked: 0,
+      dealsFound: 0,
+    }
+    expect(ebayTargetsSchema.parse({ items: [], lastRun: before }).lastRun).toMatchObject({
+      listingsSeen: 0,
+      emptyInARow: 0,
+    })
   })
 
   it('refuses a status or a format it does not know', () => {
@@ -2179,5 +2197,30 @@ describe('Batch V9 — a film\'s reviews', () => {
       reviews: [blurayCom, avforums],
     })
     expect(wanted.reviews.map((review) => review.siteName)).toEqual(['Blu-ray.com', 'AVForums'])
+  })
+})
+
+describe('Batch X2 — what needs attention, and where deals come from', () => {
+  it('reads the problems and when the check last ran', () => {
+    const attention = {
+      items: [
+        { key: 'check:stale', message: "The daily check hasn't run yet.", since: null },
+        {
+          key: 'ebay:listings',
+          message: 'No eBay listings read in the last 6 scans (since 9 Oct).',
+          since: '2026-10-13T08:00:00Z',
+        },
+      ],
+      checkedAt: '2026-10-13T08:00:00Z',
+    }
+    expect(attentionSchema.parse(attention)).toEqual(attention)
+    expect(() => attentionSchema.parse({ items: [{ key: 'x', message: '', since: null }], checkedAt: null })).toThrow()
+  })
+
+  it('reads the deal sources, and none from an API before X2', () => {
+    const list = { items: [], total: 0, retailers: [], genres: [] }
+    expect(dealListSchema.parse(list).sources).toEqual([])
+    const sources = [{ name: 'eBay', lastAnsweredAt: null }]
+    expect(dealListSchema.parse({ ...list, sources }).sources).toEqual(sources)
   })
 })

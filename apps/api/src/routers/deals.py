@@ -24,12 +24,14 @@ from src.clock import utcnow
 from src.ebay.estimate import search_query, sold_listings_url
 from src.matching.engine import searchable_title
 from src.models.deal import Deal, live_deal
+from src.models.ebay_watch import EbayWatchRun
 from src.models.movie import Movie
 from src.routers.movies import Database
 from src.schemas.deals import (
     DealDismissRequest,
     DealListResponse,
     DealResponse,
+    DealSourceResponse,
     DealsRunResponse,
     RetailerDealsOutcomeResponse,
     UsualSourceResponse,
@@ -157,7 +159,31 @@ async def list_deals(
         total=len(items),
         retailers=all_retailers,
         genres=all_genres,
+        sources=await _sources(db),
     )
+
+
+async def _sources(db: Database) -> list[DealSourceResponse]:
+    """eBay and each shop that has ever given a deal, with when each last answered (X2).
+
+    The empty page said "The sale pages have not been scraped yet" while the eBay scan, the
+    main source since T8a, was blind. Now it can say when each source last answered.
+    """
+    ebay = await db.scalar(
+        select(func.max(EbayWatchRun.started_utc)).where(EbayWatchRun.listings_seen > 0)
+    )
+    shops = (
+        await db.execute(
+            select(Deal.retailer_name_snapshot, func.max(Deal.last_seen_at_utc))
+            .where(Deal.retailer_name_snapshot != EBAY)
+            .group_by(Deal.retailer_name_snapshot)
+            .order_by(Deal.retailer_name_snapshot)
+        )
+    ).all()
+    return [
+        DealSourceResponse(name=EBAY, lastAnsweredAt=ebay),
+        *(DealSourceResponse(name=name, lastAnsweredAt=seen) for name, seen in shops),
+    ]
 
 
 @router.post("/deals/{deal_id}/dismiss", response_model=DealResponse)

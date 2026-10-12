@@ -4,6 +4,7 @@ import { Activity, CalendarHeart, Pin, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { ActivityFeed } from '@/components/ActivityFeed'
+import { AttentionRow } from '@/components/dashboard/AttentionRow'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { CollectionShelf } from '@/components/dashboard/CollectionShelf'
 import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
@@ -84,6 +85,10 @@ export default function DashboardPage() {
       />
 
       <div className="space-y-9">
+        {/* Batch X2: what has stopped, for Craig, above everything else. Hidden when all is
+            well and for Mark. */}
+        <AttentionRow />
+
         <CollectionShelf />
 
         {/* Batch T5's disc releases, second since W2. Hidden when there are none. */}

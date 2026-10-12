@@ -34,6 +34,22 @@ REFRESH_TTL = timedelta(days=30)
 #: which is in Postgres — so the count is not reset by a redeploy.
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(minutes=15)
+#: Batch X2 (DS44-05): each further lock within a day of the last lasts longer, so five
+#: tries every 15 minutes (480 a day) becomes about 20 a day. A lock more than a day after
+#: the last starts again at 15 minutes.
+LOCKOUT_STEPS = (
+    LOCKOUT_DURATION,
+    timedelta(hours=1),
+    timedelta(hours=4),
+    timedelta(hours=24),
+)
+LOCKOUT_MEMORY = timedelta(days=1)
+
+
+def lockout_for(count: int) -> timedelta:
+    """How long the ``count``-th lock in a row lasts (1-based), capped at the last step."""
+    return LOCKOUT_STEPS[min(max(count, 1), len(LOCKOUT_STEPS)) - 1]
+
 
 #: A PIN is 4–8 digits. Four is the floor because the blocklist below is calibrated to
 #: the four-digit distribution; more is allowed because nothing about the scheme needs

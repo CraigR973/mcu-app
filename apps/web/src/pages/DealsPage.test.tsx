@@ -138,14 +138,33 @@ describe('DealsPage', () => {
     expect(html).not.toContain('before postage')
   })
 
-  it('tells the admin who has to run the scrape when the feed is empty', () => {
-    // §5.9's acceptance is a live run against real shops, which `group-start.md` puts in
-    // the owner's hands — so an empty feed says so rather than implying nothing is on
-    // offer.
-    const html = markup(<DealsPage />, [])
+  it('says when each source last answered when nothing is on offer — Batch X2', () => {
+    // Before X2 it said the sale pages had not been scraped, while the eBay scan, the main
+    // source since T8a, was blind; and Deals left the menu.
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client.setQueryData(['deals', {}], {
+      items: [],
+      total: 0,
+      retailers: [],
+      genres: [],
+      sources: [
+        { name: 'eBay', lastAnsweredAt: '2026-10-12T20:23:00Z' },
+        { name: 'Zavvi', lastAnsweredAt: '2026-09-30T19:14:00Z' },
+      ],
+    })
+    const html = renderToStaticMarkup(
+      <QueryClientProvider client={client}>
+        <MemoryRouter>
+          <DealsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
 
-    expect(html).toContain('No deals recorded yet')
-    expect(html).toContain('manual step')
-    expect(html).toContain('Retailers')
+    expect(html).toContain('Nothing on offer right now')
+    expect(html).toContain(
+      'eBay was last read 12 Oct; Zavvi&#x27;s sale page last gave a deal 30 Sep.',
+    )
+    expect(html).toContain('checked from Retailers')
   })
+
 })

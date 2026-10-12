@@ -38,12 +38,13 @@ export const HOME_ITEM: NavItem = { label: 'Archive shortcut', path: '/', icon: 
  *   `/dashboard`; Notifications and AI settings are one `/settings` page. Four items
  *   become two, and `/settings/ai` stops being a destination reachable only from the
  *   header — it was defined here but placed in no group at all.
- * - **Hid what is empty.** Box sets, Collections and Deals carry `showWhen` and stay out of
- *   the menu until their table has a row. Loans did too until Batch V1: Craig asked for it
+ * - **Hid what is empty.** Box sets and Collections carry `showWhen` and stay out of the
+ *   menu until their table has a row. Loans did too until Batch V1: Craig asked for it
  *   always, for Mark and for him (#228), so where a disc went can be looked up before the
- *   first loan as well as after.
+ *   first loan as well as after. Deals did until Batch X2, whose empty page now says when
+ *   each source last answered.
  *
- * With those three empty **a signed-in non-admin sees nine destinations**, down from
+ * With those two empty **a signed-in non-admin sees ten destinations**, down from
  * fourteen.
  */
 export const navItems: NavItem[] = [
@@ -54,7 +55,10 @@ export const navItems: NavItem[] = [
   // sources. `/discover` redirects here.
   { label: 'Releases', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
-  { label: 'Deals', path: '/deals', icon: Tag, showWhen: 'deals' },
+  // Batch X2 (#154, #165 amended for Deals alone): always shown. When it hid on empty, a
+  // blind eBay scan looked the same as a quiet day; the page now says when each source last
+  // answered.
+  { label: 'Deals', path: '/deals', icon: Tag },
   // Batch T8a. Each person's eBay price alerts; nothing to hide when empty, since the
   // page is where the first one is set.
   { label: 'Price alerts', path: '/price-alerts', icon: BellRing },

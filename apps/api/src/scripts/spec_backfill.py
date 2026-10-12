@@ -28,6 +28,7 @@ import httpx
 from src.database import AsyncSessionLocal
 from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecRun
+from src.services import heartbeat
 from src.services.reviews import batch as reviews
 from src.services.specs.backfill import Coverage, StartOutcome, coverage, start_run, work_run
 from src.services.specs.search import BraveSearch
@@ -96,6 +97,9 @@ async def main() -> int:
         )
         counts = await coverage(db)
         code = report(outcome, run, counts)
+        # Batch X2: a beat whatever happened, so "nothing due" reads differently from stopped.
+        done = run.status if run is not None else outcome.reason
+        await heartbeat.beat(db, heartbeat.SPECS, done.replace("_", " "))
         # Its own Brave client, so its run counts only its own searches.
         async with BraveSearch() as review_brave:
             review_run = await reviews.start_run(db, trigger="job")

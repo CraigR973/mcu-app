@@ -28,6 +28,7 @@ import {
   completionSetDetailSchema,
   duplicateCheckSchema,
   barcodeLookupSchema,
+  attentionSchema,
   dealListSchema,
   dealSchema,
   dealsRunSchema,
@@ -103,6 +104,7 @@ import {
   watchLogEntrySchema,
   watchLogPageSchema,
   type Activity,
+  type Attention,
   type BarcodeCandidate,
   type BarcodeLookup,
   type Deal,
@@ -218,6 +220,7 @@ import { formatShortDate } from './utils'
 
 export type {
   Activity,
+  Attention,
   ActivityEvent,
   ActivityKind,
   BarcodeCandidate,
@@ -2462,6 +2465,11 @@ export async function fetchDeals(filters: DealFilters = {}): Promise<DealList> {
   if (filters.minDiscount) query.set('minDiscount', String(filters.minDiscount))
   const suffix = query.toString() ? `?${query.toString()}` : ''
   return parseResponse(await authFetch(`/deals${suffix}`), dealListSchema)
+}
+
+/** Batch X2: what the daily check found, for Home's "Needs attention" row. Admin only. */
+export async function fetchAttention(): Promise<Attention> {
+  return parseResponse(await authFetch('/attention'), attentionSchema)
 }
 
 /** §5.10's one-tap dismiss, and its undo. A soft state, because tonight's scrape will
