@@ -57,7 +57,8 @@ eBay scan blind (9 Oct).
 **Owner steps now, no code (about 20 minutes):**
 1. Take Neon's one free manual snapshot.
 2. `OWNER-ACTIONS.md` 22: rotate the Neon owner password and take it out of `apps/api/.env`.
-3. Put Mark's Letterboxd username in his profile (none is stored); press Sync now after X5.
+3. Mark's Letterboxd username: Craig gave it on 12 Oct (as in `OWNER-ACTIONS.md` 1j). The app lets only
+   Mark set his own, so X5 stores it; both people press Sync now after X5.
 4. Close `OWNER-ACTIONS.md` 16b: Mark's first push arrived 11 Oct 17:45, a movie-night match.
 5. One look each: GitHub's plan (CI runs ~3,000 minutes a month) and Neon's usage page.
 
@@ -173,7 +174,8 @@ Craig's decision of 11 Oct · CT46-02 Medium · UX48-04 Medium.
   counts and value); a dry-run-first backfill of the 756 dated diary entries not yet recorded (Craig 579,
   Mark 177), doubtful matches queued for Craig; a known year more than one apart excludes a candidate;
   the feed's TMDB id kept on each watch; the 15 re-pointed at Craig's word; the diary import leaves the
-  old engine; a weekly sync inside the 08:00 job (no new Railway service); a line on the 50-entry window.
+  old engine; Mark's username stored (Craig's word, 12 Oct); a weekly sync inside the 08:00 job (no new
+  Railway service); a line on the 50-entry window.
 - **Cost:** ~2 days plus Craig's look at doubtful matches · by 31 Oct · top · xhigh (live data).
 
 ### X6 — Value the shelf as used copies
@@ -345,7 +347,7 @@ no sold prices; no billing pages; 7 days of Railway logs; 25 wrong products is a
 
 **Sittings** (each at its strictest batch's setting; Codex takes the same tier):
 1. 13–17 Oct: X1 → X2 → X3, top · high.
-2. When decision 4 is answered: X4 alone, top · xhigh.
+2. When decision 4 is answered, and before X5 (which writes live data): X4 alone, top · xhigh.
 3. 20–24 Oct: X7 → X8, top · high.
 4. 27–31 Oct: X6 → X5, top · xhigh; then both people press Sync now.
 5. 3–7 Nov: X9 → X10, top · xhigh; then Craig's taps in Identify.
