@@ -6,11 +6,13 @@
 `docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
 planned 12 Oct", in five sittings (#255). **Sitting 1 is running as one group (`/group-start X
-· 1`): X1, the eBay scan, shipped 12 Oct (`7979e19`); X2 and X3 are next in that run.**
+· 1`): X1, the eBay scan, and X2, the daily check, shipped 12 Oct (`7979e19`, `857ee8f`); X3
+is next in that run.** Home's "Needs attention" row is live for Craig; the first check runs at
+08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
 |---|---|
-| ~~X1~~ → X2 → X3, sitting 1 | running as one group; X1 shipped 12 Oct (`7979e19`, #258) |
+| ~~X1~~ → ~~X2~~ → X3, sitting 1 | running as one group; X1 and X2 shipped 12 Oct (`7979e19` #258, `857ee8f` #259) |
 | X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
@@ -43,8 +45,8 @@ The Log keeps a dated line for each.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is running as one group
-(`/group-start X · 1`)**: X1 shipped 12 Oct; X2 ("Failures reach Craig") and X3 ("Push that
-heals itself") follow in the same run, and the resume point is the first of them not struck.
+(`/group-start X · 1`)**: X1 and X2 shipped 12 Oct; X3 ("Push that heals itself") follows in
+the same run, and the resume point is the first batch not struck.
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -432,6 +434,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-12 (X2 shipped, `857ee8f`, #259)** — A daily check inside the 08:00 reminders job
+  records every job's heartbeat, the eBay scan, each person's notifications, readiness, the
+  database's size, PIN locks and identification's doubts, and tells Craig in a "Needs
+  attention" row at the top of Home and one push per new problem. Every job beats each run;
+  `cron-scrape` exits 0 on refusals alone; Price alerts says how many listings the last checks
+  read; Deals stays in the menu; PIN locks escalate within a day. Migration 050. Production reported the merge SHA at 22:30 UTC with `db: ok`, and the API's boot heartbeat says all three readiness fields are configured.
 
 - **2026-10-12 (X1 shipped, `7979e19`, #258)** — The eBay scan's mark is its own clock, so the
   21 Oct row stopped blinding it on the deploy; the matcher refuses another year, incomplete

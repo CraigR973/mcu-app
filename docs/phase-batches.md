@@ -3194,7 +3194,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
-| 1 | ~~X1 eBay scan~~ (`7979e19`) → X2 failures reach Craig → X3 push heals itself | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
+| 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → X3 push heals itself | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
 | 2 | X7 assistant repair → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
 | 3 | X6 value as used copies → X4 weekly dump and restore drill → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
@@ -3206,7 +3206,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | Batch | Covers | Size | Claude Code | Codex |
 |---|---|---|---|---|
 | ~~X1~~ | ~~CR43-01 ≡ MK47-02, MK47-01, MK47-06, MK47-07, CR43-06; MK47-04's steps~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
-| X2 | DS44-01, DS44-05, UX48-02 (the screens) | 🟡 | top tier · high | top tier · High |
+| ~~X2~~ | ~~DS44-01, DS44-05, UX48-02 (the screens)~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | X3 | DS44-02, UX48-02 (Settings) | 🟢 | top tier · high | top tier · High |
 | X4 | DS44-03 | 🟢 | top tier · xhigh | top tier · Extra High |
 | X5 | Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share | 🔴 | top tier · xhigh | top tier · Extra High |
@@ -3309,7 +3309,28 @@ condition (`BATCH_43_CODE_REVIEW.md`, `BATCH_47_PRICES_VALUE_DEALS_REVIEW.md`).
   (`listings_seen > 0`), read with `live_sql`.
 - Tests. Gate green.
 
-### X2 — Failures reach Craig 🟡
+### ~~X2 — Failures reach Craig~~ 🟡 **shipped 2026-10-12 (`857ee8f`, [#50](https://github.com/CraigR973/mcu-app/pull/50))**
+**Acceptance: met; the first scheduled check runs at 08:00 UTC on 13 Oct, and until then
+Home's row says "The daily check hasn't run yet".** A check inside the 08:00 reminders job
+reads only tables the app writes and records each result in `health_checks`: each job's
+heartbeat or last run within its cadence (daily jobs 26 hours, eBay 5, the valuation 17 days),
+the eBay scan reading listings in one of its last six runs, each person's live device and last
+three days not all undelivered, readiness (written by the API at boot), the spec integration,
+the database under half its 1 GB, a PIN lock in the last day, Identify proposals older than a
+fortnight and identified films a disc page or review puts in another year, and deals older
+than their source's freshness. A new problem appears in a "Needs attention" row at the top of
+Home (admin) and is pushed once, in an `attention` category with no toggle; the row also says
+when the check itself has not run for a day. Every job writes a heartbeat each run, "nothing
+due" and "budget spent" included; `cron-scrape` exits 0 when shops only refused; Price alerts
+says "read 0 new listings, 33 checks in a row"; Deals stays in the menu and its empty page says
+when eBay and each shop last answered; repeated PIN locks in a day escalate (15 minutes, 1
+hour, 4 hours, 24 hours). Migration 050: `job_heartbeats` and `health_checks`, granted to the
+read-only role, guarded, and two profile columns. Choices in #259. Local gate green (API 1,241
+passed, 676 skipped without Postgres, and 1,902 passed against a local Postgres 16, its five
+failures also failing on unchanged `main`; web 531, shared 135); CI green; production reported the merge SHA at 22:30 UTC with `db: ok`; alembic at 050, the API's boot heartbeat written with push, the assistant and eBay configured, and the read-only role reading both tables and both columns while `pin_hash` stays withheld. Home's row,
+Deals' empty page and Price alerts' line were checked in a browser at 375 px against a local
+API, which removed a doubled "since".
+
 **Covers DS44-01 (High), UX48-02's screens (High) and DS44-05 (Low).** Top tier · high.
 Sitting 1, after X1.
 
@@ -3713,7 +3734,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
-| **X · 1** | ~~X1~~ (`7979e19`) → X2 → X3 | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
+| **X · 1** | ~~X1~~ (`7979e19`) → ~~X2~~ (`857ee8f`) → X3 | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
 | **X · 2** | X7 → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
 | **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → X6 → **checkpoint: his credential steps** (storage decided, #257) → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
