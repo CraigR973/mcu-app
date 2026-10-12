@@ -435,6 +435,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-12 (wave 1 review, Batches 43–48, synthesis)** — Six passes at `527522d` found 44
+  findings (10 High); the roadmap (`docs/reviews/BATCH_43-48_ROADMAP.md`) groups them into 12 draft
+  batches X1–X12 and names 20 standing guards. Re-checked 12 Oct: the eBay scan still blind (39 of 39
+  runs since 9 Oct), 30 copies still the wrong film, pushes reaching both phones again after Craig's
+  and Mark's re-subscribes on 11 Oct. Rows wait for Craig's go; X1 (the eBay scan) should land before
+  21 Oct.
+
 - **2026-10-05 (W1 follow-up, [#44](https://github.com/CraigR973/mcu-app/pull/44))** — Craig, dark theme: the top bar was still faded with
   Search open. The search sheet covers the bar while open and had kept the page's colour, so
   every tap of Search brought the faded bar back; it takes the bar's surface now. A test opens
