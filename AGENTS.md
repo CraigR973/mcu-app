@@ -6,8 +6,8 @@
 > convention somewhere only one tool can see.
 
 **Mark's Cinematic Universe (The Real MCU)** — a private, two-person film-collection
-app for Craig and Mark. Catalogues ~140 physical discs (4K / Blu-ray / DVD), enriched
-from TMDB, imported from a spreadsheet.
+app for Craig and Mark. Catalogues about 1,900 copies (4K / Blu-ray / DVD discs and
+downloads), enriched from TMDB, imported from a spreadsheet.
 
 ## Source of truth — read these first
 
@@ -29,9 +29,9 @@ in these in-repo docs so Codex and future sessions can see it.
 
 ## Current state — read STATUS.md, but in one line
 
-The app is mid-**re-scaffold** onto the in-house `app-starter` template (Decision #5).
-The API is deployed and serving its commit SHA; the web app is built and hosted but does
-not boot until Batch 3 restores auth. Do not build new features onto the old spine.
+The app is **live** on the `app-starter` spine (#5, #10) and both people use it from their
+phones. The wave 1 review (12 Oct, `docs/reviews/`) found 44 issues; their remediation is
+Group X in `docs/phase-batches.md`, and STATUS.md says which batch is next.
 
 ## Stack
 

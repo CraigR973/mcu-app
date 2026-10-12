@@ -238,7 +238,8 @@ usual when no limit; the refusing shops asked weekly. ~1 day · Nov · mid · hi
 UX48-05 Medium · UX48-06, -07, CT46-06, -07, DS44-06, CR43-08 Low. **Fix:** one number per fact ("Films
 owned 1,869"); one date style; a 12 px floor and 44 px targets; compressed answers; TMDB's logo, notice
 and JustWatch credit; decided Brave results deleted; TMDB fields refreshed before six months; completion
-sets from top billing; agent docs corrected; a "Tell Craig" line for Mark. ~1.5 days · Nov · mid · high.
+sets from top billing; the rest of the agent docs corrected (the rows step fixed `AGENTS.md`'s current state);
+a "Tell Craig" line for Mark. ~1.5 days · Nov · mid · high.
 
 **Batch 38 (queued) gains six cases:** the offline replay that may have landed (CR43-05); each job's entry
 point run (CR43-07); the built bundle against a cross-origin API (UX48-01); a drift and a missing-chunk case

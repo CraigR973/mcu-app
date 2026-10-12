@@ -67,7 +67,7 @@ eBay accounts shown empty.
 | CR43-05 offline replay untested | Low | Batch 38 |
 | CR43-06 TMDB waits unbounded | Low | X1 |
 | CR43-07 three jobs' entry points never run in a test | Low | Batch 38 |
-| CR43-08 agent docs contradict procedures | Low | X12 |
+| CR43-08 agent docs contradict procedures | Low | Rows step (`AGENTS.md`, the commands index); the rest X12 |
 | DS44-01 no failure reaches Craig | High | X2 |
 | DS44-02 a phone's push dies silently | High | X3 |
 | DS44-03 no copy outside Neon | High | X4 |
