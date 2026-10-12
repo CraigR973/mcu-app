@@ -3183,7 +3183,9 @@ a day, at most 60 an hour a person) to a film.
 `docs/reviews/BATCH_43-48_ROADMAP.md` and its packages X1–X12; each finding id points into
 its pass report in `docs/reviews/`). **Criteria authored 2026-10-12** from the roadmap, so
 `DECISIONS.md` #54 does not apply. **Written into the plan at Craig's word ("do rows and
-merge", 12 Oct, #253); each sitting starts at his go, and he starts X1 himself.** Numbers are
+merge", 12 Oct, #253); each sitting starts at his go, and he starts X1 himself.** **Regrouped
+the same day at his word (#255): five sittings, X4 inside the late-October one, and the first
+run as one group. eBay's licence (MK47-04) is an accepted risk (#254).** Numbers are
 as re-checked on 12 Oct: re-verify them, per `batch-start.md` step 3. Model tiers are Group
 V's: top tier is the two models on Group U's row in "Batch groups", mid tier the two on Batch
 21's row. **The cases X1, X5 and X9 test against are in `docs/reviews/BATCH_43-48_EVIDENCE.md`.**
@@ -3192,12 +3194,11 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
-| 1 | X1 eBay scan → X2 failures reach Craig → X3 push heals itself | Craig's go; **X1 before 21 Oct 16:35 UTC** | top tier · high | top tier · High |
-| 2 | X4 weekly dump and restore drill | Craig's storage choice (roadmap decision 4) and his credential steps; **before X5** | top tier · xhigh | top tier · Extra High |
-| 3 | X7 assistant repair → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
-| 4 | X6 value as used copies → X5 watch history | X6: Craig's yes on the value basis (decision 3, #209), before 1 Nov 04:00. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X5) | top tier · Extra High |
-| 5 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
-| 6 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
+| 1 | X1 eBay scan → X2 failures reach Craig → X3 push heals itself | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
+| 2 | X7 assistant repair → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
+| 3 | X6 value as used copies → X4 weekly dump and restore drill → X5 watch history | X6: Craig's yes on the value basis (decision 3, #209), before 1 Nov 04:00. X4: his storage choice (decision 4) and credential steps. X5: after X4, by 31 Oct; its live data steps at his word. All three answers before 27 Oct (#255) | top tier · xhigh (from X4 and X5) | top tier · Extra High |
+| 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
+| 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
 
 **Each batch on its own:**
@@ -3276,8 +3277,9 @@ condition (`BATCH_43_CODE_REVIEW.md`, `BATCH_47_PRICES_VALUE_DEALS_REVIEW.md`).
 - The TMDB client's wait on a 429 follows the scraper's bounded rule (#238): `Retry-After`
   honoured up to 90 seconds, dates parsed; a refusal on the last try is a 503 with the "TMDB
   didn't answer" wording, not a 500.
-- MK47-04 is recorded as a decision at close-out, at Craig's word (roadmap decision 2: an
-  accepted risk, or a request to eBay); the steps above ship either way.
+- MK47-04 is settled: an accepted risk, at Craig's word on 12 Oct (#254). The re-check, the
+  age line and the deletion steps above are what bound it; X1's close-out cites #254 and
+  needs no decision.
 - **Guards (CI):** a listing dated in the future never moves the mark, on write or on read;
   titles crafted from the 25 wrong-product finds (`docs/reviews/BATCH_43-48_EVIDENCE.md`,
   section 1) never match, except the three no title rule can tell apart (*Maggie* and the two
@@ -3352,9 +3354,9 @@ hand on 11 Oct.
 - Tests. Gate green.
 
 ### X4 — Weekly dump and restore drill 🟢
-**Covers DS44-03 (High).** Top tier · xhigh. Sitting 2. **Waits for Craig's choice of storage
-(roadmap decision 4: GitHub Actions artifacts recommended, or Neon's paid plan) and lands
-before X5.** Its credential steps are Craig's.
+**Covers DS44-03 (High).** Top tier · xhigh. Sitting 3, after X6 (#255). **Waits for Craig's
+choice of storage (roadmap decision 4: GitHub Actions artifacts recommended, or Neon's paid
+plan) and lands before X5.** Its credential steps are Craig's.
 
 **Found 11 Oct:** Neon's free plan (1 GB cap) restores within 6 hours, keeps one manual
 snapshot and offers no scheduled backups; no dump, export or restore runbook exists
@@ -3380,7 +3382,7 @@ snapshot for now on 12 Oct, which is why X4 precedes X5.
 ### X5 — Watch history: films not owned, the backfill, the year rule 🔴
 **Covers Craig's decision of 11 Oct (`docs/reviews/BATCH_43-48_REVIEW_SCOPE.md`, "Decisions
 during the passes"), CT46-02 (Medium), UX48-04 (Medium) and CT46-01's diary share.** Top tier ·
-xhigh. Sitting 4, after X6. **After X4; by 31 Oct**, so a sync then still reaches back past
+xhigh. Sitting 3, last. **After X4; by 31 Oct**, so a sync then still reaches back past
 14 Sep for Mark (his 50-entry feed stops reaching back around 10–19 Nov).
 
 **Found 11 Oct:** 15 imported watches sit on a different film of the same name (a 2013 film on
@@ -3416,7 +3418,7 @@ Letterboxd username stored; Craig synced once on 11 Oct (4 written, all right).
 - Tests. Gate green. Then both people press Sync now, or the first weekly run does it.
 
 ### X6 — Value the shelf as used copies 🟡
-**Covers MK47-03 (Medium).** Top tier · high. Sitting 4, first. **Waits for Craig's yes on the
+**Covers MK47-03 (Medium).** Top tier · high. Sitting 3, first. **Waits for Craig's yes on the
 value basis (roadmap decision 3; #209 for reconsideration; #237's asking prices stand); lands
 before 1 Nov 04:00**, the first re-pricing with work since 26 Sep, or the new-copy values stand
 until about 1 Dec.
@@ -3443,7 +3445,7 @@ among them.
 ### X7 — The assistant answers more than once 🟡
 **Covers AI45-01 (High), AI45-02 and AI45-03 (Med-High), AI45-04 (Medium) and AI45-05 to
 AI45-08 (Low).** Top tier · high (R3 proposed mid; raised for the write confirmation and the
-money caps). Sitting 3, first.
+money caps). Sitting 2, first.
 
 **Found 11 Oct, re-checked 12 Oct:** every follow-up fails with a 400, because each answer is
 stored as the SDK's full block dump, whose text blocks carry the SDK-only `parsed_output`, and
@@ -3483,7 +3485,7 @@ call leaves no usage row and tells the person to rephrase.
 
 ### X8 — Offline, version drift and failure words 🟡
 **Covers UX48-01 (High), UX48-03 and DS44-04 (Medium), CR43-04 and DS44-07 (Low).** Top tier ·
-high. Sitting 3, after X7.
+high. Sitting 2, after X7.
 
 **Found 11 Oct:** the worker caches API reads only when the request's origin is the page's
 own; production's API is on Railway and the page on Vercel, so it has never kept an answer,
@@ -3514,7 +3516,7 @@ build's commit with the API's; the CSP allows any Railway app and Supabase.
 
 ### X9 — Catalogue truth 🔴
 **Covers CT46-01 (High), CT46-03 and CR43-02 (Medium) and CT46-05 (Low).** Top tier · xhigh.
-Sitting 5, first. Before any future sheet import or refresh, which would match with the old
+Sitting 4, first. Before any future sheet import or refresh, which would match with the old
 engine.
 
 **Found 11 Oct, re-checked 12 Oct:** 30 copies are confidently the wrong film (27 of 1,115
@@ -3548,7 +3550,7 @@ handler reads the run after a rollback and crashes on its first failure (`Missin
 - Tests. Gate green.
 
 ### X10 — One title rule, and owned twins found 🟢
-**Covers CR43-03 and CT46-04 (Medium).** Top tier · high. Sitting 5, after X9.
+**Covers CR43-03 and CT46-04 (Medium).** Top tier · high. Sitting 4, after X9.
 
 **Found 11 Oct:** four title rules (the catalogue matcher, T9, the Letterboxd matcher, review
 finding) disagree on 7 of 8 pairs and are patched per site; 5 films are split across two rows
@@ -3569,7 +3571,7 @@ added under one barcode; 8 film rows with no copies were left by the 18 Sep refr
 - Tests. Gate green.
 
 ### X11 — Wanted: shop prices shown, alerts without a limit 🟡
-**Covers MK47-05 (Medium).** Mid tier · high. Sitting 6, first.
+**Covers MK47-05 (Medium).** Mid tier · high. Sitting 5, first.
 
 **Found 11 Oct:** 1 of 10 wants has a price limit, and a shop alert needs one; shop prices are
 stored nightly and shown nowhere; the three Shopify shops answer Cloudflare 429s to every
@@ -3584,7 +3586,7 @@ request, costing 28–31 minutes a night.
 
 ### X12 — Polish and terms 🟡
 **Covers UX48-05 (Medium), UX48-06, UX48-07, CT46-06, CT46-07, DS44-06 and the rest of CR43-08
-(Low).** Mid tier · high. Sitting 6, after X11.
+(Low).** Mid tier · high. Sitting 5, after X11.
 
 **Acceptance:**
 - Home's "Films owned" counts films with a copy (1,869 on 11 Oct, not 1,891); copies read
@@ -3691,12 +3693,11 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **V · 2** | ~~V6~~ → ~~checkpoint: Craig taps "Try bid prices" and picks~~ (neither, 1 Oct) → ~~V7~~ (shelved, #237) → ~~V8~~ (`37e7c0a`, 2 Oct) | top tier · xhigh | top tier · Extra High | **Sitting 2 of Group V. V6 shipped 1 Oct in the overnight run (`153d45b`, #230); Craig ran it on 1 Oct and picked neither: V7 is shelved (#237). V8 shipped on 2 Oct on asking prices (`37e7c0a`, #239); the sitting is done.** Same eBay pricing code throughout (`src/ebay/estimate.py`, `services/valuation.py`, `services/ebay_watch/refs.py`), and each needs the one before: V7 builds on V6's report and V8 averages V7's figure. `xhigh` is derived from V6 and V7; V8 alone is `high` |
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
-| **X · 1** | X1 → X2 → X3 | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253).** Craig starts X1 himself; it must land before 21 Oct 16:35 UTC. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
-| — | X4 · solo | top tier · xhigh | top tier · Extra High | Waits for Craig's storage choice and his credential steps; lands before X5, which writes live data |
-| **X · 3** | X7 → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
-| **X · 4** | X6 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing (at Craig's yes on the value basis), X5 by 31 Oct (after X4). `xhigh` from X5's live backfill |
-| **X · 5** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
-| **X · 6** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
+| **X · 1** | X1 → X2 → X3 | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
+| **X · 2** | X7 → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
+| **X · 3** | **checkpoint: Craig's yes on the value basis** → X6 → **checkpoint: his storage choice and credential steps** → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
+| **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
+| **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

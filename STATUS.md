@@ -5,14 +5,14 @@
 **12 Oct 2026: the wave 1 full review is done, and its remediation is Group X** (#253,
 `docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
-planned 12 Oct". **Next: X1, the eBay scan, which must land before 21 Oct 16:35 UTC**; Craig
-starts it in a new session (`/batch-start X1`).
+planned 12 Oct", in five sittings (#255). **Next: sitting 1, X1 → X2 → X3, as one group; X1,
+the eBay scan, must land before 21 Oct 16:35 UTC.** Craig starts it in a new session
+(`/group-start X · 1`).
 
 | Batch | State |
 |---|---|
-| X1 → X2 → X3, sitting 1 | X1 next, before 21 Oct; then failures reach Craig; then push that heals itself |
-| X4, the weekly dump | waits for Craig's storage choice (roadmap decision 4); before X5 |
-| X7 → X8 · X6 → X5 · X9 → X10 · X11 → X12 | in that order; X6 waits for Craig's yes on the value basis and lands before 1 Nov; X5 by 31 Oct |
+| X1 → X2 → X3, sitting 1 | next, as one group; X1 before 21 Oct; eBay's licence settled (#254), so X1's close-out does not stop |
+| X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3 needs Craig's yes on the value basis, his storage choice and X4's credential steps before 27 Oct; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -26,9 +26,9 @@ starts it in a new session (`/batch-start X1`).
   2nd, 15th and 16th, its first run with work on 1 Nov 04:00.
 - **The gate** is six CI jobs (#248). Locally: API 1,188 passed and 650 skipped without Postgres
   (11 Oct), web 525, shared 131.
-- **Craig's open items** (`OWNER-ACTIONS.md`): the roadmap's three open choices (eBay's licence,
-  the value basis, backup storage); 29 connect eBay; 22 the Neon password (left for now,
-  12 Oct); the Identify films (165) and Disc specs (525) queues.
+- **Craig's open items** (`OWNER-ACTIONS.md`): before 27 Oct, the value basis, backup storage
+  and X4's credential steps (eBay's licence settled 12 Oct, #254); 29 connect eBay; 22 the Neon
+  password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues.
 
 **Live numbers (12 Oct, read-only):**
 - **Collection:** 1,889 live copies (1,466 discs, 422 downloads, 1 unlabelled); 1,891 films,
@@ -43,8 +43,9 @@ The Log keeps a dated line for each.
 ## Next
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
-remediation, #253), then 38. **X1 is next** and must land before 21 Oct 16:35 UTC; read its
-criteria there first ("X1 — eBay: unblind the scan, name the right disc, say how fresh").
+remediation, #253, in five sittings since #255), then 38. **Sitting 1 is next, as one group
+(`/group-start X · 1`)**, and X1 must land before 21 Oct 16:35 UTC; read its criteria there
+first ("X1 — eBay: unblind the scan, name the right disc, say how fresh").
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -432,6 +433,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-12 (Group X regrouped, #254, #255)** — Craig's answers the same evening: X4 joins
+  the late-October sitting as X6 → X4 → X5, so Group X runs in five sittings, not six; sitting
+  1 runs as one group; eBay's API licence (MK47-04) is an accepted risk, so X1's close-out does
+  not stop to ask. Docs only.
 
 - **2026-10-12 (wave 1 review, Batches 43–48, synthesis)** — Six passes at `527522d` found 44
   findings (10 High); the roadmap (`docs/reviews/BATCH_43-48_ROADMAP.md`) groups them into 12 draft
