@@ -11,7 +11,11 @@ Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift 
 words (`e991281`), shipped 13 Oct. Next: sitting 3, X6 → X4 → X5, at Craig's go; X6 before
 1 Nov.** **Also 13 Oct, outside Group X: Group Y, Mark's requests, is done.** Y1 (`4840711`, #264):
 Mark edits, moves and deletes copies. Y2 (`e0b5bad`, #265): Move discs, a tray of discs found
-by search or scan, moved together and movable back (Group Y in `docs/phase-batches.md`). Home's "Needs attention" row is live for Craig; the
+by search or scan, moved together and movable back (Group Y in `docs/phase-batches.md`). Mark's
+first feedback was fixed the same evening (`2ef3b8a`, #266): a shelf-only edit kept the old
+location text, and the delete question hid its own Yes on a phone. **Mark's to do:** re-save
+12 Angry Men's 4K (Front 4th) to tidy its text, and decide whether its location-less Blu-ray,
+added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
@@ -440,6 +444,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-13 (copy fix, `2ef3b8a`, #266)** — Mark's feedback on Y1, both on 12 Angry Men.
+  (a) A shelf-only edit kept "Front 3rd shelf" over Front · 4th; the form now clears the text
+  for a new shelf, and the API recomposes text naming a different place (1 of 1,885 live discs
+  affected, re-saving it corrects it). (b) No delete was recorded: Y1's confirmation pushed
+  "Yes" off a phone and left Save in its place; the question now stands alone with Yes and
+  Keep it. CI green first time (pytest 1,981, none skipped); production and the web report
+  `2ef3b8a`.
 - **2026-10-13 (Y2 shipped, `e0b5bad`, #265; Group Y done)** — Move discs: find each disc by
   search or scan (W3's finder, now shared with Loans), collect them in a tray on the phone,
   move them all to one place in one request, and move them back. `POST /collection/move`

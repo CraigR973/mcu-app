@@ -3775,6 +3775,15 @@ location is its section and shelf on the same edit form, so he could not move on
 - Tests, API and web. Gate green. Browser check at 375 px as Mark: edit a copy, move it, ask
   to delete it.
 
+### Y1 follow-up — Mark's first feedback, fixed 2026-10-13 (`2ef3b8a`, [#63](https://github.com/CraigR973/mcu-app/pull/63))
+Both on 12 Angry Men (`DECISIONS.md` #266). **A shelf-only edit kept the old text**, so the film
+page showed two places: the copy form now clears the text for a new shelf as it did for a new
+section, and the API recomposes text that names a different place from the pickers. Read-only
+check: 1 of 1,885 live discs disagreed, this one. **The delete question hid its own Yes** below
+a phone's fold with Save in its place, and nothing was deleted: the footer is now only the
+question, "Yes, move to trash" and "Keep it". Two API tests, a CopyForm interaction test, the
+film page's delete test extended. CI green first time; production reported `2ef3b8a`.
+
 ### ~~Y2 — Move several discs at once, from anywhere~~ 🟡 **shipped 2026-10-13 (`e0b5bad`, [#61](https://github.com/CraigR973/mcu-app/pull/61))**
 **Acceptance: met.** A Move discs page in The archive's menu for both people; W3's finder
 extracted to `FilmFinder` and shared with Loans (its 4 tests unchanged and green). A film with
