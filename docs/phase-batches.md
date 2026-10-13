@@ -3735,14 +3735,27 @@ reporting the merge SHA with `db: ok`.
 
 | Batch | Covers | Size | Gate | Claude Code | Codex |
 |---|---|---|---|---|---|
-| Y1 | Mark edits, moves and deletes copies | 🟢 | Craig's go, given 13 Oct | top tier · high | top tier · High |
+| ~~Y1~~ | ~~Mark edits, moves and deletes copies~~ (`4840711`) | ~~🟢~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | Y2 | Move several copies at once | 🟡 | Craig's go, after asking Mark whether he moves whole shelves | top tier · high | top tier · High |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
 to many rows.
 
-### Y1 — Mark edits, moves and deletes copies 🟢
+### ~~Y1 — Mark edits, moves and deletes copies~~ 🟢 **shipped 2026-10-13 (`4840711`, [#59](https://github.com/CraigR973/mcu-app/pull/59))**
+**Acceptance: met.** `PUT` and `DELETE /collection/{id}` take either person; a test has Mark
+move a disc to Craig's house and delete it, with both audit rows naming him, and a second has
+him refused a restore (403) that Craig's succeeds. The film page shows him Edit copy, Mark
+damaged, Add a copy and the upgrade prompt, and still hides the eBay check, the sale panel,
+photo uploads and the item history. Move to trash asks first. Browser check at 375 px as Mark
+by #169's method (stub API in the scratchpad, `.env.local` deleted after): moved Front 2nd →
+Back Top, the `PUT` carrying `baseUpdatedAt`; two-tap delete. Local gate green (API 1,268
+passed, 706 skipped without Postgres; web 564; shared 137); CI green first time, pytest 1,974
+passed against Postgres with none skipped. The OpenAPI snapshot changed in two descriptions
+only. Production reported `4840711` with `db: ok` and every field `configured`, and the web's
+`/version.json` the same commit. **Open:** Mark trying it on his phone; asking him whether he
+moves whole shelves decides Y2.
+
 
 **Covers Mark's request.** Since #155 Mark can add a disc but not correct it, and a disc's
 location is its section and shelf on the same edit form, so he could not move one either.
