@@ -5499,3 +5499,19 @@ contemporaneous.
      panel (T6), and photo uploads and deletes, because a photo delete is a hard delete with
      no audit row. Because Mark cannot restore, Move to trash now asks first, for both people.
      Moving several copies at once is Batch Y2, planned and not built.
+
+265. **Y2 moves discs from anywhere through a tray, scanning included.** Craig, 13 Oct: "this
+     probably wouldn't be entire shelves but multiple items from anywhere to anywhere", then
+     "Go" and "Include it" for scanning. So Y2's draft (filter the Archive to one shelf, then
+     select) is replaced. *How:* a Move discs page finds each disc by search or scan with
+     W3's finder, now shared with Loans; picks go into a tray kept on that phone; one place,
+     one request. *Rejected:* a select mode across the Archive's three virtualised layouts,
+     which would touch all three and still not help with a pile of discs in hand.
+     **`POST /collection/move` carries a place per disc**, so "Move them back" is the same
+     endpoint with each disc's previous place, not a second write path. Each disc is checked
+     against the version it was picked at (#42); **`baseUpdatedAt` is required here**, unlike
+     the edit's, because a tray can sit for an afternoon. A stale disc is left alone and stays
+     in the tray at its new version, so moving it anyway is a second, deliberate act. **Online
+     only:** queueing a many-row move offline would need #42 across a queue. **A scan names a
+     film, not a copy** (none of the imported discs carries a barcode), so the person still
+     picks the disc when a film has several.

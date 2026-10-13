@@ -456,6 +456,21 @@ export const collectionItemSchema = z.object({
   deletedAt: z.string().nullable(),
 })
 
+/** Batch Y2 (`DECISIONS.md` #265): what happened to each disc a move named. */
+export const collectionMoveStatusSchema = z.enum(['moved', 'unchanged', 'stale', 'not_found'])
+
+export const collectionMoveResultSchema = z.object({
+  itemId: z.string().uuid(),
+  status: collectionMoveStatusSchema,
+  /** The disc as it now stands; for `stale`, where it actually is. Null for `not_found`. */
+  item: collectionItemSchema.nullable(),
+})
+
+export const collectionMoveResponseSchema = z.object({
+  results: z.array(collectionMoveResultSchema),
+  moved: z.number().int().nonnegative(),
+})
+
 export const existingCopySchema = z.object({
   id: z.string().uuid(),
   formats: z.array(z.string()),
@@ -542,6 +557,9 @@ export type FormatCode = z.infer<typeof formatCodeSchema>
 export type DuplicateReason = z.infer<typeof duplicateReasonSchema>
 export type AuditAction = z.infer<typeof auditActionSchema>
 export type CollectionItem = z.infer<typeof collectionItemSchema>
+export type CollectionMoveStatus = z.infer<typeof collectionMoveStatusSchema>
+export type CollectionMoveResult = z.infer<typeof collectionMoveResultSchema>
+export type CollectionMoveResponse = z.infer<typeof collectionMoveResponseSchema>
 export type ExistingCopy = z.infer<typeof existingCopySchema>
 export type DuplicateCheck = z.infer<typeof duplicateCheckSchema>
 export type TmdbSearchResult = z.infer<typeof tmdbSearchResultSchema>

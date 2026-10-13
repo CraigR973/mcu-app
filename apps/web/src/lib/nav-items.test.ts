@@ -22,7 +22,7 @@ function labels(sections: NavSections | undefined): string[] {
 }
 
 describe('the sidebar a signed-in non-admin sees', () => {
-  it('is exactly ten destinations while the two conditional tables are empty', () => {
+  it('is exactly eleven destinations while the two conditional tables are empty', () => {
     // **Batch S3 made this eight; Batch S6 made it seven**, by merging Calendar and
     // Coming soon into one Releases screen — its own criterion, and the same two-sources-
     // one-question argument `DECISIONS.md` #154 made about Home, Stats and Insights.
@@ -32,12 +32,14 @@ describe('the sidebar a signed-in non-admin sees', () => {
     // shown for Mark and Craig at Craig's word (#228): where a disc went is worth being
     // able to look up whether or not a loan has been made yet. **Batch X2 made it ten** with
     // Deals, always shown (#154 and #165 amended for Deals alone): hidden on empty, a blind
-    // eBay scan looked the same as a quiet day.
+    // eBay scan looked the same as a quiet day. **Batch Y2 made it eleven** with Move discs,
+    // always shown: either person moves discs (#264, #265).
     //
     // Asserted as the whole list rather than a count, so a swap that keeps the total
     // still fails.
     expect(labels(EMPTY)).toEqual([
       'Movies',
+      'Move discs',
       'Wanted',
       'Movie night',
       'Releases',
@@ -50,11 +52,12 @@ describe('the sidebar a signed-in non-admin sees', () => {
     ])
   })
 
-  it('grows to twelve once both have rows — the un-hide half', () => {
+  it('grows to thirteen once both have rows — the un-hide half', () => {
     // **A hide that never un-hides is the failure mode.** It looks right on this
     // database, where all four tables are empty, and stays wrong forever.
     expect(labels(FULL)).toEqual([
       'Movies',
+      'Move discs',
       'Wanted',
       'Box sets',
       'Collections',
@@ -95,7 +98,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
     // The shell renders before `nav/sections` resolves, and offline it may never
     // resolve. Hiding four destinations because a request is slow would be a worse bug
     // than the emptiness this feature exists to fix.
-    expect(labels(undefined)).toHaveLength(12)
+    expect(labels(undefined)).toHaveLength(13)
   })
 
   it('drops a group heading left with no links under it', () => {

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BellRing, Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, Plus, PoundSterling, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
+import { BellRing, Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, MoveRight, Plus, PoundSterling, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -49,6 +49,8 @@ export const HOME_ITEM: NavItem = { label: 'Archive shortcut', path: '/', icon: 
  */
 export const navItems: NavItem[] = [
   { label: 'Movies', path: '/movies', icon: Film },
+  // Batch Y2 (#265). Both people: moving a disc is editing it (#264).
+  { label: 'Move discs', path: '/collection/move', icon: MoveRight },
   { label: 'Box sets', path: '/box-sets', icon: Boxes, showWhen: 'boxSets' },
   { label: 'Collections', path: '/collections', icon: Sparkles, showWhen: 'collections' },
   // Batch S6: one destination, because the two pages answered the same question from two
@@ -115,7 +117,7 @@ function byPath(path: string): NavItem {
 export const navGroups: NavGroup[] = [
   {
     label: 'The archive',
-    items: [byPath('/movies'), byPath('/wanted'), byPath('/box-sets'), byPath('/collections')],
+    items: [byPath('/movies'), byPath('/collection/move'), byPath('/wanted'), byPath('/box-sets'), byPath('/collections')],
   },
   {
     label: 'Plan a screening',

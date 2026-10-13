@@ -3736,7 +3736,7 @@ reporting the merge SHA with `db: ok`.
 | Batch | Covers | Size | Gate | Claude Code | Codex |
 |---|---|---|---|---|---|
 | ~~Y1~~ | ~~Mark edits, moves and deletes copies~~ (`4840711`) | ~~🟢~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
-| Y2 | Move several copies at once | 🟡 | Craig's go, after asking Mark whether he moves whole shelves | top tier · high | top tier · High |
+| Y2 | Move several discs at once, from anywhere | 🟡 | Craig's go, given 13 Oct (#265) | top tier · high | top tier · High |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -3775,35 +3775,44 @@ location is its section and shelf on the same edit form, so he could not move on
 - Tests, API and web. Gate green. Browser check at 375 px as Mark: edit a copy, move it, ask
   to delete it.
 
-### Y2 — Move several copies at once 🟡
+### Y2 — Move several discs at once, from anywhere 🟡
 
-**Covers the rest of Mark's request**, if he reorganises whole shelves. Today a move is one
-copy at a time through the edit form. **Ask Mark first**: if he only moves the odd disc, Y1
-covers it and this batch is dropped.
+**Covers the rest of Mark's request.** Rewritten 13 Oct at Craig's word (#265): the discs come
+from anywhere, not from one shelf, so the first draft's "filter to a shelf, then select" is
+replaced by a tray. **Scanning included**, at Craig's choice, knowing a scan names the film,
+not the copy, for discs with no barcode stored.
 
 **Acceptance:**
-- **Select, then move.** The Archive, filtered to one section and shelf (Batch 6's filter),
-  gets a select mode. Selection is of **copies**, not films. Where a selected film has more
-  than one live copy, the copies outside the filtered shelf are not moved, and the screen says
-  so before the move.
-- **One picker.** "Move to…" offers the copy form's own section and shelf pickers, the whole
-  section vocabulary included (V4), and applies the result to every selected copy.
-- **One request, partial success.** A new endpoint takes up to 200 copy ids, each with the
-  `updatedAt` it was selected against, and the target section and shelf. It answers per copy:
-  moved, stale (changed elsewhere since it was selected, #42), or not found. A stale or missing
-  copy does not stop the others. Its own response shape, as #6 allows batch endpoints.
-- **Audited per copy.** One `update` audit row per moved copy, naming the actor, so the item
-  history of each film shows the move.
+- **A Move discs page**, in the archive's menu for both people. Find a disc by searching your
+  films or scanning its barcode, with the finder Loans' "Lend or borrow" uses (W3), shared
+  rather than copied.
+- **Copies, not films.** A film with one disc on the shelf goes straight into the tray and the
+  finder is ready for the next. A film with several asks which, each shown with its format,
+  edition and place.
+- **The tray** lists each disc with where it is now, keeps its picks across searches and
+  visits on that phone, and takes a disc out or clears.
+- **One place for all of them.** Section from the whole vocabulary (V4), then a shelf where the
+  section has any. One request.
+- **Partial success.** `POST /collection/move` takes up to 200 discs, each with the `updatedAt`
+  it was picked at and its own place. It answers per disc: moved, unchanged (already there,
+  nothing written), stale (changed elsewhere since it was picked, left alone, #42), or not
+  found (deleted, sold or unknown). A stale or missing disc does not stop the others. Every
+  place is resolved before anything is written, so an unknown section refuses the whole
+  request. Its own response shape, as #6 allows.
+- **Audited per disc.** One `update` audit row per disc moved, naming the actor, with the
+  edit's own diff.
 - **Either person**, as Y1 made editing.
-- **Undo.** The result offers "Move them back", which returns each moved copy to the section
-  and shelf it came from, through the same endpoint.
-- **Online only.** Offline, the move button is disabled and says why. Queueing a bulk move
-  offline would need #42's stale handling across a queue of many rows, which this batch does
-  not take on.
-- The facet counts and the Archive refresh after a move.
-- Tests: the endpoint's partial-success cases against Postgres, the selection rules and the
-  undo in the web suite. Gate green. Browser check at 375 px: filter to a shelf, select three
-  copies, move them, see them under the new shelf, undo.
+- **The report** says how many moved and where, which were already there, which changed on
+  the other phone (and where they are now; they stay in the tray at their new version), and
+  which are no longer in the collection.
+- **Move them back** returns each moved disc to its own previous place, free-text location
+  included, through the same endpoint.
+- **Online only.** Offline the button is off and says why; the tray waits on the phone.
+- The Archive, the facet counts and each film's copies refresh after a move.
+- Tests: the endpoint's cases against Postgres (partial success, undo exact, a bad section
+  writes nothing, one disc named once, the ceiling); the page's one-disc, several-disc, report,
+  undo and offline cases. Gate green. Browser check at 375 px as Mark: find two discs, move
+  them, see the report, move them back.
 
 ## Post-launch — sequenced, not scheduled
 
