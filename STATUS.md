@@ -9,13 +9,16 @@ planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan
 check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
 Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift and failure
 words (`e991281`), shipped 13 Oct. Next: sitting 3, X6 → X4 → X5, at Craig's go; X6 before
-1 Nov.** Home's "Needs attention" row is live for Craig; the
+1 Nov.** **Also 13 Oct, outside Group X: Y1 shipped (`4840711`, #264), so Mark edits, moves
+and deletes copies; Y2, moving several at once, waits on asking Mark whether he moves whole
+shelves** (Group Y in `docs/phase-batches.md`). Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
 |---|---|
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
+| ~~Y1~~ (`4840711` #264) · Y2 | Y1 done 13 Oct; Y2 planned, at Craig's go after Mark's answer |
 | X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 3–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
@@ -437,6 +440,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-13 (Y1 shipped, `4840711`, #264)** — Mark's request: he adds discs (#155) but could
+  not correct or move them. `PUT` and `DELETE /collection/{id}` take either person now, the
+  film page shows him the copy tools, and Move to trash asks first because only Craig can
+  restore. Photos, the eBay tools, the item history and the Trash stay Craig's. Y2, moving
+  several copies at once, is written up and not built. CI green first time; production and
+  the web report `4840711`.
 - **2026-10-13 (X8 shipped, `e991281`, #263; sitting 2 done)** — The worker caches the
   cross-origin API at last (it never had in production), and sign-out clears it. Failure screens
   say "No signal", "The archive had a problem" or "needs the newest version" with Reload; a
