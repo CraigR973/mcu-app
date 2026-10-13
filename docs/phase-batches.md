@@ -3195,7 +3195,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
 | 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → ~~X3 push heals itself~~ (`adcae0d`) — **done 12 Oct** | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
-| 2 | X7 assistant repair → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
+| 2 | ~~X7 assistant repair~~ (`aa6946d`) → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
 | 3 | X6 value as used copies → X4 weekly dump and restore drill → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
@@ -3211,7 +3211,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | X4 | DS44-03 | 🟢 | top tier · xhigh | top tier · Extra High |
 | X5 | Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share | 🔴 | top tier · xhigh | top tier · Extra High |
 | X6 | MK47-03 | 🟡 | top tier · high | top tier · High |
-| X7 | AI45-01 to AI45-08 | 🟡 | top tier · high | top tier · High |
+| ~~X7~~ | ~~AI45-01 to AI45-08~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | X8 | UX48-01, UX48-03, CR43-04, DS44-04, DS44-07 | 🟡 | top tier · high | top tier · High |
 | X9 | CT46-01, CT46-03, CT46-05, CR43-02 | 🔴 | top tier · xhigh | top tier · Extra High |
 | X10 | CR43-03, CT46-04 | 🟢 | top tier · high | top tier · High |
@@ -3500,7 +3500,35 @@ among them.
 - **Guard (CI):** R5's crafted titles never price a film.
 - Tests. Gate green.
 
-### X7 — The assistant answers more than once 🟡
+### ~~X7 — The assistant answers more than once~~ 🟡 **shipped 2026-10-13 (`aa6946d`, [#54](https://github.com/CraigR973/mcu-app/pull/54))**
+**Acceptance: met in code and in a browser; a real follow-up to the real model is Craig's to
+send (`OWNER-ACTIONS.md` 2), because it spends his money and needs his sign-in.** Stored and
+replayed blocks keep only the SDK's request fields for their type (`chat.request_block`), on
+write and on read, so the six stored conversations continue with no data write; a test drives
+real SDK blocks (thinking, a streamed text block, a tool call) through the real client over a
+stubbed transport and checks the second request. The write tools and the prompt say the app
+shows a Yes/No card; the prompt names the person and their London date and no disc count. The
+film a write is about is settled before the card (an id from a result, an exact title and
+year, or the one TMDB film with that title), so a shared title or an unknown film comes back
+as a question, and the card names "Halloween (2018)" and the date. A message sent while a card
+waits closes it as declined first; the web locks the box meanwhile. Tool results are a compact
+view (title, year, formats, place, watched), totals first, 25 a page; releases take a window
+and a kind; a cut counts what it left out. Every failed call leaves a usage row with status and
+type; 400, 401, 402, 403, 404, 413 and a 429 without `retry-after` read "The assistant isn't
+working right now; Craig has been told."; the daily check names failures in the last day. The
+allowance is checked before every model call under a per-person advisory lock, the fifth round
+is sent with `tool_choice: none`, four tools run per round, caps stop at 200 messages and $10,
+and a zero cost cap is refused (a stored zero reads as $2). One confirmation claims its row in
+one guarded update; a failed write is `failed`. Cost is priced by the configured id; the 5.5
+family is allowed and Fable 5.1's cache read corrected. #261 records the write tools behind a
+card; #262 the rest. R3's probe is kept as `src/scripts/assistant_canary.py`, at Craig's word
+at each delta review. Local gate green (API 1,261 passed, 705 skipped without Postgres, and
+1,956 against a local Postgres 16 with one collection test that fails there on unchanged
+`main` too; web 545, shared 137); CI green (1,966 passed, none skipped); production reported
+the merge SHA `4b38214` with `db: ok`. Seen at 375 px against a local API: the card naming the
+2018 film and its date, the locked box, one watch row written on Yes, the box unlocked. **Not
+seen:** a live follow-up (no read-only role on this Mac, and no sign-in).
+
 **Covers AI45-01 (High), AI45-02 and AI45-03 (Med-High), AI45-04 (Medium) and AI45-05 to
 AI45-08 (Low).** Top tier · high (R3 proposed mid; raised for the write confirmation and the
 money caps). Sitting 2, first.
@@ -3752,7 +3780,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 | **X · 1** | ~~X1~~ (`7979e19`) → ~~X2~~ (`857ee8f`) → ~~X3~~ (`adcae0d`) — **done 12 Oct** | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
-| **X · 2** | X7 → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
+| **X · 2** | ~~X7~~ (`aa6946d`) → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
 | **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → X6 → **checkpoint: his credential steps** (storage decided, #257) → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |

@@ -679,6 +679,12 @@ re-running writes zero for everything already imported.
 **12 Oct (wave 1 review):** a first question still works; any follow-up in the same chat fails
 (every stored answer carries a field the API refuses), until X7.
 
+- [ ] **13 Oct, after X7: ask one question, then a follow-up in the same chat** ("Do we own
+      Heat on 4K?", then "Which shelf?"). Both should answer; about 1p. Then try "I watched
+      Heat last night, log it, 4 stars": a Yes/No card should appear naming the film and the
+      date. Tap No unless you did. If anything fails, the reply now says "Craig has been told"
+      and the next morning's check names it.
+
 - [x] **Open Assistant in the sidebar and ask it anything. Done 2026-09-10** — §9.1 is
       met. Two calls to `claude-sonnet-5` are in `ai_usage_log` with input and output
       tokens and cost recorded ($0.004266 and $0.005282), and no error on either. That is
