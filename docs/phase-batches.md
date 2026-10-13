@@ -3736,7 +3736,7 @@ reporting the merge SHA with `db: ok`.
 | Batch | Covers | Size | Gate | Claude Code | Codex |
 |---|---|---|---|---|---|
 | ~~Y1~~ | ~~Mark edits, moves and deletes copies~~ (`4840711`) | ~~🟢~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
-| Y2 | Move several discs at once, from anywhere | 🟡 | Craig's go, given 13 Oct (#265) | top tier · high | top tier · High |
+| ~~Y2~~ | ~~Move several discs at once, from anywhere~~ (`e0b5bad`) | ~~🟡~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -3775,7 +3775,25 @@ location is its section and shelf on the same edit form, so he could not move on
 - Tests, API and web. Gate green. Browser check at 375 px as Mark: edit a copy, move it, ask
   to delete it.
 
-### Y2 — Move several discs at once, from anywhere 🟡
+### ~~Y2 — Move several discs at once, from anywhere~~ 🟡 **shipped 2026-10-13 (`e0b5bad`, [#61](https://github.com/CraigR973/mcu-app/pull/61))**
+**Acceptance: met.** A Move discs page in The archive's menu for both people; W3's finder
+extracted to `FilmFinder` and shared with Loans (its 4 tests unchanged and green). A film with
+one disc goes straight into the tray, one with several asks which. The tray lives in
+`localStorage` on the phone. `POST /collection/move` takes up to 200 discs with a required
+`baseUpdatedAt` and a place each, answers `moved` / `unchanged` / `stale` / `not_found`,
+resolves every place before writing, and writes one `update` audit row per disc moved; five
+Postgres tests cover the viewer's move with audit rows, partial success, an exact undo
+including free text, a bad section writing nothing, and the duplicate and ceiling refusals.
+Browser check at 375 px as Mark by #169's method: Heat added by search, Alien by a typed
+barcode with its two discs to choose from; three moved (two moved, one already there); "Move
+them back" sent each disc's own previous place with its new version. The check found two
+wording faults, fixed before the merge: the report now names the disc ("Alien (DVD)"), and the
+empty button reads "Move discs". The route pin (`test_health.py`) and the nav list's tests
+gained the new route and destination. Local gate green (API 1,268 passed, 711 skipped without
+Postgres; web 568; shared 139); CI green first time, pytest 1,979 passed with none skipped.
+**Open:** Mark using it on his phone, the camera scan included (the browser check typed the
+barcode; the camera path is W3's, unchanged).
+
 
 **Covers the rest of Mark's request.** Rewritten 13 Oct at Craig's word (#265): the discs come
 from anywhere, not from one shelf, so the first draft's "filter to a shelf, then select" is
