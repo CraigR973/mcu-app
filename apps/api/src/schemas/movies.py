@@ -14,20 +14,20 @@ from src.schemas.wire import UtcDatetime
 
 
 class GenreResponse(BaseModel):
-    id: int
+    id: int = Field(gt=0)
     name: str
 
 
 class CastResponse(BaseModel):
     personName: str
-    tmdbPersonId: int | None = None
+    tmdbPersonId: int | None = Field(default=None, gt=0)
     characterName: str | None = None
     profilePath: str | None = None
 
 
 class CreditResponse(BaseModel):
     personName: str
-    tmdbPersonId: int | None = None
+    tmdbPersonId: int | None = Field(default=None, gt=0)
     role: Literal["director", "writer", "producer", "composer"]
 
 
@@ -51,8 +51,8 @@ class MovieListItemResponse(BaseModel):
     year: int | None = None
     posterPath: str | None = None
     backdropPath: str | None = None
-    tmdbRating: float | None = None
-    runtimeMinutes: int | None = None
+    tmdbRating: float | None = Field(default=None, ge=0)
+    runtimeMinutes: int | None = Field(default=None, ge=0)
     bestFormatOwned: str | None = None
     bestHdrOwned: str | None = None
     bestAudioOwned: str | None = None
@@ -148,7 +148,7 @@ class SearchResponse(BaseModel):
 
 
 class CandidateResponse(BaseModel):
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None = None
     overview: str
@@ -246,7 +246,7 @@ class WatchLogResponse(BaseModel):
     posterPath: str | None = None
     watchedAt: date
     isRewatch: bool
-    personalRating: float | None = None
+    personalRating: float | None = Field(default=None, ge=0.5)
     review: str | None = None
 
 

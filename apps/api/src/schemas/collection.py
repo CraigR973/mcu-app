@@ -236,7 +236,7 @@ class DuplicateCheckResponse(BaseModel):
 class TmdbSearchResultResponse(BaseModel):
     """A film the add form found on TMDB but the catalogue does not have yet."""
 
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None = None
     overview: str
@@ -284,7 +284,9 @@ class AuditEntryResponse(BaseModel):
     id: uuid.UUID
     actorId: uuid.UUID | None = None
     actorName: str | None = None
-    actionType: str
+    #: The table's CHECK vocabulary (`models.admin_action.ACTION_TYPES`), declared so the web's
+    #: closed enum and the API agree in the contract test (Batch X8).
+    actionType: Literal["create", "update", "delete", "restore", "bulk_import"]
     targetTable: str
     targetId: str
     changes: dict[str, Any] | None = None

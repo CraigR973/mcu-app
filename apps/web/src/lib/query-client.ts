@@ -1,4 +1,6 @@
-import { QueryClient } from '@tanstack/react-query'
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
+
+import { reportIfOutOfDate } from './describe-error'
 
 /**
  * The app's query client, built here rather than inline in `main.tsx` so the options a
@@ -9,6 +11,10 @@ import { QueryClient } from '@tanstack/react-query'
  */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
+    // Batch X8: an answer this build cannot read raises the "newest version" banner, from
+    // whichever screen met it first.
+    queryCache: new QueryCache({ onError: reportIfOutOfDate }),
+    mutationCache: new MutationCache({ onError: reportIfOutOfDate }),
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5,

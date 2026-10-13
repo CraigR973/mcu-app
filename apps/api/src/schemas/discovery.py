@@ -6,7 +6,7 @@ import uuid
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.schemas.wire import UtcDatetime
 
@@ -24,7 +24,7 @@ OwnershipState = Literal["owned", "wanted", "unowned"]
 
 
 class StreamingOfferResponse(BaseModel):
-    providerId: int
+    providerId: int = Field(gt=0)
     providerName: str
     logoPath: str | None
     kind: OfferKind
@@ -50,7 +50,7 @@ class StreamingResponse(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None
     overview: str
@@ -63,14 +63,14 @@ class RecommendationResponse(BaseModel):
 class RecommendationListResponse(BaseModel):
     movieId: uuid.UUID
     items: list[RecommendationResponse]
-    ownedCount: int
+    ownedCount: int = Field(ge=0)
     #: As :attr:`StreamingResponse.unavailable` — "TMDB did not answer" is a different
     #: fact from "TMDB has no recommendations", and only one of them is worth retrying.
     unavailable: bool = False
 
 
 class NewReleaseResponse(BaseModel):
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     releaseDate: str | None
     posterPath: str | None
@@ -127,12 +127,12 @@ class CalendarMonthResponse(BaseModel):
 
     month: str
     days: dict[str, list[CalendarEntryResponse]]
-    total: int
+    total: int = Field(ge=0)
 
 
 class CalendarListResponse(BaseModel):
     items: list[CalendarEntryResponse]
-    total: int
+    total: int = Field(ge=0)
     #: Batch T5 — when the calendar last finished refreshing from TMDB, so the page can say
     #: how fresh it is. ``None`` before the first refresh.
     refreshedAt: UtcDatetime | None = None
@@ -160,11 +160,11 @@ class CalendarSubscriptionResponse(BaseModel):
 
 
 class CalendarIngestResponse(BaseModel):
-    created: int
-    updated: int
-    unchanged: int
-    skipped: int
-    total: int
+    created: int = Field(ge=0)
+    updated: int = Field(ge=0)
+    unchanged: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    total: int = Field(ge=0)
     errors: list[str]
     dryRun: bool
 
@@ -179,7 +179,7 @@ class MaybeOwnedResponse(BaseModel):
 class BeyondResultResponse(BaseModel):
     """A film the search found on TMDB that is not on the shelf — Batch T2."""
 
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None = None
     posterPath: str | None = None
@@ -210,13 +210,13 @@ class BeyondSearchResponse(BaseModel):
 class ExternalFilmResponse(BaseModel):
     """The film card for something the collection does not hold — Batch T2."""
 
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None = None
     posterPath: str | None = None
     backdropPath: str | None = None
     overview: str = ""
-    runtimeMinutes: int | None = None
+    runtimeMinutes: int | None = Field(default=None, gt=0)
     genres: list[str] = []
     cast: list[str] = []
     directors: list[str] = []

@@ -8,6 +8,7 @@ import CommandPalette from '@/components/CommandPalette'
 import ShortcutsHelpModal from '@/components/ShortcutsHelpModal'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import OfflineBanner from '@/components/OfflineBanner'
+import OutOfDateBanner from '@/components/OutOfDateBanner'
 import { PushHealthBanner } from '@/components/PushHealthBanner'
 import SearchBar from '@/components/SearchBar'
 import { useAuth } from '@/context/auth'
@@ -197,6 +198,8 @@ export default function AppLayout({ children }: Props) {
         </header>
 
         <OfflineBanner />
+        {/* Batch X8: a screen met an API newer than this build. */}
+        <OutOfDateBanner />
         {/* Batch X3: mends this phone's notifications on open; says when they stopped. */}
         <PushHealthBanner />
 

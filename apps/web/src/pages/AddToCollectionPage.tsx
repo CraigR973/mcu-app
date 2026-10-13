@@ -340,9 +340,7 @@ export default function AddToCollectionPage() {
 
             {manualChoice.isError && (
               <p role="alert" className="text-sm text-destructive">
-                {manualChoice.error instanceof Error
-                  ? manualChoice.error.message
-                  : 'That barcode match could not be confirmed.'}
+                {queryErrorMessage(manualChoice.error, 'That barcode match could not be confirmed.')}
               </p>
             )}
           </div>
@@ -373,7 +371,7 @@ export default function AddToCollectionPage() {
 
           {add.isError && !(add.error instanceof DuplicateItemError) && (
             <p role="alert" className="text-sm text-destructive">
-              {add.error instanceof Error ? add.error.message : 'Could not save that disc.'}
+              {queryErrorMessage(add.error, 'Could not save that disc.')}
             </p>
           )}
 

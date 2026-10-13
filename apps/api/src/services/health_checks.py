@@ -97,7 +97,13 @@ JOBS: tuple[Job, ...] = (
 )
 
 #: The API's readiness fields, as the row names each.
-READINESS_LABELS = {"push": "Notifications", "ai": "The assistant", "ebay": "eBay"}
+READINESS_LABELS = {
+    "push": "Notifications",
+    "ai": "The assistant",
+    "ebay": "eBay",
+    "tmdb": "TMDB",
+    "brave": "Brave search",
+}
 
 
 def day(when: datetime) -> str:

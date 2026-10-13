@@ -26,8 +26,11 @@ def test_vercel_headers_preserve_future_browser_features() -> None:
     config = json.loads((REPO_ROOT / "vercel.json").read_text(encoding="utf-8"))
     headers = {item["key"]: item["value"] for item in config["headers"][0]["headers"]}
 
-    assert "https://*.supabase.co" in headers["Content-Security-Policy"]
-    assert "https://*.up.railway.app" in headers["Content-Security-Policy"]
+    # Batch X8 (DS44-07) narrowed `connect-src` to the one API host and dropped Supabase,
+    # which the app left (#17); this asserted the wildcards it replaced.
+    csp = headers["Content-Security-Policy"]
+    assert "https://api-production-a8fe.up.railway.app" in csp
+    assert "*.up.railway.app" not in csp and "supabase" not in csp
     assert "camera=(self)" in headers["Permissions-Policy"]
     assert "microphone=(self)" in headers["Permissions-Policy"]
 

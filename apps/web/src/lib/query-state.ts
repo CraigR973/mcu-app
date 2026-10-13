@@ -1,3 +1,4 @@
+import { describeError } from './describe-error'
 import type { UseQueryResult } from '@tanstack/react-query'
 
 /**
@@ -30,6 +31,7 @@ export function listState<T>(query: UseQueryResult<T>, isEmpty: boolean): ListSt
   return isEmpty ? 'empty' : 'ready'
 }
 
+/** What a failed query or mutation says — see `describe-error.ts` (Batch X8). */
 export function queryErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback
+  return describeError(error, fallback)
 }

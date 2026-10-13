@@ -12,6 +12,7 @@ import {
   type BarcodeCandidate,
   type BarcodeLookup,
 } from '@/lib/api'
+import { queryErrorMessage } from '@/lib/query-state'
 
 interface Props {
   onConfirmed: (candidate: BarcodeCandidate, barcode: string) => Promise<void>
@@ -115,7 +116,7 @@ export default function BarcodeLookupPanel({
       {lookup.isError && (
         <div className="space-y-3" role="alert">
           <p className="text-sm text-destructive">
-            {lookup.error instanceof Error ? lookup.error.message : 'That barcode could not be looked up.'}
+            {queryErrorMessage(lookup.error, 'That barcode could not be looked up.')}
           </p>
           <p className="text-sm text-muted-foreground">
             Check the digits printed below the bars, then scan or enter them again.
@@ -220,7 +221,7 @@ export default function BarcodeLookupPanel({
 
       {confirm.isError && (
         <p role="alert" className="text-sm text-destructive">
-          {confirm.error instanceof Error ? confirm.error.message : 'That match could not be confirmed.'}
+          {queryErrorMessage(confirm.error, 'That match could not be confirmed.')}
         </p>
       )}
     </div>

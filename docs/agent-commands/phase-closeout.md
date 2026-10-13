@@ -24,6 +24,17 @@ or performed a **destructive data or history operation**. Those stay explicit.
 8. **Verify the deploy.** Wait for Railway, then confirm production `/api/v1/health` reports
    the **merged commit SHA** and `/api/v1/health/ready` reports `db: ok`. Not merely HTTP
    200. If the SHA does not match, that is a failure to report, not to retry silently.
+   **Two more checks since Batch X8 (DS44-04):** every other field of `/api/v1/health/ready`
+   (`push`, `ai`, `ebay`, `tmdb`, `brave`) reads `configured`, and the web's
+   `https://mcu-app-fawn.vercel.app/version.json` reports the same merged commit as the API,
+   so a Vercel build that failed after the merge, leaving the web a commit behind, is seen
+   here. (Vercel builds every merge to `main`, docs ones included: on 13 Oct the bundle
+   carried the close-out merge `ce8e437`.)
+
+   ```
+   curl -s https://api-production-a8fe.up.railway.app/api/v1/health/ready
+   curl -s https://mcu-app-fawn.vercel.app/version.json
+   ```
 9. Strike the batch's row in `docs/phase-batches.md` — strike the cells through, set status
    to **shipped**, and fill the Result column **including the merge SHA**. Then update the
    batch's rows in `ARCHITECTURE.md`'s **§17 reconciliation table**: grep for

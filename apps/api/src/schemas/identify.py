@@ -15,25 +15,25 @@ class IdentifyRunResponse(BaseModel):
     status: Literal["running", "finished", "stopped", "abandoned"]
     startedAt: UtcDatetime
     finishedAt: UtcDatetime | None
-    films: int
-    identified: int
-    queued: int
-    setAside: int
-    unchanged: int
-    failed: int
-    searches: int
+    films: int = Field(ge=0)
+    identified: int = Field(ge=0)
+    queued: int = Field(ge=0)
+    setAside: int = Field(ge=0)
+    unchanged: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    searches: int = Field(ge=0)
     lastError: str | None
 
 
 class IdentifyOverviewResponse(BaseModel):
     """How many unmatched films wait, and what became of the rest."""
 
-    unidentified: int
-    waiting: int
-    setAsideTv: int
-    setAsideNotFilm: int
-    skipped: int
-    identified: int
+    unidentified: int = Field(ge=0)
+    waiting: int = Field(ge=0)
+    setAsideTv: int = Field(ge=0)
+    setAsideNotFilm: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    identified: int = Field(ge=0)
     run: IdentifyRunResponse | None
 
 
@@ -43,17 +43,17 @@ class FilmInCollectionResponse(BaseModel):
     movieId: uuid.UUID
     title: str
     year: int | None
-    discs: int
-    watches: int
+    discs: int = Field(ge=0)
+    watches: int = Field(ge=0)
 
 
 class IdentifyCandidateResponse(BaseModel):
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None
     posterPath: str | None
     overview: str
-    votes: int
+    votes: int = Field(ge=0)
     notes: list[str]
     #: Set when the collection already has this film: choosing it merges the two.
     inCollection: FilmInCollectionResponse | None
@@ -67,7 +67,7 @@ class IdentifyQueueItemResponse(BaseModel):
     movieId: uuid.UUID
     title: str
     discs: list[IdentifyDiscResponse]
-    watches: int
+    watches: int = Field(ge=0)
     note: str | None
     proposedTmdbId: int | None
     candidates: list[IdentifyCandidateResponse]
@@ -75,7 +75,7 @@ class IdentifyQueueItemResponse(BaseModel):
 
 class IdentifyQueueResponse(BaseModel):
     items: list[IdentifyQueueItemResponse]
-    total: int
+    total: int = Field(ge=0)
 
 
 class IdentifySearchResponse(BaseModel):

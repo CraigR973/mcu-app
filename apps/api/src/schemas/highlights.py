@@ -77,7 +77,7 @@ class BestReviewedFilmResponse(BaseModel):
     year: int | None = None
     posterPath: str | None = None
     overall: float = Field(gt=0, le=10)
-    outOf: int
+    outOf: int = Field(gt=0)
     #: The format the review is of: one this film is owned on.
     formatCode: str | None = None
 

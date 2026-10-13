@@ -6,6 +6,14 @@ from httpx import ASGITransport, AsyncClient
 from src.main import app
 
 
+def _without_outside_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """TMDB and Brave as a fresh deployment has them: unset, whatever this machine holds."""
+    import src.routers.health as health_router
+
+    for name in ("tmdb_read_token", "tmdb_api_key", "brave_search_api_key"):
+        monkeypatch.setattr(health_router.settings, name, "")
+
+
 @pytest.mark.asyncio
 async def test_health_returns_running_commit(monkeypatch: pytest.MonkeyPatch) -> None:
     import src.routers.health as health_router
@@ -31,7 +39,8 @@ async def test_health_reports_unknown_commit_when_not_in_railway(
 
 
 @pytest.mark.asyncio
-async def test_readiness_returns_ok_when_database_responds() -> None:
+async def test_readiness_returns_ok_when_database_responds(monkeypatch: pytest.MonkeyPatch) -> None:
+    _without_outside_keys(monkeypatch)
     session = AsyncMock()
     session.__aenter__ = AsyncMock(return_value=session)
     session.__aexit__ = AsyncMock(return_value=False)
@@ -49,12 +58,17 @@ async def test_readiness_returns_ok_when_database_responds() -> None:
         "push": "not_configured",
         "ai": "not_configured",
         "ebay": "not_configured",
+        "tmdb": "not_configured",
+        "brave": "not_configured",
     }
     session.execute.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_readiness_returns_503_when_database_is_unreachable() -> None:
+async def test_readiness_returns_503_when_database_is_unreachable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _without_outside_keys(monkeypatch)
     session = AsyncMock()
     session.__aenter__ = AsyncMock(side_effect=ConnectionError("database unavailable"))
     session.__aexit__ = AsyncMock(return_value=False)
@@ -70,6 +84,8 @@ async def test_readiness_returns_503_when_database_is_unreachable() -> None:
         "push": "not_configured",
         "ai": "not_configured",
         "ebay": "not_configured",
+        "tmdb": "not_configured",
+        "brave": "not_configured",
     }
 
 
@@ -413,3 +429,59 @@ async def test_a_half_set_ebay_keyset_is_not_configured(monkeypatch: pytest.Monk
         response = await client.get("/api/v1/health/ready")
 
     assert response.json()["ebay"] == "not_configured"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("setting", "field"),
+    [("tmdb_read_token", "tmdb"), ("tmdb_api_key", "tmdb"), ("brave_search_api_key", "brave")],
+)
+async def test_readiness_reports_tmdb_and_brave(
+    setting: str, field: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Batch X8 (DS44-04): the 9 Sep TMDB outage this endpoint names as its reason was
+    never reported by it. Presence only; neither service is called."""
+    import src.routers.health as health_router
+
+    _without_outside_keys(monkeypatch)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        assert (await client.get("/api/v1/health/ready")).json()[field] == "not_configured"
+        monkeypatch.setattr(health_router.settings, setting, "a-value")
+        assert (await client.get("/api/v1/health/ready")).json()[field] == "configured"
+
+
+@pytest.mark.asyncio
+async def test_a_crash_answers_a_500_the_browser_can_read() -> None:
+    """Batch X8 (UX48-03): a 500 without CORS headers read as "Failed to fetch", the words
+    for no signal. The real middleware stack, in the real order, around a route that raises."""
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+
+    from src.middleware import SERVER_FAULT, UnhandledErrorMiddleware
+
+    crashing = FastAPI()
+
+    @crashing.get("/boom")
+    async def boom() -> None:
+        raise RuntimeError("a bug")
+
+    crashing.add_middleware(UnhandledErrorMiddleware)
+    crashing.add_middleware(CORSMiddleware, allow_origins=["https://web.example"])
+    async with AsyncClient(
+        transport=ASGITransport(app=crashing, raise_app_exceptions=False), base_url="http://test"
+    ) as client:
+        response = await client.get("/boom", headers={"Origin": "https://web.example"})
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": SERVER_FAULT}
+    assert response.headers["access-control-allow-origin"] == "https://web.example"
+
+
+def test_the_error_middleware_sits_inside_cors() -> None:
+    """Starlette lists middleware outermost first; inside CORS is what makes it work."""
+    from fastapi.middleware.cors import CORSMiddleware
+
+    from src.middleware import UnhandledErrorMiddleware
+
+    order = [entry.cls for entry in app.user_middleware]
+    assert order.index(CORSMiddleware) < order.index(UnhandledErrorMiddleware)

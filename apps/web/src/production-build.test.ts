@@ -28,9 +28,18 @@ const source = (path: string) => readFileSync(join(webRoot, 'src', path), 'utf8'
 const outDir = mkdtempSync(join(tmpdir(), 'mcu-production-build-'))
 
 let shipped = ''
+let worker = ''
+let version = ''
 
 beforeAll(() => {
-  const env: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: 'production', VITE_SKIP_AUTH: 'true' }
+  // `VITE_API_URL` on another origin, as production's Railway API is to its Vercel page, so
+  // the worker's cache rule can be read for it below (Batch X8).
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    NODE_ENV: 'production',
+    VITE_SKIP_AUTH: 'true',
+    VITE_API_URL: 'https://api.example.test',
+  }
   const build = spawnSync(
     process.execPath,
     [join(webRoot, 'node_modules/vite/bin/vite.js'), 'build', '--outDir', outDir, '--emptyOutDir', '--logLevel', 'error'],
@@ -43,7 +52,9 @@ beforeAll(() => {
   const scripts = readdirSync(join(outDir, 'assets'))
     .filter((name) => name.endsWith('.js'))
     .map((name) => readFileSync(join(outDir, 'assets', name), 'utf8'))
-  shipped = [...scripts, readFileSync(join(outDir, 'sw.js'), 'utf8'), readFileSync(join(outDir, 'index.html'), 'utf8')].join('\n')
+  worker = readFileSync(join(outDir, 'sw.js'), 'utf8')
+  version = readFileSync(join(outDir, 'version.json'), 'utf8')
+  shipped = [...scripts, worker, readFileSync(join(outDir, 'index.html'), 'utf8')].join('\n')
 }, 180_000)
 
 afterAll(() => {
@@ -51,6 +62,19 @@ afterAll(() => {
 })
 
 describe('a production build', () => {
+  it("gives the worker the API's own origin, so it keeps answers from a cross-origin API", () => {
+    // Batch X8 (UX48-01): the rule matched only the page's origin, and production's API is
+    // on another, so the worker never kept one answer. The guard for the rule itself is
+    // `api-cache-route.test.ts`; this proves the built worker is handed the API's address.
+    expect(worker).toContain('https://api.example.test')
+    expect(worker).toContain('/api/v1/')
+  })
+
+  it('says which commit it was built from', () => {
+    const parsed = JSON.parse(version) as { commit: string }
+    expect(parsed.commit).toMatch(/^([0-9a-f]{40}|unknown)$/)
+  })
+
   it('is the app as it stands, so an absence below means something', () => {
     expect(shipped).toContain('"/movies"')
     expect(shipped).toContain('Ask the assistant')

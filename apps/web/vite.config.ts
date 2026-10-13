@@ -4,6 +4,38 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+import type { Plugin } from 'vite'
+
+/**
+ * `version.json`: the commit this build was made from — Batch X8 (DS44-04).
+ *
+ * The close-out gate reads it beside the API's `/api/v1/health`, so a Vercel build that
+ * failed after a merge (the web left a commit behind the API) is seen at close-out rather
+ * than as a screen that cannot read a newer answer. Vercel provides the commit; a local
+ * build asks git.
+ */
+function buildVersion(): Plugin {
+  const commit = (): string => {
+    if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA
+    try {
+      return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim()
+    } catch {
+      return 'unknown'
+    }
+  }
+  return {
+    name: 'mcu-build-version',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: `${JSON.stringify({ commit: commit() })}\n`,
+      })
+    },
+  }
+}
 
 export default defineConfig({
   build: {
@@ -11,6 +43,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    buildVersion(),
     VitePWA({
       // `injectManifest`, not `generateSW`: the routing rules in `src/sw.ts` are the
       // batch — a generated worker could not express the poster cache or the API

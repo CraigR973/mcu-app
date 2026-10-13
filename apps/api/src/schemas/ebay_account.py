@@ -42,7 +42,7 @@ class EbayListingResponse(BaseModel):
     currency: str | None = None
     postage: str | None = None
     isAuction: bool
-    bidCount: int | None = None
+    bidCount: int | None = Field(default=None, ge=0)
     endsAt: UtcDatetime | None = None
 
 

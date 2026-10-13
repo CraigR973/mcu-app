@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.schemas.wire import UtcDatetime
 
@@ -24,13 +24,13 @@ class ValuationRunResponse(BaseModel):
     startedAt: UtcDatetime
     finishedAt: UtcDatetime | None
     #: eBay calls the run was allowed, and made.
-    budget: int
-    calls: int
-    priced: int
-    notPriced: int
-    failed: int
+    budget: int = Field(ge=0)
+    calls: int = Field(ge=0)
+    priced: int = Field(ge=0)
+    notPriced: int = Field(ge=0)
+    failed: int = Field(ge=0)
     #: Films still due a price when it ended. Null while it runs.
-    remaining: int | None
+    remaining: int | None = Field(ge=0)
     lastError: str | None
 
 
@@ -42,19 +42,19 @@ class CollectionValueResponse(BaseModel):
     currency: str
     basis: str
     #: Owned physical discs, and how they split. ``uncheckedDiscs`` have no price yet.
-    discs: int
-    pricedDiscs: int
-    notPricedDiscs: int
-    uncheckedDiscs: int
+    discs: int = Field(ge=0)
+    pricedDiscs: int = Field(ge=0)
+    notPricedDiscs: int = Field(ge=0)
+    uncheckedDiscs: int = Field(ge=0)
     #: The oldest and newest price behind the total.
     checkedFrom: UtcDatetime | None
     checkedTo: UtcDatetime | None
     #: Films and formats due a price now, and the eBay calls left in today's share.
-    due: int
-    budgetLeft: int
-    dailyShare: int
+    due: int = Field(ge=0)
+    budgetLeft: int = Field(ge=0)
+    dailyShare: int = Field(gt=0)
     #: Fewer matching listings than this and a disc is not priced.
-    minSample: int
+    minSample: int = Field(gt=0)
     #: The latest run, finished or not.
     run: ValuationRunResponse | None
 
@@ -64,8 +64,8 @@ class ValuationStartResponse(BaseModel):
 
     outcome: Literal["started", "running", "budget_spent", "nothing_due"]
     run: ValuationRunResponse | None
-    due: int
-    budgetLeft: int
+    due: int = Field(ge=0)
+    budgetLeft: int = Field(ge=0)
 
 
 class CopyValuationResponse(BaseModel):

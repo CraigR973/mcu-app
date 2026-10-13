@@ -50,13 +50,13 @@ class EbayWatchRunResponse(BaseModel):
     status: Literal["running", "finished", "budget_spent", "stopped", "abandoned"]
     startedAt: UtcDatetime
     finishedAt: UtcDatetime | None
-    targetsChecked: int
-    dealsFound: int
+    targetsChecked: int = Field(ge=0)
+    dealsFound: int = Field(ge=0)
     #: Batch X2 (UX48-02): the new listings this pass read, and how many passes in a row,
     #: this one included, read none. Price alerts said "Last check 19:20" through 45 blind
     #: passes; now it says "read 0 new listings, 33 checks in a row".
-    listingsSeen: int = 0
-    emptyInARow: int = 0
+    listingsSeen: int = Field(default=0, ge=0)
+    emptyInARow: int = Field(default=0, ge=0)
 
 
 class EbayTargetsResponse(BaseModel):

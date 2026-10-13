@@ -43,8 +43,19 @@ describe('vercel.json Content-Security-Policy', () => {
     expect(csp.get('connect-src')).toContain('https://image.tmdb.org')
   })
 
-  it('keeps the API origin reachable from connect-src', () => {
-    expect(csp.get('connect-src')).toContain('https://*.up.railway.app')
+  it('names the one API host, and no other Railway app', () => {
+    // Batch X8 (DS44-07): `*.up.railway.app` let a script post to any Railway app after an
+    // injection. The host is production's `VITE_API_URL`; a new API host must be named here
+    // and on Vercel together, or every API call is refused.
+    expect(csp.get('connect-src')).toContain('https://api-production-a8fe.up.railway.app')
+    expect(csp.get('connect-src')?.some((source) => source.includes('*'))).toBe(false)
+  })
+
+  it('drops Supabase, which the app left (#17), and Sentry, which is off', () => {
+    // Sentry goes back with its DSN: `connect-src` must then name its ingest host.
+    for (const directive of ['connect-src', 'img-src']) {
+      expect(csp.get(directive)?.join(' ')).not.toMatch(/supabase|sentry/)
+    }
   })
 
   it('pins base-uri and object-src shut', () => {

@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.schemas.wire import UtcDatetime
 
@@ -21,21 +21,21 @@ class CountSlice(BaseModel):
     key: str
     label: str
     #: Discs, not films — the same disc can hold several formats and a film several discs.
-    itemCount: int
-    movieCount: int
+    itemCount: int = Field(ge=0)
+    movieCount: int = Field(ge=0)
 
 
 class DecadeSlice(BaseModel):
     decade: int
     label: str
-    movieCount: int
+    movieCount: int = Field(ge=0)
 
 
 class WatchedFilm(BaseModel):
     movieId: uuid.UUID
     title: str
     posterPath: str | None
-    watchCount: int
+    watchCount: int = Field(gt=0)
     lastWatched: str | None
 
 
@@ -45,14 +45,14 @@ class SpendPoint(BaseModel):
     month: str
     spentCents: int
     cumulativeCents: int
-    itemCount: int
+    itemCount: int = Field(ge=0)
 
 
 class StatsResponse(BaseModel):
-    totalMovies: int
-    totalItems: int
-    identifiedMovies: int
-    watchedMovies: int
+    totalMovies: int = Field(ge=0)
+    totalItems: int = Field(ge=0)
+    identifiedMovies: int = Field(ge=0)
+    watchedMovies: int = Field(ge=0)
 
     formats: list[CountSlice]
     genres: list[CountSlice]
@@ -70,7 +70,7 @@ class StatsResponse(BaseModel):
     spendOverTime: list[SpendPoint]
     #: How many live discs carry a price at all — the denominator that tells a reader
     #: whether an empty series means "nothing bought" or "nothing recorded".
-    itemsWithPrice: int
+    itemsWithPrice: int = Field(ge=0)
 
 
 ActivityKind = Literal["added", "watched", "edited", "removed", "restored"]
@@ -89,4 +89,4 @@ class ActivityEvent(BaseModel):
 
 class ActivityResponse(BaseModel):
     items: list[ActivityEvent]
-    total: int
+    total: int = Field(ge=0)

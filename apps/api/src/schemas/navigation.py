@@ -12,7 +12,7 @@ was the client fetching four full lists on every page load to discover they were
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class NavSectionsResponse(BaseModel):
@@ -26,13 +26,13 @@ class NavSectionsResponse(BaseModel):
 
     #: Live box sets — `deleted_at IS NULL`. A soft-deleted set is in the trash, not the
     #: menu.
-    boxSets: int
+    boxSets: int = Field(ge=0)
     #: Smart collections belonging to **the caller**. They are per-user (`user_id` is on
     #: the row), so a shared count would show Craig a destination holding only Mark's.
-    collections: int
+    collections: int = Field(ge=0)
     #: Deals not dismissed — the same filter `GET /deals` itself applies, so the menu
     #: cannot offer a page that then renders empty.
-    deals: int
+    deals: int = Field(ge=0)
     #: Every loan, open or returned. A returned loan is history the page still shows, so
     #: "the table has rows" is the right test and `returned_date` is not consulted.
-    loans: int
+    loans: int = Field(ge=0)

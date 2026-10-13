@@ -16,6 +16,7 @@ import {
 } from '../lib/auth-tokens'
 import { clearQueue } from '../lib/offline-queue'
 import { shouldEndSession } from '../lib/session'
+import { clearCachedApiReads } from '@/lib/api-cache-route'
 
 interface AuthContextValue {
   profile: ProfileResponse | null
@@ -177,6 +178,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // memory; persisting the queue is only defensible with this line here
     // (`DECISIONS.md` #44).
     await clearQueue()
+    // Batch X8: the API answers kept for offline reading go too, so whoever signs in next
+    // on this phone finds none of them.
+    await clearCachedApiReads()
     setProfile(null)
     setIsSessionUnavailable(false)
   }, [])

@@ -32,7 +32,7 @@ class TrialResults(BaseModel):
 
     #: eBay's own count of matching listings. More than ``returned`` means the 200 places
     #: were full, and every auction in them took a place a Buy It Now listing could have had.
-    total: int | None
+    total: int | None = Field(ge=0)
     returned: int = Field(ge=0)
     buyItNow: int = Field(ge=0)
     #: Auctions with no Buy It Now price: listings the valuation's own search never returns.
@@ -109,7 +109,7 @@ class TrialSummary(BaseModel):
     #: Films with both a bid price and an asking price, and the median of bid ÷ asking
     #: across them, as a percentage. Null when no film has both.
     compared: int = Field(ge=0)
-    bidToAskingPercent: int | None
+    bidToAskingPercent: int | None = Field(ge=0)
     #: Films whose 200 places were full, and the places auctions with no Buy It Now took in
     #: them: the Buy It Now listings that sharing may have cost.
     cut: int = Field(ge=0)
@@ -143,15 +143,15 @@ class BidTrialResponse(BaseModel):
     startedAt: UtcDatetime
     finishedAt: UtcDatetime | None
     #: eBay calls it was allowed, and made: they come out of the day's valuation share.
-    budget: int
-    calls: int
-    failed: int
+    budget: int = Field(ge=0)
+    calls: int = Field(ge=0)
+    failed: int = Field(ge=0)
     lastError: str | None
     #: The rules it ran under, so the page states them rather than repeating them.
-    sampleSize: int
-    minSample: int
-    endingWindowHours: int
-    dailyShare: int
+    sampleSize: int = Field(gt=0)
+    minSample: int = Field(gt=0)
+    endingWindowHours: int = Field(gt=0)
+    dailyShare: int = Field(gt=0)
     currency: str
     report: BidTrialReport | None
 
@@ -162,5 +162,5 @@ class BidTrialStartResponse(BaseModel):
     outcome: Literal["started", "running", "budget_spent", "nothing_to_sample"]
     trial: BidTrialResponse | None
     #: Films and formats it would sample, and the eBay calls left in today's share.
-    sampled: int
-    budgetLeft: int
+    sampled: int = Field(ge=0)
+    budgetLeft: int = Field(ge=0)
