@@ -888,6 +888,43 @@ async def test_explicit_pickers_win_over_the_typed_text(
     assert body["location"] == "Back 3rd shelf"
 
 
+async def test_a_new_shelf_replaces_text_that_still_names_the_old_one(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Mark's 12 Angry Men, 13 Oct: the shelf changed, the text did not, and the film page
+    showed both. An older app on a phone still sends the old text, so the API fixes it."""
+    movie = await _a_film(api_session, title="Twelve Shelves", tmdb_id=930350)
+    item = await _a_disc(api_session, movie, section="Front", shelf="3rd")
+
+    response = await client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(location="Front 3rd shelf", section="Front", shelf="4th"),
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert (body["section"], body["shelf"]) == ("Front", "4th")
+    assert body["location"] == "Front 4th shelf"
+
+
+async def test_text_that_names_the_same_place_is_kept_as_written(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The imported "Front 4th Shelf", capital S, still names Front 4th: left alone."""
+    movie = await _a_film(api_session, title="Kept As Written", tmdb_id=930351)
+    item = await _a_disc(api_session, movie, section="Front", shelf="4th")
+
+    response = await client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(location="Front 4th Shelf", section="Front", shelf="4th"),
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["location"] == "Front 4th Shelf"
+
+
 async def test_a_disc_can_be_moved_to_craigs_house_from_the_picker(
     client: AsyncClient,
     api_session: AsyncSession,

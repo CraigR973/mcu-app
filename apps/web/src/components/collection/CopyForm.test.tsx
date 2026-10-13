@@ -1,6 +1,8 @@
+// @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import CopyForm, { EMPTY_COPY } from './CopyForm'
 import type { CollectionFacets, CollectionItemFields } from '@/lib/api'
@@ -116,4 +118,36 @@ describe('CopyForm', () => {
     expect(html).toMatch(/<option value="Craig&#x27;s house" selected="">/)
     expect(html).not.toContain('No particular shelf')
   })
+
+  it('drops the old text when the shelf changes, as it does for a new section', () => {
+    // Mark's 12 Angry Men, 13 Oct: the shelf went from 3rd to 4th and "Front 3rd shelf"
+    // stayed, so the film page showed both places.
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client.setQueryData(['facets'], {
+      sections: [{ section: 'Front', movieCount: 2, itemCount: 2, shelves: [
+        { shelf: '3rd', movieCount: 1, itemCount: 1 },
+        { shelf: '4th', movieCount: 1, itemCount: 1 },
+      ] }],
+      unsectionedItemCount: 0,
+      decades: [],
+      undatedMovieCount: 0,
+      discsWithSpecs: 0,
+      allSections: ['Front'],
+    })
+    const onChange = vi.fn()
+    render(
+      <QueryClientProvider client={client}>
+        <CopyForm
+          value={{ ...EMPTY_COPY, formats: ['blu_ray'], section: 'Front', shelf: '3rd', location: 'Front 3rd shelf' }}
+          onChange={onChange}
+        />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(screen.getByDisplayValue('3rd shelf'), { target: { value: '4th' } })
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ section: 'Front', shelf: '4th', location: null }))
+  })
 })
+
+afterEach(() => cleanup())
