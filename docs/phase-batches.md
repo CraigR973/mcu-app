@@ -3724,6 +3724,74 @@ request, costing 28–31 minutes a night.
 - A "Tell Craig" line on Mark's You page lands in X2's attention row.
 - Tests. Gate green.
 
+## Group Y — Mark's requests, planned 13 Oct
+
+**Planned 2026-10-13 from Mark's request, relayed by Craig:** edit discs after adding them, and
+move them between shelves. Craig's answers the same day (#264): Mark edits and moves copies,
+Mark deletes them too, and moving several discs at once is its own batch. **Criteria authored
+2026-10-13**, so `DECISIONS.md` #54 does not apply. Model tiers are Group V's. Lands as Group W
+did: a `feat/` branch, a pull request, CI green, a merge commit, production `/api/v1/health`
+reporting the merge SHA with `db: ok`.
+
+| Batch | Covers | Size | Gate | Claude Code | Codex |
+|---|---|---|---|---|---|
+| Y1 | Mark edits, moves and deletes copies | 🟢 | Craig's go, given 13 Oct | top tier · high | top tier · High |
+| Y2 | Move several copies at once | 🟡 | Craig's go, after asking Mark whether he moves whole shelves | top tier · high | top tier · High |
+
+*Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
+partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
+to many rows.
+
+### Y1 — Mark edits, moves and deletes copies 🟢
+
+**Covers Mark's request.** Since #155 Mark can add a disc but not correct it, and a disc's
+location is its section and shelf on the same edit form, so he could not move one either.
+
+**Acceptance:**
+- `PUT /collection/{id}` and `DELETE /collection/{id}` take either person (`CurrentUser`).
+  Each change writes an audit row naming the person who made it.
+- Still Craig's, and still refused to Mark with 403: listing the Trash, restoring from it,
+  the audit log, retailers. A test proves Mark deletes a disc and cannot restore it, and
+  Craig can.
+- The film page shows Mark Edit copy, Mark damaged, Add a copy and the upgrade prompt. It
+  still hides from him the live eBay check, the sale panel, photo uploads and the item
+  history.
+- Move to trash asks before it deletes, for both people. Mark's confirmation says only Craig
+  can bring the disc back.
+- Mark's edit goes through the same offline-aware path as Craig's, `baseUpdatedAt` included.
+- Tests, API and web. Gate green. Browser check at 375 px as Mark: edit a copy, move it, ask
+  to delete it.
+
+### Y2 — Move several copies at once 🟡
+
+**Covers the rest of Mark's request**, if he reorganises whole shelves. Today a move is one
+copy at a time through the edit form. **Ask Mark first**: if he only moves the odd disc, Y1
+covers it and this batch is dropped.
+
+**Acceptance:**
+- **Select, then move.** The Archive, filtered to one section and shelf (Batch 6's filter),
+  gets a select mode. Selection is of **copies**, not films. Where a selected film has more
+  than one live copy, the copies outside the filtered shelf are not moved, and the screen says
+  so before the move.
+- **One picker.** "Move to…" offers the copy form's own section and shelf pickers, the whole
+  section vocabulary included (V4), and applies the result to every selected copy.
+- **One request, partial success.** A new endpoint takes up to 200 copy ids, each with the
+  `updatedAt` it was selected against, and the target section and shelf. It answers per copy:
+  moved, stale (changed elsewhere since it was selected, #42), or not found. A stale or missing
+  copy does not stop the others. Its own response shape, as #6 allows batch endpoints.
+- **Audited per copy.** One `update` audit row per moved copy, naming the actor, so the item
+  history of each film shows the move.
+- **Either person**, as Y1 made editing.
+- **Undo.** The result offers "Move them back", which returns each moved copy to the section
+  and shelf it came from, through the same endpoint.
+- **Online only.** Offline, the move button is disabled and says why. Queueing a bulk move
+  offline would need #42's stale handling across a queue of many rows, which this batch does
+  not take on.
+- The facet counts and the Archive refresh after a move.
+- Tests: the endpoint's partial-success cases against Postgres, the selection rules and the
+  undo in the web suite. Gate green. Browser check at 375 px: filter to a shelf, select three
+  copies, move them, see them under the new shelf, undo.
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MovieDetailPage from './MovieDetailPage'
 import { fetchCopies, fetchMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
+import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 
 vi.mock('@/context/auth', () => ({
   useAuth: () => ({ profile: { role: 'viewer' } }),
@@ -29,8 +30,14 @@ vi.mock('@/lib/api', async (importOriginal) => {
     ...actual,
     fetchMovie: vi.fn(),
     fetchCopies: vi.fn(),
+    fetchFacets: vi.fn().mockResolvedValue({ sections: [], allSections: [] }),
   }
 })
+
+vi.mock('@/lib/sync', () => ({
+  deleteOrQueue: vi.fn().mockResolvedValue({ queued: false }),
+  updateOrQueue: vi.fn().mockResolvedValue({ queued: false }),
+}))
 
 const MOVIE_ID = '3f2504e0-4f89-11d3-9a0c-0305e82c3301'
 const COPY_ID = '3f2504e0-4f89-11d3-9a0c-0305e82c3302'
@@ -177,6 +184,45 @@ describe('MovieDetailPage collection answer', () => {
     expect(await screen.findByText('Could not load the owned copies')).not.toBeNull()
     expect(screen.getByText('Copies API unavailable')).not.toBeNull()
     expect(screen.queryByText('No live copies in the collection')).toBeNull()
+  })
+})
+
+// Batch Y1, `DECISIONS.md` #264: the mocked profile is Mark's (`viewer`). He adds discs
+// since #155, and now edits, moves and deletes them; the eBay tools, photo uploads and the
+// audit history stay Craig's.
+describe('MovieDetailPage copy editing for Mark', () => {
+  it('offers Mark the copy tools and keeps Craig-only tools hidden', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: /Edit copy/ })).not.toBeNull()
+    expect(screen.getByRole('button', { name: /Mark damaged/ })).not.toBeNull()
+    expect(screen.getByRole('link', { name: /Add a copy/ }).getAttribute('href')).toBe('/collection/add')
+    expect(screen.queryByText('Value and resale')).toBeNull()
+  })
+
+  it('saves Mark\'s edit through the same queue-aware path as Craig\'s', async () => {
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /Edit copy/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Save changes/ }))
+
+    await waitFor(() => expect(updateOrQueue).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(updateOrQueue).mock.calls[0]?.[2]).toMatchObject({
+      section: 'Front',
+      shelf: '2nd',
+      baseUpdatedAt: COPY.updatedAt,
+    })
+  })
+
+  it('asks before moving a copy to the Trash, and says only Craig can bring it back', async () => {
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /Edit copy/ }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move to trash' }))
+    expect(deleteOrQueue).not.toHaveBeenCalled()
+    expect(screen.getByText(/Only Craig can bring it back/)).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Yes, move to trash/ }))
+    await waitFor(() => expect(deleteOrQueue).toHaveBeenCalledWith(COPY_ID, MOVIE_ID))
   })
 })
 

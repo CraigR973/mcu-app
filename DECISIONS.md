@@ -5487,3 +5487,15 @@ contemporaneous.
      - **The CSP names `api-production-a8fe.up.railway.app` and drops Supabase and Sentry.** A
        new API host, or Sentry switched on, needs `vercel.json` changed with it. This is a
        `vercel.json` header change, deployed by the merge like any other file in it.
+
+264. **Mark edits, moves and deletes copies; restoring stays Craig's. Supersedes #37.**
+     #155 let Mark add a disc and kept editing as Craig's, which left Mark unable to correct
+     a disc he had added, or to move one: a copy's location is its section and shelf on the
+     edit form. Craig's answers, 13 Oct: "1) yes 2) yes 3) write up as diff batch". So
+     `PUT` and `DELETE /collection/{id}` take either person, and the film page shows Mark the
+     copy's Edit, Mark damaged, Add a copy and the upgrade prompt. *Why it is safe:* the audit
+     row names whoever acted, a delete is soft, and a stale edit is refused (#42). **Still
+     Craig's:** the Trash and restoring from it, the audit log, the live eBay check and sale
+     panel (T6), and photo uploads and deletes, because a photo delete is a hard delete with
+     no audit row. Because Mark cannot restore, Move to trash now asks first, for both people.
+     Moving several copies at once is Batch Y2, planned and not built.

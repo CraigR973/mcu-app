@@ -418,10 +418,14 @@ async def _get_item(
 async def update_collection_item(
     item_id: uuid.UUID,
     payload: CollectionItemUpdateRequest,
-    user: AdminUser,
+    user: CurrentUser,
     db: Database,
 ) -> CollectionItemResponse:
     """Replace the editable fields of one disc, logging the diff.
+
+    Either person may edit, which is also how a disc moves shelf (`DECISIONS.md` #264,
+    superseding #37): Mark adds discs since #155, and a disc he could add but not correct
+    was the gap. The audit row names whoever acted.
 
     Also §3.11's "mark as damaged" quick action: the client already holds the whole
     copy, so setting one field and re-submitting is the same request. A second endpoint
@@ -544,10 +548,13 @@ async def update_listing_status(
 @router.delete("/collection/{item_id}", response_model=CollectionItemResponse)
 async def delete_collection_item(
     item_id: uuid.UUID,
-    user: AdminUser,
+    user: CurrentUser,
     db: Database,
 ) -> CollectionItemResponse:
     """Soft-delete one disc — §3.2's "move to trash".
+
+    Either person may delete (#264); only the admin may list the Trash or restore from it,
+    so a disc Mark removes by mistake is Craig's to bring back.
 
     Sets ``deleted_at`` directly rather than issuing a ``DELETE``. The
     ``collection_items_soft_delete`` trigger would turn a ``DELETE`` into this same

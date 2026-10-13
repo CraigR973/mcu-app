@@ -15345,7 +15345,7 @@
   },
   "/api/v1/collection/{item_id}": {
    "delete": {
-    "description": "Soft-delete one disc — §3.2's \"move to trash\".\n\nSets ``deleted_at`` directly rather than issuing a ``DELETE``. The\n``collection_items_soft_delete`` trigger would turn a ``DELETE`` into this same\nupdate, but going through the trigger would leave the session holding an object it\nbelieves is gone, and the row it must be refreshed from is the one being returned.\n\nReturns the item rather than 204 so the client can show what it just removed and\noffer an undo without a second round trip.",
+    "description": "Soft-delete one disc — §3.2's \"move to trash\".\n\nEither person may delete (#264); only the admin may list the Trash or restore from it,\nso a disc Mark removes by mistake is Craig's to bring back.\n\nSets ``deleted_at`` directly rather than issuing a ``DELETE``. The\n``collection_items_soft_delete`` trigger would turn a ``DELETE`` into this same\nupdate, but going through the trigger would leave the session holding an object it\nbelieves is gone, and the row it must be refreshed from is the one being returned.\n\nReturns the item rather than 204 so the client can show what it just removed and\noffer an undo without a second round trip.",
     "operationId": "delete_collection_item_api_v1_collection__item_id__delete",
     "parameters": [
      {
@@ -15392,7 +15392,7 @@
     ]
    },
    "put": {
-    "description": "Replace the editable fields of one disc, logging the diff.\n\nAlso §3.11's \"mark as damaged\" quick action: the client already holds the whole\ncopy, so setting one field and re-submitting is the same request. A second endpoint\nfor it would be a second place for the condition timestamp to be forgotten.",
+    "description": "Replace the editable fields of one disc, logging the diff.\n\nEither person may edit, which is also how a disc moves shelf (`DECISIONS.md` #264,\nsuperseding #37): Mark adds discs since #155, and a disc he could add but not correct\nwas the gap. The audit row names whoever acted.\n\nAlso §3.11's \"mark as damaged\" quick action: the client already holds the whole\ncopy, so setting one field and re-submitting is the same request. A second endpoint\nfor it would be a second place for the condition timestamp to be forgotten.",
     "operationId": "update_collection_item_api_v1_collection__item_id__put",
     "parameters": [
      {
