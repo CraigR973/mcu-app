@@ -5480,7 +5480,9 @@ contemporaneous.
        is stale. **Where they disagreed (158 fields), the API took the bound the web already
        assumed** (`ge=0` on counts, `gt=0` on ids, page sizes and TMDB numbers, `ge=0.5` on a
        rating), not the other way round: both sides now say the same thing, and a value outside
-       it is a 500 the daily check would see rather than a screen of raw JSON. The audit log's
+       it is a 500 with its traceback in the API's log and "The archive had a problem" on the
+       screen, rather than a screen of raw JSON. Nothing counts those 500s yet; the daily check
+       does not read the API's errors. The audit log's
        `actionType` is now the table's five values.
      - **The CSP names `api-production-a8fe.up.railway.app` and drops Supabase and Sentry.** A
        new API host, or Sentry switched on, needs `vercel.json` changed with it. This is a
