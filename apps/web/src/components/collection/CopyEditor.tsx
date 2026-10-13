@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Save, Trash2, X } from 'lucide-react'
 
@@ -58,6 +58,13 @@ export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
   // Batch Y1 (#264): both people can delete now, and only Craig can restore, so one stray
   // tap on a phone must not be enough. The first tap asks; the second deletes.
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const confirmRef = useRef<HTMLDivElement>(null)
+  // While it asks, the question and its two answers are all the footer holds, scrolled into
+  // view. Y1's version grew a warning above the buttons, which pushed "Yes" off a phone's
+  // screen and left Save in its place: Mark tapped Save, and the disc stayed (13 Oct).
+  useEffect(() => {
+    if (confirmingDelete) confirmRef.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [confirmingDelete])
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
@@ -125,48 +132,75 @@ export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
           </p>
         )}
 
-        {confirmingDelete && (
-          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {isAdmin
-              ? 'Move this copy to the Trash? You can restore it from there.'
-              : 'Move this copy to the Trash? Only Craig can bring it back.'}
-          </p>
-        )}
-
-        <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={pending}
-            onClick={() => (confirmingDelete ? remove.mutate() : setConfirmingDelete(true))}
-            className="w-full sm:w-auto"
+        {confirmingDelete ? (
+          <div
+            ref={confirmRef}
+            role="alertdialog"
+            aria-label="Move this copy to the Trash?"
+            className="space-y-3 rounded-md border border-destructive/30 bg-destructive/10 p-3"
           >
-            {remove.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-            {confirmingDelete ? 'Yes, move to trash' : 'Move to trash'}
-          </Button>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button type="button" variant="ghost" disabled={pending} onClick={onClose} className="w-full sm:w-auto">
-              Cancel
-            </Button>
+            <p className="text-sm font-semibold text-destructive">Move this copy to the Trash?</p>
+            <p className="text-sm text-destructive">
+              {isAdmin ? 'You can restore it from the Trash.' : 'Only Craig can bring it back.'}
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={pending}
+                onClick={() => remove.mutate()}
+                className="w-full sm:w-auto"
+              >
+                {remove.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Yes, move to trash
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={() => setConfirmingDelete(false)}
+                className="w-full sm:w-auto"
+              >
+                Keep it
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button
               type="button"
-              disabled={pending || fields.formats.length === 0}
-              onClick={() => save.mutate()}
+              variant="destructive"
+              disabled={pending}
+              onClick={() => setConfirmingDelete(true)}
               className="w-full sm:w-auto"
             >
-              {save.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              Save changes
+              <Trash2 className="h-4 w-4" />
+              Move to trash
             </Button>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button type="button" variant="ghost" disabled={pending} onClick={onClose} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={pending || fields.formats.length === 0}
+                onClick={() => save.mutate()}
+                className="w-full sm:w-auto"
+              >
+                {save.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save changes
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Dialog>
   )

@@ -125,6 +125,11 @@ def _resolve_location(
 
     if section is None and shelf is None and text is not None:
         section, shelf = parse_location(text)
+    elif text is not None and parse_location(text) != (section, shelf):
+        # The pickers moved the disc and the text still names where it was. Mark's 12 Angry
+        # Men, 13 Oct: the shelf changed from 3rd to 4th, the text kept "Front 3rd shelf",
+        # and the film page showed both. Text that names the same place is kept as written.
+        text = None
 
     if text is None and section is not None:
         # Compose what the person would have typed, so `location` is never empty for a

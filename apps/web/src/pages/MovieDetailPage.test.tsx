@@ -220,6 +220,15 @@ describe('MovieDetailPage copy editing for Mark', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Move to trash' }))
     expect(deleteOrQueue).not.toHaveBeenCalled()
     expect(screen.getByText(/Only Craig can bring it back/)).not.toBeNull()
+    // While it asks, Save is gone: Mark tapped Save where "Yes" had been pushed off his
+    // screen, and the disc stayed (13 Oct).
+    expect(screen.queryByRole('button', { name: /Save changes/ })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep it' }))
+    expect(screen.getByRole('button', { name: /Save changes/ })).not.toBeNull()
+    expect(deleteOrQueue).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move to trash' }))
 
     fireEvent.click(screen.getByRole('button', { name: /Yes, move to trash/ }))
     await waitFor(() => expect(deleteOrQueue).toHaveBeenCalledWith(COPY_ID, MOVIE_ID))

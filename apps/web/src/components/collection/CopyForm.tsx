@@ -126,7 +126,9 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
               className={selectClass}
               disabled={disabled}
               value={value.shelf ?? ''}
-              onChange={(event) => set('shelf', event.target.value || null)}
+              // A new shelf drops the old text, as a new section does: the API composes it
+              // again from the pickers (Mark's 12 Angry Men, 13 Oct).
+              onChange={(event) => onChange({ ...value, shelf: event.target.value || null, location: null })}
             >
               <option value="">No particular shelf</option>
               {shelves.map((shelf) => (

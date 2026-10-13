@@ -5515,3 +5515,16 @@ contemporaneous.
      only:** queueing a many-row move offline would need #42 across a queue. **A scan names a
      film, not a copy** (none of the imported discs carries a barcode), so the person still
      picks the disc when a film has several.
+
+266. **A disc's location text follows its pickers, and the delete question stands alone.**
+     Mark's feedback on Y1, 13 Oct, both on 12 Angry Men. (a) He changed the shelf from 3rd
+     to 4th; the copy form clears the text when the section changes but not the shelf, so the
+     text kept "Front 3rd shelf" and the film page showed both places. The form now clears it
+     for a new shelf too, and **the API recomposes any text that names a different place from
+     the pickers**, so a phone still running the old app cannot write the mismatch either.
+     Text naming the same place is kept as written ("Front 4th Shelf", capital S). Read-only
+     on 13 Oct: 1 of 1,885 live discs disagreed, this one, so the rule changes no other row;
+     re-saving that copy corrects it. (b) Nothing was deleted: Y1's first tap on "Move to
+     trash" grew a warning above the buttons, which pushed "Yes" off a phone's screen and
+     left Save in its place, and Mark tapped Save. While it asks, the footer is now only the
+     question, "Yes, move to trash" and "Keep it", scrolled into view.
