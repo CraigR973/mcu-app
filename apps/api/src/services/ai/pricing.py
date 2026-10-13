@@ -36,8 +36,30 @@ class ModelPricing:
     cache_write_per_mtok: Decimal
 
 
-#: Snapshot taken 2026-09-10. Only the models this app can be configured to use.
+#: Snapshot taken 2026-09-10; the 5.5 family and Fable 5.1's cache read added 13 Oct (Batch X7,
+#: AI45-08), from Anthropic's model pages. Only the models this app can be configured to use.
+#: A cache write is the 5-minute one, 1.25x the input rate.
 MODEL_PRICING: dict[str, ModelPricing] = {
+    "claude-sonnet-5-5": ModelPricing(
+        input_per_mtok=Decimal("2.00"),
+        output_per_mtok=Decimal("10.00"),
+        cache_read_per_mtok=Decimal("0.20"),
+        cache_write_per_mtok=Decimal("2.50"),
+    ),
+    "claude-opus-5-5": ModelPricing(
+        input_per_mtok=Decimal("4.00"),
+        output_per_mtok=Decimal("20.00"),
+        cache_read_per_mtok=Decimal("0.20"),
+        cache_write_per_mtok=Decimal("5.00"),
+    ),
+    #: The rate for a prompt of 100K tokens or fewer; above that it is five times as much.
+    #: A conversation about this collection stays far below it.
+    "claude-haiku-5-5": ModelPricing(
+        input_per_mtok=Decimal("0.10"),
+        output_per_mtok=Decimal("0.50"),
+        cache_read_per_mtok=Decimal("0.01"),
+        cache_write_per_mtok=Decimal("0.125"),
+    ),
     "claude-sonnet-5": ModelPricing(
         input_per_mtok=Decimal("2.00"),
         output_per_mtok=Decimal("10.00"),
@@ -59,7 +81,8 @@ MODEL_PRICING: dict[str, ModelPricing] = {
     "claude-fable-5-1": ModelPricing(
         input_per_mtok=Decimal("10.00"),
         output_per_mtok=Decimal("50.00"),
-        cache_read_per_mtok=Decimal("1.00"),
+        #: A quarter of Fable 5's $1.00 (AI45-08 found the old figure here).
+        cache_read_per_mtok=Decimal("0.25"),
         cache_write_per_mtok=Decimal("12.50"),
     ),
 }

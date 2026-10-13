@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -59,10 +60,18 @@ class AiSettingsResponse(BaseModel):
 
 
 class AiSettingsUpdateRequest(BaseModel):
-    """Partial. Zero is a meaningful cap — "no AI for me" — so it is not treated as unset."""
+    """Partial. A message cap of zero is meaningful — "no AI for me" — so it is not unset.
 
-    dailyMessageCap: int | None = Field(default=None, ge=0, le=10000)
-    dailyCostCapUsd: float | None = Field(default=None, ge=0, le=1000)
+    **A cost cap must be more than zero** (Batch X7, AI45-05): zero used to mean "no cost
+    ceiling", and a cleared box saved zero, so clearing it quietly lifted the money ceiling.
+    Both caps are bounded at four times their defaults (`caps.MAX_MESSAGE_CAP`,
+    `caps.MAX_COST_CAP_USD`); they were $1,000 and 10,000 a day.
+    """
+
+    dailyMessageCap: int | None = Field(default=None, ge=0, le=200)
+    dailyCostCapUsd: Decimal | None = Field(
+        default=None, gt=0, le=Decimal("10.00"), max_digits=6, decimal_places=2
+    )
 
 
 class AiStatusResponse(BaseModel):

@@ -29,7 +29,7 @@ from src.auth import CurrentUser
 from src.clock import utcnow
 from src.config import settings
 from src.database import AsyncSessionLocal
-from src.models.ai import AiConversation, AiMessage, AiToolCall, AiUsageLogEntry
+from src.models.ai import AiConversation, AiMessage, AiSettings, AiToolCall, AiUsageLogEntry
 from src.models.profile import Profile
 from src.routers.movies import Database
 from src.schemas.ai import (
@@ -48,7 +48,15 @@ from src.schemas.ai import (
     ToolSummary,
     UsageResponse,
 )
-from src.services.ai.caps import UsageToday, get_or_create_settings, usage_today
+from src.services.ai.caps import (
+    MAX_MESSAGE_CAP,
+    UsageToday,
+    effective_cost_cap,
+    get_or_create_settings,
+    person_today,
+    reserve_call,
+    usage_today,
+)
 from src.services.ai.chat import (
     ChatEvent,
     pending_calls,
@@ -56,7 +64,7 @@ from src.services.ai.chat import (
     resume_after_confirmation,
     run_turn,
 )
-from src.services.ai.client import ClaudeClient
+from src.services.ai.client import ClaudeClient, system_prompt
 from src.services.ai.tools import is_write_tool, tools_for
 
 logger = structlog.get_logger(__name__)
@@ -91,6 +99,14 @@ def _usage_response(usage: UsageToday) -> UsageResponse:
     )
 
 
+def _settings_response(limits: AiSettings) -> AiSettingsResponse:
+    """The caps as they apply: a stored zero or out-of-bounds value reads as what it means."""
+    return AiSettingsResponse(
+        dailyMessageCap=min(limits.daily_message_cap, MAX_MESSAGE_CAP),
+        dailyCostCapUsd=f"{effective_cost_cap(Decimal(limits.daily_cost_cap_usd)):.2f}",
+    )
+
+
 @router.get("/ai/status", response_model=AiStatusResponse)
 async def ai_status(_user: CurrentUser) -> AiStatusResponse:
     """Can this deployment answer a question at all?"""
@@ -110,10 +126,7 @@ async def read_settings(user: CurrentUser, db: Database) -> AiSettingsResponse:
     """The caps, seeded from config on first read."""
     limits = await get_or_create_settings(db, user.id)
     await db.commit()
-    return AiSettingsResponse(
-        dailyMessageCap=limits.daily_message_cap,
-        dailyCostCapUsd=f"{limits.daily_cost_cap_usd:.2f}",
-    )
+    return _settings_response(limits)
 
 
 @router.put("/ai/settings", response_model=AiSettingsResponse)
@@ -125,13 +138,10 @@ async def update_settings(
     if payload.dailyMessageCap is not None:
         limits.daily_message_cap = payload.dailyMessageCap
     if payload.dailyCostCapUsd is not None:
-        limits.daily_cost_cap_usd = Decimal(str(payload.dailyCostCapUsd))
+        limits.daily_cost_cap_usd = payload.dailyCostCapUsd
     await db.commit()
     await db.refresh(limits)
-    return AiSettingsResponse(
-        dailyMessageCap=limits.daily_message_cap,
-        dailyCostCapUsd=f"{limits.daily_cost_cap_usd:.2f}",
-    )
+    return _settings_response(limits)
 
 
 @router.post("/ai/ask", response_model=AskResponse)
@@ -146,7 +156,7 @@ async def ask(payload: AskRequest, user: CurrentUser, db: Database) -> AskRespon
     front end an exception to render instead of an answer. The body says `blocked` and
     carries the sentence.
     """
-    usage = await usage_today(db, user.id)
+    usage = await reserve_call(db, user.id)
     if usage.blocked:
         message = usage.refusal_message() or "Today's limit has been reached."
         logger.info("ai_capped", user_id=str(user.id), messages=usage.messages)
@@ -165,7 +175,10 @@ async def ask(payload: AskRequest, user: CurrentUser, db: Database) -> AskRespon
             error=None,
         )
 
-    reply = await ai_client().ask(payload.prompt)
+    reply = await ai_client().ask(
+        payload.prompt,
+        system=system_prompt(user.display_name, await person_today(db, user.id)),
+    )
 
     # Logged whether or not it worked. A usage log holding only successes cannot explain
     # an outage — and a failed call still consumed input tokens.
@@ -435,17 +448,8 @@ async def _stream(
             yield ChatEvent(kind="error", text="That conversation is gone.").to_sse()
             return
 
-        if not resume:
-            usage = await usage_today(db, user.id)
-            if usage.blocked:
-                # The same ceiling Batch 30 enforces, at the same point: before the call.
-                yield ChatEvent(
-                    kind="error",
-                    text=usage.refusal_message() or "Today's limit has been reached.",
-                ).to_sse()
-                await db.commit()
-                return
-
+        # The allowance is checked inside the loop, before every model call, a resumed
+        # turn's included (Batch X7) — not once here for new messages only.
         client = ai_client()
         events = (
             resume_after_confirmation(db, conversation=conversation, user=user, client=client)
@@ -499,15 +503,20 @@ async def resolve_tool_call_endpoint(
     ).scalar_one_or_none()
     if call is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tool call not found")
+    already = HTTPException(
+        status_code=status.HTTP_409_CONFLICT, detail="That has already been answered"
+    )
     if call.status != "pending":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="That has already been answered"
-        )
+        raise already
 
     conversation = await _conversation_for(db, call.conversation_id, user)
-    await resolve_tool_call(
+    # The claim inside is the guard that holds against two taps at once; the check above
+    # only answers the common case quickly.
+    if not await resolve_tool_call(
         db, conversation=conversation, call=call, user=user, confirm=payload.confirm
-    )
+    ):
+        await db.rollback()
+        raise already
     await db.commit()
 
     return StreamingResponse(

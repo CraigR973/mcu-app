@@ -163,4 +163,33 @@ describe('AiChatPage', () => {
     expect(screen.getByText('Jaws is on shelf B4.')).not.toBeNull()
     expect(screen.getByText('Recommend one.')).not.toBeNull()
   })
+
+  it('locks the message box while a card waits, and unlocks it once the card is answered', async () => {
+    // Batch X7 (AI45-02): typing instead of tapping broke the conversation for good.
+    mocks.fetchAiConversation.mockResolvedValue({
+      id: CONVERSATION_ID,
+      title: 'Archive questions',
+      createdAt: '2026-09-10T10:00:00Z',
+      updatedAt: '2026-09-10T11:00:00Z',
+      messages: [],
+      pendingToolCalls: [
+        {
+          id: '3f2504e0-4f89-41d3-9a0c-0305e82c3320',
+          toolName: 'log_watch',
+          input: { title: 'Heat' },
+        },
+      ],
+    })
+    renderPage()
+
+    expect(await screen.findByText('Can I do this?')).not.toBeNull()
+    const input = screen.getByLabelText('Message to the assistant') as HTMLInputElement
+    expect(input.disabled).toBe(true)
+    expect(input.placeholder).toBe('Answer the card above first')
+
+    fireEvent.click(screen.getByRole('button', { name: /Yes, do it/ }))
+
+    expect(mocks.resolveAiToolCall).toHaveBeenCalledWith('3f2504e0-4f89-41d3-9a0c-0305e82c3320', true)
+    await vi.waitFor(() => expect(input.disabled).toBe(false))
+  })
 })

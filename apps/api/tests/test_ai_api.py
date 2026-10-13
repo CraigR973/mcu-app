@@ -24,7 +24,7 @@ from src.main import app
 from src.models.ai import AiUsageLogEntry
 from src.models.profile import Profile, UserRole
 from src.routers.ai import set_ai_client
-from src.services.ai.caps import local_day_bounds, usage_today
+from src.services.ai.caps import get_or_create_settings, local_day_bounds, usage_today
 from src.services.ai.client import AiReply, ClaudeClient
 
 
@@ -321,7 +321,7 @@ class TestCaps:
         different bills, which is why §9.7 names both ceilings.
         """
         await client.put(
-            "/api/v1/ai/settings", json={"dailyMessageCap": 1000, "dailyCostCapUsd": 0.5}
+            "/api/v1/ai/settings", json={"dailyMessageCap": 200, "dailyCostCapUsd": 0.5}
         )
         await _log(db, person, when=datetime.now(), cost="0.60")
 
@@ -331,16 +331,37 @@ class TestCaps:
         assert "spending limit" in body["text"]
         assert claude.prompts == []
 
-    async def test_a_zero_cost_cap_means_no_cost_ceiling(
+    async def test_a_zero_cost_cap_is_refused(self, client: AsyncClient) -> None:
+        """Batch X7 (AI45-05): zero used to mean "no cost ceiling", and a cleared box saved
+        zero, so clearing it quietly lifted the money ceiling. It is now refused."""
+        for value in (0, -1, 10.01):
+            response = await client.put("/api/v1/ai/settings", json={"dailyCostCapUsd": value})
+            assert response.status_code == 422, value
+
+    async def test_a_stored_zero_cost_cap_is_a_ceiling_not_unlimited(
         self, client: AsyncClient, db: AsyncSession, person: Profile, claude: StubClaude
     ) -> None:
-        """Otherwise "unlimited spend" and "spend nothing" would be the same setting."""
-        await client.put("/api/v1/ai/settings", json={"dailyMessageCap": 100, "dailyCostCapUsd": 0})
+        """A zero saved before X7 reads as the configured default, never as no ceiling."""
+        limits = await get_or_create_settings(db, person.id)
+        limits.daily_cost_cap_usd = Decimal("0")
+        await db.flush()
         await _log(db, person, when=datetime.now(), cost="99.00")
 
-        body = (await client.post("/api/v1/ai/ask", json={"prompt": "still fine"})).json()
+        body = (await client.post("/api/v1/ai/ask", json={"prompt": "still fine?"})).json()
 
-        assert body["stopReason"] != "cap_reached"
+        assert body["stopReason"] == "cap_reached"
+        assert claude.prompts == []
+        shown = (await client.get("/api/v1/ai/settings")).json()["dailyCostCapUsd"]
+        assert shown == "2.00", "the page shows the ceiling that applies"
+
+    async def test_the_caps_have_upper_bounds(self, client: AsyncClient) -> None:
+        """AI45-05: either person could set $1,000 and 10,000 messages a day."""
+        assert (
+            await client.put("/api/v1/ai/settings", json={"dailyMessageCap": 201})
+        ).status_code == 422
+        assert (
+            await client.put("/api/v1/ai/settings", json={"dailyCostCapUsd": 10})
+        ).status_code == 200
 
     async def test_a_failed_call_does_not_use_up_an_allowance(
         self, client: AsyncClient, db: AsyncSession, person: Profile, claude: StubClaude

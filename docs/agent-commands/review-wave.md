@@ -88,6 +88,12 @@ guards re-run; one report, `docs/reviews/<date>-delta-review.md`, of at most ten
 to a full panel if it finds a High in a lens it did not run, or the change touched the rules of a
 decision the app makes for its users.
 
+**The assistant's canary** is one of those guards, and the only one that spends money: five asks
+of the real model (a follow-up, a card, a card answered in words, a total, a planted note), about
+$0.08, stopping before $0.25. **Ask Craig before running it.** It stores the chat in a throwaway
+database and reads as Craig through the read-only role; how to run it is in the docstring of
+`apps/api/src/scripts/assistant_canary.py` (Batch X7).
+
 ## Hard rules
 
 - **Read-only.** No change to code, production data, hosting (Railway, Vercel, Neon) or

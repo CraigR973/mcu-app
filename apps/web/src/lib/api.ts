@@ -2156,20 +2156,35 @@ export async function* resolveAiToolCall(
 }
 
 /** What §9.4's prompt says, in words rather than a tool name and a JSON blob. */
+/** "2026-10-12" as "12 Oct 2026", the app's way of writing a date. */
+function formatCardDate(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!match) return iso
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${Number(match[3])} ${months[Number(match[2]) - 1] ?? match[2]} ${match[1]}`
+}
+
 export function describeToolCall(call: {
   toolName: string
   input: Record<string, unknown>
 }): string {
   const input = call.input
+  // Batch X7: the server settles the exact film before the card shows, and names it
+  // with its year in `resolved.label`, so "Halloween" on the card is never a guess.
+  const resolved = input.resolved
+  const film =
+    resolved && typeof resolved === 'object' && 'label' in resolved && typeof resolved.label === 'string'
+      ? resolved.label
+      : String(input.title)
   if (call.toolName === 'add_to_wanted') {
     const format = typeof input.preferredFormat === 'string' ? ` on ${formatLabel(input.preferredFormat) ?? input.preferredFormat}` : ''
-    const price = typeof input.maxPrice === 'string' ? `, alerting below £${input.maxPrice}` : ''
-    return `Add ${String(input.title)} to the wanted list${format}${price}.`
+    const price = typeof input.maxPrice === 'string' && input.maxPrice ? `, alerting below £${input.maxPrice}` : ''
+    return `Add ${film} to the wanted list${format}${price}.`
   }
   if (call.toolName === 'log_watch') {
     const rating = typeof input.rating === 'number' ? `, rated ${input.rating}/5` : ''
-    const when = typeof input.watchedAt === 'string' ? ` on ${input.watchedAt}` : ''
-    return `Record that you watched ${String(input.title)}${when}${rating}.`
+    const when = typeof input.watchedAt === 'string' ? ` on ${formatCardDate(input.watchedAt)}` : ''
+    return `Record that you watched ${film}${when}${rating}.`
   }
   return `Run ${call.toolName} with ${JSON.stringify(input)}.`
 }

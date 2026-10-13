@@ -199,8 +199,9 @@ export function AiSettings() {
         <h2 className="section-heading">Your limits</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Two ceilings, because a message count alone does not bound spend — the same
-          question costs more at the end of a long conversation than at the start. Set the
-          message cap to 0 to turn the assistant off for yourself.
+          question costs more at the end of a long conversation than at the start. Up to 200
+          messages and $10 a day. Set the message cap to 0 to turn the assistant off for
+          yourself.
         </p>
         {settings.data ? (
           <div className="mt-3 flex flex-wrap items-end gap-4">
@@ -209,26 +210,31 @@ export function AiSettings() {
               <Input
                 type="number"
                 min={0}
-                max={10000}
+                max={200}
                 className="w-32"
                 defaultValue={settings.data.dailyMessageCap}
-                onBlur={(event) =>
+                onBlur={(event) => {
+                  // A cleared box is "no change", not zero (Batch X7).
+                  if (event.target.value.trim() === '') return
                   save.mutate({ dailyMessageCap: Number(event.target.value) })
-                }
+                }}
               />
             </label>
             <label className="text-sm">
               <span className="mb-1 block text-muted-foreground">Spend per day (USD)</span>
               <Input
                 type="number"
-                min={0}
-                max={1000}
+                min={0.5}
+                max={10}
                 step="0.5"
                 className="w-32"
                 defaultValue={settings.data.dailyCostCapUsd}
-                onBlur={(event) =>
+                onBlur={(event) => {
+                  // A cleared box used to save 0, which lifted the money ceiling
+                  // (AI45-05). Blank is now "no change"; the server refuses 0.
+                  if (event.target.value.trim() === '') return
                   save.mutate({ dailyCostCapUsd: Number(event.target.value) })
-                }
+                }}
               />
             </label>
             {save.isPending ? (
