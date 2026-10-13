@@ -29,8 +29,8 @@ class FilmReviewResponse(BaseModel):
     description: str | None = None
     #: Empty until read; AVForums' never are (#241).
     scores: list[ReviewScoreResponse]
-    overall: float | None = None
-    outOf: int | None = None
+    overall: float | None = Field(default=None, gt=0)
+    outOf: int | None = Field(default=None, gt=0)
     scoresReadAt: UtcDatetime | None = None
     #: Why there are no scores, when there are none.
     note: str | None = None

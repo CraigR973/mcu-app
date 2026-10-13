@@ -6,6 +6,7 @@ import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { CacheFirst, NetworkFirst } from 'workbox-strategies'
 
+import { API_CACHE_NAME, isCachedApiRead } from './lib/api-cache-route'
 import { opensInApp } from './lib/notification-target'
 
 // vite-plugin-pwa replaces `self.__WB_MANIFEST` with the precache manifest at build time.
@@ -97,9 +98,8 @@ registerRoute(
  * hours. Caught by Batch 27's security review, which found the same bug on the gift page
  * that Batch S1 has since removed.
  *
- * The route still honours `no-store` and still matches only this app's own origin. Both
- * matter: the first respects what the API asked for, and the second stops a cross-origin
- * response being cached under a rule written for same-origin catalogue reads. **Batch S1
+ * The route still honours `no-store`, and matches only this app's own origin and its own
+ * API's: no other site's response is cached under a rule written for catalogue reads. **Batch S1
  * removed the gift exclusion because the endpoint is gone, not because the rule relaxed**
  * — every `no-store` route the API still serves is still excluded below.
  *
@@ -107,17 +107,18 @@ registerRoute(
  * which is durable in a way a response cache is not.
  */
 registerRoute(
+  // The page's own origin **and the configured API's** (Batch X8, UX48-01): in production the
+  // API is on Railway and the page on Vercel, and matching the page's origin alone meant the
+  // worker never kept one answer. The rule and its exclusions live in `api-cache-route.ts`.
   ({ url, request }) =>
-    request.method === 'GET' &&
-    url.origin === self.location.origin &&
-    url.pathname.startsWith('/api/v1/') &&
-    // The capability URL. Not catalogue data, not wanted offline, and it says `no-store`
-    // — a rule that reads the API's own instruction rather than listing paths would be
-    // better, but a service worker cannot see response headers when deciding whether a
-    // route *matches*. Anything new that answers `no-store` belongs on this list.
-    !url.pathname.startsWith('/api/v1/calendar.ics'),
+    isCachedApiRead(
+      url,
+      request.method,
+      self.location.origin,
+      import.meta.env.VITE_API_URL as string | undefined,
+    ),
   new NetworkFirst({
-    cacheName: 'mcu-api-user-v2',
+    cacheName: API_CACHE_NAME,
     networkTimeoutSeconds: 3,
     plugins: [
       // Roughly the whole catalogue at the page sizes the app asks for, plus room for

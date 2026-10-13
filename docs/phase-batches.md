@@ -1450,7 +1450,10 @@ against a **cross-origin** API, production's shape and never the dev proxy (UX48
 version-drift case (a new enum value) and one missing-chunk case (UX48-03); a two-message
 chat against a recorded model (AI45-01); and the screens never used yet (photos, box sets,
 smart collections, eBay alerts and accounts). R6's rig (`scratchpad/wave-1/r6/probes/`,
-gitignored, on the Mac) is a ready start. Still last, after Group X.
+gitignored, on the Mac) is a ready start. Still last, after Group X. **X8 (13 Oct) made the
+cross-origin shape runnable by hand:** a build with `VITE_API_URL=http://127.0.0.1:8000`,
+served by `.claude/preview.sh`, against `.claude/api-local.sh` on a throwaway Postgres; the
+suite's case automates that, then stops the API and opens a film read online.
 
 **Status 26 Sep (Group U, last step): all seven flows now exist**, since Batch 24 shipped the
 barcode scan, so the "six of seven" allowance below no longer applies. T8a's eBay price

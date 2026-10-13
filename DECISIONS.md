@@ -5452,3 +5452,36 @@ contemporaneous.
        each earlier turn back the same way every time, which is what they need.
      - **The canary** (`src/scripts/assistant_canary.py`) replaces R3's probe: five asks, about
        $0.08, at Craig's word at each monthly delta review; never in CI.
+
+### 2026-10-13 — Group X, batch X8
+
+263. **X8's choices: one describer for failure words, a lower bound on the API wherever the web
+     assumed one, a committed OpenAPI description, and a web build that says its commit.**
+
+     - **The worker keeps reads from the page's origin and the configured API's**
+       (`VITE_API_URL`, compiled into the worker), each person's in their own partition as
+       before, and sign-out deletes the cache.
+     - **`describeError` replaces raw text**: "No signal — showing what's saved." for `fetch`
+       failing, "The archive had a problem. Try again in a minute." for a 5xx with no words of
+       its own, "This screen needs the newest version." for a value this build cannot read or a
+       missing chunk, with a Reload banner. A refusal the server explains (a 409, a handled 503)
+       keeps its own sentence, and so does an error the app raised in words. Pages with their
+       own offline wording keep it.
+     - **A failed chunk reloads once a minute at most** (`vite:preloadError` and the error
+       boundary), so a page cannot loop.
+     - **A crash answers inside CORS** (`UnhandledErrorMiddleware`, registered before
+       `CORSMiddleware`): a 500 with the server-fault sentence and the traceback logged.
+     - **Readiness adds `tmdb` and `brave`, presence only**; the daily check names either when
+       missing. The close-out gate checks every field reads `configured` and that
+       `/version.json` on the web reports the merged commit.
+     - **The contract test reads `lib/api.ts`**: each parsing function's path, method and zod
+       expression, evaluated against the real schemas, walked against the response model in
+       `packages/shared/openapi.json`. The API's `test_openapi_snapshot.py` fails when that file
+       is stale. **Where they disagreed (158 fields), the API took the bound the web already
+       assumed** (`ge=0` on counts, `gt=0` on ids, page sizes and TMDB numbers, `ge=0.5` on a
+       rating), not the other way round: both sides now say the same thing, and a value outside
+       it is a 500 the daily check would see rather than a screen of raw JSON. The audit log's
+       `actionType` is now the table's five values.
+     - **The CSP names `api-production-a8fe.up.railway.app` and drops Supabase and Sentry.** A
+       new API host, or Sentry switched on, needs `vercel.json` changed with it. This is a
+       `vercel.json` header change, deployed by the merge like any other file in it.

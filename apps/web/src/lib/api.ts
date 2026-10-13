@@ -386,13 +386,17 @@ export class ApiError extends Error {
  * retried on its own (`DECISIONS.md` #43).
  */
 export class NetworkError extends Error {
+  /** Set when a server answered with a 5xx or 408: it answered, so this is not "no signal". */
+  readonly status?: number
+
   constructor(
     message: string,
     readonly mayHaveLanded: boolean,
-    options?: { cause?: unknown },
+    options?: { cause?: unknown; status?: number },
   ) {
     super(message, options)
     this.name = 'NetworkError'
+    this.status = options?.status
   }
 }
 
@@ -428,7 +432,7 @@ export async function send(path: string, options: RequestInit = {}): Promise<Res
   // thrown away. An edit made on a train behind a captive portal would have vanished
   // silently (`DECISIONS.md` #45).
   if (response.status >= 500 || response.status === 408) {
-    throw new NetworkError('The server did not answer.', true)
+    throw new NetworkError('The server did not answer.', true, { status: response.status })
   }
   return response
 }
@@ -453,7 +457,7 @@ async function errorMessage(response: Response): Promise<string> {
 type ResponseSchema<T> = ZodType<T, ZodTypeDef, unknown>
 
 async function parseResponse<T>(response: Response, schema: ResponseSchema<T>): Promise<T> {
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
   const body: unknown = await response.json()
   return schema.parse(body)
 }
@@ -561,7 +565,7 @@ export async function fetchWatches(movieId?: string, perPage = 50): Promise<Watc
 
 export async function deleteWatch(entryId: string): Promise<void> {
   const response = await authFetch(`/watch-log/${entryId}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /** Batch 37: private watches from this calendar day in prior years. */
@@ -910,7 +914,7 @@ export async function updateBoxSet(id: string, input: BoxSetInput): Promise<BoxS
 
 export async function deleteBoxSet(id: string): Promise<void> {
   const response = await authFetch(`/box-sets/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 export async function addBoxSetItem(
@@ -989,7 +993,7 @@ export async function updateSmartCollection(
 
 export async function deleteSmartCollection(id: string): Promise<void> {
   const response = await authFetch(`/smart-collections/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 export async function fetchSmartCollectionResults(
@@ -1330,7 +1334,7 @@ export async function changeTargetPrice(id: string, targetPrice: string): Promis
 
 export async function removeTarget(id: string): Promise<void> {
   const response = await authFetch(`/ebay/targets/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 // ---------------------------------------------------------------------------
@@ -1364,7 +1368,7 @@ export async function finishEbayConnect(code: string, state: string): Promise<Eb
 
 export async function disconnectEbay(): Promise<void> {
   const response = await authFetch('/ebay/account', { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 export async function fetchEbayWatching(): Promise<EbayWatching> {
@@ -1397,7 +1401,7 @@ export async function fetchActivity(limit = 20): Promise<Activity> {
 export async function downloadExport(format: 'csv' | 'json' | 'html'): Promise<void> {
   const query = format === 'html' ? '?download=true' : ''
   const response = await authFetch(`/export/collection.${format}${query}`)
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)
@@ -1423,7 +1427,7 @@ function filenameFrom(response: Response): string | null {
 /** Open the printable view in a new tab — §13.4's route to a PDF is the print dialog. */
 export async function openPrintableCollection(): Promise<void> {
   const response = await authFetch('/export/collection.html')
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
   const url = URL.createObjectURL(await response.blob())
   window.open(url, '_blank', 'noopener')
   // Not revoked immediately: the new tab has not fetched it yet. A minute is far longer
@@ -1452,7 +1456,7 @@ export async function fetchTrashTable(table: TrashTable, page = 1): Promise<Tras
 
 export async function restoreTrashRow(table: TrashTable, id: string): Promise<void> {
   const response = await authFetch(`/trash/${table}/${id}/restore-row`, { method: 'POST' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /**
@@ -1464,7 +1468,7 @@ export async function restoreTrashRow(table: TrashTable, id: string): Promise<vo
  */
 export async function destroyTrashRow(table: TrashTable, id: string): Promise<void> {
   const response = await authFetch(`/trash/${table}/${id}/permanent`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /** Dry by default, matching the endpoint — the destructive call is the one you ask for. */
@@ -1680,7 +1684,7 @@ export async function updateWanted(
 
 export async function removeWanted(id: string): Promise<void> {
   const response = await authFetch(`/wanted/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /**
@@ -1759,7 +1763,7 @@ export async function updateRetailer(id: string, input: RetailerInput): Promise<
 
 export async function removeRetailer(id: string): Promise<void> {
   const response = await authFetch(`/retailers/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 export async function seedRetailers(): Promise<RetailerSeed> {
@@ -1863,7 +1867,7 @@ export async function registerPushSubscription(
 
 export async function removePushSubscription(id: string): Promise<void> {
   const response = await authFetch(`/notifications/subscriptions/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 export async function sendTestNotification(id: string): Promise<TestNotificationResult> {
@@ -2076,7 +2080,7 @@ export async function fetchAiConversation(id: string): Promise<AiConversationDet
 
 export async function deleteAiConversation(id: string): Promise<void> {
   const response = await authFetch(`/ai/conversations/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /** One frame from the chat stream. `text` many times, then exactly one terminal event. */
@@ -2345,7 +2349,7 @@ export async function uploadItemPhoto(itemId: string, file: File): Promise<ItemP
 
 export async function deleteItemPhoto(photoId: string): Promise<void> {
   const response = await authFetch(`/photos/${photoId}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /** The absolute URL for an image tag — the API origin, not the web app's. */

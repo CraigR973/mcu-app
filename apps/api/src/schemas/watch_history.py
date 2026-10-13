@@ -19,11 +19,11 @@ class SyncRunResponse(BaseModel):
     startedAt: UtcDatetime
     finishedAt: UtcDatetime | None
     trigger: str
-    entries: int
-    written: int
-    alreadyImported: int
-    ambiguous: int
-    notInCollection: int
+    entries: int = Field(ge=0)
+    written: int = Field(ge=0)
+    alreadyImported: int = Field(ge=0)
+    ambiguous: int = Field(ge=0)
+    notInCollection: int = Field(ge=0)
     error: str | None
 
 
@@ -35,7 +35,7 @@ class WatchHistoryStatusResponse(BaseModel):
     letterboxdUsername: str | None
     lastSync: SyncRunResponse | None
     #: Live watch rows for this person. 0 for both until the S8 import is run.
-    watchCount: int
+    watchCount: int = Field(ge=0)
 
 
 class SyncRequest(BaseModel):

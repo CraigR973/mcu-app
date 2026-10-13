@@ -12,6 +12,7 @@ import {
   type Condition,
 } from '@/lib/api'
 import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
+import { queryErrorMessage } from '@/lib/query-state'
 
 interface Props {
   movieId: string
@@ -115,9 +116,7 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
           <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error instanceof StaleEditError
               ? 'This disc was changed somewhere else while you were editing. Close and reopen it to see the current version.'
-              : error instanceof Error
-                ? error.message
-                : 'That change could not be saved.'}
+              : queryErrorMessage(error, 'That change could not be saved.')}
           </p>
         )}
 

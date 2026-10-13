@@ -9,7 +9,7 @@ these ship with matching parsers in `packages/shared`.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,7 +34,7 @@ class PriceSegmentResponse(BaseModel):
     conditionId: str
     #: The English label for `conditionId`, resolved by us rather than taken from eBay.
     conditionLabel: str
-    sampleSize: int
+    sampleSize: int = Field(ge=0)
     median: str
     low: str
     high: str
@@ -54,9 +54,9 @@ class PriceEstimateResponse(BaseModel):
     formatCode: str | None
     marketplaceId: str
     #: How many listings the search returned, before any of them were judged.
-    considered: int
+    considered: int = Field(ge=0)
     #: How many survived the match filter and are behind the segments below.
-    matched: int
+    matched: int = Field(ge=0)
     segments: list[PriceSegmentResponse]
     #: The single segment to show, when there is one: standard edition, requested format,
     #: largest sample. Null when nothing matched — which is an answer, not an error.
@@ -64,10 +64,10 @@ class PriceEstimateResponse(BaseModel):
     #: Why the rest were rejected, by reason and count. **Part of the answer, not
     #: diagnostics**: a search that matched 4 of 200 is either a rare disc or a broken
     #: filter, and this is what tells the two apart (`DECISIONS.md` #122).
-    rejected: dict[str, int]
+    rejected: dict[str, Annotated[int, Field(ge=0)]]
     #: Entries that were not the shape the Browse API documents. Counted apart from
     #: rejections because a rise here means eBay changed its response.
-    unusable: int
+    unusable: int = Field(ge=0)
     #: Always "current asking prices".
     basis: str
 

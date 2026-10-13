@@ -87,22 +87,22 @@ class BoxSetMemberResponse(BaseModel):
     year: int | None
     formats: list[str]
     locationLabel: str
-    discNumber: int | None
+    discNumber: int | None = Field(gt=0)
 
 
 class BoxSetResponse(BaseModel):
     id: uuid.UUID
     name: str
     label: str | None
-    volumeNumber: int | None
+    volumeNumber: int | None = Field(gt=0)
     seriesId: uuid.UUID | None
     seriesName: str | None
-    expectedCount: int | None
+    expectedCount: int | None = Field(gt=0)
     posterUrl: str | None
     notes: str | None
     #: Live members only — a soft-deleted disc stops counting towards completion the
     #: moment it is deleted, which is the only reading that keeps "3 of 4" true.
-    ownedCount: int
+    ownedCount: int = Field(ge=0)
     #: ``None`` when ``expectedCount`` is unknown. Not ``False``: a set whose size nobody
     #: recorded is not incomplete, it is unmeasured, and rendering that as "incomplete"
     #: would put a permanent red mark against every set an admin did not fill in.
@@ -119,7 +119,7 @@ class BoxSetDetailResponse(BoxSetResponse):
 
 class BoxSetListResponse(BaseModel):
     items: list[BoxSetResponse]
-    total: int
+    total: int = Field(ge=0)
 
 
 # ---------------------------------------------------------------------------
@@ -207,14 +207,14 @@ class SmartCollectionResponse(BaseModel):
     sortBy: SortBy
     sortOrder: SortOrder
     isPinned: bool
-    displayOrder: int
+    displayOrder: int = Field(ge=0)
     createdAt: UtcDatetime
     updatedAt: UtcDatetime
 
 
 class SmartCollectionListResponse(BaseModel):
     items: list[SmartCollectionResponse]
-    total: int
+    total: int = Field(ge=0)
 
 
 class SmartCollectionResultsResponse(BaseModel):
@@ -227,11 +227,11 @@ class SmartCollectionResultsResponse(BaseModel):
 
     collection: SmartCollectionResponse
     items: list[MovieListItemResponse]
-    totalMovies: int
-    totalItems: int
-    page: int
-    perPage: int
-    pages: int
+    totalMovies: int = Field(ge=0)
+    totalItems: int = Field(ge=0)
+    page: int = Field(gt=0)
+    perPage: int = Field(gt=0)
+    pages: int = Field(ge=0)
 
 
 # ---------------------------------------------------------------------------
@@ -249,7 +249,7 @@ class CompletionFilmResponse(BaseModel):
     from the set's cached metadata rather than from ``movies``.
     """
 
-    tmdbId: int
+    tmdbId: int = Field(gt=0)
     title: str
     year: int | None
     posterPath: str | None
@@ -262,11 +262,11 @@ class CompletionSetResponse(BaseModel):
     setType: SetType
     setKey: str
     setName: str
-    ownedCount: int
-    totalCount: int
-    missingCount: int
+    ownedCount: int = Field(ge=0)
+    totalCount: int = Field(ge=0)
+    missingCount: int = Field(ge=0)
     #: 0–100, computed server-side so the bar and the caption cannot disagree.
-    percentComplete: int
+    percentComplete: int = Field(ge=0)
     lastRefreshed: UtcDatetime | None
 
 
@@ -276,18 +276,18 @@ class CompletionSetDetailResponse(CompletionSetResponse):
 
 class CompletionInsightsResponse(BaseModel):
     items: list[CompletionSetResponse]
-    total: int
+    total: int = Field(ge=0)
     #: When the whole table was last rebuilt — the oldest ``lastRefreshed`` of any set,
     #: because a page is only as current as its stalest row.
     oldestRefresh: UtcDatetime | None
 
 
 class CompletionRefreshResponse(BaseModel):
-    created: int
-    updated: int
-    unchanged: int
-    skipped: int
-    total: int
+    created: int = Field(ge=0)
+    updated: int = Field(ge=0)
+    unchanged: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    total: int = Field(ge=0)
     errors: list[str]
     dryRun: bool
 
@@ -308,7 +308,7 @@ TrashTable = Literal[
 
 class TrashCountResponse(BaseModel):
     table: TrashTable
-    count: int
+    count: int = Field(ge=0)
 
 
 class TrashRowResponse(BaseModel):
@@ -330,10 +330,10 @@ class TrashRowResponse(BaseModel):
 
 class TrashListResponse(BaseModel):
     items: list[TrashRowResponse]
-    total: int
-    page: int
-    perPage: int
-    pages: int
+    total: int = Field(ge=0)
+    page: int = Field(gt=0)
+    perPage: int = Field(gt=0)
+    pages: int = Field(ge=0)
     counts: list[TrashCountResponse]
 
 
@@ -341,10 +341,10 @@ class PurgePreviewResponse(BaseModel):
     """What a 90-day purge would destroy. ``dryRun`` is the default, deliberately."""
 
     table: TrashTable
-    olderThanDays: int
-    count: int
+    olderThanDays: int = Field(gt=0)
+    count: int = Field(ge=0)
     dryRun: bool
-    deleted: int
+    deleted: int = Field(ge=0)
 
 
 class LoanCreateRequest(BaseModel):
@@ -405,6 +405,6 @@ class LoanResponse(BaseModel):
 
 class LoanListResponse(BaseModel):
     items: list[LoanResponse]
-    total: int
-    openCount: int
-    overdueCount: int
+    total: int = Field(ge=0)
+    openCount: int = Field(ge=0)
+    overdueCount: int = Field(ge=0)

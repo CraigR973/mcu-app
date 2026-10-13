@@ -120,8 +120,8 @@ class WantedItemResponse(BaseModel):
 
 class WantedListResponse(BaseModel):
     items: list[WantedItemResponse]
-    total: int
-    activeCount: int
+    total: int = Field(ge=0)
+    activeCount: int = Field(ge=0)
 
 
 class RetailerFieldsMixin(BaseModel):
@@ -177,7 +177,7 @@ class RetailerResponse(BaseModel):
     lastScrapedAt: UtcDatetime | None
     lastScrapeStatus: str | None
     lastScrapeError: str | None
-    consecutiveFailures: int
+    consecutiveFailures: int = Field(ge=0)
     #: False until Batch 19 gives this retailer selectors. Surfaced so the settings page
     #: can say "not configured" instead of implying a scraper exists for it.
     isConfigured: bool
@@ -186,16 +186,16 @@ class RetailerResponse(BaseModel):
 
 class RetailerListResponse(BaseModel):
     items: list[RetailerResponse]
-    total: int
-    enabledCount: int
+    total: int = Field(ge=0)
+    enabledCount: int = Field(ge=0)
     #: How many have selectors. Zero on day one, and saying so is the honest version of
     #: §5.2's "seeded default retailers".
-    configuredCount: int
+    configuredCount: int = Field(ge=0)
 
 
 class RetailerSeedResponse(BaseModel):
-    created: int
-    existing: int
+    created: int = Field(ge=0)
+    existing: int = Field(ge=0)
     names: list[str]
 
 
@@ -292,18 +292,18 @@ class ScrapeOutcomeResponse(BaseModel):
 
 class ScrapeRunResponse(BaseModel):
     outcomes: list[ScrapeOutcomeResponse]
-    succeeded: int
-    failed: int
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
     #: Wants these shops cannot serve. Reported separately so they never read as failures.
-    skipped: int
+    skipped: int = Field(ge=0)
     #: Films a shop answered about and has not got. Reported separately for the same
     #: reason, and counted apart from `skipped` because the question was actually asked.
-    notStocked: int
+    notStocked: int = Field(ge=0)
     #: Wants whose shop answered with an **empty results page**. Neither a failure nor a
     #: claim that the shop has not got it — nothing in an empty page tells "we do not
     #: carry that" apart from "the selector stopped matching" (`DECISIONS.md` #125).
-    noResults: int = 0
-    written: int
+    noResults: int = Field(default=0, ge=0)
+    written: int = Field(ge=0)
     #: Retailers switched off by this run, after three consecutive failures.
     disabled: list[str]
     dryRun: bool

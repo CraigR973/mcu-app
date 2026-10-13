@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 
 import structlog
 from fastapi import APIRouter, Response
@@ -51,6 +51,13 @@ class ReadinessResponse(BaseModel):
     #: way to learn they were missing was to ask for a price and read a 503.
     ebay: Literal["configured", "not_configured"]
 
+    #: TMDB and Brave, presence only — Batch X8 (DS44-04). TMDB's token is the variable whose
+    #: absence on 9 Sep made every TMDB-backed feature answer 502 behind a green gate, the
+    #: outage this endpoint names as its reason; Brave finds the reviews. Neither is called:
+    #: a TMDB call costs a request and a Brave one costs credit.
+    tmdb: Literal["configured", "not_configured"]
+    brave: Literal["configured", "not_configured"]
+
 
 @router.get("", response_model=HealthResponse)
 async def health() -> HealthResponse:
@@ -89,21 +96,35 @@ def _push_status() -> Literal["configured", "not_configured", "invalid"]:
     return "configured"
 
 
-def readiness_fields() -> dict[str, str]:
-    """Push, the assistant and eBay as this deployment sees them, for the boot heartbeat."""
-    return {"push": _push_status(), "ai": _ai_status(), "ebay": _ebay_status()}
+def _tmdb_status() -> Literal["configured", "not_configured"]:
+    """Is there a TMDB credential? Presence only."""
+    return "configured" if settings.tmdb_read_token or settings.tmdb_api_key else "not_configured"
+
+
+def _brave_status() -> Literal["configured", "not_configured"]:
+    """Is there a Brave Search key? Presence only — a search spends credit."""
+    return "configured" if settings.brave_search_api_key else "not_configured"
+
+
+def readiness_fields() -> dict[str, Any]:
+    """Every outside service as this deployment sees it, for the boot heartbeat and /ready."""
+    return {
+        "push": _push_status(),
+        "ai": _ai_status(),
+        "ebay": _ebay_status(),
+        "tmdb": _tmdb_status(),
+        "brave": _brave_status(),
+    }
 
 
 @router.get("/ready", response_model=ReadinessResponse)
 async def ready(response: Response) -> ReadinessResponse:
-    push = _push_status()
-    ai = _ai_status()
-    ebay = _ebay_status()
+    fields = readiness_fields()
     try:
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))
-        return ReadinessResponse(status="ready", db="ok", push=push, ai=ai, ebay=ebay)
+        return ReadinessResponse(status="ready", db="ok", **fields)
     except Exception:
         log.warning("readiness check failed", db="unreachable")
         response.status_code = 503
-        return ReadinessResponse(status="not_ready", db="unreachable", push=push, ai=ai, ebay=ebay)
+        return ReadinessResponse(status="not_ready", db="unreachable", **fields)

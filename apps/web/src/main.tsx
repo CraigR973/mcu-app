@@ -9,8 +9,16 @@ import App from './App'
 import './index.css'
 import { createQueryClient } from './lib/query-client'
 import { registerServiceWorker } from './lib/register-sw'
+import { reloadOnceForNewBuild } from './lib/describe-error'
 
 const queryClient = createQueryClient()
+
+// Batch X8 (UX48-03): a deploy removed a chunk this page still asks for. Vite raises this when
+// a dynamic import fails; a reload fetches the new build. Once only (see the helper); after
+// that the screen says it needs the newest version.
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadOnceForNewBuild()) event.preventDefault()
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

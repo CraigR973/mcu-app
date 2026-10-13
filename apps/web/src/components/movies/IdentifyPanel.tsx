@@ -9,6 +9,7 @@ import {
   type Candidate,
   type MovieDetail,
 } from '@/lib/api'
+import { queryErrorMessage } from '@/lib/query-state'
 
 interface Props {
   movieId: string
@@ -112,9 +113,7 @@ export default function IdentifyPanel({ movieId, storedTitle, onIdentified }: Pr
       )}
       {candidates.isError && (
         <p className="py-6 text-sm text-destructive">
-          {candidates.error instanceof Error
-            ? candidates.error.message
-            : 'Could not search TMDB. Please try again.'}
+          {queryErrorMessage(candidates.error, 'Could not search TMDB. Please try again.')}
         </p>
       )}
       {candidates.data?.candidates.length === 0 && (
@@ -136,7 +135,7 @@ export default function IdentifyPanel({ movieId, storedTitle, onIdentified }: Pr
       )}
       {identify.isError && (
         <p className="mt-3 text-sm text-destructive">
-          {identify.error instanceof Error ? identify.error.message : 'Could not save that match.'}
+          {queryErrorMessage(identify.error, 'Could not save that match.')}
         </p>
       )}
     </section>

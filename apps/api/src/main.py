@@ -16,7 +16,11 @@ from slowapi.errors import RateLimitExceeded
 from src.config import Environment, ProcessRole, docs_urls, settings
 from src.database import AsyncSessionLocal
 from src.logging_config import configure_logging
-from src.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
+from src.middleware import (
+    CorrelationIdMiddleware,
+    SecurityHeadersMiddleware,
+    UnhandledErrorMiddleware,
+)
 from src.rate_limit import limiter
 from src.routers import (
     ai,
@@ -151,6 +155,8 @@ def _tmdb_refused_handler(_request: Request, exc: Exception) -> Response:
 
 app.add_exception_handler(TMDBRefused, _tmdb_refused_handler)
 
+# Before CORS, so inside it: a crash answers a 500 the browser can read (Batch X8).
+app.add_middleware(UnhandledErrorMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],

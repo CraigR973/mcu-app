@@ -60,7 +60,7 @@ class DealResponse(BaseModel):
     #: asking prices stand behind ``wasPrice``. Null for a shop's deal, for an eBay find
     #: stored before X1, and (the condition) once a find has expired.
     condition: str | None = None
-    usualListings: int | None = None
+    usualListings: int | None = Field(default=None, ge=0)
 
 
 class DealSourceResponse(BaseModel):
@@ -88,14 +88,14 @@ class DealListResponse(BaseModel):
 class RetailerDealsOutcomeResponse(BaseModel):
     retailer: str
     ok: bool
-    found: int
-    kept: int
-    skippedOwned: int
-    rejected: int
-    matched: int
+    found: int = Field(ge=0)
+    kept: int = Field(ge=0)
+    skippedOwned: int = Field(ge=0)
+    rejected: int = Field(ge=0)
+    matched: int = Field(ge=0)
     #: Batch 22b. Cards on the sale page at a single price: listed, not discounted, and
     #: counted apart from `rejected`, which is a card that failed a check.
-    notDiscounted: int = 0
+    notDiscounted: int = Field(default=0, ge=0)
     #: Why the page as a whole was refused. A page-level failure discards every card, so
     #: this is what separates "a quiet sale" from "the selectors have moved".
     pageReasons: list[str] = Field(default_factory=list)
@@ -109,11 +109,11 @@ class DealsRunResponse(BaseModel):
 
     dryRun: bool
     #: "populates the `deals` table with ≥ 20 rows"
-    written: int
+    written: int = Field(ge=0)
     #: "from ≥ 3 retailers"
-    retailersWithDeals: int
+    retailersWithDeals: int = Field(ge=0)
     #: "skip already-owned verified against the real `collection_items` table"
-    skippedOwned: int
+    skippedOwned: int = Field(ge=0)
     outcomes: list[RetailerDealsOutcomeResponse]
 
 

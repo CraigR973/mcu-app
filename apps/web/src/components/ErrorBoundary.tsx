@@ -1,5 +1,11 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button } from './ui/button'
+import {
+  OUT_OF_DATE,
+  describeError,
+  isChunkFailure,
+  reloadOnceForNewBuild,
+} from '@/lib/describe-error'
 
 interface Props {
   children: ReactNode
@@ -20,6 +26,9 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info.componentStack)
+    // A lazy route whose chunk a deploy removed: "Try again" would fail the same way until
+    // a full reload, so reload once (Batch X8).
+    if (isChunkFailure(error)) reloadOnceForNewBuild()
   }
 
   reset = () => this.setState({ hasError: false, error: null })
@@ -33,9 +42,13 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="text-center space-y-4 max-w-md px-4">
             <h1 className="text-2xl font-bold">Something went wrong</h1>
             <p className="text-muted-foreground text-sm">
-              {this.state.error?.message ?? 'An unexpected error occurred.'}
+              {describeError(this.state.error, 'An unexpected error occurred.')}
             </p>
-            <Button onClick={this.reset}>Try again</Button>
+            {describeError(this.state.error, '') === OUT_OF_DATE ? (
+              <Button onClick={() => window.location.reload()}>Reload</Button>
+            ) : (
+              <Button onClick={this.reset}>Try again</Button>
+            )}
           </div>
         </div>
       )
