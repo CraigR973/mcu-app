@@ -200,7 +200,7 @@ async def client(overrides: None) -> AsyncIterator[AsyncClient]:
 
 @pytest_asyncio.fixture
 async def viewer_client(overrides: None) -> AsyncIterator[AsyncClient]:
-    """Mark's client. Reads everything; writes nothing."""
+    """Mark's client. Reads everything; adds, edits and deletes discs (#155, #264)."""
     del overrides
     async with _client_as("viewer") as http_client:
         yield http_client
@@ -353,36 +353,62 @@ async def test_adding_a_tmdb_film_already_in_the_catalogue_reuses_its_row(
     assert response.json()["movieId"] == str(existing.id)
 
 
-async def test_a_viewer_may_add_a_disc_but_not_edit_or_destroy_one(
+async def test_a_viewer_may_add_edit_move_and_delete_a_disc(
     viewer_client: AsyncClient,
     api_session: AsyncSession,
+    viewer: Profile,
 ) -> None:
-    """**Batch S4 moved the line, and this test is where the line lives.**
+    """**Batch Y1 moved the line again, and this test is still where the line lives.**
 
-    This used to assert that a viewer could not `POST /collection` either. That assertion
-    was right until `DECISIONS.md` #155 and is wrong after it: `profiles` holds exactly
-    two rows and there is no public sign-up, so "only Mark and Craig can see this" already
-    described every page — what Craig actually wanted was for **Mark to be able to add a
-    disc**. Adding is now a viewer's to do.
-
-    **Editing and destroying are not**, and that is the half worth keeping sharp. Adding a
-    disc creates a row attributed to whoever added it; editing or deleting one changes or
-    removes something the other person put there.
+    #155 let Mark add a disc and kept editing and deleting as Craig's. That left Mark able
+    to add a disc he could not correct, or move when it changed shelf, so `DECISIONS.md`
+    #264 (superseding #37) gives him both. What keeps the line sharp now is attribution:
+    each change is an audit row naming Mark, and getting a disc back from the Trash stays
+    Craig's (the next test).
     """
     # Two films on purpose. Adding a *second* copy of a film that already has one is a
-    # duplicate and answers 409 before it ever reaches the role check — which would have
-    # made this test pass for the wrong reason the day the widening was reverted.
+    # duplicate and answers 409 before it ever reaches the role check.
     fresh = await _a_film(api_session, title="Marks To Add", tmdb_id=930201)
-    movie = await _a_film(api_session, title="Not Yours To Edit", tmdb_id=930011)
-    item = await _a_disc(api_session, movie)
+    movie = await _a_film(api_session, title="Marks To Move", tmdb_id=930011)
+    item = await _a_disc(api_session, movie, section="Front", shelf="2nd")
 
     added = await viewer_client.post("/api/v1/collection", json=_body(movieId=str(fresh.id)))
     assert added.status_code == 201, added.text
 
-    assert (
-        await viewer_client.put(f"/api/v1/collection/{item.id}", json=_body())
-    ).status_code == 403
-    assert (await viewer_client.delete(f"/api/v1/collection/{item.id}")).status_code == 403
+    moved = await viewer_client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(section="Craig's house", shelf=None, location=None, edition="Steelbook"),
+    )
+    assert moved.status_code == 200, moved.text
+    assert (moved.json()["section"], moved.json()["shelf"]) == ("Craig's house", None)
+    assert moved.json()["edition"] == "Steelbook"
+
+    deleted = await viewer_client.delete(f"/api/v1/collection/{item.id}")
+    assert deleted.status_code == 200, deleted.text
+    assert deleted.json()["deletedAt"] is not None
+
+    entries = await _audit_rows(api_session, item.id)
+    assert [(entry.action_type, entry.user_id) for entry in entries] == [
+        ("update", viewer.id),
+        ("delete", viewer.id),
+    ]
+
+
+async def test_a_viewer_cannot_bring_a_deleted_disc_back(
+    client: AsyncClient,
+    viewer_client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """#264 widens deleting, not the Trash: restoring stays Craig's, as #155 kept it."""
+    movie = await _a_film(api_session, title="Marks Mistake", tmdb_id=930202)
+    item = await _a_disc(api_session, movie)
+    assert (await viewer_client.delete(f"/api/v1/collection/{item.id}")).status_code == 200
+
+    refused = await viewer_client.post(f"/api/v1/trash/collection_items/{item.id}/restore")
+    assert refused.status_code == 403
+
+    restored = await client.post(f"/api/v1/trash/collection_items/{item.id}/restore")
+    assert restored.status_code == 200, restored.text
 
 
 async def test_the_admin_only_tools_still_refuse_a_viewer(viewer_client: AsyncClient) -> None:

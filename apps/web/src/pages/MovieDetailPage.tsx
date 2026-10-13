@@ -61,6 +61,7 @@ function CopyCard({
   filmTitle,
   year,
   canEdit,
+  isAdmin,
   onEdit,
 }: {
   item: CollectionCopy
@@ -70,7 +71,10 @@ function CopyCard({
    *  both. */
   filmTitle: string
   year: number | null
+  /** Either person: edit, move, mark damaged, move to trash (`DECISIONS.md` #264). */
   canEdit: boolean
+  /** Craig only: the live eBay check, the sale panel and photo uploads. */
+  isAdmin: boolean
   onEdit: (copy: CollectionCopy) => void
 }) {
   const queryClient = useQueryClient()
@@ -220,8 +224,8 @@ function CopyCard({
         </div>
       )}
 
-      {/* Batch W3 (#249): both people lend, borrow and say a disc is back. Editing the
-          copy stays the admin's, above. Only owned copies get a card, so a sold disc
+      {/* Batch W3 (#249): both people lend, borrow and say a disc is back. Since Y1 (#264)
+          both edit the copy, above, too. Only owned copies get a card, so a sold disc
           never offers a loan. */}
       <div className="border-t border-border pt-3">
         <LendButton collectionItemId={item.id} />
@@ -229,11 +233,11 @@ function CopyCard({
 
       {/* Batch T6: the stored value is for both people and costs nothing to show; the live
           check beside it spends an eBay lookup, so it stays with the admin's tools. */}
-      {(canEdit || item.valuation) && (
+      {(isAdmin || item.valuation) && (
         <div className="space-y-3 border-t border-border pt-3">
-          <h3 className="metadata-label">{canEdit ? 'Value and resale' : 'Value'}</h3>
+          <h3 className="metadata-label">{isAdmin ? 'Value and resale' : 'Value'}</h3>
           {item.valuation ? <StoredValue valuation={item.valuation} /> : null}
-          {canEdit && (
+          {isAdmin && (
             <>
               <ValuePanel
                 filmTitle={filmTitle}
@@ -251,7 +255,7 @@ function CopyCard({
 
       <div className="mt-auto border-t border-border pt-3">
         <h3 className="metadata-label">Disc photos</h3>
-        <PhotoGallery itemId={item.id} canEdit={canEdit} />
+        <PhotoGallery itemId={item.id} canEdit={isAdmin} />
       </div>
 
       {markDamaged.isError && (
@@ -272,7 +276,10 @@ export default function MovieDetailPage() {
   const [correcting, setCorrecting] = useState(false)
   const [editing, setEditing] = useState<CollectionCopy | null>(null)
   const { profile } = useAuth()
-  const canEdit = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'admin'
+  // `DECISIONS.md` #264, superseding #37: Mark adds discs (#155), so he edits and moves
+  // them too. The Trash, the audit history and the eBay tools stay Craig's.
+  const canEdit = profile != null
   const movieId = id ?? ''
   const [searchParams, setSearchParams] = useSearchParams()
   const justUpgraded = searchParams.get('upgraded') === '1'
@@ -564,7 +571,7 @@ export default function MovieDetailPage() {
                   <StatePanel
                     tone="empty"
                     title="No live copies in the collection"
-                    description={canEdit ? 'Add a copy if this film should still be in the archive.' : 'Craig can restore or add a copy if this record is out of date.'}
+                    description={isAdmin ? 'Add a copy if this film should still be in the archive.' : 'Add a copy if this film should still be in the archive. Craig can restore one from the Trash.'}
                     icon={Disc3}
                   />
                 ) : (
@@ -577,6 +584,7 @@ export default function MovieDetailPage() {
                         filmTitle={movie.title}
                         year={movie.year}
                         canEdit={canEdit}
+                        isAdmin={isAdmin}
                         onEdit={setEditing}
                       />
                     ))}
@@ -686,13 +694,13 @@ export default function MovieDetailPage() {
             {/* Batch T8a. Anyone's, on the film: its real title is what eBay is searched for. */}
             {movie.identified ? <PriceAlertPanel movieId={movie.id} title={movie.title} /> : null}
             {/* Admin-only: `GET /admin/audit` is, so a viewer would only watch it fail. */}
-            {canEdit ? <ItemHistory movieId={movie.id} /> : null}
+            {isAdmin ? <ItemHistory movieId={movie.id} /> : null}
           </aside>
         </div>
       </div>
 
       {editing ? (
-        <CopyEditor movieId={movie.id} copy={editing} onClose={() => setEditing(null)} />
+        <CopyEditor movieId={movie.id} copy={editing} isAdmin={isAdmin} onClose={() => setEditing(null)} />
       ) : null}
     </div>
   )

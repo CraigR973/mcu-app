@@ -17,6 +17,8 @@ import { queryErrorMessage } from '@/lib/query-state'
 interface Props {
   movieId: string
   copy: CollectionCopy
+  /** Only the admin can restore from the Trash, so the delete confirmation says who can. */
+  isAdmin: boolean
   onClose: () => void
 }
 
@@ -50,9 +52,12 @@ export function fieldsFrom(copy: CollectionCopy): CollectionItemFields {
  * `PUT` honest: "absent" means the user cleared it, not that an older client never
  * knew about the field.
  */
-export default function CopyEditor({ movieId, copy, onClose }: Props) {
+export default function CopyEditor({ movieId, copy, isAdmin, onClose }: Props) {
   const queryClient = useQueryClient()
   const [fields, setFields] = useState<CollectionItemFields>(() => fieldsFrom(copy))
+  // Batch Y1 (#264): both people can delete now, and only Craig can restore, so one stray
+  // tap on a phone must not be enough. The first tap asks; the second deletes.
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
@@ -120,12 +125,20 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
           </p>
         )}
 
+        {confirmingDelete && (
+          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {isAdmin
+              ? 'Move this copy to the Trash? You can restore it from there.'
+              : 'Move this copy to the Trash? Only Craig can bring it back.'}
+          </p>
+        )}
+
         <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
             variant="destructive"
             disabled={pending}
-            onClick={() => remove.mutate()}
+            onClick={() => (confirmingDelete ? remove.mutate() : setConfirmingDelete(true))}
             className="w-full sm:w-auto"
           >
             {remove.isPending ? (
@@ -133,7 +146,7 @@ export default function CopyEditor({ movieId, copy, onClose }: Props) {
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            Move to trash
+            {confirmingDelete ? 'Yes, move to trash' : 'Move to trash'}
           </Button>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <Button type="button" variant="ghost" disabled={pending} onClick={onClose} className="w-full sm:w-auto">
