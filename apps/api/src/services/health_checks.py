@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from src.clock import utcnow
+from src.models.ai import AiUsageLogEntry
 from src.models.collection_item import CollectionItem
 from src.models.deal import Deal, live_deal
 from src.models.ebay_watch import EbayWatchRun
@@ -316,6 +317,39 @@ async def check_deal_freshness(db: AsyncSession, now: datetime) -> list[Result]:
     ]
 
 
+async def check_assistant(db: AsyncSession, now: datetime) -> list[Result]:
+    """Assistant calls that failed in the last day (Batch X7, AI45-04).
+
+    Each failed call leaves a usage row with its error since X7; before it, a failure left
+    one log line Railway did not keep, and the person was told to rephrase. This is what
+    makes "Craig has been told" true.
+    """
+    since = now - timedelta(days=1)
+    failed = (
+        await db.execute(
+            select(func.count(AiUsageLogEntry.id), func.max(AiUsageLogEntry.created_at_utc)).where(
+                AiUsageLogEntry.error.is_not(None), AiUsageLogEntry.created_at_utc >= since
+            )
+        )
+    ).one()
+    count, latest = int(failed[0] or 0), failed[1]
+    if not count:
+        return [("assistant:failures", None)]
+    last_error = await db.scalar(
+        select(AiUsageLogEntry.error)
+        .where(AiUsageLogEntry.error.is_not(None), AiUsageLogEntry.created_at_utc == latest)
+        .limit(1)
+    )
+    what = (last_error or "").split(":", 1)[0].strip()
+    return [
+        (
+            "assistant:failures",
+            f"The assistant failed {'once' if count == 1 else f'{count} times'} in the last day, "
+            f"last at {moment(latest)} UTC" + (f" ({what})." if what else "."),
+        )
+    ]
+
+
 Check = Callable[[AsyncSession, datetime], Awaitable[list[Result]]]
 
 #: Every check, in the order the Home row lists their problems.
@@ -329,6 +363,7 @@ CHECKS: Sequence[Check] = (
     check_lockouts,
     check_identification,
     check_deal_freshness,
+    check_assistant,
 )
 
 

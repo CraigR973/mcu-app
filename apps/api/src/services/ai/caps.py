@@ -14,12 +14,12 @@ has not reset "next day" to the person waiting for it.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
@@ -30,6 +30,11 @@ from src.models.notification import NotificationPreference
 logger = structlog.get_logger(__name__)
 
 DEFAULT_TIMEZONE = "Europe/London"
+
+#: The upper bounds either person may set (AI45-05: $1,000 and 10,000 a day were accepted).
+#: Four times the defaults of 50 messages and $2; the assistant made 8 calls in its first month.
+MAX_MESSAGE_CAP = 200
+MAX_COST_CAP_USD = Decimal("10.00")
 
 
 async def get_or_create_settings(db: AsyncSession, user_id: object) -> AiSettings:
@@ -77,6 +82,12 @@ async def _person_timezone(db: AsyncSession, user_id: object) -> ZoneInfo:
         return ZoneInfo(DEFAULT_TIMEZONE)
 
 
+async def person_today(db: AsyncSession, user_id: object, *, now: datetime | None = None) -> date:
+    """This person's date now, in their own zone — what "today" and "last night" mean."""
+    zone = await _person_timezone(db, user_id)
+    return (now or utcnow()).replace(tzinfo=ZoneInfo("UTC")).astimezone(zone).date()
+
+
 def local_day_bounds(now_utc: datetime, zone: ZoneInfo) -> tuple[datetime, datetime]:
     """The naive-UTC instants bracketing the local day containing ``now_utc``."""
 
@@ -110,9 +121,7 @@ class UsageToday:
 
     @property
     def over_cost_cap(self) -> bool:
-        # A zero cost cap means "no cost ceiling", not "spend nothing" — the message cap
-        # is the ceiling in that configuration.
-        return self.cost_cap_usd > 0 and self.cost_usd >= self.cost_cap_usd
+        return self.cost_usd >= self.cost_cap_usd
 
     @property
     def blocked(self) -> bool:
@@ -167,7 +176,43 @@ async def usage_today(
     return UsageToday(
         messages=totals.messages,
         cost_usd=Decimal(totals.cost),
-        message_cap=limits.daily_message_cap,
-        cost_cap_usd=Decimal(limits.daily_cost_cap_usd),
+        message_cap=min(limits.daily_message_cap, MAX_MESSAGE_CAP),
+        cost_cap_usd=effective_cost_cap(Decimal(limits.daily_cost_cap_usd)),
         resets_at_utc=end,
     )
+
+
+def effective_cost_cap(stored: Decimal) -> Decimal:
+    """The ceiling a stored cost cap means (AI45-05).
+
+    A zero once meant "no cost ceiling", and clearing the box on the settings page saved a
+    zero, so a cleared box silently lifted the money ceiling. Writing zero is now refused;
+    a zero or a value over the bound already stored reads as the configured default or the
+    bound, never as "unlimited".
+    """
+    if stored <= 0:
+        return Decimal(str(settings.ai_daily_cost_cap_usd))
+    return min(stored, MAX_COST_CAP_USD)
+
+
+async def reserve_call(
+    db: AsyncSession, user_id: object, *, now: datetime | None = None
+) -> UsageToday:
+    """Hold this person's allowance for one model call, and say whether they may make it.
+
+    **Checked before every model call, a resumed turn's included** (AI45-05): the old check
+    ran once per message, so a question that went round the tool loop five times spent five
+    of the fifty, and a confirmation tapped at the cap still called the model.
+
+    **The reservation is a lock, not a row.** A transaction-scoped advisory lock on the
+    person serialises their turns: four messages sent at once with one left used to make
+    four calls, because each counted before any had logged. The second now waits until the
+    first's usage rows are committed and then counts them. It is held until the turn's
+    transaction ends, so one person's concurrent questions run one after the other; with two
+    people and a phone each, that is never a queue anyone notices.
+    """
+    await db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+        {"key": f"ai-allowance:{user_id}"},
+    )
+    return await usage_today(db, user_id, now=now)

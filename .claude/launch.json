@@ -16,6 +16,14 @@
         ".claude/preview.sh"
       ],
       "port": 4173
+    },
+    {
+      "name": "api-local",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        ".claude/api-local.sh"
+      ],
+      "port": 8000
     }
   ]
 }

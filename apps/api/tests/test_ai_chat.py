@@ -441,11 +441,21 @@ class TestWriteConfirmation:
         db.add(row)
         await _movie(db, "Nosferatu")
         await db.flush()
-        client = ScriptedClaude([tool_turn("add_to_wanted", {"title": "Nosferatu"})])
+        client = ScriptedClaude(
+            [tool_turn("add_to_wanted", {"title": "Nosferatu"}), text_turn("Only Craig can.")]
+        )
 
-        await _drain(run_turn(db, conversation=row, user=viewer, client=client, prompt="add it"))
+        events = await _drain(
+            run_turn(db, conversation=row, user=viewer, client=client, prompt="add it")
+        )
         call = (await db.execute(select(AiToolCall))).scalars().one()
-        await resolve_tool_call(db, conversation=row, call=call, user=viewer, confirm=True)
+        # Since X7 the refusal comes when the model asks, so there is no card to tap; a
+        # Yes sent anyway answers nothing.
+        assert not any(event.kind == "confirm" for event in events)
+        assert call.status == "failed"
+        assert not await resolve_tool_call(
+            db, conversation=row, call=call, user=viewer, confirm=True
+        )
 
         wanted = (await db.execute(select(WantedItem))).scalars().all()
         assert list(wanted) == []

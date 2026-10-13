@@ -5407,3 +5407,48 @@ contemporaneous.
        not delivered.
      - **Settings says "on" only when the server holds this phone live.** When this browser
        holds nothing but the account's last device was refused, it says when that was.
+
+### 2026-10-13 — Group X, batch X7
+
+261. **The model holds two write tools, behind a card: Part D 9.4's re-scope is overtaken.**
+     Part D 9.4 said the model would never hold a write tool. Batch 31 shipped `add_to_wanted`
+     and `log_watch` anyway, from the April spec, and no decision recorded the change (R3,
+     AI45 "For reconsideration"). This records it: the model may hold write tools because none
+     runs before the person taps Yes on a card that names the exact film, the admin check holds
+     at execution, and the production model refused a planted instruction (one trial, 11 Oct).
+     A third write tool, or one that runs without a card, needs a new decision.
+
+262. **X7's choices: what is stored is what the API takes back, the film is settled before the
+     card, and the allowance is a lock.**
+
+     - **Stored blocks keep only the SDK's request fields** for their type (`TextBlockParam`
+       and so on), with no nulls, on write and on read; a thinking block passes unchanged. The
+       six stored conversations continue without a data write.
+     - **The film a write is about is settled when the model asks** (`tools.prepare_write`):
+       an id from an earlier result, else an exact title (and year), else, for the wanted
+       list, the one TMDB film with that exact title. Several matches, none, a future date or
+       a rating off the half-star scale come back to the model as text, so it asks; no card
+       shows. The card names "Halloween (2018)" and the date.
+     - **A card is closed as declined when a message arrives instead**, with a result that
+       says so; the web also locks the box while a card waits.
+     - **The allowance is a transaction-scoped advisory lock per person**, checked before
+       every model call, a resumed turn's included. One person's simultaneous questions run
+       one after another. The cap still counts model calls, not questions; the label is
+       unchanged ("N of 50 left").
+     - **Caps:** at most 200 messages and $10 a day; a cost cap must be more than zero, and a
+       zero already stored reads as the $2 default. Blank boxes on the settings page change
+       nothing.
+     - **Failures:** every failed call leaves a usage row ("400 invalid_request_error: …", cost
+       0, not counted against the allowance). 400, 401, 402, 403, 404, 413 and a 429 with no
+       `retry-after` read "The assistant isn't working right now; Craig has been told."; the
+       daily check names any failure in the last day (`assistant:failures`).
+     - **Rounds:** the fifth is sent with `tool_choice: none`; at most four tools run per round,
+       the rest answered "not run".
+     - **Results:** 25 films a page (search reaches the best 50), releases 28 days by default
+       with a kind filter, totals first, and a cut that counts what it left out.
+     - **Prices:** by the configured id; Opus 5.5, Sonnet 5.5 and Haiku 5.5 added; Fable 5.1's
+       cache read is $0.25. Moving to a 5.5 model is a Railway variable, Craig's call; their
+       thinking blocks are bound to the model and refuse an edited history; this loop sends
+       each earlier turn back the same way every time, which is what they need.
+     - **The canary** (`src/scripts/assistant_canary.py`) replaces R3's probe: five asks, about
+       $0.08, at Craig's word at each monthly delta review; never in CI.

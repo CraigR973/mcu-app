@@ -113,6 +113,20 @@ describe('describeToolCall', () => {
     expect(sentence).toContain('4.5')
   })
 
+  it('names the exact film the server settled, with its year and the date', () => {
+    // Batch X7: "Halloween" is two films; the card says which one will be written.
+    const sentence = describeToolCall({
+      toolName: 'log_watch',
+      input: {
+        title: 'Halloween',
+        watchedAt: '2026-10-12',
+        resolved: { movieId: 'x', tmdbId: null, label: 'Halloween (2018)' },
+      },
+    })
+
+    expect(sentence).toBe('Record that you watched Halloween (2018) on 12 Oct 2026.')
+  })
+
   it('falls back to naming the tool for one it does not know', () => {
     expect(describeToolCall({ toolName: 'future_tool', input: { a: 1 } })).toContain(
       'future_tool',

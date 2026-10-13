@@ -60,6 +60,8 @@ export default function AiChatPage() {
 
   const storedTurns: Turn[] = (detail.data?.messages ?? [])
     .filter((message) => message.role !== 'tool_result')
+    // A turn that only called a tool has no words; it showed as an empty bubble above its card.
+    .filter((message) => message.role !== 'assistant' || message.text.trim() !== '')
     .map((message) => ({
       role: message.role === 'assistant' ? 'assistant' : 'user',
       text: message.text,
@@ -165,7 +167,7 @@ export default function AiChatPage() {
 
   async function send() {
     const question = prompt.trim()
-    if (!question || streaming) return
+    if (!question || streaming || pending.length > 0) return
 
     let target = conversationId
     if (!target) {
@@ -206,6 +208,11 @@ export default function AiChatPage() {
 
   // While streaming, the live transcript is ahead of what the server has stored.
   const transcript: Turn[] = liveTurns.length > 0 ? liveTurns : storedTurns
+  // Batch X7 (AI45-02): while a card waits, it is the only thing to answer. Typing instead
+  // used to break the conversation for good; the server now closes a waiting card as
+  // declined if a message arrives anyway, but the card is the clear way through.
+  const awaitingCard = pending.length > 0
+  const inputLocked = streaming || awaitingCard
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-5.5rem)] min-h-[32rem] max-w-6xl gap-5 p-4 sm:p-6">
@@ -402,16 +409,16 @@ export default function AiChatPage() {
             className="min-w-0 flex-1"
             value={prompt}
             maxLength={4000}
-            placeholder="Which 4Ks have I not watched?"
+            placeholder={awaitingCard ? 'Answer the card above first' : 'Which 4Ks have I not watched?'}
             aria-label="Message to the assistant"
-            disabled={streaming}
+            disabled={inputLocked}
             onChange={(event) => setPrompt(event.target.value)}
           />
           {/* §9.5. Dictation fills the box; it never sends. The engine mishears, and the
               person reading what was heard before pressing send is both the safety net and
               the thing that makes "correct transcription" checkable. */}
           <MicButton
-            disabled={streaming}
+            disabled={inputLocked}
             onTranscript={(text) =>
               setPrompt((current) => (current ? `${current} ${text}` : text))
             }
@@ -420,7 +427,7 @@ export default function AiChatPage() {
             type="submit"
             size="icon"
             aria-label={streaming ? 'Sending message' : 'Send message'}
-            disabled={streaming || !prompt.trim()}
+            disabled={inputLocked || !prompt.trim()}
           >
             {streaming ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
