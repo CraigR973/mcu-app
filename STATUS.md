@@ -7,19 +7,20 @@
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
 planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
 check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
-Next: sitting 2, X7 → X8, at Craig's go.** Home's "Needs attention" row is live for Craig; the
+Sitting 2 is under way: X7, the assistant repair, shipped 13 Oct (`aa6946d`); X8, offline,
+drift and failure words, is next in the same run.** Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
 |---|---|
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
-| X7 → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
+| ~~X7~~ (`aa6946d` #262) → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
 - **Live faults (12 Oct, read-only):** the eBay deal scan read 0 listings in 45 of 45 runs
   from 9 Oct until X1's deploy (stored mark 21 Oct 16:35); the first pass after X1's deploy (20:23 UTC) read 2,709 listings and found 21 deals; 30 copies are confidently the wrong film; every second
-  message to the assistant fails; no copy of the database exists outside Neon's six-hour
+  message to the assistant failed until X7 (13 Oct; a live follow-up is Craig's to try); no copy of the database exists outside Neon's six-hour
   window. Pushes reach both phones again, re-registered by hand on 11 Oct.
 - **The nightly jobs (UTC):** 02:00 `cron-specs` (specs, then reviews); 03:00 `cron-scrape` (Zavvi
   and Arrow answer, the Shopify shops refuse, #247; shown Crashed every night by design until
@@ -45,7 +46,7 @@ The Log keeps a dated line for each.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
-**sitting 2, X7 → X8, is next, at Craig's go** (`/group-start X · 2`).
+**sitting 2 is running: X7 shipped 13 Oct, X8 next** (`/group-start X · 2`).
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -434,6 +435,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-13 (X7 shipped, `aa6946d`, #261, #262)** — The assistant answers follow-ups: stored
+  answers keep only the API's request fields. Writes go straight to a Yes/No card naming the
+  exact film and date; a shared title asks; typing while a card waits declines it, and the box
+  locks meanwhile. Results are compact, totals first, 25 a page. Failed calls leave a usage row
+  and the daily check names them; the person reads "Craig has been told". Caps hold before
+  every call under a per-person lock (200 messages, $10, zero refused). Production at `4b38214`,
+  `db: ok`. A live follow-up is Craig's (`OWNER-ACTIONS.md` 2). New: `.claude/api-local.sh`
+  runs the API on a throwaway Postgres for browser checks.
 - **2026-10-12 (X3 shipped, `adcae0d`, #260; sitting 1 done)** — A device the push service
   refuses is kept as refused, and the app registers the phone again on its next open; Settings
   says "on" only when the server holds the phone live, otherwise when it stopped; a banner stays
