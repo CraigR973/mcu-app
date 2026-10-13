@@ -3034,6 +3034,142 @@
     "title": "CollectionItemUpdateRequest",
     "type": "object"
    },
+   "CollectionMoveEntry": {
+    "additionalProperties": false,
+    "description": "One disc and where it goes — Batch Y2 (`DECISIONS.md` #265).\n\n**Each entry carries its own place**, not one target for the whole request. A move\nsends the same place on every entry; \"Move them back\" sends each disc's own previous\nplace, through the same endpoint, so the undo is not a second write path. The three\nplace fields mean what they mean on the copy form, resolved by the same function.",
+    "properties": {
+     "baseUpdatedAt": {
+      "format": "date-time",
+      "title": "Baseupdatedat",
+      "type": "string"
+     },
+     "itemId": {
+      "format": "uuid",
+      "title": "Itemid",
+      "type": "string"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "maxLength": 255,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "section": {
+      "anyOf": [
+       {
+        "maxLength": 100,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section"
+     },
+     "shelf": {
+      "anyOf": [
+       {
+        "maxLength": 50,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shelf"
+     }
+    },
+    "required": [
+     "itemId",
+     "baseUpdatedAt"
+    ],
+    "title": "CollectionMoveEntry",
+    "type": "object"
+   },
+   "CollectionMoveRequest": {
+    "additionalProperties": false,
+    "properties": {
+     "moves": {
+      "items": {
+       "$ref": "#/components/schemas/CollectionMoveEntry"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Moves",
+      "type": "array"
+     }
+    },
+    "required": [
+     "moves"
+    ],
+    "title": "CollectionMoveRequest",
+    "type": "object"
+   },
+   "CollectionMoveResponse": {
+    "description": "Batch Y2's partial-success shape, as #6 allows a batch endpoint.",
+    "properties": {
+     "moved": {
+      "minimum": 0.0,
+      "title": "Moved",
+      "type": "integer"
+     },
+     "results": {
+      "items": {
+       "$ref": "#/components/schemas/CollectionMoveResult"
+      },
+      "title": "Results",
+      "type": "array"
+     }
+    },
+    "required": [
+     "results",
+     "moved"
+    ],
+    "title": "CollectionMoveResponse",
+    "type": "object"
+   },
+   "CollectionMoveResult": {
+    "description": "What happened to one disc. A stale or missing disc does not stop the others.",
+    "properties": {
+     "item": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/CollectionItemResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "itemId": {
+      "format": "uuid",
+      "title": "Itemid",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "moved",
+       "unchanged",
+       "stale",
+       "not_found"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "itemId",
+     "status"
+    ],
+    "title": "CollectionMoveResult",
+    "type": "object"
+   },
    "CollectionValueResponse": {
     "description": "What the owned discs add up to at current eBay asking prices.",
     "properties": {
@@ -15175,6 +15311,53 @@
     "summary": "Get Collection Facets",
     "tags": [
      "movies"
+    ]
+   }
+  },
+  "/api/v1/collection/move": {
+   "post": {
+    "description": "Move many discs in one request — Batch Y2 (`DECISIONS.md` #265).\n\nEither person, as editing is since #264. **Partial success:** each disc is checked on\nits own against the version it was picked at (#42), so one changed on the other phone\nis reported ``stale`` and left alone while the rest move. Every place is resolved\nbefore anything is written, so an unknown section refuses the whole request rather\nthan half of it. One ``update`` audit row per disc that moved, with the same diff an\nedit writes, so each film's history shows the move.",
+    "operationId": "move_collection_items_api_v1_collection_move_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CollectionMoveRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CollectionMoveResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Move Collection Items",
+    "tags": [
+     "collection"
     ]
    }
   },

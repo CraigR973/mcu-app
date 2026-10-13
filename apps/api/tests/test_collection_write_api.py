@@ -1526,3 +1526,215 @@ class TestEdition:
         )
 
         assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Batch Y2 — moving many discs at once (`DECISIONS.md` #265)
+# ---------------------------------------------------------------------------
+
+
+async def _version(http: AsyncClient, movie: Movie) -> str:
+    """The ``updatedAt`` a tray would hold for the film's only disc."""
+    return str((await http.get(f"/api/v1/movies/{movie.id}/copies")).json()[0]["updatedAt"])
+
+
+def _move(item: CollectionItem, base: str, **place: Any) -> dict[str, Any]:
+    return {"itemId": str(item.id), "baseUpdatedAt": base, **place}
+
+
+async def test_a_viewer_moves_discs_from_anywhere_to_one_place(
+    viewer_client: AsyncClient,
+    api_session: AsyncSession,
+    viewer: Profile,
+) -> None:
+    """Y2's whole point: discs from different places, one request, one destination."""
+    first = await _a_film(api_session, title="Moved From Front", tmdb_id=930301)
+    second = await _a_film(api_session, title="Moved From Lounge", tmdb_id=930302)
+    a = await _a_disc(api_session, first, section="Front", shelf="2nd")
+    b = await _a_disc(api_session, second, section="Lounge", shelf=None)
+
+    response = await viewer_client.post(
+        "/api/v1/collection/move",
+        json={
+            "moves": [
+                _move(a, await _version(viewer_client, first), section="Back", shelf="Top"),
+                _move(b, await _version(viewer_client, second), section="Back", shelf="Top"),
+            ]
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["moved"] == 2
+    assert [result["status"] for result in body["results"]] == ["moved", "moved"]
+    for result in body["results"]:
+        assert (result["item"]["section"], result["item"]["shelf"]) == ("Back", "Top")
+        assert result["item"]["location"] == "Back Top shelf"
+
+    for disc, was in ((a, "Front"), (b, "Lounge")):
+        entries = await _audit_rows(api_session, disc.id)
+        assert [(entry.action_type, entry.user_id) for entry in entries] == [("update", viewer.id)]
+        assert entries[0].changes["section"] == {"from": was, "to": "Back"}
+
+
+async def test_one_stale_or_missing_disc_does_not_stop_the_rest(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Partial success, each case on its own: moved, unchanged, stale, deleted, unknown."""
+    films = [await _a_film(api_session, title=f"Partial {n}", tmdb_id=930310 + n) for n in range(4)]
+    to_move = await _a_disc(api_session, films[0], section="Front", shelf="1st")
+    already = await _a_disc(api_session, films[1], section="Back", shelf="Top")
+    changed = await _a_disc(api_session, films[2], section="Front", shelf="1st")
+    gone = await _a_disc(api_session, films[3], section="Front", shelf="1st")
+    bases = [await _version(client, film) for film in films]
+
+    # The other phone edits one disc after it was picked, and deletes another.
+    edited = await client.put(f"/api/v1/collection/{changed.id}", json=_body(location="Lounge"))
+    assert edited.status_code == 200, edited.text
+    assert (await client.delete(f"/api/v1/collection/{gone.id}")).status_code == 200
+    unknown = uuid.uuid4()
+
+    place = {"section": "Back", "shelf": "Top"}
+    response = await client.post(
+        "/api/v1/collection/move",
+        json={
+            "moves": [
+                _move(to_move, bases[0], **place),
+                _move(already, bases[1], **place),
+                _move(changed, bases[2], **place),
+                _move(gone, bases[3], **place),
+                {"itemId": str(unknown), "baseUpdatedAt": bases[0], **place},
+            ]
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["moved"] == 1
+    assert [result["status"] for result in body["results"]] == [
+        "moved",
+        "unchanged",
+        "stale",
+        "not_found",
+        "not_found",
+    ]
+    # A stale disc reports where it actually is, so the screen can say so.
+    assert body["results"][2]["item"]["section"] == "Lounge"
+    assert body["results"][3]["item"] is None
+    # Nothing was written for the disc already there, or the one changed elsewhere.
+    assert [entry.action_type for entry in await _audit_rows(api_session, already.id)] == []
+    assert [entry.action_type for entry in await _audit_rows(api_session, changed.id)] == ["update"]
+    still = (await client.get(f"/api/v1/movies/{films[2].id}/copies")).json()[0]
+    assert still["section"] == "Lounge"
+
+
+async def test_move_them_back_restores_each_disc_exactly(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The undo is the same endpoint with each disc's own previous place.
+
+    One disc has only free text and no section — the two the importer could not file —
+    so "exactly" includes the text, not just the section and shelf.
+    """
+    first = await _a_film(api_session, title="Undo Filed", tmdb_id=930320)
+    second = await _a_film(api_session, title="Undo Unfiled", tmdb_id=930321)
+    filed = await _a_disc(api_session, first, section="Front", shelf="2nd")
+    unfiled = await _a_disc(api_session, second, section=None, shelf=None)
+    unfiled.location = "In the car"
+    await api_session.flush()
+
+    before = {
+        disc.id: (await client.get(f"/api/v1/movies/{film.id}/copies")).json()[0]
+        for disc, film in ((filed, first), (unfiled, second))
+    }
+    forward = await client.post(
+        "/api/v1/collection/move",
+        json={
+            "moves": [
+                _move(disc, before[disc.id]["updatedAt"], section="Craig's house", shelf=None)
+                for disc in (filed, unfiled)
+            ]
+        },
+    )
+    assert forward.json()["moved"] == 2, forward.text
+    after = {result["itemId"]: result["item"] for result in forward.json()["results"]}
+
+    back = await client.post(
+        "/api/v1/collection/move",
+        json={
+            "moves": [
+                _move(
+                    disc,
+                    after[str(disc.id)]["updatedAt"],
+                    location=before[disc.id]["location"],
+                    section=before[disc.id]["section"],
+                    shelf=before[disc.id]["shelf"],
+                )
+                for disc in (filed, unfiled)
+            ]
+        },
+    )
+
+    assert back.json()["moved"] == 2, back.text
+    for result in back.json()["results"]:
+        was = before[uuid.UUID(result["itemId"])]
+        now = result["item"]
+        assert (now["location"], now["section"], now["shelf"]) == (
+            was["location"],
+            was["section"],
+            was["shelf"],
+        )
+
+
+async def test_an_unknown_section_refuses_the_whole_move(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Places are resolved before any write, so a bad one never leaves half a move."""
+    first = await _a_film(api_session, title="Not Half Moved", tmdb_id=930330)
+    second = await _a_film(api_session, title="Nowhere Real", tmdb_id=930331)
+    good = await _a_disc(api_session, first, section="Front", shelf="2nd")
+    bad = await _a_disc(api_session, second, section="Front", shelf="2nd")
+
+    response = await client.post(
+        "/api/v1/collection/move",
+        json={
+            "moves": [
+                _move(good, await _version(client, first), section="Back", shelf="Top"),
+                _move(bad, await _version(client, second), section="The Moon", shelf=None),
+            ]
+        },
+    )
+
+    assert response.status_code == 422
+    assert (await client.get(f"/api/v1/movies/{first.id}/copies")).json()[0]["section"] == "Front"
+    assert await _audit_rows(api_session, good.id) == []
+
+
+async def test_a_move_names_each_disc_once_and_has_a_ceiling(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    movie = await _a_film(api_session, title="Twice Over", tmdb_id=930340)
+    item = await _a_disc(api_session, movie)
+    base = await _version(client, movie)
+
+    twice = await client.post(
+        "/api/v1/collection/move",
+        json={"moves": [_move(item, base, section="Back"), _move(item, base, section="Lounge")]},
+    )
+    assert twice.status_code == 422
+
+    too_many = await client.post(
+        "/api/v1/collection/move",
+        json={
+            "moves": [
+                {"itemId": str(uuid.uuid4()), "baseUpdatedAt": base, "section": "Back"}
+                for _ in range(201)
+            ]
+        },
+    )
+    assert too_many.status_code == 422
+    assert (await client.post("/api/v1/collection/move", json={"moves": []})).status_code == 422

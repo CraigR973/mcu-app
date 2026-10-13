@@ -17,7 +17,7 @@ import uuid
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Protocol
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, status
@@ -26,7 +26,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
 from src.models.admin_action import COLLECTION_ITEMS_TABLE, AdminAction
-from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem, owned_copy
+from src.models.collection_item import (
+    FORMAT_RANK,
+    OWNED_LISTING_STATUSES,
+    SECTIONS,
+    CollectionItem,
+    owned_copy,
+)
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile
 from src.routers.movies import Database, TmdbClient, location_label
@@ -37,6 +43,9 @@ from src.schemas.collection import (
     CollectionItemFieldsMixin,
     CollectionItemResponse,
     CollectionItemUpdateRequest,
+    CollectionMoveRequest,
+    CollectionMoveResponse,
+    CollectionMoveResult,
     DuplicateCheckResponse,
     ExistingCopyResponse,
     ListingUpdateRequest,
@@ -84,8 +93,19 @@ def _best_rank(formats: Iterable[str]) -> int | None:
     return min(ranks) if ranks else None
 
 
+class _Placed(Protocol):
+    """Anything carrying the copy form's three place fields: a copy body or a move."""
+
+    @property
+    def location(self) -> str | None: ...
+    @property
+    def section(self) -> str | None: ...
+    @property
+    def shelf(self) -> str | None: ...
+
+
 def _resolve_location(
-    payload: CollectionItemFieldsMixin,
+    payload: _Placed,
 ) -> tuple[str | None, str | None, str | None]:
     """Work out ``(location, section, shelf)`` from whatever the form supplied.
 
@@ -469,6 +489,84 @@ async def update_collection_item(
     await db.commit()
     await db.refresh(item)
     return _item_response(item, movie.title)
+
+
+@router.post("/collection/move", response_model=CollectionMoveResponse)
+async def move_collection_items(
+    payload: CollectionMoveRequest,
+    user: CurrentUser,
+    db: Database,
+) -> CollectionMoveResponse:
+    """Move many discs in one request — Batch Y2 (`DECISIONS.md` #265).
+
+    Either person, as editing is since #264. **Partial success:** each disc is checked on
+    its own against the version it was picked at (#42), so one changed on the other phone
+    is reported ``stale`` and left alone while the rest move. Every place is resolved
+    before anything is written, so an unknown section refuses the whole request rather
+    than half of it. One ``update`` audit row per disc that moved, with the same diff an
+    edit writes, so each film's history shows the move.
+    """
+    places = [_resolve_location(entry) for entry in payload.moves]
+    ids = [entry.itemId for entry in payload.moves]
+    rows = (
+        await db.execute(
+            select(CollectionItem, Movie.title)
+            .join(Movie, Movie.id == CollectionItem.movie_id)
+            .where(CollectionItem.id.in_(ids))
+        )
+    ).all()
+    found = {item.id: (item, title) for item, title in rows}
+
+    results: list[CollectionMoveResult] = []
+    moved: list[tuple[CollectionItem, str]] = []
+    for entry, (location, section, shelf) in zip(payload.moves, places, strict=True):
+        hit = found.get(entry.itemId)
+        if (
+            hit is None
+            or hit[0].deleted_at is not None
+            or hit[0].listing_status not in OWNED_LISTING_STATUSES
+        ):
+            results.append(CollectionMoveResult(itemId=entry.itemId, status="not_found"))
+            continue
+        item, title = hit
+        if item.updated_at > entry.baseUpdatedAt:
+            results.append(
+                CollectionMoveResult(
+                    itemId=item.id, status="stale", item=_item_response(item, title)
+                )
+            )
+            continue
+        if (item.location, item.section, item.shelf) == (location, section, shelf):
+            results.append(
+                CollectionMoveResult(
+                    itemId=item.id, status="unchanged", item=_item_response(item, title)
+                )
+            )
+            continue
+
+        before = item_snapshot(item)
+        item.location, item.section, item.shelf = location, section, shelf
+        await db.flush()
+        record_action(
+            db,
+            user_id=user.id,
+            action_type="update",
+            target_table=COLLECTION_ITEMS_TABLE,
+            target_id=item.id,
+            changes=diff_snapshots(before, item_snapshot(item)),
+        )
+        moved.append((item, title))
+        results.append(CollectionMoveResult(itemId=item.id, status="moved"))
+
+    await db.commit()
+    responses = {}
+    for item, title in moved:
+        await db.refresh(item)
+        responses[item.id] = _item_response(item, title)
+    for result in results:
+        if result.status == "moved":
+            result.item = responses[result.itemId]
+    return CollectionMoveResponse(results=results, moved=len(moved))
 
 
 @router.put("/collection/{item_id}/listing", response_model=CollectionItemResponse)

@@ -19,6 +19,7 @@ const ExternalFilmPage = lazy(() => import('./pages/ExternalFilmPage'))
 const YouPage = lazy(() => import('./pages/YouPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
+const MoveDiscsPage = lazy(() => import('./pages/MoveDiscsPage'))
 const TrashPage = lazy(() => import('./pages/TrashPage'))
 const OfflinePage = lazy(() => import('./pages/OfflinePage'))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
@@ -259,6 +260,11 @@ export default function App() {
             <Route
               path="/collection/add"
               element={<AppShell><AddToCollectionPage /></AppShell>}
+            />
+            {/* Batch Y2 (#265): either person moves discs, as either edits them (#264). */}
+            <Route
+              path="/collection/move"
+              element={<AppShell><MoveDiscsPage /></AppShell>}
             />
             {/* Loans are readable by both — knowing where a disc went is not an
                 admin question, even though lending one is. §6.5 marks GET /loans "Any". */}

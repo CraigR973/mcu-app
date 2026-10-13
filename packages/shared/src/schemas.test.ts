@@ -41,6 +41,7 @@ import {
   pushSubscriptionSchema,
   vapidKeySchema,
   collectionItemSchema,
+  collectionMoveResponseSchema,
   completionFilmSchema,
   completionSetSchema,
   duplicateCheckSchema,
@@ -419,6 +420,29 @@ describe('collectionItemSchema', () => {
   it('rejects wire-shape drift', () => {
     const { locationLabel: _dropped, ...missing } = collectionItem
     expect(() => collectionItemSchema.parse(missing)).toThrow()
+  })
+})
+
+describe('collectionMoveResponseSchema (Batch Y2)', () => {
+  it('parses a partial result: a disc moved, one left alone, one gone', () => {
+    const body = {
+      moved: 1,
+      results: [
+        { itemId: collectionItem.id, status: 'moved', item: collectionItem },
+        { itemId: collectionItem.id, status: 'stale', item: collectionItem },
+        { itemId: collectionItem.id, status: 'not_found', item: null },
+      ],
+    }
+    expect(collectionMoveResponseSchema.parse(body)).toEqual(body)
+  })
+
+  it('refuses a status the API does not send', () => {
+    expect(() =>
+      collectionMoveResponseSchema.parse({
+        moved: 0,
+        results: [{ itemId: collectionItem.id, status: 'skipped', item: null }],
+      }),
+    ).toThrow()
   })
 })
 

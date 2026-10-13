@@ -121,10 +121,13 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/movies/{movie_id}/candidates",
         "/api/v1/movies/{movie_id}/identify",
         "/api/v1/search",
-        # Batch 7's write surface. Admin-only, every one of them.
+        # Batch 7's write surface. Admin-only then; adding opened to both people with #155,
+        # editing and deleting with #264.
         "/api/v1/collection",
         "/api/v1/collection/duplicate-check",
         "/api/v1/collection/{item_id}",
+        # Batch Y2 (#265). Many discs moved, or put back, in one request; either person.
+        "/api/v1/collection/move",
         # Batch 29 §4.2/§4.4. One endpoint for every listing transition rather than a
         # verb each — see `collection.update_listing_status` for why sold is not deleted.
         "/api/v1/collection/{item_id}/listing",

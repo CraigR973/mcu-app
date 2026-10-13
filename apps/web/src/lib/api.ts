@@ -20,6 +20,7 @@ import {
   collectionCopiesSchema,
   collectionFacetsSchema,
   collectionItemSchema,
+  collectionMoveResponseSchema,
   bidTrialSchema,
   bidTrialStartSchema,
   collectionValueSchema,
@@ -147,6 +148,7 @@ import {
   type CollectionCopy,
   type CollectionFacets,
   type CollectionItem,
+  type CollectionMoveResponse,
   type CompletionInsights,
   type CompletionRefresh,
   type CompletionSetDetail,
@@ -283,6 +285,7 @@ export type {
   TopRatedFilm,
   ValuableDisc,
   CollectionItem,
+  CollectionMoveResponse,
   CompletionFilm,
   CompletionInsights,
   CompletionSet,
@@ -819,6 +822,23 @@ export async function deleteCollectionItem(itemId: string): Promise<CollectionIt
   return parseOrThrowApiError(
     await send(`/collection/${itemId}`, { method: 'DELETE' }),
     collectionItemSchema,
+  )
+}
+
+/** One disc and where it goes — Batch Y2. `location` only when restoring free text. */
+export interface CollectionMoveEntry {
+  itemId: string
+  baseUpdatedAt: string
+  location?: string | null
+  section: string | null
+  shelf: string | null
+}
+
+/** Move many discs at once, or put them back — Batch Y2 (`DECISIONS.md` #265). */
+export async function moveCollectionItems(moves: CollectionMoveEntry[]): Promise<CollectionMoveResponse> {
+  return parseOrThrowApiError(
+    await send('/collection/move', { method: 'POST', body: JSON.stringify({ moves }) }),
+    collectionMoveResponseSchema,
   )
 }
 

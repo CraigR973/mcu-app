@@ -346,3 +346,64 @@ def _validate_listing_price(value: str | None) -> str | None:
     if parsed >= Decimal("1000000"):
         raise ValueError("listingPrice is implausibly large")
     return value
+
+
+#: Batch Y2's ceiling. Mark moving a pile of discs is tens; two hundred is a whole shelf
+#: with room to spare, and keeps one request inside one short transaction.
+MAX_MOVES = 200
+
+
+class CollectionMoveEntry(BaseModel):
+    """One disc and where it goes — Batch Y2 (`DECISIONS.md` #265).
+
+    **Each entry carries its own place**, not one target for the whole request. A move
+    sends the same place on every entry; "Move them back" sends each disc's own previous
+    place, through the same endpoint, so the undo is not a second write path. The three
+    place fields mean what they mean on the copy form, resolved by the same function.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    itemId: uuid.UUID
+    #: The ``updatedAt`` the disc was picked against. Required, unlike the edit's: a tray
+    #: can sit on a phone for an afternoon, and a move made against an hours-old copy is
+    #: exactly the overwrite #42 forbids.
+    baseUpdatedAt: UtcDatetimeIn
+    location: str | None = Field(default=None, max_length=255)
+    section: str | None = Field(default=None, max_length=100)
+    shelf: str | None = Field(default=None, max_length=50)
+
+
+class CollectionMoveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    moves: list[CollectionMoveEntry] = Field(min_length=1, max_length=MAX_MOVES)
+
+    @field_validator("moves")
+    @classmethod
+    def _each_disc_once(cls, value: list[CollectionMoveEntry]) -> list[CollectionMoveEntry]:
+        """Two entries for one disc would make the result depend on their order."""
+        ids = [entry.itemId for entry in value]
+        if len(set(ids)) != len(ids):
+            raise ValueError("Each disc may appear only once")
+        return value
+
+
+class CollectionMoveResult(BaseModel):
+    """What happened to one disc. A stale or missing disc does not stop the others."""
+
+    itemId: uuid.UUID
+    #: ``moved``: written, with an audit row. ``unchanged``: already there, nothing
+    #: written. ``stale``: changed elsewhere after it was picked, left alone. ``not_found``:
+    #: deleted, sold or never existed.
+    status: Literal["moved", "unchanged", "stale", "not_found"]
+    #: The disc as it now stands; for ``stale``, where it actually is. Null for
+    #: ``not_found``.
+    item: CollectionItemResponse | None = None
+
+
+class CollectionMoveResponse(BaseModel):
+    """Batch Y2's partial-success shape, as #6 allows a batch endpoint."""
+
+    results: list[CollectionMoveResult]
+    moved: int = Field(ge=0)
