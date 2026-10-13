@@ -29,7 +29,9 @@ conversation still maps onto this file.*
   on both phones; 3 speak to the assistant; 1d scan a real barcode; 1h the zoom and
   Letterboxd-link checks; 1j press Sync now once; 1c judge one "What is it worth?"; and
   (Batch X3, 12 Oct) open the app on each phone and check Settings says "Notifications are on
-  for this device", which the app now mends by itself after a refusal.
+  for this device", which the app now mends by itself after a refusal; and (Batch X8, 13 Oct)
+  open a film, then switch on flight mode and open it again: it should open from the phone,
+  which it never did before X8. Then ask the assistant a question and a follow-up (2).
 - **The two queues, whenever:** 166 films on You → Identify films (from 21), then 385 discs on
   You → Disc specs (20).
 - **One live run, two taps:** 1e, on /retailers: **Check sale pages**, read the three

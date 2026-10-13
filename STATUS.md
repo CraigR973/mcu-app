@@ -7,14 +7,16 @@
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
 planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
 check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
-Sitting 2 is under way: X7, the assistant repair, shipped 13 Oct (`aa6946d`); X8, offline,
-drift and failure words, is next in the same run.** Home's "Needs attention" row is live for Craig; the
+Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift and failure
+words (`e991281`), shipped 13 Oct. Next: sitting 3, X6 → X4 → X5, at Craig's go; X6 before
+1 Nov.** Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
 |---|---|
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
-| ~~X7~~ (`aa6946d` #262) → X8 · X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 2–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
+| ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
+| X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 3–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -46,7 +48,7 @@ The Log keeps a dated line for each.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
-**sitting 2 is running: X7 shipped 13 Oct, X8 next** (`/group-start X · 2`).
+**sitting 2 is done (X7, X8, 13 Oct); sitting 3, X6 → X4 → X5, is next, at Craig's go** (`/group-start X · 3`).
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -435,6 +437,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-13 (X8 shipped, `e991281`, #263; sitting 2 done)** — The worker caches the
+  cross-origin API at last (it never had in production), and sign-out clears it. Failure screens
+  say "No signal", "The archive had a problem" or "needs the newest version" with Reload; a
+  missing chunk reloads once; a crash's 500 carries CORS. Readiness adds TMDB and Brave; the
+  close-out gate now also checks every readiness field and the web's `/version.json`. A CI
+  contract test holds every `api.ts` parse to the API's OpenAPI (158 bounds moved onto the
+  API). The CSP names the one API host. Production: API and web at `92273e3`, all configured.
 - **2026-10-13 (X7 shipped, `aa6946d`, #261, #262)** — The assistant answers follow-ups: stored
   answers keep only the API's request fields. Writes go straight to a Yes/No card naming the
   exact film and date; a shared title asks; typing while a card waits declines it, and the box

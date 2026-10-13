@@ -3198,7 +3198,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | Sitting | Batches, in order | Gate | Claude Code | Codex |
 |---|---|---|---|---|
 | 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → ~~X3 push heals itself~~ (`adcae0d`) — **done 12 Oct** | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
-| 2 | ~~X7 assistant repair~~ (`aa6946d`) → X8 offline, drift and failure words | Craig's go | top tier · high | top tier · High |
+| 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
 | 3 | X6 value as used copies → X4 weekly dump and restore drill → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
@@ -3215,7 +3215,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | X5 | Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share | 🔴 | top tier · xhigh | top tier · Extra High |
 | X6 | MK47-03 | 🟡 | top tier · high | top tier · High |
 | ~~X7~~ | ~~AI45-01 to AI45-08~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
-| X8 | UX48-01, UX48-03, CR43-04, DS44-04, DS44-07 | 🟡 | top tier · high | top tier · High |
+| ~~X8~~ | ~~UX48-01, UX48-03, CR43-04, DS44-04, DS44-07~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | X9 | CT46-01, CT46-03, CT46-05, CR43-02 | 🔴 | top tier · xhigh | top tier · Extra High |
 | X10 | CR43-03, CT46-04 | 🟢 | top tier · high | top tier · High |
 | X11 | MK47-05 | 🟡 | mid tier · high | mid tier · High |
@@ -3572,7 +3572,32 @@ call leaves no usage row and tells the person to rephrase.
   Craig's word at each monthly delta review.
 - Tests. Gate green.
 
-### X8 — Offline, version drift and failure words 🟡
+### ~~X8 — Offline, version drift and failure words~~ 🟡 **shipped 2026-10-13 (`e991281`, [#56](https://github.com/CraigR973/mcu-app/pull/56))**
+**Acceptance: met, every criterion; a phone in a garage with no signal is Craig's to see.** The
+worker keeps API reads from the configured API origin as well as the page's (the rule is
+`lib/api-cache-route.ts`, guarded by its test and by the production-build test reading the
+built worker), each person's in their own partition, and sign-out deletes the cache. Seen in a
+browser: the bundle built with `VITE_API_URL=http://127.0.0.1:8000` and served on
+`localhost:4173` cached 20 answers, all from the API's origin; with the API stopped, a film read
+online opened from the cache. One describer (`lib/describe-error.ts`, behind
+`queryErrorMessage`, and the seven places that showed `error.message` directly) says "No signal
+— showing what's saved.", "The archive had a problem. Try again in a minute." or "This screen
+needs the newest version." with a Reload banner; a failed chunk reloads once a minute at most.
+`UnhandledErrorMiddleware` answers a crash with a 500 inside CORS. Readiness reports `tmdb` and
+`brave`; `phase-closeout.md` step 8 now checks every field and the web's `/version.json`
+(emitted by the build). The contract test (`apps/web/src/contract.test.ts`) walks all 140-odd
+parsing functions in `api.ts` against `packages/shared/openapi.json`, held fresh by
+`test_openapi_snapshot.py`; the API now declares the 158 lower bounds the web assumed and the
+audit log's five actions; a planted enum value fails it. The CSP names
+`api-production-a8fe.up.railway.app` and drops Supabase and Sentry: **a `vercel.json` header
+change**, live after the merge. Choices in #263. Local gate green (API 1,268 passed, 705 skipped
+without Postgres; 1,962 against a local Postgres 16, one collection test excluded that fails
+there on unchanged `main`; web 561, shared 137); CI green (1,973 passed, none skipped);
+production: API and web both at `92273e3`, `db: ok`, all five services `configured`, the live
+worker carrying the API host, CORS answering the web's origin. Two expectations changed with the
+criteria and are recorded here: the CSP test and `test_deployment_config.py` had pinned the
+wildcard Railway host and Supabase this batch removes.
+
 **Covers UX48-01 (High), UX48-03 and DS44-04 (Medium), CR43-04 and DS44-07 (Low).** Top tier ·
 high. Sitting 2, after X7.
 
@@ -3783,7 +3808,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | — | V9 · solo | top tier · max | top tier · Max | **Sitting 3 of Group V, not started.** V10 merged into it (Craig's choice). Craig's steps come first inside it: allowing blu-ray.com and avforums.com, and Brave's limit only if the credit is out. `max` for a new scraping surface under #110 as widened by #228, as Group F's scrapers ran |
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 | **X · 1** | ~~X1~~ (`7979e19`) → ~~X2~~ (`857ee8f`) → ~~X3~~ (`adcae0d`) — **done 12 Oct** | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
-| **X · 2** | ~~X7~~ (`aa6946d`) → X8 | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
+| **X · 2** | ~~X7~~ (`aa6946d`) → ~~X8~~ (`e991281`) — **done 13 Oct** | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
 | **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → X6 → **checkpoint: his credential steps** (storage decided, #257) → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
