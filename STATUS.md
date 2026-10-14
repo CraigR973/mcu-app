@@ -30,7 +30,9 @@ location text, and the delete question hid its own Yes on a phone. His second, 1
 migration 055 filled in the side of 164 live and 160 trashed Lounge copies from their text;
 detail typed beside a section is kept after it ("Garage - top row"), where #266 had dropped
 it; the add form's TMDB search shows 20 and reads a trailing year, so "Texas Chainsaw Massacre
-1974" finds TMDB's "Chain Saw". **Mark's to do:** pick the side again for Nope and Us (both
+1974" finds TMDB's "Chain Saw". His third (`754b24c`, #73, #271): the Archive's Filters offer
+"Still to identify (155)", the films TMDB has not matched and nobody set aside, each fixable
+from its page by a viewer; one he fixes leaves Craig's Identify queue too. **Mark's to do:** pick the side again for Nope and Us (both
 4K, Lounge), whose typed side #266 dropped; re-save 12 Angry Men's 4K (Front 4th) to tidy its
 text, and decide whether its location-less Blu-ray, added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
@@ -463,6 +465,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-14 (Mark's request, `754b24c`, #73, #271)** — The Archive's filters list the films
+  still to identify (no TMDB id, not set aside: 155 of 190), with a count on the facets that
+  hides the option at 0; Mark identifies each from its page, as a viewer already could.
 
 - **2026-10-14 (Mark's feedback, `f5f63e2`, #71, #270)** — The Lounge's sides: a Side picker
   in the copy form, Move discs and the Archive filter, stored in `shelf`; migration 055 filled
