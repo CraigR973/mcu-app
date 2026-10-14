@@ -11,7 +11,7 @@ from typing import Annotated, Literal, cast
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import asc, desc, exists, func, select
+from sqlalchemy import and_, asc, desc, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.selectable import ScalarSelect
@@ -29,6 +29,7 @@ from src.models.collection_item import (
     shelf_label,
     shelf_noun,
 )
+from src.models.identify import IdentifyLookup
 from src.models.movie import Movie, MovieCredit
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
@@ -95,6 +96,9 @@ class MovieFilters:
     runtime_min: int | None = None
     runtime_max: int | None = None
     watched: bool | None = None
+    #: Mark's request, 14 Oct: the films still to identify, so he can fix them from their
+    #: pages (:func:`_to_identify`). False is every other film.
+    to_identify: bool | None = None
     #: §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Arrow Video",
     #: "Region-free". They read the JSONB Batch 23 fills in from Blu-ray.com, so a
     #: collection with no specs yet answers every one of them with an empty list. That is
@@ -174,7 +178,25 @@ def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     if filters.watched is not None and filters.user_id is not None:
         seen = _watched_exists(filters.user_id)
         predicates.append(seen if filters.watched else ~seen)
+    if filters.to_identify is not None:
+        waiting = _to_identify()
+        predicates.append(waiting if filters.to_identify else ~waiting)
     return predicates
+
+
+def _to_identify() -> ColumnElement[bool]:
+    """A film TMDB has not matched, and nobody has set aside as a TV series or not a film.
+
+    The Identify films page's own terms (Batch T9): a film set aside cannot be identified as a
+    film, so offering it would only invite a wrong match. A skipped film is still a film, and
+    still listed.
+    """
+    set_aside = exists(
+        select(IdentifyLookup.id).where(
+            IdentifyLookup.movie_id == Movie.id, IdentifyLookup.status == "set_aside"
+        )
+    )
+    return and_(Movie.tmdb_id.is_(None), ~set_aside)
 
 
 def _live_copy_exists(filters: MovieFilters) -> ColumnElement[bool]:
@@ -533,6 +555,7 @@ async def list_movies(
     runtime_min: Annotated[int | None, Query(alias="runtimeMin", ge=1, le=1000)] = None,
     runtime_max: Annotated[int | None, Query(alias="runtimeMax", ge=1, le=1000)] = None,
     watched: Annotated[bool | None, Query()] = None,
+    to_identify: Annotated[bool | None, Query(alias="toIdentify")] = None,
     # §3.9. Plain query parameters, so a filtered view is a URL somebody can bookmark —
     # which is what the phase asks for in as many words.
     hdr: Annotated[str | None, Query(min_length=1, max_length=40)] = None,
@@ -572,6 +595,7 @@ async def list_movies(
         runtime_min=runtime_min,
         runtime_max=runtime_max,
         watched=watched,
+        to_identify=to_identify,
         hdr=hdr,
         audio=audio,
         label=label,
@@ -686,6 +710,14 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
         ).scalar_one()
     )
 
+    to_identify = int(
+        (
+            await db.execute(
+                select(func.count(Movie.id)).where(*_all_predicates(MovieFilters(to_identify=True)))
+            )
+        ).scalar_one()
+    )
+
     # Batch T7: the spec filters hide while nothing could match them (#154's rule).
     with_specs = int(
         (
@@ -707,6 +739,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
         undatedMovieCount=undated,
         discsWithSpecs=with_specs,
         allSections=list(SECTIONS),
+        toIdentifyMovieCount=to_identify,
     )
 
 

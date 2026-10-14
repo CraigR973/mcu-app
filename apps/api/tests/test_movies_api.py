@@ -17,6 +17,7 @@ from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import SECTIONS, CollectionItem
+from src.models.identify import IdentifyLookup
 from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
@@ -796,6 +797,38 @@ async def test_facets_offer_the_lounges_two_sides_even_while_one_is_empty(
     assert sides["Right"]["itemCount"] >= 1
     assert sections["Front"]["shelfNoun"] == "shelf"
     assert all(shelf["label"].endswith(" shelf") for shelf in sections["Front"]["shelves"])
+
+
+async def test_still_to_identify_lists_the_films_tmdb_has_not_matched_and_counts_them(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Mark, 14 Oct: the Archive lists them, so he can identify each from its page. A film
+    set aside as a TV series cannot be identified as a film, so it is not offered."""
+    before = (await client.get("/api/v1/collection/facets")).json()["toIdentifyMovieCount"]
+    await _add_owned_movie(api_session, title="Identified Already", tmdb_id=920086, year=1902)
+    await _add_owned_movie(api_session, title="Worded Oddly", tmdb_id=None, year=1902)
+    tv, _ = await _add_owned_movie(api_session, title="A Series Set Aside", tmdb_id=None, year=1902)
+    api_session.add(
+        IdentifyLookup(id=uuid.uuid4(), movie_id=tv.id, status="set_aside", set_aside_as="tv")
+    )
+    await api_session.flush()
+
+    waiting = await client.get(
+        "/api/v1/movies", params={"toIdentify": True, "year": 1902, "perPage": 500}
+    )
+    rest = await client.get(
+        "/api/v1/movies", params={"toIdentify": False, "year": 1902, "perPage": 500}
+    )
+
+    assert waiting.status_code == 200
+    assert [item["title"] for item in waiting.json()["items"]] == ["Worded Oddly"]
+    assert sorted(item["title"] for item in rest.json()["items"]) == [
+        "A Series Set Aside",
+        "Identified Already",
+    ]
+    after = (await client.get("/api/v1/collection/facets")).json()["toIdentifyMovieCount"]
+    assert after == before + 1
 
 
 async def test_identifying_a_film_keeps_the_watch_history_it_already_had(
