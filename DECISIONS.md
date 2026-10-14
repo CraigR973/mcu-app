@@ -5577,3 +5577,45 @@ contemporaneous.
      - **Expected values moved by #256, not by accident:** the captured Blade Runner Blu-ray
        stores £5.45 from 24 used listings, not £9.99 from 29 New; its 4K £18.83, not £24.99;
        Jaws's Blu-ray stays £6.73. The tests that pinned the old figures say so.
+
+### 2026-10-14 — Group X, batch X4
+
+268. **X4's choices: the credential steps done by a session at Craig's word, a copy that is
+     data and not a `pg_dump`, and a drill that restores the copy before it is encrypted.**
+     Carries out #257.
+
+     - **The credential steps were a session's, at Craig's word** ("can you do it for me with
+       option 2", 14 Oct). This overrides the ledger's "not done by an agent" for these three
+       only. The session created `mcu_backup` with a generated password nobody has seen
+       (`CREATE ROLE … LOGIN`, read-only by default, no admin rights, no role memberships,
+       made in SQL, not Neon's Roles page, whose roles join `neon_superuser`). It wrote the
+       role's direct (unpooled) address to `~/.mcu-secrets/backup_database_url` (mode 600) and
+       piped it into the `BACKUP_DATABASE_URL` repository secret. It built `age` 1.3.2 with Go
+       into `~/.local/bin`, because Homebrew's build sandbox cannot fetch Go modules on macOS
+       13, and made the key pair at `~/.mcu-secrets/backup-age-key.txt`. **Still Craig's: a
+       copy of that private key off the Mac** (`OWNER-ACTIONS.md`); without it, losing the Mac
+       makes every copy unreadable.
+     - **A copy is data, not a `pg_dump`:** one CSV per table and a manifest (revision,
+       columns, rows), in one read-only REPEATABLE READ snapshot. `pg_dump` cannot take a
+       table without its credential column, and the schema is the code's anyway: a restore
+       runs `alembic upgrade <revision>` first, clears what migrations seeded, loads each
+       table in foreign-key order with its own triggers off (derived fields and timestamps are
+       in the copy) and its foreign keys checked, fills fresh 256-bit invite links, resumes the
+       two sequences, and compares every table's rows with the manifest.
+     - **Withheld:** the six tables production's read-only role was refused (refresh tokens,
+       calendar-feed tokens, push devices, rate limits, `ebay_accounts`,
+       `ebay_connect_states`), plus `profiles.pin_hash` and `movie_night_sessions.invite_token`.
+       The copy checks the catalogue each run and refuses when the role can read any of them,
+       or cannot read any other table or column, naming each. So a migration that forgets
+       the grant (`AGENTS.md`) fails the next Sunday's run rather than leaving a table out.
+     - **The drill restores the copy the run just took, before encryption**, into a Postgres
+       17 service on the runner: the runner never holds the private key (#257). It also fails
+       when the copy is not at the code's newest migration. Decryption was proved once on the
+       Mac with the first artifact (14 Oct): 49 tables, 99,822 rows, no PIN hash.
+     - **Measured on the first run (14 Oct, by hand):** 26 MB before compression, so about
+       0.11 GB a month of Neon's free 5 GB egress, under the 0.4 GB estimated; 7.7 MB
+       encrypted; the whole job about a minute. Weekly on Sundays 03:30 UTC, the drill on the
+       1st at 04:30 UTC and on every manual run.
+     - **Restores go into a new Neon branch** (`docs/restore-runbook.md`): the schema dropped
+       and recreated on that branch only, the copy restored and checked, then the switch,
+       which is a hosting change and Craig's.
