@@ -3199,7 +3199,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 |---|---|---|---|---|
 | 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → ~~X3 push heals itself~~ (`adcae0d`) — **done 12 Oct** | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
 | 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
-| 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
+| 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → ~~X5 watch history~~ (`19c9aad`, 14 Oct; its live data steps at Craig's word) | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
@@ -3212,7 +3212,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | ~~X2~~ | ~~DS44-01, DS44-05, UX48-02 (the screens)~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X3~~ | ~~DS44-02, UX48-02 (Settings)~~ | ~~🟢~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X4~~ | ~~DS44-03~~ | ~~🟢~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
-| X5 | Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share | 🔴 | top tier · xhigh | top tier · Extra High |
+| ~~X5~~ | ~~Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share~~ | ~~🔴~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
 | ~~X6~~ | ~~MK47-03~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X7~~ | ~~AI45-01 to AI45-08~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X8~~ | ~~UX48-01, UX48-03, CR43-04, DS44-04, DS44-07~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
@@ -3459,7 +3459,22 @@ snapshot for now on 12 Oct, which is why X4 precedes X5.
 - **Guard:** the monthly drill.
 - Tests for any code (the manifest comparison). Gate green.
 
-### X5 — Watch history: films not owned, the backfill, the year rule 🔴
+### ~~X5 — Watch history: films not owned, the backfill, the year rule~~ 🔴 **shipped 2026-10-14 (`19c9aad`, [#69](https://github.com/CraigR973/mcu-app/pull/69)); its live data steps wait for Craig's word**
+**Acceptance: met in code, in CI and on production's read-only role; three live data steps are
+Craig's** (`OWNER-ACTIONS.md`). The feed attaches by TMDB id only and a film not in the
+catalogue gets a row with no copies, kept out of Home's counts, the movie night deck and the
+completion counts (`owned_film`, #269); each watch keeps the feed's TMDB id (054, live, both
+roles reading it). A known year more than one apart excludes a title candidate (#158 amended;
+guarded in CI). The diary import no longer uses `MatchingEngine`. The weekly sync runs in the
+08:00 job (`trigger = cron`), and the Watch history tab says the feed holds 50 entries and the
+app syncs weekly. **Dry runs on 14 Oct (read-only):** backfill Craig 493 watches (436 on 397
+films to add) and 86 doubtful, Mark 158 (101 on 95) and 19 doubtful; the 15: 7 to move, 8
+doubtful. **Waiting for Craig's word:** the two backfill applies (651 watches), the 7 moves, and
+storing Mark's username (`markr973`, #253); then both press Sync now. Local gate green (API
+1,319 passed, 721 skipped without Postgres; against a local Postgres 16, 2,029 passed and the
+same 2 collection tests that fail there on `main`; web 572, shared 141); CI green; production
+reported the merge SHA, web and API, with `db: ok`.
+
 **Covers Craig's decision of 11 Oct (`docs/reviews/BATCH_43-48_REVIEW_SCOPE.md`, "Decisions
 during the passes"), CT46-02 (Medium), UX48-04 (Medium) and CT46-01's diary share.** Top tier ·
 xhigh. Sitting 3, last. **After X4; by 31 Oct**, so a sync then still reaches back past
@@ -3968,7 +3983,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 | **X · 1** | ~~X1~~ (`7979e19`) → ~~X2~~ (`857ee8f`) → ~~X3~~ (`adcae0d`) — **done 12 Oct** | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
 | **X · 2** | ~~X7~~ (`aa6946d`) → ~~X8~~ (`e991281`) — **done 13 Oct** | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
-| **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → ~~X6~~ (`51c81ff`, 14 Oct) → ~~checkpoint: his credential steps~~ (storage decided, #257; done by a session at his word, 14 Oct, #268) → ~~X4~~ (`87a734b`, 14 Oct) → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
+| **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → ~~X6~~ (`51c81ff`, 14 Oct) → ~~checkpoint: his credential steps~~ (storage decided, #257; done by a session at his word, 14 Oct, #268) → ~~X4~~ (`87a734b`, 14 Oct) → ~~X5~~ (`19c9aad`, 14 Oct) | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 

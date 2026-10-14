@@ -5619,3 +5619,40 @@ contemporaneous.
      - **Restores go into a new Neon branch** (`docs/restore-runbook.md`): the schema dropped
        and recreated on that branch only, the copy restored and checked, then the switch,
        which is a hosting change and Craig's.
+
+### 2026-10-14 — Group X, batch X5
+
+269. **X5's choices: a film only watched has a row and no copies, "owned" is a film with an
+     owned copy, the year excludes when both are known, and every write to history is a plan
+     first.** Carries out Craig's decision of 11 Oct; amends #158.
+
+     - **A film the feed names and the catalogue lacks gets a row of its own** (title, year,
+       TMDB id; no copies) and the watch goes on it, keeping the feed's TMDB id
+       (`watch_log.tmdb_id`, migration 054). The feed never falls back to a title. *So an
+       unidentified owned film watched now gets a twin row, which its identification later
+       merges into; X9 should let a merge into a row with no discs through without asking.*
+     - **"In the collection" means a row with an owned copy** (`owned_film`, beside
+       `owned_copy`). Home's Films, Identified, genres and decades, the movie night deck,
+       completion sets and the per-person counts now ask it; until X5 they counted every live
+       row, so wanted films were in them too (Home showed 1,917 films where 1,896 are owned:
+       part of UX48-05, which X12 no longer needs to fix for Home). Watch-centred lists (Most
+       rewatched, Top rated, "You've watched") keep films only watched: they are watches.
+     - **The year rule (#158 amended):** a title candidate whose year is known and more than
+       one from the entry's is excluded; an unknown year on either side never excludes, which
+       is what #158 protected.
+     - **The file import no longer identifies** (`MatchingEngine` put three diary films on the
+       wrong owned rows, CT46-01); identifying owned films is T9's. Its tests went with it.
+     - **The backfill and the 15 are plans first**, as T9's identification is: `plan` writes
+       nothing (it runs on the read-only role), uses T9's identifier with no web search, and
+       saves the exact decisions; `apply` writes them once, at Craig's word, re-checking each.
+       Dry runs on 14 Oct: Craig 579 unrecorded entries → 56 on owned films, 1 on a listed
+       film, 436 on 397 films to add, 86 doubtful; Mark 177 → 56, 1, 101 on 95 films, 19
+       doubtful. The 15: 7 to move, 8 doubtful (TMDB holds another film of the title within a
+       year of the logged one). Doubtful entries go to Craig as CSVs in `.letterboxd-export/`.
+       56 of each person's "owned" entries match now and did not in September because T9
+       renamed those films to TMDB's titles after the import.
+     - **The weekly sync is the 08:00 job's** (`sync_due`: anyone with a username unsynced
+       for 6.5 days, `trigger = cron`); a failure is recorded on its run and never fails the
+       job. **The job has no TMDB token**, so a film it adds keeps the feed's title and year;
+       Sync now in the app fills in up to 20 such films each time. *Rejected:* adding the TMDB
+       token to `cron-reminders`, a hosting change of Craig's.
