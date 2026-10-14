@@ -5528,3 +5528,52 @@ contemporaneous.
      trash" grew a warning above the buttons, which pushed "Yes" off a phone's screen and
      left Save in its place, and Mark tapped Save. While it asks, the footer is now only the
      question, "Yes, move to trash" and "Keep it", scrolled into view.
+
+### 2026-10-14 — Group X, batch X6
+
+267. **X6's choices: the used-to-New factor is measured from the stored values, a value from
+     before X6 is priced again at once, and the title must open the listing everywhere.** X6
+     carries out #256 (amending #209); this records how.
+
+     - **A used copy's value:** the median of the format's standard-edition used listings
+       (Like new, Used, Very good, Good, Acceptable, X1's pool) when there are three or more;
+       otherwise New's median, with three or more, times the factor. Open box, "not stated"
+       and collector editions value nothing; too few of both is not priced. Every row keeps
+       both groups (median and count), the range behind the value, and its factor.
+     - **The factor is measured, not set.** Two sources disagreed by format (11 Oct references,
+       by condition: 4K 0.60 from 59 films, Blu-ray 0.69 from 113; 14 Oct pooled references:
+       4K 0.71 from 27, Blu-ray 0.59 from 19), so no constant is trusted for long. Each format's
+       factor is the median used/New ratio over stored films with three or more of each,
+       capped at 1.00; 0.60, the low end of what was measured, stands in until a format has 20
+       such films. A run measures it at its start and, at its end, re-scales every New-based
+       value to the factor its own prices give, so the collection rests on one factor per
+       format. The film page's live check, the upgrade prompt and the listing link read the
+       same factor, so each shows what a run would store.
+     - **A value from before X6 is due at once** (no `used_count`) and counts in no total, list
+       or film page until a run values it again. So the scheduled runs of 15 and 16 Oct 04:00
+       UTC (750 calls each, the usual share) re-price all 1,454 film-formats, not the 1 Nov
+       run, and Home shows no total, then a partial one, until 16 Oct. *Rejected:* showing
+       new-copy prices under "as used copies" meanwhile, and scaling them by a factor without
+       their listings.
+     - **The title-opens rule is the shared matcher's now**, so the film page, the valuation,
+       the deal scan's usual price and the scan itself apply one rule. Its seller words gained
+       labels and import words seen opening a listing of the film itself (Lucasfilm, Walt, 20th
+       Century Fox, Zavvi, HMV, import, EU, DVD, BBC, factory) and its window grew from four
+       words to six; every word before the title must still be one of them. A word a title can
+       start with stays out ("Home" would file *Home Alone* under *Alone*). On the 20 live
+       searches of 11 Oct and the two fixtures it refuses 40 more listings, about three in four
+       another product; the rest are the film behind a person's name ("John Carpenter's
+       Christine"), a stated failure rather than a wrong number.
+     - **"Series" alone stays legitimate** (X1's "Collector's Series"); Staffel, Staffeln, mini
+       series and miniseries join complete series, TV series, season and "series N". The rule
+       is off for the 34 TV titles (`movies.is_tv`; the web sends `isSeries` from `mediaType`).
+       "Not 4K UHD" is removed whole before the format is read; "Steelbooks" is a collector
+       edition.
+     - **The sale panel pre-fills from the stored value**, and the upgrade prompt and listing
+       link from the live check's. The bid trial's asking price follows the same rule, as
+       "the valuation's own rule" says it does.
+     - **Responses cached on a phone before X6 still parse** (zod defaults); a copy's value
+       cached before X6 reads as not valued yet, as the API now treats it.
+     - **Expected values moved by #256, not by accident:** the captured Blade Runner Blu-ray
+       stores £5.45 from 24 used listings, not £9.99 from 29 New; its 4K £18.83, not £24.99;
+       Jaws's Blu-ray stays £6.73. The tests that pinned the old figures say so.

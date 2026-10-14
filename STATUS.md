@@ -8,8 +8,14 @@ roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — 
 planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
 check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
 Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift and failure
-words (`e991281`), shipped 13 Oct. Next: sitting 3, X6 → X4 → X5, at Craig's go; X6 before
-1 Nov.** **Also 13 Oct, outside Group X: Group Y, Mark's requests, is done.** Y1 (`4840711`, #264):
+words (`e991281`), shipped 13 Oct. Sitting 3 began 14 Oct: X6, value as used copies, shipped
+(`51c81ff`, #267); it stopped at X4's checkpoint, Craig's credential steps (a key pair, the
+backup role's password, a repository secret). X4 → X5 resume at his word; X5 by 31 Oct.**
+**What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
+count nowhere until re-priced; the scheduled runs of 15 and 16 Oct 04:00 UTC re-price them as
+used copies (750 eBay calls each, the usual share). Until then Home shows no total, then a
+partial one. Pressing **Update values** on Admin's Collection value today would start sooner.
+**Also 13 Oct, outside Group X: Group Y, Mark's requests, is done.** Y1 (`4840711`, #264):
 Mark edits, moves and deletes copies. Y2 (`e0b5bad`, #265): Move discs, a tray of discs found
 by search or scan, moved together and movable back (Group Y in `docs/phase-batches.md`). Mark's
 first feedback was fixed the same evening (`2ef3b8a`, #266): a shelf-only edit kept the old
@@ -23,7 +29,8 @@ first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not 
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
-| X6 → X4 → X5 · X9 → X10 · X11 → X12 | sittings 3–5, in that order (#255). Sitting 3's choices are made (used-copy values #256, Actions backups #257); it stops for Craig's credential steps in X4 and his word on X5's live data; X6 before 1 Nov, X5 by 31 Oct |
+| ~~X6~~ (`51c81ff` #267), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct |
+| **checkpoint: X4's credential steps** → X4 → X5 · X9 → X10 · X11 → X12 | sitting 3 stopped at the checkpoint (14 Oct); then sittings 4–5 (#255). X5's live data steps stop for Craig's word; X5 by 31 Oct |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -37,15 +44,16 @@ first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not 
   2nd, 15th and 16th, its first run with work on 1 Nov 04:00.
 - **The gate** is six CI jobs (#248). Locally: API 1,188 passed and 650 skipped without Postgres
   (11 Oct), web 525, shared 131.
-- **Craig's open items** (`OWNER-ACTIONS.md`): X4's credential steps when sitting 3 reaches
-  them (the roadmap's choices all made 12 Oct: #254, #256, #257); 29 connect eBay; 22 the Neon
+- **Craig's open items** (`OWNER-ACTIONS.md`): X4's credential steps, which sitting 3 now
+  waits on (the roadmap's choices all made 12 Oct: #254, #256, #257); 29 connect eBay; 22 the Neon
   password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues.
 
 **Live numbers (12 Oct, read-only):**
 - **Collection:** 1,889 live copies (1,466 discs, 422 downloads, 1 unlabelled); 1,891 films,
   209 without a TMDB id.
 - **Identify:** 157 identified, 165 waiting, 35 set aside. **Disc specs:** 734 done, 525 waiting.
-- **Value:** £23,604 over 1,300 priced discs, 92.5% of it new-copy asking prices (X6).
+- **Value:** £23,604 over 1,300 priced discs, 92.5% of it new-copy asking prices; X6 (14 Oct)
+  re-prices it as used copies on 15–16 Oct, roughly £12,800–£17,200 by the review's estimate.
 - **Watch history:** Craig synced once (11 Oct, 4 written); Mark has no username stored (X5).
 
 **The Now entries this block replaced** (5 Oct, Group W) are in git: `git show 527522d:STATUS.md`.
@@ -55,7 +63,7 @@ The Log keeps a dated line for each.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
-**sitting 2 is done (X7, X8, 13 Oct); sitting 3, X6 → X4 → X5, is next, at Craig's go** (`/group-start X · 3`).
+**sitting 2 is done (X7, X8, 13 Oct); sitting 3 shipped X6 (14 Oct) and waits at X4's checkpoint, Craig's credential steps; once they are done, X4 → X5 resume with `/group-start X4,X5`.**
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -444,6 +452,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-14 (X6, `51c81ff`, #65, #267)** — Group X sitting 3 began. X6 values each disc as a
+  used copy (#256): used listings' median with three or more, else New's median times a factor
+  measured per format from the stored values (0.60 until 20 films), re-applied at each run's
+  end. Migration 052, live; all 1,454 stored values are due, re-priced by the 15 and 16 Oct runs.
+  The shared matcher now refuses another film's word before the title, Staffel and mini-series,
+  "Not 4K UHD", and reads "Steelbooks" as collector; R5's crafted wrong products never price a
+  film. Gate green locally and in CI; production at `51c81ff` with `db: ok`; checked at 375 px
+  against a seeded local API. The group stopped at X4's checkpoint: Craig's credential steps.
 - **2026-10-13 (copy fix, `2ef3b8a`, #266)** — Mark's feedback on Y1, both on 12 Angry Men.
   (a) A shelf-only edit kept "Front 3rd shelf" over Front · 4th; the form now clears the text
   for a new shelf, and the API recomposes text naming a different place (1 of 1,885 live discs
