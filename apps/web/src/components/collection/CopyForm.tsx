@@ -5,6 +5,7 @@ import {
   CONDITIONS,
   fetchFacets,
   FORMATS,
+  shelfLabel,
   type CollectionItemFields,
   type Condition,
 } from '@/lib/api'
@@ -49,7 +50,10 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
   const populated = facetsQuery.data?.sections ?? []
   const allSections = facetsQuery.data?.allSections ?? []
   const sectionNames = allSections.length > 0 ? allSections : populated.map((entry) => entry.section)
-  const shelves = populated.find((entry) => entry.section === value.section)?.shelves ?? []
+  const chosen = populated.find((entry) => entry.section === value.section)
+  const shelves = chosen?.shelves ?? []
+  // Front and Back have shelves; the Lounge has a left and a right side (Mark, 14 Oct).
+  const noun = chosen?.shelfNoun ?? 'shelf'
 
   function set<K extends keyof CollectionItemFields>(key: K, next: CollectionItemFields[K]) {
     onChange({ ...value, [key]: next })
@@ -121,7 +125,7 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
         </Field>
 
         {shelves.length > 0 ? (
-          <Field label="Shelf">
+          <Field label={noun === 'side' ? 'Side' : 'Shelf'}>
             <select
               className={selectClass}
               disabled={disabled}
@@ -130,10 +134,10 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
               // again from the pickers (Mark's 12 Angry Men, 13 Oct).
               onChange={(event) => onChange({ ...value, shelf: event.target.value || null, location: null })}
             >
-              <option value="">No particular shelf</option>
+              <option value="">No particular {noun}</option>
               {shelves.map((shelf) => (
                 <option key={shelf.shelf} value={shelf.shelf}>
-                  {shelf.shelf} shelf
+                  {shelfLabel(shelf)}
                 </option>
               ))}
             </select>
@@ -143,7 +147,9 @@ export default function CopyForm({ value, onChange, disabled }: Props) {
             <Input
               disabled={disabled}
               value={value.location ?? ''}
-              placeholder="Front 2nd shelf"
+              // With a section chosen, the box is for detail within it: the API keeps it
+              // after the section, "Garage - top row" (14 Oct).
+              placeholder={value.section ? 'Anything more, e.g. top row' : 'Front 2nd shelf'}
               onChange={(event) => set('location', event.target.value || null)}
             />
           </Field>

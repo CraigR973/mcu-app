@@ -254,6 +254,9 @@ export const candidateListSchema = z.object({
 
 export const shelfFacetSchema = z.object({
   shelf: z.string().min(1),
+  /** 14 Oct. How a picker names it: "2nd shelf", or "Left hand side" for the Lounge.
+   *  Optional, as #205 explains: an older cached response has no such field. */
+  label: z.string().min(1).optional(),
   movieCount: z.number().int().nonnegative(),
   itemCount: z.number().int().nonnegative(),
 })
@@ -263,6 +266,9 @@ export const sectionFacetSchema = z.object({
   movieCount: z.number().int().nonnegative(),
   itemCount: z.number().int().nonnegative(),
   shelves: z.array(shelfFacetSchema),
+  /** 14 Oct. What `shelves` are called there: "shelf", or "side" for the Lounge. Missing
+   *  from an older cached answer (#205), which means "shelf". */
+  shelfNoun: z.string().min(1).optional(),
 })
 
 export const decadeFacetSchema = z.object({

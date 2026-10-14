@@ -262,7 +262,7 @@ export default function AddToCollectionPage() {
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search TMDB by title…"
+                placeholder="Title, and its year if you know it"
                 aria-label="Search for a film"
               />
               <Button type="submit" disabled={query.trim().length < 2}>

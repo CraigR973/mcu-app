@@ -9,6 +9,7 @@ import {
   FORMATS,
   MIN_RATING_OPTIONS,
   runtimeLabel,
+  shelfLabel,
   TMDB_GENRES,
   type MovieFilters,
 } from '@/lib/api'
@@ -152,6 +153,8 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
   const decades = facetsQuery.data?.decades ?? []
   const selectedSection = sections.find((section) => section.section === filters.section)
   const shelves = selectedSection?.shelves ?? []
+  // The Lounge's subdivisions are sides, not shelves (Mark, 14 Oct).
+  const sides = selectedSection?.shelfNoun === 'side'
   const supportsLiveOnly = context === 'browse'
   // Batch T7, #154's rule: the spec filters hide until a disc has specs to match them.
   const specsAvailable = (facetsQuery.data?.discsWithSpecs ?? 0) > 0
@@ -162,7 +165,10 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
       active.push({ key, label, clear: () => onChange({ ...filters, ...patch }) })
 
     if (filters.section) add('section', `Section: ${filters.section}`, { section: undefined, shelf: undefined })
-    if (filters.shelf) add('shelf', `Shelf: ${filters.shelf}`, { shelf: undefined })
+    if (filters.shelf) {
+      const picked = selectedSection?.shelves.find((entry) => entry.shelf === filters.shelf)
+      add('shelf', picked && sides ? `Side: ${shelfLabel(picked)}` : `Shelf: ${filters.shelf}`, { shelf: undefined })
+    }
     if (filters.format) add('format', FORMATS.find((format) => format.value === filters.format)?.label ?? filters.format, { format: undefined })
     if (filters.genreId) add('genre', TMDB_GENRES.find((genre) => genre.id === filters.genreId)?.name ?? 'Genre', { genreId: undefined })
     if (filters.year) add('year', `Year: ${filters.year}`, { year: undefined })
@@ -176,7 +182,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
     if (filters.audio) add('audio', filters.audio, { audio: undefined })
     if (filters.regionFree) add('region', 'Region-free', { regionFree: undefined })
     return active
-  }, [filters, onChange])
+  }, [filters, onChange, selectedSection, sides])
 
   // In the wide row, location and format are on show beside the button; everywhere else
   // they are inside it, and so is everything it counts.
@@ -310,9 +316,9 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
             )}
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
               {shelves.length > 0 && (
-                <select className={CONTROL_CLS} value={filters.shelf ?? ''} onChange={(event) => onChange({ ...filters, shelf: event.target.value || undefined })} aria-label="Filter by shelf">
-                  <option value="">All shelves</option>
-                  {shelves.map((shelf) => <option key={shelf.shelf} value={shelf.shelf}>{shelf.shelf} shelf ({shelf.itemCount})</option>)}
+                <select className={CONTROL_CLS} value={filters.shelf ?? ''} onChange={(event) => onChange({ ...filters, shelf: event.target.value || undefined })} aria-label={sides ? 'Filter by side' : 'Filter by shelf'}>
+                  <option value="">{sides ? 'Both sides' : 'All shelves'}</option>
+                  {shelves.map((shelf) => <option key={shelf.shelf} value={shelf.shelf}>{shelfLabel(shelf)} ({shelf.itemCount})</option>)}
                 </select>
               )}
               <select className={CONTROL_CLS} value={filters.genreId ?? ''} onChange={(event) => onChange({ ...filters, genreId: event.target.value ? Number(event.target.value) : undefined })} aria-label="Filter by genre">

@@ -152,7 +152,10 @@ READ_TOOLS: list[ToolParam] = [
                 # model: the hand-written list stopped at the five §3.4 names (Batch V4).
                 "description": f"Where it is kept — one of {', '.join(SECTIONS)}.",
             },
-            "shelf": {"type": "string", "description": "Which shelf, e.g. '2nd'."},
+            "shelf": {
+                "type": "string",
+                "description": "Which shelf, e.g. '2nd'; in the Lounge, 'Left' or 'Right'.",
+            },
             # Decades as decades (AI45-07): "earliest release year" led the model to send
             # 1985, which the endpoint refuses, and the 1980s cost a retry.
             "decadeFrom": {

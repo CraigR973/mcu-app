@@ -5656,3 +5656,39 @@ contemporaneous.
        job. **The job has no TMDB token**, so a film it adds keeps the feed's title and year;
        Sync now in the app fills in up to 20 such films each time. *Rejected:* adding the TMDB
        token to `cron-reminders`, a hosting change of Craig's.
+
+### 2026-10-14 — Mark's feedback: the Lounge's sides, and a year in a search
+
+270. **The Lounge's two sides are its shelves, detail typed beside a section is kept after
+     it, and a search ending in a year is read as a year.** Mark's feedback, 14 Oct; amends
+     #266. Both taken at Craig's word ("yes to both").
+
+     - **The Lounge side was lost by #266.** Mark chose Lounge and typed "Right Hand Side";
+       #266 dropped any text naming a different place from the pickers, and text naming no
+       place counted as different, so the copy saved as plain "Lounge". Two copies lost their
+       side that way (Nope and Us, both 4K, 14 Oct; the typed text was never stored). Every
+       section without shelves had the same fault.
+     - **Left and Right go in `shelf`**, as Front's and Back's shelves do: one column, one
+       filter, one move. The pair is fixed (`LOUNGE_SIDES`), so a side holding nothing is still
+       offered; the facets serve each shelf's `label` ("Left hand side") and each section's
+       `shelfNoun` ("side"), so the web names them without knowing the rule. Picked sides are
+       written "Lounge Cabinet - Right Hand Side", as the imported copies already were, and
+       `parse_location` reads a side out of Lounge text (only once the section is the Lounge:
+       "Left Hand Side Small Cabinet Fish Room" is a cabinet). *Rejected:* only undoing #266's
+       rule, which keeps the side as free text with no picker or filter, and is not what Mark
+       asked for.
+     - **Migration 055 fills the side in from the text**: 164 live copies (96 right, 68 left)
+       and 160 in the Trash. It is not optional: once the parser reads sides, a Lounge copy
+       without one would lose its text at its next edit. The downgrade clears the sides; the
+       text is never touched.
+     - **Text naming no place, typed beside a chosen section, is kept after it**: "Garage - top
+       row". With the section in front, the text still says where the disc is when read alone,
+       as the export reads it. *Rejected:* storing it exactly as typed (before #266), which
+       leaves "top row" in the export with no section. An app from before the side picker that
+       sends "Right Hand Side" beside the Lounge gets the side read from it.
+     - **The add form's TMDB search** shows all 20 of TMDB's first page (was 10: the 1974 Texas
+       Chain Saw Massacre, spelled so by TMDB, was 14th for "The Texas Chainsaw massacre"), and
+       a search ending in a year ("… 1974", "… (1974)") also runs as the title filtered to that
+       year, **films released that year first**, then the search as typed, because some titles
+       end in a year ("Blade Runner 2049"). TMDB's year filter also matches re-releases, which
+       is why the sort is by each film's own year.

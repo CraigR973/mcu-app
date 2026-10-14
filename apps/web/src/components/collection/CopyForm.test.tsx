@@ -148,6 +148,76 @@ describe('CopyForm', () => {
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ section: 'Front', shelf: '4th', location: null }))
   })
+
+  const LOUNGE_FACETS: CollectionFacets = {
+    sections: [
+      {
+        section: 'Lounge',
+        movieCount: 96,
+        itemCount: 96,
+        shelfNoun: 'side',
+        shelves: [
+          { shelf: 'Left', label: 'Left hand side', movieCount: 0, itemCount: 0 },
+          { shelf: 'Right', label: 'Right hand side', movieCount: 96, itemCount: 96 },
+        ],
+      },
+    ],
+    unsectionedItemCount: 0,
+    decades: [],
+    undatedMovieCount: 0,
+    discsWithSpecs: 0,
+    allSections: ['Front', 'Lounge', 'Garage'],
+  }
+
+  it('offers the Lounge’s two sides as a picker, not a box to type in — Mark, 14 Oct', () => {
+    const html = markup({ ...EMPTY_COPY, section: 'Lounge' }, LOUNGE_FACETS)
+
+    expect(html).toContain('Side')
+    expect(html).toContain('No particular side')
+    expect(html).toContain('<option value="Left">Left hand side</option>')
+    expect(html).toContain('<option value="Right">Right hand side</option>')
+    expect(html).not.toContain('shelf</option>')
+  })
+
+  it('picking a side drops the old text, so the API writes the side’s own', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client.setQueryData(['facets'], LOUNGE_FACETS)
+    const onChange = vi.fn()
+    render(
+      <QueryClientProvider client={client}>
+        <CopyForm
+          value={{ ...EMPTY_COPY, formats: ['4k_uhd'], section: 'Lounge', shelf: null, location: 'Lounge' }}
+          onChange={onChange}
+        />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(screen.getByDisplayValue('No particular side'), { target: { value: 'Right' } })
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ section: 'Lounge', shelf: 'Right', location: null }))
+  })
+
+  it('asks for detail, not a whole place, once a section without shelves is chosen', () => {
+    const html = markup({ ...EMPTY_COPY, section: 'Garage' }, LOUNGE_FACETS)
+
+    expect(html).toContain('Anything more, e.g. top row')
+    expect(html).not.toContain('placeholder="Front 2nd shelf"')
+  })
+
+  it('names shelves as before when an older cached answer has no labels', () => {
+    const html = markup(
+      { ...EMPTY_COPY, section: 'Front' },
+      {
+        ...LOUNGE_FACETS,
+        sections: [
+          { section: 'Front', movieCount: 1, itemCount: 1, shelves: [{ shelf: '2nd', movieCount: 1, itemCount: 1 }] },
+        ],
+      },
+    )
+
+    expect(html).toContain('<option value="2nd">2nd shelf</option>')
+    expect(html).toContain('No particular shelf')
+  })
 })
 
 afterEach(() => cleanup())

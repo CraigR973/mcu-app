@@ -769,6 +769,35 @@ async def test_facets_offer_every_section_to_the_form_and_filled_ones_to_the_fil
     assert filled["allSections"] == list(SECTIONS)
 
 
+async def test_facets_offer_the_lounges_two_sides_even_while_one_is_empty(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Mark, 14 Oct: the Lounge's sides are pickable, named as sides, from the first disc."""
+    await _add_owned_movie(
+        api_session,
+        title="Right Of The Lounge",
+        tmdb_id=920084,
+        section="Lounge",
+        shelf="Right",
+        location="Lounge Cabinet - Right Hand Side",
+    )
+    # Front, 2nd shelf, so the shelves keep their noun and label beside the sides.
+    await _add_owned_movie(api_session, title="Front Of The House", tmdb_id=920085)
+
+    body = (await client.get("/api/v1/collection/facets")).json()
+    sections = {section["section"]: section for section in body["sections"]}
+
+    lounge = sections["Lounge"]
+    assert lounge["shelfNoun"] == "side"
+    sides = {side["shelf"]: side for side in lounge["shelves"]}
+    assert list(sides) == ["Left", "Right"]
+    assert sides["Left"]["label"] == "Left hand side"
+    assert sides["Right"]["itemCount"] >= 1
+    assert sections["Front"]["shelfNoun"] == "shelf"
+    assert all(shelf["label"].endswith(" shelf") for shelf in sections["Front"]["shelves"])
+
+
 async def test_identifying_a_film_keeps_the_watch_history_it_already_had(
     client: AsyncClient,
     api_session: AsyncSession,

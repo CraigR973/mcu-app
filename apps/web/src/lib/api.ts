@@ -216,6 +216,7 @@ import {
   type EbayAccount,
   type EbaySelling,
   type EbayWatching,
+  type ShelfFacet,
 } from '@mcu/shared'
 import { z, type ZodType, type ZodTypeDef } from 'zod'
 
@@ -689,6 +690,13 @@ export const FORMATS = [
 export function formatLabel(value: string | null): string | null {
   if (!value) return null
   return FORMATS.find((format) => format.value === value)?.label ?? value.replaceAll('_', ' ')
+}
+
+/** How a picker names a shelf, or one of the Lounge's sides (14 Oct): "2nd shelf",
+ *  "Left hand side". The API says; an older cached answer without the label gets the old
+ *  wording. */
+export function shelfLabel(entry: ShelfFacet): string {
+  return entry.label ?? `${entry.shelf} shelf`
 }
 
 /**

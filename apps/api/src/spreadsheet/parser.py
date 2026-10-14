@@ -111,6 +111,7 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
         "Back 3rd"              → ("Back", "3rd")
         "front 1st shelf"       → ("Front", "1st")
         "Lounge"                → ("Lounge", None)
+        "Lounge Cabinet - Right Hand Side" → ("Lounge", "Right")
         "Digital"               → ("Digital", None)
         "E:\\Movies"             → ("Digital", None)
         "Top Big Cabinet"       → ("Top Big Cabinet", None)
@@ -146,7 +147,22 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
             else _add_ordinal_suffix(int(bare))
         )
 
+    if section == "Lounge" and shelf is None:
+        shelf = _lounge_side(stripped)
+
     return section, shelf
+
+
+# The Lounge cabinet's two sides (Mark, 14 Oct): "Lounge Cabinet - Right Hand Side" is the
+# Lounge, side "Right". Read only once the section is the Lounge, because "Left Hand Side
+# Small Cabinet Fish Room" is a cabinet, not a side.
+_SIDE_RE = re.compile(r"\b(left|right)\b", re.IGNORECASE)
+
+
+def _lounge_side(text: str) -> str | None:
+    """The side the text names, when it names exactly one; both or neither name none."""
+    sides = {word.lower() for word in _SIDE_RE.findall(text)}
+    return sides.pop().capitalize() if len(sides) == 1 else None
 
 
 def _add_ordinal_suffix(n: int) -> str:

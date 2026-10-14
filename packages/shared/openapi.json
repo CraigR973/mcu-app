@@ -9772,6 +9772,11 @@
       "title": "Section",
       "type": "string"
      },
+     "shelfNoun": {
+      "default": "shelf",
+      "title": "Shelfnoun",
+      "type": "string"
+     },
      "shelves": {
       "items": {
        "$ref": "#/components/schemas/ShelfFacetResponse"
@@ -9853,6 +9858,10 @@
       "title": "Itemcount",
       "type": "integer"
      },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
      "movieCount": {
       "minimum": 0.0,
       "title": "Moviecount",
@@ -9865,6 +9874,7 @@
     },
     "required": [
      "shelf",
+     "label",
      "movieCount",
      "itemCount"
     ],
