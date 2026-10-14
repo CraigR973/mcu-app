@@ -502,6 +502,9 @@ export interface MovieFilters {
   runtimeMin?: number
   runtimeMax?: number
   watched?: boolean
+  /** Mark's request, 14 Oct: films TMDB has not matched and nobody has set aside as TV or
+   *  not a film, so he can identify each from its page. The Archive only; not saved. */
+  toIdentify?: boolean
   /** §3.9's spec filters. They read what Batch 23 fetched from Blu-ray.com, so a
    *  collection whose specs have never been fetched answers all of them with nothing —
    *  which is correct rather than broken. */
@@ -532,6 +535,7 @@ export async function fetchMovies(
   if (filters.runtimeMin != null) params.set('runtimeMin', String(filters.runtimeMin))
   if (filters.runtimeMax != null) params.set('runtimeMax', String(filters.runtimeMax))
   if (filters.watched != null) params.set('watched', String(filters.watched))
+  if (filters.toIdentify != null) params.set('toIdentify', String(filters.toIdentify))
   // §3.9 asks for these to be URL-encoded so a filtered view is bookmarkable, which
   // is what they already are — the page's own URL carries them.
   if (filters.hdr) params.set('hdr', filters.hdr)

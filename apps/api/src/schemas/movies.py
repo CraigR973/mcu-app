@@ -219,6 +219,9 @@ class CollectionFacetsResponse(BaseModel):
     #: new place (Craig's house held none when it was added); ``sections`` above, which the
     #: Archive's filter reads, still lists only the places that hold a disc.
     allSections: list[str] = Field(default_factory=list)
+    #: 14 Oct, Mark's request. Films on the shelf TMDB has not matched and nobody has set aside
+    #: as TV or not a film: what the Archive's "Still to identify" filter would list.
+    toIdentifyMovieCount: int = Field(default=0, ge=0)
 
 
 # ---------------------------------------------------------------------------

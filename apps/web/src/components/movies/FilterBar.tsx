@@ -158,6 +158,9 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
   const supportsLiveOnly = context === 'browse'
   // Batch T7, #154's rule: the spec filters hide until a disc has specs to match them.
   const specsAvailable = (facetsQuery.data?.discsWithSpecs ?? 0) > 0
+  // Mark's request, 14 Oct: the Archive lists the films still to identify, and each one's
+  // page has the identify panel. Hidden at 0, by #154's rule, and in a saved collection.
+  const toIdentifyCount = facetsQuery.data?.toIdentifyMovieCount ?? 0
 
   const activeFilters = useMemo(() => {
     const active: Array<{ key: string; label: string; clear: () => void }> = []
@@ -178,6 +181,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
     const runtime = runtimeLabel(filters.runtimeMin, filters.runtimeMax)
     if (runtime) add('runtime', runtime.charAt(0).toUpperCase() + runtime.slice(1), { runtimeMin: undefined, runtimeMax: undefined })
     if (filters.watched != null) add('watched', filters.watched ? 'Watched' : 'Not watched', { watched: undefined })
+    if (filters.toIdentify) add('to-identify', 'Still to identify', { toIdentify: undefined })
     if (filters.hdr) add('hdr', filters.hdr, { hdr: undefined })
     if (filters.audio) add('audio', filters.audio, { audio: undefined })
     if (filters.regionFree) add('region', 'Region-free', { regionFree: undefined })
@@ -353,6 +357,12 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
                 <option value="true">Watched</option>
                 <option value="false">Not watched</option>
               </select>
+              {supportsLiveOnly && (toIdentifyCount > 0 || filters.toIdentify) && (
+                <select className={CONTROL_CLS} value={filters.toIdentify ? 'true' : ''} onChange={(event) => onChange({ ...filters, toIdentify: event.target.value === 'true' || undefined })} aria-label="Filter by identified or not">
+                  <option value="">Identified or not</option>
+                  <option value="true">Still to identify ({toIdentifyCount})</option>
+                </select>
+              )}
             </div>
 
             <div className="mt-3">

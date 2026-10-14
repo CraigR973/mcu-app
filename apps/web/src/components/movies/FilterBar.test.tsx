@@ -144,3 +144,36 @@ describe('FilterBar — the Lounge’s sides, Mark 14 Oct', () => {
     expect(screen.getByText('Side: Right hand side')).not.toBeNull()
   })
 })
+
+describe('FilterBar — still to identify, Mark 14 Oct', () => {
+  const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0, discsWithSpecs: 0, allSections: [] }
+
+  it('offers the films still to identify, with how many, and applies it', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, toIdentifyMovieCount: 155 })
+    const onChange = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    const select = await screen.findByRole('combobox', { name: 'Filter by identified or not' })
+    expect(within(select).getByRole('option', { name: 'Still to identify (155)' })).not.toBeNull()
+    fireEvent.change(select, { target: { value: 'true' } })
+
+    expect(onChange).toHaveBeenCalledWith({ toIdentify: true })
+  })
+
+  it('shows as a chip that clears it', () => {
+    const onChange = renderBar({ toIdentify: true })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Still to identify filter' }))
+
+    expect(onChange).toHaveBeenCalledWith({ toIdentify: undefined })
+  })
+
+  it('hides while every film is identified', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, toIdentifyMovieCount: 0 })
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    await screen.findByRole('combobox', { name: 'Filter by watched status' })
+    expect(screen.queryByRole('combobox', { name: 'Filter by identified or not' })).toBeNull()
+  })
+})

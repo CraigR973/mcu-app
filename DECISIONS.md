@@ -5692,3 +5692,21 @@ contemporaneous.
        year, **films released that year first**, then the search as typed, because some titles
        end in a year ("Blade Runner 2049"). TMDB's year filter also matches re-releases, which
        is why the sort is by each film's own year.
+
+271. **The Archive lists the films still to identify, for Mark to fix from their pages.**
+     Mark's request, 14 Oct: "a drop down for unidentified" among the filters, to fix his
+     oddly worded titles at leisure. He can already identify a film from its own page (the
+     identify panel shows on any film TMDB has not matched, and `POST /movies/{id}/identify`
+     is open to a viewer); what he lacked was a list of them.
+
+     - **"Still to identify" is the Identify films page's own term** (Batch T9): no TMDB id,
+       and not set aside as a TV series or not a film. 155 of the 190 owned unidentified films
+       on 14 Oct; the 35 set aside are left out, because they cannot be identified as films and
+       offering them invites a wrong match. A skipped film is still listed.
+     - **A `toIdentify` filter on `GET /movies`** and a `toIdentifyMovieCount` on the facets,
+       which names the option ("Still to identify (155)") and hides it at 0, by #154's rule.
+       **The Archive only:** a smart collection does not save it, because the list empties as
+       it is worked through. Identifying a film refreshes the count.
+     - *Rejected:* opening the Identify films page to Mark. It is quicker per film, but it is
+       an admin page with merges and undo, an access change that was not asked for. The
+       queue reads live, so a film Mark identifies leaves Craig's queue too.

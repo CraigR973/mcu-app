@@ -2392,6 +2392,12 @@
       "title": "Sections",
       "type": "array"
      },
+     "toIdentifyMovieCount": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Toidentifymoviecount",
+      "type": "integer"
+     },
      "undatedMovieCount": {
       "minimum": 0.0,
       "title": "Undatedmoviecount",
@@ -18702,6 +18708,22 @@
         }
        ],
        "title": "Watched"
+      }
+     },
+     {
+      "in": "query",
+      "name": "toIdentify",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Toidentify"
       }
      },
      {

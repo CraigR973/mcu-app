@@ -113,6 +113,7 @@ describe('Batch 6 location, facet and watch-log calls', () => {
       decadeTo: 1950,
       minRating: 7,
       watched: false,
+      toIdentify: true,
     })
 
     const url = String(fetchMock.mock.calls[0][0])
@@ -124,6 +125,7 @@ describe('Batch 6 location, facet and watch-log calls', () => {
     // `watched=false` is a real filter — "what have I not seen?" — and a truthiness
     // check would drop it silently.
     expect(url).toContain('watched=false')
+    expect(url).toContain('toIdentify=true')
   })
 
   it('parses the facet vocabulary the pickers are built from', async () => {

@@ -327,6 +327,8 @@ export default function MovieDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ['movies'] })
     void queryClient.invalidateQueries({ queryKey: ['search'] })
     void queryClient.invalidateQueries({ queryKey: ['movie-copies', movie.id] })
+    // The Archive's "Still to identify" count is one fewer (Mark, 14 Oct).
+    void queryClient.invalidateQueries({ queryKey: ['collection-facets'] })
     setCorrecting(false)
     if (movie.id !== movieId) navigate(`/movies/${movie.id}`, { replace: true })
   }

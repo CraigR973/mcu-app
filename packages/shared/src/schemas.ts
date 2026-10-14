@@ -287,6 +287,9 @@ export const collectionFacetsSchema = z.object({
    *  no disc until the first is moved there. The filter bar keeps reading `sections`.
    *  Defaulted, as #205 explains: an older cached response has no such field. */
   allSections: z.array(z.string().min(1)).default([]),
+  /** 14 Oct, Mark's request. Films the Archive's "Still to identify" filter would list; the
+   *  filter hides at 0. Optional, as #205 explains. */
+  toIdentifyMovieCount: z.number().int().nonnegative().optional(),
 })
 
 export const watchLogEntrySchema = z.object({
