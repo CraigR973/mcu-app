@@ -5,17 +5,18 @@
 `movies`, most of which the April import never identified. The normalisation primitives
 are shared; the decision is not.
 
-**The rules, and what each is for** (`DECISIONS.md` #158, #160):
+**The rules, and what each is for** (`DECISIONS.md` #158, #160, amended by #269):
 
-1. **Exact on `tmdb_id` when the entry has one.** A CSV never does; every RSS entry does
-   (100 of 100 measured), so this is the path S5 takes and it is written here so S5 adds
-   no second matcher.
-2. **Otherwise normalised title, with the year as a tie-breaker and never as a filter.**
-   The filter version is the mistake #158 records: an earlier pass required
-   ``abs(year - filmYear) <= 1`` and reported **zero** owned-but-unidentified matches —
-   an artifact, because every unidentified row has ``year IS NULL`` and was excluded by
-   the test itself. Taken at face value it would have shipped with neither an
-   identification step nor a confirmation step.
+1. **Exact on `tmdb_id` when the entry has one, and nothing else.** A CSV never has one;
+   every RSS entry does (100 of 100 measured). Since Batch X5 an entry whose film is not in
+   the catalogue is "not in the collection" and the sync gives it a film of its own: it no
+   longer falls through to the title, which put a *Psycho* (1998) watch on the owned 1960
+   film and *The Heat* (2013) on *Heat* (CT46-02).
+2. **Otherwise normalised title, where a known year more than one apart excludes a
+   candidate** (#158 amended, X5). Where either year is unknown the year never excludes,
+   which is what #158 protected: an earlier pass required ``abs(year - filmYear) <= 1``
+   everywhere and found **zero** owned-but-unidentified matches, because every
+   unidentified row has ``year IS NULL``. Among what remains, an exact year breaks a tie.
 3. **Anything that is not a single unambiguous candidate is offered, never guessed.**
    Measured across 2,047 distinct films, exactly **6 entries** are ambiguous —
    `Death on the Nile` and `Murder on the Orient Express`, both with several adaptations.
@@ -144,26 +145,43 @@ class MatchOutcome:
         return self.movie is not None and self.movie.tmdb_id is None
 
 
+#: A known year this far from the entry's rules a candidate out: a UK release date or a
+#: festival premiere can put a film's year one either side of Letterboxd's.
+YEAR_TOLERANCE = 1
+
+
+def year_excludes(entry_year: int | None, film_year: int | None) -> bool:
+    """Both years known and more than :data:`YEAR_TOLERANCE` apart (#158 amended, X5)."""
+    return (
+        entry_year is not None
+        and film_year is not None
+        and abs(entry_year - film_year) > YEAR_TOLERANCE
+    )
+
+
 def match_entry(entry: DiaryEntry, index: CollectionIndex) -> MatchOutcome:
     """Decide which film this viewing was of, or refuse to."""
     if entry.tmdb_id is not None:
+        # The feed names its film. Not in the catalogue is an answer, not a cue to guess by
+        # title (X5): the caller gives the film a row of its own.
         movie = index.by_tmdb_id.get(entry.tmdb_id)
         if movie is not None:
             return MatchOutcome(entry=entry, movie=movie, via="tmdb_id")
-        # Deliberately falls through to the title path rather than returning "not owned".
-        # An unidentified row *has* no `tmdb_id` to match on, and those are exactly the
-        # rows worth finding.
+        return MatchOutcome(entry=entry)
 
-    candidates = index.by_title.get(normalise_title(entry.title), [])
+    candidates = [
+        movie
+        for movie in index.by_title.get(normalise_title(entry.title), [])
+        if not year_excludes(entry.year, movie.year)
+    ]
     if not candidates:
         return MatchOutcome(entry=entry)
     if len(candidates) == 1:
         return MatchOutcome(entry=entry, movie=candidates[0], via="title")
 
-    # **The year breaks a tie; it never excludes a candidate.** Narrowing to an exact year
-    # is only safe among candidates that already agree on the title, and only when the
-    # entry and the row both know their year — an unidentified row's is NULL, which is the
-    # artifact #158 records.
+    # **Among what is left, an exact year breaks a tie.** A known year more than one apart
+    # was excluded above; a NULL one (an unidentified row) never is, which is the artifact
+    # #158 records.
     if entry.year is not None:
         exact = [m for m in candidates if m.year == entry.year]
         if len(exact) == 1:

@@ -19,6 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
+from src.models.collection_item import owned_film
 from src.models.completion_set import CompletionSet, member_display
 from src.models.movie import Movie
 from src.routers.movies import Database, TmdbClient
@@ -46,7 +47,7 @@ async def _owned_by_tmdb_id(db: AsyncSession, tmdb_ids: set[int]) -> dict[int, u
     rows = (
         await db.execute(
             select(Movie.tmdb_id, Movie.id).where(
-                Movie.tmdb_id.in_(tmdb_ids), Movie.deleted_at.is_(None)
+                Movie.tmdb_id.in_(tmdb_ids), Movie.deleted_at.is_(None), owned_film()
             )
         )
     ).all()

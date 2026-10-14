@@ -5,11 +5,10 @@ own username and their own watch rows; there is no version of this where one of 
 administers the other's viewing history. Same reasoning as Batch 11's notification
 endpoints.
 
-**A manual sync, because the crons are crashing.** `DECISIONS.md` #156 requires the first
-version to work from a button the way the scraper does — both Railway crons have been
-failing on every scheduled fire since 2026-09-10 (`OWNER-ACTIONS.md` item 1), so a design
-that assumed a schedule would ship inert. `letterboxd_syncs.trigger` already accepts
-``cron`` so adding one later needs no migration.
+**A manual sync, and since Batch X5 a weekly one.** `DECISIONS.md` #156 required the first
+version to work from a button; X5 adds the 08:00 job's weekly sync (``trigger = cron``,
+``letterboxd.sync_due``). Sync now also fills in, from TMDB, films the weekly sync could
+only add by the feed's title and year: the job holds no TMDB token.
 """
 
 from __future__ import annotations
@@ -20,13 +19,14 @@ from sqlalchemy import func, select
 from src.auth import CurrentUser
 from src.models.letterboxd_sync import LetterboxdSync
 from src.models.watch_log import WatchLog
-from src.routers.movies import Database
+from src.routers.movies import Database, TmdbClient
 from src.schemas.watch_history import (
     SyncResponse,
     SyncRunResponse,
     UsernameRequest,
     WatchHistoryStatusResponse,
 )
+from src.services.letterboxd.importer import fill_bare_films
 from src.services.letterboxd.sync import SyncNotConfigured, last_sync, sync_watch_history
 
 router = APIRouter(prefix="/api/v1", tags=["watch-history"])
@@ -84,7 +84,7 @@ async def set_username(
 
 
 @router.post("/watch-history/sync", response_model=SyncResponse)
-async def sync_now(user: CurrentUser, db: Database) -> SyncResponse:
+async def sync_now(user: CurrentUser, db: Database, tmdb: TmdbClient) -> SyncResponse:
     """Fetch this person's diary feed and write whatever is new.
 
     **Reuses S8's matcher and writer whole** — the feed reader's only job is to produce the
@@ -96,12 +96,15 @@ async def sync_now(user: CurrentUser, db: Database) -> SyncResponse:
     from a button on a schedule would make it happen quietly and repeatedly instead.
     """
     try:
-        result = await sync_watch_history(db, user)
+        result = await sync_watch_history(db, user, tmdb=tmdb)
     except SyncNotConfigured as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Set your Letterboxd username before syncing.",
         ) from exc
+    # Films the weekly job added with the feed's title and year alone (X5).
+    await fill_bare_films(db, tmdb)
+    await db.commit()
 
     return SyncResponse(
         run=_run_response(result.run),

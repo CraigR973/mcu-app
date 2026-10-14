@@ -18,14 +18,12 @@ import pytest_asyncio
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
-from src.matching import MatchingEngine
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.watch_log import WatchLog
 from src.services.letterboxd.diary import DiaryEntry
 from src.services.letterboxd.importer import run_import
 from src.tmdb.models import Movie as TmdbMovie
-from src.tmdb.models import SearchResult, SearchResults
 
 
 @pytest_asyncio.fixture
@@ -293,264 +291,20 @@ async def test_an_ambiguous_entry_writes_nothing_and_is_reported(
 
 
 # ---------------------------------------------------------------------------
-# Identification — the criterion's fifth clause
+# Identification is T9's now (Batch X5, CT46-01)
 # ---------------------------------------------------------------------------
-
-
-class _StubTmdb:
-    """Answers the two calls identification makes, and counts them.
-
-    Deliberately narrow. The point of these tests is what the *importer* does with a
-    confident match and with an unconfident one, not TMDB's wire format — which
-    `test_matching.py` already covers against captured payloads.
-    """
-
-    def __init__(self, *, title: str, tmdb_id: int, year: str, confident: bool = True) -> None:
-        self.title = title
-        self.tmdb_id = tmdb_id
-        self.year = year
-        self.confident = confident
-        self.searches = 0
-        self.fetches = 0
-
-    async def search_movie(
-        self,
-        query: str,
-        year: int | None = None,
-        page: int = 1,
-        language: str = "en-US",
-        include_adult: bool = False,
-    ) -> SearchResults:
-        del year, page, language, include_adult
-        self.searches += 1
-        if not self.confident:
-            # Two films that tie on title and are decades apart — exactly the shape
-            # `MatchingEngine` calls ambiguous, and exactly `Death on the Nile`'s.
-            return SearchResults(
-                page=1,
-                total_pages=1,
-                total_results=2,
-                results=[
-                    SearchResult(
-                        id=1,
-                        title=self.title,
-                        original_title=self.title,
-                        overview=query,
-                        release_date="1978-09-29",
-                        popularity=9.0,
-                    ),
-                    SearchResult(
-                        id=2,
-                        title=self.title,
-                        original_title=self.title,
-                        overview=query,
-                        release_date="2022-02-11",
-                        popularity=8.0,
-                    ),
-                ],
-            )
-        return SearchResults(
-            page=1,
-            total_pages=1,
-            total_results=1,
-            results=[
-                SearchResult(
-                    id=self.tmdb_id,
-                    title=self.title,
-                    original_title=self.title,
-                    overview=query,
-                    release_date=f"{self.year}-01-01",
-                    poster_path="/poster.jpg",
-                    popularity=42.0,
-                )
-            ],
-        )
-
-    async def get_movie_full(self, tmdb_id: int) -> TmdbMovie:
-        self.fetches += 1
-        return TmdbMovie(
-            id=tmdb_id,
-            title=self.title,
-            original_title=self.title,
-            overview="",
-            release_date=f"{self.year}-01-01",
-            runtime=140,
-            poster_path="/poster.jpg",
-        )
-
-
-async def test_a_film_the_april_import_never_identified_is_filled_in_and_reported(
-    db: AsyncSession, person: Profile
-) -> None:
-    """The criterion: **`tmdb_id`, year, poster, runtime and cast filled, each reported.**
-
-    This is the half of the import worth more than the watch rows. **396 distinct films**
-    would be identified on a live run — over half the 754 the April import never resolved
-    — because the diary names a film the collection holds only as a bare title
-    (`DECISIONS.md` #160).
-    """
-    unidentified = await _film(db, "Collector, The")
-    assert unidentified.tmdb_id is None and unidentified.year is None
-
-    tmdb = _StubTmdb(title="The Collector", tmdb_id=29259, year="1965")
-    report = await run_import(
-        db,
-        person,
-        [_entry("111", "The Collector", year=1965)],
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert report.matched_unidentified == 1
-    assert report.identified == [("The Collector", 29259)]
-
-    await db.refresh(unidentified)
-    assert unidentified.tmdb_id == 29259
-    assert unidentified.year == 1965
-    assert unidentified.poster_path == "/poster.jpg"
-    assert unidentified.runtime_minutes == 140
-    assert report.written == 1
-
-
-async def test_an_unconfident_tmdb_match_leaves_the_row_alone_and_says_so(
-    db: AsyncSession, person: Profile
-) -> None:
-    """**Identification rewrites a row that already exists**, so a guess is expensive and
-    silent. `MatchingEngine` reports a tie between films decades apart as ambiguous, and
-    the importer refuses it rather than taking TMDB's popularity ordering as an answer —
-    the same rule Batch 4's collection import follows (`DECISIONS.md` #31).
-
-    **The entry has no year**, which is what makes this a genuine tie: with no year to
-    score against, two same-titled films 44 years apart get identical confidence and the
-    leader's position comes from popularity alone. A diary row *with* a year resolves
-    instead — see the test below, which is the common case.
-
-    **The watch is still written.** Failing to identify the film is not a reason to lose
-    the record that somebody watched it.
-    """
-    unidentified = await _film(db, "Death on the Nile [1978]")
-
-    tmdb = _StubTmdb(title="Death on the Nile", tmdb_id=1, year="1978", confident=False)
-    report = await run_import(
-        db,
-        person,
-        [_entry("111", "Death on the Nile")],
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert report.identified == []
-    assert len(report.identification_failures) == 1
-    assert "left unidentified" in report.identification_failures[0]
-    assert tmdb.fetches == 0
-
-    await db.refresh(unidentified)
-    assert unidentified.tmdb_id is None
-    assert report.written == 1
-
-
-async def test_the_diary_year_resolves_a_tie_tmdb_alone_could_not(
-    db: AsyncSession, person: Profile
-) -> None:
-    """**The diary's year is the thing TMDB search does not have**, and it settles most of
-    these.
-
-    Two *Death on the Nile*s, 44 years apart, are ambiguous on title alone. The diary row
-    says 1978, so the 1978 film scores an exact year match and the 2022 one a mismatch —
-    not a tie, and identification proceeds. **Every row in both real diaries carries a
-    Year**, measured, so this is the common path and the test above is the edge.
-    """
-    unidentified = await _film(db, "Death on the Nile [1978]")
-
-    tmdb = _StubTmdb(title="Death on the Nile", tmdb_id=1, year="1978", confident=False)
-    report = await run_import(
-        db,
-        person,
-        [_entry("111", "Death on the Nile", year=1978)],
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert report.identified == [("Death on the Nile", 1)]
-    assert report.identification_failures == []
-    await db.refresh(unidentified)
-    assert unidentified.tmdb_id == 1
-
-
-async def test_a_dry_run_never_touches_tmdb(db: AsyncSession, person: Profile) -> None:
-    """A rehearsal that spent TMDB calls and rewrote nothing would be neither dry nor free."""
-    await _film(db, "Collector, The")
-    tmdb = _StubTmdb(title="The Collector", tmdb_id=29259, year="1965")
-
-    report = await run_import(
-        db,
-        person,
-        [_entry("111", "The Collector", year=1965)],
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert report.matched_unidentified == 1
-    assert tmdb.searches == 0
-    assert tmdb.fetches == 0
-    assert report.written == 0
-
-
-# ---------------------------------------------------------------------------
-# Batch 40 — identification survives the already-imported skip
 #
-# Step 1 of `OWNER-ACTIONS.md` 1i ran on 2026-09-15 without `--identify`, writing all
-# 1,555 watches. Every entry then short-circuited on its viewing id *above* the match, so
-# the identification branch became unreachable: `--identify` reported a clean run and
-# identified nothing. Nothing here caught it, because every S8 test identified on a
-# **first** run — the one case where the two halves are separable (`DECISIONS.md` #197).
-# ---------------------------------------------------------------------------
-
-
-async def test_identification_reaches_a_film_whose_watches_are_already_imported(
-    db: AsyncSession, person: Profile
-) -> None:
-    """The regression, in the order it actually happened: watches first, identify second.
-
-    This is the only test in this file whose first run writes without identifying, and it
-    is the sequence the live database is in.
-    """
-    unidentified = await _film(db, "Collector, The")
-    entries = [_entry("111", "The Collector", year=1965)]
-
-    first = await run_import(db, person, entries, dry_run=False)
-    assert first.written == 1
-    await db.refresh(unidentified)
-    assert unidentified.tmdb_id is None
-
-    tmdb = _StubTmdb(title="The Collector", tmdb_id=29259, year="1965")
-    second = await run_import(
-        db,
-        person,
-        entries,
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert second.already_imported == 1
-    assert second.identified == [("The Collector", 29259)]
-    assert second.written == 0, "the skip must still suppress the watch row"
-    assert await _watch_count(db, person) == 1
-
-    await db.refresh(unidentified)
-    assert unidentified.tmdb_id == 29259
-    assert unidentified.year == 1965
-    assert unidentified.runtime_minutes == 140
+# S8's import filled in owned films the April import never identified, through
+# `MatchingEngine`, and put three diary films on the wrong owned rows doing it (CT46-01).
+# Since X5 it identifies nothing; `identifiable` still counts the owned rows a watch landed
+# on that carry no TMDB id, for T9's `identify_films`. The tests of the removed step went
+# with it; these keep what remains.
 
 
 async def test_an_already_imported_entry_is_not_counted_as_a_row_to_write(
     db: AsyncSession, person: Profile
 ) -> None:
-    """`would_write` must keep meaning "rows a real run would insert".
-
-    Hoisting the match above the skip makes every entry reach the counters, so the two
-    that feed `would_write` are guarded and `identifiable` is not. Without that, a re-run
-    would claim it was about to write 1,555 watches it will not write.
-    """
+    """`would_write` must keep meaning "rows a real run would insert"."""
     await _film(db, "Collector, The")
     entries = [_entry("111", "The Collector", year=1965)]
     await run_import(db, person, entries, dry_run=False)
@@ -564,137 +318,117 @@ async def test_an_already_imported_entry_is_not_counted_as_a_row_to_write(
     assert len(report.identifiable) == 1, "still one film needing a tmdb_id"
 
 
-async def test_a_dry_run_reports_the_films_it_would_identify_without_touching_tmdb(
-    db: AsyncSession, person: Profile
-) -> None:
-    """`identifiable` is the rehearsal, and it stays free.
-
-    A dry run spends no TMDB calls, so it can say how many films it would identify and
-    what they are called locally, but not what any of them becomes. Keeping that true is
-    why `identifiable` is filled from the row rather than from a search.
-    """
-    await _film(db, "Collector, The")
-    await _film(db, "39 Steps The (Robert Donat)")
-    entries = [
-        _entry("111", "The Collector", year=1965),
-        _entry("222", "The 39 Steps", year=1935),
-    ]
-    await run_import(db, person, entries, dry_run=False)
-    tmdb = _StubTmdb(title="The Collector", tmdb_id=29259, year="1965")
-
+async def test_the_import_never_rewrites_an_owned_film(db: AsyncSession, person: Profile) -> None:
+    """A watch lands on an unidentified owned row by title, and the row is left as it was:
+    no `MatchingEngine`, no TMDB, no identification (X5)."""
+    collector = await _film(db, "Collector, The")
     report = await run_import(
-        db,
-        person,
-        entries,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
+        db, person, [_entry("111", "The Collector", year=1965)], dry_run=False
     )
 
-    assert sorted(report.identifiable.values()) == ["39 Steps The (Robert Donat)", "Collector, The"]
-    assert report.identified == []
-    assert tmdb.searches == 0
-    assert tmdb.fetches == 0
+    await db.refresh(collector)
+    assert (collector.tmdb_id, collector.title) == (None, "Collector, The")
+    assert report.written == 1
+    assert sorted(report.identifiable.values()) == ["Collector, The"]
+
+
+# ---------------------------------------------------------------------------
+# Films not owned — Batch X5 (#269)
+# ---------------------------------------------------------------------------
+
+
+class _Details:
+    """TMDB's details for a film, counted. The importer asks for nothing else."""
+
+    def __init__(self) -> None:
+        self.asked: list[int] = []
+
+    async def get_movie_full(self, movie_id: int, language: str = "en-US") -> TmdbMovie:
+        del language
+        self.asked.append(movie_id)
+        return TmdbMovie(
+            id=movie_id,
+            title="The Heat",
+            original_title="The Heat",
+            overview="Two cops.",
+            release_date="2013-06-28",
+            runtime=117,
+            poster_path="/heat2013.jpg",
+        )
+
+
+def _feed_entry(viewing_id: str, title: str, year: int, tmdb_id: int) -> DiaryEntry:
+    return DiaryEntry(
+        viewing_id=viewing_id,
+        watched_at=date(2026, 10, 1),
+        title=title,
+        year=year,
+        rating=None,
+        is_rewatch=False,
+        tmdb_id=tmdb_id,
+    )
+
+
+async def test_a_film_not_in_the_catalogue_gets_a_row_and_the_watch(
+    db: AsyncSession, person: Profile
+) -> None:
+    """The feed's *The Heat* (2013) beside an owned *Heat* (1995): a row of its own, filled
+    in from TMDB, with no copies, and the watch on it carrying the feed's id."""
+    heat_1995 = await _film(db, "Heat", 1995, tmdb_id=949)
+    details = _Details()
+    entries = [
+        _feed_entry("501", "The Heat", 2013, 136795),
+        _feed_entry("502", "The Heat", 2013, 136795),
+    ]
+
+    report = await run_import(db, person, entries, dry_run=False, tmdb=details)
+
+    assert (report.written, report.matched_not_owned, report.films_filled) == (2, 2, 1)
+    assert report.films_added == {136795: "The Heat"}
+    assert details.asked == [136795], "one TMDB call per film, not per watch"
+    rows = list(await db.scalars(select(WatchLog).where(WatchLog.user_id == person.id)))
+    assert {row.tmdb_id for row in rows} == {136795}
+    assert heat_1995.id not in {row.movie_id for row in rows}
+    film = await db.get(Movie, rows[0].movie_id)
+    assert film is not None
+    assert (film.title, film.year, film.poster_path) == ("The Heat", 2013, "/heat2013.jpg")
+    assert film.last_tmdb_sync_utc is not None
+
+
+async def test_without_tmdb_the_row_keeps_the_feeds_title_and_year(
+    db: AsyncSession, person: Profile
+) -> None:
+    """The 08:00 job holds no TMDB token: the row is bare until a Sync now fills it."""
+    report = await run_import(
+        db, person, [_feed_entry("601", "The Heat", 2013, 136795)], dry_run=False
+    )
+    film = (await db.scalars(select(Movie).where(Movie.tmdb_id == 136795))).one()
+    assert (film.title, film.year, film.last_tmdb_sync_utc) == ("The Heat", 2013, None)
+    assert report.films_filled == 0
+
+
+async def test_a_dry_run_counts_the_films_it_would_add_and_adds_none(
+    db: AsyncSession, person: Profile
+) -> None:
+    entries = [_feed_entry("701", "The Heat", 2013, 136795)]
+    report = await run_import(db, person, entries)
+    assert (report.matched_not_owned, report.would_write, report.written) == (1, 1, 0)
+    assert report.films_added == {136795: "The Heat"}
+    assert await db.scalar(select(func.count(Movie.id)).where(Movie.tmdb_id == 136795)) == 0
+
+
+async def test_a_film_in_the_trash_holding_the_id_is_left_alone(
+    db: AsyncSession, person: Profile
+) -> None:
+    from datetime import datetime
+
+    trashed = await _film(db, "The Heat", 2013, tmdb_id=136795)
+    trashed.deleted_at = datetime(2026, 10, 1)
+    await db.flush()
+
+    report = await run_import(
+        db, person, [_feed_entry("801", "The Heat", 2013, 136795)], dry_run=False
+    )
+
     assert report.written == 0
-
-
-async def test_a_film_watched_more_than_once_is_put_to_tmdb_only_once(
-    db: AsyncSession, person: Profile
-) -> None:
-    """Characterisation, not a regression — and worth saying so.
-
-    This passes against the unfixed importer too, because a *successful* identification
-    sets `tmdb_id` and so hides the film from the next entry. It is here to keep that
-    true: the guard that matters is the one below, for identifications that **fail** and
-    leave `tmdb_id` NULL.
-    """
-    await _film(db, "Collector, The")
-    entries = [
-        _entry("111", "The Collector", year=1965),
-        _entry("222", "The Collector", year=1965, rewatch=True, watched=date(2026, 9, 2)),
-        _entry("333", "The Collector", year=1965, rewatch=True, watched=date(2026, 9, 3)),
-    ]
-    tmdb = _StubTmdb(title="The Collector", tmdb_id=29259, year="1965")
-
-    report = await run_import(
-        db,
-        person,
-        entries,
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert tmdb.searches == 1
-    assert tmdb.fetches == 1
-    assert report.identified == [("The Collector", 29259)]
-    assert report.written == 3, "all three watches still land"
-    assert len(report.identifiable) == 1, "one film, however many times it was watched"
-
-
-async def test_a_film_tmdb_cannot_resolve_is_not_retried_for_every_watch(
-    db: AsyncSession, person: Profile
-) -> None:
-    """A *failed* identification leaves `tmdb_id` NULL, so it still looks like work to do.
-
-    That is the case the `tmdb_id` check cannot close by itself, and the films with no
-    confident match are exactly the messy-titled ones someone watched repeatedly. The
-    visible cost was the **report**: one failure line per watch rather than per film, so
-    the count a person reads after the run was the wrong number. The searches behind the
-    retries were already cache hits — `MatchingEngine` caches on (title, year) — so this
-    is about what the run *says*, not what it spends.
-    """
-    await _film(db, "Death on the Nile [1978]")
-    entries = [
-        _entry("111", "Death on the Nile"),
-        _entry("222", "Death on the Nile", rewatch=True, watched=date(2026, 9, 2)),
-    ]
-    tmdb = _StubTmdb(title="Death on the Nile", tmdb_id=1, year="1978", confident=False)
-
-    report = await run_import(
-        db,
-        person,
-        entries,
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert report.identified == []
-    assert len(report.identification_failures) == 1, "one line per film, not per watch"
-    assert report.written == 2
-
-
-async def test_a_later_watch_follows_a_film_that_identification_merged_away(
-    db: AsyncSession, person: Profile
-) -> None:
-    """The index is built before the loop and a merge deletes a row inside it.
-
-    `apply_identification` merges when the collection already holds the TMDB id — here the
-    same film sits in the sheet twice, once identified and once as a bare title. The
-    second entry still matches the deleted row through the stale index.
-
-    **Re-identifying that row is idempotent, not destructive** — it merges into the same
-    survivor again, and the watch still lands on the right film. Measured, not assumed:
-    every assertion here except the fetch count passes against the unfixed importer. What
-    following the merge saves is the second `get_movie_full` over the wire, and a
-    delete-and-reinsert of the survivor's credits behind it.
-    """
-    survivor = await _film(db, "Le Collectionneur", year=1965, tmdb_id=29259)
-    doomed = await _film(db, "Collector, The")
-    entries = [
-        _entry("111", "The Collector", year=1965),
-        _entry("222", "The Collector", year=1965, rewatch=True, watched=date(2026, 9, 2)),
-    ]
-    tmdb = _StubTmdb(title="The Collector", tmdb_id=29259, year="1965")
-
-    report = await run_import(
-        db,
-        person,
-        entries,
-        dry_run=False,
-        engine=MatchingEngine(tmdb),  # type: ignore[arg-type]
-    )
-
-    assert report.written == 2
-    assert tmdb.fetches == 1, "the merged-away row must not be fetched from TMDB again"
-
-    rows = list(await db.scalars(select(WatchLog.movie_id).where(WatchLog.user_id == person.id)))
-    assert rows == [survivor.id, survivor.id], "both watches hang off the surviving row"
-    assert await db.get(Movie, doomed.id) is None
+    assert report.in_trash == ["The Heat (2013)"]

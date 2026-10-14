@@ -23,6 +23,7 @@ from sqlalchemy import Text, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
+from src.models.collection_item import owned_film
 from src.models.movie import Movie
 from src.models.movie_night import (
     MovieNightParticipant,
@@ -273,7 +274,8 @@ async def seeded_candidates(
     These become suggestions credited to nobody: Batch 35 dealt them, no one put them
     forward.
     """
-    query = select(Movie).where(Movie.deleted_at.is_(None))
+    # The deck is the shelf: a film only watched or wanted has a row too (#269).
+    query = select(Movie).where(Movie.deleted_at.is_(None), owned_film())
 
     filters = session.filters or {}
     if isinstance(filters.get("decadeFrom"), int):

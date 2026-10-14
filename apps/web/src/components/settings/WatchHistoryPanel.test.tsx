@@ -82,7 +82,20 @@ describe('WatchHistoryPanel', () => {
     })
 
     renderPanel()
-    expect(await screen.findByText('Never synced')).not.toBeNull()
+    expect(await screen.findByText(/not synced yet\./)).not.toBeNull()
+  })
+
+  it("says the feed's window and that the app syncs weekly (Batch X5, UX48-04)", async () => {
+    vi.mocked(fetchWatchHistoryStatus).mockResolvedValue({
+      letterboxdUsername: 'markr973',
+      lastSync: RUN,
+      watchCount: 972,
+    })
+
+    renderPanel()
+    expect(
+      await screen.findByText(/Letterboxd’s feed holds your last 50 diary entries\. The app syncs weekly; last synced/),
+    ).not.toBeNull()
   })
 
   it('shows a failed run as failed rather than as a successful one', async () => {

@@ -1,179 +1,131 @@
-"""Import a Letterboxd diary into `watch_log` — Batch S8, snag 10b.
+"""Record every dated diary entry not yet recorded — Batch X5 (#269), on S8's import.
 
-Usage (from the repo root):
+Two steps, as T9's identification has (``services/letterboxd/backfill.py``):
 
-    DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" \\
-    PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history \\
-        --csv .letterboxd-export/craig-diary.csv \\
-        --user "Craig" \\
-        [--write] [--identify] [--ambiguous-out ambiguous.csv]
+    DATABASE_URL=... TMDB_READ_TOKEN=... PYTHONPATH=apps/api \\
+      apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history plan \\
+        --csv .letterboxd-export/craig-diary.csv --user Craig \\
+        --out .letterboxd-export/craig-backfill.json \\
+        --doubtful .letterboxd-export/craig-doubtful.csv
+
+    DATABASE_URL=... TMDB_READ_TOKEN=... PYTHONPATH=apps/api \\
+      apps/api/.venv/bin/python3.12 -m src.scripts.import_watch_history apply \\
+        --plan .letterboxd-export/craig-backfill.json
+
+``plan`` writes nothing to the database: it can run on the read-only role. It decides each
+unrecorded entry (an owned film, a film already listed, a film to add, or doubtful), saves
+that as JSON, writes the doubtful ones to a CSV for Craig, and prints the counts. ``apply``
+writes the plan's watches and adds its films, exactly, after checking each is still
+unrecorded. **``apply`` is a live data change: it runs at Craig's word, with the counts
+``plan`` printed** (`docs/agent-commands/group-start.md`).
+
+**Re-running is safe.** Every watch carries its ``letterboxd_viewing_id``; an entry already
+recorded is skipped by both steps, so a second ``apply`` of the same plan writes nothing.
 
 **Do not use `set -a; source apps/api/.env.local`.** `DATABASE_URL` is unquoted in that
-file and contains an `&`, so sourcing splits the line and the value silently truncates —
-the script then falls back to `localhost:5432` and fails with a connection error that
-reads like a Neon outage (`DECISIONS.md` #191). The `$(...)` form above keeps it one word.
+file and contains an `&`, so sourcing splits the line and the value silently truncates
+(`DECISIONS.md` #191). Export each value whole.
 
-**It is a dry run unless you pass `--write`.** That is the wrong way round for
-convenience and the right way round for this: a real run writes ~1,530 watch rows and,
-with `--identify`, **overwrites 396 existing `movies` rows** with TMDB metadata
-(`DECISIONS.md` #160). `docs/agent-commands/group-start.md` puts an operation of that size
-in the owner's hands, so no agent runs it.
-
-**Re-running is safe.** Every row carries its `letterboxd_viewing_id`, and a viewing
-already present for that person writes nothing — so a second run of the same file writes
-zero rows, and S5's RSS sync cannot re-import a viewing this file already wrote (#159, #161).
-
-**`--identify` is not subject to that skip, since Batch 40 — and was, before it.** Step 1
-of `OWNER-ACTIONS.md` 1i ran on 2026-09-15 **without** `--identify`, which wrote all 1,555
-watches. Every entry then short-circuited on its viewing id *above* the match, so the
-identification branch became unreachable and `--identify` reported a clean run having
-identified nothing (`DECISIONS.md` #197). The skip now suppresses the watch row alone.
-On this database `--identify --write` therefore identifies ~396 films and writes **0**
-watches, and the summary says so.
-
-**`--identify` is separate from `--write` on purpose.** Writing watches is additive and
-reversible: the rows soft-delete, and nothing that existed before changes. Identification
-is neither — it rewrites title, year, poster, runtime and cast on rows that are already
-there, and merges two rows into one where the collection turns out to hold both. They are
-different-sized decisions and deserve different flags.
-
-**Ambiguities are printed, never guessed.** Six across 2,322 entries — `Death on the Nile`
-and `Murder on the Orient Express` — and `--ambiguous-out` writes them to a CSV so they
-can be settled by hand.
+Since X5 this command no longer identifies owned films (``--identify`` is gone): its
+``MatchingEngine`` step put three diary films on the wrong owned rows (CT46-01). That is
+T9's job, ``src.scripts.identify_films``.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
-import csv
+import uuid
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.config import settings
-from src.matching import MatchingEngine
 from src.models.profile import Profile
-from src.services.letterboxd import ImportReport, read_diary_csv, run_import
+from src.services.identify.matcher import Identifier
+from src.services.letterboxd import read_diary_csv
+from src.services.letterboxd.backfill import (
+    BackfillPlan,
+    apply_backfill,
+    plan_backfill,
+    write_doubtful,
+)
 from src.tmdb import TMDBClient
 
 
-async def _resolve_profile(db: AsyncSession, display_name: str) -> Profile:
-    profile = await db.scalar(select(Profile).where(Profile.display_name == display_name))
-    if profile is None:
+async def _resolve_person(db: AsyncSession, display_name: str) -> tuple[uuid.UUID, str]:
+    """The profile's id and name, and nothing else: the read-only role cannot read a PIN."""
+    row = (
+        await db.execute(
+            select(Profile.id, Profile.display_name).where(Profile.display_name == display_name)
+        )
+    ).first()
+    if row is None:
         known = list(await db.scalars(select(Profile.display_name)))
         raise SystemExit(f"No profile named {display_name!r}. Known profiles: {known}")
-    return profile
+    return row[0], row[1]
 
 
-def _write_ambiguous(report: ImportReport, path: Path) -> None:
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(["line", "viewing_id", "diary_title", "diary_year", "candidates"])
-        for item in report.ambiguous:
-            writer.writerow(
-                [
-                    item.entry.line,
-                    item.entry.viewing_id,
-                    item.entry.title,
-                    item.entry.year or "",
-                    " | ".join(
-                        f"{movie.title} ({movie.year if movie.year is not None else '?'})"
-                        for movie in item.candidates
-                    ),
-                ]
-            )
+def _progress(films: int) -> None:
+    if films % 25 == 0:
+        print(f"  … {films} films put to TMDB", flush=True)
 
 
-async def run(
-    csv_path: Path,
-    display_name: str,
-    *,
-    write: bool,
-    identify: bool,
-    ambiguous_out: Path | None,
-) -> ImportReport:
+async def run_plan(csv_path: Path, display_name: str, out: Path, doubtful: Path) -> int:
     entries = read_diary_csv(csv_path)
-
     engine = create_async_engine(settings.database_url, pool_pre_ping=True)
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
     try:
-        async with session_factory() as db:
-            profile = await _resolve_profile(db, display_name)
-            if identify and write:
-                async with TMDBClient() as tmdb:
-                    report = await run_import(
-                        db, profile, entries, dry_run=not write, engine=MatchingEngine(tmdb)
-                    )
-            else:
-                report = await run_import(db, profile, entries, dry_run=not write)
+        async with async_sessionmaker(engine, expire_on_commit=False)() as db:
+            person = await _resolve_person(db, display_name)
+            async with TMDBClient() as tmdb:
+                plan = await plan_backfill(db, person, entries, Identifier(tmdb), on_film=_progress)
+            await db.rollback()
     finally:
         await engine.dispose()
+    out.write_text(plan.to_json() + "\n", encoding="utf-8")
+    asked = write_doubtful(plan, doubtful)
+    print(plan.summary())
+    print(f"  TMDB calls                {plan.tmdb_calls}")
+    print(f"\nPlan saved to {out}; {asked} doubtful entries listed in {doubtful}.")
+    print("Nothing was written. `apply --plan` writes it, at Craig's word.")
+    return 0
 
-    if ambiguous_out is not None and report.ambiguous:
-        _write_ambiguous(report, ambiguous_out)
-    return report
+
+async def run_apply(plan_path: Path) -> int:
+    plan = BackfillPlan.from_json(plan_path.read_text(encoding="utf-8"))
+    engine = create_async_engine(settings.database_url, pool_pre_ping=True)
+    try:
+        async with (
+            async_sessionmaker(engine, expire_on_commit=False)() as db,
+            TMDBClient() as tmdb,
+        ):
+            result = await apply_backfill(db, plan, tmdb)
+    finally:
+        await engine.dispose()
+    print(f"{plan.person}: wrote {result.written} watches; added {result.films_added} films")
+    print(f"  filled in from TMDB       {result.films_filled}")
+    print(f"  recorded since the plan   {result.already}")
+    for line in result.skipped:
+        print(f"  skipped: {line}")
+    return 0
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--csv", required=True, type=Path, help="A Letterboxd diary CSV")
-    parser.add_argument("--user", required=True, help="The profile display name to log against")
-    parser.add_argument(
-        "--write",
-        action="store_true",
-        help="Actually write. Without it this is a dry run and touches nothing.",
-    )
-    parser.add_argument(
-        "--identify",
-        action="store_true",
-        help="Also fill in films the April import never identified. Overwrites movies rows.",
-    )
-    parser.add_argument("--ambiguous-out", type=Path, default=None)
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    commands = parser.add_subparsers(dest="command", required=True)
+    plan = commands.add_parser("plan", help="decide every unrecorded entry; write nothing")
+    plan.add_argument("--csv", required=True, type=Path, help="A Letterboxd diary CSV")
+    plan.add_argument("--user", required=True, help="The profile display name")
+    plan.add_argument("--out", required=True, type=Path, help="Where the plan is saved")
+    plan.add_argument("--doubtful", required=True, type=Path, help="The CSV for Craig")
+    apply = commands.add_parser("apply", help="write a saved plan, at Craig's word")
+    apply.add_argument("--plan", required=True, type=Path)
     args = parser.parse_args()
-
-    report = asyncio.run(
-        run(
-            args.csv,
-            args.user,
-            write=args.write,
-            identify=args.identify,
-            ambiguous_out=args.ambiguous_out,
-        )
-    )
-
-    print("\n=== Letterboxd import ===")
-    print(report.summary())
-    if report.ambiguous:
-        print(f"\n  {len(report.ambiguous)} ambiguous — offered, not guessed:")
-        for item in report.ambiguous[:20]:
-            print(f"    - {item.describe()}")
-        if len(report.ambiguous) > 20:
-            print(f"    … and {len(report.ambiguous) - 20} more")
-        if args.ambiguous_out:
-            print(f"  written to {args.ambiguous_out}")
-    if report.dry_run and report.identifiable:
-        print(f"\n  {len(report.identifiable)} films would be identified:")
-        for title in list(report.identifiable.values())[:20]:
-            print(f"    - {title}")
-        if len(report.identifiable) > 20:
-            print(f"    … and {len(report.identifiable) - 20} more")
-        print("  Local titles only — a dry run spends no TMDB calls, so it cannot say")
-        print("  what each becomes. Pass --identify --write to resolve them.")
-    if report.identified:
-        print(f"\n  {len(report.identified)} films identified:")
-        for title, tmdb_id in report.identified[:20]:
-            print(f"    - {title} (tmdb {tmdb_id})")
-        if len(report.identified) > 20:
-            print(f"    … and {len(report.identified) - 20} more")
-    if report.identification_failures:
-        print(f"\n  {len(report.identification_failures)} identifications failed:")
-        for failure in report.identification_failures[:10]:
-            print(f"    - {failure}")
-    if report.dry_run:
-        print(f"\n  A real run would write {report.would_write} watches. Pass --write.")
+    if args.command == "plan":
+        return asyncio.run(run_plan(args.csv, args.user, args.out, args.doubtful))
+    return asyncio.run(run_apply(args.plan))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
