@@ -159,17 +159,21 @@ export function WatchHistoryPanel() {
           Sync now
         </Button>
 
-        {/* The line this panel exists for. */}
-        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" aria-hidden />
-          {lastSync ? (
-            <span>
-              Last synced <strong className="text-foreground">{sinceLabel(lastSync.startedAt)}</strong>
-              {lastSync.error ? ' — and it failed' : ` · ${String(lastSync.written)} new`}
-            </span>
-          ) : (
-            <span>Never synced</span>
-          )}
+        {/* The line this panel exists for. Batch X5 (UX48-04): the feed's window and the
+            weekly sync are said, so nobody has to know them to trust the history. */}
+        <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span>
+            Letterboxd&rsquo;s feed holds your last 50 diary entries. The app syncs weekly;{' '}
+            {lastSync ? (
+              <>
+                last synced <strong className="text-foreground">{sinceLabel(lastSync.startedAt)}</strong>
+                {lastSync.error ? ', and it failed.' : ` · ${String(lastSync.written)} new.`}
+              </>
+            ) : (
+              'not synced yet.'
+            )}
+          </span>
         </p>
 
         <span className="ml-auto text-sm tabular-nums text-muted-foreground">
@@ -204,7 +208,7 @@ export function WatchHistoryPanel() {
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <span>
                 The feed came back full at 50 entries, so older viewings may already have
-                dropped off it. Sync at least monthly to keep up.
+                dropped off it.
               </span>
             </p>
           ) : null}

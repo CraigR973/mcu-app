@@ -27,6 +27,8 @@ from sqlalchemy import (
     String,
     Text,
     and_,
+    exists,
+    select,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -106,6 +108,20 @@ def owned_copy() -> ColumnElement[bool]:
     return and_(
         CollectionItem.deleted_at.is_(None),
         CollectionItem.listing_status.in_(OWNED_LISTING_STATUSES),
+    )
+
+
+def owned_film() -> ColumnElement[bool]:
+    """A film row with at least one owned copy: a film *in the collection* — Batch X5.
+
+    A ``movies`` row is not a film you own. Wanted films have rows, and since X5 so does
+    every film either person watched, kept for its watches (#269). Anything that counts or
+    deals "the collection" asks this, not for a live ``movies`` row.
+    """
+    from src.models.movie import Movie
+
+    return exists(
+        select(CollectionItem.id).where(CollectionItem.movie_id == Movie.id, owned_copy())
     )
 
 

@@ -24,6 +24,12 @@ heartbeat, the eBay scan, each person's notifications, readiness, the database's
 locks and identification's doubts, each result recorded, and one push to Craig for each new
 problem, delivered with the morning's reminders. Problems found do not fail the job; the job
 fails only when it could not do its own work.
+
+**Since Batch X5 it also keeps the watch history current**: each person with a Letterboxd
+username is synced once a week (``letterboxd.sync_due``, ``trigger = cron``), so a 50-entry
+feed never runs out between syncs. A failed sync is recorded on its run and never fails the
+job. The job has no TMDB token, so a film it gives a row keeps the feed's title and year
+until a Sync now in the app fills it in.
 """
 
 from __future__ import annotations
@@ -35,10 +41,11 @@ from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from src.clock import utc_today
+from src.clock import utc_today, utcnow
 from src.config import settings
 from src.services import heartbeat
 from src.services.health_checks import CheckSummary, run_daily_check
+from src.services.letterboxd.sync import SyncResult, sync_due
 from src.services.notifications import deliver_pending
 from src.services.push_transport import push_sender
 from src.services.reminders import ReminderSummary, run_reminders
@@ -51,6 +58,7 @@ def report(
     failed: int,
     deliver: bool,
     check: CheckSummary | None = None,
+    synced: list[SyncResult] | None = None,
 ) -> int:
     """Print what the pass did and return the exit code the cron will see.
 
@@ -68,6 +76,10 @@ def report(
         print(f"daily check:       {check.checked} checks, {check.problems} problems")
         for message in check.new or []:
             print(f"  new:             {message}")
+    for result in synced or []:
+        run = result.run
+        outcome = run.error or f"{run.written} written of {run.entries}"
+        print(f"watch history:     {outcome}")
 
     # Gotcha 16 again: a delivery failure must not hide behind the queued count above it.
     if failed:
@@ -84,6 +96,8 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
             # Batch X2: the daily check, queued before delivery so its pushes go out now.
             check = await run_daily_check(db)
             await db.commit()
+            # Batch X5: the weekly watch-history sync, each run recorded on its own row.
+            synced = await sync_due(db, now=utcnow())
             delivered = 0
             failed = 0
             if deliver:
@@ -95,7 +109,9 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
             await heartbeat.beat(db, heartbeat.REMINDERS, "ran")
     finally:
         await engine.dispose()
-    return report(summary, delivered=delivered, failed=failed, deliver=deliver, check=check)
+    return report(
+        summary, delivered=delivered, failed=failed, deliver=deliver, check=check, synced=synced
+    )
 
 
 def main() -> int:

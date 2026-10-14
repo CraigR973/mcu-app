@@ -28,6 +28,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
+from src.models.collection_item import owned_film
 from src.models.completion_set import MIN_OWNED_FOR_SET, CompletionSet
 from src.models.movie import Movie, MovieCredit
 from src.tmdb import PersonMovieCredit, PersonMovieCredits, TMDBClient
@@ -102,6 +103,8 @@ async def candidate_people(
                     # against a filmography — counting it as owned would overstate every
                     # set it appears in.
                     Movie.tmdb_id.is_not(None),
+                    # A film only watched or wanted has a row, but is not owned (#269).
+                    owned_film(),
                 )
                 .group_by(MovieCredit.tmdb_person_id, MovieCredit.person_name)
                 .having(owned >= min_owned)

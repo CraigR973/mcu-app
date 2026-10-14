@@ -23,6 +23,7 @@ import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
+from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.movie_night import (
     MovieNightParticipant,
@@ -65,7 +66,10 @@ async def _profile(db: AsyncSession, role: UserRole = UserRole.admin) -> Profile
     return profile
 
 
-async def _movie(db: AsyncSession, title: str, *, year: int | None = 2010) -> Movie:
+async def _movie(
+    db: AsyncSession, title: str, *, year: int | None = 2010, owned: bool = True
+) -> Movie:
+    """A film, on the shelf unless ``owned`` is false: the deck is the shelf (Batch X5)."""
     movie = Movie(
         id=uuid.uuid4(),
         tmdb_id=None,
@@ -76,6 +80,9 @@ async def _movie(db: AsyncSession, title: str, *, year: int | None = 2010) -> Mo
     )
     db.add(movie)
     await db.flush()
+    if owned:
+        db.add(CollectionItem(id=uuid.uuid4(), movie_id=movie.id, formats=["blu_ray"]))
+        await db.flush()
     return movie
 
 
@@ -352,6 +359,18 @@ class TestTheShortlist:
         deck = await seeded_candidates(db, session=session)
 
         assert {movie.id for movie in deck} == {modern.id}
+
+    async def test_a_film_only_watched_or_wanted_is_not_dealt(self, db: AsyncSession) -> None:
+        """Batch X5 (#269): a film either person watched has a row now, and so does a want.
+        Neither is on the shelf, so neither is a movie night card."""
+        craig = await _profile(db)
+        session = await _session(db, craig)
+        shelf = await _movie(db, "On The Shelf")
+        await _movie(db, "Only Watched", owned=False)
+
+        deck = await seeded_candidates(db, session=session)
+
+        assert {movie.id for movie in deck} == {shelf.id}
 
     async def test_seeding_twice_does_not_double_the_list(self, db: AsyncSession) -> None:
         craig = await _profile(db)

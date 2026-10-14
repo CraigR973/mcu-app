@@ -12,12 +12,17 @@ the ordering exists to avoid.
 **Recording the run is not bookkeeping.** The feed returns 50 entries and no more: Mark
 cycles his in about eight weeks, so a sync that quietly stops running loses history
 without failing. `letterboxd_syncs` is how "when did this last run" becomes answerable.
+
+**Since Batch X5 it also runs weekly by itself** (:func:`sync_due`, inside the 08:00
+reminders job, ``trigger = cron``), and a feed entry for a film not in the catalogue gives
+the film a row of its own rather than being dropped (#269).
 """
 
 from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 import httpx
 import structlog
@@ -29,7 +34,7 @@ from src.models.letterboxd_sync import LetterboxdSync
 from src.models.profile import Profile
 from src.services.letterboxd.diary import DiaryParseError
 from src.services.letterboxd.feed import FEED_ENTRY_CAP, fetch_feed
-from src.services.letterboxd.importer import run_import
+from src.services.letterboxd.importer import TmdbDetails, run_import
 
 log = structlog.get_logger(__name__)
 
@@ -71,6 +76,7 @@ async def sync_watch_history(
     *,
     trigger: str = "manual",
     client: httpx.AsyncClient | None = None,
+    tmdb: TmdbDetails | None = None,
 ) -> SyncResult:
     """Fetch this person's diary feed and write whatever is new.
 
@@ -81,7 +87,9 @@ async def sync_watch_history(
 
     **Identification is not attempted here**, even though every feed entry carries a TMDB
     id. A sync that rewrote `movies` rows on a schedule would make an operation the owner
-    was asked to authorise in S8 happen quietly and repeatedly instead.
+    was asked to authorise in S8 happen quietly and repeatedly instead. **A film the feed
+    names and the catalogue lacks gets a new row** (X5), which rewrites nothing; ``tmdb``
+    fills its details in when given (the app's Sync now; the 08:00 job has no token).
     """
     if not profile.letterboxd_username:
         raise SyncNotConfigured(f"{profile.display_name} has no Letterboxd username set")
@@ -107,7 +115,7 @@ async def sync_watch_history(
         log.warning("letterboxd_sync_failed", user=str(profile.id), error=run.error)
         return SyncResult(run=run, ambiguities=[], feed_was_full=False)
 
-    report = await run_import(db, profile, entries, dry_run=False)
+    report = await run_import(db, profile, entries, dry_run=False, tmdb=tmdb)
 
     run.finished_at_utc = utcnow()
     run.entries = report.entries
@@ -130,3 +138,37 @@ async def sync_watch_history(
         ambiguities=[item.describe() for item in report.ambiguous],
         feed_was_full=len(entries) >= FEED_ENTRY_CAP,
     )
+
+
+#: How often the 08:00 job syncs each person (X5): weekly, so a 50-entry feed never runs out
+#: between syncs even at Mark's pace of about eight weeks per 50. Six and a half days, so a
+#: daily job whose start drifts by minutes still syncs on the seventh day, not the eighth.
+SYNC_EVERY = timedelta(days=6, hours=12)
+
+
+async def sync_due(
+    db: AsyncSession, *, now: datetime, client: httpx.AsyncClient | None = None
+) -> list[SyncResult]:
+    """Sync everyone with a username whose last sync, by any trigger, is a week old.
+
+    A failure is recorded on that person's run row, and never stops the other person's
+    sync or the job around it (`run_reminders.py`).
+    """
+    people = list(
+        await db.scalars(
+            select(Profile)
+            .where(Profile.letterboxd_username.is_not(None), Profile.letterboxd_username != "")
+            .order_by(Profile.display_name)
+        )
+    )
+    results: list[SyncResult] = []
+    for person in people:
+        last = await last_sync(db, person.id)
+        if last is not None and last.started_at_utc > now - SYNC_EVERY:
+            continue
+        try:
+            results.append(await sync_watch_history(db, person, trigger="cron", client=client))
+        except Exception:  # noqa: BLE001 - one person's failure must not stop the job
+            await db.rollback()
+            log.warning("letterboxd_weekly_sync_failed", user=str(person.id), exc_info=True)
+    return results

@@ -270,14 +270,37 @@ class TestMatching:
         assert index.total == 0
         assert match_entry(_entry("Heat", 1995, tmdb_id=949), index).movie is None
 
-    def test_an_rss_entry_whose_tmdb_id_is_unknown_still_matches_on_title(self) -> None:
-        """S5's case, and the reason the tmdb path falls through rather than returning.
+    def test_an_rss_entry_never_falls_back_to_a_title(self) -> None:
+        """Batch X5 reverses S5's fall-through (CT46-02, #269).
 
-        An unidentified row *has* no `tmdb_id` to match on — and those are exactly the
-        rows worth finding, because matching one is what lets the sync identify it.
+        The feed names its film. Falling back to the title put a *Psycho* (1998) watch on
+        the owned 1960 film; now a film the catalogue lacks is "not in the collection", and
+        the sync gives it a row of its own. An unidentified owned row is left for T9.
         """
         unidentified = _film("Collector, The")
         index = build_index([unidentified])
         outcome = match_entry(_entry("The Collector", 1965, tmdb_id=12345), index)
-        assert outcome.movie is unidentified
-        assert outcome.via == "title"
+        assert outcome.movie is None
+        assert outcome.ambiguity is None
+
+    def test_a_known_year_more_than_one_apart_excludes_a_candidate(self) -> None:
+        """**X5's guard (#158 amended).** The diary's *Psycho* (1998) is not the owned 1960
+        film, and *The Heat* (2013) is not Michael Mann's *Heat* (1995), though the leading
+        article goes and the titles meet: the September import put both on the wrong film.
+        """
+        index = build_index([_film("Psycho", 1960), _film("Heat", 1995)])
+        assert match_entry(_entry("Psycho", 1998), index).movie is None
+        assert match_entry(_entry("The Heat", 2013), index).movie is None
+
+    def test_a_year_one_apart_still_matches(self) -> None:
+        """A UK release date or a festival premiere can put a film's year one either side."""
+        owned = _film("Dunkirk", 2017)
+        index = build_index([owned])
+        assert match_entry(_entry("Dunkirk", 2016), index).movie is owned
+        assert match_entry(_entry("Dunkirk", 2018), index).movie is owned
+
+    def test_an_entry_without_a_year_is_never_excluded_by_one(self) -> None:
+        """The other side of #158: an unknown year on either side never excludes."""
+        owned = _film("Psycho", 1960)
+        index = build_index([owned])
+        assert match_entry(_entry("Psycho", None), index).movie is owned

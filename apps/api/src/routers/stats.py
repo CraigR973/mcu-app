@@ -23,7 +23,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
 from src.models.admin_action import AdminAction
-from src.models.collection_item import FORMAT_RANK, SECTIONS, CollectionItem, owned_copy
+from src.models.collection_item import (
+    FORMAT_RANK,
+    SECTIONS,
+    CollectionItem,
+    owned_copy,
+    owned_film,
+)
 from src.models.movie import Movie
 from src.models.profile import Profile
 from src.models.watch_log import WatchLog
@@ -130,7 +136,7 @@ async def _genre_slices(db: AsyncSession) -> list[CountSlice]:
             select(element.c.genre_id, func.count(func.distinct(Movie.id)))
             .select_from(Movie)
             .join(element, true())
-            .where(Movie.deleted_at.is_(None))
+            .where(Movie.deleted_at.is_(None), owned_film())
             .group_by(element.c.genre_id)
             .order_by(func.count(func.distinct(Movie.id)).desc())
         )
@@ -151,7 +157,7 @@ async def _decade_slices(db: AsyncSession) -> list[DecadeSlice]:
     rows = (
         await db.execute(
             select(decade, func.count(Movie.id))
-            .where(Movie.deleted_at.is_(None), Movie.year.is_not(None))
+            .where(Movie.deleted_at.is_(None), Movie.year.is_not(None), owned_film())
             .group_by(decade)
             .order_by(decade)
         )
@@ -272,9 +278,13 @@ async def collection_stats(
     One request rather than six, because six would make the page's load time the slowest
     of six round trips and the charts appear one at a time.
     """
+    # Films in the collection: a row with an owned copy. Wanted films, and since Batch X5
+    # films only watched, have rows too, and are not the collection's (#269).
     total_movies = int(
         (
-            await db.execute(select(func.count(Movie.id)).where(Movie.deleted_at.is_(None)))
+            await db.execute(
+                select(func.count(Movie.id)).where(Movie.deleted_at.is_(None), owned_film())
+            )
         ).scalar_one()
     )
     total_items = int(
@@ -284,7 +294,7 @@ async def collection_stats(
         (
             await db.execute(
                 select(func.count(Movie.id)).where(
-                    Movie.deleted_at.is_(None), Movie.tmdb_id.is_not(None)
+                    Movie.deleted_at.is_(None), Movie.tmdb_id.is_not(None), owned_film()
                 )
             )
         ).scalar_one()

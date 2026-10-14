@@ -13,7 +13,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -81,6 +81,13 @@ class WatchLog(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: A rewatch on a later date is a *different* viewing and correctly becomes a second
     #: row — which is what `is_rewatch` is for.
     letterboxd_viewing_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+    #: Batch X5. The TMDB film the viewing was of, as Letterboxd's feed names it (or as the
+    #: diary backfill identified it): what the watch is *of*, kept apart from ``movie_id``,
+    #: which is the row it hangs on. When the two disagree, the row is the wrong film
+    #: (CT46-02), and this is how it can be told. NULL for a watch logged by hand, and for
+    #: a file import that matched by title alone.
+    tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     #: Soft delete, so an accidental log is recoverable and §13.5's Trash has something
     #: to show. Every read path filters on it, and the watched facet counts only live

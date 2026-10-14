@@ -121,17 +121,21 @@ async def _watches(db: AsyncSession, person: Profile) -> int:
 async def test_a_sync_writes_the_viewings_of_films_they_own(
     db: AsyncSession, person: Profile
 ) -> None:
-    await _film(db, "Pressure", 2026, 111111)
-    await _film(db, "Get Out", 2017, 419430)
+    pressure = await _film(db, "Pressure", 2026, 111111)
+    get_out = await _film(db, "Get Out", 2017, 419430)
 
     result = await sync_watch_history(db, person, client=_feed_client())
 
     assert result.run.entries == 4  # the list item is not a viewing
-    assert result.run.written == 2
-    assert result.run.not_in_collection == 2
+    # Pressure and Get Out on the owned films; The Collector on a film row of its own
+    # (Batch X5, #269); Fast & Furious carries no TMDB id and matches no title.
+    assert result.run.written == 3
+    assert result.run.not_in_collection == 1
     assert result.run.error is None
     assert result.run.finished_at_utc is not None
-    assert await _watches(db, person) == 2
+    owned = select(WatchLog.movie_id).where(WatchLog.user_id == person.id)
+    on_owned = {row for row in await db.scalars(owned)}
+    assert {pressure.id, get_out.id} <= on_owned
 
 
 async def test_a_second_sync_writes_nothing(db: AsyncSession, person: Profile) -> None:
@@ -143,10 +147,11 @@ async def test_a_second_sync_writes_nothing(db: AsyncSession, person: Profile) -
     first = await sync_watch_history(db, person, client=_feed_client())
     second = await sync_watch_history(db, person, client=_feed_client())
 
-    assert first.run.written == 1
+    # Pressure on the owned film; Get Out and The Collector on films of their own (X5).
+    assert first.run.written == 3
     assert second.run.written == 0
-    assert second.run.already_imported == 1
-    assert await _watches(db, person) == 1
+    assert second.run.already_imported == 3
+    assert await _watches(db, person) == 3
 
 
 async def test_a_viewing_already_imported_from_the_file_is_not_written_again(
@@ -181,9 +186,13 @@ async def test_a_viewing_already_imported_from_the_file_is_not_written_again(
 
     result = await sync_watch_history(db, person, client=_feed_client())
 
-    assert result.run.written == 0
+    # The file's Pressure is not written again; Get Out and The Collector are new (X5).
+    assert result.run.written == 2
     assert result.run.already_imported == 1
-    assert await _watches(db, person) == 1
+    pressure_rows = select(func.count(WatchLog.id)).where(
+        WatchLog.user_id == person.id, WatchLog.letterboxd_viewing_id == "900000001"
+    )
+    assert await db.scalar(pressure_rows) == 1
 
 
 async def test_a_null_rating_is_written_as_null(db: AsyncSession, person: Profile) -> None:
@@ -192,9 +201,15 @@ async def test_a_null_rating_is_written_as_null(db: AsyncSession, person: Profil
     await _film(db, "The Collector", 1965, 29259)
     await sync_watch_history(db, person, client=_feed_client())
 
-    row = (await db.scalars(select(WatchLog).where(WatchLog.user_id == person.id))).one()
+    row = (
+        await db.scalars(
+            select(WatchLog).where(
+                WatchLog.user_id == person.id, WatchLog.letterboxd_viewing_id == "900000003"
+            )
+        )
+    ).one()
     assert row.personal_rating is None
-    assert row.letterboxd_viewing_id == "900000003"
+    assert row.tmdb_id == 29259  # Batch X5: the feed's own id, kept on the watch
 
 
 async def test_the_sync_does_not_identify_films(db: AsyncSession, person: Profile) -> None:
@@ -210,7 +225,16 @@ async def test_the_sync_does_not_identify_films(db: AsyncSession, person: Profil
 
     await db.refresh(unidentified)
     assert unidentified.tmdb_id is None
-    assert await _watches(db, person) == 1  # the watch is still logged
+    # Since Batch X5 the feed never falls back to a title (CT46-02): the viewing goes on a
+    # film row carrying its own TMDB id, not on the unidentified one. Identifying that row
+    # later merges the two.
+    collector = select(WatchLog).where(
+        WatchLog.user_id == person.id, WatchLog.letterboxd_viewing_id == "900000003"
+    )
+    row = (await db.scalars(collector)).one()
+    assert row.movie_id != unidentified.id
+    film = await db.get(Movie, row.movie_id)
+    assert film is not None and film.tmdb_id == 29259
 
 
 async def test_a_failed_fetch_records_the_failure_rather_than_vanishing(
@@ -275,8 +299,9 @@ async def test_status_reports_when_the_sync_last_ran(
 
     after = (await client.get("/api/v1/watch-history/status")).json()
     assert after["lastSync"]["startedAt"]
-    assert after["lastSync"]["written"] == 1
-    assert after["watchCount"] == 1
+    # Pressure, and Get Out and The Collector on films of their own (X5).
+    assert after["lastSync"]["written"] == 3
+    assert after["watchCount"] == 3
 
 
 async def test_syncing_without_a_username_is_a_409_not_a_500(
