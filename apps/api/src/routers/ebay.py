@@ -12,7 +12,8 @@ this is not a judgement worth making with account disablement as the downside.
 and Batch 27's gift links. Three properties make that safe here, and each is deliberate:
 
 1. **It reads nothing and writes nothing.** The GET hashes three values it was already
-   given; the POST is a no-op. There is no database session in this module at all.
+   given; the POST is a no-op. Neither takes a database session; only the price routes
+   below do, to read the used-to-New factor (Batch X6).
 2. **It is not rate limited.** Every other public route carries ``@limiter.limit``. This
    one must not: eBay polls the endpoint and emails the owner when it stops answering, so
    a 429 reads to eBay as an outage. There is nothing here worth protecting from volume —
@@ -45,13 +46,16 @@ from __future__ import annotations
 
 import hashlib
 from decimal import Decimal
+from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth import CurrentUser
 from ..config import settings
+from ..database import get_db
 from ..ebay import (
     EbayClient,
     EbayError,
@@ -61,18 +65,22 @@ from ..ebay import (
     suggested_title,
 )
 from ..ebay.estimate import estimate_price
-from ..ebay.pricing import PriceEstimate, PriceSegment
+from ..ebay.pricing import AS_USED_COPIES, PriceEstimate, PriceSegment, UsedValue
 from ..schemas.ebay import (
     ListingUrlRequest,
     ListingUrlResponse,
     PriceEstimateRequest,
     PriceEstimateResponse,
     PriceSegmentResponse,
+    UsedValueResponse,
 )
+from ..services.valuation import value_of
 
 logger = structlog.get_logger()
 
 router = APIRouter(prefix="/api/v1", tags=["ebay"])
+
+Database = Annotated[AsyncSession, Depends(get_db)]
 
 
 class ChallengeResponse(BaseModel):
@@ -162,6 +170,19 @@ async def receive_notification() -> Response:
 # ---------------------------------------------------------------------------
 
 
+def _to_used_value(value: UsedValue) -> UsedValueResponse:
+    return UsedValueResponse(
+        price=str(value.price),
+        currency=value.currency,
+        basis="used" if value.basis == "used" else "new_scaled",
+        sampleSize=value.sample_size,
+        low=str(value.low),
+        high=str(value.high),
+        factor=str(value.factor) if value.factor is not None else None,
+        valuedAs=AS_USED_COPIES,
+    )
+
+
 def _to_segment(segment: PriceSegment) -> PriceSegmentResponse:
     return PriceSegmentResponse(
         formatCode=segment.format_code,
@@ -191,6 +212,7 @@ async def _estimate(payload: PriceEstimateRequest) -> PriceEstimate:
                 film_title=payload.filmTitle,
                 format_code=payload.formatCode,
                 country=payload.country,
+                is_series=payload.isSeries,
             )
     except EbayNotConfigured as exc:
         raise HTTPException(
@@ -206,7 +228,7 @@ async def _estimate(payload: PriceEstimateRequest) -> PriceEstimate:
 
 @router.post("/ebay/price-estimate", response_model=PriceEstimateResponse)
 async def price_estimate(
-    payload: PriceEstimateRequest, _user: CurrentUser
+    payload: PriceEstimateRequest, _user: CurrentUser, db: Database
 ) -> PriceEstimateResponse:
     """Phase 4.1 — a median per segment, with the sample size and the rejections.
 
@@ -222,6 +244,9 @@ async def price_estimate(
     """
     estimate = await _estimate(payload)
     headline = estimate.headline()
+    value = await value_of(
+        db, estimate, payload.formatCode or (headline.format_code if headline else None)
+    )
     logger.info(
         "ebay_price_estimate",
         film=payload.filmTitle,
@@ -240,6 +265,7 @@ async def price_estimate(
         rejected=estimate.rejected,
         unusable=estimate.unusable,
         basis=estimate.basis,
+        usedValue=_to_used_value(value) if value else None,
     )
 
 
@@ -249,7 +275,9 @@ async def price_estimate(
 
 
 @router.post("/ebay/listing-url", response_model=ListingUrlResponse)
-async def listing_url(payload: ListingUrlRequest, _user: CurrentUser) -> ListingUrlResponse:
+async def listing_url(
+    payload: ListingUrlRequest, _user: CurrentUser, db: Database
+) -> ListingUrlResponse:
     """Phase 4.3 — the pre-filled listing link, and what to ask for the disc.
 
     **Option B promoted to primary.** Option A, a Sell API draft listing, describes
@@ -264,15 +292,19 @@ async def listing_url(payload: ListingUrlRequest, _user: CurrentUser) -> Listing
     if payload.formatCode:
         try:
             estimate = await _estimate(
-                PriceEstimateRequest(filmTitle=payload.filmTitle, formatCode=payload.formatCode)
+                PriceEstimateRequest(
+                    filmTitle=payload.filmTitle,
+                    formatCode=payload.formatCode,
+                    isSeries=payload.isSeries,
+                )
             )
         except HTTPException:
             # A missing keyset or an eBay outage must not stop someone listing a disc.
             # The link is the feature; the price is an aid to it.
             logger.info("ebay_listing_url_without_price", film=payload.filmTitle)
         else:
-            headline = estimate.headline()
-            price = suggested_price(headline.median if headline else None)
+            value = await value_of(db, estimate, payload.formatCode)
+            price = suggested_price(value.price if value else None)
 
     return ListingUrlResponse(
         url=prelist_url(

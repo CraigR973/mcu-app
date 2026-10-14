@@ -25,6 +25,7 @@ const VALUED: Value = {
   total: '12345.60',
   currency: 'GBP',
   basis: 'current asking prices',
+  valuedAs: 'as used copies',
   discs: 1457,
   pricedDiscs: 1302,
   notPricedDiscs: 103,
@@ -74,10 +75,11 @@ describe('CollectionValue — Batch T6', () => {
     renderIt()
 
     expect(await screen.findByText(/£12,346/)).not.toBeNull()
-    expect(screen.getByText('At current asking prices on eBay')).not.toBeNull()
+    expect(screen.getByText('as used copies, at current asking prices on eBay')).not.toBeNull()
     expect(screen.getByText('1,302 of 1,457 discs priced · checked 23–24 Sep 2026')).not.toBeNull()
-    expect(screen.getByText(/103 had fewer than 3 matching eBay listings, so they are not priced rather than guessed/)).not.toBeNull()
-    expect(screen.getByText(/52 not checked yet/)).not.toBeNull()
+    expect(screen.getByText(/103 had fewer than 3 used and 3 new matching eBay listings, so they are not priced rather than guessed/)).not.toBeNull()
+    expect(screen.getByText(/52 not valued as used copies yet; the next run does them first/)).not.toBeNull()
+    expect(screen.getByText(/Each disc is valued as a used copy/)).not.toBeNull()
     expect(screen.getByText(/usually run above what discs actually sell for/)).not.toBeNull()
   })
 

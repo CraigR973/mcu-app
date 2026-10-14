@@ -27,8 +27,8 @@ import { queryErrorMessage } from '@/lib/query-state'
  *
  * Two, with the price already in the box.
  *
- * **The price arrives pre-filled, not pre-committed.** §4.1's median is fetched once for
- * the whole prompt and offered as the default; the disc is listed at whatever is showing,
+ * **The price arrives pre-filled, not pre-committed.** §4.1's check is fetched once for
+ * the whole prompt and its value as a used copy (Batch X6) offered as the default; the disc is listed at whatever is showing,
  * and the number can be edited afterwards on the disc itself. That is "admin adjusts or
  * accepts" — the alternative, making them type a price before anything can happen, is the
  * tap this exists to remove.
@@ -36,11 +36,14 @@ import { queryErrorMessage } from '@/lib/query-state'
 export function UpgradePrompt({
   movieId,
   filmTitle,
+  isSeries = false,
   copies,
   onDismiss,
 }: {
   movieId: string
   filmTitle: string
+  /** Batch X6: a TV title, whose own box sets are what the price check looks for. */
+  isSeries?: boolean
   /** Every owned copy of this film. The superseded ones are worked out here so the
    *  caller does not have to duplicate the format ranking. */
   copies: CollectionCopy[]
@@ -59,6 +62,7 @@ export function UpgradePrompt({
       fetchEbayPriceEstimate({
         filmTitle,
         formatCode: bestFormat(superseded[0]?.formats ?? []),
+        isSeries,
       }),
     enabled: superseded.length > 0,
     // One estimate per prompt. Each call spends a unit of a 5,000-a-day quota, and the
@@ -78,7 +82,8 @@ export function UpgradePrompt({
 
   if (superseded.length === 0) return null
 
-  const suggested = estimate.data?.headline?.median ?? null
+  // Batch X6 (#256): the old disc is a used copy, so it is offered at a used copy's value.
+  const suggested = estimate.data?.usedValue?.price ?? null
 
   return (
     <section
@@ -97,7 +102,7 @@ export function UpgradePrompt({
                 ? 'The older disc is still on the shelf.'
                 : `${superseded.length} older discs are still on the shelf.`}{' '}
               {suggested
-                ? `Current asking prices on eBay UK put it around £${suggested}.`
+                ? `As a used copy, current asking prices on eBay UK put it around £${suggested}.`
                 : estimate.isPending
                   ? 'Checking what it is worth…'
                   : 'No price estimate — list it and set the price yourself.'}

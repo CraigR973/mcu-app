@@ -56,6 +56,7 @@ const VALUE: CollectionValue = {
   total: '1903.34',
   currency: 'GBP',
   basis: 'current asking prices',
+  valuedAs: 'as used copies',
   discs: 1880,
   pricedDiscs: 1454,
   notPricedDiscs: 300,
@@ -87,7 +88,7 @@ const HIGHLIGHTS: Highlights = {
   topRated: { items: [{ movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, ratings: [{ personName: 'Craig', rating: 5 }] }], ratedBy: ['Craig'], notRatedBy: ['Mark'] },
   mostRewatched: [{ movieId: ALIEN, title: 'Alien', year: 1979, posterPath: null, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 3 }] }],
   mostValuable: [
-    { movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, formatCode: '4k_uhd', price: '34.99', currency: 'GBP', basis: 'current asking prices', sampleSize: 7, checkedAt: '2026-09-26T03:00:00Z', copies: 1 },
+    { movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, formatCode: '4k_uhd', price: '34.99', currency: 'GBP', basis: 'current asking prices', sampleSize: 7, valueBasis: 'used', factor: null, low: '30.00', high: '40.00', valuedAs: 'as used copies', checkedAt: '2026-09-26T03:00:00Z', copies: 1 },
   ],
   bestReviewed: [{ movieId: ALIEN, title: 'Alien', year: 1979, posterPath: null, overall: 4.5, outOf: 5, formatCode: '4k_uhd' }],
 }

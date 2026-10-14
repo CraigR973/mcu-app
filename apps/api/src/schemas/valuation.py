@@ -35,13 +35,16 @@ class ValuationRunResponse(BaseModel):
 
 
 class CollectionValueResponse(BaseModel):
-    """What the owned discs add up to at current eBay asking prices."""
+    """What the owned discs add up to as used copies, at current eBay asking prices."""
 
     #: Null until at least one disc is priced.
     total: str | None
     currency: str
     basis: str
-    #: Owned physical discs, and how they split. ``uncheckedDiscs`` have no price yet.
+    #: "as used copies" (Batch X6, #256): what each disc is valued as.
+    valuedAs: str
+    #: Owned physical discs, and how they split. ``uncheckedDiscs`` have no price yet, or
+    #: only one from before X6, which a run values again first.
     discs: int = Field(ge=0)
     pricedDiscs: int = Field(ge=0)
     notPricedDiscs: int = Field(ge=0)
@@ -69,18 +72,30 @@ class ValuationStartResponse(BaseModel):
 
 
 class CopyValuationResponse(BaseModel):
-    """A disc's stored price: its film on the format it is valued as."""
+    """A disc's stored value as a used copy: its film on the format it is valued as."""
 
     formatCode: str
     status: Literal["priced", "not_priced"]
     #: Null when not priced, which is an answer: too few listings to say.
     price: str | None
     currency: str
-    sampleSize: int
+    #: Listings behind the value; for one not priced, the larger of its two groups.
+    sampleSize: int = Field(ge=0)
     conditionLabel: str | None
     checkedAt: UtcDatetime
     basis: str
-    minSample: int
+    minSample: int = Field(gt=0)
+    #: Batch X6. ``used``: the median of ``sampleSize`` used listings. ``new_scaled``: New's
+    #: median of ``sampleSize`` listings times ``factor``. Null when not priced.
+    valueBasis: Literal["used", "new_scaled"] | None
+    factor: str | None
+    #: The range of the listings the value rests on, before any factor.
+    low: str | None
+    high: str | None
+    #: Both groups' sizes, so "not priced" can say what eBay had.
+    usedCount: int = Field(ge=0)
+    newCount: int = Field(ge=0)
+    valuedAs: str
     #: Batch V8. eBay's own sold listings for the same search, opened in the person's
     #: browser: what discs went for, beside the asking prices the value is built from.
     soldListingsUrl: str

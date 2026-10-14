@@ -110,9 +110,10 @@ def prelist_url(
 
 
 def suggested_price(median: Decimal | None) -> Decimal | None:
-    """What to ask, given the median of current asking prices.
+    """What to ask, given the disc's value as a used copy (Batch X6; before it, the largest
+    group's median of current asking prices).
 
-    **The median is returned unchanged**, and that is a deliberate refusal to be clever.
+    **The value is returned unchanged**, and that is a deliberate refusal to be clever.
     Shading it — 5% under the median to sell faster, say — would turn a measured number
     into an invented one, and `DECISIONS.md` #129 is a standing account of what happens to
     eBay prices that get invented. The admin adjusts it, which is what Phase 4.2's "admin

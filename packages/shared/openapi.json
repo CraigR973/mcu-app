@@ -3171,7 +3171,7 @@
     "type": "object"
    },
    "CollectionValueResponse": {
-    "description": "What the owned discs add up to at current eBay asking prices.",
+    "description": "What the owned discs add up to as used copies, at current eBay asking prices.",
     "properties": {
      "basis": {
       "title": "Basis",
@@ -3263,12 +3263,17 @@
       "minimum": 0.0,
       "title": "Uncheckeddiscs",
       "type": "integer"
+     },
+     "valuedAs": {
+      "title": "Valuedas",
+      "type": "string"
      }
     },
     "required": [
      "total",
      "currency",
      "basis",
+     "valuedAs",
      "discs",
      "pricedDiscs",
      "notPricedDiscs",
@@ -3681,7 +3686,7 @@
     "type": "object"
    },
    "CopyValuationResponse": {
-    "description": "A disc's stored price: its film on the format it is valued as.",
+    "description": "A disc's stored value as a used copy: its film on the format it is valued as.",
     "properties": {
      "basis": {
       "title": "Basis",
@@ -3706,12 +3711,51 @@
       "title": "Currency",
       "type": "string"
      },
+     "factor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Factor"
+     },
      "formatCode": {
       "title": "Formatcode",
       "type": "string"
      },
+     "high": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "High"
+     },
+     "low": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Low"
+     },
      "minSample": {
+      "exclusiveMinimum": 0.0,
       "title": "Minsample",
+      "type": "integer"
+     },
+     "newCount": {
+      "minimum": 0.0,
+      "title": "Newcount",
       "type": "integer"
      },
      "price": {
@@ -3726,6 +3770,7 @@
       "title": "Price"
      },
      "sampleSize": {
+      "minimum": 0.0,
       "title": "Samplesize",
       "type": "integer"
      },
@@ -3740,6 +3785,30 @@
       ],
       "title": "Status",
       "type": "string"
+     },
+     "usedCount": {
+      "minimum": 0.0,
+      "title": "Usedcount",
+      "type": "integer"
+     },
+     "valueBasis": {
+      "anyOf": [
+       {
+        "enum": [
+         "used",
+         "new_scaled"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valuebasis"
+     },
+     "valuedAs": {
+      "title": "Valuedas",
+      "type": "string"
      }
     },
     "required": [
@@ -3752,6 +3821,13 @@
      "checkedAt",
      "basis",
      "minSample",
+     "valueBasis",
+     "factor",
+     "low",
+     "high",
+     "usedCount",
+     "newCount",
+     "valuedAs",
      "soldListingsUrl"
     ],
     "title": "CopyValuationResponse",
@@ -5962,6 +6038,11 @@
       ],
       "title": "Formatcode"
      },
+     "isSeries": {
+      "default": false,
+      "title": "Isseries",
+      "type": "boolean"
+     },
      "year": {
       "anyOf": [
        {
@@ -7719,6 +7800,11 @@
        }
       ],
       "title": "Formatcode"
+     },
+     "isSeries": {
+      "default": false,
+      "title": "Isseries",
+      "type": "boolean"
      }
     },
     "required": [
@@ -7792,6 +7878,16 @@
       "minimum": 0.0,
       "title": "Unusable",
       "type": "integer"
+     },
+     "usedValue": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/UsedValueResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "required": [
@@ -12304,6 +12400,67 @@
     "title": "UsageResponse",
     "type": "object"
    },
+   "UsedValueResponse": {
+    "description": "What one disc on the shelf is worth as a used copy — Batch X6 (#256).\n\n``basis`` says how: ``used``, the median of ``sampleSize`` used listings; ``new_scaled``,\nNew's median of ``sampleSize`` listings times ``factor``, the used-to-New ratio measured\nfor the format, because used listings were too few. ``low`` and ``high`` are the range of\nthose listings before any factor.",
+    "properties": {
+     "basis": {
+      "enum": [
+       "used",
+       "new_scaled"
+      ],
+      "title": "Basis",
+      "type": "string"
+     },
+     "currency": {
+      "title": "Currency",
+      "type": "string"
+     },
+     "factor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Factor"
+     },
+     "high": {
+      "title": "High",
+      "type": "string"
+     },
+     "low": {
+      "title": "Low",
+      "type": "string"
+     },
+     "price": {
+      "title": "Price",
+      "type": "string"
+     },
+     "sampleSize": {
+      "exclusiveMinimum": 0.0,
+      "title": "Samplesize",
+      "type": "integer"
+     },
+     "valuedAs": {
+      "title": "Valuedas",
+      "type": "string"
+     }
+    },
+    "required": [
+     "price",
+     "currency",
+     "basis",
+     "sampleSize",
+     "low",
+     "high",
+     "factor",
+     "valuedAs"
+    ],
+    "title": "UsedValueResponse",
+    "type": "object"
+   },
    "UserRole": {
     "description": "Craig administers, Mark views. Both can read the collection.",
     "enum": [
@@ -12411,8 +12568,27 @@
       "title": "Currency",
       "type": "string"
      },
+     "factor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Factor"
+     },
      "formatCode": {
       "title": "Formatcode",
+      "type": "string"
+     },
+     "high": {
+      "title": "High",
+      "type": "string"
+     },
+     "low": {
+      "title": "Low",
       "type": "string"
      },
      "movieId": {
@@ -12444,6 +12620,18 @@
       "title": "Title",
       "type": "string"
      },
+     "valueBasis": {
+      "enum": [
+       "used",
+       "new_scaled"
+      ],
+      "title": "Valuebasis",
+      "type": "string"
+     },
+     "valuedAs": {
+      "title": "Valuedas",
+      "type": "string"
+     },
      "year": {
       "anyOf": [
        {
@@ -12464,6 +12652,11 @@
      "currency",
      "basis",
      "sampleSize",
+     "valueBasis",
+     "factor",
+     "low",
+     "high",
+     "valuedAs",
      "checkedAt",
      "copies"
     ],

@@ -43,6 +43,11 @@ VALUED_FORMATS = ("4k_uhd", "blu_ray", "dvd")
 #: carries none. There is no third state that guesses.
 VALUATION_STATUSES = ("priced", "not_priced")
 
+#: How a priced disc's value was reached since Batch X6 (#256): ``used``, the median of its
+#: used listings; ``new_scaled``, New's median times the format's used-to-New factor. Null on
+#: a value from before X6, which was the largest condition group's median (#209).
+VALUE_BASES = ("used", "new_scaled")
+
 #: ``job`` is the scheduled command; ``admin`` is the button on Home. ``trial`` is Home's "Try
 #: bid prices" (Batch V6): it spends the same share and saves no prices.
 RUN_TRIGGERS = ("job", "admin", "trial")
@@ -120,6 +125,15 @@ class DiscValuation(Base, UUIDPrimaryKeyMixin):
             "(status = 'priced') = (price IS NOT NULL)",
             name="ck_disc_valuations_price_only_when_priced",
         ),
+        CheckConstraint(
+            "value_basis IS NULL OR value_basis IN ('used', 'new_scaled')",
+            name="ck_disc_valuations_value_basis",
+        ),
+        # A factor is the mark of a New-based value, and only of one.
+        CheckConstraint(
+            "value_basis IS NULL OR (value_basis = 'new_scaled') = (factor IS NOT NULL)",
+            name="ck_disc_valuations_factor_only_when_scaled",
+        ),
         Index("ix_disc_valuations_checked_utc", "checked_utc"),
     )
 
@@ -128,14 +142,28 @@ class DiscValuation(Base, UUIDPrimaryKeyMixin):
     )
     format_code: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    #: The median of the headline group of listings, exactly as the film page's check
-    #: reports it. Null when not priced.
+    #: The disc's value as a used copy (Batch X6), exactly as the film page's check reports
+    #: it; before X6, the median of the largest condition group. Null when not priced.
     price: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="GBP")
     #: Listings behind the price, or the most a not-priced film could muster.
     sample_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    #: "New", "Used" and so on: which group of listings the price came from.
+    #: "Used" or "New" since Batch X6: which group of listings the price came from.
     condition_label: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    #: ``used`` or ``new_scaled`` (:data:`VALUE_BASES`); null when not priced, or from before X6.
+    value_basis: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    #: The used-to-New factor a ``new_scaled`` value was multiplied by.
+    factor: Mapped[Decimal | None] = mapped_column(Numeric(4, 2), nullable=True)
+    #: The cheapest and dearest of the listings the value rests on, before any factor.
+    low: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    high: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    #: Both groups, priced or not: the standard edition's used listings pooled, and its New
+    #: ones. What the factor is measured from. ``used_count`` is null only on a value from
+    #: before X6, which is how such a value is told apart and made due.
+    used_median: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    used_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    new_median: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    new_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     #: How many listings matched the disc at all, and how many the search returned.
     matched: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     considered: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

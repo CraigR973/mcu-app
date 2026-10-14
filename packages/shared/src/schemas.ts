@@ -148,9 +148,14 @@ export const movieDetailSchema = movieListItemSchema.extend({
   reviews: z.array(filmReviewSchema).default([]),
 })
 
-/** Batch T6 — a disc's stored eBay asking price: its film, on the format it is valued as.
- *  `price` is null when fewer than `minSample` listings matched, which is an answer (too
- *  few to say), not a missing value. */
+/** How a disc's value as a used copy was reached — Batch X6 (`DECISIONS.md` #256). `used`:
+ *  the median of its used listings. `new_scaled`: New's median times the used-to-New factor
+ *  measured for its format, because used listings were too few. */
+export const valueBasisSchema = z.enum(['used', 'new_scaled'])
+
+/** Batch T6 — a disc's stored value: its film, on the format it is valued as, as a used copy
+ *  at eBay asking prices since Batch X6. `price` is null when too few listings matched, which
+ *  is an answer (too few to say), not a missing value. */
 export const copyValuationSchema = z.object({
   formatCode: z.string().min(1),
   status: z.enum(['priced', 'not_priced']),
@@ -161,6 +166,17 @@ export const copyValuationSchema = z.object({
   checkedAt: z.string(),
   basis: z.string().min(1),
   minSample: z.number().int().positive(),
+  /** Batch X6. Null when not priced. `factor` only on `new_scaled`; `low`–`high` is the range
+   *  of the listings the value rests on, before any factor. */
+  valueBasis: valueBasisSchema.nullable(),
+  factor: z.string().nullable(),
+  low: z.string().nullable(),
+  high: z.string().nullable(),
+  /** Both groups' sizes, so "not priced" can say what eBay had. */
+  usedCount: z.number().int().nonnegative(),
+  newCount: z.number().int().nonnegative(),
+  /** "as used copies": the words shown beside the value. */
+  valuedAs: z.string().min(1),
   /** Batch V8. eBay's own sold listings for the same search, opened in the person's
    *  browser. Defaulted so a page served before the API carries it still parses. */
   soldListingsUrl: z.string().min(1).nullable().default(null),
@@ -196,8 +212,15 @@ export const collectionCopySchema = z.object({
   // Batch 8: the version an edit is based on. Sent back as `baseUpdatedAt` so a queued
   // offline edit cannot overwrite a change made after it.
   updatedAt: z.string(),
-  /** Batch T6. Defaulted, as #205 explains: copies cached offline before T6 have none. */
-  valuation: copyValuationSchema.nullable().default(null),
+  /** Batch T6. Defaulted, as #205 explains: copies cached offline before T6 have none.
+   *  Batch X6: a value cached before it (no `valuedAs`) was a new copy's price, so it reads
+   *  as not valued yet, as the API now treats it. */
+  valuation: z
+    .preprocess(
+      (value) => (value && typeof value === 'object' && !('valuedAs' in value) ? null : value),
+      copyValuationSchema.nullable(),
+    )
+    .default(null),
 })
 
 export const collectionCopiesSchema = z.array(collectionCopySchema)
@@ -357,6 +380,13 @@ export const valuableDiscSchema = z.object({
   currency: z.string().min(1),
   basis: z.string().min(1),
   sampleSize: z.number().int().nonnegative(),
+  /** Batch X6: how the value was reached, and the range of the listings behind it.
+   *  Defaulted, as #205 explains: Home's rows cached offline before X6 have none. */
+  valueBasis: valueBasisSchema.nullable().default(null),
+  factor: z.string().nullable().default(null),
+  low: z.string().min(1).nullable().default(null),
+  high: z.string().min(1).nullable().default(null),
+  valuedAs: z.string().min(1).nullable().default(null),
   checkedAt: z.string(),
   copies: z.number().int().positive(),
 })
@@ -1726,6 +1756,19 @@ export const ebayPriceSegmentSchema = z.object({
   currency: z.string().min(1),
 })
 
+/** A disc's value as a used copy, from one live search — Batch X6 (`DECISIONS.md` #256).
+ *  `sampleSize`, `low` and `high` describe the listings it rests on, before any `factor`. */
+export const ebayUsedValueSchema = z.object({
+  price: z.string().min(1),
+  currency: z.string().min(1),
+  basis: valueBasisSchema,
+  sampleSize: z.number().int().positive(),
+  low: z.string().min(1),
+  high: z.string().min(1),
+  factor: z.string().nullable(),
+  valuedAs: z.string().min(1),
+})
+
 /** What a title is currently being **asked** for — never what it sold for.
  *
  *  Sold comps are unobtainable: Marketplace Insights is closed to new applicants and eBay
@@ -1745,6 +1788,9 @@ export const ebayPriceEstimateSchema = z.object({
   rejected: z.record(z.number().int().nonnegative()),
   unusable: z.number().int().nonnegative(),
   basis: z.string().min(1),
+  /** Batch X6: the disc's value as a used copy. Null when too few used and New listings
+   *  matched. */
+  usedValue: ebayUsedValueSchema.nullable().default(null),
 })
 
 /** A link that opens eBay's "start your listing" form with the title filled in.
@@ -1755,11 +1801,13 @@ export const ebayPriceEstimateSchema = z.object({
 export const ebayListingUrlSchema = z.object({
   url: z.string().min(1),
   suggestedTitle: z.string().min(1),
-  /** The median of current asking prices, unshaded. Null when nothing matched. */
+  /** The disc's value as a used copy (Batch X6), unshaded. Null when too few matched. */
   suggestedPrice: z.string().nullable(),
 })
 
 export type EbayPriceSegment = z.infer<typeof ebayPriceSegmentSchema>
+export type EbayUsedValue = z.infer<typeof ebayUsedValueSchema>
+export type ValueBasis = z.infer<typeof valueBasisSchema>
 export type EbayPriceEstimate = z.infer<typeof ebayPriceEstimateSchema>
 export type EbayListingUrl = z.infer<typeof ebayListingUrlSchema>
 
@@ -1782,12 +1830,15 @@ export const valuationRunSchema = z.object({
   lastError: z.string().nullable(),
 })
 
-/** What the owned discs add up to at current eBay **asking** prices — never what they
- *  would sell for (`DECISIONS.md` #16, #126). `basis` carries the words to show. */
+/** What the owned discs add up to as used copies at current eBay **asking** prices — never
+ *  what they would sell for (`DECISIONS.md` #16, #126, #256). `basis` and `valuedAs` carry
+ *  the words to show. */
 export const collectionValueSchema = z.object({
   total: z.string().nullable(),
   currency: z.string().min(1),
   basis: z.string().min(1),
+  /** Batch X6. Defaulted, as #205 explains: a total cached before X6 was new copies'. */
+  valuedAs: z.string().min(1).nullable().default(null),
   discs: z.number().int().nonnegative(),
   pricedDiscs: z.number().int().nonnegative(),
   notPricedDiscs: z.number().int().nonnegative(),

@@ -21,7 +21,8 @@ on that row (:class:`~src.schemas.bid_trial.BidTrialReport`) for a later session
   price is split would leave almost none.
 - Its asking price comes from the same search by the valuation's own rule
   (:func:`~src.services.valuation.valuation_from`), so both halves are from the same minute.
-  The stored price is reported beside it.
+  Since Batch X6 that is a used copy's value, on the factor the stored values give. The
+  stored price is reported beside it.
 - **Blend**: a film's bid price when it has one, its asking price otherwise. **Bids only**: a
   bid price or nothing. Every total says how many discs stand behind it.
 """
@@ -53,7 +54,7 @@ from src.ebay.bids import (
 from src.ebay.client import EbayClient, EbayError, EbayNotConfigured
 from src.ebay.estimate import UK, search_query
 from src.ebay.matching import listing_from_summary, match
-from src.ebay.pricing import median, summarise
+from src.ebay.pricing import MIN_SAMPLE, median, summarise
 from src.matching.engine import searchable_title as search_title
 from src.models.movie import Movie
 from src.models.valuation import VALUED_FORMATS, DiscValuation, ValuationRun
@@ -71,11 +72,12 @@ from src.schemas.bid_trial import (
 from src.services.valuation import (
     CURRENCY,
     MAX_FAILURES_IN_A_ROW,
-    MIN_SAMPLE,
     abandon_stale_runs,
     budget_left,
+    current_value,
     owned_valued_discs,
     running_run,
+    used_factors,
     valuation_from,
 )
 
@@ -172,7 +174,7 @@ def _priced_films() -> Select[Any]:
             ),
         )
         .join(Movie, Movie.id == DiscValuation.movie_id)
-        .where(DiscValuation.status == "priced")
+        .where(DiscValuation.status == "priced", current_value())
         .group_by(DiscValuation.id, Movie.id)
     )
 
@@ -226,9 +228,17 @@ def _stored(film: SampledFilm) -> TrialStoredPrice:
 
 
 def judge_search(
-    payload: Mapping[str, Any], *, film: SampledFilm, marketplace_id: str, now: datetime
+    payload: Mapping[str, Any],
+    *,
+    film: SampledFilm,
+    marketplace_id: str,
+    now: datetime,
+    factor: Decimal,
 ) -> TrialFilm:
-    """What one Buy It Now and auctions search says about one film and format."""
+    """What one Buy It Now and auctions search says about one film and format.
+
+    ``factor`` is the format's used-to-New factor, as a valuation run would use (Batch X6).
+    """
     summaries = [entry for entry in payload.get("itemSummaries") or [] if isinstance(entry, dict)]
     total = payload.get("total")
     buy_it_now = [entry for entry in summaries if offers_buy_it_now(entry)]
@@ -252,7 +262,7 @@ def judge_search(
         marketplace_id=marketplace_id,
         unusable=unusable,
     )
-    asking = valuation_from(estimate, film.format_code)
+    asking = valuation_from(estimate, film.format_code, factor=factor)
 
     # The auctions: counted only with a bid, and only past the same matcher.
     counted: list[Decimal] = []
@@ -496,6 +506,7 @@ async def work_trial(
         raise ValueError(f"bid trial {run_id} is not running")
 
     try:
+        factors = await used_factors(db)
         films = await sample_films(db)
         results: list[TrialFilm] = []
         outcome: str | None = None
@@ -527,7 +538,11 @@ async def work_trial(
             else:
                 failures_in_a_row = 0
                 result = judge_search(
-                    payload, film=film, marketplace_id=client.marketplace_id, now=clock()
+                    payload,
+                    film=film,
+                    marketplace_id=client.marketplace_id,
+                    now=clock(),
+                    factor=factors[film.format_code].factor,
                 )
                 results.append(result)
                 if result.bids is not None and result.bids.price is not None:

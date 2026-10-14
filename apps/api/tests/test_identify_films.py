@@ -729,6 +729,9 @@ async def test_a_value_taken_before_an_identification_falls_due(db: AsyncSession
             basis=ASKING_PRICES,
             search_query="Captain Ameica Civil War 4K",
             checked_utc=datetime(2026, 9, 25, 11, 0),
+            # Taken by Batch X6's rule, so only the identification can make it due.
+            used_count=0,
+            new_count=0,
         )
     )
     await db.flush()

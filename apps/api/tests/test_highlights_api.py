@@ -125,19 +125,39 @@ async def _watch(
 
 
 async def _value(
-    session: AsyncSession, movie: Movie, fmt: str, price: str | None, *, sample: int = 7
+    session: AsyncSession,
+    movie: Movie,
+    fmt: str,
+    price: str | None,
+    *,
+    sample: int = 7,
+    before_x6: bool = False,
 ) -> None:
+    """A stored value as runs write one since Batch X6: the median of ``sample`` used listings,
+    £1 either side of it. ``before_x6`` writes one without the groups, which no list shows."""
+    amount = Decimal(price) if price is not None else None
+    groups: dict[str, object] = {}
+    if not before_x6:
+        groups = {
+            "value_basis": "used" if amount is not None else None,
+            "low": amount - 1 if amount is not None else None,
+            "high": amount + 1 if amount is not None else None,
+            "used_median": amount,
+            "used_count": sample,
+            "new_count": 0,
+        }
     session.add(
         DiscValuation(
             id=uuid.uuid4(),
             movie_id=movie.id,
             format_code=fmt,
             status="priced" if price is not None else "not_priced",
-            price=Decimal(price) if price is not None else None,
+            price=amount,
             sample_size=sample,
             basis="current asking prices",
             search_query=movie.title,
             checked_utc=datetime(2026, 9, 26, 3, 0),
+            **groups,
         )
     )
     await session.flush()
@@ -251,6 +271,7 @@ async def test_most_valuable_is_owned_discs_at_their_stored_value_with_its_basis
     combo = await _film(api_session, "Combo Pack", formats=["4k_uhd", "blu_ray"])
     unowned = await _film(api_session, "Priced Not Owned", formats=[])
     unpriced = await _film(api_session, "Too Few Listings", formats=["dvd"])
+    new_copy = await _film(api_session, "Priced Before X6", formats=["4k_uhd"])
 
     await _value(api_session, uhd, "4k_uhd", "40.00")
     await _value(api_session, bluray, "blu_ray", "25.50")
@@ -258,6 +279,8 @@ async def test_most_valuable_is_owned_discs_at_their_stored_value_with_its_basis
     await _value(api_session, combo, "blu_ray", "60.00")
     await _value(api_session, unowned, "4k_uhd", "99.00")
     await _value(api_session, unpriced, "dvd", None)
+    # A new copy's price from before Batch X6 waits for its run, and no list shows it.
+    await _value(api_session, new_copy, "4k_uhd", "80.00", before_x6=True)
 
     rows = (await _highlights(client))["mostValuable"]
     assert isinstance(rows, list)
@@ -268,6 +291,14 @@ async def test_most_valuable_is_owned_discs_at_their_stored_value_with_its_basis
     first = rows[0]
     assert first["basis"] == "current asking prices"
     assert first["sampleSize"] == 7
+    # Batch X6: what stands behind it, for "7 used listings, £39–£41".
+    assert (first["valueBasis"], first["factor"], first["low"], first["high"]) == (
+        "used",
+        None,
+        "39.00",
+        "41.00",
+    )
+    assert first["valuedAs"] == "as used copies"
     assert first["currency"] == "GBP"
     assert first["copies"] == 2
     assert first["checkedAt"].startswith("2026-09-26T03:00:00")

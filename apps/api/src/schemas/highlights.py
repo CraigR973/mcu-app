@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -64,6 +65,14 @@ class ValuableDiscResponse(BaseModel):
     #: "current asking prices" today; the value's own basis, not a label chosen here.
     basis: str
     sampleSize: int = Field(ge=0)
+    #: Batch X6: how the value was reached (``used`` or ``new_scaled``), the factor for the
+    #: second, and the range of the listings behind it, for "7 used listings, £4–£9".
+    valueBasis: Literal["used", "new_scaled"]
+    factor: str | None
+    low: str
+    high: str
+    #: "as used copies".
+    valuedAs: str
     checkedAt: UtcDatetime
     #: Owned discs of this film on this format. Two copies are two discs at one price.
     copies: int = Field(ge=1)

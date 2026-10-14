@@ -20,6 +20,7 @@ from sqlalchemy import and_, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
+from src.ebay.pricing import AS_USED_COPIES
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.profile import Profile
@@ -37,7 +38,7 @@ from src.schemas.highlights import (
     TopRatedRowResponse,
     ValuableDiscResponse,
 )
-from src.services.valuation import owned_valued_discs
+from src.services.valuation import current_value, owned_valued_discs
 
 router = APIRouter(prefix="/api/v1", tags=["highlights"])
 
@@ -191,7 +192,7 @@ async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
                 ),
             )
             .join(Movie, Movie.id == DiscValuation.movie_id)
-            .where(DiscValuation.status == "priced")
+            .where(DiscValuation.status == "priced", current_value())
             .group_by(DiscValuation.id, Movie.id)
             .order_by(DiscValuation.price.desc(), Movie.title)
             .limit(ROW_LENGTH)
@@ -208,6 +209,11 @@ async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
             currency=valuation.currency,
             basis=valuation.basis,
             sampleSize=valuation.sample_size,
+            valueBasis="new_scaled" if valuation.value_basis == "new_scaled" else "used",
+            factor=str(valuation.factor) if valuation.factor is not None else None,
+            low=str(valuation.low),
+            high=str(valuation.high),
+            valuedAs=AS_USED_COPIES,
             checkedAt=valuation.checked_utc,
             copies=int(count),
         )

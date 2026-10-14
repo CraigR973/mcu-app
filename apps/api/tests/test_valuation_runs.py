@@ -1,6 +1,8 @@
 """Valuation runs and the total — Batch T6, snag 7. Postgres-backed, so these run in CI.
 
 **What this proves:** one eBay search per film and format however many copies there are;
+each disc valued as a used copy, a value from before Batch X6 priced again at once, and the
+used-to-New factor measured from the stored values and applied to all of them at a run's end;
 downloads, sold discs and deleted discs left out; a run that stops at its share of the day
 and a next run that carries on without re-pricing anything; one run at a time, and a dead
 one given up after 30 minutes; old prices kept when eBay fails; a price that needs three
@@ -41,12 +43,18 @@ from src.models.profile import Profile, UserRole
 from src.models.valuation import DiscValuation, ValuationRun
 from src.services.valuation import (
     DAILY_SHARE,
+    FALLBACK_FACTOR,
+    MIN_FACTOR_PAIRS,
     MIN_RUN_BUDGET,
+    UsedFactor,
     collection_value,
     count_due,
     day_start,
     due_films,
+    rescale,
     start_run,
+    used_factors,
+    valuations_for_movie,
     work_run,
 )
 
@@ -130,14 +138,36 @@ async def _disc(
 
 
 async def _price(
-    db: AsyncSession, film: Movie, format_code: str, price: str | None, *, checked: datetime
+    db: AsyncSession,
+    film: Movie,
+    format_code: str,
+    price: str | None,
+    *,
+    checked: datetime,
+    before_x6: bool = False,
 ) -> DiscValuation:
+    """A stored value as a run since Batch X6 writes one: ten used listings, or one.
+
+    ``before_x6`` writes one as runs did before it, with no groups: the largest group's
+    median, which X6 makes due and leaves out of every total.
+    """
+    amount = Decimal(price) if price is not None else None
+    groups: dict[str, Any] = {}
+    if not before_x6:
+        groups = {
+            "value_basis": "used" if amount is not None else None,
+            "low": amount,
+            "high": amount,
+            "used_median": amount,
+            "used_count": 10 if amount is not None else 1,
+            "new_count": 0,
+        }
     stored = DiscValuation(
         id=uuid.uuid4(),
         movie_id=film.id,
         format_code=format_code,
         status="priced" if price is not None else "not_priced",
-        price=Decimal(price) if price is not None else None,
+        price=amount,
         currency="GBP",
         sample_size=10 if price is not None else 1,
         matched=10,
@@ -145,6 +175,7 @@ async def _price(
         basis="current asking prices",
         search_query=f"{film.title} {format_code}",
         checked_utc=checked,
+        **groups,
     )
     db.add(stored)
     await db.flush()
@@ -220,23 +251,122 @@ async def test_a_run_prices_each_film_and_format_once_and_counts_every_disc(
         (row.movie_id, row.format_code): row
         for row in (await db.scalars(select(DiscValuation))).all()
     }
+    # As used copies (Batch X6, #256): the median of the used listings, which the captured
+    # searches have three or more of for each disc priced here. Before X6 these were the
+    # largest groups: £9.99 (New), £24.99 (New) and £6.73 (Very good).
     blu_ray = stored[(blade_runner.id, "blu_ray")]
-    assert (blu_ray.status, blu_ray.price, blu_ray.sample_size) == ("priced", Decimal("9.99"), 29)
+    assert (blu_ray.status, blu_ray.price, blu_ray.sample_size) == ("priced", Decimal("5.45"), 24)
+    assert (blu_ray.value_basis, blu_ray.condition_label, blu_ray.factor) == ("used", "Used", None)
+    assert (blu_ray.low, blu_ray.high) == (Decimal("3.29"), Decimal("65.99"))
+    assert (blu_ray.used_count, blu_ray.new_median, blu_ray.new_count) == (24, Decimal("9.99"), 29)
     assert blu_ray.basis == "current asking prices"
     assert blu_ray.checked_utc == NOW and blu_ray.run_id == run.id
-    assert stored[(blade_runner.id, "4k_uhd")].price == Decimal("24.99")
+    assert stored[(blade_runner.id, "4k_uhd")].price == Decimal("18.83")
     assert stored[(jaws.id, "blu_ray")].price == Decimal("6.73")
     assert stored[(jaws.id, "dvd")].status == "not_priced"
     assert stored[(jaws.id, "dvd")].price is None
+    assert (stored[(jaws.id, "dvd")].used_count, stored[(jaws.id, "dvd")].new_count) == (0, 0)
     assert stored[(mummy.id, "dvd")].search_query == "The Mummy DVD"
     assert (digital.id, "dvd") not in stored
 
     value = await collection_value(db, now=NOW)
-    assert value.total == Decimal("9.99") * 2 + Decimal("24.99") + Decimal("6.73")
+    assert value.total == Decimal("5.45") * 2 + Decimal("18.83") + Decimal("6.73")
     assert (value.discs, value.priced, value.not_priced, value.unchecked) == (6, 4, 2, 0)
     assert value.checked_from == value.checked_to == NOW
     assert value.due == 0
     assert value.latest_run is not None and value.latest_run.id == run.id
+
+
+async def test_a_value_from_before_x6_is_due_counts_nowhere_and_is_replaced(
+    db: AsyncSession,
+) -> None:
+    """Batch X6: a stored value from before it is a new copy's price (#209), so it is priced
+    again at once rather than in 30 days, and until then no total, list or page shows it."""
+    film = await _film(db, "Blade Runner 2049", tmdb_id=990_335_985)
+    await _disc(db, film, "blu_ray")
+    await _price(db, film, "blu_ray", "9.99", checked=NOW - timedelta(days=1), before_x6=True)
+
+    assert [due.movie_id for due in await due_films(db, now=NOW, limit=10)] == [film.id]
+    value = await collection_value(db, now=NOW)
+    assert (value.total, value.priced, value.not_priced, value.unchecked) == (None, 0, 0, 1)
+    assert await valuations_for_movie(db, film.id) == {}
+
+    await _run_now(db, FakeEbay({"Blade Runner 2049 Blu-ray": BLADE_RUNNER}))
+
+    value = await collection_value(db, now=NOW)
+    assert (value.total, value.priced, value.unchecked) == (Decimal("5.45"), 1, 0)
+    assert (await valuations_for_movie(db, film.id))["blu_ray"].value_basis == "used"
+
+
+async def _scaled(db: AsyncSession, film: Movie, *, new: str, factor: str) -> DiscValuation:
+    """A New-based value: two used listings, five New at ``new``, at ``factor``."""
+    stored = await _price(db, film, "4k_uhd", "1.00", checked=NOW - timedelta(days=1))
+    stored.value_basis, stored.factor = "new_scaled", Decimal(factor)
+    stored.price = (Decimal(new) * Decimal(factor)).quantize(Decimal("0.01"))
+    stored.used_count, stored.used_median = 2, Decimal("5.00")
+    stored.new_count, stored.new_median = 5, Decimal(new)
+    await db.flush()
+    return stored
+
+
+async def test_the_factor_is_measured_from_the_stored_values_and_every_run_moves_to_it(
+    db: AsyncSession,
+) -> None:
+    """Below 20 films with both groups the fallback stands; from 20, their median ratio, and
+    the end of a run re-scales every New-based value of that format to it."""
+    for index in range(MIN_FACTOR_PAIRS - 1):
+        film = await _film(db, f"Paired {index:02d}", tmdb_id=990_100_000 + index)
+        await _disc(db, film, "4k_uhd")
+        stored = await _price(db, film, "4k_uhd", "7.00", checked=NOW - timedelta(days=1))
+        stored.new_median, stored.new_count = Decimal("10.00"), 4
+    scaled_film = await _film(db, "Thinly Used", tmdb_id=990_100_100)
+    await _disc(db, scaled_film, "4k_uhd")
+    scaled = await _scaled(db, scaled_film, new="20.00", factor="0.60")
+    await db.flush()
+
+    assert (await used_factors(db))["4k_uhd"] == UsedFactor(FALLBACK_FACTOR, 0)
+
+    twentieth = await _film(db, "Paired 19", tmdb_id=990_100_019)
+    await _disc(db, twentieth, "4k_uhd")
+    stored = await _price(db, twentieth, "4k_uhd", "7.00", checked=NOW - timedelta(days=1))
+    stored.new_median, stored.new_count = Decimal("10.00"), 4
+    await db.flush()
+
+    assert (await used_factors(db))["4k_uhd"] == UsedFactor(Decimal("0.70"), MIN_FACTOR_PAIRS)
+
+    # Nothing is due, but a film added now is, and its run ends by re-scaling.
+    added = await _film(db, "Blade Runner 2049", tmdb_id=990_335_986)
+    await _disc(db, added, "blu_ray")
+    run = await _run_now(db, FakeEbay({"Blade Runner 2049 Blu-ray": BLADE_RUNNER}))
+    assert run.status == "finished"
+
+    await db.refresh(scaled)
+    assert (scaled.price, scaled.factor) == (Decimal("14.00"), Decimal("0.70"))
+    assert await rescale(db, await used_factors(db)) == 0
+
+
+async def test_a_value_reached_from_new_carries_its_factor_by_the_tables_own_rule(
+    db: AsyncSession,
+) -> None:
+    film = await _film(db, "Heat", tmdb_id=990_000_950)
+    with pytest.raises(IntegrityError):
+        async with db.begin_nested():
+            db.add(
+                DiscValuation(
+                    id=uuid.uuid4(),
+                    movie_id=film.id,
+                    format_code="blu_ray",
+                    status="priced",
+                    price=Decimal("6.00"),
+                    value_basis="new_scaled",
+                    factor=None,
+                    used_count=0,
+                    new_count=4,
+                    basis="current asking prices",
+                    search_query="Heat Blu-ray",
+                    checked_utc=NOW,
+                )
+            )
 
 
 async def test_a_priced_row_without_a_price_cannot_be_stored(db: AsyncSession) -> None:
@@ -530,6 +660,7 @@ async def test_both_people_can_read_the_total(db: AsyncSession) -> None:
     body = response.json()
     assert body["total"] == "9.99"
     assert body["basis"] == "current asking prices"
+    assert body["valuedAs"] == "as used copies"
     assert (body["discs"], body["pricedDiscs"], body["uncheckedDiscs"]) == (2, 1, 1)
     assert body["due"] == 1
     assert body["minSample"] == 3
@@ -601,6 +732,18 @@ async def test_a_copy_carries_its_stored_price(db: AsyncSession) -> None:
         "priced",
     )
     assert priced["basis"] == "current asking prices"
+    # Batch X6: how the value was reached, its range, and both groups' sizes.
+    assert (priced["valueBasis"], priced["factor"], priced["low"], priced["high"]) == (
+        "used",
+        None,
+        "19.50",
+        "19.50",
+    )
+    assert (priced["usedCount"], priced["newCount"], priced["valuedAs"]) == (
+        10,
+        0,
+        "as used copies",
+    )
     # Batch V8: eBay's own sold listings, searched with the words the value was.
     assert priced["soldListingsUrl"] == (
         "https://www.ebay.co.uk/sch/i.html?_nkw=Heat+4k_uhd&_sacat=617&LH_Sold=1&LH_Complete=1"

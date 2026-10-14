@@ -235,6 +235,8 @@ export type {
   EbayListingUrl,
   EbayPriceEstimate,
   EbayPriceSegment,
+  EbayUsedValue,
+  ValueBasis,
   BidTrial,
   BidTrialStart,
   CollectionValue,
@@ -2394,6 +2396,8 @@ export async function fetchEbayPriceEstimate(input: {
   formatCode?: string | null
   /** Sellers in this country only. `'GB'` by default at the server; `null` for anywhere. */
   country?: string | null
+  /** Batch X6: a TV title, whose own "Complete Series" box sets are not another product. */
+  isSeries?: boolean
 }): Promise<EbayPriceEstimate> {
   return parseOrThrowApiError(
     await authFetch('/ebay/price-estimate', { method: 'POST', body: JSON.stringify(input) }),
@@ -2413,6 +2417,7 @@ export async function fetchEbayListingUrl(input: {
   year?: number | null
   formatCode?: string | null
   condition?: string | null
+  isSeries?: boolean
 }): Promise<EbayListingUrl> {
   return parseOrThrowApiError(
     await authFetch('/ebay/listing-url', { method: 'POST', body: JSON.stringify(input) }),

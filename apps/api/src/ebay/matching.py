@@ -174,22 +174,105 @@ _INCOMPLETE_PHRASES: tuple[str, ...] = (
     "empty",
 )
 
-#: Phrases that say "this is television, not the film": "The Complete Series", "Season 2".
-#: "Series" alone stays legitimate ("Universal 100th Anniversary Collector's Series"), so it
-#: counts only after "complete" or "tv", or before a number. Looked for outside the title.
-_TV_PHRASES: tuple[str, ...] = ("complete series", "tv series", "season", "seasons")
+#: Phrases that say "this is television, not the film": "The Complete Series", "Season 2",
+#: and German sellers' "Staffel" (Batch X6: "WESTWORLD 4K. STAFFEL.1" was priced as the 1973
+#: film). "Series" alone stays legitimate ("Universal 100th Anniversary Collector's Series"),
+#: so it counts only after "complete", "tv" or "mini", or before a number. Looked for outside
+#: the title, and not at all when the film is itself a series.
+_TV_PHRASES: tuple[str, ...] = (
+    "complete series",
+    "tv series",
+    "mini series",
+    "miniseries",
+    "season",
+    "seasons",
+    "staffel",
+    "staffeln",
+)
 _TV_SERIES_NUMBER = re.compile(r"\bseries \d")
 
 #: Words that say a Blu-ray is not a 4K, though a 4K is named — Batch X1. "A Clockwork Orange
 #: … Not a 4K Blu-ray release" and "Army of Darkness … REMASTERED IN 4K" were both filed as
 #: 4K, because the highest format named wins (`extract.primary_format`). Removed from the
-#: title before the format is read, so what remains decides.
+#: title before the format is read, so what remains decides. **"Not 4K UHD" goes whole**
+#: (Batch X6): removing only "Not 4K" left "UHD", and a Blu-ray "… BTTF Not 4K UHD" was
+#: still read as a 4K and priced among them.
 _NOT_A_4K = re.compile(
-    r"\bnot\s+(?:a\s+)?4\s*k\b"
+    r"\bnot\s+(?:a\s+)?4\s*k(?:\s+(?:uhd|ultra\s*hd))?\b"
     r"|\b(?:remastered|restored|scanned|restoration|remaster)\s+(?:in|from)\s+(?:a\s+)?4\s*k\b"
     r"|\b4\s*k\s+(?:restoration|remaster|remastered|restored|scan)\b",
     re.IGNORECASE,
 )
+
+#: Words a seller puts before the title: condition, format, and the studio or label
+#: ("Marvel Studios Guardians of the Galaxy Vol. 2", "Lionsgate The Expendables 3", both
+#: seen on 26 Sep). **The film's title must open the listing**, after at most
+#: :data:`MAX_LEADING_WORDS` of these and nothing else — Batch T8a's deal-scan rule, applied
+#: to every match since Batch X6 (MK47-03). Any other word there is another film's:
+#: "Spider Labyrinth", "Pan's Labyrinth", "More American Graffiti", "American Psycho" for
+#: *Psycho*, "On the Town" for *The Town*. Seven of twenty live re-searches on 11 Oct mixed
+#: one in, four of the six highest values among them.
+#:
+#: **Kept to words no film title starts with**, because a word here lets anything after it
+#: be read as the film: "Home" would file *Home Alone* under *Alone*. So "Warner Home Video
+#: - Mystic River" is refused, a stated failure rather than a wrong number, as this file
+#: always trades.
+LEADING_NOISE = frozenset(
+    {
+        "new",
+        "sealed",
+        "brand",
+        "factory",
+        "rare",
+        "mint",
+        "4k",
+        "uhd",
+        "ultra",
+        "hd",
+        "blu",
+        "ray",
+        "bluray",
+        "dvd",
+        "steelbook",
+        "limited",
+        "edition",
+        "uk",
+        "marvel",
+        "studios",
+        "disney",
+        "pixar",
+        "dc",
+        "lionsgate",
+        "paramount",
+        "pictures",
+        "universal",
+        "warner",
+        "bros",
+        "sony",
+        "arrow",
+        "video",
+        "criterion",
+        "eureka",
+        # Batch X6, from the twenty live re-searches of 11 Oct: labels, shops and import
+        # words seen opening a listing of the film itself ("Lucasfilm Star Wars: …",
+        # "20th Century Fox Young Frankenstein", "New EU Import Christine").
+        "lucasfilm",
+        "walt",
+        "20th",
+        "century",
+        "fox",
+        "zavvi",
+        "hmv",
+        "import",
+        "imported",
+        "eu",
+        "bbc",
+    }
+)
+#: How far into the listing's title the film's may start. Every word before it must be one of
+#: :data:`LEADING_NOISE`, so this only bounds a run of them: "4K Ultra HD + Blu Ray Star
+#: Wars …" is five (Batch X6 raised it from T8a's four).
+MAX_LEADING_WORDS = 6
 
 #: A region code after "region", "reg" or "zone": "Region A", "REGION A/B/C", "Region 1".
 _REGION_WORDS = frozenset({"region", "reg", "zone"})
@@ -453,6 +536,8 @@ _COLLECTOR_PHRASES: tuple[str, ...] = (
     "premium box",
     "box set",
     "boxset",
+    "steelbooks",
+    "steel books",
     "collector",
     "collectors",
     "collectible",
@@ -589,6 +674,16 @@ def _year_after(listing_tokens: list[str], start: int) -> int | None:
     return None
 
 
+def opening_run(words: list[str], title_words: list[str]) -> int | None:
+    """Where the title's words start in the listing, if only seller's words precede them."""
+    for start in range(min(MAX_LEADING_WORDS, len(words) - len(title_words)) + 1):
+        if words[start : start + len(title_words)] == title_words and all(
+            word in LEADING_NOISE for word in words[:start]
+        ):
+            return start
+    return None
+
+
 def _without_title(listing_tokens: list[str], start: int, length: int) -> str:
     """The listing's words with the film's title taken out, joined for phrase searches."""
     return " ".join(listing_tokens[:start] + listing_tokens[start + length :])
@@ -665,16 +760,18 @@ def match(
     format_code: str | None = None,
     country: str | None = "GB",
     film_year: int | None = None,
+    is_series: bool = False,
 ) -> MatchVerdict:
     """Is this listing the disc we asked for?
 
     The gates run in two groups, and the **first** failure is the reason reported — so a
     rejection names the thing a person would have said first, not the last rule that
     happened to fire. First **is this the right product**: category, accessory, bundle,
-    title, sequel, format. Then **is its price comparable**: a multi-variation "from" price,
-    and an overseas seller. That order matters for exactly the listings where both are
-    true — "Blade Runner 2049 4K or Blu-ray Custom Slipcover" is a multi-variation listing
-    *and* a slipcover, and being a slipcover is the useful half of that.
+    title, what precedes it, sequel, format. Then **is its price comparable**: a
+    multi-variation "from" price, and an overseas seller. That order matters for exactly the
+    listings where both are true — "Blade Runner 2049 4K or Blu-ray Custom Slipcover" is a
+    multi-variation listing *and* a slipcover, and being a slipcover is the useful half of
+    that.
 
     ``format_code`` is one of ``collection_item.FORMAT_RANK``; ``None`` accepts any disc
     format and lets the caller segment on what comes back. ``country`` defaults to ``GB``:
@@ -685,6 +782,9 @@ def match(
     ``film_year``, when given, refuses a listing whose title puts another year straight
     after the film's (Batch X1): "Halloween (2018)" is not the 1978 film. ±1, because a
     disc's year is often the UK release rather than the premiere.
+
+    ``is_series`` turns the television rule off (Batch X6): for the catalogue's TV titles,
+    "Blue Planet II … Complete Series" is the thing itself.
     """
     if not listing.leaf_category_ids:
         return MatchVerdict(ok=False, reason="no category on the listing")
@@ -716,8 +816,11 @@ def match(
     incomplete = _phrase_present(rest, _INCOMPLETE_PHRASES)
     if incomplete:
         return MatchVerdict(ok=False, reason=f"incomplete, not the whole disc ({incomplete!r})")
-    television = _phrase_present(rest, _TV_PHRASES) or (
-        "series" if _TV_SERIES_NUMBER.search(rest) else None
+    television = (
+        None
+        if is_series
+        else _phrase_present(rest, _TV_PHRASES)
+        or ("series" if _TV_SERIES_NUMBER.search(rest) else None)
     )
     if television:
         return MatchVerdict(ok=False, reason=f"television, not the film ({television!r})")
@@ -728,6 +831,19 @@ def match(
     series = wanted[:-1] if len(wanted) > 1 and wanted[-1].isdigit() else wanted
     if len(_run_starts(listing_tokens, series)) > 1:
         return MatchVerdict(ok=False, reason="title names the film more than once; a bundle")
+
+    if opening_run(listing_tokens, wanted) is None:
+        before = next(
+            (word for word in listing_tokens[: starts[0]] if word not in LEADING_NOISE), None
+        )
+        return MatchVerdict(
+            ok=False,
+            reason=(
+                f"{before!r} before {film_title!r} makes it another film"
+                if before
+                else f"{film_title!r} starts too far into the listing's title"
+            ),
+        )
 
     for start in starts:
         after = start + len(wanted)

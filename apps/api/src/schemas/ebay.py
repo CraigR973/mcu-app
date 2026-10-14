@@ -41,6 +41,27 @@ class PriceSegmentResponse(BaseModel):
     currency: str
 
 
+class UsedValueResponse(BaseModel):
+    """What one disc on the shelf is worth as a used copy — Batch X6 (#256).
+
+    ``basis`` says how: ``used``, the median of ``sampleSize`` used listings; ``new_scaled``,
+    New's median of ``sampleSize`` listings times ``factor``, the used-to-New ratio measured
+    for the format, because used listings were too few. ``low`` and ``high`` are the range of
+    those listings before any factor.
+    """
+
+    price: str
+    currency: str
+    basis: Literal["used", "new_scaled"]
+    sampleSize: int = Field(gt=0)
+    low: str
+    high: str
+    #: Null unless ``basis`` is ``new_scaled``.
+    factor: str | None
+    #: "as used copies": the words every surface shows beside the value.
+    valuedAs: str
+
+
 class PriceEstimateResponse(BaseModel):
     """What a title is currently being *asked* for on eBay UK — Phase 4.1.
 
@@ -70,6 +91,9 @@ class PriceEstimateResponse(BaseModel):
     unusable: int = Field(ge=0)
     #: Always "current asking prices".
     basis: str
+    #: Batch X6: the disc's value as a used copy, for the requested format (or the
+    #: headline's). Null when too few used and too few New listings matched.
+    usedValue: UsedValueResponse | None = None
 
 
 class PriceEstimateRequest(BaseModel):
@@ -86,6 +110,9 @@ class PriceEstimateRequest(BaseModel):
     #: what the import duty will be — 52 of 200 Blade Runner listings ship from abroad.
     #: Null considers every country.
     country: str | None = Field(default="GB", max_length=2)
+    #: Batch X6: the title is a TV series, so "Complete Series" and "Season" listings are it
+    #: rather than another product. The film's own ``mediaType`` is ``tv``.
+    isSeries: bool = False
 
 
 class ListingUrlRequest(BaseModel):
@@ -95,6 +122,8 @@ class ListingUrlRequest(BaseModel):
     year: int | None = Field(default=None, ge=1880, le=2200)
     formatCode: FormatCode | None = None
     condition: Literal["new", "like_new", "good", "acceptable", "damaged"] | None = None
+    #: As on :class:`PriceEstimateRequest`.
+    isSeries: bool = False
 
 
 class ListingUrlResponse(BaseModel):
@@ -109,6 +138,6 @@ class ListingUrlResponse(BaseModel):
     url: str
     #: The title that was packed into the link, within eBay's 80-character limit.
     suggestedTitle: str
-    #: What to ask, when a price estimate was available — the median of current asking
-    #: prices, unshaded. Null when no segment matched.
+    #: What to ask, when a price estimate was available — the disc's value as a used copy
+    #: (Batch X6), unshaded. Null when too few listings matched.
     suggestedPrice: str | None

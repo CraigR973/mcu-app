@@ -108,6 +108,13 @@ const COPY: CollectionCopy = {
     checkedAt: '2026-09-24T03:05:00Z',
     basis: 'current asking prices',
     minSample: 3,
+    valueBasis: 'new_scaled',
+    factor: '0.62',
+    low: '28.00',
+    high: '45.00',
+    usedCount: 2,
+    newCount: 14,
+    valuedAs: 'as used copies',
     soldListingsUrl: null,
   },
 }
@@ -160,20 +167,40 @@ describe('MovieDetailPage collection answer', () => {
     renderPage()
 
     expect(await screen.findByText('£22.50')).not.toBeNull()
-    expect(screen.getByText(/Last valued · current asking prices/)).not.toBeNull()
-    expect(screen.getByText(/median of 14 listings · New · checked 24 Sep 2026/)).not.toBeNull()
+    expect(screen.getByText(/Last valued as a used copy · current asking prices/)).not.toBeNull()
+    expect(
+      screen.getByText(
+        /too few used listings: New's median × 0.62, from 14 new listings, £28.00–£45.00 · checked 24 Sep 2026/,
+      ),
+    ).not.toBeNull()
     // The live check spends an eBay lookup, so it stays with the admin.
     expect(screen.queryByRole('button', { name: /What is it worth/ })).toBeNull()
   })
 
   it('says a disc was not priced, and why, rather than showing a guess', async () => {
     vi.mocked(fetchCopies).mockResolvedValue([
-      { ...COPY, valuation: { ...COPY.valuation!, status: 'not_priced', price: null, sampleSize: 2 } },
+      {
+        ...COPY,
+        valuation: {
+          ...COPY.valuation!,
+          status: 'not_priced',
+          price: null,
+          sampleSize: 2,
+          valueBasis: null,
+          factor: null,
+          low: null,
+          high: null,
+          usedCount: 2,
+          newCount: 1,
+        },
+      },
     ])
     renderPage()
 
     expect(
-      await screen.findByText(/Not priced when checked on 24 Sep 2026: eBay had only 2 matching listings, and a price needs at least 3/),
+      await screen.findByText(
+        /Not priced when checked on 24 Sep 2026: eBay had 2 used listings and 1 new listing, and a value needs at least 3 of one kind/,
+      ),
     ).not.toBeNull()
   })
 

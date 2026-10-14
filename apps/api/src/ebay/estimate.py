@@ -68,6 +68,7 @@ async def estimate_price(
     format_code: str | None,
     country: str | None = UK,
     film_year: int | None = None,
+    is_series: bool = False,
 ) -> PriceEstimate:
     """Search eBay once and judge every listing that comes back.
 
@@ -77,6 +78,7 @@ async def estimate_price(
 
     ``film_year`` turns on the matcher's year rule (Batch X1); the deal scan's usual price
     passes it, so "Halloween (2018)" listings stay out of the 1978 film's median.
+    ``is_series`` says the title is a TV series, so "Complete Series" listings are it (X6).
     """
     raw = await client.search(search_query(film_title, format_code))
     judged = []
@@ -95,6 +97,7 @@ async def estimate_price(
                     format_code=format_code,
                     country=country,
                     film_year=film_year,
+                    is_series=is_series,
                 ),
             )
         )
