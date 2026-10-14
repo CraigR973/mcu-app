@@ -68,6 +68,11 @@ Hosting: Neon (Postgres) + Railway (API) + Vercel (web) — live since Batch 2.
   'mcu_readonly') THEN GRANT SELECT ON <table> TO mcu_readonly; END IF; END $$`. Never grant
   a table or column that holds a credential. **Prove one is withheld from the catalogue**
   (`has_column_privilege`, `has_table_privilege`), never by selecting it.
+- **The backup role, `mcu_backup`, is granted the same way, in the same block** (X4, #268):
+  every new table or column, guarded, unless it holds a credential, which instead goes in
+  `CREDENTIAL_TABLES` or `CREDENTIAL_COLUMNS` in `apps/api/src/services/backup.py`. The weekly
+  copy (`.github/workflows/backup.yml`) stops and names any table or column the role cannot
+  read, and any credential it can; a restore is `docs/restore-runbook.md`.
 - **Railway:** with `RAILWAY_TOKEN` set (or `RAILWAY_API_TOKEN`, after `railway link -p
   "$RAILWAY_PROJECT_ID" -e production`), `railway config plan` runs from the repo root.
   `config apply` still waits for Craig's word in the chat ("Still explicit", below). At rest
