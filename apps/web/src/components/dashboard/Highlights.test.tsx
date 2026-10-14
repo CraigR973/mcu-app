@@ -37,6 +37,11 @@ const FULL: Data = {
       currency: 'GBP',
       basis: 'current asking prices',
       sampleSize: 7,
+      valueBasis: 'used',
+      factor: null,
+      low: '29.99',
+      high: '44.00',
+      valuedAs: 'as used copies',
       checkedAt: '2026-09-26T03:00:00Z',
       copies: 2,
     },
@@ -112,9 +117,10 @@ describe('Highlights on Home — Batch V5', () => {
     renderPanel(FULL)
     const row = within(await screen.findByRole('region', { name: 'Most valuable discs' }))
 
-    expect(row.getByText('At their stored value: eBay current asking prices, checked 26 Sep 2026.')).not.toBeNull()
+    expect(row.getByText('At their stored value as used copies: eBay current asking prices, checked 26 Sep 2026.')).not.toBeNull()
     expect(row.getByText(/£34\.99 · 4K UHD/)).not.toBeNull()
-    expect(row.getByText('7 listings · 2 copies')).not.toBeNull()
+    // Batch X6: what stands behind the value, its listings and their range.
+    expect(row.getByText('7 used listings, £29.99–£44.00 · 2 copies')).not.toBeNull()
   })
 
   it('leaves out a row with nothing in it', async () => {

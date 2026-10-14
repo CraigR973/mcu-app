@@ -29,10 +29,9 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ebay.estimate import EbaySearch, estimate_price
-from src.ebay.pricing import NEW_CONDITION_ID, USED_CONDITION_IDS, PriceEstimate
+from src.ebay.pricing import MIN_SAMPLE, NEW_CONDITION_ID, USED_CONDITION_IDS, PriceEstimate
 from src.matching.engine import searchable_title
 from src.models.ebay_watch import EbayPriceRef
-from src.services.valuation import MIN_SAMPLE
 
 #: How long a usual price stands before it is searched again.
 FRESH_FOR = timedelta(days=14)
@@ -88,7 +87,7 @@ def _values(estimate: PriceEstimate, format_code: str) -> dict[str, object]:
     }
     pooled = estimate.used_pooled.get((format_code, "standard"))
     by_condition[USED_POOL] = (
-        {"median": str(pooled[0]), "n": pooled[1]} if pooled else {"median": None, "n": 0}
+        {"median": str(pooled.median), "n": pooled.count} if pooled else {"median": None, "n": 0}
     )
     return {
         "status": "priced" if priced else "not_priced",

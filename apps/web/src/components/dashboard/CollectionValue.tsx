@@ -34,7 +34,8 @@ const NOT_STARTED: Record<Exclude<ValuationStart['outcome'], 'started'>, string>
 }
 
 /**
- * What the collection is worth at current eBay asking prices — Batch T6, snag 7.
+ * What the collection is worth at current eBay asking prices — Batch T6, snag 7. Each disc
+ * as a used copy since Batch X6 (`DECISIONS.md` #256): `valuedAs` carries the words.
  *
  * **It says "asking prices" every time, and that they run high.** eBay's sold prices are
  * closed to apps (`DECISIONS.md` #16, #126), so this is what sellers are asking, which is
@@ -80,7 +81,9 @@ export function CollectionValue() {
       <div className="archive-panel space-y-3 p-4 sm:p-5">
         {value.total !== null ? (
           <div>
-            <p className="metadata-label">At {value.basis} on eBay</p>
+            <p className="metadata-label">
+              {value.valuedAs ? `${value.valuedAs}, at ${value.basis} on eBay` : `At ${value.basis} on eBay`}
+            </p>
             <p className="mt-1 font-display text-3xl font-semibold text-foreground">
               &asymp; {pounds(value.total, value.currency)}
             </p>
@@ -108,15 +111,19 @@ export function CollectionValue() {
         {value.total !== null && (value.notPricedDiscs > 0 || value.uncheckedDiscs > 0) ? (
           <p className="text-xs leading-5 text-muted-foreground">
             {value.notPricedDiscs > 0
-              ? `${COUNT.format(value.notPricedDiscs)} had fewer than ${String(value.minSample)} matching eBay listings, so they are not priced rather than guessed. `
+              ? `${COUNT.format(value.notPricedDiscs)} had fewer than ${String(value.minSample)} used and ${String(value.minSample)} new matching eBay listings, so they are not priced rather than guessed. `
               : ''}
-            {value.uncheckedDiscs > 0 ? `${COUNT.format(value.uncheckedDiscs)} not checked yet.` : ''}
+            {value.uncheckedDiscs > 0
+              ? `${COUNT.format(value.uncheckedDiscs)} not valued as used copies yet; the next run does them first.`
+              : ''}
           </p>
         ) : null}
 
         {value.total !== null ? (
           <p className="text-xs leading-5 text-muted-foreground">
-            Asking prices usually run above what discs actually sell for. eBay does not let apps see sold prices.
+            Each disc is valued as a used copy: the median of its used listings, or New&rsquo;s median at the
+            used-to-New rate measured across the collection when used listings are too few. Asking prices
+            usually run above what discs actually sell for. eBay does not let apps see sold prices.
           </p>
         ) : null}
 

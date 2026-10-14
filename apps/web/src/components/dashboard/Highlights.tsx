@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Award, Gem, Repeat, Star, type LucideIcon } from 'lucide-react'
 
+import { valueBehind } from '@/components/collection/value-words'
 import { PosterCard, Shelf } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchHighlights, formatLabel, type Highlights as HighlightsData } from '@/lib/api'
@@ -101,7 +102,7 @@ function rows(data: HighlightsData): ReactNode[] {
         id="highlights-most-valuable"
         icon={Gem}
         title="Most valuable discs"
-        caption={`At their stored value: eBay ${first.basis}, checked ${formatShortDate(first.checkedAt)}.`}
+        caption={`At their stored value${first.valuedAs ? ` ${first.valuedAs}` : ''}: eBay ${first.basis}, checked ${formatShortDate(first.checkedAt)}.`}
         cards={data.mostValuable.map((disc) => ({
           movieId: disc.movieId,
           title: disc.title,
@@ -110,7 +111,13 @@ function rows(data: HighlightsData): ReactNode[] {
             <>
               {money(disc.price, disc.currency)} · {formatLabel(disc.formatCode)}
               <span className="block">
-                {disc.sampleSize} listings{disc.copies > 1 ? ` · ${String(disc.copies)} copies` : ''}
+                {disc.valueBasis && disc.low && disc.high
+                  ? valueBehind(
+                      { ...disc, valueBasis: disc.valueBasis, low: disc.low, high: disc.high },
+                      { short: true },
+                    )
+                  : `${String(disc.sampleSize)} listings`}
+                {disc.copies > 1 ? ` · ${String(disc.copies)} copies` : ''}
               </span>
             </>
           ),

@@ -11,7 +11,8 @@ its report is Craig's to read before he picks a blend or bids only (#228).
 
 from __future__ import annotations
 
-from typing import Annotated
+from decimal import Decimal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +22,7 @@ from src.clock import utcnow
 from src.database import get_db
 from src.ebay.client import EbayClient
 from src.ebay.estimate import sold_listings_url
-from src.ebay.pricing import ASKING_PRICES
+from src.ebay.pricing import AS_USED_COPIES, ASKING_PRICES, MIN_SAMPLE
 from src.models.valuation import DiscValuation, ValuationRun
 from src.schemas.bid_trial import BidTrialReport, BidTrialResponse, BidTrialStartResponse
 from src.schemas.valuation import (
@@ -41,7 +42,6 @@ from src.services.bid_trial import (
 from src.services.valuation import (
     CURRENCY,
     DAILY_SHARE,
-    MIN_SAMPLE,
     abandon_stale_runs,
     collection_value,
     continue_run_in_background,
@@ -61,6 +61,13 @@ _RUN_STATUSES: dict[str, RunStatus] = {
     "stopped": "stopped",
     "abandoned": "abandoned",
 }
+
+
+def value_basis(stored: str | None) -> Literal["used", "new_scaled"] | None:
+    """The column's value, typed. The table's CHECK constraint allows exactly these."""
+    if stored == "used":
+        return "used"
+    return "new_scaled" if stored == "new_scaled" else None
 
 
 def run_response(run: ValuationRun) -> ValuationRunResponse:
@@ -99,17 +106,28 @@ def trial_response(run: ValuationRun) -> BidTrialResponse:
     )
 
 
+def _money(amount: Decimal | None) -> str | None:
+    return str(amount) if amount is not None else None
+
+
 def copy_valuation(valuation: DiscValuation) -> CopyValuationResponse:
     return CopyValuationResponse(
         formatCode=valuation.format_code,
         status="priced" if valuation.status == "priced" else "not_priced",
-        price=str(valuation.price) if valuation.price is not None else None,
+        price=_money(valuation.price),
         currency=valuation.currency,
         sampleSize=valuation.sample_size,
         conditionLabel=valuation.condition_label,
         checkedAt=valuation.checked_utc,
         basis=valuation.basis,
         minSample=MIN_SAMPLE,
+        valueBasis=value_basis(valuation.value_basis),
+        factor=_money(valuation.factor),
+        low=_money(valuation.low),
+        high=_money(valuation.high),
+        usedCount=valuation.used_count or 0,
+        newCount=valuation.new_count or 0,
+        valuedAs=AS_USED_COPIES,
         soldListingsUrl=sold_listings_url(valuation.search_query),
     )
 
@@ -122,6 +140,7 @@ async def get_collection_value(_user: CurrentUser, db: Database) -> CollectionVa
         total=str(value.total) if value.total is not None else None,
         currency=CURRENCY,
         basis=ASKING_PRICES,
+        valuedAs=AS_USED_COPIES,
         discs=value.discs,
         pricedDiscs=value.priced,
         notPricedDiscs=value.not_priced,

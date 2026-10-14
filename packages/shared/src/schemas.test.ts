@@ -9,6 +9,7 @@ import {
   pushSubscriptionListSchema,
   ebayListingUrlSchema,
   ebayPriceEstimateSchema,
+  ebayUsedValueSchema,
   ebayTargetsSchema,
   ebayPriceSegmentSchema,
   ebayAccountSchema,
@@ -1350,11 +1351,38 @@ describe('eBay price estimates (Batch 28)', () => {
       rejected: { 'ships from JP, not GB': 7 },
       unusable: 0,
       basis: 'current asking prices',
+      usedValue: {
+        price: '5.45',
+        currency: 'GBP',
+        basis: 'used',
+        sampleSize: 24,
+        low: '3.29',
+        high: '65.99',
+        factor: null,
+        valuedAs: 'as used copies',
+      },
     })
 
     expect(parsed.basis).toBe('current asking prices')
     expect(parsed.rejected['ships from JP, not GB']).toBe(7)
     expect(parsed.headline?.sampleSize).toBe(29)
+    expect(parsed.usedValue?.price).toBe('5.45')
+  })
+
+  it('refuses a used value resting on no listings, or reached another way (Batch X6)', () => {
+    const value = {
+      price: '5.48',
+      currency: 'GBP',
+      basis: 'new_scaled',
+      sampleSize: 4,
+      low: '7.97',
+      high: '13.16',
+      factor: '0.60',
+      valuedAs: 'as used copies',
+    }
+    expect(ebayUsedValueSchema.parse(value)).toEqual(value)
+    expect(() => ebayUsedValueSchema.parse({ ...value, sampleSize: 0 })).toThrow()
+    expect(() => ebayUsedValueSchema.parse({ ...value, basis: 'largest_group' })).toThrow()
   })
 
   it('allows a headline of null — nothing matched is an answer', () => {
@@ -1591,6 +1619,13 @@ describe('Batch T6 — the collection\'s value', () => {
     checkedAt: '2026-09-24T03:05:00Z',
     basis: 'current asking prices',
     minSample: 3,
+    valueBasis: 'used',
+    factor: null,
+    low: '19.99',
+    high: '31.00',
+    usedCount: 7,
+    newCount: 12,
+    valuedAs: 'as used copies',
     soldListingsUrl:
       'https://www.ebay.co.uk/sch/i.html?_nkw=Heat+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
   }
@@ -1606,6 +1641,20 @@ describe('Batch T6 — the collection\'s value', () => {
     ).toThrow()
   })
 
+  it('reads a value cached before X6 as not valued yet: it was a new copy\'s price', () => {
+    const {
+      valueBasis: _b,
+      factor: _f,
+      low: _l,
+      high: _h,
+      usedCount: _u,
+      newCount: _n,
+      valuedAs: _v,
+      ...before
+    } = valuation
+    expect(collectionCopiesSchema.parse([{ ...copy, valuation: before }])[0].valuation).toBeNull()
+  })
+
   it('reads a stored price from an API before V8 as having no sold-listings link', () => {
     const { soldListingsUrl: _dropped, ...before } = valuation
     expect(collectionCopiesSchema.parse([{ ...copy, valuation: before }])[0].valuation).toEqual({
@@ -1619,6 +1668,7 @@ describe('Batch T6 — the collection\'s value', () => {
       total: '12345.60',
       currency: 'GBP',
       basis: 'current asking prices',
+      valuedAs: 'as used copies',
       discs: 1457,
       pricedDiscs: 1302,
       notPricedDiscs: 103,
@@ -1995,6 +2045,11 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
           currency: 'GBP',
           basis: 'current asking prices',
           sampleSize: 7,
+          valueBasis: 'new_scaled',
+          factor: '0.62',
+          low: '45.00',
+          high: '70.00',
+          valuedAs: 'as used copies',
           checkedAt: '2026-09-26T03:00:00Z',
           copies: 1,
         },

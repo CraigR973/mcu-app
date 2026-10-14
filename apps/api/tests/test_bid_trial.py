@@ -63,6 +63,7 @@ from src.services.bid_trial import (
 )
 from src.services.valuation import (
     DAILY_SHARE,
+    FALLBACK_FACTOR,
     budget_left,
     collection_value,
     start_run,
@@ -226,12 +227,17 @@ async def test_the_asking_price_is_the_one_a_valuation_takes_from_the_same_searc
             format_code="blu_ray",
         ),
         "blu_ray",
+        factor=FALLBACK_FACTOR,
     )
 
-    result = judge_search(BLADE_RUNNER, film=film, marketplace_id="EBAY_GB", now=NOW)
+    result = judge_search(
+        BLADE_RUNNER, film=film, marketplace_id="EBAY_GB", now=NOW, factor=FALLBACK_FACTOR
+    )
 
+    # A used copy's value since Batch X6 (#256): the 24 used listings' median. It was the
+    # 29 New listings' £9.99 when the valuation's rule was the largest group (#209).
     assert result.asking is not None
-    assert (result.asking.price, result.asking.sampleSize) == ("9.99", 29)
+    assert (result.asking.price, result.asking.sampleSize) == ("5.45", 24)
     assert (Decimal(result.asking.price), result.asking.sampleSize) == (
         stored_rule.price,
         stored_rule.sample_size,
@@ -241,7 +247,9 @@ async def test_the_asking_price_is_the_one_a_valuation_takes_from_the_same_searc
 
 
 async def test_an_auction_counts_only_with_a_bid_and_past_the_same_matcher() -> None:
-    result = judge_search(WITH_AUCTIONS, film=_sampled(), marketplace_id="EBAY_GB", now=NOW)
+    result = judge_search(
+        WITH_AUCTIONS, film=_sampled(), marketplace_id="EBAY_GB", now=NOW, factor=FALLBACK_FACTOR
+    )
 
     # Counted: £6.00, £4.00 and £9.50, so a bid price of £6.00; one ends within 24 hours.
     # Without bids: the edited one and the captured one. Turned away: overseas, a
@@ -260,6 +268,7 @@ async def test_an_auction_counts_only_with_a_bid_and_past_the_same_matcher() -> 
             format_code="blu_ray",
         ),
         "blu_ray",
+        factor=FALLBACK_FACTOR,
     )
     assert result.asking is not None
     assert result.asking.price == str(expected.price)
@@ -269,7 +278,9 @@ async def test_an_auction_counts_only_with_a_bid_and_past_the_same_matcher() -> 
 async def test_two_auctions_with_bids_are_not_a_price() -> None:
     payload = {**BLADE_RUNNER, "itemSummaries": BLADE_RUNNER["itemSummaries"][:198] + AUCTIONS[:2]}
 
-    result = judge_search(payload, film=_sampled(), marketplace_id="EBAY_GB", now=NOW)
+    result = judge_search(
+        payload, film=_sampled(), marketplace_id="EBAY_GB", now=NOW, factor=FALLBACK_FACTOR
+    )
 
     assert result.bids is not None
     assert (result.bids.counted, result.bids.price) == (2, None)
@@ -304,11 +315,14 @@ def _judged(
     if asking is not None:
         for index in range(5):
             listing = copy.deepcopy(REAL_AUCTION)
+            # Used copies (eBay's 3000), so the asking price is ``asking`` itself under the
+            # valuation's used-copy rule (Batch X6).
             listing.update(
                 itemId=f"v1|9{index}|0",
                 title=f"{title} {'DVD' if format_code == 'dvd' else 'Blu-ray'}",
                 buyingOptions=["FIXED_PRICE"],
                 price={"value": asking, "currency": "GBP"},
+                conditionId="3000",
             )
             buy_it_now.append(listing)
     filler = [
@@ -323,7 +337,9 @@ def _judged(
     ]
     listings = buy_it_now + entries + filler
     payload = {"total": total if total is not None else len(listings), "itemSummaries": listings}
-    return judge_search(payload, film=film, marketplace_id="EBAY_GB", now=NOW)
+    return judge_search(
+        payload, film=film, marketplace_id="EBAY_GB", now=NOW, factor=FALLBACK_FACTOR
+    )
 
 
 async def test_the_totals_on_each_basis_count_every_copy_and_say_how_many_discs() -> None:
@@ -451,6 +467,11 @@ async def _price(db: AsyncSession, film: Movie, format_code: str, price: str | N
             basis="current asking prices",
             search_query=f"{film.title} {format_code}",
             checked_utc=NOW - timedelta(days=5),
+            # Stored as a run since Batch X6 stores one; an older row is left out of the sample.
+            value_basis="used" if price is not None else None,
+            used_median=Decimal(price) if price is not None else None,
+            used_count=12 if price is not None else 1,
+            new_count=0,
         )
     )
     await db.flush()

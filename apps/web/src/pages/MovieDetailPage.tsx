@@ -60,6 +60,7 @@ function CopyCard({
   movieId,
   filmTitle,
   year,
+  isSeries,
   canEdit,
   isAdmin,
   onEdit,
@@ -71,6 +72,8 @@ function CopyCard({
    *  both. */
   filmTitle: string
   year: number | null
+  /** A TV title (`mediaType` tv): its own box sets are what the price check looks for. */
+  isSeries: boolean
   /** Either person: edit, move, mark damaged, move to trash (`DECISIONS.md` #264). */
   canEdit: boolean
   /** Craig only: the live eBay check, the sale panel and photo uploads. */
@@ -244,9 +247,15 @@ function CopyCard({
                 year={year}
                 formatCode={bestFormat(item.formats)}
                 condition={item.condition}
+                isSeries={isSeries}
               />
               <div className="border-t border-border pt-3">
-                <SalePanel copy={item} movieId={movieId} />
+                {/* Batch X6: the asking price starts from the disc's value as a used copy. */}
+                <SalePanel
+                  copy={item}
+                  movieId={movieId}
+                  suggestedPrice={item.valuation?.status === 'priced' ? item.valuation.price : null}
+                />
               </div>
             </>
           )}
@@ -534,6 +543,7 @@ export default function MovieDetailPage() {
                   <UpgradePrompt
                     movieId={movie.id}
                     filmTitle={movie.title}
+                    isSeries={movie.mediaType === 'tv'}
                     copies={copies}
                     onDismiss={() => setSearchParams({}, { replace: true })}
                   />
@@ -583,6 +593,7 @@ export default function MovieDetailPage() {
                         movieId={movie.id}
                         filmTitle={movie.title}
                         year={movie.year}
+                        isSeries={movie.mediaType === 'tv'}
                         canEdit={canEdit}
                         isAdmin={isAdmin}
                         onEdit={setEditing}

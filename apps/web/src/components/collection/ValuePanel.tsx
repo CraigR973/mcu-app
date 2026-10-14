@@ -13,6 +13,8 @@ import {
 } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
 
+import { valueBehind } from './value-words'
+
 /**
  * What a disc is currently being asked for on eBay, and a link to list it — §4.1, §4.3.
  *
@@ -38,21 +40,24 @@ export function ValuePanel({
   year,
   formatCode,
   condition,
+  isSeries = false,
 }: {
   filmTitle: string
   year?: number | null
   formatCode?: string | null
   condition?: string | null
+  /** Batch X6: a TV title, whose own "Complete Series" box sets are not another product. */
+  isSeries?: boolean
 }) {
   const [estimate, setEstimate] = useState<EbayPriceEstimate | null>(null)
 
   const priceCheck = useMutation({
-    mutationFn: () => fetchEbayPriceEstimate({ filmTitle, formatCode }),
+    mutationFn: () => fetchEbayPriceEstimate({ filmTitle, formatCode, isSeries }),
     onSuccess: setEstimate,
   })
 
   const listing = useMutation({
-    mutationFn: () => fetchEbayListingUrl({ filmTitle, year, formatCode, condition }),
+    mutationFn: () => fetchEbayListingUrl({ filmTitle, year, formatCode, condition, isSeries }),
     onSuccess: (result) => {
       // `noopener` is not optional on a `_blank` link: without it the opened page holds a
       // reference to this one through `window.opener`.
@@ -133,19 +138,29 @@ export function Estimate({ estimate }: { estimate: EbayPriceEstimate }) {
     )
   }
 
-  const others = estimate.segments.filter((segment) => segment !== estimate.headline).slice(0, 5)
+  // Batch X6 (#256): the value leads, as a used copy; every group eBay had is listed below it.
+  const value = estimate.usedValue
+  const others = estimate.segments.slice(0, 6)
 
   return (
     <div className="rounded-md border border-border bg-muted/40 px-3 py-2.5">
-      <p className="metadata-label">{estimate.basis}</p>
-      <p className="mt-0.5 font-display text-2xl font-semibold text-foreground">
-        {money(estimate.headline)}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        median of {estimate.headline.sampleSize}{' '}
-        {estimate.headline.sampleSize === 1 ? 'listing' : 'listings'} ·{' '}
-        {estimate.headline.conditionLabel} · £{estimate.headline.low}–£{estimate.headline.high}
-      </p>
+      {value ? (
+        <>
+          {/* One disc, so the singular of the collection's "as used copies". */}
+          <p className="metadata-label">As a used copy · {estimate.basis}</p>
+          <p className="mt-0.5 font-display text-2xl font-semibold text-foreground">
+            {value.currency === 'GBP' ? `£${value.price}` : `${value.price} ${value.currency}`}
+          </p>
+          <p className="text-xs text-muted-foreground">{valueBehind({ ...value, valueBasis: value.basis })}</p>
+        </>
+      ) : (
+        <>
+          <p className="metadata-label">{estimate.basis}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Too few used or new listings to value it as a used copy. What eBay had:
+          </p>
+        </>
+      )}
 
       {others.length > 0 && (
         <ul className="mt-3 space-y-1 border-t border-border pt-2">

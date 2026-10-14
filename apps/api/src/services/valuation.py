@@ -20,13 +20,23 @@ stops at a share of eBay's daily allowance, and the next run carries on from the
 
 **Every total is "at current eBay asking prices"**, which usually run above what discs
 actually sell for. Sold prices are closed to apps (#16, #126).
+
+**Each disc is valued as a used copy** (Batch X6, #256 amending #209): the median of its
+used listings when there are three or more, otherwise New's median times the used-to-New
+factor for its format (``pricing.used_value``). The factor is **measured from the stored
+values themselves**: the median ratio over the films with three or more of each, per format
+(:func:`used_factors`). Two sources on 11–14 Oct disagreed about it by format (4K 0.60 or
+0.71, Blu-ray 0.69 or 0.59, from 19–113 films each), so no constant is trusted for long:
+:data:`FALLBACK_FACTOR` stands in only until :data:`MIN_FACTOR_PAIRS` films say otherwise,
+and every run ends by re-scaling the New-based values to the factor its own prices give.
+A value stored before X6 (no ``used_count``) is due at once and counts nowhere until then.
 """
 
 from __future__ import annotations
 
 import uuid
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from typing import Literal, Protocol
@@ -43,7 +53,15 @@ from src.clock import utcnow
 from src.database import AsyncSessionLocal
 from src.ebay.client import DEFAULT_MAX_RETRIES, EbayClient, EbayError, EbayNotConfigured
 from src.ebay.estimate import EbaySearch, estimate_price, search_query
-from src.ebay.pricing import ASKING_PRICES, PriceEstimate
+from src.ebay.pricing import (
+    ASKING_PRICES,
+    MIN_SAMPLE,
+    NEW_CONDITION_ID,
+    PriceEstimate,
+    UsedValue,
+    median,
+    used_value,
+)
 from src.matching.engine import searchable_title as search_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
@@ -55,7 +73,6 @@ logger = structlog.get_logger()
 DAILY_ALLOWANCE = 5_000
 #: The part of each UTC day's allowance valuation runs may spend: 15%.
 DAILY_SHARE = 750
-MIN_SAMPLE = 3
 REVALUE_AFTER = timedelta(days=30)
 RUN_STALE_AFTER = timedelta(minutes=30)
 MAX_FAILURES_IN_A_ROW = 5
@@ -65,6 +82,14 @@ MAX_FAILURES_IN_A_ROW = 5
 MIN_RUN_BUDGET = DEFAULT_MAX_RETRIES + 1
 #: A total is only added up in one currency. Everything eBay GB returns is in pounds.
 CURRENCY = "GBP"
+#: The used-to-New factor before the stored values can measure one: the lower end of what
+#: was measured on 11–14 Oct (0.59–0.71 by format and source), so a value does not overstate.
+FALLBACK_FACTOR = Decimal("0.60")
+#: Films with three or more used and three or more New listings a format needs before its
+#: own factor replaces the fallback.
+MIN_FACTOR_PAIRS = 20
+#: A used copy is never valued above a new one, whatever a thin market says.
+MAX_FACTOR = Decimal("1.00")
 
 StartReason = Literal["started", "running", "budget_spent", "nothing_due"]
 
@@ -105,6 +130,8 @@ class DueFilm:
     format_code: str
     title: str
     identified: bool
+    #: A TV title: "Complete Series" and "Season" listings are the thing itself (Batch X6).
+    is_tv: bool = False
 
     @property
     def search_title(self) -> str:
@@ -117,18 +144,27 @@ def _owned_discs() -> tuple[ColumnElement[str | None], list[ColumnElement[bool]]
 
 
 def _due_condition(now: datetime) -> ColumnElement[bool]:
-    """Never priced, priced over 30 days ago, or priced before the film was last identified.
+    """Never priced, priced over 30 days ago, priced before the film was last identified,
+    or priced before Batch X6.
 
-    The last is Batch T9's. A film priced under its spreadsheet title ("Captain Ameica") was
+    The third is Batch T9's. A film priced under its spreadsheet title ("Captain Ameica") was
     searched for under that title; once identified, the search the film page would run is
     different, so the stored value no longer agrees with it (#209's reason for the shared
-    estimator). ``last_tmdb_sync_utc`` is written only when a film is identified.
+    estimator). ``last_tmdb_sync_utc`` is written only when a film is identified. The last is
+    X6's: a value from before it is a new copy's price, and ``used_count`` is what every value
+    since carries.
     """
     return or_(
         DiscValuation.id.is_(None),
         DiscValuation.checked_utc < now - REVALUE_AFTER,
         DiscValuation.checked_utc < Movie.last_tmdb_sync_utc,
+        DiscValuation.used_count.is_(None),
     )
+
+
+def current_value() -> ColumnElement[bool]:
+    """A stored value made by Batch X6's rule, so one a reader may show or add up."""
+    return DiscValuation.used_count.is_not(None)
 
 
 def owned_valued_discs() -> Subquery:
@@ -163,7 +199,7 @@ async def due_films(db: AsyncSession, *, now: datetime, limit: int) -> list[DueF
     """The films and formats due a price, never-priced first, then the oldest."""
     pairs = _film_formats()
     rows = await db.execute(
-        select(pairs.c.movie_id, pairs.c.format_code, Movie.title, Movie.tmdb_id)
+        select(pairs.c.movie_id, pairs.c.format_code, Movie.title, Movie.tmdb_id, Movie.is_tv)
         .join(Movie, Movie.id == pairs.c.movie_id)
         .outerjoin(
             DiscValuation,
@@ -177,8 +213,14 @@ async def due_films(db: AsyncSession, *, now: datetime, limit: int) -> list[DueF
         .limit(limit)
     )
     return [
-        DueFilm(movie_id=movie_id, format_code=code, title=title, identified=tmdb_id is not None)
-        for movie_id, code, title, tmdb_id in rows
+        DueFilm(
+            movie_id=movie_id,
+            format_code=code,
+            title=title,
+            identified=tmdb_id is not None,
+            is_tv=bool(is_tv),
+        )
+        for movie_id, code, title, tmdb_id, is_tv in rows
     ]
 
 
@@ -225,6 +267,93 @@ async def budget_left(db: AsyncSession, *, now: datetime) -> int:
 
 
 # ---------------------------------------------------------------------------
+# The used-to-New factor (Batch X6)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class UsedFactor:
+    """What a New median is multiplied by to value a used copy, and what it rests on."""
+
+    factor: Decimal
+    #: Films with three or more of each kind of listing behind it; 0 for the fallback.
+    films: int
+
+    @property
+    def measured(self) -> bool:
+        return self.films > 0
+
+
+def factors_from(pairs: dict[str, list[Decimal]]) -> dict[str, UsedFactor]:
+    """Each format's factor from its films' used-to-New ratios, or the fallback.
+
+    The median ratio, because a few collector-priced New groups would pull a mean anywhere;
+    capped at :data:`MAX_FACTOR`.
+    """
+    factors: dict[str, UsedFactor] = {}
+    for code in VALUED_FORMATS:
+        ratios = pairs.get(code, [])
+        if len(ratios) < MIN_FACTOR_PAIRS:
+            factors[code] = UsedFactor(FALLBACK_FACTOR, 0)
+        else:
+            factors[code] = UsedFactor(min(median(ratios), MAX_FACTOR), len(ratios))
+    return factors
+
+
+async def used_factors(db: AsyncSession) -> dict[str, UsedFactor]:
+    """The factor per format, measured from the stored values that have both groups."""
+    rows = await db.execute(
+        select(
+            DiscValuation.format_code, DiscValuation.used_median, DiscValuation.new_median
+        ).where(
+            DiscValuation.used_count >= MIN_SAMPLE,
+            DiscValuation.new_count >= MIN_SAMPLE,
+            DiscValuation.new_median > 0,
+        )
+    )
+    pairs: dict[str, list[Decimal]] = {}
+    for code, used, new in rows:
+        pairs.setdefault(code, []).append(Decimal(used) / Decimal(new))
+    return factors_from(pairs)
+
+
+async def rescale(db: AsyncSession, factors: dict[str, UsedFactor]) -> int:
+    """Bring every New-based value to its format's factor; how many rows moved.
+
+    Run at the end of each run, so the whole collection rests on one factor per format
+    rather than on whatever each night's run started with.
+    """
+    moved = 0
+    for code, used in factors.items():
+        result = await db.execute(
+            update(DiscValuation)
+            .where(
+                DiscValuation.format_code == code,
+                DiscValuation.value_basis == "new_scaled",
+                DiscValuation.factor != used.factor,
+            )
+            .values(price=func.round(DiscValuation.new_median * used.factor, 2), factor=used.factor)
+            .returning(DiscValuation.id)
+        )
+        moved += len(result.all())
+    return moved
+
+
+async def value_of(
+    db: AsyncSession, estimate: PriceEstimate, format_code: str | None
+) -> UsedValue | None:
+    """A live check's value as a used copy, on the factor the stored values give.
+
+    The film page's "What is it worth?", the upgrade prompt and the listing link use this, so
+    each shows the number a valuation run would store for the same listings.
+    """
+    if format_code not in VALUED_FORMATS:
+        return None
+    factors = await used_factors(db)
+    return used_value(estimate, format_code, factor=factors[format_code].factor)
+
+
+# ---------------------------------------------------------------------------
 # A price, or not
 # ---------------------------------------------------------------------------
 
@@ -233,23 +362,57 @@ async def budget_left(db: AsyncSession, *, now: datetime) -> int:
 class Valuation:
     status: Literal["priced", "not_priced"]
     price: Decimal | None
+    #: Listings behind the price; for a film not priced, the larger of its two groups.
     sample_size: int
+    #: "Used" or "New": which group the price came from.
     condition_label: str | None
+    #: ``"used"`` or ``"new_scaled"`` when priced (``pricing.UsedValue.basis``).
+    value_basis: str | None = None
+    factor: Decimal | None = None
+    low: Decimal | None = None
+    high: Decimal | None = None
+    #: Both groups, priced or not: what the factor is measured from.
+    used_median: Decimal | None = None
+    used_count: int = 0
+    new_median: Decimal | None = None
+    new_count: int = 0
 
 
-def valuation_from(estimate: PriceEstimate, format_code: str) -> Valuation:
-    """The film page's headline for this format, if enough listings stand behind it.
+def valuation_from(estimate: PriceEstimate, format_code: str, *, factor: Decimal) -> Valuation:
+    """A disc's value as a used copy, if enough listings stand behind it — Batch X6.
 
-    The headline is the largest group of standard-edition listings in the one condition,
-    so a stored value is the number the film page's check would show. Fewer than
-    :data:`MIN_SAMPLE` listings is "not priced", never a guess from what there is.
+    ``pricing.used_value`` decides, so a stored value is the number the film page's check
+    shows as "As a used copy". Too few used and too few New listings is "not priced", never
+    a guess from what there is.
     """
-    headline = estimate.headline(format_code=format_code)
-    if headline is None:
-        return Valuation("not_priced", None, 0, None)
-    if headline.sample_size < MIN_SAMPLE or headline.currency != CURRENCY:
-        return Valuation("not_priced", None, headline.sample_size, headline.condition_label)
-    return Valuation("priced", headline.median, headline.sample_size, headline.condition_label)
+    pooled = estimate.used_pooled.get((format_code, "standard"))
+    new = estimate.headline(format_code=format_code, condition_id=NEW_CONDITION_ID)
+    used_count = pooled.count if pooled else 0
+    new_count = new.sample_size if new else 0
+    groups = Valuation(
+        "not_priced",
+        None,
+        max(used_count, new_count),
+        None,
+        used_median=pooled.median if pooled else None,
+        used_count=used_count,
+        new_median=new.median if new else None,
+        new_count=new_count,
+    )
+    value = used_value(estimate, format_code, factor=factor)
+    if value is None or value.currency != CURRENCY:
+        return groups
+    return replace(
+        groups,
+        status="priced",
+        price=value.price,
+        sample_size=value.sample_size,
+        condition_label="Used" if value.basis == "used" else "New",
+        value_basis=value.basis,
+        factor=value.factor,
+        low=value.low,
+        high=value.high,
+    )
 
 
 async def _store(
@@ -267,6 +430,14 @@ async def _store(
         "currency": CURRENCY,
         "sample_size": valuation.sample_size,
         "condition_label": valuation.condition_label,
+        "value_basis": valuation.value_basis,
+        "factor": valuation.factor,
+        "low": valuation.low,
+        "high": valuation.high,
+        "used_median": valuation.used_median,
+        "used_count": valuation.used_count,
+        "new_median": valuation.new_median,
+        "new_count": valuation.new_count,
         "matched": estimate.matched,
         "considered": estimate.considered,
         "basis": ASKING_PRICES,
@@ -381,6 +552,7 @@ async def work_run(
         raise ValueError(f"valuation run {run_id} is not running")
 
     try:
+        factors = await used_factors(db)
         # One more than the budget could reach, to know whether the budget cut the list.
         films = await due_films(db, now=run.started_utc, limit=run.budget + 1)
         cut_short = len(films) > run.budget
@@ -393,7 +565,10 @@ async def work_run(
                 break
             try:
                 estimate = await estimate_price(
-                    client, film_title=film.search_title, format_code=film.format_code
+                    client,
+                    film_title=film.search_title,
+                    format_code=film.format_code,
+                    is_series=film.is_tv,
                 )
             except EbayNotConfigured:
                 run.last_error = "eBay is not configured in this deployment."
@@ -411,7 +586,9 @@ async def work_run(
                     break
             else:
                 failures_in_a_row = 0
-                valuation = valuation_from(estimate, film.format_code)
+                valuation = valuation_from(
+                    estimate, film.format_code, factor=factors[film.format_code].factor
+                )
                 await _store(db, film, estimate, valuation, run_id=run.id, checked=clock())
                 if valuation.status == "priced":
                     run.priced += 1
@@ -421,6 +598,9 @@ async def work_run(
             run.heartbeat_utc = clock()
             await db.commit()
 
+        # The night's prices measure the factor again; every New-based value moves to it.
+        factors = await used_factors(db)
+        rescaled = await rescale(db, factors)
         finished = clock()
         run.calls = client.search_calls
         run.remaining = await count_due(db, now=finished)
@@ -451,6 +631,8 @@ async def work_run(
         not_priced=run.not_priced,
         failed=run.failed,
         remaining=run.remaining,
+        rescaled=rescaled,
+        factors={code: (str(used.factor), used.films) for code, used in factors.items()},
     )
     return run
 
@@ -487,11 +669,12 @@ class CollectionValue:
 
 
 async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> CollectionValue:
-    """Every owned physical disc, at its film and format's stored price.
+    """Every owned physical disc, at its film and format's stored value as a used copy.
 
     Counted per disc, so two copies of one film count twice: they are two discs. A run whose
     process died is closed here too, or the page would show it pricing for ever, with the
-    button that could replace it hidden.
+    button that could replace it hidden. A value from before Batch X6 is a new copy's price,
+    so its disc counts as not checked yet until a run values it again.
     """
     now = now or utcnow()
     await abandon_stale_runs(db, now=now)
@@ -513,6 +696,7 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
                 and_(
                     DiscValuation.movie_id == discs.c.movie_id,
                     DiscValuation.format_code == discs.c.format_code,
+                    current_value(),
                 ),
             )
         )
@@ -541,6 +725,8 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
 
 
 async def valuations_for_movie(db: AsyncSession, movie_id: uuid.UUID) -> dict[str, DiscValuation]:
-    """A film's stored prices by format, for its page."""
-    rows = await db.scalars(select(DiscValuation).where(DiscValuation.movie_id == movie_id))
+    """A film's stored values by format, for its page; none from before Batch X6."""
+    rows = await db.scalars(
+        select(DiscValuation).where(DiscValuation.movie_id == movie_id, current_value())
+    )
     return {row.format_code: row for row in rows}

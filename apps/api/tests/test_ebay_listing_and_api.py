@@ -20,6 +20,7 @@ from httpx import ASGITransport, AsyncClient
 
 import src.routers.ebay as ebay_router
 from src.auth import get_current_user
+from src.database import get_db
 from src.ebay.client import SEARCH_PATH, TOKEN_PATH
 from src.ebay.listing import MAX_TITLE_LENGTH, PRELIST_URL, prelist_url, suggested_title
 from src.main import app
@@ -92,6 +93,28 @@ def _as(profile: Profile) -> Any:
     app.dependency_overrides[get_current_user] = override
     yield
     app.dependency_overrides.pop(get_current_user, None)
+
+
+class _NoStoredValues:
+    """A session holding no stored values, so the used-to-New factor is the fallback.
+
+    Batch X6: both routes read the factor from ``disc_valuations``. These tests are about
+    the routes, not the table (``test_valuation_runs.py`` measures the factor in Postgres),
+    so they keep running without a database.
+    """
+
+    async def execute(self, *_args: Any, **_kwargs: Any) -> list[Any]:
+        return []
+
+
+@pytest.fixture(autouse=True)
+def no_stored_values() -> Any:
+    async def override() -> Any:
+        yield _NoStoredValues()
+
+    app.dependency_overrides[get_db] = override
+    yield
+    app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.fixture
@@ -203,6 +226,77 @@ async def test_price_estimate_returns_segments_with_sample_sizes(
     # Money crosses the wire as a string, never a float.
     assert isinstance(body["headline"]["median"], str)
     assert body["rejected"], "the rejections are part of the answer, not diagnostics"
+    # Batch X6: the disc's value as a used copy, from the 24 used listings, beside the table.
+    assert body["usedValue"] == {
+        "price": "5.45",
+        "currency": "GBP",
+        "basis": "used",
+        "sampleSize": 24,
+        "low": "3.29",
+        "high": "65.99",
+        "factor": None,
+        "valuedAs": "as used copies",
+    }
+
+
+@pytest.mark.asyncio
+async def test_a_dvd_with_too_few_used_listings_is_valued_from_new_at_the_factor(
+    as_admin: None, fake_ebay: None
+) -> None:
+    """One used DVD and four New at £9.13 median: New times the fallback factor, 0.60."""
+    response = await _post(
+        "/api/v1/ebay/price-estimate", {"filmTitle": "Blade Runner 2049", "formatCode": "dvd"}
+    )
+    assert response.status_code == 200, response.text
+    value = response.json()["usedValue"]
+    assert (value["price"], value["basis"], value["factor"], value["sampleSize"]) == (
+        "5.48",
+        "new_scaled",
+        "0.60",
+        4,
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_series_flag_lets_a_tv_titles_own_box_sets_count(
+    as_admin: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Batch X6: "Complete Series" is another product for a film, and the thing itself for a
+    TV title (``mediaType`` tv)."""
+    listing = {
+        "itemId": "v1|1|0",
+        "title": "Blue Planet II The Complete Series 4K UHD",
+        "price": {"value": "20.00", "currency": "GBP"},
+        "conditionId": "3000",
+        "leafCategoryIds": ["617"],
+        "itemLocation": {"country": "GB"},
+    }
+    payload = {"itemSummaries": [{**listing, "itemId": f"v1|{i}|0"} for i in range(3)]}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == TOKEN_PATH:
+            return httpx.Response(200, json={"access_token": "t", "expires_in": 7200})
+        return httpx.Response(200, json=payload)
+
+    original = ebay_router.EbayClient.__aenter__
+
+    async def patched(self: Any) -> Any:
+        await original(self)
+        self._client = httpx.AsyncClient(  # noqa: SLF001
+            base_url="https://api.ebay.com", transport=httpx.MockTransport(handler)
+        )
+        self._client_id = "id"
+        self._client_secret = "secret"
+        return self
+
+    monkeypatch.setattr(ebay_router.EbayClient, "__aenter__", patched)
+    asked = {"filmTitle": "Blue Planet II", "formatCode": "4k_uhd"}
+
+    as_film = (await _post("/api/v1/ebay/price-estimate", asked)).json()
+    as_series = (await _post("/api/v1/ebay/price-estimate", {**asked, "isSeries": True})).json()
+
+    assert as_film["usedValue"] is None and as_film["matched"] == 0
+    assert as_series["usedValue"]["price"] == "20.00"
 
 
 @pytest.mark.asyncio
@@ -237,7 +331,8 @@ async def test_listing_url_returns_a_link_and_a_suggested_price(
     body = response.json()
     assert body["url"].startswith(PRELIST_URL + "?title=")
     assert body["suggestedTitle"] == "Blade Runner 2049 (2017) Blu-ray"
-    assert body["suggestedPrice"] is not None
+    # The sale price starts from the disc's value as a used copy (Batch X6), not New's £9.99.
+    assert body["suggestedPrice"] == "5.45"
 
 
 @pytest.mark.asyncio

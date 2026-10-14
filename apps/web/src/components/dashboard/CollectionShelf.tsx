@@ -239,7 +239,7 @@ export function CollectionShelf() {
         icon={BarChart3}
         caption={
           value?.total
-            ? 'Worth is at eBay asking prices, which usually run above what discs sell for.'
+            ? `Worth is ${value.valuedAs ? `${value.valuedAs}, ` : ''}at eBay asking prices, which usually run above what discs sell for.`
             : undefined
         }
       />

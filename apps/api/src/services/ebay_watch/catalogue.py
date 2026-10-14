@@ -6,10 +6,11 @@ any film we care about?", for about a hundred new ones an hour. The films are fe
 the Wanted list, and those owned on a format a Blu-ray or 4K would improve on.
 
 **The film's title must open the listing's title**, after at most a few words sellers put
-first ("NEW", "4K UHD", "Blu-ray"). The estimator's matcher accepts the title anywhere,
-which is right for a search that named the film and wrong here: "Up" is a word in
-thousands of listings. The matcher then still has its say, rejecting sequels, subtitles,
-bundles, accessories and other formats as it does on the film page.
+first ("NEW", "4K UHD", "Blu-ray"). Here it also picks the film: "Up" is a word in
+thousands of listings, so a film is looked for only where a title can start. The rule and
+its words live in the matcher (``matching.LEADING_NOISE``), which since Batch X6 applies it
+to the film page's estimator too. The matcher then still has its say, rejecting sequels,
+subtitles, bundles, accessories and other formats as it does on the film page.
 
 **A year straight after the title must be the film's** (Batch X1): "Halloween (2018)" is
 not the 1978 film, though every word of the 1978 film's title opens it. Eight of the 25 wrong
@@ -27,55 +28,13 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.ebay.matching import Listing, match, tokens
+from src.ebay.matching import MAX_LEADING_WORDS, Listing, match, opening_run, tokens
 from src.models.collection_item import FORMAT_RANK, CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.wanted import WantedItem
 
 #: The formats a deal can be for. A DVD is never an upgrade worth a push.
 SCAN_FORMATS = ("4k_uhd", "blu_ray")
-
-#: Words a seller puts before the title: condition, format, and the studio or label
-#: ("Marvel Studios Guardians of the Galaxy Vol. 2", "Lionsgate The Expendables 3", both
-#: seen on 26 Sep). Only these may precede it.
-LEADING_NOISE = frozenset(
-    {
-        "new",
-        "sealed",
-        "brand",
-        "rare",
-        "mint",
-        "4k",
-        "uhd",
-        "ultra",
-        "hd",
-        "blu",
-        "ray",
-        "bluray",
-        "steelbook",
-        "limited",
-        "edition",
-        "uk",
-        "marvel",
-        "studios",
-        "disney",
-        "pixar",
-        "dc",
-        "lionsgate",
-        "paramount",
-        "pictures",
-        "universal",
-        "warner",
-        "bros",
-        "sony",
-        "arrow",
-        "video",
-        "criterion",
-        "eureka",
-    }
-)
-#: How far into the listing's title the film's may start.
-MAX_LEADING_WORDS = 4
 
 _ARTICLES = ("the ", "a ", "an ")
 
@@ -132,7 +91,7 @@ class Catalogue:
         found: dict[uuid.UUID, tuple[CatalogueFilm, int, str]] = {}
         for word in dict.fromkeys(leading):
             for film, title_words in self._by_first.get(word, []):
-                start = _opening_run(words, title_words)
+                start = opening_run(words, title_words)
                 if start is None:
                     continue
                 verdict = match(
@@ -160,16 +119,6 @@ def title_variants(title: str) -> list[str]:
         if lowered.startswith(article) and len(title) > len(article):
             variants.append(title[len(article) :])
     return variants
-
-
-def _opening_run(words: list[str], title_words: list[str]) -> int | None:
-    """Where the title's words start in the listing, if only seller's words precede them."""
-    for start in range(min(MAX_LEADING_WORDS, len(words) - len(title_words)) + 1):
-        if words[start : start + len(title_words)] == title_words and all(
-            word in LEADING_NOISE for word in words[:start]
-        ):
-            return start
-    return None
 
 
 async def load_catalogue(db: AsyncSession) -> Catalogue:

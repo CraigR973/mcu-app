@@ -53,9 +53,24 @@ const estimate: EbayPriceEstimate = {
   rejected: { "ships from JP, not GB": 7 },
   unusable: 0,
   basis: 'current asking prices',
+  usedValue: null,
 }
 
-const withHeadline: EbayPriceEstimate = { ...estimate, headline: estimate.segments[0] }
+/** Batch X6: what a used copy is worth, from 24 used listings, leads the card. */
+const withHeadline: EbayPriceEstimate = {
+  ...estimate,
+  headline: estimate.segments[0],
+  usedValue: {
+    price: '5.45',
+    currency: 'GBP',
+    basis: 'used',
+    sampleSize: 24,
+    low: '3.29',
+    high: '65.99',
+    factor: null,
+    valuedAs: 'as used copies',
+  },
+}
 
 describe('ValuePanel', () => {
   it('fetches nothing until it is asked to', () => {
@@ -85,8 +100,8 @@ describe('the estimate, once asked for', () => {
     // words come from the server's `basis`, so they cannot drift from what the API means.
     const html = renderToStaticMarkup(<Estimate estimate={withHeadline} />)
 
-    expect(html).toContain('current asking prices')
-    expect(html).toContain('£9.99')
+    expect(html).toContain('As a used copy · current asking prices')
+    expect(html).toContain('£5.45')
   })
 
   it('never shows a price without its sample size', () => {
@@ -94,8 +109,41 @@ describe('the estimate, once asked for', () => {
     // "median of 29 listings" tells them apart.
     const html = renderToStaticMarkup(<Estimate estimate={withHeadline} />)
 
-    expect(html).toContain('median of 29 listings')
+    expect(html).toContain('median of 24 used listings, £3.29–£65.99')
+    // Every group eBay had is listed with its own count, the New one among them.
+    expect(html).toContain('£9.99')
+    expect(html).toContain('/ 29')
     expect(html).toContain('117 of 200 listings matched this disc')
+  })
+
+  it('says when a value rests on New listings and the factor', () => {
+    const html = renderToStaticMarkup(
+      <Estimate
+        estimate={{
+          ...withHeadline,
+          usedValue: {
+            price: '5.48',
+            currency: 'GBP',
+            basis: 'new_scaled',
+            sampleSize: 4,
+            low: '7.97',
+            high: '13.16',
+            factor: '0.60',
+            valuedAs: 'as used copies',
+          },
+        }}
+      />,
+    )
+
+    expect(html).toContain('£5.48')
+    expect(html).toContain('too few used listings: New&#x27;s median × 0.60, from 4 new listings, £7.97–£13.16')
+  })
+
+  it('says when there is too little to value it as a used copy', () => {
+    const html = renderToStaticMarkup(<Estimate estimate={{ ...withHeadline, usedValue: null }} />)
+
+    expect(html).toContain('Too few used or new listings to value it as a used copy')
+    expect(html).toContain('current asking prices')
   })
 
   it('shows the collector segment as a comparison, never as the headline', () => {
@@ -103,7 +151,7 @@ describe('the estimate, once asked for', () => {
     // real market, and it is not what this Blu-ray is worth.
     const html = renderToStaticMarkup(<Estimate estimate={withHeadline} />)
 
-    const headlinePosition = html.indexOf('£9.99')
+    const headlinePosition = html.indexOf('£5.45')
     const collectorPosition = html.indexOf('£149.99')
     expect(headlinePosition).toBeGreaterThan(-1)
     expect(collectorPosition).toBeGreaterThan(headlinePosition)

@@ -40,6 +40,14 @@ NEW_CONDITION_ID = "1000"
 #: them alone is too few to have a median (Batch X1, MK47-02).
 USED_CONDITION_IDS = frozenset({"2750", "3000", "4000", "5000", "6000"})
 
+#: Fewer listings than this and a group has no price: below it a median is one seller's
+#: asking price (#129: "Two listings have a median and it means nothing").
+MIN_SAMPLE = 3
+
+#: What an owned disc is valued as since Batch X6 (#256): a used copy, which is what is on
+#: the shelf. Shown beside every value, as :data:`ASKING_PRICES` is.
+AS_USED_COPIES = "as used copies"
+
 
 def _round(amount: Decimal) -> Decimal:
     return amount.quantize(_PENNY, rounding=ROUND_HALF_UP)
@@ -78,6 +86,36 @@ class PriceSegment:
     currency: str
 
 
+@dataclass(frozen=True)
+class PooledGroup:
+    """Every used listing of one format and edition, taken together — Batch X1."""
+
+    median: Decimal
+    count: int
+    low: Decimal
+    high: Decimal
+    currency: str
+
+
+@dataclass(frozen=True)
+class UsedValue:
+    """What one disc on the shelf is worth as a used copy — Batch X6, #256.
+
+    ``basis`` says which rule gave it: ``"used"``, the median of three or more used listings;
+    or ``"new_scaled"``, New's median times the used-to-New ``factor`` measured for the
+    format, when used listings are too few. ``sample_size``, ``low`` and ``high`` describe the
+    listings it rests on, before any factor, so a person can see what stands behind it.
+    """
+
+    price: Decimal
+    basis: str
+    sample_size: int
+    low: Decimal
+    high: Decimal
+    currency: str
+    factor: Decimal | None = None
+
+
 @dataclass
 class PriceEstimate:
     """Every segment a search produced, plus what it threw away.
@@ -101,9 +139,9 @@ class PriceEstimate:
     #: eBay changing its response, not a noisy keyword search.
     unusable: int = 0
     basis: str = ASKING_PRICES
-    #: Every used listing's median and count together, per ``(format, edition)`` — Batch
-    #: X1. A median of medians would not be a median, so it is taken from the prices here.
-    used_pooled: dict[tuple[str, str], tuple[Decimal, int]] = field(default_factory=dict)
+    #: Every used listing together, per ``(format, edition)`` — Batch X1. A median of
+    #: medians would not be a median, so it is taken from the prices here.
+    used_pooled: dict[tuple[str, str], PooledGroup] = field(default_factory=dict)
 
     def headline(
         self, *, format_code: str | None = None, condition_id: str | None = None
@@ -176,12 +214,10 @@ def summarise(
 
     segments.sort(key=lambda segment: (-segment.sample_size, segment.format_code, segment.edition))
 
-    used: dict[tuple[str, str], list[Decimal]] = {}
+    used: dict[tuple[str, str], list[Listing]] = {}
     for (found_format, edition, condition_id), listings in grouped.items():
         if condition_id in USED_CONDITION_IDS:
-            used.setdefault((found_format, edition), []).extend(
-                listing.price for listing in listings
-            )
+            used.setdefault((found_format, edition), []).extend(listings)
 
     return PriceEstimate(
         film_title=film_title,
@@ -192,7 +228,54 @@ def summarise(
         segments=segments,
         rejected=dict(rejected.most_common()),
         unusable=unusable,
-        used_pooled={key: (median(prices), len(prices)) for key, prices in used.items()},
+        used_pooled={key: _pooled(listings) for key, listings in used.items()},
+    )
+
+
+def _pooled(listings: list[Listing]) -> PooledGroup:
+    prices = [listing.price for listing in listings]
+    return PooledGroup(
+        median=median(prices),
+        count=len(prices),
+        low=_round(min(prices)),
+        high=_round(max(prices)),
+        currency=listings[0].currency,
+    )
+
+
+def used_value(estimate: PriceEstimate, format_code: str, *, factor: Decimal) -> UsedValue | None:
+    """A disc's value as a used copy, or ``None`` when too few listings say — Batch X6.
+
+    The median of the format's standard-edition used listings when there are
+    :data:`MIN_SAMPLE` or more; otherwise New's median times ``factor``, the used-to-New
+    ratio measured for the format (``services.valuation.used_factors``). Collector editions,
+    "Open box" and listings with no stated condition price neither: a steelbook is another
+    product, and the other two say nothing about a used copy.
+
+    #209 valued a disc at its largest condition group, which was New for 965 of 1,300; a
+    used copy asks 0.48–0.71 of New where both exist (MK47-03).
+    """
+    pooled = estimate.used_pooled.get((format_code, "standard"))
+    if pooled is not None and pooled.count >= MIN_SAMPLE:
+        return UsedValue(
+            price=pooled.median,
+            basis="used",
+            sample_size=pooled.count,
+            low=pooled.low,
+            high=pooled.high,
+            currency=pooled.currency,
+        )
+    new = estimate.headline(format_code=format_code, condition_id=NEW_CONDITION_ID)
+    if new is None or new.sample_size < MIN_SAMPLE:
+        return None
+    return UsedValue(
+        price=_round(new.median * factor),
+        basis="new_scaled",
+        sample_size=new.sample_size,
+        low=new.low,
+        high=new.high,
+        currency=new.currency,
+        factor=factor,
     )
 
 

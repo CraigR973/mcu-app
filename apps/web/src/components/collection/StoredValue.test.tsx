@@ -17,10 +17,17 @@ const priced: CopyValuation = {
   price: '19.50',
   currency: 'GBP',
   sampleSize: 12,
-  conditionLabel: 'New',
+  conditionLabel: 'Used',
   checkedAt: '2026-09-26T08:00:00Z',
   basis: 'current asking prices',
   minSample: 3,
+  valueBasis: 'used',
+  factor: null,
+  low: '14.00',
+  high: '26.00',
+  usedCount: 12,
+  newCount: 5,
+  valuedAs: 'as used copies',
   soldListingsUrl: SOLD,
 }
 
@@ -29,6 +36,8 @@ describe('StoredValue', () => {
     const html = renderToStaticMarkup(<StoredValue valuation={priced} />)
 
     expect(html).toContain('£19.50')
+    expect(html).toContain('Last valued as a used copy · current asking prices')
+    expect(html).toContain('median of 12 used listings, £14.00–£26.00')
     expect(html).toContain('Sold listings on eBay')
     expect(html).toContain(`href="${SOLD.replaceAll('&', '&amp;')}"`)
     expect(html).toContain('target="_blank"')
@@ -37,10 +46,23 @@ describe('StoredValue', () => {
 
   it('links an unpriced disc too: sold listings may exist where asking prices are few', () => {
     const html = renderToStaticMarkup(
-      <StoredValue valuation={{ ...priced, status: 'not_priced', price: null, sampleSize: 2 }} />,
+      <StoredValue
+        valuation={{
+          ...priced,
+          status: 'not_priced',
+          price: null,
+          sampleSize: 2,
+          valueBasis: null,
+          low: null,
+          high: null,
+          usedCount: 2,
+          newCount: 1,
+        }}
+      />,
     )
 
     expect(html).toContain('Not priced when checked')
+    expect(html).toContain('eBay had 2 used listings and 1 new listing')
     expect(html).toContain('Sold listings on eBay')
   })
 
