@@ -782,6 +782,8 @@ async def test_facets_offer_the_lounges_two_sides_even_while_one_is_empty(
         shelf="Right",
         location="Lounge Cabinet - Right Hand Side",
     )
+    # Front, 2nd shelf, so the shelves keep their noun and label beside the sides.
+    await _add_owned_movie(api_session, title="Front Of The House", tmdb_id=920085)
 
     body = (await client.get("/api/v1/collection/facets")).json()
     sections = {section["section"]: section for section in body["sections"]}
