@@ -1,0 +1,118 @@
+name: Backup
+
+# Batch X4 (DS44-03, #257, #268): a copy of the database outside Neon, whose free plan
+# restores only within six hours. Weekly, so a dump's egress stays near 0.4 GB a month of
+# the free 5 GB. Read through the mcu_backup role, which can read no credential; encrypted
+# to the public key in .github/backup-age-recipient.txt, whose private half only Craig
+# holds; kept as an artifact for 90 days, newest 8 only.
+#
+# The monthly drill restores the copy this run took into a throwaway Postgres, before it is
+# encrypted (the runner never holds the private key), and fails the run when any table's
+# rows differ from the manifest. A failed run emails the repository's owner.
+
+on:
+  schedule:
+    - cron: '30 3 * * 0'   # every Sunday, 03:30 UTC
+    - cron: '30 4 1 * *'   # the 1st of each month, 04:30 UTC: the drill
+  workflow_dispatch:
+    inputs:
+      drill:
+        description: Restore the copy into a throwaway Postgres and compare row counts
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: write   # to delete artifacts past the newest 8
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Dump · drill · encrypt · keep 8
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mcu_drill
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PYTHONPATH: .
+      DRILL: ${{ github.event.schedule == '30 4 1 * *' || (github.event_name == 'workflow_dispatch' && inputs.drill) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: apps/api/requirements.lock
+
+      - name: Install dependencies
+        run: |
+          pip install --require-hashes -r requirements.lock
+          sudo apt-get update -qq && sudo apt-get install -y -qq age
+
+      - name: Copy the database
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          if [ -z "$BACKUP_DATABASE_URL" ]; then
+            echo "::error::The BACKUP_DATABASE_URL secret is not set, so nothing was copied."
+            exit 1
+          fi
+          python -m src.scripts.backup dump --out "$RUNNER_TEMP/copy"
+          du -sh "$RUNNER_TEMP/copy"
+
+      - name: Drill — restore it and compare row counts
+        if: env.DRILL == 'true'
+        env:
+          RESTORE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mcu_drill
+          JWT_ACCESS_SECRET: drill-access-secret-with-at-least-32-characters
+          JWT_REFRESH_SECRET: drill-refresh-secret-with-at-least-32-characters
+        run: python -m src.scripts.backup restore --from "$RUNNER_TEMP/copy" --expect-head
+
+      - name: Encrypt
+        run: |
+          stamp="$(date -u +%Y-%m-%d)-${GITHUB_RUN_ID}"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          tar -C "$RUNNER_TEMP/copy" -czf - . \
+            | age -R "$GITHUB_WORKSPACE/.github/backup-age-recipient.txt" \
+                -o "$RUNNER_TEMP/db-backup-$stamp.tar.gz.age"
+          rm -rf "$RUNNER_TEMP/copy"
+          ls -l "$RUNNER_TEMP/db-backup-$stamp.tar.gz.age"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: ${{ runner.temp }}/db-backup-${{ env.STAMP }}.tar.gz.age
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Keep the newest 8
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.name | startswith("db-backup-")) | select(.expired | not) | "\(.created_at) \(.id) \(.name)"' \
+            | sort -r | tail -n +9 \
+            | while read -r created id name; do
+                echo "Deleting $name ($created)"
+                gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/$id"
+              done

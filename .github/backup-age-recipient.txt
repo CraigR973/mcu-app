@@ -1,0 +1,2 @@
+# The weekly database copy's public key (Batch X4, #268). Its private half is Craig's only.
+age1szrj9cdfygu3ncwcjec57q9ny68vqkugy6trcwp0qh6jhne9wf6s7zqrtx
