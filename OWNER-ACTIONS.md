@@ -16,8 +16,11 @@ conversation still maps onto this file.*
   group, `/group-start X · 1`) so that X1, the eBay scan, lands before 21 Oct. eBay's licence:
   ~~yours by X1's close-out~~ **decided 12 Oct, an accepted risk (#254).** The value basis and
   where the backup goes: **decided 12 Oct, used-copy values (#256) and encrypted GitHub Actions
-  artifacts (#257).** Still yours when sitting 3 reaches X4 (27–31 Oct): its credential steps
-  (about 10 minutes: the dump role's password, a repository secret, a key pair). The backup
+  artifacts (#257).** **Sitting 3 reached X4 on 14 Oct** (X6, used-copy values, shipped) and
+  waits for its credential steps (about 10 minutes: the dump role's password, a repository
+  secret, a key pair). X6 re-prices every disc as a used copy in the runs of 15 and 16 Oct, so
+  Home has no total, then a partial one, until 16 Oct; **Update values** on Admin's Collection
+  value starts sooner if you want it. The backup
   now runs on GitHub Actions too, so the one look at GitHub's plan you left for now matters
   more (CI uses about 3,000 minutes a month). You left the other owner steps for now (12 Oct).
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
