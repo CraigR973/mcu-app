@@ -3199,7 +3199,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 |---|---|---|---|---|
 | 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → ~~X3 push heals itself~~ (`adcae0d`) — **done 12 Oct** | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
 | 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
-| 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → X4 weekly dump and restore drill → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
+| 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → X5 watch history | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
@@ -3211,7 +3211,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | ~~X1~~ | ~~CR43-01 ≡ MK47-02, MK47-01, MK47-06, MK47-07, CR43-06; MK47-04's steps~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X2~~ | ~~DS44-01, DS44-05, UX48-02 (the screens)~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X3~~ | ~~DS44-02, UX48-02 (Settings)~~ | ~~🟢~~ | ~~top tier · high~~ | ~~top tier · High~~ |
-| X4 | DS44-03 | 🟢 | top tier · xhigh | top tier · Extra High |
+| ~~X4~~ | ~~DS44-03~~ | ~~🟢~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
 | X5 | Craig's 11 Oct watch-history choice, CT46-02, UX48-04, CT46-01's diary share | 🔴 | top tier · xhigh | top tier · Extra High |
 | ~~X6~~ | ~~MK47-03~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X7~~ | ~~AI45-01 to AI45-08~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
@@ -3414,7 +3414,26 @@ hand on 11 Oct.
   refused, both Settings states, the refused-device path and the count.
 - Tests. Gate green.
 
-### X4 — Weekly dump and restore drill 🟢
+### ~~X4 — Weekly dump and restore drill~~ 🟢 **shipped 2026-10-14 (`87a734b`, [#67](https://github.com/CraigR973/mcu-app/pull/67))**
+**Acceptance: met, every criterion, and seen in production.** The credential steps were done by
+a session at Craig's word ("option 2", #268): the `mcu_backup` role with a generated password,
+the `BACKUP_DATABASE_URL` secret, and an age key pair whose private half is on the Mac (a copy
+off the Mac is his, `OWNER-ACTIONS.md`). Every Sunday 03:30 UTC `.github/workflows/backup.yml`
+copies every table through the role, one CSV per table plus a manifest in one read-only
+snapshot, encrypts it to `.github/backup-age-recipient.txt`, keeps it 90 days and the newest
+8. The role reads no credential: migration 053 grants 48 of 56 tables whole and `profiles` and
+`movie_night_sessions` without `pin_hash` and `invite_token`, and the copy refuses to run if the
+catalogue says otherwise or a table is ungranted. The drill (the 1st, and every manual run)
+restores the copy into a throwaway Postgres before encryption, checks it is at the code's head,
+and compares every table's rows; a failure fails the run, which GitHub emails. **First run, by
+hand after the deploy:** 49 tables, 99,822 rows, 26 MB (about 0.11 GB a month of egress),
+drill passed, 7.7 MB encrypted; downloaded and decrypted on the Mac with the private key, no PIN
+hash in it. Runbook `docs/restore-runbook.md`. Choices in #268. Local gate green (API 1,316
+passed, 718 skipped without Postgres; against a local Postgres 16, 2,023 passed and the same 2
+collection tests that fail there on unchanged `main`; web 571, shared 141); CI green, the two
+end-to-end backup tests among 2,034 passed on Postgres 17; production reported the merge SHA,
+web and API, with `db: ok` and every field configured; live at 053.
+
 **Covers DS44-03 (High).** Top tier · xhigh. Sitting 3, after X6 (#255). **Storage: encrypted
 GitHub Actions artifacts, at Craig's word on 12 Oct (#257); lands before X5.** Its credential
 steps are Craig's, and the sitting stops for them.
@@ -3949,7 +3968,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **W** | ~~W1~~ (`9dd6805`) → ~~W2~~ (`0a87625`) → ~~W3~~ (`3ad71eb`) | top tier · high | top tier · High | **The 5 Oct snags, written into the plan 2026-10-05 with Craig's answers and go (#249).** One sitting, a pull request per batch, on Craig's Mac. Criteria and each batch's model and effort are in "Group W — the 5 Oct snags, planned 5 Oct" above. `high` and the top tier are derived from W3, whose migration and loan permissions need them; W1 and W2 alone need only the mid tier. The iPhone checks are Craig's |
 | **X · 1** | ~~X1~~ (`7979e19`) → ~~X2~~ (`857ee8f`) → ~~X3~~ (`adcae0d`) — **done 12 Oct** | top tier · high | top tier · High | **The wave 1 review's first sitting, written into the plan 12 Oct at Craig's word (#253), and run as one group (#255).** Craig starts it himself; X1 must land before 21 Oct 16:35 UTC. MK47-04 is settled (#254), so X1's close-out does not stop for it. Same theme throughout: what reaches each person, and what tells Craig. Criteria in "Group X — the wave 1 review, planned 12 Oct" above |
 | **X · 2** | ~~X7~~ (`aa6946d`) → ~~X8~~ (`e991281`) — **done 13 Oct** | top tier · high | top tier · High | Both change what a person sees when something fails (the assistant's errors, then every screen's) |
-| **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → ~~X6~~ (`51c81ff`, 14 Oct) → **checkpoint: his credential steps** (storage decided, #257) → X4 → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
+| **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → ~~X6~~ (`51c81ff`, 14 Oct) → ~~checkpoint: his credential steps~~ (storage decided, #257; done by a session at his word, 14 Oct, #268) → ~~X4~~ (`87a734b`, 14 Oct) → X5 | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 

@@ -8,9 +8,13 @@ roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — 
 planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
 check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
 Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift and failure
-words (`e991281`), shipped 13 Oct. Sitting 3 began 14 Oct: X6, value as used copies, shipped
-(`51c81ff`, #267); it stopped at X4's checkpoint, Craig's credential steps (a key pair, the
-backup role's password, a repository secret). X4 → X5 resume at his word; X5 by 31 Oct.**
+words (`e991281`), shipped 13 Oct. Sitting 3, 14 Oct: X6, value as used copies (`51c81ff`, #267),
+and X4, a weekly encrypted copy outside Neon with a monthly restore drill (`87a734b`, #268),
+shipped; X4's credential steps were done by a session at Craig's word. Its first run passed
+its drill (49 tables, 99,822 rows). Next: X5, watch history, by 31 Oct; its live data steps
+stop for his word.**
+**Craig's, from X4: copy `~/.mcu-secrets/backup-age-key.txt` into the password manager.**
+Without a copy off the Mac, losing the Mac makes every backup unreadable.
 **What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
 count nowhere until re-priced; the scheduled runs of 15 and 16 Oct 04:00 UTC re-price them as
 used copies (750 eBay calls each, the usual share). Until then Home shows no total, then a
@@ -29,8 +33,8 @@ first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not 
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
-| ~~X6~~ (`51c81ff` #267), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct |
-| **checkpoint: X4's credential steps** → X4 → X5 · X9 → X10 · X11 → X12 | sitting 3 stopped at the checkpoint (14 Oct); then sittings 4–5 (#255). X5's live data steps stop for Craig's word; X5 by 31 Oct |
+| ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
+| X5 · X9 → X10 · X11 → X12 | X5 ends sitting 3, by 31 Oct, its live data steps at Craig's word; then sittings 4–5 (#255) |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -44,8 +48,8 @@ first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not 
   2nd, 15th and 16th, its first run with work on 1 Nov 04:00.
 - **The gate** is six CI jobs (#248). Locally: API 1,188 passed and 650 skipped without Postgres
   (11 Oct), web 525, shared 131.
-- **Craig's open items** (`OWNER-ACTIONS.md`): X4's credential steps, which sitting 3 now
-  waits on (the roadmap's choices all made 12 Oct: #254, #256, #257); 29 connect eBay; 22 the Neon
+- **Craig's open items** (`OWNER-ACTIONS.md`): a copy of the backup's private key off the Mac
+  (X4, 14 Oct); 29 connect eBay; 22 the Neon
   password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues.
 
 **Live numbers (12 Oct, read-only):**
@@ -63,7 +67,7 @@ The Log keeps a dated line for each.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
-**sitting 2 is done (X7, X8, 13 Oct); sitting 3 shipped X6 (14 Oct) and waits at X4's checkpoint, Craig's credential steps; once they are done, X4 → X5 resume with `/group-start X4,X5`.**
+**sitting 2 is done (X7, X8, 13 Oct); sitting 3 shipped X6 and X4 (14 Oct); X5 is its last batch, by 31 Oct.**
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -452,6 +456,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-14 (X4, `87a734b`, #67, #268)** — At Craig's word ("option 2") a session made the
+  backup role `mcu_backup` (generated password, never shown), the `BACKUP_DATABASE_URL` secret
+  and an age key pair (private half in `~/.mcu-secrets`; a copy off the Mac is Craig's). X4: a
+  weekly GitHub Actions copy of every table but credentials, encrypted, kept 90 days, newest 8;
+  a monthly drill restores it into a throwaway Postgres and compares rows. Migration 053, live:
+  the role reads 48 of 56 tables whole and two without their credential column. First run by
+  hand: 49 tables, 99,822 rows, 26 MB, drill passed; decrypted on the Mac. Runbook
+  `docs/restore-runbook.md`.
 - **2026-10-14 (X6, `51c81ff`, #65, #267)** — Group X sitting 3 began. X6 values each disc as a
   used copy (#256): used listings' median with three or more, else New's median times a factor
   measured per format from the stored values (0.60 until 20 films), re-applied at each run's
