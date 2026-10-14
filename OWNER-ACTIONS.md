@@ -20,7 +20,13 @@ conversation still maps onto this file.*
   (#268); X4 is live and its first run passed its drill.** **Yours now, about 2 minutes: copy
   `~/.mcu-secrets/backup-age-key.txt` (the backup's private key) into your password manager.**
   It is the only key that opens the weekly copies, and it exists only on the Mac. To restore,
-  follow `docs/restore-runbook.md`. X6 re-prices every disc as a used copy in the runs of 15 and 16 Oct, so
+  follow `docs/restore-runbook.md`.
+- **X5's live data steps, at your word (14 Oct, #269):** (1) the diary backfill, 651 watches
+  (Craig 493, Mark 158), adding about 490 films with no copies; (2) moving 7 of the 15 watches
+  on a namesake; (3) storing Mark's Letterboxd username, `markr973`. The plans are in
+  `.letterboxd-export/` on the Mac. **Yours whenever:** 105 doubtful diary entries
+  (`craig-doubtful.csv`, `mark-doubtful.csv`) and 8 doubtful moves (`repoint.json`), each saying
+  why. Then each of you presses Sync now once. X6 re-prices every disc as a used copy in the runs of 15 and 16 Oct, so
   Home has no total, then a partial one, until 16 Oct; **Update values** on Admin's Collection
   value starts sooner if you want it. The backup
   now runs on GitHub Actions too, so the one look at GitHub's plan you left for now matters

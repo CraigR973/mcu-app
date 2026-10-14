@@ -8,11 +8,13 @@ roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — 
 planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
 check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
 Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift and failure
-words (`e991281`), shipped 13 Oct. Sitting 3, 14 Oct: X6, value as used copies (`51c81ff`, #267),
-and X4, a weekly encrypted copy outside Neon with a monthly restore drill (`87a734b`, #268),
-shipped; X4's credential steps were done by a session at Craig's word. Its first run passed
-its drill (49 tables, 99,822 rows). Next: X5, watch history, by 31 Oct; its live data steps
-stop for his word.**
+words (`e991281`), shipped 13 Oct. Sitting 3 is done in code, 14 Oct: X6, value as used copies
+(`51c81ff`, #267); X4, a weekly encrypted copy outside Neon with a monthly restore drill
+(`87a734b`, #268), its credential steps done by a session at Craig's word and its first run
+passing its drill; and X5, watch history (`19c9aad`, #269). **X5's live data steps wait for
+Craig's word:** the diary backfill (651 watches, about 490 films added; 105 doubtful entries
+listed for him), 7 of the 15 misattributed watches moved (8 doubtful), and Mark's username;
+then both press Sync now. Next after that: sitting 4, X9 → X10, at Craig's go.**
 **Craig's, from X4: copy `~/.mcu-secrets/backup-age-key.txt` into the password manager.**
 Without a copy off the Mac, losing the Mac makes every backup unreadable.
 **What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
@@ -34,7 +36,8 @@ first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not 
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
-| X5 · X9 → X10 · X11 → X12 | X5 ends sitting 3, by 31 Oct, its live data steps at Craig's word; then sittings 4–5 (#255) |
+| ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
+| X9 → X10 · X11 → X12 | sittings 4–5 (#255), at Craig's go |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -67,7 +70,7 @@ The Log keeps a dated line for each.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
-**sitting 2 is done (X7, X8, 13 Oct); sitting 3 shipped X6 and X4 (14 Oct); X5 is its last batch, by 31 Oct.**
+**sitting 2 is done (X7, X8, 13 Oct); sitting 3 shipped X6, X4 and X5 (14 Oct); X5's live data steps wait for Craig's word, by 31 Oct.**
 Groups V and W are done; their records stay in the ledger.
 
 **Four acceptance criteria an agent cannot meet.** Say so plainly in each close-out; never let
@@ -456,6 +459,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-14 (X5, `19c9aad`, #69, #269)** — Watch history: the feed attaches by TMDB id and
+  a film not owned gets a row with no copies, kept out of every collection count
+  (`owned_film`); a known year more than one apart excludes a title match; the diary import
+  no longer identifies; a weekly sync in the 08:00 job; the tab says the feed holds 50 entries.
+  Migration 054, live. Dry runs (read-only): backfill 651 watches and 105 doubtful; the 15, 7
+  to move and 8 doubtful. The applies and Mark's username wait for Craig's word. Sitting 3 done
+  in code.
 - **2026-10-14 (X4, `87a734b`, #67, #268)** — At Craig's word ("option 2") a session made the
   backup role `mcu_backup` (generated password, never shown), the `BACKUP_DATABASE_URL` secret
   and an age key pair (private half in `~/.mcu-secrets`; a copy off the Mac is Craig's). X4: a
