@@ -25,9 +25,14 @@ partial one. Pressing **Update values** on Admin's Collection value today would 
 Mark edits, moves and deletes copies. Y2 (`e0b5bad`, #265): Move discs, a tray of discs found
 by search or scan, moved together and movable back (Group Y in `docs/phase-batches.md`). Mark's
 first feedback was fixed the same evening (`2ef3b8a`, #266): a shelf-only edit kept the old
-location text, and the delete question hid its own Yes on a phone. **Mark's to do:** re-save
-12 Angry Men's 4K (Front 4th) to tidy its text, and decide whether its location-less Blu-ray,
-added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
+location text, and the delete question hid its own Yes on a phone. His second, 14 Oct
+(`f5f63e2`, #71, #270): the Lounge has a Side picker (Left / Right hand side, in `shelf`), and
+migration 055 filled in the side of 164 live and 160 trashed Lounge copies from their text;
+detail typed beside a section is kept after it ("Garage - top row"), where #266 had dropped
+it; the add form's TMDB search shows 20 and reads a trailing year, so "Texas Chainsaw Massacre
+1974" finds TMDB's "Chain Saw". **Mark's to do:** pick the side again for Nope and Us (both
+4K, Lounge), whose typed side #266 dropped; re-save 12 Angry Men's 4K (Front 4th) to tidy its
+text, and decide whether its location-less Blu-ray, added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 
 | Batch | State |
@@ -458,6 +463,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-14 (Mark's feedback, `f5f63e2`, #71, #270)** — The Lounge's sides: a Side picker
+  in the copy form, Move discs and the Archive filter, stored in `shelf`; migration 055 filled
+  in 164 live and 160 trashed copies from their text. #266's rule no longer drops detail typed
+  beside a section; it is kept after it. The add form's TMDB search shows 20 results and reads
+  a trailing year (the 1974 Texas Chain Saw Massacre was 14th). Nope and Us wait for Mark.
 
 - **2026-10-14 (X5, `19c9aad`, #69, #269)** — Watch history: the feed attaches by TMDB id and
   a film not owned gets a row with no copies, kept out of every collection count
