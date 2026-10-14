@@ -925,6 +925,44 @@ async def test_text_that_names_the_same_place_is_kept_as_written(
     assert response.json()["location"] == "Front 4th Shelf"
 
 
+async def test_the_lounge_side_picker_files_the_disc_on_that_side(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Mark, 14 Oct: the side is a picker now, and its text matches the imported copies."""
+    movie = await _a_film(api_session, title="Nope Again", tmdb_id=930352)
+    item = await _a_disc(api_session, movie, formats=["4k_uhd"], section="Front", shelf="3rd")
+
+    response = await client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(location=None, section="Lounge", shelf="Right", formats=["4k_uhd"]),
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert (body["section"], body["shelf"]) == ("Lounge", "Right")
+    assert body["location"] == "Lounge Cabinet - Right Hand Side"
+    assert body["locationLabel"] == "Lounge Right"
+
+
+async def test_detail_typed_beside_a_section_is_kept_after_it(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """#266 dropped it as "a different place", which lost Mark's "Right Hand Side"."""
+    movie = await _a_film(api_session, title="Top Row Film", tmdb_id=930353)
+
+    response = await client.post(
+        "/api/v1/collection",
+        json=_body(movieId=str(movie.id), location="top row", section="Garage", shelf=None),
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert (body["section"], body["shelf"]) == ("Garage", None)
+    assert body["location"] == "Garage - top row"
+
+
 async def test_a_disc_can_be_moved_to_craigs_house_from_the_picker(
     client: AsyncClient,
     api_session: AsyncSession,

@@ -12,7 +12,9 @@ claim something happened that was rolled back.
 
 from __future__ import annotations
 
+import asyncio
 import math
+import re
 import uuid
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
@@ -31,6 +33,7 @@ from src.models.collection_item import (
     OWNED_LISTING_STATUSES,
     SECTIONS,
     CollectionItem,
+    location_text,
     owned_copy,
 )
 from src.models.movie import Movie, MovieCredit
@@ -58,6 +61,7 @@ from src.services.audit import diff_snapshots, item_snapshot, record_action
 from src.services.barcode import check_digit_valid, normalise
 from src.services.movie_metadata import credit_rows, movie_metadata_values, parse_year
 from src.spreadsheet.parser import parse_location
+from src.tmdb.models import SearchResult
 
 router = APIRouter(prefix="/api/v1", tags=["collection"])
 
@@ -125,6 +129,16 @@ def _resolve_location(
 
     if section is None and shelf is None and text is not None:
         section, shelf = parse_location(text)
+    elif text is not None and section is not None and parse_location(text) == (None, None):
+        # Text naming no place of its own is a detail of the place the pickers chose: "top
+        # row" in the Garage. It is kept after that place, so the text still says where the
+        # disc is wherever it is read alone (the export reads it first). Until 14 Oct the
+        # branch below dropped it as "a different place", which lost Mark's "Right Hand
+        # Side" for the Lounge.
+        text = f"{location_text(section, shelf)} - {text}"
+        if shelf is None:
+            # An app from before the Lounge's side picker sends the side as typed text.
+            shelf = parse_location(text)[1]
     elif text is not None and parse_location(text) != (section, shelf):
         # The pickers moved the disc and the text still names where it was. Mark's 12 Angry
         # Men, 13 Oct: the shelf changed from 3rd to 4th, the text kept "Front 3rd shelf",
@@ -134,7 +148,7 @@ def _resolve_location(
     if text is None and section is not None:
         # Compose what the person would have typed, so `location` is never empty for a
         # disc that has a place. It is the column every other surface falls back to.
-        text = f"{section} {shelf} shelf" if shelf else section
+        text = location_text(section, shelf)
 
     if section is not None and section not in SECTIONS:
         raise HTTPException(
@@ -883,6 +897,45 @@ async def list_audit_entries(
 # TMDB search for the add form (§3.1's "movie search")
 # ---------------------------------------------------------------------------
 
+#: All of TMDB's first page. Ten hid the 1974 Texas Chain Saw Massacre, 14th for Mark's
+#: "The Texas Chainsaw massacre" behind its sequels and remakes (14 Oct).
+TMDB_SEARCH_LIMIT = 20
+
+#: A year ending the search, bare or in brackets: "Halloween 1978", "Halloween (1978)".
+_TRAILING_YEAR = re.compile(r"^(?P<title>.*?\S)(?:\s+\(?|\s*\()(?P<year>(?:18|19|20)\d{2})\)?$")
+
+
+def _split_trailing_year(query: str) -> tuple[str, int] | None:
+    """The title and year of a search that ends in a year, or None if it does not."""
+    match = _TRAILING_YEAR.match(query.strip())
+    if match is None:
+        return None
+    title = match.group("title").rstrip(" -,:")
+    return (title, int(match.group("year"))) if len(title) >= 2 else None
+
+
+async def _search_tmdb_films(tmdb: TmdbClient, query: str) -> list[SearchResult]:
+    """TMDB's films for the add form's search, a year in it read as a year.
+
+    TMDB reads every word as title, so "The Texas Chainsaw Massacre 1974" found nothing. A
+    search ending in a year is also run as the title filtered to that year, and **films
+    released that year come first**. The search as typed still runs and follows, because
+    some titles end in a year of their own: "Blade Runner 2049", "Wonder Woman 1984".
+    """
+    split = _split_trailing_year(query)
+    if split is None:
+        return (await tmdb.search_movie(query)).results[:TMDB_SEARCH_LIMIT]
+
+    title, year = split
+    dated, typed = await asyncio.gather(
+        tmdb.search_movie(title, year=year), tmdb.search_movie(query)
+    )
+    # TMDB's year filter also matches a re-release, so the 1940 Fantasia answers 2000.
+    # A stable sort keeps TMDB's order within each group.
+    merged = list({result.id: result for result in [*dated.results, *typed.results]}.values())
+    merged.sort(key=lambda result: parse_year(result.release_date) != year)
+    return merged[:TMDB_SEARCH_LIMIT]
+
 
 @router.get("/tmdb/search", response_model=TmdbSearchResponse)
 async def search_tmdb(
@@ -901,14 +954,13 @@ async def search_tmdb(
     """
     query = q.strip()
     try:
-        results = await tmdb.search_movie(query)
+        top = await _search_tmdb_films(tmdb, query)
     except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="TMDB search is temporarily unavailable",
         ) from exc
 
-    top = results.results[:10]
     known = {
         tmdb_id: movie_id
         for movie_id, tmdb_id in (

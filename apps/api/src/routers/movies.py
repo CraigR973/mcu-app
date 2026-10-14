@@ -19,7 +19,16 @@ from sqlalchemy.sql.selectable import ScalarSelect
 from src.auth import CurrentUser
 from src.database import get_db
 from src.matching import MatchingEngine
-from src.models.collection_item import SECTIONS, SHELVED_SECTIONS, CollectionItem, owned_copy
+from src.models.collection_item import (
+    LOUNGE,
+    LOUNGE_SIDES,
+    SECTIONS,
+    SHELVED_SECTIONS,
+    CollectionItem,
+    owned_copy,
+    shelf_label,
+    shelf_noun,
+)
 from src.models.movie import Movie, MovieCredit
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
@@ -580,6 +589,33 @@ async def list_movies(
     )
 
 
+def _shelf_facets(
+    section: str, rows: list[tuple[str | None, int, int]]
+) -> list[ShelfFacetResponse]:
+    """One section's shelves, or the Lounge's sides, with what each holds.
+
+    Front's and Back's shelves are read from the data. The Lounge's two sides are a fixed
+    pair (Mark, 14 Oct), offered even while one holds nothing, and any other value a typed
+    location gave it follows them. Every other section is one undivided space.
+    """
+    counts = {shelf: (items, movies) for shelf, items, movies in rows if shelf is not None}
+    if section == LOUNGE:
+        names = [*LOUNGE_SIDES, *sorted(name for name in counts if name not in LOUNGE_SIDES)]
+    elif section in SHELVED_SECTIONS:
+        names = sorted(counts)
+    else:
+        return []
+    return [
+        ShelfFacetResponse(
+            shelf=name,
+            label=shelf_label(section, name),
+            itemCount=counts.get(name, (0, 0))[0],
+            movieCount=counts.get(name, (0, 0))[1],
+        )
+        for name in names
+    ]
+
+
 @router.get("/collection/facets", response_model=CollectionFacetsResponse)
 async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionFacetsResponse:
     """The vocabulary the filter bar offers, counted from the data.
@@ -617,15 +653,8 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
             section=name,
             itemCount=sum(items for _shelf, items, _movies in by_section[name]),
             movieCount=sum(movies for _shelf, _items, movies in by_section[name]),
-            shelves=[
-                ShelfFacetResponse(shelf=shelf, itemCount=items, movieCount=movies)
-                for shelf, items, movies in sorted(
-                    ((s, i, m) for s, i, m in by_section[name] if s is not None),
-                    key=lambda row: row[0],
-                )
-            ]
-            if name in SHELVED_SECTIONS
-            else [],
+            shelves=_shelf_facets(name, by_section[name]),
+            shelfNoun=shelf_noun(name),
         )
         for name in SECTIONS
         if name in by_section

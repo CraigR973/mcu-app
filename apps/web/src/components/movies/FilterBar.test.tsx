@@ -113,3 +113,34 @@ describe('FilterBar — Batch V4', () => {
     expect(options).toEqual(['All locations', 'Front (3)'])
   })
 })
+
+describe('FilterBar — the Lounge’s sides, Mark 14 Oct', () => {
+  it('offers the Lounge’s sides as sides, with what each holds, and names the chip so', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({
+      sections: [
+        {
+          section: 'Lounge',
+          movieCount: 164,
+          itemCount: 164,
+          shelfNoun: 'side',
+          shelves: [
+            { shelf: 'Left', label: 'Left hand side', movieCount: 68, itemCount: 68 },
+            { shelf: 'Right', label: 'Right hand side', movieCount: 96, itemCount: 96 },
+          ],
+        },
+      ],
+      unsectionedItemCount: 0,
+      decades: [],
+      undatedMovieCount: 0,
+      discsWithSpecs: 0,
+      allSections: ['Lounge'],
+    })
+    renderBar({ section: 'Lounge', shelf: 'Right' })
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    const select = await screen.findByRole('combobox', { name: 'Filter by side' })
+    const options = within(select).getAllByRole('option').map((option) => option.textContent)
+    expect(options).toEqual(['Both sides', 'Left hand side (68)', 'Right hand side (96)'])
+    expect(screen.getByText('Side: Right hand side')).not.toBeNull()
+  })
+})

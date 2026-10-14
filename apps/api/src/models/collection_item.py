@@ -69,6 +69,35 @@ SECTIONS = (
 #: the UI can say so instead of showing an empty select.
 SHELVED_SECTIONS = ("Front", "Back")
 
+#: The Lounge cabinet's two sides — Mark's request, 14 Oct. Stored in ``shelf``, as Front's
+#: and Back's shelves are, but offered from this pair rather than read from the data, so a
+#: side with no disc on it yet is still offered. Until migration 055, 164 copies said which
+#: side only in their location text, where no picker or filter could reach it.
+LOUNGE = "Lounge"
+LOUNGE_SIDES = ("Left", "Right")
+
+
+def location_text(section: str, shelf: str | None) -> str:
+    """The location text for a place the pickers chose: what a person would have typed.
+
+    A Lounge side is spelled as the 164 imported Lounge copies already spell it, so a copy
+    filed by the picker reads like one filed by the spreadsheet.
+    """
+    if section == LOUNGE and shelf in LOUNGE_SIDES:
+        return f"Lounge Cabinet - {shelf} Hand Side"
+    return f"{section} {shelf} shelf" if shelf else section
+
+
+def shelf_noun(section: str) -> str:
+    """What a section's subdivisions are called: Front's shelves, the Lounge's sides."""
+    return "side" if section == LOUNGE else "shelf"
+
+
+def shelf_label(section: str, shelf: str) -> str:
+    """How a picker names one subdivision: "2nd shelf", "Left hand side"."""
+    return f"{shelf} hand side" if section == LOUNGE and shelf in LOUNGE_SIDES else f"{shelf} shelf"
+
+
 #: Format codes, best to worst. This ordering is duplicated in the
 #: ``recalculate_movie_derived_fields`` trigger, which is where it is enforced; the
 #: constant exists so the API layer can sort and label without re-deriving it.

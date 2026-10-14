@@ -180,6 +180,8 @@ class IdentifyMovieRequest(BaseModel):
 
 class ShelfFacetResponse(BaseModel):
     shelf: str
+    #: How a picker names it: "2nd shelf", or "Left hand side" for the Lounge (14 Oct).
+    label: str
     movieCount: int = Field(ge=0)
     itemCount: int = Field(ge=0)
 
@@ -188,8 +190,10 @@ class SectionFacetResponse(BaseModel):
     section: str
     movieCount: int = Field(ge=0)
     itemCount: int = Field(ge=0)
-    #: Empty for a section with no numbered shelves — Digital, Garage, the cabinets.
+    #: Empty for a section with no shelves or sides — Digital, Garage, the cabinets.
     shelves: list[ShelfFacetResponse] = Field(default_factory=list)
+    #: What ``shelves`` are called there: "shelf", or "side" for the Lounge (14 Oct).
+    shelfNoun: str = "shelf"
 
 
 class DecadeFacetResponse(BaseModel):

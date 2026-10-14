@@ -29,7 +29,19 @@ vi.mock('@/lib/api', async (importOriginal) => {
     fetchCopies: vi.fn(),
     moveCollectionItems: vi.fn(),
     fetchFacets: vi.fn().mockResolvedValue({
-      sections: [{ section: 'Back', movieCount: 1, itemCount: 1, shelves: [{ shelf: 'Top', movieCount: 1, itemCount: 1 }] }],
+      sections: [
+        { section: 'Back', movieCount: 1, itemCount: 1, shelves: [{ shelf: 'Top', movieCount: 1, itemCount: 1 }] },
+        {
+          section: 'Lounge',
+          movieCount: 1,
+          itemCount: 1,
+          shelfNoun: 'side',
+          shelves: [
+            { shelf: 'Left', label: 'Left hand side', movieCount: 0, itemCount: 0 },
+            { shelf: 'Right', label: 'Right hand side', movieCount: 1, itemCount: 1 },
+          ],
+        },
+      ],
       unsectionedItemCount: 0,
       decades: [],
       undatedMovieCount: 0,
@@ -213,6 +225,38 @@ describe('Move discs — Batch Y2', () => {
       },
     ])
     expect(await screen.findByRole('heading', { name: '1 disc put back' })).not.toBeNull()
+  })
+
+  it('moves discs to one side of the Lounge, named as a side — Mark, 14 Oct', async () => {
+    vi.mocked(moveCollectionItems).mockResolvedValueOnce({
+      moved: 1,
+      results: [
+        {
+          itemId: HEAT_DISC,
+          status: 'moved',
+          item: item(HEAT_DISC, HEAT, {
+            section: 'Lounge',
+            shelf: 'Right',
+            location: 'Lounge Cabinet - Right Hand Side',
+            locationLabel: 'Lounge Right',
+          }),
+        },
+      ],
+    })
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Find Heat' }))
+    await screen.findByText(/Added Heat/)
+
+    fireEvent.change(screen.getByLabelText('Move to section'), { target: { value: 'Lounge' } })
+    expect(screen.getByRole('option', { name: 'No particular side' })).not.toBeNull()
+    fireEvent.change(screen.getByLabelText('Side'), { target: { value: 'Right' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Move 1 disc' }))
+
+    await waitFor(() => expect(moveCollectionItems).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(moveCollectionItems).mock.calls[0]?.[0]).toEqual([
+      { itemId: HEAT_DISC, baseUpdatedAt: '2026-10-13T09:00:00Z', section: 'Lounge', shelf: 'Right' },
+    ])
+    expect(await screen.findByRole('heading', { name: '1 disc moved to Lounge · Right hand side' })).not.toBeNull()
   })
 
   it('will not move offline, and says why', async () => {

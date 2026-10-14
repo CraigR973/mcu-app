@@ -12,6 +12,7 @@ import {
   fetchFacets,
   formatLabel,
   moveCollectionItems,
+  shelfLabel,
   type CollectionCopy,
   type CollectionMoveEntry,
   type CollectionMoveResponse,
@@ -123,7 +124,9 @@ export default function MoveDiscsPage() {
   const populated = facetsQuery.data?.sections ?? []
   const allSections = facetsQuery.data?.allSections ?? []
   const sectionNames = allSections.length > 0 ? allSections : populated.map((entry) => entry.section)
-  const shelves = populated.find((entry) => entry.section === section)?.shelves ?? []
+  const chosen = populated.find((entry) => entry.section === section)
+  const shelves = chosen?.shelves ?? []
+  const noun = chosen?.shelfNoun ?? 'shelf'
 
   const find = useMutation({
     mutationFn: (film: FoundFilm) => fetchCopies(film.movieId),
@@ -172,6 +175,12 @@ export default function MoveDiscsPage() {
     },
   })
 
+  /** "Lounge · Left hand side", named as the picker named it. */
+  function destinationLabel(): string {
+    const picked = shelves.find((entry) => entry.shelf === shelf)
+    return picked ? `${section} · ${shelfLabel(picked)}` : section
+  }
+
   function moveTray() {
     const target = { section, shelf: shelf || null }
     const before: Record<string, Place> = {}
@@ -184,7 +193,7 @@ export default function MoveDiscsPage() {
     setNotice(null)
     move.mutate({
       entries: tray.discs.map((disc) => ({ itemId: disc.itemId, baseUpdatedAt: disc.updatedAt, ...target })),
-      last: { destination: placeLabel({ location: null, ...target }), undo: false, before, titles },
+      last: { destination: destinationLabel(), undo: false, before, titles },
     })
   }
 
@@ -279,14 +288,14 @@ export default function MoveDiscsPage() {
           </label>
           {shelves.length > 0 ? (
             <label className="space-y-1.5 text-sm">
-              <span className="metadata-label">Shelf</span>
+              <span className="metadata-label">{noun === 'side' ? 'Side' : 'Shelf'}</span>
               <select
                 className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
                 value={shelf}
                 onChange={(event) => setShelf(event.target.value)}
               >
-                <option value="">No particular shelf</option>
-                {shelves.map((entry) => <option key={entry.shelf} value={entry.shelf}>{entry.shelf} shelf</option>)}
+                <option value="">No particular {noun}</option>
+                {shelves.map((entry) => <option key={entry.shelf} value={entry.shelf}>{shelfLabel(entry)}</option>)}
               </select>
             </label>
           ) : null}
