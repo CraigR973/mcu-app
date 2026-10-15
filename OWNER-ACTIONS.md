@@ -1368,7 +1368,7 @@ Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
    the next is instant. Agents could only type a code into a stand-in for the API. Mark can
    lend and borrow too now, from Loans or a film's page.
 
-### 31. TV series — ~~your call~~ **built as Y3 at your word, 15 Oct**; three steps left *(new 15 Oct)*
+### 31. TV series — ~~your call~~ **built as Y3 at your word, 15 Oct**; Mark's review remains
 
 **Mark's feedback, 15 Oct:** the 12 titles left under "Still to identify" are TV series, and
 some series were matched as films (Band of Brothers, 11.22.63). **You said build it now; Y3
@@ -1376,34 +1376,21 @@ some series were matched as films (Band of Brothers, 11.22.63). **You said build
 identify panel lists TMDB's series beside its films, "Correct match" offers series too, and the
 34 series T9 set aside are back under "Still to identify" to be identified as series.
 
-**15 Oct: you asked for the two steps to be done for you.** This cloud session can reach
-neither TMDB nor the live database, so they are one sitting at the Mac (about 15 minutes), the
-first two commands writing nothing (`DECISIONS.md` #274). From `/Users/craigrobinson/mcu_app`:
+**15 Oct on Craig's Mac (`DECISIONS.md` #274):** all generated files and the full apply log are
+under `~/mcu-series/`. The two searches ran in `READ ONLY` transactions. The live apply ran only
+after Craig read the plan and said go; it never merges titles.
 
-1. **The series pass, dry run (writes nothing, about a minute):**
-
-       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.identify_series --app-url https://mcu-app-fawn.vercel.app
-
-   Open `series-plan.html`. "Will be identified" lists each title still to identify that TMDB
-   has exactly one series for (or one far better known than its namesakes), with that series;
-   "Left for Mark" lists the doubtful ones, with what TMDB offered.
-2. **The live run, once the first list looks right (writes, each one undoable):**
-
-       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.identify_series --apply series-plan.json
-
-   It identifies exactly that list, re-checking each title first, and prints what it did. A
-   wrong one is undone on You → Identify films, under recent identifications. Its first series
-   is also the live check of TMDB's series answer (#273): if any print `failed`, tell a session.
-3. **The check for series matched as films (writes nothing, about 5 minutes):**
-
-       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.find_series_as_films --app-url https://mcu-app-fawn.vercel.app
-
-   `series-as-films.html` links each film that looks like a series to its page.
-4. **Send Mark the two short lists:** "Left for Mark" from step 1, and step 3's report. On each
-   page he presses **Correct match** (or uses the identify panel) and chooses under **TV series**.
-
-(The values are exported explicitly, as item 1i's commands are: `.env.local`'s connection string
-has an unquoted `&`. Each dry run reads in a `READ ONLY` transaction, so it cannot write.)
+1. ~~Run the series pass dry run and review its report.~~ **Done 15 Oct:** 45 titles; Craig moved
+   The Kennedys from the proposed matches to Mark's list, leaving 34 proposed and 11 manual.
+2. ~~Apply the reviewed plan to live data.~~ **Done 15 Oct at Craig's go:** 33 identified, 0
+   failed, 1 waiting: Shetland Series 5 shares the TMDB series ID now held by Series 1–4. The
+   real TMDB `/tv/{id}` answer parsed and committed. Both Shetland rows remain separate.
+3. ~~Check for series matched as films.~~ **Done 15 Oct, read-only:** 1,852 films checked, 9
+   suspects, 0 TMDB failures. See `~/mcu-series/series-as-films.html` and `.csv`.
+4. **Send Mark the review links.** The 11 "Left for Mark" titles are in
+   `~/mcu-series/series-plan.html`; add only the film-matched suspects Craig agrees are series.
+   On each unmatched title he chooses under **TV series**; on a film match he presses
+   **Correct match** first. Shetland Series 5 needs a separate duplicate decision.
 
 ### 22. Rotate the Neon database password — recommended, your call
 
