@@ -5772,3 +5772,23 @@ contemporaneous.
        would need the kind, and one that forgot would fetch a stranger's film); re-identifying
        the suspects automatically (a series sharing a better-known film's name would be
        overwritten with nobody looking).
+
+274. **The series still to identify are identified by a pass where TMDB leaves no doubt; Mark
+     chooses the rest (Batch Y3, follow-up).** Craig, 15 Oct, asked for #273's two remaining
+     steps to be done rather than left to Mark and him; this session could reach neither TMDB
+     nor the live database, so he chose a pass he runs at the Mac, in T9's shape (#214).
+
+     - **The same list Mark sees.** The Archive's "Still to identify" rule moved to
+       `services/identify/waiting.py`, and the pass reads exactly it, on the shelf.
+     - **Sure, or Mark's.** It proposes a series only when TMDB has one of that title (searched
+       as a series is sold: "Broadchurch", not "Broadchurch Series 1 - 3"), or one with five
+       times the votes of every other of that title and at least 50, its first-air year within
+       a year of any the title gives. Several alike (The Office, 2001 and 2005) or none at all
+       are left for Mark, with what TMDB offered.
+     - **Dry run, report, then the exact plan.** The dry run writes nothing (`READ ONLY`); the
+       live run applies the plan Craig read, re-checking each title, audited `auto` with its
+       evidence, undoable from Identify films, and **never merges**: a series another title
+       already holds is left for Mark, named.
+     - *Rejected:* doing it from this cloud session (no Postgres connection leaves it, and its
+       role is read-only by design, #236); applying without a report (46 identifications nobody
+       read first).
