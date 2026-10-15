@@ -22,7 +22,6 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
-from src.matching import MatchingEngine
 from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.identify import IdentifyLookup, IdentifyRun
@@ -37,7 +36,9 @@ from src.services.identification import (
     is_undone,
     set_aside,
 )
+from src.services.identify.matcher import Identifier, offer_notes
 from src.services.identify.plan import FORMAT_NAMES
+from src.services.identify.titles import parse_title
 from src.tmdb.client import TMDBClient
 
 
@@ -211,9 +212,19 @@ async def _waiting_film(db: AsyncSession, movie_id: uuid.UUID) -> Movie:
     return movie
 
 
+#: Films the Identify films page offers for a typed title.
+SEARCH_OFFERS = 8
+
+
 async def search_again(tmdb: TMDBClient, query: str) -> list[dict[str, Any]]:
-    """TMDB's films for a corrected title, in the shape the page offers them."""
-    result = await MatchingEngine(tmdb).match(query)
+    """TMDB's films for a corrected title, in the shape the page offers them.
+
+    X9 (CT46-01): ranked by T9's rule, with each film's votes and the notes the dry run gives
+    (the year, another title it matched by), where ``MatchingEngine`` ranked them with no
+    votes and no notes.
+    """
+    parsed = parse_title(query)
+    ranked = await Identifier(tmdb).candidates_for(parsed)
     return [
         {
             "tmdb_id": c.tmdb_id,
@@ -221,11 +232,11 @@ async def search_again(tmdb: TMDBClient, query: str) -> list[dict[str, Any]]:
             "year": c.year,
             "poster_path": c.poster_path,
             "overview": c.overview[:600],
-            "votes": 0,
+            "votes": c.vote_count,
             "origin": "search",
-            "notes": [],
+            "notes": offer_notes(parsed, c, f),
         }
-        for c in result.candidates
+        for c, f in ranked[:SEARCH_OFFERS]
     ]
 
 

@@ -4,6 +4,12 @@ Roadmap phase 1.7, re-landed in Batch 4 against the §3.4 schema.
 
 Pipeline: parse xlsx → match via TMDB → enrich → insert.
 
+**Since Batch X9 a row is matched by T9's ``Identifier``, never ``MatchingEngine``**
+(CT46-01): the engine scored a 0-vote namesake written without "The" above the real film,
+which put 27 of the 8 Sep import's copies on the wrong film. A row is identified only when
+T9 is sure, with no web search; anything it would ask about, or set aside as TV or not a
+film, is catalogued on the shelf unidentified and written to the review file.
+
 Usage (from the repo root):
 
     set -a; source apps/api/.env.local; set +a
@@ -56,7 +62,8 @@ import psycopg2
 import psycopg2.extras
 
 from src.config import psycopg2_dsn, settings
-from src.matching import LOW_CONFIDENCE, MatchingEngine, MatchResult
+from src.services.identify.matcher import Identifier, Proposal
+from src.services.identify.titles import ParsedTitle, parse_title
 from src.services.letterboxd.matcher import normalise_title
 from src.services.movie_metadata import (
     credit_rows,
@@ -91,7 +98,8 @@ REVIEW_FIELDNAMES = [
 @dataclass
 class ImportRow:
     candidate: ImportCandidate
-    match: MatchResult | None = None
+    #: TMDB's film for the row when T9's identifier was sure (X9); enriched into ``movie``.
+    tmdb_id: int | None = None
     movie: Movie | None = None
 
 
@@ -146,20 +154,24 @@ class ReplacementBlocked(RuntimeError):
 # ---------------------------------------------------------------------------
 
 
-def review_row(candidate: ImportCandidate, result: MatchResult, reason: str) -> dict[str, Any]:
-    top = result.candidates[0] if result.candidates else None
+def review_row(
+    candidate: ImportCandidate, parsed: ParsedTitle, proposal: Proposal, reason: str
+) -> dict[str, Any]:
+    """One row the import could not settle, with what T9 offered and why it waited."""
+    top = proposal.chosen or (proposal.candidates[0] if proposal.candidates else None)
     return {
         "row": candidate.row_number,
         "title": candidate.title,
-        "query": result.query,
-        "query_year": result.year or "",
+        "query": parsed.first_reading or parsed.main,
+        "query_year": parsed.year or "",
         "top_tmdb_id": top.tmdb_id if top else "",
         "top_title": top.title if top else "",
         "top_year": (top.year or "") if top else "",
-        "confidence": f"{top.confidence:.3f}" if top else "",
-        "reason": reason,
+        # T9 decides on evidence, not a score; the evidence is in the reason.
+        "confidence": "",
+        "reason": f"{reason}: {proposal.reason}" if proposal.reason else reason,
         "alternatives": " | ".join(
-            f"{c.tmdb_id}:{c.title} ({c.year or '?'})" for c in result.candidates
+            f"{c.tmdb_id}:{c.title} ({c.year or '?'})" for c in proposal.candidates
         ),
     }
 
@@ -186,7 +198,9 @@ async def match_and_enrich(
     Returns ``(rows, review_rows)``. **Every** candidate appears in ``rows``, including
     ones with no match — those carry ``movie=None`` and are imported title-only.
     """
-    engine = MatchingEngine(tmdb)
+    # No web search: an import never spends Brave, and a row T9 cannot settle waits for a
+    # person instead of being guessed.
+    identifier = Identifier(tmdb)
     rows: list[ImportRow] = []
     review_rows: list[dict[str, Any]] = []
 
@@ -197,60 +211,53 @@ async def match_and_enrich(
         if i % 25 == 0 or i == total:
             print(f"  {i}/{total} matched", flush=True)
 
+        parsed = parse_title(cand.title, cand.sub_category)
         try:
-            result = await engine.match(cand.title)
+            proposal = await identifier.identify(parsed)
         except Exception as exc:
             stats.errors.append(f"row {cand.row_number}: match error — {exc}")
             # Still catalogued: a TMDB outage must not lose a disc off the shelf.
             rows.append(ImportRow(candidate=cand))
             continue
 
-        top = result.candidates[0] if result.candidates else None
-
-        if result.matched and not result.ambiguous:
-            rows.append(ImportRow(candidate=cand, match=result))
+        if proposal.outcome == "identify" and proposal.chosen is not None:
+            rows.append(ImportRow(candidate=cand, tmdb_id=proposal.chosen.tmdb_id))
             stats.matched += 1
             continue
 
-        if result.ambiguous:
-            # Confident but tied between films that are not plausibly the same one. The
-            # disc is still catalogued with its location; only the identification waits
-            # for a person. Guessing here writes a wrong poster, cast and search vector
-            # that nothing downstream would flag as wrong (`DECISIONS.md` #31).
-            review_rows.append(review_row(cand, result, "ambiguous_match"))
-            stats.ambiguous += 1
-            rows.append(ImportRow(candidate=cand))
-            continue
-
-        if top and top.confidence >= LOW_CONFIDENCE:
-            review_rows.append(review_row(cand, result, "low_confidence"))
-            stats.review += 1
-        else:
+        # The disc is still catalogued with its location; only the identification waits
+        # for a person. Guessing here writes a wrong poster, cast and search vector that
+        # nothing downstream would flag as wrong (`DECISIONS.md` #31, CT46-01).
+        if proposal.outcome == "set_aside":
             review_rows.append(
-                review_row(cand, result, "no_results" if not top else "below_threshold")
+                review_row(cand, parsed, proposal, f"set_aside_{proposal.set_aside_as}")
             )
+            stats.review += 1
+        elif proposal.candidates:
+            review_rows.append(review_row(cand, parsed, proposal, "ask"))
+            stats.ambiguous += 1
+        else:
+            review_rows.append(review_row(cand, parsed, proposal, "no_results"))
             stats.no_match += 1
         rows.append(ImportRow(candidate=cand))
 
     print(
-        f"Matching done — {stats.matched} settled, {stats.ambiguous} ambiguous, "
-        f"{stats.review} low-confidence, {stats.no_match} no-match"
+        f"Matching done — {stats.matched} settled, {stats.ambiguous} to ask about, "
+        f"{stats.review} set aside, {stats.no_match} no-match"
     )
 
-    to_enrich = [row for row in rows if row.match is not None]
+    to_enrich = [row for row in rows if row.tmdb_id is not None]
     print(f"Enriching {len(to_enrich)} matched titles…")
     for i, row in enumerate(to_enrich, 1):
         if i % 10 == 0 or i == len(to_enrich):
             print(f"  {i}/{len(to_enrich)} enriched", flush=True)
-        assert row.match is not None
-        top_candidate = row.match.candidates[0]
+        assert row.tmdb_id is not None
         try:
-            row.movie = await tmdb.get_movie_full(top_candidate.tmdb_id)
+            row.movie = await tmdb.get_movie_full(row.tmdb_id)
             stats.enriched += 1
         except Exception as exc:
             stats.errors.append(
-                f"row {row.candidate.row_number}: "
-                f"enrich error for tmdb_id={top_candidate.tmdb_id} — {exc}"
+                f"row {row.candidate.row_number}: enrich error for tmdb_id={row.tmdb_id} — {exc}"
             )
 
     return rows, review_rows

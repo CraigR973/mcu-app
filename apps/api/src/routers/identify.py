@@ -44,6 +44,7 @@ from src.services.identify.queue import (
     search_again,
     skip,
 )
+from src.tmdb.client import TMDBRefused
 
 router = APIRouter(prefix="/api/v1", tags=["identify"])
 
@@ -165,7 +166,7 @@ async def search_film(
     del movie_id
     try:
         found = await search_again(tmdb, query.strip())
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, TMDBRefused) as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB search is unavailable"
         ) from exc
