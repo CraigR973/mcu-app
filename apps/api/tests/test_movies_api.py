@@ -29,6 +29,7 @@ from src.tmdb.models import (
     Genre,
     SearchResult,
     SearchResults,
+    TvSearchResults,
 )
 from src.tmdb.models import (
     Movie as TmdbMovie,
@@ -104,6 +105,13 @@ class FakeTmdbClient:
     async def get_movie_full(self, movie_id: int, language: str = "en-US") -> TmdbMovie:
         del language
         return _tmdb_movie(movie_id)
+
+    async def search_tv(
+        self, query: str, page: int = 1, language: str = "en-US"
+    ) -> TvSearchResults:
+        """Batch Y3 asks for series beside the films; these tests are about films."""
+        del query, page, language
+        return TvSearchResults()
 
 
 @pytest_asyncio.fixture
@@ -803,14 +811,25 @@ async def test_still_to_identify_lists_the_films_tmdb_has_not_matched_and_counts
     client: AsyncClient,
     api_session: AsyncSession,
 ) -> None:
-    """Mark, 14 Oct: the Archive lists them, so he can identify each from its page. A film
-    set aside as a TV series cannot be identified as a film, so it is not offered."""
+    """Mark, 14 Oct: the Archive lists them, so he can identify each from its page. Since
+    Batch Y3 (#273) a series set aside as TV is listed too, to be identified as the series it
+    is; a title set aside as not a film is still left out, and so is a series identified."""
     before = (await client.get("/api/v1/collection/facets")).json()["toIdentifyMovieCount"]
     await _add_owned_movie(api_session, title="Identified Already", tmdb_id=920086, year=1902)
     await _add_owned_movie(api_session, title="Worded Oddly", tmdb_id=None, year=1902)
     tv, _ = await _add_owned_movie(api_session, title="A Series Set Aside", tmdb_id=None, year=1902)
-    api_session.add(
-        IdentifyLookup(id=uuid.uuid4(), movie_id=tv.id, status="set_aside", set_aside_as="tv")
+    concert, _ = await _add_owned_movie(api_session, title="Not A Film", tmdb_id=None, year=1902)
+    series, _ = await _add_owned_movie(
+        api_session, title="A Series Identified", tmdb_id=None, year=1902
+    )
+    series.tmdb_tv_id = 920090
+    api_session.add_all(
+        [
+            IdentifyLookup(id=uuid.uuid4(), movie_id=tv.id, status="set_aside", set_aside_as="tv"),
+            IdentifyLookup(
+                id=uuid.uuid4(), movie_id=concert.id, status="set_aside", set_aside_as="not_film"
+            ),
+        ]
     )
     await api_session.flush()
 
@@ -822,13 +841,17 @@ async def test_still_to_identify_lists_the_films_tmdb_has_not_matched_and_counts
     )
 
     assert waiting.status_code == 200
-    assert [item["title"] for item in waiting.json()["items"]] == ["Worded Oddly"]
-    assert sorted(item["title"] for item in rest.json()["items"]) == [
+    assert [item["title"] for item in waiting.json()["items"]] == [
         "A Series Set Aside",
+        "Worded Oddly",
+    ]
+    assert sorted(item["title"] for item in rest.json()["items"]) == [
+        "A Series Identified",
         "Identified Already",
+        "Not A Film",
     ]
     after = (await client.get("/api/v1/collection/facets")).json()["toIdentifyMovieCount"]
-    assert after == before + 1
+    assert after == before + 2
 
 
 async def test_a_film_needs_identifying_on_its_card_exactly_when_the_filter_lists_it(
@@ -836,8 +859,10 @@ async def test_a_film_needs_identifying_on_its_card_exactly_when_the_filter_list
     api_session: AsyncSession,
 ) -> None:
     """Mark, 15 Oct: Broadchurch carried the Identify badge but was not under "Still to
-    identify", because the badge read the TMDB id alone and the filter also leaves out a film
-    set aside. Each list item and film page now says whether, and as what, it was set aside."""
+    identify", because the badge read the TMDB id alone and the filter also left out a film
+    set aside. Each list item and film page now says whether, and as what, it was set aside;
+    since Batch Y3 a series set aside is to identify, as a series, and only "not a film" is
+    left out."""
     await _add_owned_movie(api_session, title="Matched Film", tmdb_id=920087, year=1903)
     await _add_owned_movie(api_session, title="Unmatched Film", tmdb_id=None, year=1903)
     tv, _ = await _add_owned_movie(api_session, title="Unmatched Series", tmdb_id=None, year=1903)
@@ -869,8 +894,12 @@ async def test_a_film_needs_identifying_on_its_card_exactly_when_the_filter_list
         "A Concert": "not_film",
         "Skipped Film": None,
     }
-    flagged = {item["title"] for item in items if not item["identified"] and not item["setAsideAs"]}
-    assert flagged == listed == {"Unmatched Film", "Skipped Film"}
+    flagged = {
+        item["title"]
+        for item in items
+        if not item["identified"] and item["setAsideAs"] != "not_film"
+    }
+    assert flagged == listed == {"Unmatched Film", "Unmatched Series", "Skipped Film"}
 
     page = (await client.get(f"/api/v1/movies/{tv.id}")).json()
     assert page["identified"] is False

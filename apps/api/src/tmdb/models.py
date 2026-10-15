@@ -192,6 +192,9 @@ class TvSearchResult(BaseModel):
     first_air_date: str | None = None
     popularity: float = 0.0
     vote_count: int = 0
+    #: Batch Y3: what the identify panel shows of a series it offers.
+    overview: str | None = None
+    poster_path: str | None = None
 
     @property
     def year(self) -> int | None:
@@ -225,6 +228,86 @@ class TvSearchResults(BaseModel):
     results: list[TvSearchResult] = Field(default_factory=list)
     total_pages: int = 0
     total_results: int = 0
+
+
+# ---------------------------------------------------------------------------
+# A TV series — Batch Y3
+#
+# ``/tv/{id}`` with ``aggregate_credits``, ``videos`` and ``external_ids`` appended. Written
+# from TMDB's published shape, not a captured answer (the cloud session that built it had no
+# TMDB key), so everything past the id and name is optional: a field TMDB leaves out or
+# nulls must not turn an identification into a 502.
+# ---------------------------------------------------------------------------
+
+
+class TvRole(BaseModel):
+    character: str | None = None
+    episode_count: int = 0
+
+
+class TvCastMember(BaseModel):
+    """One person across the whole series, from ``aggregate_credits``: their parts are in
+    ``roles``, not a single ``character``."""
+
+    id: int
+    name: str
+    order: int = 0
+    profile_path: str | None = None
+    roles: list[TvRole] = Field(default_factory=list)
+    total_episode_count: int = 0
+
+    @property
+    def character(self) -> str | None:
+        return next((role.character for role in self.roles if role.character), None)
+
+
+class TvCrewJob(BaseModel):
+    job: str | None = None
+    episode_count: int = 0
+
+
+class TvCrewMember(BaseModel):
+    id: int
+    name: str
+    department: str | None = None
+    jobs: list[TvCrewJob] = Field(default_factory=list)
+
+
+class TvCredits(BaseModel):
+    cast: list[TvCastMember] = Field(default_factory=list)
+    crew: list[TvCrewMember] = Field(default_factory=list)
+
+
+class TvCreator(BaseModel):
+    id: int
+    name: str
+    profile_path: str | None = None
+
+
+class ExternalIds(BaseModel):
+    imdb_id: str | None = None
+
+
+class TvShow(BaseModel):
+    id: int
+    name: str
+    original_name: str | None = None
+    overview: str | None = None
+    tagline: str | None = None
+    first_air_date: str | None = None
+    last_air_date: str | None = None
+    number_of_seasons: int | None = None
+    number_of_episodes: int | None = None
+    vote_average: float | None = None
+    vote_count: int | None = None
+    popularity: float | None = None
+    poster_path: str | None = None
+    backdrop_path: str | None = None
+    genres: list[Genre] = Field(default_factory=list)
+    created_by: list[TvCreator] = Field(default_factory=list)
+    aggregate_credits: TvCredits | None = None
+    videos: Videos | None = None
+    external_ids: ExternalIds | None = None
 
 
 class Movie(BaseModel):

@@ -3794,6 +3794,7 @@ reporting the merge SHA with `db: ok`.
 |---|---|---|---|---|---|
 | ~~Y1~~ | ~~Mark edits, moves and deletes copies~~ (`4840711`) | ~~🟢~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y2~~ | ~~Move several discs at once, from anywhere~~ (`e0b5bad`) | ~~🟡~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
+| Y3 | TV series identified from TMDB, and the ones matched as films found | 🟡 | building 15 Oct | top tier · high | top tier · High |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -3897,6 +3898,52 @@ not the copy, for discs with no barcode stored.
   writes nothing, one disc named once, the ceiling); the page's one-disc, several-disc, report,
   undo and offline cases. Gate green. Browser check at 375 px as Mark: find two discs, move
   them, see the report, move them back.
+
+### Y3 — TV series identified from TMDB, and the ones matched as films found 🟡
+
+**Covers Mark's feedback of 15 Oct, points 1 and 2** (`OWNER-ACTIONS.md` item 31, built at
+Craig's word the same day). The 12 titles left under "Still to identify" are series; T9 set 34
+more aside as TV (#214) because the app matched films only; and some series were matched to a
+film of the same name (Band of Brothers, 11.22.63). Lands on `claude/brave-tesla-4y6zvv` with
+#272's two fixes, through a pull request, as Group Y does. **Criteria authored 2026-10-15.**
+
+**Acceptance:**
+- **A series has its own TMDB id.** Migration 056 adds `movies.tmdb_tv_id` (unique) and
+  `identify_lookups.media_type` (`film` or `tv`). `tmdb_id` stays a film's only: TMDB numbers
+  films and series separately, and about 40 modules read `tmdb_id` as a film's. Both tables are
+  granted to `mcu_readonly` and `mcu_backup` whole, so the new columns need no grant, and
+  neither holds a credential.
+- **Identify a series from its page**, either person. `GET /movies/{id}/candidates` returns
+  TMDB's series beside its films (`seriesCandidates`, up to 5, each with its first-air year);
+  `POST /movies/{id}/identify` takes `mediaType: "tv"`. A series fills in title, first-air year,
+  overview, poster, backdrop, rating, genres (TV genres also filed under the film genre they
+  match, so the genre filter finds them), IMDb id, trailer, cast and creators, with `is_tv`
+  true, so values keep pricing it by the series rules. It is audited, keeps the title it
+  replaced as an alias, merges into a row that already holds the series, and undoes from the
+  Identify films page as a film's identification does.
+- **A film corrected to a series, and back.** "Correct match" offers series too. Identifying a
+  film row as a series clears its film id, and the reverse clears the series id; undo restores
+  either.
+- **"Still to identify" and the badge** count a film identified when it has either id, and
+  list the 34 set aside as TV, since they can now be identified. A title set aside as not a
+  film stays out. Craig's Identify films queue and its counts leave out a series identified.
+  The identify panel shows series first for a title set aside as TV or already a series.
+- **A series' page:** "TV series" on its card and list row; streaming offers from TMDB's series
+  providers; no Letterboxd link and no price alert, which are films' (unchanged, as before Y3).
+- **Finding the series matched as films:** `src.scripts.find_series_as_films`, read-only (a
+  `READ ONLY` transaction, closed before TMDB is asked), checks every identified owned film
+  against TMDB's series index and reports the suspects with a link to each film's page: a series
+  of the same title (`titles.compare`, `same_title`) that has at least five times the film's
+  votes and at least 50, or a disc grouped "TV", or a replaced spreadsheet title in T9's series
+  words. It changes nothing; Mark or Craig correct each from its page.
+- Tests: the migration up and down; identify a series, merge into one, undo, correct a film to
+  a series and back, against Postgres; the candidates' series; the filter, badge and queue
+  counts; the detection rule on stand-in TMDB answers; the panel's series group and the card's
+  tag. Gate green. Browser check at Pixel 7 size as Mark: identify a set-aside series from its
+  page against a stand-in TMDB.
+- **The TMDB series payload is not checked against a real answer here:** the cloud session has
+  no TMDB key. The model follows TMDB's published `/tv/{id}` shape with every field optional,
+  and the first live identification (Broadchurch) is the check.
 
 ## Post-launch — sequenced, not scheduled
 

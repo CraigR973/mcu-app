@@ -90,7 +90,13 @@ class Overview:
 
 def _unidentified_on_shelf() -> Any:
     on_shelf = select(CollectionItem.id).where(CollectionItem.movie_id == Movie.id, owned_copy())
-    return (Movie.tmdb_id.is_(None), Movie.deleted_at.is_(None), on_shelf.exists())
+    # Batch Y3: a series identified (from its page) has left the queue, as a film has.
+    return (
+        Movie.tmdb_id.is_(None),
+        Movie.tmdb_tv_id.is_(None),
+        Movie.deleted_at.is_(None),
+        on_shelf.exists(),
+    )
 
 
 async def overview(db: AsyncSession) -> Overview:
@@ -200,6 +206,8 @@ async def _waiting_film(db: AsyncSession, movie_id: uuid.UUID) -> Movie:
         raise LookupError("No such film.")
     if movie.tmdb_id is not None:
         raise QueueError("This film has already been identified.")
+    if movie.tmdb_tv_id is not None:
+        raise QueueError("This has already been identified as a TV series.")
     return movie
 
 

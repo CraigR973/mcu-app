@@ -5614,6 +5614,15 @@
    },
    "IdentifyMovieRequest": {
     "properties": {
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
+     },
      "tmdbId": {
       "exclusiveMinimum": 0.0,
       "title": "Tmdbid",
@@ -6851,6 +6860,17 @@
       },
       "title": "Locations",
       "type": "array"
+     },
+     "mediaType": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mediatype"
      },
      "originalTitle": {
       "anyOf": [
@@ -13689,6 +13709,13 @@
       "title": "Query",
       "type": "string"
      },
+     "seriesCandidates": {
+      "items": {
+       "$ref": "#/components/schemas/src__schemas__movies__CandidateResponse"
+      },
+      "title": "Seriescandidates",
+      "type": "array"
+     },
      "title": {
       "title": "Title",
       "type": "string"
@@ -13710,6 +13737,15 @@
       "minimum": 0.0,
       "title": "Confidence",
       "type": "number"
+     },
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
      },
      "overview": {
       "title": "Overview",

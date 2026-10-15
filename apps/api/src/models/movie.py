@@ -32,6 +32,11 @@ class Movie(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: film TMDB does not know about, so §3.2 separates the two and this follows it.
     tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True, unique=True, index=True)
 
+    #: A TV series' TMDB id — Batch Y3 (migration 056). TMDB numbers films and series
+    #: separately, and ``tmdb_id`` is read as a film's everywhere, so a series keeps its id
+    #: here. A row has at most one of the two; one with either is identified.
+    tmdb_tv_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     imdb_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     title: Mapped[str] = mapped_column(String(500), nullable=False)

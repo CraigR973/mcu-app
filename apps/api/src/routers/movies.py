@@ -10,6 +10,7 @@ from datetime import date
 from typing import Annotated, Literal, cast
 
 import httpx
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, asc, desc, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +20,7 @@ from sqlalchemy.sql.selectable import ScalarSelect
 from src.auth import CurrentUser
 from src.database import get_db
 from src.matching import MatchingEngine
+from src.matching.engine import normalise_query, score_series
 from src.models.collection_item import (
     LOUNGE,
     LOUNGE_SIDES,
@@ -57,6 +59,10 @@ from src.services.identification import IdentifyError, identify_film
 from src.services.reviews.read import review_response, reviews_by_movie
 from src.services.valuation import valuations_for_movie, valued_format
 from src.tmdb import TMDBClient
+from src.tmdb.models import Movie as TmdbMovie
+from src.tmdb.models import TvShow
+
+logger = structlog.get_logger()
 
 router = APIRouter(prefix="/api/v1", tags=["movies"])
 
@@ -185,18 +191,21 @@ def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
 
 
 def _to_identify() -> ColumnElement[bool]:
-    """A film TMDB has not matched, and nobody has set aside as a TV series or not a film.
+    """A title TMDB has matched to neither a film nor a series, and nobody has set aside as
+    not a film.
 
-    The Identify films page's own terms (Batch T9): a film set aside cannot be identified as a
-    film, so offering it would only invite a wrong match. A skipped film is still a film, and
-    still listed.
+    #271 also left out the series T9 set aside, because the app could identify films only and
+    offering them invited a wrong match. Batch Y3 identifies series, so they are listed again,
+    to be identified as the series they are. A skipped film is still listed.
     """
-    set_aside = exists(
+    not_a_film = exists(
         select(IdentifyLookup.id).where(
-            IdentifyLookup.movie_id == Movie.id, IdentifyLookup.status == "set_aside"
+            IdentifyLookup.movie_id == Movie.id,
+            IdentifyLookup.status == "set_aside",
+            IdentifyLookup.set_aside_as == "not_film",
         )
     )
-    return and_(Movie.tmdb_id.is_(None), ~set_aside)
+    return and_(Movie.tmdb_id.is_(None), Movie.tmdb_tv_id.is_(None), ~not_a_film)
 
 
 def _live_copy_exists(filters: MovieFilters) -> ColumnElement[bool]:
@@ -306,7 +315,8 @@ async def _set_aside_by_movie(
 
     Mark, 15 Oct: a set-aside film carried the "Identify" badge but never appeared under
     "Still to identify", because the badge read the TMDB id alone. With this, a film is
-    flagged exactly when :func:`_to_identify` lists it. One query for the whole page.
+    flagged exactly when :func:`_to_identify` lists it: not identified, and not set aside as
+    not a film. One query for the whole page.
     """
     if not movie_ids:
         return {}
@@ -363,8 +373,9 @@ def _movie_list_item(
         bestFormatOwned=movie.best_format_owned,
         bestHdrOwned=movie.best_hdr_owned,
         bestAudioOwned=movie.best_audio_owned,
-        identified=movie.tmdb_id is not None,
+        identified=movie.tmdb_id is not None or movie.tmdb_tv_id is not None,
         setAsideAs=cast(Literal["tv", "not_film"] | None, set_aside_as),
+        mediaType=movie.media_type,
         copyCount=copy_count,
         locations=locations or [],
         watched=last_watched_at is not None,
@@ -479,7 +490,6 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
         crew=crew,
         trailerKey=movie.trailer_key,
         letterboxdSlug=movie.letterboxd_slug,
-        mediaType=movie.media_type,
         reviews=[review_response(row) for row in reviews],
     )
 
@@ -910,6 +920,7 @@ async def get_movie_candidates(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="TMDB search is temporarily unavailable",
         ) from exc
+    series = await _series_candidates(tmdb, search_title)
 
     return CandidateListResponse(
         movieId=movie.id,
@@ -927,7 +938,44 @@ async def get_movie_candidates(
             )
             for candidate in result.candidates
         ],
+        seriesCandidates=series,
     )
+
+
+#: Series offered beside the films. TMDB answers 20; the panel has room for five.
+SERIES_CANDIDATES = 5
+
+
+async def _series_candidates(tmdb: TMDBClient, raw_title: str) -> list[CandidateResponse]:
+    """TMDB's series for the same search, scored as its films are — Batch Y3.
+
+    Searched with the title the film search cleaned, so "Broadchurch (Series 1-3)" asks for
+    "Broadchurch". A failure here leaves the films to answer on their own: the series are the
+    extra, and the film search has just reached TMDB.
+    """
+    query, year = normalise_query(raw_title)
+    if not query:
+        return []
+    try:
+        found = await tmdb.search_tv(query)
+    except httpx.HTTPError:
+        logger.warning("tmdb_series_search_unavailable", query=query)
+        return []
+    scored = [(score_series(query, year, show), show) for show in found.results]
+    scored.sort(key=lambda pair: (pair[0][0], pair[1].popularity), reverse=True)
+    return [
+        CandidateResponse(
+            tmdbId=show.id,
+            mediaType="tv",
+            title=show.name,
+            year=show.year,
+            overview=show.overview or "",
+            posterPath=show.poster_path,
+            confidence=confidence,
+            titleSimilarity=similarity,
+        )
+        for (confidence, similarity), show in scored[:SERIES_CANDIDATES]
+    ]
 
 
 @router.post("/movies/{movie_id}/identify", response_model=MovieDetailResponse)
@@ -939,15 +987,22 @@ async def identify_movie(
     tmdb: TmdbClient,
 ) -> MovieDetailResponse:
     source = await _get_live_movie(db, movie_id)
+    series = payload.mediaType == "tv"
+    tmdb_movie: TmdbMovie | TvShow
     try:
-        tmdb_movie = await tmdb.get_movie_full(payload.tmdbId)
+        # Batch Y3: a series is fetched from TMDB's series index, by its own id.
+        if series:
+            tmdb_movie = await tmdb.get_tv_full(payload.tmdbId)
+        else:
+            tmdb_movie = await tmdb.get_movie_full(payload.tmdbId)
     except httpx.HTTPError as exc:
         code = (
             status.HTTP_404_NOT_FOUND
             if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 404
             else status.HTTP_502_BAD_GATEWAY
         )
-        raise HTTPException(status_code=code, detail="TMDB movie could not be loaded") from exc
+        noun = "series" if series else "movie"
+        raise HTTPException(status_code=code, detail=f"TMDB {noun} could not be loaded") from exc
 
     # Batch S8 moved the body to `services/identification.py` so an import script can
     # reuse it. The commit moved out with it — the service flushes, the caller decides

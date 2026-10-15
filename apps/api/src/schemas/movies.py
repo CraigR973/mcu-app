@@ -56,11 +56,15 @@ class MovieListItemResponse(BaseModel):
     bestFormatOwned: str | None = None
     bestHdrOwned: str | None = None
     bestAudioOwned: str | None = None
+    #: Matched to a TMDB film or, since Batch Y3, a TMDB series.
     identified: bool
-    #: Mark, 15 Oct: set aside as a TV series or as not a film (Batch T9), so TMDB's film
-    #: index cannot identify it and "Still to identify" leaves it out. A film needs
-    #: identifying when it is neither ``identified`` nor set aside.
+    #: Mark, 15 Oct: set aside as a TV series or as not a film (Batch T9). Since Batch Y3 a
+    #: series set aside can be identified as one, so a film needs identifying when it is not
+    #: ``identified`` and not set aside as ``not_film``, which is what "Still to identify" lists.
     setAsideAs: Literal["tv", "not_film"] | None = None
+    #: ``film``, ``tv`` for a series (identified, or set aside as one), or ``other``.
+    #: Batch Y3 moved it here from the detail, so a card can say "TV series".
+    mediaType: str | None = None
     #: **`ge=0`, and it was `ge=1` until Batch 29.** The old bound encoded a true
     #: invariant — a film reached this response only by having a live disc — and §4.4
     #: broke it: sell your only copy and the film still has a `movies` row, a watch
@@ -107,7 +111,6 @@ class MovieDetailResponse(MovieListItemResponse):
     crew: list[CreditResponse]
     trailerKey: str | None = None
     letterboxdSlug: str | None = None
-    mediaType: str | None = None
     #: Batch V9: every review found for the film, Blu-ray.com's first.
     reviews: list[FilmReviewResponse] = []
 
@@ -153,6 +156,8 @@ class SearchResponse(BaseModel):
 
 class CandidateResponse(BaseModel):
     tmdbId: int = Field(gt=0)
+    #: Batch Y3: a TMDB series is offered beside the films, and identified as one.
+    mediaType: Literal["film", "tv"] = "film"
     title: str
     year: int | None = None
     overview: str
@@ -166,10 +171,14 @@ class CandidateListResponse(BaseModel):
     title: str
     query: str
     candidates: list[CandidateResponse]
+    #: Batch Y3: TMDB's series for the same search, best first, up to five.
+    seriesCandidates: list[CandidateResponse] = Field(default_factory=list)
 
 
 class IdentifyMovieRequest(BaseModel):
     tmdbId: int = Field(gt=0)
+    #: Batch Y3: ``tv`` identifies the title as the TMDB series with this id.
+    mediaType: Literal["film", "tv"] = "film"
 
 
 # ---------------------------------------------------------------------------

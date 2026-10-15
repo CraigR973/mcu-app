@@ -199,7 +199,13 @@ async def unidentified_films(db: AsyncSession) -> list[Film]:
                 CollectionItem.location,
             )
             .join(CollectionItem, CollectionItem.movie_id == Movie.id)
-            .where(Movie.tmdb_id.is_(None), Movie.deleted_at.is_(None), owned_copy())
+            .where(
+                Movie.tmdb_id.is_(None),
+                # Batch Y3: a series identified is not a film for the matcher to look at.
+                Movie.tmdb_tv_id.is_(None),
+                Movie.deleted_at.is_(None),
+                owned_copy(),
+            )
             .order_by(Movie.title, Movie.id, CollectionItem.id)
         )
     ).all()

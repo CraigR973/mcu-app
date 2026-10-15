@@ -4,7 +4,7 @@ import re
 from difflib import SequenceMatcher
 
 from ..tmdb.client import TMDBClient
-from ..tmdb.models import SearchResult
+from ..tmdb.models import SearchResult, TvSearchResult
 from .models import MatchCandidate, MatchResult
 
 # A title is considered a confident match at or above this threshold.
@@ -143,23 +143,29 @@ def score(
     sim = title_similarity(query, result.title)
     if result.original_title and result.original_title.lower() != result.title.lower():
         sim = max(sim, title_similarity(query, result.original_title))
-
-    result_year = result.year
-    if query_year is None or result_year is None:
-        year_label = "unknown"
-        year_bonus = 0.0
-    elif query_year == result_year:
-        year_label = "exact"
-        year_bonus = 0.15
-    elif abs(query_year - result_year) <= 1:
-        year_label = "close"
-        year_bonus = 0.05
-    else:
-        year_label = "mismatch"
-        year_bonus = -0.3
-
+    year_label, year_bonus = _year_bonus(query_year, result.year)
     confidence = max(0.0, min(1.0, sim + year_bonus))
     return confidence, sim, year_label
+
+
+def score_series(query: str, query_year: int | None, show: TvSearchResult) -> tuple[float, float]:
+    """(confidence, title_similarity) for one ``/search/tv`` result — Batch Y3. Scored as a
+    film is, with its first-air year standing for the release year."""
+    sim = title_similarity(query, show.name)
+    if show.original_name and show.original_name.lower() != show.name.lower():
+        sim = max(sim, title_similarity(query, show.original_name))
+    _label, year_bonus = _year_bonus(query_year, show.year)
+    return max(0.0, min(1.0, sim + year_bonus)), sim
+
+
+def _year_bonus(query_year: int | None, result_year: int | None) -> tuple[str, float]:
+    if query_year is None or result_year is None:
+        return "unknown", 0.0
+    if query_year == result_year:
+        return "exact", 0.15
+    if abs(query_year - result_year) <= 1:
+        return "close", 0.05
+    return "mismatch", -0.3
 
 
 def title_is_exact(query: str, result: SearchResult) -> bool:
