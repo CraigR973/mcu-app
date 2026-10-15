@@ -1341,3 +1341,37 @@ async def test_forgetting_blu_ray_com_takes_its_editions_and_leaves_typed_ones(
     await db.refresh(kept)
     assert (forgotten.specs_source_url, forgotten.edition) == (None, None)
     assert (kept.specs_source_url, kept.edition) == (None, "Ultimate Hi-Def Edition")
+
+
+class ExplodingBrave(FakeBrave):
+    """A search that fails in a way nothing expects, as a library bug or an outage would."""
+
+    async def search(self, query: str, *, count: int = 20, country: str = "GB") -> list[SearchHit]:
+        self.search_calls += 1
+        raise RuntimeError("Brave's client fell over")
+
+
+async def test_an_unexpected_failure_mid_run_is_recorded_rather_than_left_running(
+    db: AsyncSession,
+) -> None:
+    """X9's guard (CR43-02's class): every run loop has a failure-injection test. A run the
+    process lost would read "running" until it was abandoned; this one says why it stopped."""
+    film = await _film(db, "Exploding Film", year=2000, tmdb_id=990_003_000)
+    await _disc(db, film, "blu_ray")
+    outcome = await start_run(db, trigger="job", search_configured=True, now=NOW)
+    assert outcome.run is not None
+    run_id = outcome.run.id
+
+    with pytest.raises(RuntimeError, match="fell over"):
+        async with FakeBlurayCom({}).client() as client:
+            await work_run(
+                db, run_id, searcher=ExplodingBrave(), client=client, clock=lambda: NOW, pause=0
+            )
+
+    stopped = await db.get(SpecRun, run_id)
+    assert stopped is not None
+    assert (stopped.status, stopped.last_error) == (
+        "stopped",
+        "RuntimeError: Brave's client fell over",
+    )
+    assert stopped.searches == 1

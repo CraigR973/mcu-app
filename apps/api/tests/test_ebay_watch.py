@@ -1032,3 +1032,31 @@ async def test_the_run_counts_pushes_delivered_not_queued(db: AsyncSession) -> N
 
     assert await record_delivered(db, run) == 1
     assert run.deals_pushed == 1
+
+
+class ExplodingEbay(FakeEbay):
+    """Browse failing in a way nothing expects, as a library bug would."""
+
+    async def search(self, query: str, **params: Any) -> dict[str, Any]:
+        self.search_calls += 1
+        raise ValueError("eBay's client fell over")
+
+
+async def test_an_unexpected_failure_mid_pass_is_recorded_rather_than_left_running(
+    db: AsyncSession,
+) -> None:
+    """X9's guard (CR43-02's class): every run loop has a failure-injection test. A pass the
+    process lost would read "running" until it was abandoned; this one says why it stopped."""
+    outcome = await start_run(db, trigger="job", now=NOW)
+    assert outcome.run is not None
+    run_id = outcome.run.id
+
+    with pytest.raises(ValueError, match="fell over"):
+        await work_run(db, ExplodingEbay(), run_id, clock=lambda: NOW)
+
+    stopped = await db.get(EbayWatchRun, run_id)
+    assert stopped is not None
+    assert (stopped.status, stopped.last_error) == (
+        "stopped",
+        "ValueError: eBay's client fell over",
+    )
