@@ -35,7 +35,8 @@ it; the add form's TMDB search shows 20 and reads a trailing year, so "Texas Cha
 text, and decide whether its location-less Blu-ray, added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
 **Mark's third feedback, 15 Oct, after working through about 200 unidentified films** (#272,
-#273), on `claude/brave-tesla-4y6zvv` with its pull request: a title is flagged "Identify"
+#273), **shipped 15 Oct as `ef62257` (#75), verified in production by Craig** (API and web
+both report it, `db: ok`, every field `configured`): a title is flagged "Identify"
 exactly when "Still to identify" (#73, #271) lists it; on a phone the open Filters panel ends in
 "Show N films" and closes on the back gesture, where before it hid the films (the grid measured
 0px) and back left the app; and **Y3, built at Craig's word the same evening, identifies TV
@@ -51,6 +52,7 @@ runs `find_series_as_films` at the Mac, read-only, for the series matched as fil
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
+| ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | done 15 Oct; Mark identifies the series, Craig's read-only check (item 31) |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
 | X9 → X10 · X11 → X12 | sittings 4–5 (#255), at Craig's go |
@@ -475,6 +477,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-15 (close-out, `ef62257`, #75)** — Y3 and #272's fixes merged; CI green on `main`.
+  This session's network policy refused the production hosts, so Craig read them: `/api/v1/health`
+  `ef62257`, `/health/ready` `db: ok` with every field `configured`, `version.json` `ef62257`. Y3
+  struck in `docs/phase-batches.md`; Group Y has no §17 row. Open: the first live series
+  identification (TMDB's real answer), Mark's series, and item 31's read-only check.
 - **2026-10-15 (Y3, Mark's TV series, #273)** — A title is identified as a TMDB series from its
   page: `tmdb_tv_id` (migration 056) beside `tmdb_id`, never in it; the panel lists series beside
   films; a film corrected to a series and back; merge and undo as a film's; streaming from TMDB's
