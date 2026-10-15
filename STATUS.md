@@ -34,6 +34,17 @@ it; the add form's TMDB search shows 20 and reads a trailing year, so "Texas Cha
 4K, Lounge), whose typed side #266 dropped; re-save 12 Angry Men's 4K (Front 4th) to tidy its
 text, and decide whether its location-less Blu-ray, added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
 first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
+**Mark's third feedback, 15 Oct, after working through about 200 unidentified films** (#272,
+#273), on `claude/brave-tesla-4y6zvv` with its pull request: a title is flagged "Identify"
+exactly when "Still to identify" (#73, #271) lists it; on a phone the open Filters panel ends in
+"Show N films" and closes on the back gesture, where before it hid the films (the grid measured
+0px) and back left the app; and **Y3, built at Craig's word the same evening, identifies TV
+series from TMDB** (`movies.tmdb_tv_id`, migration 056), from a title's page by either person,
+"Correct match" included, so Band of Brothers and 11.22.63 can go from the films they were
+matched to, to the series they are. The 34 series T9 set aside are back under "Still to
+identify". **Left (`OWNER-ACTIONS.md` item 31):** Mark identifies the series, the first being
+the live check of TMDB's series answer (built from its published shape, no key here); Craig
+runs `find_series_as_films` at the Mac, read-only, for the series matched as films.
 
 | Batch | State |
 |---|---|
@@ -464,6 +475,21 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-15 (Y3, Mark's TV series, #273)** — A title is identified as a TMDB series from its
+  page: `tmdb_tv_id` (migration 056) beside `tmdb_id`, never in it; the panel lists series beside
+  films; a film corrected to a series and back; merge and undo as a film's; streaming from TMDB's
+  series providers; the 34 set aside listed again. `find_series_as_films` reports series matched
+  as films, read-only, over a session or HTTPS. Browser check at Pixel 7 against a stand-in TMDB:
+  Broadchurch identified from "Still to identify", Band of Brothers corrected from the film to the
+  series, both cards "TV series". Gate: API 2,101 passed with Postgres, web 592, shared 143;
+  migrations up, down to base and up.
+- **2026-10-15 (Mark's feedback, `37a5efc`, `7e0379a`, #272)** — The Identify badge, the list
+  row's "Needs identification" and the film page's "Which film is this?" now follow #271's
+  filter: `setAsideAs` on list items and film pages, and a set-aside series reads "TV series".
+  The Archive's open Filters panel below 1280px is a history entry ending in "Show N films",
+  checked in Chromium at Pixel 7 size against a seeded throwaway database (the grid measured
+  0px before). TV series identification proposed as `OWNER-ACTIONS.md` item 31. Gate: API
+  2,085 passed with Postgres, web 588, shared 142.
 - **2026-10-14 (Mark's feedback, `f5f63e2`, #71, #270)** — The Lounge's sides: a Side picker
   in the copy form, Move discs and the Archive filter, stored in `shelf`; migration 055 filled
   in 164 live and 160 trashed copies from their text. #266's rule no longer drops detail typed

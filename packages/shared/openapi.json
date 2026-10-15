@@ -5614,6 +5614,15 @@
    },
    "IdentifyMovieRequest": {
     "properties": {
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
+     },
      "tmdbId": {
       "exclusiveMinimum": 0.0,
       "title": "Tmdbid",
@@ -6684,6 +6693,21 @@
       ],
       "title": "Runtimeminutes"
      },
+     "setAsideAs": {
+      "anyOf": [
+       {
+        "enum": [
+         "tv",
+         "not_film"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Setasideas"
+     },
      "tagline": {
       "anyOf": [
        {
@@ -6837,6 +6861,17 @@
       "title": "Locations",
       "type": "array"
      },
+     "mediaType": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mediatype"
+     },
      "originalTitle": {
       "anyOf": [
        {
@@ -6870,6 +6905,21 @@
        }
       ],
       "title": "Runtimeminutes"
+     },
+     "setAsideAs": {
+      "anyOf": [
+       {
+        "enum": [
+         "tv",
+         "not_film"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Setasideas"
      },
      "title": {
       "title": "Title",
@@ -13659,6 +13709,13 @@
       "title": "Query",
       "type": "string"
      },
+     "seriesCandidates": {
+      "items": {
+       "$ref": "#/components/schemas/src__schemas__movies__CandidateResponse"
+      },
+      "title": "Seriescandidates",
+      "type": "array"
+     },
      "title": {
       "title": "Title",
       "type": "string"
@@ -13680,6 +13737,15 @@
       "minimum": 0.0,
       "title": "Confidence",
       "type": "number"
+     },
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
      },
      "overview": {
       "title": "Overview",

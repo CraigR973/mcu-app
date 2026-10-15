@@ -18,7 +18,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from sqlalchemy import Integer, func, select, true
+from sqlalchemy import Integer, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
@@ -294,7 +294,10 @@ async def collection_stats(
         (
             await db.execute(
                 select(func.count(Movie.id)).where(
-                    Movie.deleted_at.is_(None), Movie.tmdb_id.is_not(None), owned_film()
+                    Movie.deleted_at.is_(None),
+                    # Batch Y3: a series identified counts, as a film does.
+                    or_(Movie.tmdb_id.is_not(None), Movie.tmdb_tv_id.is_not(None)),
+                    owned_film(),
                 )
             )
         ).scalar_one()

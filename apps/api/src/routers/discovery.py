@@ -50,7 +50,7 @@ from src.schemas.discovery import (
 )
 from src.services.movie_metadata import parse_year
 from src.tmdb import TMDBClient
-from src.tmdb.models import SearchResult, WatchProvider, WatchProviderCountry
+from src.tmdb.models import SearchResult, WatchProvider, WatchProviderCountry, WatchProviders
 
 logger = structlog.get_logger()
 
@@ -141,6 +141,16 @@ def _offers(country: WatchProviderCountry) -> list[StreamingOfferResponse]:
     return offers
 
 
+async def _watch_providers(tmdb: TMDBClient, movie: Movie) -> WatchProviders | None:
+    """TMDB's offers for a film, or (Batch Y3) a series, in the same shape; ``None`` for a
+    title TMDB has not been matched to, which asks TMDB nothing."""
+    if movie.tmdb_id is not None:
+        return await tmdb.get_watch_providers(movie.tmdb_id)
+    if movie.tmdb_tv_id is not None:
+        return await tmdb.get_tv_watch_providers(movie.tmdb_tv_id)
+    return None
+
+
 @router.get("/movies/{movie_id}/streaming", response_model=StreamingResponse)
 async def movie_streaming(
     movie_id: uuid.UUID,
@@ -158,20 +168,8 @@ async def movie_streaming(
     movie = await _live_movie(db, movie_id)
     chosen = (region or user.streaming_region or "GB").upper()
 
-    if movie.tmdb_id is None:
-        # Nothing to look up. Distinct from "TMDB knows it and has no offers", which is a
-        # real answer — and the difference is what the detail page needs to say.
-        return StreamingResponse(
-            movieId=movie.id,
-            region=chosen,
-            link=None,
-            offers=[],
-            unidentified=True,
-            unavailable=False,
-        )
-
     try:
-        providers = await tmdb.get_watch_providers(movie.tmdb_id)
+        providers = await _watch_providers(tmdb, movie)
     except httpx.HTTPError:
         # Answered, not 502'd. A 5xx from this app is classified as a *network* failure by
         # the web client — correctly, per `DECISIONS.md` #43 — so raising one here makes
@@ -185,6 +183,18 @@ async def movie_streaming(
             offers=[],
             unidentified=False,
             unavailable=True,
+        )
+
+    if providers is None:
+        # Nothing to look up. Distinct from "TMDB knows it and has no offers", which is a
+        # real answer — and the difference is what the detail page needs to say.
+        return StreamingResponse(
+            movieId=movie.id,
+            region=chosen,
+            link=None,
+            offers=[],
+            unidentified=True,
+            unavailable=False,
         )
 
     country = providers.results.get(chosen)
@@ -405,7 +415,11 @@ async def _unidentified_owned(db: AsyncSession) -> list[_Unidentified]:
     )
     rows = await db.execute(
         select(Movie.id, Movie.title, Movie.year).where(
-            Movie.tmdb_id.is_(None), Movie.deleted_at.is_(None), has_disc
+            Movie.tmdb_id.is_(None),
+            # Batch Y3: a series identified is not a film still to identify.
+            Movie.tmdb_tv_id.is_(None),
+            Movie.deleted_at.is_(None),
+            has_disc,
         )
     )
     films: list[_Unidentified] = []

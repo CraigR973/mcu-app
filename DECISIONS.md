@@ -5710,3 +5710,65 @@ contemporaneous.
      - *Rejected:* opening the Identify films page to Mark. It is quicker per film, but it is
        an admin page with merges and undo, an access change that was not asked for. The
        queue reads live, so a film Mark identifies leaves Craig's queue too.
+
+272. **A film is flagged to identify exactly when "Still to identify" lists it; the phone's
+     open Filters panel is a history entry with a "Show N films" button.** Mark's feedback,
+     15 Oct, after working through about 200 unidentified films.
+
+     - **The badge and the filter disagreed.** The card's "Identify", the list row's "Needs
+       identification" and the film page's "Which film is this?" read `tmdb_id IS NULL`; #271's
+       filter also leaves out the 35 films set aside as a TV series or not a film. So
+       Broadchurch, set aside as TV, was flagged but never listed. Each list item and film page
+       now carries `setAsideAs` (`tv`, `not_film` or null, from `identify_lookups`, one query a
+       page), and the web's `needsIdentifying()` is `!identified && !setAsideAs`, #271's own
+       predicate. A set-aside series shows "TV series"; its page says why it has no match, and
+       "Identify as a film" still opens the panel for one set aside in error.
+     - **The phone could not reach a filter's films.** The Archive's grids are virtualised in a
+       `flex-1 min-h-0` scroll box under the filter bar; the open panel is taller than a phone's
+       screen, so the grid measured 0px at Pixel 7 size and there was nothing to scroll to. Below
+       1280px the Archive's open panel is now a history entry (`location.state.filtersOpen`), so
+       the back gesture closes it instead of leaving the app, and it ends in "Show N films".
+       At 1280px and over, and in a smart collection's editor, it is plain state as before.
+     - *Rejected:* capping the panel's height so the grid peeks below it. Two nested scroll
+       areas on a phone, and the count in the row already answers "did that filter do anything".
+     - **Not decided here: identifying TV series (Mark's points 1 and 2).** TMDB numbers films
+       and series separately, so it needs its own column, not `tmdb_id`, which about 40 modules
+       read as a film's id. Proposed to Craig as one batch, `OWNER-ACTIONS.md` item 31.
+
+273. **A TV series is identified from TMDB, with its own id; the 34 set aside join "Still to
+     identify"; a read-only check finds the series matched as films (Batch Y3).** Mark's
+     feedback of 15 Oct, points 1 and 2, built at Craig's word the same day ("lets build it
+     now", on `OWNER-ACTIONS.md` item 31). **Supersedes #214 in part** (T9 set series aside
+     because the app matched films only) **and #271's and #272's exclusion of set-aside series.**
+
+     - **`movies.tmdb_tv_id`, not `tmdb_id`** (migration 056). TMDB numbers films and series
+       separately, and about 40 modules read `tmdb_id` as a film's (values, specs, streaming,
+       reviews, Letterboxd, the identify queue): a series' number there would fetch whichever
+       film shares it. A row holds at most one of the two; identifying it as one kind clears
+       the other, so a series matched as a film is corrected from its page, and back.
+       `identify_lookups.media_type` says which index a lookup's id is from, and the audit
+       keeps a series' id as `tmdbTvId`, so nothing reading `tmdbId` meets a series' number.
+     - **A series fills in what a film does**, from `/tv/{id}` with `aggregate_credits`
+       (the whole run's cast, not the last season's), `videos` and `external_ids`: first-air
+       year, no runtime (a per-episode figure would have "under two hours" find a sixty-hour
+       series), TV genres also filed under the film genre they cover (War & Politics under
+       War) so the genre filter finds them, creators as writers (`movie_credits` has no creator
+       role and creators nearly always write), `is_tv` true so values keep the series rules.
+     - **"Still to identify" is now: neither id, and not set aside as not a film.** The 34
+       series T9 set aside are listed again, to be identified as series; the panel offers
+       TMDB's series first for them ("Which series is this?") and after the films otherwise.
+       Craig's Identify films queue, the dry run and the search-beyond list leave a series
+       identified out; the stats count it identified; its streaming offers come from TMDB's
+       series providers. Letterboxd links and price alerts stay films' only.
+     - **Finding the rest is a report, not a change:** `src.scripts.find_series_as_films`
+       names an identified film when TMDB has a series of the same title with five times its
+       votes and at least 50, or a disc is grouped "TV", or a replaced spreadsheet title has
+       T9's series words. Mark or Craig correct each from its page. It reads in a `READ ONLY`
+       transaction, or over HTTPS with the read-only role from a cloud session.
+     - **Not checked against a real TMDB answer:** the building session had no TMDB key. The
+       series model follows TMDB's published shape with every field optional; the first live
+       identification is the check.
+     - *Rejected:* storing series in `tmdb_id` with a kind column (every reader of `tmdb_id`
+       would need the kind, and one that forgot would fetch a stranger's film); re-identifying
+       the suspects automatically (a series sharing a better-known film's name would be
+       overwritten with nobody looking).

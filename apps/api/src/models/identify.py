@@ -107,6 +107,7 @@ class IdentifyLookup(Base, UUIDPrimaryKeyMixin):
             "(status = 'identified') = (tmdb_id IS NOT NULL)",
             name="ck_identify_lookups_tmdb_when_identified",
         ),
+        CheckConstraint("media_type IN ('film', 'tv')", name="ck_identify_lookups_media_type"),
         Index("ix_identify_lookups_status", "status"),
     )
 
@@ -130,6 +131,10 @@ class IdentifyLookup(Base, UUIDPrimaryKeyMixin):
     )
     proposed_tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Which TMDB index ``tmdb_id`` is from: ``film``, or ``tv`` for a series (Batch Y3).
+    media_type: Mapped[str] = mapped_column(
+        Text, nullable=False, default="film", server_default="film"
+    )
     #: The spreadsheet title identification replaced.
     replaced_title: Mapped[str | None] = mapped_column(Text, nullable=True)
     run_id: Mapped[uuid.UUID | None] = mapped_column(

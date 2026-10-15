@@ -114,7 +114,7 @@ async def _still_as_planned(db: AsyncSession, item: Item) -> tuple[Movie | None,
     movie = await db.get(Movie, uuid.UUID(item.movie_id))
     if movie is None or movie.deleted_at is not None:
         return None, "The film is no longer in the collection."
-    if movie.tmdb_id is not None:
+    if movie.tmdb_id is not None or movie.tmdb_tv_id is not None:
         return None, "The film was identified after the dry run."
     if movie.title != item.title:
         return None, "The film's title changed after the dry run."

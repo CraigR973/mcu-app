@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/api', async (importOriginal) => ({
@@ -17,11 +18,20 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function renderBar(filters: MovieFilters = {}, onChange = vi.fn()) {
+/** The phone's back gesture, as far as the router can tell. */
+function BackGesture() {
+  const navigate = useNavigate()
+  return <button type="button" onClick={() => navigate(-1)}>Swipe back</button>
+}
+
+function renderBar(filters: MovieFilters = {}, onChange = vi.fn(), context: 'browse' | 'saved' = 'browse') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <FilterBar filters={filters} total={1887} onChange={onChange} trailing={<span>Layout switch</span>} />
+      <MemoryRouter initialEntries={['/home', '/movies']} initialIndex={1}>
+        <FilterBar filters={filters} total={1887} onChange={onChange} context={context} trailing={<span>Layout switch</span>} />
+        <BackGesture />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
   return onChange
@@ -175,5 +185,51 @@ describe('FilterBar — still to identify, Mark 14 Oct', () => {
 
     await screen.findByRole('combobox', { name: 'Filter by watched status' })
     expect(screen.queryByRole('combobox', { name: 'Filter by identified or not' })).toBeNull()
+  })
+})
+
+describe('FilterBar — reaching the films on a phone, Mark 15 Oct', () => {
+  // happy-dom's window is 1024px wide: below 1280px, where the open panel is a history entry.
+  it('ends the open panel in a button that shows the films, and closes it', () => {
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    expect(screen.getByLabelText('Filter by genre')).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show 1,887 films' }))
+
+    expect(screen.queryByLabelText('Filter by genre')).toBeNull()
+    expect(screen.getByRole('button', { name: /Filters/ }).getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('closes the panel on the back gesture rather than leaving the Archive', () => {
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    expect(screen.getByLabelText('Filter by genre')).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Swipe back' }))
+
+    expect(screen.queryByLabelText('Filter by genre')).toBeNull()
+    // Still on the Archive: the panel was the entry back took away.
+    expect(screen.getByTestId('collection-controls-row')).not.toBeNull()
+  })
+
+  it('keeps a filter picked inside the panel when it closes', () => {
+    const onChange = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    fireEvent.change(screen.getByLabelText('Filter by genre'), { target: { value: '27' } })
+    expect(onChange).toHaveBeenCalledWith({ genreId: 27 })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show 1,887 films' }))
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves a saved collection’s editor as it was: no history entry and no Show button', () => {
+    renderBar({}, vi.fn(), 'saved')
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    expect(screen.getByLabelText('Filter by genre')).not.toBeNull()
+    expect(screen.queryByRole('button', { name: /^Show / })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    expect(screen.queryByLabelText('Filter by genre')).toBeNull()
   })
 })

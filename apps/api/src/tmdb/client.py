@@ -17,6 +17,7 @@ from .models import (
     ReleaseDates,
     SearchResults,
     TvSearchResults,
+    TvShow,
     WatchProviders,
 )
 
@@ -246,6 +247,25 @@ class TMDBClient:
         data = await self._get(f"/movie/{movie_id}/watch/providers")
         return WatchProviders.model_validate(data)
 
+    async def get_tv_full(self, tv_id: int, language: str = "en-US") -> TvShow:
+        """A TV series with its whole-run cast and crew, videos and IMDb id — Batch Y3.
+
+        ``aggregate_credits`` rather than ``credits``: the latter is the latest season's cast
+        only, which for a finished series is whoever was in its last episodes.
+        """
+        params = {
+            "language": language,
+            "append_to_response": "aggregate_credits,videos,external_ids",
+        }
+        data = await self._get(f"/tv/{tv_id}", params=params)
+        return TvShow.model_validate(data)
+
+    async def get_tv_watch_providers(self, tv_id: int) -> WatchProviders:
+        """Where a series can be streamed, rented or bought — Batch Y3. The same shape as a
+        film's answer, from ``/tv/{id}/watch/providers``."""
+        data = await self._get(f"/tv/{tv_id}/watch/providers")
+        return WatchProviders.model_validate(data)
+
     async def get_recommendations(
         self, movie_id: int, language: str = "en-US", page: int = 1
     ) -> SearchResults:
@@ -297,8 +317,9 @@ class TMDBClient:
     ) -> TvSearchResults:
         """Search TMDB's TV index — Batch T9.
 
-        Used only to recognise a TV series among the films TMDB's movie index cannot match,
-        so "Dynasties" is set aside as TV rather than asked about as a film.
+        T9 used it to recognise a TV series among the films TMDB's movie index cannot match,
+        so "Dynasties" is set aside as TV rather than asked about as a film. Since Batch Y3 it
+        also offers series to identify a title as, and finds series matched as films.
         """
         params: dict[str, Any] = {"query": query, "page": page, "language": language}
         data = await self._get("/search/tv", params=params)

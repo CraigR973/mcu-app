@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowUpDown, ChevronDown, SlidersHorizontal, X } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -140,9 +141,35 @@ const SPEC_TOGGLES: Array<{
  * moment somebody changes a `hidden` class. One copy, one place, chosen at runtime.
  */
 export function FilterBar({ filters, total, onChange, context = 'browse', trailing }: Props) {
-  const [expanded, setExpanded] = useState(false)
   const isNarrow = !useMediaQuery('(min-width: 640px)')
   const isWide = useMediaQuery('(min-width: 1280px)')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const supportsLiveOnly = context === 'browse'
+
+  // Mark, 15 Oct: on a phone the open panel fills the screen, and the virtualised grid below
+  // it shrinks to nothing, so a filter's films could not be reached; swiping back left the
+  // app. Below 1280px the Archive's open panel is a history entry, so back closes it, and it
+  // ends in a "Show films" button. Elsewhere, and in a saved collection's editor, it is
+  // plain state.
+  const historyBacked = supportsLiveOnly && !isWide
+  const [openHere, setOpenHere] = useState(false)
+  const openInHistory = (location.state as { filtersOpen?: unknown } | null)?.filtersOpen === true
+  const expanded = historyBacked ? openInHistory : openHere
+  const setExpanded = (open: boolean) => {
+    if (!historyBacked) {
+      setOpenHere(open)
+    } else if (open && !openInHistory) {
+      const state = (location.state as Record<string, unknown> | null) ?? {}
+      navigate(
+        { pathname: location.pathname, search: location.search, hash: location.hash },
+        { state: { ...state, filtersOpen: true } },
+      )
+    } else if (!open && openInHistory) {
+      // The entry was pushed by opening the panel, so the one behind it is this page, closed.
+      navigate(-1)
+    }
+  }
   const facetsQuery = useQuery({
     queryKey: ['collection-facets'],
     queryFn: fetchFacets,
@@ -155,7 +182,6 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
   const shelves = selectedSection?.shelves ?? []
   // The Lounge's subdivisions are sides, not shelves (Mark, 14 Oct).
   const sides = selectedSection?.shelfNoun === 'side'
-  const supportsLiveOnly = context === 'browse'
   // Batch T7, #154's rule: the spec filters hide until a disc has specs to match them.
   const specsAvailable = (facetsQuery.data?.discsWithSpecs ?? 0) > 0
   // Mark's request, 14 Oct: the Archive lists the films still to identify, and each one's
@@ -267,7 +293,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
       className="shrink-0 justify-between gap-2 px-3"
       aria-expanded={expanded}
       aria-controls="collection-more-filters"
-      onClick={() => setExpanded((value) => !value)}
+      onClick={() => setExpanded(!expanded)}
     >
       <span className="inline-flex items-center gap-2">
         <SlidersHorizontal className="h-4 w-4" aria-hidden /> Filters
@@ -380,6 +406,12 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
                   )
                 })}
               </div>
+            )}
+
+            {historyBacked && (
+              <Button type="button" className="mt-4 w-full sm:w-auto" onClick={() => setExpanded(false)}>
+                {total != null ? `Show ${total.toLocaleString()} ${total === 1 ? 'film' : 'films'}` : 'Show films'}
+              </Button>
             )}
           </div>
         )}

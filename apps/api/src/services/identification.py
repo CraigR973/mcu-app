@@ -23,6 +23,10 @@ identical.
   enough of the row's old state to undo it, and keeps that title as an alias, so the
   collection refresh still finds the film by the spreadsheet's spelling (#198).
 - **:func:`undo_identification` reverses one**, merges included.
+
+**Batch Y3 identifies TV series too.** A series' TMDB id goes in ``movies.tmdb_tv_id``, never
+``tmdb_id``, which every other module reads as a film's; identifying a row as one kind clears
+the other's id, so a film matched by mistake can be corrected to the series it is, and back.
 """
 
 from __future__ import annotations
@@ -50,7 +54,14 @@ from src.models.release_calendar import ReleaseCalendarEntry
 from src.models.wanted import WantedItem
 from src.models.watch_log import WatchLog
 from src.services.audit import record_action
-from src.services.movie_metadata import credit_rows, movie_metadata_values
+from src.services.movie_metadata import (
+    credit_rows,
+    movie_metadata_values,
+    tv_credit_rows,
+    tv_metadata_values,
+)
+from src.tmdb.models import Movie as TmdbMovie
+from src.tmdb.models import TvShow
 
 MOVIES_TABLE = "movies"
 
@@ -58,6 +69,7 @@ MOVIES_TABLE = "movies"
 #: identification writes, plus what a merge would otherwise lose with the row.
 SNAPSHOT_FIELDS = (
     "tmdb_id",
+    "tmdb_tv_id",
     "imdb_id",
     "title",
     "original_title",
@@ -89,12 +101,30 @@ class IdentifyError(ValueError):
 class MergeNeeded(IdentifyError):
     """The collection already has this film. Merging needs someone to say so."""
 
-    def __init__(self, existing: Movie) -> None:
+    def __init__(self, existing: Movie, noun: str = "film") -> None:
         super().__init__(
-            f"The collection already has this film as '{existing.title}'. Choosing it merges "
+            f"The collection already has this {noun} as '{existing.title}'. Choosing it merges "
             "the two."
         )
         self.existing = existing
+
+
+#: What a title is identified as: a TMDB film, or (Batch Y3) a TMDB series.
+TmdbRecord = TmdbMovie | TvShow
+
+
+def _noun(record: TmdbRecord) -> str:
+    return "series" if isinstance(record, TvShow) else "film"
+
+
+def _media_type(record: TmdbRecord) -> str:
+    return "tv" if isinstance(record, TvShow) else "film"
+
+
+def _holding(record: TmdbRecord, other_than: uuid.UUID) -> Any:
+    """The query for another row already holding this TMDB film or series."""
+    column = Movie.tmdb_tv_id if isinstance(record, TvShow) else Movie.tmdb_id
+    return select(Movie).where(column == record.id, Movie.id != other_than)
 
 
 # ---------------------------------------------------------------------------
@@ -327,17 +357,10 @@ async def move_references(db: AsyncSession, source_id: uuid.UUID, target_id: uui
 
 
 async def _apply(db: AsyncSession, source: Movie, tmdb_movie: object) -> tuple[Movie, Merge | None]:
-    from src.tmdb.models import Movie as TmdbMovie
+    if not isinstance(tmdb_movie, TmdbMovie | TvShow):  # defensive boundary for overrides
+        raise TypeError("Expected a validated TMDB movie or series")
 
-    if not isinstance(tmdb_movie, TmdbMovie):  # defensive boundary for dependency overrides
-        raise TypeError("Expected a validated TMDB movie")
-
-    existing = await db.scalar(
-        select(Movie).where(
-            Movie.tmdb_id == tmdb_movie.id,
-            Movie.id != source.id,
-        )
-    )
+    existing = await db.scalar(_holding(tmdb_movie, source.id))
     target = existing or source
     merge: Merge | None = None
     if existing is not None:
@@ -349,12 +372,19 @@ async def _apply(db: AsyncSession, source: Movie, tmdb_movie: object) -> tuple[M
         # films, so every one of those identifications now has history behind it.
         merge = await move_references(db, source.id, existing.id)
 
-    values = movie_metadata_values(tmdb_movie)
+    if isinstance(tmdb_movie, TvShow):
+        values = tv_metadata_values(tmdb_movie)
+        rows = tv_credit_rows(target.id, tmdb_movie)
+    else:
+        # A film clears any series id, as a series clears the film's: a row is one or the
+        # other, so a series matched as a film (Band of Brothers, 15 Oct) can be corrected.
+        values = {**movie_metadata_values(tmdb_movie), "tmdb_tv_id": None}
+        rows = credit_rows(target.id, tmdb_movie)
     for name, value in values.items():
         setattr(target, name, value)
 
     await db.execute(delete(MovieCredit).where(MovieCredit.movie_id == target.id))
-    for row in credit_rows(target.id, tmdb_movie):
+    for row in rows:
         db.add(
             MovieCredit(
                 id=uuid.UUID(row[0]),
@@ -428,21 +458,19 @@ async def identify_film(
     ``how`` is ``auto`` (a live run of the dry run's plan), ``picked`` or ``searched`` (Craig,
     on the Identify films page) or ``film_page``. A merge happens only when ``allow_merge``
     says someone chose it: otherwise :class:`MergeNeeded` names the film it would merge into.
-    A film in the Trash is never merged into.
+    A film in the Trash is never merged into. ``tmdb_movie`` is a TMDB film or, since Batch
+    Y3, a TMDB series.
     """
-    from src.tmdb.models import Movie as TmdbMovie
-
-    if not isinstance(tmdb_movie, TmdbMovie):
-        raise TypeError("Expected a validated TMDB movie")
-    existing = await db.scalar(
-        select(Movie).where(Movie.tmdb_id == tmdb_movie.id, Movie.id != source.id)
-    )
+    if not isinstance(tmdb_movie, TmdbMovie | TvShow):
+        raise TypeError("Expected a validated TMDB movie or series")
+    noun = _noun(tmdb_movie)
+    existing = await db.scalar(_holding(tmdb_movie, source.id))
     if existing is not None and existing.deleted_at is not None:
         raise IdentifyError(
-            f"'{existing.title}' is in the Trash. Restore it before identifying a film as it."
+            f"'{existing.title}' is in the Trash. Restore it before identifying a {noun} as it."
         )
     if existing is not None and not allow_merge:
-        raise MergeNeeded(existing)
+        raise MergeNeeded(existing, noun)
 
     source_id = source.id
     replaced = source.title
@@ -475,17 +503,27 @@ async def identify_film(
             lookup.set_aside_as = None
             lookup.how = lookup_how
             lookup.tmdb_id = tmdb_movie.id
+            lookup.media_type = _media_type(tmdb_movie)
             lookup.replaced_title = replaced
             lookup.evidence = list(evidence or [])
             lookup.decided_by = by
             lookup.decided_utc = now
             lookup.run_id = run_id or lookup.run_id
-            lookup.note = "Identified automatically." if how == "auto" else "Identified by hand."
+            if how == "auto":
+                lookup.note = "Identified automatically."
+            else:
+                lookup.note = f"Identified by hand{' as a TV series' if noun == 'series' else ''}."
 
     changes: dict[str, Any] = {
         "kind": "identify",
         "how": how,
-        "tmdbId": tmdb_movie.id,
+        # A series' id has its own key, so nothing reading "tmdbId" as a film's is handed a
+        # series' number (Batch Y3).
+        **(
+            {"tmdbTvId": tmdb_movie.id, "mediaType": "tv"}
+            if noun == "series"
+            else {"tmdbId": tmdb_movie.id}
+        ),
         "title": {"from": replaced, "to": target.title},
         "year": target.year,
         "evidence": list(evidence or []),
@@ -537,6 +575,7 @@ async def set_aside(
     lookup.set_aside_as = kind
     lookup.how = None
     lookup.tmdb_id = None
+    lookup.media_type = "film"
     lookup.note = note
     lookup.decided_by = by
     lookup.decided_utc = utcnow()
@@ -591,7 +630,12 @@ async def undo_identification(
     if await is_undone(db, action_id):
         raise IdentifyError("That identification has already been undone.")
     target = await db.get(Movie, uuid.UUID(action.target_id))
-    if target is None or target.tmdb_id != changes.get("tmdbId"):
+    series = changes.get("mediaType") == "tv"
+    if target is None or (
+        target.tmdb_tv_id != changes.get("tmdbTvId")
+        if series
+        else target.tmdb_id != changes.get("tmdbId")
+    ):
         raise IdentifyError("The film has changed since. Undo the later change first.")
     later = await db.scalar(
         select(AdminAction.id).where(
@@ -646,6 +690,7 @@ async def undo_identification(
     lookup.set_aside_as = None
     lookup.how = None
     lookup.tmdb_id = None
+    lookup.media_type = "film"
     lookup.candidates = list(previous.get("candidates") or [])
     lookup.proposed_tmdb_id = previous.get("proposed_tmdb_id")
     lookup.note = "Put back by an undo. Pick the right film, search again, or skip."

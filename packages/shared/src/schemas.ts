@@ -81,7 +81,16 @@ export const movieListItemSchema = z.object({
   bestFormatOwned: z.string().nullable(),
   bestHdrOwned: z.string().nullable(),
   bestAudioOwned: z.string().nullable(),
+  /** Matched to a TMDB film or, since Batch Y3, a TMDB series. */
   identified: z.boolean(),
+  /** Mark, 15 Oct — set aside as a TV series or as not a film (Batch T9). Since Batch Y3 a
+   *  series set aside is identified as one, so a title needs identifying when it is not
+   *  identified and not set aside as `not_film`. Defaulted, as `lastWatchedAt` is, so a list
+   *  cached offline before it still parses. */
+  setAsideAs: z.enum(['tv', 'not_film']).nullable().default(null),
+  /** Batch Y3 — `film`, `tv` for a series, or `other`; moved here from the detail so a card
+   *  can say "TV series". Defaulted for an older cached list. */
+  mediaType: z.string().nullable().default(null),
   // Non-negative, as the API has been since Batch 29: a film whose only disc was sold keeps
   // its page and its history with zero copies. `positive()` turned that page into a parse
   // error — reachable from Batch T2's search, which links to films with no disc.
@@ -143,7 +152,6 @@ export const movieDetailSchema = movieListItemSchema.extend({
   crew: z.array(crewMemberSchema),
   trailerKey: z.string().nullable(),
   letterboxdSlug: z.string().nullable(),
-  mediaType: z.string().nullable(),
   /** Batch V9. Defaulted, so the page parses an API without it yet. */
   reviews: z.array(filmReviewSchema).default([]),
 })
@@ -233,6 +241,8 @@ export const searchResponseSchema = z.object({
 
 export const candidateSchema = z.object({
   tmdbId: z.number().int().positive(),
+  /** Batch Y3: a TMDB series is offered beside the films. `tmdbId` is in that index. */
+  mediaType: z.enum(['film', 'tv']).default('film'),
   title: z.string().min(1),
   year: z.number().int().nullable(),
   overview: z.string(),
@@ -246,6 +256,8 @@ export const candidateListSchema = z.object({
   title: z.string().min(1),
   query: z.string().min(1),
   candidates: z.array(candidateSchema).max(5),
+  /** Batch Y3: TMDB's series for the same search, best first. */
+  seriesCandidates: z.array(candidateSchema).max(5).default([]),
 })
 
 // ---------------------------------------------------------------------------
