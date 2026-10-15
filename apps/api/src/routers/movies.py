@@ -12,7 +12,7 @@ from typing import Annotated, Literal, cast
 import httpx
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, asc, desc, exists, func, select
+from sqlalchemy import asc, desc, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.selectable import ScalarSelect
@@ -56,6 +56,7 @@ from src.schemas.movies import (
 )
 from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import IdentifyError, identify_film
+from src.services.identify.waiting import still_to_identify
 from src.services.reviews.read import review_response, reviews_by_movie
 from src.services.valuation import valuations_for_movie, valued_format
 from src.tmdb import TMDBClient
@@ -103,7 +104,7 @@ class MovieFilters:
     runtime_max: int | None = None
     watched: bool | None = None
     #: Mark's request, 14 Oct: the films still to identify, so he can fix them from their
-    #: pages (:func:`_to_identify`). False is every other film.
+    #: pages (:func:`still_to_identify`). False is every other film.
     to_identify: bool | None = None
     #: §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Arrow Video",
     #: "Region-free". They read the JSONB Batch 23 fills in from Blu-ray.com, so a
@@ -185,27 +186,9 @@ def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
         seen = _watched_exists(filters.user_id)
         predicates.append(seen if filters.watched else ~seen)
     if filters.to_identify is not None:
-        waiting = _to_identify()
+        waiting = still_to_identify()
         predicates.append(waiting if filters.to_identify else ~waiting)
     return predicates
-
-
-def _to_identify() -> ColumnElement[bool]:
-    """A title TMDB has matched to neither a film nor a series, and nobody has set aside as
-    not a film.
-
-    #271 also left out the series T9 set aside, because the app could identify films only and
-    offering them invited a wrong match. Batch Y3 identifies series, so they are listed again,
-    to be identified as the series they are. A skipped film is still listed.
-    """
-    not_a_film = exists(
-        select(IdentifyLookup.id).where(
-            IdentifyLookup.movie_id == Movie.id,
-            IdentifyLookup.status == "set_aside",
-            IdentifyLookup.set_aside_as == "not_film",
-        )
-    )
-    return and_(Movie.tmdb_id.is_(None), Movie.tmdb_tv_id.is_(None), ~not_a_film)
 
 
 def _live_copy_exists(filters: MovieFilters) -> ColumnElement[bool]:
@@ -315,7 +298,7 @@ async def _set_aside_by_movie(
 
     Mark, 15 Oct: a set-aside film carried the "Identify" badge but never appeared under
     "Still to identify", because the badge read the TMDB id alone. With this, a film is
-    flagged exactly when :func:`_to_identify` lists it: not identified, and not set aside as
+    flagged exactly when :func:`still_to_identify` lists it: not identified, and not set aside as
     not a film. One query for the whole page.
     """
     if not movie_ids:
