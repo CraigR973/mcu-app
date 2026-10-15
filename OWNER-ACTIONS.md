@@ -1365,6 +1365,32 @@ Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
    the next is instant. Agents could only type a code into a stand-in for the API. Mark can
    lend and borrow too now, from Loans or a film's page.
 
+### 31. TV series: identify them from TMDB, and find the ones matched as films? *(new 15 Oct)*
+
+**Mark's feedback, 15 Oct.** The 12 titles left under "Still to identify" are TV series, and
+some series were matched as films (Band of Brothers, 11.22.63); he expects more. The app
+matches films only: T9 set series aside rather than identify them (`DECISIONS.md` #214), and
+the identify panel searches TMDB's film index. #272 made the badge and the filter agree; the
+rest is a choice of yours, because it is a batch of its own:
+
+- **Identify a series from its page**, as a film is: the panel searches films and series
+  together and labels each, and choosing a series fills in its poster, overview, years, genres
+  and cast. Stored in a new `movies.tmdb_tv_id`, because TMDB's film and series numbers
+  overlap, and `tmdb_id` is read as a film's by about 40 modules (values, specs, streaming,
+  reviews, Letterboxd), which would quietly fetch the wrong film. The 35 set aside would join
+  "Still to identify" as series. Mark can do this himself, as he does for films.
+- **Fix a series matched as a film:** "Correct match" offers series too, with undo.
+- **Find the others:** a one-off, read-only check of every identified film against TMDB's
+  series index (same title, and the series far better known than the film it was matched to),
+  listed for you or Mark to confirm. Nothing is re-identified automatically. It reads the live
+  database, so it runs where the read-only role is set up.
+- **Why it matters beyond posters:** a series matched as a film is priced by the film rules,
+  which reject eBay's "complete series" listings, so its value is probably wrong too.
+
+**Your call:** build it now, or queue it after Group X. **Meanwhile, 2 minutes if you want the
+12 out of Mark's list:** press "TV series" on each in You → Identify films (one you skipped
+must be put back first); Mark cannot.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database

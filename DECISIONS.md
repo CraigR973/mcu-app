@@ -5710,3 +5710,27 @@ contemporaneous.
      - *Rejected:* opening the Identify films page to Mark. It is quicker per film, but it is
        an admin page with merges and undo, an access change that was not asked for. The
        queue reads live, so a film Mark identifies leaves Craig's queue too.
+
+272. **A film is flagged to identify exactly when "Still to identify" lists it; the phone's
+     open Filters panel is a history entry with a "Show N films" button.** Mark's feedback,
+     15 Oct, after working through about 200 unidentified films.
+
+     - **The badge and the filter disagreed.** The card's "Identify", the list row's "Needs
+       identification" and the film page's "Which film is this?" read `tmdb_id IS NULL`; #271's
+       filter also leaves out the 35 films set aside as a TV series or not a film. So
+       Broadchurch, set aside as TV, was flagged but never listed. Each list item and film page
+       now carries `setAsideAs` (`tv`, `not_film` or null, from `identify_lookups`, one query a
+       page), and the web's `needsIdentifying()` is `!identified && !setAsideAs`, #271's own
+       predicate. A set-aside series shows "TV series"; its page says why it has no match, and
+       "Identify as a film" still opens the panel for one set aside in error.
+     - **The phone could not reach a filter's films.** The Archive's grids are virtualised in a
+       `flex-1 min-h-0` scroll box under the filter bar; the open panel is taller than a phone's
+       screen, so the grid measured 0px at Pixel 7 size and there was nothing to scroll to. Below
+       1280px the Archive's open panel is now a history entry (`location.state.filtersOpen`), so
+       the back gesture closes it instead of leaving the app, and it ends in "Show N films".
+       At 1280px and over, and in a smart collection's editor, it is plain state as before.
+     - *Rejected:* capping the panel's height so the grid peeks below it. Two nested scroll
+       areas on a phone, and the count in the row already answers "did that filter do anything".
+     - **Not decided here: identifying TV series (Mark's points 1 and 2).** TMDB numbers films
+       and series separately, so it needs its own column, not `tmdb_id`, which about 40 modules
+       read as a film's id. Proposed to Craig as one batch, `OWNER-ACTIONS.md` item 31.
