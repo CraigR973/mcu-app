@@ -3794,7 +3794,7 @@ reporting the merge SHA with `db: ok`.
 |---|---|---|---|---|---|
 | ~~Y1~~ | ~~Mark edits, moves and deletes copies~~ (`4840711`) | ~~🟢~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y2~~ | ~~Move several discs at once, from anywhere~~ (`e0b5bad`) | ~~🟡~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
-| Y3 | TV series identified from TMDB, and the ones matched as films found | 🟡 | building 15 Oct | top tier · high | top tier · High |
+| ~~Y3~~ | ~~TV series identified from TMDB, and the ones matched as films found~~ (`ef62257`) | ~~🟡~~ | **shipped 15 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -3899,7 +3899,30 @@ not the copy, for discs with no barcode stored.
   undo and offline cases. Gate green. Browser check at 375 px as Mark: find two discs, move
   them, see the report, move them back.
 
-### Y3 — TV series identified from TMDB, and the ones matched as films found 🟡
+### ~~Y3 — TV series identified from TMDB, and the ones matched as films found~~ 🟡 **shipped 2026-10-15 (`ef62257`, [#75](https://github.com/CraigR973/mcu-app/pull/75))**
+**Acceptance: met, but for the one check only production can make.** Migration 056 adds
+`movies.tmdb_tv_id` and `identify_lookups.media_type`; it went up, down to base and up again
+locally and in CI. Nine Postgres tests in `test_tv_series.py`: Mark identifies a set-aside series
+from its page (series offered, its own id, cast, creators, genres filed under War, the alias,
+the audit's `tmdbTvId`, gone from "Still to identify"); a film corrected to a series and back; a
+second copy merged into the row holding the series; Craig undoes one from the Identify films page,
+and the undo refuses a series identified again since; a series leaves Craig's queue and cannot be
+set aside; streaming from the series providers; TMDB's 404 changes nothing; a card says `tv`.
+Seven in `test_series_check.py`: the rule (Band of Brothers named, Fargo left alone, a "TV"
+grouping or a series spreadsheet title enough alone), failures noted, the report escaped, and the
+HTTPS path's compiled SQL the same rows as the session's. Web: the panel's series group first and
+a series chosen by its own kind, the not-a-film note, no Letterboxd link for a series, the card's
+tag; shared: an answer from before Y3 still parses. Browser check at Pixel 7 as Mark against a
+seeded database and a stand-in TMDB: Broadchurch identified from "Still to identify", Band of
+Brothers corrected from the 1998 film to the 2001 series, both cards "TV series", the count 2 → 1.
+Local gate green (API 2,101 passed with Postgres, none skipped; web 592; shared 143); CI green
+first time on the PR and on `main`. Shipped with #272's two fixes, the same feedback's points 3
+and 4. **Production:** Craig read `/api/v1/health` reporting `ef62257` and `/health/ready` with
+`db: ok` and every field `configured`, and `version.json` the same commit; this session's network
+policy refused both hosts. **Open:** the first live series identification, the check of TMDB's
+real `/tv/{id}` answer (no TMDB key here); Mark working through the series; Craig's read-only
+`find_series_as_films` run (`OWNER-ACTIONS.md` item 31).
+
 
 **Covers Mark's feedback of 15 Oct, points 1 and 2** (`OWNER-ACTIONS.md` item 31, built at
 Craig's word the same day). The 12 titles left under "Still to identify" are series; T9 set 34
