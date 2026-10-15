@@ -6,10 +6,13 @@ each linked to its page, where "Correct match" offers the series. About 1,450 se
 three minutes at eight a second.
 
 On the Mac, against the live database in ``apps/api/.env.local``, in a ``READ ONLY``
-transaction that ends before TMDB is asked anything:
+transaction that ends before TMDB is asked anything. The values are exported explicitly,
+because the connection string holds an unquoted ``&`` (``OWNER-ACTIONS.md`` item 31):
 
+    DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" \\
+    TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" \\
     PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.find_series_as_films \\
-        --report-out series-as-films.html --csv-out series-as-films.csv
+        --app-url https://mcu-app-fawn.vercel.app
 
 In a cloud session, where no Postgres connection leaves the container, ``--over-https`` reads
 through the read-only role in ``NEON_READONLY_URL``, as ``live_sql`` does (#236). Either way it
