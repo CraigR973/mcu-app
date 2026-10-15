@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MovieDetailPage from './MovieDetailPage'
-import { fetchCandidates, fetchCopies, fetchMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
+import { fetchCandidates, fetchCopies, fetchMovie, identifyMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
 import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 
 vi.mock('@/context/auth', () => ({
@@ -31,6 +31,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
     fetchMovie: vi.fn(),
     fetchCopies: vi.fn(),
     fetchCandidates: vi.fn(),
+    identifyMovie: vi.fn(),
     fetchFacets: vi.fn().mockResolvedValue({ sections: [], allSections: [] }),
   }
 })
@@ -369,8 +370,8 @@ describe('MovieDetailPage reviews (Batch V9)', () => {
 })
 
 
-describe('MovieDetailPage set aside (Mark, 15 Oct)', () => {
-  it('says a series was set aside, rather than asking which film it is', async () => {
+describe('MovieDetailPage set aside and series (Mark, 15 Oct; Batch Y3)', () => {
+  it('offers TMDB series first for a series set aside, and identifies it as one', async () => {
     vi.mocked(fetchMovie).mockResolvedValue({
       ...MOVIE,
       title: 'Broadchurch',
@@ -379,15 +380,36 @@ describe('MovieDetailPage set aside (Mark, 15 Oct)', () => {
       mediaType: 'tv',
       overview: null,
     })
-    vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'Broadchurch', query: 'Broadchurch', candidates: [] })
+    vi.mocked(fetchCandidates).mockResolvedValue({
+      movieId: MOVIE_ID,
+      title: 'Broadchurch',
+      query: 'Broadchurch',
+      candidates: [{ tmdbId: 990, mediaType: 'film', title: 'Broadchurch', year: 1990, overview: '', posterPath: null, confidence: 0.6, titleSimilarity: 1 }],
+      seriesCandidates: [{ tmdbId: 990, mediaType: 'tv', title: 'Broadchurch', year: 2013, overview: 'A boy is found dead.', posterPath: null, confidence: 1, titleSimilarity: 1 }],
+    })
+    vi.mocked(identifyMovie).mockResolvedValue({ ...MOVIE, title: 'Broadchurch', identified: true, setAsideAs: null, mediaType: 'tv' })
     renderPage()
 
-    expect(await screen.findByText('Set aside as a TV series')).not.toBeNull()
+    expect(await screen.findByText('Which series is this?')).not.toBeNull()
+    const groups = await screen.findAllByRole('region', { name: /^(Films|TV series)$/ })
+    expect(groups.map((group) => group.getAttribute('aria-label'))).toEqual(['TV series', 'Films'])
+    expect(screen.queryByText('Set aside as not a film')).toBeNull()
+
+    // TMDB numbers films and series separately: the same number, chosen as the series.
+    fireEvent.click(screen.getByRole('button', { name: 'This is it: Broadchurch, the TV series' }))
+    await waitFor(() => expect(identifyMovie).toHaveBeenCalledWith(MOVIE_ID, 990, 'tv'))
+  })
+
+  it('says a title set aside as not a film has no match, and can still be identified', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({ ...MOVIE, title: 'A Concert', identified: false, setAsideAs: 'not_film', mediaType: 'other', overview: null })
+    vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'A Concert', query: 'A Concert', candidates: [], seriesCandidates: [] })
+    renderPage()
+
+    expect(await screen.findByText('Set aside as not a film')).not.toBeNull()
     expect(screen.queryByText('Which film is this?')).toBeNull()
     expect(fetchCandidates).not.toHaveBeenCalled()
 
-    // One set aside in error can still be identified as a film.
-    fireEvent.click(screen.getByRole('button', { name: 'Identify as a film' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Identify it' }))
     expect(await screen.findByText('Which film is this?')).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     await waitFor(() => expect(screen.queryByText('Which film is this?')).toBeNull())
@@ -395,10 +417,18 @@ describe('MovieDetailPage set aside (Mark, 15 Oct)', () => {
 
   it('still asks which film it is when nothing set it aside', async () => {
     vi.mocked(fetchMovie).mockResolvedValue({ ...MOVIE, identified: false, setAsideAs: null })
-    vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'The Red Shoes', query: 'The Red Shoes', candidates: [] })
+    vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'The Red Shoes', query: 'The Red Shoes', candidates: [], seriesCandidates: [] })
     renderPage()
 
     expect(await screen.findByText('Which film is this?')).not.toBeNull()
-    expect(screen.queryByText('Set aside as a TV series')).toBeNull()
+    expect(screen.queryByText('Set aside as not a film')).toBeNull()
+  })
+
+  it('shows a series no Letterboxd link and no price alert, which are films\' (Batch Y3)', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({ ...MOVIE, title: 'Band of Brothers', identified: true, mediaType: 'tv' })
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: /Correct match/ })).not.toBeNull()
+    expect(screen.queryByRole('link', { name: /Letterboxd/ })).toBeNull()
   })
 })

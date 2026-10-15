@@ -19,6 +19,7 @@ const unidentified: MovieListItem = {
   bestAudioOwned: null,
   identified: false,
   setAsideAs: null,
+  mediaType: null,
   copyCount: 2,
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: true,
@@ -49,18 +50,25 @@ describe('MovieCard', () => {
     expect(markup).toContain('Masters of Cinema · SteelBook')
   })
 
-  it('flags a film for identifying only when "Still to identify" would list it', () => {
+  it('flags a title for identifying exactly when "Still to identify" would list it', () => {
     // Mark, 15 Oct: Broadchurch, set aside as a TV series, carried the Identify badge but was
-    // never under "Still to identify".
-    const series = markupOf({ ...unidentified, title: 'Broadchurch', setAsideAs: 'tv' })
-    expect(series).not.toContain('Identify')
-    expect(series).toContain('TV series')
+    // never listed. Since Batch Y3 it is listed, to be identified as a series, so it is
+    // flagged; only a title set aside as not a film is neither.
+    const setAside = markupOf({ ...unidentified, title: 'Broadchurch', setAsideAs: 'tv', mediaType: 'tv' })
+    expect(setAside).toContain('Identify')
 
     const notAFilm = markupOf({ ...unidentified, title: 'A concert', setAsideAs: 'not_film' })
     expect(notAFilm).not.toContain('Identify')
     expect(notAFilm).not.toContain('TV series')
 
-    const matched = markupOf({ ...unidentified, identified: true })
+    const matched = markupOf({ ...unidentified, identified: true, mediaType: 'film' })
     expect(matched).not.toContain('Identify')
+    expect(matched).not.toContain('TV series')
+  })
+
+  it('says "TV series" on a title identified as one (Batch Y3)', () => {
+    const series = markupOf({ ...unidentified, title: 'Band of Brothers', identified: true, mediaType: 'tv' })
+    expect(series).toContain('TV series')
+    expect(series).not.toContain('Identify')
   })
 })

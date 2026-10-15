@@ -644,11 +644,16 @@ export async function fetchCandidates(movieId: string, query?: string): Promise<
   )
 }
 
-export async function identifyMovie(movieId: string, tmdbId: number): Promise<MovieDetail> {
+/** Identify a title as a TMDB film or, with `mediaType: 'tv'`, a TMDB series (Batch Y3). */
+export async function identifyMovie(
+  movieId: string,
+  tmdbId: number,
+  mediaType: 'film' | 'tv' = 'film',
+): Promise<MovieDetail> {
   return parseResponse(
     await authFetch(`/movies/${movieId}/identify`, {
       method: 'POST',
-      body: JSON.stringify({ tmdbId }),
+      body: JSON.stringify({ tmdbId, mediaType }),
     }),
     movieDetailSchema,
   )
@@ -704,11 +709,17 @@ export function shelfLabel(entry: ShelfFacet): string {
   return entry.label ?? `${entry.shelf} shelf`
 }
 
-/** Whether a film is one the Archive's "Still to identify" lists: TMDB has not matched it,
- *  and it is not set aside as a TV series or not a film (Mark, 15 Oct). The badge read
- *  `identified` alone, so a set-aside series was flagged but never listed. */
+/** Whether a title is one the Archive's "Still to identify" lists: TMDB has matched it to
+ *  neither a film nor a series, and it is not set aside as not a film (Mark, 15 Oct; a series
+ *  set aside is identified as one since Batch Y3). The badge read `identified` alone, so a
+ *  set-aside title was flagged but never listed. */
 export function needsIdentifying(movie: Pick<MovieListItem, 'identified' | 'setAsideAs'>): boolean {
-  return !movie.identified && !movie.setAsideAs
+  return !movie.identified && movie.setAsideAs !== 'not_film'
+}
+
+/** A title identified as a TMDB series (Batch Y3), which a card labels "TV series". */
+export function isIdentifiedSeries(movie: Pick<MovieListItem, 'identified' | 'mediaType'>): boolean {
+  return movie.identified && movie.mediaType === 'tv'
 }
 
 /**

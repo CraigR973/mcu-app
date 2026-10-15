@@ -13,6 +13,7 @@ import {
   fetchOnThisDayMemories,
   fetchRewatchSuggestions,
   formatLabel,
+  identifyMovie,
   logWatch,
   lookupBarcode,
   restoreCollectionItem,
@@ -90,7 +91,52 @@ describe('collection API parsing', () => {
 
     const result = await fetchCandidates(movie.id, 'The French Connection')
 
-    expect(result.candidates[0]).toMatchObject({ tmdbId: 1051, year: 1971 })
+    expect(result.candidates[0]).toMatchObject({ tmdbId: 1051, year: 1971, mediaType: 'film' })
+    // An answer from before Batch Y3 has no series, and still parses.
+    expect(result.seriesCandidates).toEqual([])
+  })
+
+  it('reads TMDB series beside the films, and identifies a title as one (Batch Y3)', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        movieId: movie.id,
+        title: 'Band of Brothers',
+        query: 'Band of Brothers',
+        candidates: [],
+        seriesCandidates: [{
+          tmdbId: 4613,
+          mediaType: 'tv',
+          title: 'Band of Brothers',
+          year: 2001,
+          overview: 'Easy Company.',
+          posterPath: null,
+          confidence: 1,
+          titleSimilarity: 1,
+        }],
+      })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        ...movie,
+        identified: true,
+        mediaType: 'tv',
+        imdbId: 'tt0185906',
+        overview: 'Easy Company.',
+        tagline: null,
+        genres: [],
+        cast: [],
+        crew: [],
+        trailerKey: null,
+        letterboxdSlug: null,
+        reviews: [],
+      })))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const offered = await fetchCandidates(movie.id)
+    expect(offered.seriesCandidates[0]).toMatchObject({ tmdbId: 4613, mediaType: 'tv', year: 2001 })
+
+    const series = await identifyMovie(movie.id, 4613, 'tv')
+    expect(series.mediaType).toBe('tv')
+    const [, init] = fetchMock.mock.calls[1] as [string, RequestInit]
+    expect(JSON.parse(String(init.body))).toEqual({ tmdbId: 4613, mediaType: 'tv' })
   })
 })
 

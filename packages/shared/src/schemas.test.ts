@@ -184,6 +184,8 @@ const movieListItem = {
   identified: true,
   // Mark, 15 Oct: and this, null unless set aside as a TV series or not a film.
   setAsideAs: null,
+  // Batch Y3: and this, `tv` for a series.
+  mediaType: 'film',
   copyCount: 2,
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: false,
@@ -305,6 +307,7 @@ describe('Batch 5 collection schemas', () => {
       query: 'French Connection',
       candidates: [{
         tmdbId: 1051,
+        mediaType: 'film',
         title: 'The French Connection',
         year: 1971,
         overview: 'A New York detective pursues a drug shipment.',
@@ -312,9 +315,27 @@ describe('Batch 5 collection schemas', () => {
         confidence: 0.9,
         titleSimilarity: 0.9,
       }],
+      seriesCandidates: [],
     }
     expect(candidateListSchema.parse(candidates)).toEqual(candidates)
     expect(() => candidateListSchema.parse({ ...candidates, candidates: [{ tmdbId: 1051 }] })).toThrow()
+  })
+
+  it('reads an answer from before Batch Y3 as films only, and refuses an unknown kind', () => {
+    const { seriesCandidates: _none, ...before } = {
+      movieId: movieListItem.id,
+      title: 'Broadchurch',
+      query: 'Broadchurch',
+      candidates: [{ tmdbId: 990, title: 'Broadchurch', year: 1990, overview: '', posterPath: null, confidence: 0.6, titleSimilarity: 1 }],
+      seriesCandidates: [],
+    }
+    const parsed = candidateListSchema.parse(before)
+    expect(parsed.seriesCandidates).toEqual([])
+    expect(parsed.candidates[0].mediaType).toBe('film')
+    expect(() => candidateListSchema.parse({
+      ...before,
+      seriesCandidates: [{ ...before.candidates[0], mediaType: 'person' }],
+    })).toThrow()
   })
 
   it('rejects snake_case drift', () => {

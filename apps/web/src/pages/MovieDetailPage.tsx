@@ -12,7 +12,6 @@ import {
   RefreshCcw,
   ShieldAlert,
   Star,
-  Tv,
 } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
@@ -279,24 +278,25 @@ function CopyCard({
 }
 
 /**
- * Mark, 15 Oct: a film set aside as a TV series or not a film (Batch T9) offered "Which film is
- * this?", so Broadchurch read as unidentified but was never under "Still to identify". It says
- * why it has no match instead, and a film set aside in error can still be identified.
+ * Mark, 15 Oct: a title set aside (Batch T9) offered "Which film is this?" while "Still to
+ * identify" left it out. Since Batch Y3 a series set aside is identified as one, so only a
+ * title set aside as not a film says why it has no match, and can still be identified if it
+ * was set aside in error.
  */
-function SetAsideNote({ kind, identifying, onToggle }: { kind: 'tv' | 'not_film'; identifying: boolean; onToggle: () => void }) {
+function NotAFilmNote({ identifying, onToggle }: { identifying: boolean; onToggle: () => void }) {
   return (
     <section className="flex flex-wrap items-start gap-3 rounded-2xl border border-border bg-surface-sunken/50 p-4 md:p-5" aria-label="Set aside">
       <span className="rounded-full bg-muted p-2 text-muted-foreground">
-        {kind === 'tv' ? <Tv className="h-4 w-4" aria-hidden /> : <Disc3 className="h-4 w-4" aria-hidden />}
+        <Disc3 className="h-4 w-4" aria-hidden />
       </span>
       <div className="min-w-[14rem] flex-1">
-        <h2 className="font-semibold text-foreground">{kind === 'tv' ? 'Set aside as a TV series' : 'Set aside as not a film'}</h2>
+        <h2 className="font-semibold text-foreground">Set aside as not a film</h2>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          The app matches films from TMDB, so this has no poster, overview or cast, and is left out of "Still to identify".
+          It is neither a film nor a series on TMDB, so it has no poster, overview or cast, and is left out of "Still to identify".
         </p>
       </div>
       <Button type="button" size="sm" variant="secondary" onClick={onToggle}>
-        {identifying ? 'Cancel' : 'Identify as a film'}
+        {identifying ? 'Cancel' : 'Identify it'}
       </Button>
     </section>
   )
@@ -425,6 +425,8 @@ export default function MovieDetailPage() {
   // asserted directly — the Letterboxd one had two branches and only ever took the worse.
   const imdbHref = imdbUrl(movie)
   const letterboxdHref = letterboxdUrl(movie)
+  // Batch Y3: a series, set aside as one or identified as one.
+  const series = movie.mediaType === 'tv'
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: 'copies', label: 'Owned copies', count: movie.copyCount },
@@ -510,7 +512,8 @@ export default function MovieDetailPage() {
               <a href={imdbHref} target="_blank" rel="noreferrer">IMDb <ExternalLink aria-hidden /></a>
             </Button>
           ) : null}
-          {movie.identified ? (
+          {/* Letterboxd lists films; a series has no page there (Batch Y3). */}
+          {movie.identified && !series ? (
             <Button asChild size="sm" variant="outline">
               <a href={letterboxdHref} target="_blank" rel="noreferrer">Letterboxd <ExternalLink aria-hidden /></a>
             </Button>
@@ -524,15 +527,15 @@ export default function MovieDetailPage() {
 
         <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
 
-        {!movie.identified && movie.setAsideAs ? (
+        {!movie.identified && movie.setAsideAs === 'not_film' ? (
           <div className="mt-8">
-            <SetAsideNote kind={movie.setAsideAs} identifying={correcting} onToggle={() => setCorrecting((value) => !value)} />
+            <NotAFilmNote identifying={correcting} onToggle={() => setCorrecting((value) => !value)} />
           </div>
         ) : null}
 
         {(needsIdentifying(movie) || correcting) ? (
           <div className="mt-8">
-            <IdentifyPanel movieId={movie.id} storedTitle={movie.title} onIdentified={identified} />
+            <IdentifyPanel movieId={movie.id} storedTitle={movie.title} onIdentified={identified} preferSeries={series} />
           </div>
         ) : null}
 
@@ -677,9 +680,9 @@ export default function MovieDetailPage() {
                 {movie.overview ? (
                   <p className="max-w-3xl text-[0.9375rem] leading-7 text-muted-foreground">{movie.overview}</p>
                 ) : needsIdentifying(movie) ? (
-                  <p className="text-sm text-muted-foreground">Choose the film above to add its overview and cast.</p>
+                  <p className="text-sm text-muted-foreground">Choose the {series ? 'series' : 'film'} above to add its overview and cast.</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No overview is available for this {movie.setAsideAs === 'tv' ? 'series' : 'film'}.</p>
+                  <p className="text-sm text-muted-foreground">No overview is available for this {series ? 'series' : 'film'}.</p>
                 )}
 
                 {movie.cast.length > 0 ? (
@@ -737,7 +740,8 @@ export default function MovieDetailPage() {
           <aside className="min-w-0 space-y-4" aria-label="Personal film tools">
             <WatchPanel movieId={movie.id} />
             {/* Batch T8a. Anyone's, on the film: its real title is what eBay is searched for. */}
-            {movie.identified ? <PriceAlertPanel movieId={movie.id} title={movie.title} /> : null}
+            {/* A price alert searches eBay by the film rules; a series' are not its (Batch Y3). */}
+            {movie.identified && !series ? <PriceAlertPanel movieId={movie.id} title={movie.title} /> : null}
             {/* Admin-only: `GET /admin/audit` is, so a viewer would only watch it fail. */}
             {isAdmin ? <ItemHistory movieId={movie.id} /> : null}
           </aside>

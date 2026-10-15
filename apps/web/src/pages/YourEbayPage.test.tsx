@@ -106,6 +106,7 @@ function owned(id: string, title: string, year: number): MovieListItem {
     bestAudioOwned: null,
     identified: true,
     setAsideAs: null,
+    mediaType: 'film',
     copyCount: 1,
     locations: [],
     watched: false,
