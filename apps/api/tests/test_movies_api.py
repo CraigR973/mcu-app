@@ -831,6 +831,52 @@ async def test_still_to_identify_lists_the_films_tmdb_has_not_matched_and_counts
     assert after == before + 1
 
 
+async def test_a_film_needs_identifying_on_its_card_exactly_when_the_filter_lists_it(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Mark, 15 Oct: Broadchurch carried the Identify badge but was not under "Still to
+    identify", because the badge read the TMDB id alone and the filter also leaves out a film
+    set aside. Each list item and film page now says whether, and as what, it was set aside."""
+    await _add_owned_movie(api_session, title="Matched Film", tmdb_id=920087, year=1903)
+    await _add_owned_movie(api_session, title="Unmatched Film", tmdb_id=None, year=1903)
+    tv, _ = await _add_owned_movie(api_session, title="Unmatched Series", tmdb_id=None, year=1903)
+    concert, _ = await _add_owned_movie(api_session, title="A Concert", tmdb_id=None, year=1903)
+    skipped, _ = await _add_owned_movie(api_session, title="Skipped Film", tmdb_id=None, year=1903)
+    api_session.add_all(
+        [
+            IdentifyLookup(id=uuid.uuid4(), movie_id=tv.id, status="set_aside", set_aside_as="tv"),
+            IdentifyLookup(
+                id=uuid.uuid4(), movie_id=concert.id, status="set_aside", set_aside_as="not_film"
+            ),
+            IdentifyLookup(id=uuid.uuid4(), movie_id=skipped.id, status="skipped"),
+        ]
+    )
+    await api_session.flush()
+
+    everything = await client.get("/api/v1/movies", params={"year": 1903, "perPage": 500})
+    waiting = await client.get(
+        "/api/v1/movies", params={"toIdentify": True, "year": 1903, "perPage": 500}
+    )
+    items = everything.json()["items"]
+    listed = {item["title"] for item in waiting.json()["items"]}
+
+    set_aside = {item["title"]: item["setAsideAs"] for item in items}
+    assert set_aside == {
+        "Matched Film": None,
+        "Unmatched Film": None,
+        "Unmatched Series": "tv",
+        "A Concert": "not_film",
+        "Skipped Film": None,
+    }
+    flagged = {item["title"] for item in items if not item["identified"] and not item["setAsideAs"]}
+    assert flagged == listed == {"Unmatched Film", "Skipped Film"}
+
+    page = (await client.get(f"/api/v1/movies/{tv.id}")).json()
+    assert page["identified"] is False
+    assert page["setAsideAs"] == "tv"
+
+
 async def test_identifying_a_film_keeps_the_watch_history_it_already_had(
     client: AsyncClient,
     api_session: AsyncSession,

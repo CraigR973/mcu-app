@@ -6684,6 +6684,21 @@
       ],
       "title": "Runtimeminutes"
      },
+     "setAsideAs": {
+      "anyOf": [
+       {
+        "enum": [
+         "tv",
+         "not_film"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Setasideas"
+     },
      "tagline": {
       "anyOf": [
        {
@@ -6870,6 +6885,21 @@
        }
       ],
       "title": "Runtimeminutes"
+     },
+     "setAsideAs": {
+      "anyOf": [
+       {
+        "enum": [
+         "tv",
+         "not_film"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Setasideas"
      },
      "title": {
       "title": "Title",

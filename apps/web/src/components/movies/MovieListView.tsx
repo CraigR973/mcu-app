@@ -4,7 +4,7 @@ import { Check, MapPin, Settings2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { StatePanel } from '@/components/ui/state-panel'
-import { type MovieListItem } from '@/lib/api'
+import { needsIdentifying, type MovieListItem } from '@/lib/api'
 import { ALL_COLUMNS, type ColumnKey } from '@/hooks/useViewPreference'
 import { FormatBadge } from './FormatBadge'
 import { Poster } from './Poster'
@@ -106,7 +106,8 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
                     {editions && <span className="min-w-0 shrink truncate" title={editions}>{editions}</span>}
                   </span>
                   {editions && <span className="mt-0.5 hidden truncate text-xs text-muted-foreground lg:block" title={editions}>{editions}</span>}
-                  {!movie.identified && <span className="block text-xs font-semibold text-warning">Needs identification</span>}
+                  {needsIdentifying(movie) && <span className="block text-xs font-semibold text-warning">Needs identification</span>}
+                  {!movie.identified && movie.setAsideAs === 'tv' && <span className="block text-xs text-muted-foreground">TV series</span>}
                 </span>
                 {colDefs.map((column) => <span key={column.key} className="hidden w-24 shrink-0 text-right text-sm lg:block">{renderCell(movie, column.key)}</span>)}
                 <span className="hidden w-11 shrink-0 lg:block" aria-hidden />

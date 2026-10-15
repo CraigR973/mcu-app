@@ -105,6 +105,7 @@ function owned(id: string, title: string, year: number): MovieListItem {
     bestHdrOwned: null,
     bestAudioOwned: null,
     identified: true,
+    setAsideAs: null,
     copyCount: 1,
     locations: [],
     watched: false,

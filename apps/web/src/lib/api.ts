@@ -217,6 +217,7 @@ import {
   type EbaySelling,
   type EbayWatching,
   type ShelfFacet,
+  type MovieListItem,
 } from '@mcu/shared'
 import { z, type ZodType, type ZodTypeDef } from 'zod'
 
@@ -701,6 +702,13 @@ export function formatLabel(value: string | null): string | null {
  *  wording. */
 export function shelfLabel(entry: ShelfFacet): string {
   return entry.label ?? `${entry.shelf} shelf`
+}
+
+/** Whether a film is one the Archive's "Still to identify" lists: TMDB has not matched it,
+ *  and it is not set aside as a TV series or not a film (Mark, 15 Oct). The badge read
+ *  `identified` alone, so a set-aside series was flagged but never listed. */
+export function needsIdentifying(movie: Pick<MovieListItem, 'identified' | 'setAsideAs'>): boolean {
+  return !movie.identified && !movie.setAsideAs
 }
 
 /**

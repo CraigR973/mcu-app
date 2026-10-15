@@ -57,6 +57,10 @@ class MovieListItemResponse(BaseModel):
     bestHdrOwned: str | None = None
     bestAudioOwned: str | None = None
     identified: bool
+    #: Mark, 15 Oct: set aside as a TV series or as not a film (Batch T9), so TMDB's film
+    #: index cannot identify it and "Still to identify" leaves it out. A film needs
+    #: identifying when it is neither ``identified`` nor set aside.
+    setAsideAs: Literal["tv", "not_film"] | None = None
     #: **`ge=0`, and it was `ge=1` until Batch 29.** The old bound encoded a true
     #: invariant — a film reached this response only by having a live disc — and §4.4
     #: broke it: sell your only copy and the film still has a `movies` row, a watch

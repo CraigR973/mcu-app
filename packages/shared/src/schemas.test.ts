@@ -182,6 +182,8 @@ const movieListItem = {
   bestHdrOwned: 'Dolby Vision',
   bestAudioOwned: 'Dolby Atmos',
   identified: true,
+  // Mark, 15 Oct: and this, null unless set aside as a TV series or not a film.
+  setAsideAs: null,
   copyCount: 2,
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: false,
@@ -203,6 +205,16 @@ describe('Batch 5 collection schemas', () => {
     }
     expect(moviePageSchema.parse(page)).toEqual(page)
     expect(() => moviePageSchema.parse({ data: [movieListItem], meta: {} })).toThrow()
+  })
+
+  it('reads a film set aside as a TV series, and a list cached before that was said', () => {
+    // Mark, 15 Oct: the badge and "Still to identify" agree only if the item says it.
+    const series = { ...movieListItem, identified: false, setAsideAs: 'tv' }
+    expect(movieListItemSchema.parse(series).setAsideAs).toBe('tv')
+    expect(() => movieListItemSchema.parse({ ...series, setAsideAs: 'film' })).toThrow()
+
+    const { setAsideAs: _unsaid, ...cachedBefore } = movieListItem
+    expect(movieListItemSchema.parse(cachedBefore).setAsideAs).toBeNull()
   })
 
   it('parses detail and copy locations', () => {

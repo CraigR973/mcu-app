@@ -299,6 +299,27 @@ async def _editions_by_movie(
     return grouped
 
 
+async def _set_aside_by_movie(
+    db: AsyncSession, movie_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, str]:
+    """Which of these films are set aside as a TV series or not a film, and as which.
+
+    Mark, 15 Oct: a set-aside film carried the "Identify" badge but never appeared under
+    "Still to identify", because the badge read the TMDB id alone. With this, a film is
+    flagged exactly when :func:`_to_identify` lists it. One query for the whole page.
+    """
+    if not movie_ids:
+        return {}
+    rows = (
+        await db.execute(
+            select(IdentifyLookup.movie_id, IdentifyLookup.set_aside_as).where(
+                IdentifyLookup.movie_id.in_(movie_ids), IdentifyLookup.status == "set_aside"
+            )
+        )
+    ).all()
+    return {movie_id: kind for movie_id, kind in rows if kind is not None}
+
+
 async def last_watched_by_movie(
     db: AsyncSession, user_id: uuid.UUID, movie_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, date]:
@@ -328,6 +349,7 @@ def _movie_list_item(
     locations: list[LocationResponse] | None = None,
     last_watched_at: date | None = None,
     editions: list[str] | None = None,
+    set_aside_as: str | None = None,
 ) -> MovieListItemResponse:
     return MovieListItemResponse(
         id=movie.id,
@@ -342,6 +364,7 @@ def _movie_list_item(
         bestHdrOwned=movie.best_hdr_owned,
         bestAudioOwned=movie.best_audio_owned,
         identified=movie.tmdb_id is not None,
+        setAsideAs=cast(Literal["tv", "not_film"] | None, set_aside_as),
         copyCount=copy_count,
         locations=locations or [],
         watched=last_watched_at is not None,
@@ -355,12 +378,13 @@ async def _enrich_list_items(
     user_id: uuid.UUID,
     rows: Sequence[tuple[Movie, int]],
 ) -> list[MovieListItemResponse]:
-    """Attach location, watched state and editions to a page of films in three extra
-    queries, whatever the page's size."""
+    """Attach location, watched state, editions and set-aside state to a page of films in
+    four extra queries, whatever the page's size."""
     movie_ids = [movie.id for movie, _ in rows]
     locations = await _locations_by_movie(db, movie_ids)
     last_watched = await last_watched_by_movie(db, user_id, movie_ids)
     editions = await _editions_by_movie(db, movie_ids)
+    set_aside = await _set_aside_by_movie(db, movie_ids)
     return [
         _movie_list_item(
             movie,
@@ -368,6 +392,7 @@ async def _enrich_list_items(
             locations=locations.get(movie.id, []),
             last_watched_at=last_watched.get(movie.id),
             editions=editions.get(movie.id, []),
+            set_aside_as=set_aside.get(movie.id),
         )
         for movie, copies in rows
     ]
@@ -441,8 +466,11 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
 
     editions = (await _editions_by_movie(db, [movie.id])).get(movie.id, [])
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
+    set_aside_as = (await _set_aside_by_movie(db, [movie.id])).get(movie.id)
     return MovieDetailResponse(
-        **_movie_list_item(movie, copy_count, editions=editions).model_dump(),
+        **_movie_list_item(
+            movie, copy_count, editions=editions, set_aside_as=set_aside_as
+        ).model_dump(),
         imdbId=movie.imdb_id,
         overview=movie.overview,
         tagline=movie.tagline,

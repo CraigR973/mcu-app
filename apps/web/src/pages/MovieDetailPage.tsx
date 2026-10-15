@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   ShieldAlert,
   Star,
+  Tv,
 } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
@@ -46,6 +47,7 @@ import {
   LISTING_STATUS_LABELS,
   fetchCopies,
   fetchMovie,
+  needsIdentifying,
   updateCollectionItem,
   type CollectionCopy,
   type ListingStatus,
@@ -276,6 +278,30 @@ function CopyCard({
   )
 }
 
+/**
+ * Mark, 15 Oct: a film set aside as a TV series or not a film (Batch T9) offered "Which film is
+ * this?", so Broadchurch read as unidentified but was never under "Still to identify". It says
+ * why it has no match instead, and a film set aside in error can still be identified.
+ */
+function SetAsideNote({ kind, identifying, onToggle }: { kind: 'tv' | 'not_film'; identifying: boolean; onToggle: () => void }) {
+  return (
+    <section className="flex flex-wrap items-start gap-3 rounded-2xl border border-border bg-surface-sunken/50 p-4 md:p-5" aria-label="Set aside">
+      <span className="rounded-full bg-muted p-2 text-muted-foreground">
+        {kind === 'tv' ? <Tv className="h-4 w-4" aria-hidden /> : <Disc3 className="h-4 w-4" aria-hidden />}
+      </span>
+      <div className="min-w-[14rem] flex-1">
+        <h2 className="font-semibold text-foreground">{kind === 'tv' ? 'Set aside as a TV series' : 'Set aside as not a film'}</h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          The app matches films from TMDB, so this has no poster, overview or cast, and is left out of "Still to identify".
+        </p>
+      </div>
+      <Button type="button" size="sm" variant="secondary" onClick={onToggle}>
+        {identifying ? 'Cancel' : 'Identify as a film'}
+      </Button>
+    </section>
+  )
+}
+
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -498,7 +524,13 @@ export default function MovieDetailPage() {
 
         <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
 
-        {(!movie.identified || correcting) ? (
+        {!movie.identified && movie.setAsideAs ? (
+          <div className="mt-8">
+            <SetAsideNote kind={movie.setAsideAs} identifying={correcting} onToggle={() => setCorrecting((value) => !value)} />
+          </div>
+        ) : null}
+
+        {(needsIdentifying(movie) || correcting) ? (
           <div className="mt-8">
             <IdentifyPanel movieId={movie.id} storedTitle={movie.title} onIdentified={identified} />
           </div>
@@ -644,10 +676,10 @@ export default function MovieDetailPage() {
               <div id="movie-panel-overview" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 space-y-8 focus:outline-none">
                 {movie.overview ? (
                   <p className="max-w-3xl text-[0.9375rem] leading-7 text-muted-foreground">{movie.overview}</p>
-                ) : movie.identified ? (
-                  <p className="text-sm text-muted-foreground">No overview is available for this film.</p>
-                ) : (
+                ) : needsIdentifying(movie) ? (
                   <p className="text-sm text-muted-foreground">Choose the film above to add its overview and cast.</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No overview is available for this {movie.setAsideAs === 'tv' ? 'series' : 'film'}.</p>
                 )}
 
                 {movie.cast.length > 0 ? (

@@ -82,6 +82,10 @@ export const movieListItemSchema = z.object({
   bestHdrOwned: z.string().nullable(),
   bestAudioOwned: z.string().nullable(),
   identified: z.boolean(),
+  /** Mark, 15 Oct — set aside as a TV series or as not a film (Batch T9), so "Still to
+   *  identify" leaves it out; a film needs identifying when it is neither identified nor set
+   *  aside. Defaulted, as `lastWatchedAt` is, so a list cached offline before it still parses. */
+  setAsideAs: z.enum(['tv', 'not_film']).nullable().default(null),
   // Non-negative, as the API has been since Batch 29: a film whose only disc was sold keeps
   // its page and its history with zero copies. `positive()` turned that page into a parse
   // error — reachable from Batch T2's search, which links to films with no disc.

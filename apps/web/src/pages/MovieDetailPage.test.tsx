@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MovieDetailPage from './MovieDetailPage'
-import { fetchCopies, fetchMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
+import { fetchCandidates, fetchCopies, fetchMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
 import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 
 vi.mock('@/context/auth', () => ({
@@ -30,6 +30,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
     ...actual,
     fetchMovie: vi.fn(),
     fetchCopies: vi.fn(),
+    fetchCandidates: vi.fn(),
     fetchFacets: vi.fn().mockResolvedValue({ sections: [], allSections: [] }),
   }
 })
@@ -55,6 +56,7 @@ const MOVIE: MovieDetail = {
   bestHdrOwned: null,
   bestAudioOwned: null,
   identified: true,
+  setAsideAs: null,
   copyCount: 1,
   locations: [{ section: 'Front', shelf: '2nd', label: 'Front 2nd' }],
   watched: false,
@@ -366,3 +368,37 @@ describe('MovieDetailPage reviews (Batch V9)', () => {
   })
 })
 
+
+describe('MovieDetailPage set aside (Mark, 15 Oct)', () => {
+  it('says a series was set aside, rather than asking which film it is', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({
+      ...MOVIE,
+      title: 'Broadchurch',
+      identified: false,
+      setAsideAs: 'tv',
+      mediaType: 'tv',
+      overview: null,
+    })
+    vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'Broadchurch', query: 'Broadchurch', candidates: [] })
+    renderPage()
+
+    expect(await screen.findByText('Set aside as a TV series')).not.toBeNull()
+    expect(screen.queryByText('Which film is this?')).toBeNull()
+    expect(fetchCandidates).not.toHaveBeenCalled()
+
+    // One set aside in error can still be identified as a film.
+    fireEvent.click(screen.getByRole('button', { name: 'Identify as a film' }))
+    expect(await screen.findByText('Which film is this?')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByText('Which film is this?')).toBeNull())
+  })
+
+  it('still asks which film it is when nothing set it aside', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({ ...MOVIE, identified: false, setAsideAs: null })
+    vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'The Red Shoes', query: 'The Red Shoes', candidates: [] })
+    renderPage()
+
+    expect(await screen.findByText('Which film is this?')).not.toBeNull()
+    expect(screen.queryByText('Set aside as a TV series')).toBeNull()
+  })
+})
