@@ -47,7 +47,7 @@ from src.models.barcode import BarcodeLookup
 from src.models.collection_item import CollectionItem
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayTarget
-from src.models.identify import IdentifyLookup, MovieTitleAlias
+from src.models.identify import IdentifyDoubt, IdentifyLookup, MovieTitleAlias
 from src.models.movie import Movie, MovieCredit
 from src.models.movie_night import MovieNightSuggestion, MovieNightVote
 from src.models.release_calendar import ReleaseCalendarEntry
@@ -348,6 +348,8 @@ async def move_references(db: AsyncSession, source_id: uuid.UUID, target_id: uui
         )
     )
     merge.moved["movie_title_aliases"] = await move(MovieTitleAlias)
+    # Batch X9: a film's doubts go with it, so the merge that settles one can be undone.
+    merge.moved["identify_doubts"] = await move(IdentifyDoubt)
     return merge
 
 
@@ -439,6 +441,13 @@ async def _lookup_snapshot(db: AsyncSession, movie_id: uuid.UUID) -> dict[str, A
         "note": lookup.note,
         "candidates": lookup.candidates,
         "proposed_tmdb_id": lookup.proposed_tmdb_id,
+        # Batch X9: enough to put back a lookup of a film that was identified already.
+        "set_aside_as": lookup.set_aside_as,
+        "how": lookup.how,
+        "tmdb_id": lookup.tmdb_id,
+        "media_type": lookup.media_type,
+        "evidence": lookup.evidence,
+        "replaced_title": lookup.replaced_title,
     }
 
 
@@ -477,6 +486,16 @@ async def identify_film(
     before = snapshot(source)
     had_credits = await _credits_of(db, source_id)
     lookup_before = await _lookup_snapshot(db, source_id)
+    # Batch X9: identifying a film again settles any doubt about it, however it is done.
+    doubts = list(
+        (
+            await db.scalars(
+                select(IdentifyDoubt.id).where(
+                    IdentifyDoubt.movie_id == source_id, IdentifyDoubt.status == "open"
+                )
+            )
+        ).all()
+    )
 
     target, merge = await _apply(db, source, tmdb_movie)
 
@@ -545,6 +564,12 @@ async def identify_film(
         changes=changes,
     )
     await db.flush()
+    if doubts:
+        await db.execute(
+            update(IdentifyDoubt)
+            .where(IdentifyDoubt.id.in_(doubts), IdentifyDoubt.status == "open")
+            .values(status="corrected", decided_by=by, decided_utc=now, decided_action_id=audit.id)
+        )
     return Identified(film=target, merged=merge is not None, audit=audit)
 
 
@@ -683,19 +708,29 @@ async def undo_identification(
 
     lookup = await db.scalar(select(IdentifyLookup).where(IdentifyLookup.movie_id == restored.id))
     previous = changes.get("lookup") or {}
-    if lookup is None:
-        lookup = IdentifyLookup(id=uuid.uuid4(), movie_id=restored.id)
-        db.add(lookup)
-    lookup.status = "needs_you"
-    lookup.set_aside_as = None
-    lookup.how = None
-    lookup.tmdb_id = None
-    lookup.media_type = "film"
-    lookup.candidates = list(previous.get("candidates") or [])
-    lookup.proposed_tmdb_id = previous.get("proposed_tmdb_id")
-    lookup.note = "Put back by an undo. Pick the right film, search again, or skip."
-    lookup.decided_by = by
-    lookup.decided_utc = utcnow()
+    if restored.tmdb_id is not None or restored.tmdb_tv_id is not None:
+        # Batch X9: an identification that corrected one (a doubt settled) is undone back to
+        # the film it was, which waits for no one: its lookup goes back as it was.
+        await _restore_identified_lookup(db, restored, lookup, changes.get("lookup"))
+    else:
+        if lookup is None:
+            lookup = IdentifyLookup(id=uuid.uuid4(), movie_id=restored.id)
+            db.add(lookup)
+        lookup.status = "needs_you"
+        lookup.set_aside_as = None
+        lookup.how = None
+        lookup.tmdb_id = None
+        lookup.media_type = "film"
+        lookup.candidates = list(previous.get("candidates") or [])
+        lookup.proposed_tmdb_id = previous.get("proposed_tmdb_id")
+        lookup.note = "Put back by an undo. Pick the right film, search again, or skip."
+        lookup.decided_by = by
+        lookup.decided_utc = utcnow()
+    await db.execute(
+        update(IdentifyDoubt)
+        .where(IdentifyDoubt.decided_action_id == action_id)
+        .values(status="open", decided_by=None, decided_utc=None, decided_action_id=None)
+    )
 
     record_action(
         db,
@@ -711,6 +746,38 @@ async def undo_identification(
     )
     await db.flush()
     return restored
+
+
+async def _restore_identified_lookup(
+    db: AsyncSession,
+    film: Movie,
+    lookup: IdentifyLookup | None,
+    previous: dict[str, Any] | None,
+) -> None:
+    """Put back the lookup of a film the undo leaves identified, as it was before."""
+    if previous is None:
+        if lookup is not None:
+            await db.delete(lookup)
+        return
+    if lookup is None:
+        lookup = IdentifyLookup(id=uuid.uuid4(), movie_id=film.id)
+        db.add(lookup)
+    series = film.tmdb_tv_id is not None
+    status = str(previous.get("status") or "identified")
+    lookup.status = status if status in ("identified", "skipped") else "identified"
+    lookup.set_aside_as = None
+    lookup.note = previous.get("note")
+    lookup.candidates = list(previous.get("candidates") or [])
+    lookup.proposed_tmdb_id = previous.get("proposed_tmdb_id")
+    lookup.evidence = list(previous.get("evidence") or [])
+    lookup.replaced_title = previous.get("replaced_title")
+    if lookup.status == "identified":
+        lookup.tmdb_id = film.tmdb_tv_id if series else film.tmdb_id
+        lookup.media_type = "tv" if series else "film"
+        lookup.how = previous.get("how") or "picked"
+    else:
+        lookup.tmdb_id = None
+        lookup.how = None
 
 
 async def _move_back(
@@ -731,6 +798,7 @@ async def _move_back(
         "deals": Deal,
         "movie_title_aliases": MovieTitleAlias,
         "ebay_targets": EbayTarget,
+        "identify_doubts": IdentifyDoubt,
     }
     for table, model in models.items():
         ids = [uuid.UUID(value) for value in moved.get(table, [])]

@@ -284,6 +284,10 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/identify/films/{movie_id}/put-back",
         "/api/v1/identify/recent",
         "/api/v1/identify/recent/{action_id}/undo",
+        # Batch X9: identified films in doubt.
+        "/api/v1/identify/doubts",
+        "/api/v1/identify/doubts/{doubt_id}/keep",
+        "/api/v1/identify/doubts/{doubt_id}/identify",
         "/api/v1/ebay/targets",
         "/api/v1/ebay/targets/listing",
         "/api/v1/ebay/targets/search",

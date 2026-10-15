@@ -49,6 +49,7 @@ import {
   needsIdentifying,
   updateCollectionItem,
   type CollectionCopy,
+  type IdentificationDoubt,
   type ListingStatus,
   type MovieDetail,
 } from '@/lib/api'
@@ -302,6 +303,38 @@ function NotAFilmNote({ identifying, onToggle }: { identifying: boolean; onToggl
   )
 }
 
+/**
+ * Batch X9 (CT46-03): a film identified already that something says is another film. The
+ * evidence used to park a disc page as "pick the right page"; now the film says it is in
+ * doubt until Craig settles it on Identify films.
+ */
+function DoubtNote({ doubt, isAdmin }: { doubt: IdentificationDoubt; isAdmin: boolean }) {
+  return (
+    <section
+      className="flex flex-wrap items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 md:p-5"
+      aria-label="Identification in doubt"
+    >
+      <span className="rounded-full bg-warning/20 p-2 text-foreground">
+        <ShieldAlert className="h-4 w-4" aria-hidden />
+      </span>
+      <div className="min-w-[14rem] flex-1">
+        <h2 className="font-semibold text-foreground">Identification in doubt</h2>
+        <p className="mt-1 max-w-2xl text-sm text-foreground">{doubt.note}</p>
+        {isAdmin ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            <Link to="/identify" className="font-semibold text-foreground hover:text-primary">
+              Settle it on Identify films
+            </Link>
+            , or use Correct match.
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-muted-foreground">Craig will settle which film this is.</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -526,6 +559,12 @@ export default function MovieDetailPage() {
         </div>
 
         <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
+
+        {movie.identificationDoubt ? (
+          <div className="mt-8">
+            <DoubtNote doubt={movie.identificationDoubt} isAdmin={isAdmin} />
+          </div>
+        ) : null}
 
         {!movie.identified && movie.setAsideAs === 'not_film' ? (
           <div className="mt-8">

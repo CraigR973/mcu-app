@@ -92,6 +92,7 @@ import {
   ebayTargetsSchema,
   ebayWatchingSchema,
   identifyDecisionSchema,
+  identifyDoubtsSchema,
   identifyOverviewSchema,
   identifyQueueSchema,
   identifySearchSchema,
@@ -125,6 +126,7 @@ import {
   type EbayTarget,
   type EbayTargets,
   type IdentifyDecision,
+  type IdentifyDoubts,
   type IdentifyOverview,
   type IdentifyQueue,
   type IdentifySearch,
@@ -261,6 +263,9 @@ export type {
   FilmInCollection,
   IdentifyCandidate,
   IdentifyDecision,
+  IdentifyDoubt,
+  IdentifyDoubts,
+  IdentificationDoubt,
   IdentifyOverview,
   IdentifyQueue,
   IdentifyQueueItem,
@@ -1328,6 +1333,31 @@ export async function setFilmAside(movieId: string, kind: 'tv' | 'not_film'): Pr
 
 export async function skipFilm(movieId: string): Promise<IdentifyDecision> {
   return parseOrThrowApiError(await authFetch(`/identify/films/${movieId}/skip`, { method: 'POST' }), identifyDecisionSchema)
+}
+
+/** Identified films that may be the wrong one, with the evidence — Batch X9. */
+export async function fetchIdentifyDoubts(limit = 20): Promise<IdentifyDoubts> {
+  return parseResponse(await authFetch(`/identify/doubts?limit=${String(limit)}`), identifyDoubtsSchema)
+}
+
+/** The film is right after all. */
+export async function keepIdentification(doubtId: string): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(await authFetch(`/identify/doubts/${doubtId}/keep`, { method: 'POST' }), identifyDecisionSchema)
+}
+
+/** The film is another one. Undone from the recent list, which opens the doubt again. */
+export async function correctIdentification(
+  doubtId: string,
+  tmdbId: number,
+  options: { merge?: boolean; searched?: boolean } = {},
+): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/doubts/${doubtId}/identify`, {
+      method: 'POST',
+      body: JSON.stringify({ tmdbId, merge: options.merge ?? false, searched: options.searched ?? false }),
+    }),
+    identifyDecisionSchema,
+  )
 }
 
 export async function fetchRecentIdentifications(limit = 20): Promise<RecentIdentifications> {

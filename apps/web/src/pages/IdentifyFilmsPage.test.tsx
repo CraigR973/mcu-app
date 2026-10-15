@@ -4,9 +4,24 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { IdentifyOverview, IdentifyQueue, RecentIdentifications } from '@/lib/api'
+import type { IdentifyDoubts, IdentifyOverview, IdentifyQueue, RecentIdentifications } from '@/lib/api'
 
-const { overviewMock, queueMock, recentMock, searchMock, identifyMock, asideMock, skipMock, undoMock } = vi.hoisted(() => ({
+const {
+  overviewMock,
+  queueMock,
+  recentMock,
+  searchMock,
+  identifyMock,
+  asideMock,
+  skipMock,
+  undoMock,
+  doubtsMock,
+  keepMock,
+  correctMock,
+} = vi.hoisted(() => ({
+  doubtsMock: vi.fn(),
+  keepMock: vi.fn(),
+  correctMock: vi.fn(),
   overviewMock: vi.fn(),
   queueMock: vi.fn(),
   recentMock: vi.fn(),
@@ -26,6 +41,9 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   setFilmAside: asideMock,
   skipFilm: skipMock,
   undoIdentification: undoMock,
+  fetchIdentifyDoubts: doubtsMock,
+  keepIdentification: keepMock,
+  correctIdentification: correctMock,
 }))
 
 import IdentifyFilmsPage from './IdentifyFilmsPage'
@@ -97,6 +115,34 @@ const RECENT: RecentIdentifications = {
   ],
 }
 
+const DOUBT_ID = '00000000-0000-4000-8000-000000000035'
+const DOUBTED = '00000000-0000-4000-8000-000000000036'
+
+const DOUBTS: IdentifyDoubts = {
+  total: 1,
+  items: [
+    {
+      doubtId: DOUBT_ID,
+      movieId: DOUBTED,
+      title: 'The Bridge on the River Kwai',
+      year: 2007,
+      tmdbId: 501,
+      posterPath: null,
+      source: 'specs',
+      note: 'Blu-ray.com’s disc page for “The Bridge on the River Kwai” is a 1957 film, and this film is identified as 2007. The copy may be the 1957 film.',
+      evidence: ['Blu-ray.com’s disc page for “The Bridge on the River Kwai” is a 1957 film, and this film is identified as 2007. The copy may be the 1957 film.'],
+      discs: [{ label: '4K · Alec Guinness' }],
+      copies: 1,
+      watches: 0,
+      collectionItemId: null,
+      candidates: [],
+      proposedTmdbId: null,
+      searchHint: 'The Bridge on the River Kwai 1957',
+      raisedAt: '2026-10-15T02:30:00+00:00',
+    },
+  ],
+}
+
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -118,6 +164,9 @@ describe('IdentifyFilmsPage', () => {
     skipMock.mockResolvedValue({ movieId: FILM, outcome: 'skipped', title: '' })
     undoMock.mockResolvedValue({ movieId: FILM, outcome: 'waiting', title: 'Peepiing Tom' })
     searchMock.mockResolvedValue({ query: 'Dunkirk 2017', candidates: [] })
+    doubtsMock.mockResolvedValue({ items: [], total: 0 })
+    keepMock.mockResolvedValue({ movieId: DOUBTED, outcome: 'kept', title: '' })
+    correctMock.mockResolvedValue({ movieId: DOUBTED, outcome: 'identified', title: 'The Bridge on the River Kwai' })
   })
 
   afterEach(() => {
@@ -183,5 +232,53 @@ describe('IdentifyFilmsPage', () => {
 
     await vi.waitFor(() => expect(undoMock).toHaveBeenCalledWith(ACTION))
     expect(screen.getByText('Peepiing Tom')).toBeTruthy()
+  })
+
+  describe('films in doubt (Batch X9)', () => {
+    beforeEach(() => {
+      doubtsMock.mockResolvedValue(DOUBTS)
+    })
+
+    it('shows an identified film in doubt with what disagrees, and keeps it in one tap', async () => {
+      renderPage()
+      const card = await screen.findByRole('article', { name: 'The Bridge on the River Kwai (2007)' })
+
+      expect(screen.getByRole('heading', { name: 'In doubt (1)' })).toBeTruthy()
+      expect(within(card).getByText(/is a 1957 film, and this film is identified as 2007/)).toBeTruthy()
+      expect(within(card).getByText('4K · Alec Guinness')).toBeTruthy()
+      fireEvent.click(within(card).getByRole('button', { name: /It’s right/ }))
+
+      await vi.waitFor(() => expect(keepMock).toHaveBeenCalledWith(DOUBT_ID))
+    })
+
+    it('searches for the film the page names, never offers the film it already is, and corrects to another', async () => {
+      searchMock.mockResolvedValue({
+        query: 'The Bridge on the River Kwai 1957',
+        candidates: [
+          { tmdbId: 501, title: 'The Bridge on the River Kwai', year: 2007, posterPath: null, overview: '', votes: 3, notes: [], inCollection: null },
+          { tmdbId: 826, title: 'The Bridge on the River Kwai', year: 1957, posterPath: null, overview: '', votes: 3500, notes: [], inCollection: null },
+        ],
+      })
+      renderPage()
+      const card = await screen.findByRole('article', { name: 'The Bridge on the River Kwai (2007)' })
+      const input = within(card).getByRole('textbox', { name: 'Search TMDB for the film The Bridge on the River Kwai may be' })
+
+      expect((input as HTMLInputElement).value).toBe('The Bridge on the River Kwai 1957')
+      fireEvent.click(within(card).getByRole('button', { name: /Search/ }))
+      const results = await within(card).findByRole('list', { name: 'Search results for The Bridge on the River Kwai' })
+
+      expect(within(results).getAllByRole('listitem')).toHaveLength(1)
+      fireEvent.click(within(results).getByRole('button', { name: /This is it/ }))
+      await vi.waitFor(() => expect(correctMock).toHaveBeenCalledWith(DOUBT_ID, 826, { merge: false, searched: true }))
+    })
+
+    it('counts the films in doubt in the overview', async () => {
+      overviewMock.mockResolvedValue({ ...OVERVIEW, inDoubt: 7 })
+      renderPage()
+
+      const overview = await screen.findByRole('region', { name: 'Where they stand' })
+      expect(within(overview).getByText('Identified, in doubt')).toBeTruthy()
+      expect(within(overview).getByText('7')).toBeTruthy()
+    })
   })
 })

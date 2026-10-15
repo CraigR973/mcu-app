@@ -7,6 +7,8 @@
 - :class:`MovieTitleAlias`: a title a film used to have. The spreadsheet keeps its own
   spelling ("Peepiing Tom") after identification tidies the film ("Peeping Tom"), and the
   collection refresh looks films up by these too, so #198's guard still finds them.
+- :class:`IdentifyDoubt` (Batch X9): a proposal that a film already identified is the wrong
+  one, waiting on Identify films with its evidence until Craig settles it.
 """
 
 import uuid
@@ -36,6 +38,11 @@ SET_ASIDE_AS = ("tv", "not_film")
 #: after searching again.
 IDENTIFIED_HOW = ("auto", "picked", "searched")
 IDENTIFY_RUN_STATUSES = ("running", "finished", "stopped", "abandoned")
+#: Where a doubt came from: the re-check of the old paths' films, a disc page, a review.
+IDENTIFY_DOUBT_SOURCES = ("recheck", "specs", "review")
+#: ``open`` waits on Identify films; Craig keeps the film, identifies it again, or moves the
+#: copy to another film.
+IDENTIFY_DOUBT_STATUSES = ("open", "kept", "corrected", "moved")
 
 
 class IdentifyRun(Base, UUIDPrimaryKeyMixin):
@@ -165,6 +172,78 @@ class MovieTitleAlias(Base, UUIDPrimaryKeyMixin):
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     source: Mapped[str] = mapped_column(Text, nullable=False, default="identification")
+    created_utc: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False, server_default=func.now()
+    )
+
+
+class IdentifyDoubt(Base, UUIDPrimaryKeyMixin):
+    """A proposal that an identified film is the wrong one — Batch X9 (CT46-01, CT46-03)."""
+
+    __tablename__ = "identify_doubts"
+    __table_args__ = (
+        CheckConstraint(
+            "source IN ('recheck', 'specs', 'review')", name="ck_identify_doubts_source"
+        ),
+        CheckConstraint(
+            "status IN ('open', 'kept', 'corrected', 'moved')", name="ck_identify_doubts_status"
+        ),
+        CheckConstraint(
+            "(status = 'open') = (decided_utc IS NULL)", name="ck_identify_doubts_decided"
+        ),
+        CheckConstraint("length(btrim(note)) > 0", name="ck_identify_doubts_note"),
+        Index("ix_identify_doubts_movie", "movie_id"),
+        Index("ix_identify_doubts_status", "status"),
+        Index(
+            "uq_identify_doubts_open_film",
+            "movie_id",
+            "source",
+            unique=True,
+            postgresql_where=text("status = 'open' AND collection_item_id IS NULL"),
+        ),
+        Index(
+            "uq_identify_doubts_open_copy",
+            "collection_item_id",
+            "source",
+            unique=True,
+            postgresql_where=text("status = 'open' AND collection_item_id IS NOT NULL"),
+        ),
+    )
+
+    #: ``CASCADE``, as a lookup's is. A merge moves a film's doubts to the film it joins
+    #: first, and an undo moves them back, so only a deleted film takes its doubts with it.
+    movie_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("movies.id", ondelete="CASCADE"), nullable=False
+    )
+    #: The copy the doubt is about, when it names one: a disc page is one disc's, and the
+    #: re-check reads one spreadsheet row.
+    collection_item_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("collection_items.id", ondelete="SET NULL"), nullable=True
+    )
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="open")
+    #: The film's TMDB id when the doubt was raised.
+    identified_as: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Why the film is in doubt, in the words the pages show.
+    note: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    #: The films offered instead, best first, in the Identify queue's shape.
+    candidates: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    proposed_tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: What the Identify page searches TMDB for first: the page's title and year.
+    search_hint: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: The disc page or review that named another year.
+    page_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True
+    )
+    decided_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+    #: The audit row of the change that settled it; undoing that change opens it again.
+    decided_action_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_utc: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=func.now()
     )

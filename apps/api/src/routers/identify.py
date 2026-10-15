@@ -7,7 +7,7 @@ watches and movie nights hang off, and merges two films into one, so it is Craig
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, status
@@ -16,10 +16,13 @@ from src.auth import AdminUser
 from src.models.identify import IdentifyRun
 from src.routers.movies import Database, TmdbClient
 from src.schemas.identify import (
+    DoubtSource,
     FilmInCollectionResponse,
     IdentifyCandidateResponse,
     IdentifyDecisionResponse,
     IdentifyDiscResponse,
+    IdentifyDoubtResponse,
+    IdentifyDoubtsResponse,
     IdentifyOverviewResponse,
     IdentifyPickRequest,
     IdentifyQueueItemResponse,
@@ -31,6 +34,7 @@ from src.schemas.identify import (
     RecentIdentificationsResponse,
 )
 from src.services.identification import IdentifyError, MergeNeeded, undo_identification
+from src.services.identify.doubts import DoubtError, correct, keep, open_doubts
 from src.services.identify.queue import (
     FilmInCollection,
     QueueError,
@@ -123,6 +127,7 @@ async def read_overview(_user: AdminUser, db: Database) -> IdentifyOverviewRespo
         setAsideNotFilm=counts.set_aside_not_film,
         skipped=counts.skipped,
         identified=counts.identified,
+        inDoubt=counts.in_doubt,
         run=_run(counts.latest_run) if counts.latest_run else None,
     )
 
@@ -243,6 +248,89 @@ async def put_film_back(
     except (LookupError, QueueError) as exc:
         raise _refuse(exc) from exc
     return IdentifyDecisionResponse(movieId=movie_id, outcome="waiting", title="")
+
+
+@router.get("/identify/doubts", response_model=IdentifyDoubtsResponse)
+async def read_doubts(
+    _user: AdminUser,
+    db: Database,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> IdentifyDoubtsResponse:
+    """Identified films that may be the wrong one, with the evidence — Batch X9."""
+    entries, total = await open_doubts(db, limit=limit)
+    tmdb_ids = [int(c["tmdb_id"]) for entry in entries for c in entry.doubt.candidates]
+    held = await in_collection(db, tmdb_ids)
+    return IdentifyDoubtsResponse(
+        items=[
+            IdentifyDoubtResponse(
+                doubtId=entry.doubt.id,
+                movieId=entry.movie.id,
+                title=entry.movie.title,
+                year=entry.movie.year,
+                tmdbId=entry.movie.tmdb_id or 0,
+                posterPath=entry.movie.poster_path,
+                source=cast(DoubtSource, entry.doubt.source),
+                note=entry.doubt.note,
+                evidence=list(entry.doubt.evidence),
+                discs=[IdentifyDiscResponse(label=label) for label in entry.discs],
+                copies=entry.copies,
+                watches=entry.watches,
+                collectionItemId=entry.doubt.collection_item_id,
+                candidates=_candidates(entry.doubt.candidates, held),
+                proposedTmdbId=entry.doubt.proposed_tmdb_id,
+                searchHint=entry.doubt.search_hint or entry.movie.title,
+                raisedAt=entry.doubt.created_utc,
+            )
+            for entry in entries
+        ],
+        total=total,
+    )
+
+
+@router.post("/identify/doubts/{doubt_id}/keep", response_model=IdentifyDecisionResponse)
+async def keep_film(doubt_id: uuid.UUID, user: AdminUser, db: Database) -> IdentifyDecisionResponse:
+    """The film is right after all."""
+    try:
+        doubt = await keep(db, doubt_id, by=user.id)
+    except (LookupError, DoubtError) as exc:
+        await db.rollback()
+        raise _refuse(exc) from exc
+    return IdentifyDecisionResponse(movieId=doubt.movie_id, outcome="kept", title="")
+
+
+@router.post("/identify/doubts/{doubt_id}/identify", response_model=IdentifyDecisionResponse)
+async def correct_film(
+    doubt_id: uuid.UUID,
+    payload: IdentifyPickRequest,
+    user: AdminUser,
+    db: Database,
+    tmdb: TmdbClient,
+) -> IdentifyDecisionResponse:
+    """The film is another one. A choice that merges into a film the collection has needs
+    ``merge``; undone from the recent list, which opens the doubt again."""
+    try:
+        identified = await correct(
+            db,
+            doubt_id,
+            payload.tmdbId,
+            tmdb,
+            by=user.id,
+            merge=payload.merge,
+            searched=payload.searched,
+        )
+    except (LookupError, DoubtError, IdentifyError) as exc:
+        await db.rollback()
+        raise _refuse(exc) from exc
+    except (httpx.HTTPError, TMDBRefused) as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB could not be reached"
+        ) from exc
+    return IdentifyDecisionResponse(
+        movieId=identified.film.id,
+        outcome="merged" if identified.merged else "identified",
+        title=identified.film.title,
+    )
 
 
 @router.get("/identify/recent", response_model=RecentIdentificationsResponse)

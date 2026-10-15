@@ -45,6 +45,7 @@ from src.models.specs_backfill import SpecLookup, SpecRun
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.valuation import ValuationRun
 from src.services import heartbeat
+from src.services.identify.doubts import count_old as count_old_doubts
 from src.services.notifications import queue_notification
 
 logger = structlog.get_logger(__name__)
@@ -253,7 +254,10 @@ async def check_lockouts(db: AsyncSession, now: datetime) -> list[Result]:
 
 
 async def check_identification(db: AsyncSession, now: datetime) -> list[Result]:
-    """Identify proposals older than a fortnight; identified films a page says are another year."""
+    """Identify proposals older than a fortnight; identified films a page says are another year.
+
+    Batch X9: a doubt about an identified film is a proposal too, and counts once it is a
+    fortnight old."""
     waiting = int(
         await db.scalar(
             select(func.count(IdentifyLookup.id)).where(
@@ -262,7 +266,7 @@ async def check_identification(db: AsyncSession, now: datetime) -> list[Result]:
             )
         )
         or 0
-    )
+    ) + await count_old_doubts(db, now)
     spec_doubt = (
         select(CollectionItem.movie_id)
         .join(SpecLookup, SpecLookup.collection_item_id == CollectionItem.id)

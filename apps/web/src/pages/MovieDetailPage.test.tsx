@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -430,5 +430,30 @@ describe('MovieDetailPage set aside and series (Mark, 15 Oct; Batch Y3)', () => 
 
     expect(await screen.findByRole('button', { name: /Correct match/ })).not.toBeNull()
     expect(screen.queryByRole('link', { name: /Letterboxd/ })).toBeNull()
+  })
+
+  it('says an identification is in doubt while one is open, and says nothing otherwise (Batch X9)', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({
+      ...MOVIE,
+      identificationDoubt: {
+        note: 'Blu-ray.com’s disc page for “The Red Shoes” is a 2005 film, and this film is identified as 1948.',
+        source: 'specs',
+        raisedAt: '2026-10-15T02:30:00+00:00',
+      },
+    })
+    renderPage()
+
+    const note = await screen.findByRole('region', { name: 'Identification in doubt' })
+    expect(within(note).getByText(/is a 2005 film, and this film is identified as 1948/)).toBeTruthy()
+    // Mark sees the doubt; settling it is Craig's.
+    expect(within(note).getByText('Craig will settle which film this is.')).toBeTruthy()
+    expect(within(note).queryByRole('link', { name: /Identify films/ })).toBeNull()
+  })
+
+  it('shows no doubt for a film nobody doubts', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: /Correct match/ })).not.toBeNull()
+    expect(screen.queryByRole('region', { name: 'Identification in doubt' })).toBeNull()
   })
 })

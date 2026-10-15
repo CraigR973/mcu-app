@@ -8,16 +8,20 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import {
+  correctIdentification,
+  fetchIdentifyDoubts,
   fetchIdentifyOverview,
   fetchIdentifyQueue,
   fetchRecentIdentifications,
   identifyFilm,
+  keepIdentification,
   posterUrl,
   searchIdentify,
   setFilmAside,
   skipFilm,
   undoIdentification,
   type IdentifyCandidate,
+  type IdentifyDoubt,
   type IdentifyOverview,
   type IdentifyQueueItem,
   type RecentIdentification,
@@ -40,6 +44,7 @@ function Overview({ overview }: { overview: IdentifyOverview }) {
     ['Not a film', overview.setAsideNotFilm],
     ['Skipped', overview.skipped],
     ['Identified', overview.identified],
+    ['Identified, in doubt', overview.inDoubt ?? 0],
   ]
   return (
     <section className="archive-panel space-y-3 p-4 sm:p-5" aria-labelledby="identify-overview-heading">
@@ -225,6 +230,148 @@ function QueueCard({ item }: { item: IdentifyQueueItem }) {
   )
 }
 
+const SOURCE: Record<IdentifyDoubt['source'], string> = {
+  recheck: 'The re-check of the old matches',
+  specs: 'A disc page',
+  review: 'A review',
+}
+
+/**
+ * An identified film that may be the wrong one — Batch X9 (CT46-01, CT46-03). Craig keeps
+ * it, or picks the film it is; a pick is undone from the recent list like any other.
+ */
+function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
+  const queryClient = useQueryClient()
+  const [query, setQuery] = useState(doubt.searchHint)
+  const [searched, setSearched] = useState<string | null>(null)
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['identify-doubts'] })
+    void queryClient.invalidateQueries({ queryKey: ['identify-overview'] })
+    void queryClient.invalidateQueries({ queryKey: ['identify-recent'] })
+  }
+  const search = useQuery({
+    queryKey: ['identify-search', doubt.movieId, searched],
+    queryFn: () => searchIdentify(doubt.movieId, searched ?? ''),
+    enabled: searched !== null,
+  })
+  const pick = useMutation({
+    mutationFn: ({ candidate, fromSearch }: { candidate: IdentifyCandidate; fromSearch: boolean }) =>
+      correctIdentification(doubt.doubtId, candidate.tmdbId, {
+        merge: candidate.inCollection !== null,
+        searched: fromSearch,
+      }),
+    onSuccess: refresh,
+  })
+  const keep = useMutation({ mutationFn: () => keepIdentification(doubt.doubtId), onSuccess: refresh })
+  const busy = pick.isPending || keep.isPending
+  const failure = pick.error ?? keep.error
+  // The film it already is is not an alternative to itself.
+  const others = (candidates: IdentifyCandidate[]) => candidates.filter((c) => c.tmdbId !== doubt.tmdbId)
+  const offered = others(doubt.candidates)
+  const found = search.data ? others(search.data.candidates) : []
+  const evidence = doubt.evidence.filter((line) => line !== doubt.note)
+
+  return (
+    <article className="archive-panel space-y-3 p-4" aria-labelledby={`doubt-${doubt.doubtId}`}>
+      <div>
+        <p className="metadata-label">Identified as</p>
+        <h3 id={`doubt-${doubt.doubtId}`} className="font-display text-lg font-semibold text-foreground">
+          <Link to={`/movies/${doubt.movieId}`} className="hover:text-primary">
+            {doubt.title}
+            {doubt.year ? ` (${String(doubt.year)})` : ''}
+          </Link>
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          {[
+            ...doubt.discs.map((disc) => disc.label),
+            doubt.copies > doubt.discs.length ? `${String(doubt.copies)} copies on this film` : '',
+            doubt.watches ? `watched ${String(doubt.watches)}×` : '',
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      </div>
+      <p className="text-sm leading-6 text-foreground">
+        <span className="text-muted-foreground">{SOURCE[doubt.source]}: </span>
+        {doubt.note}
+      </p>
+      {evidence.length > 0 ? (
+        <ul className="list-disc space-y-1 pl-5 text-xs leading-5 text-muted-foreground">
+          {evidence.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      ) : null}
+
+      {offered.length > 0 ? (
+        <ul className="divide-y divide-border" aria-label={`Films offered instead of ${doubt.title}`}>
+          {offered.map((candidate) => (
+            <CandidateRow
+              key={candidate.tmdbId}
+              candidate={candidate}
+              busy={busy}
+              onPick={(chosen) => pick.mutate({ candidate: chosen, fromSearch: false })}
+            />
+          ))}
+        </ul>
+      ) : null}
+
+      <form
+        className="space-y-2 border-t border-border pt-3"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (query.trim()) setSearched(query.trim())
+        }}
+      >
+        <div className="flex gap-2">
+          <input
+            className="form-control min-w-0 flex-1"
+            aria-label={`Search TMDB for the film ${doubt.title} may be`}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <Button type="submit" size="sm" variant="secondary" disabled={busy || !query.trim()}>
+            <Search aria-hidden /> Search
+          </Button>
+        </div>
+        {search.isLoading ? <p className="text-xs text-muted-foreground">Searching TMDB…</p> : null}
+        {search.isError ? (
+          <p role="alert" className="text-sm text-destructive-text">
+            {queryErrorMessage(search.error, 'TMDB search is unavailable.')}
+          </p>
+        ) : null}
+        {search.data && found.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No other films found for “{search.data.query}”.</p>
+        ) : null}
+        {found.length > 0 ? (
+          <ul className="divide-y divide-border" aria-label={`Search results for ${doubt.title}`}>
+            {found.map((candidate) => (
+              <CandidateRow
+                key={candidate.tmdbId}
+                candidate={candidate}
+                busy={busy}
+                onPick={(chosen) => pick.mutate({ candidate: chosen, fromSearch: true })}
+              />
+            ))}
+          </ul>
+        ) : null}
+      </form>
+
+      <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+        <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => keep.mutate()}>
+          <Check aria-hidden /> It’s right
+        </Button>
+      </div>
+
+      {failure ? (
+        <p role="alert" className="text-sm text-destructive-text">
+          {queryErrorMessage(failure, 'That choice could not be saved.')}
+        </p>
+      ) : null}
+    </article>
+  )
+}
+
 function RecentRow({ entry }: { entry: RecentIdentification }) {
   const queryClient = useQueryClient()
   const undo = useMutation({
@@ -233,6 +380,8 @@ function RecentRow({ entry }: { entry: RecentIdentification }) {
       void queryClient.invalidateQueries({ queryKey: ['identify-recent'] })
       void queryClient.invalidateQueries({ queryKey: ['identify-queue'] })
       void queryClient.invalidateQueries({ queryKey: ['identify-overview'] })
+      // Batch X9: undoing a correction opens its doubt again.
+      void queryClient.invalidateQueries({ queryKey: ['identify-doubts'] })
     },
   })
   return (
@@ -277,17 +426,19 @@ export default function IdentifyFilmsPage() {
   const overviewQuery = useQuery({ queryKey: ['identify-overview'], queryFn: fetchIdentifyOverview })
   const queueQuery = useQuery({ queryKey: ['identify-queue'], queryFn: () => fetchIdentifyQueue(20) })
   const recentQuery = useQuery({ queryKey: ['identify-recent'], queryFn: () => fetchRecentIdentifications(20) })
+  const doubtsQuery = useQuery({ queryKey: ['identify-doubts'], queryFn: () => fetchIdentifyDoubts(20) })
 
   const items = queueQuery.data?.items ?? []
   const queueState = listState(queueQuery, items.length === 0)
   const recent = recentQuery.data?.items ?? []
+  const doubts = doubtsQuery.data?.items ?? []
 
   return (
     <div className="page-shell-narrow space-y-6">
       <PageHeader
         eyebrow="Craig’s tools"
         title="Identify films"
-        description="Films on the shelf that TMDB never matched. Pick the right film, search again, or set it aside."
+        description="Films on the shelf that TMDB never matched, and matched films that may be the wrong one. Pick the right film, search again, or set it aside."
       />
 
       {overviewQuery.isError ? (
@@ -299,6 +450,31 @@ export default function IdentifyFilmsPage() {
         />
       ) : null}
       {overviewQuery.data ? <Overview overview={overviewQuery.data} /> : null}
+
+      {doubtsQuery.isError ? (
+        <StatePanel
+          compact
+          tone="error"
+          title="The films in doubt are unavailable"
+          description={queryErrorMessage(doubtsQuery.error, 'Could not load the films in doubt.')}
+        />
+      ) : null}
+      {doubts.length > 0 && doubtsQuery.data ? (
+        <section className="space-y-3" aria-labelledby="identify-doubts-heading">
+          <h2 id="identify-doubts-heading" className="section-heading">
+            In doubt ({COUNT.format(doubtsQuery.data.total)})
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Films already identified that something says are another film. Keep each one, or pick the film it is.
+          </p>
+          {doubts.map((doubt) => <DoubtCard key={doubt.doubtId} doubt={doubt} />)}
+          {doubtsQuery.data.total > doubts.length ? (
+            <p className="text-xs text-muted-foreground">
+              Showing {doubts.length} of {COUNT.format(doubtsQuery.data.total)}. More appear as you settle these.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="space-y-3" aria-labelledby="identify-queue-heading">
         <h2 id="identify-queue-heading" className="section-heading">

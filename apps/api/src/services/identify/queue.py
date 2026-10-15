@@ -36,6 +36,7 @@ from src.services.identification import (
     is_undone,
     set_aside,
 )
+from src.services.identify.doubts import count_open
 from src.services.identify.matcher import Identifier, offer_notes
 from src.services.identify.plan import FORMAT_NAMES
 from src.services.identify.titles import parse_title
@@ -87,6 +88,8 @@ class Overview:
     skipped: int
     identified: int
     latest_run: IdentifyRun | None
+    #: Batch X9: identified films with an open doubt.
+    in_doubt: int = 0
 
 
 def _unidentified_on_shelf() -> Any:
@@ -126,7 +129,16 @@ async def overview(db: AsyncSession) -> Overview:
     )
     latest = await db.scalar(select(IdentifyRun).order_by(IdentifyRun.started_utc.desc()).limit(1))
     unidentified, waiting, tv, not_film, skipped = (int(v) for v in row)
-    return Overview(unidentified, waiting, tv, not_film, skipped, int(identified or 0), latest)
+    return Overview(
+        unidentified,
+        waiting,
+        tv,
+        not_film,
+        skipped,
+        int(identified or 0),
+        latest,
+        in_doubt=await count_open(db),
+    )
 
 
 async def in_collection(db: AsyncSession, tmdb_ids: list[int]) -> dict[int, FilmInCollection]:

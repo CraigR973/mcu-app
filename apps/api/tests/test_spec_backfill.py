@@ -36,6 +36,7 @@ from src.config import settings
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
+from src.models.identify import IdentifyDoubt
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
@@ -275,6 +276,34 @@ async def test_a_chosen_page_showing_another_year_goes_back_to_craig(db: AsyncSe
     lookup = await _lookup(db, disc)
     assert (lookup.status, lookup.accepted_url) == ("needs_you", None)
     assert "1999" in (lookup.note or "") and "2021" in (lookup.note or "")
+    # Batch X9 (CT46-03): the page names the film's own title, so the film may be the wrong
+    # one. That goes to Identify as a doubt, rather than asking for another page.
+    assert (lookup.note or "").endswith(
+        "The film may be the wrong one: it waits on Identify films."
+    )
+    doubt = await db.scalar(select(IdentifyDoubt).where(IdentifyDoubt.movie_id == film.id))
+    assert doubt is not None
+    assert (doubt.source, doubt.status, doubt.collection_item_id) == ("specs", "open", disc.id)
+    assert (doubt.search_hint, doubt.page_url) == ("Fight Club 1999", FIGHT_CLUB_UK)
+
+
+async def test_another_years_page_for_an_unidentified_film_asks_for_another_page(
+    db: AsyncSession,
+) -> None:
+    """No identification to doubt: the film is in Identify's queue already (X9)."""
+    film = await _film(db, "Fight Club", year=2021, tmdb_id=None)
+    disc = await _disc(db, film, "blu_ray")
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    run = await _run(db, FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK}), site)
+
+    assert (run.fetched, run.sent_back) == (1, 1)
+    lookup = await _lookup(db, disc)
+    assert lookup.note == (
+        "The page is for a 1999 film and this one is from 2021, so its specs were not used. "
+        "Pick the right page."
+    )
+    assert await db.scalar(select(IdentifyDoubt).where(IdentifyDoubt.movie_id == film.id)) is None
 
 
 async def test_craigs_own_choice_is_fetched_as_he_made_it(db: AsyncSession) -> None:

@@ -34,6 +34,7 @@ from src.models.movie import Movie, MovieCredit
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
 from src.routers.valuation import copy_valuation
+from src.schemas.identify import DoubtSource, IdentificationDoubtResponse
 from src.schemas.movies import (
     CandidateListResponse,
     CandidateResponse,
@@ -54,6 +55,7 @@ from src.schemas.movies import (
 )
 from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import IdentifyError, identify_film
+from src.services.identify.doubts import doubt_for_film
 from src.services.identify.matcher import Identifier, match_score, rank_series
 from src.services.identify.titles import ParsedTitle, parse_title
 from src.services.identify.waiting import still_to_identify
@@ -462,6 +464,7 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
     editions = (await _editions_by_movie(db, [movie.id])).get(movie.id, [])
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
     set_aside_as = (await _set_aside_by_movie(db, [movie.id])).get(movie.id)
+    doubt = await doubt_for_film(db, movie.id) if movie.tmdb_id is not None else None
     return MovieDetailResponse(
         **_movie_list_item(
             movie, copy_count, editions=editions, set_aside_as=set_aside_as
@@ -475,6 +478,15 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
         trailerKey=movie.trailer_key,
         letterboxdSlug=movie.letterboxd_slug,
         reviews=[review_response(row) for row in reviews],
+        identificationDoubt=(
+            IdentificationDoubtResponse(
+                note=doubt.note,
+                source=cast(DoubtSource, doubt.source),
+                raisedAt=doubt.created_utc,
+            )
+            if doubt is not None
+            else None
+        ),
     )
 
 
