@@ -31,9 +31,9 @@ conversation still maps onto this file.*
   value starts sooner if you want it. The backup
   now runs on GitHub Actions too, so the one look at GitHub's plan you left for now matters
   more (CI uses about 3,000 minutes a month). You left the other owner steps for now (12 Oct).
-- **15 Oct, Mark's TV series (Y3, item 31):** Mark identifies the series under "Still to
-  identify" from their pages; you run the five-minute, read-only check at the Mac for series
-  matched as films, and send Mark the list.
+- **15 Oct, Mark's TV series (Y3, item 31):** one sitting at the Mac, about 15 minutes: the
+  series pass (dry run, read its report, apply), then the read-only check for series matched as
+  films; send Mark what is left.
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub
@@ -1376,24 +1376,34 @@ some series were matched as films (Band of Brothers, 11.22.63). **You said build
 identify panel lists TMDB's series beside its films, "Correct match" offers series too, and the
 34 series T9 set aside are back under "Still to identify" to be identified as series.
 
-1. **Mark, whenever:** work through "Still to identify" (the 12, plus the 34 set aside), and
-   choose each under **TV series**. **The first one is the live check**: the building session
-   had no TMDB key, so TMDB's series answer was built from its published shape. If identifying
-   a series ever says it could not be loaded, tell a session which title.
-2. **You, once, at the Mac (about 5 minutes, writes nothing):** find the series matched as
-   films and send Mark the list:
+**15 Oct: you asked for the two steps to be done for you.** This cloud session can reach
+neither TMDB nor the live database, so they are one sitting at the Mac (about 15 minutes), the
+first two commands writing nothing (`DECISIONS.md` #274). From `/Users/craigrobinson/mcu_app`:
 
-       cd /Users/craigrobinson/mcu_app && DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.find_series_as_films --app-url https://mcu-app-fawn.vercel.app
+1. **The series pass, dry run (writes nothing, about a minute):**
 
-   (Exported explicitly, as item 1i's commands are: `.env.local`'s connection string has an
-   unquoted `&`. It reads the live database in a `READ ONLY` transaction, so it cannot write.)
+       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.identify_series --app-url https://mcu-app-fawn.vercel.app
 
-   It writes `series-as-films.html` (and `.csv`): each film that TMDB has as a far better-known
-   series of the same title, or that a disc's "TV" grouping or old spreadsheet title marks as
-   one, linked to its page. Open each, press **Correct match**, and choose the series if it is
-   one. A cloud session can run it too, with `--over-https`, once `NEON_READONLY_URL` and
-   `TMDB_READ_TOKEN` are in its environment (`docs/mac-cloud-setup.md`).
-3. Nothing else: no data was changed by the batch, only two columns added.
+   Open `series-plan.html`. "Will be identified" lists each title still to identify that TMDB
+   has exactly one series for (or one far better known than its namesakes), with that series;
+   "Left for Mark" lists the doubtful ones, with what TMDB offered.
+2. **The live run, once the first list looks right (writes, each one undoable):**
+
+       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.identify_series --apply series-plan.json
+
+   It identifies exactly that list, re-checking each title first, and prints what it did. A
+   wrong one is undone on You → Identify films, under recent identifications. Its first series
+   is also the live check of TMDB's series answer (#273): if any print `failed`, tell a session.
+3. **The check for series matched as films (writes nothing, about 5 minutes):**
+
+       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.find_series_as_films --app-url https://mcu-app-fawn.vercel.app
+
+   `series-as-films.html` links each film that looks like a series to its page.
+4. **Send Mark the two short lists:** "Left for Mark" from step 1, and step 3's report. On each
+   page he presses **Correct match** (or uses the identify panel) and chooses under **TV series**.
+
+(The values are exported explicitly, as item 1i's commands are: `.env.local`'s connection string
+has an unquoted `&`. Each dry run reads in a `READ ONLY` transaction, so it cannot write.)
 
 ### 22. Rotate the Neon database password — recommended, your call
 

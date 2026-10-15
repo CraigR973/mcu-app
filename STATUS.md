@@ -43,9 +43,10 @@ exactly when "Still to identify" (#73, #271) lists it; on a phone the open Filte
 series from TMDB** (`movies.tmdb_tv_id`, migration 056), from a title's page by either person,
 "Correct match" included, so Band of Brothers and 11.22.63 can go from the films they were
 matched to, to the series they are. The 34 series T9 set aside are back under "Still to
-identify". **Left (`OWNER-ACTIONS.md` item 31):** Mark identifies the series, the first being
-the live check of TMDB's series answer (built from its published shape, no key here); Craig
-runs `find_series_as_films` at the Mac, read-only, for the series matched as films.
+identify". **Left (`OWNER-ACTIONS.md` item 31), at Craig's word made one sitting at the Mac (#274):** the
+series pass (`identify_series`: a read-only dry run and report, then `--apply` for the ones TMDB
+leaves no doubt about), then the read-only `find_series_as_films`; Mark chooses what is left. The
+first series identified is the live check of TMDB's series answer (built from its published shape).
 
 | Batch | State |
 |---|---|
@@ -477,6 +478,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-15 (Y3 follow-up, #274)** — The series pass: `identify_series` proposes a TMDB series
+  for each title still to identify where TMDB leaves no doubt (dry run, report), and `--apply`
+  identifies exactly that plan, audited `auto`, undoable, never merging. The "still to identify"
+  rule moved to `services/identify/waiting.py`. Gate: API 2,109 passed with Postgres. Craig runs it
+  at the Mac (item 31): this session reaches neither TMDB nor the database.
 - **2026-10-15 (close-out, `ef62257`, #75)** — Y3 and #272's fixes merged; CI green on `main`.
   This session's network policy refused the production hosts, so Craig read them: `/api/v1/health`
   `ef62257`, `/health/ready` `db: ok` with every field `configured`, `version.json` `ef62257`. Y3

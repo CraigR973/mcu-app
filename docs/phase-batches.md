@@ -3968,6 +3968,17 @@ film of the same name (Band of Brothers, 11.22.63). Lands on `claude/brave-tesla
   no TMDB key. The model follows TMDB's published `/tv/{id}` shape with every field optional,
   and the first live identification (Broadchurch) is the check.
 
+### Y3 follow-up — the series pass, built 2026-10-15 at Craig's word
+`DECISIONS.md` #274. Craig asked for #273's two steps to be done for him; this session could reach
+neither TMDB nor the live database, and he chose a pass he runs at the Mac. `src.scripts.
+identify_series`: a read-only dry run proposes a TMDB series for each title "Still to identify"
+(the Archive's rule, moved to `services/identify/waiting.py`) where TMDB leaves no doubt, and
+writes a plan and a report; `--apply` identifies exactly that plan, re-checking each title, audited
+`auto`, undoable, never merging. Eight tests in `test_series_pass.py`, two against Postgres; they
+caught a would-merge title reading its holder's name after the rollback had expired it. Local gate
+green (API 2,109 passed with Postgres; web 592; shared 143). **Open:** Craig's sitting at the Mac,
+`OWNER-ACTIONS.md` item 31.
+
 ## Post-launch — sequenced, not scheduled
 
 Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated except 9.6.
