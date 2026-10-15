@@ -43,17 +43,19 @@ exactly when "Still to identify" (#73, #271) lists it; on a phone the open Filte
 series from TMDB** (`movies.tmdb_tv_id`, migration 056), from a title's page by either person,
 "Correct match" included, so Band of Brothers and 11.22.63 can go from the films they were
 matched to, to the series they are. The 34 series T9 set aside are back under "Still to
-identify". **Left (`OWNER-ACTIONS.md` item 31), at Craig's word made one sitting at the Mac (#274):** the
-series pass (`identify_series`: a read-only dry run and report, then `--apply` for the ones TMDB
-leaves no doubt about), then the read-only `find_series_as_films`; Mark chooses what is left. The
-first series identified is the live check of TMDB's series answer (built from its published shape).
+identify". **Owner action 31 ran on Craig's Mac, 15 Oct (#274):** the read-only pass found 45
+titles; Craig moved The Kennedys to Mark's list, then authorised the live plan. It identified
+33 series, left the second Shetland row waiting because its series ID was already held, and
+failed on none. The first live `/tv/{id}` answers worked with the series model. The read-only
+film check examined 1,852 identified films and found 9 suspects, with no TMDB failures. Mark
+still has 11 titles to choose and the agreed film-matched series to correct (item 31).
 
 | Batch | State |
 |---|---|
 | ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
-| ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | done 15 Oct; Mark identifies the series, Craig's read-only check (item 31) |
+| ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
 | X9 → X10 · X11 → X12 | sittings 4–5 (#255), at Craig's go |
@@ -478,6 +480,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-15 (owner action 31, Y3 live series pass)** — On Craig's Mac at his go: 45 still
+  to identify; The Kennedys moved to manual review, leaving 34 in the apply plan and 11 for
+  Mark. Apply identified 33, left Shetland Series 5 waiting because Series 1–4 already holds
+  the same TMDB series ID, and failed on 0. The first real TMDB series details parsed and
+  committed. The read-only film scan checked 1,852, found 9 suspects, and had 0 TMDB failures.
+  Reports and full apply log are under `~/mcu-series/`; Mark's choices remain open.
 - **2026-10-15 (Y3 follow-up, #274)** — The series pass: `identify_series` proposes a TMDB series
   for each title still to identify where TMDB leaves no doubt (dry run, report), and `--apply`
   identifies exactly that plan, audited `auto`, undoable, never merging. The "still to identify"
