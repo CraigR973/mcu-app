@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, GitMerge, Search, SkipForward, Tv, Undo2, X } from 'lucide-react'
+import { ArrowRightLeft, Check, GitMerge, Search, SkipForward, Tv, Undo2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,7 @@ import {
   fetchRecentIdentifications,
   identifyFilm,
   keepIdentification,
+  moveCopy,
   posterUrl,
   searchIdentify,
   setFilmAside,
@@ -36,6 +37,7 @@ const HOW: Record<string, string> = {
   picked: 'by you',
   searched: 'by you, after a search',
   film_page: 'on the film page',
+  copy_moved: 'one copy moved',
 }
 
 function Overview({ overview }: { overview: IdentifyOverview }) {
@@ -75,10 +77,13 @@ function CandidateRow({
   candidate,
   busy,
   onPick,
+  onMove,
 }: {
   candidate: IdentifyCandidate
   busy: boolean
   onPick: (candidate: IdentifyCandidate) => void
+  /** Batch X9: the doubt names one of the film's copies, which can move on its own. */
+  onMove?: (candidate: IdentifyCandidate) => void
 }) {
   const held = candidate.inCollection
   return (
@@ -108,10 +113,17 @@ function CandidateRow({
             {held.watches === 1 ? 'watch' : 'watches'}. Choosing it merges the two.
           </p>
         ) : null}
-        <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => onPick(candidate)}>
-          {held ? <GitMerge aria-hidden /> : <Check aria-hidden />}
-          {held ? 'Merge into this film' : 'This is it'}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => onPick(candidate)}>
+            {held ? <GitMerge aria-hidden /> : <Check aria-hidden />}
+            {held ? 'Merge into this film' : 'This is it'}
+          </Button>
+          {onMove ? (
+            <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => onMove(candidate)}>
+              <ArrowRightLeft aria-hidden /> Move only this copy
+            </Button>
+          ) : null}
+        </div>
       </div>
     </li>
   )
@@ -263,8 +275,15 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
     onSuccess: refresh,
   })
   const keep = useMutation({ mutationFn: () => keepIdentification(doubt.doubtId), onSuccess: refresh })
-  const busy = pick.isPending || keep.isPending
-  const failure = pick.error ?? keep.error
+  // Batch X9: the doubt names one copy of a film that has others, which may be right.
+  const copyId = doubt.copies > 1 ? doubt.collectionItemId : null
+  const move = useMutation({
+    mutationFn: (candidate: IdentifyCandidate) => moveCopy(copyId ?? '', candidate.tmdbId, doubt.doubtId),
+    onSuccess: refresh,
+  })
+  const onMove = copyId ? (candidate: IdentifyCandidate) => move.mutate(candidate) : undefined
+  const busy = pick.isPending || keep.isPending || move.isPending
+  const failure = pick.error ?? keep.error ?? move.error
   // The film it already is is not an alternative to itself.
   const others = (candidates: IdentifyCandidate[]) => candidates.filter((c) => c.tmdbId !== doubt.tmdbId)
   const offered = others(doubt.candidates)
@@ -311,6 +330,7 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
               candidate={candidate}
               busy={busy}
               onPick={(chosen) => pick.mutate({ candidate: chosen, fromSearch: false })}
+              onMove={onMove}
             />
           ))}
         </ul>
@@ -351,6 +371,7 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
                 candidate={candidate}
                 busy={busy}
                 onPick={(chosen) => pick.mutate({ candidate: chosen, fromSearch: true })}
+                onMove={onMove}
               />
             ))}
           </ul>

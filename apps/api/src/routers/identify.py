@@ -13,6 +13,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query, status
 
 from src.auth import AdminUser
+from src.models.admin_action import AdminAction
 from src.models.identify import IdentifyRun
 from src.routers.movies import Database, TmdbClient
 from src.schemas.identify import (
@@ -30,11 +31,14 @@ from src.schemas.identify import (
     IdentifyRunResponse,
     IdentifySearchResponse,
     IdentifySetAsideRequest,
+    MoveCopyRequest,
+    MoveCopyResponse,
     RecentIdentificationResponse,
     RecentIdentificationsResponse,
 )
 from src.services.identification import IdentifyError, MergeNeeded, undo_identification
 from src.services.identify.doubts import DoubtError, correct, keep, open_doubts
+from src.services.identify.move_copy import MOVE_KIND, MoveError, move_copy, undo_move
 from src.services.identify.queue import (
     FilmInCollection,
     QueueError,
@@ -333,6 +337,37 @@ async def correct_film(
     )
 
 
+@router.post("/identify/copies/{item_id}/move", response_model=MoveCopyResponse)
+async def move_a_copy(
+    item_id: uuid.UUID,
+    payload: MoveCopyRequest,
+    user: AdminUser,
+    db: Database,
+    tmdb: TmdbClient,
+) -> MoveCopyResponse:
+    """This copy is another film: it moves on its own, to that film — Batch X9. Undone from
+    the recent list."""
+    try:
+        record = await tmdb.get_movie_full(payload.tmdbId)
+        moved = await move_copy(db, item_id, record, by=user.id, doubt_id=payload.doubtId)
+        await db.commit()
+    except (LookupError, MoveError) as exc:
+        await db.rollback()
+        raise _refuse(exc) from exc
+    except (httpx.HTTPError, TMDBRefused) as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB could not be reached"
+        ) from exc
+    return MoveCopyResponse(
+        movieId=moved.film.id,
+        title=moved.film.title,
+        year=moved.film.year,
+        created=moved.created,
+        actionId=moved.audit.id,
+    )
+
+
 @router.get("/identify/recent", response_model=RecentIdentificationsResponse)
 async def read_recent(
     _user: AdminUser,
@@ -362,10 +397,16 @@ async def read_recent(
 
 @router.post("/identify/recent/{action_id}/undo", response_model=IdentifyDecisionResponse)
 async def undo(action_id: uuid.UUID, user: AdminUser, db: Database) -> IdentifyDecisionResponse:
-    """Put the film back as it was before that identification, merges included."""
+    """Put the film back as it was before that identification, merges included, or a moved
+    copy back on the film it came from (Batch X9)."""
+    action = await db.get(AdminAction, action_id)
+    moved = action is not None and (action.changes or {}).get("kind") == MOVE_KIND
     try:
-        restored = await undo_identification(db, action_id, by=user.id)
-    except IdentifyError as exc:
+        if moved:
+            restored = await undo_move(db, action_id, by=user.id)
+        else:
+            restored = await undo_identification(db, action_id, by=user.id)
+    except (IdentifyError, MoveError) as exc:
         await db.rollback()
         raise _refuse(exc) from exc
     await db.commit()

@@ -16,10 +16,12 @@ const {
   skipMock,
   undoMock,
   doubtsMock,
+  moveMock,
   keepMock,
   correctMock,
 } = vi.hoisted(() => ({
   doubtsMock: vi.fn(),
+  moveMock: vi.fn(),
   keepMock: vi.fn(),
   correctMock: vi.fn(),
   overviewMock: vi.fn(),
@@ -44,6 +46,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   fetchIdentifyDoubts: doubtsMock,
   keepIdentification: keepMock,
   correctIdentification: correctMock,
+  moveCopy: moveMock,
 }))
 
 import IdentifyFilmsPage from './IdentifyFilmsPage'
@@ -163,6 +166,7 @@ describe('IdentifyFilmsPage', () => {
     asideMock.mockResolvedValue({ movieId: FILM, outcome: 'set_aside', title: '' })
     skipMock.mockResolvedValue({ movieId: FILM, outcome: 'skipped', title: '' })
     undoMock.mockResolvedValue({ movieId: FILM, outcome: 'waiting', title: 'Peepiing Tom' })
+    moveMock.mockReset()
     searchMock.mockResolvedValue({ query: 'Dunkirk 2017', candidates: [] })
     doubtsMock.mockResolvedValue({ items: [], total: 0 })
     keepMock.mockResolvedValue({ movieId: DOUBTED, outcome: 'kept', title: '' })
@@ -270,6 +274,23 @@ describe('IdentifyFilmsPage', () => {
       expect(within(results).getAllByRole('listitem')).toHaveLength(1)
       fireEvent.click(within(results).getByRole('button', { name: /This is it/ }))
       await vi.waitFor(() => expect(correctMock).toHaveBeenCalledWith(DOUBT_ID, 826, { merge: false, searched: true }))
+    })
+
+    it('moves only the copy in doubt when the film has others, and offers no move when it has one', async () => {
+      const COPY = '00000000-0000-4000-8000-000000000037'
+      const offered = { tmdbId: 1051, title: 'The French Connection', year: 1971, posterPath: null, overview: '', votes: 2400, notes: [], inCollection: null }
+      const shared = { ...DOUBTS.items[0], title: 'French Connection II', year: 1975, copies: 2, collectionItemId: COPY, candidates: [offered] }
+      doubtsMock.mockResolvedValue({ total: 2, items: [shared, { ...shared, doubtId: DOUBTED, title: 'Life', copies: 1 }] })
+      moveMock.mockResolvedValue({ movieId: DOUBTED, title: 'The French Connection', year: 1971, created: false, actionId: ACTION })
+      renderPage()
+
+      const lone = await screen.findByRole('article', { name: 'Life (1975)' })
+      expect(within(lone).queryByRole('button', { name: /Move only this copy/ })).toBeNull()
+      const card = screen.getByRole('article', { name: 'French Connection II (1975)' })
+      fireEvent.click(within(card).getByRole('button', { name: /Move only this copy/ }))
+
+      await vi.waitFor(() => expect(moveMock).toHaveBeenCalledWith(COPY, 1051, DOUBT_ID))
+      expect(correctMock).not.toHaveBeenCalled()
     })
 
     it('counts the films in doubt in the overview', async () => {

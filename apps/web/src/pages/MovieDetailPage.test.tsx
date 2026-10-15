@@ -228,6 +228,8 @@ describe('MovieDetailPage copy editing for Mark', () => {
     expect(screen.getByRole('button', { name: /Mark damaged/ })).not.toBeNull()
     expect(screen.getByRole('link', { name: /Add a copy/ }).getAttribute('href')).toBe('/collection/add')
     expect(screen.queryByText('Value and resale')).toBeNull()
+    // Batch X9: moving a copy to another film rewrites the catalogue, so it is Craig's.
+    expect(screen.queryByRole('button', { name: /This copy is another film/ })).toBeNull()
   })
 
   it('saves Mark\'s edit through the same queue-aware path as Craig\'s', async () => {

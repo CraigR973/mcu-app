@@ -144,6 +144,25 @@ class IdentificationDoubtResponse(BaseModel):
     raisedAt: UtcDatetime
 
 
+class MoveCopyRequest(BaseModel):
+    """One copy is another film — Batch X9."""
+
+    tmdbId: int = Field(gt=0)
+    #: The doubt the move settles, when it came from one.
+    doubtId: uuid.UUID | None = None
+
+
+class MoveCopyResponse(BaseModel):
+    """Where the copy went, and the audit row that undoes the move."""
+
+    movieId: uuid.UUID
+    title: str
+    year: int | None
+    #: The collection had no such film, so the move made one.
+    created: bool
+    actionId: uuid.UUID
+
+
 class RecentIdentificationResponse(BaseModel):
     actionId: uuid.UUID
     at: UtcDatetime

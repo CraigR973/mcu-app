@@ -17,7 +17,7 @@ Three things raise one:
 Craig settles each one: the film is right (**keep**: a page that disagreed goes back to
 "pick the right page"), it is another film (**identify it again**, which settles every open
 doubt about it and is undone from the recent list, opening them again), or the copy is
-another film (X9's move, ``services/identify/move_copy``). A doubt Craig kept is not raised
+another film (**move it**, ``services/identify/move_copy``). A doubt Craig kept is not raised
 again by the same source while the film stays as he left it.
 """
 
@@ -375,8 +375,6 @@ async def correct(
     doubt, movie = await _open_doubt(db, doubt_id)
     if movie.tmdb_id == tmdb_id:
         raise DoubtError("That is the film it is already identified as. Keep it instead.")
-    lookup = await _spec_lookup_waiting(db, doubt)
-    page_url = doubt.page_url
     record = await tmdb.get_movie_full(tmdb_id)
     identified = await identify_film(
         db,
@@ -387,12 +385,22 @@ async def correct(
         evidence=["Chosen by Craig.", doubt.note],
         allow_merge=merge,
     )
-    if lookup is not None and page_url:
-        lookup.status = "accepted"
-        lookup.accepted_url = page_url
-        lookup.how = "auto"
-        lookup.note = None
-        lookup.decided_by = by
-        lookup.decided_utc = utcnow()
+    await reaccept_disagreeing_page(db, doubt, by=by)
     await db.commit()
     return identified
+
+
+async def reaccept_disagreeing_page(
+    db: AsyncSession, doubt: IdentifyDoubt, *, by: uuid.UUID | None
+) -> None:
+    """Choose again the disc page that raised a doubt, once the copy is another film, so the
+    next spec run reads it against that film's year. Does not commit."""
+    lookup = await _spec_lookup_waiting(db, doubt)
+    if lookup is None or not doubt.page_url:
+        return
+    lookup.status = "accepted"
+    lookup.accepted_url = doubt.page_url
+    lookup.how = "auto"
+    lookup.note = None
+    lookup.decided_by = by
+    lookup.decided_utc = utcnow()

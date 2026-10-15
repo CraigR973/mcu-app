@@ -8,7 +8,10 @@ doubts with the copy and the films offered, and its overview counts them; the fi
 back to "pick the right page"; identifying the film again settles every doubt about it,
 chooses that disc page again, and is undone from the recent list, which opens the doubt
 again and puts the film and its lookup back; a merge carries a film's doubts and its undo
-brings them back; and the daily check counts a doubt a fortnight old.
+brings them back; the daily check counts a doubt a fortnight old; and one copy moves on its
+own to the film it is, made from TMDB when the collection lacks it, settling the doubt about
+it, and the move is undone from the recent list, removing a film it made that nothing else
+points at.
 
 The spec and review jobs' own hooks are in ``test_spec_backfill.py`` and
 ``test_reviews_batch.py``.
@@ -22,7 +25,7 @@ from datetime import timedelta
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user
@@ -30,9 +33,12 @@ from src.clock import utcnow
 from src.database import get_db
 from src.main import app
 from src.models.admin_action import AdminAction
+from src.models.collection_item import CollectionItem
 from src.models.identify import IdentifyDoubt, IdentifyLookup
+from src.models.movie import Movie, MovieCredit
 from src.models.profile import Profile
 from src.models.specs_backfill import SpecCandidate, SpecLookup
+from src.models.watch_log import WatchLog
 from src.routers.movies import get_tmdb_client
 from src.services.health_checks import check_identification
 from src.services.identify.doubts import (
@@ -42,6 +48,7 @@ from src.services.identify.doubts import (
     raise_doubt,
 )
 from tests.test_identify_films import (
+    NOW,
     FakeTmdb,
     _disc,
     _film,
@@ -359,3 +366,141 @@ async def test_the_daily_check_counts_a_doubt_a_fortnight_old(db: AsyncSession) 
         return int(message.split()[0]) if message else 0
 
     assert waiting(after["identify:waiting"]) == waiting(before["identify:waiting"]) + 1
+
+
+# ---------------------------------------------------------------------------
+# One copy is another film
+# ---------------------------------------------------------------------------
+
+
+async def test_a_copy_moves_on_its_own_and_the_move_is_undone(
+    db: AsyncSession, page: tuple[AsyncClient, Profile, FakeTmdb]
+) -> None:
+    """The French Connection II row held both discs of The French Connection (CT46-01)."""
+    client, craig, tmdb = page
+    sequel_id, real_id, _ = _tmdb_ids()
+    tmdb.records[real_id] = _record(real_id, "The French Connection", 1971)
+    real = await _film(db, "The French Connection", tmdb_id=real_id, year=1971)
+    sequel = await _film(db, "French Connection II", tmdb_id=sequel_id, year=1975)
+    right = await _disc(db, sequel, "dvd")
+    wrong = await _disc(db, sequel, "blu_ray")
+    db.add(WatchLog(id=uuid.uuid4(), movie_id=sequel.id, user_id=craig.id, watched_at=NOW.date()))
+    lookup = await _waiting_spec_page(db, wrong.id, f"A 1971 page. {SPECS_IN_DOUBT}")
+    doubt = await raise_doubt(
+        db,
+        sequel,
+        source="specs",
+        note="A 1971 page for this disc.",
+        collection_item_id=wrong.id,
+        page_url=KWAI_PAGE,
+    )
+    assert doubt is not None
+    await db.commit()
+    wrong_id, sequel_id_, real_movie_id, doubt_id = wrong.id, sequel.id, real.id, doubt.id
+
+    moved = await client.post(
+        f"/api/v1/identify/copies/{wrong_id}/move",
+        json={"tmdbId": real_id, "doubtId": str(doubt_id)},
+    )
+
+    assert moved.status_code == 200, moved.text
+    body = moved.json()
+    assert (body["movieId"], body["created"]) == (str(real_movie_id), False)
+    await db.refresh(wrong)
+    await db.refresh(right)
+    await db.refresh(doubt)
+    await db.refresh(lookup)
+    assert (wrong.movie_id, right.movie_id) == (real_movie_id, sequel_id_)
+    assert (doubt.status, str(doubt.decided_action_id)) == ("moved", body["actionId"])
+    assert (lookup.status, lookup.accepted_url) == ("accepted", KWAI_PAGE)
+    # The watch is of the film, not the disc: it stays.
+    watches = await db.scalar(
+        select(func.count(WatchLog.id)).where(WatchLog.movie_id == sequel_id_)
+    )
+    assert watches == 1
+    audit = await db.get(AdminAction, uuid.UUID(body["actionId"]))
+    assert audit is not None and audit.changes is not None
+    assert (audit.target_table, audit.target_id, audit.user_id) == (
+        "collection_items",
+        str(wrong_id),
+        craig.id,
+    )
+    assert (audit.changes["from"]["title"], audit.changes["to"]["title"]) == (
+        "French Connection II",
+        "The French Connection",
+    )
+
+    recent = (await client.get("/api/v1/identify/recent")).json()["items"]
+    (entry,) = [item for item in recent if item["actionId"] == body["actionId"]]
+    assert (entry["how"], entry["replaced"], entry["title"], entry["undone"]) == (
+        "copy_moved",
+        "French Connection II",
+        "The French Connection",
+        False,
+    )
+    undone = await client.post(f"/api/v1/identify/recent/{body['actionId']}/undo")
+    assert undone.status_code == 200 and undone.json()["movieId"] == str(sequel_id_)
+    await db.refresh(wrong)
+    await db.refresh(doubt)
+    assert wrong.movie_id == sequel_id_
+    assert (doubt.status, doubt.decided_action_id) == ("open", None)
+    again = await client.post(f"/api/v1/identify/recent/{body['actionId']}/undo")
+    assert again.status_code == 409
+
+
+async def test_a_copy_moved_to_a_film_the_collection_lacks_makes_it_and_its_undo_removes_it(
+    db: AsyncSession, page: tuple[AsyncClient, Profile, FakeTmdb]
+) -> None:
+    client, _craig, tmdb = page
+    wrong_id, life_id, _ = _tmdb_ids()
+    tmdb.records[life_id] = _record(life_id, "Life", 2009)
+    film = await _film(db, "Life", tmdb_id=wrong_id, year=2017)
+    disc = await _disc(db, film, "blu_ray")
+    await db.commit()
+    disc_id = disc.id
+
+    moved = (
+        await client.post(f"/api/v1/identify/copies/{disc_id}/move", json={"tmdbId": life_id})
+    ).json()
+
+    assert moved["created"] is True and moved["year"] == 2009
+    made = await db.get(Movie, uuid.UUID(moved["movieId"]))
+    assert made is not None and (made.tmdb_id, made.title) == (life_id, "Life")
+    credits = await db.scalar(
+        select(func.count(MovieCredit.id)).where(MovieCredit.movie_id == made.id)
+    )
+    assert credits == 2
+
+    assert (
+        await client.post(f"/api/v1/identify/recent/{moved['actionId']}/undo")
+    ).status_code == 200
+    db.expunge_all()
+    assert await db.get(Movie, uuid.UUID(moved["movieId"])) is None
+    back = await db.get(CollectionItem, disc_id)
+    assert back is not None and back.movie_id == film.id
+
+
+async def test_a_copy_is_not_moved_to_its_own_film_a_trashed_one_or_from_nowhere(
+    db: AsyncSession, page: tuple[AsyncClient, Profile, FakeTmdb]
+) -> None:
+    client, _craig, tmdb = page
+    own_id, trashed_id, _ = _tmdb_ids()
+    tmdb.records[own_id] = _record(own_id, "Rome", 2005)
+    tmdb.records[trashed_id] = _record(trashed_id, "Rome", 1972)
+    film = await _film(db, "Rome", tmdb_id=own_id, year=2005)
+    disc = await _disc(db, film, "dvd")
+    trashed = await _film(db, "Rome", tmdb_id=trashed_id, year=1972)
+    trashed.deleted_at = utcnow()
+    await db.commit()
+    disc_id = disc.id
+
+    same = await client.post(f"/api/v1/identify/copies/{disc_id}/move", json={"tmdbId": own_id})
+    binned = await client.post(
+        f"/api/v1/identify/copies/{disc_id}/move", json={"tmdbId": trashed_id}
+    )
+    nowhere = await client.post(
+        f"/api/v1/identify/copies/{uuid.uuid4()}/move", json={"tmdbId": own_id}
+    )
+
+    assert (same.status_code, binned.status_code, nowhere.status_code) == (409, 409, 404)
+    assert "Trash" in binned.json()["detail"]

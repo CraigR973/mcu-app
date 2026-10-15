@@ -6701,6 +6701,76 @@
     "title": "MaybeOwnedResponse",
     "type": "object"
    },
+   "MoveCopyRequest": {
+    "description": "One copy is another film — Batch X9.",
+    "properties": {
+     "doubtId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Doubtid"
+     },
+     "tmdbId": {
+      "exclusiveMinimum": 0.0,
+      "title": "Tmdbid",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "tmdbId"
+    ],
+    "title": "MoveCopyRequest",
+    "type": "object"
+   },
+   "MoveCopyResponse": {
+    "description": "Where the copy went, and the audit row that undoes the move.",
+    "properties": {
+     "actionId": {
+      "format": "uuid",
+      "title": "Actionid",
+      "type": "string"
+     },
+     "created": {
+      "title": "Created",
+      "type": "boolean"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "movieId",
+     "title",
+     "year",
+     "created",
+     "actionId"
+    ],
+    "title": "MoveCopyResponse",
+    "type": "object"
+   },
    "MovieDetailResponse": {
     "properties": {
      "backdropPath": {
@@ -17378,6 +17448,65 @@
     ]
    }
   },
+  "/api/v1/identify/copies/{item_id}/move": {
+   "post": {
+    "description": "This copy is another film: it moves on its own, to that film — Batch X9. Undone from\nthe recent list.",
+    "operationId": "move_a_copy_api_v1_identify_copies__item_id__move_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MoveCopyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MoveCopyResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Move A Copy",
+    "tags": [
+     "identify"
+    ]
+   }
+  },
   "/api/v1/identify/doubts": {
    "get": {
     "description": "Identified films that may be the wrong one, with the evidence — Batch X9.",
@@ -17944,7 +18073,7 @@
   },
   "/api/v1/identify/recent/{action_id}/undo": {
    "post": {
-    "description": "Put the film back as it was before that identification, merges included.",
+    "description": "Put the film back as it was before that identification, merges included, or a moved\ncopy back on the film it came from (Batch X9).",
     "operationId": "undo_api_v1_identify_recent__action_id__undo_post",
     "parameters": [
      {

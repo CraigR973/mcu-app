@@ -18,11 +18,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
-from src.models.admin_action import AdminAction
+from src.models.admin_action import COLLECTION_ITEMS_TABLE, AdminAction
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.identify import IdentifyLookup, IdentifyRun
 from src.models.movie import Movie
@@ -38,6 +38,7 @@ from src.services.identification import (
 )
 from src.services.identify.doubts import count_open
 from src.services.identify.matcher import Identifier, offer_notes
+from src.services.identify.move_copy import MOVE_KIND, is_move_undone
 from src.services.identify.plan import FORMAT_NAMES
 from src.services.identify.titles import parse_title
 from src.tmdb.client import TMDBClient
@@ -335,13 +336,22 @@ class RecentIdentification:
 
 
 async def recent(db: AsyncSession, *, limit: int) -> list[RecentIdentification]:
-    """The latest identifications, newest first, and whether each has been undone."""
+    """The latest identifications and copies moved (Batch X9), newest first, and whether
+    each has been undone."""
     rows = await db.execute(
         select(AdminAction, Profile.display_name)
         .outerjoin(Profile, Profile.id == AdminAction.user_id)
         .where(
-            AdminAction.target_table == MOVIES_TABLE,
-            AdminAction.changes["kind"].astext == "identify",
+            or_(
+                and_(
+                    AdminAction.target_table == MOVIES_TABLE,
+                    AdminAction.changes["kind"].astext == "identify",
+                ),
+                and_(
+                    AdminAction.target_table == COLLECTION_ITEMS_TABLE,
+                    AdminAction.changes["kind"].astext == MOVE_KIND,
+                ),
+            )
         )
         .order_by(AdminAction.created_at.desc(), AdminAction.id)
         .limit(limit)
@@ -349,6 +359,23 @@ async def recent(db: AsyncSession, *, limit: int) -> list[RecentIdentification]:
     found: list[RecentIdentification] = []
     for action, name in rows:
         changes = action.changes or {}
+        if changes.get("kind") == MOVE_KIND:
+            to = changes.get("to") or {}
+            found.append(
+                RecentIdentification(
+                    action_id=action.id,
+                    when=action.created_at,
+                    by=name,
+                    movie_id=uuid.UUID(str(to.get("movieId"))),
+                    replaced=str((changes.get("from") or {}).get("title") or ""),
+                    title=str(to.get("title") or ""),
+                    year=to.get("year"),
+                    how="copy_moved",
+                    merged=False,
+                    undone=await is_move_undone(db, action.id),
+                )
+            )
+            continue
         title = changes.get("title") or {}
         found.append(
             RecentIdentification(

@@ -17,6 +17,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
+import { MoveCopyPanel } from '@/components/collection/MoveCopyPanel'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { SpecBadges } from '@/components/collection/SpecBadges'
 import { SalePanel } from '@/components/collection/SalePanel'
@@ -83,6 +84,7 @@ function CopyCard({
   onEdit: (copy: CollectionCopy) => void
 }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   // §3.11's "mark as damaged" quick action. It is the ordinary update with one field
   // changed — the client already holds the whole copy — so there is only one path that
@@ -235,6 +237,24 @@ function CopyCard({
       <div className="border-t border-border pt-3">
         <LendButton collectionItemId={item.id} />
       </div>
+
+      {/* Batch X9 (CT46-01): one copy can be another film; Craig moves it on its own. */}
+      {isAdmin && (
+        <div className="border-t border-border pt-3">
+          <MoveCopyPanel
+            itemId={item.id}
+            movieId={movieId}
+            filmTitle={filmTitle}
+            onMoved={(moved) => {
+              void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
+              void queryClient.invalidateQueries({ queryKey: ['movie', movieId] })
+              void queryClient.invalidateQueries({ queryKey: ['movies'] })
+              void queryClient.invalidateQueries({ queryKey: ['identify-recent'] })
+              navigate(`/movies/${moved.movieId}`)
+            }}
+          />
+        </div>
+      )}
 
       {/* Batch T6: the stored value is for both people and costs nothing to show; the live
           check beside it spends an eBay lookup, so it stays with the admin's tools. */}

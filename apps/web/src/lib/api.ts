@@ -93,6 +93,7 @@ import {
   ebayWatchingSchema,
   identifyDecisionSchema,
   identifyDoubtsSchema,
+  moveCopySchema,
   identifyOverviewSchema,
   identifyQueueSchema,
   identifySearchSchema,
@@ -127,6 +128,7 @@ import {
   type EbayTargets,
   type IdentifyDecision,
   type IdentifyDoubts,
+  type MoveCopy,
   type IdentifyOverview,
   type IdentifyQueue,
   type IdentifySearch,
@@ -266,6 +268,7 @@ export type {
   IdentifyDoubt,
   IdentifyDoubts,
   IdentificationDoubt,
+  MoveCopy,
   IdentifyOverview,
   IdentifyQueue,
   IdentifyQueueItem,
@@ -1357,6 +1360,17 @@ export async function correctIdentification(
       body: JSON.stringify({ tmdbId, merge: options.merge ?? false, searched: options.searched ?? false }),
     }),
     identifyDecisionSchema,
+  )
+}
+
+/** This copy is another film: it moves on its own. Undone from the recent list. */
+export async function moveCopy(itemId: string, tmdbId: number, doubtId?: string): Promise<MoveCopy> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/copies/${itemId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ tmdbId, doubtId: doubtId ?? null }),
+    }),
+    moveCopySchema,
   )
 }
 

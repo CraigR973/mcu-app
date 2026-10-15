@@ -2178,6 +2178,16 @@ export const identifyDoubtSchema = z.object({
   raisedAt: z.string(),
 })
 
+/** Where a moved copy went, and the audit row that undoes the move — Batch X9. */
+export const moveCopySchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  /** The collection had no such film, so the move made one. */
+  created: z.boolean(),
+  actionId: z.string().uuid(),
+})
+
 export const identifyDoubtsSchema = z.object({
   items: z.array(identifyDoubtSchema),
   total: z.number().int().nonnegative(),
@@ -2210,6 +2220,7 @@ export type IdentifySearch = z.infer<typeof identifySearchSchema>
 export type IdentifyDecision = z.infer<typeof identifyDecisionSchema>
 export type IdentifyDoubt = z.infer<typeof identifyDoubtSchema>
 export type IdentifyDoubts = z.infer<typeof identifyDoubtsSchema>
+export type MoveCopy = z.infer<typeof moveCopySchema>
 export type IdentificationDoubt = z.infer<typeof identificationDoubtSchema>
 export type RecentIdentification = z.infer<typeof recentIdentificationSchema>
 export type RecentIdentifications = z.infer<typeof recentIdentificationsSchema>
