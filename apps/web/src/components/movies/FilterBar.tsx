@@ -187,6 +187,9 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
   // Mark's request, 14 Oct: the Archive lists the films still to identify, and each one's
   // page has the identify panel. Hidden at 0, by #154's rule, and in a saved collection.
   const toIdentifyCount = facetsQuery.data?.toIdentifyMovieCount ?? 0
+  // Batch Y4: and the identified films in doubt, which either person settles from the page.
+  const inDoubtCount = facetsQuery.data?.inDoubtMovieCount ?? 0
+  const identifyChoice = filters.toIdentify ? 'true' : filters.inDoubt ? 'in-doubt' : ''
 
   const activeFilters = useMemo(() => {
     const active: Array<{ key: string; label: string; clear: () => void }> = []
@@ -208,6 +211,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
     if (runtime) add('runtime', runtime.charAt(0).toUpperCase() + runtime.slice(1), { runtimeMin: undefined, runtimeMax: undefined })
     if (filters.watched != null) add('watched', filters.watched ? 'Watched' : 'Not watched', { watched: undefined })
     if (filters.toIdentify) add('to-identify', 'Still to identify', { toIdentify: undefined })
+    if (filters.inDoubt) add('in-doubt', 'In doubt', { inDoubt: undefined })
     if (filters.hdr) add('hdr', filters.hdr, { hdr: undefined })
     if (filters.audio) add('audio', filters.audio, { audio: undefined })
     if (filters.regionFree) add('region', 'Region-free', { regionFree: undefined })
@@ -383,10 +387,11 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
                 <option value="true">Watched</option>
                 <option value="false">Not watched</option>
               </select>
-              {supportsLiveOnly && (toIdentifyCount > 0 || filters.toIdentify) && (
-                <select className={CONTROL_CLS} value={filters.toIdentify ? 'true' : ''} onChange={(event) => onChange({ ...filters, toIdentify: event.target.value === 'true' || undefined })} aria-label="Filter by identified or not">
+              {supportsLiveOnly && (toIdentifyCount > 0 || inDoubtCount > 0 || filters.toIdentify || filters.inDoubt) && (
+                <select className={CONTROL_CLS} value={identifyChoice} onChange={(event) => onChange({ ...filters, toIdentify: event.target.value === 'true' || undefined, inDoubt: event.target.value === 'in-doubt' || undefined })} aria-label="Filter by identified or not">
                   <option value="">Identified or not</option>
-                  <option value="true">Still to identify ({toIdentifyCount})</option>
+                  {(toIdentifyCount > 0 || filters.toIdentify) && <option value="true">Still to identify ({toIdentifyCount})</option>}
+                  {(inDoubtCount > 0 || filters.inDoubt) && <option value="in-doubt">In doubt ({inDoubtCount})</option>}
                 </select>
               )}
             </div>

@@ -1,7 +1,10 @@
 """The Identify films page — Batch T9.
 
-**Every route is admin-only.** Identification rewrites the film identities that discs,
-watches and movie nights hang off, and merges two films into one, so it is Craig's.
+**Every route is admin-only but three.** Identification rewrites the film identities that
+discs, watches and movie nights hang off, and merges two films into one, so it is Craig's.
+Since Batch Y4 (#276) Mark settles a doubt from the film page: keeping it, moving one copy,
+and the TMDB search that move uses take any signed-in person, and the audit row names who.
+The queue, the doubts list, the recent list and its undo stay Craig's.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ from typing import Annotated, Any, cast
 import httpx
 from fastapi import APIRouter, HTTPException, Query, status
 
-from src.auth import AdminUser
+from src.auth import AdminUser, CurrentUser
 from src.models.admin_action import AdminAction
 from src.models.identify import IdentifyRun
 from src.routers.movies import Database, TmdbClient
@@ -37,7 +40,14 @@ from src.schemas.identify import (
     RecentIdentificationsResponse,
 )
 from src.services.identification import IdentifyError, MergeNeeded, undo_identification
-from src.services.identify.doubts import DoubtError, correct, keep, open_doubts
+from src.services.identify.doubts import (
+    KEEP_KIND,
+    DoubtError,
+    correct,
+    keep,
+    open_doubts,
+    undo_keep,
+)
 from src.services.identify.move_copy import MOVE_KIND, MoveError, move_copy, undo_move
 from src.services.identify.queue import (
     FilmInCollection,
@@ -166,12 +176,13 @@ async def read_queue(
 @router.get("/identify/films/{movie_id}/search", response_model=IdentifySearchResponse)
 async def search_film(
     movie_id: uuid.UUID,
-    _user: AdminUser,
+    _user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
     query: Annotated[str, Query(min_length=1, max_length=300)],
 ) -> IdentifySearchResponse:
-    """TMDB's films for a corrected title. Nothing is saved until Craig picks one."""
+    """TMDB's films for a corrected title. Nothing is saved until Craig picks one. Either
+    person since Batch Y4: "Move only this copy" searches with it, and it writes nothing."""
     del movie_id
     try:
         found = await search_again(tmdb, query.strip())
@@ -292,8 +303,10 @@ async def read_doubts(
 
 
 @router.post("/identify/doubts/{doubt_id}/keep", response_model=IdentifyDecisionResponse)
-async def keep_film(doubt_id: uuid.UUID, user: AdminUser, db: Database) -> IdentifyDecisionResponse:
-    """The film is right after all."""
+async def keep_film(
+    doubt_id: uuid.UUID, user: CurrentUser, db: Database
+) -> IdentifyDecisionResponse:
+    """The film is right after all. Either person, from the film page, since Batch Y4."""
     try:
         doubt = await keep(db, doubt_id, by=user.id)
     except (LookupError, DoubtError) as exc:
@@ -341,12 +354,12 @@ async def correct_film(
 async def move_a_copy(
     item_id: uuid.UUID,
     payload: MoveCopyRequest,
-    user: AdminUser,
+    user: CurrentUser,
     db: Database,
     tmdb: TmdbClient,
 ) -> MoveCopyResponse:
     """This copy is another film: it moves on its own, to that film — Batch X9. Undone from
-    the recent list."""
+    the recent list. Either person since Batch Y4."""
     try:
         record = await tmdb.get_movie_full(payload.tmdbId)
         moved = await move_copy(db, item_id, record, by=user.id, doubt_id=payload.doubtId)
@@ -397,16 +410,18 @@ async def read_recent(
 
 @router.post("/identify/recent/{action_id}/undo", response_model=IdentifyDecisionResponse)
 async def undo(action_id: uuid.UUID, user: AdminUser, db: Database) -> IdentifyDecisionResponse:
-    """Put the film back as it was before that identification, merges included, or a moved
-    copy back on the film it came from (Batch X9)."""
+    """Put the film back as it was before that identification, merges included, a moved
+    copy back on the film it came from (Batch X9), or a kept doubt open again (Batch Y4)."""
     action = await db.get(AdminAction, action_id)
-    moved = action is not None and (action.changes or {}).get("kind") == MOVE_KIND
+    kind = (action.changes or {}).get("kind") if action is not None else None
     try:
-        if moved:
+        if kind == MOVE_KIND:
             restored = await undo_move(db, action_id, by=user.id)
+        elif kind == KEEP_KIND:
+            restored = await undo_keep(db, action_id, by=user.id)
         else:
             restored = await undo_identification(db, action_id, by=user.id)
-    except (IdentifyError, MoveError) as exc:
+    except (IdentifyError, MoveError, DoubtError) as exc:
         await db.rollback()
         raise _refuse(exc) from exc
     await db.commit()

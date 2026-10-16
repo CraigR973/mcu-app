@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MovieDetailPage from './MovieDetailPage'
-import { confirmEdition, fetchCandidates, fetchCopies, fetchMovie, identifyMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
+import { confirmEdition, fetchCandidates, fetchCopies, fetchMovie, identifyMovie, keepIdentification, moveCopy, searchIdentify, type CollectionCopy, type MovieDetail } from '@/lib/api'
 import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 
 vi.mock('@/context/auth', () => ({
@@ -33,6 +33,9 @@ vi.mock('@/lib/api', async (importOriginal) => {
     fetchCandidates: vi.fn(),
     identifyMovie: vi.fn(),
     confirmEdition: vi.fn(),
+    keepIdentification: vi.fn(),
+    moveCopy: vi.fn(),
+    searchIdentify: vi.fn(),
     fetchFacets: vi.fn().mockResolvedValue({ sections: [], allSections: [] }),
   }
 })
@@ -229,8 +232,9 @@ describe('MovieDetailPage copy editing for Mark', () => {
     expect(screen.getByRole('button', { name: /Mark damaged/ })).not.toBeNull()
     expect(screen.getByRole('link', { name: /Add a copy/ }).getAttribute('href')).toBe('/collection/add')
     expect(screen.queryByText('Value and resale')).toBeNull()
-    // Batch X9: moving a copy to another film rewrites the catalogue, so it is Craig's.
-    expect(screen.queryByRole('button', { name: /This copy is another film/ })).toBeNull()
+    // Batch X9 made moving a copy to another film Craig's; Batch Y4 (#276) gives it to Mark
+    // too, audited as him and undone by Craig from Identify films.
+    expect(screen.getByRole('button', { name: /This copy is another film/ })).not.toBeNull()
   })
 
   it('saves Mark\'s edit through the same queue-aware path as Craig\'s', async () => {
@@ -448,9 +452,106 @@ describe('MovieDetailPage set aside and series (Mark, 15 Oct; Batch Y3)', () => 
 
     const note = await screen.findByRole('region', { name: 'Identification in doubt' })
     expect(within(note).getByText(/is a 2005 film, and this film is identified as 1948/)).toBeTruthy()
-    // Mark sees the doubt; settling it is Craig's.
-    expect(within(note).getByText('Craig will settle which film this is.')).toBeTruthy()
+    // Mark sees the doubt. Since Batch Y4 (#276) he settles it too, but an API from before Y4
+    // names no doubt to settle, so it offers nothing; Identify films stays Craig's page.
+    expect(within(note).queryByRole('button', { name: /It’s right/ })).toBeNull()
     expect(within(note).queryByRole('link', { name: /Identify films/ })).toBeNull()
+  })
+
+  describe('Batch Y4 — Mark settles the doubts from the film page', () => {
+    const FIRST = '3f2504e0-4f89-11d3-9a0c-0305e82c3311'
+    const SECOND = '3f2504e0-4f89-11d3-9a0c-0305e82c3312'
+    const doubted: MovieDetail = {
+      ...MOVIE,
+      title: 'French Connection II',
+      year: 1975,
+      copyCount: 2,
+      inDoubt: true,
+      identificationDoubts: [
+        {
+          note: 'T9 cannot tell which film the sheet’s “French Connection” is.',
+          source: 'recheck',
+          raisedAt: '2026-10-16T18:30:00Z',
+          doubtId: FIRST,
+          collectionItemId: COPY_ID,
+          copyLabel: 'Blu-ray · Front',
+          evidence: ['TMDB holds 2 films of this title.'],
+          proposedTmdbId: 1051,
+          proposedTitle: 'The French Connection',
+          proposedYear: 1971,
+        },
+        {
+          note: 'Blu-ray.com’s disc page is a 1971 film.',
+          source: 'specs',
+          raisedAt: '2026-10-16T18:31:00Z',
+          doubtId: SECOND,
+          collectionItemId: null,
+          copyLabel: null,
+          evidence: [],
+          proposedTmdbId: null,
+          proposedTitle: null,
+          proposedYear: null,
+        },
+      ],
+    }
+
+    it('lists every open doubt with its copy and the film it may be', async () => {
+      vi.mocked(fetchMovie).mockResolvedValue(doubted)
+      renderPage()
+
+      const panel = await screen.findByRole('region', { name: 'Identification in doubt' })
+      expect(within(panel).getByText(/2 things say this may be the wrong film/)).toBeTruthy()
+      expect(within(panel).getByText('About the copy: Blu-ray · Front')).toBeTruthy()
+      expect(within(panel).getByText('The French Connection (1971)')).toBeTruthy()
+      expect(within(panel).getByText('TMDB holds 2 films of this title.')).toBeTruthy()
+      expect(within(panel).getAllByRole('button', { name: /It’s right/ })).toHaveLength(2)
+      // Only the doubt naming one copy of a film with two offers to move that copy.
+      expect(within(panel).getAllByRole('button', { name: /Move only this copy/ })).toHaveLength(1)
+    })
+
+    it('keeps a film as right, for Mark', async () => {
+      vi.mocked(fetchMovie).mockResolvedValue(doubted)
+      vi.mocked(keepIdentification).mockResolvedValue({ movieId: MOVIE_ID, outcome: 'kept', title: '' })
+      renderPage()
+
+      const panel = await screen.findByRole('region', { name: 'Identification in doubt' })
+      fireEvent.click(within(panel).getAllByRole('button', { name: /It’s right/ })[1])
+
+      await waitFor(() => expect(keepIdentification).toHaveBeenCalledWith(SECOND))
+    })
+
+    it('moves only the copy a doubt names, searching for the film it may be', async () => {
+      vi.mocked(fetchMovie).mockResolvedValue(doubted)
+      vi.mocked(searchIdentify).mockResolvedValue({
+        query: 'The French Connection',
+        candidates: [
+          { tmdbId: 1051, title: 'The French Connection', year: 1971, posterPath: null, overview: '', votes: 2200, notes: [], inCollection: null },
+        ],
+      })
+      vi.mocked(moveCopy).mockResolvedValue({ movieId: MOVIE_ID, title: 'The French Connection', year: 1971, created: true, actionId: FIRST })
+      renderPage()
+
+      const panel = await screen.findByRole('region', { name: 'Identification in doubt' })
+      fireEvent.click(within(panel).getByRole('button', { name: /Move only this copy/ }))
+      const search = within(panel).getByRole('textbox', { name: 'Search TMDB for the film this copy is' })
+      expect((search as HTMLInputElement).value).toBe('The French Connection')
+      fireEvent.click(within(panel).getByRole('button', { name: /Search/ }))
+      fireEvent.click(await within(panel).findByRole('button', { name: 'Move this copy here' }))
+
+      await waitFor(() => expect(moveCopy).toHaveBeenCalledWith(COPY_ID, 1051))
+    })
+
+    it('opens Correct match from a doubt', async () => {
+      vi.mocked(fetchMovie).mockResolvedValue(doubted)
+      vi.mocked(fetchCandidates).mockResolvedValue({ movieId: MOVIE_ID, title: 'French Connection II', query: 'French Connection II', candidates: [], seriesCandidates: [] })
+      renderPage()
+
+      const panel = await screen.findByRole('region', { name: 'Identification in doubt' })
+      fireEvent.click(within(panel).getAllByRole('button', { name: /Correct match/ })[0])
+
+      expect(await screen.findByText('Which film is this?')).not.toBeNull()
+    })
+
   })
 
   it('shows no doubt for a film nobody doubts', async () => {

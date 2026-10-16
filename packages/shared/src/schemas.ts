@@ -105,6 +105,9 @@ export const movieListItemSchema = z.object({
    *  Cinema"); empty when none records one. Defaulted, as `lastWatchedAt` is: a list cached
    *  offline before editions existed must still parse. */
   editions: z.array(z.string()).default([]),
+  /** Batch Y4 — the film has an open identification doubt, which the Archive's "In doubt"
+   *  filter lists and a card says. Optional, as #205 explains: an older cached list lacks it. */
+  inDoubt: z.boolean().optional(),
 })
 
 export const moviePageSchema = z.object({
@@ -143,11 +146,22 @@ export const filmReviewSchema = z.object({
   note: z.string().nullable(),
 })
 
-/** What the film page says while a doubt about its identification is open — Batch X9. */
+/** What the film page says while a doubt about its identification is open — Batch X9 — and,
+ *  since Batch Y4, what either person needs to settle it there. The Y4 fields are optional, as
+ *  #205 explains, so a response from before them parses as it did. */
 export const identificationDoubtSchema = z.object({
   note: z.string(),
   source: z.enum(['recheck', 'specs', 'review']),
   raisedAt: z.string(),
+  doubtId: z.string().uuid().nullable().optional(),
+  /** The copy the doubt names, while it is still one of the film's, and how it reads. */
+  collectionItemId: z.string().uuid().nullable().optional(),
+  copyLabel: z.string().nullable().optional(),
+  evidence: z.array(z.string()).optional(),
+  /** The film T9 proposes, when it proposes one. */
+  proposedTmdbId: z.number().int().nullable().optional(),
+  proposedTitle: z.string().nullable().optional(),
+  proposedYear: z.number().int().nullable().optional(),
 })
 
 export const movieDetailSchema = movieListItemSchema.extend({
@@ -162,8 +176,11 @@ export const movieDetailSchema = movieListItemSchema.extend({
   /** Batch V9. Defaulted, so the page parses an API without it yet. */
   reviews: z.array(filmReviewSchema).default([]),
   /** Batch X9: set while a doubt about the film's identification is open. Optional, so the
-   *  page parses an API without it yet. */
+   *  page parses an API without it yet. Since Batch Y4, the oldest of `identificationDoubts`. */
   identificationDoubt: identificationDoubtSchema.nullable().optional(),
+  /** Batch Y4: every open doubt about the film, oldest first, each settled on the page.
+   *  Optional, as #205 explains. */
+  identificationDoubts: z.array(identificationDoubtSchema).optional(),
 })
 
 /** How a disc's value as a used copy was reached — Batch X6 (`DECISIONS.md` #256). `used`:
@@ -318,6 +335,9 @@ export const collectionFacetsSchema = z.object({
   /** 14 Oct, Mark's request. Films the Archive's "Still to identify" filter would list; the
    *  filter hides at 0. Optional, as #205 explains. */
   toIdentifyMovieCount: z.number().int().nonnegative().optional(),
+  /** Batch Y4. Films the Archive's "In doubt" filter would list; the choice hides at 0.
+   *  Optional, as #205 explains. */
+  inDoubtMovieCount: z.number().int().nonnegative().optional(),
 })
 
 export const watchLogEntrySchema = z.object({

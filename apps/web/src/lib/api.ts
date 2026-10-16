@@ -515,6 +515,9 @@ export interface MovieFilters {
   /** Mark's request, 14 Oct: films TMDB has not matched and nobody has set aside as TV or
    *  not a film, so he can identify each from its page. The Archive only; not saved. */
   toIdentify?: boolean
+  /** Batch Y4: identified films with an open doubt, so Mark can settle each from its page.
+   *  The Archive only; not saved. */
+  inDoubt?: boolean
   /** §3.9's spec filters. They read what Batch 23 fetched from Blu-ray.com, so a
    *  collection whose specs have never been fetched answers all of them with nothing —
    *  which is correct rather than broken. */
@@ -546,6 +549,7 @@ export async function fetchMovies(
   if (filters.runtimeMax != null) params.set('runtimeMax', String(filters.runtimeMax))
   if (filters.watched != null) params.set('watched', String(filters.watched))
   if (filters.toIdentify != null) params.set('toIdentify', String(filters.toIdentify))
+  if (filters.inDoubt != null) params.set('inDoubt', String(filters.inDoubt))
   // §3.9 asks for these to be URL-encoded so a filtered view is bookmarkable, which
   // is what they already are — the page's own URL carries them.
   if (filters.hdr) params.set('hdr', filters.hdr)
@@ -724,6 +728,12 @@ export function shelfLabel(entry: ShelfFacet): string {
  *  set-aside title was flagged but never listed. */
 export function needsIdentifying(movie: Pick<MovieListItem, 'identified' | 'setAsideAs'>): boolean {
   return !movie.identified && movie.setAsideAs !== 'not_film'
+}
+
+/** An identified film with an open identification doubt (Batch Y4), which a card labels
+ *  "In doubt". Only an identified one: an unidentified title says "Identify" instead. */
+export function isInDoubt(movie: Pick<MovieListItem, 'identified' | 'inDoubt'>): boolean {
+  return movie.identified && movie.inDoubt === true
 }
 
 /** A title identified as a TMDB series (Batch Y3), which a card labels "TV series". */

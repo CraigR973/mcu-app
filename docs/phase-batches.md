@@ -3834,6 +3834,7 @@ reporting the merge SHA with `db: ok`.
 | ~~Y1~~ | ~~Mark edits, moves and deletes copies~~ (`4840711`) | ~~🟢~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y2~~ | ~~Move several discs at once, from anywhere~~ (`e0b5bad`) | ~~🟡~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y3~~ | ~~TV series identified from TMDB, and the ones matched as films found~~ (`ef62257`) | ~~🟡~~ | **shipped 15 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
+| ~~Y4~~ | ~~Mark settles the doubts from the film page~~ ([#81](https://github.com/CraigR973/mcu-app/pull/81), #276) | ~~🟡~~ | **shipped 16 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -4017,6 +4018,44 @@ writes a plan and a report; `--apply` identifies exactly that plan, re-checking 
 caught a would-merge title reading its holder's name after the rollback had expired it. Local gate
 green (API 2,109 passed with Postgres; web 592; shared 143). **Open:** Craig's sitting at the Mac,
 `OWNER-ACTIONS.md` item 31.
+
+### ~~Y4 — Mark settles the doubts from the film page~~ 🟡 **shipped 2026-10-16 ([#81](https://github.com/CraigR973/mcu-app/pull/81))**
+**Acceptance: met, criterion by criterion; production in the close-out.** Five Postgres tests in
+`test_mark_settles_doubts.py` (the filter, flag and facet; every doubt on the film page with its
+copy and proposal; Mark keeps, audited as him, and Craig sees and undoes it; the undo refused
+once the film changed; Mark searches and moves one copy, and is still refused the queue, the
+doubts list, the overview, the recent list, undo and correcting a doubt). Web: the filter's
+option and chip, the card's flag, the film page's rows and actions for Mark, a kept row with
+Mark's name. Two X9/Y1 web assertions changed with #276, flagged in the PR. Local gate green
+(API 1,388 passed, Postgres tests skipped on the Mac; shared 149; web 611); the identification
+and health tests (63) also ran against a throwaway local Postgres. Browser check at 375px against
+seeded local data: Mark filtered "In doubt (2)", kept one, opened Move only this copy; Craig saw
+"kept as right · Mark" and undid it ("In doubt" 2 → 3); no console or server errors.
+
+**Asked by Craig, 16 Oct, after item 32 raised 384 doubts:** "can we add them for Mark to
+verify in the app?" He chose the full version and said go the same evening (#276). Mark has
+worked through the unidentified films from their pages (#271–#273); the doubts were Craig's
+alone, on Identify films. Top tier · high: it opens three Craig-only routes to Mark. **Criteria
+authored 2026-10-16.**
+
+**Acceptance:**
+- **Mark finds them.** The Archive's identification filter offers "In doubt (N)" beside "Still
+  to identify": identified films with an open doubt. `GET /movies?inDoubt=true` and the facets'
+  `inDoubtMovieCount`; each list item carries `inDoubt`, and a card or row says "In doubt".
+- **The film page lists every open doubt**, one row each, with its note, the copy it names and
+  T9's proposal where it has one, where it showed only the oldest.
+- **Either person settles one there:** **It's right** (keep), **Correct match** (already both,
+  #273; settles every doubt), and **Move only this copy** where the doubt names one copy of a
+  film with others. Keep, move and the TMDB search the move uses open to any signed-in person;
+  each audit row carries who. The rest of Identify (queue, doubts list, recent, undo, set
+  aside) stays Craig's.
+- **Craig can see and undo Mark's decisions:** a kept doubt is listed under Recently identified
+  ("kept as right") with who, and its undo opens the doubt again, refused once the film has
+  changed since. Every recent row shows who.
+- **Guards:** Postgres tests that Mark keeps and moves, audited as him; that he is still refused
+  the rest of Identify; the filter, facet and flag; the film page's list; a keep undone and the
+  refusal. Web tests for the filter, the flag, the film page's actions for Mark and a kept row.
+- Tests. Gate green; production `/api/v1/health` on the merge SHA with `db: ok`.
 
 ## Post-launch — sequenced, not scheduled
 

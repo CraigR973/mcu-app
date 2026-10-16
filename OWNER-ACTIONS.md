@@ -35,8 +35,9 @@ conversation still maps onto this file.*
   series pass (dry run, read its report, apply), then the read-only check for series matched as
   films; send Mark what is left.
 - **16 Oct, X9's re-check (item 32):** ~~the dry run and the apply~~ **done 16 Oct: 384
-  doubts wait on Identify films, "In doubt".** The taps are yours: keep, pick the right film,
-  or move one copy. About 370 are probably right (one "It's right" each); 10 are the review's
+  doubts wait on Identify films, "In doubt".** The taps are yours and, since Y4 (#276),
+  Mark's, from the Archive's "In doubt" filter: keep, pick the right film, or move one copy.
+  **Tell Mark** the filter is there. About 370 are probably right (one "It's right" each); 10 are the review's
   known wrong copies. Also bin the old copy of King Kong [1976] and of Ghostbusters 2, which
   Mark re-added on the right films.
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
@@ -1433,7 +1434,10 @@ the Mac. Nothing is identified again by it: each disagreement becomes a doubt yo
    Every disagreement by default; `--verdicts different,series` narrows it. Each copy is
    re-checked first; a film you kept before is left alone.~~ **Done 16 Oct at your word, all
    of them: 384 doubts raised, 0 kept before, 0 changed since the dry run.**
-3. **Yours: settle them on You → Identify films, "In doubt":** **It's right**, **This is it** on the
+3. **Yours, and Mark's since Y4 (#276): settle them.** Mark finds them with the Archive's
+   Filters → "In doubt", and settles each on the film page (It's right, Correct match, Move
+   only this copy); you see his under Recently identified, with his name, and can undo any.
+   Yours on You → Identify films, "In doubt": **It's right**, **This is it** on the
    film it is (a merge says so first), or **Move only this copy** where one copy of a film is
    right and another is not (French Connection II, Life, Tinker Tailor). Each is undone from
    "Recently identified". The film page says "Identification in doubt" until then. About 370

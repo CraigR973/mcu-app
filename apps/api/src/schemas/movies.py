@@ -93,6 +93,9 @@ class MovieListItemResponse(BaseModel):
     #: "Masters of Cinema"; empty when none records one. Read for a whole page of films in
     #: one grouped query, as ``locations`` is, never once per film.
     editions: list[str] = Field(default_factory=list)
+    #: Batch Y4 — the film has an open identification doubt, which the Archive's "In doubt"
+    #: filter lists and a card says, so Mark can find and settle them from the film page.
+    inDoubt: bool = False
 
 
 class MoviePageResponse(BaseModel):
@@ -115,8 +118,11 @@ class MovieDetailResponse(MovieListItemResponse):
     letterboxdSlug: str | None = None
     #: Batch V9: every review found for the film, Blu-ray.com's first.
     reviews: list[FilmReviewResponse] = []
-    #: Batch X9: set while a doubt about the film's identification is open.
+    #: Batch X9: set while a doubt about the film's identification is open: the oldest of
+    #: ``identificationDoubts``, kept for an app cached before Batch Y4.
     identificationDoubt: IdentificationDoubtResponse | None = None
+    #: Batch Y4: every open doubt about the film, oldest first, each settled on the page.
+    identificationDoubts: list[IdentificationDoubtResponse] = Field(default_factory=list)
 
 
 class CollectionCopyResponse(BaseModel):
@@ -242,6 +248,9 @@ class CollectionFacetsResponse(BaseModel):
     #: 14 Oct, Mark's request. Films on the shelf TMDB has not matched and nobody has set aside
     #: as TV or not a film: what the Archive's "Still to identify" filter would list.
     toIdentifyMovieCount: int = Field(default=0, ge=0)
+    #: Batch Y4. Films on the shelf with an open identification doubt: what the Archive's
+    #: "In doubt" filter would list.
+    inDoubtMovieCount: int = Field(default=0, ge=0)
 
 
 # ---------------------------------------------------------------------------
