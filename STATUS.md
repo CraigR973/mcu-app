@@ -23,9 +23,13 @@ the app. **Its live step ran on Craig's Mac, 16 Oct (item 32):** after Mark's af
 identifying fixed 14 of the review's 30, a clean dry run re-checked 1,486 copies (1,102 agree;
 5 different, 3 series, 3 not offered, 373 unsure) and, at Craig's word, raised all 384 as doubts
 on Identify films (0 kept before, 0 changed). Of the 30: 19 corrected, 10 wait as doubts, and
-King Kong [1976] was not re-checked, since its film was identified since. **Craig settles the
-384.** Mark added right copies of King Kong (1976) and Ghostbusters II rather than moving the
-wrong ones, so each old copy is now a duplicate to bin. Next: X10, at Craig's go.
+King Kong [1976] was not re-checked, since its film was identified since. **Both settle the
+384 since Y4, built at Craig's word the same evening (#276):** the Archive's "In doubt" filter
+finds them, and each film page lists its open doubts with It's right, Correct match and Move
+only this copy, for Mark too, audited as whoever did it; Craig sees a keep under Recently
+identified and undoes it there. Mark added right copies of King Kong (1976) and Ghostbusters II
+rather than moving the wrong ones, so each old copy is now a duplicate to bin. Next: X10, at
+Craig's go.
 **Craig's, from X4: copy `~/.mcu-secrets/backup-age-key.txt` into the password manager.**
 Without a copy off the Mac, losing the Mac makes every backup unreadable.
 **What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
@@ -67,6 +71,7 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 | ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
 | ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
+| ~~Y4~~ (#276), Mark settles the doubts from the film page | shipped 16 Oct; the 384 are both people's to settle |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
 | ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the live re-check ran 16 Oct, 384 doubts raised; settling them is Craig's (item 32) |
@@ -493,6 +498,15 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-16 (Y4, #276)** — Mark settles identification doubts from the film page, at Craig's
+  word after item 32 raised 384. Keep, move one copy and the move's TMDB search take either
+  person; the rest of Identify stays Craig's. The Archive's "In doubt (N)" filter and an "In
+  doubt" flag find them; the film page lists every open doubt with its copy, T9's proposal and
+  the three actions. A keep is now listed under Recently identified and undone there, and every
+  row says who. Two earlier web assertions changed with the decision: Mark now sees "This copy
+  is another film" on a copy card, and no longer "Craig will settle which film this is".
+  Tests: five Postgres tests in `test_mark_settles_doubts.py`, run here against a throwaway
+  pgserver as well as in CI; web and shared tests for the filter, flag, panel and kept row.
 - **2026-10-16 (owner action 32, X9's live re-check)** — On Craig's Mac at his go. The sheet is
   the 18 Sep refresh's `… 02.02.26 (1).xlsx` (1,880 rows; rows 550, 614, 878 and 1831 checked;
   the 20 Sep "corrected" copy differs only in rows 302 and 816). The morning dry run re-checked

@@ -5831,3 +5831,32 @@ contemporaneous.
        the 36 old year-conflict notes into doubts in a migration (27 of them were wrong pages,
        correctly refused, and would each have cost Craig a tap).
 
+
+276. **Mark settles identification doubts from the film page (Batch Y4); partly supersedes
+     #275's "Craig settles each one".** After item 32 raised 384 doubts on 16 Oct, Craig asked
+     for Mark to verify them in the app, chose the full version over finding-only or a list,
+     and said go the same evening. Mark had already worked through the unidentified films
+     from their pages (#271–#273).
+
+     - **Three Identify routes take any signed-in person:** keeping a doubt, moving one copy,
+       and the read-only TMDB search the move uses. Correct match was already his (#273) and
+       settles every doubt on the film. Each audit row names who. The queue, the doubts list,
+       Recently identified, its undo and set aside stay Craig's.
+     - **Mark finds them** with the Archive's "In doubt (N)" filter beside "Still to identify",
+       and an "In doubt" flag on a card or row: an identified film with an open doubt, counted
+       as Identify films counts them.
+     - **The film page lists every open doubt**, where X9 showed the oldest, each with its note,
+       the copy it names, T9's proposal and up to three lines of evidence, and the three
+       actions. "Move only this copy" shows only where the doubt names one copy of a film with
+       others, as X9's Identify page offers it. `identificationDoubt` stays as the oldest, so a
+       phone with an app cached before Y4 still shows the note.
+     - **A keep is now listed under Recently identified ("kept as right") and undone there**,
+       opening the doubt again; refused once the film is identified as another since. Until
+       Y4 a keep had no undo. Every recent row now shows who did it.
+     - **Mark's keep counts as Craig's would:** the re-check does not raise that film again
+       while it stays as he left it. If he keeps a wrong film, nothing prompts again; Craig
+       sees it, named, on Recently identified and can undo it.
+     - *Rejected:* finding-only for Mark (the tap that clears about 370 right films would stay
+       Craig's); a list sent to Mark outside the app (the same, and no audit); opening the
+       whole Identify page to Mark (merges and set-asides rewrite more than one film, and the
+       queue is Craig's working list).
