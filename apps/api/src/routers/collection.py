@@ -19,7 +19,7 @@ import uuid
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Literal, Protocol
+from typing import Annotated, Literal, Protocol, cast
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, status
@@ -50,6 +50,7 @@ from src.schemas.collection import (
     CollectionMoveResponse,
     CollectionMoveResult,
     DuplicateCheckResponse,
+    EditionSource,
     ExistingCopyResponse,
     ListingUpdateRequest,
     TmdbSearchResponse,
@@ -170,6 +171,7 @@ def _item_response(item: CollectionItem, movie_title: str) -> CollectionItemResp
         locationLabel=location_label(item.section, item.shelf),
         subCategory=item.sub_category,
         edition=item.edition,
+        editionSource=cast(EditionSource, item.edition_source),
         notes=item.notes,
         condition=item.condition,
         conditionUpdatedAt=item.condition_updated_at_utc,
@@ -202,6 +204,9 @@ def _apply_fields(item: CollectionItem, payload: CollectionItemFieldsMixin) -> N
     item.sub_category = payload.subCategory
     if "edition" in payload.model_fields_set:
         # Batch U2: only when the body carries it, so an older client cannot clear it.
+        if payload.edition != item.edition:
+            # Batch X9 (CT46-05): a person typed it, so it is no longer the spec job's guess.
+            item.edition_source = None
         item.edition = payload.edition
     item.notes = payload.notes
     item.condition = payload.condition
@@ -505,6 +510,35 @@ async def update_collection_item(
             target_id=item.id,
             changes=changes,
         )
+    await db.commit()
+    await db.refresh(item)
+    return _item_response(item, movie.title)
+
+
+@router.post("/collection/{item_id}/edition/confirm", response_model=CollectionItemResponse)
+async def confirm_edition(
+    item_id: uuid.UUID, user: CurrentUser, db: Database
+) -> CollectionItemResponse:
+    """The edition the spec job inferred is this copy's — Batch X9 (CT46-05).
+
+    Either person, as an edit is (#264). The page stops saying "probably", and the audit row
+    says who looked at the box.
+    """
+    item, movie = await _get_item(db, item_id)
+    if item.edition is None or item.edition_source is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This copy's edition is already a person's, not a guess to confirm.",
+        )
+    record_action(
+        db,
+        user_id=user.id,
+        action_type="update",
+        target_table=COLLECTION_ITEMS_TABLE,
+        target_id=item.id,
+        changes={"edition_source": {"from": item.edition_source, "to": None}},
+    )
+    item.edition_source = None
     await db.commit()
     await db.refresh(item)
     return _item_response(item, movie.title)

@@ -24,6 +24,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
+import httpx
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -536,6 +537,52 @@ async def test_the_live_run_applies_the_plan_film_by_film(db: AsyncSession) -> N
     assert gained.tmdb_id is None
     # The dry run's Brave searches now count against the ceiling T7's batches share.
     assert await backfill.searches_this_month(db, now=NOW) >= 3
+
+
+class FailingTmdb(FakeTmdb):
+    """TMDB that drops the connection for the ids it is given, as a hiccup does."""
+
+    def __init__(self, records: dict[int, TmdbMovie], *, failing: set[int]) -> None:
+        super().__init__(records)
+        self.failing = failing
+
+    async def get_movie_full(self, movie_id: int, language: str = "en-US") -> TmdbMovie:
+        if movie_id in self.failing:
+            raise httpx.ConnectError("TMDB dropped the connection")
+        return await super().get_movie_full(movie_id, language)
+
+
+async def test_the_live_run_records_a_tmdb_failure_and_carries_on(db: AsyncSession) -> None:
+    """CR43-02 (X9): the handler's rollback expired the run, and its next line read the run's
+    id, so the first TMDB hiccup ended the run with ``MissingGreenlet`` and the run read
+    "running" until it was abandoned. It now takes the id first and reloads by it."""
+    first, second, _third = _tmdb_ids()
+    unlucky = await _film(db, "Unlucky Film")
+    lucky = await _film(db, "Lucky Film")
+    for film in (unlucky, lucky):
+        await _disc(db, film)
+    plan = Plan(
+        version=PLAN_VERSION,
+        made_utc=NOW.isoformat(),
+        films=2,
+        tmdb_calls=4,
+        brave_searches=0,
+        brave_budget=60,
+        items=[
+            _item(unlucky, "identify", chosen=_offered(first, "The Unlucky Film", 1990)),
+            _item(lucky, "identify", chosen=_offered(second, "The Lucky Film", 1991)),
+        ],
+    )
+    tmdb = FailingTmdb({second: _record(second, "The Lucky Film", 1991)}, failing={first})
+
+    run = await start_run(db, plan)
+    run = await apply_plan(db, plan, tmdb, run=run, clock=lambda: NOW)
+
+    assert (run.status, run.identified, run.failed) == ("finished", 1, 1)
+    assert run.last_error is not None
+    assert run.last_error.startswith("Unlucky Film: ConnectError")
+    await db.refresh(lucky)
+    assert lucky.tmdb_id == second
 
 
 # ---------------------------------------------------------------------------

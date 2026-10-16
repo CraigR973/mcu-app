@@ -558,3 +558,21 @@ def test_is_ambiguous_ignores_a_single_candidate() -> None:
     )
     assert is_ambiguous([only]) is False
     assert is_ambiguous([]) is False
+
+
+def test_the_engine_decides_nothing_in_the_app_any_more() -> None:
+    """X9 (CT46-01): the collection refresh, the film page's Correct match list and Identify's
+    search match with T9's ``Identifier``; the diary import stopped identifying in X5. The
+    engine kept a leading article, scored a 0-vote namesake above the real film and read one
+    results page, so nothing under ``src`` outside its own package may build or import it."""
+    import re
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parents[1] / "src"
+    uses = re.compile(r"\bMatchingEngine\(|import[^\n]*\bMatchingEngine\b|\bMatchResult\b")
+    offenders = [
+        str(path.relative_to(src))
+        for path in sorted(src.rglob("*.py"))
+        if path.parent.name != "matching" and uses.search(path.read_text(encoding="utf-8"))
+    ]
+    assert offenders == []

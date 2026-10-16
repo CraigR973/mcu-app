@@ -4,7 +4,7 @@ import re
 from difflib import SequenceMatcher
 
 from ..tmdb.client import TMDBClient
-from ..tmdb.models import SearchResult, TvSearchResult
+from ..tmdb.models import SearchResult
 from .models import MatchCandidate, MatchResult
 
 # A title is considered a confident match at or above this threshold.
@@ -146,16 +146,6 @@ def score(
     year_label, year_bonus = _year_bonus(query_year, result.year)
     confidence = max(0.0, min(1.0, sim + year_bonus))
     return confidence, sim, year_label
-
-
-def score_series(query: str, query_year: int | None, show: TvSearchResult) -> tuple[float, float]:
-    """(confidence, title_similarity) for one ``/search/tv`` result — Batch Y3. Scored as a
-    film is, with its first-air year standing for the release year."""
-    sim = title_similarity(query, show.name)
-    if show.original_name and show.original_name.lower() != show.name.lower():
-        sim = max(sim, title_similarity(query, show.original_name))
-    _label, year_bonus = _year_bonus(query_year, show.year)
-    return max(0.0, min(1.0, sim + year_bonus)), sim
 
 
 def _year_bonus(query_year: int | None, result_year: int | None) -> tuple[str, float]:

@@ -14,7 +14,13 @@ words (`e991281`), shipped 13 Oct. Sitting 3 is done in code, 14 Oct: X6, value 
 passing its drill; and X5, watch history (`19c9aad`, #269). **X5's live data steps wait for
 Craig's word:** the diary backfill (651 watches, about 490 films added; 105 doubtful entries
 listed for him), 7 of the 15 misattributed watches moved (8 doubtful), and Mark's username;
-then both press Sync now. Next after that: sitting 4, X9 → X10, at Craig's go.**
+then both press Sync now.** **Sitting 4 began 15–16 Oct at Craig's go ("code here, data at
+the Mac"): X9, catalogue truth, shipped 16 Oct ([#79](https://github.com/CraigR973/mcu-app/pull/79),
+#275).** An identified film can be "in doubt" (Identify films and its page say so); the spec and
+review jobs raise a doubt when a page for the film's own title is another year's; one copy can
+move to another film; inferred editions read "Probably …"; `MatchingEngine` decides nothing in
+the app. **Its live step is Craig's at the Mac (item 32):** the re-check of the old paths'
+films, read-only, then doubts at his word. Next: X10, at Craig's go.
 **Craig's, from X4: copy `~/.mcu-secrets/backup-age-key.txt` into the password manager.**
 Without a copy off the Mac, losing the Mac makes every backup unreadable.
 **What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
@@ -58,7 +64,8 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 | ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
-| X9 → X10 · X11 → X12 | sittings 4–5 (#255), at Craig's go |
+| ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the re-check's live run and the doubts are Craig's (item 32) |
+| X10 · X11 → X12 | X10 next in sitting 4, then sitting 5 (#255), at Craig's go |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
 
@@ -480,6 +487,16 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-16 (X9, #275, [#79](https://github.com/CraigR973/mcu-app/pull/79))** — Catalogue
+  truth, built in a cloud session at Craig's go. The identify run survives a TMDB failure, and
+  all five run loops have failure-injection tests. The refresh, Correct match and Identify's
+  search use T9's identifier, and a CI guard keeps `MatchingEngine` out of `src`.
+  `identify_doubts` (057) holds "this film may be the wrong one": the spec and review jobs raise
+  doubts, the Identify page lists them, and the film page says so. Keep, re-identify (undo
+  reopens) or move one copy (undoable). `edition_source` (058) shows inferred editions as
+  "Probably …" until confirmed, and release names use T9's rule too. `recheck_identifications`
+  is the Mac's dry run and apply (item 32). Local gate: API 2,148 passed, none skipped; shared
+  146; web 602.
 - **2026-10-15 (owner action 31, Y3 live series pass)** — On Craig's Mac at his go: 45 still
   to identify; The Kennedys moved to manual review, leaving 34 in the apply plan and 11 for
   Mark. Apply identified 33, left Shetland Series 5 waiting because Series 1–4 already holds

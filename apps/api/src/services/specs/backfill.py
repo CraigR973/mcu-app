@@ -50,6 +50,12 @@ from src.models.identify import IdentifyRun
 from src.models.movie import Movie
 from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
+from src.services.identify.doubts import (
+    SPECS_IN_DOUBT,
+    SPECS_KEPT,
+    doubt_from_page,
+    spec_page_name,
+)
 from src.services.specs.bluray_com import (
     OutOfBounds,
     canonical_release_url,
@@ -718,6 +724,7 @@ async def fetch_phase(
     for lookup in lookups:
         item = await db.get(CollectionItem, lookup.collection_item_id)
         url = lookup.accepted_url
+        chosen_url = url
         if item is None or item.deleted_at is not None or url is None:
             _send_back(lookup, "The disc is no longer in the collection.")
             lookup.status = "skipped"
@@ -793,7 +800,21 @@ async def fetch_phase(
             elif abs(page_year - film_year) > YEAR_TOLERANCE:
                 reason = f"The page is for a {page_year} film and this one is from {film_year}"
             if reason is not None:
-                _send_back(lookup, f"{reason}, so its specs were not used. Pick the right page.")
+                # Batch X9 (CT46-03): a page for the film's own title in another year may be
+                # the right page on the wrong film. That goes to Identify as a doubt.
+                in_doubt = None
+                if movie is not None and page_year is not None and film_year is not None:
+                    in_doubt = await doubt_from_page(
+                        db,
+                        movie,
+                        source="specs",
+                        page_name=await spec_page_name(db, lookup.id, chosen_url or url),
+                        page_year=page_year,
+                        page_url=url,
+                        collection_item_id=item.id,
+                    )
+                then = SPECS_IN_DOUBT if in_doubt is not None else SPECS_KEPT
+                _send_back(lookup, f"{reason}, so its specs were not used. {then}")
                 run.sent_back += 1
                 run.heartbeat_utc = now
                 await db.commit()
@@ -846,6 +867,8 @@ async def fill_edition(
     if found is None or found.edition is None:
         return None
     item.edition = found.edition
+    # Batch X9 (CT46-05): inferred, so the copy page says "probably" until a person confirms.
+    item.edition_source = found.kind
     logger.info("edition_filled", item_id=str(item.id), kind=found.kind, edition=found.edition)
     return found
 
@@ -904,6 +927,7 @@ async def fill_editions(db: AsyncSession, found: list[EditionFound]) -> int:
         item = await db.get(CollectionItem, entry.item_id)
         if item is not None and item.edition is None:
             item.edition = entry.edition
+            item.edition_source = entry.kind
             written += 1
     await db.commit()
     return written

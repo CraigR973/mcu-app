@@ -5792,3 +5792,42 @@ contemporaneous.
      - *Rejected:* doing it from this cloud session (no Postgres connection leaves it, and its
        role is read-only by design, #236); applying without a report (46 identifications nobody
        read first).
+
+275. **An identified film can be in doubt; a copy can move alone; an inferred edition says
+     "probably"; the old paths' films are re-checked at the Mac (Batch X9).** CT46-01 found 30
+     copies confidently the wrong film and CT46-03 that the app's own year checks blamed the
+     page. Craig said go on sitting 4 with "code here, data at the Mac", 15 Oct.
+
+     - **A doubt is its own row** (`identify_doubts`, migration 057), not an identified film's
+       lookup turned back to "needs you": the lookup records how the film was identified, and
+       its constraints tie "identified" to a TMDB id. One open doubt per film and source, or per
+       copy and source. A doubt Craig kept is not raised again by that source while the film
+       stays as he left it.
+     - **Identifying a film again settles every open doubt about it**, by whichever page it is
+       done, and the undo opens them again; a merge carries a film's doubts and its undo brings
+       them back. Undoing a correction of a film that was identified before now puts its lookup
+       back as it was, not into the queue.
+     - **The spec and review jobs raise a doubt only when the page names the film** by T9's
+       rule (its title, original title or a replaced sheet title) and the film is identified.
+       A remake's page names the film too, so Craig keeps the film with a tap and the page goes
+       back to "pick the right page"; correcting it chooses the page again for the next run.
+       The 36 notes written before X9 are left as they are: the re-check asks about the films
+       behind them from their sheet rows.
+     - **A copy moves on its own** to the collection's film of that TMDB id, or one made from
+       TMDB's record; watches stay with the film they are of. The undo removes a film the move
+       made only when no copy, watch or want has come to point at it.
+     - **`edition_source`** (migration 058) marks an edition the spec job inferred, by how its
+       page was settled. The backfill marks only editions no audit row shows a person setting.
+       Either person confirms (as either edits, #264); sending the same edition back, as "mark
+       damaged" does, confirms nothing.
+     - **Release names are compared by T9's rule as well as the old one**, exact matches only:
+       "Alien" is not "Aliens". `fold` reads "Vol." as "Volume", for identification too.
+     - **The re-check never re-identifies.** It sorts T9's answer into a verdict; `--apply`
+       raises a doubt for every disagreement (`unsure` included: the review's Good Fellas is
+       one, since T9 will not choose between a namesake and the real film), at Craig's word.
+     - *Rejected:* re-identifying the old paths' films automatically (T9 asks about some of the
+       30, and a wrong bulk change is what CT46-01 is); deleting `MatchingEngine` now (X10's
+       one title rule replaces its helpers, and its evaluation script still runs it); turning
+       the 36 old year-conflict notes into doubts in a migration (27 of them were wrong pages,
+       correctly refused, and would each have cost Craig a tap).
+

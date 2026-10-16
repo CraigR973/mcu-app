@@ -538,6 +538,29 @@ def test_a_sequel_is_still_another_film() -> None:
     assert not same_film("Blade Runner", "Blade Runner 2049")
 
 
+@pytest.mark.parametrize(
+    ("page", "film"),
+    [
+        ("Kill Bill: Vol. 1", "Kill Bill: Volume 1"),
+        ("Mission: Impossible 2", "Mission: Impossible II"),
+        ("Mission: Impossible II", "Mission: Impossible 2"),
+        ("The Godfather Part II", "The Godfather: Part II"),
+    ],
+)
+def test_release_names_are_compared_by_t9s_title_rule(page: str, film: str) -> None:
+    """Batch X9 (CT46-05): spelling alone kept the plain UK release out of three copies'
+    searches, so each copy's edition was a retailer exclusive it may not be."""
+    assert same_film(page, film)
+
+
+@pytest.mark.parametrize(
+    ("page", "film"),
+    [("Aliens", "Alien"), ("Rocky II", "Rocky"), ("Kill Bill: Vol. 2", "Kill Bill: Volume 1")],
+)
+def test_t9s_rule_takes_only_an_exact_title_not_a_near_one(page: str, film: str) -> None:
+    assert not same_film(page, film)
+
+
 UP_HITS = [
     SearchHit(f"https://www.blu-ray.com/movies/Up-Blu-ray/{index}/", title, "")
     for index, title in enumerate(

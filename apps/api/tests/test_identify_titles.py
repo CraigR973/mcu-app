@@ -252,6 +252,9 @@ def test_a_test_row_is_not_a_film() -> None:
         ("Leon", "Léon"),
         ("National Lampoons Animal House", "National Lampoon's Animal House"),
         ("Happy Feet 2", "Happy Feet Two"),
+        # Batch X9 (CT46-05): Blu-ray.com's spelling against TMDB's.
+        ("Kill Bill: Vol. 1", "Kill Bill: Volume 1"),
+        ("The Alfred Hitchcock Collection Vol III", "The Alfred Hitchcock Collection Volume 3"),
     ],
 )
 def test_folding_makes_two_spellings_of_one_title_equal(ours: str, theirs: str) -> None:

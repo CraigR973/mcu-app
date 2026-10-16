@@ -36,6 +36,7 @@ from src.models.identify import IdentifyLookup, IdentifyRun
 from src.models.movie import Movie
 from src.services.identification import IdentifyError, MergeNeeded, identify_film, set_aside
 from src.services.identify.plan import Item, Plan
+from src.tmdb.client import TMDBRefused
 from src.tmdb.models import Movie as TmdbMovie
 
 logger = structlog.get_logger(__name__)
@@ -198,7 +199,14 @@ async def apply_plan(
     clock: Callable[[], datetime] = utcnow,
     progress: Callable[[int, int, Item, str], None] | None = None,
 ) -> IdentifyRun:
-    """Apply every film in the plan, committing each on its own."""
+    """Apply every film in the plan, committing each on its own.
+
+    X9 (CR43-02): the run's id is taken before the loop. A rollback expires the run, and
+    reading its id afterwards raised ``MissingGreenlet`` inside the handler, so the first TMDB
+    hiccup ended the run with an unrelated traceback and the run read "running" until it was
+    abandoned. TMDB's refusal (``TMDBRefused``, a RuntimeError) is a failure like the others.
+    """
+    run_id = run.id
     failures_in_a_row = 0
     for index, item in enumerate(plan.items, start=1):
         try:
@@ -214,14 +222,16 @@ async def apply_plan(
             run.heartbeat_utc = clock()
             await db.commit()
             failures_in_a_row = 0
-        except (httpx.HTTPError, IdentifyError, IntegrityError) as exc:
+        except (httpx.HTTPError, TMDBRefused, IdentifyError, IntegrityError) as exc:
+            error = f"{item.title}: {type(exc).__name__}: {exc}"[:500]
             await db.rollback()
             failures_in_a_row += 1
-            fresh = await db.get(IdentifyRun, run.id)
-            if fresh is not None:
-                run = fresh
+            fresh = await db.get(IdentifyRun, run_id)
+            if fresh is None:
+                raise
+            run = fresh
             run.failed += 1
-            run.last_error = f"{item.title}: {type(exc).__name__}: {exc}"[:500]
+            run.last_error = error
             run.heartbeat_utc = clock()
             await db.commit()
             outcome = "failed"

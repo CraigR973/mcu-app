@@ -8,6 +8,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.schemas.collection import EditionSource
+from src.schemas.identify import IdentificationDoubtResponse
 from src.schemas.reviews import FilmReviewResponse
 from src.schemas.valuation import CopyValuationResponse
 from src.schemas.wire import UtcDatetime
@@ -113,6 +115,8 @@ class MovieDetailResponse(MovieListItemResponse):
     letterboxdSlug: str | None = None
     #: Batch V9: every review found for the film, Blu-ray.com's first.
     reviews: list[FilmReviewResponse] = []
+    #: Batch X9: set while a doubt about the film's identification is open.
+    identificationDoubt: IdentificationDoubtResponse | None = None
 
 
 class CollectionCopyResponse(BaseModel):
@@ -124,6 +128,9 @@ class CollectionCopyResponse(BaseModel):
     subCategory: str | None = None
     #: Batch U2.
     edition: str | None = None
+    #: Batch X9 (CT46-05): how the spec job inferred the edition, so the page says
+    #: "probably"; null once a person typed or confirmed it.
+    editionSource: EditionSource | None = None
     notes: str | None = None
     purchasePrice: str | None = None
     purchaseSource: str | None = None

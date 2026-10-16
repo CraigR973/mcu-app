@@ -26,9 +26,11 @@ from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
+from src.models.identify import IdentifyDoubt
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.reviews import FilmReview, ReviewRun
+from src.models.specs_backfill import SpecCandidate, SpecLookup
 from src.models.specs_state import SpecsIntegrationState
 from src.models.wanted import WantedItem
 from src.routers.movies import get_tmdb_client
@@ -246,6 +248,55 @@ class TestTheNightlyBatch:
         )
         assert site.asked == [UK_4K], "nothing followed from another film's page"
 
+    async def test_a_review_of_the_films_own_title_in_another_year_raises_a_doubt(
+        self, db: AsyncSession
+    ) -> None:
+        """Batch X9 (CT46-03): the page may be right and the identified film wrong."""
+        movie = await _film(db, year=1990)
+        movie.tmdb_id = 990_046_001
+        disc = CollectionItem(
+            id=uuid.uuid4(),
+            movie_id=movie.id,
+            formats=["4k_uhd"],
+            specs_source_url=UK_4K,
+            specs_fetched_at_utc=NOW,
+        )
+        db.add(disc)
+        await db.flush()
+        lookup = SpecLookup(
+            id=uuid.uuid4(),
+            collection_item_id=disc.id,
+            status="done",
+            accepted_url=UK_4K,
+            how="auto",
+            attempts=0,
+        )
+        db.add(lookup)
+        await db.flush()
+        db.add(
+            SpecCandidate(
+                id=uuid.uuid4(),
+                lookup_id=lookup.id,
+                url=UK_4K,
+                title="Dog Soldiers 4K Blu-ray (United Kingdom)",
+                rank=1,
+                matches=True,
+            )
+        )
+        await db.flush()
+
+        await _nightly(db, FakeBrave(), Site())
+
+        assert (await _reviews(db, movie))["bluray_com:4k_uhd"].status == "mismatch"
+        doubt = await db.scalar(select(IdentifyDoubt).where(IdentifyDoubt.movie_id == movie.id))
+        assert doubt is not None
+        assert (doubt.source, doubt.status, doubt.search_hint) == (
+            "review",
+            "open",
+            "Dog Soldiers 2002",
+        )
+        assert doubt.note.startswith("Blu-ray.com's review for “Dog Soldiers” is a 2002 film")
+
     async def test_a_429_halts_the_whole_integration(self, db: AsyncSession) -> None:
         movie = await _film(db)
         await _owned(db, movie, ["4k_uhd"], UK_4K)
@@ -354,6 +405,40 @@ class TestTheNightlyBatch:
             ("Dog Soldiers", "bluray_com"),
             ("Dog Soldiers", "avforums"),
         ]
+
+    async def test_an_unexpected_failure_mid_run_is_recorded_rather_than_left_running(
+        self, db: AsyncSession
+    ) -> None:
+        """X9's guard (CR43-02's class): every run loop has a failure-injection test. A run
+        the process lost would read "running" until it was abandoned; this one says why."""
+
+        class ExplodingBrave(FakeBrave):
+            async def search(
+                self, query: str, *, count: int = 20, country: str = "GB"
+            ) -> list[SearchHit]:
+                self.search_calls += 1
+                raise RuntimeError("Brave's client fell over")
+
+        movie = await _film(db)
+        await _want(db, movie, "4k_uhd")
+        run = await batch.start_run(db, trigger="job", now=NOW)
+        assert run is not None
+        run_id = run.id
+
+        with pytest.raises(RuntimeError, match="fell over"):
+            async with Site().client() as client:
+                await batch.work_run(
+                    db, run, searcher=ExplodingBrave(), client=client, clock=lambda: NOW, pause=0
+                )
+
+        stopped = await db.get(ReviewRun, run_id)
+        assert stopped is not None
+        await db.refresh(stopped)
+        assert (stopped.status, stopped.last_error, stopped.searches) == (
+            "stopped",
+            "RuntimeError: Brave's client fell over",
+            1,
+        )
 
     async def test_nothing_found_is_recorded_and_searched_again_after_a_month(
         self, db: AsyncSession

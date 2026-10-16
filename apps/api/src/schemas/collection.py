@@ -37,6 +37,10 @@ FormatCode = Annotated[str, StringConstraints(min_length=1, max_length=50)]
 assert set(CONDITIONS) == {"new", "like_new", "good", "acceptable", "damaged"}
 
 
+#: How the spec job inferred a copy's edition from its Blu-ray.com page — Batch X9 (CT46-05).
+EditionSource = Literal["only_uk_edition", "chosen", "pasted"]
+
+
 class CollectionItemFieldsMixin(BaseModel):
     """The fields a person edits, shared by the create and update bodies.
 
@@ -181,6 +185,9 @@ class CollectionItemResponse(BaseModel):
     subCategory: str | None = None
     #: Batch U2.
     edition: str | None = None
+    #: Batch X9 (CT46-05): how the spec job inferred the edition; null once a person typed
+    #: or confirmed it.
+    editionSource: EditionSource | None = None
     notes: str | None = None
     condition: str | None = None
     conditionUpdatedAt: UtcDatetime | None = None

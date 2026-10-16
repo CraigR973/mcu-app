@@ -337,6 +337,62 @@ async def test_candidates_include_the_information_needed_to_choose(
     assert candidate["overview"] == "Candidate overview for A better title"
 
 
+class SequelFirstTmdb(FakeTmdbClient):
+    """TMDB's page for "French Connection", the sequel listed first (CT46-01)."""
+
+    async def search_movie(
+        self,
+        query: str,
+        year: int | None = None,
+        page: int = 1,
+        language: str = "en-US",
+        include_adult: bool = False,
+    ) -> SearchResults:
+        del query, year, language, include_adult
+        films = [
+            (10711, "French Connection II", "1975-05-18", 486),
+            (1051, "The French Connection", "1971-10-09", 2400),
+        ]
+        results = [
+            SearchResult(
+                id=tmdb_id,
+                title=title,
+                original_title=title,
+                release_date=released,
+                vote_count=votes,
+            )
+            for tmdb_id, title, released, votes in films
+        ]
+        return SearchResults(
+            page=page,
+            total_pages=1,
+            total_results=len(results),
+            results=results if page == 1 else [],
+        )
+
+
+async def test_correct_match_ranks_by_t9_not_the_retired_engine(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """X9's guard (CT46-01): the old engine put "French Connection II" (0.919) above "The
+    French Connection" (0.900) because it kept the article and floored any containing title.
+    The Correct match list now ranks with T9's title rule."""
+
+    async def override_tmdb() -> AsyncIterator[FakeTmdbClient]:
+        yield SequelFirstTmdb()
+
+    app.dependency_overrides[get_tmdb_client] = override_tmdb
+    movie, _ = await _add_owned_movie(api_session, title="French Connection", tmdb_id=None)
+
+    response = await client.get(f"/api/v1/movies/{movie.id}/candidates")
+
+    assert response.status_code == 200
+    ranked = [(c["tmdbId"], c["titleSimilarity"]) for c in response.json()["candidates"]]
+    assert ranked[0] == (1051, 1.0)
+    assert [tmdb_id for tmdb_id, _ in ranked].index(10711) > 0
+
+
 async def test_viewer_can_identify_and_search_new_metadata(
     client: AsyncClient,
     api_session: AsyncSession,

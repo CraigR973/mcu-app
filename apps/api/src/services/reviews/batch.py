@@ -39,6 +39,7 @@ from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.reviews import FilmReview, ReviewRun
 from src.models.wanted import WantedItem
+from src.services.identify.doubts import doubt_from_page, review_page_name
 from src.services.reviews.bluray_com import OUT_OF, format_of, review_scores, reviewed_editions
 from src.services.reviews.finding import (
     ReviewHit,
@@ -464,20 +465,22 @@ async def read_one(
     now: datetime,
     pause: float,
     may_follow: bool,
-) -> None:
+) -> int | None:
     """Read one row's review, following the page's link to the reviewed edition if needed.
 
-    Raises :class:`IntegrationHalted`, :class:`PageMoved` and :class:`httpx.HTTPError` for
-    the caller to record.
+    Returns the page's year when it is another year's film (``mismatch``), for Batch X9's
+    doubt. Raises :class:`IntegrationHalted`, :class:`PageMoved` and :class:`httpx.HTTPError`
+    for the caller to record.
     """
     assert row.url is not None
     url, html = await _get(db, client, row.url, reading, pause=pause)
     row.checked_utc = now
-    problem = _year_problem(extract_year(html), film_year)
+    page_year = extract_year(html)
+    problem = _year_problem(page_year, film_year)
     if problem:
         row.status = "mismatch"
         row.note = f"{problem}, so its review was not used."
-        return
+        return page_year
 
     scores = review_scores(html)
     if scores is None:
@@ -497,15 +500,16 @@ async def read_one(
         if edition is None:
             row.status = "no_review"
             row.note = "Blu-ray.com has no review of this film on this format."
-            return
+            return None
         if not may_follow:
             # Out of requests for tonight: read the reviewed edition's page next time.
             row.found_url = row.found_url or row.url
             row.url = edition.url
             row.note = "The review is on another edition's page, to be read next time."
-            return
+            return None
         url, html = await _get(db, client, edition.url, reading, pause=pause)
-        problem = _year_problem(extract_year(html), film_year)
+        page_year = extract_year(html)
+        problem = _year_problem(page_year, film_year)
         scores = review_scores(html)
         if problem or scores is None:
             row.status = "mismatch" if problem else "no_review"
@@ -514,7 +518,7 @@ async def read_one(
                 if problem
                 else "The edition Blu-ray.com links as reviewed shows no review."
             )
-            return
+            return page_year if problem else None
 
     row.found_url = row.found_url or row.url
     row.url = url
@@ -524,6 +528,7 @@ async def read_one(
     row.out_of = OUT_OF
     row.scores_read_utc = now
     row.note = None
+    return None
 
 
 async def read_phase(
@@ -559,7 +564,7 @@ async def read_phase(
         movie = await db.get(Movie, row.movie_id)
         reading = _Reading()
         try:
-            await read_one(
+            other_year = await read_one(
                 db,
                 row,
                 client,
@@ -594,6 +599,17 @@ async def read_phase(
                 run.scored += 1
             elif row.status == "no_review":
                 run.no_review += 1
+            elif row.status == "mismatch" and movie is not None and other_year is not None:
+                # Batch X9 (CT46-03): a review of the film's own title in another year may
+                # be the right review of the wrong film, so it goes to Identify as a doubt.
+                await doubt_from_page(
+                    db,
+                    movie,
+                    source="review",
+                    page_name=await review_page_name(db, row),
+                    page_year=other_year,
+                    page_url=row.url,
+                )
         run.heartbeat_utc = clock()
         await db.commit()
         if failures_in_a_row >= MAX_FAILURES_IN_A_ROW:

@@ -36,6 +36,7 @@ from src.config import settings
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
+from src.models.identify import IdentifyDoubt
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.specs_backfill import SpecCandidate, SpecLookup, SpecRun
@@ -275,6 +276,34 @@ async def test_a_chosen_page_showing_another_year_goes_back_to_craig(db: AsyncSe
     lookup = await _lookup(db, disc)
     assert (lookup.status, lookup.accepted_url) == ("needs_you", None)
     assert "1999" in (lookup.note or "") and "2021" in (lookup.note or "")
+    # Batch X9 (CT46-03): the page names the film's own title, so the film may be the wrong
+    # one. That goes to Identify as a doubt, rather than asking for another page.
+    assert (lookup.note or "").endswith(
+        "The film may be the wrong one: it waits on Identify films."
+    )
+    doubt = await db.scalar(select(IdentifyDoubt).where(IdentifyDoubt.movie_id == film.id))
+    assert doubt is not None
+    assert (doubt.source, doubt.status, doubt.collection_item_id) == ("specs", "open", disc.id)
+    assert (doubt.search_hint, doubt.page_url) == ("Fight Club 1999", FIGHT_CLUB_UK)
+
+
+async def test_another_years_page_for_an_unidentified_film_asks_for_another_page(
+    db: AsyncSession,
+) -> None:
+    """No identification to doubt: the film is in Identify's queue already (X9)."""
+    film = await _film(db, "Fight Club", year=2021, tmdb_id=None)
+    disc = await _disc(db, film, "blu_ray")
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    run = await _run(db, FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK}), site)
+
+    assert (run.fetched, run.sent_back) == (1, 1)
+    lookup = await _lookup(db, disc)
+    assert lookup.note == (
+        "The page is for a 1999 film and this one is from 2021, so its specs were not used. "
+        "Pick the right page."
+    )
+    assert await db.scalar(select(IdentifyDoubt).where(IdentifyDoubt.movie_id == film.id)) is None
 
 
 async def test_craigs_own_choice_is_fetched_as_he_made_it(db: AsyncSession) -> None:
@@ -1172,6 +1201,8 @@ async def test_the_one_uk_edition_the_search_found_gives_the_disc_its_edition(
     assert run.applied == 1
     await db.refresh(disc)
     assert disc.edition == "MetalPak"
+    # Batch X9 (CT46-05): inferred, so the copy page reads "probably" until a person confirms.
+    assert disc.edition_source == "only_uk_edition"
 
 
 async def test_the_plain_one_among_several_uk_editions_gives_none(db: AsyncSession) -> None:
@@ -1206,7 +1237,7 @@ async def test_craigs_choice_from_the_list_gives_the_edition_he_chose(db: AsyncS
 
     assert run.applied == 1
     await db.refresh(disc)
-    assert disc.edition == "Play Exclusive SteelBook"
+    assert (disc.edition, disc.edition_source) == ("Play Exclusive SteelBook", "chosen")
 
 
 async def test_a_page_craig_pasted_that_the_search_never_offered_gives_none(
@@ -1241,7 +1272,7 @@ async def test_an_edition_already_on_the_disc_is_never_replaced(db: AsyncSession
     await _run(db, FakeBrave({"Fight Club": _one_uk()}), site)
 
     await db.refresh(disc)
-    assert disc.edition == "Bought in Fopp, the tin one"
+    assert (disc.edition, disc.edition_source) == ("Bought in Fopp, the tin one", None)
 
 
 async def test_a_page_that_moved_gives_no_edition_from_its_old_name(db: AsyncSession) -> None:
@@ -1288,8 +1319,9 @@ async def test_the_one_off_fills_discs_settled_before_editions_existed(db: Async
         FakeBrave({"Fight Club": _one_uk()}),
         FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE}),
     )
-    # As the 430 discs settled before Batch U2 were.
+    # As the 430 discs settled before Batch U2 were: no edition, so nothing inferred.
     disc.edition = None
+    disc.edition_source = None
     await db.commit()
 
     found = await editions_to_fill(db)
@@ -1301,7 +1333,7 @@ async def test_the_one_off_fills_discs_settled_before_editions_existed(db: Async
     ]
     assert written == 1
     await db.refresh(disc)
-    assert disc.edition == "MetalPak"
+    assert (disc.edition, disc.edition_source) == ("MetalPak", "only_uk_edition")
     assert again == []
 
 
@@ -1326,7 +1358,9 @@ async def test_forgetting_blu_ray_com_takes_its_editions_and_leaves_typed_ones(
     await _run(db, brave, site)
     await db.refresh(heat)
     assert heat.edition == "SteelBook"
+    # Craig's correction, as the copy form writes it: his, so no longer the job's guess.
     heat.edition = "Ultimate Hi-Def Edition"
+    heat.edition_source = None
     await db.commit()
     fight_club_id, heat_id = fight_club.id, heat.id
 
@@ -1340,4 +1374,39 @@ async def test_forgetting_blu_ray_com_takes_its_editions_and_leaves_typed_ones(
     await db.refresh(forgotten)
     await db.refresh(kept)
     assert (forgotten.specs_source_url, forgotten.edition) == (None, None)
+    assert forgotten.edition_source is None
     assert (kept.specs_source_url, kept.edition) == (None, "Ultimate Hi-Def Edition")
+
+
+class ExplodingBrave(FakeBrave):
+    """A search that fails in a way nothing expects, as a library bug or an outage would."""
+
+    async def search(self, query: str, *, count: int = 20, country: str = "GB") -> list[SearchHit]:
+        self.search_calls += 1
+        raise RuntimeError("Brave's client fell over")
+
+
+async def test_an_unexpected_failure_mid_run_is_recorded_rather_than_left_running(
+    db: AsyncSession,
+) -> None:
+    """X9's guard (CR43-02's class): every run loop has a failure-injection test. A run the
+    process lost would read "running" until it was abandoned; this one says why it stopped."""
+    film = await _film(db, "Exploding Film", year=2000, tmdb_id=990_003_000)
+    await _disc(db, film, "blu_ray")
+    outcome = await start_run(db, trigger="job", search_configured=True, now=NOW)
+    assert outcome.run is not None
+    run_id = outcome.run.id
+
+    with pytest.raises(RuntimeError, match="fell over"):
+        async with FakeBlurayCom({}).client() as client:
+            await work_run(
+                db, run_id, searcher=ExplodingBrave(), client=client, clock=lambda: NOW, pause=0
+            )
+
+    stopped = await db.get(SpecRun, run_id)
+    assert stopped is not None
+    assert (stopped.status, stopped.last_error) == (
+        "stopped",
+        "RuntimeError: Brave's client fell over",
+    )
+    assert stopped.searches == 1

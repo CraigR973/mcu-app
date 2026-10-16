@@ -36,6 +36,10 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from src.models.base import Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
 
+#: How the spec job inferred a copy's edition from its Blu-ray.com page (Batch X9): the
+#: search found no other UK edition, Craig chose the page from the list, or pasted it.
+EDITION_SOURCES = ("only_uk_edition", "chosen", "pasted")
+
 #: The areas the collection is stored in. §3.4 named five; Batch 6 added the four
 #: cabinets, which between them held 122 of the 124 rows that §3.4's vocabulary could
 #: not classify (`DECISIONS.md` #34).
@@ -194,6 +198,10 @@ class CollectionItem(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: Wanted list's ``preferred_edition`` is. Set by hand on the copy form, or from the
     #: disc's Blu-ray.com page when that page is certainly this copy (Batch U2, #220).
     edition: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    #: Batch X9 (CT46-05): how the spec job inferred ``edition`` from the disc's page —
+    #: ``only_uk_edition``, ``chosen`` or ``pasted`` (:data:`EDITION_SOURCES`). The copy page
+    #: reads "probably …" while it is set. Null when a person typed or confirmed it.
+    edition_source: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     #: Genuine notes only. Before Batch 4 this column held the raw location string for
     #: every imported row and real notes for anything added by hand, with nothing to

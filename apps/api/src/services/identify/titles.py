@@ -87,9 +87,10 @@ def fold(title: str) -> str:
 
     Accents go ("Léon"), and so do apostrophes ("Lampoon's"), full stops ("U.S.", "Dr.") and
     other punctuation. "&", "+", "v" and "vs" read as "and", so "Cowboys v Aliens" meets
-    "Cowboys & Aliens". Numbers are written as digits, so "Dune 2" meets "Dune: Part Two"
-    and "Star Wars Ep IV" meets "Star Wars: Episode IV": number words always, roman numerals
-    after "Part", "Episode" or "Ep", and a trailing "Part" or "Ep" is dropped before them.
+    "Cowboys & Aliens", and "Vol." reads as "Volume". Numbers are written as digits, so "Dune
+    2" meets "Dune: Part Two" and "Star Wars Ep IV" meets "Star Wars: Episode IV": number
+    words always, roman numerals after "Part", "Episode", "Ep" or "Vol", and a trailing "Part"
+    or "Ep" is dropped before them.
     Both sides of every comparison are folded the same way, so none of this can make two
     different titles equal unless they differ only in these ways.
     """
@@ -107,6 +108,9 @@ def fold(title: str) -> str:
             out.append("and")
         elif word == "ep":
             out.append("episode")
+        elif word == "vol":
+            # Batch X9 (CT46-05): Blu-ray.com's "Kill Bill: Vol. 1" is TMDB's "Volume 1".
+            out.append("volume")
         elif word in _NUMBER_WORDS:
             out.append(_NUMBER_WORDS[word])
         elif word in _ROMAN and (

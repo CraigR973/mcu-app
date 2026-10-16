@@ -61,6 +61,7 @@ from src.tmdb.models import (
     PersonSearchResults,
     SearchResult,
     SearchResults,
+    TvSearchResult,
     TvSearchResults,
 )
 
@@ -570,6 +571,30 @@ class Identifier:
 
     # -- the whole thing -----------------------------------------------------------
 
+    async def candidates_for(self, parsed: ParsedTitle) -> list[tuple[Candidate, Fit]]:
+        """TMDB's films for a title, best first by T9's rule — Batch X9 (CT46-01).
+
+        The film page's "Correct match" list and the Identify films page's search ranked with
+        ``MatchingEngine``, which scores a 0-vote namesake written without "The" above the real
+        film and floors any containing title at 0.9. This is :meth:`identify`'s first two steps,
+        ranked as it ranks: the title (articles, numerals, both sides of a colon), then a year
+        that agrees, then how well known. No alternative titles, people or web search, so it
+        stays quick enough to run while someone waits.
+        """
+        found: dict[int, Candidate] = {}
+        whole = [r for r in parsed.readings if r.tier == 1]
+        for reading in whole:
+            if parsed.year is not None:
+                await self._gather(found, reading.text, year=parsed.year, origin="search")
+            await self._gather(found, reading.text, year=None, origin="search")
+        fits = self._fits(found, parsed)
+        if not any(f.tier == 1 and f.same_title for f in fits.values()):
+            for looser in _looser_queries(whole):
+                await self._gather(found, looser, year=None, origin="search")
+            fits = self._fits(found, parsed)
+        ranked = self._rank(parsed, list(found.values()), fits)
+        return [(candidate, fits[candidate.tmdb_id]) for candidate in ranked]
+
     async def identify(self, parsed: ParsedTitle, *, held: Holder | None = None) -> Proposal:
         """Propose what to do with one film. Reads TMDB and Brave; writes nothing."""
         if parsed.not_film:
@@ -593,18 +618,8 @@ class Identifier:
 
         if not strong():
             # Step 2: looser searches, then the title's other parts.
-            queries: list[str] = []
-            for reading in whole:
-                for query in (
-                    simplified(reading.text),
-                    without_article(reading.text),
-                    without_article(simplified(reading.text)),
-                    leading_words(reading.text),
-                ):
-                    if query and query not in queries and query != reading.text:
-                        queries.append(query)
-            for query in queries:
-                await self._gather(found, query, year=None, origin="search")
+            for looser in _looser_queries(whole):
+                await self._gather(found, looser, year=None, origin="search")
             for reading in parsed.readings:
                 if reading.tier > 1:
                     await self._gather(found, reading.text, year=parsed.year, origin="search")
@@ -966,6 +981,73 @@ class Identifier:
         if candidate.vote_count:
             notes.append(f"{candidate.vote_count:,} TMDB votes")
         return notes
+
+
+# ---------------------------------------------------------------------------
+# For the pages that offer films to choose from — Batch X9
+# ---------------------------------------------------------------------------
+
+
+def offer_notes(parsed: ParsedTitle, candidate: Candidate, f: Fit) -> list[str]:
+    """What a person reads beside an offered film: another title it matched by, whether the
+    year agrees, and how well known it is, in the Identify films page's own words."""
+    return Identifier._notes(parsed, candidate, f, [])
+
+
+def match_score(title_ratio: float, year: int | None, candidate_year: int | None) -> float:
+    """The "% match" an offered film shows, from 0 to 1: how close the title is, raised by a
+    year that agrees and lowered by one that does not, as the old engine's score was, so the
+    figure means what it meant. It shows a reading; it never ranks (T9's rule does)."""
+    if year is None or candidate_year is None:
+        bonus = 0.0
+    elif abs(year - candidate_year) <= YEAR_TOLERANCE:
+        bonus = 0.15
+    else:
+        bonus = -0.3
+    return max(0.0, min(1.0, title_ratio + bonus))
+
+
+def rank_series(
+    parsed: ParsedTitle, found: TvSearchResults
+) -> list[tuple[TvSearchResult, TitleMatch]]:
+    """TMDB's series for a title, best first by T9's rule: how the title matches (as a series
+    is sold, "Broadchurch" for "Broadchurch Series 1 - 3"), then a year that agrees, then
+    how well known. Replaces the engine's similarity score (X9)."""
+    query = parsed.tv_title or parsed.main
+    scored: list[tuple[TvSearchResult, TitleMatch]] = []
+    for show in found.results:
+        names = [show.name, *([show.original_name] if show.original_name else [])]
+        best = max(
+            (compare(query, name) for name in names),
+            key=lambda m: (_HOW_RANK[m.how], m.ratio),
+        )
+        scored.append((show, best))
+
+    def key(pair: tuple[TvSearchResult, TitleMatch]) -> tuple[int, int, float, int]:
+        show, match = pair
+        if parsed.year is None or show.year is None:
+            agrees = 1
+        else:
+            agrees = 0 if abs(show.year - parsed.year) <= YEAR_TOLERANCE else 2
+        return (-_HOW_RANK[match.how], agrees, -match.ratio, -show.vote_count)
+
+    return sorted(scored, key=key)
+
+
+def _looser_queries(whole: Sequence[Reading]) -> list[str]:
+    """Step 2's searches: each whole reading simplified, without its article, and cut to its
+    leading words, never repeating one already made."""
+    queries: list[str] = []
+    for reading in whole:
+        for query in (
+            simplified(reading.text),
+            without_article(reading.text),
+            without_article(simplified(reading.text)),
+            leading_words(reading.text),
+        ):
+            if query and query not in queries and query != reading.text:
+                queries.append(query)
+    return queries
 
 
 def _year_of(release_date: str | None) -> int | None:

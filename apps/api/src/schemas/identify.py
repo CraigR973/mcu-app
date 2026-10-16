@@ -34,6 +34,8 @@ class IdentifyOverviewResponse(BaseModel):
     setAsideNotFilm: int = Field(ge=0)
     skipped: int = Field(ge=0)
     identified: int = Field(ge=0)
+    #: Batch X9: identified films with an open doubt.
+    inDoubt: int = Field(ge=0)
     run: IdentifyRunResponse | None
 
 
@@ -97,8 +99,68 @@ class IdentifySetAsideRequest(BaseModel):
 
 class IdentifyDecisionResponse(BaseModel):
     movieId: uuid.UUID
-    outcome: Literal["identified", "merged", "set_aside", "skipped", "waiting"]
+    outcome: Literal["identified", "merged", "set_aside", "skipped", "waiting", "kept", "moved"]
     title: str
+
+
+DoubtSource = Literal["recheck", "specs", "review"]
+
+
+class IdentifyDoubtResponse(BaseModel):
+    """An identified film that may be the wrong one — Batch X9 (CT46-01, CT46-03)."""
+
+    doubtId: uuid.UUID
+    movieId: uuid.UUID
+    title: str
+    year: int | None
+    #: The film it is identified as now.
+    tmdbId: int = Field(gt=0)
+    posterPath: str | None
+    source: DoubtSource
+    note: str
+    evidence: list[str]
+    #: The copy the doubt names, or the film's copies when it names none.
+    discs: list[IdentifyDiscResponse]
+    copies: int = Field(ge=0)
+    watches: int = Field(ge=0)
+    collectionItemId: uuid.UUID | None
+    candidates: list[IdentifyCandidateResponse]
+    proposedTmdbId: int | None
+    #: What to search TMDB for first.
+    searchHint: str
+    raisedAt: UtcDatetime
+
+
+class IdentifyDoubtsResponse(BaseModel):
+    items: list[IdentifyDoubtResponse]
+    total: int = Field(ge=0)
+
+
+class IdentificationDoubtResponse(BaseModel):
+    """What the film page says while a doubt is open."""
+
+    note: str
+    source: DoubtSource
+    raisedAt: UtcDatetime
+
+
+class MoveCopyRequest(BaseModel):
+    """One copy is another film — Batch X9."""
+
+    tmdbId: int = Field(gt=0)
+    #: The doubt the move settles, when it came from one.
+    doubtId: uuid.UUID | None = None
+
+
+class MoveCopyResponse(BaseModel):
+    """Where the copy went, and the audit row that undoes the move."""
+
+    movieId: uuid.UUID
+    title: str
+    year: int | None
+    #: The collection had no such film, so the move made one.
+    created: bool
+    actionId: uuid.UUID
 
 
 class RecentIdentificationResponse(BaseModel):

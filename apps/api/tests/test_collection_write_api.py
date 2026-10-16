@@ -1602,6 +1602,113 @@ class TestEdition:
 
         assert response.status_code == 422
 
+    async def test_an_inferred_edition_stays_a_guess_until_a_person_confirms_or_retypes_it(
+        self,
+        client: AsyncClient,
+        viewer_client: AsyncClient,
+        api_session: AsyncSession,
+        viewer: Profile,
+    ) -> None:
+        """Batch X9 (CT46-05): the spec job's editions read "probably" until a person says."""
+        movie = await _a_film(api_session, title="An Inferred Edition", tmdb_id=930205)
+        guessed = await _a_disc(api_session, movie)
+        guessed.edition, guessed.edition_source = "Zavvi Exclusive SteelBook", "only_uk_edition"
+        retyped = await _a_disc(api_session, movie, section="Back")
+        retyped.edition, retyped.edition_source = "MetalPak", "chosen"
+        await api_session.flush()
+        guessed_id, retyped_id = guessed.id, retyped.id
+
+        copies = (await client.get(f"/api/v1/movies/{movie.id}/copies")).json()
+        assert {c["editionSource"] for c in copies} == {"only_uk_edition", "chosen"}
+
+        # The whole form sent back unchanged, as "mark damaged" does, confirms nothing.
+        same = await client.put(
+            f"/api/v1/collection/{guessed_id}",
+            json=_body(edition="Zavvi Exclusive SteelBook", notes="Shelf note"),
+        )
+        assert same.json()["editionSource"] == "only_uk_edition"
+        typed = await client.put(
+            f"/api/v1/collection/{retyped_id}",
+            json=_body(edition="Limited Edition", section="Back", location="Back"),
+        )
+        assert (typed.json()["edition"], typed.json()["editionSource"]) == (
+            "Limited Edition",
+            None,
+        )
+
+        confirmed = await viewer_client.post(f"/api/v1/collection/{guessed_id}/edition/confirm")
+        assert confirmed.status_code == 200, confirmed.text
+        assert (confirmed.json()["edition"], confirmed.json()["editionSource"]) == (
+            "Zavvi Exclusive SteelBook",
+            None,
+        )
+        audits = await _audit_rows(api_session, guessed_id)
+        assert audits[-1].user_id == viewer.id
+        assert audits[-1].changes == {"edition_source": {"from": "only_uk_edition", "to": None}}
+        again = await viewer_client.post(f"/api/v1/collection/{guessed_id}/edition/confirm")
+        assert again.status_code == 409
+
+    async def test_the_backfill_marks_only_the_editions_the_spec_job_wrote(
+        self, api_session: AsyncSession, admin: Profile
+    ) -> None:
+        """Migration 058: an edition with an audit row naming it is a person's."""
+        import importlib.util
+        from pathlib import Path
+
+        from sqlalchemy import text
+
+        from src.models.specs_backfill import SpecLookup
+
+        path = Path(__file__).resolve().parents[1] / "migrations/versions/058_edition_source.py"
+        spec = importlib.util.spec_from_file_location("migration_058", path)
+        assert spec is not None and spec.loader is not None
+        migration = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(migration)
+
+        movie = await _a_film(api_session, title="A Backfilled Edition", tmdb_id=930206)
+        page = "https://www.blu-ray.com/movies/A-Backfilled-Edition-Blu-ray/{}/"
+        rows: dict[str, CollectionItem] = {}
+        for index, (name, how) in enumerate(
+            [("auto", "auto"), ("chosen", "confirmed"), ("typed", "auto"), ("unsettled", None)],
+            start=1,
+        ):
+            item = await _a_disc(api_session, movie, shelf=str(index))
+            item.edition = "SteelBook"
+            rows[name] = item
+            await api_session.flush()
+            api_session.add(
+                SpecLookup(
+                    id=uuid.uuid4(),
+                    collection_item_id=item.id,
+                    status="done" if how else "needs_you",
+                    accepted_url=page.format(index) if how else None,
+                    how=how,
+                    attempts=0,
+                )
+            )
+        api_session.add(
+            AdminAction(
+                id=uuid.uuid4(),
+                user_id=admin.id,
+                action_type="update",
+                target_table="collection_items",
+                target_id=str(rows["typed"].id),
+                changes={"edition": {"from": None, "to": "SteelBook"}},
+            )
+        )
+        await api_session.flush()
+
+        await api_session.execute(text(migration.BACKFILL))
+        for item in rows.values():
+            await api_session.refresh(item)
+
+        assert {name: item.edition_source for name, item in rows.items()} == {
+            "auto": "only_uk_edition",
+            "chosen": "chosen",
+            "typed": None,
+            "unsettled": None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # Batch Y2 — moving many discs at once (`DECISIONS.md` #265)

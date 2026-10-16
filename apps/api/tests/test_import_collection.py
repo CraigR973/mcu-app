@@ -13,7 +13,7 @@ import asyncio
 import csv
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from unittest.mock import MagicMock, patch
 
 import psycopg2
@@ -880,56 +880,148 @@ def test_write_review_file_empty(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_review_row_lists_the_tied_alternatives() -> None:
-    from src.matching import MatchCandidate, MatchResult
-    from src.scripts.import_collection import review_row
+def _offered(tmdb_id: int, title: str, year: int | None, votes: int = 10) -> Any:
+    from src.services.identify.matcher import Candidate
 
-    def _cand(id_: int, title: str, year: int | None) -> MatchCandidate:
-        return MatchCandidate(
-            tmdb_id=id_,
-            title=title,
-            year=year,
-            confidence=1.0,
-            title_similarity=1.0,
-            year_match="unknown",
-            title_exact=True,
-        )
-
-    result = MatchResult(
-        raw_query="Frankenstein",
-        query="Frankenstein",
-        candidates=[_cand(1, "Frankenstein", 2025), _cand(2, "Frankenstein", 1931)],
-        matched=True,
-        ambiguous=True,
+    return Candidate(
+        tmdb_id=tmdb_id, title=title, original_title=title, year=year, vote_count=votes
     )
-    row = review_row(_make_candidate(title="Frankenstein"), result, "ambiguous_match")
 
-    assert row["reason"] == "ambiguous_match"
+
+def test_review_row_lists_the_tied_alternatives() -> None:
+    from src.scripts.import_collection import review_row
+    from src.services.identify.matcher import Proposal
+    from src.services.identify.titles import parse_title
+
+    proposal = Proposal(
+        "ask",
+        reason="TMDB holds two films of this title.",
+        candidates=[_offered(1, "Frankenstein", 2025), _offered(2, "Frankenstein", 1931)],
+    )
+    row = review_row(
+        _make_candidate(title="Frankenstein"), parse_title("Frankenstein"), proposal, "ask"
+    )
+
+    assert row["reason"] == "ask: TMDB holds two films of this title."
     assert "1:Frankenstein (2025)" in row["alternatives"]
     assert "2:Frankenstein (1931)" in row["alternatives"]
 
 
 def test_review_row_renders_a_missing_year_rather_than_omitting_it() -> None:
-    from src.matching import MatchCandidate, MatchResult
     from src.scripts.import_collection import review_row
+    from src.services.identify.matcher import Proposal
+    from src.services.identify.titles import parse_title
 
-    result = MatchResult(
-        raw_query="Scapegoat",
-        query="Scapegoat",
-        candidates=[
-            MatchCandidate(
-                tmdb_id=9,
-                title="Scapegoat",
-                year=None,
-                confidence=1.0,
-                title_similarity=1.0,
-                year_match="unknown",
-            )
-        ],
-        matched=True,
-    )
-    row = review_row(_make_candidate(title="Scapegoat"), result, "ambiguous_match")
+    proposal = Proposal("ask", candidates=[_offered(9, "Scapegoat", None)])
+    row = review_row(_make_candidate(title="Scapegoat"), parse_title("Scapegoat"), proposal, "ask")
     assert row["alternatives"] == "9:Scapegoat (?)"
+
+
+class _NamesakeTmdb:
+    """TMDB answering by title for the review's namesake and article cases (CT46-01)."""
+
+    FILMS: ClassVar[dict[str, list[tuple[int, str, str, int]]]] = {
+        # The old engine took "French Connection" to the sequel (0.919 against 0.900).
+        "french connection": [
+            (10711, "French Connection II", "1975-05-18", 486),
+            (1051, "The French Connection", "1971-10-09", 2400),
+        ],
+        # And "Good Fellas" to a 0-vote 2016 film, an exact hit without the space.
+        "good fellas": [
+            (626867, "Good Fellas", "2016-01-01", 0),
+            (769, "GoodFellas", "1990-09-12", 12000),
+        ],
+    }
+
+    def __init__(self) -> None:
+        self.fetched: list[int] = []
+
+    def _results(self, query: str) -> list[Any]:
+        from src.tmdb.models import SearchResult
+
+        rows = self.FILMS.get(query.lower().removeprefix("the ").strip(), [])
+        return [
+            SearchResult(
+                id=tmdb_id,
+                title=title,
+                original_title=title,
+                release_date=released,
+                vote_count=votes,
+            )
+            for tmdb_id, title, released, votes in rows
+        ]
+
+    async def search_movie(
+        self, query: str, year: int | None = None, page: int = 1, **_: Any
+    ) -> Any:
+        from src.tmdb.models import SearchResults
+
+        results = self._results(query) if page == 1 else []
+        return SearchResults(page=page, results=results, total_pages=1, total_results=len(results))
+
+    async def get_movie(self, movie_id: int, append_to_response: Any = None, **_: Any) -> Any:
+        from src.tmdb.models import Movie as TmdbMovie
+
+        for rows in self.FILMS.values():
+            for tmdb_id, title, released, votes in rows:
+                if tmdb_id == movie_id:
+                    return TmdbMovie(
+                        id=tmdb_id,
+                        title=title,
+                        original_title=title,
+                        overview="",
+                        release_date=released,
+                        vote_count=votes,
+                    )
+        raise KeyError(movie_id)
+
+    async def get_movie_full(self, movie_id: int, language: str = "en-US") -> Any:
+        self.fetched.append(movie_id)
+        return await self.get_movie(movie_id)
+
+    async def search_tv(self, query: str, page: int = 1) -> Any:
+        from src.tmdb.models import TvSearchResults
+
+        return TvSearchResults()
+
+    async def search_person(self, query: str, page: int = 1) -> Any:
+        from src.tmdb.models import PersonSearchResults
+
+        return PersonSearchResults()
+
+    async def get_person_movie_credits(self, person_id: int) -> Any:
+        from src.tmdb.models import PersonMovieCredits
+
+        return PersonMovieCredits(id=person_id)
+
+
+async def test_the_refresh_matches_with_t9_not_the_engine_namesake_and_article_cases() -> None:
+    """X9's guard (CT46-01): the 8 Sep import's engine kept a leading article and scored an
+    exact namesake above the real film. The refresh now matches with T9's identifier, which
+    never takes the sequel and never settles on the 0-vote namesake."""
+    from src.scripts.import_collection import ImportStats, match_and_enrich
+
+    tmdb = _NamesakeTmdb()
+    stats = ImportStats()
+    rows, review = await match_and_enrich(
+        [
+            _make_candidate(title="French Connection"),
+            _make_candidate(title="Good Fellas", row_number=3),
+        ],
+        tmdb,  # type: ignore[arg-type]
+        stats,
+    )
+
+    # The sequel scored 0.919 against the real film's 0.900 in the old engine; T9 takes the
+    # real film. The namesake was an exact hit at 1.000; T9 asks, as it did live on 12 Oct.
+    assert [(row.candidate.title, row.tmdb_id) for row in rows] == [
+        ("French Connection", 1051),
+        ("Good Fellas", None),
+    ]
+    assert [(r["title"], r["reason"][:4]) for r in review] == [("Good Fellas", "ask:")]
+    assert "626867:Good Fellas (2016)" in review[0]["alternatives"]
+    assert "769:GoodFellas (1990)" in review[0]["alternatives"]
+    assert tmdb.fetched == [1051]
 
 
 def test_a_dry_run_can_count_resolutions_the_write_path_never_reaches() -> None:

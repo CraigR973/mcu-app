@@ -19,8 +19,6 @@ from sqlalchemy.sql.selectable import ScalarSelect
 
 from src.auth import CurrentUser
 from src.database import get_db
-from src.matching import MatchingEngine
-from src.matching.engine import normalise_query, score_series
 from src.models.collection_item import (
     LOUNGE,
     LOUNGE_SIDES,
@@ -36,6 +34,8 @@ from src.models.movie import Movie, MovieCredit
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
 from src.routers.valuation import copy_valuation
+from src.schemas.collection import EditionSource
+from src.schemas.identify import DoubtSource, IdentificationDoubtResponse
 from src.schemas.movies import (
     CandidateListResponse,
     CandidateResponse,
@@ -56,10 +56,14 @@ from src.schemas.movies import (
 )
 from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import IdentifyError, identify_film
+from src.services.identify.doubts import doubt_for_film
+from src.services.identify.matcher import Identifier, match_score, rank_series
+from src.services.identify.titles import ParsedTitle, parse_title
 from src.services.identify.waiting import still_to_identify
 from src.services.reviews.read import review_response, reviews_by_movie
 from src.services.valuation import valuations_for_movie, valued_format
 from src.tmdb import TMDBClient
+from src.tmdb.client import TMDBRefused
 from src.tmdb.models import Movie as TmdbMovie
 from src.tmdb.models import TvShow
 
@@ -461,6 +465,7 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
     editions = (await _editions_by_movie(db, [movie.id])).get(movie.id, [])
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
     set_aside_as = (await _set_aside_by_movie(db, [movie.id])).get(movie.id)
+    doubt = await doubt_for_film(db, movie.id) if movie.tmdb_id is not None else None
     return MovieDetailResponse(
         **_movie_list_item(
             movie, copy_count, editions=editions, set_aside_as=set_aside_as
@@ -474,6 +479,15 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
         trailerKey=movie.trailer_key,
         letterboxdSlug=movie.letterboxd_slug,
         reviews=[review_response(row) for row in reviews],
+        identificationDoubt=(
+            IdentificationDoubtResponse(
+                note=doubt.note,
+                source=cast(DoubtSource, doubt.source),
+                raisedAt=doubt.created_utc,
+            )
+            if doubt is not None
+            else None
+        ),
     )
 
 
@@ -810,6 +824,7 @@ async def get_movie_copies(
             shelf=copy.shelf,
             subCategory=copy.sub_category,
             edition=copy.edition,
+            editionSource=cast(EditionSource, copy.edition_source),
             notes=copy.notes,
             purchasePrice=(str(copy.purchase_price) if copy.purchase_price is not None else None),
             purchaseSource=copy.purchase_source,
@@ -896,19 +911,22 @@ async def get_movie_candidates(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Query is empty",
         )
+    # X9 (CT46-01): ranked by T9's rule, not ``MatchingEngine``'s score, which put a 0-vote
+    # namesake written without "The" above the real film.
+    parsed = parse_title(search_title)
     try:
-        result = await MatchingEngine(tmdb).match(search_title)
-    except httpx.HTTPError as exc:
+        ranked = await Identifier(tmdb).candidates_for(parsed)
+    except (httpx.HTTPError, TMDBRefused) as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="TMDB search is temporarily unavailable",
         ) from exc
-    series = await _series_candidates(tmdb, search_title)
+    series = await _series_candidates(tmdb, parsed)
 
     return CandidateListResponse(
         movieId=movie.id,
         title=movie.title,
-        query=result.query,
+        query=parsed.first_reading or search_title,
         candidates=[
             CandidateResponse(
                 tmdbId=candidate.tmdb_id,
@@ -916,36 +934,35 @@ async def get_movie_candidates(
                 year=candidate.year,
                 overview=candidate.overview,
                 posterPath=candidate.poster_path,
-                confidence=candidate.confidence,
-                titleSimilarity=candidate.title_similarity,
+                confidence=match_score(fitted.match.ratio, parsed.year, candidate.year),
+                titleSimilarity=fitted.match.ratio,
             )
-            for candidate in result.candidates
+            for candidate, fitted in ranked[:FILM_CANDIDATES]
         ],
         seriesCandidates=series,
     )
 
 
-#: Series offered beside the films. TMDB answers 20; the panel has room for five.
+#: Films and series offered. TMDB answers 20 a page; the panel has room for five of each.
+FILM_CANDIDATES = 5
 SERIES_CANDIDATES = 5
 
 
-async def _series_candidates(tmdb: TMDBClient, raw_title: str) -> list[CandidateResponse]:
-    """TMDB's series for the same search, scored as its films are — Batch Y3.
+async def _series_candidates(tmdb: TMDBClient, parsed: ParsedTitle) -> list[CandidateResponse]:
+    """TMDB's series for the same title, ranked by T9's rule — Batches Y3 and X9.
 
-    Searched with the title the film search cleaned, so "Broadchurch (Series 1-3)" asks for
+    Searched with the title as a series is sold, so "Broadchurch Series 1-3" asks for
     "Broadchurch". A failure here leaves the films to answer on their own: the series are the
     extra, and the film search has just reached TMDB.
     """
-    query, year = normalise_query(raw_title)
+    query = parsed.tv_title or parsed.main
     if not query:
         return []
     try:
         found = await tmdb.search_tv(query)
-    except httpx.HTTPError:
+    except (httpx.HTTPError, TMDBRefused):
         logger.warning("tmdb_series_search_unavailable", query=query)
         return []
-    scored = [(score_series(query, year, show), show) for show in found.results]
-    scored.sort(key=lambda pair: (pair[0][0], pair[1].popularity), reverse=True)
     return [
         CandidateResponse(
             tmdbId=show.id,
@@ -954,10 +971,10 @@ async def _series_candidates(tmdb: TMDBClient, raw_title: str) -> list[Candidate
             year=show.year,
             overview=show.overview or "",
             posterPath=show.poster_path,
-            confidence=confidence,
-            titleSimilarity=similarity,
+            confidence=match_score(match.ratio, parsed.year, show.year),
+            titleSimilarity=match.ratio,
         )
-        for (confidence, similarity), show in scored[:SERIES_CANDIDATES]
+        for show, match in rank_series(parsed, found)[:SERIES_CANDIDATES]
     ]
 
 

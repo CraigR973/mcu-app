@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MovieDetailPage from './MovieDetailPage'
-import { fetchCandidates, fetchCopies, fetchMovie, identifyMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
+import { confirmEdition, fetchCandidates, fetchCopies, fetchMovie, identifyMovie, type CollectionCopy, type MovieDetail } from '@/lib/api'
 import { deleteOrQueue, updateOrQueue } from '@/lib/sync'
 
 vi.mock('@/context/auth', () => ({
@@ -32,6 +32,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
     fetchCopies: vi.fn(),
     fetchCandidates: vi.fn(),
     identifyMovie: vi.fn(),
+    confirmEdition: vi.fn(),
     fetchFacets: vi.fn().mockResolvedValue({ sections: [], allSections: [] }),
   }
 })
@@ -228,6 +229,8 @@ describe('MovieDetailPage copy editing for Mark', () => {
     expect(screen.getByRole('button', { name: /Mark damaged/ })).not.toBeNull()
     expect(screen.getByRole('link', { name: /Add a copy/ }).getAttribute('href')).toBe('/collection/add')
     expect(screen.queryByText('Value and resale')).toBeNull()
+    // Batch X9: moving a copy to another film rewrites the catalogue, so it is Craig's.
+    expect(screen.queryByRole('button', { name: /This copy is another film/ })).toBeNull()
   })
 
   it('saves Mark\'s edit through the same queue-aware path as Craig\'s', async () => {
@@ -430,5 +433,52 @@ describe('MovieDetailPage set aside and series (Mark, 15 Oct; Batch Y3)', () => 
 
     expect(await screen.findByRole('button', { name: /Correct match/ })).not.toBeNull()
     expect(screen.queryByRole('link', { name: /Letterboxd/ })).toBeNull()
+  })
+
+  it('says an identification is in doubt while one is open, and says nothing otherwise (Batch X9)', async () => {
+    vi.mocked(fetchMovie).mockResolvedValue({
+      ...MOVIE,
+      identificationDoubt: {
+        note: 'Blu-ray.com’s disc page for “The Red Shoes” is a 2005 film, and this film is identified as 1948.',
+        source: 'specs',
+        raisedAt: '2026-10-15T02:30:00+00:00',
+      },
+    })
+    renderPage()
+
+    const note = await screen.findByRole('region', { name: 'Identification in doubt' })
+    expect(within(note).getByText(/is a 2005 film, and this film is identified as 1948/)).toBeTruthy()
+    // Mark sees the doubt; settling it is Craig's.
+    expect(within(note).getByText('Craig will settle which film this is.')).toBeTruthy()
+    expect(within(note).queryByRole('link', { name: /Identify films/ })).toBeNull()
+  })
+
+  it('shows no doubt for a film nobody doubts', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: /Correct match/ })).not.toBeNull()
+    expect(screen.queryByRole('region', { name: 'Identification in doubt' })).toBeNull()
+  })
+
+  it('says an edition the spec job inferred is probably the copy\'s, and where it came from (Batch X9)', async () => {
+    vi.mocked(fetchCopies).mockResolvedValue([
+      { ...COPY, edition: 'Zavvi Exclusive SteelBook', editionSource: 'only_uk_edition' },
+    ])
+    vi.mocked(confirmEdition).mockResolvedValue({} as never)
+    renderPage()
+
+    expect(await screen.findByText('Probably Zavvi Exclusive SteelBook')).toBeTruthy()
+    expect(screen.getByText(/the only UK edition its search found/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'It is this edition' }))
+
+    await waitFor(() => expect(confirmEdition).toHaveBeenCalledWith(COPY_ID))
+  })
+
+  it('shows a person\'s edition as it is', async () => {
+    renderPage()
+
+    expect(await screen.findByText('Criterion Collection', { selector: 'p' })).toBeTruthy()
+    expect(screen.queryByText(/^Probably /)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'It is this edition' })).toBeNull()
   })
 })

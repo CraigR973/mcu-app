@@ -92,6 +92,8 @@ import {
   ebayTargetsSchema,
   ebayWatchingSchema,
   identifyDecisionSchema,
+  identifyDoubtsSchema,
+  moveCopySchema,
   identifyOverviewSchema,
   identifyQueueSchema,
   identifySearchSchema,
@@ -125,6 +127,8 @@ import {
   type EbayTarget,
   type EbayTargets,
   type IdentifyDecision,
+  type IdentifyDoubts,
+  type MoveCopy,
   type IdentifyOverview,
   type IdentifyQueue,
   type IdentifySearch,
@@ -261,6 +265,11 @@ export type {
   FilmInCollection,
   IdentifyCandidate,
   IdentifyDecision,
+  IdentifyDoubt,
+  IdentifyDoubts,
+  IdentificationDoubt,
+  EditionSource,
+  MoveCopy,
   IdentifyOverview,
   IdentifyQueue,
   IdentifyQueueItem,
@@ -833,6 +842,14 @@ export type UpdateCollectionItemInput = CollectionItemFields & {
   baseUpdatedAt?: string
 }
 
+/** The edition the spec job inferred is this copy's — Batch X9. Either person. */
+export async function confirmEdition(itemId: string): Promise<CollectionItem> {
+  return parseOrThrowApiError(
+    await authFetch(`/collection/${itemId}/edition/confirm`, { method: 'POST' }),
+    collectionItemSchema,
+  )
+}
+
 export async function updateCollectionItem(
   itemId: string,
   input: UpdateCollectionItemInput,
@@ -1328,6 +1345,42 @@ export async function setFilmAside(movieId: string, kind: 'tv' | 'not_film'): Pr
 
 export async function skipFilm(movieId: string): Promise<IdentifyDecision> {
   return parseOrThrowApiError(await authFetch(`/identify/films/${movieId}/skip`, { method: 'POST' }), identifyDecisionSchema)
+}
+
+/** Identified films that may be the wrong one, with the evidence — Batch X9. */
+export async function fetchIdentifyDoubts(limit = 20): Promise<IdentifyDoubts> {
+  return parseResponse(await authFetch(`/identify/doubts?limit=${String(limit)}`), identifyDoubtsSchema)
+}
+
+/** The film is right after all. */
+export async function keepIdentification(doubtId: string): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(await authFetch(`/identify/doubts/${doubtId}/keep`, { method: 'POST' }), identifyDecisionSchema)
+}
+
+/** The film is another one. Undone from the recent list, which opens the doubt again. */
+export async function correctIdentification(
+  doubtId: string,
+  tmdbId: number,
+  options: { merge?: boolean; searched?: boolean } = {},
+): Promise<IdentifyDecision> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/doubts/${doubtId}/identify`, {
+      method: 'POST',
+      body: JSON.stringify({ tmdbId, merge: options.merge ?? false, searched: options.searched ?? false }),
+    }),
+    identifyDecisionSchema,
+  )
+}
+
+/** This copy is another film: it moves on its own. Undone from the recent list. */
+export async function moveCopy(itemId: string, tmdbId: number, doubtId?: string): Promise<MoveCopy> {
+  return parseOrThrowApiError(
+    await authFetch(`/identify/copies/${itemId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ tmdbId, doubtId: doubtId ?? null }),
+    }),
+    moveCopySchema,
+  )
 }
 
 export async function fetchRecentIdentifications(limit = 20): Promise<RecentIdentifications> {

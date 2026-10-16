@@ -17,6 +17,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import CopyEditor, { fieldsFrom } from '@/components/collection/CopyEditor'
 import { LendButton } from '@/components/collection/LendButton'
+import { MoveCopyPanel } from '@/components/collection/MoveCopyPanel'
 import { PhotoGallery } from '@/components/collection/PhotoGallery'
 import { SpecBadges } from '@/components/collection/SpecBadges'
 import { SalePanel } from '@/components/collection/SalePanel'
@@ -43,18 +44,55 @@ import {
   backdropUrl,
   bestFormat,
   conditionLabel,
+  confirmEdition,
   LISTING_STATUS_LABELS,
   fetchCopies,
   fetchMovie,
   needsIdentifying,
   updateCollectionItem,
   type CollectionCopy,
+  type EditionSource,
+  type IdentificationDoubt,
   type ListingStatus,
   type MovieDetail,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
 type Tab = 'overview' | 'crew' | 'copies' | 'watch'
+
+const EDITION_SOURCE: Record<EditionSource, string> = {
+  only_uk_edition: 'Blu-ray.com: the only UK edition its search found for this film and format.',
+  chosen: 'Blu-ray.com: the page Craig chose from its search.',
+  pasted: 'Blu-ray.com: the page Craig pasted.',
+}
+
+/**
+ * Batch X9 (CT46-05): on 12 Oct every edition on a copy had come from the spec job, none from
+ * a person, and 16 named a SteelBook the sheet never mentions. An inferred edition says where
+ * it came from and reads "probably" until someone confirms it or types another.
+ */
+function EditionGuess({
+  source,
+  canConfirm,
+  confirming,
+  onConfirm,
+}: {
+  source: EditionSource
+  canConfirm: boolean
+  confirming: boolean
+  onConfirm: () => void
+}) {
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-2">
+      <p className="text-xs text-muted-foreground">{EDITION_SOURCE[source]}</p>
+      {canConfirm ? (
+        <Button type="button" size="sm" variant="ghost" disabled={confirming} onClick={onConfirm}>
+          It is this edition
+        </Button>
+      ) : null}
+    </div>
+  )
+}
 
 function CopyCard({
   item,
@@ -82,10 +120,20 @@ function CopyCard({
   onEdit: (copy: CollectionCopy) => void
 }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   // §3.11's "mark as damaged" quick action. It is the ordinary update with one field
   // changed — the client already holds the whole copy — so there is only one path that
   // has to remember to stamp `conditionUpdatedAt` and write the audit row.
+  // Batch X9 (CT46-05): the spec job's edition is a guess until someone looks at the box.
+  const confirm = useMutation({
+    mutationFn: () => confirmEdition(item.id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
+      void queryClient.invalidateQueries({ queryKey: ['item-history', movieId] })
+    },
+  })
+
   const markDamaged = useMutation({
     mutationFn: () =>
       updateCollectionItem(item.id, {
@@ -119,8 +167,21 @@ function CopyCard({
             <div>
               <p className="metadata-label">Edition</p>
               <p className="mt-0.5 font-display text-lg font-semibold text-foreground">
-                {item.edition}
+                {item.editionSource ? `Probably ${item.edition}` : item.edition}
               </p>
+              {item.editionSource ? (
+                <EditionGuess
+                  source={item.editionSource}
+                  canConfirm={canEdit}
+                  confirming={confirm.isPending}
+                  onConfirm={() => confirm.mutate()}
+                />
+              ) : null}
+              {confirm.isError ? (
+                <p role="alert" className="mt-1 text-sm text-destructive">
+                  {queryErrorMessage(confirm.error, 'Could not confirm the edition.')}
+                </p>
+              ) : null}
             </div>
           ) : null}
           {item.subCategory ? (
@@ -235,6 +296,24 @@ function CopyCard({
         <LendButton collectionItemId={item.id} />
       </div>
 
+      {/* Batch X9 (CT46-01): one copy can be another film; Craig moves it on its own. */}
+      {isAdmin && (
+        <div className="border-t border-border pt-3">
+          <MoveCopyPanel
+            itemId={item.id}
+            movieId={movieId}
+            filmTitle={filmTitle}
+            onMoved={(moved) => {
+              void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
+              void queryClient.invalidateQueries({ queryKey: ['movie', movieId] })
+              void queryClient.invalidateQueries({ queryKey: ['movies'] })
+              void queryClient.invalidateQueries({ queryKey: ['identify-recent'] })
+              navigate(`/movies/${moved.movieId}`)
+            }}
+          />
+        </div>
+      )}
+
       {/* Batch T6: the stored value is for both people and costs nothing to show; the live
           check beside it spends an eBay lookup, so it stays with the admin's tools. */}
       {(isAdmin || item.valuation) && (
@@ -298,6 +377,38 @@ function NotAFilmNote({ identifying, onToggle }: { identifying: boolean; onToggl
       <Button type="button" size="sm" variant="secondary" onClick={onToggle}>
         {identifying ? 'Cancel' : 'Identify it'}
       </Button>
+    </section>
+  )
+}
+
+/**
+ * Batch X9 (CT46-03): a film identified already that something says is another film. The
+ * evidence used to park a disc page as "pick the right page"; now the film says it is in
+ * doubt until Craig settles it on Identify films.
+ */
+function DoubtNote({ doubt, isAdmin }: { doubt: IdentificationDoubt; isAdmin: boolean }) {
+  return (
+    <section
+      className="flex flex-wrap items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 md:p-5"
+      aria-label="Identification in doubt"
+    >
+      <span className="rounded-full bg-warning/20 p-2 text-foreground">
+        <ShieldAlert className="h-4 w-4" aria-hidden />
+      </span>
+      <div className="min-w-[14rem] flex-1">
+        <h2 className="font-semibold text-foreground">Identification in doubt</h2>
+        <p className="mt-1 max-w-2xl text-sm text-foreground">{doubt.note}</p>
+        {isAdmin ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            <Link to="/identify" className="font-semibold text-foreground hover:text-primary">
+              Settle it on Identify films
+            </Link>
+            , or use Correct match.
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-muted-foreground">Craig will settle which film this is.</p>
+        )}
+      </div>
     </section>
   )
 }
@@ -526,6 +637,12 @@ export default function MovieDetailPage() {
         </div>
 
         <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
+
+        {movie.identificationDoubt ? (
+          <div className="mt-8">
+            <DoubtNote doubt={movie.identificationDoubt} isAdmin={isAdmin} />
+          </div>
+        ) : null}
 
         {!movie.identified && movie.setAsideAs === 'not_film' ? (
           <div className="mt-8">

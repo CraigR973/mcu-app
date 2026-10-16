@@ -143,6 +143,13 @@ export const filmReviewSchema = z.object({
   note: z.string().nullable(),
 })
 
+/** What the film page says while a doubt about its identification is open — Batch X9. */
+export const identificationDoubtSchema = z.object({
+  note: z.string(),
+  source: z.enum(['recheck', 'specs', 'review']),
+  raisedAt: z.string(),
+})
+
 export const movieDetailSchema = movieListItemSchema.extend({
   imdbId: z.string().nullable(),
   overview: z.string().nullable(),
@@ -154,6 +161,9 @@ export const movieDetailSchema = movieListItemSchema.extend({
   letterboxdSlug: z.string().nullable(),
   /** Batch V9. Defaulted, so the page parses an API without it yet. */
   reviews: z.array(filmReviewSchema).default([]),
+  /** Batch X9: set while a doubt about the film's identification is open. Optional, so the
+   *  page parses an API without it yet. */
+  identificationDoubt: identificationDoubtSchema.nullable().optional(),
 })
 
 /** How a disc's value as a used copy was reached — Batch X6 (`DECISIONS.md` #256). `used`:
@@ -190,6 +200,9 @@ export const copyValuationSchema = z.object({
   soldListingsUrl: z.string().min(1).nullable().default(null),
 })
 
+/** How the spec job inferred a copy's edition from its Blu-ray.com page — Batch X9. */
+export const editionSourceSchema = z.enum(['only_uk_edition', 'chosen', 'pasted'])
+
 export const collectionCopySchema = z.object({
   id: z.string().uuid(),
   formats: z.array(z.string()),
@@ -199,6 +212,9 @@ export const collectionCopySchema = z.object({
   subCategory: z.string().nullable(),
   /** Batch U2 — which edition this disc is. Defaulted: copies cached before it have none. */
   edition: z.string().nullable().default(null),
+  /** Batch X9 (CT46-05): set while the edition is the spec job's guess, so the page says
+   *  "probably". Optional, so the page reads an API without it yet. */
+  editionSource: editionSourceSchema.nullable().optional(),
   notes: z.string().nullable(),
   purchasePrice: z.string().nullable(),
   purchaseSource: z.string().nullable(),
@@ -448,6 +464,7 @@ export type MovieListItem = z.infer<typeof movieListItemSchema>
 export type MoviePage = z.infer<typeof moviePageSchema>
 export type MovieDetail = z.infer<typeof movieDetailSchema>
 export type CollectionCopy = z.infer<typeof collectionCopySchema>
+export type EditionSource = z.infer<typeof editionSourceSchema>
 export type SearchResponse = z.infer<typeof searchResponseSchema>
 export type Candidate = z.infer<typeof candidateSchema>
 export type CandidateList = z.infer<typeof candidateListSchema>
@@ -488,6 +505,8 @@ export const collectionItemSchema = z.object({
   subCategory: z.string().nullable(),
   /** Batch U2. Defaulted, like the copies' own. */
   edition: z.string().nullable().default(null),
+  /** Batch X9: as the copies' own. */
+  editionSource: editionSourceSchema.nullable().optional(),
   notes: z.string().nullable(),
   condition: z.string().nullable(),
   conditionUpdatedAt: z.string().nullable(),
@@ -2088,6 +2107,9 @@ export const identifyOverviewSchema = z.object({
   setAsideNotFilm: z.number().int().nonnegative(),
   skipped: z.number().int().nonnegative(),
   identified: z.number().int().nonnegative(),
+  /** Batch X9: identified films with an open doubt. Optional, so the page reads an API
+   *  without it yet. */
+  inDoubt: z.number().int().nonnegative().optional(),
   run: identifyRunSchema.nullable(),
 })
 
@@ -2134,8 +2156,50 @@ export const identifySearchSchema = z.object({
 
 export const identifyDecisionSchema = z.object({
   movieId: z.string().uuid(),
-  outcome: z.enum(['identified', 'merged', 'set_aside', 'skipped', 'waiting']),
+  outcome: z.enum(['identified', 'merged', 'set_aside', 'skipped', 'waiting', 'kept', 'moved']),
   title: z.string(),
+})
+
+/** Where a doubt about an identified film came from — Batch X9. */
+export const doubtSourceSchema = z.enum(['recheck', 'specs', 'review'])
+
+/** An identified film that may be the wrong one, with the evidence — Batch X9. */
+export const identifyDoubtSchema = z.object({
+  doubtId: z.string().uuid(),
+  movieId: z.string().uuid(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  /** The film it is identified as now. */
+  tmdbId: z.number().int().positive(),
+  posterPath: z.string().nullable(),
+  source: doubtSourceSchema,
+  note: z.string(),
+  evidence: z.array(z.string()),
+  /** The copy the doubt names, or the film's copies when it names none. */
+  discs: z.array(z.object({ label: z.string() })),
+  copies: z.number().int().nonnegative(),
+  watches: z.number().int().nonnegative(),
+  collectionItemId: z.string().uuid().nullable(),
+  candidates: z.array(identifyCandidateSchema),
+  proposedTmdbId: z.number().int().nullable(),
+  /** What to search TMDB for first. */
+  searchHint: z.string(),
+  raisedAt: z.string(),
+})
+
+/** Where a moved copy went, and the audit row that undoes the move — Batch X9. */
+export const moveCopySchema = z.object({
+  movieId: z.string().uuid(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  /** The collection had no such film, so the move made one. */
+  created: z.boolean(),
+  actionId: z.string().uuid(),
+})
+
+export const identifyDoubtsSchema = z.object({
+  items: z.array(identifyDoubtSchema),
+  total: z.number().int().nonnegative(),
 })
 
 export const recentIdentificationSchema = z.object({
@@ -2163,6 +2227,10 @@ export type IdentifyQueueItem = z.infer<typeof identifyQueueItemSchema>
 export type IdentifyQueue = z.infer<typeof identifyQueueSchema>
 export type IdentifySearch = z.infer<typeof identifySearchSchema>
 export type IdentifyDecision = z.infer<typeof identifyDecisionSchema>
+export type IdentifyDoubt = z.infer<typeof identifyDoubtSchema>
+export type IdentifyDoubts = z.infer<typeof identifyDoubtsSchema>
+export type MoveCopy = z.infer<typeof moveCopySchema>
+export type IdentificationDoubt = z.infer<typeof identificationDoubtSchema>
 export type RecentIdentification = z.infer<typeof recentIdentificationSchema>
 export type RecentIdentifications = z.infer<typeof recentIdentificationsSchema>
 

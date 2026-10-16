@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  identificationDoubtSchema,
+  identifyDoubtsSchema,
   activitySchema,
   attentionSchema,
   dealListSchema,
@@ -2353,5 +2355,42 @@ describe('Batch X3 — what the server holds for this phone', () => {
       expect(pushDeviceStatusSchema.parse({ state, revokedAt: null }).state).toBe(state)
     }
     expect(() => pushDeviceStatusSchema.parse({ state: 'deleted', revokedAt: null })).toThrow()
+  })
+})
+
+describe('Batch X9 — identification in doubt', () => {
+  const doubt = {
+    doubtId: '00000000-0000-4000-8000-000000000041',
+    movieId: '00000000-0000-4000-8000-000000000042',
+    title: 'Good Fellas',
+    year: 2016,
+    tmdbId: 626867,
+    posterPath: null,
+    source: 'recheck',
+    note: 'The sheet groups it under Martin Scorsese, who made GoodFellas (1990).',
+    evidence: ['This film has 0 TMDB votes.'],
+    discs: [{ label: 'Blu-ray · Martin Scorsese' }],
+    copies: 1,
+    watches: 2,
+    collectionItemId: '00000000-0000-4000-8000-000000000043',
+    candidates: [],
+    proposedTmdbId: 769,
+    searchHint: 'Good Fellas',
+    raisedAt: '2026-10-15T02:30:00+00:00',
+  }
+
+  it('reads the films in doubt', () => {
+    const page = { items: [doubt], total: 1 }
+    expect(identifyDoubtsSchema.parse(page)).toEqual(page)
+  })
+
+  it('refuses a source it does not know, and a film identified as nothing', () => {
+    expect(() => identifyDoubtsSchema.parse({ items: [{ ...doubt, source: 'guess' }], total: 1 })).toThrow()
+    expect(() => identifyDoubtsSchema.parse({ items: [{ ...doubt, tmdbId: 0 }], total: 1 })).toThrow()
+  })
+
+  it('reads the film page\'s doubt', () => {
+    const shown = { note: doubt.note, source: 'specs', raisedAt: doubt.raisedAt }
+    expect(identificationDoubtSchema.parse(shown)).toEqual(shown)
   })
 })

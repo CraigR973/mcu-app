@@ -1,0 +1,113 @@
+import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { ArrowRightLeft, Search } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { moveCopy, searchIdentify, type MoveCopy } from '@/lib/api'
+import { queryErrorMessage } from '@/lib/query-state'
+
+interface Props {
+  itemId: string
+  movieId: string
+  filmTitle: string
+  onMoved: (moved: MoveCopy) => void
+}
+
+/**
+ * "This copy is another film" — Batch X9 (CT46-01). Craig's, on a copy card.
+ *
+ * A film row could hold a right copy and a wrong one (the *French Connection II* row held
+ * both discs of *The French Connection*), so a copy moves on its own, to the film TMDB says
+ * it is, which the collection makes if it lacks it. The move is undone from Identify films'
+ * recent list.
+ */
+export function MoveCopyPanel({ itemId, movieId, filmTitle, onMoved }: Props) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState(filmTitle)
+  const [searched, setSearched] = useState<string | null>(null)
+  const search = useQuery({
+    queryKey: ['identify-search', movieId, searched],
+    queryFn: () => searchIdentify(movieId, searched ?? ''),
+    enabled: open && searched !== null,
+  })
+  const move = useMutation({
+    mutationFn: (target: number) => moveCopy(itemId, target),
+    onSuccess: onMoved,
+  })
+  // The film the copy is on now is never offered.
+  const found = (search.data?.candidates ?? []).filter((candidate) => candidate.inCollection?.movieId !== movieId)
+
+  if (!open) {
+    return (
+      <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(true)}>
+        <ArrowRightLeft aria-hidden /> This copy is another film
+      </Button>
+    )
+  }
+
+  return (
+    <section className="space-y-2" aria-label="Move this copy to another film">
+      <p className="text-sm text-muted-foreground">
+        Which film is this copy? It moves on its own; the other copies and the watches stay here.
+      </p>
+      <form
+        className="flex gap-2"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (query.trim()) setSearched(query.trim())
+        }}
+      >
+        <input
+          className="form-control min-w-0 flex-1"
+          aria-label="Search TMDB for the film this copy is"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <Button type="submit" size="sm" variant="secondary" disabled={move.isPending || !query.trim()}>
+          <Search aria-hidden /> Search
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </form>
+      {search.isLoading ? <p className="text-xs text-muted-foreground">Searching TMDB…</p> : null}
+      {search.isError ? (
+        <p role="alert" className="text-sm text-destructive-text">
+          {queryErrorMessage(search.error, 'TMDB search is unavailable.')}
+        </p>
+      ) : null}
+      {search.data && found.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No other films found for “{search.data.query}”.</p>
+      ) : null}
+      {found.length > 0 ? (
+        <ul className="divide-y divide-border" aria-label="Films this copy may be">
+          {found.map((candidate) => (
+            <li key={candidate.tmdbId} className="flex flex-wrap items-center justify-between gap-2 py-2">
+              <span className="text-sm text-foreground">
+                {candidate.title}
+                {candidate.year ? <span className="text-muted-foreground"> ({candidate.year})</span> : null}
+                {candidate.inCollection ? (
+                  <span className="block text-xs text-muted-foreground">Already in the collection</span>
+                ) : null}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={move.isPending}
+                onClick={() => move.mutate(candidate.tmdbId)}
+              >
+                Move this copy here
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {move.isError ? (
+        <p role="alert" className="text-sm text-destructive-text">
+          {queryErrorMessage(move.error, 'The copy could not be moved.')}
+        </p>
+      ) : null}
+    </section>
+  )
+}

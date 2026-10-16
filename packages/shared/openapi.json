@@ -2159,6 +2159,22 @@
       ],
       "title": "Edition"
      },
+     "editionSource": {
+      "anyOf": [
+       {
+        "enum": [
+         "only_uk_edition",
+         "chosen",
+         "pasted"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Editionsource"
+     },
      "formats": {
       "items": {
        "type": "string"
@@ -2696,6 +2712,22 @@
        }
       ],
       "title": "Edition"
+     },
+     "editionSource": {
+      "anyOf": [
+       {
+        "enum": [
+         "only_uk_edition",
+         "chosen",
+         "pasted"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Editionsource"
      },
      "formats": {
       "items": {
@@ -5495,6 +5527,35 @@
     "title": "HighlightsResponse",
     "type": "object"
    },
+   "IdentificationDoubtResponse": {
+    "description": "What the film page says while a doubt is open.",
+    "properties": {
+     "note": {
+      "title": "Note",
+      "type": "string"
+     },
+     "raisedAt": {
+      "title": "Raisedat",
+      "type": "string"
+     },
+     "source": {
+      "enum": [
+       "recheck",
+       "specs",
+       "review"
+      ],
+      "title": "Source",
+      "type": "string"
+     }
+    },
+    "required": [
+     "note",
+     "source",
+     "raisedAt"
+    ],
+    "title": "IdentificationDoubtResponse",
+    "type": "object"
+   },
    "IdentifyCandidateResponse": {
     "properties": {
      "inCollection": {
@@ -5581,7 +5642,9 @@
        "merged",
        "set_aside",
        "skipped",
-       "waiting"
+       "waiting",
+       "kept",
+       "moved"
       ],
       "title": "Outcome",
       "type": "string"
@@ -5610,6 +5673,170 @@
      "label"
     ],
     "title": "IdentifyDiscResponse",
+    "type": "object"
+   },
+   "IdentifyDoubtResponse": {
+    "description": "An identified film that may be the wrong one — Batch X9 (CT46-01, CT46-03).",
+    "properties": {
+     "candidates": {
+      "items": {
+       "$ref": "#/components/schemas/IdentifyCandidateResponse"
+      },
+      "title": "Candidates",
+      "type": "array"
+     },
+     "collectionItemId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collectionitemid"
+     },
+     "copies": {
+      "minimum": 0.0,
+      "title": "Copies",
+      "type": "integer"
+     },
+     "discs": {
+      "items": {
+       "$ref": "#/components/schemas/IdentifyDiscResponse"
+      },
+      "title": "Discs",
+      "type": "array"
+     },
+     "doubtId": {
+      "format": "uuid",
+      "title": "Doubtid",
+      "type": "string"
+     },
+     "evidence": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "note": {
+      "title": "Note",
+      "type": "string"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "proposedTmdbId": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proposedtmdbid"
+     },
+     "raisedAt": {
+      "title": "Raisedat",
+      "type": "string"
+     },
+     "searchHint": {
+      "title": "Searchhint",
+      "type": "string"
+     },
+     "source": {
+      "enum": [
+       "recheck",
+       "specs",
+       "review"
+      ],
+      "title": "Source",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "tmdbId": {
+      "exclusiveMinimum": 0.0,
+      "title": "Tmdbid",
+      "type": "integer"
+     },
+     "watches": {
+      "minimum": 0.0,
+      "title": "Watches",
+      "type": "integer"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "doubtId",
+     "movieId",
+     "title",
+     "year",
+     "tmdbId",
+     "posterPath",
+     "source",
+     "note",
+     "evidence",
+     "discs",
+     "copies",
+     "watches",
+     "collectionItemId",
+     "candidates",
+     "proposedTmdbId",
+     "searchHint",
+     "raisedAt"
+    ],
+    "title": "IdentifyDoubtResponse",
+    "type": "object"
+   },
+   "IdentifyDoubtsResponse": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/IdentifyDoubtResponse"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "total": {
+      "minimum": 0.0,
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total"
+    ],
+    "title": "IdentifyDoubtsResponse",
     "type": "object"
    },
    "IdentifyMovieRequest": {
@@ -5641,6 +5868,11 @@
      "identified": {
       "minimum": 0.0,
       "title": "Identified",
+      "type": "integer"
+     },
+     "inDoubt": {
+      "minimum": 0.0,
+      "title": "Indoubt",
       "type": "integer"
      },
      "run": {
@@ -5686,6 +5918,7 @@
      "setAsideNotFilm",
      "skipped",
      "identified",
+     "inDoubt",
      "run"
     ],
     "title": "IdentifyOverviewResponse",
@@ -6500,6 +6733,76 @@
     "title": "MaybeOwnedResponse",
     "type": "object"
    },
+   "MoveCopyRequest": {
+    "description": "One copy is another film — Batch X9.",
+    "properties": {
+     "doubtId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Doubtid"
+     },
+     "tmdbId": {
+      "exclusiveMinimum": 0.0,
+      "title": "Tmdbid",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "tmdbId"
+    ],
+    "title": "MoveCopyRequest",
+    "type": "object"
+   },
+   "MoveCopyResponse": {
+    "description": "Where the copy went, and the audit row that undoes the move.",
+    "properties": {
+     "actionId": {
+      "format": "uuid",
+      "title": "Actionid",
+      "type": "string"
+     },
+     "created": {
+      "title": "Created",
+      "type": "boolean"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "movieId",
+     "title",
+     "year",
+     "created",
+     "actionId"
+    ],
+    "title": "MoveCopyResponse",
+    "type": "object"
+   },
    "MovieDetailResponse": {
     "properties": {
      "backdropPath": {
@@ -6583,6 +6886,16 @@
       "format": "uuid",
       "title": "Id",
       "type": "string"
+     },
+     "identificationDoubt": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/IdentificationDoubtResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "identified": {
       "title": "Identified",
@@ -15907,6 +16220,55 @@
     ]
    }
   },
+  "/api/v1/collection/{item_id}/edition/confirm": {
+   "post": {
+    "description": "The edition the spec job inferred is this copy's — Batch X9 (CT46-05).\n\nEither person, as an edit is (#264). The page stops saying \"probably\", and the audit row\nsays who looked at the box.",
+    "operationId": "confirm_edition_api_v1_collection__item_id__edition_confirm_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CollectionItemResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Confirm Edition",
+    "tags": [
+     "collection"
+    ]
+   }
+  },
   "/api/v1/collection/{item_id}/listing": {
    "put": {
     "description": "Move a disc between §3.4's listing states — phases 4.2 and 4.4.\n\n**Sold is not deleted, and that distinction is the batch.** §4.4 asks that marking\nsold *\"removes from active views, remains in audit/trash\"*, and the obvious reading —\nsoft-delete it, so the existing trash machinery hides it — is wrong for one reason\nthat only shows up in ninety days: §6.30 **auto-purges the trash after 90 days**\n(`services/trash.py`). A sold disc routed through `deleted_at` would be permanently\ndestroyed a quarter later, taking the record of what it fetched with it.\n\nSo the row stays, undeleted, and ``owned_copy()`` is what removes it from the active\nviews — see that predicate for the nineteen places the word \"owned\" was previously\nspelled out. \"Remains in audit\" is this function's audit row; \"remains in trash\" is\nunchanged, because a sold disc can still be deleted and restored like any other.\n\n**`listed_for_sale` stays visible.** A disc that is advertised is still a disc on the\nshelf until somebody buys it; hiding it at the moment of listing would make listing\nindistinguishable from losing.",
@@ -17167,6 +17529,224 @@
     ]
    }
   },
+  "/api/v1/identify/copies/{item_id}/move": {
+   "post": {
+    "description": "This copy is another film: it moves on its own, to that film — Batch X9. Undone from\nthe recent list.",
+    "operationId": "move_a_copy_api_v1_identify_copies__item_id__move_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MoveCopyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MoveCopyResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Move A Copy",
+    "tags": [
+     "identify"
+    ]
+   }
+  },
+  "/api/v1/identify/doubts": {
+   "get": {
+    "description": "Identified films that may be the wrong one, with the evidence — Batch X9.",
+    "operationId": "read_doubts_api_v1_identify_doubts_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 20,
+       "maximum": 50,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IdentifyDoubtsResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Read Doubts",
+    "tags": [
+     "identify"
+    ]
+   }
+  },
+  "/api/v1/identify/doubts/{doubt_id}/identify": {
+   "post": {
+    "description": "The film is another one. A choice that merges into a film the collection has needs\n``merge``; undone from the recent list, which opens the doubt again.",
+    "operationId": "correct_film_api_v1_identify_doubts__doubt_id__identify_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doubt_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Doubt Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IdentifyPickRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IdentifyDecisionResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Correct Film",
+    "tags": [
+     "identify"
+    ]
+   }
+  },
+  "/api/v1/identify/doubts/{doubt_id}/keep": {
+   "post": {
+    "description": "The film is right after all.",
+    "operationId": "keep_film_api_v1_identify_doubts__doubt_id__keep_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doubt_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Doubt Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IdentifyDecisionResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Keep Film",
+    "tags": [
+     "identify"
+    ]
+   }
+  },
   "/api/v1/identify/films/{movie_id}/identify": {
    "post": {
     "description": "Craig's choice. A choice that merges into a film the collection has needs ``merge``.",
@@ -17574,7 +18154,7 @@
   },
   "/api/v1/identify/recent/{action_id}/undo": {
    "post": {
-    "description": "Put the film back as it was before that identification, merges included.",
+    "description": "Put the film back as it was before that identification, merges included, or a moved\ncopy back on the film it came from (Batch X9).",
     "operationId": "undo_api_v1_identify_recent__action_id__undo_post",
     "parameters": [
      {
