@@ -19,8 +19,13 @@ the Mac"): X9, catalogue truth, shipped 16 Oct ([#79](https://github.com/CraigR9
 #275).** An identified film can be "in doubt" (Identify films and its page say so); the spec and
 review jobs raise a doubt when a page for the film's own title is another year's; one copy can
 move to another film; inferred editions read "Probably …"; `MatchingEngine` decides nothing in
-the app. **Its live step is Craig's at the Mac (item 32):** the re-check of the old paths'
-films, read-only, then doubts at his word. Next: X10, at Craig's go.
+the app. **Its live step ran on Craig's Mac, 16 Oct (item 32):** after Mark's afternoon of
+identifying fixed 14 of the review's 30, a clean dry run re-checked 1,486 copies (1,102 agree;
+5 different, 3 series, 3 not offered, 373 unsure) and, at Craig's word, raised all 384 as doubts
+on Identify films (0 kept before, 0 changed). Of the 30: 19 corrected, 10 wait as doubts, and
+King Kong [1976] was not re-checked, since its film was identified since. **Craig settles the
+384.** Mark added right copies of King Kong (1976) and Ghostbusters II rather than moving the
+wrong ones, so each old copy is now a duplicate to bin. Next: X10, at Craig's go.
 **Craig's, from X4: copy `~/.mcu-secrets/backup-age-key.txt` into the password manager.**
 Without a copy off the Mac, losing the Mac makes every backup unreadable.
 **What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
@@ -64,7 +69,7 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 | ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
-| ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the re-check's live run and the doubts are Craig's (item 32) |
+| ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the live re-check ran 16 Oct, 384 doubts raised; settling them is Craig's (item 32) |
 | X10 · X11 → X12 | X10 next in sitting 4, then sitting 5 (#255), at Craig's go |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
@@ -81,7 +86,8 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
   (11 Oct), web 525, shared 131.
 - **Craig's open items** (`OWNER-ACTIONS.md`): a copy of the backup's private key off the Mac
   (X4, 14 Oct); 29 connect eBay; 22 the Neon
-  password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues.
+  password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues; the
+  384 re-check doubts on Identify films (item 32, 16 Oct).
 
 **Live numbers (12 Oct, read-only):**
 - **Collection:** 1,889 live copies (1,466 discs, 422 downloads, 1 unlabelled); 1,891 films,
@@ -487,6 +493,19 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-16 (owner action 32, X9's live re-check)** — On Craig's Mac at his go. The sheet is
+  the 18 Sep refresh's `… 02.02.26 (1).xlsx` (1,880 rows; rows 550, 614, 878 and 1831 checked;
+  the 20 Sep "corrected" copy differs only in rows 302 and 816). The morning dry run re-checked
+  1,508 copies (401 disagreements) and missed 2 of the 30: Holy Grail and House on the River
+  exactly match an obscure film's title, and T9 never counts a grouping against a film. Mark
+  then identified 25 films (13:34–15:23 UTC), fixing 14 of the 30 and both misses, so the run
+  was repeated. The first repeat lost 508 lookups when the Mac slept with its lid shut (a failed
+  lookup reads as "nothing" and raises no doubt) and was discarded. **The clean run (18:10 UTC):
+  1,486 copies, 8,759 TMDB calls; 1,102 agree, 5 different, 3 series, 3 not offered, 373
+  unsure, 0 nothing; 52 without a sheet row, 0 on another grouping; 0 of the 30 missed.** The
+  apply raised 384 doubts (0 kept before, 0 changed). King Kong [1976] stays outside the
+  re-check, because its film was identified on 15 Oct; it and Ghostbusters 2 each have a
+  duplicate copy from Mark's adds.
 - **2026-10-16 (X9, #275, [#79](https://github.com/CraigR973/mcu-app/pull/79))** — Catalogue
   truth, built in a cloud session at Craig's go. The identify run survives a TMDB failure, and
   all five run loops have failure-injection tests. The refresh, Correct match and Identify's

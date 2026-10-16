@@ -3688,6 +3688,12 @@ build's commit with the API's; the CSP allows any Railway app and Supabase.
 ### ~~X9 — Catalogue truth~~ 🔴 **shipped 2026-10-16 ([#79](https://github.com/CraigR973/mcu-app/pull/79)); the re-check's live run is Craig's (`OWNER-ACTIONS.md` 32)**
 **Acceptance: met in code, criterion by criterion; the live re-check and the queue are Craig's.**
 Choices in `DECISIONS.md` #275.
+**The live re-check ran 16 Oct on Craig's Mac (item 32):** 1,486 copies, 384 disagreements,
+all raised as doubts at his word. **Of the 30 known wrong copies, 19 were already corrected
+(14 by Mark that afternoon), 10 appear, 0 are missed, and King Kong [1976] was not
+re-checked:** its film was identified on 15 Oct, so a wrong copy beside a right one on that
+film is outside the re-check. The morning's run, before Mark's fixes, missed Holy Grail and
+House on the River (an obscure film's exact title; a grouping never counts against a film).
 - **The identify run** takes its id before the loop and reloads by it after a rollback;
   `test_the_live_run_records_a_tmdb_failure_and_carries_on` injects a `ConnectError` and the run
   finishes with it recorded. Identify, specs, reviews, valuation and eBay each have a

@@ -34,11 +34,11 @@ conversation still maps onto this file.*
 - **15 Oct, Mark's TV series (Y3, item 31):** one sitting at the Mac, about 15 minutes: the
   series pass (dry run, read its report, apply), then the read-only check for series matched as
   films; send Mark what is left.
-- **16 Oct, X9's re-check (item 32):** one evening at the Mac. A read-only dry run asks T9
-  again about every copy the old paths identified, then you read its report (it accounts for
-  each of the review's 30 wrong copies) and, at your word, it puts each disagreement on
-  Identify films as "in doubt". Then the taps are yours: keep, pick the right film, or move
-  one copy.
+- **16 Oct, X9's re-check (item 32):** ~~the dry run and the apply~~ **done 16 Oct: 384
+  doubts wait on Identify films, "In doubt".** The taps are yours: keep, pick the right film,
+  or move one copy. About 370 are probably right (one "It's right" each); 10 are the review's
+  known wrong copies. Also bin the old copy of King Kong [1976] and of Ghostbusters 2, which
+  Mark re-added on the right films.
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub
@@ -1397,7 +1397,7 @@ after Craig read the plan and said go; it never merges titles.
    On each unmatched title he chooses under **TV series**; on a film match he presses
    **Correct match** first. Shetland Series 5 needs a separate duplicate decision.
 
-### 32. Re-check the old paths' identifications — X9 *(new 16 Oct)*
+### 32. Re-check the old paths' identifications — X9 *(new 16 Oct; steps 1–2 done 16 Oct, step 3 is yours)*
 
 **Why:** the review found 30 copies confidently the wrong film, matched by the 8 Sep import's
 old engine and the diary import (CT46-01). X9 (`DECISIONS.md` #275) re-asks T9's identifier,
@@ -1405,7 +1405,18 @@ which identified 156 films with none wrong, about every copy those paths decided
 copy's own spreadsheet row. No cloud session reaches TMDB or the live database, so it runs at
 the Mac. Nothing is identified again by it: each disagreement becomes a doubt you settle.
 
-1. **The dry run, read-only, about an evening** (free TMDB calls, no Brave). Use the same
+1. ~~**The dry run, read-only, about an evening**~~ **Done 16 Oct, on the refresh's sheet
+   (`… 02.02.26 (1).xlsx`).** Mark's identifications that afternoon fixed 14 of the 30, so it
+   ran again; one repeat was discarded after the Mac slept with its lid shut (508 failed
+   lookups). **The clean run, 18:10 UTC: 1,486 copies; 1,102 agree, 5 different, 3 series, 3
+   not offered, 373 unsure, 0 nothing; 52 without a sheet row, 0 on another grouping.** Of
+   the 30: 19 already corrected, 10 appear, 0 missed, and King Kong [1976] not re-checked (its
+   film was identified on 15 Oct). Of the six doubtful titles, No Way Out, Alice in
+   Wonderland and Jack the Ripper were identified by a person first; Last Chance to See,
+   Project X and A Christmas Carol are unsure. *Keep the lid open for the whole run: a failed
+   lookup reads as "nothing" and raises no doubt.*
+
+   *(As it was written:)* (free TMDB calls, no Brave). Use the same
    spreadsheet the 18 Sep refresh read: copies are keyed by its line numbers, and the report
    counts rows whose grouping is not the copy's (many means the wrong version).
 
@@ -1418,13 +1429,20 @@ the Mac. Nothing is identified again by it: each disagreement becomes a doubt yo
    and the table of the review's 30 (each appears, was corrected already, or is missed with a
    reason). The review's six "doubtful" titles (No Way Out, Alice in Wonderland, Last Chance to
    See, Jack the Ripper, Project X, A Christmas Carol) are decided with the rest.
-2. **At your word, raise the doubts:** the same command with `--apply recheck-plan.json`.
+2. ~~**At your word, raise the doubts:** the same command with `--apply recheck-plan.json`.
    Every disagreement by default; `--verdicts different,series` narrows it. Each copy is
-   re-checked first; a film you kept before is left alone.
-3. **Settle them on You → Identify films, "In doubt":** **It's right**, **This is it** on the
+   re-checked first; a film you kept before is left alone.~~ **Done 16 Oct at your word, all
+   of them: 384 doubts raised, 0 kept before, 0 changed since the dry run.**
+3. **Yours: settle them on You → Identify films, "In doubt":** **It's right**, **This is it** on the
    film it is (a merge says so first), or **Move only this copy** where one copy of a film is
    right and another is not (French Connection II, Life, Tinker Tailor). Each is undone from
-   "Recently identified". The film page says "Identification in doubt" until then.
+   "Recently identified". The film page says "Identification in doubt" until then. About 370
+   of the 384 are probably right; two are false alarms (Hitchcock, House of the Flying
+   Daggers). **Ghostbusters 2:** Mark added a Ghostbusters II copy, so bin the old copy
+   rather than "This is it", which would leave two. **King Kong [1976]** has no doubt: its
+   old copy (sheet row 878) sits on King Kong (2005) beside the right 2005 copy (row 877),
+   and Mark added a 1976 copy, so bin row 878's. The two 2005 copies look alike; row 878's
+   location reads "Front 1st shelf", row 877's "Front 1st Shelf".
 
 Also from X9: a copy's edition the spec job inferred now reads "Probably …" with where it came
 from; **It is this edition** on the copy (either of you) confirms it.
