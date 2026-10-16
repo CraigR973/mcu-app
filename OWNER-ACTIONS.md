@@ -34,6 +34,11 @@ conversation still maps onto this file.*
 - **15 Oct, Mark's TV series (Y3, item 31):** one sitting at the Mac, about 15 minutes: the
   series pass (dry run, read its report, apply), then the read-only check for series matched as
   films; send Mark what is left.
+- **16 Oct, X9's re-check (item 32):** one evening at the Mac. A read-only dry run asks T9
+  again about every copy the old paths identified, then you read its report (it accounts for
+  each of the review's 30 wrong copies) and, at your word, it puts each disagreement on
+  Identify films as "in doubt". Then the taps are yours: keep, pick the right film, or move
+  one copy.
 - ~~**At your Mac, once (about 15 minutes):** 27, the cloud setup.~~ **Done 1 Oct:** cloud
   sessions now read the live database and plan Railway changes without the Mac.
 - **Accounts, at a computer:** 22 rotate the Neon password; 9 revoke the dead April GitHub
@@ -1391,6 +1396,38 @@ after Craig read the plan and said go; it never merges titles.
    `~/mcu-series/series-plan.html`; add only the film-matched suspects Craig agrees are series.
    On each unmatched title he chooses under **TV series**; on a film match he presses
    **Correct match** first. Shetland Series 5 needs a separate duplicate decision.
+
+### 32. Re-check the old paths' identifications — X9 *(new 16 Oct)*
+
+**Why:** the review found 30 copies confidently the wrong film, matched by the 8 Sep import's
+old engine and the diary import (CT46-01). X9 (`DECISIONS.md` #275) re-asks T9's identifier,
+which identified 156 films with none wrong, about every copy those paths decided, from the
+copy's own spreadsheet row. No cloud session reaches TMDB or the live database, so it runs at
+the Mac. Nothing is identified again by it: each disagreement becomes a doubt you settle.
+
+1. **The dry run, read-only, about an evening** (free TMDB calls, no Brave). Use the same
+   spreadsheet the 18 Sep refresh read: copies are keyed by its line numbers, and the report
+   counts rows whose grouping is not the copy's (many means the wrong version).
+
+       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" \
+       TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" \
+       PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.recheck_identifications \
+           --xlsx "<the collection spreadsheet>" --app-url https://mcu-app-fawn.vercel.app
+
+   It writes `recheck-plan.json` and `recheck-report.md`. Read the report: the verdict counts,
+   and the table of the review's 30 (each appears, was corrected already, or is missed with a
+   reason). The review's six "doubtful" titles (No Way Out, Alice in Wonderland, Last Chance to
+   See, Jack the Ripper, Project X, A Christmas Carol) are decided with the rest.
+2. **At your word, raise the doubts:** the same command with `--apply recheck-plan.json`.
+   Every disagreement by default; `--verdicts different,series` narrows it. Each copy is
+   re-checked first; a film you kept before is left alone.
+3. **Settle them on You → Identify films, "In doubt":** **It's right**, **This is it** on the
+   film it is (a merge says so first), or **Move only this copy** where one copy of a film is
+   right and another is not (French Connection II, Life, Tinker Tailor). Each is undone from
+   "Recently identified". The film page says "Identification in doubt" until then.
+
+Also from X9: a copy's edition the spec job inferred now reads "Probably …" with where it came
+from; **It is this edition** on the copy (either of you) confirms it.
 
 ### 22. Rotate the Neon database password — recommended, your call
 

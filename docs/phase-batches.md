@@ -3216,7 +3216,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | ~~X6~~ | ~~MK47-03~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X7~~ | ~~AI45-01 to AI45-08~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X8~~ | ~~UX48-01, UX48-03, CR43-04, DS44-04, DS44-07~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
-| X9 | CT46-01, CT46-03, CT46-05, CR43-02 | 🔴 | top tier · xhigh | top tier · Extra High |
+| ~~X9~~ | ~~CT46-01, CT46-03, CT46-05, CR43-02~~ | ~~🔴~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
 | X10 | CR43-03, CT46-04 | 🟢 | top tier · high | top tier · High |
 | X11 | MK47-05 | 🟡 | mid tier · high | mid tier · High |
 | X12 | UX48-05, UX48-06, UX48-07, CT46-06, CT46-07, DS44-06, the rest of CR43-08 | 🟡 | mid tier · high | mid tier · High |
@@ -3685,7 +3685,40 @@ build's commit with the API's; the CSP allows any Railway app and Supabase.
   (CI); the gate's two checks.
 - Tests. Gate green.
 
-### X9 — Catalogue truth 🔴
+### ~~X9 — Catalogue truth~~ 🔴 **shipped 2026-10-16 ([#79](https://github.com/CraigR973/mcu-app/pull/79)); the re-check's live run is Craig's (`OWNER-ACTIONS.md` 32)**
+**Acceptance: met in code, criterion by criterion; the live re-check and the queue are Craig's.**
+Choices in `DECISIONS.md` #275.
+- **The identify run** takes its id before the loop and reloads by it after a rollback;
+  `test_the_live_run_records_a_tmdb_failure_and_carries_on` injects a `ConnectError` and the run
+  finishes with it recorded. Identify, specs, reviews, valuation and eBay each have a
+  failure-injection test (the reviews one is new).
+- **The dry run over the old paths' films** is `scripts/recheck_identifications`: every owned
+  copy the import or the diary identified that neither T9 nor a person has since, its own sheet
+  row asked of T9 (no Brave), a verdict each, and a report that names each of the 30 known wrong
+  copies as appearing, already corrected (Y3's pass corrected the series among them), or missed
+  and why. `--apply` puts every disagreement into Identify as a doubt with its evidence, at
+  Craig's word. **Built and tested in CI, not yet run on live data:** no cloud session reaches
+  TMDB or the live database, so the run is item 32.
+- **A copy moves to another film** on its own (`POST /identify/copies/{id}/move`), made from
+  TMDB's record if the collection lacks it, audited on the copy and undone from the recent
+  list; Craig's copy cards and a doubt naming one copy of a film with others offer it.
+- **A disc page or review** for the copy's own title (by T9's rule) in another year raises a
+  doubt instead of only "pick the right page" (migration 057, `identify_doubts`); the film page
+  shows "Identification in doubt" while one is open.
+- **Editions** the spec job inferred read "Probably …" with their source until either person
+  confirms or retypes them (migration 058, `edition_source`); release names are compared with
+  T9's rule too ("Vol." is "Volume", numerals agree). Of the review's three examples, Kill Bill
+  and Mission: Impossible now match; *Star Wars: Episode IX* against *The Rise of Skywalker*
+  does not, since T9 requires the numbers to agree.
+- **`MatchingEngine`** no longer decides or ranks in the refresh, Correct match or Identify's
+  search; `test_the_engine_decides_nothing_in_the_app_any_more` holds it to that. The class
+  stays for its evaluation script and X10's title work.
+- **Craig settles the queue**: nothing is re-identified by the batch; the apply only raises
+  doubts, and it waits for his word.
+- **Guards:** the failure-injection tests; the namesake and article cases through the refresh
+  and Correct match; the daily check counts doubts a fortnight old beside year conflicts.
+- Local gate green (API 2,148 passed, none skipped; shared 146; web 602); CI and production in
+  the close-out.
 **Covers CT46-01 (High), CT46-03 and CR43-02 (Medium) and CT46-05 (Low).** Top tier · xhigh.
 Sitting 4, first. Before any future sheet import or refresh, which would match with the old
 engine.

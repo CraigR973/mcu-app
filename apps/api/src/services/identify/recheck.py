@@ -153,6 +153,9 @@ class RecheckPlan:
     known: list[KnownCheck] = field(default_factory=list)
     #: Copies with no spreadsheet row to read, which were not re-checked.
     without_row: int = 0
+    #: Sheet rows whose grouping is not the copy's: another version of the spreadsheet, or a
+    #: copy edited since. Not re-checked, since the title may be another row's.
+    mismatched: list[int] = field(default_factory=list)
 
     def count(self, verdict: str) -> int:
         return sum(1 for item in self.items if item.verdict == verdict)
@@ -173,6 +176,7 @@ class RecheckPlan:
             items=[Checked(**item) for item in raw["items"]],
             known=[KnownCheck(**known) for known in raw.get("known", [])],
             without_row=raw.get("without_row", 0),
+            mismatched=list(raw.get("mismatched", [])),
         )
 
 
@@ -331,6 +335,19 @@ def judge(copy: OldCopy, sheet: SheetRow, proposal: Proposal) -> Checked:
     )
 
 
+def _grouping(text: str | None) -> str:
+    return " ".join((text or "").split()).casefold()
+
+
+def same_row(copy: OldCopy, row: SheetRow) -> bool:
+    """The sheet row is the one the copy was imported from: it has the copy's grouping.
+
+    Copies are keyed by spreadsheet line (``import_source_row``) since the 18 Sep refresh, so
+    another version of the sheet would hand every copy a neighbour's title.
+    """
+    return _grouping(copy.grouping) == _grouping(row.grouping)
+
+
 async def recheck(
     copies: Iterable[OldCopy],
     sheet: dict[int, SheetRow],
@@ -342,8 +359,11 @@ async def recheck(
 ) -> RecheckPlan:
     """The plan for copies already read from the collection. Touches no database."""
     every = list(copies)
-    todo = [copy for copy in every if copy.sheet_row is not None and copy.sheet_row in sheet]
-    without_row = len(every) - len(todo)
+    rowed = [copy for copy in every if copy.sheet_row is not None and copy.sheet_row in sheet]
+    todo = [copy for copy in rowed if same_row(copy, sheet[copy.sheet_row or 0])]
+    kept = {copy.item_id for copy in todo}
+    mismatched = sorted(copy.sheet_row or 0 for copy in rowed if copy.item_id not in kept)
+    without_row = len(every) - len(rowed)
     answers: dict[tuple[str, str | None], Proposal] = {}
     items: list[Checked] = []
     for index, copy in enumerate(todo, start=1):
@@ -367,6 +387,7 @@ async def recheck(
         tmdb_calls=identifier.counters.tmdb_calls,
         items=items,
         without_row=without_row,
+        mismatched=mismatched,
     )
     plan.known = check_known(plan, known or {})
     return plan
@@ -386,6 +407,8 @@ def check_known(plan: RecheckPlan, known: dict[int, KnownCopy]) -> list[KnownChe
         elif copy.tmdb_id != wrong:
             now = f"“{copy.title}”" if copy.tmdb_id else "unidentified"
             status = f"Already corrected: the copy is now {now}."
+        elif row in plan.mismatched:
+            status = "Not re-checked: the sheet's row has another grouping than the copy."
         elif item is None:
             status = "Not re-checked: the film was identified again by T9 or a person since."
         elif item.verdict in DOUBT_CLASSES:
@@ -452,8 +475,10 @@ def render_report(plan: RecheckPlan, *, app_url: str) -> str:
         "# Re-check of the old paths' identifications (Batch X9)",
         "",
         f"Made {plan.made_utc} UTC: {plan.copies} copies re-checked, {plan.tmdb_calls} TMDB "
-        f"calls, no Brave. {plan.without_row} copies had no spreadsheet row and were not "
-        "re-checked.",
+        f"calls, no Brave. {plan.without_row} copies had no spreadsheet row and "
+        f"{len(plan.mismatched)} a row with another grouping than the copy's; neither was "
+        "re-checked. **Many mismatches mean the spreadsheet is not the version the 18 Sep "
+        "refresh read.**",
         "",
         "| Verdict | Copies |",
         "|---|---|",

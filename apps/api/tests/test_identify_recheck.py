@@ -178,9 +178,25 @@ async def test_one_sheet_title_is_asked_about_once() -> None:
             return Proposal("ask")
 
     sheet = {1: SheetRow("Dunkirk", "War"), 2: SheetRow("Dunkirk", "War")}
-    await recheck([_copy(1, 1), _copy(2, 2)], sheet, Counting(_NamesakeTmdb()), now=NOW)  # type: ignore[arg-type]
+    copies = [_copy(1, 1, grouping="War"), _copy(2, 2, grouping=" war ")]
+    await recheck(copies, sheet, Counting(_NamesakeTmdb()), now=NOW)  # type: ignore[arg-type]
 
     assert len(calls) == 1
+
+
+async def test_a_row_from_another_version_of_the_sheet_is_not_re_checked() -> None:
+    """Copies are keyed by spreadsheet line since the 18 Sep refresh: a row whose grouping is
+    not the copy's is another row, so its title says nothing about the copy."""
+    sheet = {728: SheetRow("Comedy Classics Box", "Comedy")}
+    copy = _copy(259577, 728, film_title="House on the River", grouping="Fritz Lang")
+    known = {728: KnownCopy(728, copy.item_id, 259577, None, "House on the River")}
+
+    plan = await recheck([copy], sheet, Identifier(_NamesakeTmdb()), now=NOW, known=known)  # type: ignore[arg-type]
+
+    assert (plan.items, plan.mismatched) == ([], [728])
+    status = {check.row: check.status for check in plan.known}
+    assert status[728] == "Not re-checked: the sheet's row has another grouping than the copy."
+    assert "1 a row with another grouping" in render_report(plan, app_url="https://mcu.example")
 
 
 # ---------------------------------------------------------------------------

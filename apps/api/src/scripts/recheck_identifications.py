@@ -85,7 +85,9 @@ async def run_dry(xlsx: Path, plan_out: Path, report_out: Path, app_url: str) ->
     missed = [known for known in plan.known if known.status.startswith("MISSED")]
     print(
         f"Agrees {plan.count('agrees')}, {counts}, nothing {plan.count('nothing')}. "
-        f"Known wrong copies missed: {len(missed)}. Plan {plan_out}, report {report_out}."
+        f"Not re-checked: {plan.without_row} without a sheet row, {len(plan.mismatched)} whose "
+        f"row has another grouping. Known wrong copies missed: {len(missed)}. "
+        f"Plan {plan_out}, report {report_out}."
     )
     return 0
 
