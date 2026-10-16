@@ -36,7 +36,7 @@ from src.services.identification import (
     is_undone,
     set_aside,
 )
-from src.services.identify.doubts import count_open
+from src.services.identify.doubts import KEEP_KIND, count_open
 from src.services.identify.matcher import Identifier, offer_notes
 from src.services.identify.move_copy import MOVE_KIND, is_move_undone
 from src.services.identify.plan import FORMAT_NAMES
@@ -336,8 +336,8 @@ class RecentIdentification:
 
 
 async def recent(db: AsyncSession, *, limit: int) -> list[RecentIdentification]:
-    """The latest identifications and copies moved (Batch X9), newest first, and whether
-    each has been undone."""
+    """The latest identifications, copies moved (Batch X9) and doubts kept (Batch Y4),
+    newest first, each with who and whether it has been undone."""
     rows = await db.execute(
         select(AdminAction, Profile.display_name)
         .outerjoin(Profile, Profile.id == AdminAction.user_id)
@@ -345,7 +345,7 @@ async def recent(db: AsyncSession, *, limit: int) -> list[RecentIdentification]:
             or_(
                 and_(
                     AdminAction.target_table == MOVIES_TABLE,
-                    AdminAction.changes["kind"].astext == "identify",
+                    AdminAction.changes["kind"].astext.in_(["identify", KEEP_KIND]),
                 ),
                 and_(
                     AdminAction.target_table == COLLECTION_ITEMS_TABLE,
@@ -373,6 +373,22 @@ async def recent(db: AsyncSession, *, limit: int) -> list[RecentIdentification]:
                     how="copy_moved",
                     merged=False,
                     undone=await is_move_undone(db, action.id),
+                )
+            )
+            continue
+        if changes.get("kind") == KEEP_KIND:
+            found.append(
+                RecentIdentification(
+                    action_id=action.id,
+                    when=action.created_at,
+                    by=name,
+                    movie_id=uuid.UUID(action.target_id),
+                    replaced="",
+                    title=str(changes.get("title") or ""),
+                    year=changes.get("year"),
+                    how="kept",
+                    merged=False,
+                    undone=await is_undone(db, action.id),
                 )
             )
             continue

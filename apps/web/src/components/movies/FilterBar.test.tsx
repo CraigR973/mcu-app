@@ -188,6 +188,40 @@ describe('FilterBar — still to identify, Mark 14 Oct', () => {
   })
 })
 
+describe('FilterBar — in doubt, Batch Y4', () => {
+  const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0, discsWithSpecs: 0, allSections: [] }
+
+  it('offers the films in doubt, with how many, and applies it in place of "Still to identify"', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, toIdentifyMovieCount: 12, inDoubtMovieCount: 362 })
+    const onChange = renderBar({ toIdentify: true })
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    const select = await screen.findByRole('combobox', { name: 'Filter by identified or not' })
+    expect(await within(select).findByRole('option', { name: 'In doubt (362)' })).not.toBeNull()
+    fireEvent.change(select, { target: { value: 'in-doubt' } })
+
+    expect(onChange).toHaveBeenCalledWith({ toIdentify: undefined, inDoubt: true })
+  })
+
+  it('shows when only films in doubt remain, without "Still to identify (0)"', async () => {
+    vi.mocked(fetchFacets).mockResolvedValueOnce({ ...facets, toIdentifyMovieCount: 0, inDoubtMovieCount: 3 })
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    const select = await screen.findByRole('combobox', { name: 'Filter by identified or not' })
+    expect(within(select).getByRole('option', { name: 'In doubt (3)' })).not.toBeNull()
+    expect(within(select).queryByRole('option', { name: /Still to identify/ })).toBeNull()
+  })
+
+  it('shows as a chip that clears it', () => {
+    const onChange = renderBar({ inDoubt: true })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove In doubt filter' }))
+
+    expect(onChange).toHaveBeenCalledWith({ inDoubt: undefined })
+  })
+})
+
 describe('FilterBar — reaching the films on a phone, Mark 15 Oct', () => {
   // happy-dom's window is 1024px wide: below 1280px, where the open panel is a history entry.
   it('ends the open panel in a button that shows the films, and closes it', () => {

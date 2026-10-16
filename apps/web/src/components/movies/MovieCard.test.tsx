@@ -71,4 +71,16 @@ describe('MovieCard', () => {
     expect(series).toContain('TV series')
     expect(series).not.toContain('Identify')
   })
+
+  it('says "In doubt" on an identified film with an open doubt, and nowhere else (Batch Y4)', () => {
+    const doubted = markupOf({ ...unidentified, title: 'Good Fellas', identified: true, mediaType: 'film', inDoubt: true })
+    expect(doubted).toContain('In doubt')
+    expect(doubted).not.toContain('Identify')
+
+    // A list cached before Y4 has no flag; a title not yet identified says "Identify".
+    expect(markupOf({ ...unidentified, identified: true, mediaType: 'film' })).not.toContain('In doubt')
+    const waiting = markupOf({ ...unidentified, inDoubt: true })
+    expect(waiting).toContain('Identify')
+    expect(waiting).not.toContain('In doubt')
+  })
 })

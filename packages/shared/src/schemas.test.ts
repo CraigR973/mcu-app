@@ -2394,3 +2394,52 @@ describe('Batch X9 — identification in doubt', () => {
     expect(identificationDoubtSchema.parse(shown)).toEqual(shown)
   })
 })
+
+describe('Batch Y4 — Mark settles the doubts from the film page', () => {
+  const shown = {
+    note: 'T9 cannot tell which film the sheet\'s “Good Fellas” is.',
+    source: 'recheck',
+    raisedAt: '2026-10-16T18:30:00Z',
+    doubtId: '00000000-0000-4000-8000-000000000051',
+    collectionItemId: '00000000-0000-4000-8000-000000000052',
+    copyLabel: 'Blu-ray · Martin Scorsese · Front',
+    evidence: ['Scorsese directed GoodFellas (1990).'],
+    proposedTmdbId: 769,
+    proposedTitle: 'GoodFellas',
+    proposedYear: 1990,
+  }
+
+  it('reads every doubt the film page settles, with its copy and T9\'s proposal', () => {
+    expect(identificationDoubtSchema.parse(shown)).toEqual(shown)
+    const detail = movieDetailSchema.parse({
+      ...movieListItem,
+      inDoubt: true,
+      imdbId: null,
+      overview: null,
+      tagline: null,
+      genres: [],
+      cast: [],
+      crew: [],
+      trailerKey: null,
+      letterboxdSlug: null,
+      identificationDoubt: shown,
+      identificationDoubts: [shown, { ...shown, doubtId: '00000000-0000-4000-8000-000000000053', collectionItemId: null }],
+    })
+    expect(detail.inDoubt).toBe(true)
+    expect(detail.identificationDoubts?.map((entry) => entry.collectionItemId)).toEqual([shown.collectionItemId, null])
+  })
+
+  it('still reads a film, a doubt and the facets cached before Y4', () => {
+    expect(movieListItemSchema.parse(movieListItem).inDoubt).toBeUndefined()
+    expect(identificationDoubtSchema.parse({ note: 'x', source: 'specs', raisedAt: shown.raisedAt }).doubtId).toBeUndefined()
+    expect(() => identificationDoubtSchema.parse({ ...shown, doubtId: 'not-a-uuid' })).toThrow()
+    expect(() => movieListItemSchema.parse({ ...movieListItem, inDoubt: 'yes' })).toThrow()
+  })
+
+  it('counts the films in doubt for the Archive\'s filter', () => {
+    const facets = { sections: [], unsectionedItemCount: 0, decades: [], undatedMovieCount: 0 }
+    expect(collectionFacetsSchema.parse({ ...facets, inDoubtMovieCount: 362 }).inDoubtMovieCount).toBe(362)
+    expect(collectionFacetsSchema.parse(facets).inDoubtMovieCount).toBeUndefined()
+    expect(() => collectionFacetsSchema.parse({ ...facets, inDoubtMovieCount: -1 })).toThrow()
+  })
+})

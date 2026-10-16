@@ -1,9 +1,9 @@
 import { memo } from 'react'
 import { Link } from 'react-router-dom'
-import { CircleHelp, Copy, Eye, MapPin, Tv } from 'lucide-react'
+import { CircleHelp, Copy, Eye, MapPin, ShieldAlert, Tv } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { isIdentifiedSeries, needsIdentifying, type MovieListItem } from '@/lib/api'
+import { isIdentifiedSeries, isInDoubt, needsIdentifying, type MovieListItem } from '@/lib/api'
 import { FormatBadge } from './FormatBadge'
 import { Poster } from './Poster'
 
@@ -29,8 +29,14 @@ export const MovieCard = memo(function MovieCard({ movie }: Props) {
             <CircleHelp className="mr-1 h-3.5 w-3.5" aria-hidden /> Identify
           </Badge>
         )}
+        {/* Batch Y4: an identified film with an open doubt says so, for either person to settle. */}
+        {isInDoubt(movie) && (
+          <Badge tone="warning" className="absolute bottom-2 left-2 bg-popover/95">
+            <ShieldAlert className="mr-1 h-3.5 w-3.5" aria-hidden /> In doubt
+          </Badge>
+        )}
         {/* Batch Y3: a title identified as a TMDB series says so. */}
-        {isIdentifiedSeries(movie) && (
+        {isIdentifiedSeries(movie) && !isInDoubt(movie) && (
           <Badge className="absolute bottom-2 left-2 bg-popover/95">
             <Tv className="mr-1 h-3.5 w-3.5" aria-hidden /> TV series
           </Badge>

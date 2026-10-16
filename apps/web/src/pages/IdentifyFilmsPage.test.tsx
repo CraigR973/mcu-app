@@ -302,4 +302,35 @@ describe('IdentifyFilmsPage', () => {
       expect(within(overview).getByText('7')).toBeTruthy()
     })
   })
+
+  describe('decisions Mark made on the film page (Batch Y4)', () => {
+    const KEPT = '00000000-0000-4000-8000-000000000061'
+
+    it('lists a film Mark kept as right, with his name, and undoes it', async () => {
+      recentMock.mockResolvedValue({
+        items: [
+          {
+            actionId: KEPT,
+            at: '2026-10-16T20:00:00+00:00',
+            by: 'Mark',
+            movieId: DOUBTED,
+            replaced: '',
+            title: 'Kiss of Death',
+            year: 1947,
+            how: 'kept',
+            merged: false,
+            undone: false,
+          },
+        ],
+      })
+      renderPage()
+
+      expect(await screen.findByText('Kept:')).toBeTruthy()
+      expect(screen.getByText('Kiss of Death (1947)')).toBeTruthy()
+      expect(screen.getByText(/kept as right · Mark/)).toBeTruthy()
+      fireEvent.click(screen.getByRole('button', { name: /Undo/ }))
+
+      await vi.waitFor(() => expect(undoMock).toHaveBeenCalledWith(KEPT))
+    })
+  })
 })

@@ -38,6 +38,8 @@ const HOW: Record<string, string> = {
   searched: 'by you, after a search',
   film_page: 'on the film page',
   copy_moved: 'one copy moved',
+  // Batch Y4: a doubt settled as "it's right", by either person, undone here.
+  kept: 'kept as right',
 }
 
 function Overview({ overview }: { overview: IdentifyOverview }) {
@@ -408,7 +410,13 @@ function RecentRow({ entry }: { entry: RecentIdentification }) {
   return (
     <li className="space-y-1.5 py-3 first:pt-0 last:pb-0">
       <p className="text-sm leading-5 text-foreground">
-        <span className="text-muted-foreground">{entry.replaced}</span> →{' '}
+        {entry.how === 'kept' ? (
+          <span className="text-muted-foreground">Kept: </span>
+        ) : (
+          <>
+            <span className="text-muted-foreground">{entry.replaced}</span> →{' '}
+          </>
+        )}
         <Link to={`/movies/${entry.movieId}`} className="font-semibold hover:text-primary">
           {entry.title}
           {entry.year ? ` (${String(entry.year)})` : ''}
@@ -417,6 +425,8 @@ function RecentRow({ entry }: { entry: RecentIdentification }) {
       <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
         <span>
           {formatShortDate(entry.at)}, {HOW[entry.how] ?? entry.how}
+          {/* Batch Y4: Mark settles doubts too, so each row says who. */}
+          {entry.by ? ` · ${entry.by}` : ''}
         </span>
         {entry.merged ? <Badge tone="warning">Merged</Badge> : null}
         {entry.undone ? <Badge tone="neutral">Undone</Badge> : null}

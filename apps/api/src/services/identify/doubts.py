@@ -19,6 +19,10 @@ Craig settles each one: the film is right (**keep**: a page that disagreed goes 
 doubt about it and is undone from the recent list, opening them again), or the copy is
 another film (**move it**, ``services/identify/move_copy``). A doubt Craig kept is not raised
 again by the same source while the film stays as he left it.
+
+**Since Batch Y4 (#276) Mark settles them too**, from the film page: keep and move as either
+person, each audited as whoever did it. A keep is listed under Recently identified, so Craig
+sees Mark's, and its undo opens the doubt again.
 """
 
 from __future__ import annotations
@@ -29,10 +33,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from src.clock import utcnow
+from src.models.admin_action import AdminAction
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.identify import IdentifyDoubt, MovieTitleAlias
 from src.models.movie import Movie
@@ -40,7 +46,12 @@ from src.models.reviews import FilmReview
 from src.models.specs_backfill import SpecCandidate, SpecLookup
 from src.models.watch_log import WatchLog
 from src.services.audit import record_action
-from src.services.identification import MOVIES_TABLE, Identified, identify_film
+from src.services.identification import (
+    MOVIES_TABLE,
+    Identified,
+    identify_film,
+    is_undone,
+)
 from src.services.identify.plan import FORMAT_NAMES
 from src.services.identify.titles import compare
 from src.services.specs.candidates import parse_release_title
@@ -52,6 +63,10 @@ DOUBT_AGE = timedelta(days=14)
 #: How the spec job's note reads while the film is in doubt, and once Craig keeps it.
 SPECS_IN_DOUBT = "The film may be the wrong one: it waits on Identify films."
 SPECS_KEPT = "Pick the right page."
+
+#: The audit kind of a kept doubt, and of its undo (Batch Y4).
+KEEP_KIND = "doubt_kept"
+UNDO_KEEP_KIND = "undo_doubt_kept"
 
 
 class DoubtError(ValueError):
@@ -282,15 +297,73 @@ async def count_old(db: AsyncSession, now: datetime) -> int:
     )
 
 
-async def doubt_for_film(db: AsyncSession, movie_id: uuid.UUID) -> IdentifyDoubt | None:
-    """The film's oldest open doubt, for the film page."""
+async def doubts_for_film(db: AsyncSession, movie_id: uuid.UUID) -> list[IdentifyDoubt]:
+    """The film's open doubts, oldest first, for the film page (every one since Batch Y4)."""
     found = await db.scalars(
         select(IdentifyDoubt)
         .where(IdentifyDoubt.movie_id == movie_id, IdentifyDoubt.status == "open")
         .order_by(IdentifyDoubt.created_utc, IdentifyDoubt.id)
-        .limit(1)
     )
-    return found.first()
+    return list(found.all())
+
+
+def in_doubt() -> ColumnElement[bool]:
+    """An identified film with an open doubt: the Archive's "In doubt" filter (Batch Y4),
+    counted as Identify films counts them."""
+    return and_(
+        Movie.tmdb_id.is_not(None),
+        exists().where(IdentifyDoubt.movie_id == Movie.id, IdentifyDoubt.status == "open"),
+    )
+
+
+@dataclass
+class PageDoubt:
+    """One open doubt as the film page shows it, to settle there — Batch Y4."""
+
+    doubt: IdentifyDoubt
+    #: The copy it names, while that copy is still one of this film's owned copies.
+    copy: CollectionItem | None
+    copy_label: str | None
+    proposed_title: str | None
+    proposed_year: int | None
+
+
+async def film_page_doubts(db: AsyncSession, movie_id: uuid.UUID) -> list[PageDoubt]:
+    """The film's open doubts, oldest first, with the copy each names and T9's proposal."""
+    doubts = await doubts_for_film(db, movie_id)
+    named = [doubt.collection_item_id for doubt in doubts if doubt.collection_item_id]
+    copies: dict[uuid.UUID, CollectionItem] = {}
+    if named:
+        found = await db.scalars(
+            select(CollectionItem).where(
+                CollectionItem.id.in_(named), CollectionItem.movie_id == movie_id, owned_copy()
+            )
+        )
+        copies = {item.id: item for item in found.all()}
+    shown: list[PageDoubt] = []
+    for doubt in doubts:
+        copy = copies.get(doubt.collection_item_id) if doubt.collection_item_id else None
+        proposed = next(
+            (
+                candidate
+                for candidate in doubt.candidates or []
+                if doubt.proposed_tmdb_id is not None
+                and int(candidate.get("tmdb_id") or 0) == doubt.proposed_tmdb_id
+            ),
+            None,
+        )
+        title = (proposed or {}).get("title")
+        year = (proposed or {}).get("year")
+        shown.append(
+            PageDoubt(
+                doubt=doubt,
+                copy=copy,
+                copy_label=_disc_label(copy) if copy is not None else None,
+                proposed_title=str(title) if title else None,
+                proposed_year=year if isinstance(year, int) else None,
+            )
+        )
+    return shown
 
 
 async def doubted_films(db: AsyncSession, movie_ids: Iterable[uuid.UUID]) -> set[uuid.UUID]:
@@ -328,9 +401,15 @@ async def _spec_lookup_waiting(db: AsyncSession, doubt: IdentifyDoubt) -> SpecLo
 
 
 async def keep(db: AsyncSession, doubt_id: uuid.UUID, *, by: uuid.UUID) -> IdentifyDoubt:
-    """The film is right. A disc page that disagreed is the wrong page after all."""
+    """The film is right. A disc page that disagreed is the wrong page after all.
+
+    Either person, since Batch Y4; the audit row names who, and Recently identified lists it
+    (with the film's title and year, as they were) so Craig can undo it.
+    """
     doubt, movie = await _open_doubt(db, doubt_id)
     now = utcnow()
+    lookup = await _spec_lookup_waiting(db, doubt)
+    repaged = lookup is not None and bool(lookup.note) and SPECS_IN_DOUBT in (lookup.note or "")
     audit = record_action(
         db,
         user_id=by,
@@ -338,11 +417,14 @@ async def keep(db: AsyncSession, doubt_id: uuid.UUID, *, by: uuid.UUID) -> Ident
         target_table=MOVIES_TABLE,
         target_id=movie.id,
         changes={
-            "kind": "doubt_kept",
+            "kind": KEEP_KIND,
             "doubt": str(doubt.id),
             "source": doubt.source,
             "tmdbId": movie.tmdb_id,
+            "title": movie.title,
+            "year": movie.year,
             "note": doubt.note,
+            "specNote": repaged,
         },
     )
     await db.flush()
@@ -350,11 +432,49 @@ async def keep(db: AsyncSession, doubt_id: uuid.UUID, *, by: uuid.UUID) -> Ident
     doubt.decided_by = by
     doubt.decided_utc = now
     doubt.decided_action_id = audit.id
-    lookup = await _spec_lookup_waiting(db, doubt)
-    if lookup is not None and lookup.note and SPECS_IN_DOUBT in lookup.note:
-        lookup.note = lookup.note.replace(SPECS_IN_DOUBT, SPECS_KEPT)
+    if lookup is not None and repaged:
+        lookup.note = (lookup.note or "").replace(SPECS_IN_DOUBT, SPECS_KEPT)
     await db.commit()
     return doubt
+
+
+async def undo_keep(db: AsyncSession, action_id: uuid.UUID, *, by: uuid.UUID | None) -> Movie:
+    """Open a kept doubt again — Batch Y4, so Craig can undo a keep of Mark's. Refused once
+    the film is identified as another since. Does not commit."""
+    action = await db.get(AdminAction, action_id)
+    changes = action.changes if action is not None else None
+    if action is None or not changes or changes.get("kind") != KEEP_KIND:
+        raise DoubtError("That is not a film kept as right.")
+    if await is_undone(db, action_id):
+        raise DoubtError("That has already been undone.")
+    doubt = await db.get(IdentifyDoubt, uuid.UUID(str(changes.get("doubt"))))
+    movie = await db.get(Movie, uuid.UUID(action.target_id))
+    if doubt is None or movie is None or movie.deleted_at is not None:
+        raise DoubtError("The film is gone. Restore it first.")
+    if (
+        doubt.status != "kept"
+        or doubt.decided_action_id != action.id
+        or movie.tmdb_id != changes.get("tmdbId")
+    ):
+        raise DoubtError("The film has changed since. Undo the later change first.")
+    doubt.status = "open"
+    doubt.decided_by = None
+    doubt.decided_utc = None
+    doubt.decided_action_id = None
+    if changes.get("specNote"):
+        lookup = await _spec_lookup_waiting(db, doubt)
+        if lookup is not None and lookup.note and SPECS_KEPT in lookup.note:
+            lookup.note = lookup.note.replace(SPECS_KEPT, SPECS_IN_DOUBT)
+    record_action(
+        db,
+        user_id=by,
+        action_type="update",
+        target_table=MOVIES_TABLE,
+        target_id=movie.id,
+        changes={"kind": UNDO_KEEP_KIND, "undoes": str(action_id), "doubt": str(doubt.id)},
+    )
+    await db.flush()
+    return movie
 
 
 async def correct(

@@ -56,7 +56,7 @@ from src.schemas.movies import (
 )
 from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import IdentifyError, identify_film
-from src.services.identify.doubts import doubt_for_film
+from src.services.identify.doubts import doubted_films, film_page_doubts, in_doubt
 from src.services.identify.matcher import Identifier, match_score, rank_series
 from src.services.identify.titles import ParsedTitle, parse_title
 from src.services.identify.waiting import still_to_identify
@@ -110,6 +110,9 @@ class MovieFilters:
     #: Mark's request, 14 Oct: the films still to identify, so he can fix them from their
     #: pages (:func:`still_to_identify`). False is every other film.
     to_identify: bool | None = None
+    #: Batch Y4: identified films with an open doubt, so Mark can settle them from their pages
+    #: (:func:`in_doubt`). False is every other film.
+    in_doubt: bool | None = None
     #: §3.9's spec filters — "Dolby Atmos only", "Dolby Vision 4K only", "Arrow Video",
     #: "Region-free". They read the JSONB Batch 23 fills in from Blu-ray.com, so a
     #: collection with no specs yet answers every one of them with an empty list. That is
@@ -192,6 +195,9 @@ def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     if filters.to_identify is not None:
         waiting = still_to_identify()
         predicates.append(waiting if filters.to_identify else ~waiting)
+    if filters.in_doubt is not None:
+        doubted = in_doubt()
+        predicates.append(doubted if filters.in_doubt else ~doubted)
     return predicates
 
 
@@ -347,6 +353,7 @@ def _movie_list_item(
     last_watched_at: date | None = None,
     editions: list[str] | None = None,
     set_aside_as: str | None = None,
+    in_doubt: bool = False,
 ) -> MovieListItemResponse:
     return MovieListItemResponse(
         id=movie.id,
@@ -368,6 +375,7 @@ def _movie_list_item(
         watched=last_watched_at is not None,
         lastWatchedAt=last_watched_at,
         editions=editions or [],
+        inDoubt=in_doubt and movie.tmdb_id is not None,
     )
 
 
@@ -376,13 +384,14 @@ async def _enrich_list_items(
     user_id: uuid.UUID,
     rows: Sequence[tuple[Movie, int]],
 ) -> list[MovieListItemResponse]:
-    """Attach location, watched state, editions and set-aside state to a page of films in
-    four extra queries, whatever the page's size."""
+    """Attach location, watched state, editions, set-aside state and doubts (Batch Y4) to a
+    page of films in five extra queries, whatever the page's size."""
     movie_ids = [movie.id for movie, _ in rows]
     locations = await _locations_by_movie(db, movie_ids)
     last_watched = await last_watched_by_movie(db, user_id, movie_ids)
     editions = await _editions_by_movie(db, movie_ids)
     set_aside = await _set_aside_by_movie(db, movie_ids)
+    doubted = await doubted_films(db, movie_ids)
     return [
         _movie_list_item(
             movie,
@@ -391,6 +400,7 @@ async def _enrich_list_items(
             last_watched_at=last_watched.get(movie.id),
             editions=editions.get(movie.id, []),
             set_aside_as=set_aside.get(movie.id),
+            in_doubt=movie.id in doubted,
         )
         for movie, copies in rows
     ]
@@ -465,10 +475,24 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
     editions = (await _editions_by_movie(db, [movie.id])).get(movie.id, [])
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
     set_aside_as = (await _set_aside_by_movie(db, [movie.id])).get(movie.id)
-    doubt = await doubt_for_film(db, movie.id) if movie.tmdb_id is not None else None
+    doubts = [
+        IdentificationDoubtResponse(
+            note=shown.doubt.note,
+            source=cast(DoubtSource, shown.doubt.source),
+            raisedAt=shown.doubt.created_utc,
+            doubtId=shown.doubt.id,
+            collectionItemId=shown.copy.id if shown.copy is not None else None,
+            copyLabel=shown.copy_label,
+            evidence=list(shown.doubt.evidence or []),
+            proposedTmdbId=shown.doubt.proposed_tmdb_id,
+            proposedTitle=shown.proposed_title,
+            proposedYear=shown.proposed_year,
+        )
+        for shown in (await film_page_doubts(db, movie.id) if movie.tmdb_id is not None else [])
+    ]
     return MovieDetailResponse(
         **_movie_list_item(
-            movie, copy_count, editions=editions, set_aside_as=set_aside_as
+            movie, copy_count, editions=editions, set_aside_as=set_aside_as, in_doubt=bool(doubts)
         ).model_dump(),
         imdbId=movie.imdb_id,
         overview=movie.overview,
@@ -479,15 +503,8 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
         trailerKey=movie.trailer_key,
         letterboxdSlug=movie.letterboxd_slug,
         reviews=[review_response(row) for row in reviews],
-        identificationDoubt=(
-            IdentificationDoubtResponse(
-                note=doubt.note,
-                source=cast(DoubtSource, doubt.source),
-                raisedAt=doubt.created_utc,
-            )
-            if doubt is not None
-            else None
-        ),
+        identificationDoubt=doubts[0] if doubts else None,
+        identificationDoubts=doubts,
     )
 
 
@@ -591,6 +608,7 @@ async def list_movies(
     runtime_max: Annotated[int | None, Query(alias="runtimeMax", ge=1, le=1000)] = None,
     watched: Annotated[bool | None, Query()] = None,
     to_identify: Annotated[bool | None, Query(alias="toIdentify")] = None,
+    in_doubt: Annotated[bool | None, Query(alias="inDoubt")] = None,
     # §3.9. Plain query parameters, so a filtered view is a URL somebody can bookmark —
     # which is what the phase asks for in as many words.
     hdr: Annotated[str | None, Query(min_length=1, max_length=40)] = None,
@@ -631,6 +649,7 @@ async def list_movies(
         runtime_max=runtime_max,
         watched=watched,
         to_identify=to_identify,
+        in_doubt=in_doubt,
         hdr=hdr,
         audio=audio,
         label=label,
@@ -753,6 +772,14 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
         ).scalar_one()
     )
 
+    in_doubt_count = int(
+        (
+            await db.execute(
+                select(func.count(Movie.id)).where(*_all_predicates(MovieFilters(in_doubt=True)))
+            )
+        ).scalar_one()
+    )
+
     # Batch T7: the spec filters hide while nothing could match them (#154's rule).
     with_specs = int(
         (
@@ -775,6 +802,7 @@ async def get_collection_facets(_user: CurrentUser, db: Database) -> CollectionF
         discsWithSpecs=with_specs,
         allSections=list(SECTIONS),
         toIdentifyMovieCount=to_identify,
+        inDoubtMovieCount=in_doubt_count,
     )
 
 

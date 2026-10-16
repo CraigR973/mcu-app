@@ -2,6 +2,8 @@ import { useEffect, useState, type KeyboardEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
+  ArrowRightLeft,
+  Check,
   Clock,
   Disc3,
   ExternalLink,
@@ -48,6 +50,7 @@ import {
   LISTING_STATUS_LABELS,
   fetchCopies,
   fetchMovie,
+  keepIdentification,
   needsIdentifying,
   updateCollectionItem,
   type CollectionCopy,
@@ -296,8 +299,9 @@ function CopyCard({
         <LendButton collectionItemId={item.id} />
       </div>
 
-      {/* Batch X9 (CT46-01): one copy can be another film; Craig moves it on its own. */}
-      {isAdmin && (
+      {/* Batch X9 (CT46-01): one copy can be another film, moved on its own; by either person
+          since Batch Y4 (#276), audited as whoever moved it. */}
+      {canEdit && (
         <div className="border-t border-border pt-3">
           <MoveCopyPanel
             itemId={item.id}
@@ -384,9 +388,30 @@ function NotAFilmNote({ identifying, onToggle }: { identifying: boolean; onToggl
 /**
  * Batch X9 (CT46-03): a film identified already that something says is another film. The
  * evidence used to park a disc page as "pick the right page"; now the film says it is in
- * doubt until Craig settles it on Identify films.
+ * doubt until someone settles it.
+ *
+ * Batch Y4 (#276): every open doubt, and either person settles each one here. **It's right**
+ * keeps the film; **Correct match** (the button above) identifies it again, which settles
+ * them all; and where a doubt names one copy of a film with others, **Move only this copy**.
+ * Each is audited as whoever did it, and Craig sees and undoes it on Identify films.
  */
-function DoubtNote({ doubt, isAdmin }: { doubt: IdentificationDoubt; isAdmin: boolean }) {
+function DoubtPanel({
+  movieId,
+  filmTitle,
+  doubts,
+  copyCount,
+  isAdmin,
+  correcting,
+  onCorrect,
+}: {
+  movieId: string
+  filmTitle: string
+  doubts: IdentificationDoubt[]
+  copyCount: number
+  isAdmin: boolean
+  correcting: boolean
+  onCorrect: () => void
+}) {
   return (
     <section
       className="flex flex-wrap items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 md:p-5"
@@ -395,21 +420,131 @@ function DoubtNote({ doubt, isAdmin }: { doubt: IdentificationDoubt; isAdmin: bo
       <span className="rounded-full bg-warning/20 p-2 text-foreground">
         <ShieldAlert className="h-4 w-4" aria-hidden />
       </span>
-      <div className="min-w-[14rem] flex-1">
-        <h2 className="font-semibold text-foreground">Identification in doubt</h2>
-        <p className="mt-1 max-w-2xl text-sm text-foreground">{doubt.note}</p>
-        {isAdmin ? (
-          <p className="mt-1 text-sm text-muted-foreground">
-            <Link to="/identify" className="font-semibold text-foreground hover:text-primary">
-              Settle it on Identify films
-            </Link>
-            , or use Correct match.
+      <div className="min-w-[14rem] flex-1 space-y-4">
+        <div>
+          <h2 className="font-semibold text-foreground">Identification in doubt</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            {doubts.length > 1 ? `${String(doubts.length)} things say` : 'Something says'} this may be the wrong film.
+            If it is right, say so; if not, use Correct match.
+            {isAdmin ? (
+              <>
+                {' '}They are on{' '}
+                <Link to="/identify" className="font-semibold text-foreground hover:text-primary">
+                  Identify films
+                </Link>{' '}
+                too.
+              </>
+            ) : null}
           </p>
-        ) : (
-          <p className="mt-1 text-sm text-muted-foreground">Craig will settle which film this is.</p>
-        )}
+        </div>
+        <ul className="space-y-4">
+          {doubts.map((doubt, index) => (
+            <DoubtRow
+              key={doubt.doubtId ?? `${doubt.source}-${String(index)}`}
+              movieId={movieId}
+              filmTitle={filmTitle}
+              doubt={doubt}
+              copyCount={copyCount}
+              correcting={correcting}
+              onCorrect={onCorrect}
+            />
+          ))}
+        </ul>
       </div>
     </section>
+  )
+}
+
+function DoubtRow({
+  movieId,
+  filmTitle,
+  doubt,
+  copyCount,
+  correcting,
+  onCorrect,
+}: {
+  movieId: string
+  filmTitle: string
+  doubt: IdentificationDoubt
+  copyCount: number
+  correcting: boolean
+  onCorrect: () => void
+}) {
+  const queryClient = useQueryClient()
+  const [moving, setMoving] = useState(false)
+  const settled = () => {
+    void queryClient.invalidateQueries({ queryKey: ['movie', movieId] })
+    void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
+    void queryClient.invalidateQueries({ queryKey: ['movies'] })
+    void queryClient.invalidateQueries({ queryKey: ['collection-facets'] })
+    void queryClient.invalidateQueries({ queryKey: ['identify-doubts'] })
+    void queryClient.invalidateQueries({ queryKey: ['identify-recent'] })
+  }
+  const doubtId = doubt.doubtId ?? null
+  const keep = useMutation({
+    mutationFn: () => keepIdentification(doubtId ?? ''),
+    onSuccess: settled,
+  })
+  // A doubt about one copy of a film with others may be about that copy alone (X9).
+  const movable = doubt.collectionItemId != null && copyCount > 1
+  const evidence = (doubt.evidence ?? []).filter((line) => line !== doubt.note).slice(0, 3)
+
+  return (
+    <li className="space-y-2 border-t border-warning/30 pt-3 first:border-t-0 first:pt-0">
+      <p className="max-w-2xl text-sm text-foreground">{doubt.note}</p>
+      {doubt.copyLabel ? (
+        <p className="text-xs text-muted-foreground">About the copy: {doubt.copyLabel}</p>
+      ) : null}
+      {doubt.proposedTitle ? (
+        <p className="text-xs text-muted-foreground">
+          It may be <span className="font-semibold text-foreground">
+            {doubt.proposedTitle}
+            {doubt.proposedYear ? ` (${String(doubt.proposedYear)})` : ''}
+          </span>
+          .
+        </p>
+      ) : null}
+      {evidence.length > 0 ? (
+        <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+          {evidence.map((line) => <li key={line}>{line}</li>)}
+        </ul>
+      ) : null}
+      {doubtId ? (
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="secondary" disabled={keep.isPending} onClick={() => keep.mutate()}>
+            <Check aria-hidden /> It’s right
+          </Button>
+          {!correcting ? (
+            <Button type="button" size="sm" variant="ghost" onClick={onCorrect}>
+              <RefreshCcw aria-hidden /> Correct match
+            </Button>
+          ) : null}
+          {movable && !moving ? (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setMoving(true)}>
+              <ArrowRightLeft aria-hidden /> Move only this copy
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {keep.isError ? (
+        <p role="alert" className="text-sm text-destructive-text">
+          {queryErrorMessage(keep.error, 'That could not be saved.')}
+        </p>
+      ) : null}
+      {movable && moving && doubt.collectionItemId ? (
+        <MoveCopyPanel
+          itemId={doubt.collectionItemId}
+          movieId={movieId}
+          filmTitle={doubt.proposedTitle ?? filmTitle}
+          startOpen
+          onCancel={() => setMoving(false)}
+          onMoved={() => {
+            setMoving(false)
+            settled()
+          }}
+        />
+      ) : null}
+    </li>
   )
 }
 
@@ -526,6 +661,8 @@ export default function MovieDetailPage() {
     (copy) => copy.listingStatus === 'in_collection' || copy.listingStatus === 'listed_for_sale',
   )
   const goneCopies = allCopies.filter((copy) => !copies.includes(copy))
+  // Batch Y4: every open doubt; an API from before Y4 sends only the oldest.
+  const doubts = movie.identificationDoubts ?? (movie.identificationDoubt ? [movie.identificationDoubt] : [])
   const copiesState = listState(copiesQuery, copies.length === 0)
   const runtime = movie.runtimeMinutes
     ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m`
@@ -638,9 +775,17 @@ export default function MovieDetailPage() {
 
         <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
 
-        {movie.identificationDoubt ? (
+        {doubts.length > 0 ? (
           <div className="mt-8">
-            <DoubtNote doubt={movie.identificationDoubt} isAdmin={isAdmin} />
+            <DoubtPanel
+              movieId={movie.id}
+              filmTitle={movie.title}
+              doubts={doubts}
+              copyCount={movie.copyCount}
+              isAdmin={isAdmin}
+              correcting={correcting}
+              onCorrect={() => setCorrecting(true)}
+            />
           </div>
         ) : null}
 

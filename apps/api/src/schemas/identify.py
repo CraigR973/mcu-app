@@ -137,11 +137,22 @@ class IdentifyDoubtsResponse(BaseModel):
 
 
 class IdentificationDoubtResponse(BaseModel):
-    """What the film page says while a doubt is open."""
+    """What the film page says while a doubt is open, and since Batch Y4 what either person
+    needs to settle it there."""
 
     note: str
     source: DoubtSource
     raisedAt: UtcDatetime
+    #: Batch Y4. Defaulted, so the shape still reads as X9 wrote it.
+    doubtId: uuid.UUID | None = None
+    #: The copy the doubt names, and how it reads ("Blu-ray · Front"), or none.
+    collectionItemId: uuid.UUID | None = None
+    copyLabel: str | None = None
+    evidence: list[str] = Field(default_factory=list)
+    #: The film T9 proposes, when it proposes one.
+    proposedTmdbId: int | None = None
+    proposedTitle: str | None = None
+    proposedYear: int | None = None
 
 
 class MoveCopyRequest(BaseModel):

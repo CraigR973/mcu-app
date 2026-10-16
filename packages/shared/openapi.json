@@ -2401,6 +2401,12 @@
       "title": "Discswithspecs",
       "type": "integer"
      },
+     "inDoubtMovieCount": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Indoubtmoviecount",
+      "type": "integer"
+     },
      "sections": {
       "items": {
        "$ref": "#/components/schemas/SectionFacetResponse"
@@ -5528,11 +5534,86 @@
     "type": "object"
    },
    "IdentificationDoubtResponse": {
-    "description": "What the film page says while a doubt is open.",
+    "description": "What the film page says while a doubt is open, and since Batch Y4 what either person\nneeds to settle it there.",
     "properties": {
+     "collectionItemId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collectionitemid"
+     },
+     "copyLabel": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Copylabel"
+     },
+     "doubtId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Doubtid"
+     },
+     "evidence": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+     },
      "note": {
       "title": "Note",
       "type": "string"
+     },
+     "proposedTitle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proposedtitle"
+     },
+     "proposedTmdbId": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proposedtmdbid"
+     },
+     "proposedYear": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proposedyear"
      },
      "raisedAt": {
       "title": "Raisedat",
@@ -6897,6 +6978,13 @@
        }
       ]
      },
+     "identificationDoubts": {
+      "items": {
+       "$ref": "#/components/schemas/IdentificationDoubtResponse"
+      },
+      "title": "Identificationdoubts",
+      "type": "array"
+     },
      "identified": {
       "title": "Identified",
       "type": "boolean"
@@ -6911,6 +6999,11 @@
        }
       ],
       "title": "Imdbid"
+     },
+     "inDoubt": {
+      "default": false,
+      "title": "Indoubt",
+      "type": "boolean"
      },
      "lastWatchedAt": {
       "anyOf": [
@@ -7153,6 +7246,11 @@
      },
      "identified": {
       "title": "Identified",
+      "type": "boolean"
+     },
+     "inDoubt": {
+      "default": false,
+      "title": "Indoubt",
       "type": "boolean"
      },
      "lastWatchedAt": {
@@ -17531,7 +17629,7 @@
   },
   "/api/v1/identify/copies/{item_id}/move": {
    "post": {
-    "description": "This copy is another film: it moves on its own, to that film — Batch X9. Undone from\nthe recent list.",
+    "description": "This copy is another film: it moves on its own, to that film — Batch X9. Undone from\nthe recent list. Either person since Batch Y4.",
     "operationId": "move_a_copy_api_v1_identify_copies__item_id__move_post",
     "parameters": [
      {
@@ -17700,7 +17798,7 @@
   },
   "/api/v1/identify/doubts/{doubt_id}/keep": {
    "post": {
-    "description": "The film is right after all.",
+    "description": "The film is right after all. Either person, from the film page, since Batch Y4.",
     "operationId": "keep_film_api_v1_identify_doubts__doubt_id__keep_post",
     "parameters": [
      {
@@ -17857,7 +17955,7 @@
   },
   "/api/v1/identify/films/{movie_id}/search": {
    "get": {
-    "description": "TMDB's films for a corrected title. Nothing is saved until Craig picks one.",
+    "description": "TMDB's films for a corrected title. Nothing is saved until Craig picks one. Either\nperson since Batch Y4: \"Move only this copy\" searches with it, and it writes nothing.",
     "operationId": "search_film_api_v1_identify_films__movie_id__search_get",
     "parameters": [
      {
@@ -18154,7 +18252,7 @@
   },
   "/api/v1/identify/recent/{action_id}/undo": {
    "post": {
-    "description": "Put the film back as it was before that identification, merges included, or a moved\ncopy back on the film it came from (Batch X9).",
+    "description": "Put the film back as it was before that identification, merges included, a moved\ncopy back on the film it came from (Batch X9), or a kept doubt open again (Batch Y4).",
     "operationId": "undo_api_v1_identify_recent__action_id__undo_post",
     "parameters": [
      {
@@ -19370,6 +19468,22 @@
         }
        ],
        "title": "Toidentify"
+      }
+     },
+     {
+      "in": "query",
+      "name": "inDoubt",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Indoubt"
       }
      },
      {
