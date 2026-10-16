@@ -867,6 +867,8 @@ async def fill_edition(
     if found is None or found.edition is None:
         return None
     item.edition = found.edition
+    # Batch X9 (CT46-05): inferred, so the copy page says "probably" until a person confirms.
+    item.edition_source = found.kind
     logger.info("edition_filled", item_id=str(item.id), kind=found.kind, edition=found.edition)
     return found
 
@@ -925,6 +927,7 @@ async def fill_editions(db: AsyncSession, found: list[EditionFound]) -> int:
         item = await db.get(CollectionItem, entry.item_id)
         if item is not None and item.edition is None:
             item.edition = entry.edition
+            item.edition_source = entry.kind
             written += 1
     await db.commit()
     return written

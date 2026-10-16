@@ -2159,6 +2159,22 @@
       ],
       "title": "Edition"
      },
+     "editionSource": {
+      "anyOf": [
+       {
+        "enum": [
+         "only_uk_edition",
+         "chosen",
+         "pasted"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Editionsource"
+     },
      "formats": {
       "items": {
        "type": "string"
@@ -2696,6 +2712,22 @@
        }
       ],
       "title": "Edition"
+     },
+     "editionSource": {
+      "anyOf": [
+       {
+        "enum": [
+         "only_uk_edition",
+         "chosen",
+         "pasted"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Editionsource"
      },
      "formats": {
       "items": {
@@ -16183,6 +16215,55 @@
      }
     ],
     "summary": "Update Collection Item",
+    "tags": [
+     "collection"
+    ]
+   }
+  },
+  "/api/v1/collection/{item_id}/edition/confirm": {
+   "post": {
+    "description": "The edition the spec job inferred is this copy's — Batch X9 (CT46-05).\n\nEither person, as an edit is (#264). The page stops saying \"probably\", and the audit row\nsays who looked at the box.",
+    "operationId": "confirm_edition_api_v1_collection__item_id__edition_confirm_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CollectionItemResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Confirm Edition",
     "tags": [
      "collection"
     ]

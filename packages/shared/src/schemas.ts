@@ -200,6 +200,9 @@ export const copyValuationSchema = z.object({
   soldListingsUrl: z.string().min(1).nullable().default(null),
 })
 
+/** How the spec job inferred a copy's edition from its Blu-ray.com page — Batch X9. */
+export const editionSourceSchema = z.enum(['only_uk_edition', 'chosen', 'pasted'])
+
 export const collectionCopySchema = z.object({
   id: z.string().uuid(),
   formats: z.array(z.string()),
@@ -209,6 +212,9 @@ export const collectionCopySchema = z.object({
   subCategory: z.string().nullable(),
   /** Batch U2 — which edition this disc is. Defaulted: copies cached before it have none. */
   edition: z.string().nullable().default(null),
+  /** Batch X9 (CT46-05): set while the edition is the spec job's guess, so the page says
+   *  "probably". Optional, so the page reads an API without it yet. */
+  editionSource: editionSourceSchema.nullable().optional(),
   notes: z.string().nullable(),
   purchasePrice: z.string().nullable(),
   purchaseSource: z.string().nullable(),
@@ -458,6 +464,7 @@ export type MovieListItem = z.infer<typeof movieListItemSchema>
 export type MoviePage = z.infer<typeof moviePageSchema>
 export type MovieDetail = z.infer<typeof movieDetailSchema>
 export type CollectionCopy = z.infer<typeof collectionCopySchema>
+export type EditionSource = z.infer<typeof editionSourceSchema>
 export type SearchResponse = z.infer<typeof searchResponseSchema>
 export type Candidate = z.infer<typeof candidateSchema>
 export type CandidateList = z.infer<typeof candidateListSchema>
@@ -498,6 +505,8 @@ export const collectionItemSchema = z.object({
   subCategory: z.string().nullable(),
   /** Batch U2. Defaulted, like the copies' own. */
   edition: z.string().nullable().default(null),
+  /** Batch X9: as the copies' own. */
+  editionSource: editionSourceSchema.nullable().optional(),
   notes: z.string().nullable(),
   condition: z.string().nullable(),
   conditionUpdatedAt: z.string().nullable(),

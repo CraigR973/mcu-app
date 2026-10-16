@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from src.matching.engine import canonical_title
+from src.services.identify.titles import compare
 from src.services.specs.bluray_com import canonical_release_url, is_release_url
 from src.services.specs.search import SearchHit
 
@@ -224,9 +225,21 @@ def _film_key(title: str) -> str:
 
 
 def same_film(page_name: str, film_title: str) -> bool:
-    """Equal once both are reduced the way identification reduces titles."""
+    """Equal once both are reduced the way identification reduces titles.
+
+    Batch X9 (CT46-05): by T9's title rule too, which reads numerals and "Vol." as the film's
+    own title writes them. Spelling alone kept three copies' plain UK releases out of their
+    searches: "Kill Bill: Volume 1" against "Vol. 1", "Mission: Impossible 2" against "II".
+    Only an exact match counts: a typo-close title is another film here ("Alien", "Aliens").
+    """
     page = _film_key(page_name)
-    return bool(page) and page == _film_key(film_title)
+    if not page:
+        return False
+    if page == _film_key(film_title):
+        return True
+    ours, _ = canonical_title(film_title)
+    theirs, _ = canonical_title(page_name)
+    return compare(ours, theirs).how == "exact"
 
 
 @dataclass(frozen=True)

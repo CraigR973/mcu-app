@@ -289,6 +289,7 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/identify/doubts/{doubt_id}/keep",
         "/api/v1/identify/doubts/{doubt_id}/identify",
         "/api/v1/identify/copies/{item_id}/move",
+        "/api/v1/collection/{item_id}/edition/confirm",
         "/api/v1/ebay/targets",
         "/api/v1/ebay/targets/listing",
         "/api/v1/ebay/targets/search",

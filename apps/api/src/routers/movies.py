@@ -34,6 +34,7 @@ from src.models.movie import Movie, MovieCredit
 from src.models.valuation import DiscValuation
 from src.models.watch_log import WatchLog
 from src.routers.valuation import copy_valuation
+from src.schemas.collection import EditionSource
 from src.schemas.identify import DoubtSource, IdentificationDoubtResponse
 from src.schemas.movies import (
     CandidateListResponse,
@@ -823,6 +824,7 @@ async def get_movie_copies(
             shelf=copy.shelf,
             subCategory=copy.sub_category,
             edition=copy.edition,
+            editionSource=cast(EditionSource, copy.edition_source),
             notes=copy.notes,
             purchasePrice=(str(copy.purchase_price) if copy.purchase_price is not None else None),
             purchaseSource=copy.purchase_source,

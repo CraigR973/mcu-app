@@ -1201,6 +1201,8 @@ async def test_the_one_uk_edition_the_search_found_gives_the_disc_its_edition(
     assert run.applied == 1
     await db.refresh(disc)
     assert disc.edition == "MetalPak"
+    # Batch X9 (CT46-05): inferred, so the copy page reads "probably" until a person confirms.
+    assert disc.edition_source == "only_uk_edition"
 
 
 async def test_the_plain_one_among_several_uk_editions_gives_none(db: AsyncSession) -> None:
@@ -1235,7 +1237,7 @@ async def test_craigs_choice_from_the_list_gives_the_edition_he_chose(db: AsyncS
 
     assert run.applied == 1
     await db.refresh(disc)
-    assert disc.edition == "Play Exclusive SteelBook"
+    assert (disc.edition, disc.edition_source) == ("Play Exclusive SteelBook", "chosen")
 
 
 async def test_a_page_craig_pasted_that_the_search_never_offered_gives_none(
@@ -1270,7 +1272,7 @@ async def test_an_edition_already_on_the_disc_is_never_replaced(db: AsyncSession
     await _run(db, FakeBrave({"Fight Club": _one_uk()}), site)
 
     await db.refresh(disc)
-    assert disc.edition == "Bought in Fopp, the tin one"
+    assert (disc.edition, disc.edition_source) == ("Bought in Fopp, the tin one", None)
 
 
 async def test_a_page_that_moved_gives_no_edition_from_its_old_name(db: AsyncSession) -> None:
@@ -1317,8 +1319,9 @@ async def test_the_one_off_fills_discs_settled_before_editions_existed(db: Async
         FakeBrave({"Fight Club": _one_uk()}),
         FakeBlurayCom({FIGHT_CLUB_UK_PATH: FIGHT_CLUB_PAGE}),
     )
-    # As the 430 discs settled before Batch U2 were.
+    # As the 430 discs settled before Batch U2 were: no edition, so nothing inferred.
     disc.edition = None
+    disc.edition_source = None
     await db.commit()
 
     found = await editions_to_fill(db)
@@ -1330,7 +1333,7 @@ async def test_the_one_off_fills_discs_settled_before_editions_existed(db: Async
     ]
     assert written == 1
     await db.refresh(disc)
-    assert disc.edition == "MetalPak"
+    assert (disc.edition, disc.edition_source) == ("MetalPak", "only_uk_edition")
     assert again == []
 
 
@@ -1355,7 +1358,9 @@ async def test_forgetting_blu_ray_com_takes_its_editions_and_leaves_typed_ones(
     await _run(db, brave, site)
     await db.refresh(heat)
     assert heat.edition == "SteelBook"
+    # Craig's correction, as the copy form writes it: his, so no longer the job's guess.
     heat.edition = "Ultimate Hi-Def Edition"
+    heat.edition_source = None
     await db.commit()
     fight_club_id, heat_id = fight_club.id, heat.id
 
@@ -1369,6 +1374,7 @@ async def test_forgetting_blu_ray_com_takes_its_editions_and_leaves_typed_ones(
     await db.refresh(forgotten)
     await db.refresh(kept)
     assert (forgotten.specs_source_url, forgotten.edition) == (None, None)
+    assert forgotten.edition_source is None
     assert (kept.specs_source_url, kept.edition) == (None, "Ultimate Hi-Def Edition")
 
 

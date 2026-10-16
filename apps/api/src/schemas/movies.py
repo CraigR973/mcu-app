@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.schemas.collection import EditionSource
 from src.schemas.identify import IdentificationDoubtResponse
 from src.schemas.reviews import FilmReviewResponse
 from src.schemas.valuation import CopyValuationResponse
@@ -127,6 +128,9 @@ class CollectionCopyResponse(BaseModel):
     subCategory: str | None = None
     #: Batch U2.
     edition: str | None = None
+    #: Batch X9 (CT46-05): how the spec job inferred the edition, so the page says
+    #: "probably"; null once a person typed or confirmed it.
+    editionSource: EditionSource | None = None
     notes: str | None = None
     purchasePrice: str | None = None
     purchaseSource: str | None = None

@@ -44,12 +44,14 @@ import {
   backdropUrl,
   bestFormat,
   conditionLabel,
+  confirmEdition,
   LISTING_STATUS_LABELS,
   fetchCopies,
   fetchMovie,
   needsIdentifying,
   updateCollectionItem,
   type CollectionCopy,
+  type EditionSource,
   type IdentificationDoubt,
   type ListingStatus,
   type MovieDetail,
@@ -57,6 +59,40 @@ import {
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
 type Tab = 'overview' | 'crew' | 'copies' | 'watch'
+
+const EDITION_SOURCE: Record<EditionSource, string> = {
+  only_uk_edition: 'Blu-ray.com: the only UK edition its search found for this film and format.',
+  chosen: 'Blu-ray.com: the page Craig chose from its search.',
+  pasted: 'Blu-ray.com: the page Craig pasted.',
+}
+
+/**
+ * Batch X9 (CT46-05): on 12 Oct every edition on a copy had come from the spec job, none from
+ * a person, and 16 named a SteelBook the sheet never mentions. An inferred edition says where
+ * it came from and reads "probably" until someone confirms it or types another.
+ */
+function EditionGuess({
+  source,
+  canConfirm,
+  confirming,
+  onConfirm,
+}: {
+  source: EditionSource
+  canConfirm: boolean
+  confirming: boolean
+  onConfirm: () => void
+}) {
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-2">
+      <p className="text-xs text-muted-foreground">{EDITION_SOURCE[source]}</p>
+      {canConfirm ? (
+        <Button type="button" size="sm" variant="ghost" disabled={confirming} onClick={onConfirm}>
+          It is this edition
+        </Button>
+      ) : null}
+    </div>
+  )
+}
 
 function CopyCard({
   item,
@@ -89,6 +125,15 @@ function CopyCard({
   // §3.11's "mark as damaged" quick action. It is the ordinary update with one field
   // changed — the client already holds the whole copy — so there is only one path that
   // has to remember to stamp `conditionUpdatedAt` and write the audit row.
+  // Batch X9 (CT46-05): the spec job's edition is a guess until someone looks at the box.
+  const confirm = useMutation({
+    mutationFn: () => confirmEdition(item.id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['movie-copies', movieId] })
+      void queryClient.invalidateQueries({ queryKey: ['item-history', movieId] })
+    },
+  })
+
   const markDamaged = useMutation({
     mutationFn: () =>
       updateCollectionItem(item.id, {
@@ -122,8 +167,21 @@ function CopyCard({
             <div>
               <p className="metadata-label">Edition</p>
               <p className="mt-0.5 font-display text-lg font-semibold text-foreground">
-                {item.edition}
+                {item.editionSource ? `Probably ${item.edition}` : item.edition}
               </p>
+              {item.editionSource ? (
+                <EditionGuess
+                  source={item.editionSource}
+                  canConfirm={canEdit}
+                  confirming={confirm.isPending}
+                  onConfirm={() => confirm.mutate()}
+                />
+              ) : null}
+              {confirm.isError ? (
+                <p role="alert" className="mt-1 text-sm text-destructive">
+                  {queryErrorMessage(confirm.error, 'Could not confirm the edition.')}
+                </p>
+              ) : null}
             </div>
           ) : null}
           {item.subCategory ? (

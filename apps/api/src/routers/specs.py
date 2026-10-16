@@ -175,6 +175,7 @@ async def forget_all_specs(_user: AdminUser, db: Database) -> SpecsStateResponse
             )
             if lookup is not None and item.edition == await page_edition(db, lookup):
                 item.edition = None
+                item.edition_source = None
         item.video_specs = None
         item.audio_specs = None
         item.special_features = None

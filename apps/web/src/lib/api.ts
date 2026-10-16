@@ -268,6 +268,7 @@ export type {
   IdentifyDoubt,
   IdentifyDoubts,
   IdentificationDoubt,
+  EditionSource,
   MoveCopy,
   IdentifyOverview,
   IdentifyQueue,
@@ -839,6 +840,14 @@ export type UpdateCollectionItemInput = CollectionItemFields & {
    * edit flushed after someone else moved the disc would silently win.
    */
   baseUpdatedAt?: string
+}
+
+/** The edition the spec job inferred is this copy's — Batch X9. Either person. */
+export async function confirmEdition(itemId: string): Promise<CollectionItem> {
+  return parseOrThrowApiError(
+    await authFetch(`/collection/${itemId}/edition/confirm`, { method: 'POST' }),
+    collectionItemSchema,
+  )
 }
 
 export async function updateCollectionItem(
