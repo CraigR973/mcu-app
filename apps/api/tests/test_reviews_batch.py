@@ -406,6 +406,40 @@ class TestTheNightlyBatch:
             ("Dog Soldiers", "avforums"),
         ]
 
+    async def test_an_unexpected_failure_mid_run_is_recorded_rather_than_left_running(
+        self, db: AsyncSession
+    ) -> None:
+        """X9's guard (CR43-02's class): every run loop has a failure-injection test. A run
+        the process lost would read "running" until it was abandoned; this one says why."""
+
+        class ExplodingBrave(FakeBrave):
+            async def search(
+                self, query: str, *, count: int = 20, country: str = "GB"
+            ) -> list[SearchHit]:
+                self.search_calls += 1
+                raise RuntimeError("Brave's client fell over")
+
+        movie = await _film(db)
+        await _want(db, movie, "4k_uhd")
+        run = await batch.start_run(db, trigger="job", now=NOW)
+        assert run is not None
+        run_id = run.id
+
+        with pytest.raises(RuntimeError, match="fell over"):
+            async with Site().client() as client:
+                await batch.work_run(
+                    db, run, searcher=ExplodingBrave(), client=client, clock=lambda: NOW, pause=0
+                )
+
+        stopped = await db.get(ReviewRun, run_id)
+        assert stopped is not None
+        await db.refresh(stopped)
+        assert (stopped.status, stopped.last_error, stopped.searches) == (
+            "stopped",
+            "RuntimeError: Brave's client fell over",
+            1,
+        )
+
     async def test_nothing_found_is_recorded_and_searched_again_after_a_month(
         self, db: AsyncSession
     ) -> None:
