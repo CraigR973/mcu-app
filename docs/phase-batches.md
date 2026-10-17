@@ -3835,6 +3835,7 @@ reporting the merge SHA with `db: ok`.
 | ~~Y2~~ | ~~Move several discs at once, from anywhere~~ (`e0b5bad`) | ~~🟡~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y3~~ | ~~TV series identified from TMDB, and the ones matched as films found~~ (`ef62257`) | ~~🟡~~ | **shipped 15 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y4~~ | ~~Mark settles the doubts from the film page~~ ([#81](https://github.com/CraigR973/mcu-app/pull/81), #276) | ~~🟡~~ | **shipped 16 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
+| Y5 | Mark's 16 Oct points: series discs added and moved, Film Noir, a disc added by its title (#277) | 🟡 | in progress | top tier · high | top tier · High |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -4056,6 +4057,65 @@ authored 2026-10-16.**
   the rest of Identify; the filter, facet and flag; the film page's list; a keep undone and the
   refusal. Web tests for the filter, the flag, the film page's actions for Mark and a kept row.
 - Tests. Gate green; production `/api/v1/health` on the merge SHA with `db: ok`.
+
+### Y5 — Mark's 16 Oct points 🟡 **in progress**
+
+**Asked by Mark through Craig, 16 Oct; Craig approved all three parts the same day (#277).**
+Mark found three series discs catalogued on the same-named film beside a right copy (BBC's
+*Life* Blu-ray on *Life* (2017), the 1979 *Tinker Tailor* Blu-ray on the 2011 film, the 2019
+*Name of the Rose* Blu-ray on the 1986 film), each with an open re-check doubt naming the copy,
+and "Move only this copy" and the add form offer films only. He asked for a Film Noir filter;
+Craig chose TMDB's keyword 9807 "film noir" over IMDb's genre and the sheet's groupings (224 of
+the 1,850 identified owned films carry it; 35 of the 48 sheet "noir" groupings). And John
+Krish's *A Day in the Life* (BFI Blu-ray) is not on TMDB as one title, so it cannot be added.
+Top tier · high: it adds a migration, a live backfill and a third and fourth way to name a
+film on the add form. **Criteria authored 2026-10-16.**
+
+**Acceptance:**
+- **Series on the add form.** `GET /tmdb/search` answers TMDB's series in their own list
+  (`series`, up to 5, ranked by T9's series rule, each saying whether the collection holds it);
+  `results` stays films, so an app cached before Y5 never offers a series as a film.
+  `POST /collection` and `GET /collection/duplicate-check` take `tmdbTvId`: the copy goes on
+  the collection's row for that series, or one made from TMDB's record (metadata and credits as
+  Correct match writes them), restored from the Trash as a film's is. The duplicate prompt
+  holds for a series as for a film.
+- **Series for "Move only this copy".** `GET /identify/films/{id}/search` answers
+  `seriesCandidates` beside `candidates`; `POST /identify/copies/{id}/move` takes
+  `mediaType: "tv"`, moving the copy to the collection's row for that series or one made from
+  TMDB's record. The audit row names both ends, the doubt about the copy is settled, and the
+  undo on Recently identified puts it back and removes a series row nothing else points at.
+- **One tap from the doubt.** A doubt's "Move only this copy" opens already searched, on the
+  title the doubt was raised from (the sheet's, carried as `searchHint`), and lists series
+  marked "TV series" beside films, so moving the copy is the next tap. Checked against TMDB for
+  the three: *Life* → tv 16946, *Tinker Tailor* → tv 35430, *Name of the Rose* → tv 86343, each
+  offered. The three moves themselves are Craig's, in the app.
+- **Film Noir.** Migration 059 adds `movies.tmdb_keyword_ids integer[]`, null meaning not
+  fetched, granted to `mcu_readonly` and `mcu_backup` in the guarded block. `get_movie_full`
+  and `get_tv_full` append `keywords`; `movie_metadata_values` and `tv_metadata_values` set the
+  ids (null when the record carries no keywords block, an empty list when TMDB has none), so
+  every add, identification and move fills it. `GET /movies?keywordId=` filters by it, and a
+  saved collection's filters carry `keywordId`. The Archive's genre filter offers "Film Noir"
+  (keyword 9807), with its chip, beside the genres.
+- **The backfill.** `src.scripts.fill_keywords` fills the column for live identified films and
+  series whose ids are null, one `/movie/{id}/keywords` (or `/tv/{id}/keywords`) call each, at
+  8 a second; a dry run by default (it reads TMDB and reports how many would fill and how many
+  are noir, writing nothing), `--apply` at Craig's word. Rerunnable: it touches only null rows,
+  and a film TMDB no longer has is counted and left null.
+- **Add by title.** The add form's search offers "Add “…” by its title" for a disc TMDB does not
+  have. `POST /collection` (and the duplicate check) take `title` as a fourth reference: the
+  copy goes on a new title-only film, set aside as not a film (audited, by whoever added it),
+  or on the live title-only film already set aside under that title, so a second copy meets
+  the duplicate prompt. Such a film is not on "Still to identify" and is not flagged
+  "Identify". With a scanned barcode held, a series or a title-only add skips the barcode
+  confirmation (the barcode still goes on the copy, which the next scan finds).
+- **Guards:** Postgres tests for adding a series (new and existing), the duplicate prompt for
+  one, moving a copy to a series and undoing it, the series search answers, the keyword filter,
+  the backfill's dry run and apply, adding by title (new, reused, kept off "Still to
+  identify"), and the migration's grants; unit tests for the metadata translation. Web tests
+  for the add form's series and title-only adds, the move panel's series and opened search,
+  the genre filter's Film Noir and its chip. Browser check at 375px against seeded local data.
+- Tests. Gate green; production `/api/v1/health` and `version.json` on the merge SHA with
+  `db: ok`. Then the backfill waits for Craig's word.
 
 ## Post-launch — sequenced, not scheduled
 
