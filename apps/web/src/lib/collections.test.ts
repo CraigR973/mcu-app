@@ -13,6 +13,7 @@ import {
 
 const NO_FILTERS: SmartCollectionFilters = {
   genreId: null,
+  keywordId: null,
   year: null,
   format: null,
   section: null,
@@ -35,6 +36,14 @@ describe('completionLabel', () => {
     // nobody entered, not a judgement about the set.
     expect(completionLabel({ ownedCount: 3, expectedCount: null })).toBe('3 discs')
     expect(completionLabel({ ownedCount: 1, expectedCount: null })).toBe('1 disc')
+  })
+})
+
+describe('Film Noir in a saved collection — Batch Y5', () => {
+  it('says film noir and carries the keyword to the filter bar', () => {
+    const noir = { ...NO_FILTERS, keywordId: 9807, decadeFrom: 1940, decadeTo: 1940 }
+    expect(describeFilters(noir)).toContain('film noir')
+    expect(filtersToMovieFilters(noir)).toEqual({ keywordId: 9807, decadeFrom: 1940, decadeTo: 1940 })
   })
 })
 

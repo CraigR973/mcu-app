@@ -267,3 +267,34 @@ describe('FilterBar — reaching the films on a phone, Mark 15 Oct', () => {
     expect(screen.queryByLabelText('Filter by genre')).toBeNull()
   })
 })
+
+describe('FilterBar — Batch Y5, Film Noir', () => {
+  it('offers Film Noir among the genres, in alphabetical place, and filters by its TMDB keyword', () => {
+    const onChange = renderBar({ genreId: 27 })
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    const select = screen.getByLabelText('Filter by genre')
+    const names = within(select).getAllByRole('option').map((option) => option.textContent)
+
+    expect(names.indexOf('Film Noir')).toBe(names.indexOf('Fantasy') + 1)
+    expect(names.indexOf('History')).toBe(names.indexOf('Film Noir') + 1)
+    fireEvent.change(select, { target: { value: 'keyword-9807' } })
+    // One choice at a time: Film Noir replaces Horror.
+    expect(onChange).toHaveBeenCalledWith({ genreId: undefined, keywordId: 9807 })
+  })
+
+  it('shows Film Noir as chosen, with a chip that clears it', () => {
+    const onChange = renderBar({ keywordId: 9807 })
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    expect((screen.getByLabelText('Filter by genre') as HTMLSelectElement).value).toBe('keyword-9807')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Film Noir filter' }))
+    expect(onChange).toHaveBeenCalledWith({ keywordId: undefined })
+  })
+
+  it('picking a genre clears Film Noir', () => {
+    const onChange = renderBar({ keywordId: 9807 })
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    fireEvent.change(screen.getByLabelText('Filter by genre'), { target: { value: '80' } })
+    expect(onChange).toHaveBeenCalledWith({ genreId: 80, keywordId: undefined })
+  })
+})

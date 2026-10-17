@@ -293,6 +293,32 @@ describe('IdentifyFilmsPage', () => {
       expect(correctMock).not.toHaveBeenCalled()
     })
 
+    it('moves the copy in doubt to a TV series found by searching (Batch Y5)', async () => {
+      const COPY = '00000000-0000-4000-8000-000000000038'
+      const shared = { ...DOUBTS.items[0], title: 'Tinker Tailor Soldier Spy', year: 2011, copies: 2, collectionItemId: COPY, candidates: [] }
+      doubtsMock.mockResolvedValue({ total: 1, items: [shared] })
+      searchMock.mockResolvedValue({
+        query: 'Tinker Tailor Soldier Spy (TV)',
+        candidates: [],
+        seriesCandidates: [
+          { tmdbId: 35430, title: 'Tinker Tailor Soldier Spy', year: 1979, posterPath: null, overview: 'Smiley hunts the mole.', votes: 140, notes: [], inCollection: null, mediaType: 'tv' },
+        ],
+      })
+      moveMock.mockResolvedValue({ movieId: DOUBTED, title: 'Tinker Tailor Soldier Spy', year: 1979, created: true, actionId: ACTION })
+      renderPage()
+
+      const card = await screen.findByRole('article', { name: 'Tinker Tailor Soldier Spy (2011)' })
+      fireEvent.change(within(card).getByRole('textbox'), { target: { value: 'Tinker Tailor Soldier Spy (TV)' } })
+      fireEvent.click(within(card).getByRole('button', { name: /Search/ }))
+      const series = await within(card).findByRole('list', { name: 'TV series the copy of Tinker Tailor Soldier Spy may be' })
+      // A series is only a move from here: the doubt corrects to films.
+      expect(within(series).queryByRole('button', { name: /This is it/ })).toBeNull()
+      fireEvent.click(within(series).getByRole('button', { name: /Move only this copy/ }))
+
+      await vi.waitFor(() => expect(moveMock).toHaveBeenCalledWith(COPY, 35430, DOUBT_ID, 'tv'))
+      expect(correctMock).not.toHaveBeenCalled()
+    })
+
     it('counts the films in doubt in the overview', async () => {
       overviewMock.mockResolvedValue({ ...OVERVIEW, inDoubt: 7 })
       renderPage()

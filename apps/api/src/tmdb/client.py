@@ -12,10 +12,12 @@ from ..config import settings
 from ..services.scraping.fetcher import bounded_wait
 from .models import (
     Movie,
+    MovieKeywords,
     PersonMovieCredits,
     PersonSearchResults,
     ReleaseDates,
     SearchResults,
+    TvKeywords,
     TvSearchResults,
     TvShow,
     WatchProviders,
@@ -163,12 +165,23 @@ class TMDBClient:
         return Movie.model_validate(data)
 
     async def get_movie_full(self, movie_id: int, language: str = "en-US") -> Movie:
-        """Fetch a movie with credits, videos, and watch providers in one call."""
+        """Fetch a movie with credits, videos, watch providers and, since Batch Y5, its
+        keywords in one call. The keywords are what the Archive's Film Noir reads."""
         return await self.get_movie(
             movie_id,
-            append_to_response=["credits", "videos", "watch/providers"],
+            append_to_response=["credits", "videos", "watch/providers", "keywords"],
             language=language,
         )
+
+    async def get_movie_keywords(self, movie_id: int) -> MovieKeywords:
+        """A film's TMDB keywords alone — Batch Y5's backfill, one call a film."""
+        data = await self._get(f"/movie/{movie_id}/keywords")
+        return MovieKeywords.model_validate(data)
+
+    async def get_tv_keywords(self, tv_id: int) -> TvKeywords:
+        """A series' TMDB keywords alone — Batch Y5's backfill."""
+        data = await self._get(f"/tv/{tv_id}/keywords")
+        return TvKeywords.model_validate(data)
 
     async def get_upcoming(
         self, region: str = "GB", language: str = "en-US", page: int = 1
@@ -251,11 +264,12 @@ class TMDBClient:
         """A TV series with its whole-run cast and crew, videos and IMDb id — Batch Y3.
 
         ``aggregate_credits`` rather than ``credits``: the latter is the latest season's cast
-        only, which for a finished series is whoever was in its last episodes.
+        only, which for a finished series is whoever was in its last episodes. Its keywords
+        too since Batch Y5.
         """
         params = {
             "language": language,
-            "append_to_response": "aggregate_credits,videos,external_ids",
+            "append_to_response": "aggregate_credits,videos,external_ids,keywords",
         }
         data = await self._get(f"/tv/{tv_id}", params=params)
         return TvShow.model_validate(data)

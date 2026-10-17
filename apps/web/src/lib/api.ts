@@ -498,6 +498,9 @@ async function parseOrThrowApiError<T>(
 
 export interface MovieFilters {
   genreId?: number
+  /** Batch Y5 (#277): a TMDB keyword the film carries. The genre filter offers Film Noir
+   *  ({@link FILM_NOIR}) this way, beside the genres. */
+  keywordId?: number
   year?: number
   format?: string
   section?: string
@@ -536,6 +539,7 @@ export async function fetchMovies(
 ): Promise<MoviePage> {
   const params = new URLSearchParams({ page: String(page), perPage: String(perPage) })
   if (filters.genreId) params.set('genreId', String(filters.genreId))
+  if (filters.keywordId) params.set('keywordId', String(filters.keywordId))
   if (filters.year) params.set('year', String(filters.year))
   if (filters.format) params.set('format', filters.format)
   if (filters.section) params.set('section', filters.section)
@@ -703,6 +707,15 @@ export const TMDB_GENRES: { id: number; name: string }[] = [
   { id: 37, name: 'Western' },
 ]
 
+/** Batch Y5 (#277): Film Noir is TMDB's keyword 9807, not a genre. The genre filter offers it
+ *  among the genres, in alphabetical place, and it filters by `keywordId`. */
+export const FILM_NOIR = { keywordId: 9807, name: 'Film Noir' } as const
+
+/** What a keyword filter is called: Film Noir, or "A keyword" for any other. */
+export function keywordLabel(keywordId: number): string {
+  return keywordId === FILM_NOIR.keywordId ? FILM_NOIR.name : 'A keyword'
+}
+
 export const FORMATS = [
   { value: '4k_uhd', label: '4K UHD' },
   { value: 'blu_ray', label: 'Blu-ray' },
@@ -802,13 +815,16 @@ export class DuplicateItemError extends Error {
   }
 }
 
-export async function checkDuplicate(
-  film: { movieId: string } | { tmdbId: number },
-  formats: string[],
-): Promise<DuplicateCheck> {
+/** Which film a disc is added to: one the catalogue has, a TMDB film, a TMDB series (Batch
+ *  Y5), or a title TMDB does not have (Batch Y5), filed as not a film. */
+export type FilmReference = { movieId: string } | { tmdbId: number } | { tmdbTvId: number } | { title: string }
+
+export async function checkDuplicate(film: FilmReference, formats: string[]): Promise<DuplicateCheck> {
   const params = new URLSearchParams()
   if ('movieId' in film) params.set('movieId', film.movieId)
-  else params.set('tmdbId', String(film.tmdbId))
+  else if ('tmdbId' in film) params.set('tmdbId', String(film.tmdbId))
+  else if ('tmdbTvId' in film) params.set('tmdbTvId', String(film.tmdbTvId))
+  else params.set('title', film.title)
   for (const format of formats) params.append('format', format)
   return parseResponse(await authFetch(`/collection/duplicate-check?${params}`), duplicateCheckSchema)
 }
@@ -816,6 +832,10 @@ export async function checkDuplicate(
 export type AddCollectionItemInput = CollectionItemFields & {
   movieId?: string
   tmdbId?: number
+  /** Batch Y5: a TMDB series, by its own id. */
+  tmdbTvId?: number
+  /** Batch Y5: a disc TMDB does not have, by its title alone. */
+  title?: string
   barcode?: string
   confirmDuplicate?: DuplicateReason
 }
@@ -1096,6 +1116,7 @@ export async function fetchSmartCollectionResults(
 export function filtersToMovieFilters(filters: SmartCollectionFilters): MovieFilters {
   const out: MovieFilters = {}
   if (filters.genreId !== null) out.genreId = filters.genreId
+  if (filters.keywordId !== null) out.keywordId = filters.keywordId
   if (filters.year !== null) out.year = filters.year
   if (filters.format !== null) out.format = filters.format
   if (filters.section !== null) out.section = filters.section
@@ -1125,6 +1146,7 @@ export function describeFilters(filters: SmartCollectionFilters): string {
   if (filters.genreId !== null) {
     parts.push(TMDB_GENRES.find((g) => g.id === filters.genreId)?.name ?? 'a genre')
   }
+  if (filters.keywordId !== null) parts.push(keywordLabel(filters.keywordId).toLowerCase())
   if (filters.decadeFrom !== null || filters.decadeTo !== null) {
     const from = filters.decadeFrom
     const to = filters.decadeTo
@@ -1383,11 +1405,17 @@ export async function correctIdentification(
 }
 
 /** This copy is another film: it moves on its own. Undone from the recent list. */
-export async function moveCopy(itemId: string, tmdbId: number, doubtId?: string): Promise<MoveCopy> {
+/** Move one copy to another film or, since Batch Y5, with `mediaType` "tv", to a series. */
+export async function moveCopy(
+  itemId: string,
+  tmdbId: number,
+  doubtId?: string,
+  mediaType: 'film' | 'tv' = 'film',
+): Promise<MoveCopy> {
   return parseOrThrowApiError(
     await authFetch(`/identify/copies/${itemId}/move`, {
       method: 'POST',
-      body: JSON.stringify({ tmdbId, doubtId: doubtId ?? null }),
+      body: JSON.stringify({ tmdbId, mediaType, doubtId: doubtId ?? null }),
     }),
     moveCopySchema,
   )

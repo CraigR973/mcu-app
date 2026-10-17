@@ -109,6 +109,9 @@ class CollectionItemFieldsMixin(BaseModel):
         return value
 
 
+FILM_REFERENCE_ERROR = "Supply exactly one of movieId, tmdbId, tmdbTvId or title"
+
+
 class CollectionItemCreateRequest(CollectionItemFieldsMixin):
     """Add one disc.
 
@@ -120,6 +123,11 @@ class CollectionItemCreateRequest(CollectionItemFieldsMixin):
 
     movieId: uuid.UUID | None = None
     tmdbId: int | None = Field(default=None, gt=0)
+    #: Batch Y5 (#277): a TMDB **series**, by its own id, which is never a film's.
+    tmdbTvId: int | None = Field(default=None, gt=0)
+    #: Batch Y5: a disc TMDB does not have, named by its title alone. It is filed as set aside,
+    #: not a film, so it stays off "Still to identify".
+    title: str | None = Field(default=None, min_length=1, max_length=500)
     #: Present only when this create follows Batch 24's scanner confirmation. The edit
     #: body deliberately does not carry it: changing which physical product a row means
     #: is not an ordinary copy edit.
@@ -128,6 +136,16 @@ class CollectionItemCreateRequest(CollectionItemFieldsMixin):
     #: has a live copy is refused with 409 and the existing copies in the body — so the
     #: §3.5 confirmation holds even for a client that skipped the preflight check.
     confirmDuplicate: Literal["another_copy", "upgrade"] | None = None
+
+    @field_validator("title")
+    @classmethod
+    def _title_or_nothing(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        text = " ".join(value.split())
+        if not text:
+            raise ValueError("title cannot be blank")
+        return text
 
     @model_validator(mode="after")
     def _exactly_one_film_reference(self) -> CollectionItemCreateRequest:
@@ -139,8 +157,9 @@ class CollectionItemCreateRequest(CollectionItemFieldsMixin):
         look the film up by. Caught in CI by this batch's own test — the "neither" case
         returned a 500 rather than a 422.
         """
-        if (self.movieId is None) == (self.tmdbId is None):
-            raise ValueError("Supply exactly one of movieId or tmdbId")
+        given = [self.movieId, self.tmdbId, self.tmdbTvId, self.title]
+        if sum(reference is not None for reference in given) != 1:
+            raise ValueError(FILM_REFERENCE_ERROR)
         return self
 
 
@@ -252,11 +271,16 @@ class TmdbSearchResultResponse(BaseModel):
     #: it to route the choice down the ``movieId`` path instead of creating a duplicate.
     inCollection: bool = False
     movieId: uuid.UUID | None = None
+    #: Batch Y5: "tv" for an entry of ``series``, whose ``tmdbId`` is the series' id.
+    mediaType: Literal["film", "tv"] = "film"
 
 
 class TmdbSearchResponse(BaseModel):
     query: str
+    #: Films only, as before Y5: an app cached before it reads every entry here as a film.
     results: list[TmdbSearchResultResponse]
+    #: Batch Y5 (#277): TMDB's series for the same words, best first, apart from the films.
+    series: list[TmdbSearchResultResponse] = Field(default_factory=list)
 
 
 class TrashItemResponse(BaseModel):

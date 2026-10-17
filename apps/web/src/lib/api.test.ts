@@ -160,6 +160,7 @@ describe('Batch 6 location, facet and watch-log calls', () => {
       minRating: 7,
       watched: false,
       toIdentify: true,
+      keywordId: 9807,
     })
 
     const url = String(fetchMock.mock.calls[0][0])
@@ -172,6 +173,8 @@ describe('Batch 6 location, facet and watch-log calls', () => {
     // check would drop it silently.
     expect(url).toContain('watched=false')
     expect(url).toContain('toIdentify=true')
+    // Batch Y5: Film Noir is a TMDB keyword.
+    expect(url).toContain('keywordId=9807')
   })
 
   it('parses the facet vocabulary the pickers are built from', async () => {

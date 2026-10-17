@@ -5860,3 +5860,36 @@ contemporaneous.
        Craig's); a list sent to Mark outside the app (the same, and no audit); opening the
        whole Identify page to Mark (merges and set-asides rewrite more than one film, and the
        queue is Craig's working list).
+
+
+277. **Mark's 16 Oct points (Batch Y5): series discs are added and moved as series, Film Noir is
+     TMDB's keyword, and a disc TMDB lacks is added by its title.** Mark raised three, Craig
+     approved all three on 16 Oct and chose TMDB's keyword for Film Noir.
+
+     - **A series is a third way to name a film on the add form and for a move.** The add
+       form's search lists series apart (`series`), and the move's search answers
+       `seriesCandidates`, rather than mixing them into the films: an app cached before Y5
+       reads only the films, and would otherwise offer a series' id as a film's. The copy goes
+       on the collection's row for that series (`tmdb_tv_id`, unique since Y3's migration
+       056), or one made from TMDB's record exactly as Correct match makes one.
+     - **"Move only this copy" opens searched on the doubt's own title** (the sheet's, as the
+       re-check raised it), so the three series discs are one tap from their doubts. Moving
+       them is Craig's, in the app: the agent identifies and moves nothing.
+     - **Film Noir is `movies.tmdb_keyword_ids`** (migration 059), every TMDB keyword of the
+       film, not a noir flag: the filter is `keywordId`, and the Archive offers 9807 as "Film
+       Noir" with the genres. Null is "not fetched", an empty list "TMDB has none", so the
+       backfill knows what is left. Every path that fetches a full record now fills it.
+     - **The backfill is a script, dry run by default**, at 8 calls a second, touching only
+       null rows. Its writes are metadata, as an identification's are, so they are not audited
+       one row per film; the run's counts are its record.
+     - **A disc TMDB lacks is added by its title and filed as set aside, not a film**, by
+       whoever added it, so it never sits on "Still to identify" waiting for a match that does
+       not exist. A second copy under the same title finds that row and meets the duplicate
+       prompt. Craig can put it back from Identify films as any set-aside title.
+     - **With a barcode held, a series or a title-only add skips the barcode confirmation**:
+       the barcode cache knows films only, and the copy still carries the barcode, which the
+       next scan finds as an owned disc.
+     - *Rejected:* IMDb's "Film-Noir" genre (the app has no IMDb source to read it from); the sheet's
+       "noir" groupings (48 rows, a shelf grouping, not a film's property); one combined
+       film-and-series result list (an old cached app would add a series as a film); a boolean
+       `is_noir` column (the next keyword Mark asks for would need another migration).

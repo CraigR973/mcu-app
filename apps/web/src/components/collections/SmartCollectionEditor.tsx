@@ -162,6 +162,7 @@ export function SmartCollectionEditor({ existing, pending, error, onSave, onCanc
 function toNullable(filters: MovieFilters) {
   return {
     genreId: filters.genreId ?? null,
+    keywordId: filters.keywordId ?? null,
     year: filters.year ?? null,
     format: filters.format ?? null,
     section: filters.section ?? null,

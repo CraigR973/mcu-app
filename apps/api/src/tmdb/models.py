@@ -288,6 +288,25 @@ class ExternalIds(BaseModel):
     imdb_id: str | None = None
 
 
+class Keyword(BaseModel):
+    id: int
+    name: str = ""
+
+
+class MovieKeywords(BaseModel):
+    """``/movie/{id}/keywords``, or the ``keywords`` a full record appends — Batch Y5. A film's
+    list is ``keywords``."""
+
+    keywords: list[Keyword] = Field(default_factory=list)
+
+
+class TvKeywords(BaseModel):
+    """``/tv/{id}/keywords``, or the ``keywords`` a full series appends. A series' list is
+    ``results``, not ``keywords``: TMDB names them differently."""
+
+    results: list[Keyword] = Field(default_factory=list)
+
+
 class TvShow(BaseModel):
     id: int
     name: str
@@ -308,6 +327,8 @@ class TvShow(BaseModel):
     aggregate_credits: TvCredits | None = None
     videos: Videos | None = None
     external_ids: ExternalIds | None = None
+    #: Batch Y5. Absent unless the request appended it, which ``get_tv_full`` does.
+    keywords: TvKeywords | None = None
 
 
 class Movie(BaseModel):
@@ -343,6 +364,8 @@ class Movie(BaseModel):
     videos: Videos | None = None
     watch_providers: WatchProviders | None = Field(None, alias="watch/providers")
     alternative_titles: AlternativeTitles | None = None
+    #: Batch Y5. Absent unless the request appended it, which ``get_movie_full`` does.
+    keywords: MovieKeywords | None = None
 
 
 class PersonMovieCredit(BaseModel):

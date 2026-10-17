@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Camera, Check, Loader2, Plus, Search } from 'lucide-react'
+import { Camera, Check, Loader2, Plus, Search, Type } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import BarcodeLookupPanel from '@/components/collection/BarcodeLookupPanel'
@@ -16,6 +16,7 @@ import {
   confirmBarcode,
   DuplicateItemError,
   searchTmdb,
+  type FilmReference,
   type BarcodeCandidate,
   type CollectionItemFields,
   type DuplicateCheck,
@@ -33,9 +34,20 @@ interface ChosenFilm {
   /** Set when the catalogue already has the film; otherwise the TMDB id creates it. */
   movieId: string | null
   tmdbId: number | null
+  /** Batch Y5: a TMDB series the catalogue does not have yet, by its own id. */
+  tmdbTvId: number | null
+  /** Batch Y5: a disc TMDB does not have, added by its title and filed as not a film. */
+  byTitle: boolean
+  /** Which result was picked, to mark it: a film's and a series' ids can be the same number. */
+  pick: string
+}
+
+function resultKey(result: TmdbSearchResult): string {
+  return `${result.mediaType ?? 'film'}-${String(result.tmdbId)}`
 }
 
 function chosenFrom(result: TmdbSearchResult): ChosenFilm {
+  const series = result.mediaType === 'tv'
   return {
     title: result.title,
     year: result.year,
@@ -43,7 +55,10 @@ function chosenFrom(result: TmdbSearchResult): ChosenFilm {
     // Attaching to the existing row rather than the TMDB id when we already have the
     // film: `movies.tmdb_id` is unique, and two rows would split one film's discs.
     movieId: result.movieId,
-    tmdbId: result.movieId ? null : result.tmdbId,
+    tmdbId: result.movieId || series ? null : result.tmdbId,
+    tmdbTvId: result.movieId || !series ? null : result.tmdbId,
+    byTitle: false,
+    pick: resultKey(result),
   }
 }
 
@@ -54,7 +69,14 @@ function chosenFromBarcode(candidate: BarcodeCandidate): ChosenFilm {
     posterPath: candidate.posterPath,
     movieId: candidate.movieId,
     tmdbId: candidate.movieId ? null : candidate.tmdbId,
+    tmdbTvId: null,
+    byTitle: false,
+    pick: `barcode-${candidate.movieId ?? String(candidate.tmdbId)}`,
   }
+}
+
+function chosenByTitle(title: string): ChosenFilm {
+  return { title, year: null, posterPath: null, movieId: null, tmdbId: null, tmdbTvId: null, byTitle: true, pick: 'title' }
 }
 
 export default function AddToCollectionPage() {
@@ -75,8 +97,11 @@ export default function AddToCollectionPage() {
     enabled: submitted.length >= 2,
   })
 
-  function filmRef(chosen: ChosenFilm) {
-    return chosen.movieId ? { movieId: chosen.movieId } : { tmdbId: chosen.tmdbId ?? 0 }
+  function filmRef(chosen: ChosenFilm): FilmReference {
+    if (chosen.movieId) return { movieId: chosen.movieId }
+    if (chosen.tmdbTvId !== null) return { tmdbTvId: chosen.tmdbTvId }
+    if (chosen.byTitle) return { title: chosen.title }
+    return { tmdbId: chosen.tmdbId ?? 0 }
   }
 
   async function chooseFilm(chosen: ChosenFilm) {
@@ -113,7 +138,9 @@ export default function AddToCollectionPage() {
   })
 
   function chooseTitle(result: TmdbSearchResult) {
-    if (scannedBarcode) {
+    // Batch Y5: the barcode cache knows films only, so a series skips the confirmation; the
+    // barcode still goes on the copy, where the next scan finds it as an owned disc.
+    if (scannedBarcode && result.mediaType !== 'tv') {
       manualChoice.mutate({ result, barcode: scannedBarcode })
       return
     }
@@ -134,7 +161,7 @@ export default function AddToCollectionPage() {
       if (!film) throw new Error('Choose a film first')
       return addOrQueue({
         ...fields,
-        ...(film.movieId ? { movieId: film.movieId } : { tmdbId: film.tmdbId ?? 0 }),
+        ...filmRef(film),
         ...(scannedBarcode ? { barcode: scannedBarcode } : {}),
         confirmDuplicate,
       })
@@ -167,7 +194,10 @@ export default function AddToCollectionPage() {
   })
 
   const results = searchQuery.data?.results ?? []
-  const searchState = listState(searchQuery, results.length === 0)
+  const series = searchQuery.data?.series ?? []
+  const searchState = listState(searchQuery, results.length === 0 && series.length === 0)
+  const searchedFor = searchQuery.data?.query ?? submitted
+  const seriesHeading = useRef<HTMLParagraphElement>(null)
   const canSave = film !== null && fields.formats.length > 0
 
   return (
@@ -290,53 +320,75 @@ export default function AddToCollectionPage() {
             {/* Only once results genuinely arrived: a paused query has no results either,
                 and "no films matched" would be a confident lie about a search that never ran. */}
             {submitted.length >= 2 && searchState === 'empty' && (
-              <p className="text-sm text-muted-foreground">No films matched “{submitted}”.</p>
+              <p className="text-sm text-muted-foreground">No films or series matched “{submitted}”.</p>
             )}
 
-            <ul className="space-y-2">
-              {results.map((result) => {
-                const active =
-                  film !== null &&
-                  (film.movieId === result.movieId ||
-                    (film.tmdbId !== null && film.tmdbId === result.tmdbId))
-                return (
-                  <li key={result.tmdbId}>
-                    <button
-                      type="button"
-                      onClick={() => chooseTitle(result)}
-                      aria-pressed={active}
-                      disabled={manualChoice.isPending}
-                      className={`flex min-h-20 w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors disabled:opacity-50 ${
-                        active
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:bg-muted/50'
-                      }`}
-                    >
-                      <Poster path={result.posterPath} title={result.title} size="w92" decorative className="h-16 w-11 shrink-0 rounded-sm" />
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2">
-                          <span className="font-medium text-foreground">{result.title}</span>
-                          {result.year && (
-                            <span className="text-xs text-muted-foreground">{result.year}</span>
-                          )}
-                          {result.inCollection && (
-                            <Badge tone="success">Already catalogued</Badge>
-                          )}
-                        </span>
-                        <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">
-                          {result.overview}
-                        </span>
-                      </span>
-                      {manualChoice.isPending && manualChoice.variables?.result === result ? (
-                        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
-                      ) : active ? (
-                        <Check className="h-4 w-4 shrink-0 text-primary" />
-                      ) : null}
-                    </button>
-                  </li>
-                )
-              })}
+            {results.length > 0 && series.length > 0 && (
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="page-kicker">Films</p>
+                {/* The series follow up to twenty films; on a phone that is a long way down. */}
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                  onClick={() => seriesHeading.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
+                  {series.length === 1 ? '1 TV series' : `${String(series.length)} TV series`}, below ↓
+                </button>
+              </div>
+            )}
+            <ul className="space-y-2" aria-label="Films found">
+              {results.map((result) => (
+                <li key={resultKey(result)}>
+                  <ResultButton
+                    result={result}
+                    active={film?.pick === resultKey(result)}
+                    disabled={manualChoice.isPending}
+                    pending={manualChoice.isPending && manualChoice.variables?.result === result}
+                    onChoose={() => chooseTitle(result)}
+                  />
+                </li>
+              ))}
             </ul>
+
+            {/* Batch Y5 (#277): TMDB's series for the same words, apart from the films. */}
+            {series.length > 0 && (
+              <>
+                <p ref={seriesHeading} className="page-kicker scroll-mt-20">TV series</p>
+                <ul className="space-y-2" aria-label="TV series found">
+                  {series.map((result) => (
+                    <li key={resultKey(result)}>
+                      <ResultButton
+                        result={result}
+                        active={film?.pick === resultKey(result)}
+                        disabled={manualChoice.isPending}
+                        pending={false}
+                        onChoose={() => chooseTitle(result)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {/* Batch Y5: a disc TMDB does not have (John Krish's "A Day in the Life", 16 Oct). */}
+            {submitted.length >= 2 && (searchState === 'ready' || searchState === 'empty') && (
+              <div className="rounded-lg border border-dashed border-border p-3 text-sm">
+                <p className="text-muted-foreground">
+                  Not on TMDB? Add it by its title. It is filed as not a film, so it stays off “Still to identify”.
+                </p>
+                <Button
+                  type="button"
+                  variant={film?.pick === 'title' ? 'default' : 'secondary'}
+                  size="sm"
+                  className="mt-2 max-w-full"
+                  aria-pressed={film?.pick === 'title'}
+                  onClick={() => void chooseFilm(chosenByTitle(searchedFor))}
+                >
+                  <Type className="h-4 w-4" />
+                  <span className="truncate">Add “{searchedFor}” by its title</span>
+                </Button>
+              </div>
+            )}
 
             {manualChoice.isError && (
               <p role="alert" className="text-sm text-destructive">
@@ -396,5 +448,48 @@ export default function AddToCollectionPage() {
         </>
       )}
     </div>
+  )
+}
+
+function ResultButton({
+  result,
+  active,
+  disabled,
+  pending,
+  onChoose,
+}: {
+  result: TmdbSearchResult
+  active: boolean
+  disabled: boolean
+  pending: boolean
+  onChoose: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onChoose}
+      aria-pressed={active}
+      disabled={disabled}
+      className={`flex min-h-20 w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors disabled:opacity-50 ${
+        active ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+      }`}
+    >
+      <Poster path={result.posterPath} title={result.title} size="w92" decorative className="h-16 w-11 shrink-0 rounded-sm" />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-foreground">{result.title}</span>
+          {result.year && <span className="text-xs text-muted-foreground">{result.year}</span>}
+          {result.mediaType === 'tv' && <Badge>TV series</Badge>}
+          {result.inCollection && <Badge tone="success">Already catalogued</Badge>}
+        </span>
+        {/* Batch Y5: no `block` here, which overrode the clamp and printed a whole overview. */}
+        <span className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{result.overview}</span>
+      </span>
+      {pending ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+      ) : active ? (
+        <Check className="h-4 w-4 shrink-0 text-primary" />
+      ) : null}
+    </button>
   )
 }

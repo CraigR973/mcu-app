@@ -2,6 +2,17 @@
 
 ## Now
 
+**17 Oct: Y5, Mark's 16 Oct points, built at Craig's word of 16 Oct (#277).** A disc can be
+added to, or one copy moved to, a TMDB series: the add form and "Move only this copy" list
+series apart from films, and a doubt's move opens already searched on the sheet's title, so
+BBC's *Life*, the 1979 *Tinker Tailor* and the 2019 *Name of the Rose* are one tap from their
+doubts (the series search reads two TMDB pages: BBC's *Life* is 28th for "Life"). The
+Archive's genre filter offers **Film Noir**, TMDB's keyword 9807, from `movies.tmdb_keyword_ids`
+(migration 059); every full TMDB fetch fills it, and the films identified before Y5 wait for
+`src.scripts.fill_keywords --apply` at Craig's word (item 33). A disc TMDB lacks is added by
+its title and filed as not a film. **Craig's next:** item 33, the keyword backfill (dry run
+first) and the three series moves in the app.
+
 **12 Oct 2026: the wave 1 full review is done, and its remediation is Group X** (#253,
 `docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
 roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
@@ -72,6 +83,7 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 | ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
 | ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
 | ~~Y4~~ (#276), Mark settles the doubts from the film page | shipped 16 Oct; the 384 are both people's to settle |
+| ~~Y5~~ (#277), series added and moved, Film Noir, add by title | shipped 17 Oct; the keyword backfill and the three series moves are Craig's (item 33) |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
 | ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the live re-check ran 16 Oct, 384 doubts raised; settling them is Craig's (item 32) |
@@ -92,7 +104,8 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 - **Craig's open items** (`OWNER-ACTIONS.md`): a copy of the backup's private key off the Mac
   (X4, 14 Oct); 29 connect eBay; 22 the Neon
   password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues; the
-  384 re-check doubts on Identify films (item 32, 16 Oct).
+  384 re-check doubts on Identify films (item 32, 16 Oct); Y5's keyword backfill and the
+  three series discs (item 33, 17 Oct).
 
 **Live numbers (12 Oct, read-only):**
 - **Collection:** 1,889 live copies (1,466 discs, 422 downloads, 1 unlabelled); 1,891 films,
@@ -497,6 +510,20 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-17 (Y5, #277)** — Mark's 16 Oct points, approved by Craig 16 Oct. Series on the add
+  form (`series`, `tmdbTvId`) and for "Move only this copy" (`seriesCandidates`, `mediaType`),
+  made or found by `tmdb_tv_id` as Y3 identifies one, from one shared module
+  (`services/film_rows.py`); the series search reads two pages. A doubt's move opens searched on
+  its `searchHint`; Identify films' doubt card moves to a series too. Film Noir: migration 059,
+  `movies.tmdb_keyword_ids` (null = not fetched), GIN-indexed and granted to both roles;
+  `keywordId` on `GET /movies` and saved collections; `src.scripts.fill_keywords` is the
+  backfill, not yet run. Add by title: a fourth film reference, set aside `not_film` by whoever
+  added it. Found on the way: the add form's overviews were never clamped (`block` overrode
+  `line-clamp`). Tests: nine Postgres tests in `test_y5_series_noir_title.py` and twelve unit
+  tests, run here against a throwaway pgserver too; web and shared tests for each part. Two
+  stale-edit tests in `test_collection_write_api.py` fail against pgserver on `main` as well,
+  and pass in CI.
 
 - **2026-10-16 (Y4, #276)** — Mark settles identification doubts from the film page, at Craig's
   word after item 32 raised 384. Keep, move one copy and the move's TMDB search take either

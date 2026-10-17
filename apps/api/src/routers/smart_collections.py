@@ -68,6 +68,7 @@ def _movie_filters(filters: SmartCollectionFilters, user_id: uuid.UUID) -> Movie
     """
     return MovieFilters(
         genre_id=filters.genreId,
+        keyword_id=filters.keywordId,
         year=filters.year,
         format_code=filters.format,
         section=filters.section,

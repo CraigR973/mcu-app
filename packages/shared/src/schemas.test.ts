@@ -2443,3 +2443,44 @@ describe('Batch Y4 — Mark settles the doubts from the film page', () => {
     expect(() => collectionFacetsSchema.parse({ ...facets, inDoubtMovieCount: -1 })).toThrow()
   })
 })
+
+describe('Batch Y5 — series, Film Noir and a title-only disc', () => {
+  it('reads the add form’s series apart from its films, and an answer from before them', () => {
+    const answer = {
+      query: 'Life',
+      results: [{ tmdbId: 395992, title: 'Life', year: 2017, overview: '', posterPath: null, inCollection: false, movieId: null, mediaType: 'film' }],
+      series: [{ tmdbId: 16946, title: 'Life', year: 2009, overview: '', posterPath: null, inCollection: false, movieId: null, mediaType: 'tv' }],
+    }
+    expect(tmdbSearchResponseSchema.parse(answer)).toEqual(answer)
+    const before = { query: 'Life', results: [{ ...answer.results[0], mediaType: undefined }] }
+    expect(tmdbSearchResponseSchema.parse(before).series).toBeUndefined()
+    expect(() => tmdbSearchResponseSchema.parse({ ...answer, series: [{ ...answer.series[0], mediaType: 'radio' }] })).toThrow()
+  })
+
+  it('reads the move’s series candidates and a doubt’s search title', () => {
+    const search = {
+      query: 'Tinker Tailor Soldier Spy (TV)',
+      candidates: [],
+      seriesCandidates: [
+        { tmdbId: 35430, title: 'Tinker Tailor Soldier Spy', year: 1979, posterPath: null, overview: '', votes: 140, notes: [], inCollection: null, mediaType: 'tv' },
+      ],
+    }
+    expect(identifySearchSchema.parse(search)).toEqual(search)
+    const doubt = identificationDoubtSchema.parse({
+      note: 'T9 reads the row as a TV series.',
+      source: 'recheck',
+      raisedAt: '2026-10-16T18:00:00',
+      searchHint: 'Tinker Tailor Soldier Spy (TV)',
+    })
+    expect(doubt.searchHint).toBe('Tinker Tailor Soldier Spy (TV)')
+  })
+
+  it('reads a saved keyword, and a collection saved before keywords as none', () => {
+    const saved = {
+      genreId: null, year: null, format: null, section: null, shelf: null, decadeFrom: null,
+      decadeTo: null, minRating: null, runtimeMin: null, runtimeMax: null, watched: null,
+    }
+    expect(smartCollectionFiltersSchema.parse(saved).keywordId).toBeNull()
+    expect(smartCollectionFiltersSchema.parse({ ...saved, keywordId: 9807 }).keywordId).toBe(9807)
+  })
+})

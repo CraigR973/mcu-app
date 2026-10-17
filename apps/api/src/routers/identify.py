@@ -13,6 +13,7 @@ import uuid
 from typing import Annotated, Any, cast
 
 import httpx
+import structlog
 from fastapi import APIRouter, HTTPException, Query, status
 
 from src.auth import AdminUser, CurrentUser
@@ -48,6 +49,7 @@ from src.services.identify.doubts import (
     open_doubts,
     undo_keep,
 )
+from src.services.identify.matcher import find_series
 from src.services.identify.move_copy import MOVE_KIND, MoveError, move_copy, undo_move
 from src.services.identify.queue import (
     FilmInCollection,
@@ -63,6 +65,10 @@ from src.services.identify.queue import (
     skip,
 )
 from src.tmdb.client import TMDBRefused
+from src.tmdb.models import Movie as TmdbMovie
+from src.tmdb.models import TvShow
+
+logger = structlog.get_logger()
 
 router = APIRouter(prefix="/api/v1", tags=["identify"])
 
@@ -182,7 +188,8 @@ async def search_film(
     query: Annotated[str, Query(min_length=1, max_length=300)],
 ) -> IdentifySearchResponse:
     """TMDB's films for a corrected title. Nothing is saved until Craig picks one. Either
-    person since Batch Y4: "Move only this copy" searches with it, and it writes nothing."""
+    person since Batch Y4: "Move only this copy" searches with it, and it writes nothing.
+    Since Batch Y5 it answers TMDB's series apart, which a copy can move to."""
     del movie_id
     try:
         found = await search_again(tmdb, query.strip())
@@ -191,7 +198,41 @@ async def search_film(
             status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB search is unavailable"
         ) from exc
     held = await in_collection(db, [int(c["tmdb_id"]) for c in found])
-    return IdentifySearchResponse(query=query.strip(), candidates=_candidates(found, held))
+    return IdentifySearchResponse(
+        query=query.strip(),
+        candidates=_candidates(found, held),
+        seriesCandidates=await _series_candidates(db, tmdb, query.strip()),
+    )
+
+
+#: Series offered beside the films, as Correct match offers them.
+SERIES_OFFERED = 5
+
+
+async def _series_candidates(
+    db: Database, tmdb: TmdbClient, query: str
+) -> list[IdentifyCandidateResponse]:
+    """TMDB's series for the words — Batch Y5. A failure leaves the films to answer alone."""
+    try:
+        _, ranked = await find_series(tmdb, query, limit=SERIES_OFFERED)
+    except (httpx.HTTPError, TMDBRefused):
+        logger.warning("tmdb_series_search_unavailable", query=query)
+        return []
+    held = await in_collection(db, [show.id for show, _ in ranked], series=True)
+    return [
+        IdentifyCandidateResponse(
+            tmdbId=show.id,
+            title=show.name,
+            year=show.year,
+            posterPath=show.poster_path,
+            overview=(show.overview or "")[:600],
+            votes=show.vote_count,
+            notes=[],
+            inCollection=_in_collection(held.get(show.id)),
+            mediaType="tv",
+        )
+        for show, _ in ranked
+    ]
 
 
 @router.post("/identify/films/{movie_id}/identify", response_model=IdentifyDecisionResponse)
@@ -359,9 +400,13 @@ async def move_a_copy(
     tmdb: TmdbClient,
 ) -> MoveCopyResponse:
     """This copy is another film: it moves on its own, to that film — Batch X9. Undone from
-    the recent list. Either person since Batch Y4."""
+    the recent list. Either person since Batch Y4; to a series too since Batch Y5."""
+    record: TmdbMovie | TvShow
     try:
-        record = await tmdb.get_movie_full(payload.tmdbId)
+        if payload.mediaType == "tv":
+            record = await tmdb.get_tv_full(payload.tmdbId)
+        else:
+            record = await tmdb.get_movie_full(payload.tmdbId)
         moved = await move_copy(db, item_id, record, by=user.id, doubt_id=payload.doubtId)
         await db.commit()
     except (LookupError, MoveError) as exc:
