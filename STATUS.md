@@ -512,6 +512,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-17 (#278, the 378 doubts)** — Settled from one plan Craig agreed, with Mark's
+  word: 370 kept, 6 corrected, 1 copy moved (French Connection), 1 copy binned (Ghostbusters
+  2's old 4K). `src.scripts.settle_doubts` applies it through the app's own actions, audited as
+  Craig; the dry run on live data checked all 378 with none skipped and no merge needed.
+
 - **2026-10-17 (item 33, Y5's keyword backfill)** — At Craig's word, on the Mac, after Y5
   merged (`99cee5e`, production on it with `db: ok`). Dry run: 1,905 rows, 225 noir (1930s 7,
   1940s 115, 1950s 98, 1960s 4, *Dead Again* 1991), 24 with no keywords, 0 missing. `--apply`
