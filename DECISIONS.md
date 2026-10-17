@@ -5893,3 +5893,25 @@ contemporaneous.
        "noir" groupings (48 rows, a shelf grouping, not a film's property); one combined
        film-and-series result list (an old cached app would add a series as a film); a boolean
        `is_noir` column (the next keyword Mark asks for would need another migration).
+
+
+278. **The 378 open re-check doubts are settled from one agreed plan, 17 Oct.** Mark asked for
+     them to be settled "to what you think they are"; Craig agreed the plan Claude proposed
+     (`scratchpad/doubts-plan-17-oct.md`) with five answers (Carrie 1976, Crossroads 1986,
+     Fright Night 1985, Vice Versa 1948, bin the old Ghostbusters 2 copy) and three exceptions
+     of his own (the Pelham and Journey Blu-rays are the 2009 and 2008 films; French
+     Connection II's row holds one copy of each film, so one copy moves).
+
+     - **The plan:** 370 kept, 6 corrected (Arsenic and Old Lace 1944, Holiday 1938, X2, A
+       Tale of Two Cities 1958, and the Planet Earth II and Last Chance to See series), 1 copy
+       moved (to The French Connection), 1 copy binned. A keep needs the identified film to
+       be far better known than any namesake (260 by ten times the votes or more) or the
+       copy's grouping or shelf to say which; the rest were Craig's.
+     - **`src.scripts.settle_doubts` applies it through the app's own actions** (keep,
+       correct, a series identification, move one copy, Delete), each audited as Craig and
+       undone from Recently identified or the Trash. A dry run checks every entry first; an
+       entry overtaken since the plan is skipped, never forced, and a correction that would
+       merge is refused.
+     - *Rejected:* settling by votes alone (a remake often outvotes the classic this
+       collection holds); writing the statuses in SQL (no audit, no undo); asking Mark about
+       all 378 (he asked not to be).
