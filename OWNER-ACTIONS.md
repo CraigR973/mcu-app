@@ -1451,14 +1451,18 @@ the Mac. Nothing is identified again by it: each disagreement becomes a doubt yo
 Also from X9: a copy's edition the spec job inferred now reads "Probably …" with where it came
 from; **It is this edition** on the copy (either of you) confirms it.
 
-### 33. Mark's 16 Oct points — Y5 *(new 17 Oct; the code is live once Y5 merges)*
+### 33. Mark's 16 Oct points — Y5 *(new 17 Oct; step 1 done 17 Oct, step 2 is yours or Mark's)*
 
 **Why:** Y5 (`DECISIONS.md` #277) lets a disc be added to, or moved to, a TMDB series, adds Film
 Noir to the Archive's genre filter from TMDB's keyword 9807, and adds a disc TMDB lacks by its
 title. Two steps are yours.
 
-1. **At your word, fill the keywords of the films already identified**, so Film Noir finds
-   them. Until then it finds only films added or identified after Y5 merged. First the dry
+1. ~~**At your word, fill the keywords of the films already identified**~~ **Done 17 Oct at
+   your word.** Dry run: 1,905 rows (46 series), 24 with no keywords on TMDB, 225 noir, 0
+   missing. `--apply` wrote 1,904; TMDB did not answer for one, which a second run wrote. Now
+   0 identified rows are unfilled and Film Noir lists 225 films, all with a copy on the shelf.
+   *(As it was written:)* At your word, fill the keywords of the films already identified, so
+   Film Noir finds them. Until then it finds only films added or identified after Y5 merged. First the dry
    run, which reads TMDB (about 1,850 calls at 8 a second, roughly four minutes; keep the lid
    open) and writes nothing; it prints how many it would fill and every film tagged noir:
 
