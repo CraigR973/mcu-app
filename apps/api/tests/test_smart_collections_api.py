@@ -367,6 +367,8 @@ async def test_the_column_stores_only_the_constrained_fields(
 
     assert collection["filters"] == {
         "genreId": None,
+        # Batch Y5: the vocabulary gained a TMDB keyword (Film Noir), and the wire carries it.
+        "keywordId": None,
         "year": None,
         "format": "4k_uhd",
         "section": None,

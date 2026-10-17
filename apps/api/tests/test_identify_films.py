@@ -69,7 +69,7 @@ from src.services.identify.plan import (
 )
 from src.services.specs import backfill
 from src.services.valuation import count_due
-from src.tmdb.models import CastMember, Credits, CrewMember, SearchResults
+from src.tmdb.models import CastMember, Credits, CrewMember, SearchResults, TvSearchResults
 from src.tmdb.models import Movie as TmdbMovie
 
 NOW = datetime(2026, 9, 25, 12, 0)
@@ -120,6 +120,11 @@ class FakeTmdb:
     ) -> SearchResults:
         del query, year, page, language, include_adult
         return SearchResults()
+
+    async def search_tv(self, query: str, page: int = 1) -> TvSearchResults:
+        """Batch Y5: the move's search asks for series too. None here."""
+        del query, page
+        return TvSearchResults()
 
 
 @pytest_asyncio.fixture

@@ -83,6 +83,7 @@ SNAPSHOT_FIELDS = (
     "tmdb_vote_count",
     "genres",
     "genre_ids",
+    "tmdb_keyword_ids",
     "top_cast_summary",
     "trailer_key",
     "letterboxd_slug",
@@ -161,6 +162,10 @@ def _restore(movie: Movie, values: dict[str, Any]) -> None:
     for name in SNAPSHOT_FIELDS:
         if name in values:
             setattr(movie, name, _from_json(name, values[name]))
+    # A snapshot from before Batch Y5 has no keywords: what the row had is unknown, and the
+    # keywords now on it are the film the undo takes away.
+    if "tmdb_keyword_ids" not in values:
+        movie.tmdb_keyword_ids = None
 
 
 async def _credits_of(db: AsyncSession, movie_id: uuid.UUID) -> list[dict[str, Any]]:

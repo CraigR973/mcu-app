@@ -11,7 +11,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from src.tmdb.models import Movie, TvShow, Videos
+from src.tmdb.models import Keyword, Movie, TvShow, Videos
 
 CREW_ROLE_BY_JOB: dict[str, str] = {
     "Director": "director",
@@ -70,6 +70,14 @@ def build_top_cast_summary(movie: Movie) -> list[dict[str, Any]] | None:
     ]
 
 
+def keyword_ids(keywords: list[Keyword] | None) -> list[int] | None:
+    """A record's TMDB keyword ids — Batch Y5. None when the record carries no keywords
+    (it was fetched without them, so they are unknown), an empty list when TMDB has none."""
+    if keywords is None:
+        return None
+    return list(dict.fromkeys(keyword.id for keyword in keywords))
+
+
 def movie_metadata_values(movie: Movie) -> dict[str, Any]:
     """Return every §3.2 value supplied by a full TMDB movie payload."""
     genres = [{"id": genre.id, "name": genre.name} for genre in movie.genres]
@@ -88,6 +96,7 @@ def movie_metadata_values(movie: Movie) -> dict[str, Any]:
         "tmdb_vote_count": movie.vote_count,
         "genres": genres or None,
         "genre_ids": [genre.id for genre in movie.genres] or None,
+        "tmdb_keyword_ids": keyword_ids(movie.keywords.keywords if movie.keywords else None),
         "top_cast_summary": build_top_cast_summary(movie),
         "trailer_key": pick_trailer_key(movie),
         "media_type": "film",
@@ -196,6 +205,7 @@ def tv_metadata_values(show: TvShow) -> dict[str, Any]:
         "tmdb_vote_count": show.vote_count,
         "genres": genres or None,
         "genre_ids": tv_genre_ids(show) or None,
+        "tmdb_keyword_ids": keyword_ids(show.keywords.results if show.keywords else None),
         "top_cast_summary": build_tv_top_cast_summary(show),
         "trailer_key": _trailer_key(show.videos),
         "media_type": "tv",

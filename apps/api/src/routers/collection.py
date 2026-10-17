@@ -19,11 +19,12 @@ import uuid
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Literal, Protocol, cast
+from typing import Annotated, Any, Literal, Protocol, cast
 
 import httpx
+import structlog
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
@@ -36,10 +37,12 @@ from src.models.collection_item import (
     location_text,
     owned_copy,
 )
-from src.models.movie import Movie, MovieCredit
+from src.models.identify import IdentifyLookup
+from src.models.movie import Movie
 from src.models.profile import Profile
 from src.routers.movies import Database, TmdbClient, location_label
 from src.schemas.collection import (
+    FILM_REFERENCE_ERROR,
     AuditEntryResponse,
     AuditPageResponse,
     CollectionItemCreateRequest,
@@ -60,9 +63,16 @@ from src.schemas.collection import (
 )
 from src.services.audit import diff_snapshots, item_snapshot, record_action
 from src.services.barcode import check_digit_valid, normalise
-from src.services.movie_metadata import credit_rows, movie_metadata_values, parse_year
+from src.services.film_rows import held_row, make_row
+from src.services.identification import IdentifyError, set_aside
+from src.services.identify.matcher import find_series
+from src.services.movie_metadata import parse_year
 from src.spreadsheet.parser import parse_location
-from src.tmdb.models import SearchResult
+from src.tmdb.client import TMDBRefused
+from src.tmdb.models import Movie as TmdbMovie
+from src.tmdb.models import SearchResult, TvShow
+
+logger = structlog.get_logger()
 
 router = APIRouter(prefix="/api/v1", tags=["collection"])
 
@@ -277,47 +287,86 @@ async def _get_live_movie(db: AsyncSession, movie_id: uuid.UUID) -> Movie:
     return movie
 
 
-async def _movie_from_tmdb(db: AsyncSession, tmdb: TmdbClient, tmdb_id: int) -> Movie:
-    """Find or create the ``movies`` row for a TMDB id.
+async def _movie_from_tmdb(
+    db: AsyncSession, tmdb: TmdbClient, tmdb_id: int, *, series: bool = False
+) -> Movie:
+    """Find or create the ``movies`` row for a TMDB film or, since Batch Y5, a series.
 
-    An existing row wins: ``movies.tmdb_id`` is unique, so creating a second one for a
-    film already in the catalogue would fail at the constraint — and if it did not, it
-    would split one film's discs across two rows and hide half of them from every view.
+    An existing row wins: ``movies.tmdb_id`` and ``tmdb_tv_id`` are unique, so creating a
+    second one for a film already in the catalogue would fail at the constraint — and if it
+    did not, it would split one film's discs across two rows and hide half of them from every
+    view. A trashed one is restored, as adding a disc to it says the film is wanted again.
     """
-    existing = await db.scalar(select(Movie).where(Movie.tmdb_id == tmdb_id))
+    existing = await (held_row(db, tmdb_tv_id=tmdb_id) if series else held_row(db, tmdb_id=tmdb_id))
     if existing is not None:
         if existing.deleted_at is not None:
             existing.deleted_at = None
         return existing
 
+    record: TmdbMovie | TvShow
     try:
-        tmdb_movie = await tmdb.get_movie_full(tmdb_id)
+        record = await (tmdb.get_tv_full(tmdb_id) if series else tmdb.get_movie_full(tmdb_id))
     except httpx.HTTPError as exc:
         code = (
             status.HTTP_404_NOT_FOUND
             if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 404
             else status.HTTP_502_BAD_GATEWAY
         )
-        raise HTTPException(status_code=code, detail="TMDB movie could not be loaded") from exc
+        noun = "series" if series else "movie"
+        raise HTTPException(status_code=code, detail=f"TMDB {noun} could not be loaded") from exc
+    return await make_row(db, record)
 
-    movie = Movie(id=uuid.uuid4(), **movie_metadata_values(tmdb_movie))
-    db.add(movie)
-    # The credits reference the movie row, and the search_vector trigger reads the
-    # title and overview this flush writes.
-    await db.flush()
-    for row in credit_rows(movie.id, tmdb_movie):
-        db.add(
-            MovieCredit(
-                id=uuid.UUID(row[0]),
-                movie_id=movie.id,
-                person_name=row[2],
-                tmdb_person_id=row[3],
-                role=row[4],
-                character_name=row[5],
-                display_order=row[6],
+
+def _title_only_film() -> Any:
+    """A title the add form filed by its title alone (Batch Y5): no TMDB id of either kind,
+    set aside as not a film."""
+    return (
+        Movie.tmdb_id.is_(None),
+        Movie.tmdb_tv_id.is_(None),
+        Movie.deleted_at.is_(None),
+        exists(
+            select(IdentifyLookup.id).where(
+                IdentifyLookup.movie_id == Movie.id,
+                IdentifyLookup.status == "set_aside",
+                IdentifyLookup.set_aside_as == "not_film",
             )
-        )
+        ),
+    )
+
+
+async def _held_title(db: AsyncSession, title: str) -> Movie | None:
+    """The title-only film already filed under this title, so a second copy of it meets the
+    duplicate prompt rather than making a second row."""
+    held: Movie | None = await db.scalar(
+        select(Movie)
+        .where(func.lower(Movie.title) == title.lower(), *_title_only_film())
+        .order_by(Movie.id)
+        .limit(1)
+    )
+    return held
+
+
+async def _movie_by_title(db: AsyncSession, title: str, *, by: uuid.UUID) -> Movie:
+    """A disc TMDB does not have, by its title alone — Batch Y5 (#277).
+
+    Filed as set aside, not a film, by whoever added it, so it never waits on "Still to
+    identify" for a match TMDB cannot make. Craig can put it back from Identify films.
+    """
+    held = await _held_title(db, title)
+    if held is not None:
+        return held
+    movie = Movie(id=uuid.uuid4(), title=title, original_title=title)
+    db.add(movie)
+    await db.flush()
+    try:
+        await set_aside(db, movie, "not_film", by=by, note=TITLE_ONLY_NOTE)
+    except IdentifyError as exc:  # pragma: no cover - "not_film" is a kind it knows
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return movie
+
+
+#: What Identify films says of a title added by its title alone.
+TITLE_ONLY_NOTE = "Not on TMDB: added by its title."
 
 
 # ---------------------------------------------------------------------------
@@ -334,6 +383,9 @@ async def check_duplicate(
     db: Database,
     movie_id: Annotated[uuid.UUID | None, Query(alias="movieId")] = None,
     tmdb_id: Annotated[int | None, Query(alias="tmdbId", gt=0)] = None,
+    # Batch Y5: a series, and a disc named by its title alone, as `POST /collection` takes.
+    tmdb_tv_id: Annotated[int | None, Query(alias="tmdbTvId", gt=0)] = None,
+    title: Annotated[str | None, Query(min_length=1, max_length=500)] = None,
     formats: Annotated[list[str] | None, Query(alias="format")] = None,
 ) -> DuplicateCheckResponse:
     """The warning §3.1 wants *before* saving.
@@ -342,16 +394,21 @@ async def check_duplicate(
     the clash by being rejected. ``POST /collection`` enforces the same rule
     independently — this endpoint is the courtesy, not the guard.
     """
-    if (movie_id is None) == (tmdb_id is None):
+    named = " ".join(title.split()) if title is not None else None
+    if sum(ref is not None for ref in (movie_id, tmdb_id, tmdb_tv_id, named or None)) != 1:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Supply exactly one of movieId or tmdbId",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=FILM_REFERENCE_ERROR
         )
 
+    movie: Movie | None
     if movie_id is not None:
         movie = await db.get(Movie, movie_id)
+    elif tmdb_id is not None:
+        movie = await held_row(db, tmdb_id=tmdb_id)
+    elif tmdb_tv_id is not None:
+        movie = await held_row(db, tmdb_tv_id=tmdb_tv_id)
     else:
-        movie = await db.scalar(select(Movie).where(Movie.tmdb_id == tmdb_id))
+        movie = await _held_title(db, named or "")
 
     if movie is None or movie.deleted_at is not None:
         # Not an error: "we have never heard of this film" is the answer the add form
@@ -396,10 +453,13 @@ async def add_collection_item(
         movie = await _get_live_movie(db, payload.movieId)
     elif payload.tmdbId is not None:
         movie = await _movie_from_tmdb(db, tmdb, payload.tmdbId)
+    elif payload.tmdbTvId is not None:
+        movie = await _movie_from_tmdb(db, tmdb, payload.tmdbTvId, series=True)
+    elif payload.title is not None:
+        movie = await _movie_by_title(db, payload.title, by=user.id)
     else:  # pragma: no cover - the model validator rejects this body first
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Supply exactly one of movieId or tmdbId",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=FILM_REFERENCE_ERROR
         )
 
     duplicate = await _duplicate_state(db, movie, payload.formats)
@@ -1006,6 +1066,7 @@ async def search_tmdb(
             )
         ).all()
     }
+    series = await _search_tmdb_series(db, tmdb, query)
 
     return TmdbSearchResponse(
         query=query,
@@ -1021,4 +1082,48 @@ async def search_tmdb(
             )
             for result in top
         ],
+        series=series,
     )
+
+
+#: Series the add form offers beside the films — Batch Y5.
+TMDB_SERIES_LIMIT = 5
+
+
+async def _search_tmdb_series(
+    db: AsyncSession, tmdb: TmdbClient, query: str
+) -> list[TmdbSearchResultResponse]:
+    """TMDB's series for the add form's words, ranked as Correct match ranks them — Batch Y5.
+
+    A failure leaves the films to answer alone: the series are the extra, and the film search
+    has just reached TMDB.
+    """
+    try:
+        _, ranked = await find_series(tmdb, query, limit=TMDB_SERIES_LIMIT)
+    except (httpx.HTTPError, TMDBRefused):
+        logger.warning("tmdb_series_search_unavailable", query=query)
+        return []
+    held = {
+        tv_id: movie_id
+        for movie_id, tv_id in (
+            await db.execute(
+                select(Movie.id, Movie.tmdb_tv_id).where(
+                    Movie.tmdb_tv_id.in_([show.id for show, _ in ranked]),
+                    Movie.deleted_at.is_(None),
+                )
+            )
+        ).all()
+    }
+    return [
+        TmdbSearchResultResponse(
+            tmdbId=show.id,
+            title=show.name,
+            year=show.year,
+            overview=show.overview or "",
+            posterPath=show.poster_path,
+            inCollection=show.id in held,
+            movieId=held.get(show.id),
+            mediaType="tv",
+        )
+        for show, _ in ranked
+    ]

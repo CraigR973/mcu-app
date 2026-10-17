@@ -59,6 +59,8 @@ class IdentifyCandidateResponse(BaseModel):
     notes: list[str]
     #: Set when the collection already has this film: choosing it merges the two.
     inCollection: FilmInCollectionResponse | None
+    #: Batch Y5: "tv" for an entry of ``seriesCandidates``, whose ``tmdbId`` is the series'.
+    mediaType: Literal["film", "tv"] = "film"
 
 
 class IdentifyDiscResponse(BaseModel):
@@ -82,7 +84,10 @@ class IdentifyQueueResponse(BaseModel):
 
 class IdentifySearchResponse(BaseModel):
     query: str
+    #: Films only, as before Y5: the Identify page picks films from it.
     candidates: list[IdentifyCandidateResponse]
+    #: Batch Y5 (#277): TMDB's series for the same words, for "Move only this copy".
+    seriesCandidates: list[IdentifyCandidateResponse] = Field(default_factory=list)
 
 
 class IdentifyPickRequest(BaseModel):
@@ -153,12 +158,18 @@ class IdentificationDoubtResponse(BaseModel):
     proposedTmdbId: int | None = None
     proposedTitle: str | None = None
     proposedYear: int | None = None
+    #: Batch Y5: the title the doubt was raised from (the sheet row's, for the re-check), which
+    #: "Move only this copy" searches first: "Tinker Tailor Soldier Spy (TV)".
+    searchHint: str | None = None
 
 
 class MoveCopyRequest(BaseModel):
     """One copy is another film — Batch X9."""
 
     tmdbId: int = Field(gt=0)
+    #: Batch Y5: "tv" when ``tmdbId`` is a TMDB series' id. An app cached before Y5 sends
+    #: none, and meant a film.
+    mediaType: Literal["film", "tv"] = "film"
     #: The doubt the move settles, when it came from one.
     doubtId: uuid.UUID | None = None
 

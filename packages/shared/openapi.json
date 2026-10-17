@@ -2642,6 +2642,19 @@
       ],
       "title": "Subcategory"
      },
+     "title": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
      "tmdbId": {
       "anyOf": [
        {
@@ -2653,6 +2666,18 @@
        }
       ],
       "title": "Tmdbid"
+     },
+     "tmdbTvId": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tmdbtvid"
      }
     },
     "required": [
@@ -5619,6 +5644,17 @@
       "title": "Raisedat",
       "type": "string"
      },
+     "searchHint": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Searchhint"
+     },
      "source": {
       "enum": [
        "recheck",
@@ -5648,6 +5684,15 @@
         "type": "null"
        }
       ]
+     },
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
      },
      "notes": {
       "items": {
@@ -6224,6 +6269,13 @@
      "query": {
       "title": "Query",
       "type": "string"
+     },
+     "seriesCandidates": {
+      "items": {
+       "$ref": "#/components/schemas/IdentifyCandidateResponse"
+      },
+      "title": "Seriescandidates",
+      "type": "array"
      }
     },
     "required": [
@@ -6828,6 +6880,15 @@
        }
       ],
       "title": "Doubtid"
+     },
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
      },
      "tmdbId": {
       "exclusiveMinimum": 0.0,
@@ -10470,6 +10531,18 @@
       ],
       "title": "Genreid"
      },
+     "keywordId": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Keywordid"
+     },
      "minRating": {
       "anyOf": [
        {
@@ -11940,6 +12013,13 @@
       },
       "title": "Results",
       "type": "array"
+     },
+     "series": {
+      "items": {
+       "$ref": "#/components/schemas/TmdbSearchResultResponse"
+      },
+      "title": "Series",
+      "type": "array"
      }
     },
     "required": [
@@ -11956,6 +12036,15 @@
       "default": false,
       "title": "Incollection",
       "type": "boolean"
+     },
+     "mediaType": {
+      "default": "film",
+      "enum": [
+       "film",
+       "tv"
+      ],
+      "title": "Mediatype",
+      "type": "string"
      },
      "movieId": {
       "anyOf": [
@@ -15922,6 +16011,41 @@
      },
      {
       "in": "query",
+      "name": "tmdbTvId",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "exclusiveMinimum": 0,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tmdbtvid"
+      }
+     },
+     {
+      "in": "query",
+      "name": "title",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 500,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Title"
+      }
+     },
+     {
+      "in": "query",
       "name": "format",
       "required": false,
       "schema": {
@@ -17629,7 +17753,7 @@
   },
   "/api/v1/identify/copies/{item_id}/move": {
    "post": {
-    "description": "This copy is another film: it moves on its own, to that film — Batch X9. Undone from\nthe recent list. Either person since Batch Y4.",
+    "description": "This copy is another film: it moves on its own, to that film — Batch X9. Undone from\nthe recent list. Either person since Batch Y4; to a series too since Batch Y5.",
     "operationId": "move_a_copy_api_v1_identify_copies__item_id__move_post",
     "parameters": [
      {
@@ -17955,7 +18079,7 @@
   },
   "/api/v1/identify/films/{movie_id}/search": {
    "get": {
-    "description": "TMDB's films for a corrected title. Nothing is saved until Craig picks one. Either\nperson since Batch Y4: \"Move only this copy\" searches with it, and it writes nothing.",
+    "description": "TMDB's films for a corrected title. Nothing is saved until Craig picks one. Either\nperson since Batch Y4: \"Move only this copy\" searches with it, and it writes nothing.\nSince Batch Y5 it answers TMDB's series apart, which a copy can move to.",
     "operationId": "search_film_api_v1_identify_films__movie_id__search_get",
     "parameters": [
      {
@@ -19274,6 +19398,23 @@
         }
        ],
        "title": "Genreid"
+      }
+     },
+     {
+      "in": "query",
+      "name": "keywordId",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "exclusiveMinimum": 0,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Keywordid"
       }
      },
      {

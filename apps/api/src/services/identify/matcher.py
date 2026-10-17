@@ -51,6 +51,7 @@ from src.services.identify.titles import (
     compare,
     fold,
     leading_words,
+    parse_title,
     simplified,
     without_article,
 )
@@ -1032,6 +1033,35 @@ def rank_series(
         return (-_HOW_RANK[match.how], agrees, -match.ratio, -show.vote_count)
 
     return sorted(scored, key=key)
+
+
+#: Pages of TMDB's series read for a title — Batch Y5. A one-word title is shared by dozens
+#: of series: BBC's *Life* (2009) is 28th for "Life", on the second page, so one page cannot
+#: offer it. Two put both series called exactly "Life" first.
+SERIES_PAGES = 2
+
+
+class SeriesSearch(Protocol):
+    async def search_tv(self, query: str, page: int = 1) -> TvSearchResults: ...
+
+
+async def find_series(
+    tmdb: SeriesSearch, title: str, *, limit: int
+) -> tuple[ParsedTitle, list[tuple[TvSearchResult, TitleMatch]]]:
+    """TMDB's series for a title as it is typed or sold, best first by :func:`rank_series` —
+    Batch Y5, for Correct match, the add form and a move alike. Searched as a series is sold
+    ("Broadchurch Series 1-3" asks for "Broadchurch"), over :data:`SERIES_PAGES` pages."""
+    parsed = parse_title(title)
+    query = parsed.tv_title or parsed.main
+    if not query:
+        return parsed, []
+    first = await tmdb.search_tv(query)
+    shows = list(first.results)
+    for page in range(2, min(first.total_pages, SERIES_PAGES) + 1):
+        shows.extend((await tmdb.search_tv(query, page=page)).results)
+    unique = list({show.id: show for show in shows}.values())
+    ranked = rank_series(parsed, TvSearchResults(results=unique))
+    return parsed, ranked[:limit]
 
 
 def _looser_queries(whole: Sequence[Reading]) -> list[str]:

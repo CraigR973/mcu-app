@@ -7,7 +7,9 @@ Tailor* with the 2011 one. Identifying the row again would carry the right copy 
 wrong one, so a copy can be moved on its own.
 
 The copy goes to the collection's film of that TMDB id, or to a new film made from TMDB's
-record when the collection has none. Watches stay where they are: they are of a film, not a
+record when the collection has none. Since Batch Y5 (#277) it can go to a series the same way,
+by its series id: BBC's *Life*, the 1979 *Tinker Tailor* and the 2019 *Name of the Rose* are
+series discs on the same-named films. Watches stay where they are: they are of a film, not a
 disc. A doubt about this copy is settled by the move. The move is audited on the copy and
 undone from Identify films' recent list: the copy goes back, the doubt opens again, and a
 film the move made is removed if nothing else has come to point at it.
@@ -30,9 +32,10 @@ from src.models.movie import Movie, MovieCredit
 from src.models.wanted import WantedItem
 from src.models.watch_log import WatchLog
 from src.services.audit import record_action
+from src.services.film_rows import held_row_for, make_row
 from src.services.identify.doubts import reaccept_disagreeing_page
-from src.services.movie_metadata import credit_rows, movie_metadata_values
 from src.tmdb.models import Movie as TmdbMovie
+from src.tmdb.models import TvShow
 
 MOVE_KIND = "move_copy"
 
@@ -49,26 +52,34 @@ class Moved:
 
 
 def _film_json(film: Movie) -> dict[str, Any]:
-    return {"movieId": str(film.id), "title": film.title, "year": film.year, "tmdbId": film.tmdb_id}
+    return {
+        "movieId": str(film.id),
+        "title": film.title,
+        "year": film.year,
+        "tmdbId": film.tmdb_id,
+        "tmdbTvId": film.tmdb_tv_id,
+    }
 
 
 async def move_copy(
     db: AsyncSession,
     item_id: uuid.UUID,
-    record: TmdbMovie,
+    record: TmdbMovie | TvShow,
     *,
     by: uuid.UUID | None,
     doubt_id: uuid.UUID | None = None,
 ) -> Moved:
-    """Move one copy to the film ``record`` is, making that film if need be. Does not commit."""
+    """Move one copy to the film or, since Batch Y5, the series ``record`` is, making that
+    row if need be. Does not commit."""
     item = await db.get(CollectionItem, item_id)
     if item is None or item.deleted_at is not None:
         raise LookupError("No such copy.")
     source = await db.get(Movie, item.movie_id)
     if source is None:
         raise LookupError("No such copy.")
-    if source.tmdb_id == record.id:
-        raise MoveError("This copy is already on that film.")
+    series = isinstance(record, TvShow)
+    if (source.tmdb_tv_id if series else source.tmdb_id) == record.id:
+        raise MoveError(f"This copy is already on that {'series' if series else 'film'}.")
     doubt: IdentifyDoubt | None = None
     if doubt_id is not None:
         doubt = await db.get(IdentifyDoubt, doubt_id)
@@ -77,26 +88,12 @@ async def move_copy(
         if doubt.status != "open":
             raise MoveError("This doubt has already been settled.")
 
-    target = await db.scalar(select(Movie).where(Movie.tmdb_id == record.id))
+    target = await held_row_for(db, record)
     if target is not None and target.deleted_at is not None:
         raise MoveError(f"'{target.title}' is in the Trash. Restore it before moving a copy to it.")
     created = target is None
     if target is None:
-        target = Movie(id=uuid.uuid4(), **movie_metadata_values(record))
-        db.add(target)
-        await db.flush()
-        for row in credit_rows(target.id, record):
-            db.add(
-                MovieCredit(
-                    id=uuid.UUID(row[0]),
-                    movie_id=target.id,
-                    person_name=row[2],
-                    tmdb_person_id=row[3],
-                    role=row[4],
-                    character_name=row[5],
-                    display_order=row[6],
-                )
-            )
+        target = await make_row(db, record)
 
     about = [IdentifyDoubt.collection_item_id == item.id]
     if doubt is not None:

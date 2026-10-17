@@ -141,6 +141,8 @@ class SmartCollectionFilters(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     genreId: Annotated[int | None, Field(gt=0)] = None
+    #: Batch Y5 — a TMDB keyword, as ``GET /movies``' ``keywordId``: Film Noir is 9807.
+    keywordId: Annotated[int | None, Field(gt=0)] = None
     year: Annotated[int | None, Field(ge=1870, le=2200)] = None
     format: Annotated[str | None, Field(min_length=1, max_length=50)] = None
     section: Annotated[str | None, Field(min_length=1, max_length=100)] = None

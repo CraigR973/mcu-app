@@ -64,6 +64,9 @@ class Movie(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: filters actually query. Both, because a card shows names and a filter matches ids.
     genres: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
     genre_ids: Mapped[list[int] | None] = mapped_column(ARRAY(Integer), nullable=True)
+    #: Batch Y5 (#277): every TMDB keyword id of the film or series, which the Archive's Film
+    #: Noir reads (keyword 9807). Null is "not fetched yet", an empty array "TMDB has none".
+    tmdb_keyword_ids: Mapped[list[int] | None] = mapped_column(ARRAY(Integer), nullable=True)
 
     #: Top five cast, denormalised onto the row so a grid of 1,857 cards renders without
     #: joining ``movie_credits`` 1,857 times.

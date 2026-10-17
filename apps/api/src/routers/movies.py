@@ -57,8 +57,8 @@ from src.schemas.movies import (
 from src.schemas.valuation import CopyValuationResponse
 from src.services.identification import IdentifyError, identify_film
 from src.services.identify.doubts import doubted_films, film_page_doubts, in_doubt
-from src.services.identify.matcher import Identifier, match_score, rank_series
-from src.services.identify.titles import ParsedTitle, parse_title
+from src.services.identify.matcher import Identifier, find_series, match_score
+from src.services.identify.titles import parse_title
 from src.services.identify.waiting import still_to_identify
 from src.services.reviews.read import review_response, reviews_by_movie
 from src.services.valuation import valuations_for_movie, valued_format
@@ -96,6 +96,9 @@ class MovieFilters:
     """
 
     genre_id: int | None = None
+    #: Batch Y5 (#277): a TMDB keyword the film carries. The Archive offers 9807 as "Film
+    #: Noir" with the genres. A film whose keywords were never fetched matches none.
+    keyword_id: int | None = None
     year: int | None = None
     format_code: str | None = None
     section: str | None = None
@@ -170,6 +173,8 @@ def _movie_predicates(filters: MovieFilters) -> list[ColumnElement[bool]]:
     predicates: list[ColumnElement[bool]] = [Movie.deleted_at.is_(None)]
     if filters.genre_id is not None:
         predicates.append(Movie.genre_ids.contains([filters.genre_id]))
+    if filters.keyword_id is not None:
+        predicates.append(Movie.tmdb_keyword_ids.contains([filters.keyword_id]))
     if filters.year is not None:
         predicates.append(Movie.year == filters.year)
     if filters.decade_from is not None:
@@ -487,6 +492,7 @@ async def _movie_detail(db: AsyncSession, movie: Movie) -> MovieDetailResponse:
             proposedTmdbId=shown.doubt.proposed_tmdb_id,
             proposedTitle=shown.proposed_title,
             proposedYear=shown.proposed_year,
+            searchHint=shown.doubt.search_hint,
         )
         for shown in (await film_page_doubts(db, movie.id) if movie.tmdb_id is not None else [])
     ]
@@ -597,6 +603,7 @@ async def list_movies(
     # pagination can still choose a smaller page size.
     per_page: Annotated[int, Query(alias="perPage", ge=1, le=2000)] = 60,
     genre_id: Annotated[int | None, Query(alias="genreId", gt=0)] = None,
+    keyword_id: Annotated[int | None, Query(alias="keywordId", gt=0)] = None,
     year: Annotated[int | None, Query(ge=1870, le=2200)] = None,
     format_code: Annotated[str | None, Query(alias="format", min_length=1, max_length=50)] = None,
     section: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
@@ -638,6 +645,7 @@ async def list_movies(
 
     filters = MovieFilters(
         genre_id=genre_id,
+        keyword_id=keyword_id,
         year=year,
         format_code=format_code,
         section=section,
@@ -949,7 +957,7 @@ async def get_movie_candidates(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="TMDB search is temporarily unavailable",
         ) from exc
-    series = await _series_candidates(tmdb, parsed)
+    series = await _series_candidates(tmdb, search_title)
 
     return CandidateListResponse(
         movieId=movie.id,
@@ -976,20 +984,17 @@ FILM_CANDIDATES = 5
 SERIES_CANDIDATES = 5
 
 
-async def _series_candidates(tmdb: TMDBClient, parsed: ParsedTitle) -> list[CandidateResponse]:
-    """TMDB's series for the same title, ranked by T9's rule — Batches Y3 and X9.
+async def _series_candidates(tmdb: TMDBClient, title: str) -> list[CandidateResponse]:
+    """TMDB's series for the same title, ranked by T9's rule — Batches Y3 and X9, over two
+    pages since Y5 (:func:`find_series`).
 
-    Searched with the title as a series is sold, so "Broadchurch Series 1-3" asks for
-    "Broadchurch". A failure here leaves the films to answer on their own: the series are the
-    extra, and the film search has just reached TMDB.
+    A failure here leaves the films to answer on their own: the series are the extra, and the
+    film search has just reached TMDB.
     """
-    query = parsed.tv_title or parsed.main
-    if not query:
-        return []
     try:
-        found = await tmdb.search_tv(query)
+        parsed, ranked = await find_series(tmdb, title, limit=SERIES_CANDIDATES)
     except (httpx.HTTPError, TMDBRefused):
-        logger.warning("tmdb_series_search_unavailable", query=query)
+        logger.warning("tmdb_series_search_unavailable", query=title)
         return []
     return [
         CandidateResponse(
@@ -1002,7 +1007,7 @@ async def _series_candidates(tmdb: TMDBClient, parsed: ParsedTitle) -> list[Cand
             confidence=match_score(match.ratio, parsed.year, show.year),
             titleSimilarity=match.ratio,
         )
-        for show, match in rank_series(parsed, found)[:SERIES_CANDIDATES]
+        for show, match in ranked
     ]
 
 

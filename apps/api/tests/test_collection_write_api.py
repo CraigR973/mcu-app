@@ -38,6 +38,7 @@ from src.tmdb.models import (
     Genre,
     SearchResult,
     SearchResults,
+    TvSearchResults,
 )
 from src.tmdb.models import (
     Movie as TmdbMovie,
@@ -111,6 +112,11 @@ class FakeTmdbClient:
                 )
             ],
         )
+
+    async def search_tv(self, query: str, page: int = 1) -> TvSearchResults:
+        """Batch Y5: the add form's search asks for series too. None here."""
+        del query, page
+        return TvSearchResults()
 
     async def get_movie_full(self, movie_id: int, language: str = "en-US") -> TmdbMovie:
         del language

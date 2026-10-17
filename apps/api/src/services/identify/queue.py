@@ -142,8 +142,11 @@ async def overview(db: AsyncSession) -> Overview:
     )
 
 
-async def in_collection(db: AsyncSession, tmdb_ids: list[int]) -> dict[int, FilmInCollection]:
-    """The collection's live films holding these TMDB ids, with their discs and watches."""
+async def in_collection(
+    db: AsyncSession, tmdb_ids: list[int], *, series: bool = False
+) -> dict[int, FilmInCollection]:
+    """The collection's live films holding these TMDB ids, with their discs and watches; the
+    series holding these series ids when ``series`` is set (Batch Y5)."""
     if not tmdb_ids:
         return {}
     discs = (
@@ -152,9 +155,10 @@ async def in_collection(db: AsyncSession, tmdb_ids: list[int]) -> dict[int, Film
         .scalar_subquery()
     )
     watches = select(func.count(WatchLog.id)).where(WatchLog.movie_id == Movie.id).scalar_subquery()
+    column = Movie.tmdb_tv_id if series else Movie.tmdb_id
     rows = await db.execute(
-        select(Movie.tmdb_id, Movie.id, Movie.title, Movie.year, discs, watches).where(
-            Movie.tmdb_id.in_(tmdb_ids), Movie.deleted_at.is_(None)
+        select(column, Movie.id, Movie.title, Movie.year, discs, watches).where(
+            column.in_(tmdb_ids), Movie.deleted_at.is_(None)
         )
     )
     return {
