@@ -83,11 +83,13 @@ function CandidateRow({
 }: {
   candidate: IdentifyCandidate
   busy: boolean
-  onPick: (candidate: IdentifyCandidate) => void
+  /** Absent for a series a doubt's copy can move to (Batch Y5): the doubt corrects to films. */
+  onPick?: (candidate: IdentifyCandidate) => void
   /** Batch X9: the doubt names one of the film's copies, which can move on its own. */
   onMove?: (candidate: IdentifyCandidate) => void
 }) {
   const held = candidate.inCollection
+  const series = candidate.mediaType === 'tv'
   return (
     <li className="flex gap-3 py-3 first:pt-0 last:pb-0">
       <img
@@ -100,11 +102,15 @@ function CandidateRow({
         <p className="text-sm font-semibold leading-5 text-foreground">
           {candidate.title}
           {candidate.year ? <span className="font-normal text-muted-foreground"> ({candidate.year})</span> : null}
+          {series ? <span className="font-normal text-muted-foreground"> · TV series</span> : null}
         </p>
+        {series && candidate.overview ? (
+          <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">{candidate.overview}</p>
+        ) : null}
         {candidate.notes.length > 0 ? (
           <p className="text-xs leading-5 text-muted-foreground">{candidate.notes.join(' · ')}</p>
         ) : null}
-        {held ? (
+        {held && onPick ? (
           <p className="rounded-md border border-warning/40 bg-warning/10 p-2 text-xs leading-5 text-foreground">
             You already have this as{' '}
             <Link to={`/movies/${held.movieId}`} className="font-semibold hover:text-primary">
@@ -116,10 +122,12 @@ function CandidateRow({
           </p>
         ) : null}
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => onPick(candidate)}>
-            {held ? <GitMerge aria-hidden /> : <Check aria-hidden />}
-            {held ? 'Merge into this film' : 'This is it'}
-          </Button>
+          {onPick ? (
+            <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => onPick(candidate)}>
+              {held ? <GitMerge aria-hidden /> : <Check aria-hidden />}
+              {held ? 'Merge into this film' : 'This is it'}
+            </Button>
+          ) : null}
           {onMove ? (
             <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => onMove(candidate)}>
               <ArrowRightLeft aria-hidden /> Move only this copy
@@ -280,7 +288,11 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
   // Batch X9: the doubt names one copy of a film that has others, which may be right.
   const copyId = doubt.copies > 1 ? doubt.collectionItemId : null
   const move = useMutation({
-    mutationFn: (candidate: IdentifyCandidate) => moveCopy(copyId ?? '', candidate.tmdbId, doubt.doubtId),
+    // Batch Y5: to a series too, which says so; a film moves as before.
+    mutationFn: (candidate: IdentifyCandidate) =>
+      candidate.mediaType === 'tv'
+        ? moveCopy(copyId ?? '', candidate.tmdbId, doubt.doubtId, 'tv')
+        : moveCopy(copyId ?? '', candidate.tmdbId, doubt.doubtId),
     onSuccess: refresh,
   })
   const onMove = copyId ? (candidate: IdentifyCandidate) => move.mutate(candidate) : undefined
@@ -290,6 +302,8 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
   const others = (candidates: IdentifyCandidate[]) => candidates.filter((c) => c.tmdbId !== doubt.tmdbId)
   const offered = others(doubt.candidates)
   const found = search.data ? others(search.data.candidates) : []
+  // Batch Y5: a series the doubt's copy may be, which only a move can reach from here.
+  const foundSeries = onMove ? (search.data?.seriesCandidates ?? []) : []
   const evidence = doubt.evidence.filter((line) => line !== doubt.note)
 
   return (
@@ -362,7 +376,7 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
             {queryErrorMessage(search.error, 'TMDB search is unavailable.')}
           </p>
         ) : null}
-        {search.data && found.length === 0 ? (
+        {search.data && found.length === 0 && foundSeries.length === 0 ? (
           <p className="text-xs text-muted-foreground">No other films found for “{search.data.query}”.</p>
         ) : null}
         {found.length > 0 ? (
@@ -375,6 +389,13 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
                 onPick={(chosen) => pick.mutate({ candidate: chosen, fromSearch: true })}
                 onMove={onMove}
               />
+            ))}
+          </ul>
+        ) : null}
+        {foundSeries.length > 0 ? (
+          <ul className="divide-y divide-border" aria-label={`TV series the copy of ${doubt.title} may be`}>
+            {foundSeries.map((candidate) => (
+              <CandidateRow key={`tv-${String(candidate.tmdbId)}`} candidate={candidate} busy={busy} onMove={onMove} />
             ))}
           </ul>
         ) : null}

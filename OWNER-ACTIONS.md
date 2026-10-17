@@ -1451,6 +1451,34 @@ the Mac. Nothing is identified again by it: each disagreement becomes a doubt yo
 Also from X9: a copy's edition the spec job inferred now reads "Probably …" with where it came
 from; **It is this edition** on the copy (either of you) confirms it.
 
+### 33. Mark's 16 Oct points — Y5 *(new 17 Oct; the code is live once Y5 merges)*
+
+**Why:** Y5 (`DECISIONS.md` #277) lets a disc be added to, or moved to, a TMDB series, adds Film
+Noir to the Archive's genre filter from TMDB's keyword 9807, and adds a disc TMDB lacks by its
+title. Two steps are yours.
+
+1. **At your word, fill the keywords of the films already identified**, so Film Noir finds
+   them. Until then it finds only films added or identified after Y5 merged. First the dry
+   run, which reads TMDB (about 1,850 calls at 8 a second, roughly four minutes; keep the lid
+   open) and writes nothing; it prints how many it would fill and every film tagged noir:
+
+       DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" \
+       TMDB_READ_TOKEN="$(grep '^TMDB_READ_TOKEN=' apps/api/.env.local | cut -d= -f2-)" \
+       PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.fill_keywords
+
+   Then the same with `--apply`. It writes only empty rows still the film it read, a hundred
+   at a time, so it can be stopped and run again. Expect about 224 noir films (measured 16 Oct).
+2. **Yours or Mark's, in the app: move the three series discs.** Each film page's doubt →
+   **Move only this copy** opens already searched on the sheet's title; tap the series:
+   *Life* (2017) → **Life (2009) · TV series**, BBC's (Attenborough), not the 2007 one;
+   *Tinker Tailor Soldier Spy* (2011) → **(1979) · TV series**; *The Name of the Rose* (1986)
+   → **(2019) · TV series**. Each is undone from Identify films → Recently identified. The
+   same moves are on Identify films' doubt cards: search, then **Move only this copy** under
+   the TV series.
+
+Also from Y5: John Krish's *A Day in the Life* (BFI Blu-ray) can now be added: Add → Search
+title → "Add … by its title". It is filed as not a film, so it stays off "Still to identify".
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database

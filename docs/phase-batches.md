@@ -3835,7 +3835,7 @@ reporting the merge SHA with `db: ok`.
 | ~~Y2~~ | ~~Move several discs at once, from anywhere~~ (`e0b5bad`) | ~~🟡~~ | **shipped 13 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y3~~ | ~~TV series identified from TMDB, and the ones matched as films found~~ (`ef62257`) | ~~🟡~~ | **shipped 15 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y4~~ | ~~Mark settles the doubts from the film page~~ ([#81](https://github.com/CraigR973/mcu-app/pull/81), #276) | ~~🟡~~ | **shipped 16 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
-| Y5 | Mark's 16 Oct points: series discs added and moved, Film Noir, a disc added by its title (#277) | 🟡 | in progress | top tier · high | top tier · High |
+| ~~Y5~~ | ~~Mark's 16 Oct points: series discs added and moved, Film Noir, a disc added by its title~~ (#277) | ~~🟡~~ | **shipped 17 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -4058,7 +4058,32 @@ authored 2026-10-16.**
   refusal. Web tests for the filter, the flag, the film page's actions for Mark and a kept row.
 - Tests. Gate green; production `/api/v1/health` on the merge SHA with `db: ok`.
 
-### Y5 — Mark's 16 Oct points 🟡 **in progress**
+### ~~Y5 — Mark's 16 Oct points~~ 🟡 **shipped 2026-10-17**
+**Acceptance: met, criterion by criterion; production in the close-out; the backfill waits for
+Craig (item 33).** Nine Postgres tests in `test_y5_series_noir_title.py` (series apart on the
+add form, page two read; a series made once then found, the duplicate prompt, a trashed one
+restored; two references refused; a copy moved to a series as Mark, the doubt settled, the
+repeat refused, Craig's undo removing the series; a move to a held series, and a move with no
+media type a film's; keywords stored on an add; `keywordId` on `/movies` and a saved
+collection; the backfill's dry run, apply, 404 and changed row; a title-only add set aside as
+Mark, off "Still to identify", found again) and twelve unit tests in `test_y5_units.py`.
+Migration 059 up, down and up on a throwaway pgserver with both roles present: both granted
+`SELECT` on the column, neither `UPDATE`. Web: the add form's series, title-only and barcode
+cases and a pre-Y5 answer; the move panel's series and opened search; Identify films' series
+move; Film Noir's option, place, chip and clearing; the saved filter and its words. One API
+assertion gained the new key (`test_smart_collections_api.py`, the wire carries every filter,
+as T3's runtime did); the two TMDB fakes gained `search_tv`. Local gate green (API 1,400
+passed without Postgres; 2,163 passed against pgserver, bar the two stale-edit tests that fail
+there on `main` too; shared 152; web 622). TMDB checked live for the three: *Life* → tv 16946
+first of five, *Tinker Tailor* → 35430, *Name of the Rose* → 86343. Browser check at 375px
+against seeded local data and live TMDB: Mark filtered Film Noir (3 of 8); opened each
+doubt's move already searched; moved Tinker Tailor's Blu-ray to the 1979 series (made with its
+keywords); added Band of Brothers as a series and *A Day in the Life* by its title; Craig saw
+"one copy moved · Mark" and undid it (series gone, both copies back, doubt open); Identify
+films offered BBC's *Life* to move. No server errors. Found and fixed on the way: overviews
+were never clamped on the add form (`block` overrode `line-clamp`), and the series sat below
+twenty films, so a "N TV series, below ↓" link jumps to them.
+
 
 **Asked by Mark through Craig, 16 Oct; Craig approved all three parts the same day (#277).**
 Mark found three series discs catalogued on the same-named film beside a right copy (BBC's
@@ -4086,7 +4111,8 @@ film on the add form. **Criteria authored 2026-10-16.**
   undo on Recently identified puts it back and removes a series row nothing else points at.
 - **One tap from the doubt.** A doubt's "Move only this copy" opens already searched, on the
   title the doubt was raised from (the sheet's, carried as `searchHint`), and lists series
-  marked "TV series" beside films, so moving the copy is the next tap. Checked against TMDB for
+  marked "TV series" beside films, so moving the copy is the next tap. Identify films' doubt
+  card offers the same series moves from its search. Checked against TMDB for
   the three: *Life* → tv 16946, *Tinker Tailor* → tv 35430, *Name of the Rose* → tv 86343, each
   offered. The three moves themselves are Craig's, in the app.
 - **Film Noir.** Migration 059 adds `movies.tmdb_keyword_ids integer[]`, null meaning not

@@ -145,7 +145,7 @@ function CandidateList({
               {/* Batch Y5: two series can share a name ("Life", 2007 and 2009); a line of
                   TMDB's overview tells them apart. */}
               {candidate.mediaType === 'tv' && candidate.overview ? (
-                <span className="line-clamp-1 block text-xs text-muted-foreground">{candidate.overview}</span>
+                <span className="line-clamp-2 text-xs text-muted-foreground">{candidate.overview}</span>
               ) : null}
             </span>
             <Button type="button" size="sm" variant="secondary" disabled={pending} onClick={() => onMove(candidate)}>

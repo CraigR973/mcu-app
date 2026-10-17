@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Camera, Check, Loader2, Plus, Search, Type } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -197,6 +197,7 @@ export default function AddToCollectionPage() {
   const series = searchQuery.data?.series ?? []
   const searchState = listState(searchQuery, results.length === 0 && series.length === 0)
   const searchedFor = searchQuery.data?.query ?? submitted
+  const seriesHeading = useRef<HTMLParagraphElement>(null)
   const canSave = film !== null && fields.formats.length > 0
 
   return (
@@ -322,7 +323,19 @@ export default function AddToCollectionPage() {
               <p className="text-sm text-muted-foreground">No films or series matched “{submitted}”.</p>
             )}
 
-            {results.length > 0 && series.length > 0 && <p className="page-kicker">Films</p>}
+            {results.length > 0 && series.length > 0 && (
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="page-kicker">Films</p>
+                {/* The series follow up to twenty films; on a phone that is a long way down. */}
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                  onClick={() => seriesHeading.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
+                  {series.length === 1 ? '1 TV series' : `${String(series.length)} TV series`}, below ↓
+                </button>
+              </div>
+            )}
             <ul className="space-y-2" aria-label="Films found">
               {results.map((result) => (
                 <li key={resultKey(result)}>
@@ -340,7 +353,7 @@ export default function AddToCollectionPage() {
             {/* Batch Y5 (#277): TMDB's series for the same words, apart from the films. */}
             {series.length > 0 && (
               <>
-                <p className="page-kicker">TV series</p>
+                <p ref={seriesHeading} className="page-kicker scroll-mt-20">TV series</p>
                 <ul className="space-y-2" aria-label="TV series found">
                   {series.map((result) => (
                     <li key={resultKey(result)}>
@@ -469,7 +482,8 @@ function ResultButton({
           {result.mediaType === 'tv' && <Badge>TV series</Badge>}
           {result.inCollection && <Badge tone="success">Already catalogued</Badge>}
         </span>
-        <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">{result.overview}</span>
+        {/* Batch Y5: no `block` here, which overrode the clamp and printed a whole overview. */}
+        <span className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{result.overview}</span>
       </span>
       {pending ? (
         <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />

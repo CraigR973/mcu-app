@@ -16,6 +16,9 @@ DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' "$ENV_FILE")"
 # served by `web-dist` and calls this API cross-origin (Batch X8's offline check).
 FRONTEND_ORIGIN="$(sed -n 's/^FRONTEND_ORIGIN=//p' "$ENV_FILE")"
 FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-http://localhost:5173}"
+# Optional TMDB_READ_TOKEN line, for a check that searches TMDB (Batch Y5's series). Read-only.
+TMDB_READ_TOKEN="$(sed -n 's/^TMDB_READ_TOKEN=//p' "$ENV_FILE")"
+if [ -n "$TMDB_READ_TOKEN" ]; then export TMDB_READ_TOKEN; fi
 case "$DATABASE_URL" in
   ""|*neon*|*railway*) echo "Refusing: DATABASE_URL must be a throwaway database." >&2; exit 2 ;;
 esac
