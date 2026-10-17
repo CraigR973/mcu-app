@@ -75,3 +75,57 @@ describe('MoveCopyPanel (Batch X9)', () => {
     expect(await screen.findByRole('alert')).toBeTruthy()
   })
 })
+
+describe('MoveCopyPanel (Batch Y5)', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  function renderFromDoubt(title: string) {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <MoveCopyPanel itemId={ITEM} movieId={FILM} filmTitle={title} onMoved={vi.fn()} startOpen />
+      </QueryClientProvider>,
+    )
+  }
+
+  it('opens from a doubt already searched, and moves the copy to a series', async () => {
+    searchMock.mockResolvedValue({
+      query: 'Tinker Tailor Soldier Spy (TV)',
+      candidates: [
+        { tmdbId: 49517, title: 'Tinker Tailor Soldier Spy', year: 2011, posterPath: null, overview: '', votes: 6000, notes: [], inCollection: { movieId: FILM, title: 'Tinker Tailor Soldier Spy', year: 2011, discs: 2, watches: 0 } },
+      ],
+      seriesCandidates: [
+        { tmdbId: 35430, title: 'Tinker Tailor Soldier Spy', year: 1979, posterPath: null, overview: 'Smiley hunts the mole.', votes: 140, notes: [], inCollection: null, mediaType: 'tv' },
+      ],
+    })
+    moveMock.mockResolvedValue({ movieId: OTHER, title: 'Tinker Tailor Soldier Spy', year: 1979, created: true, actionId: '00000000-0000-4000-8000-000000000055' })
+    renderFromDoubt('Tinker Tailor Soldier Spy (TV)')
+
+    const series = await screen.findByRole('list', { name: 'TV series this copy may be' })
+    expect(searchMock).toHaveBeenCalledWith(FILM, 'Tinker Tailor Soldier Spy (TV)')
+    // The film the copy is on is not offered, so only the series is.
+    expect(screen.queryByRole('list', { name: 'Films this copy may be' })).toBeNull()
+    expect(within(series).getByText(/TV series/)).toBeTruthy()
+    expect(within(series).getByText('Smiley hunts the mole.')).toBeTruthy()
+    fireEvent.click(within(series).getByRole('button', { name: 'Move this copy here' }))
+
+    await vi.waitFor(() => expect(moveMock).toHaveBeenCalledWith(ITEM, 35430, undefined, 'tv'))
+  })
+
+  it('lists films and series under their own headings', async () => {
+    searchMock.mockResolvedValue({
+      query: 'Life',
+      candidates: [{ tmdbId: 7, title: 'Life', year: 1999, posterPath: null, overview: '', votes: 300, notes: [], inCollection: null }],
+      seriesCandidates: [{ tmdbId: 16946, title: 'Life', year: 2009, posterPath: null, overview: '', votes: 180, notes: [], inCollection: null, mediaType: 'tv' }],
+    })
+    renderFromDoubt('Life')
+
+    expect(await screen.findByRole('list', { name: 'Films this copy may be' })).toBeTruthy()
+    expect(screen.getByRole('list', { name: 'TV series this copy may be' })).toBeTruthy()
+    expect(screen.getByText('Films')).toBeTruthy()
+    expect(screen.getByText('TV series')).toBeTruthy()
+  })
+})

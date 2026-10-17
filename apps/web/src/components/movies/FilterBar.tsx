@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   fetchFacets,
+  FILM_NOIR,
   FORMATS,
+  keywordLabel,
   MIN_RATING_OPTIONS,
   runtimeLabel,
   shelfLabel,
@@ -24,6 +26,18 @@ interface Props {
   context?: 'browse' | 'saved'
   /** Batch T3, snag 1: the layout switch, drawn at the end of the same row. */
   trailing?: ReactNode
+}
+
+/** Batch Y5 (#277): the genres and Film Noir, which is a TMDB keyword, in one alphabetical list.
+ *  One choice at a time, so picking either clears the other. */
+const GENRE_CHOICES: Array<{ value: string; name: string }> = [
+  ...TMDB_GENRES.map((genre) => ({ value: String(genre.id), name: genre.name })),
+  { value: `keyword-${String(FILM_NOIR.keywordId)}`, name: FILM_NOIR.name },
+].sort((a, b) => a.name.localeCompare(b.name))
+
+function fromGenreChoice(value: string): Pick<MovieFilters, 'genreId' | 'keywordId'> {
+  if (value.startsWith('keyword-')) return { genreId: undefined, keywordId: Number(value.slice('keyword-'.length)) }
+  return { genreId: value ? Number(value) : undefined, keywordId: undefined }
 }
 
 const SORT_OPTIONS: Array<{ value: string; label: string }> = [
@@ -190,6 +204,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
   // Batch Y4: and the identified films in doubt, which either person settles from the page.
   const inDoubtCount = facetsQuery.data?.inDoubtMovieCount ?? 0
   const identifyChoice = filters.toIdentify ? 'true' : filters.inDoubt ? 'in-doubt' : ''
+  const genreChoice = filters.keywordId ? `keyword-${String(filters.keywordId)}` : filters.genreId ? String(filters.genreId) : ''
 
   const activeFilters = useMemo(() => {
     const active: Array<{ key: string; label: string; clear: () => void }> = []
@@ -203,6 +218,7 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
     }
     if (filters.format) add('format', FORMATS.find((format) => format.value === filters.format)?.label ?? filters.format, { format: undefined })
     if (filters.genreId) add('genre', TMDB_GENRES.find((genre) => genre.id === filters.genreId)?.name ?? 'Genre', { genreId: undefined })
+    if (filters.keywordId) add('keyword', keywordLabel(filters.keywordId), { keywordId: undefined })
     if (filters.year) add('year', `Year: ${filters.year}`, { year: undefined })
     if (filters.decadeFrom) add('decade-from', `From ${filters.decadeFrom}s`, { decadeFrom: undefined })
     if (filters.decadeTo) add('decade-to', `Through ${filters.decadeTo}s`, { decadeTo: undefined })
@@ -355,9 +371,9 @@ export function FilterBar({ filters, total, onChange, context = 'browse', traili
                   {shelves.map((shelf) => <option key={shelf.shelf} value={shelf.shelf}>{shelfLabel(shelf)} ({shelf.itemCount})</option>)}
                 </select>
               )}
-              <select className={CONTROL_CLS} value={filters.genreId ?? ''} onChange={(event) => onChange({ ...filters, genreId: event.target.value ? Number(event.target.value) : undefined })} aria-label="Filter by genre">
+              <select className={CONTROL_CLS} value={genreChoice} onChange={(event) => onChange({ ...filters, ...fromGenreChoice(event.target.value) })} aria-label="Filter by genre">
                 <option value="">All genres</option>
-                {TMDB_GENRES.map((genre) => <option key={genre.id} value={genre.id}>{genre.name}</option>)}
+                {GENRE_CHOICES.map((choice) => <option key={choice.value} value={choice.value}>{choice.name}</option>)}
               </select>
               <input
                 type="number"

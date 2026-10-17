@@ -162,6 +162,8 @@ export const identificationDoubtSchema = z.object({
   proposedTmdbId: z.number().int().nullable().optional(),
   proposedTitle: z.string().nullable().optional(),
   proposedYear: z.number().int().nullable().optional(),
+  /** Batch Y5: the title the doubt was raised from, which "Move only this copy" searches. */
+  searchHint: z.string().nullable().optional(),
 })
 
 export const movieDetailSchema = movieListItemSchema.extend({
@@ -587,11 +589,17 @@ export const tmdbSearchResultSchema = z.object({
   posterPath: z.string().nullable(),
   inCollection: z.boolean(),
   movieId: z.string().uuid().nullable(),
+  /** Batch Y5: `tv` for an entry of `series`, whose `tmdbId` is the series' own. Optional
+   *  (#205); absent is a film. */
+  mediaType: z.enum(['film', 'tv']).optional(),
 })
 
 export const tmdbSearchResponseSchema = z.object({
   query: z.string(),
+  /** Films only. */
   results: z.array(tmdbSearchResultSchema),
+  /** Batch Y5: TMDB's series for the same words, apart from the films. Optional (#205). */
+  series: z.array(tmdbSearchResultSchema).optional(),
 })
 
 export const trashItemSchema = z.object({
@@ -686,6 +694,8 @@ export const collectionSortOrderSchema = z.enum(['asc', 'desc'])
 
 export const smartCollectionFiltersSchema = z.object({
   genreId: z.number().int().positive().nullable(),
+  /** Batch Y5 — a TMDB keyword: Film Noir is 9807. Defaulted, as the runtimes are. */
+  keywordId: z.number().int().positive().nullable().default(null),
   year: z.number().int().nullable(),
   format: z.string().nullable(),
   section: z.string().nullable(),
@@ -2152,6 +2162,9 @@ export const identifyCandidateSchema = z.object({
   notes: z.array(z.string()),
   /** Set when the collection already has this film: choosing it merges the two. */
   inCollection: filmInCollectionSchema.nullable(),
+  /** Batch Y5: `tv` for a series, whose `tmdbId` is the series' own. Optional, as #205
+   *  explains, so an answer from before it parses as it did; absent is a film. */
+  mediaType: z.enum(['film', 'tv']).optional(),
 })
 
 export const identifyQueueItemSchema = z.object({
@@ -2172,6 +2185,8 @@ export const identifyQueueSchema = z.object({
 export const identifySearchSchema = z.object({
   query: z.string(),
   candidates: z.array(identifyCandidateSchema),
+  /** Batch Y5: TMDB's series for the same words, which a copy can move to. Optional (#205). */
+  seriesCandidates: z.array(identifyCandidateSchema).optional(),
 })
 
 export const identifyDecisionSchema = z.object({

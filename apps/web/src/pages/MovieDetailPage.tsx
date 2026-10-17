@@ -535,7 +535,8 @@ function DoubtRow({
         <MoveCopyPanel
           itemId={doubt.collectionItemId}
           movieId={movieId}
-          filmTitle={doubt.proposedTitle ?? filmTitle}
+          // Batch Y5: the title the doubt was raised from (the sheet's), searched as it opens.
+          filmTitle={doubt.searchHint ?? doubt.proposedTitle ?? filmTitle}
           startOpen
           onCancel={() => setMoving(false)}
           onMoved={() => {
