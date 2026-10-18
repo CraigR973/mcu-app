@@ -2,6 +2,15 @@
 
 ## Now
 
+**18 Oct: Y6, a doubt shows only while what it is about is still owned (#279), at Craig's
+choice of option A, widened.** On 17–18 Oct a re-check doubt outlived the disc it named (#278
+binned it): Identify films counted it while the Archive and the film page could not show it.
+Now one rule decides, everywhere: a doubt naming a copy shows while that copy is owned and on
+the film; one naming no copy shows while the film has a copy. Binning or selling hides it,
+restoring or unselling brings it back; nothing is written either way. "Identified, in doubt"
+now counts films, equal to the Archive's "In doubt (N)"; the daily check counts films whose
+doubt is a fortnight old. No live data step: live has 0 open doubts.
+
 **17 Oct: Y5, Mark's 16 Oct points, built at Craig's word of 16 Oct (#277).** A disc can be
 added to, or one copy moved to, a TMDB series: the add form and "Move only this copy" list
 series apart from films, and a doubt's move opens already searched on the sheet's title, so
@@ -85,6 +94,7 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 | ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
 | ~~Y4~~ (#276), Mark settles the doubts from the film page | shipped 16 Oct; the 384 are both people's to settle |
 | ~~Y5~~ (`99cee5e` #82, #277), series added and moved, Film Noir, add by title | shipped 17 Oct; keywords filled (225 noir); the three series moves are Craig's or Mark's (item 33) |
+| ~~Y6~~ (#279), doubts on a film with no copy | shipped 18 Oct; no data step |
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
 | ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the live re-check ran 16 Oct, 384 doubts raised; settling them is Craig's (item 32) |
@@ -511,6 +521,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-18 (Y6, #279)** — Craig chose option A, widened, over settling a doubt when its
+  copy is binned. `showing_doubt()` in `services/identify/doubts.py` is the one predicate for
+  Identify films' list, overview and the daily check, the Archive's filter, count and flag, and
+  the film page. The overview and daily check count films; `/identify/doubts` adds `films`.
+  Gate green bar the two known stale-edit tests on pgserver; browser-checked at 375px.
 
 - **2026-10-17 (#278, the 378 doubts)** — Settled from one plan Craig agreed, with Mark's
   word: 370 kept, 6 corrected, 1 copy moved (French Connection), 1 copy binned (Ghostbusters

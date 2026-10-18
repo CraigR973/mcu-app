@@ -23,6 +23,11 @@ again by the same source while the film stays as he left it.
 **Since Batch Y4 (#276) Mark settles them too**, from the film page: keep and move as either
 person, each audited as whoever did it. A keep is listed under Recently identified, so Craig
 sees Mark's, and its undo opens the doubt again.
+
+**Since Batch Y6 (#279) a doubt shows only while what it is about is still owned**
+(:func:`showing_doubt`): the copy it names, or, naming none, the film's copies. A binned or
+sold copy's doubt stays open and hides, and comes back with the copy. Every surface that lists
+or counts doubts asks this one rule, and counts films where the Archive does.
 """
 
 from __future__ import annotations
@@ -33,7 +38,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import and_, exists, func, select
+from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
@@ -228,22 +233,66 @@ def _disc_label(item: CollectionItem) -> str:
     return " · ".join(parts)
 
 
-def _open_on_live_film() -> tuple[Any, ...]:
-    return (
+def showing_doubt() -> ColumnElement[bool]:
+    """An open doubt still about something owned — Batch Y6 (#279).
+
+    A doubt naming a copy shows while that copy is an owned copy of the doubt's film: not
+    binned, not sold, not moved to another film. A doubt naming no copy shows while the film
+    has an owned copy. On 17 Oct a re-check doubt outlived the disc it named, binned by #278's
+    plan, and Identify films counted a doubt the Archive and the film page could not show.
+    Nothing is written when a copy goes: the doubt hides, and a restored copy brings it back.
+    """
+    named = (
+        select(CollectionItem.id)
+        .where(
+            CollectionItem.id == IdentifyDoubt.collection_item_id,
+            CollectionItem.movie_id == IdentifyDoubt.movie_id,
+            owned_copy(),
+        )
+        .correlate_except(CollectionItem)
+        .exists()
+    )
+    any_copy = (
+        select(CollectionItem.id)
+        .where(CollectionItem.movie_id == IdentifyDoubt.movie_id, owned_copy())
+        .correlate_except(CollectionItem)
+        .exists()
+    )
+    return and_(
         IdentifyDoubt.status == "open",
+        or_(
+            and_(IdentifyDoubt.collection_item_id.is_not(None), named),
+            and_(IdentifyDoubt.collection_item_id.is_(None), any_copy),
+        ),
+    )
+
+
+def _showing_on_live_film() -> tuple[Any, ...]:
+    return (
+        showing_doubt(),
         Movie.deleted_at.is_(None),
         Movie.tmdb_id.is_not(None),
     )
 
 
-async def open_doubts(db: AsyncSession, *, limit: int) -> tuple[list[DoubtEntry], int]:
-    """Open doubts, oldest first, each with the copy it names (or the film's copies)."""
+@dataclass
+class DoubtsPage:
+    entries: list[DoubtEntry]
+    #: Every showing doubt, one card each.
+    total: int
+    #: The films they are about, as the Archive's "In doubt (N)" counts them.
+    films: int
+
+
+async def open_doubts(db: AsyncSession, *, limit: int) -> DoubtsPage:
+    """Showing doubts, oldest first, each with the copy it names (or the film's copies)."""
     base = (
         select(IdentifyDoubt, Movie)
         .join(Movie, Movie.id == IdentifyDoubt.movie_id)
-        .where(*_open_on_live_film())
+        .where(*_showing_on_live_film())
     )
     total = await db.scalar(select(func.count()).select_from(base.subquery()))
+    films = await count_open(db)
     rows = (
         await db.execute(base.order_by(IdentifyDoubt.created_utc, IdentifyDoubt.id).limit(limit))
     ).all()
@@ -271,48 +320,51 @@ async def open_doubts(db: AsyncSession, *, limit: int) -> tuple[list[DoubtEntry]
                 watches=int(watches or 0),
             )
         )
-    return entries, int(total or 0)
+    return DoubtsPage(entries, int(total or 0), int(films or 0))
 
 
 async def count_open(db: AsyncSession) -> int:
+    """Films with a showing doubt: Identify films' "Identified, in doubt", equal to the
+    Archive's "In doubt (N)" since Batch Y6. A film with two doubts is one film."""
     return int(
         await db.scalar(
-            select(func.count(IdentifyDoubt.id))
+            select(func.count(func.distinct(IdentifyDoubt.movie_id)))
             .join(Movie, Movie.id == IdentifyDoubt.movie_id)
-            .where(*_open_on_live_film())
+            .where(*_showing_on_live_film())
         )
         or 0
     )
 
 
 async def count_old(db: AsyncSession, now: datetime) -> int:
-    """Open doubts older than a fortnight, for the daily check."""
+    """Films with a showing doubt older than a fortnight, for the daily check: never more than
+    the Archive's "In doubt (N)"."""
     return int(
         await db.scalar(
-            select(func.count(IdentifyDoubt.id))
+            select(func.count(func.distinct(IdentifyDoubt.movie_id)))
             .join(Movie, Movie.id == IdentifyDoubt.movie_id)
-            .where(*_open_on_live_film(), IdentifyDoubt.created_utc < now - DOUBT_AGE)
+            .where(*_showing_on_live_film(), IdentifyDoubt.created_utc < now - DOUBT_AGE)
         )
         or 0
     )
 
 
 async def doubts_for_film(db: AsyncSession, movie_id: uuid.UUID) -> list[IdentifyDoubt]:
-    """The film's open doubts, oldest first, for the film page (every one since Batch Y4)."""
+    """The film's showing doubts, oldest first, for the film page (every one since Batch Y4)."""
     found = await db.scalars(
         select(IdentifyDoubt)
-        .where(IdentifyDoubt.movie_id == movie_id, IdentifyDoubt.status == "open")
+        .where(IdentifyDoubt.movie_id == movie_id, showing_doubt())
         .order_by(IdentifyDoubt.created_utc, IdentifyDoubt.id)
     )
     return list(found.all())
 
 
 def in_doubt() -> ColumnElement[bool]:
-    """An identified film with an open doubt: the Archive's "In doubt" filter (Batch Y4),
-    counted as Identify films counts them."""
+    """An identified film with a showing doubt: the Archive's "In doubt" filter (Batch Y4),
+    counted as Identify films counts them (Batch Y6)."""
     return and_(
         Movie.tmdb_id.is_not(None),
-        exists().where(IdentifyDoubt.movie_id == Movie.id, IdentifyDoubt.status == "open"),
+        exists().where(IdentifyDoubt.movie_id == Movie.id, showing_doubt()),
     )
 
 
@@ -367,14 +419,12 @@ async def film_page_doubts(db: AsyncSession, movie_id: uuid.UUID) -> list[PageDo
 
 
 async def doubted_films(db: AsyncSession, movie_ids: Iterable[uuid.UUID]) -> set[uuid.UUID]:
-    """Which of these films have an open doubt."""
+    """Which of these films have a showing doubt."""
     ids = list(movie_ids)
     if not ids:
         return set()
     found = await db.scalars(
-        select(IdentifyDoubt.movie_id).where(
-            IdentifyDoubt.movie_id.in_(ids), IdentifyDoubt.status == "open"
-        )
+        select(IdentifyDoubt.movie_id).where(IdentifyDoubt.movie_id.in_(ids), showing_doubt())
     )
     return set(found.all())
 

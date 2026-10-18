@@ -5945,6 +5945,11 @@
    },
    "IdentifyDoubtsResponse": {
     "properties": {
+     "films": {
+      "minimum": 0.0,
+      "title": "Films",
+      "type": "integer"
+     },
      "items": {
       "items": {
        "$ref": "#/components/schemas/IdentifyDoubtResponse"
@@ -5960,7 +5965,8 @@
     },
     "required": [
      "items",
-     "total"
+     "total",
+     "films"
     ],
     "title": "IdentifyDoubtsResponse",
     "type": "object"

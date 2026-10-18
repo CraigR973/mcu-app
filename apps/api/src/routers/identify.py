@@ -313,7 +313,8 @@ async def read_doubts(
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> IdentifyDoubtsResponse:
     """Identified films that may be the wrong one, with the evidence — Batch X9."""
-    entries, total = await open_doubts(db, limit=limit)
+    page = await open_doubts(db, limit=limit)
+    entries = page.entries
     tmdb_ids = [int(c["tmdb_id"]) for entry in entries for c in entry.doubt.candidates]
     held = await in_collection(db, tmdb_ids)
     return IdentifyDoubtsResponse(
@@ -339,7 +340,8 @@ async def read_doubts(
             )
             for entry in entries
         ],
-        total=total,
+        total=page.total,
+        films=page.films,
     )
 
 

@@ -3836,6 +3836,7 @@ reporting the merge SHA with `db: ok`.
 | ~~Y3~~ | ~~TV series identified from TMDB, and the ones matched as films found~~ (`ef62257`) | ~~🟡~~ | **shipped 15 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y4~~ | ~~Mark settles the doubts from the film page~~ ([#81](https://github.com/CraigR973/mcu-app/pull/81), #276) | ~~🟡~~ | **shipped 16 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~Y5~~ | ~~Mark's 16 Oct points: series discs added and moved, Film Noir, a disc added by its title~~ (#277) | ~~🟡~~ | **shipped 17 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
+| ~~Y6~~ | ~~Doubts on a film with no copy~~ (#279) | ~~🟢~~ | **shipped 18 Oct** | ~~top tier · high~~ | ~~top tier · High~~ |
 
 *Why those efforts.* Both change who may write the collection. Y2 adds a write endpoint with
 partial success and one audit row per copy, and its stale-edit handling is #42's rule applied
@@ -4142,6 +4143,59 @@ film on the add form. **Criteria authored 2026-10-16.**
   the genre filter's Film Noir and its chip. Browser check at 375px against seeded local data.
 - Tests. Gate green; production `/api/v1/health` and `version.json` on the merge SHA with
   `db: ok`. Then the backfill waits for Craig's word.
+
+
+### ~~Y6 — Doubts on a film with no copy~~ 🟢 **shipped 2026-10-18**
+**Acceptance: met, criterion by criterion; production in the close-out.** Six Postgres tests in
+`test_y6_doubts_without_copy.py` (the only copy binned, then restored, with the daily check;
+the named copy binned beside another; sold and unsold; a doubt naming no copy as each copy
+goes; a named copy on another film; two doubts on one film counted once, the three counts
+agreeing). One existing test changed its setup, not its assertion: the daily check's doubt in
+`test_identify_doubts.py` was on a film with no copy, exactly what #279 hides, so it gained a
+DVD. Shared and web tests for `films` and the header's words; the OpenAPI snapshot regenerated.
+Local gate green (API 1,401 passed without Postgres; 2,174 passed against a throwaway pgserver,
+bar the two stale-edit tests that fail there on `main` too; shared 153; web 624). Browser check
+at 375px against seeded local data: Identify films read "Identified, in doubt 3" and "In doubt
+(3 films, 4 doubts)", the Archive "In doubt (3)"; binning the documentary's only disc made it
+2 and "2 films, 3 doubts"; restoring it from the Trash brought back 3 and the film page's
+doubt with its copy. No console or server errors.
+
+
+**The fault, 17–18 Oct.** A re-check doubt named a copy that #278's plan then binned (the old
+Ghostbusters 2 disc, catalogued on *Time Is But a Window: Ghostbusters 2 and Beyond*). The film
+had no owned copy left, so the Archive's "In doubt" filter, its search and the film page never
+showed it, while Identify films' overview still counted it and its doubts list could only show
+it with 0 copies. Craig could not find it anywhere; it was cleared by hand on 18 Oct
+(`settle_doubts`), so live data has no open doubts. The cause: Identify films and the daily check
+read "open, on a live identified film", while the Archive and the film page also need an owned
+copy. **Craig chose option A, widened (#279), 18 Oct**, over settling the doubt when its copy is
+binned (B). Top tier · high: it changes what five surfaces count. **Criteria authored
+2026-10-18.**
+
+**Acceptance:**
+- **One rule for a doubt that shows** (`showing_doubt()` in `services/identify/doubts.py`): open,
+  on a live identified film, and still about something owned. A doubt naming a copy shows while
+  that copy is an owned copy of the film (not binned, not sold, still on that film); a doubt
+  naming no copy shows while the film has an owned copy.
+- **Every surface uses it:** Identify films' doubts list and its total, the overview's
+  "Identified, in doubt", the daily check's fortnight-old count, the Archive's "In doubt" filter
+  and count, the card and row flag, and the film page's list and flag.
+- **Nothing is written when a copy goes.** Binning or selling the copy hides its doubt, by any
+  path (the copy's Delete, the tray, `settle_doubts`, a merge, marking sold); restoring it from
+  the Trash or unselling it shows the doubt again, as it was.
+- **The counts agree.** The overview counts films, so it equals the Archive's "In doubt (N)";
+  the daily check counts films whose showing doubt is a fortnight old, so it is never more. The
+  doubts list says how many films and how many doubts when they differ
+  (`IdentifyDoubtsResponse.films`, optional in the shared schema, so the web still parses an
+  API from before Y6 while the two deploy).
+- **Guards:** Postgres tests for a doubt whose copy is binned (film has no copy, and film has
+  another copy), sold, restored from the Trash, and a film-level doubt whose last copy goes;
+  the overview, the Archive count and the daily check agreeing; two doubts on one film counted
+  once. Shared and web tests for the films count and its words. Browser check at 375px against
+  seeded local data.
+- Tests. Gate green (pytest without Postgres, and against a throwaway pgserver bar the two
+  stale-edit tests that fail there on `main` too); production `/api/v1/health` and
+  `version.json` on the merge SHA with `db: ok`. No live data step.
 
 ## Post-launch — sequenced, not scheduled
 

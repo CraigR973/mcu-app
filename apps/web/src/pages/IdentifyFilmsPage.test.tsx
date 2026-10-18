@@ -319,6 +319,25 @@ describe('IdentifyFilmsPage', () => {
       expect(correctMock).not.toHaveBeenCalled()
     })
 
+    it('says how many films and how many doubts when a film has two (Batch Y6)', async () => {
+      const second = { ...DOUBTS.items[0], doubtId: DOUBTED }
+      doubtsMock.mockResolvedValue({ total: 2, films: 1, items: [DOUBTS.items[0], second] })
+      renderPage()
+
+      expect(await screen.findByRole('heading', { name: 'In doubt (1 film, 2 doubts)' })).toBeTruthy()
+    })
+
+    it('gives one number when every film has one doubt, or the API predates Y6', async () => {
+      doubtsMock.mockResolvedValue({ total: 2, films: 2, items: [DOUBTS.items[0], { ...DOUBTS.items[0], doubtId: DOUBTED }] })
+      const { unmount } = renderPage()
+      expect(await screen.findByRole('heading', { name: 'In doubt (2)' })).toBeTruthy()
+      unmount()
+
+      doubtsMock.mockResolvedValue({ total: 1, items: [DOUBTS.items[0]] })
+      renderPage()
+      expect(await screen.findByRole('heading', { name: 'In doubt (1)' })).toBeTruthy()
+    })
+
     it('counts the films in doubt in the overview', async () => {
       overviewMock.mockResolvedValue({ ...OVERVIEW, inDoubt: 7 })
       renderPage()
