@@ -5939,3 +5939,36 @@ contemporaneous.
        that. Hiding only when the film has no owned copy at all (A as first written): a doubt
        naming a binned copy of a film with other copies would still show, about a disc that is
        gone.
+
+
+280. **X10 is slimmed to what still holds, at Craig's word on 18 Oct ("slim X10 as you
+     recommend").** Re-measured read-only before code: the four title rules still disagree on
+     7 of R1's 8 pairs; the 5 split films are one row each and only 1 owned film is
+     unidentified (from 210 on 11 Oct); no owned copies share a barcode; 9 copy-less rows from
+     the 18 Sep refresh remain, plus 3 of the same kind since.
+
+     - **Kept in full:** the one title-key module and its pair-table guard, the dry-run diff,
+       and the leftover rows at Craig's word with the count shown first.
+     - **Narrowed:** the add form's lookalike check and the barcode warning stay, as cheap
+       insurance rather than a fix for live harm: the lookalike reuses Search's check through
+       the duplicate check the add form already makes, and the barcode warning names the copy
+       the scan's banner already finds.
+     - **Two levels, not one key:** `WORDS` keeps order and the article, for a page title read
+       as a prefix (AVForums' "Dog Soldiers 4K Blu-ray Review"); `TITLE` is a catalogue
+       entry's key, the article dropped, as Letterboxd's rule already dropped it. T9's
+       `compare` stays the identification verdict on top of the same `fold`.
+     - **Choices made building it:** `TITLE` drops edition words and a bracketed year as the
+       catalogue's rule did, and the leading article as Letterboxd's did; Search's lookalike now
+       drops the article too (a may, which the year still checks). A barcode on an owned copy is
+       refused unconfirmed by the add, as the same film is, while the lookalike is asked only by
+       the preflight check: it is a question, not a duplicate. The add form sends the film's
+       title and year with the check rather than the API fetching TMDB for them.
+     - **The leftover rows are a rule, not a list:** a live row with no TMDB id of either kind, at
+       least one copy and every copy binned, and no watch, want or movie-night suggestion.
+       `--apply` needs `--expect N`, the count Craig saw, and puts each in the Trash, audited,
+       restorable. The dry run on 18 Oct found 12: the review's 8 were 9, and binning has made 3
+       more of the kind.
+     - *Rejected:* dropping the add-form and barcode criteria (Craig's alternative): both cost
+       about an hour once the module exists, and the next import or title-only add can make an
+       unidentified twin again; keeping X10 as written (two of its five findings are gone, and
+       a criterion that cannot fail proves nothing).

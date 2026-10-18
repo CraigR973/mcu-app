@@ -1483,6 +1483,29 @@ title. Two steps are yours.
 Also from Y5: John Krish's *A Day in the Life* (BFI Blu-ray) can now be added: Add → Search
 title → "Add … by its title". It is filed as not a film, so it stays off "Still to identify".
 
+### 34. The 12 leftover film rows — X10 *(new 18 Oct; yours to say)*
+
+**Why:** the 18 Sep sheet refresh made new rows for titles it could not tell apart and binned
+the discs on the old ones, so 9 film rows hold nothing but a binned copy; binning has left 3
+more like them since. None shows anywhere in the app. X10 (`DECISIONS.md` #280) lists them and
+puts them in the Trash only at your word, audited as you; each comes back from the Trash.
+
+**The dry run on 18 Oct (read-only) found 12:** *ABC Murders the*, *Batman v Superman*,
+*Dunkirk*, *Edge of Darkness*, *Ghostbusters*, *Halloween*, *Invasion of the Body Snatchers*
+(two rows, one made by the refresh and binned 15 Oct), *Misery*, *Outlaw Josey Wales [Clint
+Eastwood Western Collection]*, *Test 15.04.26* and *Titanic*. Each film's real copies are on
+another row; the binned copies stay in the Trash.
+
+**At your word,** on the Mac, the dry run again and then the same with the count it shows:
+
+    DATABASE_URL="$(grep '^DATABASE_URL=' apps/api/.env.local | cut -d= -f2-)" \
+    PYTHONPATH=apps/api apps/api/.venv/bin/python3.12 -m src.scripts.remove_leftover_films --as Craig
+
+    … -m src.scripts.remove_leftover_films --as Craig --apply --expect 12
+
+It refuses unless exactly that many are leftovers when it runs, and skips a row that gained a
+copy, watch or want since.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database

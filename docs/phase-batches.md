@@ -3200,7 +3200,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → ~~X3 push heals itself~~ (`adcae0d`) — **done 12 Oct** | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
 | 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
 | 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → ~~X5 watch history~~ (`19c9aad`, 14 Oct; its live data steps at Craig's word) | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
-| 4 | X9 catalogue truth → X10 one title rule, owned twins | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
+| 4 | ~~X9 catalogue truth~~ → ~~X10 one title rule, owned twins~~ (18 Oct; its leftover rows at Craig's word) | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
 
@@ -3217,7 +3217,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | ~~X7~~ | ~~AI45-01 to AI45-08~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X8~~ | ~~UX48-01, UX48-03, CR43-04, DS44-04, DS44-07~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X9~~ | ~~CT46-01, CT46-03, CT46-05, CR43-02~~ | ~~🔴~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
-| X10 | CR43-03, CT46-04 | 🟢 | top tier · high | top tier · High |
+| ~~X10~~ | ~~CR43-03, CT46-04~~ | ~~🟢~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | X11 | MK47-05 | 🟡 | mid tier · high | mid tier · High |
 | X12 | UX48-05, UX48-06, UX48-07, CT46-06, CT46-07, DS44-06, the rest of CR43-08 | 🟡 | mid tier · high | mid tier · High |
 
@@ -3759,8 +3759,65 @@ handler reads the run after a rollback and crashes on its first failure (`Missin
   X2's daily counts of year conflicts and old proposals.
 - Tests. Gate green.
 
-### X10 — One title rule, and owned twins found 🟢
+### ~~X10 — One title rule, and owned twins found~~ 🟢 **built 18 Oct (#280); the leftover rows wait for Craig's word (item 34)**
+**Acceptance: met, criterion by criterion, as amended 18 Oct.** (1) `services/title_key.py` holds
+T9's `fold`, moved unchanged, and two levels, `WORDS` and `TITLE`; Search's and the add form's
+lookalike (`services/lookalike.py`), the spec page check, the diary and refresh index and review
+finding use it, and `canonical_title`, Letterboxd's `normalise_title`, reviews' `normalise` and
+the "&" patch are gone. `tests/test_title_key.py` runs 21 pairs, R1's eight among them, through
+every site. Review finding now splits a page title into the film's words and its format words
+before folding, so *Rocky IV 4K Blu-ray* still finds *Rocky IV*. (2) **The dry-run diff**, old
+against new keys over all 1,939 live films: identification's fold is identical for every title
+(0 moves); the diary and refresh index and the spec check change on 0 pairs; Search's lookalike
+gains 3 pairs (*Steptoe & Son* 1972 ~ 1962, *The Batman* ~ *Batman*, and the leftover *Outlaw
+Josey Wales* row ~ the 1976 film), none of them an owned unidentified film, so nothing it shows
+changes today; review finding loses 1 (*Alien³* no longer takes *Alien*'s pages). (3) The add
+form asks the duplicate check with the film's title and year, and shows "You may already own
+this" with Open it. (4) The duplicate check and the add carry `barcodeCopy`; an unconfirmed add
+under a barcode on an owned copy is refused 409, and the prompt names the copy, says a box of two
+formats is one copy and links to it. (5) `src.scripts.remove_leftover_films`, dry run by default,
+`--apply --expect N`; the live dry run found 12 (item 34). Local gate green (API 1,571 passed, 789
+skipped without Postgres; the full suite on a throwaway Postgres bar the two known stale-edit
+tests; web 629, shared 154); checked at 375 px against a seeded local API. CI and production in the
+close-out.
+
 **Covers CR43-03 and CT46-04 (Medium).** Top tier · high. Sitting 4, after X9.
+
+**Re-measured 18 Oct, read-only, before code; slimmed at Craig's word the same day (#280).**
+At `7584d8d` and on live data: (1) the four title rules still disagree on 7 of R1's 8 pairs
+(R1's probe re-run unchanged) — **holds**. (2) The 5 split films are each one row now, merged
+by Mark's identifying; unidentified owned films fell from 210 to 1 (set aside, not a film) —
+**gone**, so the lookalike check stays only as cheap insurance for the next import or
+title-only add. (3) 0 owned copies share a barcode (6 carry one at all); the scan already says
+"This exact barcode is already in the collection" but names no copy — **mostly gone**. (4) 9
+copy-less rows from the 18 Sep refresh remain, each unidentified and holding only a copy binned
+on 18 Sep, plus 3 of the same kind since — **holds**, and shows nowhere in the app.
+
+**Acceptance, as amended 18 Oct (#280).** Each original criterion is kept or narrowed; none
+dropped:
+- One title-key module (`services/title_key.py`) with named strictness levels — `WORDS` (a
+  page's words: "&" and "and", accents, apostrophes, numerals; order and article kept) and
+  `TITLE` (a catalogue entry: brackets, a trailing year, edition words and library order
+  removed, then folded and its leading article dropped) — built from T9's `fold`, which moves
+  there unchanged. Used by the catalogue's lookalike check (Search, and now the add form), the
+  spec page check, the Letterboxd and refresh index, and review finding; T9's `compare` reads
+  the same `fold`. `canonical_title`, Letterboxd's `normalise_title` and reviews' `normalise`
+  are gone, and the spec check's "&" patch with them. R1's pair table, with namesake and
+  article cases, is the test.
+- A dry-run diff of old against new keys over every live title lists, per site, each pair of
+  live films whose sameness changes; identification's own comparison is unchanged by
+  construction, so 0 identifications move, or the diff lists each for Craig.
+- The add form, whether the film came from the search or a barcode, says "you may already
+  own this" when an unidentified owned title has the same `TITLE` key and no other year:
+  Search's check, shared.
+- A barcode already on an owned copy is named before another copy is added: which copy (film,
+  formats, place), that a box holding two formats is one copy (#101), and a link to it.
+- The leftover rows are listed with their count after the merge and removed only at Craig's
+  word, never in the merge.
+- **Guard (CI):** the pair table, and a test that each site gives the table's answer.
+- Tests. Gate green.
+
+**The criteria as written on 12 Oct:**
 
 **Found 11 Oct:** four title rules (the catalogue matcher, T9, the Letterboxd matcher, review
 finding) disagree on 7 of 8 pairs and are patched per site; 5 films are split across two rows
@@ -3768,7 +3825,7 @@ finding) disagree on 7 of 8 pairs and are patched per site; 5 films are split ac
 collection" by TMDB id only, so an unidentified twin is invisible; two copies of one film were
 added under one barcode; 8 film rows with no copies were left by the 18 Sep refresh.
 
-**Acceptance:**
+**Acceptance (12 Oct, superseded by the amended list above):**
 - One title-key module with named strictness levels, built from T9's comparison (numerals,
   both sides of a colon, "&" and "and", accents, leading articles), used by all four sites; the
   per-site patches are gone; R1's pair table is its test.

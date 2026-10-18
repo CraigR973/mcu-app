@@ -18,17 +18,15 @@ import asyncio
 import time
 import uuid
 from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import Annotated
 
 import httpx
 import structlog
 from fastapi import APIRouter, HTTPException, Path, Query, status
-from sqlalchemy import exists, func, select, true
+from sqlalchemy import func, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
-from src.matching.engine import canonical_title
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
 from src.models.wanted import WantedItem
@@ -48,6 +46,8 @@ from src.schemas.discovery import (
     StreamingOfferResponse,
     StreamingResponse,
 )
+from src.services.lookalike import lookalike as find_lookalike
+from src.services.lookalike import unidentified_owned
 from src.services.movie_metadata import parse_year
 from src.tmdb import TMDBClient
 from src.tmdb.models import SearchResult, WatchProvider, WatchProviderCountry, WatchProviders
@@ -397,50 +397,6 @@ async def _movie_rows_by_tmdb_id(db: AsyncSession, tmdb_ids: Sequence[int]) -> d
     return {int(tmdb_id): movie_id for tmdb_id, movie_id in rows.all() if tmdb_id is not None}
 
 
-@dataclass(frozen=True)
-class _Unidentified:
-    movie_id: uuid.UUID
-    title: str
-    canonical: str
-    year: int | None
-
-
-async def _unidentified_owned(db: AsyncSession) -> list[_Unidentified]:
-    """Owned films nothing has matched to TMDB yet, with their titles made comparable.
-
-    A few hundred rows at most, and falling as identification proceeds.
-    """
-    has_disc = exists(
-        select(CollectionItem.id).where(CollectionItem.movie_id == Movie.id, owned_copy())
-    )
-    rows = await db.execute(
-        select(Movie.id, Movie.title, Movie.year).where(
-            Movie.tmdb_id.is_(None),
-            # Batch Y3: a series identified is not a film still to identify.
-            Movie.tmdb_tv_id.is_(None),
-            Movie.deleted_at.is_(None),
-            has_disc,
-        )
-    )
-    films: list[_Unidentified] = []
-    for movie_id, title, year in rows.all():
-        canonical, title_year = canonical_title(title)
-        films.append(_Unidentified(movie_id, title, canonical, year or title_year))
-    return films
-
-
-def _lookalike(
-    films: Sequence[_Unidentified], title: str, year: int | None
-) -> _Unidentified | None:
-    canonical, _ = canonical_title(title)
-    for film in films:
-        if film.canonical != canonical:
-            continue
-        if film.year is None or year is None or film.year == year:
-            return film
-    return None
-
-
 @router.get("/search/beyond", response_model=BeyondSearchResponse)
 async def search_beyond(
     user: CurrentUser,
@@ -471,7 +427,7 @@ async def search_beyond(
     owned = await _owned_by_tmdb_id(db, ids)
     rows = await _movie_rows_by_tmdb_id(db, ids)
     last_watched = await last_watched_by_movie(db, user.id, list(rows.values()))
-    unidentified = await _unidentified_owned(db)
+    unidentified = await unidentified_owned(db)
     region = (user.streaming_region or "GB").upper()
 
     beyond = [result for result in top if result.id not in owned]
@@ -484,7 +440,7 @@ async def search_beyond(
         year = parse_year(result.release_date)
         names = looked_up[index] if index < len(looked_up) else None
         movie_id = rows.get(result.id)
-        lookalike = _lookalike(unidentified, result.title, year)
+        lookalike = find_lookalike(unidentified, result.title, year)
         items.append(
             BeyondResultResponse(
                 tmdbId=result.id,

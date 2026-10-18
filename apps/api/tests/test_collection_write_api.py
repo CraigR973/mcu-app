@@ -589,6 +589,150 @@ async def test_a_confirmed_duplicate_is_added_and_records_why(
 
 
 # ---------------------------------------------------------------------------
+# Batch X10 (CT46-04, #280) — what a film's id cannot see: a barcode on a copy, and an
+# unidentified owned twin
+# ---------------------------------------------------------------------------
+
+#: Valid EAN-13s, by their check digit.
+ON_A_COPY = "5051892000017"
+NOWHERE = "5051892000024"
+
+
+async def test_a_barcode_already_on_a_copy_names_that_copy(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """12 Angry Men, 10 Oct: a 4K box added, then its Blu-ray added again under its barcode."""
+    movie = await _a_film(api_session, title="Twelve Angry Men", tmdb_id=930040)
+    disc = await _a_disc(api_session, movie, formats=["4k_uhd"], section="Front", shelf="4th")
+    disc.barcode = ON_A_COPY
+    await api_session.flush()
+
+    response = await client.get(
+        "/api/v1/collection/duplicate-check",
+        params={"tmdbId": 999_999_040, "format": "blu_ray", "barcode": ON_A_COPY},
+    )
+
+    body = response.json()
+    assert body["isDuplicate"] is True
+    assert body["existingCopies"] == []
+    assert body["barcodeCopy"] == {
+        "id": str(disc.id),
+        "movieId": str(movie.id),
+        "movieTitle": "Twelve Angry Men",
+        "formats": ["4k_uhd"],
+        "locationLabel": "Front 4th",
+    }
+
+    elsewhere = await client.get(
+        "/api/v1/collection/duplicate-check",
+        params={"tmdbId": 999_999_040, "barcode": NOWHERE},
+    )
+    assert elsewhere.json()["isDuplicate"] is False
+    assert elsewhere.json()["barcodeCopy"] is None
+
+
+async def test_a_binned_copy_s_barcode_is_free_again(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    movie = await _a_film(api_session, title="Binned Box", tmdb_id=930041)
+    disc = await _a_disc(api_session, movie)
+    disc.barcode = ON_A_COPY
+    disc.deleted_at = datetime.now(UTC).replace(tzinfo=None)
+    await api_session.flush()
+
+    response = await client.get(
+        "/api/v1/collection/duplicate-check",
+        params={"tmdbId": 999_999_041, "barcode": ON_A_COPY},
+    )
+    assert response.json()["barcodeCopy"] is None
+
+
+async def test_an_unconfirmed_add_under_a_barcode_on_a_copy_is_refused(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """The guard as well as the courtesy, as for the same film: a skipped preflight stops."""
+    movie = await _a_film(api_session, title="Boxed Once", tmdb_id=930042)
+    disc = await _a_disc(api_session, movie, formats=["4k_uhd"])
+    disc.barcode = ON_A_COPY
+    await api_session.flush()
+
+    refused = await client.post(
+        "/api/v1/collection", json=_body(tmdbId=NEW_TMDB_ID, barcode=ON_A_COPY)
+    )
+    assert refused.status_code == 409
+    detail = refused.json()["detail"]
+    assert detail["barcodeCopy"]["id"] == str(disc.id)
+    assert detail["maybeOwned"] is None
+
+    confirmed = await client.post(
+        "/api/v1/collection",
+        json=_body(tmdbId=NEW_TMDB_ID, barcode=ON_A_COPY, confirmDuplicate="another_copy"),
+    )
+    assert confirmed.status_code == 201, confirmed.text
+
+
+async def test_the_add_form_names_an_unidentified_owned_twin(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Invasion of the Body Snatchers, 10 Oct: a scan met no prompt beside its own
+    unidentified Blu-ray, because only TMDB ids were compared."""
+    twin = await _a_film(api_session, title="Invasion of the Body Snatchers, The", tmdb_id=None)
+    twin.year = None
+    await _a_disc(api_session, twin)
+    await api_session.flush()
+
+    response = await client.get(
+        "/api/v1/collection/duplicate-check",
+        params={
+            "tmdbId": 999_999_043,
+            "filmTitle": "Invasion of the Body Snatchers",
+            "filmYear": 1978,
+        },
+    )
+    body = response.json()
+    assert body["isDuplicate"] is False
+    assert body["maybeOwned"] == {
+        "movieId": str(twin.id),
+        "title": "Invasion of the Body Snatchers, The",
+    }
+
+    # The twin is not its own lookalike, and another title is no twin.
+    itself = await client.get(
+        "/api/v1/collection/duplicate-check", params={"movieId": str(twin.id)}
+    )
+    assert itself.json()["maybeOwned"] is None
+    other = await client.get(
+        "/api/v1/collection/duplicate-check",
+        params={"tmdbId": 999_999_044, "filmTitle": "Invasion of the Pod People"},
+    )
+    assert other.json()["maybeOwned"] is None
+
+
+async def test_a_known_year_that_disagrees_is_no_twin(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    twin = await _a_film(api_session, title="Mummy, The", tmdb_id=None)
+    twin.year = 1999
+    await _a_disc(api_session, twin)
+    await api_session.flush()
+
+    async def maybe(year: int) -> Any:
+        response = await client.get(
+            "/api/v1/collection/duplicate-check",
+            params={"tmdbId": 999_999_045, "filmTitle": "The Mummy", "filmYear": year},
+        )
+        return response.json()["maybeOwned"]
+
+    assert await maybe(1932) is None
+    assert (await maybe(1999))["movieId"] == str(twin.id)
+
+
+# ---------------------------------------------------------------------------
 # §3.2 — Changes persist; deleted items appear in trash; the audit log shows the change
 # ---------------------------------------------------------------------------
 

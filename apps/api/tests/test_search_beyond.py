@@ -21,15 +21,17 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
-from src.matching.engine import canonical_title
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.wanted import WantedItem
 from src.models.watch_log import WatchLog
 from src.routers import discovery
-from src.routers.discovery import _cached_streaming_names, _lookalike, _Unidentified
+from src.routers.discovery import _cached_streaming_names
 from src.routers.movies import get_tmdb_client
+from src.services.lookalike import Unidentified
+from src.services.lookalike import lookalike as _lookalike
+from src.services.title_key import title_key_and_year
 from src.tmdb.models import (
     CastMember,
     Credits,
@@ -49,9 +51,10 @@ from src.tmdb.models import Movie as TmdbMovie
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("Mummy, The (Brendan Fraser)", ("the mummy", None)),
-        ("The Mummy", ("the mummy", None)),
-        ("African Queen, The", ("the african queen", None)),
+        # Batch X10 (#280): the shared catalogue key drops the leading article.
+        ("Mummy, The (Brendan Fraser)", ("mummy", None)),
+        ("The Mummy", ("mummy", None)),
+        ("African Queen, The", ("african queen", None)),
         ("Heat (1995)", ("heat", 1995)),
         ("Blade Runner: The Final Cut", ("blade runner", None)),
     ],
@@ -59,12 +62,12 @@ from src.tmdb.models import Movie as TmdbMovie
 def test_two_spellings_of_one_title_compare_equal(
     raw: str, expected: tuple[str, int | None]
 ) -> None:
-    assert canonical_title(raw) == expected
+    assert title_key_and_year(raw) == expected
 
 
-def _unidentified(title: str, year: int | None = None) -> _Unidentified:
-    canonical, title_year = canonical_title(title)
-    return _Unidentified(uuid.uuid4(), title, canonical, year or title_year)
+def _unidentified(title: str, year: int | None = None) -> Unidentified:
+    key, title_year = title_key_and_year(title)
+    return Unidentified(uuid.uuid4(), title, key, year or title_year)
 
 
 def test_an_unidentified_owned_film_is_recognised_under_its_tmdb_title() -> None:

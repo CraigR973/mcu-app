@@ -64,11 +64,11 @@ import psycopg2.extras
 from src.config import psycopg2_dsn, settings
 from src.services.identify.matcher import Identifier, Proposal
 from src.services.identify.titles import ParsedTitle, parse_title
-from src.services.letterboxd.matcher import normalise_title
 from src.services.movie_metadata import (
     credit_rows,
     movie_metadata_values,
 )
+from src.services.title_key import Strictness, title_key
 from src.spreadsheet import ImportCandidate, parse_xlsx
 from src.tmdb import TMDBClient
 from src.tmdb.models import Movie
@@ -314,8 +314,9 @@ class LiveFilmIndex:
 
     **Normalised matching is the second half.** Identification also *tidies* titles —
     `Thing, The` becomes `The Thing` — so exact matching alone recovers only some of them.
-    :func:`normalise_title` is the matcher the diary import already uses for this, article
-    rotation and all, so the two agree by construction rather than by coincidence.
+    The title-key module's catalogue level (``Strictness.TITLE``) is the key the diary import
+    already uses for this, article rotation and all, so the two agree by construction rather
+    than by coincidence (one rule since Batch X10, #280).
 
     **More than one match is a question, not a guess.** Seven titles match two live films
     each — two `Dunkirk`s, two `Ghostbusters`, two `Titanic`s — and nothing in a
@@ -352,7 +353,7 @@ class LiveFilmIndex:
         # One film answers to a title once, however many of its names reduce to it.
         for key, index in (
             ((title or "").strip(), self.by_exact),
-            (normalise_title(title or ""), self.by_normalised),
+            (title_key(title or "", Strictness.TITLE), self.by_normalised),
         ):
             if movie_id not in index[key]:
                 index[key].append(movie_id)
@@ -371,7 +372,7 @@ class LiveFilmIndex:
         if len(exact) > 1:
             return None, "ambiguous"
 
-        normalised = self.by_normalised.get(normalise_title(title or ""), [])
+        normalised = self.by_normalised.get(title_key(title or "", Strictness.TITLE), [])
         if len(normalised) == 1:
             return normalised[0], "normalised"
         if len(normalised) > 1:

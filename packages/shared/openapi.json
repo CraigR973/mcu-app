@@ -643,6 +643,45 @@
     "title": "BarcodeConfirmRequest",
     "type": "object"
    },
+   "BarcodeCopyResponse": {
+    "description": "The owned copy a barcode is already on — Batch X10 (CT46-04, #280).\n\nOn 10 Oct two copies of *12 Angry Men* were added under one barcode, a 4K and a Blu-ray,\neach through the prompt as \"another copy\", where #101 makes a box holding both one copy.",
+    "properties": {
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "locationLabel": {
+      "title": "Locationlabel",
+      "type": "string"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "movieTitle": {
+      "title": "Movietitle",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "movieId",
+     "movieTitle",
+     "formats",
+     "locationLabel"
+    ],
+    "title": "BarcodeCopyResponse",
+    "type": "object"
+   },
    "BarcodeLookupRequest": {
     "additionalProperties": false,
     "properties": {
@@ -4419,6 +4458,16 @@
    "DuplicateCheckResponse": {
     "description": "Whether this film is already on a shelf, and what the prompt should offer.\n\n``isUpgrade`` is what makes §3.5's acceptance criterion — \"adding a 4K when Blu-ray\nexists triggers the **upgrade** prompt\" — answerable without the web app\nre-implementing the format ranking that the database already enforces.",
     "properties": {
+     "barcodeCopy": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/BarcodeCopyResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "bestFormatOwned": {
       "anyOf": [
        {
@@ -4445,6 +4494,16 @@
       "default": false,
       "title": "Isupgrade",
       "type": "boolean"
+     },
+     "maybeOwned": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MaybeOwnedFilmResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "movieId": {
       "anyOf": [
@@ -6850,6 +6909,26 @@
      "title"
     ],
     "title": "MatchResponse",
+    "type": "object"
+   },
+   "MaybeOwnedFilmResponse": {
+    "description": "An owned film with no TMDB id yet whose title reads as this one — Batch X10.\n\nSearch's \"Might be your copy of …\" (T2), asked by the add form too.",
+    "properties": {
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "movieId",
+     "title"
+    ],
+    "title": "MaybeOwnedFilmResponse",
     "type": "object"
    },
    "MaybeOwnedResponse": {
@@ -15978,7 +16057,7 @@
   },
   "/api/v1/collection/duplicate-check": {
    "get": {
-    "description": "The warning §3.1 wants *before* saving.\n\nA read, so the add form can ask as soon as a film is chosen rather than discovering\nthe clash by being rejected. ``POST /collection`` enforces the same rule\nindependently — this endpoint is the courtesy, not the guard.",
+    "description": "The warning §3.1 wants *before* saving.\n\nA read, so the add form can ask as soon as a film is chosen rather than discovering\nthe clash by being rejected. ``POST /collection`` enforces the same rule\nindependently — this endpoint is the courtesy, not the guard. The one exception is\n``maybeOwned``: an unidentified film that may be this one is a question for the person,\nso only this check asks it.",
     "operationId": "check_duplicate_api_v1_collection_duplicate_check_get",
     "parameters": [
      {
@@ -16067,6 +16146,60 @@
         }
        ],
        "title": "Format"
+      }
+     },
+     {
+      "in": "query",
+      "name": "barcode",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 32,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Barcode"
+      }
+     },
+     {
+      "in": "query",
+      "name": "filmTitle",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 500,
+         "minLength": 1,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Filmtitle"
+      }
+     },
+     {
+      "in": "query",
+      "name": "filmYear",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maximum": 2100,
+         "minimum": 1800,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Filmyear"
       }
      }
     ],

@@ -28,9 +28,16 @@ from src.services.letterboxd.diary import (
     parse_diary,
     read_diary_csv,
 )
-from src.services.letterboxd.matcher import build_index, match_entry, normalise_title
+from src.services.letterboxd.matcher import build_index, match_entry
+from src.services.title_key import Strictness, title_key
 
 FIXTURE = Path(__file__).parent / "fixtures" / "letterboxd_diary.csv"
+
+
+def normalise_title(raw: str) -> str:
+    """The collection index's key, the shared catalogue level since Batch X10 (#280)."""
+    return title_key(raw, Strictness.TITLE)
+
 
 HEADER = "WatchedDate,Slug,Name,Year,Rating,Rewatch,ViewingId\n"
 
@@ -165,7 +172,9 @@ class TestNormalisation:
     def test_the_junk_row_normalises_without_crashing(self) -> None:
         # `'Test 15.04.26'` is a real row in `movies`, and a matcher that raised on it
         # would take the whole import down over one line of someone's typing.
-        assert normalise_title("Test 15.04.26") == "test 15 04 26"
+        # Batch X10 (#280): the shared fold drops full stops ("U.S.", "Dr."), so the date's
+        # parts join up; it was "test 15 04 26" under this module's own rule.
+        assert normalise_title("Test 15.04.26") == "test 150426"
 
 
 # ---------------------------------------------------------------------------

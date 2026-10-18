@@ -579,6 +579,21 @@ export const duplicateCheckSchema = z.object({
   // than re-derived here where it could disagree with `bestFormatOwned`.
   isUpgrade: z.boolean(),
   bestFormatOwned: z.string().nullable(),
+  // Batch X10 (#280): what a film's id cannot see. The owned copy this disc's barcode is
+  // already on, which makes the add a duplicate whichever film it is; and an unidentified
+  // owned film this may be, which is only a warning. Defaulted, so an API from before X10
+  // still parses.
+  barcodeCopy: z
+    .object({
+      id: z.string().uuid(),
+      movieId: z.string().uuid(),
+      movieTitle: z.string().min(1),
+      formats: z.array(z.string()),
+      locationLabel: z.string().min(1),
+    })
+    .nullable()
+    .default(null),
+  maybeOwned: z.object({ movieId: z.string().uuid(), title: z.string().min(1) }).nullable().default(null),
 })
 
 export const tmdbSearchResultSchema = z.object({

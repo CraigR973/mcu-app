@@ -25,7 +25,6 @@ from src.services.reviews.finding import (
     bluray_com_query,
     choose,
     choose_bluray_com,
-    normalise,
 )
 from src.services.reviews.read import (
     AVFORUMS_NOTE,
@@ -35,6 +34,7 @@ from src.services.reviews.read import (
 )
 from src.services.specs.bluray_com import assert_no_price_fields, extract, extract_year
 from src.services.specs.search import SearchHit, hits_from_payload
+from src.services.title_key import Strictness, title_key
 
 FIXTURES = Path(__file__).parent / "fixtures"
 REVIEW_PAGE = (FIXTURES / "bluray_com_review_page_4k.html").read_text(encoding="utf-8")
@@ -230,8 +230,10 @@ class TestFindingWithBrave:
         assert avforums_hits([sequel], "Dog Soldiers") == []
 
     def test_titles_are_compared_as_words(self) -> None:
-        assert normalise("Don't Look Now") == normalise("Dont Look Now") == "dont look now"
-        assert normalise("Angels & Demons") == "angels and demons"
+        words = Strictness.WORDS
+        assert title_key("Don't Look Now", words) == title_key("Dont Look Now", words)
+        assert title_key("Dont Look Now", words) == "dont look now"
+        assert title_key("Angels & Demons", words) == "angels and demons"
 
     def test_each_search_names_its_site_the_film_and_the_format(self) -> None:
         assert (

@@ -819,13 +819,31 @@ export class DuplicateItemError extends Error {
  *  Y5), or a title TMDB does not have (Batch Y5), filed as not a film. */
 export type FilmReference = { movieId: string } | { tmdbId: number } | { tmdbTvId: number } | { title: string }
 
-export async function checkDuplicate(film: FilmReference, formats: string[]): Promise<DuplicateCheck> {
+/**
+ * What the add form knows beside the film's reference — Batch X10 (#280): the scanned
+ * barcode, so a box already on a shelf is named, and the film's title and year as shown, so
+ * an unidentified owned film of that title is too.
+ */
+export interface DuplicateHints {
+  barcode?: string | null
+  title?: string | null
+  year?: number | null
+}
+
+export async function checkDuplicate(
+  film: FilmReference,
+  formats: string[],
+  hints: DuplicateHints = {},
+): Promise<DuplicateCheck> {
   const params = new URLSearchParams()
   if ('movieId' in film) params.set('movieId', film.movieId)
   else if ('tmdbId' in film) params.set('tmdbId', String(film.tmdbId))
   else if ('tmdbTvId' in film) params.set('tmdbTvId', String(film.tmdbTvId))
   else params.set('title', film.title)
   for (const format of formats) params.append('format', format)
+  if (hints.barcode) params.set('barcode', hints.barcode)
+  if (hints.title) params.set('filmTitle', hints.title)
+  if (hints.year) params.set('filmYear', String(hints.year))
   return parseResponse(await authFetch(`/collection/duplicate-check?${params}`), duplicateCheckSchema)
 }
 

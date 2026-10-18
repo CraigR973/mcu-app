@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import DuplicatePrompt from './DuplicatePrompt'
@@ -18,11 +19,15 @@ const owningBluRay: DuplicateCheck = {
   ],
   isUpgrade: true,
   bestFormatOwned: 'blu_ray',
+  barcodeCopy: null,
+  maybeOwned: null,
 }
 
 function markup(duplicate: DuplicateCheck) {
   return renderToStaticMarkup(
-    <DuplicatePrompt duplicate={duplicate} onConfirm={() => {}} onCancel={() => {}} />,
+    <MemoryRouter>
+      <DuplicatePrompt duplicate={duplicate} onConfirm={() => {}} onCancel={() => {}} />
+    </MemoryRouter>,
   )
 }
 
@@ -64,5 +69,28 @@ describe('DuplicatePrompt', () => {
     expect(html).toContain('2 copies are already on a shelf')
     // A combo pack is one row holding several formats, and reads as one.
     expect(html).toContain('DVD + Digital')
+  })
+
+  it('names the copy a scanned barcode is already on, and says a box is one copy (X10)', () => {
+    const html = markup({
+      ...owningBluRay,
+      isUpgrade: false,
+      bestFormatOwned: '4k_uhd',
+      existingCopies: [],
+      barcodeCopy: {
+        id: '3f2504e0-4f89-11d3-9a0c-0305e82c3305',
+        movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3306',
+        movieTitle: '12 Angry Men',
+        formats: ['4k_uhd'],
+        locationLabel: 'Front 4th',
+      },
+    })
+
+    expect(html).toContain('This barcode is already in the collection')
+    expect(html).not.toContain('copies are already on a shelf')
+    expect(html).toContain('12 Angry Men')
+    expect(html).toContain('Front 4th')
+    expect(html).toContain('A box holding two formats is one copy')
+    expect(html).toContain('href="/movies/3f2504e0-4f89-11d3-9a0c-0305e82c3306"')
   })
 })
