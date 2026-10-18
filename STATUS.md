@@ -2,15 +2,7 @@
 
 ## Now
 
-**18 Oct: X12c, terms and tidying, is built (#284); two live steps wait for Craig's word.** Settings
-has TMDB's logo and its "not endorsed" notice, and JustWatch is credited by the providers. TMDB
-data older than 150 days is refetched inside the calendar refresh (none is yet; the first is on 5
-Feb 2027). Brave results go when a lookup settles, keeping the accepted page. Completion sets
-count the top ten billed and drop shorts and compilations. The dead SQL is gone, `*.xlsx` is
-ignored, #28's twin is noted, group-start cites #24. **Craig's word needed for:** 1) deleting the
-9,456 stored Brave results (`prune_spec_results --apply --expect 9456`); 2) re-running the
-completion-set refresh (dry run on 18 Oct: 22 created, 14 updated, 4 unchanged, 22 retired, 0 errors). Then Group X is done; 38, the end-to-end suite, is next at
-his go.
+**18 Oct: X12c, terms and tidying, is shipped (#284; `833369c`, fix `e109b98`), and both its live steps ran at Craig's word the same day.** Settings has TMDB's logo and "not endorsed" notice and JustWatch is credited by the providers; TMDB data older than 150 days is refetched inside the calendar refresh (none is yet; the first is on 5 Feb 2027); Brave results go when a lookup settles; completion sets count the top ten billed and drop shorts and compilations. **Live steps:** `prune_spec_results --apply --expect 9456` deleted 9,456 of 15,516 stored Brave results (6,060 left: 5,210 on lookups still waiting for a person, 850 accepted pages); the completion-set refresh created 22 sets, updated 14, left 4, removed 22 no longer chosen, 0 errors (20 actor and 20 director sets, all refreshed 18 Oct). **Group X's sitting 5 is done**; 38, the end-to-end suite, is next at Craig's go.
 
 **18 Oct: X12b, phone type, targets and speed, is built (#283).** Re-measured first with R6's
 axe walker on the current build: the dark primary button is already 4.84:1 and no screen has an
@@ -576,6 +568,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-18 (X12c live steps)** — At Craig's word: Brave results pruned (dry run 9,456 of 15,516, applied with `--expect 9456`, 6,060 left, every `done` lookup keeps its accepted page) and the completion-set refresh run (dry run, then live: 22 created, 14 updated, 4 unchanged, 22 removed, 0 errors).
 - **2026-10-18 (X12c, #284)** — Re-measured read-only (9,456 of 15,516 Brave results qualify; no TMDB
   field is 150 days old; 40 completion sets last refreshed 8 Sep). Built TMDB logo and notice,
   JustWatch credit, results pruning at settle plus a one-off script, the 150-day refresh, top-ten
