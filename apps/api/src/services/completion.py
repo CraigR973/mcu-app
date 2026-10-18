@@ -74,6 +74,8 @@ class RefreshResult:
     updated: int = 0
     unchanged: int = 0
     skipped: int = 0
+    #: Sets whose person is no longer one of the collection's candidates (Batch X12c): removed.
+    removed: int = 0
     errors: list[str] = field(default_factory=list)
 
     @property
@@ -273,6 +275,14 @@ async def refresh_sets(
             row.set_metadata = metadata
             row.last_refreshed = utcnow()
 
+    # A set whose person is no longer chosen (Batch X12c: the top-ten rule dropped 22 of the 40,
+    # background players among them) is removed, or it would sit beside its replacements. A
+    # person still chosen but skipped or failed this run keeps the set they have.
+    chosen = {(c.set_type, str(c.tmdb_person_id)) for c in candidates}
+    retired = [row for key, row in existing.items() if key not in chosen]
+    result.removed = len(retired)
     if not dry_run:
+        for row in retired:
+            await db.delete(row)
         await db.commit()
     return result
