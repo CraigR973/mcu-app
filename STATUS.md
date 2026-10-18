@@ -9,7 +9,7 @@ Feb 2027). Brave results go when a lookup settles, keeping the accepted page. Co
 count the top ten billed and drop shorts and compilations. The dead SQL is gone, `*.xlsx` is
 ignored, #28's twin is noted, group-start cites #24. **Craig's word needed for:** 1) deleting the
 9,456 stored Brave results (`prune_spec_results --apply --expect 9456`); 2) re-running the
-completion-set refresh on the 40 sets. Then Group X is done; 38, the end-to-end suite, is next at
+completion-set refresh (dry run on 18 Oct: 22 created, 14 updated, 4 unchanged, 22 retired, 0 errors). Then Group X is done; 38, the end-to-end suite, is next at
 his go.
 
 **18 Oct: X12b, phone type, targets and speed, is built (#283).** Re-measured first with R6's

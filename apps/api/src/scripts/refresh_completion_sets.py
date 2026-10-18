@@ -40,6 +40,7 @@ async def _run(limit_per_type: int, dry_run: bool) -> int:
     print(f"  created:   {result.created}")
     print(f"  updated:   {result.updated}")
     print(f"  unchanged: {result.unchanged}")
+    print(f"  removed:   {result.removed}  (no longer chosen)")
     print(f"  skipped:   {result.skipped}  (no releasable films on TMDB)")
     print(f"  total:     {result.total}")
 

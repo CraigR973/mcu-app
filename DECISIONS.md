@@ -6121,6 +6121,11 @@ contemporaneous.
        by runtime, one call per set, `with_runtime.gte=1` so an unknown runtime is not a short) are
        left out. If the shorts call fails the set is left as it was and the run says so. The
        existing 40 sets change only when the refresh runs: **a live step, Craig's word.**
+       **Found by the dry run on 18 Oct, after the merge (`fix/x12c-retire-unchosen-sets`):** of the
+       40 sets, 22 would be created, 14 updated, 4 unchanged, so **22 existing sets (the background
+       players) would have stayed beside their 22 replacements, 62 in all**. The refresh now also
+       removes a set whose person is no longer chosen (a person chosen but skipped or failed keeps
+       theirs); a dry run counts them. Nothing is removed until the refresh is run.
      - **Tidying:** the Supabase-era `migrations/001_profiles.sql` is deleted (nothing read it);
        `*.xlsx` is ignored by pattern (Craig's two catalogue spreadsheets stay, untracked and
        untouched); the duplicate #28 is noted in place, not renumbered (documents cite both);

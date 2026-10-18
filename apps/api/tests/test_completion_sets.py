@@ -643,3 +643,41 @@ async def test_refresh_leaves_shorts_out_of_a_set_and_keeps_it_when_the_lookup_f
     await api_session.refresh(row)
     assert any("shorts not checked" in error for error in again.errors)
     assert row.member_tmdb_ids == [9_160_001, 9_160_002]
+
+
+async def test_a_set_whose_person_is_no_longer_chosen_is_removed_and_a_dry_run_only_counts_it(
+    api_session: AsyncSession,
+) -> None:
+    """Batch X12c: the top-ten rule retires sets, which must not sit beside their replacements."""
+    director = (9_000_701, "A Director Still Chosen")
+    await _a_collector_of(api_session, director, [9_170_001, 9_170_002, 9_170_003])
+    api_session.add(
+        CompletionSet(
+            id=uuid.uuid4(),
+            set_type="actor",
+            set_key="9000999",
+            set_name="A Background Player",
+            member_tmdb_ids=[1],
+            set_metadata={"members": []},
+            last_refreshed=datetime(2026, 9, 8),
+        )
+    )
+    await api_session.flush()
+    credits = PersonMovieCredits(
+        id=director[0],
+        crew=[_credit(9_170_001, "Feature", job="Director")],
+    )
+    tmdb = FakePersonClient({director[0]: credits}, on_unknown="empty")
+
+    dry = await refresh_sets(api_session, tmdb, dry_run=True)  # type: ignore[arg-type]
+    assert dry.removed >= 1
+    assert await api_session.scalar(select(CompletionSet).where(CompletionSet.set_key == "9000999"))
+
+    live = await refresh_sets(api_session, tmdb)  # type: ignore[arg-type]
+    assert live.removed >= 1
+    assert not await api_session.scalar(
+        select(CompletionSet).where(CompletionSet.set_key == "9000999")
+    )
+    assert await api_session.scalar(
+        select(CompletionSet).where(CompletionSet.set_key == str(director[0]))
+    )
