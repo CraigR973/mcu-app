@@ -9,9 +9,10 @@ module, `services/title_key.py` (T9's fold and two levels), decides "same title"
 the add form, the spec check, the diary and refresh index and review finding; the diff over all
 1,939 live films moves 0 identifications. The add form says "You may already own this" for an
 unidentified owned twin, and names the copy a scanned barcode is already on (a box of two
-formats is one copy). **Craig's: the 12 leftover film rows** (9 from the 18 Sep refresh, 3
-since), listed in `OWNER-ACTIONS.md` 34, go to the Trash only at his word. Next: sitting 5, X11
-→ X12, at Craig's go.
+formats is one copy). Merged as `f8de7ab` (PR #86); production API and web report it, `db:
+ok`. **The 12 leftover film rows** (9 from the 18 Sep refresh, 3 since) **went to the Trash at
+Craig's word the same day**, audited as him and restorable: live films 1,939 → 1,927, 0
+leftovers left. Next: sitting 5, X11 → X12, at Craig's go.
 
 **18 Oct: Y6, a doubt shows only while what it is about is still owned (#279), at Craig's
 choice of option A, widened.** On 17–18 Oct a re-check doubt outlived the disc it named (#278
@@ -109,7 +110,7 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 | ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
 | ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
 | ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the live re-check ran 16 Oct, 384 doubts raised; settling them is Craig's (item 32) |
-| ~~X10~~ (#280), one title rule, owned twins | built 18 Oct; the 12 leftover rows wait for Craig's word (item 34) |
+| ~~X10~~ (`f8de7ab` #86, #280), one title rule, owned twins | shipped 18 Oct; the 12 leftover rows trashed at Craig's word |
 | X11 → X12 | sitting 5 (#255), at Craig's go |
 | 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
 | 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
@@ -541,7 +542,8 @@ it renders — and report what was observed rather than what passed.
   Diff over 1,939 live films: 0 identification moves, 0 index changes, 3 new Search lookalike
   pairs (none an owned unidentified film), *Alien³* no longer matched to *Alien*'s reviews. The
   add form's duplicate check names an unidentified twin and a barcode's copy; the add refuses an
-  unconfirmed barcode clash. `remove_leftover_films` lists 12 and waits for Craig (item 34).
+  unconfirmed barcode clash. Merged `f8de7ab`, production verified. At Craig's word,
+  `remove_leftover_films --apply --expect 12` trashed the 12 (item 34): 1,939 → 1,927 live films.
   Gate green bar the two known stale-edit tests on pgserver; checked at 375 px.
 - **2026-10-18 (Y6, #279)** — Craig chose option A, widened, over settling a doubt when its
   copy is binned. `showing_doubt()` in `services/identify/doubts.py` is the one predicate for

@@ -3200,7 +3200,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | 1 | ~~X1 eBay scan~~ (`7979e19`) → ~~X2 failures reach Craig~~ (`857ee8f`) → ~~X3 push heals itself~~ (`adcae0d`) — **done 12 Oct** | Craig's go, as one group (`/group-start X · 1`); **X1 before 21 Oct 16:35 UTC**. MK47-04 is settled (#254), so X1's close-out does not stop | top tier · high | top tier · High |
 | 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
 | 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → ~~X5 watch history~~ (`19c9aad`, 14 Oct; its live data steps at Craig's word) | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
-| 4 | ~~X9 catalogue truth~~ → ~~X10 one title rule, owned twins~~ (18 Oct; its leftover rows at Craig's word) | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
+| 4 | ~~X9 catalogue truth~~ → ~~X10 one title rule, owned twins~~ (`f8de7ab`, 18 Oct) — **done** | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
 
@@ -3759,7 +3759,7 @@ handler reads the run after a rollback and crashes on its first failure (`Missin
   X2's daily counts of year conflicts and old proposals.
 - Tests. Gate green.
 
-### ~~X10 — One title rule, and owned twins found~~ 🟢 **built 18 Oct (#280); the leftover rows wait for Craig's word (item 34)**
+### ~~X10 — One title rule, and owned twins found~~ 🟢 **shipped 18 Oct (`f8de7ab`, [#86](https://github.com/CraigR973/mcu-app/pull/86), #280); the 12 leftover rows trashed at Craig's word the same day**
 **Acceptance: met, criterion by criterion, as amended 18 Oct.** (1) `services/title_key.py` holds
 T9's `fold`, moved unchanged, and two levels, `WORDS` and `TITLE`; Search's and the add form's
 lookalike (`services/lookalike.py`), the spec page check, the diary and refresh index and review
@@ -3776,10 +3776,10 @@ form asks the duplicate check with the film's title and year, and shows "You may
 this" with Open it. (4) The duplicate check and the add carry `barcodeCopy`; an unconfirmed add
 under a barcode on an owned copy is refused 409, and the prompt names the copy, says a box of two
 formats is one copy and links to it. (5) `src.scripts.remove_leftover_films`, dry run by default,
-`--apply --expect N`; the live dry run found 12 (item 34). Local gate green (API 1,571 passed, 789
+`--apply --expect N`; the live dry run found 12, and at Craig's word `--apply --expect 12` put all 12 in the Trash (item 34). Local gate green (API 1,571 passed, 789
 skipped without Postgres; the full suite on a throwaway Postgres bar the two known stale-edit
-tests; web 629, shared 154); checked at 375 px against a seeded local API. CI and production in the
-close-out.
+tests; web 629, shared 154); checked at 375 px against a seeded local API. CI green (14 checks);
+production API and web reported `f8de7ab` with `db: ok`.
 
 **Covers CR43-03 and CT46-04 (Medium).** Top tier · high. Sitting 4, after X9.
 
