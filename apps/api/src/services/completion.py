@@ -24,7 +24,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
@@ -37,9 +37,11 @@ from src.tmdb import PersonMovieCredit, PersonMovieCredits, TMDBClient
 #: in the same ``crew`` array, and "the Hitchcock films" means the ones he directed.
 DIRECTOR_JOB = "Director"
 
-#: An actor's set counts films they were billed in, not every walk-on. TMDB's ``order`` is
-#: billing position; 15 is generous — it keeps supporting roles and drops the crowd.
-MAX_BILLING_ORDER = 15
+#: An actor's set counts films they were billed in the top ten of, not every walk-on. TMDB's
+#: ``order`` counts from 0, so the ninth is the tenth billed (Batch X12c, CT46-07: 12 of the 20
+#: actor sets had been chosen from background players, because the old rule counted any credit
+#: and members were kept to 15).
+MAX_BILLING_ORDER = 9
 
 #: A credit with no release date has not come out. Counting unreleased films as "missing"
 #: would make every set permanently incomplete by construction.
@@ -105,6 +107,9 @@ async def candidate_people(
                     Movie.tmdb_id.is_not(None),
                     # A film only watched or wanted has a row, but is not owned (#269).
                     owned_film(),
+                    # An actor counts only for films they are top-ten billed in (Batch X12c).
+                    # Directors carry no billing position.
+                    or_(MovieCredit.role != "cast", MovieCredit.display_order <= MAX_BILLING_ORDER),
                 )
                 .group_by(MovieCredit.tmdb_person_id, MovieCredit.person_name)
                 .having(owned >= min_owned)
@@ -140,7 +145,9 @@ def _is_real_release(credit: PersonMovieCredit) -> bool:
     return (credit.vote_count or 0) >= MIN_VOTE_COUNT
 
 
-def select_members(credits: PersonMovieCredits, set_type: str) -> list[PersonMovieCredit]:
+def select_members(
+    credits: PersonMovieCredits, set_type: str, *, short_ids: frozenset[int] = frozenset()
+) -> list[PersonMovieCredit]:
     """The films that belong in this person's set, deduplicated by TMDB id.
 
     Deduplication matters more than it looks: TMDB lists a person once per job, so someone
@@ -150,6 +157,11 @@ def select_members(credits: PersonMovieCredits, set_type: str) -> list[PersonMov
     source = credits.crew if set_type == "director" else credits.cast
     chosen: dict[int, PersonMovieCredit] = {}
     for credit in source:
+        # A compilation (TMDB's `video` flag) or a short is not a film in the set (CT46-07:
+        # 6 of Nolan's 19 were shorts or compilations). `short_ids` is the person's films of
+        # 40 minutes or less, from discover.
+        if credit.video or credit.id in short_ids:
+            continue
         if set_type == "director" and credit.job != DIRECTOR_JOB:
             continue
         if set_type == "actor" and (credit.order is None or credit.order > MAX_BILLING_ORDER):
@@ -208,7 +220,16 @@ async def refresh_sets(
             result.errors.append(f"{candidate.name} ({candidate.tmdb_person_id}): {exc}")
             continue
 
-        members = select_members(credits, candidate.set_type)
+        try:
+            shorts = await tmdb.get_short_film_ids(
+                candidate.tmdb_person_id, role=candidate.set_type
+            )
+        except Exception as exc:  # noqa: BLE001 - one bad person must not end the run
+            # Left as it was: writing the set with its shorts back in would undo the filter
+            # for it, and the next run tries again.
+            result.errors.append(f"{candidate.name}: shorts not checked, set left as it was: {exc}")
+            continue
+        members = select_members(credits, candidate.set_type, short_ids=frozenset(shorts))
         if not members:
             # A person TMDB has no releasable films for. Writing an empty set would show
             # "you own 3 of 0", which is worse than not showing the set.

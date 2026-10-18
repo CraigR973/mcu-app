@@ -108,7 +108,7 @@ export function StreamingPanel({ movieId }: { movieId: string }) {
       })}
       <p className="flex items-center gap-1 text-xs text-muted-foreground">
         <Tv className="h-3 w-3" />
-        Availability in {data.region} via TMDB.
+        Availability in {data.region} via TMDB, data from JustWatch.
         {data.link ? (
           <a
             href={data.link}

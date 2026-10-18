@@ -9,9 +9,9 @@ interrupted group. Groups are defined in `docs/phase-batches.md` under **Batch g
 
 ## What this overrides, and what it does not
 
-Close-out is **explicit on this project** (`DECISIONS.md` #13) — normally the agent stops
-after `batch-start` and waits. **This command is the user's explicit, standing
-authorisation to run close-out for every batch in the named group**, given once at group
+Close-out is **automatic after a green gate on this project** (`DECISIONS.md` #24, superseding
+#13) — an agent used to stop after `batch-start` and wait. **This command is the user's
+standing authorisation to run every batch in the named group end to end**, given once at group
 level instead of once per batch. That is its entire purpose.
 
 It authorises nothing else. Every guardrail in `batch-start.md`, `batch-verify.md` and

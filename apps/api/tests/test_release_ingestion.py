@@ -343,6 +343,60 @@ async def test_a_refresh_records_what_it_found(db: AsyncSession) -> None:
     assert state.last_error is None
 
 
+async def test_a_refresh_also_fetches_again_the_films_whose_tmdb_data_is_150_days_old(
+    db: AsyncSession,
+) -> None:
+    """Batch X12c (DS44-06): TMDB's terms bar caching its data over six months."""
+    from src.models.movie import Movie
+    from src.tmdb.models import Genre
+    from src.tmdb.models import Movie as TmdbMovie
+
+    now = utcnow()
+    await _set_state(db, now - timedelta(days=2), now - timedelta(days=2))
+    old = Movie(
+        id=uuid.uuid4(),
+        tmdb_id=9_700_901,
+        title="Old Data",
+        original_title="Old Data",
+        media_type="film",
+        overview="Stale.",
+        last_tmdb_sync_utc=now - timedelta(days=200),
+    )
+    db.add(old)
+    await db.flush()
+
+    class WithFilms(FakeDiscover):
+        failing = False
+
+        async def get_movie_full(self, movie_id: int, language: str = "en-US") -> TmdbMovie:
+            del language
+            if self.failing:
+                raise RuntimeError("TMDB is down")
+            return TmdbMovie(
+                id=movie_id,
+                title="New Data",
+                original_title="New Data",
+                overview="Fresh.",
+                genres=[Genre(id=18, name="Drama")],
+            )
+
+    fake = WithFilms({DISCS: {1: []}}, {})
+    result = await refresh_calendar(db, fake, now=now)
+
+    assert result is not None and not result.errors
+    await db.refresh(old)
+    assert (old.title, old.overview) == ("New Data", "Fresh.")
+
+    # TMDB down for the fields: the calendar still finishes, and says so.
+    await _set_state(db, now - timedelta(days=2), now - timedelta(days=2))
+    old.last_tmdb_sync_utc = now - timedelta(days=200)
+    await db.flush()
+    broken = WithFilms({DISCS: {1: []}}, {})
+    broken.failing = True
+    again = await refresh_calendar(db, broken, now=now)
+    assert again is not None and any("TMDB is down" in e for e in again.errors)
+
+
 @pytest_asyncio.fixture
 async def viewer_client(db: AsyncSession) -> AsyncIterator[AsyncClient]:
     viewer = Profile(

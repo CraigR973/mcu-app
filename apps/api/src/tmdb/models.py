@@ -390,6 +390,9 @@ class PersonMovieCredit(BaseModel):
     job: str | None = None
     #: Cast-half only. Used the same way, to keep a bit part out of an actor's set.
     order: int | None = None
+    #: TMDB's flag for a compilation or video release (Batch X12c): *Cinema 16: British Short
+    #: Films* sits among Nolan's directing credits with it set. Not a film the person made.
+    video: bool | None = None
 
 
 class PersonMovieCredits(BaseModel):

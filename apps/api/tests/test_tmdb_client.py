@@ -367,3 +367,34 @@ async def test_a_route_answers_tmdbs_refusal_503_in_its_own_words() -> None:
         app.dependency_overrides.clear()
     assert response.status_code == 503
     assert response.json() == {"detail": "TMDB didn't answer. Try again in a moment."}
+
+
+# ---------------------------------------------------------------------------
+# Batch X12c — a person's short films, for the completion sets
+# ---------------------------------------------------------------------------
+
+
+async def test_a_persons_short_films_come_from_discover_by_runtime() -> None:
+    pages = {
+        1: {"results": [{"id": 10}, {"id": 11}], "total_pages": 2},
+        2: {"results": [{"id": 12}], "total_pages": 2},
+    }
+    client = TMDBClient()
+    seen: list[dict] = []
+
+    async def fake_get(path: str, params: dict | None = None) -> dict:
+        assert path == "/discover/movie"
+        assert params is not None
+        seen.append(params)
+        return pages[params["page"]]
+
+    with patch.object(client, "_get", side_effect=fake_get):
+        director = await client.get_short_film_ids(525, role="director")
+        actor = await client.get_short_film_ids(3895, role="actor", max_pages=1)
+
+    assert director == {10, 11, 12}
+    assert actor == {10, 11}, "max_pages stops the walk"
+    assert seen[0]["with_crew"] == 525 and "with_cast" not in seen[0]
+    # 40 minutes or less, and runtime 0 ("unknown" on TMDB) is not a short.
+    assert (seen[0]["with_runtime.gte"], seen[0]["with_runtime.lte"]) == (1, 40)
+    assert seen[-1]["with_cast"] == 3895

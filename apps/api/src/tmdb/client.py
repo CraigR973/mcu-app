@@ -306,6 +306,34 @@ class TMDBClient:
         data = await self._get(f"/person/{person_id}/movie_credits", {"language": language})
         return PersonMovieCredits.model_validate(data)
 
+    async def get_short_film_ids(
+        self, person_id: int, *, role: str, max_pages: int = 5
+    ) -> set[int]:
+        """The films of at most 40 minutes this person is credited on (Batch X12c).
+
+        A person's credit list carries no runtime, so shorts cannot be told from features
+        there; TMDB's discover does filter by it. ``role`` is ``director`` (``with_crew``) or
+        ``actor`` (``with_cast``). Runtime 0 is "unknown" on TMDB, so it is excluded: an
+        unreleased feature is not a short.
+        """
+        key = "with_crew" if role == "director" else "with_cast"
+        found: set[int] = set()
+        for page in range(1, max_pages + 1):
+            data = await self._get(
+                "/discover/movie",
+                {
+                    key: person_id,
+                    "with_runtime.gte": 1,
+                    "with_runtime.lte": 40,
+                    "include_adult": "false",
+                    "page": page,
+                },
+            )
+            found.update(int(item["id"]) for item in data.get("results", []))
+            if page >= int(data.get("total_pages", 1)):
+                break
+        return found
+
     async def search_movie(
         self,
         query: str,

@@ -2,6 +2,16 @@
 
 ## Now
 
+**18 Oct: X12c, terms and tidying, is built (#284); two live steps wait for Craig's word.** Settings
+has TMDB's logo and its "not endorsed" notice, and JustWatch is credited by the providers. TMDB
+data older than 150 days is refetched inside the calendar refresh (none is yet; the first is on 5
+Feb 2027). Brave results go when a lookup settles, keeping the accepted page. Completion sets
+count the top ten billed and drop shorts and compilations. The dead SQL is gone, `*.xlsx` is
+ignored, #28's twin is noted, group-start cites #24. **Craig's word needed for:** 1) deleting the
+9,456 stored Brave results (`prune_spec_results --apply --expect 9456`); 2) re-running the
+completion-set refresh on the 40 sets. Then Group X is done; 38, the end-to-end suite, is next at
+his go.
+
 **18 Oct: X12b, phone type, targets and speed, is built (#283).** Re-measured first with R6's
 axe walker on the current build: the dark primary button is already 4.84:1 and no screen has an
 axe violation. Done: nothing under 12 px (390 small-text elements to 0), list links and the
@@ -566,6 +576,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-18 (X12c, #284)** — Re-measured read-only (9,456 of 15,516 Brave results qualify; no TMDB
+  field is 150 days old; 40 completion sets last refreshed 8 Sep). Built TMDB logo and notice,
+  JustWatch credit, results pruning at settle plus a one-off script, the 150-day refresh, top-ten
+  billing and shorts filter, and the tidying. One expectation changed (a spec test now keeps the
+  accepted page only). TMDB's logo downloaded at Craig's word.
 - **2026-10-18 (X12b, #283)** — Ran R6's walker against the current build and a seeded throwaway
   database, before and after. 12 px floor and guard test, `.list-link`, whole-row activity link,
   gzip, `LIST_COLUMNS`, the Archive's two-step load (4 tests). One expectation changed

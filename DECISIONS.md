@@ -289,6 +289,9 @@ contemporaneous.
     owns reinstating it** against the new schema, and must add its own completion column.
 
 28. **A PIN is 4–8 digits; the weak-PIN blocklist covers four-digit values only.**
+    *(Two decisions carry the number 28. This is the PIN rule, 7 Sep; the other, Batch 4's
+    schema, is under "2026-09-07 — Batch 4 domain layer". Neither is renumbered, because
+    other documents cite them by number: say which when citing.)*
     *Why:* the published distribution of leaked four-digit PINs is extremely
     concentrated — roughly a quarter of choices fall in about twenty values — so a short
     blocklist there buys a great deal. Beyond four digits the distribution flattens and a
@@ -6086,3 +6089,39 @@ contemporaneous.
        7.8 s on a weak link) came from a throttled rig reading production-sized data; mine reads
        a seeded database of three films, so only the bytes are measured here. Check on a phone
        after the deploy.
+
+
+284. **X12c: terms and tidying (DS44-06, CT46-06, CT46-07, the rest of CR43-08).** Re-measured read-only
+     on 18 Oct before code; the live counts are in the ledger. Two data steps stay Craig's word.
+
+     - **TMDB's terms:** Settings ends with a "Film data" panel: TMDB's own logo (the
+       `blue_square_2` SVG from themoviedb.org/about/logos-attribution, 2,577 bytes, downloaded at
+       Craig's word on 18 Oct and saved unaltered as `apps/web/public/third-party/tmdb.svg` (not `brand/`, whose files a test requires to be byte for byte the design system's), so no CSP or
+       hosting change) and "This product uses the TMDB API but is not endorsed or certified by
+       TMDB". TMDB's page gives no required wording; this is the standard sentence. **JustWatch** is
+       credited under the film page's providers and on the movie night's "Streaming on" line.
+     - **TMDB data over six months:** `services/tmdb_refresh.py` refetches a film (or series) whose
+       `last_tmdb_sync_utc` is older than 150 days, stalest first, 100 at a time, inside the
+       calendar refresh (which a read triggers at most daily). It rewrites TMDB's fields and credit
+       rows and nothing a person set. **A film with no sync date is left alone** (17 on 18 Oct): its
+       age is unknown, and the first run must not write rows nobody expected. None is 150 days old
+       yet (the oldest is 8 Sep; 1,051 films reach it on 5 Feb 2027, so 11 days of runs clear them
+       well before 8 Mar). A failure on one film is recorded and the rest go on; a failure of the
+       whole step is added to the calendar run's errors and never fails the calendar.
+     - **Brave results:** `done` and `skipped` are the settled states (not `accepted`, whose fetch can
+       be sent back and then needs the results). A settled lookup keeps only its accepted page, which
+       the doubt checks read the title of; the deletion runs after the edition is read off the other
+       results. For the 850 `done` lookups already holding results, `src.scripts.prune_spec_results`
+       (dry run by default; `--apply --expect N`) deletes what remains: **9,456 results of 15,516
+       on 18 Oct.** `test_a_disc_searched_under_a_misspelt_title...` changed its expectation from
+       "keeps both new results" to "keeps the accepted page", which is the criterion.
+     - **Completion sets:** an actor counts only for films they are top-ten billed in (both when the
+       person is chosen and for the set's members; the old member rule was order 15); a credit TMDB
+       flags `video` (a compilation: *Cinema 16*) and a film of 40 minutes or less (TMDB's discover
+       by runtime, one call per set, `with_runtime.gte=1` so an unknown runtime is not a short) are
+       left out. If the shorts call fails the set is left as it was and the run says so. The
+       existing 40 sets change only when the refresh runs: **a live step, Craig's word.**
+     - **Tidying:** the Supabase-era `migrations/001_profiles.sql` is deleted (nothing read it);
+       `*.xlsx` is ignored by pattern (Craig's two catalogue spreadsheets stay, untracked and
+       untouched); the duplicate #28 is noted in place, not renumbered (documents cite both);
+       `group-start.md` cites #24, not #13.

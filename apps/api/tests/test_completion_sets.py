@@ -127,6 +127,16 @@ class FakePersonClient:
         self._filmographies = filmographies
         self._on_unknown = on_unknown
         self.calls: list[int] = []
+        #: Batch X12c: the films of 40 minutes or less each person is credited on, by id, and
+        #: the people whose shorts lookup should fail.
+        self.shorts: dict[int, set[int]] = {}
+        self.shorts_fail: set[int] = set()
+
+    async def get_short_film_ids(self, person_id: int, *, role: str) -> set[int]:
+        del role
+        if person_id in self.shorts_fail:
+            raise RuntimeError("discover is down")
+        return self.shorts.get(person_id, set())
 
     async def get_person_movie_credits(
         self, person_id: int, language: str = "en-US"
@@ -566,3 +576,70 @@ async def test_the_refresh_endpoint_reports_what_it_did(
     assert body["dryRun"] is True
     assert body["created"] >= 1
     assert body["errors"] == []
+
+
+# ---------------------------------------------------------------------------
+# Batch X12c — top-ten billing, no shorts or compilations (CT46-07)
+# ---------------------------------------------------------------------------
+
+
+async def test_an_actor_is_a_candidate_only_for_films_they_are_top_ten_billed_in(
+    api_session: AsyncSession,
+) -> None:
+    """12 of the 20 actor sets were background players, because any credit counted."""
+    extra = (9_000_501, "A Background Player")
+    star = (9_000_502, "A Billed Actor")
+    for index in range(4):
+        film = await _owned_film(
+            api_session, tmdb_id=9_150_000 + index, title=f"Crowd Film {index}"
+        )
+        for person, order in ((extra, 20 + index), (star, index)):
+            api_session.add(
+                MovieCredit(
+                    id=uuid.uuid4(),
+                    movie_id=film.id,
+                    person_name=person[1],
+                    tmdb_person_id=person[0],
+                    role="cast",
+                    display_order=order,
+                )
+            )
+    await api_session.flush()
+
+    actors = [
+        c for c in await candidate_people(api_session, limit_per_type=500) if c.set_type == "actor"
+    ]
+    assert [c.owned_count for c in actors if c.tmdb_person_id == star[0]] == [4]
+    assert not [c for c in actors if c.tmdb_person_id == extra[0]]
+
+
+async def test_refresh_leaves_shorts_out_of_a_set_and_keeps_it_when_the_lookup_fails(
+    api_session: AsyncSession,
+) -> None:
+    director = (9_000_601, "A Short-Making Director")
+    await _a_collector_of(api_session, director, [9_160_001, 9_160_002, 9_160_003])
+    credits = PersonMovieCredits(
+        id=director[0],
+        crew=[
+            _credit(9_160_001, "Feature One", job="Director"),
+            _credit(9_160_002, "Feature Two", job="Director"),
+            _credit(9_160_900, "A Short", job="Director"),
+        ],
+    )
+    tmdb = FakePersonClient({director[0]: credits}, on_unknown="empty")
+    tmdb.shorts[director[0]] = {9_160_900}
+
+    result = await refresh_sets(api_session, tmdb)  # type: ignore[arg-type]
+
+    row = await api_session.scalar(
+        select(CompletionSet).where(CompletionSet.set_key == str(director[0]))
+    )
+    assert row is not None and row.member_tmdb_ids == [9_160_001, 9_160_002]
+    assert not result.errors
+
+    # A failed shorts lookup records an error and leaves the set as it was, without the short.
+    tmdb.shorts_fail.add(director[0])
+    again = await refresh_sets(api_session, tmdb)  # type: ignore[arg-type]
+    await api_session.refresh(row)
+    assert any("shorts not checked" in error for error in again.errors)
+    assert row.member_tmdb_ids == [9_160_001, 9_160_002]

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Bell, Bot, Clapperboard, ShoppingBag } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
+import { DataSources } from '@/components/settings/DataSources'
 import { EbayAccountPanel } from '@/components/settings/EbayAccountPanel'
 import { WatchHistoryPanel } from '@/components/settings/WatchHistoryPanel'
 import { PageHeader } from '@/components/ui/page-header'
@@ -111,6 +112,8 @@ export default function SettingsPage() {
         {active === 'assistant' ? <AiSettings /> : null}
         {active === 'ebay' ? <EbayAccountPanel /> : null}
       </div>
+
+      <DataSources />
     </div>
   )
 }
