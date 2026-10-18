@@ -36,6 +36,56 @@ def _credit(
     )
 
 
+def test_a_compilation_is_not_a_film_in_the_set() -> None:
+    """Batch X12c (CT46-07): *Cinema 16: British Short Films* is among Nolan's directing
+    credits on TMDB, flagged `video`."""
+    credits = PersonMovieCredits(
+        id=525,
+        crew=[
+            PersonMovieCredit(
+                id=1, title="Memento", release_date="2000-10-11", vote_count=900, job="Director"
+            ),
+            PersonMovieCredit(
+                id=2,
+                title="Cinema16: British Short Films",
+                release_date="2003-05-05",
+                vote_count=7,
+                job="Director",
+                video=True,
+            ),
+        ],
+    )
+    assert [m.title for m in select_members(credits, "director")] == ["Memento"]
+
+
+def test_a_short_is_not_a_film_in_the_set() -> None:
+    """The credit list carries no runtime, so the shorts come from discover (40 minutes or
+    less) and are left out by id."""
+    credits = PersonMovieCredits(
+        id=525,
+        crew=[
+            _credit(1, "Following", job="Director"),
+            _credit(2, "Doodlebug", job="Director"),
+            _credit(3, "Quay", job="Director"),
+        ],
+    )
+    members = select_members(credits, "director", short_ids=frozenset({2, 3}))
+    assert [m.title for m in members] == ["Following"]
+
+
+def test_an_actors_set_counts_the_top_ten_billed_only() -> None:
+    """Order counts from 0: the tenth billed is order 9, the eleventh is out."""
+    credits = PersonMovieCredits(
+        id=HITCHCOCK,
+        cast=[
+            _credit(1, "Tenth Billed", order=9),
+            _credit(2, "Eleventh Billed", order=10),
+            _credit(3, "Fifteenth Billed", order=14),
+        ],
+    )
+    assert [m.title for m in select_members(credits, "actor")] == ["Tenth Billed"]
+
+
 def test_a_directors_set_holds_only_what_he_directed() -> None:
     """TMDB returns a director's producing and writing credits in the same array.
 

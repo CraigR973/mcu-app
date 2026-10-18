@@ -741,9 +741,10 @@ async def test_a_disc_searched_under_a_misspelt_title_is_searched_again_once_ide
         run.id,
     )
     assert disc.specs_source_url == FIGHT_CLUB_UK
-    # The old title's result is gone; the new search's are what Craig would see.
+    # The old title's result is gone. Batch X12c: the lookup is settled (fetched), so only the
+    # accepted page of the new search stays; it used to keep all of them.
     kept = await db.scalars(select(SpecCandidate.url).where(SpecCandidate.lookup_id == lookup.id))
-    assert set(kept.all()) == {FIGHT_CLUB_UK, FIGHT_CLUB_US}
+    assert set(kept.all()) == {FIGHT_CLUB_UK}
 
 
 async def test_a_disc_is_searched_again_only_once(db: AsyncSession) -> None:
@@ -1410,3 +1411,111 @@ async def test_an_unexpected_failure_mid_run_is_recorded_rather_than_left_runnin
         "RuntimeError: Brave's client fell over",
     )
     assert stopped.searches == 1
+
+
+# ---------------------------------------------------------------------------
+# Batch X12c — search results are kept only while a person may still choose from them
+# ---------------------------------------------------------------------------
+
+
+async def _candidate_urls(db: AsyncSession, lookup: SpecLookup) -> set[str]:
+    return set(
+        (
+            await db.scalars(select(SpecCandidate.url).where(SpecCandidate.lookup_id == lookup.id))
+        ).all()
+    )
+
+
+async def test_a_settled_lookup_keeps_only_its_accepted_page(db: AsyncSession) -> None:
+    """Brave's terms bar storing a database of search results: 8,868 of 15,283 were for discs
+    already decided. Once the page is fetched, only the accepted address stays."""
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    brave = FakeBrave({"Fight Club": FIGHT_CLUB_ONE_UK})
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    await _run(db, brave, site)
+
+    lookup = await _lookup(db, disc)
+    assert lookup.status == "done"
+    assert await _candidate_urls(db, lookup) == {FIGHT_CLUB_UK}
+
+
+async def test_a_lookup_waiting_for_craig_keeps_every_result(db: AsyncSession) -> None:
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    disc = await _disc(db, film, "blu_ray")
+    site = FakeBlurayCom({"/movies/Fight-Club-Blu-ray/6715/": FIGHT_CLUB_PAGE})
+
+    await _run(db, FakeBrave({"Fight Club": FIGHT_CLUB_THREE_UK}), site)
+
+    lookup = await _lookup(db, disc)
+    assert lookup.status == "needs_you"
+    assert len(await _candidate_urls(db, lookup)) == 3
+
+
+async def test_an_accepted_page_not_yet_fetched_keeps_its_results_for_a_send_back(
+    db: AsyncSession,
+) -> None:
+    """A fetch can be sent back, and Craig then picks again from these results."""
+    from src.services.specs.backfill import prune_candidates
+
+    film = await _film(db, "Fight Club", year=1999, tmdb_id=990_000_550)
+    _disc_row, lookup = await _accepted(db, film, FIGHT_CLUB_UK)
+    for rank, url in enumerate((FIGHT_CLUB_UK, FIGHT_CLUB_US)):
+        db.add(SpecCandidate(id=uuid.uuid4(), lookup_id=lookup.id, url=url, title="t", rank=rank))
+    await db.flush()
+
+    assert await prune_candidates(db, lookup) == 0
+    assert await _candidate_urls(db, lookup) == {FIGHT_CLUB_UK, FIGHT_CLUB_US}
+
+
+async def test_skipping_a_disc_deletes_its_results(db: AsyncSession) -> None:
+    craig = await _person(db, UserRole.admin)
+    _disc_row, lookup = await _queued(db)
+    assert await _candidate_urls(db, lookup)
+    async with _as(db, craig) as client:
+        response = await client.post(f"/api/v1/specs/queue/{lookup.id}/skip")
+    assert response.status_code == 200
+    assert await _candidate_urls(db, lookup) == set()
+
+
+async def test_the_one_off_clears_only_what_settled_lookups_still_hold(db: AsyncSession) -> None:
+    """The count the script shows and deletes (`src.scripts.prune_spec_results`)."""
+    from sqlalchemy import delete, func
+
+    from src.services.specs.backfill import settled_candidates_condition
+
+    async def lookup_with(status: str, accepted: str | None, urls: list[str]) -> SpecLookup:
+        film = await _film(db, f"Film {uuid.uuid4().hex[:6]}", year=1999, tmdb_id=None)
+        disc = await _disc(db, film, "blu_ray")
+        row = SpecLookup(
+            id=uuid.uuid4(),
+            collection_item_id=disc.id,
+            status=status,
+            accepted_url=accepted,
+            attempts=0,
+        )
+        db.add(row)
+        await db.flush()
+        for rank, url in enumerate(urls):
+            db.add(SpecCandidate(id=uuid.uuid4(), lookup_id=row.id, url=url, title="t", rank=rank))
+        await db.flush()
+        return row
+
+    base = "https://www.blu-ray.com/movies/Heat-Blu-ray/"
+    done = await lookup_with("done", f"{base}1/", [f"{base}1/", f"{base}2/", f"{base}3/"])
+    skipped = await lookup_with("skipped", None, [f"{base}4/", f"{base}5/"])
+    waiting = await lookup_with("needs_you", None, [f"{base}6/", f"{base}7/"])
+    accepted = await lookup_with("accepted", f"{base}8/", [f"{base}8/", f"{base}9/"])
+
+    mine = SpecCandidate.lookup_id.in_([done.id, skipped.id, waiting.id, accepted.id])
+    goes = await db.scalar(
+        select(func.count(SpecCandidate.id)).where(mine, settled_candidates_condition())
+    )
+    assert goes == 4, "done's two others and both of skipped's"
+
+    await db.execute(delete(SpecCandidate).where(mine, settled_candidates_condition()))
+    assert await _candidate_urls(db, done) == {f"{base}1/"}
+    assert await _candidate_urls(db, skipped) == set()
+    assert len(await _candidate_urls(db, waiting)) == 2
+    assert len(await _candidate_urls(db, accepted)) == 2

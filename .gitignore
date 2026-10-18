@@ -69,3 +69,7 @@ docs/brand/**/*.jpeg
 
 # A review's working files (docs/agent-commands/review-wave.md): persistent, never committed.
 scratchpad/
+
+# Craig's spreadsheets (the catalogue he imports from) live in the repo root and are his:
+# ignored by pattern so a `git add` never takes them, never deleted by an agent.
+*.xlsx

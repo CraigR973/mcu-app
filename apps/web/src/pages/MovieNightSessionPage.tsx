@@ -156,7 +156,8 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
       ) : null}
       {card.streamingOn.length > 0 ? (
         <p className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">Streaming on</span> {card.streamingOn.join(', ')}
+          <span className="font-semibold text-foreground">Streaming on</span> {card.streamingOn.join(', ')}{' '}
+          <span className="opacity-80">(JustWatch)</span>
         </p>
       ) : null}
       {path ? (

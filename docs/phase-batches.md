@@ -3960,7 +3960,8 @@ its own, in this order** (proposed 18 Oct; amended here, not dropped, criterion 
 - **X12b, phone polish and speed** (UX48-06, UX48-07) — **shipped 18 Oct (#283)**: 12 px floor, 44 px list links, the dark
   primary button at 4.5:1, axe-core on R6's screens (the rig is on this Mac), JSON compression,
   the Archive list's columns and first screen first. About a day.
-- **X12c, terms and tidying** (CT46-06, CT46-07, DS44-06, CR43-08's rest): TMDB's logo and
+- **X12c, terms and tidying** (CT46-06, CT46-07, DS44-06, CR43-08's rest) — **built 18 Oct (#284);
+  its two live steps wait for Craig's word**: TMDB's logo and
   notice, the JustWatch credit, Brave results deleted once decided, the 150-day TMDB refresh,
   completion sets by top ten billed without shorts, the dead file, `*.xlsx`, #28, group-start.
   About a day; **two live steps at Craig's word, count first:** deleting 9,456 Brave results,

@@ -38,7 +38,7 @@ from urllib.parse import urlsplit
 
 import httpx
 import structlog
-from sqlalchemy import case, delete, func, select, update
+from sqlalchemy import and_, case, delete, exists, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
@@ -429,6 +429,44 @@ def _restore_from(old: CollectionItem, item: CollectionItem) -> None:
     item.specs_fetched_at_utc = old.specs_fetched_at_utc
 
 
+#: Statuses after which a lookup's search results are no longer needed: the page was fetched
+#: and its specs read (``done``), or Craig said no specs (``skipped``). ``accepted`` is not
+#: one: the fetch may still be sent back, and the person then picks again from these results.
+SETTLED = ("done", "skipped")
+
+
+def settled_candidates_condition() -> ColumnElement[bool]:
+    """The search results that can go: those of a settled lookup other than its accepted page.
+
+    Batch X12c (DS44-06). Brave's API terms bar storing a database of search results beyond
+    transient storage, and 8,868 of the 15,283 stored on 11 Oct belonged to discs already
+    decided. The accepted page stays: the doubt checks read its title (`services/identify/
+    doubts.py`), and it is the record of what was chosen.
+    """
+    settled = select(SpecLookup.id).where(
+        SpecLookup.id == SpecCandidate.lookup_id, SpecLookup.status.in_(SETTLED)
+    )
+    accepted = (
+        select(SpecLookup.accepted_url)
+        .where(SpecLookup.id == SpecCandidate.lookup_id)
+        .scalar_subquery()
+    )
+    return and_(exists(settled), SpecCandidate.url.is_distinct_from(accepted))
+
+
+async def prune_candidates(db: AsyncSession, lookup: SpecLookup) -> int:
+    """Delete a settled lookup's search results, keeping the accepted page. Returns how many."""
+    if lookup.status not in SETTLED:
+        return 0
+    result = await db.execute(
+        delete(SpecCandidate).where(
+            SpecCandidate.lookup_id == lookup.id,
+            SpecCandidate.url.is_distinct_from(lookup.accepted_url),
+        )
+    )
+    return int(result.rowcount or 0)  # type: ignore[attr-defined]
+
+
 def _candidate_row(lookup_id: uuid.UUID, candidate: Candidate) -> SpecCandidate:
     release = candidate.release
     return SpecCandidate(
@@ -492,6 +530,7 @@ async def record_search(
             lookup.fetched_utc = now
             lookup.note = "Specs from the 10 Sep test, whose page is this film's UK edition."
             run.restored += 1
+            await prune_candidates(db, lookup)
             return lookup
         if is_release_url(old_url) and not any(same_page(c.url, old_url) for c in candidates):
             db.add(
@@ -728,11 +767,13 @@ async def fetch_phase(
         if item is None or item.deleted_at is not None or url is None:
             _send_back(lookup, "The disc is no longer in the collection.")
             lookup.status = "skipped"
+            await prune_candidates(db, lookup)
             await db.commit()
             continue
         if item.specs_source_url:
             lookup.status = "done"
             lookup.note = "This disc already had specs."
+            await prune_candidates(db, lookup)
             await db.commit()
             continue
         if not is_release_url(url):
@@ -827,6 +868,8 @@ async def fetch_phase(
             run.applied += 1
             # Batch U2: the page names the disc's edition only when it is certainly the copy.
             await fill_edition(db, lookup, item)
+            # Last: the edition above is read off the other candidates, which then go (X12c).
+            await prune_candidates(db, lookup)
         else:
             _send_back(lookup, "That page had no specs to read. Pick another, or skip.")
             run.sent_back += 1
@@ -1142,5 +1185,6 @@ async def skip_disc(
     lookup.decided_by = by
     lookup.decided_utc = now or utcnow()
     lookup.note = "Skipped by hand."
+    await prune_candidates(db, lookup)
     await db.commit()
     return lookup

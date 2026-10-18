@@ -38,6 +38,7 @@ from src.models.release_calendar import (
     CalendarRefreshState,
     ReleaseCalendarEntry,
 )
+from src.services.tmdb_refresh import refresh_stale_fields
 from src.tmdb import TMDBClient
 from src.tmdb.models import TMDB_RELEASE_PHYSICAL, SearchResult
 
@@ -440,6 +441,22 @@ async def refresh_calendar(
     genres = set(await _collected_genres(db, 8)) or None
     try:
         result = await ingest_releases(db, tmdb, region="GB", genre_ids=genres)
+        # Batch X12c: TMDB's terms bar keeping its data over six months, so the films whose
+        # fields are 150 days old are fetched again here, a few at a time. A failure is
+        # reported in the run's errors and never fails the calendar.
+        try:
+            stale = await refresh_stale_fields(db, tmdb, now=now)
+            if stale.refreshed or stale.failed:
+                logger.info(
+                    "tmdb_fields_refreshed",
+                    refreshed=stale.refreshed,
+                    failed=stale.failed,
+                    remaining=stale.remaining,
+                )
+            result.errors.extend(stale.errors[:5])
+        except Exception as exc:  # noqa: BLE001
+            await db.rollback()
+            result.errors.append(f"TMDB field refresh failed: {exc}"[:200])
     except Exception as exc:
         await db.rollback()
         await db.execute(
