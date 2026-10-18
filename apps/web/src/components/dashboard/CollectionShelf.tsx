@@ -111,7 +111,7 @@ function SpendChart({ stats }: { stats: Stats }) {
           </li>
         ))}
       </ul>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {formatMonth(points[0]?.month ?? '')} – {formatMonth(points[points.length - 1]?.month ?? '')}
       </p>
     </div>

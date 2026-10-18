@@ -46,7 +46,7 @@ export function MovieCompactView({ movies, isLoading }: Props) {
           const editions = movie.editions.join(' · ')
           return (
             <Link key={movie.id} to={`/movies/${movie.id}`} style={positioning} className="group flex items-center gap-2 border-b border-border/80 px-3 transition-colors hover:bg-muted/65 focus-visible:z-10 sm:gap-3 sm:px-4">
-              <span className="hidden w-7 shrink-0 text-right font-mono text-[0.6875rem] tabular-nums text-muted-foreground sm:block">{virtualRow.index + 1}</span>
+              <span className="hidden w-7 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground sm:block">{virtualRow.index + 1}</span>
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 items-baseline gap-2">
                   <span className="truncate text-sm font-semibold text-foreground">{movie.title}</span>

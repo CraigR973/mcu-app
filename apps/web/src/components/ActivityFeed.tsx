@@ -26,8 +26,8 @@ const KIND_VERB: Record<ActivityKind, string> = {
 function Row({ event }: { event: ActivityEvent }) {
   const Icon = KIND_ICON[event.kind]
   const title = event.movieTitle ?? event.detail ?? 'something'
-  return (
-    <li className="flex items-center gap-2.5 py-1.5">
+  const content = (
+    <>
       <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
       {event.movieTitle ? (
         <img
@@ -39,18 +39,27 @@ function Row({ event }: { event: ActivityEvent }) {
       ) : null}
       <p className="min-w-0 flex-1 truncate text-xs text-foreground">
         <span className="text-muted-foreground">{event.actorName ?? 'Someone'} </span>
-        {KIND_VERB[event.kind]}{' '}
-        {event.movieId ? (
-          <Link to={`/movies/${event.movieId}`} className="font-medium hover:underline">
-            {title}
-          </Link>
-        ) : (
-          <span className="font-medium">{title}</span>
-        )}
+        {KIND_VERB[event.kind]} <span className="font-medium">{title}</span>
       </p>
-      <time className="shrink-0 text-[11px] text-muted-foreground" dateTime={event.at}>
+      <time className="shrink-0 text-xs text-muted-foreground" dateTime={event.at}>
         {formatDate(event.at)}
       </time>
+    </>
+  )
+  // Batch X12b (UX48-06): the whole row opens the film, 44px tall, where the review found a
+  // 15px title link to hit.
+  return (
+    <li>
+      {event.movieId ? (
+        <Link
+          to={`/movies/${event.movieId}`}
+          className="flex min-h-11 items-center gap-2.5 py-1.5 hover:bg-muted/50"
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className="flex min-h-11 items-center gap-2.5 py-1.5">{content}</div>
+      )}
     </li>
   )
 }

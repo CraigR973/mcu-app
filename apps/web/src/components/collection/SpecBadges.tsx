@@ -54,7 +54,7 @@ function Badge({
     <span
       title={title}
       className={cn(
-        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+        'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide',
         tone === 'resolution' && 'bg-quality-4k/15 text-quality-4k',
         tone === 'hdr' && 'bg-quality-hdr/15 text-quality-hdr',
         tone === 'audio' && 'bg-quality-audio/15 text-quality-audio',

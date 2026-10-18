@@ -6051,3 +6051,38 @@ contemporaneous.
      - **Expectations that changed, by design, because a response gained a field:**
        `test_home_lists_the_problems…` (attention items carry `noteId: null`) and the shared
        `attentionSchema` test (the parse now returns `noteId: null`). No assertion was loosened.
+
+
+283. **X12b: the phone's type, targets and speed (UX48-06, UX48-07).** Re-measured first, with R6's
+     headless walker (Playwright, axe-core 4.10.2, 375 px, both themes) pointed at the current
+     build and a seeded throwaway database, 29 of R6's screens, before and after.
+
+     - **Gone before I started:** the dark primary button is 4.84:1 now (R6 measured 4.17:1; the
+       token test pins AA), and axe finds no contrast or target-size *violation* on any measured
+       screen (22 "could not decide" results over images and gradients, unchanged).
+     - **12 px floor:** every `text-[9-11px]`, `0.5625-0.6875rem` and the two shared classes
+       (`.page-kicker`, `.metadata-label`) became `text-xs`; small text on the measured screens
+       went from 390 elements to 0. `MobileTabBar.test` pinned 11 px and now pins 12 px (the
+       criterion changed it); the bar's side padding and tracking went so "Movie night" fits its
+       75 px slot at 12 px. A test (`type-floor.test.ts`) fails when a size under 12 px returns.
+     - **44 px targets:** `.list-link` (44 px tall) on Wanted's titles and review links, Trash,
+       Identify's three title links, the Home shelf link and the privacy page's way back; the
+       activity feed's whole row is the link; the top bar's avatar and assistant buttons are
+       44 px; the skip link is. Targets under 44 px on the measured screens went from 142 to 70.
+       **Not done, by design:** in-sentence links keep their line; 24 px-tall settings switches
+       stay (WCAG 2.5.8's floor is 24); `Button size="sm"` is 36-40 px and is a button, not a
+       list link. The ledger's "list links" are met; "every control at 44" is not claimed.
+     - **Compression:** `GZipMiddleware` (minimum 1,000 bytes, level 5), innermost. Starlette
+       leaves `text/event-stream` out, and a test pins that the app does not override the list, so
+       the assistant's and the movie night's streams still flush.
+     - **Archive list:** the query selects the 14 columns a card shows (`LIST_COLUMNS`), as
+       columns rather than half-loaded `Movie` objects, which would break the next read of
+       another column in the same session. On live data, whole rows are 5,462 kB for 1,927 films
+       and the list's columns 287 kB (19 times less). **Its first screen renders before the
+       rest:** the page asks for 60 films and for all of them together, shows the 60 as soon as
+       they arrive and swaps in the full list, saying "Showing the first 60 of N films; loading
+       the rest…" meanwhile, and if the rest fails keeps the 60 and says so.
+     - **Not measured:** wall-clock times against production. R6's cold-open numbers (2.0 s on 4G,
+       7.8 s on a weak link) came from a throttled rig reading production-sized data; mine reads
+       a seeded database of three films, so only the bytes are measured here. Check on a phone
+       after the deploy.

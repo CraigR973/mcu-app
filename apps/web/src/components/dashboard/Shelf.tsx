@@ -80,7 +80,7 @@ export function Shelf({
 /** "All releases", "All 40": the link beside a row's heading. */
 export function ShelfLink({ to, children }: { to: string; children: ReactNode }) {
   return (
-    <Link to={to} className="text-primary hover:underline">
+    <Link to={to} className="list-link text-primary hover:underline">
       {children}
     </Link>
   )

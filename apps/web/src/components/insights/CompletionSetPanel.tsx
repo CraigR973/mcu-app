@@ -165,7 +165,7 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
                   >
                     {film.title}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">{film.year ?? '—'}</p>
+                  <p className="text-xs text-muted-foreground">{film.year ?? '—'}</p>
                 </div>
               )
               return (

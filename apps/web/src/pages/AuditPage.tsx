@@ -14,7 +14,7 @@ const ACTIONS = ['', 'create', 'update', 'delete', 'restore', 'bulk_import'] as 
 
 function Diff({ changes }: { changes: Record<string, unknown> | null }) {
   if (!changes || Object.keys(changes).length === 0) {
-    return <p className="text-[11px] text-muted-foreground">no field changes recorded</p>
+    return <p className="text-xs text-muted-foreground">no field changes recorded</p>
   }
   return (
     <ul className="space-y-0.5">

@@ -45,7 +45,7 @@ function DestinationLink({ item }: { item: NavItem }) {
 function DestinationGroup({ group }: { group: NavGroup }) {
   return (
     <section aria-labelledby={`you-${group.label}`}>
-      <h2 id={`you-${group.label}`} className="px-1 pb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      <h2 id={`you-${group.label}`} className="px-1 pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         {group.label}
       </h2>
       <div className="archive-panel divide-y divide-border overflow-hidden">
@@ -155,7 +155,7 @@ export default function YouPage() {
 
       {saved.length > 0 ? (
         <section aria-labelledby="you-saved">
-          <h2 id="you-saved" className="px-1 pb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <h2 id="you-saved" className="px-1 pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Saved collections
           </h2>
           <div className="archive-panel divide-y divide-border overflow-hidden">

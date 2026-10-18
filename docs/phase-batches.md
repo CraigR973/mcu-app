@@ -3957,7 +3957,7 @@ its own, in this order** (proposed 18 Oct; amended here, not dropped, criterion 
   and the two Digital figures; one date helper across the 80 sites; the shortlist reading title,
   year and poster from the film; a match stored on the session (migration) and shown on the
   night page; a copy's shelf once; the "Tell Craig" line into X2's attention row. About a day.
-- **X12b, phone polish and speed** (UX48-06, UX48-07): 12 px floor, 44 px list links, the dark
+- **X12b, phone polish and speed** (UX48-06, UX48-07) — **shipped 18 Oct (#283)**: 12 px floor, 44 px list links, the dark
   primary button at 4.5:1, axe-core on R6's screens (the rig is on this Mac), JSON compression,
   the Archive list's columns and first screen first. About a day.
 - **X12c, terms and tidying** (CT46-06, CT46-07, DS44-06, CR43-08's rest): TMDB's logo and

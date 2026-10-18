@@ -7,7 +7,8 @@ import uuid
 from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
-from typing import Annotated, Literal, cast
+from decimal import Decimal
+from typing import Annotated, Literal, Protocol, cast
 
 import httpx
 import structlog
@@ -350,8 +351,27 @@ async def last_watched_by_movie(
     return {movie_id: watched_at for movie_id, watched_at in rows.all()}
 
 
+class _ListedFilm(Protocol):
+    """What a list card reads off a film: a ``Movie``, or a row of :data:`LIST_COLUMNS`."""
+
+    id: uuid.UUID
+    title: str
+    original_title: str | None
+    year: int | None
+    poster_path: str | None
+    backdrop_path: str | None
+    tmdb_rating: Decimal | None
+    runtime_minutes: int | None
+    best_format_owned: str | None
+    best_hdr_owned: str | None
+    best_audio_owned: str | None
+    tmdb_id: int | None
+    tmdb_tv_id: int | None
+    media_type: str | None
+
+
 def _movie_list_item(
-    movie: Movie,
+    movie: _ListedFilm,
     copy_count: int,
     *,
     locations: list[LocationResponse] | None = None,
@@ -387,7 +407,7 @@ def _movie_list_item(
 async def _enrich_list_items(
     db: AsyncSession,
     user_id: uuid.UUID,
-    rows: Sequence[tuple[Movie, int]],
+    rows: Sequence[tuple[_ListedFilm, int]],
 ) -> list[MovieListItemResponse]:
     """Attach location, watched state, editions, set-aside state and doubts (Batch Y4) to a
     page of films in five extra queries, whatever the page's size."""
@@ -523,6 +543,30 @@ def _validate_decade(value: int | None, name: str) -> int | None:
     return value
 
 
+#: The columns a list card reads (`_movie_list_item`), and no others (Batch X12b, UX48-07).
+#: The Archive asks for every film at once, and whole rows were 5.4 MB of the database's 1,927
+#: films, 3.0 MB of it the search column the list never shows. Selected as columns, not as
+#: ``Movie`` objects: a half-loaded object in the session would break the next thing that
+#: read another of its columns, which an async session refuses to lazy-load. Anything else a
+#: card needs is added here first.
+LIST_COLUMNS = (
+    Movie.id,
+    Movie.title,
+    Movie.original_title,
+    Movie.year,
+    Movie.poster_path,
+    Movie.backdrop_path,
+    Movie.tmdb_rating,
+    Movie.runtime_minutes,
+    Movie.best_format_owned,
+    Movie.best_hdr_owned,
+    Movie.best_audio_owned,
+    Movie.tmdb_id,
+    Movie.tmdb_tv_id,
+    Movie.media_type,
+)
+
+
 async def movie_page(
     db: AsyncSession,
     *,
@@ -575,7 +619,7 @@ async def movie_page(
     copy_count = _copy_count().label("copy_count")
     rows = (
         await db.execute(
-            select(Movie, copy_count)
+            select(*LIST_COLUMNS, copy_count)
             .where(*predicates)
             .order_by(direction(sort_column).nulls_last(), asc(func.lower(Movie.title)))
             .offset((page - 1) * per_page)
@@ -584,7 +628,7 @@ async def movie_page(
     ).all()
 
     return MoviePageResponse(
-        items=await _enrich_list_items(db, viewer_id, [(m, int(c)) for m, c in rows]),
+        items=await _enrich_list_items(db, viewer_id, [(row, int(row.copy_count)) for row in rows]),
         totalMovies=total_movies,
         totalItems=total_items,
         page=page,

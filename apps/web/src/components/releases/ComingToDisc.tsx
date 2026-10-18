@@ -35,7 +35,7 @@ function DiscRow({ entry }: { entry: CalendarEntry }) {
       ) : title}
       <span
         className={cn(
-          'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[0.6875rem] font-semibold',
+          'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold',
           entry.releaseType === '4k_uhd_release'
             ? 'border-primary/40 bg-primary/10 text-primary'
             : 'border-border bg-muted/60 text-muted-foreground',
@@ -112,7 +112,7 @@ export function ComingToDisc({ limit }: { limit?: number }) {
       {state === 'ready'
         ? [...months.entries()].map(([month, entries]) => (
             <div key={month}>
-              <h3 className="px-1 pb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{monthHeading(`${month}-01`)}</h3>
+              <h3 className="px-1 pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{monthHeading(`${month}-01`)}</h3>
               <ul className="archive-panel divide-y divide-border px-4">
                 {entries.map((entry) => <DiscRow key={entry.id} entry={entry} />)}
               </ul>

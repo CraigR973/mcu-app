@@ -7,10 +7,11 @@ interface MobileTabBarProps {
   onOpenSearch: () => void
 }
 
-/* Five slots at 375px leave 75px each, which fits "Movie night" at 11px — the smallest
-   size this bar may use. Batch S3's six slots needed a 9px label to fit. */
+/* Five slots at 375px leave 75px each, which fits "Movie night" at 12px — the smallest
+   size this bar may use (Batch X12b raised it from 11px; the slot's side padding and the
+   label's tracking went to keep it whole). Batch S3's six slots needed a 9px label to fit. */
 const TAB_CLS =
-  'touch-target flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1 text-[0.6875rem] font-semibold leading-tight text-muted-foreground'
+  'touch-target flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-md px-0 py-1 text-xs font-semibold leading-tight tracking-tight text-muted-foreground'
 
 const ICON_CLS = 'h-5 w-5'
 
@@ -31,7 +32,7 @@ export function MobileTabBar({ onOpenSearch }: MobileTabBarProps) {
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-popover/96 px-1 pt-1.5 shadow-[0_-12px_35px_-28px_hsl(var(--shadow-colour)/0.65)] backdrop-blur-md lg:hidden"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-popover/96 px-0 pt-1.5 shadow-[0_-12px_35px_-28px_hsl(var(--shadow-colour)/0.65)] backdrop-blur-md lg:hidden"
     >
       <NavLink to="/dashboard" className={link}>
         <LayoutDashboard className={ICON_CLS} aria-hidden />

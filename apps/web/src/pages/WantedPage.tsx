@@ -282,7 +282,7 @@ function Card({ item }: { item: WantedItem }) {
       <div className="min-w-0 flex-1 py-0.5">
         <Link
           to={`/movies/${item.movieId}`}
-          className="font-medium text-foreground hover:underline"
+          className="list-link font-medium text-foreground hover:underline"
         >
           {item.movieTitle}
         </Link>

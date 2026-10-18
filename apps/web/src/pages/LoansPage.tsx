@@ -55,7 +55,7 @@ function Row({ loan }: { loan: Loan }) {
         </p>
         <p
           className={cn(
-            'mt-0.5 text-[11px]',
+            'mt-0.5 text-xs',
             loan.isOverdue ? 'font-medium text-destructive' : 'text-muted-foreground',
           )}
         >

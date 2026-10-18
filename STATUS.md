@@ -2,6 +2,15 @@
 
 ## Now
 
+**18 Oct: X12b, phone type, targets and speed, is built (#283).** Re-measured first with R6's
+axe walker on the current build: the dark primary button is already 4.84:1 and no screen has an
+axe violation. Done: nothing under 12 px (390 small-text elements to 0), list links and the
+activity rows at 44 px (targets under 44 px 142 to 70; buttons, switches and in-sentence links
+not claimed), JSON compressed, the Archive list selecting the 14 columns it shows (5.4 MB to
+287 kB of database read on live data) and showing its first 60 films before the rest. Wall-clock
+speed on a phone is not measured; check it after the deploy. Next: X12c (terms and tidying; two
+live steps at Craig's word).
+
 **18 Oct: X12 is split into X12a, X12b, X12c at Craig's word (#282); X12a is built.** Home says
 "Films owned" and "Copies: N discs, M downloads"; the two Digital figures are labelled
 (Downloads in Formats, the Digital shelf in Where they live). One date family in `lib/utils.ts`,
@@ -557,6 +566,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-18 (X12b, #283)** — Ran R6's walker against the current build and a seeded throwaway
+  database, before and after. 12 px floor and guard test, `.list-link`, whole-row activity link,
+  gzip, `LIST_COLUMNS`, the Archive's two-step load (4 tests). One expectation changed
+  (`MobileTabBar` 11 px to 12 px). Gate green bar the two known pgserver stale-edit tests.
 - **2026-10-18 (X12a, #282)** — Re-measured first (live copies 1,923; the films count and agent
   summaries already fixed), split X12 in three at Craig's word, built X12a: Home's labels and
   `downloadCopies`, `formatDate` family and a guard test, `placeLabel`, film-sourced movie-night

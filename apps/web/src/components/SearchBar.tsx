@@ -330,7 +330,7 @@ export default function SearchBar({
             <X className="h-4 w-4" aria-hidden />
           </button>
         ) : global ? (
-          <kbd className="pointer-events-none absolute right-3 hidden rounded-sm border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground sm:block">/</kbd>
+          <kbd className="pointer-events-none absolute right-3 hidden rounded-sm border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:block">/</kbd>
         ) : null}
       </div>
 
@@ -361,7 +361,7 @@ export default function SearchBar({
               )}
               {beyond.length > 0 && (
                 <div role="group" aria-labelledby={`${resultsId}-beyond`}>
-                  <p id={`${resultsId}-beyond`} className="border-y border-border bg-surface-sunken/60 px-3 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  <p id={`${resultsId}-beyond`} className="border-y border-border bg-surface-sunken/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     Not in the collection
                   </p>
                   {beyond.map((item, offset) => {

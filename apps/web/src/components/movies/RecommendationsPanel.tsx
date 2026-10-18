@@ -93,7 +93,7 @@ export function RecommendationsPanel({ movieId }: { movieId: string }) {
               <p className="truncate text-xs text-foreground" title={item.title}>
                 {item.title}
               </p>
-              <p className="text-[11px] text-muted-foreground">{item.year ?? '—'}</p>
+              <p className="text-xs text-muted-foreground">{item.year ?? '—'}</p>
             </div>
           )
           return (

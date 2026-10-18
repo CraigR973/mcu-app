@@ -61,7 +61,7 @@ export default function Sidebar() {
               <span className="block truncate font-display text-base font-semibold leading-none text-foreground">
                 The Real MCU
               </span>
-              <span className="mt-1 block truncate text-[0.5625rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mt-1 block truncate text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Private film archive
               </span>
             </span>
@@ -72,7 +72,7 @@ export default function Sidebar() {
         <nav aria-label="Application destinations" className="flex-1 overflow-y-auto px-3 py-4">
           {groups.map((group) => (
             <div key={group.label} className="mb-5 last:mb-0">
-              <p className="mb-1 px-3 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -99,7 +99,7 @@ export default function Sidebar() {
 
           {profile?.role === 'admin' && (
             <div className="mb-5 border-t border-border pt-4">
-              <p className="mb-1 px-3 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {adminNavGroup.label}
               </p>
               <div className="space-y-0.5">
@@ -126,7 +126,7 @@ export default function Sidebar() {
 
           {saved.length > 0 && (
             <>
-              <p className="mb-1 border-t border-border px-3 pb-1 pt-4 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="mb-1 border-t border-border px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Saved collections
               </p>
               {saved.map((collection) => {
@@ -161,7 +161,7 @@ export default function Sidebar() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-foreground">{profile?.displayName ?? 'Local preview'}</span>
-              <span className="block text-[0.6875rem] capitalize text-muted-foreground">{profile?.role ?? 'Loading profile'}</span>
+              <span className="block text-xs capitalize text-muted-foreground">{profile?.role ?? 'Loading profile'}</span>
             </span>
             <ThemeToggle />
           </div>
