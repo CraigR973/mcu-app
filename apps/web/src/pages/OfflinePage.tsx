@@ -21,7 +21,7 @@ export default function OfflinePage() {
           state icon rather than competing with it. */}
       <div className="mb-2 flex items-center gap-2">
         <BrandMark size={32} />
-        <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           The Real MCU
         </span>
       </div>

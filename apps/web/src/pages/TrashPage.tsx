@@ -78,7 +78,7 @@ function Row({ row, table }: { row: TrashRow; table: TrashTable }) {
         {row.movieId ? (
           <Link
             to={`/movies/${row.movieId}`}
-            className="font-medium text-foreground hover:underline"
+            className="list-link font-medium text-foreground hover:underline"
           >
             {row.label}
           </Link>
@@ -88,7 +88,7 @@ function Row({ row, table }: { row: TrashRow; table: TrashTable }) {
         {row.sublabel ? (
           <p className="text-xs text-muted-foreground">{row.sublabel}</p>
         ) : null}
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Removed {formatDateTime(row.deletedAt)}
         </p>
         {destroy.isError ? (

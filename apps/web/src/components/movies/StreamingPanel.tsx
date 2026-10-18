@@ -106,7 +106,7 @@ export function StreamingPanel({ movieId }: { movieId: string }) {
           </div>
         )
       })}
-      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+      <p className="flex items-center gap-1 text-xs text-muted-foreground">
         <Tv className="h-3 w-3" />
         Availability in {data.region} via TMDB.
         {data.link ? (

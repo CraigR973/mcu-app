@@ -128,7 +128,7 @@ export default function ItemHistory({ movieId }: Props) {
                     <span className="font-normal text-muted-foreground"> by {entry.actorName}</span>
                   )}
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {formatDateTime(entry.createdAt)}
                 </span>
               </div>

@@ -28,11 +28,11 @@ describe('MobileTabBar — Batch T3', () => {
     expect(bar.queryByText('More')).toBeNull()
   })
 
-  it('uses labels no smaller than 11px', () => {
+  it('uses labels no smaller than 12px (Batch X12b raised the floor from 11px)', () => {
     const bar = renderBar()
     for (const slot of [...bar.getAllByRole('link'), ...bar.getAllByRole('button')]) {
-      expect(slot.className).toContain('text-[0.6875rem]')
-      expect(slot.className).not.toContain('text-[0.5625rem]')
+      expect(slot.className).toContain('text-xs')
+      expect(slot.className).not.toContain('text-[0.6875rem]')
     }
   })
 

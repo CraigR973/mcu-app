@@ -56,7 +56,7 @@ export function MovieListView({ movies, isLoading, enabledColumns, toggleColumn 
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="relative hidden min-h-11 items-center gap-3 border-b border-border bg-surface-sunken/65 px-4 text-[0.6875rem] font-semibold uppercase tracking-[0.13em] text-muted-foreground lg:flex">
+      <div className="relative hidden min-h-11 items-center gap-3 border-b border-border bg-surface-sunken/65 px-4 text-xs font-semibold uppercase tracking-[0.13em] text-muted-foreground lg:flex">
         <div className="w-9 shrink-0" />
         <div className="min-w-0 flex-1">Film</div>
         {colDefs.map((column) => <div key={column.key} className="w-24 shrink-0 text-right">{column.label}</div>)}

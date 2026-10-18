@@ -173,7 +173,7 @@ function QueueCard({ item }: { item: IdentifyQueueItem }) {
     <article className="archive-panel space-y-3 p-4" aria-labelledby={`identify-${item.movieId}`}>
       <div>
         <h3 id={`identify-${item.movieId}`} className="font-display text-lg font-semibold text-foreground">
-          <Link to={`/movies/${item.movieId}`} className="hover:text-primary">{item.title}</Link>
+          <Link to={`/movies/${item.movieId}`} className="list-link hover:text-primary">{item.title}</Link>
         </h3>
         <p className="text-xs text-muted-foreground">
           {[...item.discs.map((disc) => disc.label), item.watches ? `watched ${String(item.watches)}×` : '']
@@ -317,7 +317,7 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
       <div>
         <p className="metadata-label">Identified as</p>
         <h3 id={`doubt-${doubt.doubtId}`} className="font-display text-lg font-semibold text-foreground">
-          <Link to={`/movies/${doubt.movieId}`} className="hover:text-primary">
+          <Link to={`/movies/${doubt.movieId}`} className="list-link hover:text-primary">
             {doubt.title}
             {doubt.year ? ` (${String(doubt.year)})` : ''}
           </Link>
@@ -444,7 +444,7 @@ function RecentRow({ entry }: { entry: RecentIdentification }) {
             <span className="text-muted-foreground">{entry.replaced}</span> →{' '}
           </>
         )}
-        <Link to={`/movies/${entry.movieId}`} className="font-semibold hover:text-primary">
+        <Link to={`/movies/${entry.movieId}`} className="list-link font-semibold hover:text-primary">
           {entry.title}
           {entry.year ? ` (${String(entry.year)})` : ''}
         </Link>

@@ -334,7 +334,7 @@ function SalePagesPanel() {
                 key={figure.label}
                 className="flex min-w-0 flex-col-reverse rounded-md border border-border px-2 py-1.5"
               >
-                <dt className="text-[11px] leading-tight text-muted-foreground">
+                <dt className="text-xs leading-tight text-muted-foreground">
                   {figure.label}
                 </dt>
                 <dd className="text-lg font-semibold tabular-nums text-foreground">
@@ -397,7 +397,7 @@ function Row({ retailer }: { retailer: RetailerRow }) {
       <div className="min-w-0 flex-1">
         <p className="font-medium text-foreground">{retailer.name}</p>
         <p className="truncate text-xs text-muted-foreground">{retailer.baseUrl}</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {retailer.scrapeFrequency} ·{' '}
           {/* Honest about what a seeded row actually is: a name and a URL, not a working
               scraper. The selectors are Batch 19's, and a plausible wrong one persists a
@@ -497,7 +497,7 @@ function BuiltInPanel() {
             {verified.map((entry) => (
               <li
                 key={entry.name}
-                className="flex items-center gap-1 rounded-md border border-primary/40 px-2 py-0.5 text-[11px] text-primary"
+                className="flex items-center gap-1 rounded-md border border-primary/40 px-2 py-0.5 text-xs text-primary"
                 title={entry.note ?? undefined}
               >
                 <Check className="h-3 w-3" aria-hidden />
@@ -518,7 +518,7 @@ function BuiltInPanel() {
             {unverified.map((entry) => (
               <li
                 key={entry.name}
-                className="flex items-start gap-1.5 text-[11px] text-muted-foreground"
+                className="flex items-start gap-1.5 text-xs text-muted-foreground"
               >
                 <Ban className="mt-0.5 h-3 w-3 shrink-0 text-warning" aria-hidden />
                 <span>

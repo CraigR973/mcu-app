@@ -70,7 +70,7 @@ function Entry({ entry }: { entry: CalendarEntry }) {
         <p className="mt-1">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold',
+              'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold',
               physical
                 ? 'border-primary/40 bg-primary/10 text-primary'
                 : 'border-border bg-muted/60 text-muted-foreground',
@@ -158,7 +158,7 @@ function SubscribePanel() {
               Open in Calendar
             </a>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {subscribe.data?.replacedPrevious
               ? 'Your previous link has stopped working.'
               : 'This is the only time the link is shown — copy it now.'}
@@ -380,7 +380,7 @@ export default function ReleasesPage() {
                       )}
                     />
                     {item.ownership === 'owned' ? (
-                      <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-success/40 bg-background/95 px-2 py-1 text-[0.625rem] font-semibold text-success shadow-soft">
+                      <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-success/40 bg-background/95 px-2 py-1 text-xs font-semibold text-success shadow-soft">
                         <Check className="h-3 w-3" aria-hidden />
                         Owned
                       </span>
@@ -394,7 +394,7 @@ export default function ReleasesPage() {
                       {item.releaseDate ?? 'Date to be confirmed'}
                     </p>
                     {item.matchedGenres.length > 0 ? (
-                      <p className="mt-1 truncate text-[0.6875rem] text-muted-foreground">
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
                         {item.matchedGenres.join(' · ')}
                       </p>
                     ) : null}

@@ -1071,3 +1071,68 @@ async def test_a_films_page_and_its_copies_carry_the_edition(
 
     assert detail.json()["editions"] == ["Indicator Series"]
     assert copies.json()[0]["edition"] == "Indicator Series"
+
+
+async def test_the_archive_list_reads_only_the_columns_a_card_shows(
+    client: AsyncClient, api_session: AsyncSession, db_conn: AsyncConnection
+) -> None:
+    """Batch X12b (UX48-07): whole rows were 5.4 MB of the Archive's call, 3.0 MB of it the
+    search column. The list selects the columns a card shows, not whole films, and the answer
+    is the same."""
+    from sqlalchemy import event
+
+    await _add_owned_movie(
+        api_session, title="A Narrow Read", tmdb_id=940_201, year=1999, overview="Long text " * 50
+    )
+    seen: list[str] = []
+
+    def record(conn: Any, cursor: Any, statement: str, *rest: Any) -> None:
+        del conn, cursor, rest
+        seen.append(statement)
+
+    event.listen(db_conn.sync_connection, "before_cursor_execute", record)
+    try:
+        response = await client.get("/api/v1/movies", params={"perPage": 2000})
+    finally:
+        event.remove(db_conn.sync_connection, "before_cursor_execute", record)
+
+    assert response.status_code == 200, response.text
+    row = next(item for item in response.json()["items"] if item["title"] == "A Narrow Read")
+    assert row["year"] == 1999 and row["identified"] is True and row["copyCount"] == 1
+    selects = [q for q in seen if q.lstrip().upper().startswith("SELECT") and "FROM movies" in q]
+    listing = next(q for q in selects if "copy_count" in q)
+    columns = listing.split("FROM movies")[0]
+    assert "search_vector" not in columns and "overview" not in columns
+
+
+async def test_json_answers_are_compressed_and_streams_are_not(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Batch X12b (UX48-07): the Archive's 875 kB list went out uncompressed."""
+    from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES
+
+    for number in range(40):
+        await _add_owned_movie(
+            api_session, title=f"A Long List Film {number}", tmdb_id=940_300 + number
+        )
+
+    params = {"perPage": 2000}
+    plain = await client.get(
+        "/api/v1/movies", params=params, headers={"Accept-Encoding": "identity"}
+    )
+    squeezed = await client.get(
+        "/api/v1/movies", params=params, headers={"Accept-Encoding": "gzip"}
+    )
+
+    assert "content-encoding" not in plain.headers
+    assert squeezed.headers["content-encoding"] == "gzip"
+    assert "accept-encoding" in squeezed.headers["vary"].lower()
+    assert squeezed.json() == plain.json(), "the same answer, smaller"
+    # A small answer is left alone.
+    small = await client.get("/api/v1/health", headers={"Accept-Encoding": "gzip"})
+    assert "content-encoding" not in small.headers
+    # An event stream must flush as it is written (the assistant, the movie night): Starlette
+    # leaves it out of compression, and the app does not override that list.
+    assert "text/event-stream" in DEFAULT_EXCLUDED_CONTENT_TYPES
+    gzip_layers = [m for m in app.user_middleware if m.cls.__name__ == "GZipMiddleware"]
+    assert len(gzip_layers) == 1 and "exclude_content_types" not in gzip_layers[0].kwargs

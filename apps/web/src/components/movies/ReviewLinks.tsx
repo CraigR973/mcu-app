@@ -22,7 +22,7 @@ export function ReviewLinks({ reviews, className }: { reviews: FilmReview[]; cla
   if (reviews.length === 0) return null
   return (
     <div className={className}>
-      <p className="text-xs text-muted-foreground">
+      <p className="flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">Reviews:</span>{' '}
         {reviews.map((review, index) => (
           <span key={review.url}>
@@ -31,7 +31,7 @@ export function ReviewLinks({ reviews, className }: { reviews: FilmReview[]; cla
               href={review.url}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-primary underline-offset-2 hover:underline"
+              className="list-link font-medium text-primary underline-offset-2 hover:underline"
             >
               {siteLabel(review)}
             </a>

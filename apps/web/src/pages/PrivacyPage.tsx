@@ -58,7 +58,7 @@ export default function PrivacyPage() {
       </section>
 
       <p className="text-sm">
-        <Link to="/" className="font-medium text-primary underline-offset-2 hover:underline">
+        <Link to="/" className="list-link font-medium text-primary underline-offset-2 hover:underline">
           Back to the app
         </Link>
       </p>

@@ -6,6 +6,7 @@ import sentry_sdk
 import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -155,6 +156,11 @@ def _tmdb_refused_handler(_request: Request, exc: Exception) -> Response:
 
 app.add_exception_handler(TMDBRefused, _tmdb_refused_handler)
 
+# Innermost (Batch X12b, UX48-07): JSON answers are compressed, the Archive's 875 kB list
+# among them. Starlette leaves `text/event-stream` alone, so the assistant's and the movie
+# night's streams still flush as they are written. Level 5: most of the saving, a fraction
+# of level 9's time on the Archive's list.
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
 # Before CORS, so inside it: a crash answers a 500 the browser can read (Batch X8).
 app.add_middleware(UnhandledErrorMiddleware)
 app.add_middleware(

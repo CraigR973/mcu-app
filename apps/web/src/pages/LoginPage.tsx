@@ -80,7 +80,7 @@ export default function LoginPage() {
               <p className="font-display text-lg font-semibold leading-none text-foreground">
                 The Real MCU
               </p>
-              <p className="mt-1 text-[0.625rem] font-semibold uppercase tracking-[0.17em] text-muted-foreground">
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.17em] text-muted-foreground">
                 Private film archive
               </p>
             </div>

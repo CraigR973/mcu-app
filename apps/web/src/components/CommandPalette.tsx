@@ -170,19 +170,19 @@ export default function CommandPalette({ open, onClose, isAdmin }: Props) {
       </div>
       <ul role="listbox" aria-label="Results" className="max-h-96 overflow-y-auto py-1">
         {recentResults.length > 0 && (
-          <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <li className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Recent
           </li>
         )}
         {recentResults.map(row)}
         {movieResults.length > 0 && (
-          <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <li className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Films
           </li>
         )}
         {movieResults.map(row)}
         {pageResults.length > 0 && (
-          <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <li className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Pages
           </li>
         )}

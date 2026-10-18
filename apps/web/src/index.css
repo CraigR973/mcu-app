@@ -122,7 +122,7 @@
   }
 
   .page-kicker {
-    @apply mb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-primary;
+    @apply mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary;
   }
 
   .page-title {
@@ -166,7 +166,7 @@
   }
 
   .metadata-label {
-    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.13em] text-muted-foreground;
+    @apply text-xs font-semibold uppercase tracking-[0.13em] text-muted-foreground;
   }
 
   .metadata-value {
@@ -192,6 +192,15 @@
  * Fine pointers are untouched, so desktop keeps its density.
  */
 @layer utilities {
+  /* A link that is a row's main control (Batch X12b, UX48-06): 44px tall on every pointer,
+     as the review's 15-18px title links were too small to hit with a thumb. Text links inside
+     a sentence keep their line. */
+  .list-link {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+  }
+
   @media (pointer: coarse) {
     .touch-target {
       min-height: 44px;

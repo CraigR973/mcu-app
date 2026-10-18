@@ -241,7 +241,7 @@ export default function OnboardingPage() {
               in the welcome card below, where it has a square to sit in. */}
           <div className="flex min-w-0 items-center gap-3">
             <BrandMark size={36} />
-            <div className="min-w-0"><p className="truncate font-display text-lg font-semibold text-foreground">The Real MCU</p><p className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Private film archive</p></div>
+            <div className="min-w-0"><p className="truncate font-display text-lg font-semibold text-foreground">The Real MCU</p><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Private film archive</p></div>
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={() => void signOut()}><LogOut aria-hidden />Sign out</Button>
         </header>

@@ -103,12 +103,12 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
       >
         <Command className="h-4 w-4" aria-hidden />
       </button>
-      <AssistantLink className="touch-target flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
+      <AssistantLink className="touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary" />
       <Link
         to={YOU_ITEM.path}
         aria-label="You: every other page, and your account"
         aria-current={pathname === YOU_ITEM.path ? 'page' : undefined}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-sm font-semibold text-secondary-foreground ring-offset-background aria-[current=page]:ring-2 aria-[current=page]:ring-primary"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-sm font-semibold text-secondary-foreground ring-offset-background aria-[current=page]:ring-2 aria-[current=page]:ring-primary"
       >
         {profile?.displayName?.slice(0, 1).toUpperCase() ?? '?'}
       </Link>
@@ -157,7 +157,7 @@ export default function AppLayout({ children }: Props) {
   return (
     <PageChromeProvider>
     <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-background text-foreground">
-      <a href="#main-content" className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-lift focus:translate-y-0">Skip to content</a>
+      <a href="#main-content" className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-md bg-primary px-4 py-2.5 font-semibold text-primary-foreground shadow-lift focus:translate-y-0">Skip to content</a>
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -181,7 +181,7 @@ export default function AppLayout({ children }: Props) {
             >
               <Command className="h-4 w-4" aria-hidden />
               <span className="hidden xl:inline">Commands</span>
-              <kbd className="hidden rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground md:inline">⌘K</kbd>
+              <kbd className="hidden rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground md:inline">⌘K</kbd>
             </button>
             {/* Batch U3. The floating button floated here too, over the page's corner; its
                 replacement is the same top-bar link at every width. */}
