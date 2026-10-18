@@ -5915,3 +5915,27 @@ contemporaneous.
      - *Rejected:* settling by votes alone (a remake often outvotes the classic this
        collection holds); writing the statuses in SQL (no audit, no undo); asking Mark about
        all 378 (he asked not to be).
+
+
+279. **A doubt shows only while what it is about is still owned (Batch Y6).** On 17–18 Oct a
+     re-check doubt outlived the copy it named, binned by #278's plan: its film had no owned copy,
+     so the Archive and the film page never showed it while Identify films counted it, and Craig
+     could not find it. He chose this on 18 Oct from two options.
+
+     - **One predicate, read everywhere** (`showing_doubt()`): an open doubt on a live identified
+       film whose named copy is still an owned copy of that film, or, naming no copy, whose film
+       has one. Identify films' list, overview and the daily check now ask what the Archive and
+       the film page already asked.
+     - **Nothing is written when a copy goes.** A binned or sold copy's doubt stays `open` in the
+       table and hides; restoring or unselling the copy shows it again unchanged. Every path that
+       bins, sells or restores is covered by the rule, including ones not yet written.
+     - **Counts are films where the Archive's are.** "Identified, in doubt" counts films, equal to
+       the Archive's "In doubt (N)"; the daily check counts films with a fortnight-old showing
+       doubt. The doubts list stays one card per doubt and says both numbers when they differ.
+     - *Rejected:* settling the doubt when its copy is binned and reopening it on restore (B): a
+       new status and a migration, hooks in about four bin paths, three restore paths and the
+       sell path, and a rule for film-level doubts when the last copy goes; each missed hook brings
+       the fault back. Its one gain, that the table's statuses match the screens, is not worth
+       that. Hiding only when the film has no owned copy at all (A as first written): a doubt
+       naming a binned copy of a film with other copies would still show, about a disc that is
+       gone.
