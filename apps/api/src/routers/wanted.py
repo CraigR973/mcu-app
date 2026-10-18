@@ -28,6 +28,7 @@ from src.auth import AdminUser, CurrentUser
 from src.clock import utcnow
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
+from src.models.price_check import PriceCheck
 from src.models.reviews import FilmReview
 from src.models.wanted import (
     DEFAULT_RETAILERS,
@@ -45,6 +46,7 @@ from src.schemas.wanted import (
     RetailerUpdateRequest,
     ScrapeFrequency,
     ScraperType,
+    ShopPriceResponse,
     WantedCreateRequest,
     WantedItemResponse,
     WantedListResponse,
@@ -54,6 +56,7 @@ from src.services.audit import record_action
 from src.services.movie_metadata import credit_rows, movie_metadata_values
 from src.services.reviews.batch import search_for_want_in_background
 from src.services.reviews.read import for_want, review_response, reviews_by_movie
+from src.services.scraping.runner import WEEKLY_AFTER_NIGHTS
 
 router = APIRouter(prefix="/api/v1", tags=["wanted", "retailers"])
 
@@ -79,8 +82,54 @@ async def _owned_movie_ids(db: AsyncSession, movie_ids: list[uuid.UUID]) -> set[
     return set(rows.scalars().all())
 
 
+async def _shop_prices(
+    db: AsyncSession, wanted_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[ShopPriceResponse]]:
+    """Each want's latest price at each shop, cheapest first (Batch X11, MK47-05).
+
+    One row per want and shop: the newest check, whatever its age, so the date beside it
+    is what says how stale it is. Read from ``price_checks`` only; the 90-day roll-up keeps
+    older days in ``price_history_daily``, and the latest check is never older than that
+    unless the shop has not been priced for three months.
+    """
+    if not wanted_ids:
+        return {}
+    rows = (
+        await db.execute(
+            select(PriceCheck)
+            .where(PriceCheck.wanted_id.in_(wanted_ids))
+            .order_by(PriceCheck.checked_at.desc())
+        )
+    ).scalars()
+    latest: dict[tuple[uuid.UUID, str], PriceCheck] = {}
+    for check in rows:
+        if check.wanted_id is None:  # pragma: no cover - filtered by the query
+            continue
+        latest.setdefault((check.wanted_id, check.retailer_name_snapshot), check)
+    by_want: dict[uuid.UUID, list[ShopPriceResponse]] = {}
+    for (wanted_id, _shop), check in sorted(
+        latest.items(), key=lambda entry: (entry[1].price, entry[0][1])
+    ):
+        by_want.setdefault(wanted_id, []).append(
+            ShopPriceResponse(
+                retailer=check.retailer_name_snapshot,
+                price=str(check.price),
+                currency=check.currency,
+                title=check.title_snapshot,
+                url=check.url,
+                checkedAt=check.checked_at,
+            )
+        )
+    return by_want
+
+
 def _wanted_response(
-    item: WantedItem, movie: Movie, *, owned: bool, reviews: list[FilmReview] | None = None
+    item: WantedItem,
+    movie: Movie,
+    *,
+    owned: bool,
+    reviews: list[FilmReview] | None = None,
+    shop_prices: list[ShopPriceResponse] | None = None,
 ) -> WantedItemResponse:
     return WantedItemResponse(
         id=item.id,
@@ -99,6 +148,7 @@ def _wanted_response(
         ownedAlready=owned,
         addedAt=item.added_at,
         reviews=[review_response(row) for row in for_want(reviews or [], item.preferred_format)],
+        shopPrices=shop_prices or [],
     )
 
 
@@ -123,9 +173,14 @@ async def list_wanted(
     ).all()
     owned = await _owned_movie_ids(db, [item.movie_id for item, _ in rows])
     reviews = await reviews_by_movie(db, [item.movie_id for item, _ in rows])
+    prices = await _shop_prices(db, [item.id for item, _ in rows])
     items = [
         _wanted_response(
-            item, movie, owned=item.movie_id in owned, reviews=reviews.get(item.movie_id, [])
+            item,
+            movie,
+            owned=item.movie_id in owned,
+            reviews=reviews.get(item.movie_id, []),
+            shop_prices=prices.get(item.id, []),
         )
         for item, movie in rows
     ]
@@ -294,7 +349,14 @@ async def update_wanted(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
     owned = await _owned_movie_ids(db, [movie.id])
     reviews = (await reviews_by_movie(db, [movie.id])).get(movie.id, [])
-    return _wanted_response(item, movie, owned=movie.id in owned, reviews=reviews)
+    prices = await _shop_prices(db, [item.id])
+    return _wanted_response(
+        item,
+        movie,
+        owned=movie.id in owned,
+        reviews=reviews,
+        shop_prices=prices.get(item.id, []),
+    )
 
 
 @router.delete("/wanted/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -339,6 +401,8 @@ def _retailer_response(retailer: Retailer) -> RetailerResponse:
         lastScrapeStatus=retailer.last_scrape_status,
         lastScrapeError=retailer.last_scrape_error,
         consecutiveFailures=retailer.consecutive_failures,
+        refusedNights=retailer.refused_nights,
+        askedWeekly=retailer.refused_nights >= WEEKLY_AFTER_NIGHTS,
         # Selectors are Batch 19's. Saying "not configured" is the honest version of
         # §5.2's "seeded default retailers" — a seeded row is a name and a URL, not a
         # working scraper.

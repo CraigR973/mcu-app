@@ -22,6 +22,8 @@ import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
+from src.clock import utcnow
+from src.models.ebay_watch import EbayPriceRef
 from src.models.movie import Movie
 from src.models.notification import Notification, NotificationPreference, PushSubscription
 from src.models.price_check import PriceCheck
@@ -32,6 +34,13 @@ from src.services.notifications import DeliveryOutcome, DeliveryResult
 from src.services.scraping.aggregate import aggregate_old_checks
 from src.services.scraping.alerts import AlertCandidate, queue_price_drop_alerts
 from src.services.scraping.daily import run_daily_scrape
+from src.services.scraping.runner import (
+    WEEKLY_AFTER_NIGHTS,
+    ScrapeOutcome,
+    is_refusing_night,
+    is_resting,
+    record_refusing_night,
+)
 
 
 class StubSender:
@@ -173,6 +182,7 @@ async def _check(
     when: datetime,
     notified: bool = False,
     url: str | None = None,
+    title: str = "Heat [4K UHD]",
 ) -> PriceCheck:
     check = PriceCheck(
         id=uuid.uuid4(),
@@ -181,7 +191,7 @@ async def _check(
         retailer_name_snapshot=retailer.name,
         price=Decimal(price),
         currency="GBP",
-        title_snapshot="Heat [4K UHD]",
+        title_snapshot=title,
         url=url or f"https://93.184.216.34/p/{uuid.uuid4().hex}",
         notification_sent=notified,
         checked_at=when,
@@ -854,3 +864,267 @@ class TestDailyRun:
         assert summary.alerts_queued >= 1  # type: ignore[attr-defined]
         assert summary.pushes_sent >= 1  # type: ignore[attr-defined]
         assert sender.sent, "a price drop reached the device"
+
+
+NOW = datetime(2026, 10, 18, 3, 0)
+
+
+async def _usual(
+    db: AsyncSession,
+    movie: Movie,
+    *,
+    format_code: str = "4k_uhd",
+    median: str = "30.00",
+    checked: datetime = NOW,
+) -> EbayPriceRef:
+    ref = EbayPriceRef(
+        id=uuid.uuid4(),
+        movie_id=movie.id,
+        format_code=format_code,
+        status="priced",
+        median=Decimal(median),
+        sample_size=12,
+        by_condition={"1000": {"median": median, "n": 12}, "used": {"median": None, "n": 0}},
+        checked_utc=checked,
+    )
+    db.add(ref)
+    await db.flush()
+    return ref
+
+
+class TestAlertsWithoutALimit:
+    """Batch X11 (MK47-05): 9 of the 10 wants had no price limit, so no shop alert could fire."""
+
+    async def _alert(
+        self, db: AsyncSession, check: PriceCheck, want: WantedItem, *, now: datetime = NOW
+    ) -> int:
+        return await queue_price_drop_alerts(
+            db, [AlertCandidate(check=check, wanted=want)], now=now
+        )
+
+    async def test_a_price_under_the_stored_usual_alerts_and_says_what_it_beat(
+        self, db: AsyncSession
+    ) -> None:
+        person = await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price=None)
+        await _usual(db, film, median="30.00")
+        check = await _check(
+            db, want, await _retailer(db), price="17.99", when=NOW, url="https://93.184.216.34/p/h"
+        )
+
+        assert await self._alert(db, check, want) >= 1
+
+        mine = [a for a in await _deals_notifications(db) if a.user_id == person.id]
+        assert [a.title for a in mine] == ["Heat is £17.99"]
+        assert "Under the usual £30.00 on eBay (asking prices, 12 listings)." in mine[0].body
+        assert check.notification_sent is True
+
+    async def test_a_price_at_or_over_the_usual_does_not_alert(self, db: AsyncSession) -> None:
+        await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price=None)
+        await _usual(db, film, median="30.00")
+        shop = await _retailer(db)
+        at = await _check(db, want, shop, price="30.00", when=NOW)
+        over = await _check(db, want, shop, price="31.00", when=NOW)
+
+        assert await self._alert(db, at, want) == 0
+        assert await self._alert(db, over, want) == 0
+
+    async def test_no_stored_usual_means_no_alert(self, db: AsyncSession) -> None:
+        await _profile(db)
+        want = await _want(db, await _movie(db), max_price=None)
+        check = await _check(db, want, await _retailer(db), price="0.99", when=NOW)
+
+        assert await self._alert(db, check, want) == 0
+
+    async def test_a_usual_older_than_a_fortnight_is_not_used(self, db: AsyncSession) -> None:
+        await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price=None)
+        await _usual(db, film, checked=NOW - timedelta(days=15))
+        check = await _check(db, want, await _retailer(db), price="10.00", when=NOW)
+
+        assert await self._alert(db, check, want) == 0
+
+    async def test_the_usual_must_be_for_the_format_the_shop_priced(self, db: AsyncSession) -> None:
+        """A 4K listing is never judged against the Blu-ray's cheaper usual, or the reverse."""
+        await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price=None)
+        await _usual(db, film, format_code="blu_ray", median="12.00")
+        check = await _check(
+            db, want, await _retailer(db), price="20.00", when=NOW, title="Heat [4K UHD]"
+        )
+
+        assert await self._alert(db, check, want) == 0
+
+    async def test_a_limited_edition_has_no_standard_usual_to_beat(self, db: AsyncSession) -> None:
+        await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price=None)
+        await _usual(db, film, median="40.00")
+        check = await _check(
+            db,
+            want,
+            await _retailer(db),
+            price="30.00",
+            when=NOW,
+            title="Heat Limited Edition 4K UHD",
+        )
+
+        assert await self._alert(db, check, want) == 0
+
+    async def test_a_second_night_under_the_usual_does_not_alert_again(
+        self, db: AsyncSession
+    ) -> None:
+        await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price=None)
+        await _usual(db, film, median="30.00")
+        shop = await _retailer(db)
+        first = await _check(db, want, shop, price="17.99", when=NOW - timedelta(days=1))
+        assert await self._alert(db, first, want, now=NOW - timedelta(days=1)) >= 1
+        second = await _check(db, want, shop, price="17.99", when=NOW)
+
+        assert await self._alert(db, second, want) == 0
+        assert second.notification_sent is True
+
+    async def test_a_want_with_a_limit_ignores_the_usual(self, db: AsyncSession) -> None:
+        """The limit is the person's own word and stays the rule when there is one."""
+        await _profile(db)
+        film = await _movie(db)
+        want = await _want(db, film, max_price="10.00")
+        await _usual(db, film, median="30.00")
+        check = await _check(db, want, await _retailer(db), price="17.99", when=NOW)
+
+        assert await self._alert(db, check, want) == 0
+
+
+class TestRefusingShops:
+    """Batch X11: a shop that refuses half its requests seven scheduled checks running is
+    asked weekly. No shop refused *every* request in the week measured on 18 Oct."""
+
+    @staticmethod
+    def _outcome(**flags: bool) -> ScrapeOutcome:
+        return ScrapeOutcome(retailer="Second Sight", wanted_title="Heat", **{"ok": False, **flags})
+
+    def test_half_refused_is_a_refusing_night(self) -> None:
+        outcomes = [self._outcome(refused=True), self._outcome(not_stocked=True)]
+        assert is_refusing_night(outcomes) is True
+
+    def test_under_half_refused_is_not(self) -> None:
+        outcomes = [self._outcome(refused=True), self._outcome(), self._outcome()]
+        assert is_refusing_night(outcomes) is False
+
+    def test_a_want_the_shop_cannot_serve_was_never_asked(self) -> None:
+        outcomes = [self._outcome(refused=True), self._outcome(skipped=True)]
+        assert is_refusing_night(outcomes) is True
+        assert is_refusing_night([self._outcome(skipped=True)]) is None
+
+    async def test_the_run_of_nights_grows_and_resets(self, db: AsyncSession) -> None:
+        shop = await _retailer(db)
+        for night in range(1, 4):
+            record_refusing_night(shop, [self._outcome(refused=True)])
+            assert shop.refused_nights == night
+        record_refusing_night(shop, [self._outcome(skipped=True)])
+        assert shop.refused_nights == 3, "a night nothing was asked changes nothing"
+        record_refusing_night(shop, [self._outcome(not_stocked=True), self._outcome(ok=True)])
+        assert shop.refused_nights == 0
+
+    async def test_a_shop_rests_only_after_seven_nights_and_until_a_week_after_it_was_asked(
+        self, db: AsyncSession
+    ) -> None:
+        shop = await _retailer(db)
+        shop.last_scraped_at = NOW - timedelta(days=1)
+        shop.refused_nights = WEEKLY_AFTER_NIGHTS - 1
+        assert is_resting(shop, now=NOW) is False
+        shop.refused_nights = WEEKLY_AFTER_NIGHTS
+        assert is_resting(shop, now=NOW) is True
+        # Last asked a week ago to the minute, less the start's drift: asked again tonight.
+        shop.last_scraped_at = NOW - timedelta(days=7) + timedelta(minutes=20)
+        assert is_resting(shop, now=NOW) is False
+        shop.last_scraped_at = None
+        assert is_resting(shop, now=NOW) is False
+
+    async def _cron(
+        self, db: AsyncSession, transport: httpx.MockTransport, *, trigger: str
+    ) -> object:
+        async with httpx.AsyncClient(transport=transport, follow_redirects=False) as client:
+            return await run_daily_scrape(
+                db,
+                sender=StubSender(),
+                client=client,
+                trigger=trigger,
+                polite_pause=0,
+                now=utcnow(),
+            )
+
+    async def test_the_scheduled_check_leaves_a_resting_shop_alone_without_a_request(
+        self, db: AsyncSession
+    ) -> None:
+        await _profile(db)
+        await _want(db, await _movie(db))
+        shop = await _retailer(db, "101 Films", config=CARD_CONFIG)
+        shop.refused_nights = WEEKLY_AFTER_NIGHTS
+        shop.last_scraped_at = utcnow() - timedelta(days=2)
+        await db.flush()
+        asked: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            asked.append(str(request.url))
+            return httpx.Response(429)
+
+        summary = await self._cron(db, httpx.MockTransport(handler), trigger="cron")
+
+        assert asked == []
+        assert summary.scrape.resting == ["101 Films"]  # type: ignore[attr-defined]
+        assert summary.scrape.outcomes == []  # type: ignore[attr-defined]
+        assert shop.refused_nights == WEEKLY_AFTER_NIGHTS, (
+            "not asked, so neither extended nor reset"
+        )
+
+    async def test_run_now_asks_a_resting_shop_and_does_not_extend_its_run(
+        self, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        await _profile(db)
+        await _want(db, await _movie(db))
+        shop = await _retailer(db, "101 Films", config=CARD_CONFIG)
+        shop.refused_nights = WEEKLY_AFTER_NIGHTS
+        shop.last_scraped_at = utcnow() - timedelta(days=2)
+        await db.flush()
+
+        summary = await self._cron(
+            db, httpx.MockTransport(lambda request: httpx.Response(429)), trigger="manual"
+        )
+
+        assert summary.scrape.resting == []  # type: ignore[attr-defined]
+        assert len(summary.scrape.outcomes) == 1  # type: ignore[attr-defined]
+        assert shop.refused_nights == WEEKLY_AFTER_NIGHTS
+
+    async def test_a_scheduled_refusing_night_extends_the_run_and_an_answering_one_ends_it(
+        self, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("src.services.scraping.runner.RETRY_PAUSE_SECONDS", 0)
+        await _profile(db)
+        await _want(db, await _movie(db))
+        shop = await _retailer(db, "101 Films", config=CARD_CONFIG)
+        shop.refused_nights = 6
+        await db.flush()
+
+        await self._cron(
+            db, httpx.MockTransport(lambda request: httpx.Response(429)), trigger="cron"
+        )
+        assert shop.refused_nights == 7
+
+        # Asked a week on, the shop answers: nightly again.
+        shop.last_scraped_at = utcnow() - timedelta(days=8)
+        await db.flush()
+        await self._cron(
+            db,
+            httpx.MockTransport(lambda request: httpx.Response(200, text=NOT_STOCKED_PAGE)),
+            trigger="cron",
+        )
+        assert shop.refused_nights == 0

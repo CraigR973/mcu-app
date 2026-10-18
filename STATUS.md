@@ -2,6 +2,19 @@
 
 ## Now
 
+**18 Oct: X11, Wanted shows shop prices, alerts need no limit, refusing shops asked weekly
+(#281), built at Craig's go after a re-measure.** The Wanted card lists each shop's latest
+price with its day and a link; a shop price strictly under the film's stored usual (same format
+and standard edition, fresh within 14 days) now alerts when the want has no limit (9 of 10
+had none). **The weekly criterion was amended:** no shop refuses *every* request (each of the
+three had 5-10 of 10 refused twice, and some retries got through, on each of the last 9
+nights), so a shop that refused at least half its requests on seven scheduled checks in a row
+(`retailers.refused_nights`, migration 060) is skipped by the scheduled check until a week
+after it was last asked; "Run now" asks all. **No live row was written:** every counter starts
+at 0, so the half-hour nights (26-29 minutes since 3 Oct) end about 26 Oct, unless Craig says to
+seed them (count shown first). Noticed, not X11's: Zavvi has priced nothing since 12 Oct. Next:
+X12, same sitting.
+
 **18 Oct: X10, one title rule and owned twins found, slimmed at Craig's word (#280).** Re-measured
 first: the four title rules still disagreed on 7 of 8 pairs, but Mark's identifying had merged
 all 5 split films and left 1 owned film unidentified, and no copies shared a barcode. Now one
@@ -535,6 +548,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-18 (X11, #281)** — Re-measured read-only first: 1 of 10 wants has a limit; the
+  nightly run 26-29 minutes every night since 3 Oct; no shop refused every request, so the
+  weekly criterion became "half its requests, seven scheduled checks running", at Craig's word.
+  Built: shop prices on the Wanted card, alerts under the stored usual with no limit, the
+  counter and the weekly skip. Tests: 8 alert cases, 6 refusal cases, 3 API, 2 web. Gate green
+  bar the two known pgserver stale-edit tests; checked at 375 px.
 - **2026-10-18 (X10, #280)** — Re-measured read-only before code, then slimmed at Craig's word:
   title rules still 7 of 8 apart; 0 of 5 splits left; 1 owned film unidentified; 0 shared
   barcodes; 12 leftover rows. Built the title-key module (T9's fold moved unchanged; `WORDS` and

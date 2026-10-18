@@ -9409,6 +9409,11 @@
       "title": "Addedat",
       "type": "string"
      },
+     "askedWeekly": {
+      "default": false,
+      "title": "Askedweekly",
+      "type": "boolean"
+     },
      "baseUrl": {
       "title": "Baseurl",
       "type": "string"
@@ -9493,6 +9498,12 @@
        }
       ],
       "title": "Notes"
+     },
+     "refusedNights": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Refusednights",
+      "type": "integer"
      },
      "region": {
       "title": "Region",
@@ -10492,6 +10503,52 @@
      "itemCount"
     ],
     "title": "ShelfFacetResponse",
+    "type": "object"
+   },
+   "ShopPriceResponse": {
+    "description": "A shop's latest price for a want (Batch X11, MK47-05).",
+    "properties": {
+     "checkedAt": {
+      "title": "Checkedat",
+      "type": "string"
+     },
+     "currency": {
+      "title": "Currency",
+      "type": "string"
+     },
+     "price": {
+      "title": "Price",
+      "type": "string"
+     },
+     "retailer": {
+      "title": "Retailer",
+      "type": "string"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "url": {
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "retailer",
+     "price",
+     "currency",
+     "title",
+     "url",
+     "checkedAt"
+    ],
+    "title": "ShopPriceResponse",
     "type": "object"
    },
    "SmartCollectionCreateRequest": {
@@ -13715,6 +13772,14 @@
        "$ref": "#/components/schemas/FilmReviewResponse"
       },
       "title": "Reviews",
+      "type": "array"
+     },
+     "shopPrices": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/ShopPriceResponse"
+      },
+      "title": "Shopprices",
       "type": "array"
      },
      "year": {

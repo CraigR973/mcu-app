@@ -1237,6 +1237,17 @@ export type CalendarIngest = z.infer<typeof calendarIngestSchema>
 // Wanted list and retailers (Batch 18) — §3.5, §3.16, §5.1, §5.2
 // ---------------------------------------------------------------------------
 
+/** A shop's latest price for a want (Batch X11, MK47-05). `price` is a string, as
+ *  `maxPrice` is. `title` is what the shop's page called the listing. */
+export const shopPriceSchema = z.object({
+  retailer: z.string().min(1),
+  price: z.string(),
+  currency: z.string().length(3),
+  title: z.string().nullable(),
+  url: z.string(),
+  checkedAt: z.string(),
+})
+
 export const wantedItemSchema = z.object({
   id: z.string().uuid(),
   movieId: z.string().uuid(),
@@ -1260,6 +1271,9 @@ export const wantedItemSchema = z.object({
   /** Batch V9: one review per site, of the want's format where found. Defaulted, so the
    *  page parses an API without it yet. */
   reviews: z.array(filmReviewSchema).default([]),
+  /** Batch X11: each shop's latest price, cheapest first. Defaulted, so the page parses an
+   *  API without it yet. */
+  shopPrices: z.array(shopPriceSchema).default([]),
 })
 
 export const wantedListSchema = z.object({
@@ -1288,6 +1302,10 @@ export const retailerSchema = z.object({
   lastScrapeStatus: z.string().nullable(),
   lastScrapeError: z.string().nullable(),
   consecutiveFailures: z.number().int().nonnegative(),
+  /** Batch X11: scheduled checks in a row this shop refused half its requests or more; at
+   *  seven it is asked weekly. Defaulted for an API without it yet. */
+  refusedNights: z.number().int().nonnegative().default(0),
+  askedWeekly: z.boolean().default(false),
   /** False until Batch 19 gives this retailer selectors — so the page can say "not
    *  configured" rather than implying a working scraper exists. */
   isConfigured: z.boolean(),
@@ -1307,6 +1325,7 @@ export const retailerSeedSchema = z.object({
   names: z.array(z.string()),
 })
 
+export type ShopPrice = z.infer<typeof shopPriceSchema>
 export type WantedItem = z.infer<typeof wantedItemSchema>
 export type WantedList = z.infer<typeof wantedListSchema>
 export type ScraperType = z.infer<typeof scraperTypeSchema>

@@ -33,11 +33,14 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.clock import utcnow
 from src.models.movie import Movie
 from src.models.notification import NotificationCategory
 from src.models.price_check import PriceCheck
 from src.models.profile import Profile
 from src.models.wanted import WantedItem
+from src.services.ebay_watch.refs import Yardstick
+from src.services.ebay_watch.usual import shop_usual
 from src.services.notifications import queue_notification
 
 logger = structlog.get_logger(__name__)
@@ -61,7 +64,9 @@ def _money(amount: Decimal, currency: str) -> str:
     return f"{symbol}{amount:.2f}" if symbol else f"{amount:.2f} {currency}"
 
 
-async def _previously_alerted_below_threshold(db: AsyncSession, candidate: AlertCandidate) -> bool:
+async def _previously_alerted_below_threshold(
+    db: AsyncSession, candidate: AlertCandidate, threshold: Decimal
+) -> bool:
     """Was the last check for this want at this shop already a notified drop?
 
     The question that turns "the price is low" into "the price has *just become* low".
@@ -84,13 +89,10 @@ async def _previously_alerted_below_threshold(db: AsyncSession, candidate: Alert
 
     if previous is None:
         return False
-    threshold = candidate.wanted.max_price
-    if threshold is None:  # pragma: no cover - guarded by the caller
-        return False
     return previous.notification_sent and previous.price <= threshold
 
 
-def _body(candidate: AlertCandidate, title: str) -> str:
+def _body(candidate: AlertCandidate, title: str, usual: Yardstick | None = None) -> str:
     """What the notification says, including any substitution."""
     price = _money(candidate.check.price, candidate.check.currency)
     parts = [f"{price} at {candidate.check.retailer_name_snapshot}."]
@@ -103,6 +105,12 @@ def _body(candidate: AlertCandidate, title: str) -> str:
         parts.append(
             f"It is a different edition from the {candidate.wanted.preferred_edition!r} "
             "you asked for."
+        )
+    if usual is not None:
+        # A drop with no limit set says what it was measured against.
+        parts.append(
+            f"Under the usual {_money(usual.median, candidate.check.currency)} on eBay "
+            f"(asking prices, {usual.sample_size} listings)."
         )
     if candidate.check.title_snapshot and candidate.check.title_snapshot != title:
         parts.append(f"Listed as {candidate.check.title_snapshot!r}.")
@@ -134,11 +142,29 @@ async def queue_price_drop_alerts(
         return 0
 
     queued = 0
+    stamp = now or utcnow()
     for candidate in candidates:
         threshold = candidate.wanted.max_price
-        if threshold is None or candidate.check.price > threshold:
+        usual: Yardstick | None = None
+        if threshold is None:
+            # No limit set (Batch X11, MK47-05): 9 of the 10 wants had none, so no shop alert
+            # could fire. The film's usual stands in, like for like, and only when one is
+            # stored: see :func:`shop_usual`.
+            if candidate.check.currency != "GBP":
+                continue
+            usual = await shop_usual(
+                db,
+                movie_id=candidate.wanted.movie_id,
+                title=candidate.check.title_snapshot,
+                url=candidate.check.url,
+                now=stamp,
+            )
+            if usual is None or candidate.check.price >= usual.median:
+                continue
+            threshold = usual.median
+        elif candidate.check.price > threshold:
             continue
-        if await _previously_alerted_below_threshold(db, candidate):
+        if await _previously_alerted_below_threshold(db, candidate, threshold):
             # Still cheap, already said so. Re-arms when it goes back above.
             candidate.check.notification_sent = True
             continue
@@ -153,7 +179,7 @@ async def queue_price_drop_alerts(
                 user_id=person.id,
                 category=NotificationCategory.deals,
                 title=f"{title} is {price}",
-                body=_body(candidate, title),
+                body=_body(candidate, title, usual),
                 url="/wanted",
                 # The check's own id: one alert per person per drop, and a re-run that
                 # updates the same row cannot produce a second.
@@ -170,6 +196,7 @@ async def queue_price_drop_alerts(
             price=str(candidate.check.price),
             retailer=candidate.check.retailer_name_snapshot,
             threshold=str(threshold),
+            basis="usual" if usual is not None else "limit",
         )
 
     return queued

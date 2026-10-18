@@ -26,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta
 from decimal import Decimal
 from urllib.parse import quote, urljoin, urlparse
 
@@ -73,6 +74,18 @@ FAILURE_LIMIT = 3
 #: A courtesy pause between requests to the same shop. Not a rate limiter — a manners
 #: setting, and the difference between a tool a retailer tolerates and one it blocks.
 POLITE_PAUSE_SECONDS = 1.0
+
+#: Batch X11 (MK47-05). A night counts against a shop when it refused at least this share
+#: of the requests it was asked, twice each (``ScrapeOutcome.refused``). No shop refused
+#: *every* request on any of the nights measured on 18 Oct, so "all" would match none.
+REFUSING_SHARE = 0.5
+
+#: Scheduled checks in a row that must count before the shop is asked weekly instead.
+WEEKLY_AFTER_NIGHTS = 7
+
+#: How long a resting shop is left alone. Less 12 hours, so a start that drifts a few minutes
+#: earlier than last week's still asks it on the seventh night rather than the eighth.
+REST_FOR = timedelta(days=7) - timedelta(hours=12)
 
 
 async def _pause(seconds: float) -> None:
@@ -152,6 +165,9 @@ class ScrapeRunResult:
     outcomes: list[ScrapeOutcome] = field(default_factory=list)
     written: int = 0
     disabled: list[str] = field(default_factory=list)
+    #: Shops the scheduled check left alone tonight, having refused seven nights running
+    #: (Batch X11). Never asked, so nothing in ``outcomes`` names them.
+    resting: list[str] = field(default_factory=list)
     #: The rows this run actually wrote, paired with the want they were found for and what
     #: the scrape had to substitute. Batch 20 turns these into §5.6's price-drop alerts —
     #: collected here rather than re-queried afterwards, because "checks written today" is
@@ -446,6 +462,39 @@ def _record_success(retailer: Retailer) -> None:
     retailer.last_scraped_at = utcnow()
 
 
+def is_refusing_night(outcomes: list[ScrapeOutcome]) -> bool | None:
+    """Did the shop refuse at least half of what it was asked tonight? ``None``: not asked.
+
+    A want these shops cannot serve (``skipped``) was never put to the shop, so it is
+    neither asked nor refused.
+    """
+    asked = [outcome for outcome in outcomes if not outcome.skipped]
+    if not asked:
+        return None
+    return sum(1 for outcome in asked if outcome.refused) >= len(asked) * REFUSING_SHARE
+
+
+def record_refusing_night(retailer: Retailer, outcomes: list[ScrapeOutcome]) -> None:
+    """Extend, or end, the shop's run of refusing nights (Batch X11)."""
+    refusing = is_refusing_night(outcomes)
+    if refusing is None:
+        return
+    retailer.refused_nights = retailer.refused_nights + 1 if refusing else 0
+
+
+def is_resting(retailer: Retailer, *, now: datetime) -> bool:
+    """Should the scheduled check leave this shop alone tonight?
+
+    True after :data:`WEEKLY_AFTER_NIGHTS` refusing nights in a row, until a week after it
+    was last asked. Asked on the seventh night, a shop that still refuses stays on the
+    weekly cadence; one that answers goes back to nightly. Needs no stored schedule, so the
+    cadence moves with the shop, and nothing is written to put it there.
+    """
+    if retailer.refused_nights < WEEKLY_AFTER_NIGHTS or retailer.last_scraped_at is None:
+        return False
+    return now - retailer.last_scraped_at < REST_FOR
+
+
 async def _release(db: AsyncSession) -> None:
     """End the session's transaction, so no connection is held while a shop is asked.
 
@@ -466,11 +515,16 @@ async def run_scrape(
     dry_run: bool = False,
     polite_pause: float = POLITE_PAUSE_SECONDS,
     retry_after_limit: float = RETRY_AFTER_LIMIT_SECONDS,
+    rest_refusing: bool = False,
 ) -> ScrapeRunResult:
     """Every enabled retailer × every active wanted item. **Makes live requests.**
 
     The nightly check's (`daily.py`), and "Run now" in the app's, which passes
     ``retry_after_limit=0`` so a refusal does not hold the phone's request for a minute.
+
+    ``rest_refusing`` is the scheduled check's alone (Batch X11): a shop that has refused
+    seven scheduled checks in a row is left out until a week after it was last asked. "Run
+    now" and a person's dry run ask every shop.
 
     **No transaction is open while a shop is asked** (:func:`_release`), so a session whose
     objects expire on commit cannot call this: every caller's session keeps them.
@@ -494,7 +548,12 @@ async def run_scrape(
         )
     ).all()
 
+    now = utcnow()
     for retailer in retailers:
+        if rest_refusing and is_resting(retailer, now=now):
+            result.resting.append(retailer.name)
+            logger.info("retailer_resting", retailer=retailer.name, nights=retailer.refused_nights)
+            continue
         any_success = False
         for wanted, movie in wanted_rows:
             await _release(db)
@@ -529,6 +588,9 @@ async def run_scrape(
 
         if not dry_run:
             mine = [o for o in result.outcomes if o.retailer == retailer.name]
+            if rest_refusing:
+                # Scheduled checks only: a person's "Run now" must not make a shop weekly.
+                record_refusing_night(retailer, mine)
             attempted = [
                 o
                 for o in mine

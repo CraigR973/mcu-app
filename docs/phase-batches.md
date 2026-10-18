@@ -3201,7 +3201,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
 | 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → ~~X5 watch history~~ (`19c9aad`, 14 Oct; its live data steps at Craig's word) | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | ~~X9 catalogue truth~~ → ~~X10 one title rule, owned twins~~ (`f8de7ab`, 18 Oct) — **done** | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
-| 5 | X11 Wanted shop prices → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
+| 5 | ~~X11 Wanted shop prices~~ (18 Oct) → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
 
 **Each batch on its own:**
@@ -3218,7 +3218,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | ~~X8~~ | ~~UX48-01, UX48-03, CR43-04, DS44-04, DS44-07~~ | ~~🟡~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X9~~ | ~~CT46-01, CT46-03, CT46-05, CR43-02~~ | ~~🔴~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
 | ~~X10~~ | ~~CR43-03, CT46-04~~ | ~~🟢~~ | ~~top tier · high~~ | ~~top tier · High~~ |
-| X11 | MK47-05 | 🟡 | mid tier · high | mid tier · High |
+| ~~X11~~ | ~~MK47-05~~ (#281) | ~~🟡~~ | ~~mid tier · high~~ | ~~mid tier · High~~ |
 | X12 | UX48-05, UX48-06, UX48-07, CT46-06, CT46-07, DS44-06, the rest of CR43-08 | 🟡 | mid tier · high | mid tier · High |
 
 *Why those efforts.* `xhigh` where a batch writes live data or holds a credential: X4 (a dump
@@ -3837,7 +3837,7 @@ added under one barcode; 8 film rows with no copies were left by the 18 Sep refr
 - **Guard (CI):** the pair table.
 - Tests. Gate green.
 
-### X11 — Wanted: shop prices shown, alerts without a limit 🟡
+### ~~X11~~ — Wanted: shop prices shown, alerts without a limit 🟡 — **shipped 18 Oct (#281)**
 **Covers MK47-05 (Medium).** Mid tier · high. Sitting 5, first.
 
 **Found 11 Oct:** 1 of 10 wants has a price limit, and a shop alert needs one; shop prices are
@@ -3850,6 +3850,56 @@ request, costing 28–31 minutes a night.
 - A shop that refused every request for a week is asked weekly, not nightly, until
   `OWNER-ACTIONS.md` 28; a nightly run takes minutes, not half an hour.
 - Tests. Gate green.
+
+**Re-measured 18 Oct, read-only against live (nothing built yet; waits for Craig's go).** What
+still holds, and what changed since 11 Oct:
+- *Holds:* 1 of 10 active wants has a limit (Cross of Iron, £14); 8 of 10 name no format. No
+  API or screen shows a stored shop price. The nightly run took 26–29 minutes on every night
+  from 3 to 18 Oct (2 minutes before 3 Oct); 25–28 refusals a night, each waited 60 s.
+- *Changed:* no shop refuses **every** request. On each of the last 9 nights 101 Films,
+  Powerhouse and Second Sight each had 5–10 of 10 wants refused twice, but each also had a
+  retry get through on some nights (Second Sight priced a want on 18 Oct, Powerhouse on 15 Oct,
+  101 Films on 13 Oct). Read literally the weekly criterion matches no shop today.
+- *Changed:* the shops now give 1–2 prices a night, not 5–7. Zavvi has priced nothing since 12
+  Oct (`no_results` on every want since; 74 checks before). Not X11's to fix; noted for Craig.
+- *Changed:* `retailers.scrape_frequency` already exists and the admin screen edits it, but
+  `run_scrape` never reads it, and every live shop holds the default `weekly`. Making the
+  runner honour it as it stands would move Zavvi and Arrow to weekly too.
+- *Changed:* V8's "usual" exists as `ebay_price_refs` per film and format (fresh for 14 days;
+  all 10 wants' films were last priced 12 Oct, so they go stale on 26 Oct unless the scan
+  refreshes them). A want with no format has no usual to compare against until the format is
+  read off the shop's own listing, as `ebay_watch/usual.py` does.
+
+**Amended criteria (the original wording kept above; each change stated):**
+- The Wanted page shows each want's latest price per shop, with its date. *(unchanged; adds the
+  listing's title and link, so a "Limited Edition" price is not read as the standard disc.)*
+- A want with no price limit alerts on a shop price under the film's usual (V8's). *(Amended:
+  "usual" is the stored usual for the format and standard edition of the listing the shop
+  priced; no stored fresh usual means no alert, and nothing calls eBay from the shop check.
+  An alert still fires only on the way down, as a limit's does. A want with a limit is as
+  before.)*
+- A shop that refused every request for a week is asked weekly... *(Amended, pending Craig's
+  choice: "refused every request" becomes "refused at least half of a night's requests, twice
+  each, on each of its last seven asked nights", which the three shops meet today. Weekly means
+  the scheduled check skips it for six nights; "Run now" still asks every shop. The mechanism
+  (a counter column on `retailers`, or the runner honouring `scrape_frequency`) is Craig's
+  choice at the go: either way the shops start nightly and the first weekly skip comes after
+  seven refused nights, unless he says to seed it, which writes live rows.)* A scheduled run
+  without those shops takes about 3 minutes.
+- Tests. Gate green. *(unchanged)*
+
+**Acceptance: met in code, criterion by criterion (18 Oct, #281).** Shop prices with dates and
+links on the Wanted card (web and API tests; seen at 375 px against a seeded throwaway
+database). No-limit alert under the stored usual: eight cases (under, at and over, no ref,
+stale ref, other format, limited edition, once per drop) plus a limit's unchanged. Weekly ask:
+the rule, the counter, the skip without a request, "Run now" asking every shop, and a night
+that answers resetting it. **Not yet seen live:** every shop's counter starts at 0, so the
+half-hour night ends only after the seventh scheduled refusing check (about 26 Oct), unless
+Craig says to seed it. Migration 060 adds `retailers.refused_nights`; both read-only roles
+already read the table, and the grant is repeated for the column. Gate: ruff, mypy, API pytest
+(2,372 passed, the two known stale-edit tests failing on a throwaway pgserver as on `main`, 9
+skipped), `pnpm -r test` (631 web), shared typecheck and build, web lint (10 warnings, none
+added), typecheck and build. OpenAPI snapshot regenerated.
 
 ### X12 — Polish and terms 🟡
 **Covers UX48-05 (Medium), UX48-06, UX48-07, CT46-06, CT46-07, DS44-06 and the rest of CR43-08
