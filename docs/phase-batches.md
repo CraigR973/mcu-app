@@ -3201,7 +3201,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | 2 | ~~X7 assistant repair~~ (`aa6946d`) → ~~X8 offline, drift and failure words~~ (`e991281`) — **done 13 Oct** | Craig's go | top tier · high | top tier · High |
 | 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → ~~X5 watch history~~ (`19c9aad`, 14 Oct; its live data steps at Craig's word) | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | ~~X9 catalogue truth~~ → ~~X10 one title rule, owned twins~~ (`f8de7ab`, 18 Oct) — **done** | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
-| 5 | ~~X11 Wanted shop prices~~ (18 Oct) → X12 polish and terms | Craig's go | mid tier · high | mid tier · High |
+| 5 | ~~X11 Wanted shop prices~~ (18 Oct) → ~~X12 polish and terms~~ (X12a–c, 18 Oct) | Craig's go | mid tier · high | mid tier · High |
 | — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
 
 **Each batch on its own:**
@@ -3219,7 +3219,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | ~~X9~~ | ~~CT46-01, CT46-03, CT46-05, CR43-02~~ | ~~🔴~~ | ~~top tier · xhigh~~ | ~~top tier · Extra High~~ |
 | ~~X10~~ | ~~CR43-03, CT46-04~~ | ~~🟢~~ | ~~top tier · high~~ | ~~top tier · High~~ |
 | ~~X11~~ | ~~MK47-05~~ (#281) | ~~🟡~~ | ~~mid tier · high~~ | ~~mid tier · High~~ |
-| X12 | UX48-05, UX48-06, UX48-07, CT46-06, CT46-07, DS44-06, the rest of CR43-08 | 🟡 | mid tier · high | mid tier · High |
+| ~~X12~~ | ~~UX48-05, UX48-06, UX48-07, CT46-06, CT46-07, DS44-06, the rest of CR43-08~~ (#282, #283, #284) | ~~🟡~~ | ~~mid tier · high~~ | ~~mid tier · High~~ |
 
 *Why those efforts.* `xhigh` where a batch writes live data or holds a credential: X4 (a dump
 role and a secret), X5 (a backfill of 756 diary entries and film records with no copies, as
@@ -3960,8 +3960,8 @@ its own, in this order** (proposed 18 Oct; amended here, not dropped, criterion 
 - **X12b, phone polish and speed** (UX48-06, UX48-07) — **shipped 18 Oct (#283)**: 12 px floor, 44 px list links, the dark
   primary button at 4.5:1, axe-core on R6's screens (the rig is on this Mac), JSON compression,
   the Archive list's columns and first screen first. About a day.
-- **X12c, terms and tidying** (CT46-06, CT46-07, DS44-06, CR43-08's rest) — **built 18 Oct (#284);
-  its two live steps wait for Craig's word**: TMDB's logo and
+- **X12c, terms and tidying** (CT46-06, CT46-07, DS44-06, CR43-08's rest) — **shipped 18 Oct (#284; fix
+  `e109b98`); both live steps ran at Craig's word the same day**: TMDB's logo and
   notice, the JustWatch credit, Brave results deleted once decided, the 150-day TMDB refresh,
   completion sets by top ten billed without shorts, the dead file, `*.xlsx`, #28, group-start.
   About a day; **two live steps at Craig's word, count first:** deleting 9,456 Brave results,
