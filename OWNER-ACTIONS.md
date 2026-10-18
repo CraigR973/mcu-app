@@ -1483,7 +1483,7 @@ title. Two steps are yours.
 Also from Y5: John Krish's *A Day in the Life* (BFI Blu-ray) can now be added: Add → Search
 title → "Add … by its title". It is filed as not a film, so it stays off "Still to identify".
 
-### 34. The 12 leftover film rows — X10 *(new 18 Oct; yours to say)*
+### 34. ~~The 12 leftover film rows — X10~~ — **done 18 Oct at your word: 12 put in the Trash, audited as you; live films 1,939 → 1,927**
 
 **Why:** the 18 Sep sheet refresh made new rows for titles it could not tell apart and binned
 the discs on the old ones, so 9 film rows hold nothing but a binned copy; binning has left 3
