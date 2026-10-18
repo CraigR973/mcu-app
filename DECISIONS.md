@@ -5972,3 +5972,43 @@ contemporaneous.
        about an hour once the module exists, and the next import or title-only add can make an
        unidentified twin again; keeping X10 as written (two of its five findings are gone, and
        a criterion that cannot fail proves nothing).
+
+281. **X11: shop prices shown, alerts without a limit, and a weekly ask for refusing shops.
+     Amends the ledger's third criterion at Craig's word on 18 Oct (counter on `retailers`,
+     half-requests rule, no live seeding; alert only on a stored fresh usual).**
+
+     - **Re-measured first (read-only, 18 Oct):** 1 of 10 wants has a limit; no screen showed a
+       shop price; the nightly run took 26-29 minutes on every night from 3 Oct (25-28 refusals,
+       each waited 60 s). **No shop refuses every request:** 101 Films, Powerhouse and Second
+       Sight each had 5-10 of 10 wants refused twice on each of the last 9 nights and a retry
+       get through on some, so "refused every request for a week" matched none. The shops now
+       give 1-2 prices a night (5-7 on 11 Oct); Zavvi has priced nothing since 12 Oct.
+       `retailers.scrape_frequency` exists but `run_scrape` never reads it, and every live shop
+       holds the default `weekly`: honouring it as it stands would have moved Zavvi and Arrow off
+       nightly too.
+     - **The rule:** a night counts against a shop when it refused, twice each, at least half of
+       the requests it was asked (`REFUSING_SHARE`); `retailers.refused_nights` (migration 060)
+       counts such scheduled nights in a row and any other night resets it. At seven
+       (`WEEKLY_AFTER_NIGHTS`) the scheduled check leaves the shop alone until a week less 12
+       hours after it was last asked, then asks it; if it still refuses it stays weekly, if it
+       answers it is nightly again. "Run now" and dry runs ask every shop and never touch the
+       counter. No stored schedule, no change to `scrape_frequency`.
+     - **No live row is written.** Every shop starts at zero, so the first skip is the scheduled
+       check after the seventh refusing night: about 26 Oct if the three keep refusing at this
+       rate (Second Sight sits at exactly half on some nights and may not hold seven). A seed
+       to start sooner would write live rows: Craig's word, count shown first. Until then the
+       half-hour night stays.
+     - **Alert without a limit:** a shop price strictly under the usual alerts, on the way down
+       as a limit's does. The usual is `ebay_price_refs` for the film and the format read off
+       the shop's listing (not the want's, 8 of 10 name none), as a New copy's (`yardstick`),
+       from a ref fresh within 14 days; a limited or other non-standard edition, a non-GBP
+       price, or no fresh ref means no alert. Nothing calls eBay from the shop check. The body
+       names the usual and its listing count. A want with a limit is unchanged.
+     - **Shown:** `GET /wanted` carries `shopPrices` (each shop's newest check for the want,
+       cheapest first: shop, price, date, the listing's title, its link); the card lists them
+       with the day, or says none was found. The Retailers screen says "asked weekly".
+     - *Rejected:* a circuit breaker that ends a shop's night at its first refused-twice request
+       (a night would be minutes at once, but it gives up the one price in four that gets
+       through, which Second Sight and Powerhouse still delivered this week); honouring
+       `scrape_frequency` (see above); a threshold below the usual such as V8's 30% (the ledger
+       says "under", and an alert fires once per drop).

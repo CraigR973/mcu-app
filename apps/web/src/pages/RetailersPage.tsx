@@ -410,6 +410,10 @@ function Row({ retailer }: { retailer: RetailerRow }) {
           {retailer.consecutiveFailures > 0
             ? ` · ${String(retailer.consecutiveFailures)} recent failures`
             : ''}
+          {/* Batch X11: refused seven scheduled checks in a row, so asked once a week. */}
+          {retailer.askedWeekly
+            ? ` · asked weekly (refused ${String(retailer.refusedNights)} checks in a row)`
+            : ''}
         </p>
       </div>
       <Button

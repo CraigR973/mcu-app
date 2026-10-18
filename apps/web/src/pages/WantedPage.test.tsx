@@ -237,3 +237,59 @@ describe('WantedPage — reviews (Batch V9)', () => {
   })
 })
 
+
+describe('WantedPage — shop prices (Batch X11)', () => {
+  function stubWanted(items: unknown[]) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input).includes('/wanted')) {
+          return new Response(JSON.stringify({ items, total: items.length, activeCount: items.length }))
+        }
+        return new Response(JSON.stringify({ items: [], total: 0, activeCount: 0 }))
+      }),
+    )
+  }
+
+  it("shows each shop's latest price with the day it was seen, linked to the listing", async () => {
+    stubWanted([
+      {
+        ...EXISTING,
+        shopPrices: [
+          {
+            retailer: 'Second Sight',
+            price: '17.99',
+            currency: 'GBP',
+            title: 'Dog Soldiers Standard Edition 4K UHD',
+            url: 'https://secondsightfilms.co.uk/products/dog-soldiers',
+            checkedAt: '2026-10-18T03:10:24Z',
+          },
+          {
+            retailer: 'Zavvi',
+            price: '40.99',
+            currency: 'GBP',
+            title: null,
+            url: 'https://www.zavvi.com/dog-soldiers',
+            checkedAt: '2026-10-12T03:00:00Z',
+          },
+        ],
+      },
+    ])
+    renderPage()
+
+    const second = await screen.findByRole('link', { name: /Second Sight/ })
+    expect(second.getAttribute('href')).toBe('https://secondsightfilms.co.uk/products/dog-soldiers')
+    expect(second.textContent).toContain('£17.99')
+    expect(second.textContent).toContain('18 Oct')
+    expect(second.textContent).toContain('Dog Soldiers Standard Edition 4K UHD')
+    const zavvi = screen.getByRole('link', { name: /Zavvi/ })
+    expect(zavvi.textContent).toContain('12 Oct')
+  })
+
+  it('says so when no shop has been priced yet, rather than showing nothing', async () => {
+    stubWanted([EXISTING])
+    renderPage()
+
+    expect(await screen.findByText('No shop price found yet')).not.toBeNull()
+  })
+})

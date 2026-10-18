@@ -125,6 +125,9 @@ async def run_daily_scrape(
             client=client,
             dry_run=dry_run,
             retry_after_limit=retry_after_limit,
+            # Only the scheduled check rests a refusing shop (Batch X11): a person's run asks
+            # them all, and its refusals do not extend the run of nights.
+            rest_refusing=trigger == "cron",
             **kwargs,
         )
     except Exception as exc:

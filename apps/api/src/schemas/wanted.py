@@ -97,6 +97,20 @@ class WantedUpdateRequest(BaseModel):
         return _validate_max_price(value)
 
 
+class ShopPriceResponse(BaseModel):
+    """A shop's latest price for a want (Batch X11, MK47-05)."""
+
+    retailer: str
+    #: A string, as ``maxPrice`` is: money does not round-trip through a float.
+    price: str
+    currency: str
+    #: What the shop's page called the listing it priced, so a limited edition is not read
+    #: as the standard disc. ``None`` when the page gave no title.
+    title: str | None
+    url: str
+    checkedAt: UtcDatetime
+
+
 class WantedItemResponse(BaseModel):
     id: uuid.UUID
     movieId: uuid.UUID
@@ -116,6 +130,9 @@ class WantedItemResponse(BaseModel):
     addedAt: UtcDatetime
     #: Batch V9: one review per site, Blu-ray.com's first, of the want's format where found.
     reviews: list[FilmReviewResponse] = []
+    #: Batch X11: each shop's latest price for this want, cheapest first. Empty until a
+    #: nightly check has found one.
+    shopPrices: list[ShopPriceResponse] = []
 
 
 class WantedListResponse(BaseModel):
@@ -178,6 +195,10 @@ class RetailerResponse(BaseModel):
     lastScrapeStatus: str | None
     lastScrapeError: str | None
     consecutiveFailures: int = Field(ge=0)
+    #: Batch X11: scheduled checks in a row this shop refused half or more of its requests.
+    #: At seven the scheduled check asks it weekly (`askedWeekly`).
+    refusedNights: int = Field(default=0, ge=0)
+    askedWeekly: bool = False
     #: False until Batch 19 gives this retailer selectors. Surfaced so the settings page
     #: can say "not configured" instead of implying a scraper exists for it.
     isConfigured: bool

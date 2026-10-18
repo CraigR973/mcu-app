@@ -161,6 +161,12 @@ class Retailer(Base, UUIDPrimaryKeyMixin):
     #: behaviour rather than a migration.
     consecutive_failures: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
 
+    #: Batch X11 (MK47-05): how many scheduled checks in a row this shop refused at least
+    #: half of its requests, twice each. At seven the scheduled check asks it weekly rather
+    #: than nightly (:func:`src.services.scraping.runner.is_resting`); any night it refuses
+    #: less sets it back to zero. Migration 060.
+    refused_nights: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True, index=True
     )

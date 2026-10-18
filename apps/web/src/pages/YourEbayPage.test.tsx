@@ -88,6 +88,7 @@ function want(movieId: string, movieTitle: string, year: number, preferredFormat
     ownedAlready: false,
     addedAt: '2026-09-30T20:00:00Z',
     reviews: [],
+    shopPrices: [],
   }
 }
 

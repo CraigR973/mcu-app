@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bookmark, Check, Loader2, Plus, PoundSterling, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { WantedItem } from '@mcu/shared'
+import type { ShopPrice, WantedItem } from '@mcu/shared'
 
 /** The body `PUT /wanted/{id}` replaces the row with — every field, always. */
 type WantedUpdate = Parameters<typeof updateWanted>[1]
@@ -25,7 +25,7 @@ import {
   updateWanted,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDayMonth } from '@/lib/utils'
 
 function AddWantedPanel() {
   const queryClient = useQueryClient()
@@ -200,6 +200,47 @@ function fullUpdate(item: WantedItem, changes: Partial<WantedUpdate>): WantedUpd
   }
 }
 
+const POUNDS: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' }
+
+/** A shop's price as money, never converted: "£17.99", or "17.99 SEK" for a currency without a sign. */
+function shopMoney(price: ShopPrice): string {
+  const symbol = POUNDS[price.currency.toUpperCase()]
+  return symbol ? `${symbol}${price.price}` : `${price.price} ${price.currency}`
+}
+
+/**
+ * Each shop's latest price for the want, with the day it was seen (Batch X11, MK47-05).
+ * The date is the whole point: the nightly check is refused by some shops for days, so a
+ * price is only as current as the day beside it. The listing's own title is shown so a
+ * limited edition is not read as the standard disc.
+ */
+function ShopPrices({ prices }: { prices: ShopPrice[] }) {
+  if (prices.length === 0) {
+    return <p className="mt-2 text-xs text-muted-foreground">No shop price found yet</p>
+  }
+  return (
+    <ul className="mt-2 divide-y divide-border text-xs" aria-label="Latest shop prices">
+      {prices.map((price) => (
+        <li key={price.retailer}>
+          <a
+            href={price.url}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="flex flex-wrap items-baseline gap-x-2 py-1.5 hover:underline"
+          >
+            <span className="font-medium text-foreground">{price.retailer}</span>
+            <span className="font-semibold text-foreground">{shopMoney(price)}</span>
+            <span className="text-muted-foreground">{formatDayMonth(price.checkedAt)}</span>
+            {price.title ? (
+              <span className="w-full truncate text-muted-foreground">{price.title}</span>
+            ) : null}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function Card({ item }: { item: WantedItem }) {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
@@ -263,6 +304,9 @@ function Card({ item }: { item: WantedItem }) {
           <p className="mt-1 text-xs text-muted-foreground">No longer looking</p>
         ) : null}
         <ReviewLinks reviews={item.reviews} className="mt-2" />
+        {item.isActive || item.shopPrices.length > 0 ? (
+          <ShopPrices prices={item.shopPrices} />
+        ) : null}
         {saveBudget.isError ? (
           <p role="alert" className="mt-1 text-xs text-destructive">
             {queryErrorMessage(saveBudget.error, 'Could not save that limit.')}

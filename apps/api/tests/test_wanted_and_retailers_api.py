@@ -25,6 +25,7 @@ from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
 from src.models.movie import Movie
+from src.models.price_check import PriceCheck
 from src.models.profile import Profile, UserRole
 from src.models.wanted import DEFAULT_RETAILERS, Retailer, WantedItem
 from src.routers.movies import get_tmdb_client
@@ -710,3 +711,80 @@ async def test_a_wanted_edition_round_trips_through_the_api(
     )
     assert cleared.status_code == 200, cleared.json()
     assert cleared.json()["preferredEdition"] is None
+
+
+async def test_the_list_carries_each_shops_latest_price_cheapest_first(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Batch X11 (MK47-05): the prices were stored nightly and shown nowhere."""
+    from datetime import datetime
+    from decimal import Decimal
+
+    film = await _film(api_session, "A Priced Film")
+    wanted = (await client.post("/api/v1/wanted", json={"movieId": str(film.id)})).json()
+    want_id = uuid.UUID(wanted["id"])
+
+    def check(shop: str, price: str, day: int, title: str) -> PriceCheck:
+        return PriceCheck(
+            id=uuid.uuid4(),
+            wanted_id=want_id,
+            retailer_name_snapshot=shop,
+            price=Decimal(price),
+            currency="GBP",
+            title_snapshot=title,
+            url=f"https://shop.example/{shop}/{day}",
+            checked_at=datetime(2026, 10, day, 3, 0),
+        )
+
+    api_session.add_all(
+        [
+            check("Zavvi", "24.99", 10, "A Priced Film Blu-ray"),
+            check("Zavvi", "19.99", 17, "A Priced Film Blu-ray"),
+            check("Second Sight", "17.99", 18, "A Priced Film Standard Edition"),
+            check("Arrow Video", "22.00", 12, "A Priced Film"),
+        ]
+    )
+    await api_session.flush()
+
+    listed = (await client.get("/api/v1/wanted")).json()
+    row = next(item for item in listed["items"] if item["id"] == wanted["id"])
+
+    assert [(p["retailer"], p["price"]) for p in row["shopPrices"]] == [
+        ("Second Sight", "17.99"),
+        ("Zavvi", "19.99"),
+        ("Arrow Video", "22.00"),
+    ], "one price per shop, the newest, cheapest first"
+    top = row["shopPrices"][0]
+    assert top["checkedAt"].startswith("2026-10-18")
+    assert top["title"] == "A Priced Film Standard Edition"
+    assert top["url"] == "https://shop.example/Second Sight/18"
+
+
+async def test_a_want_with_no_checks_has_no_shop_prices(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    film = await _film(api_session, "An Unpriced Film")
+    await client.post("/api/v1/wanted", json={"movieId": str(film.id)})
+
+    listed = (await client.get("/api/v1/wanted")).json()
+
+    assert all(item["shopPrices"] == [] for item in listed["items"])
+
+
+async def test_a_retailer_says_when_it_is_asked_weekly(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    shop = Retailer(
+        id=uuid.uuid4(),
+        name="Refusing Shop",
+        base_url="https://refusing.example",
+        refused_nights=7,
+    )
+    api_session.add(shop)
+    await api_session.flush()
+
+    listed = (await client.get("/api/v1/retailers")).json()
+    row = next(item for item in listed["items"] if item["name"] == "Refusing Shop")
+
+    assert row["refusedNights"] == 7
+    assert row["askedWeekly"] is True

@@ -1304,6 +1304,10 @@ Railway's `config plan`.
 > address on any plan. So the fix below was never "an address of its own", and it was not
 > sure to work. The nightly check keeps trying the three shops and gets the odd price
 > through; 22c is parked with this item. Reopen it if those shops' prices start to matter.
+>
+> **18 Oct (X11, #281):** the scheduled check now asks a shop weekly once it has refused half
+> its requests seven checks running, so the half-hour nights end by themselves (about 26 Oct).
+> This item stays "left for now"; nothing here needs you.
 
 **What happened.** Since 30 Sep the three Shopify shops (Second Sight, 101 Films, Powerhouse)
 refuse the app with `429 Too Many Requests` from Cloudflare, asking it to wait 60 seconds, and
