@@ -23,6 +23,7 @@ from urllib.parse import urlsplit
 from src.services.reviews.bluray_com import format_of
 from src.services.specs.bluray_com import canonical_release_url, is_release_url
 from src.services.specs.search import SearchHit
+from src.services.title_key import Strictness, title_key
 
 #: Brave's line for every Blu-ray.com page ends with this, whatever the film.
 _BLURAY_COM_BOILERPLATE = re.compile(
@@ -37,16 +38,9 @@ _AVFORUMS_SUFFIX = re.compile(r"\s+Review\s*\|\s*AVForums\s*$", re.IGNORECASE)
 _KIND_WORDS = frozenset(
     {"4k", "uhd", "ultra", "hd", "blu", "ray", "bluray", "dvd", "movie", "film"}
 )
-_NOT_A_WORD = re.compile(r"[^a-z0-9]+")
 
 #: The order a review is preferred in when the want's own format has none, best first.
 _PREFERENCE = ("4k_uhd", "blu_ray", None, "dvd")
-
-
-def normalise(title: str) -> str:
-    """A title as words: lower case, apostrophes dropped, ``&`` read as "and"."""
-    text = title.lower().replace("&", " and ").replace("'", "").replace("’", "")
-    return " ".join(_NOT_A_WORD.sub(" ", text).split())
 
 
 @dataclass(frozen=True)
@@ -83,7 +77,7 @@ def _bluray_com_film(title: str) -> str | None:
 
 def bluray_com_hits(hits: list[SearchHit], title: str) -> list[ReviewHit]:
     """Blu-ray.com release pages for this film, in Brave's order, each with its format."""
-    wanted = normalise(title)
+    wanted = title_key(title, Strictness.WORDS)
     kept: list[ReviewHit] = []
     seen: set[str] = set()
     for hit in hits:
@@ -91,7 +85,7 @@ def bluray_com_hits(hits: list[SearchHit], title: str) -> list[ReviewHit]:
             continue
         format_code = format_of(hit.url)
         film = _bluray_com_film(hit.title)
-        if format_code is None or film is None or normalise(film) != wanted:
+        if format_code is None or film is None or title_key(film, Strictness.WORDS) != wanted:
             continue
         url = canonical_release_url(hit.url)
         if url in seen:
@@ -116,9 +110,28 @@ def _avforums_kind(words: list[str]) -> str | None | bool:
     return None
 
 
+def _avforums_film_and_kind(page_title: str, wanted: str) -> str | None | bool:
+    """The format of a review whose title is the film's words then only kind words, or False.
+
+    The title is split before folding, at each point after which only kind words follow, so
+    the film's words fold as the film's own title folds: "Rocky IV 4K Blu-ray" is "rocky 4"
+    then "4k blu ray", as TMDB's "Rocky IV" is "rocky 4" (Batch X10, #280). A film whose title
+    ends in a kind word ("Bee Movie") is still found, at the earlier split.
+    """
+    tokens = page_title.split()
+    for cut in range(len(tokens), 0, -1):
+        rest = title_key(" ".join(tokens[cut:]), Strictness.WORDS).split()
+        kind = _avforums_kind(rest)
+        if kind is False:
+            break
+        if title_key(" ".join(tokens[:cut]), Strictness.WORDS) == wanted:
+            return kind
+    return False
+
+
 def avforums_hits(hits: list[SearchHit], title: str) -> list[ReviewHit]:
     """AVForums review pages for this film, in Brave's order, each with its format."""
-    wanted = normalise(title).split()
+    wanted = title_key(title, Strictness.WORDS)
     kept: list[ReviewHit] = []
     seen: set[str] = set()
     for hit in hits:
@@ -133,10 +146,7 @@ def avforums_hits(hits: list[SearchHit], title: str) -> list[ReviewHit]:
             or not suffix
         ):
             continue
-        words = normalise(hit.title[: suffix.start()]).split()
-        if not wanted or words[: len(wanted)] != wanted:
-            continue
-        kind = _avforums_kind(words[len(wanted) :])
+        kind = _avforums_film_and_kind(hit.title[: suffix.start()], wanted) if wanted else False
         if kind is False:
             continue
         url = f"https://www.avforums.com/reviews/{path.group(1)}/"

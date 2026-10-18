@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import BarcodeLookupPanel from '@/components/collection/BarcodeLookupPanel'
 import CopyForm, { EMPTY_COPY } from '@/components/collection/CopyForm'
 import DuplicatePrompt from '@/components/collection/DuplicatePrompt'
+import MaybeOwnedNotice from '@/components/collection/MaybeOwnedNotice'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/ui/page-header'
@@ -90,6 +91,8 @@ export default function AddToCollectionPage() {
   const [film, setFilm] = useState<ChosenFilm | null>(null)
   const [fields, setFields] = useState<CollectionItemFields>(EMPTY_COPY)
   const [duplicate, setDuplicate] = useState<DuplicateCheck | null>(null)
+  // Batch X10: an unidentified owned film this may be. A warning, never a reason to refuse.
+  const [maybeOwned, setMaybeOwned] = useState<DuplicateCheck['maybeOwned']>(null)
 
   const searchQuery = useQuery({
     queryKey: ['tmdb-search', submitted],
@@ -104,14 +107,22 @@ export default function AddToCollectionPage() {
     return { tmdbId: chosen.tmdbId ?? 0 }
   }
 
-  async function chooseFilm(chosen: ChosenFilm) {
+  async function chooseFilm(chosen: ChosenFilm, barcode: string | null = scannedBarcode) {
     setFilm(chosen)
     setDuplicate(null)
+    setMaybeOwned(null)
     // §3.1 wants the warning *before* saving, so ask as soon as the film is known
     // rather than letting the save be rejected. The POST enforces it independently.
+    // Batch X10 (#280): the barcode and the title go too, so a box already on a shelf and an
+    // unidentified twin are named, neither of which the film's id can see.
     try {
-      const check = await checkDuplicate(filmRef(chosen), fields.formats)
+      const check = await checkDuplicate(filmRef(chosen), fields.formats, {
+        barcode,
+        title: chosen.title,
+        year: chosen.year,
+      })
       if (check.isDuplicate) setDuplicate(check)
+      setMaybeOwned(check.maybeOwned)
     } catch {
       // A failed preflight must not block the add — the server-side 409 still holds.
     }
@@ -119,7 +130,8 @@ export default function AddToCollectionPage() {
 
   async function chooseBarcode(candidate: BarcodeCandidate, barcode: string) {
     setScannedBarcode(barcode)
-    await chooseFilm(chosenFromBarcode(candidate))
+    // The state above is not read until the next render, so the barcode is passed.
+    await chooseFilm(chosenFromBarcode(candidate), barcode)
   }
 
   const manualChoice = useMutation({
@@ -134,7 +146,7 @@ export default function AddToCollectionPage() {
       })
       return chosen
     },
-    onSuccess: (chosen) => void chooseFilm(chosen),
+    onSuccess: (chosen, { barcode }) => void chooseFilm(chosen, barcode),
   })
 
   function chooseTitle(result: TmdbSearchResult) {
@@ -401,6 +413,8 @@ export default function AddToCollectionPage() {
 
       {film && (
         <>
+          {maybeOwned && <MaybeOwnedNotice film={maybeOwned} />}
+
           {duplicate && (
             <DuplicatePrompt
               duplicate={duplicate}

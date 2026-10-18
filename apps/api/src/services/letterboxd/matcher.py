@@ -21,50 +21,21 @@ are shared; the decision is not.
    Measured across 2,047 distinct films, exactly **6 entries** are ambiguous —
    `Death on the Nile` and `Murder on the Orient Express`, both with several adaptations.
 
-Normalisation covers what the real rows actually contain: trailing articles
-(`'Collector, The'`), bracketed years (`'Death on the Nile [1978]'`), `&` against `and`,
-and case. Those are not hypothetical — they are rows in this database.
+Titles are keyed by the title-key module's catalogue level (`Strictness.TITLE`, Batch X10,
+#280), which covers what the real rows actually contain: trailing articles (`'Collector,
+The'`), bracketed years (`'Death on the Nile [1978]'`), `&` against `and`, accents and case.
+The leading article is dropped, so `'The Collector'` and `'Collector'` are one key: a rare
+collision between two films is offered for confirmation rather than guessed.
 """
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from src.matching.engine import rotate_trailing_article, strip_annotations
 from src.models.movie import Movie
 from src.services.letterboxd.diary import DiaryEntry
-
-_AMPERSAND_RE = re.compile(r"\s*&\s*")
-_PUNCT_RE = re.compile(r"[^\w\s]")
-_WHITESPACE_RE = re.compile(r"\s+")
-_LEADING_ARTICLE_RE = re.compile(r"^(?:the|a|an)\s+", re.IGNORECASE)
-
-
-def normalise_title(raw: str) -> str:
-    """Reduce a title to the form two spellings of the same film share.
-
-    Order matters. Bracketed annotations go first so ``'Death on the Nile [1978]'`` loses
-    its year before anything else looks at the string; the trailing article is rotated
-    while the comma is still there to find it by; ``&`` becomes ``and`` *before* punctuation
-    is stripped, or the two spellings diverge into ``fast furious`` and ``fast and furious``.
-
-    The leading article goes last and unconditionally, which makes ``'The Collector'``,
-    ``'Collector, The'`` and ``'Collector'`` one key. That is deliberately aggressive: the
-    cost is a rare collision between two genuinely different films, and **a collision is
-    offered for confirmation rather than guessed**, so the aggressive version loses nothing
-    that the confirmation step does not already catch.
-    """
-    text = unicodedata.normalize("NFKD", raw)
-    text = "".join(ch for ch in text if not unicodedata.combining(ch))
-    text = strip_annotations(text)
-    text = rotate_trailing_article(text.strip())
-    text = _AMPERSAND_RE.sub(" and ", text)
-    text = _PUNCT_RE.sub(" ", text.lower())
-    text = _WHITESPACE_RE.sub(" ", text).strip()
-    return _LEADING_ARTICLE_RE.sub("", text).strip()
+from src.services.title_key import Strictness, title_key
 
 
 @dataclass(frozen=True)
@@ -105,7 +76,7 @@ def build_index(movies: list[Movie]) -> CollectionIndex:
         if movie.tmdb_id is not None:
             index.by_tmdb_id[movie.tmdb_id] = movie
         for spelling in {movie.title, movie.original_title or movie.title}:
-            key = normalise_title(spelling)
+            key = title_key(spelling, Strictness.TITLE)
             if key and movie not in index.by_title[key]:
                 index.by_title[key].append(movie)
     return index
@@ -171,7 +142,7 @@ def match_entry(entry: DiaryEntry, index: CollectionIndex) -> MatchOutcome:
 
     candidates = [
         movie
-        for movie in index.by_title.get(normalise_title(entry.title), [])
+        for movie in index.by_title.get(title_key(entry.title, Strictness.TITLE), [])
         if not year_excludes(entry.year, movie.year)
     ]
     if not candidates:

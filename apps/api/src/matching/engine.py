@@ -1,7 +1,16 @@
 from __future__ import annotations
 
-import re
 from difflib import SequenceMatcher
+
+from src.services.title_key import (
+    Strictness,
+    extract_year,
+    normalise_query,
+    rotate_trailing_article,
+    strip_annotations,
+    strip_edition_suffix,
+    title_key,
+)
 
 from ..tmdb.client import TMDBClient
 from ..tmdb.models import SearchResult
@@ -17,79 +26,20 @@ LOW_CONFIDENCE = 0.6
 #: genuinely different films beyond it, which makes the match ambiguous.
 AMBIGUOUS_YEAR_SPREAD = 3
 
-_YEAR_RE = re.compile(r"\s*\((\d{4})\)\s*$")
-_APOS_RE = re.compile(r"[\u2019']")  # straight + curly apostrophe
-_PUNCT_RE = re.compile(r"[^\w\s]")
-_WHITESPACE_RE = re.compile(r"\s+")
-_BRACKET_RE = re.compile(r"\s*[\[(][^\[\]()]*[\])]\s*")
-_TRAILING_ARTICLE_RE = re.compile(r"^(.+?),?\s+(the|a|an)\s*$", re.IGNORECASE)
-
-# Trailing edition / cut markers that are not part of the canonical TMDB title.
-_EDITION_SUFFIXES = [
-    r"director'?s cut",
-    r"the final cut",
-    r"final cut",
-    r"extended edition",
-    r"extended cut",
-    r"extended",
-    r"special edition",
-    r"theatrical cut",
-    r"unrated(?: edition| cut)?",
-    r"uncut",
-    r"remastered",
-    r"anniversary edition",
+# Batch X10 (#280): the title helpers live in the one title-key module, `title_key.py`, and
+# are re-exported here for the evaluation script and `src.matching`'s callers.
+__all__ = [
+    "extract_year",
+    "normalise_query",
+    "rotate_trailing_article",
+    "strip_annotations",
+    "strip_edition_suffix",
 ]
-_EDITION_RE = re.compile(
-    r"(?:\s*[:\-\u2013]\s*|\s+)(?:" + "|".join(_EDITION_SUFFIXES) + r")\s*$",
-    re.IGNORECASE,
-)
-
-
-def extract_year(title: str) -> tuple[str, int | None]:
-    """Strip a trailing ``(YYYY)`` from the title and return (clean_title, year)."""
-    stripped = title.strip()
-    m = _YEAR_RE.search(stripped)
-    if not m:
-        return stripped, None
-    cleaned = _YEAR_RE.sub("", stripped).rstrip()
-    return cleaned, int(m.group(1))
-
-
-def strip_annotations(title: str) -> str:
-    """Remove ``[...]`` and ``(...)`` annotations such as edition or box-set tags."""
-    cleaned = _BRACKET_RE.sub(" ", title)
-    return _WHITESPACE_RE.sub(" ", cleaned).strip()
-
-
-def rotate_trailing_article(title: str) -> str:
-    """Rewrite library-card titles like 'Eiger Sanction, The' as 'The Eiger Sanction'."""
-    m = _TRAILING_ARTICLE_RE.match(title)
-    if not m:
-        return title
-    body = m.group(1).rstrip(",").strip()
-    article = m.group(2).capitalize()
-    return f"{article} {body}"
-
-
-def strip_edition_suffix(title: str) -> str:
-    """Drop trailing edition / cut markers (e.g. 'The Final Cut', 'Director's Cut')."""
-    return _EDITION_RE.sub("", title).strip()
-
-
-def normalise_query(raw_title: str) -> tuple[str, int | None]:
-    """Apply year extraction, annotation stripping, edition stripping, and article rotation."""
-    cleaned, year = extract_year(raw_title)
-    cleaned = strip_annotations(cleaned)
-    cleaned = strip_edition_suffix(cleaned)
-    cleaned = rotate_trailing_article(cleaned)
-    return cleaned, year
 
 
 def _canonicalise(title: str) -> str:
-    # Drop apostrophes outright so "Lampoon's" canonicalises identically to "Lampoons".
-    no_apos = _APOS_RE.sub("", title.lower())
-    no_punct = _PUNCT_RE.sub(" ", no_apos)
-    return _WHITESPACE_RE.sub(" ", no_punct).strip()
+    """The retired engine's comparison form: the title-key module's words (#280)."""
+    return title_key(title, Strictness.WORDS)
 
 
 def searchable_title(title: str, *, identified: bool) -> str:
@@ -104,18 +54,6 @@ def searchable_title(title: str, *, identified: bool) -> str:
         return title
     cleaned, _year = normalise_query(title)
     return cleaned or title
-
-
-def canonical_title(raw_title: str) -> tuple[str, int | None]:
-    """A title reduced to what two spellings of one film share, and any year it carried.
-
-    ``'Mummy, The (Brendan Fraser)'`` and ``'The Mummy'`` both come back as ``'the mummy'``:
-    the library-card article is rotated, the annotation dropped, punctuation and case
-    folded. Batch T2 uses it to notice that a TMDB result may be an owned film that has not
-    been identified yet.
-    """
-    cleaned, year = normalise_query(raw_title)
-    return _canonicalise(cleaned), year
 
 
 def title_similarity(a: str, b: str) -> float:

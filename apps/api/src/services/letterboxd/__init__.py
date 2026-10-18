@@ -26,7 +26,6 @@ from src.services.letterboxd.matcher import (
     MatchOutcome,
     build_index,
     match_entry,
-    normalise_title,
 )
 from src.services.letterboxd.sync import (
     SyncNotConfigured,
@@ -46,7 +45,6 @@ __all__ = [
     "MatchOutcome",
     "build_index",
     "match_entry",
-    "normalise_title",
     "fetch_feed",
     "feed_url",
     "last_sync",

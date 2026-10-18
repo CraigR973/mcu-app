@@ -20,11 +20,12 @@ reordered; only a tier-1 match can ever be taken without asking Craig.
 from __future__ import annotations
 
 import re
-import unicodedata
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
-from src.matching.engine import rotate_trailing_article
+from src.services.title_key import ARTICLES, rotate_trailing_article
+from src.services.title_key import bare as bare
+from src.services.title_key import fold as fold
 
 #: Years a film can have. A four-digit number outside them is part of the title, as in
 #: "Blade Runner 2049".
@@ -42,96 +43,9 @@ STRONG = ("exact", "words", "typo")
 # Folding: the form two spellings of one title share
 # ---------------------------------------------------------------------------
 
-_NUMBER_WORDS = {
-    "one": "1",
-    "two": "2",
-    "three": "3",
-    "four": "4",
-    "five": "5",
-    "six": "6",
-    "seven": "7",
-    "eight": "8",
-    "nine": "9",
-    "ten": "10",
-    "eleven": "11",
-    "twelve": "12",
-    "thirteen": "13",
-    "fourteen": "14",
-    "fifteen": "15",
-    "sixteen": "16",
-    "seventeen": "17",
-    "eighteen": "18",
-    "nineteen": "19",
-    "twenty": "20",
-}
-_ROMAN = {
-    "i": "1",
-    "ii": "2",
-    "iii": "3",
-    "iv": "4",
-    "v": "5",
-    "vi": "6",
-    "vii": "7",
-    "viii": "8",
-    "ix": "9",
-    "x": "10",
-}
-#: Words after which a roman numeral is a number. Elsewhere "I" is a pronoun.
-_NUMBERED_BY = {"part", "episode", "chapter", "volume", "vol"}
-_ARTICLES = {"the", "a", "an"}
-_CONJUNCTIONS = {"&": " and ", "+": " and "}
-
-
-def fold(title: str) -> str:
-    """Reduce a title to the form two spellings of one title share.
-
-    Accents go ("Léon"), and so do apostrophes ("Lampoon's"), full stops ("U.S.", "Dr.") and
-    other punctuation. "&", "+", "v" and "vs" read as "and", so "Cowboys v Aliens" meets
-    "Cowboys & Aliens", and "Vol." reads as "Volume". Numbers are written as digits, so "Dune
-    2" meets "Dune: Part Two" and "Star Wars Ep IV" meets "Star Wars: Episode IV": number
-    words always, roman numerals after "Part", "Episode", "Ep" or "Vol", and a trailing "Part"
-    or "Ep" is dropped before them.
-    Both sides of every comparison are folded the same way, so none of this can make two
-    different titles equal unless they differ only in these ways.
-    """
-    text = unicodedata.normalize("NFKD", title)
-    text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
-    for symbol, word in _CONJUNCTIONS.items():
-        text = text.replace(symbol, word)
-    text = re.sub(r"[’'`\.]", "", text)
-    text = re.sub(r"[^\w\s]", " ", text).replace("_", " ")
-    words = text.split()
-    out: list[str] = []
-    for index, word in enumerate(words):
-        before = words[index - 1] if index else ""
-        if word in ("v", "vs", "versus") and 0 < index < len(words) - 1:
-            out.append("and")
-        elif word == "ep":
-            out.append("episode")
-        elif word == "vol":
-            # Batch X9 (CT46-05): Blu-ray.com's "Kill Bill: Vol. 1" is TMDB's "Volume 1".
-            out.append("volume")
-        elif word in _NUMBER_WORDS:
-            out.append(_NUMBER_WORDS[word])
-        elif word in _ROMAN and (
-            (index and (before in _NUMBERED_BY or before == "ep"))
-            or (index == len(words) - 1 and len(word) > 1)
-        ):
-            out.append(_ROMAN[word])
-        else:
-            out.append(word)
-    # "Part 2" and "2" are the same instalment; "Episode 4" keeps its word, because TMDB
-    # always writes it out.
-    joined = " ".join(out)
-    return re.sub(r"\bpart (\d+)\b", r"\1", joined)
-
-
-def bare(folded: str) -> str:
-    """A folded title without its leading article: "the sorcerer" and "sorcerer" meet."""
-    words = folded.split()
-    if len(words) > 1 and words[0] in _ARTICLES:
-        return " ".join(words[1:])
-    return folded
+# Batch X10 (#280): `fold` and `bare` live in the one title-key module, unchanged, so every
+# feature that asks "is this the same title?" folds the way identification does.
+_ARTICLES = ARTICLES
 
 
 def numbers(folded: str) -> tuple[str, ...]:

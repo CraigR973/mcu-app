@@ -1,4 +1,5 @@
-import { AlertTriangle, ArrowUpCircle } from 'lucide-react'
+import { AlertTriangle, ArrowUpCircle, ScanBarcode } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import { formatLabel, type DuplicateCheck, type DuplicateReason } from '@/lib/api'
 
@@ -18,6 +19,8 @@ interface Props {
  */
 export default function DuplicatePrompt({ duplicate, onConfirm, onCancel, pending }: Props) {
   const owned = formatLabel(duplicate.bestFormatOwned)
+  const copies = duplicate.existingCopies.length
+  const boxed = duplicate.barcodeCopy
 
   return (
     <section
@@ -34,13 +37,15 @@ export default function DuplicatePrompt({ duplicate, onConfirm, onCancel, pendin
           <h3 className="text-sm font-semibold text-foreground">
             {duplicate.isUpgrade
               ? `You already own this on ${owned}`
-              : 'This film is already in the collection'}
+              : copies > 0
+                ? 'This film is already in the collection'
+                : 'This barcode is already in the collection'}
           </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {duplicate.existingCopies.length === 1
-              ? 'One copy is already on a shelf.'
-              : `${duplicate.existingCopies.length} copies are already on a shelf.`}
-          </p>
+          {copies > 0 && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {copies === 1 ? 'One copy is already on a shelf.' : `${copies} copies are already on a shelf.`}
+            </p>
+          )}
         </div>
       </div>
 
@@ -57,6 +62,23 @@ export default function DuplicatePrompt({ duplicate, onConfirm, onCancel, pendin
           </li>
         ))}
       </ul>
+
+      {boxed && (
+        // Batch X10 (#280): two copies of 12 Angry Men went in under one barcode on 10 Oct.
+        // A box holding a 4K and a Blu-ray is one copy (#101), so say which copy has it.
+        <div className="flex items-start gap-2 rounded-lg bg-background/70 px-3 py-2 text-xs">
+          <ScanBarcode className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+          <p className="min-w-0 flex-1 text-foreground">
+            This barcode is already on the{' '}
+            <span className="font-medium">{boxed.formats.map((format) => formatLabel(format)).join(' + ')}</span>{' '}
+            copy of “{boxed.movieTitle}” ({boxed.locationLabel}). A box holding two formats is one copy: add
+            the format to that copy rather than adding another.{' '}
+            <Link to={`/movies/${boxed.movieId}`} className="font-medium text-primary underline-offset-2 hover:underline">
+              Open that copy
+            </Link>
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 pt-1">
         {duplicate.isUpgrade && (

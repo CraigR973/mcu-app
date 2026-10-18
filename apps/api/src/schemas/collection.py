@@ -240,6 +240,30 @@ class ExistingCopyResponse(BaseModel):
     condition: str | None = None
 
 
+class BarcodeCopyResponse(BaseModel):
+    """The owned copy a barcode is already on — Batch X10 (CT46-04, #280).
+
+    On 10 Oct two copies of *12 Angry Men* were added under one barcode, a 4K and a Blu-ray,
+    each through the prompt as "another copy", where #101 makes a box holding both one copy.
+    """
+
+    id: uuid.UUID
+    movieId: uuid.UUID
+    movieTitle: str
+    formats: list[str]
+    locationLabel: str
+
+
+class MaybeOwnedFilmResponse(BaseModel):
+    """An owned film with no TMDB id yet whose title reads as this one — Batch X10.
+
+    Search's "Might be your copy of …" (T2), asked by the add form too.
+    """
+
+    movieId: uuid.UUID
+    title: str
+
+
 class DuplicateCheckResponse(BaseModel):
     """Whether this film is already on a shelf, and what the prompt should offer.
 
@@ -257,6 +281,11 @@ class DuplicateCheckResponse(BaseModel):
     isUpgrade: bool = False
     #: The best format already owned, so the prompt can say "you own this on Blu-ray".
     bestFormatOwned: str | None = None
+    #: Batch X10: the owned copy this disc's barcode is already on. It makes the add a
+    #: duplicate even when that copy is another film's.
+    barcodeCopy: BarcodeCopyResponse | None = None
+    #: Batch X10: an unidentified owned film this may be. A warning, never a refusal.
+    maybeOwned: MaybeOwnedFilmResponse | None = None
 
 
 class TmdbSearchResultResponse(BaseModel):

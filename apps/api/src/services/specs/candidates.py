@@ -27,10 +27,10 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from src.matching.engine import canonical_title
 from src.services.identify.titles import compare
 from src.services.specs.bluray_com import canonical_release_url, is_release_url
 from src.services.specs.search import SearchHit
+from src.services.title_key import Strictness, normalise_query, same_title, title_key
 
 #: How a Blu-ray.com title names the product, longest first so "4K/3D Blu-ray" is never
 #: read as "3D Blu-ray" or "Blu-ray".
@@ -212,34 +212,22 @@ def parse_release_title(raw: str) -> ReleaseTitle:
     return ReleaseTitle(name=name, format_label=format_label, country=country, editions=editions)
 
 
-_LEADING_ARTICLE = re.compile(r"^(the|a|an)\s+")
-
-
-def _film_key(title: str) -> str:
-    """A title reduced as identification reduces it, with "&" read as "and" and any leading
-    article dropped: TMDB's "Angels & Demons" is Blu-ray.com's "Angels and Demons", and
-    "Bride of Frankenstein" is "The Bride of Frankenstein". The year check after the fetch
-    is what stops "The Thing" standing in for "Thing"."""
-    canonical, _ = canonical_title(title.replace("&", " and "))
-    return _LEADING_ARTICLE.sub("", canonical)
-
-
 def same_film(page_name: str, film_title: str) -> bool:
-    """Equal once both are reduced the way identification reduces titles.
+    """Whether a release page names this film: one catalogue title by the title-key module.
 
-    Batch X9 (CT46-05): by T9's title rule too, which reads numerals and "Vol." as the film's
-    own title writes them. Spelling alone kept three copies' plain UK releases out of their
-    searches: "Kill Bill: Volume 1" against "Vol. 1", "Mission: Impossible 2" against "II".
-    Only an exact match counts: a typo-close title is another film here ("Alien", "Aliens").
+    TMDB's "Angels & Demons" is Blu-ray.com's "Angels and Demons", "Bride of Frankenstein" is
+    "The Bride of Frankenstein", "Kill Bill: Volume 1" is "Vol. 1" and "Mission: Impossible
+    2" is "II" (Batch X9, CT46-05). Since Batch X10 (#280) the key is the shared
+    ``Strictness.TITLE``, so the "&" patch this check carried is gone. T9's ``compare`` adds
+    its exact match on top, which reads a first "Part 1" as the film itself. Only an exact
+    match counts: a typo-close title is another film here ("Alien", "Aliens"). The year check
+    after the fetch is what stops "The Thing" standing in for "Thing".
     """
-    page = _film_key(page_name)
-    if not page:
-        return False
-    if page == _film_key(film_title):
-        return True
-    ours, _ = canonical_title(film_title)
-    theirs, _ = canonical_title(page_name)
-    return compare(ours, theirs).how == "exact"
+    if not same_title(page_name, film_title, Strictness.TITLE):
+        ours, _ = normalise_query(film_title)
+        theirs, _ = normalise_query(page_name)
+        return bool(title_key(page_name, Strictness.TITLE)) and compare(ours, theirs).how == "exact"
+    return True
 
 
 @dataclass(frozen=True)

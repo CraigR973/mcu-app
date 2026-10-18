@@ -85,7 +85,10 @@ describe('AddToCollectionPage — Batch Y5', () => {
     expect(within(series).getAllByText('TV series')).toHaveLength(2)
     fireEvent.click(within(series).getByRole('button', { name: /2009/ }))
 
-    await waitFor(() => expect(duplicateMock).toHaveBeenCalledWith({ tmdbTvId: 16946 }, ['blu_ray']))
+    // Batch X10: the check also carries the barcode and the title as shown (#280).
+    await waitFor(() =>
+      expect(duplicateMock).toHaveBeenCalledWith({ tmdbTvId: 16946 }, ['blu_ray'], { barcode: null, title: 'Life', year: 2009 }),
+    )
     addAsBluRay('Life')
     await waitFor(() => expect(addMock).toHaveBeenCalled())
     const body = addMock.mock.calls[0]?.[0] as Record<string, unknown>
@@ -102,7 +105,13 @@ describe('AddToCollectionPage — Batch Y5', () => {
 
     expect(await screen.findByText('No films or series matched “A Day in the Life”.')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Add “A Day in the Life” by its title' }))
-    await waitFor(() => expect(duplicateMock).toHaveBeenCalledWith({ title: 'A Day in the Life' }, ['blu_ray']))
+    await waitFor(() =>
+      expect(duplicateMock).toHaveBeenCalledWith({ title: 'A Day in the Life' }, ['blu_ray'], {
+        barcode: null,
+        title: 'A Day in the Life',
+        year: null,
+      }),
+    )
     addAsBluRay('A Day in the Life')
 
     await waitFor(() => expect(addMock).toHaveBeenCalled())
@@ -139,5 +148,53 @@ describe('AddToCollectionPage — Batch Y5', () => {
 
     expect(await screen.findByRole('list', { name: 'Films found' })).toBeTruthy()
     expect(screen.queryByRole('list', { name: 'TV series found' })).toBeNull()
+  })
+})
+
+describe('AddToCollectionPage — Batch X10', () => {
+  it('asks the duplicate check with the scanned barcode, after a manual pick', async () => {
+    confirmMock.mockResolvedValue({})
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Simulate manual fallback' }))
+    search('Life')
+
+    const films = await screen.findByRole('list', { name: 'Films found' })
+    // The list is there before the answer is: wait for the film itself.
+    fireEvent.click(await within(films).findByRole('button', { name: /2017/ }))
+
+    await waitFor(() =>
+      expect(duplicateMock).toHaveBeenCalledWith({ tmdbId: 395992 }, ['blu_ray'], {
+        barcode: BARCODE,
+        title: 'Life',
+        year: 2017,
+      }),
+    )
+  })
+
+  it('says "you may already own this" for an unidentified twin, and still adds', async () => {
+    duplicateMock.mockResolvedValue({
+      isDuplicate: false,
+      existingCopies: [],
+      isUpgrade: false,
+      bestFormatOwned: null,
+      barcodeCopy: null,
+      maybeOwned: { movieId: MOVIE, title: 'Life, The' },
+    })
+    renderPage()
+    fireEvent.click(screen.getByRole('tab', { name: 'Search title' }))
+    search('Life')
+
+    const films = await screen.findByRole('list', { name: 'Films found' })
+    // The list is there before the answer is: wait for the film itself.
+    fireEvent.click(await within(films).findByRole('button', { name: /2017/ }))
+
+    const notice = await screen.findByRole('status')
+    expect(notice.textContent).toContain('You may already own this')
+    expect(within(notice).getByRole('link', { name: 'Open it' }).getAttribute('href')).toBe(`/movies/${MOVIE}`)
+    // A warning, not the duplicate prompt: the add goes without a confirmation.
+    expect(screen.queryByText('Add another copy')).toBeNull()
+    addAsBluRay('Life')
+    await waitFor(() => expect(addMock).toHaveBeenCalled())
+    expect((addMock.mock.calls[0]?.[0] as Record<string, unknown>).confirmDuplicate).toBeUndefined()
   })
 })

@@ -360,6 +360,22 @@ describe('write surface', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('format=4k_uhd&format=download')
   })
 
+  it('sends the barcode and the title as shown, for what the film id cannot see (X10)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(duplicate)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await checkDuplicate({ tmdbId: 11336 }, ['blu_ray'], {
+      barcode: '5051892000017',
+      title: 'Invasion of the Body Snatchers',
+      year: 1978,
+    })
+
+    const url = String(fetchMock.mock.calls[0][0])
+    expect(url).toContain('barcode=5051892000017')
+    expect(url).toContain('filmTitle=Invasion+of+the+Body+Snatchers')
+    expect(url).toContain('filmYear=1978')
+  })
+
   it('sends the whole editable field set on an edit', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(writtenItem)))
     vi.stubGlobal('fetch', fetchMock)

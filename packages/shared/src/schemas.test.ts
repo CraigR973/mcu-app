@@ -513,6 +513,30 @@ describe('duplicateCheckSchema', () => {
       bestFormatOwned: null,
     })
     expect(parsed.isDuplicate).toBe(false)
+    // An API from before X10 sends neither field.
+    expect(parsed.barcodeCopy).toBeNull()
+    expect(parsed.maybeOwned).toBeNull()
+  })
+
+  it("parses X10's barcode copy and unidentified twin", () => {
+    const parsed = duplicateCheckSchema.parse({
+      movieId: null,
+      movieTitle: null,
+      isDuplicate: true,
+      existingCopies: [],
+      isUpgrade: false,
+      bestFormatOwned: null,
+      barcodeCopy: {
+        id: '3f2504e0-4f89-11d3-9a0c-0305e82c3303',
+        movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3302',
+        movieTitle: '12 Angry Men',
+        formats: ['4k_uhd'],
+        locationLabel: 'Front 4th',
+      },
+      maybeOwned: { movieId: '3f2504e0-4f89-11d3-9a0c-0305e82c3304', title: 'Invasion of the Body Snatchers' },
+    })
+    expect(parsed.barcodeCopy?.locationLabel).toBe('Front 4th')
+    expect(parsed.maybeOwned?.title).toBe('Invasion of the Body Snatchers')
   })
 })
 

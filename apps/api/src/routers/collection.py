@@ -45,6 +45,7 @@ from src.schemas.collection import (
     FILM_REFERENCE_ERROR,
     AuditEntryResponse,
     AuditPageResponse,
+    BarcodeCopyResponse,
     CollectionItemCreateRequest,
     CollectionItemFieldsMixin,
     CollectionItemResponse,
@@ -56,6 +57,7 @@ from src.schemas.collection import (
     EditionSource,
     ExistingCopyResponse,
     ListingUpdateRequest,
+    MaybeOwnedFilmResponse,
     TmdbSearchResponse,
     TmdbSearchResultResponse,
     TrashItemResponse,
@@ -66,6 +68,7 @@ from src.services.barcode import check_digit_valid, normalise
 from src.services.film_rows import held_row, make_row
 from src.services.identification import IdentifyError, set_aside
 from src.services.identify.matcher import find_series
+from src.services.lookalike import lookalike, unidentified_owned
 from src.services.movie_metadata import parse_year
 from src.spreadsheet.parser import parse_location
 from src.tmdb.client import TMDBRefused
@@ -244,26 +247,80 @@ async def _live_copies(db: AsyncSession, movie_id: uuid.UUID) -> Sequence[Collec
     )
 
 
+async def _barcode_copy(db: AsyncSession, barcode: str) -> BarcodeCopyResponse | None:
+    """The owned copy already carrying this barcode, oldest first — Batch X10."""
+    row = (
+        await db.execute(
+            select(CollectionItem, Movie.title)
+            .join(Movie, Movie.id == CollectionItem.movie_id)
+            .where(CollectionItem.barcode == barcode, owned_copy())
+            .order_by(CollectionItem.created_at, CollectionItem.id)
+            .limit(1)
+        )
+    ).first()
+    if row is None:
+        return None
+    copy, title = row
+    return BarcodeCopyResponse(
+        id=copy.id,
+        movieId=copy.movie_id,
+        movieTitle=title,
+        formats=copy.formats,
+        locationLabel=location_label(copy.section, copy.shelf),
+    )
+
+
+async def _maybe_owned(
+    db: AsyncSession, title: str, year: int | None, *, besides: uuid.UUID | None
+) -> MaybeOwnedFilmResponse | None:
+    """Search's lookalike check, for the add form — Batch X10 (CT46-04): an unidentified
+    owned film whose title is this one's by the shared catalogue key, with no other year."""
+    films = [film for film in await unidentified_owned(db) if film.movie_id != besides]
+    found = lookalike(films, title, year)
+    if found is None:
+        return None
+    return MaybeOwnedFilmResponse(movieId=found.movie_id, title=found.title)
+
+
 async def _duplicate_state(
     db: AsyncSession,
-    movie: Movie,
+    movie: Movie | None,
     incoming_formats: Sequence[str],
+    *,
+    barcode: str | None = None,
+    film_title: str | None = None,
+    film_year: int | None = None,
+    ask_maybe_owned: bool = False,
 ) -> DuplicateCheckResponse:
     """Whether this film is already on a shelf, and whether this disc beats what is there.
 
     §3.5's acceptance is *"adding a 4K when Blu-ray exists triggers the upgrade prompt"*,
     so the ranking decision is made here rather than in the web app — the same
     :data:`FORMAT_RANK` order the ``best_format_owned`` trigger enforces, read once.
+
+    Batch X10 (#280) adds two things the film's id cannot see. A barcode already on an owned
+    copy makes the add a duplicate, whichever film that copy is. And an unidentified owned
+    film with this title is named as one the disc may be, which never makes it a duplicate.
     """
-    copies = await _live_copies(db, movie.id)
+    copies = await _live_copies(db, movie.id) if movie is not None else []
     owned = [code for copy in copies for code in copy.formats]
     owned_rank = _best_rank(owned)
     incoming_rank = _best_rank(incoming_formats)
+    barcode_copy = await _barcode_copy(db, barcode) if barcode else None
+    title = film_title or (movie.title if movie is not None else None)
+    year = film_year if film_year is not None else (movie.year if movie is not None else None)
+    maybe_owned = (
+        await _maybe_owned(db, title, year, besides=movie.id if movie is not None else None)
+        if ask_maybe_owned and title
+        else None
+    )
 
     return DuplicateCheckResponse(
-        movieId=movie.id,
-        movieTitle=movie.title,
-        isDuplicate=bool(copies),
+        movieId=movie.id if movie is not None else None,
+        movieTitle=movie.title if movie is not None else None,
+        isDuplicate=bool(copies) or barcode_copy is not None,
+        barcodeCopy=barcode_copy,
+        maybeOwned=maybe_owned,
         existingCopies=[
             ExistingCopyResponse(
                 id=copy.id,
@@ -387,12 +444,21 @@ async def check_duplicate(
     tmdb_tv_id: Annotated[int | None, Query(alias="tmdbTvId", gt=0)] = None,
     title: Annotated[str | None, Query(min_length=1, max_length=500)] = None,
     formats: Annotated[list[str] | None, Query(alias="format")] = None,
+    # Batch X10 (#280): the disc's barcode, and the chosen film's title and year as the add
+    # form shows them, for a film the catalogue does not hold by its id.
+    barcode: Annotated[str | None, Query(min_length=1, max_length=32)] = None,
+    film_title: Annotated[
+        str | None, Query(alias="filmTitle", min_length=1, max_length=500)
+    ] = None,
+    film_year: Annotated[int | None, Query(alias="filmYear", ge=1800, le=2100)] = None,
 ) -> DuplicateCheckResponse:
     """The warning §3.1 wants *before* saving.
 
     A read, so the add form can ask as soon as a film is chosen rather than discovering
     the clash by being rejected. ``POST /collection`` enforces the same rule
-    independently — this endpoint is the courtesy, not the guard.
+    independently — this endpoint is the courtesy, not the guard. The one exception is
+    ``maybeOwned``: an unidentified film that may be this one is a question for the person,
+    so only this check asks it.
     """
     named = " ".join(title.split()) if title is not None else None
     if sum(ref is not None for ref in (movie_id, tmdb_id, tmdb_tv_id, named or None)) != 1:
@@ -410,12 +476,21 @@ async def check_duplicate(
     else:
         movie = await _held_title(db, named or "")
 
-    if movie is None or movie.deleted_at is not None:
-        # Not an error: "we have never heard of this film" is the answer the add form
-        # needs most of the time, and it is not a duplicate.
-        return DuplicateCheckResponse(isDuplicate=False)
-
-    return await _duplicate_state(db, movie, formats or [])
+    if movie is not None and movie.deleted_at is not None:
+        movie = None
+    # "We have never heard of this film" is not an error, and not a duplicate by itself: it
+    # is the answer the add form needs most of the time. The barcode and the title may
+    # still say something its id cannot.
+    scanned = normalise(barcode) if barcode is not None else None
+    return await _duplicate_state(
+        db,
+        movie,
+        formats or [],
+        barcode=scanned if scanned and check_digit_valid(scanned) else None,
+        film_title=film_title,
+        film_year=film_year,
+        ask_maybe_owned=True,
+    )
 
 
 @router.post(
@@ -462,7 +537,9 @@ async def add_collection_item(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=FILM_REFERENCE_ERROR
         )
 
-    duplicate = await _duplicate_state(db, movie, payload.formats)
+    # Batch X10: a barcode already on an owned copy is refused unconfirmed, as the same film
+    # is; the title lookalike is the check's question alone, so it is not asked here.
+    duplicate = await _duplicate_state(db, movie, payload.formats, barcode=barcode)
     if duplicate.isDuplicate and payload.confirmDuplicate is None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
