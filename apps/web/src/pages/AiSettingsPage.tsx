@@ -16,7 +16,7 @@ import {
   updateAiSettings,
 } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 /**
  * §9.7's caps, and the one-question box that proves §9.1 works.
@@ -179,7 +179,7 @@ export function AiSettings() {
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               {usage.data.limitMessage ??
-                `Resets at ${new Date(usage.data.resetsAt).toLocaleTimeString()}.`}
+                `Resets at ${formatDateTime(usage.data.resetsAt)}.`}
             </p>
           </>
         ) : usage.isError ? (

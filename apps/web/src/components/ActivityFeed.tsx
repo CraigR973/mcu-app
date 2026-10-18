@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { formatDate } from '@/lib/utils'
 import { Eye, Pencil, Plus, RotateCcw, Trash2, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { ActivityEvent, ActivityKind } from '@mcu/shared'
@@ -48,7 +49,7 @@ function Row({ event }: { event: ActivityEvent }) {
         )}
       </p>
       <time className="shrink-0 text-[11px] text-muted-foreground" dateTime={event.at}>
-        {new Date(event.at).toLocaleDateString()}
+        {formatDate(event.at)}
       </time>
     </li>
   )

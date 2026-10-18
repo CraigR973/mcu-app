@@ -3927,6 +3927,45 @@ added), typecheck and build. OpenAPI snapshot regenerated.
 - A "Tell Craig" line on Mark's You page lands in X2's attention row.
 - Tests. Gate green.
 
+**Re-measured 18 Oct, read-only against live and the code (nothing built; waits for Craig's
+go on the split below).** What holds, what has moved, what has gone:
+- *Gone:* `AGENTS.md`'s stale summaries and `docs/agent-commands/README.md`'s "never automatic"
+  (CR43-08's first half): both already read correctly. The API's "Films" count already counts
+  films with an owned copy (X5, #269); only the labels remain.
+- *Moved:* live counts are 1,923 copies (1,335 discs, 588 downloads) over 1,899 films with a
+  copy, not 1,889 / 1,466 / 422 / 1,869. "Digital" is 588 in Formats (copies carrying the
+  download format) and 454 in Where they live (copies kept in the Digital section).
+  Criterion 1 is written as "copies N: discs, downloads" with the live numbers, not those of
+  11 Oct.
+- *Holds:* no JSON compression; 80 date-formatting sites across the web (several forms); 18
+  `text-[9-11px]` sites; no TMDB logo or "not endorsed" notice and no JustWatch credit; root
+  `/migrations/001_profiles.sql` exists and nothing reads it; `*.xlsx` is not ignored (the two
+  untracked spreadsheets are the proof); `group-start.md` still says "(#13)"; `DECISIONS.md` has
+  two #28s; no match is stored on a movie-night session; nothing tells Craig from Mark's You
+  page (X2's `/attention` reads the daily check only).
+- *Holds, live data:* Brave results kept on decided lookups: 10,306 on 851 done lookups, 850 of
+  them the accepted address, so **9,456 would be deleted** (the 5,210 on the 422 lookups
+  still needing a person stay); TMDB fields: none older than 150 days yet (oldest 8 Sep,
+  1,051 films that day; first crosses 150 days on 5 Feb 2027), 17 films with a TMDB id and
+  no sync date; completion sets: 40 (20 and 20), all last refreshed 8 Sep (Bess Flowers 353
+  members, Christopher Nolan 19), `candidate_people` still counts any billing position.
+
+**X12 is more than a day (about three), so it is split into three batches, each closed out on
+its own, in this order** (proposed 18 Oct; amended here, not dropped, criterion by criterion):
+- **X12a, counts, dates and the movie night** (UX48-05, the "Tell Craig" line) — **shipped 18
+  Oct (#282)**: Home's labels
+  and the two Digital figures; one date helper across the 80 sites; the shortlist reading title,
+  year and poster from the film; a match stored on the session (migration) and shown on the
+  night page; a copy's shelf once; the "Tell Craig" line into X2's attention row. About a day.
+- **X12b, phone polish and speed** (UX48-06, UX48-07): 12 px floor, 44 px list links, the dark
+  primary button at 4.5:1, axe-core on R6's screens (the rig is on this Mac), JSON compression,
+  the Archive list's columns and first screen first. About a day.
+- **X12c, terms and tidying** (CT46-06, CT46-07, DS44-06, CR43-08's rest): TMDB's logo and
+  notice, the JustWatch credit, Brave results deleted once decided, the 150-day TMDB refresh,
+  completion sets by top ten billed without shorts, the dead file, `*.xlsx`, #28, group-start.
+  About a day; **two live steps at Craig's word, count first:** deleting 9,456 Brave results,
+  and re-running the completion-set refresh (40 sets).
+
 ## Group Y — Mark's requests, planned 13 Oct
 
 **Planned 2026-10-13 from Mark's request, relayed by Craig:** edit discs after adding them, and

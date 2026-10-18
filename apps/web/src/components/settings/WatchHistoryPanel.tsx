@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatDate } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Clock, Loader2, RefreshCw } from 'lucide-react'
 import type { SyncResponse } from '@mcu/shared'
@@ -22,7 +23,7 @@ export function sinceLabel(iso: string, now: number = Date.now()): string {
   if (days <= 0) return 'today'
   if (days === 1) return 'yesterday'
   if (days < 56) return `${String(days)} days ago`
-  return `on ${then.toLocaleDateString()}`
+  return `on ${formatDate(then)}`
 }
 
 /**

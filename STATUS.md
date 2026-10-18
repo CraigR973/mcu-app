@@ -2,6 +2,15 @@
 
 ## Now
 
+**18 Oct: X12 is split into X12a, X12b, X12c at Craig's word (#282); X12a is built.** Home says
+"Films owned" and "Copies: N discs, M downloads"; the two Digital figures are labelled
+(Downloads in Formats, the Digital shelf in Where they live). One date family in `lib/utils.ts`,
+with a test that fails on a hand-formatted date. The movie-night shortlist, push and match read
+the film's title, year and poster; **a match is stored on the session** (migration 061) and
+shown on the night page. A copy's shelf prints once. **Tell Craig:** Mark's You page sends a
+line to Craig's "Needs attention" row (migration 062). Next: X12b (phone polish and speed),
+then X12c (terms and tidying, two live steps at Craig's word).
+
 **18 Oct: X11, Wanted shows shop prices, alerts need no limit, refusing shops asked weekly
 (#281), built at Craig's go after a re-measure.** The Wanted card lists each shop's latest
 price with its day and a link; a shop price strictly under the film's stored usual (same format
@@ -548,6 +557,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-18 (X12a, #282)** — Re-measured first (live copies 1,923; the films count and agent
+  summaries already fixed), split X12 in three at Craig's word, built X12a: Home's labels and
+  `downloadCopies`, `formatDate` family and a guard test, `placeLabel`, film-sourced movie-night
+  face and a stored match (061), Tell Craig (062). Tests: 8 web files extended, 6 API. Two
+  expectations changed because a response gained a field (reported in #282).
 - **2026-10-18 (X11, #281)** — Re-measured read-only first: 1 of 10 wants has a limit; the
   nightly run 26-29 minutes every night since 3 Oct; no shop refused every request, so the
   weekly criterion became "half its requests, seven scheduled checks running", at Craig's word.

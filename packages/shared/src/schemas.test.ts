@@ -2353,7 +2353,14 @@ describe('Batch X2 — what needs attention, and where deals come from', () => {
       ],
       checkedAt: '2026-10-13T08:00:00Z',
     }
-    expect(attentionSchema.parse(attention)).toEqual(attention)
+    // Batch X12a added `noteId`, defaulted to null for a problem the check found.
+    expect(attentionSchema.parse(attention)).toEqual({
+      ...attention,
+      items: attention.items.map((item) => ({ ...item, noteId: null })),
+    })
+    const noteId = '3f2504e0-4f89-41d3-9a0c-0305e82c3401'
+    const note = { key: `note:${noteId}`, message: 'Mark says: hello', since: '2026-10-18T10:00:00Z', noteId }
+    expect(attentionSchema.parse({ items: [note], checkedAt: null }).items[0]).toEqual(note)
     expect(() => attentionSchema.parse({ items: [{ key: 'x', message: '', since: null }], checkedAt: null })).toThrow()
   })
 

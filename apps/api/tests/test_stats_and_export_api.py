@@ -170,6 +170,24 @@ async def test_the_dashboard_counts_formats_genres_decades_and_sections(
     assert body["totalMovies"] >= 3
 
 
+async def test_the_dashboard_says_how_many_copies_are_downloads(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Batch X12a (UX48-05): Home reads "N copies: discs, downloads", so the API says how many
+    of the copies are downloads, and the Formats chart calls them that, not "Digital" (which
+    is also a shelf section with a different count)."""
+    before = (await client.get("/api/v1/collection/stats")).json()
+    await _disc(api_session, "A Rip", formats=["download"], section="Digital")
+    await _disc(api_session, "A Disc", formats=["blu_ray"])
+
+    after = (await client.get("/api/v1/collection/stats")).json()
+
+    assert after["downloadCopies"] == before["downloadCopies"] + 1
+    assert after["totalItems"] == before["totalItems"] + 2
+    labels = {slice_["key"]: slice_["label"] for slice_ in after["formats"]}
+    assert labels["download"] == "Downloads"
+
+
 async def test_a_film_in_two_genres_counts_once_in_each(
     client: AsyncClient, api_session: AsyncSession
 ) -> None:

@@ -331,6 +331,18 @@
       "title": "Message",
       "type": "string"
      },
+     "noteId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Noteid"
+     },
      "since": {
       "anyOf": [
        {
@@ -6903,6 +6915,17 @@
      "title": {
       "title": "Title",
       "type": "string"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
      }
     },
     "required": [
@@ -7585,6 +7608,16 @@
       "title": "Invitetoken",
       "type": "string"
      },
+     "match": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MatchResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "participantCount": {
       "minimum": 1.0,
       "title": "Participantcount",
@@ -7798,6 +7831,23 @@
      "movieId"
     ],
     "title": "NewReleaseResponse",
+    "type": "object"
+   },
+   "NoteRequest": {
+    "additionalProperties": false,
+    "description": "What a person types on the You page.",
+    "properties": {
+     "message": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+     }
+    },
+    "required": [
+     "message"
+    ],
+    "title": "NoteRequest",
     "type": "object"
    },
    "NotificationListResponse": {
@@ -11721,6 +11771,12 @@
       "title": "Decades",
       "type": "array"
      },
+     "downloadCopies": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Downloadcopies",
+      "type": "integer"
+     },
      "formats": {
       "items": {
        "$ref": "#/components/schemas/CountSlice"
@@ -15234,6 +15290,88 @@
      }
     ],
     "summary": "Attention",
+    "tags": [
+     "attention"
+    ]
+   }
+  },
+  "/api/v1/attention/notes": {
+   "post": {
+    "description": "A line from the person asking, for Craig's \"Needs attention\" (Batch X12a).\n\nOpen to both people, so it works for Craig too; the You page offers it to Mark.",
+    "operationId": "tell_craig_api_v1_attention_notes_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NoteRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Tell Craig",
+    "tags": [
+     "attention"
+    ]
+   }
+  },
+  "/api/v1/attention/notes/{note_id}": {
+   "delete": {
+    "description": "Craig has read it. The row stays in the table, cleared, as a record.",
+    "operationId": "clear_note_api_v1_attention_notes__note_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "note_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Note Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Clear Note",
     "tags": [
      "attention"
     ]

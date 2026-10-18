@@ -56,6 +56,7 @@ from src.services.movie_night.sessions import (
     add_suggestion,
     deliver_now,
     ensure_seeded,
+    film_face,
     invite_key,
     participants,
     publish,
@@ -144,6 +145,15 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
         if session.status == "open"
         else []
     )
+    matched = (
+        await db.get(MovieNightSuggestion, session.matched_suggestion_id)
+        if session.matched_suggestion_id is not None
+        else None
+    )
+    match = None
+    if matched is not None:
+        title, year, poster = await film_face(db, matched)
+        match = MatchResponse(movieId=matched.movie_id, title=title, year=year, posterPath=poster)
     return MovieNightSessionResponse(
         id=session.id,
         status="open" if session.status == "open" else "ended",
@@ -165,6 +175,7 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
             for person_id, name in people
         ],
         invitable=[PersonResponse(id=person_id, displayName=name) for person_id, name in others],
+        match=match,
     )
 
 
@@ -448,9 +459,12 @@ async def list_candidates(
                 suggestionId=suggestion.id,
                 movieId=suggestion.movie_id,
                 tmdbId=suggestion.tmdb_id,
-                title=suggestion.title,
-                year=suggestion.year,
-                posterPath=suggestion.poster_path,
+                # The film's own title, year and poster when it is on the shelf (X12a).
+                title=movie.title if movie else suggestion.title,
+                year=movie.year if movie else suggestion.year,
+                posterPath=(movie.poster_path or suggestion.poster_path)
+                if movie
+                else suggestion.poster_path,
                 overview=suggestion.overview,
                 runtimeMinutes=movie.runtime_minutes if movie else None,
                 genres=_genre_names(movie),
@@ -533,7 +547,12 @@ async def cast_vote(
     return VoteResponse(
         recorded=True,
         match=(
-            MatchResponse(movieId=match.movie_id, title=match.title, posterPath=match.poster_path)
+            MatchResponse(
+                movieId=match.movie_id,
+                title=match.title,
+                year=match.year,
+                posterPath=match.poster_path,
+            )
             if match is not None
             else None
         ),

@@ -51,7 +51,9 @@ FORMAT_LABELS = {
     "4k_uhd": "4K UHD",
     "blu_ray": "Blu-ray",
     "dvd": "DVD",
-    "download": "Digital",
+    # Batch X12a: the Formats chart counts copies carrying the download format; "Digital" is
+    # also a shelf section ("Where they live"), and the two differ (588 and 454 on 18 Oct).
+    "download": "Downloads",
 }
 
 #: TMDB's genre vocabulary, mirrored so a bar chart can be labelled without a join. The
@@ -290,6 +292,15 @@ async def collection_stats(
     total_items = int(
         (await db.execute(select(func.count(CollectionItem.id)).where(owned_copy()))).scalar_one()
     )
+    downloads = int(
+        (
+            await db.execute(
+                select(func.count(CollectionItem.id)).where(
+                    owned_copy(), CollectionItem.formats.contains(["download"])
+                )
+            )
+        ).scalar_one()
+    )
     identified = int(
         (
             await db.execute(
@@ -316,6 +327,7 @@ async def collection_stats(
     return StatsResponse(
         totalMovies=total_movies,
         totalItems=total_items,
+        downloadCopies=downloads,
         identifiedMovies=identified,
         watchedMovies=watched,
         formats=await _format_slices(db),

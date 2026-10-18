@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { ChevronRight, LogOut } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { COLLECTION_ICONS } from '@/components/collections/icons'
@@ -7,7 +8,8 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
 import { useAuth } from '@/context/auth'
-import { fetchNavSections, fetchSmartCollections } from '@/lib/api'
+import { fetchNavSections, fetchSmartCollections, tellCraig } from '@/lib/api'
+import { queryErrorMessage } from '@/lib/query-state'
 import {
   adminNavGroup,
   BOTTOM_BAR_PATHS,
@@ -49,6 +51,58 @@ function DestinationGroup({ group }: { group: NavGroup }) {
       <div className="archive-panel divide-y divide-border overflow-hidden">
         {group.items.map((item) => <DestinationLink key={item.path} item={item} />)}
       </div>
+    </section>
+  )
+}
+
+/**
+ * "Tell Craig" (Batch X12a, UX48-05): a line to Craig that lands in his Home "Needs attention"
+ * row, for Mark, who had no way to say "this is wrong" from inside the app.
+ */
+function TellCraig() {
+  const [message, setMessage] = useState('')
+  const send = useMutation({
+    mutationFn: () => tellCraig(message.trim()),
+    onSuccess: () => setMessage(''),
+  })
+  return (
+    <section aria-labelledby="you-tell-craig" className="space-y-2">
+      <h2 id="you-tell-craig" className="px-1 pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Tell Craig
+      </h2>
+      <form
+        className="archive-panel space-y-2 p-4"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (message.trim()) send.mutate()
+        }}
+      >
+        <label htmlFor="tell-craig" className="text-sm text-muted-foreground">
+          Something wrong, or something you want. It shows on Craig&apos;s Home until he clears it.
+        </label>
+        <textarea
+          id="tell-craig"
+          value={message}
+          onChange={(event) => {
+            setMessage(event.target.value)
+            send.reset()
+          }}
+          maxLength={300}
+          rows={3}
+          className="block w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+        />
+        <div className="flex items-center justify-between gap-3">
+          <Button type="submit" disabled={send.isPending || message.trim().length === 0}>
+            Send
+          </Button>
+          {send.isSuccess ? <p role="status" className="text-sm text-muted-foreground">Sent to Craig.</p> : null}
+          {send.isError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {queryErrorMessage(send.error, 'That could not be sent.')}
+            </p>
+          ) : null}
+        </div>
+      </form>
     </section>
   )
 }
@@ -116,6 +170,8 @@ export default function YouPage() {
       ) : null}
 
       {admin ? <DestinationGroup group={admin} /> : null}
+
+      {profile && !isAdmin ? <TellCraig /> : null}
 
       <Button type="button" variant="outline" className="w-full justify-center" onClick={() => void signOut()}>
         <LogOut aria-hidden /> Sign out

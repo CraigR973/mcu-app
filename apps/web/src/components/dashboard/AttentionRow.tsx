@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle } from 'lucide-react'
 
 import { useAuth } from '@/context/auth'
-import { fetchAttention, type Attention } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { clearCraigNote, fetchAttention, type Attention } from '@/lib/api'
 import { formatDayMonth } from '@/lib/utils'
 
 /**
@@ -21,6 +22,27 @@ export function AttentionRow() {
   const query = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: isAdmin })
   if (!isAdmin || !query.data) return null
   return <AttentionList attention={query.data} />
+}
+
+/** Batch X12a: a line from Mark stays until Craig has read it and says so. */
+function ClearNote({ noteId }: { noteId: string }) {
+  const queryClient = useQueryClient()
+  const clear = useMutation({
+    mutationFn: () => clearCraigNote(noteId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['attention'] }),
+  })
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      className="ml-2 align-middle"
+      disabled={clear.isPending}
+      onClick={() => clear.mutate()}
+    >
+      Clear
+    </Button>
+  )
 }
 
 export function AttentionList({ attention }: { attention: Attention }) {
@@ -45,6 +67,7 @@ export function AttentionList({ attention }: { attention: Attention }) {
             {item.since && !item.message.includes('since ') ? (
               <span className="text-muted-foreground"> · since {formatDayMonth(item.since)}</span>
             ) : null}
+            {item.noteId ? <ClearNote noteId={item.noteId} /> : null}
           </li>
         ))}
       </ul>

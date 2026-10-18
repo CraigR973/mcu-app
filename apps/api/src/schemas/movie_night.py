@@ -37,6 +37,14 @@ class SendRequest(BaseModel):
     userIds: list[uuid.UUID] | None = None
 
 
+class MatchResponse(BaseModel):
+    #: Null when the match is a film nobody owns, which Batch S7 made possible.
+    movieId: uuid.UUID | None = None
+    title: str
+    year: int | None = None
+    posterPath: str | None = None
+
+
 class MovieNightSessionResponse(BaseModel):
     """One sitting.
 
@@ -56,6 +64,9 @@ class MovieNightSessionResponse(BaseModel):
     invitable: list[PersonResponse] = Field(default_factory=list)
     createdAt: UtcDatetime
     endedAt: UtcDatetime | None = None
+    #: Batch X12a: the film of the latest match, read back from the session, so a night opened
+    #: from "It's a match" shows it. Null until two people like the same film.
+    match: MatchResponse | None = None
 
 
 class MovieNightSessionListResponse(BaseModel):
@@ -128,13 +139,6 @@ class SuggestionRequest(BaseModel):
 class VoteRequest(BaseModel):
     suggestionId: uuid.UUID
     liked: bool
-
-
-class MatchResponse(BaseModel):
-    #: Null when the match is a film nobody owns, which Batch S7 made possible.
-    movieId: uuid.UUID | None = None
-    title: str
-    posterPath: str | None = None
 
 
 class VoteResponse(BaseModel):

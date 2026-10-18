@@ -59,6 +59,7 @@ import {
   type ListingStatus,
   type MovieDetail,
 } from '@/lib/api'
+import { placeLabel } from '@/lib/place'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
 type Tab = 'overview' | 'crew' | 'copies' | 'watch'
@@ -209,15 +210,10 @@ function CopyCard({
       <div className="flex items-start gap-2 rounded-md bg-primary/10 px-3 py-2.5 text-sm">
         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
         <div>
-          {item.location ? (
-            <p className="font-semibold text-foreground">{item.location}</p>
+          {item.location || item.section ? (
+            <p className="font-semibold text-foreground">{placeLabel(item)}</p>
           ) : (
             <p className="text-muted-foreground">Location not recorded</p>
-          )}
-          {item.section && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {item.section}{item.shelf ? ` · ${item.shelf} shelf` : ''}
-            </p>
           )}
         </div>
       </div>

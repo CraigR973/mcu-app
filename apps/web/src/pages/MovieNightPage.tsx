@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatDateTime } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link2, Loader2, Popcorn, Square } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -152,7 +153,7 @@ export default function MovieNightPage() {
                   to={`/movie-night/${session.id}`}
                   className="touch-target flex min-w-0 flex-1 items-center text-sm hover:underline"
                 >
-                  {new Date(session.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} ·{' '}
+                  {formatDateTime(session.createdAt)} ·{' '}
                   {session.people.length > 1
                     ? `with ${session.people.filter((person) => person.id !== profile?.id).map((person) => person.displayName).join(', ')}`
                     : session.participantCount === 1 ? 'just you' : `${session.participantCount} people`}

@@ -6012,3 +6012,42 @@ contemporaneous.
        through, which Second Sight and Powerhouse still delivered this week); honouring
        `scrape_frequency` (see above); a threshold below the usual such as V8's 30% (the ledger
        says "under", and an alert fires once per drop).
+
+
+282. **X12 is split into X12a, X12b and X12c, at Craig's word on 18 Oct; X12a is built.**
+     Re-measured first (read-only): the review's stale agent summaries and the API's films count
+     were already fixed (X5, #269); live copies are 1,923 (1,335 discs, 588 downloads) over 1,899
+     films with a copy, not 11 Oct's numbers.
+
+     - **Split:** X12a counts, dates and the movie night; X12b phone polish and speed; X12c terms
+       and tidying (two live steps at Craig's word). About three days, so three close-outs.
+     - **Home:** "Films owned" (with a copy) and "Copies" with "N discs, M downloads" under it
+       (`downloadCopies` on `/collection/stats`); the Formats chart says "Downloads" (copies
+       carrying the download format, 588) and both charts say "(copies)", because "Digital" was
+       also a shelf section with a different count (454).
+     - **Dates:** one module, `lib/utils.ts`: `formatDate` ("11 Oct", "11 Oct 2026" outside the
+       current year), `formatDateTime`, `formatMonth`, beside `formatShortDate` (always with the
+       year) and `formatDayMonth`. Every `toLocale*String` date was moved onto them, and a test
+       fails when a screen formats one by hand again (month headings on Releases and UK clock
+       time on Price alerts are named exceptions). *Not done:* `formatShortDate` keeps its year
+       in the current year, because its callers (watch dates, price history) want the full date
+       and its tests pin that.
+     - **Movie night:** the shortlist, the match event, the push and the night page read title,
+       year and poster from the film when it is on the shelf (the snapshot only for a film nobody
+       owns). **A match is now stored on the session** (`matched_suggestion_id`, migration 061,
+       set when announced, with **no foreign key**: a suggestion already points at its session, and
+       the second constraint is a cycle the restore drill refuses) and `GET /movie-night/{id}`
+       returns it, so a night opened
+       from the push shows it. This **departs from the old rule "no matches table: the votes are
+       the truth"** (Batch 35): the column only remembers which suggestion the latest
+       announcement was about, nothing reads a match from it but the page, and the votes still
+       decide whether there is one. No backfill: nights that matched before show none.
+     - **A copy's shelf once:** one `placeLabel` (`lib/place.ts`) for the film page, Move discs
+       and Loans; it prints the recorded place, else the section and shelf.
+     - **Tell Craig:** a line typed on Mark's You page (300 characters, at most 5 waiting) is
+       stored in `craig_notes` (migration 062, both read-only roles granted) and appears in
+       Craig's "Needs attention" row as "Mark says: …" with a Clear button (`DELETE
+       /attention/notes/{id}`, admin). No push: Craig opens Home. Craig is not offered the form.
+     - **Expectations that changed, by design, because a response gained a field:**
+       `test_home_lists_the_problems…` (attention items carry `noteId: null`) and the shared
+       `attentionSchema` test (the parse now returns `noteId: null`). No assertion was loosened.

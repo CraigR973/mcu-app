@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { formatMonth } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
 import type { CountSlice, Stats } from '@mcu/shared'
@@ -15,6 +16,13 @@ function pounds(total: string, currency: string): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency, maximumFractionDigits: 0 }).format(
     Number(total),
   )
+}
+
+/** "1,335 discs, 588 downloads", and "1 disc, 1 download" when it is one of each. */
+function copiesDetail(discs: number, downloads: number): string {
+  const discWord = discs === 1 ? 'disc' : 'discs'
+  const downloadWord = downloads === 1 ? 'download' : 'downloads'
+  return `${COUNT.format(discs)} ${discWord}, ${COUNT.format(downloads)} ${downloadWord}`
 }
 
 function NumberCard({ label, value, detail }: { label: string; value: string; detail?: ReactNode }) {
@@ -95,16 +103,16 @@ function SpendChart({ stats }: { stats: Stats }) {
             key={point.month}
             className="relative flex-1 rounded-t-sm bg-primary/60"
             style={{ height: `${String(Math.max(4, (point.cumulativeCents / peak) * 100))}%` }}
-            title={`${point.month} · ${poundsFromCents(point.cumulativeCents)}`}
+            title={`${formatMonth(point.month)} · ${poundsFromCents(point.cumulativeCents)}`}
           >
             <span className="sr-only">
-              {point.month}: {poundsFromCents(point.cumulativeCents)}
+              {formatMonth(point.month)}: {poundsFromCents(point.cumulativeCents)}
             </span>
           </li>
         ))}
       </ul>
       <p className="text-[11px] text-muted-foreground">
-        {points[0]?.month} – {points[points.length - 1]?.month}
+        {formatMonth(points[0]?.month ?? '')} – {formatMonth(points[points.length - 1]?.month ?? '')}
       </p>
     </div>
   )
@@ -193,17 +201,21 @@ export function CollectionShelf() {
     body = (
       <>
         <ShelfRow label="The collection in numbers">
-          <NumberCard label="Films" value={COUNT.format(stats.totalMovies)} />
-          <NumberCard label="Discs" value={COUNT.format(stats.totalItems)} />
+          <NumberCard label="Films owned" value={COUNT.format(stats.totalMovies)} detail="with a copy" />
+          <NumberCard
+            label="Copies"
+            value={COUNT.format(stats.totalItems)}
+            detail={copiesDetail(stats.totalItems - stats.downloadCopies, stats.downloadCopies)}
+          />
           <WorthCard value={value} isAdmin={isAdmin} />
           <NumberCard label="You've watched" value={COUNT.format(stats.watchedMovies)} />
           <NumberCard label="Identified" value={COUNT.format(stats.identifiedMovies)} />
         </ShelfRow>
         <ShelfRow label="The collection's shape">
-          <ChartCard title="Formats">
+          <ChartCard title="Formats (copies)">
             <BarChart slices={stats.formats} countOf={(s) => s.itemCount} />
           </ChartCard>
-          <ChartCard title="Where they live">
+          <ChartCard title="Where they live (copies)">
             <BarChart slices={stats.sections} countOf={(s) => s.itemCount} />
           </ChartCard>
           <ChartCard title="Genres">

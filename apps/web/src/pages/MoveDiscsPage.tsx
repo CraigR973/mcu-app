@@ -17,20 +17,8 @@ import {
   type CollectionMoveEntry,
   type CollectionMoveResponse,
 } from '@/lib/api'
+import { placeLabel, type Place } from '@/lib/place'
 import { queryErrorMessage } from '@/lib/query-state'
-
-interface Place {
-  location: string | null
-  section: string | null
-  shelf: string | null
-}
-
-/** Where a disc is, as the film page's copy card says it. */
-function placeLabel(place: Place): string {
-  if (place.location) return place.location
-  if (place.section) return `${place.section}${place.shelf ? ` · ${place.shelf} shelf` : ''}`
-  return 'No place recorded'
-}
 
 function discLabel(disc: { formats: string[]; edition: string | null }): string {
   const formats = disc.formats.map((format) => formatLabel(format) ?? format).join(' + ') || 'Format not recorded'

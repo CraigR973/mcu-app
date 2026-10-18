@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchAudit } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 const ACTIONS = ['', 'create', 'update', 'delete', 'restore', 'bulk_import'] as const
 
@@ -63,7 +63,7 @@ function Row({ entry }: { entry: AuditEntry }) {
           </span>
         </p>
         <time className="shrink-0 text-xs tabular-nums text-muted-foreground" dateTime={entry.createdAt}>
-          {new Date(entry.createdAt).toLocaleString()}
+          {formatDateTime(entry.createdAt)}
         </time>
       </div>
       <div className="mt-3 border-t border-border pt-3">

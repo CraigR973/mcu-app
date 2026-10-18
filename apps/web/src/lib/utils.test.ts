@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn, formatDayMonth, formatShortDate } from './utils'
+import { cn, formatDate, formatDateTime, formatDayMonth, formatMonth, formatShortDate } from './utils'
 
 describe('cn', () => {
   it('joins class names', () => {
@@ -44,5 +44,39 @@ describe('formatShortDate', () => {
 
   it('gives back anything that is not a date unchanged', () => {
     expect(formatShortDate('someday')).toBe('someday')
+  })
+})
+
+describe('formatDate — Batch X12a (UX48-05)', () => {
+  const now = new Date(2026, 9, 18)
+
+  it('drops the year in the current year and keeps it in any other', () => {
+    expect(formatDate('2026-10-11', now)).toBe('11 Oct')
+    expect(formatDate('2025-10-11', now)).toBe('11 Oct 2025')
+  })
+
+  it('writes September as Sep, never "Sept"', () => {
+    expect(formatDate('2026-09-22', now)).toBe('22 Sep')
+  })
+
+  it('reads a bare date off the string, whatever the time zone', () => {
+    expect(formatDate('2026-03-01', now)).toBe('1 Mar')
+  })
+
+  it('reads a timestamp in the viewer\'s own day, and a moment with its time', () => {
+    const moment = new Date(2026, 9, 11, 14, 5)
+    expect(formatDate(moment, now)).toBe('11 Oct')
+    expect(formatDateTime(moment, now)).toBe('11 Oct, 14:05')
+  })
+
+  it('passes an unreadable value through rather than printing "Invalid Date"', () => {
+    expect(formatDate('soon', now)).toBe('soon')
+  })
+})
+
+describe('formatMonth', () => {
+  it('reads the spend chart month as words', () => {
+    expect(formatMonth('2026-09')).toBe('Sep 2026')
+    expect(formatMonth('nonsense')).toBe('nonsense')
   })
 })

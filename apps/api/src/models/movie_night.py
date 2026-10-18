@@ -57,6 +57,18 @@ class MovieNightSession(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     filters: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="open")
+
+    #: Batch X12a (UX48-05): the suggestion the latest match was about, set when it is
+    #: announced, so the night page can still show it once the live event and the push are
+    #: gone. The votes stay the truth (`sessions.detect_match`); this only remembers which
+    #: suggestion the last announcement was about. **No foreign key, deliberately:** a suggestion
+    #: already points at its session, and a second constraint the other way is a cycle the
+    #: restore drill refuses (it orders tables by foreign keys, `docs/restore-runbook.md`).
+    #: Suggestions go only with their session, and a read that finds none shows no match.
+    #: Migration 061.
+    matched_suggestion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
     ended_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

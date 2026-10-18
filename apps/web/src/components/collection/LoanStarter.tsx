@@ -6,6 +6,7 @@ import { FilmFinder, type FoundFilm as Film } from '@/components/collection/Film
 import { LendButton } from '@/components/collection/LendButton'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchCopies, formatLabel } from '@/lib/api'
+import { placeLabel } from '@/lib/place'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 
 /** One film's discs on the shelf, each with Lend, Borrow, or Returned when it is out. */
@@ -50,7 +51,7 @@ function FilmCopies({ film, onBack }: { film: Film; onBack: () => void }) {
                 {copy.edition ? <span className="font-normal text-muted-foreground"> · {copy.edition}</span> : null}
               </p>
               <p className="mb-3 text-xs text-muted-foreground">
-                {copy.location ?? (copy.section ? `${copy.section}${copy.shelf ? ` · ${copy.shelf} shelf` : ''}` : 'No place recorded')}
+                {placeLabel(copy)}
               </p>
               <LendButton collectionItemId={copy.id} />
             </li>

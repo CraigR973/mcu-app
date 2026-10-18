@@ -2443,8 +2443,9 @@ export async function suggestMovieNightFilm(
 export interface MovieNightEvent {
   kind: 'vote' | 'match' | 'joined' | 'ended' | 'suggestion'
   sessionId: string
-  movieId?: string
+  movieId?: string | null
   title?: string
+  year?: number | null
   posterPath?: string | null
 }
 
@@ -2667,6 +2668,22 @@ export async function fetchDeals(filters: DealFilters = {}): Promise<DealList> {
 /** Batch X2: what the daily check found, for Home's "Needs attention" row. Admin only. */
 export async function fetchAttention(): Promise<Attention> {
   return parseResponse(await authFetch('/attention'), attentionSchema)
+}
+
+/** Batch X12a: a line from the person signed in to Craig's "Needs attention" row. */
+export async function tellCraig(message: string): Promise<void> {
+  const response = await authFetch('/attention/notes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
+  })
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
+}
+
+/** Craig has read a line from Mark; it leaves the row. */
+export async function clearCraigNote(noteId: string): Promise<void> {
+  const response = await authFetch(`/attention/notes/${noteId}`, { method: 'DELETE' })
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
 }
 
 /** §5.10's one-tap dismiss, and its undo. A soft state, because tonight's scrape will

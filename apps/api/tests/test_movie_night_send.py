@@ -316,6 +316,107 @@ async def test_a_match_is_pushed_to_both_at_once(db: AsyncSession, pushes: Recor
     assert sorted(pushes.sent) == sorted([craigs_phone, marks_phone])
 
 
+async def _suggest_exorcist(
+    db: AsyncSession, night: MovieNightSession, by: Profile
+) -> tuple[Movie, MovieNightSuggestion]:
+    """A film identified since it was suggested: the suggestion keeps the old spreadsheet
+    title with no year or poster, the film has the real ones (the review's walk, 11 Oct)."""
+    film = Movie(
+        id=uuid.uuid4(),
+        tmdb_id=None,
+        title="The Exorcist",
+        original_title="The Exorcist",
+        media_type="film",
+        year=1973,
+        poster_path="/exorcist.jpg",
+    )
+    db.add(film)
+    await db.flush()
+    suggestion = MovieNightSuggestion(
+        id=uuid.uuid4(),
+        session_id=night.id,
+        suggested_by=by.id,
+        movie_id=film.id,
+        title="Exorcist, the",
+    )
+    db.add(suggestion)
+    await db.flush()
+    return film, suggestion
+
+
+async def test_the_shortlist_reads_title_year_and_poster_from_the_film(
+    db: AsyncSession,
+) -> None:
+    """Batch X12a (UX48-05): it read the snapshot, "Exorcist, the", with no year or poster."""
+    from src.routers.movies import get_tmdb_client
+
+    class NoTmdb:
+        pass
+
+    async def override_tmdb() -> AsyncIterator[NoTmdb]:
+        yield NoTmdb()
+
+    craig = await _person(db, "Craig")
+    night = await _night(db, craig)
+    await _suggest_exorcist(db, night, craig)
+
+    async with _as(db, craig) as client:
+        app.dependency_overrides[get_tmdb_client] = override_tmdb
+        response = await client.get(f"/api/v1/movie-night/{night.id}/candidates")
+
+    card = next(item for item in response.json()["items"] if item["movieId"])
+    assert (card["title"], card["year"], card["posterPath"]) == (
+        "The Exorcist",
+        1973,
+        "/exorcist.jpg",
+    )
+
+
+async def test_a_match_is_stored_on_the_session_and_shown_on_the_night(
+    db: AsyncSession, pushes: RecordingSender
+) -> None:
+    craig, mark = await _person(db, "Craig"), await _person(db, "Mark")
+    night = await _night(db, craig, mark)
+    film, suggestion = await _suggest_exorcist(db, night, craig)
+
+    async with _as(db, craig) as client:
+        before = (await client.get(f"/api/v1/movie-night/{night.id}")).json()
+        await client.post(
+            f"/api/v1/movie-night/{night.id}/votes",
+            json={"suggestionId": str(suggestion.id), "liked": True},
+        )
+    assert before["match"] is None
+
+    async with _as(db, mark) as client:
+        voted = (
+            await client.post(
+                f"/api/v1/movie-night/{night.id}/votes",
+                json={"suggestionId": str(suggestion.id), "liked": True},
+            )
+        ).json()
+    # The push and the answer name the film, not the snapshot.
+    assert voted["match"]["title"] == "The Exorcist" and voted["match"]["year"] == 1973
+    titles = [
+        n.title
+        for n in (await db.execute(select(Notification).where(Notification.user_id == craig.id)))
+        .scalars()
+        .all()
+    ]
+    assert "It's a match — The Exorcist" in titles
+
+    # Opened later from the push: the night remembers it.
+    async with _as(db, craig) as client:
+        after = (await client.get(f"/api/v1/movie-night/{night.id}")).json()
+    assert after["match"] == {
+        "movieId": str(film.id),
+        "title": "The Exorcist",
+        "year": 1973,
+        "posterPath": "/exorcist.jpg",
+    }
+    stored = await db.get(MovieNightSession, night.id)
+    assert stored is not None and stored.matched_suggestion_id == suggestion.id
+
+
 async def test_the_invite_key_names_the_night_and_the_person() -> None:
     night, person = uuid.uuid4(), uuid.uuid4()
     assert invite_key(night, person) == f"movie-night-invite:{night}:{person}"

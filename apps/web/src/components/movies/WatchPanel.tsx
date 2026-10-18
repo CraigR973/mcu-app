@@ -6,22 +6,15 @@ import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
 import { deleteWatch, fetchWatches, logWatch, RATING_STEPS } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { formatDate } from '@/lib/utils'
 
 interface Props {
   movieId: string
 }
 
 function formatWatchedAt(value: string): string {
-  // `watchedAt` is a plain YYYY-MM-DD. Parsing it with `new Date()` would read it as
-  // UTC midnight and render the day before for anyone west of Greenwich, so the parts
-  // are used directly.
-  const [year, month, day] = value.split('-').map(Number)
-  if (!year || !month || !day) return value
-  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  // `watchedAt` is a plain YYYY-MM-DD, which `formatDate` reads off the string.
+  return formatDate(value)
 }
 
 function Stars({

@@ -155,6 +155,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/activity",
         # Batch X2: the daily check's problems, for Home's "Needs attention" row.
         "/api/v1/attention",
+        "/api/v1/attention/notes",
+        "/api/v1/attention/notes/{note_id}",
         "/api/v1/export/collection.csv",
         "/api/v1/export/collection.json",
         "/api/v1/export/collection.html",
