@@ -275,6 +275,8 @@ export default function MovieNightSessionPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [match, setMatch] = useState<MovieNightMatch | null>(null)
+  // "Keep going" hides the match the session remembers, until a new one arrives.
+  const [dismissedStored, setDismissedStored] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [realtimeError, setRealtimeError] = useState<string | null>(null)
 
@@ -299,10 +301,11 @@ export default function MovieNightSessionPage() {
         for await (const event of streamMovieNightEvents(id)) {
           if (cancelled) return
           setRealtimeError(null)
-          if (event.kind === 'match' && event.movieId && event.title) {
+          if (event.kind === 'match' && event.title) {
             setMatch({
-              movieId: event.movieId,
+              movieId: event.movieId ?? null,
               title: event.title,
+              year: event.year ?? null,
               posterPath: event.posterPath ?? null,
             })
           } else if (event.kind === 'joined' || event.kind === 'ended') {
@@ -346,6 +349,9 @@ export default function MovieNightSessionPage() {
     onError: (cause) => setError(queryErrorMessage(cause, 'That vote did not register.')),
   })
 
+  // A match just made on this screen, else the one the session remembers (Batch X12a), so a
+  // night opened from the "It's a match" push shows its match.
+  const shownMatch = match ?? (dismissedStored ? null : (session.data?.match ?? null))
   const cards = shortlist.data?.items ?? []
   const shortlistState = listState(shortlist, cards.length === 0)
 
@@ -408,16 +414,25 @@ export default function MovieNightSessionPage() {
         </p>
       ) : null}
 
-      {match ? (
+      {shownMatch ? (
         <div role="status" className="w-full rounded-lg border-2 border-success bg-success/10 p-6 text-center">
           <Check className="mx-auto h-8 w-8 text-success" aria-hidden />
           <p className="mt-2 text-lg font-bold">It's a match</p>
-          <p className="mt-1 text-xl">{match.title}</p>
-          {match.posterPath ? (
-            <img src={posterUrl(match.posterPath)} alt="" className="mx-auto mt-3 w-32 rounded shadow" />
+          <p className="mt-1 text-xl">
+            {shownMatch.title}
+            {shownMatch.year ? ` (${String(shownMatch.year)})` : ''}
+          </p>
+          {shownMatch.posterPath ? (
+            <img src={posterUrl(shownMatch.posterPath)} alt="" className="mx-auto mt-3 w-32 rounded shadow" />
           ) : null}
           <div className="mt-4 flex justify-center gap-2">
-            <Button variant="outline" onClick={() => setMatch(null)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMatch(null)
+                setDismissedStored(true)
+              }}
+            >
               Keep going
             </Button>
             <Button onClick={() => navigate('/movie-night')}>Done</Button>

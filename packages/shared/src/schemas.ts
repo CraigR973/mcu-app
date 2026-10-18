@@ -909,6 +909,9 @@ export const spendPointSchema = z.object({
 export const statsSchema = z.object({
   totalMovies: z.number().int().nonnegative(),
   totalItems: z.number().int().nonnegative(),
+  /** Of `totalItems`, the copies carrying the download format (Batch X12a). Defaulted for an
+   *  API without it yet. */
+  downloadCopies: z.number().int().nonnegative().default(0),
   identifiedMovies: z.number().int().nonnegative(),
   watchedMovies: z.number().int().nonnegative(),
   formats: z.array(countSliceSchema),
@@ -1722,6 +1725,16 @@ export const movieNightPersonSchema = z.object({
   displayName: z.string().min(1),
 })
 
+export const movieNightMatchSchema = z.object({
+  /** Null when the match is a film nobody owns, which Batch S7 made possible. */
+  movieId: z.string().uuid().nullable(),
+  title: z.string().min(1),
+  /** Batch X12a: the film's year, so a match reads "The Exorcist (1973)". Defaulted for an
+   *  API without it yet. */
+  year: z.number().int().nullable().default(null),
+  posterPath: z.string().nullable(),
+})
+
 export const movieNightSessionSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(['open', 'ended']),
@@ -1736,6 +1749,9 @@ export const movieNightSessionSchema = z.object({
   people: z.array(movieNightPersonSchema.extend({ invited: z.boolean() })).default([]),
   /** Who could still be sent it. Empty once the night ends. */
   invitable: z.array(movieNightPersonSchema).default([]),
+  /** Batch X12a: the film of the latest match, so a night opened from "It's a match" shows
+   *  it. Null until two people like the same film; defaulted for an older answer. */
+  match: movieNightMatchSchema.nullable().default(null),
 })
 
 export const movieNightSessionListSchema = z.object({
@@ -1780,13 +1796,6 @@ export const movieNightCandidateSchema = z.object({
 export const movieNightCandidateListSchema = z.object({
   items: z.array(movieNightCandidateSchema),
   total: z.number().int().nonnegative(),
-})
-
-export const movieNightMatchSchema = z.object({
-  /** Null when the match is a film nobody owns, which Batch S7 made possible. */
-  movieId: z.string().uuid().nullable(),
-  title: z.string().min(1),
-  posterPath: z.string().nullable(),
 })
 
 export const movieNightVoteResultSchema = z.object({
@@ -2651,6 +2660,9 @@ export const attentionItemSchema = z.object({
   message: z.string().min(1),
   /** When it first appeared; null for one worked out as the row is read. */
   since: z.string().nullable(),
+  /** Batch X12a: set on a line a person sent with "Tell Craig", which Craig clears. Defaulted
+   *  for an API without it yet. */
+  noteId: z.string().uuid().nullable().default(null),
 })
 
 export const attentionSchema = z.object({

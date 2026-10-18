@@ -27,7 +27,7 @@ import {
 } from '@/lib/api'
 import { usePushSubscription } from '@/hooks/usePushSubscription'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn, formatDayMonth } from '@/lib/utils'
+import { cn, formatDate, formatDateTime, formatDayMonth } from '@/lib/utils'
 
 /** §6.1's categories, in the order they are worth reading. */
 const CATEGORIES: Array<{
@@ -282,7 +282,7 @@ export function DeviceSection() {
                   <p className="truncate text-xs text-muted-foreground">
                     {device.pushService} · {device.endpointPreview}
                     {device.lastUsedAt
-                      ? ` · last push ${new Date(device.lastUsedAt).toLocaleDateString()}`
+                      ? ` · last push ${formatDate(device.lastUsedAt)}`
                       : ' · never used'}
                     {device.failureCount > 0 ? ` · ${device.failureCount} failures` : ''}
                   </p>
@@ -510,7 +510,7 @@ function HistorySection() {
               >
                 {notificationStateLabel(item)}
                 {item.deliverAfter
-                  ? ` · due ${new Date(item.deliverAfter).toLocaleString()}`
+                  ? ` · due ${formatDateTime(item.deliverAfter)}`
                   : ''}
               </p>
             </li>

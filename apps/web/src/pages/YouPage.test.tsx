@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const state = vi.hoisted(() => ({
   role: 'viewer' as 'viewer' | 'admin',
   signOut: vi.fn(),
+  tellCraig: vi.fn(),
   sections: { boxSets: 1, collections: 1, deals: 1, loans: 1 },
 }))
 vi.mock('@/context/auth', () => ({
@@ -19,6 +20,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   fetchNavSections: vi.fn(() => Promise.resolve(state.sections)),
   fetchSmartCollections: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+  tellCraig: state.tellCraig,
 }))
 
 import { ThemeProvider } from '@/context/theme'
@@ -46,6 +48,7 @@ function linkedPaths(): Set<string> {
 beforeEach(() => {
   state.role = 'viewer'
   state.signOut.mockReset()
+  state.tellCraig.mockReset().mockResolvedValue(undefined)
   state.sections = { boxSets: 1, collections: 1, deals: 1, loans: 1 }
 })
 
@@ -106,5 +109,26 @@ describe('YouPage — Batch T3', () => {
     renderYou()
     fireEvent.click(await screen.findByRole('button', { name: /Sign out/ }))
     expect(state.signOut).toHaveBeenCalledOnce()
+  })
+
+  it('lets Mark tell Craig something, and sends the trimmed line — Batch X12a', async () => {
+    renderYou()
+    fireEvent.change(await screen.findByLabelText(/Something wrong/), {
+      target: { value: '  the Alien disc is in the Lounge ' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    await waitFor(() => expect(state.tellCraig).toHaveBeenCalledWith('the Alien disc is in the Lounge'))
+    expect(await screen.findByText('Sent to Craig.')).not.toBeNull()
+  })
+
+  it('will not send an empty line, and does not offer Craig a note to himself', async () => {
+    renderYou()
+    expect((await screen.findByRole('button', { name: 'Send' })).hasAttribute('disabled')).toBe(true)
+    cleanup()
+    state.role = 'admin'
+    renderYou()
+    await screen.findByRole('link', { name: /Wanted/ })
+    expect(screen.queryByText('Tell Craig')).toBeNull()
   })
 })

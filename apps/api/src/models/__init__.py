@@ -34,6 +34,7 @@ from src.models.completion_set import (
     CompletionSet,
     member_display,
 )
+from src.models.craig_note import CraigNote
 from src.models.deal import DEALS_TABLE, Deal
 from src.models.ebay_account import EbayAccount, EbayConnectState
 from src.models.ebay_watch import (
@@ -222,6 +223,7 @@ __all__ = [
     "EbayPriceRef",
     "EbayTarget",
     "EbayWatchRun",
+    "CraigNote",
     "HealthCheck",
     "JobHeartbeat",
     "TARGET_FORMATS",

@@ -265,4 +265,23 @@ describe('MovieNightSessionPage', () => {
       expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: `${window.location.origin}${NIGHT.invitePath}` })),
     )
   })
+
+  it('shows the match the session remembers, from the film, and hides it on Keep going — Batch X12a', async () => {
+    mocks.fetchMovieNight.mockResolvedValue({
+      ...NIGHT,
+      match: { movieId: MOVIE_ID, title: 'The Exorcist', year: 1973, posterPath: '/exorcist.jpg' },
+    })
+    renderPage()
+
+    expect(await screen.findByText("It's a match")).not.toBeNull()
+    expect(screen.getByText('The Exorcist (1973)')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Keep going' }))
+    await waitFor(() => expect(screen.queryByText("It's a match")).toBeNull())
+  })
+
+  it('shows no match banner when the session has none', async () => {
+    renderPage()
+    await screen.findByRole('region', { name: /Tonight's shortlist/ })
+    expect(screen.queryByText("It's a match")).toBeNull()
+  })
 })

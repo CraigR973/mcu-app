@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { formatDateTime } from '@/lib/utils'
 import { History } from 'lucide-react'
 import { auditFieldChangeSchema } from '@mcu/shared'
 
@@ -128,7 +129,7 @@ export default function ItemHistory({ movieId }: Props) {
                   )}
                 </span>
                 <span className="text-[11px] text-muted-foreground">
-                  {new Date(entry.createdAt).toLocaleString()}
+                  {formatDateTime(entry.createdAt)}
                 </span>
               </div>
               <Changes entry={entry} />

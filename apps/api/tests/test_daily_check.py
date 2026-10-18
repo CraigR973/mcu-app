@@ -463,7 +463,12 @@ async def test_home_lists_the_problems_and_a_check_that_has_stopped(db: AsyncSes
         never = (await client.get("/api/v1/attention")).json()
     assert never == {
         "items": [
-            {"key": "check:stale", "message": "The daily check hasn't run yet.", "since": None}
+            {
+                "key": "check:stale",
+                "message": "The daily check hasn't run yet.",
+                "since": None,
+                "noteId": None,
+            }
         ],
         "checkedAt": None,
     }
@@ -574,3 +579,75 @@ async def test_the_spec_job_beats_when_nothing_is_due(
 
     specs = await db.get(JobHeartbeat, "cron-specs")
     assert specs is not None and specs.outcome == "nothing due"
+
+
+# ---------------------------------------------------------------------------
+# Batch X12a — "Tell Craig"
+# ---------------------------------------------------------------------------
+
+
+async def test_a_line_from_mark_lands_in_craigs_row_until_he_clears_it(db: AsyncSession) -> None:
+    craig_id = (await _person(db, UserRole.admin)).id
+    mark = await _person(db)
+
+    async with _as(db, mark.id) as client:
+        sent = await client.post(
+            "/api/v1/attention/notes", json={"message": "  The Alien disc is in the Lounge  "}
+        )
+        assert sent.status_code == 204
+        # Clearing is Craig's, not the sender's.
+        assert (await client.get("/api/v1/attention")).status_code == 403
+
+    async with _as(db, craig_id) as client:
+        items = (await client.get("/api/v1/attention")).json()["items"]
+        (note,) = [item for item in items if item["noteId"]]
+        assert note["message"] == f"{mark.display_name} says: The Alien disc is in the Lounge"
+        assert note["key"] == f"note:{note['noteId']}"
+
+        assert (await client.delete(f"/api/v1/attention/notes/{note['noteId']}")).status_code == 204
+        again = (await client.get("/api/v1/attention")).json()["items"]
+        assert all(item["noteId"] is None for item in again)
+        # Clearing twice, or something that was never there, is harmless or a 404.
+        assert (await client.delete(f"/api/v1/attention/notes/{note['noteId']}")).status_code == 204
+        missing = await client.delete(f"/api/v1/attention/notes/{uuid.uuid4()}")
+        assert missing.status_code == 404
+
+    async with _as(db, mark.id) as client:
+        assert (await client.delete(f"/api/v1/attention/notes/{note['noteId']}")).status_code == 403
+
+
+async def test_a_note_must_have_words_and_stay_short(db: AsyncSession) -> None:
+    mark = await _person(db)
+    async with _as(db, mark.id) as client:
+        assert (
+            await client.post("/api/v1/attention/notes", json={"message": "   "})
+        ).status_code == 422
+        long = await client.post("/api/v1/attention/notes", json={"message": "x" * 301})
+        assert long.status_code == 422
+        assert (
+            await client.post("/api/v1/attention/notes", json={"message": "x" * 300})
+        ).status_code == 204
+
+
+async def test_one_person_cannot_fill_craigs_home(db: AsyncSession) -> None:
+    craig_id = (await _person(db, UserRole.admin)).id
+    mark = await _person(db)
+    async with _as(db, mark.id) as client:
+        for number in range(5):
+            sent = await client.post("/api/v1/attention/notes", json={"message": f"note {number}"})
+            assert sent.status_code == 204
+        sixth = await client.post("/api/v1/attention/notes", json={"message": "one more"})
+        assert sixth.status_code == 429
+
+    # Craig clearing one makes room.
+    async with _as(db, craig_id) as client:
+        first = next(
+            item
+            for item in (await client.get("/api/v1/attention")).json()["items"]
+            if item["noteId"]
+        )
+        await client.delete(f"/api/v1/attention/notes/{first['noteId']}")
+    async with _as(db, mark.id) as client:
+        assert (
+            await client.post("/api/v1/attention/notes", json={"message": "again"})
+        ).status_code == 204

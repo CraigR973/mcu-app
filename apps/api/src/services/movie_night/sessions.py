@@ -53,6 +53,24 @@ class Match:
     movie_id: uuid.UUID | None
     title: str
     poster_path: str | None
+    year: int | None = None
+
+
+async def film_face(
+    db: AsyncSession, suggestion: MovieNightSuggestion
+) -> tuple[str, int | None, str | None]:
+    """The title, year and poster to show for a suggestion: **the film's own** when it is on
+    the shelf, the snapshot taken when it was suggested otherwise (Batch X12a, UX48-05).
+
+    The snapshot is what the film was called that evening. After Craig identified *The
+    Exorcist* (1973) the shortlist and the push still read "Exorcist, the", with no year and
+    no poster, because they read the copy and not the film.
+    """
+    if suggestion.movie_id is not None:
+        movie = await db.get(Movie, suggestion.movie_id)
+        if movie is not None:
+            return movie.title, movie.year, movie.poster_path or suggestion.poster_path
+    return suggestion.title, suggestion.year, suggestion.poster_path
 
 
 async def publish(
@@ -127,11 +145,8 @@ async def detect_match(
             vote.announced_at_utc = announced
     await db.flush()
 
-    return Match(
-        movie_id=suggestion.movie_id,
-        title=suggestion.title,
-        poster_path=suggestion.poster_path,
-    )
+    title, year, poster = await film_face(db, suggestion)
+    return Match(movie_id=suggestion.movie_id, title=title, poster_path=poster, year=year)
 
 
 async def record_vote(
@@ -191,6 +206,10 @@ async def record_vote(
     match = await detect_match(db, session=session, suggestion=suggestion)
     if match is None:
         return None
+    # Remembered on the session, so the night page shows it after the event and the push
+    # are gone (Batch X12a).
+    session.matched_suggestion_id = suggestion.id
+    await db.flush()
 
     await publish(
         db,
@@ -200,6 +219,7 @@ async def record_vote(
             "movieId": str(match.movie_id) if match.movie_id else None,
             "title": match.title,
             "posterPath": match.poster_path,
+            "year": match.year,
         },
     )
     await _notify_match(db, session=session, match=match, now=now)

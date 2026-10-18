@@ -14,7 +14,7 @@ import {
   setTypeLabel,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 
 function SetRow({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
   return (
@@ -184,7 +184,7 @@ export function CompletionSets({ onOpenChange }: { onOpenChange?: (open: boolean
           <p className="text-xs text-muted-foreground">
             {sets.length} sets
             {insightsQuery.data?.oldestRefresh
-              ? ` · oldest refreshed ${new Date(insightsQuery.data.oldestRefresh).toLocaleDateString()}`
+              ? ` · oldest refreshed ${formatDate(insightsQuery.data.oldestRefresh)}`
               : ''}
           </p>
           <ul className="grid gap-2 sm:grid-cols-2">

@@ -14,7 +14,7 @@ import {
   TRASH_TABLE_LABELS,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 const TABLES: TrashTable[] = [
   'collection_items',
@@ -89,7 +89,7 @@ function Row({ row, table }: { row: TrashRow; table: TrashTable }) {
           <p className="text-xs text-muted-foreground">{row.sublabel}</p>
         ) : null}
         <p className="text-[11px] text-muted-foreground">
-          Removed {new Date(row.deletedAt).toLocaleString()}
+          Removed {formatDateTime(row.deletedAt)}
         </p>
         {destroy.isError ? (
           <p role="alert" className="text-xs text-destructive">

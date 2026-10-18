@@ -41,6 +41,7 @@ const ALIEN = '3f2504e0-4f89-41d3-9a0c-0305e82c3402'
 const STATS: Stats = {
   totalMovies: 1888,
   totalItems: 1880,
+  downloadCopies: 422,
   identifiedMovies: 1678,
   watchedMovies: 594,
   formats: [{ key: 'bluray', label: 'Blu-ray', itemCount: 900, movieCount: 880 }],
@@ -172,6 +173,15 @@ describe('Home as rows, the collection first — Batch W2', () => {
       'Completion',
       'Recent activity',
     ])
+  })
+
+  it('says what each count is: films owned, and copies split into discs and downloads — Batch X12a', async () => {
+    renderHome()
+    expect(await screen.findByText('Films owned')).not.toBeNull()
+    expect(screen.getByText('Copies')).not.toBeNull()
+    expect(screen.getByText('1,458 discs, 422 downloads')).not.toBeNull()
+    expect(screen.getByText('Formats (copies)')).not.toBeNull()
+    expect(screen.getByText('Where they live (copies)')).not.toBeNull()
   })
 
   it('makes every section but Recent activity a row that scrolls sideways', async () => {

@@ -34,7 +34,7 @@ import {
   updateRetailer,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 /**
  * A scraped price, rendered as money in the currency it was **read in**.
@@ -693,7 +693,7 @@ function NightlyPanel() {
               <li key={run.id} className="py-2 text-xs">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-foreground">
-                    {new Date(run.startedAt).toLocaleString()}
+                    {formatDateTime(run.startedAt)}
                   </span>
                   <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
                     {run.trigger}
