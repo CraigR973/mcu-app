@@ -2384,6 +2384,12 @@ describe('Batch X9 — identification in doubt', () => {
     expect(identifyDoubtsSchema.parse(page)).toEqual(page)
   })
 
+  it('reads how many films the doubts are about (Batch Y6), and an API from before it', () => {
+    const page = { items: [doubt, { ...doubt, doubtId: '00000000-0000-4000-8000-0000000000d2' }], total: 2, films: 1 }
+    expect(identifyDoubtsSchema.parse(page)).toEqual(page)
+    expect(() => identifyDoubtsSchema.parse({ ...page, films: -1 })).toThrow()
+  })
+
   it('refuses a source it does not know, and a film identified as nothing', () => {
     expect(() => identifyDoubtsSchema.parse({ items: [{ ...doubt, source: 'guess' }], total: 1 })).toThrow()
     expect(() => identifyDoubtsSchema.parse({ items: [{ ...doubt, tmdbId: 0 }], total: 1 })).toThrow()

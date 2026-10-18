@@ -2235,6 +2235,9 @@ export const moveCopySchema = z.object({
 export const identifyDoubtsSchema = z.object({
   items: z.array(identifyDoubtSchema),
   total: z.number().int().nonnegative(),
+  // Batch Y6: the films the doubts are about, equal to the Archive's "In doubt (N)". Optional
+  // so an API from before Y6 still parses.
+  films: z.number().int().nonnegative().optional(),
 })
 
 export const recentIdentificationSchema = z.object({

@@ -353,6 +353,8 @@ async def test_a_doubt_settled_by_a_merge_goes_with_the_film_and_comes_back_on_u
 async def test_the_daily_check_counts_a_doubt_a_fortnight_old(db: AsyncSession) -> None:
     tmdb_id, _, _ = _tmdb_ids()
     film = await _film(db, "The Night of the Hunter", tmdb_id=tmdb_id, year=1991)
+    # Since Y6 (#279) a doubt counts only while the film has an owned copy.
+    await _disc(db, film, "dvd")
     doubt = await raise_doubt(db, film, source="recheck", note="Laughton's grouping.")
     assert doubt is not None
     now = utcnow()

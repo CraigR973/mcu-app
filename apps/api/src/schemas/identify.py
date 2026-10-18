@@ -139,6 +139,9 @@ class IdentifyDoubtResponse(BaseModel):
 class IdentifyDoubtsResponse(BaseModel):
     items: list[IdentifyDoubtResponse]
     total: int = Field(ge=0)
+    #: The films the doubts are about (Batch Y6): equal to the Archive's "In doubt (N)" and the
+    #: overview's "Identified, in doubt". One film can have two doubts, so it can be below total.
+    films: int = Field(ge=0)
 
 
 class IdentificationDoubtResponse(BaseModel):

@@ -42,6 +42,12 @@ const HOW: Record<string, string> = {
   kept: 'kept as right',
 }
 
+// Batch Y6: the overview and the Archive count films; a film can have two doubts, one card each.
+function doubtCountWords({ total, films }: { total: number; films?: number }): string {
+  if (films === undefined || films === total) return COUNT.format(total)
+  return `${COUNT.format(films)} ${films === 1 ? 'film' : 'films'}, ${COUNT.format(total)} doubts`
+}
+
 function Overview({ overview }: { overview: IdentifyOverview }) {
   const rows: Array<[string, number]> = [
     ['Set aside as TV', overview.setAsideTv],
@@ -514,7 +520,7 @@ export default function IdentifyFilmsPage() {
       {doubts.length > 0 && doubtsQuery.data ? (
         <section className="space-y-3" aria-labelledby="identify-doubts-heading">
           <h2 id="identify-doubts-heading" className="section-heading">
-            In doubt ({COUNT.format(doubtsQuery.data.total)})
+            In doubt ({doubtCountWords(doubtsQuery.data)})
           </h2>
           <p className="text-sm text-muted-foreground">
             Films already identified that something says are another film. Keep each one, or pick the film it is.
