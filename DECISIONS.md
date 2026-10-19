@@ -6130,3 +6130,64 @@ contemporaneous.
        `*.xlsx` is ignored by pattern (Craig's two catalogue spreadsheets stay, untracked and
        untouched); the duplicate #28 is noted in place, not renumbered (documents cite both);
        `group-start.md` cites #24, not #13.
+
+285. **Batch 38: the end-to-end suite (Phase 13.10). Its shape, the ledger's amendments, and what it
+     found.** Re-measured read-only on 19 Oct before code; built at Craig's go the same day.
+
+     - **Shape.** `apps/e2e` (`@mcu/e2e`, Playwright 1.60.0) boots the production web build
+       (`VITE_API_URL=http://127.0.0.1:8000`, served on `localhost:4173`: two origins, as Vercel
+       and Railway are, never the dev proxy) against the real API on a throwaway Postgres. One
+       worker, no retries, a fresh copy of one seeded database per browser. Four projects:
+       `chromium`, `firefox`, `webkit`, and `jobs` (no browser: the five cron jobs).
+     - **One fake outside world**, `apps/api/tests/outside_world/`, armed in every Python process
+       the harness starts by `apps/e2e/fakes/sitecustomize.py`: a `MockTransport` under every
+       `httpx` client **and under `httpx2`, the library the `anthropic` SDK brings**, answering
+       by host (TMDB, eBay Browse/OAuth/Trading, Brave, Blu-ray.com, the shops, the model in the
+       real streaming format, push services that decrypt what the app sent), plus a backstop that
+       refuses any name lookup or socket to another machine. **It fails closed**: an unknown host
+       fails the call and the case; a failure to arm ends the process (Python otherwise carries
+       on after a failed `sitecustomize`); it refuses a database URL that is not local.
+       `test_outside_world.py` pins all of it. Chosen over per-client dependency overrides
+       because it is the only seam that also covers the cron subprocesses and the call sites
+       that have none.
+     - **Incident, disclosed:** the first chat case, before the `httpx2` cover existed, sent one
+       request to api.anthropic.com from the Mac (a fake key, so a 401; the body held the system
+       prompt with Mark's name and the date, and one test question). Nothing else left the
+       machine. The gap is closed and tested.
+     - **Amendments to the ledger's criteria, none dropped:** (1) *Import has no screen and no
+       endpoint*: the case runs the real import CLI on the throwaway database and checks the
+       screens. (2) *T8a's eBay alert is the eighth flow*, with its own case. (3) *CR43-07 is
+       wider than the review said*: `test_cron_scripts.py` replaces `_run` with a fake, so the
+       shop check and reminders had not run either; all five jobs now run as
+       `python -m src.scripts.<job>`, in the e2e job's `jobs` project rather than in pytest (the
+       seeded database and the app's own seed paths are already there). (4) *CR43-05* has two
+       vitest cases (revert-the-fix proved) and a browser case. (5) The two-message chat is held
+       to the wire by the fake model, which refuses a replayed block carrying an SDK-only field
+       as the real API does.
+     - **What it cannot prove, said plainly:** reading a barcode from a real camera (the typed
+       digits take the same road); the tap on a push notification (the payload and URL the app
+       sent are read, and the page that URL opens is tested); speech recognition (the dictation
+       button is asserted where it exists and **skipped visibly on Firefox**, which has none).
+       **WebKit cannot run on this Mac**: Playwright has no WebKit build for macOS 13, so the
+       criterion's "green locally on all three" is met on CI for WebKit and locally for
+       Chromium and Firefox.
+     - **CI.** A seventh job, `e2e`, on pull requests, pushes to `main` and manual runs, **not on
+       feature-branch pushes** (a PR commit already runs CI twice). Cost: see STATUS.
+     - **Found by the suite.** Fixed: (a) *a person's first message to the assistant could 500*
+       (the usage read and the message both created the `ai_settings` row; the second broke its
+       unique index), fixed with an insert that yields to the other, with a regression test
+       that fails on the old code; (b) *Safari's wording for a removed chunk was not
+       recognised* (`'text/html' is not a valid JavaScript MIME type`), so an iPhone met
+       "Something went wrong" instead of the newest-version prompt; the pattern and a test were
+       added. **Not fixed, for Craig to call:** (c) a first message in a brand-new conversation
+       races the conversation's own record against the Yes/No card: the page copies the record's
+       `pendingToolCalls` over the card the stream has just raised, so a slow link can wipe the
+       card (the write stays pending on the server; reopening the conversation shows it);
+       (d) a disc added by TMDB id alone whose answer is lost stays "never heard back" for
+       good, since there is no film id to read it back by; (e) the barcode screen shows the raw
+       code ("already owned on blu_ray"); (f) a refused connection counts as "may have landed"
+       (the conservative choice, noted so nobody is surprised that the queue says unconfirmed).
+     - **Left out, with reasons:** Loans, Move discs, Identify films, doubts, watch history and the
+       notification settings (not in the ledger; covered by API tests); visual regression and axe
+       (R6 and X12b did them); the production CSP header (Vercel serves it, `csp.test.ts` holds
+       it); a Chromium fake-camera barcode case (the real-device check stays Craig's, item 1d).

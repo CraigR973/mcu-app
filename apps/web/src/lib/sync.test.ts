@@ -240,6 +240,23 @@ describe('flushing on reconnect', () => {
     expect(init?.method ?? 'GET').toBe('GET')
   })
 
+  it('sends a queued write once even when two flushes start together', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['4k_uhd'], hasPlaybackIssues: false })
+    setOnline(true)
+    // `online` firing twice, or "Sync now" pressed during the automatic flush.
+    const fetchMock = vi.fn().mockResolvedValue(itemResponse(201))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const [first, second] = await Promise.all([flushQueue(), flushQueue()])
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(first.sent).toBe(1)
+    expect(second).toEqual(first)
+    expect(await listQueue()).toHaveLength(0)
+  })
+
   it('stops and records the reason when the server refuses a queued edit', async () => {
     setOnline(false)
     vi.stubGlobal('fetch', offlineFetch())

@@ -94,14 +94,14 @@ test.describe('offline, against an API on another origin', () => {
     expect(await queueState(page)).toBe('[["queued",null]]')
 
     // 2. The connection returns and the replay goes out. It reaches the server and lands, but the
-    // answer is lost on the way back (a 503): this is the step CR43-05 found untested.
+    // answer is lost on the way back (the connection is reset): the step CR43-05 found untested.
     const seen: string[] = []
     page.on('response', (r) => r.url().endsWith('/api/v1/collection') && seen.push(`${r.request().method()} ${r.status()}`))
     page.on('requestfailed', (r) => r.url().endsWith('/api/v1/collection') && seen.push(`failed ${r.failure()?.errorText}`))
     await page.route(`${API_ORIGIN}/api/v1/collection`, async (route) => {
       if (route.request().method() !== 'POST') return route.continue()
-      const response = await route.fetch()
-      return route.fulfill({ response, status: 503, body: 'upstream gone' })
+      await route.fetch() // the server has it
+      return route.abort('connectionreset') // and the answer never reaches the page
     })
     await context.setOffline(false)
     // Chromium and Firefox announce the connection coming back; WebKit under Playwright does not

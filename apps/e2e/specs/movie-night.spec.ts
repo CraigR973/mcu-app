@@ -19,6 +19,26 @@ test.describe('movie night', () => {
     await craig.page.getByRole('button', { name: 'Start movie night' }).click()
     await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
     const nightUrl = new URL(craig.page.url()).pathname
+    // A second listener of our own on the same stream, to say when each piece of it reaches the
+    // page, for the failure message (WebKit is the browser that has needed it).
+    await craig.page.evaluate(
+      ({ api, id }) => {
+        const chunks: [number, number][] = []
+        ;(window as unknown as { __chunks: [number, number][] }).__chunks = chunks
+        const started = Date.now()
+        void (async () => {
+          const token = localStorage.getItem('mcu.accessToken') ?? ''
+          const response = await fetch(`${api}/api/v1/movie-night/${id}/events`, { headers: { authorization: `Bearer ${token}` } })
+          const reader = response.body!.getReader()
+          for (;;) {
+            const { done, value } = await reader.read()
+            if (done) break
+            chunks.push([Date.now() - started, value?.length ?? 0])
+          }
+        })()
+      },
+      { api: API_ORIGIN, id: nightUrl.split('/').pop() ?? '' },
+    )
     await craig.page.getByRole('button', { name: 'Send to Mark' }).click()
 
     // What reached Mark's phone says which night to open.
@@ -67,7 +87,8 @@ test.describe('movie night', () => {
         },
         { api: API_ORIGIN, id: nightUrl.split('/').pop() ?? '' },
       )
-      throw new Error(`Craig's page was not told live. Console: ${said.join(' | ')}. Its own stream: ${streamLog.join(', ')}. A new one: ${stream}`)
+      const timeline = await craig.page.evaluate(() => JSON.stringify((window as unknown as { __chunks: unknown }).__chunks))
+      throw new Error(`Craig's page was not told live. Chunks that reached it (ms, bytes): ${timeline}. Console: ${said.join(' | ')}. Its own stream: ${streamLog.join(', ')}. A new one: ${stream}`)
     }
     await expect.poll(() => pushesTo(craigPhone).map((p) => p.title).join('|')).toContain('match')
 
