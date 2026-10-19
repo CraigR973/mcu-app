@@ -48,6 +48,10 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
       }),
     )
 
+    let chunkUrl = ''
+    page.on('request', (request) => {
+      if (chunk.test(request.url())) chunkUrl = request.url()
+    })
     let loads = 0
     page.on('load', () => (loads += 1))
     // What the browser itself said about the failed import, for the failure message: each
@@ -70,6 +74,11 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
     expect(afterFirst).toBeLessThanOrEqual(1)
 
     await page.unroute(chunk)
+    // The chunk is back for this page before it is asked to reload (a route removed an instant
+    // ago can still be answering in some engines).
+    await expect
+      .poll(() => page.evaluate((url) => fetch(url, { cache: 'reload' }).then((r) => r.headers.get('content-type')), chunkUrl))
+      .toMatch(/javascript/)
     await page.getByRole('button', { name: 'Reload' }).first().click()
     await expect(page.getByRole('heading', { name: 'Wanted', level: 1 })).toBeVisible()
   })
