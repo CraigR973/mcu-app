@@ -16,6 +16,7 @@ import copy
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs
 
 import httpx
 
@@ -83,10 +84,42 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
     scenario = world.scenario()
 
     if path == "/identity/v1/oauth2/token":
+        form = parse_qs(request.content.decode())
+        grant = (form.get("grant_type") or [""])[0]
+        if grant == "authorization_code":
+            if (form.get("code") or [""])[0] == "declined":
+                return httpx.Response(400, json={"error": "invalid_grant", "error_description": "code refused"})
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "e2e-fake-user-token",
+                    "expires_in": 7200,
+                    "refresh_token": "e2e-fake-refresh-token",
+                    "refresh_token_expires_in": 47304000,
+                    "token_type": "User Access Token",
+                },
+            )
         return httpx.Response(
             200,
             json={"access_token": "e2e-fake-ebay-token", "expires_in": 7200, "token_type": "Application Access Token"},
         )
+
+    if path == "/ws/api.dll":
+        call_name = request.headers.get("x-ebay-api-call-name", "")
+        if call_name == "GetUser":
+            body = (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<GetUserResponse xmlns="urn:ebay:apis:eBLBaseComponents"><Ack>Success</Ack>'
+                "<User><UserID>e2e_collector</UserID></User></GetUserResponse>"
+            )
+        elif call_name == "GetMyeBayBuying":
+            body = (_FIXTURES / "ebay_trading_buying_doc_sample.xml").read_text()
+        elif call_name == "GetMyeBaySelling":
+            body = (_FIXTURES / "ebay_trading_selling_doc_sample.xml").read_text()
+        else:
+            world.log(kind="unknown", host=request.url.host, path=path, why=call_name)
+            return httpx.Response(404)
+        return httpx.Response(200, text=body, headers={"content-type": "text/xml"})
 
     if path == "/buy/browse/v1/item_summary/search":
         query = request.url.params.get("q", "")
