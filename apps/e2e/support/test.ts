@@ -21,7 +21,7 @@ export interface Session {
 
 interface Fixtures {
   /** A new browser context already signed in as that person (no login form). */
-  signedIn: (person: Person) => Promise<Session>
+  signedIn: (person: Person, options?: { worker?: boolean }) => Promise<Session>
   /** The app's own API as that person, from the test process. */
   api: (person: Person) => Promise<Api>
   /** Stop or start the API process (the one the browser talks to). */
@@ -34,9 +34,12 @@ interface Fixtures {
 export const test = base.extend<Fixtures>({
   signedIn: async ({ browser }, use) => {
     const opened: BrowserContext[] = []
-    await use(async (person) => {
+    await use(async (person, options) => {
       const tokens = await tokensFor(person)
-      const context = await browser.newContext()
+      // The service worker installs on a page's first load and then takes the page over, which
+      // reloads it. A case that is not about the worker does not want that mid-click, so it runs
+      // without one; the offline cases ask for it.
+      const context = await browser.newContext({ serviceWorkers: options?.worker ? 'allow' : 'block' })
       opened.push(context)
       await context.addInitScript((t) => {
         try {

@@ -41,6 +41,8 @@ NAMED: tuple[Film, ...] = (
     # Wanted, not owned: the shop-price and alert cases.
     Film(1401, "Ember Coast", 2012, "Lena Fox", 103, ("Drama",)),
     Film(1402, "Salt And Static", 2005, "Joss Hale", 99, ("Science Fiction",)),
+    # In the catalogue (wanted) but not owned: the offline replay adds a copy of it.
+    Film(1403, "Paper Lantern", 2007, "Yuki Aoki", 94, ("Drama",)),
     # Not owned at the start: the add-by-scan flow adds this one.
     Film(1101, "Midnight Ferry", 2009, "Nora Quill", 101, ("Mystery",)),
     # The movie-night shortlist and match.
