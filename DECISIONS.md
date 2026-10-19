@@ -6212,3 +6212,17 @@ contemporaneous.
        notification settings (not in the ledger; covered by API tests); visual regression and axe
        (R6 and X12b did them); the production CSP header (Vercel serves it, `csp.test.ts` holds
        it); a Chromium fake-camera barcode case (the real-device check stays Craig's, item 1d).
+
+286. **Group Z is planned: one batch, Z1, for the four faults Batch 38 found and did not fix, at
+     Craig's word on 19 Oct ("batch up the follow up items").** The faults are #285's items c, d,
+     e and g: the chat card race, a TMDB-id add whose lost answer never settles, the raw
+     `blu_ray` on the barcode screen, and two simultaneous likes missing the match.
+
+     - **One batch, not four:** each is small and each is proved by a case the suite already has
+       or is a few lines from; two are races, so top tier · high.
+     - **Recommended fixes, to be re-verified before building:** (c) never let a conversation
+       record overwrite a card the stream raised; (d) read a TMDB-id create back through the
+       existing duplicate check, no new endpoint and no migration; (e) the one format formatter;
+       (g) lock the night's session row while a vote is recorded, no migration.
+     - **Left out:** the WebKit skips wait on Craig's two-phone check (`OWNER-ACTIONS.md` 16b);
+       the double CI run on every pull-request commit stays Craig's call.

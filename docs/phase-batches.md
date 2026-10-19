@@ -4381,6 +4381,75 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~37~~ | ~~On-this-day + rewatch~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~**11.6**~~ | `50a4828` · caller-scoped anniversary memories and high-rated, not-recently-watched suggestions; date-controlled Postgres test proves a watch from a year ago appears on the dashboard |
 | ~~38~~ | ~~E2E suite~~ | ~~🟢~~ | — built | — built | **built** | ~~13.10~~ | #94 · Playwright on Chromium, Firefox and WebKit against the production bundle with every outside service faked; five cron jobs run as Railway runs them (`DECISIONS.md` #285) |
 
+## Group Z — what the end-to-end suite found, planned 19 Oct
+
+**Planned 2026-10-19 from Batch 38's findings** (`DECISIONS.md` #285, items c, d, e and g), at
+Craig's word to batch up the follow-ups. **Criteria authored 2026-10-19**, so `DECISIONS.md` #54
+does not apply. One batch, because the four are small and each is proved by a case that already
+exists or is a few lines from one. Model tier is Group V's top tier. Lands as Group Y did: a
+`feat/` branch, a pull request, CI green **including the `e2e` job**, a merge commit, production
+`/api/v1/health` reporting the merge SHA with `db: ok`. **Re-verify each fault in the code first**
+(`batch-start.md` step 3): the four were measured on 19 Oct and the code may have moved.
+
+| Batch | Covers | Size | Gate | Claude Code | Codex |
+|---|---|---|---|---|---|
+| Z1 | The four faults below | 🟡 | Craig's go | top tier · high | top tier · High |
+
+### Z1 — Four faults the end-to-end suite found
+**Why top tier.** Two are races (a client state race, a server write skew) where a fix that
+passes the obvious case can leave the real one open, and one changes how the offline queue
+settles a write.
+
+**Found 19 Oct, all measured, none yet fixed:**
+
+1. **The Yes/No card can vanish (client race).** `AiChatPage` copies the conversation record's
+   `pendingToolCalls` over its own state whenever that record arrives. On a first message in a
+   brand-new conversation the record is fetched as the conversation opens, and a slow answer can
+   land *after* the stream has raised the card, writing an empty list over it. The write stays
+   pending on the server; reopening the conversation shows the card. Seen on Firefox and WebKit
+   on CI runners, not on a fast machine.
+2. **A disc added by TMDB id, whose answer is lost, never settles (offline queue).** `reconcile`
+   in `lib/sync.ts` returns "unknown" when the queued create has no `movieId`, which is every add
+   made from a TMDB search for a film the catalogue has not seen. The banner says "we'll check
+   rather than send it twice" and cannot; only Discard clears it. `GET /collection/duplicate-check`
+   already answers "which copies of this TMDB id exist", so the read-back needs no new endpoint.
+3. **The barcode screen shows a raw code.** "already owned on blu_ray" (`services/barcode.py`
+   builds the evidence from the stored format codes). Every other screen says "Blu-ray".
+4. **Two likes cast together can both miss the match (server write skew).** `detect_match` reads
+   the votes without locking, so two transactions that commit within milliseconds each see only
+   their own like and neither announces. Unproven in production (a real pair is seconds apart);
+   seen once under CI timing.
+
+**Acceptance:**
+- **1.** A conversation record that arrives while a reply is streaming, or after the stream has
+  raised a card, never removes that card; a record read on opening a conversation still restores
+  a card left pending. A browser case sends the **first message in a new conversation** with the
+  record held back until after the card appears, and the card stays (the `chat.spec.ts` card case
+  today opens the conversation first to avoid this; it returns to the real order). Fails on the
+  old code.
+- **2.** A queued create with a TMDB id and no film id is read back through the duplicate check:
+  landed settles it, absent returns it to `queued`, unreachable leaves it unconfirmed. Vitest
+  cases for each, and the `offline.spec.ts` replay case gains a variant that adds by TMDB id.
+  Fails on the old code.
+- **3.** The barcode screen names formats as the rest of the app does ("Blu-ray", "4K UHD",
+  "DVD"), through the one formatter the Archive uses; a test fails if the evidence string holds a
+  stored code. Check the other places a stored code reaches a sentence (`grep` for
+  `formats.join` in `apps/api/src` and the web) and fix or list what is found.
+- **4.** Recording a vote takes a lock on the night (`SELECT … FOR UPDATE` on the session row)
+  so detection sees the other person's committed like. A Postgres test casts both likes from two
+  sessions at once, many times, and every run ends with exactly one match and one announcement;
+  it fails on the old code. No migration.
+- **Guards.** Each fix is shown to bite by reverting it. The `e2e` job is green on all three
+  browsers with no new skip.
+- Tests. Gate green. `STATUS.md`, this entry and `DECISIONS.md` updated.
+
+**Not in Z1, and why.** The two WebKit skips (the lost-answer replay, the live match on an open
+page) wait on Craig's two-phone check (`OWNER-ACTIONS.md` 16b): if Safari does not show the live
+match, that becomes a batch of its own (a polling fallback). Stopping the existing double CI run
+(push and pull request on every commit) is a separate small workflow change, Craig's call.
+
+---
+
 ## Batch groups
 
 **Grouping rule:** batches share a group when they touch the same files, share a
@@ -4433,6 +4502,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 3** | ~~checkpoint: Craig's yes on the value basis~~ (yes, 12 Oct, #256) → ~~X6~~ (`51c81ff`, 14 Oct) → ~~checkpoint: his credential steps~~ (storage decided, #257; done by a session at his word, 14 Oct, #268) → ~~X4~~ (`87a734b`, 14 Oct) → ~~X5~~ (`19c9aad`, 14 Oct) | top tier · xhigh | top tier · Extra High | Dated: X6 before the 1 Nov re-pricing, X5 by 31 Oct. **X4 joined it at Craig's word (#255):** its one tie is landing before X5 writes live data. X6 goes first, so a stall on X4's credentials cannot hold up its date. X5's live data steps stop for his word inside it. `xhigh` from X4's credentials and X5's backfill |
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
+| **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
