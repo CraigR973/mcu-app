@@ -66,10 +66,16 @@ test.describe('offline, against an API on another origin', () => {
       )
     // A film the catalogue already knows, so the add names it by id and a lost answer can be
     // read back. (One added by TMDB id alone has nothing to read back by.)
-    await craig.post('/wanted', { tmdbId: 1403 })
+    const wanted = await craig.post<{ movieId: string }>('/wanted', { tmdbId: 1403 })
     const { context, page } = await signedIn('Craig', { worker: true })
     await page.goto('/collection/add')
     await workerInControl(page)
+    // Open the film's own screen once while there is a connection, so the page has its code in
+    // hand when the add sends the person there: WebKit under Playwright cannot fetch a lazy chunk
+    // offline, which is a limit of its offline switch, not the point of this case.
+    await page.goto(`/movies/${wanted.movieId}`)
+    await expect(page.getByRole('heading', { name: 'Paper Lantern', level: 1 })).toBeVisible()
+    await page.getByRole('link', { name: 'Add a copy' }).click()
     await page.getByRole('tab', { name: 'Search title' }).click()
     await page.getByRole('textbox', { name: 'Search for a film' }).fill('Paper Lantern')
     await page.getByRole('button', { name: 'Search', exact: true }).click()

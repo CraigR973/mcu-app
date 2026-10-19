@@ -38,6 +38,9 @@ test.describe('movie night', () => {
     // Craig is told live, and by push.
     const said: string[] = []
     craig.page.on('console', (message) => said.push(message.text().slice(0, 160)))
+    // A page that is not in front may be throttled by the engine (WebKit pauses a background
+    // page's streams); a person watching the night has it in front.
+    await craig.page.bringToFront()
     const shownLive = craig.page.getByText("It's a match")
     const told = await shownLive.waitFor({ timeout: 10_000 }).then(() => true, () => false)
     if (!told) {
