@@ -95,6 +95,9 @@ test.describe('offline, against an API on another origin', () => {
 
     // 2. The connection returns and the replay goes out. It reaches the server and lands, but the
     // answer is lost on the way back (a 503): this is the step CR43-05 found untested.
+    const seen: string[] = []
+    page.on('response', (r) => r.url().endsWith('/api/v1/collection') && seen.push(`${r.request().method()} ${r.status()}`))
+    page.on('requestfailed', (r) => r.url().endsWith('/api/v1/collection') && seen.push(`failed ${r.failure()?.errorText}`))
     await page.route(`${API_ORIGIN}/api/v1/collection`, async (route) => {
       if (route.request().method() !== 'POST') return route.continue()
       const response = await route.fetch()
@@ -104,7 +107,11 @@ test.describe('offline, against an API on another origin', () => {
     // Chromium and Firefox announce the connection coming back; WebKit under Playwright does not
     // fire `online`, which is the event the app flushes on. Say it for that browser.
     if (browserName === 'webkit') await page.evaluate(() => window.dispatchEvent(new Event('online')))
-    await expect.poll(() => queueState(page)).toBe('[["unconfirmed",null]]')
+    try {
+      await expect.poll(() => queueState(page)).toBe('[["unconfirmed",null]]')
+    } catch (failure) {
+      throw new Error(`the page saw these answers to its add: ${seen.join(', ') || 'none'}\n${String(failure)}`)
+    }
     expect(copies()).toBe('1')
 
     // 3. The next sync reads the shelf back instead of sending it again.

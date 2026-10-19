@@ -10,6 +10,11 @@ test.describe('movie night', () => {
     const markPhone = await registerDevice(markApi, 'mark-phone')
 
     const craig = await signedIn('Craig')
+    // For the failure message: what Craig's page asked of the live-update stream, and how it ended.
+    const streamLog: string[] = []
+    craig.page.on('request', (r) => r.url().endsWith('/events') && streamLog.push(`asked at ${Date.now() % 100000}`))
+    craig.page.on('requestfinished', (r) => r.url().endsWith('/events') && streamLog.push(`finished at ${Date.now() % 100000}`))
+    craig.page.on('requestfailed', (r) => r.url().endsWith('/events') && streamLog.push(`failed: ${r.failure()?.errorText}`))
     await craig.page.goto('/movie-night')
     await craig.page.getByRole('button', { name: 'Start movie night' }).click()
     await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
@@ -62,7 +67,7 @@ test.describe('movie night', () => {
         },
         { api: API_ORIGIN, id: nightUrl.split('/').pop() ?? '' },
       )
-      throw new Error(`Craig's page was not told live. Console: ${said.join(' | ')}. Stream: ${stream}`)
+      throw new Error(`Craig's page was not told live. Console: ${said.join(' | ')}. Its own stream: ${streamLog.join(', ')}. A new one: ${stream}`)
     }
     await expect.poll(() => pushesTo(craigPhone).map((p) => p.title).join('|')).toContain('match')
 
