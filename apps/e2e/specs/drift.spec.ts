@@ -37,7 +37,8 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
     // Vercel answers an unknown /assets/*.js with index.html at 200 (STATUS, 10 Sep): the
     // script loads, and is not JavaScript.
     const indexHtml = await (await page.request.get('/')).text()
-    await page.route(/\/assets\/WantedPage-[^/]+\.js$/, (route) =>
+    const chunk = /\/assets\/WantedPage-[^/]+\.js$/
+    await page.route(chunk, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'text/html',
@@ -68,7 +69,7 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
     expect(loads).toBe(afterFirst)
     expect(afterFirst).toBeLessThanOrEqual(1)
 
-    await page.unroute(/\/assets\/WantedPage-[^/]+\.js$/)
+    await page.unroute(chunk)
     await page.getByRole('button', { name: 'Reload' }).first().click()
     await expect(page.getByRole('heading', { name: 'Wanted', level: 1 })).toBeVisible()
   })

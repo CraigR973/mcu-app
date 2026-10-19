@@ -88,7 +88,9 @@ test.describe('movie night', () => {
         { api: API_ORIGIN, id: nightUrl.split('/').pop() ?? '' },
       )
       const timeline = await craig.page.evaluate(() => JSON.stringify((window as unknown as { __chunks: unknown }).__chunks))
-      throw new Error(`Craig's page was not told live. Chunks that reached it (ms, bytes): ${timeline}. Console: ${said.join(' | ')}. Its own stream: ${streamLog.join(', ')}. A new one: ${stream}`)
+      const stored = await craigApi.get<{ match?: unknown }>(`/movie-night/${nightUrl.split('/').pop()}`).catch((e) => String(e))
+      const onScreen = (await craig.page.getByRole('main').innerText()).replace(/\s+/g, ' ').slice(0, 300)
+      throw new Error(`Craig's page was not told live. The night as stored: ${JSON.stringify(stored).slice(0, 300)}. On Craig's screen: ${onScreen}. Chunks that reached it (ms, bytes): ${timeline}. Console: ${said.join(' | ')}. Its own stream: ${streamLog.join(', ')}. A new one: ${stream}`)
     }
     await expect.poll(() => pushesTo(craigPhone).map((p) => p.title).join('|')).toContain('match')
 
