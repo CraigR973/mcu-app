@@ -12,16 +12,19 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
 from decimal import Decimal
+from types import SimpleNamespace
+from typing import Any
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user
 from src.database import get_db
 from src.main import app
-from src.models.ai import AiUsageLogEntry
+from src.models.ai import AiSettings, AiUsageLogEntry
 from src.models.profile import Profile, UserRole
 from src.routers.ai import set_ai_client
 from src.services.ai.caps import get_or_create_settings, local_day_bounds, usage_today
@@ -353,6 +356,35 @@ class TestCaps:
         assert claude.prompts == []
         shown = (await client.get("/api/v1/ai/settings")).json()["dailyCostCapUsd"]
         assert shown == "2.00", "the page shows the ceiling that applies"
+
+    async def test_two_first_reads_at_once_make_one_row_and_both_get_it(
+        self, db: AsyncSession, person: Profile, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Batch 38: a person's first visit asks for the caps twice at once (the usage read and
+        the message). Both found no row, and the second insert broke the unique index, so the
+        message answered 500. The second lookup here is blind to a row the first has just made,
+        which is the race; the insert must yield to it and the row must still be returned."""
+        first = await get_or_create_settings(db, person.id)
+
+        real_execute = db.execute
+        blind = {"once": True}
+
+        async def execute_unaware_of_the_row(statement: Any, *args: Any, **kwargs: Any) -> Any:
+            if blind["once"]:
+                blind["once"] = False
+                return SimpleNamespace(scalar_one_or_none=lambda: None)
+            return await real_execute(statement, *args, **kwargs)
+
+        monkeypatch.setattr(db, "execute", execute_unaware_of_the_row)
+        second = await get_or_create_settings(db, person.id)
+
+        assert second.id == first.id
+        count = (
+            await real_execute(
+                select(func.count()).select_from(AiSettings).where(AiSettings.user_id == person.id)
+            )
+        ).scalar_one()
+        assert count == 1
 
     async def test_the_caps_have_upper_bounds(self, client: AsyncClient) -> None:
         """AI45-05: either person could set $1,000 and 10,000 messages a day."""

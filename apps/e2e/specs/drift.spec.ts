@@ -43,11 +43,19 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
 
     let loads = 0
     page.on('load', () => (loads += 1))
+    // What the browser itself said about the failed import, for the failure message: each
+    // engine words it differently, and the app's classifier has to know all three.
+    const said: string[] = []
+    page.on('console', (message) => said.push(message.text().slice(0, 200)))
+    page.on('pageerror', (error) => said.push(String(error).slice(0, 200)))
     await page.getByRole('main').getByRole('link', { name: 'Wanted' }).click()
 
     const failed = page.getByText('Something went wrong')
     await expect(failed).toBeVisible()
-    await expect(page.getByText('This screen needs the newest version').first()).toBeVisible()
+    await expect(
+      page.getByText('This screen needs the newest version').first(),
+      `the page said: ${said.join(' | ')}`,
+    ).toBeVisible()
     // One reload, tried and failed the same way: never a loop.
     const afterFirst = loads
     await page.waitForTimeout(2500)

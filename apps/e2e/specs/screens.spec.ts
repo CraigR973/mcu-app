@@ -70,9 +70,13 @@ test.describe('screens that had never been used', () => {
       const asked = new URL(route.request().url())
       sentTo = asked.origin + asked.pathname
       const state = asked.searchParams.get('state') ?? ''
+      // eBay's page, in effect: send the person back with the code. (A redirect cannot be
+      // fulfilled in WebKit, so the stand-in page does the sending.)
+      const back = `${WEB_ORIGIN}/settings/ebay/connected?code=e2e-code&state=${encodeURIComponent(state)}`
       return route.fulfill({
-        status: 302,
-        headers: { location: `${WEB_ORIGIN}/settings/ebay/connected?code=e2e-code&state=${encodeURIComponent(state)}` },
+        status: 200,
+        contentType: 'text/html',
+        body: `<!doctype html><title>eBay</title><script>location.replace(${JSON.stringify(back)})</script>`,
       })
     })
     await mark.page.goto('/settings?tab=ebay')

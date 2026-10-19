@@ -30,6 +30,9 @@ test.describe('login', () => {
     }
     await enter.click()
     await expect(page).toHaveURL(/\/movies$/)
+    // Let the archive finish loading before leaving it: Firefox reports a navigation made
+    // while the last one's chunks are still arriving as aborted.
+    await expect(page.getByRole('main').getByRole('heading', { name: 'The archive', level: 1 })).toBeVisible()
 
     // First-run does not come back.
     await page.goto('/dashboard')

@@ -46,7 +46,7 @@ test.describe('chat session', () => {
     await expect(card).toBeVisible()
     // Nothing has been written, and the box is locked until the card is answered.
     const box = page.getByRole('textbox', { name: 'Message to the assistant' })
-    await expect(box).toBeDisabled()
+    await expect(box, `placeholder: ${await box.getAttribute('placeholder')}`).toBeDisabled()
     const mark = await api('Mark')
     const before = await mark.get<{ items: unknown[] }>('/watch-log')
     await page.getByRole('button', { name: 'Yes, do it' }).click()

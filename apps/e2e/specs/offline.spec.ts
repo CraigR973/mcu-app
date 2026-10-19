@@ -58,7 +58,7 @@ test.describe('offline, against an API on another origin', () => {
     await expect(page.getByRole('heading', { name: 'Copper Canyon', level: 1 })).toBeVisible()
   })
 
-  test('a replay whose answer is lost is checked, not sent twice: one copy exists afterwards (CR43-05)', async ({ signedIn, api, db }) => {
+  test('a replay whose answer is lost is checked, not sent twice: one copy exists afterwards (CR43-05)', async ({ signedIn, api, db, browserName }) => {
     const craig = await api('Craig')
     const copies = () =>
       db.scalar(
@@ -92,6 +92,9 @@ test.describe('offline, against an API on another origin', () => {
       return route.fulfill({ response, status: 503, body: 'upstream gone' })
     })
     await context.setOffline(false)
+    // Chromium and Firefox announce the connection coming back; WebKit under Playwright does not
+    // fire `online`, which is the event the app flushes on. Say it for that browser.
+    if (browserName === 'webkit') await page.evaluate(() => window.dispatchEvent(new Event('online')))
     await expect.poll(() => queueState(page)).toBe('[["unconfirmed",null]]')
     expect(copies()).toBe('1')
 

@@ -13,7 +13,7 @@ let failed = false
 let first = true
 for (const browser of browsers) {
   console.log(`\n=== ${browser} ===`)
-  const result = spawnSync('pnpm', ['exec', 'playwright', 'test', `--project=${browser}`, ...extra], {
+  const result = spawnSync('pnpm', ['exec', 'playwright', 'test', `--project=${browser}`, `--output=test-results/${browser}`, ...extra], {
     stdio: 'inherit',
     env: {
       ...process.env,

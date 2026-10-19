@@ -24,7 +24,7 @@ test.describe('movie night', () => {
     // Both look at the same shortlist; Craig picks the first film on it.
     const shortlist = craig.page.getByRole('region', { name: /Tonight's shortlist/ })
     const firstAdd = shortlist.getByRole('button', { name: /^Add / }).first()
-    const film = (await firstAdd.innerText()).replace(/\s+/g, ' ').replace(/^Add /, '').trim()
+    const film = (await firstAdd.innerText()).replace(/\s+/g, ' ').replace(/^Add\s*/, '').trim()
     await firstAdd.click()
 
     // Mark opens the night the way the notification does: by its address.
