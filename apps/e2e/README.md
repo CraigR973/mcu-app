@@ -71,7 +71,9 @@ unfaked host, or to a path on a faked host nobody wrote, fails the case that cau
   reset.
 - **No retries, no loosened assertions to reach green.** A flaky case is a defect.
 - A skip must say why, in the report: `test.skip(condition, 'reason')`. Firefox has no Web
-  Speech API, so dictation is skipped there on purpose and visibly.
+  Speech API, so dictation is skipped there on purpose and visibly. Under Playwright's WebKit two
+  cases are skipped for reasons recorded in `DECISIONS.md` #285 (the replayed write's lost answer,
+  and the live match on an open page). Any other skip is a defect.
 - Wait for the state you need (`expect.poll`, a visible element), never for a time. Let a screen
   finish loading before leaving it.
 - Cases that are not about the service worker run without one (`signedIn(person)`); ask for it

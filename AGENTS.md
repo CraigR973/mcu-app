@@ -148,8 +148,10 @@ Firefox and WebKit against the real API on a real Postgres, with every outside s
 It runs on pull requests, on pushes to `main` and by hand, **not on a push to a feature
 branch**: a PR commit already runs CI twice. **A green run with the e2e job skipped (a plain
 feature-branch push) has not run the app in a browser.** A skipped case in its report is a
-defect unless its reason is one of the three in its README (Firefox has no dictation; the
-service worker on a browser that will not run it, if that is ever recorded; nothing else).
+defect unless its reason is one of the three in `apps/e2e/README.md`: Firefox has no dictation,
+and Playwright's WebKit cannot lose the replayed write's answer or show a live match on an open
+page (unproven for Safari, `DECISIONS.md` #285). WebKit itself cannot run on Craig's Mac
+(Playwright has no build for macOS 13); only CI runs it.
 
 **It still does not prove four things.** (1) The image boots with CI's throwaway values,
 not production's variables, so a variable missing on Railway still surfaces only at deploy

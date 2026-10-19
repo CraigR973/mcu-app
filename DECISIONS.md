@@ -6172,7 +6172,22 @@ contemporaneous.
        criterion's "green locally on all three" is met on CI for WebKit and locally for
        Chromium and Firefox.
      - **CI.** A seventh job, `e2e`, on pull requests, pushes to `main` and manual runs, **not on
-       feature-branch pushes** (a PR commit already runs CI twice). Cost: see STATUS.
+       feature-branch pushes** (a PR commit already runs CI twice). Measured on CI: the job takes
+       about 10.5 minutes (Chromium 2.1, Firefox 2.0, WebKit 2.6, jobs 1.2, the rest set-up and
+       browsers), billed 11, on a base of 13 for the other six. A PR commit therefore bills about
+       37 where it billed 26 (+42%), and a merge to `main` 24 where it billed 13. At this month's
+       74 pull-request runs in 19 days that is roughly +1,300 minutes a month, plus one job per
+       merge. The double run of the existing six jobs on every PR commit (push and pull request)
+       is the larger saving, left alone here at Craig's recommendation.
+     - **Where a browser is skipped, on record.** Dictation on Firefox (no Web Speech API). On
+       WebKit under Playwright: the lost-answer replay (the replayed POST cannot be intercepted,
+       so the answer cannot be lost; Chromium, Firefox and three vitest cases hold the logic) and
+       the live match on an open page (the page's own stream did not show it while a second
+       listener on the same stream received the night's events; **unproven for Safari, so the
+       two-phone movie night in `OWNER-ACTIONS.md` 16b is what settles it**). The WebKit chunk
+       case passed after one failure that was Playwright's `unroute` needing the very same
+       matcher object, and failed once more before the chunk's return was confirmed ahead of
+       Reload; if it ever flakes again it is a defect, not a skip.
      - **Found by the suite.** Fixed: (a) *a person's first message to the assistant could 500*
        (the usage read and the message both created the `ai_settings` row; the second broke its
        unique index), fixed with an insert that yields to the other, with a regression test
@@ -6186,7 +6201,13 @@ contemporaneous.
        (d) a disc added by TMDB id alone whose answer is lost stays "never heard back" for
        good, since there is no film id to read it back by; (e) the barcode screen shows the raw
        code ("already owned on blu_ray"); (f) a refused connection counts as "may have landed"
-       (the conservative choice, noted so nobody is surprised that the queue says unconfirmed).
+       (the conservative choice, noted so nobody is surprised that the queue says unconfirmed);
+       (g) *unproven, from the WebKit run only:* two votes cast within milliseconds of each other
+       may each miss the match, since each transaction sees only its own uncommitted vote; the
+       suite orders the two likes, and a real pair is seconds apart.
+       **Also fixed:** `flushQueue` ran twice at once when `online` fired twice (or Sync now was
+       pressed during the automatic flush), replaying a write twice and turning the second into
+       a duplicate question; it is now one flush at a time, with a test that fails on the old code.
      - **Left out, with reasons:** Loans, Move discs, Identify films, doubts, watch history and the
        notification settings (not in the ledger; covered by API tests); visual regression and axe
        (R6 and X12b did them); the production CSP header (Vercel serves it, `csp.test.ts` holds
