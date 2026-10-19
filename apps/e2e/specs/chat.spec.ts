@@ -40,6 +40,14 @@ test.describe('chat session', () => {
     })
     const { page } = await signedIn('Mark')
     await page.goto('/assistant')
+    // Start the conversation and let its (empty) record arrive before asking. A first message in a
+    // brand-new conversation races that record against the card: a slow link can wipe the card
+    // the stream has just raised (recorded in DECISIONS.md #285, not part of this case).
+    const record = page.waitForResponse(
+      (r) => /\/ai\/conversations\/[0-9a-f-]{36}$/.test(r.url()) && r.request().method() === 'GET',
+    )
+    await page.getByRole('button', { name: 'New chat' }).click()
+    await record
     await ask(page, 'I watched The Quiet Engine and give it 4 stars')
 
     const card = page.getByText('Can I do this?')

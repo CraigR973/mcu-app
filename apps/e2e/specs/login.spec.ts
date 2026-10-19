@@ -57,6 +57,7 @@ test.describe('login', () => {
     await page.goto('/you')
     await page.getByRole('main').getByRole('button', { name: 'Sign out' }).click()
     await expect(page).toHaveURL(/\/login/)
+    await expect(page.getByRole('heading', { name: 'Welcome back', level: 1 })).toBeVisible()
     await page.goto('/movies')
     await expect(page).toHaveURL(/\/login/)
   })

@@ -298,6 +298,7 @@ jobs:
           path: |
             apps/e2e/playwright-report
             apps/e2e/test-results
+            apps/e2e/.run/world/log.jsonl
             apps/e2e/.run/api.log
             apps/e2e/.run/web.log
           retention-days: 7

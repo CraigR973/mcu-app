@@ -81,8 +81,10 @@ test.describe('offline, against an API on another origin', () => {
     await context.setOffline(true)
     await page.getByRole('button', { name: 'Add “Paper Lantern”', exact: true }).click()
     const banner = page.getByTestId('offline-banner')
-    const queueNow = await queueState(page).catch(() => 'unreadable (the page was navigating)')
-    await expect(banner, `the page was at ${page.url()}, queue ${queueNow}`).toContainText('You’re offline')
+    // Chromium and Firefox know the connection is gone and say so; WebKit under Playwright still
+    // thinks it is online, so the same banner says a change is waiting. Either is the banner, and
+    // the queue's state is what is asserted.
+    await expect(banner).toContainText(/You’re offline|waiting to sync/)
     expect(await queueState(page)).toBe('[["queued",null]]')
 
     // 2. The connection returns and the replay goes out. It reaches the server and lands, but the

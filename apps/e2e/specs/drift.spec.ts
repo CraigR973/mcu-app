@@ -38,7 +38,13 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
     // script loads, and is not JavaScript.
     const indexHtml = await (await page.request.get('/')).text()
     await page.route(/\/assets\/WantedPage-[^/]+\.js$/, (route) =>
-      route.fulfill({ status: 200, contentType: 'text/html', body: indexHtml }),
+      route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        // Vercel serves index.html with `max-age=0, must-revalidate`; this must not be kept either.
+        headers: { 'cache-control': 'no-store' },
+        body: indexHtml,
+      }),
     )
 
     let loads = 0
