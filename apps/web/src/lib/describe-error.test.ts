@@ -42,6 +42,19 @@ describe('describeError', () => {
     expect(describeError(chunk, 'x')).toBe(OUT_OF_DATE)
   })
 
+  // Batch 38: Safari (WebKit) words a removed chunk differently. Vercel answers an unknown
+  // /assets/*.js with index.html, and WebKit refuses that for its MIME type, in these words;
+  // the classifier did not know them, so an iPhone met "Something went wrong" instead.
+  it("says so for a removed chunk in Safari's words as well as Chrome's and Firefox's", () => {
+    for (const words of [
+      "'text/html' is not a valid JavaScript MIME type.",
+      'Importing a module script failed.',
+      'error loading dynamically imported module: https://x/assets/WantedPage-abc.js',
+    ]) {
+      expect(describeError(new TypeError(words), 'x'), words).toBe(OUT_OF_DATE)
+    }
+  })
+
   it("keeps a refusal's own words, and falls back when there are none", () => {
     expect(describeError(new ApiError('That film is already wanted.', 409), 'x')).toBe(
       'That film is already wanted.',

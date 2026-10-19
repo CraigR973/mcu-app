@@ -19,7 +19,7 @@ export const OUT_OF_DATE = 'This screen needs the newest version.'
 export type ErrorKind = 'offline' | 'server' | 'outdated' | 'explained'
 
 const CHUNK_FAILURE =
-  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS|is not a valid JavaScript MIME type/i
 
 /** The API's own words for a fault it could not explain, or no words at all. */
 const GENERIC_SERVER_TEXT = /^(HTTP 5\d\d|Internal Server Error|The server did not answer\.)$/

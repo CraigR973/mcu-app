@@ -1,16 +1,24 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { test as base, expect, type BrowserContext, type Page } from '@playwright/test'
-import { CONTROL_ORIGIN, PINS, RUN_DB, type Person } from '../harness/env.ts'
+import { CONTROL_ORIGIN, PINS, RUN_DB, WORLD_DIR, type Person } from '../harness/env.ts'
 import { dbtool } from '../harness/stack.ts'
 import { Api, login, type Tokens } from './api.ts'
 import { world } from './world.ts'
 
-const tokenCache = new Map<Person, Tokens>()
+// Signing in is limited to five a quarter-hour per person, charged even when it works. A case
+// that fails restarts its worker, and a worker's memory goes with it, so the tokens are kept in
+// the run's own directory instead: one API sign-in per person per run.
+const tokenFile = path.join(WORLD_DIR, 'tokens.json')
 
 async function tokensFor(person: Person): Promise<Tokens> {
-  const cached = tokenCache.get(person)
+  const known: Partial<Record<Person, Tokens>> = existsSync(tokenFile)
+    ? (JSON.parse(readFileSync(tokenFile, 'utf8')) as Partial<Record<Person, Tokens>>)
+    : {}
+  const cached = known[person]
   if (cached) return cached
   const fresh = await login(person)
-  tokenCache.set(person, fresh)
+  writeFileSync(tokenFile, JSON.stringify({ ...known, [person]: fresh }))
   return fresh
 }
 

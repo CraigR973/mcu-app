@@ -35,7 +35,13 @@ test.describe('movie night', () => {
     await expect(mark.page.getByText("It's a match")).toBeVisible()
 
     // Craig is told live, and by push.
-    await expect(craig.page.getByText("It's a match")).toBeVisible()
+    const said: string[] = []
+    craig.page.on('console', (message) => said.push(message.text().slice(0, 160)))
+    const shownLive = craig.page.getByText("It's a match")
+    await expect(
+      shownLive,
+      `Craig's page was not told live (it said: ${said.join(' | ')})`,
+    ).toBeVisible()
     await expect.poll(() => pushesTo(craigPhone).map((p) => p.title).join('|')).toContain('match')
 
     // The match is stored on the night: a fresh page, with no live message, still shows it.
