@@ -218,6 +218,91 @@ jobs:
           VITE_SUPABASE_URL: https://placeholder.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: placeholder_key
 
+  # Batch 38 (Phase 13.10, DECISIONS.md #285). The bundle the web job builds, booted in three
+  # browsers against the real API on a real Postgres with every outside service faked, plus the
+  # cron jobs run as Railway runs them. Until this job CI built the web app and never ran it.
+  #
+  # **Not on every push to a feature branch.** A pull request's commits already run CI twice (the
+  # push and the pull_request events), and this job is the longest in the file. It runs on pull
+  # requests, on pushes to main and by hand, so a PR commit pays for it once.
+  e2e:
+    name: E2E — Chromium · Firefox · WebKit · jobs
+    if: github.event_name != 'push' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # A throwaway server. The harness makes its own databases on it and refuses anything that
+      # does not look local.
+      E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      E2E_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: apps/api/requirements-dev.lock
+
+      - name: Install the API's dependencies
+        run: pip install --require-hashes -r apps/api/requirements-dev.lock
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (e2e)
+        run: pnpm --filter @mcu/e2e typecheck
+
+      - name: Build (shared)
+        run: pnpm --filter @mcu/shared build
+
+      - name: Cache the browsers
+        id: browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-1.60.0
+
+      - name: Install the browsers
+        run: pnpm --filter @mcu/e2e exec playwright install --with-deps chromium firefox webkit
+
+      - name: Run the suite (builds the bundle once, then each browser, then the jobs)
+        run: pnpm --filter @mcu/e2e e2e
+
+      - name: Keep the reports and logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure
+          path: |
+            apps/e2e/playwright-report
+            apps/e2e/test-results
+            apps/e2e/.run/world/log.jsonl
+            apps/e2e/.run/api.log
+            apps/e2e/.run/web.log
+          retention-days: 7
+
   dependency-audit:
     name: Dependencies — Python · pnpm
     runs-on: ubuntu-latest

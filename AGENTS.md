@@ -118,6 +118,10 @@ PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web lint
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web typecheck
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web build
 ```
+End-to-end suite (a throwaway Postgres in `E2E_DATABASE_URL`; `apps/e2e/README.md` has the setup):
+```
+PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/e2e e2e [chromium|firefox|webkit|jobs]
+```
 Alembic:
 ```
 PYTHONPATH=apps/api apps/api/.venv/bin/alembic --config apps/api/alembic.ini <cmd>
@@ -128,21 +132,34 @@ PYTHONPATH=apps/api apps/api/.venv/bin/alembic --config apps/api/alembic.ini <cm
 
 ### What a green run currently proves — and does not
 
-Batch 2 replaced the old gate, and on 4 Oct a sixth job joined it (`DECISIONS.md` #248). CI
-is six jobs: API lint/typecheck, API pytest **against a real Postgres 17 service**, `upgrade
-head` → `downgrade base` migration reversal, **the image Railway deploys** (built from the
-Dockerfile, every cron job's module imported in it, then booted as production runs it,
-migrating first, until `/api/v1/health/ready` says `db: ok`), web lint/typecheck/test/build,
-and a Python + pnpm dependency audit. A green run proves the API migrates, reverses cleanly
-and boots from its real image, and that a database was genuinely reachable while the tests
-ran. `test_derived_field_triggers.py` runs in that job with no skips (16 tests on 4 Oct); a
-green run that skips them is a failure being hidden.
+Batch 2 replaced the old gate, on 4 Oct a sixth job joined it (`DECISIONS.md` #248), and Batch 38
+added a seventh (#285). CI is seven jobs: API lint/typecheck, API pytest **against a real
+Postgres 17 service**, `upgrade head` → `downgrade base` migration reversal, **the image Railway
+deploys** (built from the Dockerfile, every cron job's module imported in it, then booted as
+production runs it, migrating first, until `/api/v1/health/ready` says `db: ok`), web
+lint/typecheck/test/build, a Python + pnpm dependency audit, and **the end-to-end job** (below).
+A green run proves the API migrates, reverses cleanly and boots from its real image, and that a
+database was genuinely reachable while the tests ran. `test_derived_field_triggers.py` runs in
+that job with no skips (16 tests on 4 Oct); a green run that skips them is a failure being hidden.
 
-**It still does not prove three things.** (1) The image boots with CI's throwaway values,
+**The end-to-end job** (`apps/e2e`, its `README.md`) boots the production web build in Chromium,
+Firefox and WebKit against the real API on a real Postgres, with every outside service faked
+(`apps/api/tests/outside_world`), and runs the five cron jobs as `python -m src.scripts.<job>`.
+It runs on pull requests, on pushes to `main` and by hand, **not on a push to a feature
+branch**: a PR commit already runs CI twice. **A green run with the e2e job skipped (a plain
+feature-branch push) has not run the app in a browser.** A skipped case in its report is a
+defect unless its reason is one of the three in `apps/e2e/README.md`: Firefox has no dictation,
+and Playwright's WebKit cannot lose the replayed write's answer or show a live match on an open
+page (unproven for Safari, `DECISIONS.md` #285). WebKit itself cannot run on Craig's Mac
+(Playwright has no build for macOS 13); only CI runs it.
+
+**It still does not prove four things.** (1) The image boots with CI's throwaway values,
 not production's variables, so a variable missing on Railway still surfaces only at deploy
-(STATUS's "Anything that lives only in a Railway variable has no test"). (2) The cron jobs
-are imported, not run. (3) CI builds the web bundle but never runs it in a browser; Batch 38
-is the batch that would. **A green web job is not evidence the app runs.**
+(STATUS's "Anything that lives only in a Railway variable has no test"). (2) The fake outside
+world is the suite's own idea of TMDB, eBay, Brave, the shops and the model: a provider changing
+its answers is found by the nightly jobs and the monthly canary, not by this. (3) A real camera
+reading a real barcode, the tap on a real push notification, and speech. (4) A real phone: iOS
+Safari's zoom, a garage with no signal, `OWNER-ACTIONS.md`.
 
 ## Close-out protocol — **automatic after a green gate**
 

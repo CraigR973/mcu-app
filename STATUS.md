@@ -2,6 +2,19 @@
 
 ## Now
 
+**19 Oct: Batch 38, the end-to-end suite, is built (#94, `DECISIONS.md` #285), and that finishes
+Group X.** `apps/e2e` runs the production web build in Chromium, Firefox and WebKit against the
+real API on a throwaway Postgres with every outside service faked, plus the five cron jobs run as
+Railway runs them: 29 cases on Chromium, 28 on Firefox (dictation skipped, no Web Speech API), 27
+on WebKit (2 skipped, reasons in #285), 5 job cases. A seventh CI job, `e2e`, runs on pull
+requests and `main` (about 10.5 minutes, 11 billed), **not on feature-branch pushes**. **WebKit
+cannot run on the Mac** (Playwright has no build for macOS 13): CI is where it runs. **The suite
+found and Batch 38 fixed** a first assistant message that could 500, a queue that could flush
+twice at once, and Safari's wording for a removed chunk. **Found, not fixed (#285):** a
+new-conversation card race, a TMDB-id add whose lost answer never settles, the raw `blu_ray` on
+the barcode screen. **Yours:** the two-phone movie night (16b) now also settles whether Safari
+shows a live match on an open page. Run it: `apps/e2e/README.md`.
+
 **18 Oct: X12c, terms and tidying, is shipped (#284; `833369c`, fix `e109b98`), and both its live steps ran at Craig's word the same day.** Settings has TMDB's logo and "not endorsed" notice and JustWatch is credited by the providers; TMDB data older than 150 days is refetched inside the calendar refresh (none is yet; the first is on 5 Feb 2027); Brave results go when a lookup settles; completion sets count the top ten billed and drop shorts and compilations. **Live steps:** `prune_spec_results --apply --expect 9456` deleted 9,456 of 15,516 stored Brave results (6,060 left: 5,210 on lookups still waiting for a person, 850 accepted pages); the completion-set refresh created 22 sets, updated 14, left 4, removed 22 no longer chosen, 0 errors (20 actor and 20 director sets, all refreshed 18 Oct). **Group X's sitting 5 is done**; 38, the end-to-end suite, is next at Craig's go.
 
 **18 Oct: X12b, phone type, targets and speed, is built (#283).** Re-measured first with R6's
@@ -568,6 +581,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-19 (Batch 38, #285)** — Re-measured read-only first (import has no screen; CR43-05 and
+  CR43-07 still open, CR43-07 wider than the review said). Built the harness, one fake outside
+  world (httpx, httpx2 and a socket backstop, failing closed), 29 browser cases, 5 job cases, three
+  unit cases for the replay and one for the flush, and the `e2e` job. One request with a fake key
+  reached api.anthropic.com from the Mac before the SDK's own HTTP library was covered (disclosed
+  in #285). Fixed what the suite found (first-read race on `ai_settings`, concurrent queue flush,
+  Safari's chunk wording). Green on CI on all three browsers after eight runs of fixing browser
+  differences; WebKit cannot run locally. Guards proved by reverting seven fixes.
 - **2026-10-18 (X12c live steps)** — At Craig's word: Brave results pruned (dry run 9,456 of 15,516, applied with `--expect 9456`, 6,060 left, every `done` lookup keeps its accepted page) and the completion-set refresh run (dry run, then live: 22 created, 14 updated, 4 unchanged, 22 removed, 0 errors).
 - **2026-10-18 (X12c, #284)** — Re-measured read-only (9,456 of 15,516 Brave results qualify; no TMDB
   field is 150 days old; 40 completion sets last refreshed 8 Sep). Built TMDB logo and notice,

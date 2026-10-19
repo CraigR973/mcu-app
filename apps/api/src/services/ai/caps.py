@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import structlog
 from sqlalchemy import func, select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.clock import utcnow
@@ -50,14 +51,20 @@ async def get_or_create_settings(db: AsyncSession, user_id: object) -> AiSetting
     if existing is not None:
         return existing
 
-    created = AiSettings(
-        user_id=user_id,
-        daily_message_cap=settings.ai_daily_message_cap,
-        daily_cost_cap_usd=Decimal(str(settings.ai_daily_cost_cap_usd)),
+    # Batch 38 (found by the end-to-end chat case): a person's first visit to the assistant
+    # asks for these twice at once (the page's usage read and the message itself), and both found
+    # no row, so the second insert broke the unique index and the message answered 500. The
+    # insert yields to a row that has just appeared, and the row is read back either way.
+    await db.execute(
+        pg_insert(AiSettings)
+        .values(
+            user_id=user_id,
+            daily_message_cap=settings.ai_daily_message_cap,
+            daily_cost_cap_usd=Decimal(str(settings.ai_daily_cost_cap_usd)),
+        )
+        .on_conflict_do_nothing(index_elements=[AiSettings.user_id])
     )
-    db.add(created)
-    await db.flush()
-    return created
+    return (await db.execute(select(AiSettings).where(AiSettings.user_id == user_id))).scalar_one()
 
 
 async def _person_timezone(db: AsyncSession, user_id: object) -> ZoneInfo:

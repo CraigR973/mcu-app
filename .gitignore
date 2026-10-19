@@ -73,3 +73,8 @@ scratchpad/
 # Craig's spreadsheets (the catalogue he imports from) live in the repo root and are his:
 # ignored by pattern so a `git add` never takes them, never deleted by an agent.
 *.xlsx
+
+# Batch 38: the E2E suite's scratch (built bundle, fake-world log, reports)
+apps/e2e/.run/
+apps/e2e/test-results/
+apps/e2e/playwright-report/

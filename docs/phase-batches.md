@@ -1441,50 +1441,51 @@ command, as `daily_scrape` and `run_reminders` are.
 
 **`purchase_candidates` does not exist** — verified live on 2026-09-11.
 
-### Batch 38 — E2E suite 🟢
-**Wave 1 review, 12 Oct (#253): six cases join the suite.** The offline replay that may have
-landed (CR43-05: deleting its "unconfirmed" step leaves all 525 web tests green); each cron
-job's entry point run on CI's Postgres with fake outside clients (CR43-07: the eBay,
-spec-and-review and valuation jobs' `main()` has never run in a test); the built bundle
-against a **cross-origin** API, production's shape and never the dev proxy (UX48-01); one
-version-drift case (a new enum value) and one missing-chunk case (UX48-03); a two-message
-chat against a recorded model (AI45-01); and the screens never used yet (photos, box sets,
-smart collections, eBay alerts and accounts). R6's rig (`scratchpad/wave-1/r6/probes/`,
-gitignored, on the Mac) is a ready start. Still last, after Group X. **X8 (13 Oct) made the
-cross-origin shape runnable by hand:** a build with `VITE_API_URL=http://127.0.0.1:8000`,
-served by `.claude/preview.sh`, against `.claude/api-local.sh` on a throwaway Postgres; the
-suite's case automates that, then stops the API and opens a film read online.
+### ~~Batch 38 — E2E suite~~ 🟢 **built 2026-10-19 ([#94](https://github.com/CraigR973/mcu-app/pull/94)); the last batch of Group X**
+**Acceptance: met on Chromium and Firefox locally and on CI, and on WebKit on CI only (Playwright
+has no WebKit for macOS 13, so it cannot run on Craig's Mac). Four things cannot run, and a
+case is skipped on WebKit for each of two reasons; all are listed below, none dropped.** Choices,
+findings and the incident are in `DECISIONS.md` #285; how to run it is `apps/e2e/README.md`.
 
-**Status 26 Sep (Group U, last step): all seven flows now exist**, since Batch 24 shipped the
-barcode scan, so the "six of seven" allowance below no longer applies. T8a's eBay price
-alert is a candidate eighth. It runs last so it pins the flows as they end up.
+**What was built.** `apps/e2e` boots the production web build against the real API on a throwaway
+Postgres with every outside service faked (`apps/api/tests/outside_world`), in three browsers,
+plus the five cron jobs run as `python -m src.scripts.<job>`. A seventh CI job, `e2e`, runs on
+pull requests, `main` and by hand (not on feature-branch pushes).
 
-**Covers Phase 13.10:**
+**The flows, as the criteria list them (29 cases per browser, 5 job cases):**
 
-> **Phase 13.10: Playwright E2E Tests** 🟢
-> - Critical flows: login, import, search, add via scan, price alert, chat session, movie night match
-> - Runs in CI
-> - **Acceptance:** All flows pass on CI in Chromium + Firefox + WebKit
+| Flow | Case | Notes |
+|---|---|---|
+| login (both people) | 4 | form, Mark's first-run wizard, wrong PIN, Mark turned away from Craig's screens, sign-out |
+| import | 2 | **Amended: there is no import screen or endpoint.** The case runs the real import CLI on the throwaway database (fake TMDB) and checks the screens |
+| search | 2 | the top bar, and a film not owned found on TMDB |
+| add via scan | 2 | typed digits take the camera's road; **the camera itself cannot run** (real-device check, `OWNER-ACTIONS.md` 1d) |
+| price alert | 3 | a shop price under the limit reaches the Wanted card (X11) and the phone; **the eighth flow, T8a's eBay alert**, through the `ebay_watch` job; a listing watched by address |
+| chat session | 4 | two messages on a recorded model (AI45-01, held to the wire), the Yes/No card, the cap, dictation (**skipped visibly on Firefox**) |
+| movie night match | 2 | push read off the fake service, Mark opens the night by its address, the match is stored (X12a); **the tap on the notification cannot run**; the live update on an open page is **skipped visibly on WebKit** |
+| CR43-05 offline replay | 1 + 3 unit | the browser case is **skipped visibly on WebKit** (the replayed POST cannot be intercepted there); three vitest cases hold it on all |
+| UX48-01 cross-origin worker | 1 | cache kept under the API's origin; API stopped, a film read online opens |
+| UX48-03 drift and chunk | 2 | **found: Safari's wording of a removed chunk was not recognised** (fixed) |
+| never-used screens | 4 | photos, box sets, smart collections, eBay accounts (connect, return, disconnect) |
+| Group X | 2 | Tell Craig reaches Craig's Needs attention row; the Archive's first 60 before the rest |
+| CR43-07 the five jobs | 5 | **wider than the review said** (the shop check and reminders had not run either); in the `jobs` project |
 
-**The flow list names a flow that does not exist.** "Add via scan" is Batch 24, which is not
-built. Either 38 runs after 24, or it ships six flows of seven and **says which one is
-missing and why** — the one thing it must not do is quietly drop it and call the criterion
-met.
+**Skips, all visible in the report with their reason:** dictation on Firefox (no Web Speech API); on
+WebKit, the lost-answer replay and the live match on an open page (Playwright's WebKit; unproven
+for Safari). **Cannot run anywhere:** a real camera decode, the notification tap, speech, a real
+phone.
 
-**Every other named flow is built:** login (Batch 3), import (4), search (5), price alert
-(20), chat session (31), movie night match (35).
+**Guards proved to bite** (the fix reverted, the case fails): the replay's unconfirmed step
+(vitest and browser), the cross-origin cache rule, the reload-once guard, the chat block filter,
+a job's `main()`, the first-read race, the single flush.
 
-**"Chromium + Firefox + WebKit" has one known casualty.** Firefox has no Web Speech API, so
-Batch 32 hides the dictation button there rather than showing it dead. Any assertion that
-touches dictation must skip on Firefox, not fail — and skipping must be visible, because a
-silent skip is the failure mode `AGENTS.md` calls out for `test_derived_field_triggers.py`.
+**The suite also found, and Batch 38 fixed:** a person's first assistant message could 500 (two
+first reads of their caps at once); `flushQueue` could run twice at once and replay a write twice;
+Safari's chunk-failure wording. **Found, not fixed, `DECISIONS.md` #285:** the new-conversation
+card race, a TMDB-id add whose answer is lost never settling, the raw `blu_ray` on the barcode
+screen.
 
-**Two people can sign in**, which is what the login flow and the movie-night match need:
-Mark's PIN was set on 2026-09-09.
-
-**Playwright is not installed today**, and CI does not run a browser — the web job builds the
-bundle but never boots it. This batch is what changes that, so expect the CI wiring to be a
-real part of the work rather than a `pnpm add`.
+---
 
 ---
 
@@ -3202,7 +3203,7 @@ so X7 (R3's probe) and Batch 38 (R6's rig) run there or rebuild what they need.
 | 3 | ~~X6 value as used copies~~ (`51c81ff`, 14 Oct) → ~~X4 weekly dump and restore drill~~ (`87a734b`, 14 Oct) → ~~X5 watch history~~ (`19c9aad`, 14 Oct; its live data steps at Craig's word) | X6: used-copy values (#256), before 1 Nov 04:00 — **shipped 14 Oct**. X4: Actions artifacts (#257); stops for Craig's credential steps. X5: after X4, by 31 Oct; its live data steps at his word | top tier · xhigh (from X4 and X5) | top tier · Extra High |
 | 4 | ~~X9 catalogue truth~~ → ~~X10 one title rule, owned twins~~ (`f8de7ab`, 18 Oct) — **done** | Craig's go; their data steps at his word | top tier · xhigh (from X9) | top tier · Extra High |
 | 5 | ~~X11 Wanted shop prices~~ (18 Oct) → ~~X12 polish and terms~~ (X12a–c, 18 Oct) | Craig's go | mid tier · high | mid tier · High |
-| — | 38 the end-to-end suite | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
+| — | ~~38 the end-to-end suite~~ — **built 19 Oct** (#285) | Craig's go, last; six cases added by the review | mid tier · high | mid tier · High |
 
 **Each batch on its own:**
 
@@ -4378,7 +4379,7 @@ Revised 2026-09-07 by `DECISIONS.md` #16: all of Part D's drops are reinstated e
 | ~~35~~ | ~~Movie night~~ | ~~🔴~~ | — shipped | — shipped | **shipped** | ~~**8.3, 8.4**~~ | Postgres `LISTEN`/`NOTIFY` + SSE (#113), **not** Supabase Realtime — no new service, no credential, no hosting step. One dedicated listening connection, opened on the first watcher and closed with the last, per #113's pool warning. **A match is derived, never stored** (gotcha 1b); the rule is "everyone here", not "two". The other person's votes are invisible. **8.4's notification arriving on a device is an owner action** |
 | ~~36~~ | ~~Command palette + shortcuts~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~6.3, 6.4~~ | `1425f91` · Ctrl/Cmd+K palette (pages, admin actions, films via Batch 5's search, recent items) + centralized shortcuts hook; `.` and the AI-conversations index dropped — Batch 31 isn't built |
 | ~~37~~ | ~~On-this-day + rewatch~~ | ~~🟢~~ | — shipped | — shipped | **shipped** | ~~**11.6**~~ | `50a4828` · caller-scoped anniversary memories and high-rated, not-recently-watched suggestions; date-controlled Postgres test proves a watch from a year ago appears on the dashboard |
-| 38 | E2E suite | 🟢 | Sonnet 5 · high | GPT-5.6 Terra · High | planned | 13.10 — written alongside features, formalised here |
+| ~~38~~ | ~~E2E suite~~ | ~~🟢~~ | — built | — built | **built** | ~~13.10~~ | #94 · Playwright on Chromium, Firefox and WebKit against the production bundle with every outside service faked; five cron jobs run as Railway runs them (`DECISIONS.md` #285) |
 
 ## Batch groups
 

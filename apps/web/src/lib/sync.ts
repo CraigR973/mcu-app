@@ -188,13 +188,29 @@ async function replay(entry: QueuedWrite): Promise<void> {
   await deleteCollectionItem(entry.itemId ?? '')
 }
 
+let flushing: Promise<FlushResult> | null = null
+
 /**
  * Send everything the queue is holding.
  *
  * Safe to call at any time — on reconnect, on app start, or from the sync panel. Nothing
  * here re-sends a write whose fate is unknown.
+ *
+ * **One flush at a time** (Batch 38). `online` can fire twice, and "Sync now" can be pressed
+ * while the automatic flush is running; two flushes read the same queue and both replayed the
+ * same disc, which the server turned into a duplicate question. A second call now joins the
+ * flush already under way and gets its result.
  */
-export async function flushQueue(): Promise<FlushResult> {
+export function flushQueue(): Promise<FlushResult> {
+  if (flushing) return flushing
+  const run = flushOnce().finally(() => {
+    flushing = null
+  })
+  flushing = run
+  return run
+}
+
+async function flushOnce(): Promise<FlushResult> {
   if (!queueIsAvailable()) return { sent: 0, remaining: 0, stillOffline: false }
 
   const entries = await listQueue()

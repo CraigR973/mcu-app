@@ -1029,6 +1029,10 @@ both phones. This also closes Batch 11's open 6.2 (a push reaching two real devi
 **Since V3 (30 Sep) a night is one list:** **Add** is on each film's row (no deck, no swiping),
 **Added** takes your vote back, and tapping a film opens its details in the row. This check is
 V3's last criterion too.
+**Added 19 Oct (Batch 38):** while both phones have the night open, watch whether "It's a match"
+appears on the phone that did **not** tap second, without touching it. The end-to-end suite saw
+that live update on Chromium and Firefox but not under Playwright's WebKit, so only an iPhone can
+say whether Safari shows it (the push and the stored match work either way, `DECISIONS.md` #285).
 
 ### 17. ~~A Brave Search API account and key — for T7, the Blu-ray.com backfill~~ — **done 26 Sep**
 
