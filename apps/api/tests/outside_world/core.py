@@ -89,12 +89,18 @@ def _refuse_database_not_throwaway() -> None:
         raise RuntimeError(f"the fake outside world refuses database host {host!r}")
 
 
+def _is_local(host: object) -> bool:
+    if not isinstance(host, str):
+        return True  # a unix-socket path or bytes address: nothing leaves the machine
+    return host in {"", "localhost", "127.0.0.1", "::1", "0.0.0.0", "::"}  # noqa: S104
+
+
 def install() -> None:
     _refuse_database_not_throwaway()
     world = World(_directory())
     routes = _routes()
 
-    def answer(request: httpx.Request) -> httpx.Response:
+    def answer(request: Any) -> httpx.Response:
         host = request.url.host
         handler = routes.get(host)
         if handler is None:
@@ -111,29 +117,78 @@ def install() -> None:
         )
         return handler(request, world)
 
-    original_async = httpx.AsyncClient.__init__
-    original_sync = httpx.Client.__init__
+    # Two HTTP libraries are in this process: ``httpx`` (the app's own clients) and ``httpx2``
+    # (the one the ``anthropic`` SDK brings). Both get a mock transport.
+    libraries: list[Any] = [httpx]
+    try:
+        import httpx2
 
-    def async_init(self: httpx.AsyncClient, *args: Any, **kwargs: Any) -> None:
-        kwargs["transport"] = httpx.MockTransport(answer)
-        kwargs.pop("proxy", None)
-        kwargs.pop("proxies", None)
-        original_async(self, *args, **kwargs)
+        libraries.append(httpx2)
+    except ImportError:  # pragma: no cover - the SDK is a dependency
+        pass
 
-    def sync_init(self: httpx.Client, *args: Any, **kwargs: Any) -> None:
-        kwargs["transport"] = httpx.MockTransport(answer)
-        kwargs.pop("proxy", None)
-        kwargs.pop("proxies", None)
-        original_sync(self, *args, **kwargs)
+    for library in libraries:
 
-    httpx.AsyncClient.__init__ = async_init  # type: ignore[method-assign]
-    httpx.Client.__init__ = sync_init  # type: ignore[method-assign]
+        def make(library: Any) -> Any:
+            def handler(request: Any) -> Any:
+                response = answer(request)
+                if library is httpx:
+                    return response
+                return library.Response(response.status_code, headers=response.headers, content=response.content)
 
+            return handler
+
+        mock = make(library)
+        for client in (library.AsyncClient, library.Client):
+            original = client.__init__
+
+            def patched(self: Any, *args: Any, __original: Any = original, __mock: Any = mock, **kwargs: Any) -> None:
+                kwargs["transport"] = library_for(self).MockTransport(__mock)
+                kwargs.pop("proxy", None)
+                kwargs.pop("proxies", None)
+                __original(self, *args, **kwargs)
+
+            client.__init__ = patched
+
+    # Backstop for anything that does not go through either library: nothing may resolve or
+    # connect to a machine that is not this one.
     real_getaddrinfo = socket.getaddrinfo
 
     def getaddrinfo(host: Any, *args: Any, **kwargs: Any) -> Any:
         if isinstance(host, str) and host in routes:
             return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (_PUBLIC_ADDRESS, 443))]
+        if not _is_local(host):
+            world.log(kind="unfaked", host=host, path="(name lookup)", method="DNS")
+            raise socket.gaierror(f"name lookup for {host} is blocked by the fake outside world")
         return real_getaddrinfo(host, *args, **kwargs)
 
     socket.getaddrinfo = getaddrinfo  # type: ignore[assignment]
+
+    real_connect = socket.socket.connect
+    real_connect_ex = socket.socket.connect_ex
+
+    def refuse_remote(address: Any) -> None:
+        if isinstance(address, tuple) and address and not _is_local(address[0]):
+            world.log(kind="unfaked", host=str(address[0]), path="(connect)", method="TCP")
+            raise OSError(f"connecting to {address[0]} is blocked by the fake outside world")
+
+    def connect(self: socket.socket, address: Any) -> None:
+        refuse_remote(address)
+        real_connect(self, address)
+
+    def connect_ex(self: socket.socket, address: Any) -> int:
+        refuse_remote(address)
+        return real_connect_ex(self, address)
+
+    socket.socket.connect = connect  # type: ignore[method-assign]
+    socket.socket.connect_ex = connect_ex  # type: ignore[method-assign]
+
+
+def library_for(client: Any) -> Any:
+    """The HTTP library a client class belongs to, for its own ``MockTransport``."""
+    module = type(client).__module__.split(".")[0]
+    if module == "httpx2" or any(c.__module__.split(".")[0] == "httpx2" for c in type(client).__mro__):
+        import httpx2
+
+        return httpx2
+    return httpx
