@@ -1,5 +1,4 @@
 import { filmId } from '../support/films.ts'
-import { probe } from '../support/probe.ts'
 import { pushesTo, registerDevice } from '../support/push.ts'
 import { runJob } from '../support/cli.ts'
 import { expect, test } from '../support/test.ts'
@@ -37,7 +36,6 @@ test.describe('price alert from a shop', () => {
     await expect(ember.getByRole('list', { name: 'Latest shop prices' }).getByRole('link', { name: /^Zavvi £8\.99/ })).toBeVisible()
     const salt = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: 'Salt And Static', exact: true }) })
     await expect(salt.getByRole('list', { name: 'Latest shop prices' }).getByRole('link', { name: /^Zavvi £12\.99/ })).toBeVisible()
-    await probe(page, 'wanted')
   })
 })
 
@@ -53,7 +51,6 @@ test.describe('eBay price alert', () => {
     await panel.getByRole('combobox', { name: 'Format' }).selectOption({ label: 'Blu-ray' })
     await panel.getByRole('textbox', { name: 'Your price (£)' }).fill('9.00')
     await panel.getByRole('button', { name: 'Alert me' }).click()
-    await probe(page, 'ebay-alert-set')
 
     world.setScenario({
       ebay: {

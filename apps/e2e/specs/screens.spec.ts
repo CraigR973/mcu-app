@@ -1,6 +1,5 @@
 import { WEB_ORIGIN } from '../harness/env.ts'
 import { filmId } from '../support/films.ts'
-import { probe } from '../support/probe.ts'
 import { expect, test } from '../support/test.ts'
 
 // A 1×1 PNG, enough for the photo pipeline to resize and store.
@@ -34,7 +33,7 @@ test.describe('screens that had never been used', () => {
     await craig.page.goto('/collections')
     await craig.page.getByRole('button', { name: 'New collection' }).click()
     await craig.page.getByRole('textbox', { name: 'Collection name' }).fill('Garage discs')
-    await craig.page.getByRole('combobox', { name: 'Filter by section' }).selectOption({ label: 'Garage (1)' })
+    await craig.page.getByRole('combobox', { name: 'Filter by section' }).selectOption('Garage')
     await craig.page.getByRole('button', { name: 'Create collection' }).click()
     await craig.page.getByRole('main').getByRole('link', { name: 'Garage discs' }).click()
     await expect(craig.page.getByRole('heading', { name: 'Garage discs', level: 1 })).toBeVisible()

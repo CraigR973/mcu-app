@@ -37,7 +37,8 @@ def _card(title: str, price: str, path: str) -> str:
     return (
         '<div class="product-card" data-testid="product-item">'
         f'<a data-testid="product-title" href="{html.escape(path)}">{html.escape(title)}</a>'
-        f'<div data-testid="product-price"><p class="text-md font-bold">£{html.escape(price)}</p></div>'
+        '<div data-testid="product-price">'
+        f'<p class="text-md font-bold">£{html.escape(price)}</p></div>'
         "</div>"
     )
 
@@ -53,7 +54,11 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
         body = "<html><body><main><p>No results found.</p></main></body></html>"
     else:
         cards = "".join(
-            _card(r["title"], str(r["price"]), r.get("path", "/p/blu-ray/" + re.sub(r"\W+", "-", r["title"].lower()) + "/1/"))
+            _card(
+                r["title"],
+                str(r["price"]),
+                r.get("path", "/p/blu-ray/" + re.sub(r"\W+", "-", r["title"].lower()) + "/1/"),
+            )
             for r in rules
         )
         body = f"<html><body><main>{cards}</main></body></html>"

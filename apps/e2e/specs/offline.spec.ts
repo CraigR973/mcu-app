@@ -1,6 +1,5 @@
 import type { Page } from '@playwright/test'
 import { filmId } from '../support/films.ts'
-import { probe } from '../support/probe.ts'
 import { API_ORIGIN } from '../harness/env.ts'
 import { expect, test } from '../support/test.ts'
 
@@ -34,7 +33,10 @@ test.describe('offline, against an API on another origin', () => {
     await page.goto(`/movies/${film}`)
     await workerInControl(page)
     await expect(page.getByRole('heading', { name: 'Copper Canyon', level: 1 })).toBeVisible()
+    // Let each screen finish loading before leaving it: leaving mid-load aborts its lazy chunks,
+    // and the app answers a failed chunk by reloading, which Firefox reports as a failed navigation.
     await page.goto('/dashboard')
+    await expect(page.getByRole('heading', { name: 'Home', level: 1 })).toBeVisible()
     await page.goto(`/movies/${film}`)
     await expect(page.getByRole('heading', { name: 'Copper Canyon', level: 1 })).toBeVisible()
 
@@ -54,7 +56,6 @@ test.describe('offline, against an API on another origin', () => {
     await apiProcess.stop()
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Copper Canyon', level: 1 })).toBeVisible()
-    await probe(page, 'offline-film')
   })
 
   test('a replay whose answer is lost is checked, not sent twice: one copy exists afterwards (CR43-05)', async ({ signedIn, api, db }) => {

@@ -1,5 +1,4 @@
 import type { Page } from '@playwright/test'
-import { probe } from '../support/probe.ts'
 import { expect, test } from '../support/test.ts'
 import { world } from '../support/world.ts'
 
@@ -18,7 +17,6 @@ test.describe('chat session', () => {
 
     await ask(page, 'And anything older than 1980?')
     await expect(log.getByText(/You asked: And anything older than 1980\?\. This answer is recorded\./)).toBeVisible()
-    await probe(page, 'chat-two')
 
     // The second request sent the first question and its answer back. A block the API would not
     // accept (X7's `parsed_output`) is a 400 from the fake, so an answer here means it was sent right.
@@ -46,7 +44,6 @@ test.describe('chat session', () => {
 
     const card = page.getByText('Can I do this?')
     await expect(card).toBeVisible()
-    await probe(page, 'chat-card')
     // Nothing has been written, and the box is locked until the card is answered.
     const box = page.getByRole('textbox', { name: 'Message to the assistant' })
     await expect(box).toBeDisabled()

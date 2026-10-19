@@ -1,5 +1,4 @@
 import { API_ORIGIN } from '../harness/env.ts'
-import { probe } from '../support/probe.ts'
 import { expect, test } from '../support/test.ts'
 
 test.describe('what Group X built', () => {
@@ -15,7 +14,6 @@ test.describe('what Group X built', () => {
     await craig.page.goto('/dashboard')
     const row = craig.page.getByRole('region', { name: 'Needs attention' })
     await expect(row.getByText(line)).toBeVisible()
-    await probe(craig.page, 'tell-craig-row')
 
     // It is Craig's to read: Mark's own token is refused the list.
     const markApi = await api('Mark')

@@ -56,6 +56,9 @@ export async function buildTemplate(name: string): Promise<void> {
   } finally {
     await api.stop()
   }
+  // A shop with no selectors in the built-in list fails every pass ("no selectors configured")
+  // and makes the nightly job exit 1. Production has it switched off; so does the seed.
+  dbtool('sql', name, "UPDATE retailers SET enabled = false WHERE scraper_config = '{}'::jsonb")
   // Logging in to seed counted against the five-per-fifteen-minutes limit.
   dbtool('sql', name, 'TRUNCATE rate_limit_counters')
   resetWorld()

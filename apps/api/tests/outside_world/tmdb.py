@@ -164,7 +164,10 @@ def handle(request: httpx.Request, world: object) -> httpx.Response:
         if tail == "/keywords":
             return httpx.Response(
                 200,
-                json={"id": film.tmdb_id, "keywords": [{"id": 1, "name": w} for w in film.keywords]},
+                json={
+                    "id": film.tmdb_id,
+                    "keywords": [{"id": 1, "name": w} for w in film.keywords],
+                },
             )
         if tail == "/watch/providers":
             return httpx.Response(200, json={"id": film.tmdb_id, "results": _PROVIDERS})

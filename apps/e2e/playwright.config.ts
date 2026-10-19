@@ -11,8 +11,6 @@ export default defineConfig({
   retries: 0,
   forbidOnly: !!process.env.CI,
   timeout: 60_000,
-  // A control that is not there fails in seconds, not after the whole case's minute.
-  // (set below in use)
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
@@ -24,8 +22,10 @@ export default defineConfig({
     timezoneId: 'Europe/London',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'chromium', testIgnore: /jobs\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', testIgnore: /jobs\.spec\.ts/, use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', testIgnore: /jobs\.spec\.ts/, use: { ...devices['Desktop Safari'] } },
+    // The cron jobs' entry points: no browser, so they run once, not once per browser.
+    { name: 'jobs', testMatch: /jobs\.spec\.ts/ },
   ],
 })

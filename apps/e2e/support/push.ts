@@ -1,4 +1,7 @@
 import { createECDH, randomBytes } from 'node:crypto'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+import { WORLD_DIR } from '../harness/env.ts'
 import type { Api } from './api.ts'
 import { world } from './world.ts'
 
@@ -21,10 +24,11 @@ export async function registerDevice(api: Api, name: string): Promise<Device> {
     keys: { p256dh: ecdh.getPublicKey().toString('base64url'), auth },
     deviceLabel: name,
   })
-  const existing = (world.scenario().push ?? { keys: {} }) as { keys: Record<string, unknown> }
-  world.setScenario({
-    push: { keys: { ...existing.keys, [endpoint]: { d: ecdh.getPrivateKey().toString('base64url'), auth } } },
-  })
+  // Kept apart from the scenario: a device stays registered in the database after the case that
+  // made it, so the fake push service has to keep knowing its key.
+  const file = path.join(WORLD_DIR, 'devices.json')
+  const known = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>) : {}
+  writeFileSync(file, JSON.stringify({ ...known, [endpoint]: { d: ecdh.getPrivateKey().toString('base64url'), auth } }))
   return { endpoint }
 }
 

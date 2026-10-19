@@ -54,7 +54,8 @@ def _refusal(messages: list[dict[str, Any]]) -> str | None:
             if block.get("type") == "text":
                 extra = sorted(set(block) - _TEXT_FIELDS)
                 if extra:
-                    return f"messages.{index}.content.{position}.text.{extra[0]}: Extra inputs are not permitted"
+                    where = f"messages.{index}.content.{position}.text.{extra[0]}"
+                    return f"{where}: Extra inputs are not permitted"
     return None
 
 
@@ -84,14 +85,25 @@ def _stream(model: str, text: str | None, tool: dict[str, Any] | None) -> bytes:
     index = 0
     if text:
         events.append(
-            ("content_block_start", {"type": "content_block_start", "index": index, "content_block": {"type": "text", "text": ""}})
+            (
+                "content_block_start",
+                {
+                    "type": "content_block_start",
+                    "index": index,
+                    "content_block": {"type": "text", "text": ""},
+                },
+            )
         )
         third = max(1, len(text) // 3)
         for start in range(0, len(text), third):
             events.append(
                 (
                     "content_block_delta",
-                    {"type": "content_block_delta", "index": index, "delta": {"type": "text_delta", "text": text[start : start + third]}},
+                    {
+                        "type": "content_block_delta",
+                        "index": index,
+                        "delta": {"type": "text_delta", "text": text[start : start + third]},
+                    },
                 )
             )
         events.append(("content_block_stop", {"type": "content_block_stop", "index": index}))
@@ -103,7 +115,12 @@ def _stream(model: str, text: str | None, tool: dict[str, Any] | None) -> bytes:
                 {
                     "type": "content_block_start",
                     "index": index,
-                    "content_block": {"type": "tool_use", "id": "toolu_e2e_1", "name": tool["name"], "input": {}},
+                    "content_block": {
+                        "type": "tool_use",
+                        "id": "toolu_e2e_1",
+                        "name": tool["name"],
+                        "input": {},
+                    },
                 },
             )
         )
@@ -113,7 +130,10 @@ def _stream(model: str, text: str | None, tool: dict[str, Any] | None) -> bytes:
                 {
                     "type": "content_block_delta",
                     "index": index,
-                    "delta": {"type": "input_json_delta", "partial_json": json.dumps(tool["input"])},
+                    "delta": {
+                        "type": "input_json_delta",
+                        "partial_json": json.dumps(tool["input"]),
+                    },
                 },
             )
         )
@@ -135,7 +155,10 @@ def _stream(model: str, text: str | None, tool: dict[str, Any] | None) -> bytes:
 def handle(request: httpx.Request, world: Any) -> httpx.Response:
     if request.url.path != "/v1/messages" or request.method != "POST":
         world.log(kind="unknown", host=request.url.host, path=request.url.path)
-        return httpx.Response(404, json={"type": "error", "error": {"type": "not_found_error", "message": "not faked"}})
+        return httpx.Response(
+            404,
+            json={"type": "error", "error": {"type": "not_found_error", "message": "not faked"}},
+        )
 
     body: dict[str, Any] = json.loads(request.content)
     messages: list[dict[str, Any]] = body.get("messages", [])
@@ -150,7 +173,10 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
 
     problem = _refusal(messages)
     if problem:
-        return httpx.Response(400, json={"type": "error", "error": {"type": "invalid_request_error", "message": problem}})
+        return httpx.Response(
+            400,
+            json={"type": "error", "error": {"type": "invalid_request_error", "message": problem}},
+        )
 
     last = messages[-1] if messages else {}
     last_is_result = any(b.get("type") == "tool_result" for b in _blocks(last))
@@ -167,7 +193,11 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
         text, tool = rule.get("text"), rule.get("toolUse")
         break
     else:
-        text = "Done." if last_is_result else f"You asked: {question.strip()[:120]}. This answer is recorded."
+        text = (
+            "Done."
+            if last_is_result
+            else f"You asked: {question.strip()[:120]}. This answer is recorded."
+        )
 
     model = body.get("model", "claude-sonnet-5")
     if not body.get("stream"):
@@ -175,7 +205,14 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
         if text:
             content.append({"type": "text", "text": text})
         if tool:
-            content.append({"type": "tool_use", "id": "toolu_e2e_1", "name": tool["name"], "input": tool["input"]})
+            content.append(
+                {
+                    "type": "tool_use",
+                    "id": "toolu_e2e_1",
+                    "name": tool["name"],
+                    "input": tool["input"],
+                }
+            )
         return httpx.Response(
             200,
             json={
@@ -189,4 +226,6 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
                 "usage": {"input_tokens": 120, "output_tokens": 40},
             },
         )
-    return httpx.Response(200, content=_stream(model, text, tool), headers={"content-type": "text/event-stream"})
+    return httpx.Response(
+        200, content=_stream(model, text, tool), headers={"content-type": "text/event-stream"}
+    )

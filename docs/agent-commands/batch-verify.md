@@ -17,6 +17,12 @@ PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web typech
 PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH" pnpm --filter @mcu/web build
 ```
 
+**For a batch that changes what a screen does, also run the end-to-end suite** (Batch 38,
+`apps/e2e/README.md`): `E2E_DATABASE_URL=<a throwaway Postgres> pnpm --filter @mcu/e2e e2e`. It
+needs a local throwaway server (pgserver; never Neon) and Playwright's browsers. CI runs it on
+pull requests and `main`; it is not part of the quick loop above, and a case that is skipped must
+say why.
+
 **Know what this proves.** CI runs pytest against a real Postgres 17 service, proves
 `upgrade head` → `downgrade base`, and builds and boots the image Railway deploys (#248), so a
 missing database or a broken image can no longer pass silently. `test_derived_field_triggers.py`
@@ -24,8 +30,9 @@ runs there with no skips. **On Craig's Mac, run pytest with `env -u DATABASE_URL
 no local Postgres (STATUS gotcha 15), and the only database URL on the Mac, in
 `apps/api/.env.local`, is production's. Never point tests or migrations at it; the
 database-backed tests and migration changes are proved by CI, and the report says so. A cloud
-session has its own throwaway Postgres (`AGENTS.md`, "Cloud sessions"). The gate does **not**
-run the web bundle it builds in a browser: a green web job is not evidence the app runs.
+session has its own throwaway Postgres (`AGENTS.md`, "Cloud sessions"). The commands above do **not**
+run the web bundle they build in a browser: a green web job is not evidence the app runs. The
+end-to-end job does.
 
 `pnpm -r test`, not `--filter @mcu/web test` — the filtered form never runs
 `packages/shared`.

@@ -134,7 +134,9 @@ def install() -> None:
                 response = answer(request)
                 if library is httpx:
                     return response
-                return library.Response(response.status_code, headers=response.headers, content=response.content)
+                return library.Response(
+                    response.status_code, headers=response.headers, content=response.content
+                )
 
             return handler
 
@@ -142,7 +144,9 @@ def install() -> None:
         for client in (library.AsyncClient, library.Client):
             original = client.__init__
 
-            def patched(self: Any, *args: Any, __original: Any = original, __mock: Any = mock, **kwargs: Any) -> None:
+            def patched(
+                self: Any, *args: Any, __original: Any = original, __mock: Any = mock, **kwargs: Any
+            ) -> None:
                 kwargs["transport"] = library_for(self).MockTransport(__mock)
                 kwargs.pop("proxy", None)
                 kwargs.pop("proxies", None)
@@ -187,7 +191,9 @@ def install() -> None:
 def library_for(client: Any) -> Any:
     """The HTTP library a client class belongs to, for its own ``MockTransport``."""
     module = type(client).__module__.split(".")[0]
-    if module == "httpx2" or any(c.__module__.split(".")[0] == "httpx2" for c in type(client).__mro__):
+    if module == "httpx2" or any(
+        c.__module__.split(".")[0] == "httpx2" for c in type(client).__mro__
+    ):
         import httpx2
 
         return httpx2

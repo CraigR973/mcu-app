@@ -1,4 +1,3 @@
-import { probe } from '../support/probe.ts'
 import { pushesTo, registerDevice } from '../support/push.ts'
 import { expect, test } from '../support/test.ts'
 
@@ -33,12 +32,10 @@ test.describe('movie night', () => {
     await mark.page.goto(invite.url as string)
     await expect(mark.page.getByRole('heading', { name: 'Movie night', level: 1 })).toBeVisible()
     await mark.page.getByRole('button', { name: `Add ${film}` }).click()
-    await probe(mark.page, 'mn-match-mark')
     await expect(mark.page.getByText("It's a match")).toBeVisible()
 
     // Craig is told live, and by push.
     await expect(craig.page.getByText("It's a match")).toBeVisible()
-    await probe(craig.page, 'mn-match-craig')
     await expect.poll(() => pushesTo(craigPhone).map((p) => p.title).join('|')).toContain('match')
 
     // The match is stored on the night: a fresh page, with no live message, still shows it.

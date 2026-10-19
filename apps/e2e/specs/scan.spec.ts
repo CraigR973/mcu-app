@@ -1,5 +1,4 @@
 import type { Page } from '@playwright/test'
-import { probe } from '../support/probe.ts'
 import { expect, test } from '../support/test.ts'
 
 const BARCODE = '5051429700106' // printed on Midnight Ferry in the fake eBay
@@ -47,7 +46,6 @@ test.describe('add via scan', () => {
 
     const { page } = await signedIn('Mark')
     await lookUp(page, salted)
-    await probe(page, 'scan-again')
     await expect(page.getByText(/already/i).first()).toBeVisible()
     await expect(page.getByText('The Salt Road').first()).toBeVisible()
   })

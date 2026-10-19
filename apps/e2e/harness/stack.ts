@@ -2,6 +2,7 @@ import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, createWriteStream } from 'node:fs'
 import http from 'node:http'
+import net from 'node:net'
 import path from 'node:path'
 import {
   adminUrl,
@@ -96,6 +97,40 @@ export function runPython(
   return { status: result.status ?? 1, output }
 }
 
+/** Children to end with this process, however it ends: a server left behind on port 8000 would
+ * be mistaken, by the next run, for its own. */
+const children = new Set<ChildProcess>()
+/** The whole process group: `pnpm` starts Vite, and ending only `pnpm` would leave Vite on its port. */
+function endGroup(child: ChildProcess, signal: NodeJS.Signals): void {
+  try {
+    if (child.pid !== undefined) process.kill(-child.pid, signal)
+  } catch {
+    child.kill(signal)
+  }
+}
+function killChildren(): void {
+  for (const child of children) endGroup(child, 'SIGKILL')
+}
+process.on('exit', killChildren)
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(signal, () => {
+    killChildren()
+    process.exit(1)
+  })
+}
+
+/** Refuse to start on a port something else already holds: the run would otherwise talk to a
+ * stranger's server, on a stranger's database, and call it its own. */
+export function assertPortFree(port: number, host: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer()
+    probe.once('error', () =>
+      reject(new Error(`port ${port} on ${host} is already in use: stop whatever holds it (lsof -i :${port}) and run again`)),
+    )
+    probe.listen(port, host, () => probe.close(() => resolve()))
+  })
+}
+
 function waitFor(url: string, ready: (body: string, status: number) => boolean, seconds: number): Promise<void> {
   return new Promise((resolve, reject) => {
     const deadline = Date.now() + seconds * 1000
@@ -125,14 +160,16 @@ export class ApiProcess {
 
   async start(): Promise<void> {
     if (this.child) return
+    await assertPortFree(API_PORT, '127.0.0.1')
     mkdirSync(RUN_DIR, { recursive: true })
     const log = createWriteStream(path.join(RUN_DIR, 'api.log'), { flags: 'a' })
     // cwd is RUN_DIR: Settings reads `.env` from the working directory, and there is none.
     this.child = spawn(
       pythonBin(),
       ['-m', 'uvicorn', 'src.main:app', '--host', '127.0.0.1', '--port', String(API_PORT), '--log-level', 'warning'],
-      { cwd: RUN_DIR, env: pythonEnv(this.db), stdio: ['ignore', 'pipe', 'pipe'] },
+      { cwd: RUN_DIR, env: pythonEnv(this.db), stdio: ['ignore', 'pipe', 'pipe'], detached: true },
     )
+    children.add(this.child)
     this.child.stdout?.pipe(log)
     this.child.stderr?.pipe(log)
     await waitFor(`${API_ORIGIN}/api/v1/health/ready`, (body) => body.includes('"db":"ok"'), 60)
@@ -142,10 +179,11 @@ export class ApiProcess {
     const child = this.child
     if (!child) return
     this.child = null
+    children.delete(child)
     await new Promise<void>((resolve) => {
       child.once('exit', () => resolve())
-      child.kill('SIGTERM')
-      setTimeout(() => child.kill('SIGKILL'), 5000).unref()
+      endGroup(child, 'SIGTERM')
+      setTimeout(() => endGroup(child, 'SIGKILL'), 5000).unref()
     })
   }
 }
@@ -154,12 +192,14 @@ export class WebProcess {
   private child: ChildProcess | null = null
 
   async start(): Promise<void> {
+    await assertPortFree(WEB_PORT, 'localhost')
     const log = createWriteStream(path.join(RUN_DIR, 'web.log'), { flags: 'a' })
     this.child = spawn(
       'pnpm',
       ['--filter', '@mcu/web', 'exec', 'vite', 'preview', '--outDir', WEB_DIST, '--port', String(WEB_PORT), '--strictPort', '--host', 'localhost'],
-      { cwd: REPO, env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] },
+      { cwd: REPO, env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'], detached: true },
     )
+    children.add(this.child)
     this.child.stdout?.pipe(log)
     this.child.stderr?.pipe(log)
     await waitFor(`${WEB_ORIGIN}/version.json`, (_body, status) => status === 200, 60)
@@ -169,10 +209,11 @@ export class WebProcess {
     const child = this.child
     if (!child) return
     this.child = null
+    children.delete(child)
     await new Promise<void>((resolve) => {
       child.once('exit', () => resolve())
-      child.kill('SIGTERM')
-      setTimeout(() => child.kill('SIGKILL'), 5000).unref()
+      endGroup(child, 'SIGTERM')
+      setTimeout(() => endGroup(child, 'SIGKILL'), 5000).unref()
     })
   }
 }

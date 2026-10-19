@@ -58,19 +58,38 @@ def _listings_for(query: str, scenario: dict[str, Any]) -> list[dict[str, Any]]:
     film = next((title for code, title in BARCODES.items() if code in query), None)
     if film:
         return [
-            {"title": f"{film} Blu-ray (2009) {query} DVD Film", "price": "8.49", "legacyItemId": "610001"},
-            {"title": f"{film} [Blu-ray] [2009] {query}", "price": "10.00", "legacyItemId": "610002"},
-            {"title": f"{film} Blu-ray 2009 Region B {query}", "price": "7.25", "legacyItemId": "610003"},
+            {
+                "title": f"{film} Blu-ray (2009) {query} DVD Film",
+                "price": "8.49",
+                "legacyItemId": "610001",
+            },
+            {
+                "title": f"{film} [Blu-ray] [2009] {query}",
+                "price": "10.00",
+                "legacyItemId": "610002",
+            },
+            {
+                "title": f"{film} Blu-ray 2009 Region B {query}",
+                "price": "7.25",
+                "legacyItemId": "610003",
+            },
         ]
+    # Enough ordinary listings of the thing asked for that a valuation can price it.
+    prices = ["6.50", "7.25", "8.00", "8.99", "9.50", "11.00"]
     return [
-        {"title": f"{query} Blu-ray (2010)", "price": "8.99", "legacyItemId": "620001"},
-        {"title": f"{query} Blu-ray (2010) VGC", "price": "6.50", "legacyItemId": "620002"},
-        {"title": f"{query} 4K UHD Blu-ray", "price": "14.00", "legacyItemId": "620003"},
+        {
+            "title": f"{query} Blu-ray (2010) VGC",
+            "price": price,
+            "legacyItemId": str(620000 + index),
+        }
+        for index, price in enumerate(prices)
     ]
 
 
 def _item(legacy_id: str, scenario: dict[str, Any]) -> dict[str, Any]:
-    item: dict[str, Any] = json.loads((_FIXTURES / "ebay_item_auction_with_buy_now.json").read_text())
+    item: dict[str, Any] = json.loads(
+        (_FIXTURES / "ebay_item_auction_with_buy_now.json").read_text()
+    )
     item.pop("note", None)
     item["legacyItemId"] = legacy_id
     item["itemId"] = f"v1|{legacy_id}|0"
@@ -88,7 +107,9 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
         grant = (form.get("grant_type") or [""])[0]
         if grant == "authorization_code":
             if (form.get("code") or [""])[0] == "declined":
-                return httpx.Response(400, json={"error": "invalid_grant", "error_description": "code refused"})
+                return httpx.Response(
+                    400, json={"error": "invalid_grant", "error_description": "code refused"}
+                )
             return httpx.Response(
                 200,
                 json={
@@ -101,7 +122,11 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
             )
         return httpx.Response(
             200,
-            json={"access_token": "e2e-fake-ebay-token", "expires_in": 7200, "token_type": "Application Access Token"},
+            json={
+                "access_token": "e2e-fake-ebay-token",
+                "expires_in": 7200,
+                "token_type": "Application Access Token",
+            },
         )
 
     if path == "/ws/api.dll":
@@ -140,7 +165,9 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
         legacy = request.url.params.get("legacy_item_id", "")
         known = scenario.get("ebay", {}).get("items", {})
         if scenario.get("ebay", {}).get("onlyKnownItems") and legacy not in known:
-            return httpx.Response(404, json={"errors": [{"errorId": 11001, "message": "not found"}]})
+            return httpx.Response(
+                404, json={"errors": [{"errorId": 11001, "message": "not found"}]}
+            )
         return httpx.Response(200, json=_item(legacy, scenario))
 
     world.log(kind="unknown", host=request.url.host, path=path)

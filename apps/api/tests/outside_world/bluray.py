@@ -23,7 +23,9 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
     name = pages.get(request.url.path)
     if name:
         return httpx.Response(
-            200, text=(_FIXTURES / name).read_text(), headers={"content-type": "text/html; charset=utf-8"}
+            200,
+            text=(_FIXTURES / name).read_text(),
+            headers={"content-type": "text/html; charset=utf-8"},
         )
     return httpx.Response(
         200,

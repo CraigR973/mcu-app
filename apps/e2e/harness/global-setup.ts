@@ -1,7 +1,7 @@
 import http from 'node:http'
 import { CONTROL_PORT, RUN_DB } from './env.ts'
 import { buildTemplate } from './template.ts'
-import { ApiProcess, WebProcess, buildWeb, dbtool, resetWorld, templateName } from './stack.ts'
+import { ApiProcess, WebProcess, assertPortFree, buildWeb, dbtool, resetWorld, templateName } from './stack.ts'
 
 /**
  * One run: build the bundle for the cross-origin API, seed (or reuse) the template, clone it
@@ -16,6 +16,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   dbtool('clone', template, RUN_DB)
   resetWorld()
 
+  await assertPortFree(CONTROL_PORT, '127.0.0.1')
   const api = new ApiProcess(RUN_DB)
   const web = new WebProcess()
   await api.start()

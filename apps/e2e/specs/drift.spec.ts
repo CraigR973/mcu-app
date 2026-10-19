@@ -1,6 +1,5 @@
 import { API_ORIGIN } from '../harness/env.ts'
 import { filmId } from '../support/films.ts'
-import { probe } from '../support/probe.ts'
 import { expect, test } from '../support/test.ts'
 
 test.describe('a phone that is out of date with the app (UX48-03)', () => {
@@ -24,7 +23,6 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
     await expect(notice).toContainText('This screen needs the newest version')
     // Never the parser's own words or a page of JSON.
     await expect(page.getByText(/invalid_enum_value|ZodError|Expected/)).toHaveCount(0)
-    await probe(page, 'drift-enum')
 
     // Reload fetches what the API now sends, and the screen reads again.
     await page.unroute(copiesOfTheFilm)
@@ -55,7 +53,6 @@ test.describe('a phone that is out of date with the app (UX48-03)', () => {
     await page.waitForTimeout(2500)
     expect(loads).toBe(afterFirst)
     expect(afterFirst).toBeLessThanOrEqual(1)
-    await probe(page, 'drift-chunk', 'body')
 
     await page.unroute(/\/assets\/WantedPage-[^/]+\.js$/)
     await page.getByRole('button', { name: 'Reload' }).first().click()

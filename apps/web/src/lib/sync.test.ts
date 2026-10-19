@@ -192,6 +192,54 @@ describe('flushing on reconnect', () => {
     expect((fetchMock.mock.calls[1][1] as RequestInit).method).toBe('PUT')
   })
 
+  // CR43-05 (Batch 38). The first send's version of this rule is tested above and in
+  // "queueing a write"; the replay's was not: deleting the `mayHaveLanded` step in
+  // `flushQueue` left every case green. A replay that reaches the server and loses its answer
+  // is exactly what a deploy restart looks like from the phone.
+  it('marks a replay whose answer was lost as unconfirmed, and keeps it for the next flush', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['4k_uhd'], hasPlaybackIssues: false })
+    expect((await listQueue())[0].state).toBe('queued')
+
+    // Back online; the replay goes out and the answer is a 503 from a container restarting.
+    setOnline(true)
+    const lost = vi.fn().mockResolvedValue(new Response('', { status: 503 }))
+    vi.stubGlobal('fetch', lost)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(0)
+    expect(lost).toHaveBeenCalledTimes(1)
+    const [entry] = await listQueue()
+    expect(entry.state).toBe('unconfirmed')
+  })
+
+  it('reads a lost replay back instead of sending it a second time', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['4k_uhd'], hasPlaybackIssues: false })
+    setOnline(true)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 503 })))
+    await flushQueue()
+    expect((await listQueue())[0].state).toBe('unconfirmed')
+
+    // The shelf now holds the disc: the replay had landed.
+    const readBack = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify([{ ...copy, formats: ['4k_uhd'], location: null }])))
+    vi.stubGlobal('fetch', readBack)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(1)
+    expect(await listQueue()).toHaveLength(0)
+    // One call and it was the read: a second POST here is a second disc.
+    expect(readBack).toHaveBeenCalledTimes(1)
+    const [, init] = readBack.mock.calls[0] as [string, RequestInit | undefined]
+    expect(init?.method ?? 'GET').toBe('GET')
+  })
+
   it('stops and records the reason when the server refuses a queued edit', async () => {
     setOnline(false)
     vi.stubGlobal('fetch', offlineFetch())
