@@ -45,6 +45,7 @@ from src.schemas.collections import (
 )
 from src.services import trash as trash_service
 from src.services.audit import record_action
+from src.services.format_names import formats_phrase
 
 router = APIRouter(prefix="/api/v1", tags=["trash", "loans"])
 
@@ -74,7 +75,7 @@ async def _describe(
                 id=item.id,
                 table=table,
                 label=_title(movies.get(item.movie_id)),
-                sublabel=" + ".join(item.formats or [])
+                sublabel=formats_phrase(item.formats or [])
                 + f" · {location_label(item.section, item.shelf)}",
                 posterPath=_poster(movies.get(item.movie_id)),
                 movieId=item.movie_id,

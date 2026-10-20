@@ -166,6 +166,15 @@ async def record_vote(
     """
     now = now or utcnow()
 
+    # **One vote at a time per night** (Batch Z1, `DECISIONS.md` #287). Without this, two
+    # likes committed within milliseconds each ran `detect_match` seeing only their own
+    # uncommitted vote, and neither announced. Holding the night's row until commit makes the
+    # second voter wait, and its read then sees the first like. Taken first, before any vote
+    # row, so the order of locks is always the same.
+    await db.execute(
+        select(MovieNightSession.id).where(MovieNightSession.id == session.id).with_for_update()
+    )
+
     existing = (
         await db.execute(
             select(MovieNightVote).where(

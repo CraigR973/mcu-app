@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Page, Request, Response, Route } from '@playwright/test'
 import { filmId } from '../support/films.ts'
 import { API_ORIGIN } from '../harness/env.ts'
 import { expect, test } from '../support/test.ts'
@@ -58,20 +58,19 @@ test.describe('offline, against an API on another origin', () => {
     await expect(page.getByRole('heading', { name: 'Copper Canyon', level: 1 })).toBeVisible()
   })
 
-  test('a replay whose answer is lost is checked, not sent twice: one copy exists afterwards (CR43-05)', async ({ signedIn, api, db, browserName }) => {
-    // Visible in the report, with its reason. The replay's logic is also held by three vitest cases
-    // and runs here on Chromium and Firefox.
+  test('a replay whose answer is lost is checked, not sent twice, whether the add names the film by its id or by TMDB id: one copy each afterwards (CR43-05)', async ({ signedIn, api, db, browserName }) => {
+    // Visible in the report, with its reason. The replay's logic is also held by vitest cases
+    // (`sync.test.ts`) and runs here on Chromium and Firefox.
     test.skip(
       browserName === 'webkit',
       "Playwright's WebKit does not let a case intercept the replayed POST (the page saw the server's own 201 twice), so the answer cannot be lost there",
     )
     const craig = await api('Craig')
-    const copies = () =>
+    const copiesOf = (tmdbId: number) =>
       db.scalar(
-        "SELECT count(*) FROM collection_items ci JOIN movies m ON m.id = ci.movie_id WHERE m.title = 'Paper Lantern' AND ci.deleted_at IS NULL",
+        `SELECT count(*) FROM collection_items ci JOIN movies m ON m.id = ci.movie_id WHERE m.tmdb_id = ${tmdbId} AND ci.deleted_at IS NULL`,
       )
-    // A film the catalogue already knows, so the add names it by id and a lost answer can be
-    // read back. (One added by TMDB id alone has nothing to read back by.)
+    // A film the catalogue already knows, so the add names it by its film id.
     const wanted = await craig.post<{ movieId: string }>('/wanted', { tmdbId: 1403 })
     const { context, page } = await signedIn('Craig', { worker: true })
     await page.goto('/collection/add')
@@ -81,50 +80,78 @@ test.describe('offline, against an API on another origin', () => {
     // offline, which is a limit of its offline switch, not the point of this case.
     await page.goto(`/movies/${wanted.movieId}`)
     await expect(page.getByRole('heading', { name: 'Paper Lantern', level: 1 })).toBeVisible()
-    await page.getByRole('link', { name: 'Add a copy' }).click()
-    await page.getByRole('tab', { name: 'Search title' }).click()
-    await page.getByRole('textbox', { name: 'Search for a film' }).fill('Paper Lantern')
-    await page.getByRole('button', { name: 'Search', exact: true }).click()
-    await page.getByRole('list', { name: 'Films found' }).getByRole('button', { name: /Paper Lantern/ }).first().click()
-    await page.getByRole('combobox', { name: 'Section' }).selectOption({ label: 'Garage' })
-    await page.getByRole('textbox', { name: 'Location' }).fill('Garage replay shelf')
-
-    // 1. No connection when "Add" is pressed: the browser never sent it, so it waits as `queued`.
-    await context.setOffline(true)
-    await page.getByRole('button', { name: 'Add “Paper Lantern”', exact: true }).click()
     const banner = page.getByTestId('offline-banner')
-    // Chromium and Firefox know the connection is gone and say so; WebKit under Playwright still
-    // thinks it is online, so the same banner says a change is waiting. Either is the banner, and
-    // the queue's state is what is asserted.
-    await expect(banner).toContainText(/You’re offline|waiting to sync/)
-    expect(await queueState(page)).toBe('[["queued",null]]')
 
-    // 2. The connection returns and the replay goes out. It reaches the server and lands, but the
-    // answer is lost on the way back (the connection is reset): the step CR43-05 found untested.
-    const seen: string[] = []
-    page.on('response', (r) => r.url().endsWith('/api/v1/collection') && seen.push(`${r.request().method()} ${r.status()}`))
-    page.on('requestfailed', (r) => r.url().endsWith('/api/v1/collection') && seen.push(`failed ${r.failure()?.errorText}`))
-    await page.route(`${API_ORIGIN}/api/v1/collection`, async (route) => {
-      if (route.request().method() !== 'POST') return route.continue()
-      await route.fetch() // the server has it
-      return route.abort('connectionreset') // and the answer never reaches the page
-    })
-    await context.setOffline(false)
-    // Chromium and Firefox announce the connection coming back; WebKit under Playwright does not
-    // fire `online`, which is the event the app flushes on. Say it for that browser.
-    if (browserName === 'webkit') await page.evaluate(() => window.dispatchEvent(new Event('online')))
-    try {
-      await expect.poll(() => queueState(page)).toBe('[["unconfirmed",null]]')
-    } catch (failure) {
-      throw new Error(`the page saw these answers to its add: ${seen.join(', ') || 'none'}\n${String(failure)}`)
+    /** Choose the film from a TMDB search on the add form and fill in where the disc lives. */
+    async function chooseFilm(title: string, location: string) {
+      await page.getByRole('tab', { name: 'Search title' }).click()
+      await page.getByRole('textbox', { name: 'Search for a film' }).fill(title)
+      await page.getByRole('button', { name: 'Search', exact: true }).click()
+      await page.getByRole('list', { name: 'Films found' }).getByRole('button', { name: new RegExp(title) }).first().click()
+      await page.getByRole('combobox', { name: 'Section' }).selectOption({ label: 'Garage' })
+      await page.getByRole('textbox', { name: 'Location' }).fill(location)
     }
-    expect(copies()).toBe('1')
 
-    // 3. The next sync reads the shelf back instead of sending it again.
-    await page.unroute(`${API_ORIGIN}/api/v1/collection`)
-    await banner.getByRole('button', { name: 'Sync now' }).click()
-    await expect(banner).toHaveCount(0)
-    expect(copies()).toBe('1')
-    expect(await queueState(page)).toBe('[]')
+    /**
+     * 1. No connection when "Add" is pressed: the browser never sent it, so it waits as `queued`.
+     * 2. The connection returns and the replay goes out. It reaches the server and lands, but the
+     *    answer is lost on the way back (the connection is reset): the step CR43-05 found untested.
+     * 3. The next sync reads the shelf back instead of sending it again.
+     */
+    async function addWithItsAnswerLost(title: string, tmdbId: number) {
+      await context.setOffline(true)
+      await page.getByRole('button', { name: `Add “${title}”`, exact: true }).click()
+      // Chromium and Firefox know the connection is gone and say so; WebKit under Playwright still
+      // thinks it is online, so the same banner says a change is waiting. Either is the banner, and
+      // the queue's state is what is asserted.
+      await expect(banner).toContainText(/You’re offline|waiting to sync/)
+      expect(await queueState(page)).toBe('[["queued",null]]')
+
+      const seen: string[] = []
+      const answers = (r: Response) =>
+        r.url().endsWith('/api/v1/collection') && seen.push(`${r.request().method()} ${r.status()}`)
+      const failures = (r: Request) =>
+        r.url().endsWith('/api/v1/collection') && seen.push(`failed ${r.failure()?.errorText}`)
+      page.on('response', answers)
+      page.on('requestfailed', failures)
+      const loseTheAnswer = async (route: Route) => {
+        if (route.request().method() !== 'POST') return route.continue()
+        await route.fetch() // the server has it
+        return route.abort('connectionreset') // and the answer never reaches the page
+      }
+      await page.route(`${API_ORIGIN}/api/v1/collection`, loseTheAnswer)
+      await context.setOffline(false)
+      // Chromium and Firefox announce the connection coming back; WebKit under Playwright does not
+      // fire `online`, which is the event the app flushes on. Say it for that browser.
+      if (browserName === 'webkit') await page.evaluate(() => window.dispatchEvent(new Event('online')))
+      try {
+        await expect.poll(() => queueState(page)).toBe('[["unconfirmed",null]]')
+      } catch (failure) {
+        throw new Error(`the page saw these answers to its add: ${seen.join(', ') || 'none'}\n${String(failure)}`)
+      } finally {
+        page.off('response', answers)
+        page.off('requestfailed', failures)
+      }
+      expect(copiesOf(tmdbId)).toBe('1')
+
+      await page.unroute(`${API_ORIGIN}/api/v1/collection`, loseTheAnswer)
+      await banner.getByRole('button', { name: 'Sync now' }).click()
+      await expect(banner).toHaveCount(0)
+      expect(copiesOf(tmdbId)).toBe('1')
+      expect(await queueState(page)).toBe('[]')
+    }
+
+    // A film the catalogue knows: the lost add is read back by its film id.
+    await page.getByRole('link', { name: 'Add a copy' }).click()
+    await chooseFilm('Paper Lantern', 'Garage replay shelf')
+    await addWithItsAnswerLost('Paper Lantern', 1403)
+
+    // A film it has never seen (Batch Z1, DECISIONS.md #287): the add names it by its TMDB id
+    // alone, so there is no film id to read it back by. It used to stay "never heard back" for
+    // good; it is read back through the duplicate check instead.
+    expect(copiesOf(1404)).toBe('0')
+    await page.goto('/collection/add')
+    await chooseFilm('Paper Kite', 'Garage replay shelf')
+    await addWithItsAnswerLost('Paper Kite', 1404)
   })
 })

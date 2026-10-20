@@ -36,10 +36,12 @@ from src.routers.movies import get_tmdb_client
 from src.services.barcode import (
     check_digit_valid,
     film_title_from_listing,
+    from_collection,
     normalise,
     rank_titles,
     titles_from_ebay,
 )
+from src.services.format_names import FORMAT_NAMES
 from src.tmdb.models import SearchResult, SearchResults
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -445,3 +447,38 @@ async def test_the_endpoint_refuses_a_bad_check_digit_before_the_chain(
 
     assert response.status_code == 422
     assert called is False
+
+
+@pytest.mark.asyncio
+async def test_a_disc_already_owned_names_its_formats_as_the_archive_does(
+    barcode_session: AsyncSession,
+) -> None:
+    """Batch Z1 (#287): the scan screen said "already owned on blu_ray", the stored code.
+
+    It now reads as the Archive does, through the one set of format names.
+    """
+    movie = Movie(
+        id=uuid.uuid4(),
+        tmdb_id=None,
+        title="A Twice Owned Film",
+        original_title="A Twice Owned Film",
+        year=2017,
+        media_type="film",
+    )
+    barcode_session.add(movie)
+    await barcode_session.flush()
+    barcode_session.add(
+        CollectionItem(
+            id=uuid.uuid4(),
+            movie_id=movie.id,
+            formats=["4k_uhd", "blu_ray"],
+            barcode="5051892211475",
+        )
+    )
+    await barcode_session.flush()
+
+    owned = await from_collection(barcode_session, "5051892211475")
+
+    assert owned is not None
+    assert owned.evidence == "already owned on 4K UHD + Blu-ray"
+    assert not [code for code in FORMAT_NAMES if code in (owned.evidence or "")]

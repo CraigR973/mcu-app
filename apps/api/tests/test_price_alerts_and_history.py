@@ -337,11 +337,14 @@ class TestPriceDropAlerts:
 
         await queue_price_drop_alerts(
             db,
-            [AlertCandidate(check=check, wanted=want, substituted_format="Blu-ray")],
+            # What the runner really sets: `primary_format` returns the stored code.
+            [AlertCandidate(check=check, wanted=want, substituted_format="blu_ray")],
         )
 
         mine = [a for a in await _deals_notifications(db) if a.user_id == person.id]
-        assert "Blu-ray" in mine[0].body
+        # Batch Z1 (#287): named as the Archive names it, never as it is stored.
+        assert "This is the Blu-ray, not" in mine[0].body
+        assert "blu_ray" not in mine[0].body
         assert "not the format you wanted" in mine[0].body
 
     async def test_a_different_edition_alerts_but_says_so(self, db: AsyncSession) -> None:
