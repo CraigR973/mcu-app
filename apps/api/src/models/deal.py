@@ -4,12 +4,12 @@ import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, and_, func, or_
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, and_, or_
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.elements import ColumnElement
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 DEALS_TABLE = "deals"
 
@@ -64,10 +64,10 @@ class Deal(Base, UUIDPrimaryKeyMixin):
     #: offer" and "is it still there" are different questions and one column answers
     #: neither.
     first_seen_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
     last_seen_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     #: §5.10: *"dismissed items don't reappear"*. A soft state rather than a delete,

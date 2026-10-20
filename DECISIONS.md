@@ -6270,3 +6270,31 @@ contemporaneous.
        reply). Neither loosens an assertion. The chat e2e case returns to the real order (no New
        chat first; the record held until the card shows). The TMDB-id offline variant runs inside
        the existing replay case, so WebKit's one recorded skip covers it and no new skip appears.
+
+288. **Every naive-UTC column defaults to UTC, whatever the session's time zone (migration
+     `063`).** Found 20 Oct while gating Z1: on a local Postgres set to Europe/London, two
+     stale-edit tests failed on `main` (a stale edit got 200, not 409); CI's Postgres runs in UTC
+     and passed them.
+
+     - **Root cause, a code fragility, not a test quirk.** 54 `timestamp without time zone`
+       columns defaulted to a bare `now()`, which Postgres casts to a naive timestamp in the
+       *session's* zone; `set_updated_at` has always written UTC (`003`, `009`). A new disc's
+       `updated_at` came from the default, every later one from the trigger. Under BST the
+       default stamped 19:56 and the first edit's trigger 18:56, so the edit looked older than
+       the version the stale edit was based on, `row.updated_at > baseUpdatedAt` was false, and
+       #42's guard let it through. Production is safe only while Neon's session zone is UTC.
+       Neon's live zone was **not checked**: `NEON_READONLY_URL` is not on the Mac.
+     - **Fix.** Migration `063` sets each of the 54 defaults to `timezone('utc', now())` (the same
+       value as the trigger's); `SET DEFAULT` rewrites no row and no table. The models use
+       `src.models.base.UTC_NOW` in place of `func.now()`. Reverses cleanly.
+     - **Tests.** A catalogue guard fails on any naive timestamp column whose default reads the
+       clock in anything but UTC (so the next `server_default=func.now()` is caught in CI); a raw
+       insert under `SET LOCAL TIME ZONE 'Asia/Tokyo'` must default to UTC; and the stale-edit
+       case replayed under Tokyo must get 409. All three failed on the old schema even on a UTC
+       database, because they set the zone themselves.
+     - **Rejected:** pinning the app's connections to UTC (`server_settings`). It hides the
+       defect for the app's own sessions only; a migration, a job's raw SQL or a `psql` session
+       would still write local time. The defaults are the authority, so they are what changed.
+     - **Not changed:** existing rows (if Neon ever ran outside UTC, their stamps are skewed;
+       not checked), and `scripts/set_pin.py`, which sets a refresh token's `revoked_at_utc` to
+       `func.now()` from Python (same class, only ever read as null or not null).

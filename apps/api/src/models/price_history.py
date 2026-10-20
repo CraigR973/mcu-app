@@ -14,13 +14,12 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 #: §5.8's threshold — raw checks older than this are rolled up and deleted.
 RETENTION_DAYS = 90
@@ -58,7 +57,7 @@ class PriceHistoryDaily(Base, UUIDPrimaryKeyMixin):
     check_count: Mapped[int] = mapped_column(Integer, nullable=False)
 
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

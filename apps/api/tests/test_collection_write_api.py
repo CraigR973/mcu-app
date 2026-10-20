@@ -1297,6 +1297,35 @@ async def test_a_stale_edit_is_refused_and_shows_what_it_would_have_overwritten(
     assert still["section"] == "Back"
 
 
+async def test_a_stale_edit_is_refused_whatever_the_database_time_zone(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    """Migration ``063``: the guard must not depend on the session's time zone.
+
+    A new disc's ``updated_at`` comes from the column default and every later one from the
+    ``set_updated_at`` trigger. The default was a bare ``now()``, cast to local time; the
+    trigger writes UTC. In a zone ahead of UTC the first edit therefore stamped a version
+    *older* than the one the stale edit was based on, and the stale edit won. Tokyo has no
+    daylight saving, so this holds all year; CI's Postgres runs in UTC and never saw it.
+    """
+    await api_session.execute(text("SET LOCAL TIME ZONE 'Asia/Tokyo'"))
+    movie = await _a_film(api_session, title="Edited Abroad", tmdb_id=930085)
+    item = await _a_disc(api_session, movie, section="Front", shelf="2nd")
+
+    stale_base = (await client.get(f"/api/v1/movies/{movie.id}/copies")).json()[0]["updatedAt"]
+    moved = await client.put(f"/api/v1/collection/{item.id}", json=_body(location="Back 6th shelf"))
+    assert moved.status_code == 200, moved.text
+
+    late = await client.put(
+        f"/api/v1/collection/{item.id}",
+        json=_body(location="Lounge", baseUpdatedAt=stale_base),
+    )
+
+    assert late.status_code == 409, late.text
+    assert late.json()["detail"]["current"]["section"] == "Back"
+
+
 async def test_an_edit_based_on_the_current_version_is_accepted(
     client: AsyncClient,
     api_session: AsyncSession,

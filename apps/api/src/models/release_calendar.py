@@ -12,12 +12,11 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    func,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 #: §3.26's vocabulary.
 RELEASE_TYPES = (
@@ -84,14 +83,14 @@ class ReleaseCalendarEntry(Base, UUIDPrimaryKeyMixin):
     notified: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     added_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     #: Moved by `015`'s trigger, so a client can tell an edited event from a new one —
     #: which is what makes a release date shifting update a subscriber's event rather than
     #: duplicating it.
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
@@ -117,7 +116,7 @@ class CalendarFeedToken(Base, UUIDPrimaryKeyMixin):
     token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
 
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     #: So an unused link is visible. A subscription never fetched is either not set up or

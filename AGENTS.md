@@ -96,7 +96,9 @@ Hosting: Neon (Postgres) + Railway (API) + Vercel (web) — live since Batch 2.
   later never gets added. (Decision #6.)
 - **UTC everywhere.** Naive-UTC columns, `DateTime(timezone=False)`, `_utcnow()` =
   `datetime.now(UTC).replace(tzinfo=None)`, and the `*_utc` suffix on domain timestamp
-  columns. Correct at the wire with a `UtcDatetime` annotation, not at each call site.
+  columns. Correct at the wire with a `UtcDatetime` annotation, not at each call site. A
+  column's database default is `UTC_NOW` (`src/models/base.py`), never `func.now()`, which
+  writes the session's local time (#288); a test fails on any other clock default.
 - **UUID primary keys**, `deleted_at` soft deletes, `admin_actions` for audit.
 - Branches `feat/`/`fix/`/`chore/`; Conventional Commits; small commits (`git log` is a handoff).
 - **Tests ship with every change.**

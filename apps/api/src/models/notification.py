@@ -26,12 +26,11 @@ from sqlalchemy import (
     String,
     Text,
     Time,
-    func,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
 
 
 class NotificationCategory(StrEnum):
@@ -270,7 +269,7 @@ class Notification(Base, UUIDPrimaryKeyMixin):
     )
 
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

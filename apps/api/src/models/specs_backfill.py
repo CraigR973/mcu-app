@@ -25,13 +25,12 @@ from sqlalchemy import (
     Integer,
     Text,
     UniqueConstraint,
-    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 #: Where a disc is. ``needs_you`` and ``no_match`` wait for Craig; ``accepted`` waits for
 #: the nightly fetch; ``done`` has specs; ``skipped`` is Craig saying not this one.
@@ -153,7 +152,7 @@ class SpecLookup(Base, UUIDPrimaryKeyMixin):
     fetched_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
 
@@ -184,5 +183,5 @@ class SpecCandidate(Base, UUIDPrimaryKeyMixin):
     #: ``restored`` marks the page the 10 Sep test fetched for this disc.
     origin: Mapped[str] = mapped_column(Text, nullable=False, default="search")
     created_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
