@@ -2,6 +2,17 @@
 
 ## Now
 
+**20 Oct: Z1, the four faults the end-to-end suite found, is built (#287), and that is Group Z.**
+A first message in a new conversation keeps its Yes/No card however late the conversation's
+record arrives (a record asked for before the stream ended no longer speaks for the card). A
+disc added offline by TMDB id, series id or title, whose answer was lost, is read back through
+the duplicate check and settles. Formats read as the Archive names them on the barcode screen,
+in the Trash, in a price-alert push and in the offline banner (one server formatter, tied to the
+web's list by a test). Two likes cast at once make exactly one match (the night's row is locked
+while a vote is recorded). No migration, no live data step. Each fix was reverted once and its
+test seen to fail. **Local note:** on the scratchpad Postgres (timezone Europe/London) one
+existing test, the stale-edit refusal, fails on `main` too; CI (UTC) passes it. Not Z1's.
+
 **19 Oct: Batch 38, the end-to-end suite, is built (#94, `DECISIONS.md` #285), and that finishes
 Group X.** `apps/e2e` runs the production web build in Chromium, Firefox and WebKit against the
 real API on a throwaway Postgres with every outside service faked, plus the five cron jobs run as
@@ -581,6 +592,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-20 (Batch Z1, #287)** — Re-verified the four faults at `1faf99a` (all present; the
+  card race worse than recorded, the raw codes in three more places). Locked the night's row while
+  a vote is recorded, added one server format formatter tied to the web's list, read a TMDB-id,
+  series or title add back through the duplicate check, and set aside conversation records asked
+  for before the latest stream ended. Race test on two real connections (40 nights), format,
+  read-back and card tests; the chat e2e case back to the real order and the offline case adding
+  by TMDB id too. Each fix reverted once and seen to fail. Gate and e2e (Chromium, Firefox) run on
+  the scratchpad Postgres; WebKit on CI.
 - **2026-10-19 (Batch 38, #285)** — Re-measured read-only first (import has no screen; CR43-05 and
   CR43-07 still open, CR43-07 wider than the review said). Built the harness, one fake outside
   world (httpx, httpx2 and a socket backstop, failing closed), 29 browser cases, 5 job cases, three

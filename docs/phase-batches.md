@@ -4393,9 +4393,19 @@ exists or is a few lines from one. Model tier is Group V's top tier. Lands as Gr
 
 | Batch | Covers | Size | Gate | Claude Code | Codex |
 |---|---|---|---|---|---|
-| Z1 | The four faults below | 🟡 | Craig's go | top tier · high | top tier · High |
+| ~~Z1~~ | The four faults below — **built 20 Oct (#287)** | 🟡 | Craig's go | top tier · high | top tier · High |
 
 ### Z1 — Four faults the end-to-end suite found
+**Built 20 Oct at Craig's go (`DECISIONS.md` #287).** Re-verified first at `1faf99a`: all four
+still present. **Amended, none dropped:** criterion 2 widened to a series add and a title-only
+add (same fault, same call); criterion 3's grep found three more sentences with a stored code
+(the Trash, the price-alert push, the offline banner), all fixed, and listed the admin-only,
+CLI and CSV strings left as they are. **Each fix shown to bite by reverting it:** the vote race
+test failed on night 2 at natural timing; three server format tests failed; six vitest cases
+and the offline e2e case (on the TMDB-id add) failed; two vitest cases and the chat e2e case
+failed. The chat card case runs in the real order again; the TMDB-id variant runs inside the
+existing replay case, so no new skip.
+
 **Why top tier.** Two are races (a client state race, a server write skew) where a fix that
 passes the obvious case can leave the real one open, and one changes how the offline queue
 settles a write.
