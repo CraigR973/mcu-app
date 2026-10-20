@@ -45,6 +45,7 @@ from src.ebay.matching import (
 from src.models.barcode import BarcodeLookup
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.movie import Movie
+from src.services.format_names import formats_phrase
 
 _DIGITS = re.compile(r"[^0-9]")
 
@@ -158,7 +159,8 @@ async def from_collection(db: AsyncSession, barcode: str) -> BarcodeCandidate | 
         tmdb_id=movie.tmdb_id,
         year=movie.year,
         poster_path=movie.poster_path,
-        evidence=f"already owned on {'/'.join(item.formats) or 'an unrecorded format'}",
+        # "Blu-ray", not the stored "blu_ray" (Batch Z1, #287).
+        evidence=f"already owned on {formats_phrase(item.formats) or 'an unrecorded format'}",
     )
 
 

@@ -45,6 +45,11 @@ export default function AiChatPage() {
   const [pending, setPending] = useState<AiPendingToolCall[]>([])
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  // Batch Z1 (`DECISIONS.md` #287): how many streams have ended on this page, and which count
+  // each conversation record was asked for under. The server writes a card when its stream
+  // closes, so a record asked for before then cannot know about the card the stream raised.
+  const streamsEnded = useRef(0)
+  const askedAfter = useRef(new WeakMap<object, number>())
 
   const status = useQuery({ queryKey: ['ai-status'], queryFn: fetchAiStatus })
   const conversations = useQuery({
@@ -53,9 +58,18 @@ export default function AiChatPage() {
   })
   const detail = useQuery({
     queryKey: ['ai-conversation', conversationId],
-    queryFn: () => fetchAiConversation(conversationId as string),
+    queryFn: async () => {
+      const asked = streamsEnded.current
+      const record = await fetchAiConversation(conversationId as string)
+      askedAfter.current.set(record, asked)
+      return record
+    },
     enabled: Boolean(conversationId),
+    // Every answer is its own object, so each one carries the count it was asked under. With
+    // sharing, an answer equal to an older one would come back as that older object.
+    structuralSharing: false,
   })
+  const refetchDetail = detail.refetch
   const usage = useQuery({ queryKey: ['ai-usage'], queryFn: fetchAiUsage })
 
   const storedTurns: Turn[] = (detail.data?.messages ?? [])
@@ -69,9 +83,22 @@ export default function AiChatPage() {
 
   // A pending confirmation outlives the stream that raised it — somebody can close the
   // tab mid-prompt and come back to it.
+  //
+  // **Only a record asked for after the latest stream ended speaks for the card** (Batch Z1,
+  // #287). A first message in a new conversation opens the conversation, and its record was
+  // asked for before the server held any card: arriving after the stream raised one, it wiped
+  // the card. While a stream runs the stream is the authority; an older record that lands
+  // later is set aside and asked for again.
   useEffect(() => {
-    if (detail.data) setPending(detail.data.pendingToolCalls)
-  }, [detail.data])
+    const record = detail.data
+    if (!record || streaming) return
+    // A record this page did not ask for (an earlier visit's) predates every stream here.
+    if ((askedAfter.current.get(record) ?? 0) !== streamsEnded.current) {
+      void refetchDetail()
+      return
+    }
+    setPending(record.pendingToolCalls)
+  }, [detail.data, streaming, refetchDetail])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
@@ -156,6 +183,8 @@ export default function AiChatPage() {
       } catch (cause) {
         setError(queryErrorMessage(cause, 'The assistant response was interrupted.'))
       } finally {
+        // Before the refresh below is asked for, so that refresh counts and older ones do not.
+        streamsEnded.current += 1
         setStreaming(false)
         void queryClient.invalidateQueries({ queryKey: ['ai-conversation', targetId] })
         void queryClient.invalidateQueries({ queryKey: ['ai-conversations'] })

@@ -1,13 +1,16 @@
 import {
   addCollectionItem,
   ApiError,
+  checkDuplicate,
   deleteCollectionItem,
   fetchCopies,
+  formatLabel,
   NetworkError,
   StaleEditError,
   updateCollectionItem,
   type AddCollectionItemInput,
   type CollectionItemFields,
+  type FilmReference,
   type UpdateCollectionItemInput,
 } from './api'
 import {
@@ -59,7 +62,8 @@ export interface FlushResult {
 }
 
 function describeAdd(input: AddCollectionItemInput): string {
-  return `Add a disc (${input.formats.join(' + ')})`
+  // "Blu-ray", not the stored "blu_ray" (Batch Z1, `DECISIONS.md` #287).
+  return `Add a disc (${input.formats.map((format) => formatLabel(format) ?? format).join(' + ')})`
 }
 
 /**
@@ -145,16 +149,43 @@ function sameDisc(copy: { formats: string[]; location: string | null }, body: un
 }
 
 /**
+ * The film a queued add names by something other than its id: a TMDB film the catalogue had
+ * not seen, a series, or a title alone (Batch Y5). `null` when it names none of them.
+ */
+function filmReference(body: unknown): FilmReference | null {
+  const input = body as Partial<AddCollectionItemInput>
+  if (input.tmdbId !== undefined) return { tmdbId: input.tmdbId }
+  if (input.tmdbTvId !== undefined) return { tmdbTvId: input.tmdbTvId }
+  if (input.title) return { title: input.title }
+  return null
+}
+
+/**
  * Settle an `unconfirmed` entry by reading the server, never by re-sending.
  *
  * Returns `'landed'`, `'absent'` (so the entry can safely go back to `queued`), or
  * `'unknown'` when the read itself could not be made.
  */
 async function reconcile(entry: QueuedWrite): Promise<'landed' | 'absent' | 'unknown'> {
-  if (entry.movieId === undefined) return 'unknown'
+  let movieId = entry.movieId
+  if (movieId === undefined) {
+    // Batch Z1 (#287): an add made from a TMDB search names the film by its TMDB id, and once
+    // stayed "never heard back" for good, because there was no film id to read it back by.
+    // The duplicate check finds the film the add would have made, if it made one.
+    const film = entry.operation === 'create' ? filmReference(entry.body) : null
+    if (film === null) return 'unknown'
+    try {
+      const found = await checkDuplicate(film, [])
+      // The catalogue has no such film, so the add that would have created it never landed.
+      if (found.movieId === null) return 'absent'
+      movieId = found.movieId
+    } catch {
+      return 'unknown'
+    }
+  }
   let copies: Awaited<ReturnType<typeof fetchCopies>>
   try {
-    copies = await fetchCopies(entry.movieId)
+    copies = await fetchCopies(movieId)
   } catch {
     // Still unreachable. Staying `unconfirmed` is the correct answer: reporting a guess
     // here is the failure this whole mechanism exists to avoid.

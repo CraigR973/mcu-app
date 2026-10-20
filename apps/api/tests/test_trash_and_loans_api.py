@@ -32,6 +32,7 @@ from src.models.profile import Profile, UserRole
 from src.models.wanted import Retailer, WantedItem
 from src.models.watch_log import WatchLog
 from src.services import trash as trash_service
+from src.services.format_names import FORMAT_NAMES
 
 ACTOR_HEADER = "x-test-actor"
 
@@ -184,6 +185,21 @@ async def test_deleted_rows_from_every_table_appear_in_one_shape(
 
     sets = (await client.get("/api/v1/trash/all?table=box_sets")).json()
     assert any(row["label"] == "A Deleted Box Set" for row in sets["items"])
+
+
+async def test_a_binned_disc_names_its_formats_as_the_archive_does(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Batch Z1 (#287): the Trash read "blu_ray + dvd · …", the stored codes."""
+    _, item = await _disc(api_session, "A Binned Box")
+    item.formats = ["4k_uhd", "blu_ray", "dvd", "download"]
+    item.deleted_at = datetime(2026, 9, 9)
+    await api_session.flush()
+
+    items = (await client.get("/api/v1/trash/all?table=collection_items")).json()
+    (row,) = [row for row in items["items"] if row["label"] == "A Binned Box"]
+    assert row["sublabel"].startswith("4K UHD + Blu-ray + DVD + Digital · ")
+    assert not [code for code in FORMAT_NAMES if code in row["sublabel"]]
 
 
 async def test_a_table_with_no_trash_is_refused_rather_than_answered_empty(

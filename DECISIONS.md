@@ -6226,3 +6226,47 @@ contemporaneous.
        (g) lock the night's session row while a vote is recorded, no migration.
      - **Left out:** the WebKit skips wait on Craig's two-phone check (`OWNER-ACTIONS.md` 16b);
        the double CI run on every pull-request commit stays Craig's call.
+
+287. **Batch Z1: the four faults Batch 38 found, fixed (#285 c, d, e, g; planned in #286).** Each
+     re-verified read-only on 20 Oct at `1faf99a`; all four were still there. Built at Craig's go
+     the same day.
+
+     - **(c) The Yes/No card.** A conversation record now counts only if it was asked for after the
+       latest stream on the page ended; while a stream runs the stream is the authority, and an
+       older record that lands later is set aside and the conversation read again. Why: the server
+       writes a card when the stream closes, so any record asked for before then cannot know the
+       card. Re-verification found it worse than recorded: React Query does not cancel a first read
+       still in flight, so the refresh at the end of the stream joined the stale read and nothing
+       read again. Rejected: comparing when an answer *arrived* (a read sent before the stream ended
+       can arrive after it).
+     - **(d) An add by TMDB id.** A lost create with no film id is read back through
+       `GET /collection/duplicate-check`: no such film means it never landed (back to `queued`);
+       otherwise that film's copies are compared exactly as an add by film id is. Either read
+       failing leaves it unconfirmed. **Widened, same call:** a series add (`tmdbTvId`) and a
+       title-only add (Y5) had the same fault and are read back the same way. No new endpoint, no
+       migration.
+     - **(e) Format names.** One server formatter, `services/format_names.py`, holding exactly the
+       web's `FORMATS` (4K UHD, Blu-ray, DVD, Digital), with a test that reads the web's list and
+       fails if they differ. Chosen over having the web format the barcode evidence because two of
+       the sentences have no web step: a price-alert push, and the Trash's line. **Wider than
+       recorded:** the grep found the Trash ("blu_ray + dvd · …"), the price-alert push ("This is
+       the blu_ray, not the format you wanted"; its test fed it "Blu-ray", which hid it) and the
+       offline banner ("Add a disc (blu_ray)"); all fixed. Listed, not changed: admin-only run
+       errors (`last_error` in the valuation, bid-trial and spec runs), a CLI print in
+       `fill_editions`, the CSV export's format column (data, not a sentence), and two label maps
+       that say "4K" on purpose (the identify plan, eBay targets).
+     - **(g) Two likes at once.** `record_vote` takes `SELECT … FOR UPDATE` on the night's row
+       before anything else, so the second voter waits for the first to commit and then sees its
+       like. No migration. No deadlock path: votes are written only here, and ending a night
+       touches the session row alone.
+     - **Proof that each fix bites, by reverting it:** (g) the race test (two real connections, 40
+       nights, half with the gap held open) failed on night 2 at natural timing; (e) three server
+       tests failed; (d) six vitest cases failed and the offline e2e case failed on the TMDB-id
+       add; (c) two vitest cases failed and the chat e2e case failed ("the page read the
+       conversation again": 1, wanted ≥ 2).
+     - **Test changes, said plainly:** the existing alert test now feeds the code the runner really
+       sets (`blu_ray`) and asserts "Blu-ray"; the existing "unlocks once answered" chat test's
+       second record no longer holds the card (the server settles the call before it streams the
+       reply). Neither loosens an assertion. The chat e2e case returns to the real order (no New
+       chat first; the record held until the card shows). The TMDB-id offline variant runs inside
+       the existing replay case, so WebKit's one recorded skip covers it and no new skip appears.

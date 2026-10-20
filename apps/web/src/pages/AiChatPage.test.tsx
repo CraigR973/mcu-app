@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -166,7 +166,7 @@ describe('AiChatPage', () => {
 
   it('locks the message box while a card waits, and unlocks it once the card is answered', async () => {
     // Batch X7 (AI45-02): typing instead of tapping broke the conversation for good.
-    mocks.fetchAiConversation.mockResolvedValue({
+    const waiting = {
       id: CONVERSATION_ID,
       title: 'Archive questions',
       createdAt: '2026-09-10T10:00:00Z',
@@ -179,7 +179,11 @@ describe('AiChatPage', () => {
           input: { title: 'Heat' },
         },
       ],
-    })
+    }
+    // Once answered, the server holds no card: it settles the call before it streams the reply.
+    mocks.fetchAiConversation
+      .mockResolvedValueOnce(waiting)
+      .mockResolvedValue({ ...waiting, pendingToolCalls: [] })
     renderPage()
 
     expect(await screen.findByText('Can I do this?')).not.toBeNull()
@@ -191,5 +195,103 @@ describe('AiChatPage', () => {
 
     expect(mocks.resolveAiToolCall).toHaveBeenCalledWith('3f2504e0-4f89-41d3-9a0c-0305e82c3320', true)
     await vi.waitFor(() => expect(input.disabled).toBe(false))
+  })
+
+  // Batch Z1 (`DECISIONS.md` #287). A first message in a new conversation opens the
+  // conversation, and that record is asked for before the server holds any card. On a slow
+  // link it arrived after the stream had raised the card, and wiped it.
+  describe('a first message in a new conversation whose record arrives late', () => {
+    const CARD = {
+      id: '3f2504e0-4f89-41d3-9a0c-0305e82c3330',
+      toolName: 'log_watch',
+      input: { title: 'The Quiet Engine', rating: 4 },
+    }
+
+    function record(pendingToolCalls: (typeof CARD)[]) {
+      return {
+        id: CREATED_ID,
+        title: 'New conversation',
+        createdAt: '2026-09-10T12:00:00Z',
+        updatedAt: '2026-09-10T12:00:00Z',
+        messages: [],
+        pendingToolCalls,
+      }
+    }
+
+    function deferred<T>() {
+      let resolve!: (value: T) => void
+      const promise = new Promise<T>((done) => {
+        resolve = done
+      })
+      return { promise, resolve }
+    }
+
+    /** Ask the first question on a blank page, the stream raising a card. */
+    async function askForAWrite(stream: AsyncGenerator<unknown>) {
+      mocks.streamAiMessage.mockImplementation(() => stream)
+      renderPage('/assistant')
+      fireEvent.change(screen.getByLabelText('Message to the assistant'), {
+        target: { value: 'I watched The Quiet Engine and give it 4 stars' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
+      expect(await screen.findByText('Can I do this?')).not.toBeNull()
+    }
+
+    async function settle() {
+      for (let tick = 0; tick < 5; tick += 1) await act(async () => {})
+    }
+
+    it('keeps the card when the record lands while the stream is still open', async () => {
+      const late = deferred<ReturnType<typeof record>>()
+      const streamEnds = deferred<void>()
+      mocks.fetchAiConversation
+        .mockReset()
+        .mockReturnValueOnce(late.promise)
+        // Asked for after the stream closed: the server has written the card by then.
+        .mockResolvedValue(record([CARD]))
+      await askForAWrite(
+        (async function* () {
+          yield { kind: 'confirm' as const, text: '', toolCalls: [CARD] }
+          await streamEnds.promise
+        })(),
+      )
+
+      late.resolve(record([]))
+      await settle()
+      expect(screen.getByText('Can I do this?')).not.toBeNull()
+
+      streamEnds.resolve()
+      await settle()
+      expect(screen.getByText('Can I do this?')).not.toBeNull()
+      expect(screen.getByRole('button', { name: /Yes, do it/ })).not.toBeNull()
+    })
+
+    it('keeps the card when the record lands after the stream has closed, and asks again', async () => {
+      const late = deferred<ReturnType<typeof record>>()
+      const streamEnds = deferred<void>()
+      mocks.fetchAiConversation
+        .mockReset()
+        .mockReturnValueOnce(late.promise)
+        .mockResolvedValue(record([CARD]))
+      await askForAWrite(
+        (async function* () {
+          yield { kind: 'confirm' as const, text: '', toolCalls: [CARD] }
+          await streamEnds.promise
+        })(),
+      )
+      // The record was asked for while the stream was open, before the server held the card.
+      await vi.waitFor(() => expect(mocks.fetchAiConversation).toHaveBeenCalledTimes(1))
+      streamEnds.resolve()
+      await settle()
+
+      late.resolve(record([]))
+      await settle()
+
+      expect(screen.getByText('Can I do this?')).not.toBeNull()
+      // The early record was set aside and the conversation read again.
+      await vi.waitFor(() => expect(mocks.fetchAiConversation).toHaveBeenCalledTimes(2))
+      await settle()
+      expect(screen.getByText('Can I do this?')).not.toBeNull()
+    })
   })
 })

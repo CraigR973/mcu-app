@@ -40,17 +40,42 @@ test.describe('chat session', () => {
     })
     const { page } = await signedIn('Mark')
     await page.goto('/assistant')
-    // Start the conversation and let its (empty) record arrive before asking. A first message in a
-    // brand-new conversation races that record against the card: a slow link can wipe the card
-    // the stream has just raised (recorded in DECISIONS.md #285, not part of this case).
-    const record = page.waitForResponse(
-      (r) => /\/ai\/conversations\/[0-9a-f-]{36}$/.test(r.url()) && r.request().method() === 'GET',
-    )
-    await page.getByRole('button', { name: 'New chat' }).click()
-    await record
+    // The real order (Batch Z1, DECISIONS.md #287): the first message in a brand-new
+    // conversation. Sending it opens the conversation, and the page asks for its record while the
+    // reply is still streaming, before the server holds any card. On a slow link that record
+    // arrives after the stream has raised the card; it used to wipe the card.
+    //
+    // Made certain here, not left to timing: the server answers the record first (the message is
+    // held until it has), and the page is handed that answer only once the card is on screen.
+    let recordAnswered!: () => void
+    const recordAsked = new Promise<void>((resolve) => (recordAnswered = resolve))
+    let releaseRecord!: () => void
+    const cardShown = new Promise<void>((resolve) => (releaseRecord = resolve))
+    let reads = 0
+    const record = /\/api\/v1\/ai\/conversations\/[0-9a-f-]{36}$/
+    await page.route(record, async (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      reads += 1
+      if (reads > 1) return route.continue()
+      const answer = await route.fetch() // what the server held before the reply finished
+      recordAnswered()
+      await cardShown
+      return route.fulfill({ response: answer })
+    })
+    await page.route(/\/api\/v1\/ai\/conversations\/[0-9a-f-]{36}\/messages$/, async (route) => {
+      await recordAsked
+      return route.continue()
+    })
     await ask(page, 'I watched The Quiet Engine and give it 4 stars')
 
     const card = page.getByText('Can I do this?')
+    await expect(card).toBeVisible()
+    // Now the early record lands. The page sets it aside and reads the conversation again,
+    // and the card is still there to answer.
+    const early = page.waitForResponse((r) => record.test(r.url()) && r.request().method() === 'GET')
+    releaseRecord()
+    await early
+    await expect.poll(() => reads, { message: 'the page read the conversation again' }).toBeGreaterThanOrEqual(2)
     await expect(card).toBeVisible()
     // Nothing has been written, and the box is locked until the card is answered.
     const box = page.getByRole('textbox', { name: 'Message to the assistant' })

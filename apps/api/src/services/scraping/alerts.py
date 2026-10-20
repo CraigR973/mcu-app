@@ -41,6 +41,7 @@ from src.models.profile import Profile
 from src.models.wanted import WantedItem
 from src.services.ebay_watch.refs import Yardstick
 from src.services.ebay_watch.usual import shop_usual
+from src.services.format_names import format_label
 from src.services.notifications import queue_notification
 
 logger = structlog.get_logger(__name__)
@@ -100,7 +101,9 @@ def _body(candidate: AlertCandidate, title: str, usual: Yardstick | None = None)
     if candidate.substituted_format:
         # Never silent: the alert compares against whatever was priced, so the reader has
         # to be able to see that it was not the format they asked for.
-        parts.append(f"This is the {candidate.substituted_format}, not the format you wanted.")
+        parts.append(
+            f"This is the {format_label(candidate.substituted_format)}, not the format you wanted."
+        )
     if candidate.edition_matched is False:
         parts.append(
             f"It is a different edition from the {candidate.wanted.preferred_edition!r} "

@@ -320,6 +320,138 @@ describe('flushing on reconnect', () => {
   })
 })
 
+// Batch Z1 (`DECISIONS.md` #287). An add made from a TMDB search names the film by its TMDB
+// id; the catalogue has no film id for it yet. `reconcile` gave up on those ("unknown"), so a
+// lost answer stayed "never heard back" until the person discarded it.
+describe('an add named by its TMDB id, a series id or a title', () => {
+  const TMDB_ADD = { tmdbId: 1404, formats: ['blu_ray'], location: null, hasPlaybackIssues: false }
+
+  function duplicateCheck(movieId: string | null) {
+    return new Response(
+      JSON.stringify({
+        movieId,
+        movieTitle: movieId ? 'Paper Kite' : null,
+        isDuplicate: false,
+        existingCopies: [],
+        isUpgrade: false,
+        bestFormatOwned: null,
+      }),
+    )
+  }
+
+  /** Queue the add, then lose the replay's answer, as a deploy restart does. */
+  async function lostAdd(input: Parameters<typeof addOrQueue>[0]) {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue(input)
+    setOnline(true)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 503 })))
+    await flushQueue()
+    expect((await listQueue())[0].state).toBe('unconfirmed')
+  }
+
+  function methods(fetchMock: ReturnType<typeof vi.fn>): string[] {
+    return fetchMock.mock.calls.map(([url, init]) => {
+      const path = new URL(String(url), 'http://app.test').pathname
+      return `${(init as RequestInit | undefined)?.method ?? 'GET'} ${path}`
+    })
+  }
+
+  it('reads the film back by its TMDB id and settles when the add landed', async () => {
+    await lostAdd(TMDB_ADD)
+    const readBack = vi
+      .fn()
+      .mockResolvedValueOnce(duplicateCheck(MOVIE_ID))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ ...copy, formats: ['blu_ray'], location: null }])))
+    vi.stubGlobal('fetch', readBack)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(1)
+    expect(await listQueue()).toHaveLength(0)
+    // Two reads and no POST: a second POST here is a second disc.
+    expect(methods(readBack)).toEqual([
+      'GET /api/v1/collection/duplicate-check',
+      `GET /api/v1/movies/${MOVIE_ID}/copies`,
+    ])
+    expect(String(readBack.mock.calls[0][0])).toContain('tmdbId=1404')
+  })
+
+  it('returns it to queued when the catalogue has never heard of the film, and sends it then', async () => {
+    await lostAdd(TMDB_ADD)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(duplicateCheck(null))
+      .mockResolvedValueOnce(itemResponse(201))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(1)
+    expect(await listQueue()).toHaveLength(0)
+    expect(methods(fetchMock)).toEqual(['GET /api/v1/collection/duplicate-check', 'POST /api/v1/collection'])
+  })
+
+  it('returns it to queued when the film is there but this disc is not', async () => {
+    await lostAdd(TMDB_ADD)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(duplicateCheck(MOVIE_ID))
+      .mockResolvedValueOnce(new Response(JSON.stringify([])))
+      // The resend loses its answer too; what matters here is that it came after both reads.
+      .mockResolvedValueOnce(new Response('', { status: 503 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await flushQueue()
+
+    expect(methods(fetchMock)).toEqual([
+      'GET /api/v1/collection/duplicate-check',
+      `GET /api/v1/movies/${MOVIE_ID}/copies`,
+      'POST /api/v1/collection',
+    ])
+  })
+
+  it('leaves it unconfirmed when the read cannot be made, and sends nothing', async () => {
+    await lostAdd(TMDB_ADD)
+    const unreachable = droppedFetch()
+    vi.stubGlobal('fetch', unreachable)
+
+    const result = await flushQueue()
+
+    expect(result.sent).toBe(0)
+    expect((await listQueue())[0].state).toBe('unconfirmed')
+    expect(methods(unreachable)).toEqual(['GET /api/v1/collection/duplicate-check'])
+  })
+
+  it('reads a series add back by its series id, and a title-only add by its title', async () => {
+    for (const [input, query] of [
+      [{ ...TMDB_ADD, tmdbId: undefined, tmdbTvId: 2316 }, 'tmdbTvId=2316'],
+      [{ ...TMDB_ADD, tmdbId: undefined, title: 'Life on Earth' }, 'title=Life+on+Earth'],
+    ] as const) {
+      await clearQueue()
+      await lostAdd(input)
+      const readBack = vi
+        .fn()
+        .mockResolvedValueOnce(duplicateCheck(MOVIE_ID))
+        .mockResolvedValueOnce(new Response(JSON.stringify([{ ...copy, formats: ['blu_ray'], location: null }])))
+      vi.stubGlobal('fetch', readBack)
+
+      expect((await flushQueue()).sent).toBe(1)
+      expect(await listQueue()).toHaveLength(0)
+      expect(String(readBack.mock.calls[0][0])).toContain(query)
+    }
+  })
+
+  it('names the formats in the queue as the Archive does', async () => {
+    setOnline(false)
+    vi.stubGlobal('fetch', offlineFetch())
+    await addOrQueue({ ...TMDB_ADD, formats: ['4k_uhd', 'blu_ray'] })
+
+    const [entry] = await listQueue()
+    expect(entry.label).toBe('Add a disc (4K UHD + Blu-ray)')
+  })
+})
+
 describe('a server that answers without being the application', () => {
   it('treats a 5xx on a write as unknown, not as a refusal', async () => {
     // `fetch` *resolves* for a 503, so this looked like an answer and the write was
