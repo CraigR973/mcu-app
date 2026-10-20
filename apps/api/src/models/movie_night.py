@@ -19,12 +19,11 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UpdatedAtMixin, UUIDPrimaryKeyMixin
 
 SESSION_STATUSES = ("open", "ended")
 
@@ -90,7 +89,7 @@ class MovieNightParticipant(Base, UUIDPrimaryKeyMixin):
         UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False
     )
     joined_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
 
@@ -136,7 +135,7 @@ class MovieNightSuggestion(Base, UUIDPrimaryKeyMixin):
     overview: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
@@ -187,7 +186,7 @@ class MovieNightVote(Base, UUIDPrimaryKeyMixin):
     )
 
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

@@ -10,11 +10,11 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 CONDITIONS = ("new", "used", "refurbished", "unknown")
 LISTING_TYPES = ("buy_it_now", "auction", "fixed_price", "unknown")
@@ -49,7 +49,7 @@ class PriceCheck(Base, UUIDPrimaryKeyMixin):
     notification_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     checked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now(), index=True
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW, index=True
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

@@ -23,13 +23,12 @@ from sqlalchemy import (
     Integer,
     Text,
     UniqueConstraint,
-    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 #: ``needs_you`` waits on the Identify films page; the rest are settled.
 IDENTIFY_LOOKUP_STATUSES = ("needs_you", "identified", "set_aside", "skipped")
@@ -152,7 +151,7 @@ class IdentifyLookup(Base, UUIDPrimaryKeyMixin):
     )
     decided_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     created_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
 
@@ -173,7 +172,7 @@ class MovieTitleAlias(Base, UUIDPrimaryKeyMixin):
     title: Mapped[str] = mapped_column(Text, nullable=False)
     source: Mapped[str] = mapped_column(Text, nullable=False, default="identification")
     created_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
 
@@ -245,5 +244,5 @@ class IdentifyDoubt(Base, UUIDPrimaryKeyMixin):
     #: The audit row of the change that settled it; undoing that change opens it again.
     decided_action_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )

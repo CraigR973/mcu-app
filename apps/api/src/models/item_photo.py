@@ -8,11 +8,11 @@ nothing to the catalogue queries that never select it.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 #: §3.10's "max 5 per item".
 MAX_PHOTOS_PER_ITEM = 5
@@ -52,7 +52,7 @@ class ItemPhoto(Base, UUIDPrimaryKeyMixin):
     )
 
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

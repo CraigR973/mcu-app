@@ -28,13 +28,12 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base, UUIDPrimaryKeyMixin
+from src.models.base import UTC_NOW, Base, UUIDPrimaryKeyMixin
 
 #: ``listing`` watches one eBay listing; ``search`` watches a film on a format.
 TARGET_KINDS = ("listing", "search")
@@ -125,7 +124,7 @@ class EbayTarget(Base, UUIDPrimaryKeyMixin):
     met_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at_utc: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=UTC_NOW
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 

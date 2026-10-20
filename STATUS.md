@@ -2,6 +2,11 @@
 
 ## Now
 
+**20 Oct: a time-zone fault in the stale-edit guard is fixed (#288, migration `063`).** Every
+naive-UTC column now defaults to `timezone('utc', now())` rather than a bare `now()`, so a new
+row's `updated_at` matches the trigger's UTC whatever the database's time zone. Production was
+safe only while Neon runs in UTC; its live zone was not checked from the Mac. No row rewritten.
+
 **20 Oct: Z1, the four faults the end-to-end suite found, is built (#287), and that is Group Z.**
 A first message in a new conversation keeps its Yes/No card however late the conversation's
 record arrives (a record asked for before the stream ended no longer speaks for the card). A
@@ -10,8 +15,8 @@ the duplicate check and settles. Formats read as the Archive names them on the b
 in the Trash, in a price-alert push and in the offline banner (one server formatter, tied to the
 web's list by a test). Two likes cast at once make exactly one match (the night's row is locked
 while a vote is recorded). No migration, no live data step. Each fix was reverted once and its
-test seen to fail. **Local note:** on the scratchpad Postgres (timezone Europe/London) one
-existing test, the stale-edit refusal, fails on `main` too; CI (UTC) passes it. Not Z1's.
+test seen to fail. **Local note, since fixed (#288):** on the scratchpad Postgres (Europe/London)
+two stale-edit tests failed on `main` too; the cause was the column defaults, not the tests.
 
 **19 Oct: Batch 38, the end-to-end suite, is built (#94, `DECISIONS.md` #285), and that finishes
 Group X.** `apps/e2e` runs the production web build in Chromium, Firefox and WebKit against the
@@ -592,6 +597,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-20 (fix, #288)** — Two stale-edit tests failed on a Europe/London Postgres, on
+  `main` too. Cause: 54 naive-UTC columns defaulted to a bare `now()` (session-local time)
+  while the `set_updated_at` trigger writes UTC, so under BST a new disc's first edit looked
+  older than its original and a stale edit was accepted. Migration `063` sets every one to
+  `timezone('utc', now())`; a catalogue guard and two Tokyo-zone tests fail on the old schema.
+  Full API suite green on a London and a UTC database. Neon's live zone not checked (no
+  read-only URL on the Mac).
 - **2026-10-20 (Batch Z1, #287)** — Re-verified the four faults at `1faf99a` (all present; the
   card race worse than recorded, the raw codes in three more places). Locked the night's row while
   a vote is recorded, added one server format formatter tied to the web's list, read a TMDB-id,
