@@ -1514,6 +1514,14 @@ another row; the binned copies stay in the Trash.
 It refuses unless exactly that many are leftovers when it runs, and skips a row that gained a
 copy, watch or want since.
 
+### 35. The eBay hand check — AA10 *(new 21 Oct, about 30 minutes, Craig or Mark)*
+
+Decides the stand-in figure AA10b builds (#289). Open the ten links in section 3 of
+`docs/reviews/values-and-deals-2026-10-21.md`, signed in to eBay. For each: filter to Used, skip
+steelbooks, limited editions, foreign-region, disc-only and damaged copies, and note the last
+five sale prices **with postage** from the last 90 days. Reply in the chat with five numbers per
+disc. AA10a does not wait for this; AA10b does.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database

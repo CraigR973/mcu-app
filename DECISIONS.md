@@ -6298,3 +6298,26 @@ contemporaneous.
      - **Not changed:** existing rows (if Neon ever ran outside UTC, their stamps are skewed;
        not checked), and `scripts/set_pin.py`, which sets a refresh token's `revoked_at_utc` to
        `func.now()` from Python (same class, only ever read as null or not null).
+
+289. **Disc values and deals rest on what used copies sell for: option 3 of AA10's note, at
+     Craig's word, 21 Oct** (`docs/reviews/values-and-deals-2026-10-21.md`; snags 23 and 24).
+     The note found 75 of the last 90 deals were New listings judged against New asking
+     prices, whose "usually" ran a median 2.2 times a used copy's going rate. Craig's five
+     answers, all "yes, as recommended":
+     - **Option 3.** Deals are judged at once against a used stand-in figure, and sold prices
+       are recorded from now on; a disc with 3 or more sales in 90 days is valued at their
+       median, postage in, and its deals judged against that. Mark's rule (mean of the 3
+       lowest in 3 months) is not adopted: on asks it swings 0.49–1.87 of today's figure on
+       the sample, and on sales the 3 lowest are damaged and disc-only copies.
+     - **Every listing, New included, is judged against the used figure.** A New copy at a fair
+       New price is never a deal; accepted.
+     - **A deal is 10% or more under the figure** (23 of the 90 kept), not merely under it (32).
+     - **Sold prices are kept for 90 days: listing number, price, postage, condition code and
+       dates only, no title or image.** This extends the eBay licence risk accepted in #254
+       (§8.1.2); the worst case is a keyset suspension, accepted.
+     - **The hand check runs before the stand-in is built** (`OWNER-ACTIONS.md` 35): ten discs'
+       last five used sales, postage in, read on eBay's site by Craig or Mark. It decides the
+       stand-in: today's used median, or the lower quartile of used asks with postage.
+     Planned as AA10a (the sold-price store, first, so the 90 days start filling) and AA10b
+     (deals and values on the new figure, after the hand check) in `docs/phase-batches.md`.
+

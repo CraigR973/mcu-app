@@ -4476,7 +4476,7 @@ commit, production `/api/v1/health` on the merge SHA with `db: ok`.
 | 2 | AA4 movie night layout and time → AA5 the film's details on a night → AA6 feeling lucky | Craig's go; answer 4 for AA5 |
 | 3 | AA7 profile pictures → AA8 the artwork → AA11 lend and borrow | Answer 3; AA11's story signed off |
 | Reviews | AA3 the collection section, AA9 the assistant page: a report each, then a build batch from it | Craig's go on each report |
-| Design | AA10 what a disc really sells for: values and deals, a design note with live numbers, no build | The build is planned from Craig and Mark's pick |
+| 4 | ~~AA10 the note~~ (`8a33c19`) → AA10a the sold-price store → AA10b deals and values on the used figure | Option 3 picked 21 Oct (#289); AA10b waits for the hand check (`OWNER-ACTIONS.md` 35) |
 
 **Each batch on its own:**
 
@@ -4491,7 +4491,9 @@ commit, production `/api/v1/health` on the merge SHA with `db: ok`.
 | AA7 | 4: profile pictures | 🟡 | top tier · high | top tier · High |
 | AA8 | 1: the tribute artwork in the app | 🟢 | mid tier · high | mid tier · High |
 | AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | top tier · high | top tier · High |
-| AA10 | 23, 24: what a disc really sells for — values and deals, a design note | 🔴 | top tier · xhigh | top tier · Extra High |
+| ~~AA10~~ | 23, 24: what a disc really sells for — values and deals, a design note — **written 21 Oct (`8a33c19`)** | 🔴 | top tier · xhigh | top tier · Extra High |
+| AA10a | 23, 24: record used listings and their sales, value on sales | 🔴 | top tier · xhigh | top tier · Extra High |
+| AA10b | 23, 24: deals and values on the used stand-in figure | 🟡 | top tier · high | top tier · High |
 | AA11 | 25: lend and borrow as it happens — asked for, out, back, shelved | 🟡 | top tier · high | top tier · High |
 
 *Why those efforts.* AA4, AA5 and AA7 write migrations or a new nightly import; AA10 changes
@@ -4597,6 +4599,31 @@ As AA3: a review report first, then a build planned from Craig's picks.
   against eBay's sold listings read by Craig or Mark on the website; last month's deals re-judged
   under each; the extra eBay calls (inside the daily budget or not); and the options with costs.
 - The build is planned from Craig and Mark's pick.
+
+**Picked 21 Oct: option 3, every recommendation (#289).** Built as two batches:
+
+### AA10a — The sold-price store 🔴
+- A table of used listings seen (eBay item number, film, format, price, postage, condition code,
+  first and last seen, sold or ended, sold count): **no title, no image** (#289). Rows older than
+  90 days after they end are deleted. Migration granted to `mcu_readonly` and `mcu_backup`.
+- A weekly pass records each tracked disc's used Buy It Now listings and checks each vanished one
+  once by item number: sold ("out of stock" with a sold count) or ended unsold. **It runs inside
+  an existing cron job** so no Railway service is added; if it cannot, adding one is a hosting
+  change and stops for Craig. About 600 calls a day, inside the 5,000.
+- A disc with 3 or more sales in 90 days is valued at their median, postage in, labelled "based
+  on N sales"; Home says how many values rest on sales.
+- Tests (sold, withdrawn, a relisted item, the 90-day window, the budget). Gate green. The first
+  live pass is read back after deploy.
+
+### AA10b — Deals and values on the used figure 🟡
+**Waits for the hand check (`OWNER-ACTIONS.md` 35)**, which picks the stand-in: today's used
+median, or the lower quartile of used asks with postage.
+- Every deal, New included, is judged against the disc's figure (sales when AA10a has them, else
+  the stand-in) and must be 10% or more under it. A deal card says what it was judged against.
+- Values without 3 sales use the stand-in; the change lands at one re-price, with Home's total
+  before and after reported to Craig.
+- Tests (the note's own cases: Deep Red New at £15.49 is not a deal; Reservoir Dogs 4K at £3.99
+  is). Gate green.
 
 ### AA11 — Lend and borrow as it happens 🟡
 - **25.** A loan runs **asked for → out → back, not shelved → shelved**. Craig asks in the app
