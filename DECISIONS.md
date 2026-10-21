@@ -6333,3 +6333,13 @@ contemporaneous.
      `OWNER-ACTIONS.md` 35 is closed. Group AA's sittings and their named models are in
      `docs/phase-batches.md`, so a sitting can be run from Codex as well as Claude Code.
 
+291. **AA10a counts one ended listing as one observed sale, using its last advertised price.**
+     The Browse item answer can report `estimatedSoldQuantity` but not the accepted Best Offer
+     or the individual prices of earlier units. A positive sold count on an out-of-stock item
+     proves that listing sold; it does not prove each unit sold at the stored ask. Keep the
+     count for audit, use the postage-in last ask once in the 90-day median, and label it
+     "based on N sales" with the advertised-price limitation visible. A 404 or an out-of-stock
+     item with no positive count is ended unsold. A relisted item gets a new observation; a
+     reappearing item number loses its old sold classification. The weekly pass spends at most
+     600 calls per UTC day and remains inactive until Craig starts the first live pass in Admin.
+

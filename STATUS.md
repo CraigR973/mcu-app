@@ -2,15 +2,12 @@
 
 ## Now
 
-**21 Oct: Group AA is planned, not started (#289, #290).** Craig's 25 snags of 20–21 Oct
-(`docs/owner-snags-2026-10-20.md`) are 13 batches to build in six sittings in `docs/phase-batches.md`,
-each sitting with its model and effort named for Claude Code and Codex. **Sitting 1 is AA10a → AA10b**,
-the sold-price store (eBay sales recorded weekly, so values and deals can rest on what used
-copies sell for: the AA10 note, `docs/reviews/values-and-deals-2026-10-21.md`, found 75 of the
-last 90 deals were New listings judged against New asking prices). AA10b judges deals 10% under the used
-figure. Then AA1 → AA8 → AA2 (top bar, artwork, Home and film-page fixes). **Each sitting waits for Craig's go.**
-Tell Craig after AA1 ships: each iPhone removes and re-adds the app, or it keeps opening on the
-Archive.
+**21 Oct: Group AA sitting 1 is paused during AA10a.** The sold-price store, weekly pass,
+sales-backed value and owner-start control are built on `feat/aa10a-sold-price-store`. A global
+Railway build pause left production API on `0dfec186` while `main` and the web serve `159ec624`;
+Craig authorised repair, then asked to proceed without Railway for now. Finish local and PR CI
+checks, but do not merge, run live eBay, or start AA10b until Railway can deploy and the AA10a
+first live pass is read back at the owner checkpoint. Sitting 2 is not authorised.
 
 **20 Oct: a time-zone fault in the stale-edit guard is fixed (#288, migration `063`).** Every
 naive-UTC column now defaults to `timezone('utc', now())` rather than a bare `now()`, so a new
@@ -607,6 +604,10 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-21 (AA10a, in progress)** — Built the used-listing store, bounded weekly checks
+  inside the existing eBay job, sales-backed values, Admin first-pass control and Home sales
+  count on a feature branch. Local checks use throwaway Postgres and scripted eBay. No live
+  eBay pass or production change; Railway's global build pause blocks close-out.
 - **2026-10-21 (fix)** — The dependency audit went red on `main` with no change of ours: 8 new
   Pillow advisories (fixed in 13.0.0) and 1 certifi. Both locks regenerated with only those two
   upgraded (Pillow 12.3.0 → 13.0.0, certifi 2026.7.22 → 2026.10.19). Photo tests pass on 13

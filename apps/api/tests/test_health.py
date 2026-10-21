@@ -326,6 +326,7 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # admin-only: it spends a share of the same eBay allowance, capped per day.
         "/api/v1/collection/value",
         "/api/v1/collection/value/refresh",
+        "/api/v1/collection/value/sales/refresh",
         # Batch V6. Admin-only, both: starting a bid trial spends the same eBay share as
         # `/refresh` and saves no prices; reading its report is for Craig's pick.
         "/api/v1/collection/value/bid-trial",

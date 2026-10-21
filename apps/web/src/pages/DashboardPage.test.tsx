@@ -60,6 +60,9 @@ const VALUE: CollectionValue = {
   valuedAs: 'as used copies',
   discs: 1880,
   pricedDiscs: 1454,
+  salesBackedDiscs: 0,
+  salesRun: null,
+  salesBudgetLeft: 600,
   notPricedDiscs: 300,
   uncheckedDiscs: 126,
   checkedFrom: '2026-09-24T03:00:00Z',
@@ -213,6 +216,13 @@ describe('Home as rows, the collection first — Batch W2', () => {
     expect(await numbers.findByText('≈ £1,903')).not.toBeNull()
     expect(numbers.getByText('1,454 of 1,880 discs priced')).not.toBeNull()
     expect(numbers.getByText('1,888')).not.toBeNull()
+  })
+
+  it('counts sales-backed discs beside the worth on Home', async () => {
+    api.fetchCollectionValue.mockResolvedValue({ ...VALUE, salesBackedDiscs: 3 })
+    renderHome()
+    const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
+    expect(numbers.getByText('1,454 of 1,880 discs priced; 3 based on sales')).not.toBeNull()
   })
 
   it('leaves the worth out for a viewer until there is a total', async () => {

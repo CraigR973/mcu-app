@@ -44,6 +44,22 @@ describe('StoredValue', () => {
     expect(html).toContain('rel="noopener noreferrer"')
   })
 
+  it('labels a sales-backed value with its observed sample and postage-in range', () => {
+    const html = renderToStaticMarkup(
+      <StoredValue
+        valuation={{
+          ...priced,
+          valueBasis: 'sales',
+          basis: 'observed sold listings',
+          sampleSize: 3,
+          low: '12.00',
+          high: '22.00',
+        }}
+      />,
+    )
+    expect(html).toContain('based on 3 sales in 90 days, postage included, £12.00–£22.00')
+  })
+
   it('links an unpriced disc too: sold listings may exist where asking prices are few', () => {
     const html = renderToStaticMarkup(
       <StoredValue

@@ -3,7 +3,7 @@ import { Loader2, PoundSterling, RefreshCw } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth'
-import { fetchCollectionValue, startValuationRun, type CollectionValue as Value, type ValuationStart } from '@/lib/api'
+import { fetchCollectionValue, startUsedSalesRun, startValuationRun, type CollectionValue as Value, type ValuationStart } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
 import { formatShortDate } from '@/lib/utils'
 
@@ -34,13 +34,8 @@ const NOT_STARTED: Record<Exclude<ValuationStart['outcome'], 'started'>, string>
 }
 
 /**
- * What the collection is worth at current eBay asking prices — Batch T6, snag 7. Each disc
- * as a used copy since Batch X6 (`DECISIONS.md` #256): `valuedAs` carries the words.
- *
- * **It says "asking prices" every time, and that they run high.** eBay's sold prices are
- * closed to apps (`DECISIONS.md` #16, #126), so this is what sellers are asking, which is
- * usually more than discs sell for. It also says how many discs are behind the total:
- * a disc with fewer than three matching listings is not priced rather than guessed.
+ * What the collection is worth as used copies. AA10a uses observed sold-listing asking
+ * prices where three exist; the rest retain the earlier current-asking-price basis.
  *
  * Hidden from Mark until there is a total, as Home hides every empty section. Craig sees it
  * before the first run, because the button that starts one lives here. **On Admin's
@@ -56,10 +51,18 @@ export function CollectionValue() {
     queryKey: ['collection-value'],
     queryFn: fetchCollectionValue,
     // Poll while a run is pricing, so the total grows in front of whoever is watching.
-    refetchInterval: (current) => (current.state.data?.run?.status === 'running' ? 5_000 : false),
+    refetchInterval: (current) => (
+      current.state.data?.run?.status === 'running' || current.state.data?.salesRun?.status === 'running'
+        ? 5_000
+        : false
+    ),
   })
   const start = useMutation({
     mutationFn: startValuationRun,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['collection-value'] }),
+  })
+  const startSales = useMutation({
+    mutationFn: startUsedSalesRun,
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['collection-value'] }),
   })
 
@@ -82,7 +85,11 @@ export function CollectionValue() {
         {value.total !== null ? (
           <div>
             <p className="metadata-label">
-              {value.valuedAs ? `${value.valuedAs}, at ${value.basis} on eBay` : `At ${value.basis} on eBay`}
+              {value.salesBackedDiscs > 0
+                ? `${value.valuedAs} on eBay: ${value.basis}`
+                : value.valuedAs
+                  ? `${value.valuedAs}, at ${value.basis} on eBay`
+                  : `At ${value.basis} on eBay`}
             </p>
             <p className="mt-1 font-display text-3xl font-semibold text-foreground">
               &asymp; {pounds(value.total, value.currency)}
@@ -91,6 +98,11 @@ export function CollectionValue() {
               {COUNT.format(value.pricedDiscs)} of {COUNT.format(value.discs)} discs priced
               {when ? ` · ${when}` : ''}
             </p>
+            {value.salesBackedDiscs > 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {COUNT.format(value.salesBackedDiscs)} discs based on at least 3 observed sales in 90 days.
+              </p>
+            ) : null}
           </div>
         ) : (
           <p className="text-sm leading-6 text-muted-foreground">
@@ -121,9 +133,10 @@ export function CollectionValue() {
 
         {value.total !== null ? (
           <p className="text-xs leading-5 text-muted-foreground">
-            Each disc is valued as a used copy: the median of its used listings, or New&rsquo;s median at the
-            used-to-New rate measured across the collection when used listings are too few. Asking prices
-            usually run above what discs actually sell for. eBay does not let apps see sold prices.
+            Each disc is valued as a used copy. Three observed sales use the postage-in median of
+            their last advertised listing prices. Other discs use the existing asking-price rule
+            until the next batch reprices them. Asking prices usually run above what discs actually
+            sell for, especially when a Best Offer was accepted.
           </p>
         ) : null}
 
@@ -147,6 +160,30 @@ export function CollectionValue() {
                 {queryErrorMessage(start.error, 'The valuation could not be started.')}
               </p>
             ) : null}
+          </div>
+        ) : null}
+
+        {isAdmin ? (
+          <div className="space-y-2 border-t border-border pt-3">
+            <p className="text-sm font-medium text-foreground">Used-sale tracking</p>
+            <p className="text-xs text-muted-foreground">
+              One weekly search per tracked disc; at most 600 eBay calls per UTC day. The first pass starts only when you press the button. Later passes use the existing eBay job.
+            </p>
+            {value.salesRun?.status === 'running' ? (
+              <p role="status" className="text-sm text-foreground">Checking used listings now: {COUNT.format(value.salesRun.searched)} searches, {COUNT.format(value.salesRun.checked)} ended items checked.</p>
+            ) : null}
+            {value.salesRun && value.salesRun.status !== 'running' ? (
+              <p className="text-xs text-muted-foreground">
+                Last pass: {value.salesRun.status.replace('_', ' ')}; {COUNT.format(value.salesRun.searched)} searches, {COUNT.format(value.salesRun.sold)} sales, {COUNT.format(value.salesRun.calls)} calls.
+              </p>
+            ) : null}
+            {value.salesBudgetLeft > 0 && value.salesRun?.status !== 'running' ? (
+              <Button type="button" size="sm" variant="secondary" onClick={() => startSales.mutate()} disabled={startSales.isPending}>
+                {startSales.isPending ? <Loader2 className="animate-spin" aria-hidden /> : <RefreshCw aria-hidden />}
+                {value.salesRun ? 'Check used sales now' : 'Start used-sale tracking'}
+              </Button>
+            ) : null}
+            {startSales.isError ? <p role="alert" className="text-sm text-destructive-text">{queryErrorMessage(startSales.error, 'The used-sale pass could not be started.')}</p> : null}
           </div>
         ) : null}
 

@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from fastapi import APIRouter
-from sqlalchemy import and_, exists, func, select
+from sqlalchemy import and_, case, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
@@ -181,6 +181,8 @@ async def _most_rewatched(db: AsyncSession) -> list[RewatchedFilmResponse]:
 async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
     discs = owned_valued_discs()
     copies = func.count(discs.c.id)
+    sales = and_(DiscValuation.sales_count >= 3, DiscValuation.sales_price.is_not(None))
+    effective_price = case((sales, DiscValuation.sales_price), else_=DiscValuation.price)
     rows = (
         await db.execute(
             select(DiscValuation, Movie.title, Movie.year, Movie.poster_path, copies)
@@ -192,9 +194,9 @@ async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
                 ),
             )
             .join(Movie, Movie.id == DiscValuation.movie_id)
-            .where(DiscValuation.status == "priced", current_value())
+            .where(or_(DiscValuation.status == "priced", sales), current_value())
             .group_by(DiscValuation.id, Movie.id)
-            .order_by(DiscValuation.price.desc(), Movie.title)
+            .order_by(effective_price.desc(), Movie.title)
             .limit(ROW_LENGTH)
         )
     ).all()
@@ -205,16 +207,22 @@ async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
             year=year,
             posterPath=poster_path,
             formatCode=valuation.format_code,
-            price=str(valuation.price),
+            price=str(valuation.effective_price),
             currency=valuation.currency,
-            basis=valuation.basis,
-            sampleSize=valuation.sample_size,
-            valueBasis="new_scaled" if valuation.value_basis == "new_scaled" else "used",
-            factor=str(valuation.factor) if valuation.factor is not None else None,
-            low=str(valuation.low),
-            high=str(valuation.high),
+            basis="observed sold listings" if valuation.sales_backed else valuation.basis,
+            sampleSize=valuation.sales_count if valuation.sales_backed else valuation.sample_size,
+            valueBasis="sales"
+            if valuation.sales_backed
+            else ("new_scaled" if valuation.value_basis == "new_scaled" else "used"),
+            factor=str(valuation.factor)
+            if valuation.factor is not None and not valuation.sales_backed
+            else None,
+            low=str(valuation.sales_low if valuation.sales_backed else valuation.low),
+            high=str(valuation.sales_high if valuation.sales_backed else valuation.high),
             valuedAs=AS_USED_COPIES,
-            checkedAt=valuation.checked_utc,
+            checkedAt=(valuation.sales_checked_utc or valuation.checked_utc)
+            if valuation.sales_backed
+            else valuation.checked_utc,
             copies=int(count),
         )
         for valuation, title, year, poster_path, count in rows

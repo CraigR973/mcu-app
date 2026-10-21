@@ -37,6 +37,7 @@ from src.models.completion_set import (
 from src.models.craig_note import CraigNote
 from src.models.deal import DEALS_TABLE, Deal
 from src.models.ebay_account import EbayAccount, EbayConnectState
+from src.models.ebay_sold import EbayUsedListing, EbayUsedRun, EbayUsedScan
 from src.models.ebay_watch import (
     TARGET_FORMATS,
     TARGET_KINDS,
@@ -219,6 +220,9 @@ __all__ = [
     "CalendarRefreshState",
     "DiscValuation",
     "EbayAccount",
+    "EbayUsedListing",
+    "EbayUsedRun",
+    "EbayUsedScan",
     "EbayConnectState",
     "EbayPriceRef",
     "EbayTarget",

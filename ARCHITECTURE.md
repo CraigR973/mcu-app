@@ -9,6 +9,8 @@
 This is the **April 2026 design spec**, kept as reference for what each feature is meant
 to do — not a record of what has been built. **`DECISIONS.md` and `STATUS.md` are the
 authority on what actually exists**; where this document conflicts with them, they win.
+The small [current architecture map](docs/architecture-map.md) shows the deployed flow and
+the AA10a change pending close-out; use it before this older feature detail.
 Three things changed structurally from the original file:
 
 1. **§16 Build Phases** (the 86-phase, 14-stage build plan) has been removed outright.

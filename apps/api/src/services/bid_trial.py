@@ -38,7 +38,7 @@ from statistics import median as plain_median
 from typing import Any, Literal, Protocol
 
 import structlog
-from sqlalchemy import Select, and_, func, select
+from sqlalchemy import Select, and_, case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -156,14 +156,15 @@ def quotas(available: Mapping[str, int], size: int) -> dict[str, int]:
 def _priced_films() -> Select[Any]:
     """Each owned film and format with a stored price, its copies and that price."""
     discs = owned_valued_discs()
+    sales = and_(DiscValuation.sales_count >= MIN_SAMPLE, DiscValuation.sales_price.is_not(None))
     return (
         select(
             DiscValuation.movie_id,
             DiscValuation.format_code,
             Movie.title,
             Movie.tmdb_id,
-            DiscValuation.price,
-            DiscValuation.sample_size,
+            case((sales, DiscValuation.sales_price), else_=DiscValuation.price),
+            case((sales, DiscValuation.sales_count), else_=DiscValuation.sample_size),
             func.count(discs.c.id).label("copies"),
         )
         .join(
@@ -174,7 +175,7 @@ def _priced_films() -> Select[Any]:
             ),
         )
         .join(Movie, Movie.id == DiscValuation.movie_id)
-        .where(DiscValuation.status == "priced", current_value())
+        .where(or_(DiscValuation.status == "priced", sales), current_value())
         .group_by(DiscValuation.id, Movie.id)
     )
 
