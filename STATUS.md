@@ -2,12 +2,13 @@
 
 ## Now
 
-**21 Oct: Group AA sitting 1 is paused during AA10a.** The sold-price store, weekly pass,
-sales-backed value and owner-start control are built on `feat/aa10a-sold-price-store`. A global
-Railway build pause left production API on `0dfec186` while `main` and the web serve `159ec624`;
-Craig authorised repair, then asked to proceed without Railway for now. Finish local and PR CI
-checks, but do not merge, run live eBay, or start AA10b until Railway can deploy and the AA10a
-first live pass is read back at the owner checkpoint. Sitting 2 is not authorised.
+**21 Oct: Group AA sitting 1 is paused after AA10a's green gate.** The sold-price store,
+weekly pass, sales-backed value and owner-start control are in [PR #100](https://github.com/CraigR973/mcu-app/pull/100)
+on `feat/aa10a-sold-price-store`; its code commit `eacc1cc` passed all seven PR CI jobs.
+A global Railway build pause left production API on `0dfec186` while `main` and the web
+served `159ec624` at the last check. Craig authorised repair, then asked to proceed without
+Railway for now. Do not merge, run live eBay, or start AA10b until Railway can deploy and the
+AA10a first live pass is read back at the owner checkpoint. Sitting 2 is not authorised.
 
 **20 Oct: a time-zone fault in the stale-edit guard is fixed (#288, migration `063`).** Every
 naive-UTC column now defaults to `timezone('utc', now())` rather than a bare `now()`, so a new
@@ -604,10 +605,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
-- **2026-10-21 (AA10a, in progress)** — Built the used-listing store, bounded weekly checks
+- **2026-10-21 (AA10a, PR #100)** — Built the used-listing store, bounded weekly checks
   inside the existing eBay job, sales-backed values, Admin first-pass control and Home sales
-  count on a feature branch. Local checks use throwaway Postgres and scripted eBay. No live
-  eBay pass or production change; Railway's global build pause blocks close-out.
+  count. Local API (2,423 passed, 9 environment skips), web (670), shared (154), Chromium,
+  cron jobs and migration reversal passed on throwaway Postgres and scripted eBay; all seven
+  exact-code PR CI jobs passed at `eacc1cc`. No live eBay pass or production change;
+  Railway's build pause blocks close-out and AA10b.
 - **2026-10-21 (fix)** — The dependency audit went red on `main` with no change of ours: 8 new
   Pillow advisories (fixed in 13.0.0) and 1 certifi. Both locks regenerated with only those two
   upgraded (Pillow 12.3.0 → 13.0.0, certifi 2026.7.22 → 2026.10.19). Photo tests pass on 13
