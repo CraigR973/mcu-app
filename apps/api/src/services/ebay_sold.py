@@ -413,6 +413,7 @@ async def work_run(
         raise ValueError(f"used-listing run {run_id} is not running")
     baseline = client.search_calls
     budget_cap = run.budget
+    rate_limited = False
 
     def room() -> bool:
         return client.search_calls - baseline + client.attempts_per_search <= budget_cap
@@ -446,6 +447,7 @@ async def work_run(
                 run.heartbeat_utc = clock()
                 await db.commit()
                 if exc.status_code == 429:
+                    rate_limited = True
                     break
                 continue
             seen = [
@@ -470,7 +472,7 @@ async def work_run(
                 run.calls = client.search_calls - baseline
                 run.heartbeat_utc = clock()
                 await db.commit()
-        run.status = "budget_spent" if not room() else "finished"
+        run.status = "stopped" if rate_limited else "budget_spent" if not room() else "finished"
     except (EbayNotConfigured, EbayError) as exc:
         await db.rollback()
         run = await db.get(EbayUsedRun, run_id)

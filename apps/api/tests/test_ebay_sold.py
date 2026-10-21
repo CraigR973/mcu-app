@@ -12,6 +12,7 @@ import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
+from src.ebay.client import EbayError
 from src.models.collection_item import CollectionItem
 from src.models.ebay_sold import EbayUsedListing, EbayUsedRun
 from src.models.movie import Movie
@@ -65,12 +66,15 @@ class FakeEbay:
         self.details: dict[str, dict[str, Any] | None] = {}
         self.searches = 0
         self.checked: list[str] = []
+        self.search_error: Exception | None = None
 
     async def search(self, query: str, **kwargs: object) -> dict[str, Any]:
         assert query == "Jaws Blu-ray"
         assert kwargs["filter"] == "buyingOptions:{FIXED_PRICE}"
         self.search_calls += 1
         self.searches += 1
+        if self.search_error is not None:
+            raise self.search_error
         return {"itemSummaries": self.results}
 
     async def get_item_by_legacy_id(self, legacy_item_id: str) -> dict[str, Any] | None:
@@ -208,3 +212,15 @@ async def test_daily_share_blocks_another_pass(db: AsyncSession) -> None:
     await db.commit()
     reason, run = await start_run(db, trigger="job", now=NOW + timedelta(hours=1))
     assert reason == "budget_spent" and run is None
+
+
+async def test_rate_limit_stops_the_pass_without_advancing_the_week(db: AsyncSession) -> None:
+    await film_with_disc(db)
+    client = FakeEbay()
+    client.search_error = EbayError("too many requests", status_code=429)
+    reason, run = await start_run(db, trigger="admin", now=NOW)
+    assert reason == "started" and run is not None
+    result = await work_run(db, client, run.id, clock=lambda: NOW)
+    assert result.status == "stopped" and result.calls == 1
+    assert result.last_error is not None
+    assert result.searched == 0
