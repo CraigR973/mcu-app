@@ -1514,7 +1514,7 @@ another row; the binned copies stay in the Trash.
 It refuses unless exactly that many are leftovers when it runs, and skips a row that gained a
 copy, watch or want since.
 
-### 35. The eBay hand check — AA10 *(new 21 Oct, about 30 minutes, Craig or Mark)*
+### 35. ~~The eBay hand check — AA10~~ — **dropped 21 Oct at your word (#290): AA10a's recorded sales settle it instead (AA10c)**
 
 Decides the stand-in figure AA10b builds (#289). Open the ten links in section 3 of
 `docs/reviews/values-and-deals-2026-10-21.md`, signed in to eBay. For each: filter to Used, skip

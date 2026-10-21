@@ -4,8 +4,7 @@ Craig raised 23 points on 20 Oct 2026 and two more on 21 Oct, one message each. 
 the code at `0dfec18`. No live database read: `NEON_READONLY_URL` is not set on the Mac this
 session, so nothing below quotes a live count. Nothing was rendered in a browser.
 
-**Status: reconciled; Craig answered on 21 Oct (below) and added two points. Sitting 1 waits for his "now"; AA10's note may start.** The plan is Group AA in
-`docs/phase-batches.md`.
+**Status: planned 21 Oct.** Every answer is in; Group AA in `docs/phase-batches.md` has the sittings, named models and criteria. Values and deals: `DECISIONS.md` #289 and #290 (no hand check).
 
 ## Craig's answers, 21 Oct
 

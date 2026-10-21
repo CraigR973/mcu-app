@@ -6321,3 +6321,15 @@ contemporaneous.
      Planned as AA10a (the sold-price store, first, so the 90 days start filling) and AA10b
      (deals and values on the new figure, after the hand check) in `docs/phase-batches.md`.
 
+290. **No hand check: recorded sales settle the stand-in (amends #289), at Craig's word, 21 Oct.**
+     #289 had Craig or Mark read ten discs' sold listings on eBay's site before AA10b. Craig
+     asked why an agent could not; it cannot, for the reason #228 gives: reading eBay's pages
+     by automation, an agent's browser included, is ruled out by #203 and eBay's terms. AA10a
+     records used sales through the Browse API instead, which is allowed, so the hand check is
+     replaced by data: **AA10b ships with the lower quartile of used asks, postage in, as the
+     stand-in**, and **AA10c, from 25 Nov**, compares it and today's used median against about
+     four weeks of recorded sales and keeps the closer. Cost, accepted: for about a month values
+     may read up to about 9% low (the sample's gap) and deals be a little strict.
+     `OWNER-ACTIONS.md` 35 is closed. Group AA's sittings and their named models are in
+     `docs/phase-batches.md`, so a sitting can be run from Codex as well as Claude Code.
+

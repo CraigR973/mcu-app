@@ -4460,45 +4460,64 @@ match, that becomes a batch of its own (a polling fallback). Stopping the existi
 
 ---
 
-## Group AA — the 20 and 21 Oct snags, proposed 20 Oct
+## Group AA — the 20 and 21 Oct snags, planned 21 Oct
 
-**Proposed 2026-10-20 from Craig's 23 points of that day, and two more on 21 Oct**, reconciled
-against the code in `docs/owner-snags-2026-10-20.md`. **Not yet approved:** Craig's 21 Oct
-answers are recorded there; three remain open, and sitting 1 is "yes, but not yet".
-Criteria below are outlines; each batch's full acceptance is written when its answers are in,
-before it starts, so `DECISIONS.md` #54 does not apply. Model tiers are Group V's. Each lands
-as Group Y did: a `feat/` branch, a pull request, CI green **including the `e2e` job**, a merge
-commit, production `/api/v1/health` on the merge SHA with `db: ok`.
+**Planned 2026-10-21 from Craig's 23 points of 20 Oct and two more on 21 Oct**, reconciled
+against the code in `docs/owner-snags-2026-10-20.md`, where his answers are recorded; the values
+and deals picks are `DECISIONS.md` #289 and #290. **Criteria authored 2026-10-21:** the bullets
+under each batch below are its acceptance criteria, so `DECISIONS.md` #54 does not apply.
+**Re-verify each point in the code first** (`batch-start.md` step 3): the code was read at
+`0dfec18` on 20 Oct. **Not started: each sitting waits for Craig's go.**
 
-| Sitting | Batches, in order | Gate |
-|---|---|---|
-| 1 | AA1 quick fixes → AA2 Home rows | Craig's go; answers 2, 6, 7 |
-| 2 | AA4 movie night layout and time → AA5 the film's details on a night → AA6 feeling lucky | Craig's go; answer 4 for AA5 |
-| 3 | AA7 profile pictures → AA8 the artwork → AA11 lend and borrow | Answer 3; AA11's story signed off |
-| Reviews | AA3 the collection section, AA9 the assistant page: a report each, then a build batch from it | Craig's go on each report |
-| 4 | ~~AA10 the note~~ (`8a33c19`) → AA10a the sold-price store → AA10b deals and values on the used figure | Option 3 picked 21 Oct (#289); AA10b waits for the hand check (`OWNER-ACTIONS.md` 35) |
+**How each lands** (Group Y's way, on Craig's Mac or from Codex): its own `feat/` branch from
+`main`, a pull request, CI green **including the `e2e` job**, a merge commit, production
+`/api/v1/health` on the merge SHA with `/health/ready` `db: ok`. One batch per branch and per
+pull request, in the order below; never two at once (`group-start.md`).
+
+**Models, named.** Top tier is **Opus 5** in Claude Code and **GPT-5.6 Sol** in Codex; mid tier
+is **Sonnet 5** and **GPT-5.6 Terra** (Group U's and Batch 21's rows in "Batch groups"). A
+sitting runs at the strictest setting any of its batches asks for, so one model and effort
+cover the whole sitting.
+
+| Sitting | Batches, in order | Claude Code | Codex | Checkpoints (the run stops for Craig) |
+|---|---|---|---|---|
+| 1 | AA10a the sold-price store | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High | None. The first live pass is read back after deploy |
+| 2 | AA1 quick fixes → AA2 Home rows | Sonnet 5 · `high` | GPT-5.6 Terra · High | AA1: the top bar's before-and-after screenshot, before its merge. AA2: the completion-set refresh that fills headshots is a live step at Craig's word, after the merge |
+| 3 | AA10b deals and values on the used figure | Opus 5 · `high` | GPT-5.6 Sol · High | Home's total before and after the re-price, reported |
+| 4 | AA4 movie night → AA5 a night's film details → AA6 feeling lucky | Opus 5 · `high` | GPT-5.6 Sol · High | None |
+| 5 | AA7 profile pictures → AA8 the artwork → AA11 lend and borrow | Opus 5 · `high` | GPT-5.6 Sol · High | AA11: the four-state story shown to Craig and signed off before building |
+| 6 | AA3 the collection section (review) | Opus 5 · `high` | GPT-5.6 Sol · High | Stops after the report for Craig's picks; the build is planned from them |
+| 7 | AA9 the assistant page (review) | Opus 5 · `high` | GPT-5.6 Sol · High | As AA3 |
+| 8 | AA10c settle the stand-in, **from 25 Nov** | Opus 5 · `high` | GPT-5.6 Sol · High | Needs about four weeks of AA10a's recorded sales |
+
+*Why that order.* AA10a first so the 90 days of sales start filling (about half the collection
+reaches three sales by late January). AA10b after AA1 and AA2 because all three touch Home's
+highlight rows, and AA10b needs AA10a's figure code. Sittings 6 and 7 can go any time; they
+change no code until Craig picks.
 
 **Each batch on its own:**
 
 | Batch | Covers (snag numbers) | Size | Claude Code | Codex |
 |---|---|---|---|---|
-| AA1 | 2, 3, 6, 8, 10, 14, 15: start page, top bar, Top rated, best-reviewed title, film tabs, our disc first | 🟢 | mid tier · high | mid tier · High |
-| AA2 | 5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films | 🟡 | mid tier · high | mid tier · High |
-| AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | top tier · high | top tier · High |
-| AA4 | 16, 17, 18, 20: suggest first, two lists, a planned time, add from a film | 🟡 | top tier · high | top tier · High |
-| AA5 | 19: each film's details on a night, IMDb's score | 🟡 | top tier · high | top tier · High |
-| AA6 | 21: feeling lucky, alone on Home and in a night | 🟡 | mid tier · high | mid tier · High |
-| AA7 | 4: profile pictures | 🟡 | top tier · high | top tier · High |
-| AA8 | 1: the tribute artwork in the app | 🟢 | mid tier · high | mid tier · High |
-| AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | top tier · high | top tier · High |
-| ~~AA10~~ | 23, 24: what a disc really sells for — values and deals, a design note — **written 21 Oct (`8a33c19`)** | 🔴 | top tier · xhigh | top tier · Extra High |
-| AA10a | 23, 24: record used listings and their sales, value on sales | 🔴 | top tier · xhigh | top tier · Extra High |
-| AA10b | 23, 24: deals and values on the used stand-in figure | 🟡 | top tier · high | top tier · High |
-| AA11 | 25: lend and borrow as it happens — asked for, out, back, shelved | 🟡 | top tier · high | top tier · High |
+| AA1 | 2, 3, 6, 8, 10, 14, 15: start page, top bar, Top rated, best-reviewed title, film tabs, our disc first | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| AA2 | 5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA4 | 16, 17, 18, 20: suggest first, two lists, a planned time, add from a film | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA5 | 19: each film's details on a night, IMDb's score | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA6 | 21: feeling lucky, alone on Home and in a night | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| AA7 | 4: profile pictures | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA8 | 1: the artwork in the app | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| ~~AA10~~ | 23, 24: what a disc really sells for, a design note — **written 21 Oct (`8a33c19`)** | 🔴 | — done | — done |
+| AA10a | 23, 24: record used listings and their sales, value on sales | 🔴 | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High |
+| AA10b | 23, 24: deals and values on the used stand-in figure | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA10c | 23: the stand-in settled from recorded sales | 🟢 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA11 | 25: lend and borrow as it happens — asked for, out, back, shelved | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 
-*Why those efforts.* AA4, AA5 and AA7 write migrations or a new nightly import; AA10 changes
-every stored value, which is money and shows on Home. AA1, AA2, AA6 and AA8 are interface work
-over data the app already holds.
+*Why those efforts.* AA10a adds a table of eBay data under a licence risk (#254, #289), a job
+and about 600 calls a day: an irreversible-feeling store and a public provider, so `xhigh`.
+AA4, AA5, AA7 and AA11 write migrations; AA10b and AA10c change every stored value, which is
+money and shows on Home. AA1, AA2, AA6 and AA8 are interface work over data the app holds.
 
 ### AA1 — Quick fixes 🟢
 - **3.** The manifest's `start_url` is `/`. `OWNER-ACTIONS.md` gains: each iPhone removes and
@@ -4586,7 +4605,7 @@ to Craig; the build is planned from his picks. No code before his picks.
 ### AA9 — The assistant page 🟡
 As AA3: a review report first, then a build planned from Craig's picks.
 
-### AA10 — What a disc really sells for: values and deals, a design note 🔴
+### ~~AA10 — What a disc really sells for: values and deals, a design note~~ 🔴 **written 21 Oct (`8a33c19`, `docs/reviews/values-and-deals-2026-10-21.md`)**
 - **23, 24.** One note, not code, because both rest on the same missing number: eBay gives only
   asking prices, never sold ones (#16, #228). A value is a used asking median; a deal is 30%
   under an asking median, which is often just the going rate.
@@ -4600,7 +4619,7 @@ As AA3: a review report first, then a build planned from Craig's picks.
   under each; the extra eBay calls (inside the daily budget or not); and the options with costs.
 - The build is planned from Craig and Mark's pick.
 
-**Picked 21 Oct: option 3, every recommendation (#289).** Built as two batches:
+**Picked 21 Oct: option 3, every recommendation (#289); the hand check dropped (#290).** Built as three batches:
 
 ### AA10a — The sold-price store 🔴
 - A table of used listings seen (eBay item number, film, format, price, postage, condition code,
@@ -4616,14 +4635,22 @@ As AA3: a review report first, then a build planned from Craig's picks.
   live pass is read back after deploy.
 
 ### AA10b — Deals and values on the used figure 🟡
-**Waits for the hand check (`OWNER-ACTIONS.md` 35)**, which picks the stand-in: today's used
-median, or the lower quartile of used asks with postage.
+**No hand check (#290).** The stand-in is the lower quartile of current used Buy It Now asks,
+postage in, until AA10c settles it from recorded sales.
 - Every deal, New included, is judged against the disc's figure (sales when AA10a has them, else
   the stand-in) and must be 10% or more under it. A deal card says what it was judged against.
 - Values without 3 sales use the stand-in; the change lands at one re-price, with Home's total
   before and after reported to Craig.
 - Tests (the note's own cases: Deep Red New at £15.49 is not a deal; Reservoir Dogs 4K at £3.99
   is). Gate green.
+
+### AA10c — The stand-in settled from recorded sales 🟢
+**From 25 Nov**, once AA10a has about four weeks of sales (#290). Replaces the hand check.
+- For every disc with recorded sales, compare the lower-quartile stand-in and today's used
+  median against the median of its sales; report both errors (median and spread) to Craig.
+- Keep the closer one as the stand-in; if it is the median, switch and re-price at the next run,
+  reporting Home's total before and after.
+- Tests for the comparison. Gate green.
 
 ### AA11 — Lend and borrow as it happens 🟡
 - **25.** A loan runs **asked for → out → back, not shelved → shelved**. Craig asks in the app
@@ -4690,6 +4717,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
+| **AA** | AA10a → AA1 → AA2 → AA10b → AA4 → AA5 → AA6 → AA7 → AA8 → AA11; reviews AA3, AA9; AA10c from 25 Nov | **by sitting** (Group AA's table) | **by sitting** | **Planned 21 Oct from Craig's 25 snags (#289, #290); not started, each sitting at Craig's go.** Run one sitting at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
