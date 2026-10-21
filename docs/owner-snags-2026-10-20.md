@@ -21,7 +21,7 @@ session, so nothing below quotes a live count. Nothing was rendered in a browser
 | 8. Go for sitting 1 (AA1 → AA2)? | Yes, but not yet | Waiting for "now" |
 
 **21 Oct, later:** borrowing is asked for **in the app** (Mark gets a push), not by message
-only (AA11). The photographic hero goes on Home's top banner, served to signed-in people only (no longer public), and #140 is superseded for it; Craig asked whether the app-icon art can replace the small vector marks too (AA8).
+only (AA11). The photographic hero goes on Home's top banner, served to signed-in people only (no longer public), and #140 is superseded for it; The app-icon art replaces the vector marks in the top bar (grown to 36 px) and the sidebar; the 16 px icon and the badge stay vector (AA8, Craig's yes after a phone-size comparison).
 
 **Two more points, 21 Oct:** 24, the deals coming through are not good deals; 25, the lend and
 borrow story, as Craig and Mark actually do it (below). Both are in Group AA.

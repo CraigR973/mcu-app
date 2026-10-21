@@ -4571,8 +4571,8 @@ to Craig; the build is planned from his picks. No code before his picks.
 - **1.** The app-icon art (the original screen-print emblem, not built from stills) shows in the
   app: Home's header and the loading screen, at the size it shows on a phone's Home Screen
   (about 60 px). **Asked 21 Oct: the art in place of the vector marks too** — the top bar (28 px
-  today, 36 px proposed) and the sidebar (40 px); a phone-size comparison was sent to Craig, and
-  his pick decides. The 16 px favicon and the notification badge stay vector, where the art is
+  today, 36 px from now) and the sidebar (40 px); a phone-size comparison was sent to Craig, and
+  he said yes, 21 Oct. The 16 px favicon and the notification badge stay vector, where the art is
   noise. `BrandMark`'s tier table and its test change with the pick.
 - **The MARKS photo hero** (the compact five-image edition) is a full-width banner at the top of
   Home, and **is served only to a signed-in person**: the two heroes leave `public/brand/`, so
