@@ -3,12 +3,12 @@
 ## Now
 
 **21 Oct: Group AA is planned, not started (#289, #290).** Craig's 25 snags of 20–21 Oct
-(`docs/owner-snags-2026-10-20.md`) are 13 batches to build in eight sittings in `docs/phase-batches.md`,
-each sitting with its model and effort named for Claude Code and Codex. **Sitting 1 is AA10a**,
+(`docs/owner-snags-2026-10-20.md`) are 13 batches to build in six sittings in `docs/phase-batches.md`,
+each sitting with its model and effort named for Claude Code and Codex. **Sitting 1 is AA10a → AA10b**,
 the sold-price store (eBay sales recorded weekly, so values and deals can rest on what used
 copies sell for: the AA10 note, `docs/reviews/values-and-deals-2026-10-21.md`, found 75 of the
-last 90 deals were New listings judged against New asking prices). Then AA1 → AA2 (Home and
-film-page fixes), AA10b (deals 10% under the used figure). **Each sitting waits for Craig's go.**
+last 90 deals were New listings judged against New asking prices). AA10b judges deals 10% under the used
+figure. Then AA1 → AA8 → AA2 (top bar, artwork, Home and film-page fixes). **Each sitting waits for Craig's go.**
 Tell Craig after AA1 ships: each iPhone removes and re-adds the app, or it keeps opening on the
 Archive.
 

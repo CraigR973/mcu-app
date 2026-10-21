@@ -4481,19 +4481,20 @@ cover the whole sitting.
 
 | Sitting | Batches, in order | Claude Code | Codex | Checkpoints (the run stops for Craig) |
 |---|---|---|---|---|
-| 1 | AA10a the sold-price store | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High | None. The first live pass is read back after deploy |
-| 2 | AA1 quick fixes → AA2 Home rows | Sonnet 5 · `high` | GPT-5.6 Terra · High | AA1: the top bar's before-and-after screenshot, before its merge. AA2: the completion-set refresh that fills headshots is a live step at Craig's word, after the merge |
-| 3 | AA10b deals and values on the used figure | Opus 5 · `high` | GPT-5.6 Sol · High | Home's total before and after the re-price, reported |
-| 4 | AA4 movie night → AA5 a night's film details → AA6 feeling lucky | Opus 5 · `high` | GPT-5.6 Sol · High | None |
-| 5 | AA7 profile pictures → AA8 the artwork → AA11 lend and borrow | Opus 5 · `high` | GPT-5.6 Sol · High | AA11: the four-state story shown to Craig and signed off before building |
-| 6 | AA3 the collection section (review) | Opus 5 · `high` | GPT-5.6 Sol · High | Stops after the report for Craig's picks; the build is planned from them |
-| 7 | AA9 the assistant page (review) | Opus 5 · `high` | GPT-5.6 Sol · High | As AA3 |
-| 8 | AA10c settle the stand-in, **from 25 Nov** | Opus 5 · `high` | GPT-5.6 Sol · High | Needs about four weeks of AA10a's recorded sales |
+| 1 | AA10a the sold-price store → AA10b deals and values on the used figure | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High | AA10a's first live pass read back after deploy; Home's total before and after AA10b's re-price, reported |
+| 2 | AA1 quick fixes → AA8 the artwork → AA2 Home rows | Sonnet 5 · `high` | GPT-5.6 Terra · High | AA1: the top bar's before-and-after screenshot, before its merge. AA2: the completion-set refresh that fills headshots is a live step at Craig's word, after the merge |
+| 3 | AA4 movie night → AA5 a night's film details → AA6 feeling lucky | Opus 5 · `high` | GPT-5.6 Sol · High | None |
+| 4 | AA7 profile pictures → AA11 lend and borrow | Opus 5 · `high` | GPT-5.6 Sol · High | AA11: the four-state story shown to Craig and signed off before building |
+| 5 | AA3 the collection section → AA9 the assistant page (both reviews) | Opus 5 · `high` | GPT-5.6 Sol · High | Each stops after its report for Craig's picks; their builds are planned from them |
+| 6 | AA10c settle the stand-in, **from 25 Nov** | Opus 5 · `high` | GPT-5.6 Sol · High | Needs about four weeks of AA10a's recorded sales |
 
-*Why that order.* AA10a first so the 90 days of sales start filling (about half the collection
-reaches three sales by late January). AA10b after AA1 and AA2 because all three touch Home's
-highlight rows, and AA10b needs AA10a's figure code. Sittings 6 and 7 can go any time; they
-change no code until Craig picks.
+*Why that grouping* (Craig's yes, 21 Oct). AA10a first so the 90 days of sales start filling
+(about half the collection reaches three sales by late January); AA10b joins it because it
+shares the valuation and scan code and needs AA10a's figure, which also lands the deals fix a
+sitting sooner (cost: AA10b at Extra High). AA1 and AA8 both change the top bar and AA8 and AA2
+both Home's header, so they run together, AA8 between. The two reviews share a method and stop
+for picks. AA7 and AA11 each add a migration and touch no other sitting's files. Grouping is not
+merging: each batch keeps its own branch and pull request, so any one can be reverted.
 
 **Each batch on its own:**
 
@@ -4717,7 +4718,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | AA10a → AA1 → AA2 → AA10b → AA4 → AA5 → AA6 → AA7 → AA8 → AA11; reviews AA3, AA9; AA10c from 25 Nov | **by sitting** (Group AA's table) | **by sitting** | **Planned 21 Oct from Craig's 25 snags (#289, #290); not started, each sitting at Craig's go.** Run one sitting at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: AA10a → AA10b · 2: AA1 → AA8 → AA2 · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **by sitting** | **Planned 21 Oct from Craig's 25 snags (#289, #290); not started, each sitting at Craig's go.** Six sittings since 21 Oct (Craig's yes). Run one sitting at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
