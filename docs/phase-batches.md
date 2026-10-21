@@ -4460,6 +4460,156 @@ match, that becomes a batch of its own (a polling fallback). Stopping the existi
 
 ---
 
+## Group AA — the 20 and 21 Oct snags, proposed 20 Oct
+
+**Proposed 2026-10-20 from Craig's 23 points of that day, and two more on 21 Oct**, reconciled
+against the code in `docs/owner-snags-2026-10-20.md`. **Not yet approved:** Craig's 21 Oct
+answers are recorded there; three remain open, and sitting 1 is "yes, but not yet".
+Criteria below are outlines; each batch's full acceptance is written when its answers are in,
+before it starts, so `DECISIONS.md` #54 does not apply. Model tiers are Group V's. Each lands
+as Group Y did: a `feat/` branch, a pull request, CI green **including the `e2e` job**, a merge
+commit, production `/api/v1/health` on the merge SHA with `db: ok`.
+
+| Sitting | Batches, in order | Gate |
+|---|---|---|
+| 1 | AA1 quick fixes → AA2 Home rows | Craig's go; answers 2, 6, 7 |
+| 2 | AA4 movie night layout and time → AA5 the film's details on a night → AA6 feeling lucky | Craig's go; answer 4 for AA5 |
+| 3 | AA7 profile pictures → AA8 the artwork → AA11 lend and borrow | Answer 3; AA11's story signed off |
+| Reviews | AA3 the collection section, AA9 the assistant page: a report each, then a build batch from it | Craig's go on each report |
+| Design | AA10 what a disc really sells for: values and deals, a design note with live numbers, no build | The build is planned from Craig and Mark's pick |
+
+**Each batch on its own:**
+
+| Batch | Covers (snag numbers) | Size | Claude Code | Codex |
+|---|---|---|---|---|
+| AA1 | 2, 3, 6, 8, 10, 14, 15: start page, top bar, Top rated, best-reviewed title, film tabs, our disc first | 🟢 | mid tier · high | mid tier · High |
+| AA2 | 5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films | 🟡 | mid tier · high | mid tier · High |
+| AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | top tier · high | top tier · High |
+| AA4 | 16, 17, 18, 20: suggest first, two lists, a planned time, add from a film | 🟡 | top tier · high | top tier · High |
+| AA5 | 19: each film's details on a night, IMDb's score | 🟡 | top tier · high | top tier · High |
+| AA6 | 21: feeling lucky, alone on Home and in a night | 🟡 | mid tier · high | mid tier · High |
+| AA7 | 4: profile pictures | 🟡 | top tier · high | top tier · High |
+| AA8 | 1: the tribute artwork in the app | 🟢 | mid tier · high | mid tier · High |
+| AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | top tier · high | top tier · High |
+| AA10 | 23, 24: what a disc really sells for — values and deals, a design note | 🔴 | top tier · xhigh | top tier · Extra High |
+| AA11 | 25: lend and borrow as it happens — asked for, out, back, shelved | 🟡 | top tier · high | top tier · High |
+
+*Why those efforts.* AA4, AA5 and AA7 write migrations or a new nightly import; AA10 changes
+every stored value, which is money and shows on Home. AA1, AA2, AA6 and AA8 are interface work
+over data the app already holds.
+
+### AA1 — Quick fixes 🟢
+- **3.** The manifest's `start_url` is `/`. `OWNER-ACTIONS.md` gains: each iPhone removes and
+  re-adds the app.
+- **2.** Every screen, dark theme (answer 7). Likely cause: the bar is a lighter brown-grey
+  (`--popover`, 11% lightness) over a near-black page (6%), with the iOS clock on it. The bar takes
+  the page's own near-black (or darker) with a crisp bottom rule, confirmed by a before-and-after
+  screenshot at 375 px sent to Craig before merging; a test pins the bar's surface token.
+- **6.** Top rated leaves Home. Worth a rewatch stays (it uses the viewer's own ratings, and hides
+  for Mark as now).
+- **8.** Home's collection row gains a "Browse the archive" link (answer 2).
+- **10.** The row is titled for the disc ("Best discs", or as Craig words it) and its caption
+  says it scores picture, sound and extras, not the film.
+- **14.** The film page's tabs never scroll up and down; at 375 px all four show whole with no
+  sideways scroll (shorter labels or a fitted grid); a test at 375 px.
+- **15.** Where to watch opens with "On the shelf": each owned copy's format, location and loan,
+  then Streaming. A download names where it is.
+- Tests. Gate green. Browser check at 375 px, both themes.
+
+### AA2 — Home rows 🟡
+- **5.** Each Needs attention line opens the screen that fixes it (Identify, Disc specs, Retailers,
+  Settings' devices, the assistant settings, Admin's jobs); a line with nothing in the app to do
+  (server set-up, database size) says what to do instead. One map from check key to place, with a
+  test that every key has an entry.
+- **7.** Recent activity moves to the You page (answer 6); Home keeps no copy of it.
+- **11.** Each best-reviewed card says what the disc is strongest at, from the stored sub-scores
+  (picture from Video 4K or 2K, sound from Audio, extras), with the scores on tap.
+- **12.** Completion cards show the person's TMDB headshot, stored by the set refresh, initials
+  when TMDB has none. **The refresh that fills them is a live step at Craig's word.**
+- **13.** A set's page lists its missing films on their own, each with Add to wanted (or
+  "Wanted" when it is), each opening its TMDB film page; the bulk button stays. Mark sees it too
+  if Wanted is shared (checked when the batch starts).
+- Tests. Gate green. Browser check at 375 px.
+
+### AA3 — The collection section 🟡
+A UI/UX review of Home's collection row as its own report (`docs/reviews/`), with mock-ups, sent
+to Craig; the build is planned from his picks. No code before his picks.
+
+### AA4 — Movie night: suggest first, two lists, a planned time 🟡
+- **16, 17.** The night opens with Suggest a film; below it "Suggested" (people's picks, who and
+  when), then "Stuck for ideas? A random shortlist" (the Archive's picks).
+- **18.** A night takes an optional planned date and time (one nullable `planned_start_utc`,
+  shown in the person's time, in the list of nights and in the invite push). Migration granted to
+  `mcu_readonly` and `mcu_backup` as `CLAUDE.md` says.
+- **20.** A film page (owned or a TMDB page) offers "Add to movie night" when a night is open,
+  choosing the night when more than one is.
+- Tests (the e2e movie-night case updated, not loosened). Gate green.
+
+### AA5 — The film's details on a night 🟡
+- **19.** Each film on a night shows, for each person: when they last watched it and their own
+  rating (the app's, which already holds their Letterboxd ratings from the diary sync; "not
+  rated" otherwise); where to watch it (shelf location first, else streaming); runtime; IMDb's
+  score; a Letterboxd link. Letterboxd's average is not shown: it has no public API.
+- **IMDb's score** comes from IMDb's daily `title.ratings` file, matched on the stored IMDb id,
+  inside an existing nightly job (no new Railway service, so no hosting change). New columns
+  granted as above.
+- Tests. Gate green.
+
+### AA6 — Feeling lucky 🟡
+- **21.** "Feeling lucky" deals one film at a time until someone takes one: on Home for the person
+  alone (the Archive, optionally unwatched by them), and on a night, where taking it adds it to
+  the night's suggestions. Skipped films are not dealt again in that run.
+- Tests. Gate green.
+
+### AA7 — Profile pictures 🟡
+- **4.** An uploaded photo (answer 3). A person's picture shows wherever their initial does now (top bar, You,
+  movie night, activity), the initial when there is none. If uploaded: stored in Postgres as copy
+  photos are, resized, size-capped. Migration granted as above.
+- Tests. Gate green.
+
+### AA8 — The artwork 🟢
+- **1.** The app-icon art (the original screen-print emblem, not built from stills) shows in the
+  app: Home's header and the loading screen, at the size it shows on a phone's Home Screen
+  (about 60 px). **Asked 21 Oct: the art in place of the vector marks too** — the top bar (28 px
+  today, 36 px proposed) and the sidebar (40 px); a phone-size comparison was sent to Craig, and
+  his pick decides. The 16 px favicon and the notification badge stay vector, where the art is
+  noise. `BrandMark`'s tier table and its test change with the pick.
+- **The MARKS photo hero** (the compact five-image edition) is a full-width banner at the top of
+  Home, and **is served only to a signed-in person**: the two heroes leave `public/brand/`, so
+  they stop being fetchable by anyone. Never on sign-in or any public screen. Supersedes #140 with
+  a new decision; the source-level test moves to the new boundary (photo art on Home and
+  onboarding only, never public) at Craig's word, 21 Oct.
+- Tests. Gate green. Browser check at 375 px and 1,280 px.
+
+### AA9 — The assistant page 🟡
+As AA3: a review report first, then a build planned from Craig's picks.
+
+### AA10 — What a disc really sells for: values and deals, a design note 🔴
+- **23, 24.** One note, not code, because both rest on the same missing number: eBay gives only
+  asking prices, never sold ones (#16, #228). A value is a used asking median; a deal is 30%
+  under an asking median, which is often just the going rate.
+- **The proposal to test:** keep each used listing seen, by eBay item id, on a weekly pass; a
+  listing that vanishes before its end date most likely sold. The value becomes the median of
+  "probably sold" prices with postage over 90 days, falling back to the lower quartile of current
+  used asks; a deal must beat that figure, not the asking median. Mark's rule (mean of the 3
+  lowest in 3 months) and today's rule are computed beside it.
+- **The note gives, on live data:** the three rules side by side for a sample of discs, checked
+  against eBay's sold listings read by Craig or Mark on the website; last month's deals re-judged
+  under each; the extra eBay calls (inside the daily budget or not); and the options with costs.
+- The build is planned from Craig and Mark's pick.
+
+### AA11 — Lend and borrow as it happens 🟡
+- **25.** A loan runs **asked for → out → back, not shelved → shelved**. Craig asks in the app
+  for a film with a needed-by date (Mark gets a push; Craig's word, 21 Oct), or records taking it
+  himself. Either person
+  marks it back (left at Mark's, or collected). Mark gets a "to put back" list, and putting one
+  back confirms or changes its shelf. Loans and the film page say which state a copy is in.
+- The story is shown to Craig as a short flow first and signed off before building. Migration
+  (state, needed-by, returned-by, shelved-at, all nullable) granted as above.
+- Tests (the e2e loans case extended). Gate green.
+
+---
+
 ## Batch groups
 
 **Grouping rule:** batches share a group when they touch the same files, share a
