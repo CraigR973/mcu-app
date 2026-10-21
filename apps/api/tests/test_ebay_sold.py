@@ -224,3 +224,35 @@ async def test_rate_limit_stops_the_pass_without_advancing_the_week(db: AsyncSes
     assert result.status == "stopped" and result.calls == 1
     assert result.last_error is not None
     assert result.searched == 0
+
+
+async def test_still_active_missing_item_is_rechecked_after_next_weekly_search(
+    db: AsyncSession,
+) -> None:
+    await film_with_disc(db)
+    client = FakeEbay()
+    client.results = [summary("1", "10.00")]
+    _, run = await start_run(db, trigger="admin", now=NOW)
+    assert run is not None
+    await work_run(db, client, run.id, clock=lambda: NOW)
+
+    next_week = NOW + timedelta(days=8)
+    client.results = []
+    client.details["1"] = {"estimatedAvailabilities": [{"estimatedAvailabilityStatus": "IN_STOCK"}]}
+    _, run = await start_run(db, trigger="job", now=next_week)
+    assert run is not None
+    still_active = await work_run(db, client, run.id, clock=lambda: next_week)
+    assert still_active.checked == 1 and still_active.sold == 0
+
+    _, run = await start_run(db, trigger="job", now=next_week + timedelta(hours=1))
+    assert run is not None
+    same_week = await work_run(db, client, run.id, clock=lambda: next_week + timedelta(hours=1))
+    assert same_week.checked == 0 and same_week.searched == 0
+
+    another_week = next_week + timedelta(days=8)
+    client.details["1"] = sold_detail(another_week, 1)
+    _, run = await start_run(db, trigger="job", now=another_week)
+    assert run is not None
+    ended = await work_run(db, client, run.id, clock=lambda: another_week)
+    assert ended.checked == 1 and ended.sold == 1
+    assert client.checked == ["1", "1"]

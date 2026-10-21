@@ -51,7 +51,7 @@ class EbayUsedListing(Base, UUIDPrimaryKeyMixin):
     status: Mapped[str] = mapped_column(String(10), nullable=False)
     ended_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     sold_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    #: A disappearance is checked once until the item reappears in a search.
+    #: One check per successful weekly search while an item remains absent.
     missing_checked_utc: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True
     )

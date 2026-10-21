@@ -6339,7 +6339,9 @@ contemporaneous.
      proves that listing sold; it does not prove each unit sold at the stored ask. Keep the
      count for audit, use the postage-in last ask once in the 90-day median, and label it
      "based on N sales" with the advertised-price limitation visible. A 404 or an out-of-stock
-     item with no positive count is ended unsold. A relisted item gets a new observation; a
-     reappearing item number loses its old sold classification. The weekly pass spends at most
-     600 calls per UTC day and remains inactive until Craig starts the first live pass in Admin.
+     item with no positive count is ended unsold. An absent item still active on its item page
+     is checked once after each later weekly search while absent, so its eventual end is not
+     missed. A relisted item gets a new observation; a reappearing item number loses its old
+     sold classification. The weekly pass spends at most 600 calls per UTC day and remains
+     inactive until Craig starts the first live pass in Admin.
 

@@ -215,7 +215,7 @@ async def _record_search(
 
 
 async def pending_missing(db: AsyncSession, *, limit: int) -> list[EbayUsedListing]:
-    """Items absent from a successful search and not checked in this disappearance episode."""
+    """Items absent from a successful search, checked once per weekly search."""
     rows = await db.scalars(
         select(EbayUsedListing)
         .join(
@@ -227,7 +227,10 @@ async def pending_missing(db: AsyncSession, *, limit: int) -> list[EbayUsedListi
         )
         .where(
             EbayUsedListing.status == "active",
-            EbayUsedListing.missing_checked_utc.is_(None),
+            or_(
+                EbayUsedListing.missing_checked_utc.is_(None),
+                EbayUsedListing.missing_checked_utc < EbayUsedScan.checked_utc,
+            ),
             EbayUsedListing.last_seen_utc < EbayUsedScan.checked_utc,
         )
         .order_by(EbayUsedListing.last_seen_utc)

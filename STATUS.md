@@ -2,9 +2,10 @@
 
 ## Now
 
-**21 Oct: Group AA sitting 1 is paused after AA10a's green gate.** The sold-price store,
+**21 Oct: Group AA sitting 1 is paused at AA10a's close-out boundary.** The sold-price store,
 weekly pass, sales-backed value and owner-start control are in [PR #100](https://github.com/CraigR973/mcu-app/pull/100)
-on `feat/aa10a-sold-price-store`; its code commit `eacc1cc` passed all seven PR CI jobs.
+on `feat/aa10a-sold-price-store`. Its earlier code commit `eacc1cc` passed all seven PR CI
+jobs; check the PR's exact current head before close-out.
 A global Railway build pause left production API on `0dfec186` while `main` and the web
 served `159ec624` at the last check. Craig authorised repair, then asked to proceed without
 Railway for now. Do not merge, run live eBay, or start AA10b until Railway can deploy and the
@@ -605,6 +606,9 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-21 (AA10a follow-up)** — An item absent from search but still active on its
+  item page is rechecked once after each later weekly search while absent, so an eventual
+  sale or withdrawal is found. A database regression test covers this and same-week deduping.
 - **2026-10-21 (AA10a, PR #100)** — Built the used-listing store, bounded weekly checks
   inside the existing eBay job, sales-backed values, Admin first-pass control and Home sales
   count. Local API (2,423 passed, 9 environment skips), web (670), shared (154), Chromium,
