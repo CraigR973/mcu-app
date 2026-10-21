@@ -607,6 +607,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-21 (fix)** — The dependency audit went red on `main` with no change of ours: 8 new
+  Pillow advisories (fixed in 13.0.0) and 1 certifi. Both locks regenerated with only those two
+  upgraded (Pillow 12.3.0 → 13.0.0, certifi 2026.7.22 → 2026.10.19). Photo tests pass on 13
+  with deprecation warnings as errors; API 1,589 passed locally (837 skipped without Postgres);
+  `pip-audit` clean.
 - **2026-10-21 (plan, #289, #290)** — Craig's 25 snags reconciled and planned as Group AA
   (AA1–AA11, AA10a–c). AA10's note written from live data, read only (128 eBay calls). Option 3
   picked: record sales, judge every deal against the used figure, 10% under. The hand check
