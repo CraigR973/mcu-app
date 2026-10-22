@@ -13,7 +13,7 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
-## AA10a, deployed; first live pass at Craig's checkpoint
+## AA10a, shipped; first live pass read back 22 Oct
 
 ```mermaid
 flowchart TB
@@ -30,5 +30,6 @@ flowchart TB
 
 The store keeps no eBay title or image. A positive sold count on an out-of-stock listing
 marks that listing sold; the figure uses its last advertised price, which can exceed an
-accepted Best Offer. The run stops at 600 eBay calls per UTC day, and the cron path stays
-inactive until the first Admin pass. AA10b has not started.
+accepted Best Offer. The run stops at 600 eBay calls per UTC day. Craig started the first
+Admin pass on 22 Oct; the cron path now carries the remaining film-format pairs into later
+daily budgets. AA10b is next.

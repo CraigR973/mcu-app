@@ -2,15 +2,16 @@
 
 ## Now
 
-**22 Oct: Group AA sitting 1 is at AA10a's owner checkpoint.** The sold-price store,
-bounded weekly pass, sales-backed value and owner-start control merged in
-[PR #100](https://github.com/CraigR973/mcu-app/pull/100) (`eb315c2`). Railway's GitHub
-trigger resumed: the API automatically deployed that merge and ran migration `064`; the
-API and web served the exact merge SHA, with `/health/ready` reporting `db: ok` and all
-integrations configured. The PR's seven jobs and postmerge CI run `39859936458` all passed.
-Craig starts the first live eBay pass from Home, **Start used-sale tracking**;
-the agent reads back its run and stored listings (`OWNER-ACTIONS.md` 36). Do not start AA10b
-or strike AA10a's row before that check. Sitting 2 is not authorised.
+**22 Oct: AA10a's first live pass is read back; Group AA sitting 1 proceeds to AA10b.**
+The sold-price store and bounded weekly pass shipped in [PR #100](https://github.com/CraigR973/mcu-app/pull/100)
+(`eb315c2`), with migration `064`, seven green PR jobs and seven green postmerge jobs. Railway
+automatically deployed it; API and web matched the merge SHA, and readiness reported `db: ok`
+with every integration configured. Craig started the first live eBay pass on Home. It spent
+598 of 600 calls on 598 searches, stored 6,179 distinct active listings, found no sales yet,
+and finished at its budget without an error. Of 1,997 tracked film-format pairs, 1,399 remain
+due for later daily budgets. The pre-AA10b Home total is **£16,867.11** across 1,290 priced
+of 1,469 physical discs, 0 sales-backed. AA10b's one re-price and before/after total remain;
+sitting 2 is not authorised.
 
 **20 Oct: a time-zone fault in the stale-edit guard is fixed (#288, migration `063`).** Every
 naive-UTC column now defaults to `timezone('utc', now())` rather than a bare `now()`, so a new
@@ -215,6 +216,10 @@ still has 11 titles to choose and the agreed film-matched series to correct (ite
 The Log keeps a dated line for each.
 
 ## Next
+
+**Group AA sitting 1:** AA10b now builds deals and values on the used stand-in figure.
+The pre-reprice Home total is £16,867.11; report the total after its one re-price.
+Do not start sitting 2 in this run.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -607,6 +612,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-22 (AA10a first live pass, owner checkpoint cleared)** — Craig pressed Home's
+  **Start used-sale tracking**. Read-only production queries found one admin run: 598 of 600
+  calls, 598 searches, 6,179 distinct active listings, 0 sold/ended, no error, status
+  `budget_spent`. 1,399 of 1,997 tracked pairs remain due. The three new tables have the
+  read-only and backup grants; no title or image column was stored. Home's pre-AA10b total
+  is £16,867.11 (1,290 of 1,469 discs priced; no sales-backed values yet).
 - **2026-10-22 (AA10a, Railway recovery)** — Railway's account showed GitHub connected and
   the API watching `main`, but no deployment for two merges. A single **Deploy latest commit**
   caught the API up to `159ec624`; `/health` and `/health/ready` passed. PR #100 then merged

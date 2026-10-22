@@ -11,10 +11,9 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AA sitting 1, AA10a (item 36):** on Home, as Craig, press **Start used-sale
-  tracking** once. This is the first live eBay pass; it writes observed used listings and
-  spends at most 600 eBay calls in a UTC day. Tell the agent when the pass finishes so it
-  can read back the run and stored listings. AA10b waits for that check.
+- ~~**Group AA sitting 1, AA10a (item 36):** start and read back the first live used-sale
+  pass.~~ **Done 22 Oct:** Craig started it; 598 searches stored 6,179 listings, and the run
+  ended at its daily budget without an error. AA10b may proceed.
 - **12 Oct, the wave 1 review:** its remediation is Group X (X1–X12) in
   `docs/phase-batches.md`, in five sittings (#255). You start sitting 1 (X1 → X2 → X3, as one
   group, `/group-start X · 1`) so that X1, the eBay scan, lands before 21 Oct. eBay's licence:
@@ -1523,14 +1522,14 @@ copy, watch or want since.
 AA10b uses the lower quartile of current used asking prices until AA10c has about four weeks
 of AA10a's recorded sales. No manual eBay hand check remains (#290).
 
-### 36. First live used-sale pass — AA10a, Group AA sitting 1
+### 36. ~~First live used-sale pass — AA10a, Group AA sitting 1~~ — done 22 Oct
 
-- [ ] On Home, as Craig, press **Start used-sale tracking** once. The pass calls live eBay,
-      writes observed listings and starts the later weekly checks. Its daily share is capped
-      at 600 eBay calls.
-- [ ] Let the agent read back the pass status, call count and stored listings after it finishes.
-      Stop before AA10b until this check passes. The Group AA sitting 1 go does not authorise
-      the agent to run this live pass on Craig's behalf (`group-start.md`).
+- [x] Craig pressed **Start used-sale tracking** on Home. The pass called live eBay and
+      enabled later weekly checks in the existing cron job.
+- [x] Read back: `budget_spent`, 598 of 600 calls, 598 film-format scans, 6,179 distinct
+      active listings, 0 sold or ended, no last error. Of 1,997 tracked pairs, 1,399 remain
+      due and carry into later daily budgets. All three new tables are readable by the
+      `mcu_readonly` and `mcu_backup` roles; the listing table has no title or image column.
 
 ### 22. Rotate the Neon database password — recommended, your call
 
