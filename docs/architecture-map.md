@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which branch is deployed. This map shows the running structure and the
-AA10a change pending merge; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map shows the running structure and the
+AA10a change deployed on 22 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -13,7 +13,7 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
-## AA10a, pending close-out on 21 Oct
+## AA10a, deployed; first live pass at Craig's checkpoint
 
 ```mermaid
 flowchart TB

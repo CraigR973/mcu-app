@@ -11,6 +11,10 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Group AA sitting 1, AA10a (item 36):** on Home, as Craig, press **Start used-sale
+  tracking** once. This is the first live eBay pass; it writes observed used listings and
+  spends at most 600 eBay calls in a UTC day. Tell the agent when the pass finishes so it
+  can read back the run and stored listings. AA10b waits for that check.
 - **12 Oct, the wave 1 review:** its remediation is Group X (X1–X12) in
   `docs/phase-batches.md`, in five sittings (#255). You start sitting 1 (X1 → X2 → X3, as one
   group, `/group-start X · 1`) so that X1, the eBay scan, lands before 21 Oct. eBay's licence:
@@ -1516,11 +1520,17 @@ copy, watch or want since.
 
 ### 35. ~~The eBay hand check — AA10~~ — **dropped 21 Oct at your word (#290): AA10a's recorded sales settle it instead (AA10c)**
 
-Decides the stand-in figure AA10b builds (#289). Open the ten links in section 3 of
-`docs/reviews/values-and-deals-2026-10-21.md`, signed in to eBay. For each: filter to Used, skip
-steelbooks, limited editions, foreign-region, disc-only and damaged copies, and note the last
-five sale prices **with postage** from the last 90 days. Reply in the chat with five numbers per
-disc. AA10a does not wait for this; AA10b does.
+AA10b uses the lower quartile of current used asking prices until AA10c has about four weeks
+of AA10a's recorded sales. No manual eBay hand check remains (#290).
+
+### 36. First live used-sale pass — AA10a, Group AA sitting 1
+
+- [ ] On Home, as Craig, press **Start used-sale tracking** once. The pass calls live eBay,
+      writes observed listings and starts the later weekly checks. Its daily share is capped
+      at 600 eBay calls.
+- [ ] Let the agent read back the pass status, call count and stored listings after it finishes.
+      Stop before AA10b until this check passes. The Group AA sitting 1 go does not authorise
+      the agent to run this live pass on Craig's behalf (`group-start.md`).
 
 ### 22. Rotate the Neon database password — recommended, your call
 

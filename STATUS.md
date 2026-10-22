@@ -2,14 +2,15 @@
 
 ## Now
 
-**21 Oct: Group AA sitting 1 is paused at AA10a's close-out boundary.** The sold-price store,
-weekly pass, sales-backed value and owner-start control are in [PR #100](https://github.com/CraigR973/mcu-app/pull/100)
-on `feat/aa10a-sold-price-store`. Its earlier code commit `eacc1cc` passed all seven PR CI
-jobs; check the PR's exact current head before close-out.
-A global Railway build pause left production API on `0dfec186` while `main` and the web
-served `159ec624` at the last check. Craig authorised repair, then asked to proceed without
-Railway for now. Do not merge, run live eBay, or start AA10b until Railway can deploy and the
-AA10a first live pass is read back at the owner checkpoint. Sitting 2 is not authorised.
+**22 Oct: Group AA sitting 1 is at AA10a's owner checkpoint.** The sold-price store,
+bounded weekly pass, sales-backed value and owner-start control merged in
+[PR #100](https://github.com/CraigR973/mcu-app/pull/100) (`eb315c2`). Railway's GitHub
+trigger resumed: the API automatically deployed that merge and ran migration `064`; the
+API and web served the exact merge SHA, with `/health/ready` reporting `db: ok` and all
+integrations configured. The PR's seven jobs and postmerge CI run `39859936458` all passed.
+Craig starts the first live eBay pass from Home, **Start used-sale tracking**;
+the agent reads back its run and stored listings (`OWNER-ACTIONS.md` 36). Do not start AA10b
+or strike AA10a's row before that check. Sitting 2 is not authorised.
 
 **20 Oct: a time-zone fault in the stale-edit guard is fixed (#288, migration `063`).** Every
 naive-UTC column now defaults to `timezone('utc', now())` rather than a bare `now()`, so a new
@@ -606,6 +607,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-22 (AA10a, Railway recovery)** — Railway's account showed GitHub connected and
+  the API watching `main`, but no deployment for two merges. A single **Deploy latest commit**
+  caught the API up to `159ec624`; `/health` and `/health/ready` passed. PR #100 then merged
+  as `eb315c2`; the GitHub trigger automatically deployed it, migration `063 → 064` ran, and
+  API and web served the exact merge SHA with readiness green. The first live used-sale pass
+  is still Craig's owner checkpoint; AA10b has not started.
 - **2026-10-21 (AA10a follow-up)** — An item absent from search but still active on its
   item page is rechecked once after each later weekly search while absent, so an eventual
   sale or withdrawal is found. A database regression test covers this and same-week deduping.
