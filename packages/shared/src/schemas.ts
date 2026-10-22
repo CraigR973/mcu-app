@@ -188,7 +188,7 @@ export const movieDetailSchema = movieListItemSchema.extend({
 /** How a disc's value as a used copy was reached — Batch X6 (`DECISIONS.md` #256). `used`:
  *  the median of its used listings. `new_scaled`: New's median times the used-to-New factor
  *  measured for its format, because used listings were too few. */
-export const valueBasisSchema = z.enum(['used', 'new_scaled'])
+export const valueBasisSchema = z.enum(['used', 'new_scaled', 'sales'])
 
 /** Batch T6 — a disc's stored value: its film, on the format it is valued as, as a used copy
  *  at eBay asking prices since Batch X6. `price` is null when too few listings matched, which
@@ -1943,6 +1943,25 @@ export const valuationRunSchema = z.object({
   lastError: z.string().nullable(),
 })
 
+export const usedSalesRunSchema = z.object({
+  status: z.enum(['running', 'finished', 'budget_spent', 'stopped', 'abandoned']),
+  trigger: z.enum(['admin', 'job']),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  budget: z.number().int().nonnegative(),
+  calls: z.number().int().nonnegative(),
+  searched: z.number().int().nonnegative(),
+  checked: z.number().int().nonnegative(),
+  sold: z.number().int().nonnegative(),
+  ended: z.number().int().nonnegative(),
+  lastError: z.string().nullable(),
+})
+
+export const usedSalesStartSchema = z.object({
+  outcome: z.enum(['started', 'inactive', 'running', 'budget_spent']),
+  run: usedSalesRunSchema.nullable(),
+})
+
 /** What the owned discs add up to as used copies at current eBay **asking** prices — never
  *  what they would sell for (`DECISIONS.md` #16, #126, #256). `basis` and `valuedAs` carry
  *  the words to show. */
@@ -1954,6 +1973,8 @@ export const collectionValueSchema = z.object({
   valuedAs: z.string().min(1).nullable().default(null),
   discs: z.number().int().nonnegative(),
   pricedDiscs: z.number().int().nonnegative(),
+  /** AA10a: physical discs whose current figure rests on at least three observed sales. */
+  salesBackedDiscs: z.number().int().nonnegative().default(0),
   notPricedDiscs: z.number().int().nonnegative(),
   uncheckedDiscs: z.number().int().nonnegative(),
   checkedFrom: z.string().nullable(),
@@ -1963,6 +1984,8 @@ export const collectionValueSchema = z.object({
   dailyShare: z.number().int().positive(),
   minSample: z.number().int().positive(),
   run: valuationRunSchema.nullable(),
+  salesRun: usedSalesRunSchema.nullable().default(null),
+  salesBudgetLeft: z.number().int().nonnegative().default(0),
 })
 
 export const valuationStartSchema = z.object({
@@ -2326,6 +2349,8 @@ export type SpecBatchStart = z.infer<typeof specBatchStartSchema>
 
 export type CopyValuation = z.infer<typeof copyValuationSchema>
 export type ValuationRun = z.infer<typeof valuationRunSchema>
+export type UsedSalesRun = z.infer<typeof usedSalesRunSchema>
+export type UsedSalesStart = z.infer<typeof usedSalesStartSchema>
 export type CollectionValue = z.infer<typeof collectionValueSchema>
 export type ValuationStart = z.infer<typeof valuationStartSchema>
 export type TrialFilm = z.infer<typeof trialFilmSchema>

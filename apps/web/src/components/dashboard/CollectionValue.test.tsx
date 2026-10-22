@@ -5,9 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CollectionValue as Value } from '@/lib/api'
 
-const { fetchValueMock, startMock, auth } = vi.hoisted(() => ({
+const { fetchValueMock, startMock, startSalesMock, auth } = vi.hoisted(() => ({
   fetchValueMock: vi.fn(),
   startMock: vi.fn(),
+  startSalesMock: vi.fn(),
   auth: { role: 'viewer' },
 }))
 vi.mock('@/context/auth', () => ({
@@ -17,6 +18,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   fetchCollectionValue: fetchValueMock,
   startValuationRun: startMock,
+  startUsedSalesRun: startSalesMock,
 }))
 
 import { CollectionValue } from './CollectionValue'
@@ -28,6 +30,9 @@ const VALUED: Value = {
   valuedAs: 'as used copies',
   discs: 1457,
   pricedDiscs: 1302,
+  salesBackedDiscs: 0,
+  salesRun: null,
+  salesBudgetLeft: 600,
   notPricedDiscs: 103,
   uncheckedDiscs: 52,
   checkedFrom: '2026-09-23T03:00:00Z',
@@ -64,6 +69,7 @@ beforeEach(() => {
   auth.role = 'viewer'
   fetchValueMock.mockReset().mockResolvedValue(VALUED)
   startMock.mockReset()
+  startSalesMock.mockReset().mockResolvedValue({ outcome: 'started', run: null })
 })
 
 afterEach(() => {
@@ -134,7 +140,7 @@ describe('CollectionValue — Batch T6', () => {
 
     expect(await screen.findByRole('status')).not.toBeNull()
     expect(screen.getByText(/Pricing now: 312 checked, 1,142 to go./)).not.toBeNull()
-    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Update values/ })).toBeNull()
   })
 
   it('tells an admin when there is nothing to update', async () => {
@@ -143,6 +149,22 @@ describe('CollectionValue — Batch T6', () => {
     renderIt()
 
     expect(await screen.findByText('Every price is less than 30 days old.')).not.toBeNull()
-    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Update values/ })).toBeNull()
+  })
+
+  it('shows the sales basis and the owner control without starting a live pass on read', async () => {
+    auth.role = 'admin'
+    fetchValueMock.mockResolvedValue({
+      ...VALUED,
+      basis: 'observed sales where available; current asking prices otherwise',
+      salesBackedDiscs: 3,
+    })
+    renderIt()
+
+    expect(await screen.findByText(/3 discs based on at least 3 observed sales in 90 days/)).not.toBeNull()
+    expect(screen.getByText('as used copies on eBay: observed sales where available; current asking prices otherwise')).not.toBeNull()
+    expect(startSalesMock).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Start used-sale tracking' }))
+    await vi.waitFor(() => expect(startSalesMock).toHaveBeenCalledTimes(1))
   })
 })

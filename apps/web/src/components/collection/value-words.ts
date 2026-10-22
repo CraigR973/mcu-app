@@ -26,6 +26,11 @@ function listings(count: number, kind: string): string {
  */
 export function valueBehind(value: ValueBehind, { short = false }: { short?: boolean } = {}): string {
   const range = `£${value.low}–£${value.high}`
+  if (value.valueBasis === 'sales') {
+    return short
+      ? `based on ${value.sampleSize} sales, ${range}`
+      : `based on ${value.sampleSize} sales in 90 days, postage included, ${range}`
+  }
   if (value.valueBasis === 'used') {
     return short
       ? `${listings(value.sampleSize, 'used')}, ${range}`

@@ -119,7 +119,7 @@ function SpendChart({ stats }: { stats: Stats }) {
 }
 
 /**
- * The worth card: what the collection is worth at eBay asking prices (Batch T6), read only.
+ * The worth card: the stored used-copy figure, with observed sales counted when present.
  * "Update values" and the bid trial moved to Admin's "Collection value" with W2 (#249).
  * Hidden from a viewer until there is a total, as before; an admin sees where to start one.
  */
@@ -140,7 +140,7 @@ function WorthCard({ value, isAdmin }: { value: CollectionValue | undefined; isA
     <NumberCard
       label="Worth"
       value={`≈ ${pounds(value.total, value.currency)}`}
-      detail={running ? 'Pricing now' : `${COUNT.format(value.pricedDiscs)} of ${COUNT.format(value.discs)} discs priced`}
+      detail={running ? 'Pricing now' : `${COUNT.format(value.pricedDiscs)} of ${COUNT.format(value.discs)} discs priced${value.salesBackedDiscs ? `; ${COUNT.format(value.salesBackedDiscs)} based on sales` : ''}`}
     />
   )
 }

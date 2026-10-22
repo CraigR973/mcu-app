@@ -29,6 +29,8 @@ from src.schemas.valuation import (
     CollectionValueResponse,
     CopyValuationResponse,
     RunStatus,
+    UsedSalesRunResponse,
+    UsedSalesStartResponse,
     ValuationRunResponse,
     ValuationStartResponse,
 )
@@ -39,6 +41,10 @@ from src.services.bid_trial import (
     latest_trial,
     start_trial,
 )
+from src.services.ebay_sold import budget_left as sales_budget_left
+from src.services.ebay_sold import continue_admin_run
+from src.services.ebay_sold import latest_run as latest_sales_run
+from src.services.ebay_sold import start_run as start_sales_run
 from src.services.valuation import (
     CURRENCY,
     DAILY_SHARE,
@@ -63,10 +69,12 @@ _RUN_STATUSES: dict[str, RunStatus] = {
 }
 
 
-def value_basis(stored: str | None) -> Literal["used", "new_scaled"] | None:
+def value_basis(stored: str | None) -> Literal["used", "new_scaled", "sales"] | None:
     """The column's value, typed. The table's CHECK constraint allows exactly these."""
     if stored == "used":
         return "used"
+    if stored == "sales":
+        return "sales"
     return "new_scaled" if stored == "new_scaled" else None
 
 
@@ -83,6 +91,25 @@ def run_response(run: ValuationRun) -> ValuationRunResponse:
         notPriced=run.not_priced,
         failed=run.failed,
         remaining=run.remaining,
+        lastError=run.last_error,
+    )
+
+
+def sales_run_response(run: object) -> UsedSalesRunResponse:
+    from src.models.ebay_sold import EbayUsedRun
+
+    assert isinstance(run, EbayUsedRun)
+    return UsedSalesRunResponse(
+        status=_RUN_STATUSES[run.status],
+        trigger="admin" if run.trigger == "admin" else "job",
+        startedAt=run.started_utc,
+        finishedAt=run.finished_utc,
+        budget=run.budget,
+        calls=run.calls,
+        searched=run.searched,
+        checked=run.checked,
+        sold=run.sold,
+        ended=run.ended,
         lastError=run.last_error,
     )
 
@@ -111,20 +138,21 @@ def _money(amount: Decimal | None) -> str | None:
 
 
 def copy_valuation(valuation: DiscValuation) -> CopyValuationResponse:
+    sales = valuation.sales_backed
     return CopyValuationResponse(
         formatCode=valuation.format_code,
-        status="priced" if valuation.status == "priced" else "not_priced",
-        price=_money(valuation.price),
+        status="priced" if valuation.status == "priced" or sales else "not_priced",
+        price=_money(valuation.effective_price),
         currency=valuation.currency,
-        sampleSize=valuation.sample_size,
-        conditionLabel=valuation.condition_label,
-        checkedAt=valuation.checked_utc,
-        basis=valuation.basis,
+        sampleSize=valuation.sales_count if sales else valuation.sample_size,
+        conditionLabel="Used" if sales else valuation.condition_label,
+        checkedAt=valuation.sales_checked_utc if sales else valuation.checked_utc,
+        basis="observed sold listings" if sales else valuation.basis,
         minSample=MIN_SAMPLE,
-        valueBasis=value_basis(valuation.value_basis),
-        factor=_money(valuation.factor),
-        low=_money(valuation.low),
-        high=_money(valuation.high),
+        valueBasis=value_basis("sales" if sales else valuation.value_basis),
+        factor=None if sales else _money(valuation.factor),
+        low=_money(valuation.sales_low if sales else valuation.low),
+        high=_money(valuation.sales_high if sales else valuation.high),
         usedCount=valuation.used_count or 0,
         newCount=valuation.new_count or 0,
         valuedAs=AS_USED_COPIES,
@@ -136,13 +164,17 @@ def copy_valuation(valuation: DiscValuation) -> CopyValuationResponse:
 async def get_collection_value(_user: CurrentUser, db: Database) -> CollectionValueResponse:
     """Every owned physical disc at its stored price, and how many have one."""
     value = await collection_value(db)
+    sales_run = await latest_sales_run(db)
     return CollectionValueResponse(
         total=str(value.total) if value.total is not None else None,
         currency=CURRENCY,
-        basis=ASKING_PRICES,
+        basis="observed sales where available; current asking prices otherwise"
+        if value.sales_backed
+        else ASKING_PRICES,
         valuedAs=AS_USED_COPIES,
         discs=value.discs,
         pricedDiscs=value.priced,
+        salesBackedDiscs=value.sales_backed,
         notPricedDiscs=value.not_priced,
         uncheckedDiscs=value.unchecked,
         checkedFrom=value.checked_from,
@@ -152,6 +184,23 @@ async def get_collection_value(_user: CurrentUser, db: Database) -> CollectionVa
         dailyShare=DAILY_SHARE,
         minSample=MIN_SAMPLE,
         run=run_response(value.latest_run) if value.latest_run else None,
+        salesRun=sales_run_response(sales_run) if sales_run else None,
+        salesBudgetLeft=await sales_budget_left(db, now=utcnow()),
+    )
+
+
+@router.post("/collection/value/sales/refresh", response_model=UsedSalesStartResponse)
+async def refresh_used_sales(
+    _user: AdminUser, db: Database, background_tasks: BackgroundTasks
+) -> UsedSalesStartResponse:
+    """Craig starts the first live pass; subsequent passes run in the existing eBay job."""
+    _require_ebay()
+    reason, run = await start_sales_run(db, trigger="admin")
+    if run is not None:
+        background_tasks.add_task(continue_admin_run, run.id)
+    return UsedSalesStartResponse(
+        outcome=reason,
+        run=sales_run_response(run) if run else None,
     )
 
 

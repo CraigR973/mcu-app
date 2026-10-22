@@ -164,6 +164,15 @@ class DiscValuation(Base, UUIDPrimaryKeyMixin):
     used_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     new_median: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
     new_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: AA10a keeps the monthly asking-value intact as a fallback. Three distinct observed
+    #: sold listings in the last 90 days make this the effective value instead.
+    sales_price: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    sales_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    sales_low: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    sales_high: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    sales_checked_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
     #: How many listings matched the disc at all, and how many the search returned.
     matched: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     considered: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -175,3 +184,11 @@ class DiscValuation(Base, UUIDPrimaryKeyMixin):
     run_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("valuation_runs.id", ondelete="SET NULL"), nullable=True
     )
+
+    @property
+    def sales_backed(self) -> bool:
+        return self.sales_count >= 3 and self.sales_price is not None
+
+    @property
+    def effective_price(self) -> Decimal | None:
+        return self.sales_price if self.sales_backed else self.price

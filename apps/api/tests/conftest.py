@@ -83,6 +83,19 @@ def _no_background_valuation_run(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _no_background_used_sales_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep the owner-started eBay pass inside its test transaction and fake client."""
+    import uuid
+
+    import src.routers.valuation as valuation_router
+
+    async def _skip(run_id: uuid.UUID) -> None:
+        del run_id
+
+    monkeypatch.setattr(valuation_router, "continue_admin_run", _skip)
+
+
+@pytest.fixture(autouse=True)
 def _no_background_bid_trial(monkeypatch: pytest.MonkeyPatch) -> None:
     """Batch V6: "Try bid prices" carries on after the response, as the valuation run does.
 

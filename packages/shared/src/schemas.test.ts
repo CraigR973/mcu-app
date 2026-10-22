@@ -1730,6 +1730,7 @@ describe('Batch T6 — the collection\'s value', () => {
       valuedAs: 'as used copies',
       discs: 1457,
       pricedDiscs: 1302,
+      salesBackedDiscs: 0,
       notPricedDiscs: 103,
       uncheckedDiscs: 52,
       checkedFrom: '2026-09-23T03:00:00Z',
@@ -1738,6 +1739,8 @@ describe('Batch T6 — the collection\'s value', () => {
       budgetLeft: 438,
       dailyShare: 750,
       minSample: 3,
+      salesRun: null,
+      salesBudgetLeft: 600,
       run: {
         id: '00000000-0000-4000-8000-000000000001',
         trigger: 'job',
@@ -1755,6 +1758,7 @@ describe('Batch T6 — the collection\'s value', () => {
     }
     expect(collectionValueSchema.parse(value)).toEqual(value)
     expect(collectionValueSchema.parse({ ...value, total: null, run: null }).total).toBeNull()
+    expect(collectionValueSchema.parse({ ...value, salesBackedDiscs: 12 }).salesBackedDiscs).toBe(12)
   })
 
   it('reads what the button did', () => {

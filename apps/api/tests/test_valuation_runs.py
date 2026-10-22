@@ -38,6 +38,7 @@ from src.database import get_db
 from src.ebay.client import EbayError
 from src.main import app
 from src.models.collection_item import CollectionItem
+from src.models.ebay_sold import EbayUsedRun
 from src.models.movie import Movie
 from src.models.profile import Profile, UserRole
 from src.models.valuation import DiscValuation, ValuationRun
@@ -710,6 +711,29 @@ async def test_the_button_says_so_when_ebay_is_not_configured(
     assert response.status_code == 503
     assert await db.scalar(select(func.count()).select_from(ValuationRun)) == 0
     assert background == []
+
+
+async def test_used_sales_first_pass_is_admin_only_and_does_not_run_on_read(
+    db: AsyncSession, ebay_keys: None
+) -> None:
+    mark = await _person(db, UserRole.viewer)
+    async with _as(db, mark) as client:
+        read = await client.get("/api/v1/collection/value")
+        refused = await client.post("/api/v1/collection/value/sales/refresh")
+    assert read.status_code == 200
+    assert read.json()["salesRun"] is None
+    assert refused.status_code == 403
+    assert await db.scalar(select(func.count()).select_from(EbayUsedRun)) == 0
+
+    craig = await _person(db, UserRole.admin)
+    async with _as(db, craig) as client:
+        started = await client.post("/api/v1/collection/value/sales/refresh")
+        again = await client.post("/api/v1/collection/value/sales/refresh")
+    assert started.status_code == 200, started.text
+    assert started.json()["outcome"] == "started"
+    assert again.json()["outcome"] == "running"
+    run = await db.scalar(select(EbayUsedRun))
+    assert run is not None and run.trigger == "admin" and run.calls == 0
 
 
 async def test_a_copy_carries_its_stored_price(db: AsyncSession) -> None:

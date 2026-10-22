@@ -21,6 +21,8 @@ from src.database import AsyncSessionLocal
 from src.ebay.client import EbayClient
 from src.models.ebay_watch import EbayWatchRun
 from src.services import heartbeat
+from src.services.ebay_sold import start_run as start_used_run
+from src.services.ebay_sold import work_run as work_used_run
 from src.services.ebay_watch.runs import (
     StartOutcome,
     deliver_now,
@@ -65,17 +67,34 @@ async def main() -> int:
             if outcome.run is None:
                 # Batch X2: a beat when no pass starts, so idle reads differently from stopped.
                 await heartbeat.beat(db, heartbeat.EBAY, outcome.reason.replace("_", " "))
-                return report(outcome, None)
-            result = await work_run(db, client, outcome.run.id)
-            await deliver_now(db, result.told)
-            # Batch X3: "pushed" is what reached a phone, not what was queued.
-            await record_delivered(db, result.run)
-            await heartbeat.beat(
-                db,
-                heartbeat.EBAY,
-                f"{result.run.status.replace('_', ' ')}, {result.run.listings_seen} listings read",
-            )
-    return report(outcome, result.run)
+                watch_code = report(outcome, None)
+            else:
+                result = await work_run(db, client, outcome.run.id)
+                await deliver_now(db, result.told)
+                # Batch X3: "pushed" is what reached a phone, not what was queued.
+                await record_delivered(db, result.run)
+                await heartbeat.beat(
+                    db,
+                    heartbeat.EBAY,
+                    (
+                        f"{result.run.status.replace('_', ' ')}, "
+                        f"{result.run.listings_seen} listings read"
+                    ),
+                )
+                watch_code = report(outcome, result.run)
+            if watch_code:
+                return watch_code
+            used_reason, used_run = await start_used_run(db, trigger="job")
+            if used_run is not None:
+                used_run = await work_used_run(db, client, used_run.id)
+                print(
+                    f"Used-sale pass {used_run.status}: {used_run.searched} searches, "
+                    f"{used_run.checked} ended items checked, {used_run.calls} calls"
+                )
+                return 1 if used_run.status == "stopped" else 0
+            if used_reason not in {"inactive", "budget_spent"}:
+                print(f"Used-sale pass: {used_reason}")
+    return 0
 
 
 if __name__ == "__main__":

@@ -81,6 +81,7 @@ import {
   watchHistoryStatusSchema,
   statsSchema,
   valuationStartSchema,
+  usedSalesStartSchema,
   specBackfillSchema,
   specBatchStartSchema,
   specDecisionSchema,
@@ -120,6 +121,7 @@ import {
   type BidTrialStart,
   type CollectionValue,
   type ValuationStart,
+  type UsedSalesStart,
   type SpecBackfill,
   type SpecBatchStart,
   type SpecDecision,
@@ -251,6 +253,7 @@ export type {
   CopyValuation,
   ValuationRun,
   ValuationStart,
+  UsedSalesStart,
   SpecBackfill,
   SpecBatchStart,
   SpecCandidate,
@@ -1301,6 +1304,14 @@ export async function startValuationRun(): Promise<ValuationStart> {
   return parseOrThrowApiError(
     await authFetch('/collection/value/refresh', { method: 'POST' }),
     valuationStartSchema,
+  )
+}
+
+/** Admin-only: starts the first observed-sales pass; the scheduled eBay job continues it. */
+export async function startUsedSalesRun(): Promise<UsedSalesStart> {
+  return parseOrThrowApiError(
+    await authFetch('/collection/value/sales/refresh', { method: 'POST' }),
+    usedSalesStartSchema,
   )
 }
 

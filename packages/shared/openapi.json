@@ -3368,6 +3368,26 @@
        }
       ]
      },
+     "salesBackedDiscs": {
+      "minimum": 0.0,
+      "title": "Salesbackeddiscs",
+      "type": "integer"
+     },
+     "salesBudgetLeft": {
+      "minimum": 0.0,
+      "title": "Salesbudgetleft",
+      "type": "integer"
+     },
+     "salesRun": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/UsedSalesRunResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "total": {
       "anyOf": [
        {
@@ -3396,6 +3416,7 @@
      "valuedAs",
      "discs",
      "pricedDiscs",
+     "salesBackedDiscs",
      "notPricedDiscs",
      "uncheckedDiscs",
      "checkedFrom",
@@ -3404,7 +3425,9 @@
      "budgetLeft",
      "dailyShare",
      "minSample",
-     "run"
+     "run",
+     "salesRun",
+     "salesBudgetLeft"
     ],
     "title": "CollectionValueResponse",
     "type": "object"
@@ -3916,7 +3939,8 @@
        {
         "enum": [
          "used",
-         "new_scaled"
+         "new_scaled",
+         "sales"
         ],
         "type": "string"
        },
@@ -13164,6 +13188,130 @@
     "title": "UsageResponse",
     "type": "object"
    },
+   "UsedSalesRunResponse": {
+    "properties": {
+     "budget": {
+      "minimum": 0.0,
+      "title": "Budget",
+      "type": "integer"
+     },
+     "calls": {
+      "minimum": 0.0,
+      "title": "Calls",
+      "type": "integer"
+     },
+     "checked": {
+      "minimum": 0.0,
+      "title": "Checked",
+      "type": "integer"
+     },
+     "ended": {
+      "minimum": 0.0,
+      "title": "Ended",
+      "type": "integer"
+     },
+     "finishedAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finishedat"
+     },
+     "lastError": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lasterror"
+     },
+     "searched": {
+      "minimum": 0.0,
+      "title": "Searched",
+      "type": "integer"
+     },
+     "sold": {
+      "minimum": 0.0,
+      "title": "Sold",
+      "type": "integer"
+     },
+     "startedAt": {
+      "title": "Startedat",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "running",
+       "finished",
+       "budget_spent",
+       "stopped",
+       "abandoned"
+      ],
+      "title": "Status",
+      "type": "string"
+     },
+     "trigger": {
+      "enum": [
+       "admin",
+       "job"
+      ],
+      "title": "Trigger",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status",
+     "trigger",
+     "startedAt",
+     "finishedAt",
+     "budget",
+     "calls",
+     "searched",
+     "checked",
+     "sold",
+     "ended",
+     "lastError"
+    ],
+    "title": "UsedSalesRunResponse",
+    "type": "object"
+   },
+   "UsedSalesStartResponse": {
+    "properties": {
+     "outcome": {
+      "enum": [
+       "started",
+       "inactive",
+       "running",
+       "budget_spent"
+      ],
+      "title": "Outcome",
+      "type": "string"
+     },
+     "run": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/UsedSalesRunResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "outcome",
+     "run"
+    ],
+    "title": "UsedSalesStartResponse",
+    "type": "object"
+   },
    "UsedValueResponse": {
     "description": "What one disc on the shelf is worth as a used copy — Batch X6 (#256).\n\n``basis`` says how: ``used``, the median of ``sampleSize`` used listings; ``new_scaled``,\nNew's median of ``sampleSize`` listings times ``factor``, the used-to-New ratio measured\nfor the format, because used listings were too few. ``low`` and ``high`` are the range of\nthose listings before any factor.",
     "properties": {
@@ -13387,7 +13535,8 @@
      "valueBasis": {
       "enum": [
        "used",
-       "new_scaled"
+       "new_scaled",
+       "sales"
       ],
       "title": "Valuebasis",
       "type": "string"
@@ -16673,6 +16822,33 @@
      }
     ],
     "summary": "Refresh Collection Value",
+    "tags": [
+     "valuation"
+    ]
+   }
+  },
+  "/api/v1/collection/value/sales/refresh": {
+   "post": {
+    "description": "Craig starts the first live pass; subsequent passes run in the existing eBay job.",
+    "operationId": "refresh_used_sales_api_v1_collection_value_sales_refresh_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UsedSalesStartResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Refresh Used Sales",
     "tags": [
      "valuation"
     ]

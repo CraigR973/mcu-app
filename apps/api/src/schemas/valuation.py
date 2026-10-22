@@ -34,6 +34,25 @@ class ValuationRunResponse(BaseModel):
     lastError: str | None
 
 
+class UsedSalesRunResponse(BaseModel):
+    status: RunStatus
+    trigger: Literal["admin", "job"]
+    startedAt: UtcDatetime
+    finishedAt: UtcDatetime | None
+    budget: int = Field(ge=0)
+    calls: int = Field(ge=0)
+    searched: int = Field(ge=0)
+    checked: int = Field(ge=0)
+    sold: int = Field(ge=0)
+    ended: int = Field(ge=0)
+    lastError: str | None
+
+
+class UsedSalesStartResponse(BaseModel):
+    outcome: Literal["started", "inactive", "running", "budget_spent"]
+    run: UsedSalesRunResponse | None
+
+
 class CollectionValueResponse(BaseModel):
     """What the owned discs add up to as used copies, at current eBay asking prices."""
 
@@ -47,6 +66,7 @@ class CollectionValueResponse(BaseModel):
     #: only one from before X6, which a run values again first.
     discs: int = Field(ge=0)
     pricedDiscs: int = Field(ge=0)
+    salesBackedDiscs: int = Field(ge=0)
     notPricedDiscs: int = Field(ge=0)
     uncheckedDiscs: int = Field(ge=0)
     #: The oldest and newest price behind the total.
@@ -60,6 +80,8 @@ class CollectionValueResponse(BaseModel):
     minSample: int = Field(gt=0)
     #: The latest run, finished or not.
     run: ValuationRunResponse | None
+    salesRun: UsedSalesRunResponse | None
+    salesBudgetLeft: int = Field(ge=0)
 
 
 class ValuationStartResponse(BaseModel):
@@ -87,7 +109,7 @@ class CopyValuationResponse(BaseModel):
     minSample: int = Field(gt=0)
     #: Batch X6. ``used``: the median of ``sampleSize`` used listings. ``new_scaled``: New's
     #: median of ``sampleSize`` listings times ``factor``. Null when not priced.
-    valueBasis: Literal["used", "new_scaled"] | None
+    valueBasis: Literal["used", "new_scaled", "sales"] | None
     factor: str | None
     #: The range of the listings the value rests on, before any factor.
     low: str | None

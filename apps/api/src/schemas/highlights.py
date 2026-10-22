@@ -67,7 +67,7 @@ class ValuableDiscResponse(BaseModel):
     sampleSize: int = Field(ge=0)
     #: Batch X6: how the value was reached (``used`` or ``new_scaled``), the factor for the
     #: second, and the range of the listings behind it, for "7 used listings, £4–£9".
-    valueBasis: Literal["used", "new_scaled"]
+    valueBasis: Literal["used", "new_scaled", "sales"]
     factor: str | None
     low: str
     high: str

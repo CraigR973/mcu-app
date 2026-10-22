@@ -656,6 +656,7 @@ class CollectionValue:
     total: Decimal | None
     discs: int
     priced: int
+    sales_backed: int
     not_priced: int
     checked_from: datetime | None
     checked_to: datetime | None
@@ -679,16 +680,26 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
     now = now or utcnow()
     await abandon_stale_runs(db, now=now)
     discs = owned_valued_discs()
-    priced = DiscValuation.status == "priced"
+    sales_backed = and_(
+        DiscValuation.sales_count >= MIN_SAMPLE, DiscValuation.sales_price.is_not(None)
+    )
+    priced = or_(DiscValuation.status == "priced", sales_backed)
+    effective_price = case((sales_backed, DiscValuation.sales_price), else_=DiscValuation.price)
+    effective_checked = case(
+        (sales_backed, DiscValuation.sales_checked_utc), else_=DiscValuation.checked_utc
+    )
     row = (
         await db.execute(
             select(
                 func.count(discs.c.id),
                 func.count(DiscValuation.id).filter(priced),
-                func.count(DiscValuation.id).filter(DiscValuation.status == "not_priced"),
-                func.sum(DiscValuation.price).filter(priced),
-                func.min(DiscValuation.checked_utc),
-                func.max(DiscValuation.checked_utc),
+                func.count(DiscValuation.id).filter(
+                    and_(DiscValuation.status == "not_priced", ~sales_backed)
+                ),
+                func.count(DiscValuation.id).filter(sales_backed),
+                func.sum(effective_price).filter(priced),
+                func.min(effective_checked),
+                func.max(effective_checked),
             )
             .select_from(discs)
             .outerjoin(
@@ -701,7 +712,7 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
             )
         )
     ).one()
-    total_discs, priced_discs, not_priced_discs, total, first, last = row
+    total_discs, priced_discs, not_priced_discs, sales_backed_discs, total, first, last = row
     # A bid trial (Batch V6) prices nothing, so it is not "the last run" of the value.
     latest = (
         await db.execute(
@@ -715,6 +726,7 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
         total=total,
         discs=int(total_discs),
         priced=int(priced_discs),
+        sales_backed=int(sales_backed_discs),
         not_priced=int(not_priced_discs),
         checked_from=first,
         checked_to=last,
