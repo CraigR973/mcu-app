@@ -316,7 +316,11 @@ async def scan(
         )
         if usual is None:
             ref = await stored_ref(
-                db, movie_id=candidate.film.movie_id, format_code=candidate.format_code, now=now
+                db,
+                movie_id=candidate.film.movie_id,
+                format_code=candidate.format_code,
+                now=now,
+                require_used_figure=True,
             )
             if ref is None:
                 if client.search_calls + client.attempts_per_search > run.budget:

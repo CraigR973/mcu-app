@@ -27,7 +27,7 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
@@ -394,7 +394,9 @@ async def test_the_factor_is_measured_from_the_stored_values_and_every_run_moves
 
     assert (await used_factors(db))["4k_uhd"] == UsedFactor(Decimal("0.70"), MIN_FACTOR_PAIRS)
 
-    # Nothing is due, but a film added now is, and its run ends by re-scaling.
+    # These synthetic stored figures represent an already completed AA10b campaign;
+    # the new film alone is due, and its run ends by re-scaling the others.
+    await db.execute(update(DiscValuation).values(value_basis="used_quartile"))
     added = await _film(db, "Blade Runner 2049", tmdb_id=990_335_986)
     await _disc(db, added, "blu_ray")
     run = await _run_now(db, FakeEbay({"Blade Runner 2049 Blu-ray": BLADE_RUNNER}))
@@ -615,7 +617,9 @@ async def test_five_failures_in_a_row_stop_the_run_and_old_prices_are_kept(
     ebay = FakeEbay()
     ebay.default = EbayError("eBay search failed (HTTP 500)", 500)
 
-    run = await _run_now(db, ebay)
+    started = await start_run(db, trigger="admin", now=NOW)
+    assert started.run is not None
+    run = await work_run(db, ebay, started.run.id, clock=lambda: NOW)
 
     assert (run.status, run.calls, run.failed, run.priced) == ("stopped", 5, 5, 0)
     assert run.last_error is not None and "HTTP 500" in run.last_error

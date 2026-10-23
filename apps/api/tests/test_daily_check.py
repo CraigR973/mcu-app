@@ -346,6 +346,7 @@ async def test_a_deal_older_than_its_sources_freshness_is_named(db: AsyncSession
             title_snapshot="An old find kept alive",
             url="https://www.ebay.co.uk/itm/990000000201",
             price=Decimal("5.00"),
+            usual_sources=[{"source": "Lower quartile of used asks, postage in", "price": "8.00"}],
             currency="GBP",
             first_seen_at_utc=NOW - timedelta(days=4),
             last_seen_at_utc=NOW - timedelta(days=4),

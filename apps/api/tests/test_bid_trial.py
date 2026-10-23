@@ -647,7 +647,7 @@ async def test_a_trial_and_a_valuation_run_never_spend_the_share_at_once(
     await _disc(db, film, "blu_ray")  # never priced: due a valuation
     await _priced(db, "Heat", "blu_ray", "9.99")
 
-    valuation = await start_run(db, trigger="job", now=NOW)
+    valuation = await start_run(db, trigger="admin", now=NOW)
     assert valuation.reason == "started" and valuation.run is not None
     blocked = await start_trial(db, started_by=None, now=NOW)
     assert (blocked.reason, blocked.run) == ("running", None)
@@ -656,7 +656,7 @@ async def test_a_trial_and_a_valuation_run_never_spend_the_share_at_once(
     await db.commit()
     trial = await start_trial(db, started_by=None, now=NOW)
     assert trial.reason == "started"
-    assert (await start_run(db, trigger="job", now=NOW)).reason == "running"
+    assert (await start_run(db, trigger="admin", now=NOW)).reason == "running"
 
 
 async def test_a_failed_search_is_reported_and_too_many_requests_stops_the_trial(

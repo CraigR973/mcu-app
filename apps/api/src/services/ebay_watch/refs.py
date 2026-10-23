@@ -129,9 +129,14 @@ def _values(estimate: PriceEstimate, format_code: str, *, factor: Decimal) -> di
 
 
 async def stored_ref(
-    db: AsyncSession, *, movie_id: uuid.UUID, format_code: str, now: datetime
+    db: AsyncSession,
+    *,
+    movie_id: uuid.UUID,
+    format_code: str,
+    now: datetime,
+    require_used_figure: bool = False,
 ) -> EbayPriceRef | None:
-    """The stored usual price, if it is still fresh and has the used listings pooled."""
+    """A fresh reference, with the figure required by the caller."""
     ref = await db.scalar(
         select(EbayPriceRef).where(
             EbayPriceRef.movie_id == movie_id, EbayPriceRef.format_code == format_code
@@ -140,7 +145,7 @@ async def stored_ref(
     if (
         ref is not None
         and ref.checked_utc >= now - FRESH_FOR
-        and USED_FIGURE in (ref.by_condition or {})
+        and (USED_FIGURE if require_used_figure else USED_POOL) in (ref.by_condition or {})
     ):
         return ref
     return None
