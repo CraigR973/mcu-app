@@ -106,6 +106,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/auth/me",
         "/api/v1/auth/pin",
         "/api/v1/auth/onboarding/complete",
+        # AA8. The personal MARKS collage is bearer-token protected rather than a public
+        # web asset; the Home page turns its bytes into an in-memory object URL.
+        "/api/v1/brand/heroes/{hero}",
         "/api/v1/movies",
         "/api/v1/movies/{movie_id}",
         "/api/v1/movies/{movie_id}/copies",

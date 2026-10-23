@@ -16165,6 +16165,52 @@
     ]
    }
   },
+  "/api/v1/brand/heroes/{hero}": {
+   "get": {
+    "description": "Serve one private photo hero to a signed-in person only.",
+    "operationId": "serve_hero_api_v1_brand_heroes__hero__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "hero",
+      "required": true,
+      "schema": {
+       "title": "Hero",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Serve Hero",
+    "tags": [
+     "brand"
+    ]
+   }
+  },
   "/api/v1/calendar": {
    "get": {
     "description": "Upcoming releases, soonest first — §6.5's `/calendar`.",

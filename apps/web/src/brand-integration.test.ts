@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -28,12 +28,12 @@ describe('brand integration hierarchy', () => {
     expect(uses).toEqual(['pages/OnboardingPage.tsx'])
   })
 
-  it('does not use photographic hero artwork as interface chrome', () => {
-    const uses = sources
-      .filter(({ source }) => source.includes('/brand/hero-photo'))
-      .map(({ path }) => path)
-
-    expect(uses).toEqual([])
+  it('keeps photographic heroes out of Vercel public assets and puts the banner only on Home', () => {
+    expect(existsSync(join(repoRoot, 'apps/web/public/brand/hero-photo-five-v3.png'))).toBe(false)
+    expect(existsSync(join(repoRoot, 'apps/web/public/brand/hero-photo-v3.png'))).toBe(false)
+    expect(sources.filter(({ source }) => source.includes('<PrivateHero')).map(({ path }) => path)).toEqual([
+      'pages/DashboardPage.tsx',
+    ])
   })
 
   it('uses the rights-independent social card at its native dimensions', () => {

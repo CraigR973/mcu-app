@@ -32,6 +32,9 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   ...api,
 }))
+vi.mock('@/components/brand/PrivateHero', () => ({
+  PrivateHero: ({ hero, alt }: { hero: string; alt: string }) => <img data-testid="private-hero" data-hero={hero} alt={alt} />,
+}))
 
 import DashboardPage from './DashboardPage'
 
@@ -160,6 +163,16 @@ afterEach(() => {
 })
 
 describe('Home as rows, the collection first — Batch W2', () => {
+  it('shows AA8’s private five-image MARKS banner above the Home rows', async () => {
+    renderHome()
+    const hero = await screen.findByTestId('private-hero')
+    expect(hero.getAttribute('data-hero')).toBe('five')
+    expect(hero.getAttribute('alt')).toContain('MARKS')
+    expect(hero.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'The collection' }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+  })
+
   it('runs the collection first, then disc releases, the highlights, memories, completion and activity', async () => {
     renderHome()
     await screen.findByRole('heading', { level: 2, name: 'Completion' })

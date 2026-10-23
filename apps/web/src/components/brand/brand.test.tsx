@@ -46,26 +46,23 @@ describe('markAsset', () => {
   it.each([
     [512, 'app-icon-concept-art'],
     [192, 'app-icon-concept-art'],
-    [191, 'stack-mark.svg'],
-    [128, 'stack-mark.svg'],
-    [127, 'stack-mark-compact.svg'],
-    [96, 'stack-mark-compact.svg'],
-    [32, 'stack-mark-compact.svg'],
-    [31, 'micro-mark-16.svg'],
+    [60, 'app-icon-concept-art'],
+    [40, 'app-icon-concept-art'],
+    [28, 'app-icon-concept-art'],
+    [27, 'micro-mark-16.svg'],
     [16, 'micro-mark-16.svg'],
   ])('draws %ipx with %s', (size, expected) => {
     expect(markAsset(size, 'dark')).toContain(expected)
   })
 
-  it('pairs the vector tiers with the surface, and leaves the emblem alone', () => {
-    expect(markAsset(128, 'light')).toContain('stack-mark-light.svg')
-    expect(markAsset(64, 'light')).toContain('stack-mark-compact-light.svg')
-    // The concept-art emblem is a platform icon with one approved field.
+  it('keeps the emblem on its one approved field in either theme', () => {
+    expect(markAsset(128, 'light')).toBe(markAsset(128, 'dark'))
+    expect(markAsset(64, 'light')).toBe(markAsset(64, 'dark'))
     expect(markAsset(512, 'light')).toBe(markAsset(512, 'dark'))
   })
 
-  it('never asks the concept art to draw below its 192px minimum', () => {
-    for (let size = 8; size < 192; size += 1) {
+  it('keeps the tiny favicon-scale mark vector', () => {
+    for (let size = 8; size < 28; size += 1) {
       expect(markAsset(size, 'dark')).not.toContain('concept-art')
     }
   })
@@ -92,9 +89,9 @@ describe('BrandMark', () => {
     expect(img.style.height).toBe('36px')
   })
 
-  it('picks the light artwork on a light surface', () => {
+  it('keeps the original screen-print emblem on a light surface', () => {
     renderWithTheme(<BrandMark size={64} />, 'light')
-    expect(document.querySelector('img')?.getAttribute('src')).toContain('compact-light')
+    expect(document.querySelector('img')?.getAttribute('src')).toContain('concept-art')
   })
 })
 

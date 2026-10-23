@@ -11,6 +11,7 @@ import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
 import { Highlights } from '@/components/dashboard/Highlights'
 import { PosterCard, Shelf } from '@/components/dashboard/Shelf'
 import { CompletionSetPanel } from '@/components/insights/CompletionSetPanel'
+import { PrivateHero } from '@/components/brand/PrivateHero'
 import { PageHeader } from '@/components/ui/page-header'
 import { ComingToDisc } from '@/components/releases/ComingToDisc'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -82,6 +83,12 @@ export default function DashboardPage() {
         eyebrow="Your archive"
         title="Home"
         description="The collection at a glance, what is coming to disc, the highlights, and how close each set is to complete."
+      />
+
+      <PrivateHero
+        hero="five"
+        alt="MARKS — five moments from the collection"
+        className="mb-9 aspect-[40/19] w-full rounded-xl border border-border object-cover shadow-soft"
       />
 
       <div className="space-y-9">

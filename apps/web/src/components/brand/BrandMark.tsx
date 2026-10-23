@@ -11,13 +11,11 @@ import { cn } from '@/lib/utils'
  *
  * | Rendered size | Artwork |
  * |---|---|
- * | >= 192 px | concept-art emblem |
- * | 128-191 px | display vector mark |
- * | 32-127 px | optically strengthened compact mark |
- * | < 32 px | pixel-hinted micro mark |
+ * | >= 28 px | original screen-print emblem |
+ * | < 28 px | pixel-hinted micro mark |
  *
- * Anything below 192 px is theme-paired. The concept-art emblem is a platform icon with a
- * single approved field and no light variant — that is deliberate, not an omission.
+ * The screen-print emblem has one approved field and no light variant — that is deliberate,
+ * not an omission. The favicon and notification badge use the micro mark directly.
  */
 
 const CONCEPT_ART = '/brand/app-icon-concept-art-512.png'
@@ -25,11 +23,8 @@ const MICRO = '/brand/micro-mark-16.svg'
 
 /** Exported for the unit test: the tier table is the part worth pinning down. */
 export function markAsset(size: number, theme: 'light' | 'dark'): string {
-  if (size >= 192) return CONCEPT_ART
-  if (size >= 128) return theme === 'dark' ? '/brand/stack-mark.svg' : '/brand/stack-mark-light.svg'
-  if (size >= 32) {
-    return theme === 'dark' ? '/brand/stack-mark-compact.svg' : '/brand/stack-mark-compact-light.svg'
-  }
+  void theme
+  if (size >= 28) return CONCEPT_ART
   return MICRO
 }
 

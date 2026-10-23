@@ -187,6 +187,36 @@ async def _upload(client: AsyncClient, item: CollectionItem, raw: bytes | None =
     )
 
 
+class TestPrivateBrandArtwork:
+    """AA8 — the MARKS collage is private archive artwork, not a public web asset."""
+
+    async def test_a_signed_in_person_can_read_the_home_hero(self) -> None:
+        async def signed_in() -> object:
+            return object()
+
+        app.dependency_overrides[get_current_user] = signed_in
+        try:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                response = await client.get("/api/v1/brand/heroes/five")
+        finally:
+            app.dependency_overrides.clear()
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert "private" in response.headers["cache-control"]
+        assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
+
+    async def test_the_hero_is_not_anonymous(self) -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as anonymous:
+            response = await anonymous.get("/api/v1/brand/heroes/five")
+
+        assert response.status_code == 401
+
+
 class TestGallery:
     """§3.10's acceptance — *"upload succeeds; photos appear in gallery; deletion works"*."""
 

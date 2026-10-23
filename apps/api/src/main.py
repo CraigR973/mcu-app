@@ -29,6 +29,7 @@ from src.routers import (
     auth,
     barcode,
     box_sets,
+    brand,
     calendar,
     collection,
     deals,
@@ -175,6 +176,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(brand.router)
 app.include_router(movies.router)
 app.include_router(watch_log.router)
 app.include_router(memories.router)
