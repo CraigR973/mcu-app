@@ -112,10 +112,10 @@ class UsedAsks:
 class UsedValue:
     """What one disc on the shelf is worth as a used copy — Batch X6, #256.
 
-    ``basis`` says which rule gave it: ``"used"``, the median of three or more used listings;
-    or ``"new_scaled"``, New's median times the used-to-New ``factor`` measured for the
-    format, when used listings are too few. ``sample_size``, ``low`` and ``high`` describe the
-    listings it rests on, before any factor, so a person can see what stands behind it.
+    ``basis`` says which rule gave it: ``"used_quartile"``, the postage-inclusive lower
+    quartile of at least three used Buy It Now listings; or ``"new_scaled"``, New's median
+    times the measured used-to-New ``factor`` when used listings are too few.
+    ``sample_size``, ``low`` and ``high`` describe the listings behind the figure.
     """
 
     price: Decimal

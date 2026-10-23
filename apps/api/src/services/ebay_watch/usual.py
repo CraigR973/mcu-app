@@ -1,25 +1,9 @@
-"""What "usually" means on an eBay find — Batch V8, snag 1.
+"""Shop price alert comparisons and the earlier eBay-find yardstick.
 
-Before V8 it was eBay's figure alone: the median asking price of matching UK Buy It Now
-listings (:mod:`refs`). Craig's answer to snag 1 (`DECISIONS.md` #228) was to average it
-with the shops' prices, and V7 being shelved (#237) leaves eBay's figure on asking prices.
-
-**Since Batch X1 a shop's price never raises the usual** (MK47-06; #239 amended). Averaged,
-a £24.99 shop price lifted a £12 eBay median to £18.50 and made a £12 listing a "35% off"
-deal. Now the cheapest shop price is a ceiling on a **New** listing's usual, which it can
-only lower, and a used listing's usual is eBay's used figure alone: a shop sells new copies.
-
-**The shops' part is thin by design.** The nightly check asks every watched shop about the
-Wanted list and nothing else, so a shop price exists only for a Wanted film. Asking the
-shops about every eBay find would multiply requests to the three that answer ``429``
-(Batch 20b). Most finds are upgrades on owned films, which no shop is asked about, and for
-those "usually" stays eBay's figure.
-
-**Like for like, as eBay's figure is.** A shop's price counts only when it is the same
-format (read off the listing it priced, as the nightly check reads it) and a standard
-edition (by the eBay matcher's own rule), from the last seven days, the latest per shop.
-A £49.99 limited edition averaged into a standard disc's usual price would make an ordinary
-listing look like a deal.
+AA10b's eBay deal scan uses the disc's used figure in :mod:`scan`, not ``UsualPrice``.
+``shop_usual`` still gives a wanted shop listing a like-for-like New asking reference.
+The old ``UsualPrice`` and condition yardstick remain available for that earlier rule and
+its regression tests; a shop's price can only lower the reference.
 """
 
 from __future__ import annotations

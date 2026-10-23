@@ -1,9 +1,8 @@
-"""What each disc is being asked for on eBay, and the runs that found out — Batch T6.
+"""Stored disc figures and the bounded runs that found them — Batch T6 onward.
 
-Snag 7 asked what the collection is worth. eBay's sold prices are closed to apps
-(`DECISIONS.md` #16, #126), so the answer is the one the film page's check already gives,
-**current asking prices**, for every physical disc. It is stored so that a total is a sum
-over rows rather than 1,454 live searches.
+One film-format row holds a current asking-value stand-in and, since AA10a, the median
+advertised price of observed sales when three or more are available. Home totals each
+physical disc from those rows rather than making a live search for every copy.
 
 - :class:`DiscValuation`: one row per **film and format**, because one eBay search prices
   exactly that. Two Blu-rays of *Heat* are one search and one price, counted twice in the
@@ -43,9 +42,8 @@ VALUED_FORMATS = ("4k_uhd", "blu_ray", "dvd")
 #: carries none. There is no third state that guesses.
 VALUATION_STATUSES = ("priced", "not_priced")
 
-#: How a priced disc's value was reached since Batch X6 (#256): ``used``, the median of its
-#: used listings; ``new_scaled``, New's median times the format's used-to-New factor. Null on
-#: a value from before X6, which was the largest condition group's median (#209).
+#: ``used`` is the legacy median; ``used_quartile`` is AA10b's postage-inclusive Buy It Now
+#: stand-in; ``new_scaled`` is the sparse-used fallback. Null marks an unpriced or pre-X6 row.
 VALUE_BASES = ("used", "used_quartile", "new_scaled")
 
 #: ``job`` is the scheduled command; ``admin`` is the button on Home. ``trial`` is Home's "Try

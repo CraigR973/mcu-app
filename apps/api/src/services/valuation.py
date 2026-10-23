@@ -1,4 +1,4 @@
-"""Pricing the whole collection at current eBay asking prices — Batch T6, snag 7.
+"""Pricing physical discs from eBay asking figures and observed sales — Batch T6 onward.
 
 **What a run does.** It finds the films due a price, searches eBay once per film and
 format, judges the listings with the film page's own estimator, and stores the answer. It
@@ -18,12 +18,11 @@ stops at a share of eBay's daily allowance, and the next run carries on from the
 - :data:`RUN_STALE_AFTER`: 30 minutes without a heartbeat means the process running it died.
 - :data:`MAX_FAILURES_IN_A_ROW`: 5. An eBay outage should stop a run, not spend it on errors.
 
-**Every total is "at current eBay asking prices"**, which usually run above what discs
-actually sell for. Sold prices are closed to apps (#16, #126).
-
-**Each disc is valued as a used copy** (Batch X6, #256 amending #209): the median of its
-used listings when there are three or more, otherwise New's median times the used-to-New
-factor for its format (``pricing.used_value``). The factor is **measured from the stored
+**Each disc is valued as a used copy**: three observed sales use their advertised-price
+median; otherwise AA10b uses the postage-inclusive lower quartile of current used Buy It
+Now asks, or New's median times the used-to-New factor when used asks are scarce
+(``pricing.used_value``). A sale accepted through Best Offer may have closed below its
+advertised price. The factor is **measured from the stored
 values themselves**: the median ratio over the films with three or more of each, per format
 (:func:`used_factors`). Two sources on 11–14 Oct disagreed about it by format (4K 0.60 or
 0.71, Blu-ray 0.69 or 0.59, from 19–113 films each), so no constant is trusted for long:
