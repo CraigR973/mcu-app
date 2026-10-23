@@ -11,6 +11,13 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Group AA sitting 1, AA10b:** On Home, under **Collection value**, press **Update values**
+  once after the `deccd87` release. This starts a live eBay re-price of the existing
+  film-format pairs; scheduled runs continue it at no more than 750 valuation calls per UTC
+  day. When Home says none are due, send its total and priced/sales-backed disc counts so
+  the after value can be compared with the measured before total, **£16,867.11**. Do not
+  press **Check used sales now** for this step; that is AA10a's separate pass. Sitting 2
+  remains closed until its own go.
 - ~~**Group AA sitting 1, AA10a (item 36):** start and read back the first live used-sale
   pass.~~ **Done 22 Oct:** Craig started it; 598 searches stored 6,179 listings, and the run
   ended at its daily budget without an error. AA10b may proceed.

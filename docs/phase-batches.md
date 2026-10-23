@@ -4468,7 +4468,8 @@ and deals picks are `DECISIONS.md` #289 and #290. **Criteria authored 2026-10-21
 under each batch below are its acceptance criteria, so `DECISIONS.md` #54 does not apply.
 **Re-verify each point in the code first** (`batch-start.md` step 3): the code was read at
 `0dfec18` on 20 Oct. **Sitting 1 began at Craig's go; AA10a's first live eBay pass was read
-back on 22 Oct (`OWNER-ACTIONS.md` 36), and AA10b is next.** The other sittings wait for
+back on 22 Oct (`OWNER-ACTIONS.md` 36). AA10b's code shipped 23 Oct; its live re-price is
+the owner checkpoint.** The other sittings wait for
 Craig's go.
 
 **How each lands** (Group Y's way, on Craig's Mac or from Codex): its own `feat/` branch from
@@ -4513,7 +4514,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA10~~ | 23, 24: what a disc really sells for, a design note — **written 21 Oct (`8a33c19`)** | 🔴 | — done | — done |
 | ~~AA10a~~ | ~~23, 24: record used listings and their sales, value on sales~~ — **shipped 22 Oct `eb315c2`** ([PR #100](https://github.com/CraigR973/mcu-app/pull/100)); Craig's first live pass read back: 598 searches, 6,179 active listings, 0 sold yet, 1,399 pairs still due under the daily cap | 🔴 | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High |
-| AA10b | 23, 24: deals and values on the used stand-in figure | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA10b | 23, 24: deals and values on the used stand-in figure — **code live 23 Oct `deccd87`** ([PR #101](https://github.com/CraigR973/mcu-app/pull/101)); Craig's one-time re-price and Home after total remain the owner checkpoint | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA10c | 23: the stand-in settled from recorded sales | 🟢 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA11 | 25: lend and borrow as it happens — asked for, out, back, shelved | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 
@@ -4720,7 +4721,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b · 2: AA1 → AA8 → AA2 · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 1 started 21 Oct; AA10a shipped 22 Oct after Craig's first live eBay pass and readback. AA10b is next; its pre-reprice Home total is £16,867.11.** The other sittings each wait for Craig's go. Run one sitting at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; owner re-price open) · 2: AA1 → AA8 → AA2 · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 1 paused at AA10b's live re-price and after-total checkpoint.** AA10a's first pass was read back 22 Oct. Home's measured before total is £16,867.11; Craig starts the re-price and reports its after total when none are due. The other sittings each wait for Craig's go. Run one sitting at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

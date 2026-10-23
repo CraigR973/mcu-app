@@ -2,224 +2,27 @@
 
 ## Now
 
-**22 Oct: AA10a's first live pass is read back; Group AA sitting 1 proceeds to AA10b.**
-The sold-price store and bounded weekly pass shipped in [PR #100](https://github.com/CraigR973/mcu-app/pull/100)
-(`eb315c2`), with migration `064`, seven green PR jobs and seven green postmerge jobs. Railway
-automatically deployed it; API and web matched the merge SHA, and readiness reported `db: ok`
-with every integration configured. Craig started the first live eBay pass on Home. It spent
-598 of 600 calls on 598 searches, stored 6,179 distinct active listings, found no sales yet,
-and finished at its budget without an error. Of 1,997 tracked film-format pairs, 1,399 remain
-due for later daily budgets. The pre-AA10b Home total is **£16,867.11** across 1,290 priced
-of 1,469 physical discs, 0 sales-backed. AA10b's one re-price and before/after total remain;
-sitting 2 is not authorised.
+**23 Oct: Group AA sitting 1 is paused at AA10b's owner re-price checkpoint.** AA10a's
+first live used-sale pass was read back on 22 Oct: 598 searches, 6,179 active listings,
+no recorded sales yet, and 1,399 of 1,997 tracked pairs still due under its daily cap.
+AA10b's code shipped in [PR #101](https://github.com/CraigR973/mcu-app/pull/101)
+(`deccd87`); the separate browser CI timeout fix shipped first in
+[PR #102](https://github.com/CraigR973/mcu-app/pull/102) (`2df5778`). All seven AA10b PR
+and postmerge jobs passed. Railway and Vercel serve `deccd87`; the API reports `db: ok`
+and push, AI, eBay, TMDB and Brave configured.
 
-**20 Oct: a time-zone fault in the stale-edit guard is fixed (#288, migration `063`).** Every
-naive-UTC column now defaults to `timezone('utc', now())` rather than a bare `now()`, so a new
-row's `updated_at` matches the trigger's UTC whatever the database's time zone. Production was
-safe only while Neon runs in UTC; its live zone was not checked from the Mac. No row rewritten.
-
-**20 Oct: Z1, the four faults the end-to-end suite found, is built (#287), and that is Group Z.**
-A first message in a new conversation keeps its Yes/No card however late the conversation's
-record arrives (a record asked for before the stream ended no longer speaks for the card). A
-disc added offline by TMDB id, series id or title, whose answer was lost, is read back through
-the duplicate check and settles. Formats read as the Archive names them on the barcode screen,
-in the Trash, in a price-alert push and in the offline banner (one server formatter, tied to the
-web's list by a test). Two likes cast at once make exactly one match (the night's row is locked
-while a vote is recorded). No migration, no live data step. Each fix was reverted once and its
-test seen to fail. **Local note, since fixed (#288):** on the scratchpad Postgres (Europe/London)
-two stale-edit tests failed on `main` too; the cause was the column defaults, not the tests.
-
-**19 Oct: Batch 38, the end-to-end suite, is built (#94, `DECISIONS.md` #285), and that finishes
-Group X.** `apps/e2e` runs the production web build in Chromium, Firefox and WebKit against the
-real API on a throwaway Postgres with every outside service faked, plus the five cron jobs run as
-Railway runs them: 29 cases on Chromium, 28 on Firefox (dictation skipped, no Web Speech API), 27
-on WebKit (2 skipped, reasons in #285), 5 job cases. A seventh CI job, `e2e`, runs on pull
-requests and `main` (about 10.5 minutes, 11 billed), **not on feature-branch pushes**. **WebKit
-cannot run on the Mac** (Playwright has no build for macOS 13): CI is where it runs. **The suite
-found and Batch 38 fixed** a first assistant message that could 500, a queue that could flush
-twice at once, and Safari's wording for a removed chunk. **Found, not fixed (#285):** a
-new-conversation card race, a TMDB-id add whose lost answer never settles, the raw `blu_ray` on
-the barcode screen. **Yours:** the two-phone movie night (16b) now also settles whether Safari
-shows a live match on an open page. Run it: `apps/e2e/README.md`.
-
-**18 Oct: X12c, terms and tidying, is shipped (#284; `833369c`, fix `e109b98`), and both its live steps ran at Craig's word the same day.** Settings has TMDB's logo and "not endorsed" notice and JustWatch is credited by the providers; TMDB data older than 150 days is refetched inside the calendar refresh (none is yet; the first is on 5 Feb 2027); Brave results go when a lookup settles; completion sets count the top ten billed and drop shorts and compilations. **Live steps:** `prune_spec_results --apply --expect 9456` deleted 9,456 of 15,516 stored Brave results (6,060 left: 5,210 on lookups still waiting for a person, 850 accepted pages); the completion-set refresh created 22 sets, updated 14, left 4, removed 22 no longer chosen, 0 errors (20 actor and 20 director sets, all refreshed 18 Oct). **Group X's sitting 5 is done**; 38, the end-to-end suite, is next at Craig's go.
-
-**18 Oct: X12b, phone type, targets and speed, is built (#283).** Re-measured first with R6's
-axe walker on the current build: the dark primary button is already 4.84:1 and no screen has an
-axe violation. Done: nothing under 12 px (390 small-text elements to 0), list links and the
-activity rows at 44 px (targets under 44 px 142 to 70; buttons, switches and in-sentence links
-not claimed), JSON compressed, the Archive list selecting the 14 columns it shows (5.4 MB to
-287 kB of database read on live data) and showing its first 60 films before the rest. Wall-clock
-speed on a phone is not measured; check it after the deploy. Next: X12c (terms and tidying; two
-live steps at Craig's word).
-
-**18 Oct: X12 is split into X12a, X12b, X12c at Craig's word (#282); X12a is built.** Home says
-"Films owned" and "Copies: N discs, M downloads"; the two Digital figures are labelled
-(Downloads in Formats, the Digital shelf in Where they live). One date family in `lib/utils.ts`,
-with a test that fails on a hand-formatted date. The movie-night shortlist, push and match read
-the film's title, year and poster; **a match is stored on the session** (migration 061) and
-shown on the night page. A copy's shelf prints once. **Tell Craig:** Mark's You page sends a
-line to Craig's "Needs attention" row (migration 062). Next: X12b (phone polish and speed),
-then X12c (terms and tidying, two live steps at Craig's word).
-
-**18 Oct: X11, Wanted shows shop prices, alerts need no limit, refusing shops asked weekly
-(#281), built at Craig's go after a re-measure.** The Wanted card lists each shop's latest
-price with its day and a link; a shop price strictly under the film's stored usual (same format
-and standard edition, fresh within 14 days) now alerts when the want has no limit (9 of 10
-had none). **The weekly criterion was amended:** no shop refuses *every* request (each of the
-three had 5-10 of 10 refused twice, and some retries got through, on each of the last 9
-nights), so a shop that refused at least half its requests on seven scheduled checks in a row
-(`retailers.refused_nights`, migration 060) is skipped by the scheduled check until a week
-after it was last asked; "Run now" asks all. **No live row was written:** every counter starts
-at 0, so the half-hour nights (26-29 minutes since 3 Oct) end about 26 Oct, unless Craig says to
-seed them (count shown first). Noticed, not X11's: Zavvi has priced nothing since 12 Oct. Next:
-X12, same sitting.
-
-**18 Oct: X10, one title rule and owned twins found, slimmed at Craig's word (#280).** Re-measured
-first: the four title rules still disagreed on 7 of 8 pairs, but Mark's identifying had merged
-all 5 split films and left 1 owned film unidentified, and no copies shared a barcode. Now one
-module, `services/title_key.py` (T9's fold and two levels), decides "same title" for Search,
-the add form, the spec check, the diary and refresh index and review finding; the diff over all
-1,939 live films moves 0 identifications. The add form says "You may already own this" for an
-unidentified owned twin, and names the copy a scanned barcode is already on (a box of two
-formats is one copy). Merged as `f8de7ab` (PR #86); production API and web report it, `db:
-ok`. **The 12 leftover film rows** (9 from the 18 Sep refresh, 3 since) **went to the Trash at
-Craig's word the same day**, audited as him and restorable: live films 1,939 → 1,927, 0
-leftovers left. Next: sitting 5, X11 → X12, at Craig's go.
-
-**18 Oct: Y6, a doubt shows only while what it is about is still owned (#279), at Craig's
-choice of option A, widened.** On 17–18 Oct a re-check doubt outlived the disc it named (#278
-binned it): Identify films counted it while the Archive and the film page could not show it.
-Now one rule decides, everywhere: a doubt naming a copy shows while that copy is owned and on
-the film; one naming no copy shows while the film has a copy. Binning or selling hides it,
-restoring or unselling brings it back; nothing is written either way. "Identified, in doubt"
-now counts films, equal to the Archive's "In doubt (N)"; the daily check counts films whose
-doubt is a fortnight old. No live data step: live has 0 open doubts.
-
-**17 Oct: Y5, Mark's 16 Oct points, built at Craig's word of 16 Oct (#277).** A disc can be
-added to, or one copy moved to, a TMDB series: the add form and "Move only this copy" list
-series apart from films, and a doubt's move opens already searched on the sheet's title, so
-BBC's *Life*, the 1979 *Tinker Tailor* and the 2019 *Name of the Rose* are one tap from their
-doubts (the series search reads two TMDB pages: BBC's *Life* is 28th for "Life"). The
-Archive's genre filter offers **Film Noir**, TMDB's keyword 9807, from `movies.tmdb_keyword_ids`
-(migration 059); every full TMDB fetch fills it, and the films identified before Y5 wait for
-`src.scripts.fill_keywords --apply`, **run 17 Oct at Craig's word: 1,905 filled, 225 noir, all
-on the shelf.** Merged as `99cee5e` (PR #82); production API and web report it, `db: ok`. A
-disc TMDB lacks is added by its title and filed as not a film. **Next for Craig or Mark:** the
-three series moves in the app (item 33, step 2).
-
-**12 Oct 2026: the wave 1 full review is done, and its remediation is Group X** (#253,
-`docs/reviews/BATCH_43-48_ROADMAP.md`). Six passes at `527522d` found 44 findings, 10 High; the
-roadmap's twelve packages are X1–X12 in `docs/phase-batches.md`, "Group X — the wave 1 review,
-planned 12 Oct", in five sittings (#255). **Sitting 1 is done: X1, the eBay scan, X2, the daily
-check, and X3, push that heals itself, shipped 12 Oct (`7979e19`, `857ee8f`, `adcae0d`).
-Sitting 2 is done: X7, the assistant repair (`aa6946d`), and X8, offline, drift and failure
-words (`e991281`), shipped 13 Oct. Sitting 3 is done in code, 14 Oct: X6, value as used copies
-(`51c81ff`, #267); X4, a weekly encrypted copy outside Neon with a monthly restore drill
-(`87a734b`, #268), its credential steps done by a session at Craig's word and its first run
-passing its drill; and X5, watch history (`19c9aad`, #269). **X5's live data steps wait for
-Craig's word:** the diary backfill (651 watches, about 490 films added; 105 doubtful entries
-listed for him), 7 of the 15 misattributed watches moved (8 doubtful), and Mark's username;
-then both press Sync now.** **Sitting 4 began 15–16 Oct at Craig's go ("code here, data at
-the Mac"): X9, catalogue truth, shipped 16 Oct ([#79](https://github.com/CraigR973/mcu-app/pull/79),
-#275).** An identified film can be "in doubt" (Identify films and its page say so); the spec and
-review jobs raise a doubt when a page for the film's own title is another year's; one copy can
-move to another film; inferred editions read "Probably …"; `MatchingEngine` decides nothing in
-the app. **Its live step ran on Craig's Mac, 16 Oct (item 32):** after Mark's afternoon of
-identifying fixed 14 of the review's 30, a clean dry run re-checked 1,486 copies (1,102 agree;
-5 different, 3 series, 3 not offered, 373 unsure) and, at Craig's word, raised all 384 as doubts
-on Identify films (0 kept before, 0 changed). Of the 30: 19 corrected, 10 wait as doubts, and
-King Kong [1976] was not re-checked, since its film was identified since. **Both settle the
-384 since Y4, built at Craig's word the same evening (#276):** the Archive's "In doubt" filter
-finds them, and each film page lists its open doubts with It's right, Correct match and Move
-only this copy, for Mark too, audited as whoever did it; Craig sees a keep under Recently
-identified and undoes it there. Mark added right copies of King Kong (1976) and Ghostbusters II
-rather than moving the wrong ones, so each old copy is now a duplicate to bin. Next: X10, at
-Craig's go.
-**Craig's, from X4: copy `~/.mcu-secrets/backup-age-key.txt` into the password manager.**
-Without a copy off the Mac, losing the Mac makes every backup unreadable.
-**What X6 does to Home:** every stored value was a new copy's price, so all 1,454 are due and
-count nowhere until re-priced; the scheduled runs of 15 and 16 Oct 04:00 UTC re-price them as
-used copies (750 eBay calls each, the usual share). Until then Home shows no total, then a
-partial one. Pressing **Update values** on Admin's Collection value today would start sooner.
-**Also 13 Oct, outside Group X: Group Y, Mark's requests, is done.** Y1 (`4840711`, #264):
-Mark edits, moves and deletes copies. Y2 (`e0b5bad`, #265): Move discs, a tray of discs found
-by search or scan, moved together and movable back (Group Y in `docs/phase-batches.md`). Mark's
-first feedback was fixed the same evening (`2ef3b8a`, #266): a shelf-only edit kept the old
-location text, and the delete question hid its own Yes on a phone. His second, 14 Oct
-(`f5f63e2`, #71, #270): the Lounge has a Side picker (Left / Right hand side, in `shelf`), and
-migration 055 filled in the side of 164 live and 160 trashed Lounge copies from their text;
-detail typed beside a section is kept after it ("Garage - top row"), where #266 had dropped
-it; the add form's TMDB search shows 20 and reads a trailing year, so "Texas Chainsaw Massacre
-1974" finds TMDB's "Chain Saw". **Mark's to do:** pick the side again for Nope and Us (both
-4K, Lounge), whose typed side #266 dropped; re-save 12 Angry Men's 4K (Front 4th) to tidy its
-text, and decide whether its location-less Blu-ray, added twice on 10 Oct, goes to the Trash. Home's "Needs attention" row is live for Craig; the
-first check runs at 08:00 UTC on 13 Oct, and until then the row says it has not run yet.
-**Mark's third feedback, 15 Oct, after working through about 200 unidentified films** (#272,
-#273), **shipped 15 Oct as `ef62257` (#75), verified in production by Craig** (API and web
-both report it, `db: ok`, every field `configured`): a title is flagged "Identify"
-exactly when "Still to identify" (#73, #271) lists it; on a phone the open Filters panel ends in
-"Show N films" and closes on the back gesture, where before it hid the films (the grid measured
-0px) and back left the app; and **Y3, built at Craig's word the same evening, identifies TV
-series from TMDB** (`movies.tmdb_tv_id`, migration 056), from a title's page by either person,
-"Correct match" included, so Band of Brothers and 11.22.63 can go from the films they were
-matched to, to the series they are. The 34 series T9 set aside are back under "Still to
-identify". **Owner action 31 ran on Craig's Mac, 15 Oct (#274):** the read-only pass found 45
-titles; Craig moved The Kennedys to Mark's list, then authorised the live plan. It identified
-33 series, left the second Shetland row waiting because its series ID was already held, and
-failed on none. The first live `/tv/{id}` answers worked with the series model. The read-only
-film check examined 1,852 identified films and found 9 suspects, with no TMDB failures. Mark
-still has 11 titles to choose and the agreed film-matched series to correct (item 31).
-
-| Batch | State |
-|---|---|
-| ~~X1~~ → ~~X2~~ → ~~X3~~, sitting 1 | done 12 Oct (`7979e19` #258, `857ee8f` #259, `adcae0d` #260) |
-| ~~X7~~ (`aa6946d` #262) → ~~X8~~ (`e991281` #263), sitting 2 | done 13 Oct |
-| ~~Y1~~ (`4840711` #264) → ~~Y2~~ (`e0b5bad` #265) | done 13 Oct |
-| ~~Y3~~ (`ef62257` #75, #273), TV series, with #272's two fixes | code done 15 Oct; live pass identified 33, 1 duplicate waits; read-only film check found 9 suspects; Mark's review remains (item 31) |
-| ~~Y4~~ (#276), Mark settles the doubts from the film page | shipped 16 Oct; the 384 are both people's to settle |
-| ~~Y5~~ (`99cee5e` #82, #277), series added and moved, Film Noir, add by title | shipped 17 Oct; keywords filled (225 noir); the three series moves are Craig's or Mark's (item 33) |
-| ~~Y6~~ (#279), doubts on a film with no copy | shipped 18 Oct; no data step |
-| ~~X6~~ (`51c81ff` #267) → ~~X4~~ (`87a734b` #268), sitting 3 | done 14 Oct; values re-priced by the runs of 15–16 Oct; backups weekly from 19 Oct |
-| ~~X5~~ (`19c9aad` #269), sitting 3 | done in code 14 Oct; live data steps at Craig's word, by 31 Oct |
-| ~~X9~~ ([#79](https://github.com/CraigR973/mcu-app/pull/79), #275), sitting 4 | shipped 16 Oct; the live re-check ran 16 Oct, 384 doubts raised; settling them is Craig's (item 32) |
-| ~~X10~~ (`f8de7ab` #86, #280), one title rule, owned twins | shipped 18 Oct; the 12 leftover rows trashed at Craig's word |
-| X11 → X12 | sitting 5 (#255), at Craig's go |
-| 38, the end-to-end suite | at Craig's go, last; six cases added by the review |
-| 21 · 22c · 33 → 34 | unchanged: 21 waits on data; 22c and email parked |
-
-- **Live faults (12 Oct, read-only):** the eBay deal scan read 0 listings in 45 of 45 runs
-  from 9 Oct until X1's deploy (stored mark 21 Oct 16:35); the first pass after X1's deploy (20:23 UTC) read 2,709 listings and found 21 deals; 30 copies are confidently the wrong film; every second
-  message to the assistant failed until X7 (13 Oct; a live follow-up is Craig's to try); no copy of the database exists outside Neon's six-hour
-  window. Pushes reach both phones again, re-registered by hand on 11 Oct.
-- **The nightly jobs (UTC):** 02:00 `cron-specs` (specs, then reviews); 03:00 `cron-scrape` (Zavvi
-  and Arrow answer, the Shopify shops refuse, #247; shown Crashed every night by design until
-  X2); 08:00 reminders; `cron-ebay` every two hours (blind until X1); `cron-values` on the 1st,
-  2nd, 15th and 16th, its first run with work on 1 Nov 04:00.
-- **The gate** is six CI jobs (#248). Locally: API 1,188 passed and 650 skipped without Postgres
-  (11 Oct), web 525, shared 131.
-- **Craig's open items** (`OWNER-ACTIONS.md`): a copy of the backup's private key off the Mac
-  (X4, 14 Oct); 29 connect eBay; 22 the Neon
-  password (left for now, 12 Oct); the Identify films (165) and Disc specs (525) queues; the
-  384 re-check doubts on Identify films (item 32, 16 Oct); Y5's keyword backfill and the
-  three series discs (item 33, 17 Oct; the keyword backfill is done).
-
-**Live numbers (12 Oct, read-only):**
-- **Collection:** 1,889 live copies (1,466 discs, 422 downloads, 1 unlabelled); 1,891 films,
-  209 without a TMDB id.
-- **Identify:** 157 identified, 165 waiting, 35 set aside. **Disc specs:** 734 done, 525 waiting.
-- **Value:** £23,604 over 1,300 priced discs, 92.5% of it new-copy asking prices; X6 (14 Oct)
-  re-prices it as used copies on 15–16 Oct, roughly £12,800–£17,200 by the review's estimate.
-- **Watch history:** Craig synced once (11 Oct, 4 written); Mark has no username stored (X5).
-
-**The Now entries this block replaced** (5 Oct, Group W) are in git: `git show 527522d:STATUS.md`.
-The Log keeps a dated line for each.
+**The live AA10b re-price has not started.** Home's measured before total is £16,867.11
+across 1,290 priced of 1,469 physical discs, with 0 sales-backed values. The old stored
+asking values remain until Craig presses **Home → Collection value → Update values** once.
+The campaign then continues through scheduled runs, at most 750 eBay calls per UTC day,
+until Home says none are due. Read back its after total and priced/sales-backed counts;
+only then close AA10b. The next Group AA sitting is not authorised.
 
 ## Next
 
-**Group AA sitting 1:** AA10b now builds deals and values on the used stand-in figure.
-The pre-reprice Home total is £16,867.11; report the total after its one re-price.
-Do not start sitting 2 in this run.
+**Group AA sitting 1:** Craig starts AA10b's re-price once on Home. The daily scheduled
+runs finish the backlog; read back Home's total when none are due and compare it with
+£16,867.11. Do not start sitting 2 in this run.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -612,6 +415,8 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-23 (AA10b code shipped; owner checkpoint open)** — [PR #101](https://github.com/CraigR973/mcu-app/pull/101) merged as `deccd87` after the separate browser CI timeout repair, [PR #102](https://github.com/CraigR973/mcu-app/pull/102) (`2df5778`). The used Buy It Now lower quartile includes postage; every eBay find, New included, needs to be at least 10% under the disc's used figure. Earlier eBay finds remain stored but are withheld until re-judged. The owner-started re-price covers every existing film-format pair and continues within the 750-call daily share. Local API 1,593 passed with 845 Mac database skips; web/shared 671 passed; lint, type checks and builds passed. All seven PR and postmerge jobs passed, including Postgres 17, image boot, Chromium, Firefox, WebKit and jobs. Production API and web serve `deccd87` with `db: ok` and all integrations configured. No AA10b live re-price was run; Craig's before/after Home total remains open.
+- **2026-10-23 (CI gate repair before AA10b)** — The docs-only main run at `92c494d` hit its 40-minute E2E job limit while Ubuntu was still downloading Playwright dependencies; the rerun was cancelled after the cause was confirmed. PR #102 raised only that job limit to 90 minutes, kept all browser cases, and passed the full gate. Main's exact `2df5778` run and production SHA/readiness also passed before AA10b was merged. AA10b's first Postgres run found six failures (owner-run gate fixtures, a legacy shop reference, and an old deal freshness fixture); its second found one invalid scaled-value test fixture. The third passed without relaxing the gate.
 - **2026-10-22 (AA10a first live pass, owner checkpoint cleared)** — Craig pressed Home's
   **Start used-sale tracking**. Read-only production queries found one admin run: 598 of 600
   calls, 598 searches, 6,179 distinct active listings, 0 sold/ended, no error, status

@@ -6345,3 +6345,16 @@ contemporaneous.
      sold classification. The weekly pass spends at most 600 calls per UTC day and remains
      inactive until Craig starts the first live pass in Admin.
 
+
+292. **AA10b's re-price is one owner-started campaign, continued by the existing scheduled
+     valuation job (23 Oct).** The daily valuation share is 750 eBay calls, while the
+     collection has about 2,000 film-format pairs. A single Home button press therefore
+     records the campaign start; each successful search marks one pre-start pair complete,
+     whether its previous value used a used median, a New-based fallback, or had no price.
+     Later scheduled runs continue the remaining pairs within the same daily share. Before
+     Craig presses the button, scheduled valuation waits while legacy used values remain,
+     so Home's before total does not change piecemeal. Failed searches keep their old
+     checked time and stay due. Old eBay deal rows remain for audit but leave the live feed
+     until a fresh scan judges them against the new used figure. No extra Railway service or
+     hosting setting was added. The live start and after-total readback remain Craig's
+     checkpoint in `OWNER-ACTIONS.md`; this decision does not authorise an agent to run it.
