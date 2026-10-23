@@ -2,15 +2,13 @@
 
 ## Now
 
-**23 Oct: Group AA sitting 1 is paused while AA10b's re-price finishes.** AA10a's
-first live used-sale pass was read back on 22 Oct: 598 searches, 6,179 active listings,
-no recorded sales yet, and 1,399 of 1,997 tracked pairs still due under its daily cap.
-AA10b's code shipped in [PR #101](https://github.com/CraigR973/mcu-app/pull/101)
-(`deccd87`); the separate browser CI timeout fix shipped first in
-[PR #102](https://github.com/CraigR973/mcu-app/pull/102) (`2df5778`). All seven AA10b PR
-and postmerge jobs passed. The later checkpoint handoff is `22fa632`: all seven CI jobs
-passed, Railway and Vercel serve that SHA, and the API reports `db: ok`
-and push, AI, eBay, TMDB and Brave configured.
+**23 Oct: Group AA sitting 2 is authorised while AA10b's re-price remains open.** AA1's
+quick fixes shipped in [PR #103](https://github.com/CraigR973/mcu-app/pull/103)
+(`4cc207d`): the installed app now starts on Home, the dark top bar uses the page surface,
+Home's labels and links are corrected, film tabs fit at 375 px, and Where to watch begins
+with the owned copies. All seven PR and postmerge jobs passed, including WebKit; Railway and
+Vercel serve `4cc207d`, and the API reports `db: ok` with push, AI, eBay, TMDB and Brave
+configured. Each iPhone must remove and re-add the app to receive the new start page.
 
 **Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
 £16,867.11 across 1,290 priced of 1,469 physical discs, with 0 sales-backed values.
@@ -18,13 +16,15 @@ The first run spent 748 of its 750-call budget, checked 748 pairs without failur
 left 719 due. Home's interim total is £15,961.05 across 1,314 priced discs, 0 sales-backed.
 The next scheduled valuation runs are 1 and 2 Nov at 04:00 UTC; each can spend up to 750
 calls for its UTC day. Read back the final Home total and priced/sales-backed counts when
-none are due; only then close AA10b. The next Group AA sitting is not authorised.
+none are due; only then close AA10b. AA8 is the next batch in the authorised sitting; AA2's
+completion-set refresh remains a separate live checkpoint at Craig's word.
 
 ## Next
 
-**Group AA sitting 1:** Wait for the 1–2 Nov scheduled valuation runs to finish AA10b's
-719 due pairs. Read back Home's total when none are due and compare it with £16,867.11.
-Do not start sitting 2 in this run.
+**Group AA sitting 2:** Start AA8 as its own branch and pull request. Then start AA2 only
+after AA8 closes; stop before AA2's live completion-set refresh until Craig authorises it.
+AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
+Home's final total and compare it with £16,867.11.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -417,6 +417,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-23 (AA1 shipped, Group AA sitting 2)** — [PR #103](https://github.com/CraigR973/mcu-app/pull/103) merged as `4cc207d`: the PWA starts on Home after each iPhone removes and re-adds it; the dark top bar matches the page with a clear lower rule; Home no longer shows Top rated, labels Best discs accurately and links to the Archive; film tabs fit at 375 px; and Where to watch starts with owned copies. Local API 1,593 passed with 845 expected Mac database skips; web/shared 673 passed; lint, type checks and production build passed. Chromium, Firefox and jobs passed locally; Mac WebKit is unavailable. All seven PR and postmerge CI jobs passed, including WebKit. Railway and Vercel both serve `4cc207d`; readiness is `db: ok` and every integration is configured. AA10b's re-price remains open; AA8 is next, and AA2's live refresh remains Craig's checkpoint.
 - **2026-10-23 (AA10b owner pass started; after-total pending)** — Craig pressed **Home → Collection value → Update values** once. Read-only production queries found one AA10b admin run, `budget_spent`: 748 calls, 675 priced pairs, 73 not priced, 0 failed, 719 remaining. A separate read-only query matching Home's effective-value rule found 1,469 physical discs, 1,314 priced, 0 sales-backed and £15,961.05 total. This is interim against the £16,867.11 before total. The scheduled valuation job runs on 1, 2, 15 and 16 of each month at 04:00 UTC, so its next continuation is 1 Nov, with 2 Nov available if needed. Do not press again or close AA10b until the final readback.
 - **2026-10-23 (AA10b code shipped; owner checkpoint open)** — [PR #101](https://github.com/CraigR973/mcu-app/pull/101) merged as `deccd87` after the separate browser CI timeout repair, [PR #102](https://github.com/CraigR973/mcu-app/pull/102) (`2df5778`). The used Buy It Now lower quartile includes postage; every eBay find, New included, needs to be at least 10% under the disc's used figure. Earlier eBay finds remain stored but are withheld until re-judged. The owner-started re-price covers every existing film-format pair and continues within the 750-call daily share. Local API 1,593 passed with 845 Mac database skips; web/shared 671 passed; lint, type checks and builds passed. All seven PR and postmerge jobs passed, including Postgres 17, image boot, Chromium, Firefox, WebKit and jobs. Production API and web serve `deccd87` with `db: ok` and all integrations configured. No AA10b live re-price was run; Craig's before/after Home total remains open.
 - **2026-10-23 (CI gate repair before AA10b)** — The docs-only main run at `92c494d` hit its 40-minute E2E job limit while Ubuntu was still downloading Playwright dependencies; the rerun was cancelled after the cause was confirmed. PR #102 raised only that job limit to 90 minutes, kept all browser cases, and passed the full gate. Main's exact `2df5778` run and production SHA/readiness also passed before AA10b was merged. AA10b's first Postgres run found six failures (owner-run gate fixtures, a legacy shop reference, and an old deal freshness fixture); its second found one invalid scaled-value test fixture. The third passed without relaxing the gate.
