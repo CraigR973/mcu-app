@@ -6358,3 +6358,20 @@ contemporaneous.
      until a fresh scan judges them against the new used figure. No extra Railway service or
      hosting setting was added. The live start and after-total readback remain Craig's
      checkpoint in `OWNER-ACTIONS.md`; this decision does not authorise an agent to run it.
+
+293. **AA8's original screen-print emblem is the app-scale mark, and MARKS photographic art is
+     a private Home asset (23 Oct).** Craig approved the phone-size comparison on 21 Oct.
+
+     - **The mark.** The original screen-print emblem, not a still collage, appears at 28 px and
+       above in the app: top bar, sidebar, loading screen and Home header. The 16 px favicon and
+       notification badge retain the pixel-hinted vector mark, where the emblem is noise.
+     - **The photographs.** The compact five-image MARKS banner appears only at the top of
+       signed-in Home. Its two source files moved from Vercel's public directory into the API
+       image; `GET /api/v1/brand/heroes/{hero}` requires the ordinary bearer token and carries a
+       private cache header. Home fetches the bytes and creates an in-memory object URL, so the
+       browser never receives a public or token-bearing image address. A source-level boundary
+       test permits the private banner only on Home; the existing personalised poster remains
+       only in onboarding.
+     - **Supersedes #140 only for this signed-in Home banner.** Photo art is no longer confined
+       to onboarding, but is still absent from sign-in and every public screen. The choice does
+       not make the photographs public brand assets.

@@ -4469,8 +4469,8 @@ under each batch below are its acceptance criteria, so `DECISIONS.md` #54 does n
 **Re-verify each point in the code first** (`batch-start.md` step 3): the code was read at
 `0dfec18` on 20 Oct. **Sitting 1 began at Craig's go; AA10a's first live eBay pass was read
 back on 22 Oct (`OWNER-ACTIONS.md` 36). AA10b's code shipped 23 Oct; its live re-price remains
-the owner checkpoint. Sitting 2 was authorised while that readback remains open: AA1 shipped
-23 Oct; AA8 is next.** The later sittings wait for Craig's go.
+the owner checkpoint. Sitting 2 was authorised while that readback remains open: AA1 and AA8
+shipped 23 Oct; AA2 is next.** The later sittings wait for Craig's go.
 
 **How each lands** (Group Y's way, on Craig's Mac or from Codex): its own `feat/` branch from
 `main`, a pull request, CI green **including the `e2e` job**, a merge commit, production
@@ -4510,7 +4510,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | AA5 | 19: each film's details on a night, IMDb's score | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA6 | 21: feeling lucky, alone on Home and in a night | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA7 | 4: profile pictures | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
-| AA8 | 1: the artwork in the app | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| ~~AA8~~ | ~~1: the artwork in the app~~ — **shipped 23 Oct `6b039bf`** ([PR #104](https://github.com/CraigR973/mcu-app/pull/104)) | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA10~~ | 23, 24: what a disc really sells for, a design note — **written 21 Oct (`8a33c19`)** | 🔴 | — done | — done |
 | ~~AA10a~~ | ~~23, 24: record used listings and their sales, value on sales~~ — **shipped 22 Oct `eb315c2`** ([PR #100](https://github.com/CraigR973/mcu-app/pull/100)); Craig's first live pass read back: 598 searches, 6,179 active listings, 0 sold yet, 1,399 pairs still due under the daily cap | 🔴 | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High |
@@ -4592,7 +4592,7 @@ to Craig; the build is planned from his picks. No code before his picks.
   photos are, resized, size-capped. Migration granted as above.
 - Tests. Gate green.
 
-### AA8 — The artwork 🟢
+### ~~AA8 — The artwork~~ 🟢 **shipped 23 Oct (`6b039bf`, [PR #104](https://github.com/CraigR973/mcu-app/pull/104))**
 - **1.** The app-icon art (the original screen-print emblem, not built from stills) shows in the
   app: Home's header and the loading screen, at the size it shows on a phone's Home Screen
   (about 60 px). **Asked 21 Oct: the art in place of the vector marks too** — the top bar (28 px
@@ -4721,7 +4721,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → AA8 → AA2 · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 2 is authorised and AA1 shipped 23 Oct; AA8 is next.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's completion-set refresh remains a separate live checkpoint at Craig's word. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → AA2 · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 2 is authorised; AA1 and AA8 shipped 23 Oct, and AA2 is next.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's completion-set refresh remains a separate live checkpoint at Craig's word. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
