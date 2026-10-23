@@ -396,7 +396,11 @@ async def test_the_factor_is_measured_from_the_stored_values_and_every_run_moves
 
     # These synthetic stored figures represent an already completed AA10b campaign;
     # the new film alone is due, and its run ends by re-scaling the others.
-    await db.execute(update(DiscValuation).values(value_basis="used_quartile"))
+    await db.execute(
+        update(DiscValuation)
+        .where(DiscValuation.value_basis == "used")
+        .values(value_basis="used_quartile")
+    )
     added = await _film(db, "Blade Runner 2049", tmdb_id=990_335_986)
     await _disc(db, added, "blu_ray")
     run = await _run_now(db, FakeEbay({"Blade Runner 2049 Blu-ray": BLADE_RUNNER}))
