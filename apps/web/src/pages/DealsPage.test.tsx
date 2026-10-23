@@ -51,7 +51,7 @@ const deal: Deal = {
   usualListings: null,
 }
 
-/** An eBay find (V8, X1): eBay's figure lowered to Zavvi's cheaper price, a used copy. */
+/** An eBay find judged against the postage-inclusive used figure. */
 const ebayFind: Deal = {
   ...deal,
   id: '3f2504e0-4f89-11d3-9a0c-0305e82c3305',
@@ -60,15 +60,12 @@ const ebayFind: Deal = {
   url: 'https://www.ebay.co.uk/itm/298708357566',
   formatCode: '4k_uhd',
   price: '4.75',
-  wasPrice: '14.00',
-  discountPercent: 66,
+  wasPrice: '12.00',
+  discountPercent: 60,
   lastSeenAt: '2026-09-30T19:14:57Z',
   condition: 'Very good',
   usualListings: 12,
-  usualSources: [
-    { source: 'eBay', price: '16.00' },
-    { source: 'Zavvi', price: '14.00' },
-  ],
+  usualSources: [{ source: 'Lower quartile of used asks, postage in', price: '12.00' }],
   soldListingsUrl:
     'https://www.ebay.co.uk/sch/i.html?_nkw=Star+Wars%3A+The+Last+Jedi+4K&_sacat=617&LH_Sold=1&LH_Complete=1',
 }
@@ -112,11 +109,11 @@ describe('DealsPage', () => {
     expect(html).toContain('Cross Of Iron')
   })
 
-  it('says what an eBay find\'s "usually" is made of, and links to what it sold for', () => {
+  it('says what an eBay find was judged against, and links to sold listings', () => {
     const html = markup(<DealsPage />, [ebayFind])
 
-    expect(html).toContain('with postage · usually £14.00 (asking prices, 12 listings)')
-    expect(html).toContain('eBay £16.00 before postage · Zavvi £14.00')
+    expect(html).toContain('with postage · judged against £12.00')
+    expect(html).toContain('Lower quartile of used asks, postage in: £12.00')
     expect(html).toContain('Sold on eBay')
     // React escapes the ampersands in an attribute.
     expect(html).toContain(ebayFind.soldListingsUrl?.replaceAll('&', '&amp;'))

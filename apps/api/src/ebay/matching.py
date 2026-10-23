@@ -576,6 +576,9 @@ class Listing:
     #: ``price`` is then the **cheapest** variation, which is a "from" price and not
     #: comparable with a single-item one.
     item_group_type: str | None
+    #: A missing shipping quote is treated as free for the asking-price comparison.
+    postage: Decimal = Decimal("0")
+    buy_now: bool = True
 
 
 @dataclass(frozen=True)
@@ -737,6 +740,19 @@ def listing_from_summary(summary: dict[str, object]) -> Listing | None:
     condition_id = summary.get("conditionId")
     web_url = summary.get("itemWebUrl")
     group_type = summary.get("itemGroupType")
+    options = summary.get("shippingOptions")
+    shipping = (
+        options[0] if isinstance(options, list) and options and isinstance(options[0], dict) else {}
+    )
+    shipping_cost = shipping.get("shippingCost")
+    raw_postage = shipping_cost.get("value") if isinstance(shipping_cost, dict) else None
+    try:
+        postage = Decimal(raw_postage) if isinstance(raw_postage, str) else Decimal("0")
+        if not postage.is_finite() or postage < 0:
+            postage = Decimal("0")
+    except (ArithmeticError, ValueError):
+        postage = Decimal("0")
+    buying = summary.get("buyingOptions")
 
     return Listing(
         item_id=item_id,
@@ -750,6 +766,8 @@ def listing_from_summary(summary: dict[str, object]) -> Listing | None:
         ),
         country=location.get("country") if isinstance(location, dict) else None,
         item_group_type=group_type if isinstance(group_type, str) else None,
+        postage=postage,
+        buy_now=isinstance(buying, list) and "FIXED_PRICE" in buying,
     )
 
 

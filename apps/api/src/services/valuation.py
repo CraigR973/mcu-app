@@ -132,6 +132,7 @@ class DueFilm:
     identified: bool
     #: A TV title: "Complete Series" and "Season" listings are the thing itself (Batch X6).
     is_tv: bool = False
+    year: int | None = None
 
     @property
     def search_title(self) -> str:
@@ -143,9 +144,10 @@ def _owned_discs() -> tuple[ColumnElement[str | None], list[ColumnElement[bool]]
     return _valued_format_sql(), [owned_copy(), Movie.deleted_at.is_(None)]
 
 
-def _due_condition(now: datetime) -> ColumnElement[bool]:
+def _due_condition(now: datetime, *, include_reprice: bool = False) -> ColumnElement[bool]:
     """Never priced, priced over 30 days ago, priced before the film was last identified,
-    or priced before Batch X6.
+    or priced before Batch X6. Once the owner starts AA10b's re-price, include values
+    on the old used median until each pair has been searched again.
 
     The third is Batch T9's. A film priced under its spreadsheet title ("Captain Ameica") was
     searched for under that title; once identified, the search the film page would run is
@@ -154,12 +156,27 @@ def _due_condition(now: datetime) -> ColumnElement[bool]:
     X6's: a value from before it is a new copy's price, and ``used_count`` is what every value
     since carries.
     """
-    return or_(
+    normal = or_(
         DiscValuation.id.is_(None),
         DiscValuation.checked_utc < now - REVALUE_AFTER,
         DiscValuation.checked_utc < Movie.last_tmdb_sync_utc,
         DiscValuation.used_count.is_(None),
     )
+    if not include_reprice:
+        return normal
+    # Every stored pair, including sparse used and unpriced ones, is searched once after
+    # Craig starts the campaign. A checked time at or after its start marks completion;
+    # a failed search retains the old time and stays due. Before the first start, Home
+    # shows the full workload while scheduled runs remain paused on legacy used values.
+    started = (
+        select(func.min(ValuationRun.started_utc))
+        .where(
+            ValuationRun.trigger == "admin",
+            ValuationRun.report["priceRule"].astext == "used_quartile",
+        )
+        .scalar_subquery()
+    )
+    return or_(normal, DiscValuation.checked_utc < func.coalesce(started, now))
 
 
 def current_value() -> ColumnElement[bool]:
@@ -195,11 +212,20 @@ def _film_formats() -> Subquery:
     )
 
 
-async def due_films(db: AsyncSession, *, now: datetime, limit: int) -> list[DueFilm]:
+async def due_films(
+    db: AsyncSession, *, now: datetime, limit: int, include_reprice: bool = False
+) -> list[DueFilm]:
     """The films and formats due a price, never-priced first, then the oldest."""
     pairs = _film_formats()
     rows = await db.execute(
-        select(pairs.c.movie_id, pairs.c.format_code, Movie.title, Movie.tmdb_id, Movie.is_tv)
+        select(
+            pairs.c.movie_id,
+            pairs.c.format_code,
+            Movie.title,
+            Movie.tmdb_id,
+            Movie.is_tv,
+            Movie.year,
+        )
         .join(Movie, Movie.id == pairs.c.movie_id)
         .outerjoin(
             DiscValuation,
@@ -208,7 +234,7 @@ async def due_films(db: AsyncSession, *, now: datetime, limit: int) -> list[DueF
                 DiscValuation.format_code == pairs.c.format_code,
             ),
         )
-        .where(_due_condition(now))
+        .where(_due_condition(now, include_reprice=include_reprice))
         .order_by(DiscValuation.checked_utc.asc().nulls_first(), Movie.title, pairs.c.format_code)
         .limit(limit)
     )
@@ -219,12 +245,13 @@ async def due_films(db: AsyncSession, *, now: datetime, limit: int) -> list[DueF
             title=title,
             identified=tmdb_id is not None,
             is_tv=bool(is_tv),
+            year=year,
         )
-        for movie_id, code, title, tmdb_id, is_tv in rows
+        for movie_id, code, title, tmdb_id, is_tv, year in rows
     ]
 
 
-async def count_due(db: AsyncSession, *, now: datetime) -> int:
+async def count_due(db: AsyncSession, *, now: datetime, include_reprice: bool = False) -> int:
     pairs = _film_formats()
     total = await db.scalar(
         select(func.count())
@@ -237,7 +264,7 @@ async def count_due(db: AsyncSession, *, now: datetime) -> int:
                 DiscValuation.format_code == pairs.c.format_code,
             ),
         )
-        .where(_due_condition(now))
+        .where(_due_condition(now, include_reprice=include_reprice))
     )
     return int(total or 0)
 
@@ -407,7 +434,7 @@ def valuation_from(estimate: PriceEstimate, format_code: str, *, factor: Decimal
         status="priced",
         price=value.price,
         sample_size=value.sample_size,
-        condition_label="Used" if value.basis == "used" else "New",
+        condition_label="Used" if value.basis == "used_quartile" else "New",
         value_basis=value.basis,
         factor=value.factor,
         low=value.low,
@@ -504,7 +531,26 @@ async def start_run(
     """
     now = now or utcnow()
     await abandon_stale_runs(db, now=now)
-    due = await count_due(db, now=now)
+    activated = False
+    if trigger == "job":
+        # Do not change Home's prices piecemeal before Craig starts AA10b's one-time
+        # re-price. The admin run itself is the durable switch for later scheduled work.
+        activation = await db.scalar(
+            select(ValuationRun.id)
+            .where(
+                ValuationRun.trigger == "admin",
+                ValuationRun.report["priceRule"].astext == "used_quartile",
+            )
+            .limit(1)
+        )
+        legacy_value = await db.scalar(
+            select(DiscValuation.id).where(DiscValuation.value_basis == "used").limit(1)
+        )
+        activated = activation is not None
+        if not activated and legacy_value is not None:
+            return StartOutcome("nothing_due", None, 0, await budget_left(db, now=now))
+    reprice = trigger == "admin" or activated
+    due = await count_due(db, now=now, include_reprice=reprice)
     left = await budget_left(db, now=now)
     if await running_run(db) is not None:
         return StartOutcome("running", None, due, left)
@@ -525,6 +571,7 @@ async def start_run(
         priced=0,
         not_priced=0,
         failed=0,
+        report={"priceRule": "used_quartile"} if reprice else None,
     )
     db.add(run)
     try:
@@ -554,7 +601,12 @@ async def work_run(
     try:
         factors = await used_factors(db)
         # One more than the budget could reach, to know whether the budget cut the list.
-        films = await due_films(db, now=run.started_utc, limit=run.budget + 1)
+        films = await due_films(
+            db,
+            now=run.started_utc,
+            limit=run.budget + 1,
+            include_reprice=(run.report or {}).get("priceRule") == "used_quartile",
+        )
         cut_short = len(films) > run.budget
         films = films[: run.budget]
         outcome: str | None = None
@@ -569,6 +621,7 @@ async def work_run(
                     film_title=film.search_title,
                     format_code=film.format_code,
                     is_series=film.is_tv,
+                    film_year=film.year,
                 )
             except EbayNotConfigured:
                 run.last_error = "eBay is not configured in this deployment."
@@ -603,7 +656,11 @@ async def work_run(
         rescaled = await rescale(db, factors)
         finished = clock()
         run.calls = client.search_calls
-        run.remaining = await count_due(db, now=finished)
+        run.remaining = await count_due(
+            db,
+            now=finished,
+            include_reprice=(run.report or {}).get("priceRule") == "used_quartile",
+        )
         if outcome is None:
             # Without a cut, everything due when the run started was tried. Anything left is
             # a film eBay failed on, or one that fell due since; both go first next time.
@@ -730,7 +787,7 @@ async def collection_value(db: AsyncSession, *, now: datetime | None = None) -> 
         not_priced=int(not_priced_discs),
         checked_from=first,
         checked_to=last,
-        due=await count_due(db, now=now),
+        due=await count_due(db, now=now, include_reprice=True),
         budget_left=await budget_left(db, now=now),
         latest_run=latest,
     )

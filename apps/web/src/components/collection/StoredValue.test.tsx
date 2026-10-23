@@ -60,6 +60,13 @@ describe('StoredValue', () => {
     expect(html).toContain('based on 3 sales in 90 days, postage included, £12.00–£22.00')
   })
 
+  it('labels the used asking lower quartile with postage', () => {
+    const html = renderToStaticMarkup(
+      <StoredValue valuation={{ ...priced, valueBasis: 'used_quartile', price: '17.25' }} />,
+    )
+    expect(html).toContain('lower quartile of 12 used listings, postage included')
+  })
+
   it('links an unpriced disc too: sold listings may exist where asking prices are few', () => {
     const html = renderToStaticMarkup(
       <StoredValue

@@ -213,7 +213,13 @@ async def _most_valuable(db: AsyncSession) -> list[ValuableDiscResponse]:
             sampleSize=valuation.sales_count if valuation.sales_backed else valuation.sample_size,
             valueBasis="sales"
             if valuation.sales_backed
-            else ("new_scaled" if valuation.value_basis == "new_scaled" else "used"),
+            else (
+                "new_scaled"
+                if valuation.value_basis == "new_scaled"
+                else "used_quartile"
+                if valuation.value_basis == "used_quartile"
+                else "used"
+            ),
             factor=str(valuation.factor)
             if valuation.factor is not None and not valuation.sales_backed
             else None,

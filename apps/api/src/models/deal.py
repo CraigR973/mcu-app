@@ -15,6 +15,11 @@ DEALS_TABLE = "deals"
 
 #: How long a shop's deal stays on the page after the scrape last saw it (Batch X1).
 SHOP_DEAL_FRESH_FOR = timedelta(days=2)
+AA10B_EBAY_SOURCES = (
+    "Lower quartile of used asks, postage in",
+    "New asking median scaled to used",
+    "3 observed sales, postage in",
+)
 
 
 class Deal(Base, UUIDPrimaryKeyMixin):
@@ -98,6 +103,14 @@ def live_deal(now: datetime) -> ColumnElement[bool]:
     """
     return and_(
         Deal.dismissed_at_utc.is_(None),
+        # Earlier eBay finds were judged against a different, higher figure. Keep the
+        # rows for audit, but stop recommending them until a new scan re-judges them.
+        or_(
+            Deal.retailer_name_snapshot != "eBay",
+            Deal.retailer_id.is_not(None),
+            Deal.usual_sources[0]["source"].astext.in_(AA10B_EBAY_SOURCES),
+            Deal.usual_sources[0]["source"].astext.like("% observed sales, postage in"),
+        ),
         or_(
             Deal.expires_at_utc > now,
             and_(

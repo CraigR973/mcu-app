@@ -98,6 +98,17 @@ class PooledGroup:
 
 
 @dataclass(frozen=True)
+class UsedAsks:
+    """Comparable used Buy It Now totals, including the first quoted postage option."""
+
+    lower_quartile: Decimal
+    count: int
+    low: Decimal
+    high: Decimal
+    currency: str
+
+
+@dataclass(frozen=True)
 class UsedValue:
     """What one disc on the shelf is worth as a used copy — Batch X6, #256.
 
@@ -142,6 +153,7 @@ class PriceEstimate:
     #: Every used listing together, per ``(format, edition)`` — Batch X1. A median of
     #: medians would not be a median, so it is taken from the prices here.
     used_pooled: dict[tuple[str, str], PooledGroup] = field(default_factory=dict)
+    used_asks: dict[tuple[str, str], UsedAsks] = field(default_factory=dict)
 
     def headline(
         self, *, format_code: str | None = None, condition_id: str | None = None
@@ -215,9 +227,13 @@ def summarise(
     segments.sort(key=lambda segment: (-segment.sample_size, segment.format_code, segment.edition))
 
     used: dict[tuple[str, str], list[Listing]] = {}
+    used_buy_now: dict[tuple[str, str], list[Listing]] = {}
     for (found_format, edition, condition_id), listings in grouped.items():
         if condition_id in USED_CONDITION_IDS:
             used.setdefault((found_format, edition), []).extend(listings)
+            used_buy_now.setdefault((found_format, edition), []).extend(
+                listing for listing in listings if listing.buy_now
+            )
 
     return PriceEstimate(
         film_title=film_title,
@@ -229,6 +245,7 @@ def summarise(
         rejected=dict(rejected.most_common()),
         unusable=unusable,
         used_pooled={key: _pooled(listings) for key, listings in used.items()},
+        used_asks={key: _used_asks(listings) for key, listings in used_buy_now.items() if listings},
     )
 
 
@@ -243,11 +260,29 @@ def _pooled(listings: list[Listing]) -> PooledGroup:
     )
 
 
+def lower_quartile(prices: list[Decimal]) -> Decimal:
+    """25th percentile, linearly interpolated between the nearest zero-based ranks."""
+    ordered = sorted(prices)
+    rank = Decimal(len(ordered) - 1) / 4
+    lower = int(rank)
+    fraction = rank - lower
+    return _round(
+        ordered[lower] + (ordered[min(lower + 1, len(ordered) - 1)] - ordered[lower]) * fraction
+    )
+
+
+def _used_asks(listings: list[Listing]) -> UsedAsks:
+    totals = [listing.price + listing.postage for listing in listings]
+    return UsedAsks(
+        lower_quartile(totals), len(totals), min(totals), max(totals), listings[0].currency
+    )
+
+
 def used_value(estimate: PriceEstimate, format_code: str, *, factor: Decimal) -> UsedValue | None:
     """A disc's value as a used copy, or ``None`` when too few listings say — Batch X6.
 
-    The median of the format's standard-edition used listings when there are
-    :data:`MIN_SAMPLE` or more; otherwise New's median times ``factor``, the used-to-New
+    The postage-inclusive lower quartile of standard used Buy It Now listings when there
+    are :data:`MIN_SAMPLE` or more; otherwise New's median times ``factor``, the used-to-New
     ratio measured for the format (``services.valuation.used_factors``). Collector editions,
     "Open box" and listings with no stated condition price neither: a steelbook is another
     product, and the other two say nothing about a used copy.
@@ -255,11 +290,11 @@ def used_value(estimate: PriceEstimate, format_code: str, *, factor: Decimal) ->
     #209 valued a disc at its largest condition group, which was New for 965 of 1,300; a
     used copy asks 0.48–0.71 of New where both exist (MK47-03).
     """
-    pooled = estimate.used_pooled.get((format_code, "standard"))
+    pooled = estimate.used_asks.get((format_code, "standard"))
     if pooled is not None and pooled.count >= MIN_SAMPLE:
         return UsedValue(
-            price=pooled.median,
-            basis="used",
+            price=pooled.lower_quartile,
+            basis="used_quartile",
             sample_size=pooled.count,
             low=pooled.low,
             high=pooled.high,

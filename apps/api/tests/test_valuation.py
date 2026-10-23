@@ -146,19 +146,13 @@ async def test_a_stored_value_is_the_film_pages_used_value(
     assert valuation.sample_size == live.sample_size
     assert valuation.value_basis == live.basis
     assert (valuation.low, valuation.high, valuation.factor) == (live.low, live.high, live.factor)
-    assert valuation.condition_label == ("Used" if live.basis == "used" else "New")
+    assert valuation.condition_label == ("Used" if live.basis == "used_quartile" else "New")
     assert estimate.basis == ASKING_PRICES
 
 
 @pytest.mark.asyncio
 async def test_the_captured_prices_are_the_ones_expected() -> None:
-    """Pinned, so a change to the estimator shows up here as a changed valuation.
-
-    Before Batch X6 these were £9.99 and £6.73, the largest group's median: New for Blade
-    Runner, Very good for Jaws (#209). As used copies (#256), Blade Runner's 24 used listings
-    say £5.45 and Jaws's 30 say £6.73; a DVD with one used listing and four New is New's £9.13
-    at the factor.
-    """
+    """Captured listings pin the postage-in lower quartile and sparse-used fallback."""
     blade_runner = await estimate_price(
         Answering(BLADE_RUNNER), film_title="Blade Runner 2049", format_code="blu_ray"
     )
@@ -168,10 +162,14 @@ async def test_the_captured_prices_are_the_ones_expected() -> None:
     )
 
     used = valuation_from(blade_runner, "blu_ray", factor=FALLBACK_FACTOR)
-    assert (used.price, used.sample_size, used.value_basis) == (Decimal("5.45"), 24, "used")
-    assert (used.low, used.high) == (Decimal("3.29"), Decimal("65.99"))
+    assert (used.price, used.sample_size, used.value_basis) == (
+        Decimal("7.05"),
+        24,
+        "used_quartile",
+    )
+    assert (used.low, used.high) == (Decimal("3.72"), Decimal("65.99"))
     assert (used.new_median, used.new_count) == (Decimal("9.99"), 29)
-    assert valuation_from(jaws, "blu_ray", factor=FALLBACK_FACTOR).price == Decimal("6.73")
+    assert valuation_from(jaws, "blu_ray", factor=FALLBACK_FACTOR).price == Decimal("8.18")
 
     scaled = valuation_from(dvd, "dvd", factor=Decimal("0.60"))
     assert (scaled.price, scaled.value_basis, scaled.factor) == (
@@ -188,6 +186,7 @@ def _summary(index: int, condition_id: str, price: str = "10.00") -> dict[str, A
         "title": "Blade Runner 2049 Blu-ray",
         "price": {"value": price, "currency": "GBP"},
         "conditionId": condition_id,
+        "buyingOptions": ["FIXED_PRICE"],
         "leafCategoryIds": ["617"],
         "itemLocation": {"country": "GB"},
     }
@@ -215,7 +214,7 @@ async def test_three_used_listings_value_a_disc_whatever_new_says() -> None:
     assert (valuation.status, valuation.price, valuation.value_basis) == (
         "priced",
         Decimal("4.00"),
-        "used",
+        "used_quartile",
     )
     assert (valuation.sample_size, valuation.factor) == (3, None)
 

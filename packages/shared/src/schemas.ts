@@ -188,7 +188,7 @@ export const movieDetailSchema = movieListItemSchema.extend({
 /** How a disc's value as a used copy was reached — Batch X6 (`DECISIONS.md` #256). `used`:
  *  the median of its used listings. `new_scaled`: New's median times the used-to-New factor
  *  measured for its format, because used listings were too few. */
-export const valueBasisSchema = z.enum(['used', 'new_scaled', 'sales'])
+export const valueBasisSchema = z.enum(['used', 'used_quartile', 'new_scaled', 'sales'])
 
 /** Batch T6 — a disc's stored value: its film, on the format it is valued as, as a used copy
  *  at eBay asking prices since Batch X6. `price` is null when too few listings matched, which

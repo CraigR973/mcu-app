@@ -69,10 +69,14 @@ _RUN_STATUSES: dict[str, RunStatus] = {
 }
 
 
-def value_basis(stored: str | None) -> Literal["used", "new_scaled", "sales"] | None:
+def value_basis(
+    stored: str | None,
+) -> Literal["used", "used_quartile", "new_scaled", "sales"] | None:
     """The column's value, typed. The table's CHECK constraint allows exactly these."""
     if stored == "used":
         return "used"
+    if stored == "used_quartile":
+        return "used_quartile"
     if stored == "sales":
         return "sales"
     return "new_scaled" if stored == "new_scaled" else None

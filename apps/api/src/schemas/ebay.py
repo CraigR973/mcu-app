@@ -52,7 +52,7 @@ class UsedValueResponse(BaseModel):
 
     price: str
     currency: str
-    basis: Literal["used", "new_scaled"]
+    basis: Literal["used_quartile", "new_scaled"]
     sampleSize: int = Field(gt=0)
     low: str
     high: str

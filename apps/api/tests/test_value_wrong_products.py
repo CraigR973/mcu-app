@@ -50,6 +50,7 @@ def _six(title: str) -> dict[str, Any]:
                 "title": title,
                 "price": {"value": f"{20 + index}.00", "currency": "GBP"},
                 "conditionId": "3000" if index < 3 else "1000",
+                "buyingOptions": ["FIXED_PRICE"],
                 "leafCategoryIds": ["617"],
                 "itemLocation": {"country": "GB"},
             }
@@ -126,8 +127,8 @@ async def test_the_film_itself_still_prices(film: str, format_code: str, title: 
     valuation = await _valued(film, format_code, title)
     assert (valuation.status, valuation.value_basis, valuation.price) == (
         "priced",
-        "used",
-        Decimal("21.00"),
+        "used_quartile",
+        Decimal("20.50"),
     )
 
 

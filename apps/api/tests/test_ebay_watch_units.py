@@ -35,7 +35,15 @@ from src.scripts.ebay_watch import report
 from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm
 from src.services.ebay_watch.links import legacy_item_id, listing_url
 from src.services.ebay_watch.listings import item_state, scan_listing
-from src.services.ebay_watch.refs import USED_POOL, Yardstick, _values, yardstick
+from src.services.ebay_watch.refs import (
+    USED_FIGURE,
+    USED_POOL,
+    DealFigure,
+    Yardstick,
+    _values,
+    deal_figure,
+    yardstick,
+)
 from src.services.ebay_watch.runs import StartOutcome, deal_alert
 from src.services.ebay_watch.scan import Find, is_deal, read_new_listings
 from src.services.ebay_watch.targets import check_listing, check_search
@@ -340,10 +348,11 @@ async def test_a_usual_price_stored_before_x1_is_searched_again() -> None:
         format_code="4k_uhd",
         marketplace_id="EBAY_GB",
     )
-    stored = _values(estimate, "4k_uhd")["by_condition"]
+    stored = _values(estimate, "4k_uhd", factor=Decimal("0.60"))["by_condition"]
     assert isinstance(stored, dict)
     # 6, 8, 10 and 12 pooled: the median of the four prices, not of the two medians.
     assert stored[USED_POOL] == {"median": "9.00", "n": 4}
+    assert stored[USED_FIGURE] == {"price": "7.50", "n": 4, "basis": "used_quartile"}
 
 
 async def test_no_yardstick_without_three_listings() -> None:
@@ -353,11 +362,10 @@ async def test_no_yardstick_without_three_listings() -> None:
     )
 
 
-async def test_a_deal_is_thirty_percent_or_more_under_the_usual_price() -> None:
-    # The usual price itself since Batch V8, which may average in the shops' prices.
+async def test_a_deal_is_ten_percent_or_more_under_the_used_figure() -> None:
     usual = Decimal("20.00")
-    assert is_deal(Decimal("14.00"), usual)
-    assert not is_deal(Decimal("14.01"), usual)
+    assert is_deal(Decimal("18.00"), usual)
+    assert not is_deal(Decimal("18.01"), usual)
 
 
 async def test_a_shop_price_is_a_ceiling_never_a_lift() -> None:
@@ -378,13 +386,16 @@ async def test_a_shop_price_is_a_ceiling_never_a_lift() -> None:
     assert cheaper.amount == Decimal("13.99")
 
 
-async def test_a_deal_is_judged_against_the_lowered_price() -> None:
-    """The 70% rule compares with the usual after the ceiling, not eBay's alone."""
-    figure = UsualPrice(Yardstick(Decimal("16.00"), 20), (ShopPrice("Zavvi", Decimal("13.00")),))
-    assert figure.amount == Decimal("13.00")
-    # Under eBay's £16.00 × 70% = £11.20, but not under £13.00 × 70% = £9.10.
-    assert is_deal(Decimal("11.00"), Decimal("16.00"))
-    assert not is_deal(Decimal("11.00"), figure.amount)
+async def test_every_listing_condition_uses_the_stored_used_figure() -> None:
+    ref = _ref(
+        by_condition={
+            "1000": {"median": "26.00", "n": 20},
+            "usedFigure": {"price": "13.50", "n": 12, "basis": "used_quartile"},
+        }
+    )
+    figure = deal_figure(ref)
+    assert figure == DealFigure(Decimal("13.50"), 12, "used_quartile")
+    assert not is_deal(Decimal("15.49"), figure.amount)
 
 
 async def test_the_sold_listings_link_searches_as_the_estimator_does() -> None:
@@ -401,12 +412,13 @@ async def test_a_deal_push_says_why_it_matters() -> None:
     film = _film("Star Wars: The Last Jedi", best_owned=1)
     person = uuid.uuid4()
     alert = deal_alert(
-        Find(film, "4k_uhd", found, Yardstick(Decimal("16.00"), 20), False, 70), person
+        Find(film, "4k_uhd", found, DealFigure(Decimal("16.00"), 20, "used_quartile"), False, 70),
+        person,
     )
     # Batch X1: the listing's own title and condition, then what "usual" stands on.
     assert alert.title == "Star Wars the Last Jedi 4K Ultra HD Blu-ray New Sealed"
-    assert alert.body.startswith("New, £4.75 with postage on eBay: 70% under the usual £16.00")
-    assert "(asking prices, 20 listings)" in alert.body
+    assert alert.body.startswith("New, £4.75 with postage on eBay: 70% under £16.00")
+    assert "lower quartile of used asks, postage in" in alert.body
     assert "Filed as Star Wars: The Last Jedi on 4K." in alert.body
     assert "upgrade" in alert.body
     assert alert.url == found.url

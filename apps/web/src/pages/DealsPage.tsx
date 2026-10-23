@@ -27,10 +27,10 @@ const DISCOUNT_STEPS = [10, 25, 50] as const
 /** Batch T8a's finds, named so by the API (`services/ebay_watch/scan.py`). */
 const EBAY = 'eBay'
 
-/** Where an eBay find's "usually" comes from: "eBay £16.00 before postage · Zavvi £20.00". */
+/** The figure an eBay find was judged against, with its source. */
 function usualSourcesLine(sources: NonNullable<Deal['usualSources']>): string {
   return sources
-    .map(({ source, price }) => `${source} £${price}${source === EBAY ? ' before postage' : ''}`)
+    .map(({ source, price }) => `${source}: £${price}${source === EBAY ? ' before postage' : ''}`)
     .join(' · ')
 }
 
@@ -113,13 +113,11 @@ function DealCard({ deal }: { deal: Deal }) {
           <span className="font-display text-xl font-semibold text-foreground">
             £{deal.price}
           </span>
-          {/* Batch T8a. An eBay find's price includes postage. "Usually" is eBay's asking
-              price, lowered to a shop's when a New listing's is cheaper (X1), never a sold
-              price; the line beneath says which, and how many listings stand behind it. */}
+          {/* An eBay find includes postage and is judged against the disc's used figure.
+              The line beneath names the figure's source. */}
           {deal.wasPrice && isEbay ? (
             <span className="text-sm text-muted-foreground">
-              with postage · usually £{deal.wasPrice}
-              {deal.usualListings ? ` (asking prices, ${String(deal.usualListings)} listings)` : ''}
+              with postage · judged against £{deal.wasPrice}
             </span>
           ) : null}
           {deal.wasPrice && !isEbay ? (
@@ -144,8 +142,7 @@ function DealCard({ deal }: { deal: Deal }) {
               View at {deal.retailer} <ExternalLink aria-hidden />
             </a>
           </Button>
-          {/* Batch V8: what the film actually sold for, which the app cannot read. eBay asks
-              the person to sign in, in their own browser. */}
+          {/* eBay's sold-search page offers a person a separate comparison in their browser. */}
           {isEbay && deal.soldListingsUrl ? (
             <Button asChild size="sm" variant="ghost">
               <a href={deal.soldListingsUrl} target="_blank" rel="noopener noreferrer">

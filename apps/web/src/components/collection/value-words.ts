@@ -31,6 +31,11 @@ export function valueBehind(value: ValueBehind, { short = false }: { short?: boo
       ? `based on ${value.sampleSize} sales, ${range}`
       : `based on ${value.sampleSize} sales in 90 days, postage included, ${range}`
   }
+  if (value.valueBasis === 'used_quartile') {
+    return short
+      ? `lower quartile of ${listings(value.sampleSize, 'used')}, postage in, ${range}`
+      : `lower quartile of ${listings(value.sampleSize, 'used')}, postage included, ${range}`
+  }
   if (value.valueBasis === 'used') {
     return short
       ? `${listings(value.sampleSize, 'used')}, ${range}`

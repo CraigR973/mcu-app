@@ -1,20 +1,9 @@
-"""What a film on a format usually asks on eBay UK — Batch T8a's yardstick for a deal.
+"""Cached eBay price references for deal and shop checks.
 
-One search with the film page's estimator (`src/ebay/estimate.py`), so "usually" means the
-same number "What is it worth?" would show. It is kept for a fortnight: the scan meets the
-same film again within days, and asking prices do not move that fast.
-
-**A used copy is compared only with used copies** (Batch X1, MK47-02; #239 amended). The
-estimator splits listings by eBay's condition code. A used listing (Like new, Used, Very good,
-Good, Acceptable) is judged against its own condition's median when that has three or more
-standard-edition listings behind it, else against every used listing pooled when they have
-three or more, else not at all. Never against New's median: 227 of the 265 finds of 26 Sep–
-9 Oct were, whatever their condition, so a used disc at a used price read as a deal. And
-never against a used group whose median is above New's, which says the group is thin or odd.
-
-Any other listing, New among them, keeps T8a's rule: its own condition's median with three
-or more behind it, otherwise the headline (the largest group). A median of two is one
-seller's asking price (#129).
+One search uses the film page's estimator (`src/ebay/estimate.py`). AA10b stores the disc's
+used figure in ``usedFigure`` and judges every eBay listing against it, including New ones.
+The earlier condition medians remain for shop alerts; ``yardstick`` still reads them there.
+References last a fortnight, and an older row without ``usedFigure`` is fetched again.
 """
 
 from __future__ import annotations
@@ -29,7 +18,13 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ebay.estimate import EbaySearch, estimate_price
-from src.ebay.pricing import MIN_SAMPLE, NEW_CONDITION_ID, USED_CONDITION_IDS, PriceEstimate
+from src.ebay.pricing import (
+    MIN_SAMPLE,
+    NEW_CONDITION_ID,
+    USED_CONDITION_IDS,
+    PriceEstimate,
+    used_value,
+)
 from src.matching.engine import searchable_title
 from src.models.ebay_watch import EbayPriceRef
 
@@ -39,6 +34,7 @@ FRESH_FOR = timedelta(days=14)
 #: ``by_condition``'s entry for every used listing pooled (Batch X1). A usual price stored
 #: before X1 has none, and is searched again the next time a listing needs it.
 USED_POOL = "used"
+USED_FIGURE = "usedFigure"
 
 
 @dataclass(frozen=True)
@@ -47,6 +43,35 @@ class Yardstick:
 
     median: Decimal
     sample_size: int
+
+
+@dataclass(frozen=True)
+class DealFigure:
+    """The one used-disc figure against which every eBay listing is tested."""
+
+    amount: Decimal
+    sample_size: int
+    basis: str
+
+    def sources(self) -> list[dict[str, str]]:
+        if self.basis == "sales":
+            name = f"{self.sample_size} observed sales, postage in"
+        elif self.basis == "used_quartile":
+            name = "Lower quartile of used asks, postage in"
+        else:
+            name = "New asking median scaled to used"
+        return [{"source": name, "price": str(self.amount)}]
+
+
+def deal_figure(ref: EbayPriceRef) -> DealFigure | None:
+    group = (ref.by_condition or {}).get(USED_FIGURE)
+    if not isinstance(group, dict) or group.get("price") is None:
+        return None
+    count = int(group.get("n") or 0)
+    basis = group.get("basis")
+    if count < MIN_SAMPLE or basis not in {"used_quartile", "new_scaled"}:
+        return None
+    return DealFigure(Decimal(str(group["price"])), count, basis)
 
 
 def _group(groups: dict[str, object], key: str) -> Yardstick | None:
@@ -77,7 +102,7 @@ def yardstick(ref: EbayPriceRef, condition_id: str) -> Yardstick | None:
     return None
 
 
-def _values(estimate: PriceEstimate, format_code: str) -> dict[str, object]:
+def _values(estimate: PriceEstimate, format_code: str, *, factor: Decimal) -> dict[str, object]:
     headline = estimate.headline(format_code=format_code)
     priced = headline is not None and headline.sample_size >= MIN_SAMPLE
     by_condition: dict[str, dict[str, object]] = {
@@ -88,6 +113,12 @@ def _values(estimate: PriceEstimate, format_code: str) -> dict[str, object]:
     pooled = estimate.used_pooled.get((format_code, "standard"))
     by_condition[USED_POOL] = (
         {"median": str(pooled.median), "n": pooled.count} if pooled else {"median": None, "n": 0}
+    )
+    used = used_value(estimate, format_code, factor=factor)
+    by_condition[USED_FIGURE] = (
+        {"price": str(used.price), "n": used.sample_size, "basis": used.basis}
+        if used is not None
+        else {"price": None, "n": 0, "basis": None}
     )
     return {
         "status": "priced" if priced else "not_priced",
@@ -109,7 +140,7 @@ async def stored_ref(
     if (
         ref is not None
         and ref.checked_utc >= now - FRESH_FOR
-        and USED_POOL in (ref.by_condition or {})
+        and USED_FIGURE in (ref.by_condition or {})
     ):
         return ref
     return None
@@ -133,7 +164,14 @@ async def fetch_ref(
         format_code=format_code,
         film_year=year,
     )
-    values = {**_values(estimate, format_code), "checked_utc": now}
+    # The sparse-used fallback uses the same measured format factor as a valuation.
+    from src.services.valuation import used_factors
+
+    factors = await used_factors(db)
+    values = {
+        **_values(estimate, format_code, factor=factors[format_code].factor),
+        "checked_utc": now,
+    }
     await db.execute(
         insert(EbayPriceRef)
         .values(id=uuid.uuid4(), movie_id=movie_id, format_code=format_code, **values)

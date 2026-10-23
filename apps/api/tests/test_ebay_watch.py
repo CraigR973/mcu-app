@@ -39,9 +39,11 @@ from src.models.movie import Movie
 from src.models.notification import Notification
 from src.models.price_check import PriceCheck
 from src.models.profile import Profile, UserRole
+from src.models.valuation import DiscValuation
 from src.models.wanted import WantedItem
 from src.routers.ebay_watch import get_ebay_client_factory
 from src.services.ebay_watch.runs import DAILY_SHARE, clear_ended_finds, start_run, work_run
+from src.services.ebay_watch.scan import is_deal
 from src.services.identification import _move_back, move_references
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -51,6 +53,13 @@ NEWEST = json.loads((FIXTURES / "ebay_newest_bluray_4k_gb.json").read_text())
 NOW = datetime(2026, 9, 26, 10, 0)
 LAST_JEDI_4K = "https://www.ebay.co.uk/itm/298708357566"
 LAST_JEDI_TITLE = "Star Wars the Last Jedi 4K Ultra HD Blu-ray New Sealed"
+
+
+def test_aa10b_note_deep_red_is_not_a_deal_but_reservoir_dogs_is() -> None:
+    assert not is_deal(Decimal("15.49"), Decimal("13.50"))
+    assert is_deal(Decimal("3.99"), Decimal("15.89"))
+    assert is_deal(Decimal("9.00"), Decimal("10.00"))
+    assert not is_deal(Decimal("9.01"), Decimal("10.00"))
 
 
 def _for_sale(legacy_id: str, *, available: bool = True) -> dict[str, Any]:
@@ -367,7 +376,7 @@ async def _pass(db: AsyncSession, ebay: FakeEbay, *, now: datetime = NOW) -> Eba
 
 
 async def _last_jedi_owned_on_blu_ray(db: AsyncSession) -> Movie:
-    """Owned on Blu-ray, so a 4K is an upgrade, with a usual 4K price of £16.00."""
+    """Owned on Blu-ray, so a 4K is an upgrade against a used-copy figure."""
     film = await _film(db, "Star Wars: The Last Jedi", tmdb_id=990_181_808, owned=["blu_ray"])
     db.add(
         EbayPriceRef(
@@ -377,7 +386,11 @@ async def _last_jedi_owned_on_blu_ray(db: AsyncSession) -> Movie:
             status="priced",
             median=Decimal("16.00"),
             sample_size=20,
-            by_condition={"1000": {"median": "16.00", "n": 14}, "used": {"median": None, "n": 0}},
+            by_condition={
+                "1000": {"median": "16.00", "n": 14},
+                "used": {"median": None, "n": 0},
+                "usedFigure": {"price": "9.60", "n": 14, "basis": "new_scaled"},
+            },
             checked_utc=NOW - timedelta(days=2),
         )
     )
@@ -425,8 +438,8 @@ async def test_a_pass_checks_targets_finds_a_deal_and_tells_the_right_people(
     assert (deal.retailer_name_snapshot, deal.price, deal.was_price, deal.discount_percent) == (
         "eBay",
         Decimal("4.75"),
-        Decimal("16.00"),
-        70,
+        Decimal("9.60"),
+        51,
     )
     assert (deal.movie_id, deal.format_code, deal.expires_at_utc) == (
         film.id,
@@ -441,11 +454,45 @@ async def test_a_pass_checks_targets_finds_a_deal_and_tells_the_right_people(
     for person in (craig, mark):
         notes = await _notes(db, person, "ebay-deal:")
         assert [note.url for note in notes] == [LAST_JEDI_4K]
-        # Batch X1: the listing's own title and condition, and what "usual" is.
+        # AA10b: the listing's own title and the used-copy comparison figure.
         assert notes[0].title == LAST_JEDI_TITLE
-        assert notes[0].body.startswith("New, £4.75 with postage on eBay: 70% under the usual")
-        assert "(asking prices, 14 listings)" in notes[0].body
+        assert notes[0].body.startswith("New, £4.75 with postage on eBay: 51% under £9.60")
+        assert "new asking median scaled to used" in notes[0].body
         assert "Filed as Star Wars: The Last Jedi (2017) on 4K." in notes[0].body
+
+
+async def test_three_sales_replace_the_asking_figure_for_a_new_deal(
+    db: AsyncSession,
+) -> None:
+    await _person(db, UserRole.admin)
+    film = await _last_jedi_owned_on_blu_ray(db)
+    db.add(
+        DiscValuation(
+            id=uuid.uuid4(),
+            movie_id=film.id,
+            format_code="4k_uhd",
+            status="not_priced",
+            price=None,
+            currency="GBP",
+            sample_size=0,
+            matched=0,
+            considered=0,
+            basis="current asking prices",
+            search_query="Star Wars The Last Jedi 4K",
+            checked_utc=NOW,
+            sales_count=3,
+            sales_price=Decimal("12.00"),
+            sales_checked_utc=NOW,
+        )
+    )
+    await db.commit()
+
+    run = await _pass(db, FakeEbay(pages=[NEWEST]))
+    deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
+    assert run.refs_fetched == 0
+    assert deal is not None
+    assert (deal.was_price, deal.discount_percent, deal.usual_listings) == (Decimal("12.00"), 60, 3)
+    assert deal.usual_sources == [{"source": "3 observed sales, postage in", "price": "12.00"}]
 
 
 async def test_the_next_pass_reads_no_listing_twice_and_pushes_nothing_twice(
@@ -640,6 +687,9 @@ async def test_an_expired_ebay_deal_leaves_the_feed_its_count_and_the_badge(
                 url=f"https://www.ebay.co.uk/itm/99000000000{suffix}",
                 price=Decimal("4.75"),
                 was_price=Decimal("16.00"),
+                usual_sources=[
+                    {"source": "Lower quartile of used asks, postage in", "price": "16.00"}
+                ],
                 currency="GBP",
                 discount_percent=70,
                 expires_at_utc=expires,
@@ -854,7 +904,7 @@ async def _wanted_with_shop_prices(db: AsyncSession, film: Movie, *, zavvi: str)
     await db.commit()
 
 
-async def test_a_cheaper_shop_lowers_a_new_listings_usual_like_for_like(
+async def test_a_cheaper_shop_does_not_change_the_used_figure_for_a_new_listing(
     db: AsyncSession,
 ) -> None:
     craig = await _person(db, UserRole.admin)
@@ -866,17 +916,14 @@ async def test_a_cheaper_shop_lowers_a_new_listings_usual_like_for_like(
     assert run.deals_found == 1
     deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
     assert deal is not None
-    # Zavvi's £14.00 is under eBay's £16.00, so it is the ceiling. The limited edition, the
-    # Blu-ray, Zavvi's earlier price and HMV's of eight days ago are left out.
-    assert deal.was_price == Decimal("14.00")
+    # AA10b judges every listing against the used-copy figure, not a New shop price.
+    assert deal.was_price == Decimal("9.60")
     assert deal.usual_sources == [
-        {"source": "eBay", "price": "16.00"},
-        {"source": "Zavvi", "price": "14.00"},
+        {"source": "New asking median scaled to used", "price": "9.60"},
     ]
-    # (£14.00 - £4.75) / £14.00 = 66.1%.
-    assert deal.discount_percent == 66
+    assert deal.discount_percent == 51
     (note,) = await _notes(db, craig, "ebay-deal:")
-    assert "66% under the usual £14.00" in note.body
+    assert "51% under £9.60" in note.body
 
     # The pass ran on the test's clock, so its three days ended long ago; the feed is read now.
     deal.expires_at_utc = datetime(2099, 1, 1)
@@ -884,10 +931,9 @@ async def test_a_cheaper_shop_lowers_a_new_listings_usual_like_for_like(
     async with _as(db, craig.id) as client:
         feed = (await client.get("/api/v1/deals")).json()
     (item,) = [item for item in feed["items"] if item["retailer"] == "eBay"]
-    assert (item["wasPrice"], item["condition"], item["usualListings"]) == ("14.00", "New", 14)
+    assert (item["wasPrice"], item["condition"], item["usualListings"]) == ("9.60", "New", 14)
     assert item["usualSources"] == [
-        {"source": "eBay", "price": "16.00"},
-        {"source": "Zavvi", "price": "14.00"},
+        {"source": "New asking median scaled to used", "price": "9.60"},
     ]
     assert item["soldListingsUrl"] == (
         "https://www.ebay.co.uk/sch/i.html"
@@ -895,8 +941,7 @@ async def test_a_cheaper_shop_lowers_a_new_listings_usual_like_for_like(
     )
 
 
-async def test_a_dearer_shop_never_raises_the_usual(db: AsyncSession) -> None:
-    """MK47-06: averaged, Zavvi's £20.00 made eBay's £16.00 an £18.00 usual."""
+async def test_a_dearer_shop_does_not_change_the_used_figure(db: AsyncSession) -> None:
     await _person(db, UserRole.admin)
     film = await _last_jedi_owned_on_blu_ray(db)
     await _wanted_with_shop_prices(db, film, zavvi="20.00")
@@ -905,7 +950,7 @@ async def test_a_dearer_shop_never_raises_the_usual(db: AsyncSession) -> None:
 
     deal = await db.scalar(select(Deal).where(Deal.url == LAST_JEDI_4K))
     assert deal is not None
-    assert (deal.was_price, deal.discount_percent) == (Decimal("16.00"), 70)
+    assert (deal.was_price, deal.discount_percent) == (Decimal("9.60"), 51)
 
 
 async def test_an_earlier_find_reads_as_ebay_alone_and_a_shops_deal_has_no_parts(
@@ -946,10 +991,7 @@ async def test_an_earlier_find_reads_as_ebay_alone_and_a_shops_deal_has_no_parts
         feed = (await client.get("/api/v1/deals")).json()
 
     by_title = {item["title"]: item for item in feed["items"]}
-    earlier = by_title["An earlier eBay find"]
-    assert earlier["usualSources"] == [{"source": "eBay", "price": "16.00"}]
-    # Matched to no film, so there is no film and format to search sold listings for.
-    assert earlier["soldListingsUrl"] is None
+    assert "An earlier eBay find" not in by_title  # judged under the superseded rule
     sale = by_title["A disc in Zavvi's sale"]
     assert (sale["usualSources"], sale["soldListingsUrl"]) == (None, None)
 

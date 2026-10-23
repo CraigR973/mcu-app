@@ -234,10 +234,9 @@ async def test_the_asking_price_is_the_one_a_valuation_takes_from_the_same_searc
         BLADE_RUNNER, film=film, marketplace_id="EBAY_GB", now=NOW, factor=FALLBACK_FACTOR
     )
 
-    # A used copy's value since Batch X6 (#256): the 24 used listings' median. It was the
-    # 29 New listings' £9.99 when the valuation's rule was the largest group (#209).
+    # AA10b's postage-in lower quartile of the 24 used Buy It Now listings.
     assert result.asking is not None
-    assert (result.asking.price, result.asking.sampleSize) == ("5.45", 24)
+    assert (result.asking.price, result.asking.sampleSize) == ("7.05", 24)
     assert (Decimal(result.asking.price), result.asking.sampleSize) == (
         stored_rule.price,
         stored_rule.sample_size,
@@ -344,7 +343,7 @@ def _judged(
 
 async def test_the_totals_on_each_basis_count_every_copy_and_say_how_many_discs() -> None:
     films = [
-        # Two copies; bids at £6, asking £10: bids are 60% of asking.
+        # Two copies; the postage-inclusive asking figure exceeds the £10 item price.
         _judged(
             "Heat",
             "blu_ray",
@@ -376,13 +375,13 @@ async def test_the_totals_on_each_basis_count_every_copy_and_say_how_many_discs(
 
     assert (overall.films, overall.withBids, overall.withBidsEndingSoon) == (3, 2, 1)
     assert (overall.auctionsCounted, overall.endingSoon) == (7, 3)
-    # Heat 6.00/10.00; Kes has no asking price to compare with.
-    assert (overall.compared, overall.bidToAskingPercent) == (1, 60)
+    # Heat's bid is £6; its asking figure includes postage under AA10b.
+    assert (overall.compared, overall.bidToAskingPercent) == (1, 47)
     assert (overall.stored.total, overall.stored.discs) == ("36.00", 4)
-    assert (overall.asking.total, overall.asking.discs) == ("29.00", 3)
+    assert (overall.asking.total, overall.asking.discs) == ("37.16", 3)
     assert (overall.bids.total, overall.bids.discs) == ("15.50", 3)
     blend = overall.blend
-    assert (blend.total, blend.discs, blend.fromBids, blend.fromAsking) == ("24.50", 4, 3, 1)
+    assert (blend.total, blend.discs, blend.fromBids, blend.fromAsking) == ("27.22", 4, 3, 1)
     # Kes's 300 results stopped at 200, and auctions with no Buy It Now held 200 places.
     assert (overall.cut, overall.auctionOnlyPlaces, overall.askingLost) == (1, 200, 1)
     assert (overall.askingSample, overall.storedSample) == (10, 30)

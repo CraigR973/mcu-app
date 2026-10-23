@@ -8,10 +8,10 @@ better, one by one, would cost that many a pass and still see each film only now
 A pass reads the newest listings back to where the last pass stopped (at most
 :data:`MAX_PAGES` pages; in a flood the older ones are skipped for good). Each one that is
 a film on the Wanted list, or an upgrade on what is owned (`deals_runner.already_owned`'s
-rule: a better format than the best on the shelf), is compared with that film's usual
-price on that format (:mod:`refs`), averaged since Batch V8 with the shops' recent prices
-for it where the nightly check has any (:mod:`usual`). **A deal is one that costs,
-postage included, no more than :data:`DEAL_RATIO` of that usual price.** Deals go on the
+rule: a better format than the best on the shelf), is compared with that film's used
+figure on that format: three observed sales when available, otherwise the lower quartile
+of used Buy It Now asks (:mod:`refs`). **A deal is one that costs, postage included,
+no more than :data:`DEAL_RATIO` of that figure.** Deals go on the
 Deals page, as "eBay", for :data:`DEAL_LIFETIME`; a find is re-checked with one item
 call before it is pushed (`runs.py`), and nothing checks later whether one has sold.
 
@@ -41,15 +41,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ebay.client import EbayError
 from src.ebay.matching import CONDITION_LABELS
-from src.ebay.pricing import NEW_CONDITION_ID
+from src.ebay.pricing import MIN_SAMPLE
 from src.matching.engine import searchable_title
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayWatchRun
+from src.models.valuation import DiscValuation
 from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm, load_catalogue
 from src.services.ebay_watch.client import WatchClient
 from src.services.ebay_watch.listings import ScanListing, scan_listing
-from src.services.ebay_watch.refs import Yardstick, fetch_ref, stored_ref, yardstick
-from src.services.ebay_watch.usual import ShopPrice, UsualPrice, shop_prices
+from src.services.ebay_watch.refs import DealFigure, deal_figure, fetch_ref, stored_ref
 
 logger = structlog.get_logger(__name__)
 
@@ -68,8 +68,8 @@ PAGE_SIZE = 200
 MAX_PAGES = 10
 #: How far back the very first pass looks.
 FIRST_LOOK_BACK = timedelta(hours=3)
-#: A deal costs no more than this share of the usual price: 30% or more under it.
-DEAL_RATIO = Decimal("0.70")
+#: A deal costs no more than this share of the used figure: 10% or more under it.
+DEAL_RATIO = Decimal("0.90")
 #: How long a deal stays on the Deals page.
 DEAL_LIFETIME = timedelta(days=3)
 #: How far before its own start a pass sets the next one's mark: listings reach eBay's
@@ -98,17 +98,14 @@ class Find:
     format_code: str
     listing: ScanListing
     #: eBay's figure for the film and format.
-    usual: Yardstick
+    usual: DealFigure
     wanted: bool
     discount_percent: int
-    #: The shops' recent prices that may lower a New listing's usual (Batch V8, X1); none
-    #: for most finds, and never for a used one.
-    shops: tuple[ShopPrice, ...] = ()
 
     @property
-    def figure(self) -> UsualPrice:
+    def figure(self) -> DealFigure:
         """The usual price the find was judged against, and where it comes from."""
-        return UsualPrice(self.usual, self.shops)
+        return self.usual
 
     @property
     def condition(self) -> str:
@@ -128,7 +125,7 @@ def _discount(usual: Decimal, price: Decimal) -> int:
 
 
 def is_deal(total: Decimal, usual: Decimal) -> bool:
-    return total <= (usual * DEAL_RATIO).quantize(Decimal("0.01"))
+    return total <= usual * DEAL_RATIO
 
 
 async def read_new_listings(
@@ -304,61 +301,62 @@ async def scan(
     failures_in_a_row = 0
     for candidate in candidates:
         now = clock()
-        ref = await stored_ref(
-            db, movie_id=candidate.film.movie_id, format_code=candidate.format_code, now=now
-        )
-        if ref is None:
-            if client.search_calls + client.attempts_per_search > run.budget:
-                stopped = stopped or "budget"
-                break
-            try:
-                ref = await fetch_ref(
-                    db,
-                    client,
-                    movie_id=candidate.film.movie_id,
-                    title=candidate.film.title,
-                    format_code=candidate.format_code,
-                    now=now,
-                    year=candidate.film.year,
-                )
-            except EbayError as exc:
-                failures_in_a_row += 1
-                run.last_error = f"{candidate.film.title}: {exc}"
-                logger.warning("ebay_usual_price_failed", film=candidate.film.title, error=str(exc))
-                if exc.status_code == 429 or failures_in_a_row >= 5:
-                    stopped = "failed"
-                    break
-                continue
-            failures_in_a_row = 0
-            run.refs_fetched += 1
-        condition_id = candidate.listing.listing.condition_id
-        usual = yardstick(ref, condition_id)
-        if usual is not None:
-            # A shop sells new copies, so its price can only lower a New listing's usual.
-            shops = (
-                await shop_prices(
-                    db,
-                    movie_id=candidate.film.movie_id,
-                    format_code=candidate.format_code,
-                    now=now,
-                )
-                if condition_id == NEW_CONDITION_ID
-                else ()
+        sales = await db.scalar(
+            select(DiscValuation).where(
+                DiscValuation.movie_id == candidate.film.movie_id,
+                DiscValuation.format_code == candidate.format_code,
+                DiscValuation.sales_count >= MIN_SAMPLE,
+                DiscValuation.sales_price.is_not(None),
             )
-            figure = UsualPrice(usual, shops)
-            if is_deal(candidate.listing.total, figure.amount):
-                find = Find(
-                    film=candidate.film,
-                    format_code=candidate.format_code,
-                    listing=candidate.listing,
-                    usual=usual,
-                    wanted=candidate.wanted,
-                    discount_percent=_discount(figure.amount, candidate.listing.total),
-                    shops=shops,
-                )
-                await _record_deal(db, find, now=now)
-                finds.append(find)
-                run.deals_found += 1
+        )
+        usual = (
+            DealFigure(sales.sales_price, sales.sales_count, "sales")
+            if sales is not None and sales.sales_price is not None
+            else None
+        )
+        if usual is None:
+            ref = await stored_ref(
+                db, movie_id=candidate.film.movie_id, format_code=candidate.format_code, now=now
+            )
+            if ref is None:
+                if client.search_calls + client.attempts_per_search > run.budget:
+                    stopped = stopped or "budget"
+                    break
+                try:
+                    ref = await fetch_ref(
+                        db,
+                        client,
+                        movie_id=candidate.film.movie_id,
+                        title=candidate.film.title,
+                        format_code=candidate.format_code,
+                        now=now,
+                        year=candidate.film.year,
+                    )
+                except EbayError as exc:
+                    failures_in_a_row += 1
+                    run.last_error = f"{candidate.film.title}: {exc}"
+                    logger.warning(
+                        "ebay_used_figure_failed", film=candidate.film.title, error=str(exc)
+                    )
+                    if exc.status_code == 429 or failures_in_a_row >= 5:
+                        stopped = "failed"
+                        break
+                    continue
+                failures_in_a_row = 0
+                run.refs_fetched += 1
+            usual = deal_figure(ref)
+        if usual is not None and is_deal(candidate.listing.total, usual.amount):
+            find = Find(
+                film=candidate.film,
+                format_code=candidate.format_code,
+                listing=candidate.listing,
+                usual=usual,
+                wanted=candidate.wanted,
+                discount_percent=_discount(usual.amount, candidate.listing.total),
+            )
+            await _record_deal(db, find, now=now)
+            finds.append(find)
+            run.deals_found += 1
         run.calls = client.search_calls
         run.heartbeat_utc = now
         await db.commit()

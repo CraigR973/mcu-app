@@ -25,7 +25,7 @@ import pytest
 from src.ebay.matching import Listing, match
 from src.services.ebay_watch.catalogue import Catalogue, CatalogueFilm
 from src.services.ebay_watch.listings import ScanListing
-from src.services.ebay_watch.refs import Yardstick
+from src.services.ebay_watch.refs import DealFigure
 from src.services.ebay_watch.runs import deal_alert
 from src.services.ebay_watch.scan import Find
 
@@ -198,7 +198,9 @@ def test_a_wrong_product_no_rule_can_see_is_pushed_under_its_own_title(
         image_url=None,
         buy_now=True,
     )
-    find = Find(film, named[1], listing, Yardstick(Decimal("12.00"), 7), False, 46)
+    find = Find(
+        film, named[1], listing, DealFigure(Decimal("12.00"), 7, "used_quartile"), False, 46
+    )
     alert = deal_alert(find, uuid.uuid4())
     assert alert.title == title
     assert alert.body.startswith("Very good, £6.50 with postage on eBay")

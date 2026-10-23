@@ -13,12 +13,20 @@ say so.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 from src.ebay.matching import Listing, listing_from_summary, match
-from src.ebay.pricing import ASKING_PRICES, median, naive_median, summarise
+from src.ebay.pricing import (
+    ASKING_PRICES,
+    lower_quartile,
+    median,
+    naive_median,
+    summarise,
+    used_value,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -86,6 +94,32 @@ def test_the_median_never_becomes_a_float() -> None:
     result = median([Decimal("0.10"), Decimal("0.20"), Decimal("0.30")])
     assert isinstance(result, Decimal)
     assert result == Decimal("0.20")
+
+
+def test_used_stand_in_is_a_postage_in_lower_quartile_of_buy_it_now_only() -> None:
+    used = [
+        replace(listing, postage=Decimal("2.00"))
+        for listing in _listings("4.00", "8.00", "12.00", "20.00", condition_id="3000")
+    ]
+    auction = replace(used[0], item_id="auction", price=Decimal("0.99"), buy_now=False)
+    estimate = summarise(
+        [(listing, match(listing, film_title="Jaws")) for listing in [*used, auction]],
+        film_title="Jaws",
+        format_code="blu_ray",
+        marketplace_id="EBAY_GB",
+    )
+    value = used_value(estimate, "blu_ray", factor=Decimal("0.60"))
+    assert lower_quartile([Decimal("6"), Decimal("10"), Decimal("14"), Decimal("22")]) == Decimal(
+        "9.00"
+    )
+    assert value is not None
+    assert (value.price, value.basis, value.sample_size, value.low, value.high) == (
+        Decimal("9.00"),
+        "used_quartile",
+        4,
+        Decimal("6.00"),
+        Decimal("22.00"),
+    )
 
 
 # ---------------------------------------------------------------------------

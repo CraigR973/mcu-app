@@ -228,11 +228,11 @@ async def test_price_estimate_returns_segments_with_sample_sizes(
     assert body["rejected"], "the rejections are part of the answer, not diagnostics"
     # Batch X6: the disc's value as a used copy, from the 24 used listings, beside the table.
     assert body["usedValue"] == {
-        "price": "5.45",
+        "price": "7.05",
         "currency": "GBP",
-        "basis": "used",
+        "basis": "used_quartile",
         "sampleSize": 24,
-        "low": "3.29",
+        "low": "3.72",
         "high": "65.99",
         "factor": None,
         "valuedAs": "as used copies",
@@ -268,6 +268,7 @@ async def test_a_series_flag_lets_a_tv_titles_own_box_sets_count(
         "title": "Blue Planet II The Complete Series 4K UHD",
         "price": {"value": "20.00", "currency": "GBP"},
         "conditionId": "3000",
+        "buyingOptions": ["FIXED_PRICE"],
         "leafCategoryIds": ["617"],
         "itemLocation": {"country": "GB"},
     }
@@ -332,7 +333,7 @@ async def test_listing_url_returns_a_link_and_a_suggested_price(
     assert body["url"].startswith(PRELIST_URL + "?title=")
     assert body["suggestedTitle"] == "Blade Runner 2049 (2017) Blu-ray"
     # The sale price starts from the disc's value as a used copy (Batch X6), not New's £9.99.
-    assert body["suggestedPrice"] == "5.45"
+    assert body["suggestedPrice"] == "7.05"
 
 
 @pytest.mark.asyncio

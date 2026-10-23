@@ -10,9 +10,8 @@ search summaries the estimator judges:
   whether it can be bought outright.
 
 **Postage is part of the price.** A £2 disc with £9 postage is not a bargain, so every
-comparison here is on what the buyer pays. The usual asking price it is compared with is
-the film page's median, which leaves postage out, so the comparison errs towards "not a
-deal".
+comparison here is on what the buyer pays. AA10b compares it with the disc's used figure,
+which also includes quoted postage.
 """
 
 from __future__ import annotations

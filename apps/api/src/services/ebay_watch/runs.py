@@ -237,13 +237,14 @@ def deal_alert(find: Find, user_id: uuid.UUID) -> Alert:
         else "It would be an upgrade on the copy on the shelf."
     )
     year = f" ({find.film.year})" if find.film.year else ""
+    judged_against = find.figure.sources()[0]["source"].lower()
     return Alert(
         user_id=user_id,
         title=short(find.listing.listing.title, 80),
         body=(
             f"{find.condition}, {pounds(find.listing.total)} with postage on eBay: "
-            f"{find.discount_percent}% under the usual {pounds(find.figure.amount)} "
-            f"(asking prices, {find.usual.sample_size} listings). "
+            f"{find.discount_percent}% under {pounds(find.figure.amount)} "
+            f"({judged_against}). "
             f"Filed as {short(find.film.title)}{year} on {label}. {why}"
         ),
         url=find.listing.url,

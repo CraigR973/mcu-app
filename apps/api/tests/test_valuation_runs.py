@@ -252,18 +252,20 @@ async def test_a_run_prices_each_film_and_format_once_and_counts_every_disc(
         (row.movie_id, row.format_code): row
         for row in (await db.scalars(select(DiscValuation))).all()
     }
-    # As used copies (Batch X6, #256): the median of the used listings, which the captured
-    # searches have three or more of for each disc priced here. Before X6 these were the
-    # largest groups: £9.99 (New), £24.99 (New) and £6.73 (Very good).
+    # AA10b: postage-in lower quartile of standard used Buy It Now listings.
     blu_ray = stored[(blade_runner.id, "blu_ray")]
-    assert (blu_ray.status, blu_ray.price, blu_ray.sample_size) == ("priced", Decimal("5.45"), 24)
-    assert (blu_ray.value_basis, blu_ray.condition_label, blu_ray.factor) == ("used", "Used", None)
-    assert (blu_ray.low, blu_ray.high) == (Decimal("3.29"), Decimal("65.99"))
+    assert (blu_ray.status, blu_ray.price, blu_ray.sample_size) == ("priced", Decimal("7.05"), 24)
+    assert (blu_ray.value_basis, blu_ray.condition_label, blu_ray.factor) == (
+        "used_quartile",
+        "Used",
+        None,
+    )
+    assert (blu_ray.low, blu_ray.high) == (Decimal("3.72"), Decimal("65.99"))
     assert (blu_ray.used_count, blu_ray.new_median, blu_ray.new_count) == (24, Decimal("9.99"), 29)
     assert blu_ray.basis == "current asking prices"
     assert blu_ray.checked_utc == NOW and blu_ray.run_id == run.id
-    assert stored[(blade_runner.id, "4k_uhd")].price == Decimal("18.83")
-    assert stored[(jaws.id, "blu_ray")].price == Decimal("6.73")
+    assert stored[(blade_runner.id, "4k_uhd")].price == Decimal("20.34")
+    assert stored[(jaws.id, "blu_ray")].price == Decimal("8.18")
     assert stored[(jaws.id, "dvd")].status == "not_priced"
     assert stored[(jaws.id, "dvd")].price is None
     assert (stored[(jaws.id, "dvd")].used_count, stored[(jaws.id, "dvd")].new_count) == (0, 0)
@@ -271,7 +273,7 @@ async def test_a_run_prices_each_film_and_format_once_and_counts_every_disc(
     assert (digital.id, "dvd") not in stored
 
     value = await collection_value(db, now=NOW)
-    assert value.total == Decimal("5.45") * 2 + Decimal("18.83") + Decimal("6.73")
+    assert value.total == Decimal("7.05") * 2 + Decimal("20.34") + Decimal("8.18")
     assert (value.discs, value.priced, value.not_priced, value.unchecked) == (6, 4, 2, 0)
     assert value.checked_from == value.checked_to == NOW
     assert value.due == 0
@@ -295,8 +297,65 @@ async def test_a_value_from_before_x6_is_due_counts_nowhere_and_is_replaced(
     await _run_now(db, FakeEbay({"Blade Runner 2049 Blu-ray": BLADE_RUNNER}))
 
     value = await collection_value(db, now=NOW)
-    assert (value.total, value.priced, value.unchecked) == (Decimal("5.45"), 1, 0)
-    assert (await valuations_for_movie(db, film.id))["blu_ray"].value_basis == "used"
+    assert (value.total, value.priced, value.unchecked) == (Decimal("7.05"), 1, 0)
+    assert (await valuations_for_movie(db, film.id))["blu_ray"].value_basis == "used_quartile"
+
+
+async def test_aa10b_reprice_waits_for_admin_and_replaces_the_old_median(
+    db: AsyncSession,
+) -> None:
+    film = await _film(db, "Blade Runner 2049", tmdb_id=990_335_986)
+    await _disc(db, film, "blu_ray")
+    old = await _price(db, film, "blu_ray", "5.45", checked=NOW - timedelta(seconds=1))
+    await db.commit()
+
+    assert await count_due(db, now=NOW) == 0
+    assert await count_due(db, now=NOW, include_reprice=True) == 1
+    assert (await start_run(db, trigger="job", now=NOW)).reason == "nothing_due"
+
+    started = await start_run(db, trigger="admin", now=NOW)
+    assert started.reason == "started" and started.run is not None
+    await work_run(
+        db,
+        FakeEbay({"Blade Runner 2049 Blu-ray": BLADE_RUNNER}),
+        started.run.id,
+        clock=lambda: NOW,
+    )
+    await db.refresh(old)
+    assert (old.price, old.value_basis) == (Decimal("7.05"), "used_quartile")
+    assert await count_due(db, now=NOW, include_reprice=True) == 0
+
+
+async def test_aa10b_one_admin_start_continues_legacy_reprice_on_later_days(
+    db: AsyncSession,
+) -> None:
+    films = await _films_due(db, 6)
+    for film in films:
+        await _price(db, film, "blu_ray", "5.45", checked=NOW - timedelta(seconds=1))
+    scarce = await db.scalar(select(DiscValuation).where(DiscValuation.movie_id == films[-1].id))
+    assert scarce is not None
+    scarce.value_basis = "new_scaled"
+    scarce.factor = Decimal("0.50")
+    scarce.used_count = 1
+    scarce.new_count = 3
+    scarce.new_median = Decimal("10.90")
+    db.add(_spent_today(DAILY_SHARE - 3))
+    await db.commit()
+
+    assert await count_due(db, now=NOW, include_reprice=True) == 6
+    assert (await start_run(db, trigger="job", now=NOW)).reason == "nothing_due"
+    first = await start_run(db, trigger="admin", now=NOW)
+    assert first.run is not None and first.run.budget == 3
+    finished = await work_run(db, FakeEbay(), first.run.id, clock=lambda: NOW)
+    assert finished.remaining == 3
+
+    second = await start_run(db, trigger="job", now=NOW + timedelta(days=1))
+    assert second.run is not None
+    assert second.run.report == {"priceRule": "used_quartile"}
+    continued = await work_run(db, FakeEbay(), second.run.id, clock=lambda: NOW + timedelta(days=1))
+    assert (continued.calls, continued.remaining) == (3, 0)
+    await db.refresh(scarce)
+    assert scarce.value_basis is None
 
 
 async def _scaled(db: AsyncSession, film: Movie, *, new: str, factor: str) -> DiscValuation:
@@ -663,7 +722,8 @@ async def test_both_people_can_read_the_total(db: AsyncSession) -> None:
     assert body["basis"] == "current asking prices"
     assert body["valuedAs"] == "as used copies"
     assert (body["discs"], body["pricedDiscs"], body["uncheckedDiscs"]) == (2, 1, 1)
-    assert body["due"] == 1
+    # The unpriced DVD and the older-rule Blu-ray both need the one-time re-price.
+    assert body["due"] == 2
     assert body["minSample"] == 3
 
 

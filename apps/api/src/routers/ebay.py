@@ -174,7 +174,7 @@ def _to_used_value(value: UsedValue) -> UsedValueResponse:
     return UsedValueResponse(
         price=str(value.price),
         currency=value.currency,
-        basis="used" if value.basis == "used" else "new_scaled",
+        basis="used_quartile" if value.basis == "used_quartile" else "new_scaled",
         sampleSize=value.sample_size,
         low=str(value.low),
         high=str(value.high),

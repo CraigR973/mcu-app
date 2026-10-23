@@ -3939,6 +3939,7 @@
        {
         "enum": [
          "used",
+         "used_quartile",
          "new_scaled",
          "sales"
         ],
@@ -13317,7 +13318,7 @@
     "properties": {
      "basis": {
       "enum": [
-       "used",
+       "used_quartile",
        "new_scaled"
       ],
       "title": "Basis",
@@ -13535,6 +13536,7 @@
      "valueBasis": {
       "enum": [
        "used",
+       "used_quartile",
        "new_scaled",
        "sales"
       ],

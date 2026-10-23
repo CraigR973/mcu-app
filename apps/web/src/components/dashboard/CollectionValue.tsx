@@ -134,9 +134,10 @@ export function CollectionValue() {
         {value.total !== null ? (
           <p className="text-xs leading-5 text-muted-foreground">
             Each disc is valued as a used copy. Three observed sales use the postage-in median of
-            their last advertised listing prices. Other discs use the existing asking-price rule
-            until the next batch reprices them. Asking prices usually run above what discs actually
-            sell for, especially when a Best Offer was accepted.
+            their last advertised listing prices. Otherwise a current used Buy It Now lower quartile,
+            postage in, is used when three listings exist; scarce used listings fall back to New's
+            median scaled to used. Craig starts the re-price once; it continues within the daily
+            eBay limit until every older value has been checked.
           </p>
         ) : null}
 

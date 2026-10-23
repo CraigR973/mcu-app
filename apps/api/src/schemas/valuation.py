@@ -109,7 +109,7 @@ class CopyValuationResponse(BaseModel):
     minSample: int = Field(gt=0)
     #: Batch X6. ``used``: the median of ``sampleSize`` used listings. ``new_scaled``: New's
     #: median of ``sampleSize`` listings times ``factor``. Null when not priced.
-    valueBasis: Literal["used", "new_scaled", "sales"] | None
+    valueBasis: Literal["used", "used_quartile", "new_scaled", "sales"] | None
     factor: str | None
     #: The range of the listings the value rests on, before any factor.
     low: str | None

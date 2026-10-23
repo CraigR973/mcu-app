@@ -46,7 +46,7 @@ VALUATION_STATUSES = ("priced", "not_priced")
 #: How a priced disc's value was reached since Batch X6 (#256): ``used``, the median of its
 #: used listings; ``new_scaled``, New's median times the format's used-to-New factor. Null on
 #: a value from before X6, which was the largest condition group's median (#209).
-VALUE_BASES = ("used", "new_scaled")
+VALUE_BASES = ("used", "used_quartile", "new_scaled")
 
 #: ``job`` is the scheduled command; ``admin`` is the button on Home. ``trial`` is Home's "Try
 #: bid prices" (Batch V6): it spends the same share and saves no prices.
@@ -104,8 +104,8 @@ class ValuationRun(Base, UUIDPrimaryKeyMixin):
     #: trial: films in its sample it did not search.
     remaining: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    #: A trial's report (``schemas.bid_trial.BidTrialReport``), written as it goes, so a
-    #: later session can read what it found. Null for a valuation run.
+    #: A trial's report, or an AA10b admin re-price marker that enables later scheduled
+    #: valuation runs. Null on older runs and scheduled runs before the re-price starts.
     report: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
 
@@ -126,7 +126,7 @@ class DiscValuation(Base, UUIDPrimaryKeyMixin):
             name="ck_disc_valuations_price_only_when_priced",
         ),
         CheckConstraint(
-            "value_basis IS NULL OR value_basis IN ('used', 'new_scaled')",
+            "value_basis IS NULL OR value_basis IN ('used', 'used_quartile', 'new_scaled')",
             name="ck_disc_valuations_value_basis",
         ),
         # A factor is the mark of a New-based value, and only of one.

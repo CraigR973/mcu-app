@@ -61,11 +61,11 @@ const withHeadline: EbayPriceEstimate = {
   ...estimate,
   headline: estimate.segments[0],
   usedValue: {
-    price: '5.45',
+    price: '7.05',
     currency: 'GBP',
-    basis: 'used',
+    basis: 'used_quartile',
     sampleSize: 24,
-    low: '3.29',
+    low: '3.72',
     high: '65.99',
     factor: null,
     valuedAs: 'as used copies',
@@ -101,7 +101,7 @@ describe('the estimate, once asked for', () => {
     const html = renderToStaticMarkup(<Estimate estimate={withHeadline} />)
 
     expect(html).toContain('As a used copy · current asking prices')
-    expect(html).toContain('£5.45')
+    expect(html).toContain('£7.05')
   })
 
   it('never shows a price without its sample size', () => {
@@ -109,7 +109,7 @@ describe('the estimate, once asked for', () => {
     // "median of 29 listings" tells them apart.
     const html = renderToStaticMarkup(<Estimate estimate={withHeadline} />)
 
-    expect(html).toContain('median of 24 used listings, £3.29–£65.99')
+    expect(html).toContain('lower quartile of 24 used listings, postage included, £3.72–£65.99')
     // Every group eBay had is listed with its own count, the New one among them.
     expect(html).toContain('£9.99')
     expect(html).toContain('/ 29')
@@ -151,7 +151,7 @@ describe('the estimate, once asked for', () => {
     // real market, and it is not what this Blu-ray is worth.
     const html = renderToStaticMarkup(<Estimate estimate={withHeadline} />)
 
-    const headlinePosition = html.indexOf('£5.45')
+    const headlinePosition = html.indexOf('£7.05')
     const collectorPosition = html.indexOf('£149.99')
     expect(headlinePosition).toBeGreaterThan(-1)
     expect(collectorPosition).toBeGreaterThan(headlinePosition)

@@ -86,7 +86,7 @@ describe('CollectionValue — Batch T6', () => {
     expect(screen.getByText(/103 had fewer than 3 used and 3 new matching eBay listings, so they are not priced rather than guessed/)).not.toBeNull()
     expect(screen.getByText(/52 not valued as used copies yet; the next run does them first/)).not.toBeNull()
     expect(screen.getByText(/Each disc is valued as a used copy/)).not.toBeNull()
-    expect(screen.getByText(/usually run above what discs actually sell for/)).not.toBeNull()
+    expect(screen.getByText(/current used Buy It Now lower quartile, postage in/)).not.toBeNull()
   })
 
   it('offers a viewer no button, because a run spends the shared eBay allowance', async () => {
