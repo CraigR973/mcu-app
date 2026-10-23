@@ -254,6 +254,7 @@ export function CollectionShelf() {
             ? `Worth is ${value.valuedAs ? `${value.valuedAs}, ` : ''}at eBay asking prices, which usually run above what discs sell for.`
             : undefined
         }
+        action={<ShelfLink to="/movies">Browse the archive</ShelfLink>}
       />
       {body}
     </section>

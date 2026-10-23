@@ -95,10 +95,9 @@ const selector = (className: string) => `.${className.replace('/', '\\/')}`
 
 describe('opacity steps', () => {
   it('reads the classes V1 found dropped, so a pass below means something', () => {
-    // The ten files of 30 Sep's reconciliation, one class from each kind.
+    // Representative retained classes from 30 Sep's reconciliation, one class from each kind.
     const names = new Set(inSource.map(({ className }) => className))
     for (const className of [
-      'bg-background/94',
       'bg-popover/96',
       'bg-warning/12',
       'bg-quality-4k/14',

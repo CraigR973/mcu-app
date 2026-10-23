@@ -167,10 +167,9 @@ describe('Home as rows, the collection first — Batch W2', () => {
     expect(headings()).toEqual([
       'The collection',
       'Coming to disc',
-      'Top rated',
       'Most rewatched',
       'Most valuable discs',
-      'Best reviewed',
+      'Best discs',
       'On this day',
       'Worth a rewatch',
       'Completion',
@@ -216,6 +215,14 @@ describe('Home as rows, the collection first — Batch W2', () => {
     expect(await numbers.findByText('≈ £1,903')).not.toBeNull()
     expect(numbers.getByText('1,454 of 1,880 discs priced')).not.toBeNull()
     expect(numbers.getByText('1,888')).not.toBeNull()
+  })
+
+  it('links the collection heading to the Archive — AA1', async () => {
+    renderHome()
+    const collection = await screen.findByRole('heading', { level: 2, name: 'The collection' })
+    const section = collection.closest('section') as HTMLElement
+
+    expect(within(section).getByRole('link', { name: 'Browse the archive' }).getAttribute('href')).toBe('/movies')
   })
 
   it('counts sales-backed discs beside the worth on Home', async () => {

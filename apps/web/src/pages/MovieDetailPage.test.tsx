@@ -273,20 +273,28 @@ describe('MovieDetailPage copy editing for Mark', () => {
 })
 
 describe('MovieDetailPage tabs', () => {
-  // Batch U3's browser check, at 375 px on a touch screen: `touch-target`'s 44px minimum
-  // width replaced the flex item's automatic one, so the tabs shrank below their labels and
-  // the copy count spilled onto "Overview". No layout here to measure; this pins the fix.
-  it('never shrinks a tab below its label, so the strip scrolls instead', async () => {
+  it('fits all four tabs at 375 px without sideways scrolling', async () => {
     renderPage()
     await screen.findByText('Criterion Collection')
 
     const tabs = screen.getAllByRole('tab')
-    expect(tabs.length).toBeGreaterThan(1)
+    expect(tabs).toHaveLength(4)
     for (const tab of tabs) {
-      expect(tab.className).toMatch(/(^|\s)shrink-0(\s|$)/)
-      expect(tab.className).toContain('whitespace-nowrap')
+      expect(tab.className).toContain('min-w-0')
     }
-    expect(screen.getByRole('tablist', { name: 'Film details' }).className).toContain('overflow-x-auto')
+    const tablist = screen.getByRole('tablist', { name: 'Film details' })
+    expect(tablist.className).toContain('grid-cols-4')
+    expect(tablist.className).not.toContain('overflow-x-auto')
+  })
+
+  it('puts the owned copies before streaming in Where to watch', async () => {
+    renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: 'Where to watch' }))
+
+    const shelf = await screen.findByRole('heading', { name: 'On the shelf' })
+    const streaming = screen.getByRole('heading', { name: 'Streaming' })
+    expect(shelf.compareDocumentPosition(streaming) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText('Front 2nd shelf')).not.toBeNull()
   })
 })
 

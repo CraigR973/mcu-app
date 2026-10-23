@@ -93,7 +93,7 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
-        start_url: '/movies',
+        start_url: '/',
         // `any` and `maskable` are separate entries on purpose: a maskable icon holds its
         // artwork inside a 72% safe area, so a platform that used it unmasked would draw
         // the emblem small in a field of ink. Declaring one icon as both makes every

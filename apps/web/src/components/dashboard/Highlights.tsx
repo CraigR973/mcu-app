@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Award, Gem, Repeat, Star, type LucideIcon } from 'lucide-react'
+import { Award, Gem, Repeat, type LucideIcon } from 'lucide-react'
 
 import { valueBehind } from '@/components/collection/value-words'
 import { PosterCard, Shelf } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
 import { fetchHighlights, formatLabel, type Highlights as HighlightsData } from '@/lib/api'
-import { stars, whoseRatings } from '@/lib/highlights'
 import { queryErrorMessage } from '@/lib/query-state'
 import { formatShortDate } from '@/lib/utils'
 
@@ -52,24 +51,6 @@ function PosterRow({
 
 function rows(data: HighlightsData): ReactNode[] {
   const built: ReactNode[] = []
-  const top = data.topRated
-  if (top.items.length > 0) {
-    built.push(
-      <PosterRow
-        key="top-rated"
-        id="highlights-top-rated"
-        icon={Star}
-        title="Top rated"
-        caption={whoseRatings(top.ratedBy, top.notRatedBy)}
-        cards={top.items.map((film) => ({
-          movieId: film.movieId,
-          title: film.title,
-          posterPath: film.posterPath,
-          detail: film.ratings.map((entry) => `★ ${stars(entry.rating)} ${entry.personName}`).join(' · '),
-        }))}
-      />,
-    )
-  }
   if (data.mostRewatched.length > 0) {
     built.push(
       <PosterRow
@@ -131,8 +112,8 @@ function rows(data: HighlightsData): ReactNode[] {
         key="best-reviewed"
         id="highlights-best-reviewed"
         icon={Award}
-        title="Best reviewed"
-        caption="Blu-ray.com's overall score for the disc, on a format on the shelf."
+        title="Best discs"
+        caption="Blu-ray.com scores the disc's picture, sound and extras, not the film."
         cards={data.bestReviewed.map((film) => ({
           movieId: film.movieId,
           title: film.title,
@@ -153,9 +134,9 @@ function rows(data: HighlightsData): ReactNode[] {
 /**
  * Highlights on Home — Batch V5, snag 9 (`DECISIONS.md` #228: "a mix of all").
  *
- * Short poster rows, each film opening its page: top rated (with whose rating it is), most
- * rewatched across both diaries, the most valuable discs at their stored value, and since
- * V9 the best reviewed, by Blu-ray.com's overall score. **A row with nothing in it is not
+ * Short poster rows, each film opening its page: most rewatched across both diaries,
+ * the most valuable discs at their stored value, and the best discs by Blu-ray.com's
+ * overall score. AA1 removed Top rated from Home. **A row with nothing in it is not
  * shown**, and nothing at all when every row is empty, as Home's other sections do. One
  * request for all four.
  *

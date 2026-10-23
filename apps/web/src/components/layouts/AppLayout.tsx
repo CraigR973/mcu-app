@@ -161,12 +161,8 @@ export default function AppLayout({ children }: Props) {
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Batch W1, snag 5. The bottom bar's raised surface and its shadow, mirrored. Until
-            W1 this was `bg-background/94` with a blur, which V1 made real, but nothing
-            scrolls under this bar (the page scrolls in `main`, below it), so 94% of the
-            page's colour over the page's colour was the page's colour: the bar read as part
-            of the page, its icons in the muted grey. */}
-        <header aria-label="Top bar" className="relative z-20 border-b border-border bg-popover pt-[env(safe-area-inset-top)] shadow-[0_12px_35px_-28px_hsl(var(--shadow-colour)/0.65)]">
+        {/* AA1: keep the iOS clock and page on the same surface, with a clear rule below. */}
+        <header aria-label="Top bar" className="relative z-20 border-b border-border bg-background pt-[env(safe-area-inset-top)]">
           <PhoneTopBar onOpenPalette={() => setPaletteOpen(true)} />
           <div className="hidden min-h-[4.5rem] items-center gap-3 px-7 lg:flex">
           <div className="w-full max-w-2xl flex-1">
@@ -230,9 +226,8 @@ export default function AppLayout({ children }: Props) {
             role="dialog"
             aria-modal="true"
             aria-label="Search the archive"
-            // The top bar's surface (W1). Taller than the bar, the sheet covers it while open, so
-            // in the page's colour it brought the faded bar back on every tap of Search.
-            className="absolute inset-x-0 top-0 border-b border-border bg-popover px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-lift"
+            // Search covers the top bar, so its surface follows AA1's bar colour.
+            className="absolute inset-x-0 top-0 border-b border-border bg-background px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-lift"
           >
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">

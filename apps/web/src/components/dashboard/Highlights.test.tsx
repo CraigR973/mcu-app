@@ -76,15 +76,15 @@ afterEach(() => {
 })
 
 describe('Highlights on Home — Batch V5', () => {
-  it('shows three short poster rows, each film opening its page', async () => {
+  it('shows the remaining short poster rows, each film opening its page', async () => {
     renderPanel(FULL)
 
     // Since W2 each row is a section of Home in its own right, and the "Highlights" heading
     // over them has gone (#249: "make all the sections look like highlights").
-    expect(await screen.findByRole('region', { name: 'Top rated' })).not.toBeNull()
+    expect(await screen.findByRole('region', { name: 'Most rewatched' })).not.toBeNull()
+    expect(screen.queryByRole('region', { name: 'Top rated' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Highlights' })).toBeNull()
     for (const [row, films] of [
-      ['Top rated', ['Heat', 'Alien']],
       ['Most rewatched', ['Alien']],
       ['Most valuable discs', ['Heat']],
     ] as const) {
@@ -96,13 +96,12 @@ describe('Highlights on Home — Batch V5', () => {
     expect(fetchHighlightsMock).toHaveBeenCalledTimes(1)
   })
 
-  it("says whose ratings they are, and who does not rate (#159)", async () => {
+  it('leaves Top rated and the ratings detail off Home — AA1', async () => {
     renderPanel(FULL)
-    const top = within(await screen.findByRole('region', { name: 'Top rated' }))
+    await screen.findByRole('region', { name: 'Most rewatched' })
 
-    expect(top.getByText('Rated 4½ or 5 stars by Craig. Mark has not rated any films.')).not.toBeNull()
-    expect(top.getByText('★ 5 Craig')).not.toBeNull()
-    expect(top.getByText('★ 4½ Craig')).not.toBeNull()
+    expect(screen.queryByRole('region', { name: 'Top rated' })).toBeNull()
+    expect(screen.queryByText('Rated 4½ or 5 stars by Craig. Mark has not rated any films.')).toBeNull()
   })
 
   it('counts rewatches across both diaries, saying whose', async () => {
@@ -126,7 +125,7 @@ describe('Highlights on Home — Batch V5', () => {
   it('leaves out a row with nothing in it', async () => {
     renderPanel({ ...FULL, mostRewatched: [] })
 
-    expect(await screen.findByRole('region', { name: 'Top rated' })).not.toBeNull()
+    expect(await screen.findByRole('region', { name: 'Most valuable discs' })).not.toBeNull()
     expect(screen.queryByRole('region', { name: 'Most rewatched' })).toBeNull()
     expect(screen.queryByText('Most rewatched')).toBeNull()
     expect(screen.getByRole('region', { name: 'Most valuable discs' })).not.toBeNull()
@@ -160,31 +159,31 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
 
   it('ranks owned films by Blu-ray.com\'s overall score, each opening its page', async () => {
     renderPanel(REVIEWED)
-    const row = within(await screen.findByRole('region', { name: 'Best reviewed' }))
+    const row = within(await screen.findByRole('region', { name: 'Best discs' }))
 
     expect(row.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
       `/movies/${ALIEN.movieId}`,
       `/movies/${HEAT.movieId}`,
     ])
-    expect(row.getByText("Blu-ray.com's overall score for the disc, on a format on the shelf.")).not.toBeNull()
+    expect(row.getByText("Blu-ray.com scores the disc's picture, sound and extras, not the film.")).not.toBeNull()
     expect(row.getByText('4.5/5 · 4K UHD')).not.toBeNull()
     expect(row.getByText('4.0/5 · Blu-ray')).not.toBeNull()
   })
 
-  it('is the fourth row, after the most valuable discs', async () => {
+  it('follows the most valuable discs', async () => {
     renderPanel(REVIEWED)
-    await screen.findByRole('region', { name: 'Best reviewed' })
+    await screen.findByRole('region', { name: 'Best discs' })
 
     // Level 2 since W2, when the rows became peers of Home's other sections.
     const titles = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
-    expect(titles).toEqual(['Top rated', 'Most rewatched', 'Most valuable discs', 'Best reviewed'])
+    expect(titles).toEqual(['Most rewatched', 'Most valuable discs', 'Best discs'])
   })
 
   it('is left out until a review has been read', async () => {
     renderPanel(FULL)
-    await screen.findByRole('region', { name: 'Top rated' })
+    await screen.findByRole('region', { name: 'Most rewatched' })
 
-    expect(screen.queryByRole('region', { name: 'Best reviewed' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Best discs' })).toBeNull()
   })
 })
 

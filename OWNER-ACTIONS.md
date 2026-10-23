@@ -17,6 +17,8 @@ conversation still maps onto this file.*
   second press is needed. When Home says none are due, send its total and priced/sales-backed
   disc counts to compare with the measured before total, **£16,867.11**. Sitting 2 remains
   closed until its own go.
+- **Group AA sitting 2, AA1:** after AA1 is live, remove and re-add the app on each iPhone.
+  It will then open Home, rather than the Archive, from its new start page.
 - ~~**Group AA sitting 1, AA10a (item 36):** start and read back the first live used-sale
   pass.~~ **Done 22 Oct:** Craig started it; 598 searches stored 6,179 listings, and the run
   ended at its daily budget without an error. AA10b may proceed.

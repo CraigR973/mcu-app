@@ -159,16 +159,13 @@ describe('AppLayout phone top bar — Batch T3', () => {
     await waitFor(() => expect(screen.getByLabelText('Current page').textContent).toBe('/deals'))
   })
 
-  it("is drawn on the bottom bar's surface, not the page's colour — Batch W1, snag 5", () => {
-    // Nothing scrolls under the top bar, so the page's colour at any opacity reads as the
-    // page itself: that was the "faded" bar. The browser check measures the colours; this
-    // keeps the bar from drifting back to them.
+  it("uses the page's dark surface with a crisp rule — AA1, snag 2", () => {
     renderShell('/movies/some-film', <p>A film</p>)
     const topBar = screen.getByRole('banner', { name: 'Top bar' })
     const bottomBar = screen.getByRole('navigation', { name: 'Primary mobile navigation' })
     const surface = (element: Element) => element.className.split(/\s+/).find((name) => name.startsWith('bg-'))
 
-    expect(surface(topBar)).toBe('bg-popover')
+    expect(surface(topBar)).toBe('bg-background')
     expect(surface(bottomBar)?.startsWith('bg-popover')).toBe(true)
     for (const control of [
       within(topBar).getByRole('button', { name: 'Back' }),
@@ -178,16 +175,13 @@ describe('AppLayout phone top bar — Batch T3', () => {
     }
   })
 
-  it('keeps that surface when Search opens over the bar — W1 follow-up', () => {
-    // The search sheet is taller than the top bar and covers it, so it *is* the top bar while
-    // it is open. It kept the page's colour after W1, and Craig saw the faded bar again each
-    // time he tapped Search (dark theme, 5 Oct).
+  it('keeps the top-bar surface when Search opens over it — AA1', () => {
     renderShell('/movies')
     fireEvent.click(screen.getByRole('button', { name: 'Search the archive' }))
     const sheet = screen.getByRole('dialog', { name: 'Search the archive' })
     const surface = sheet.className.split(/\s+/).find((name) => name.startsWith('bg-'))
 
-    expect(surface).toBe('bg-popover')
+    expect(surface).toBe('bg-background')
   })
 
   it("opens the You page from the person's initial", () => {

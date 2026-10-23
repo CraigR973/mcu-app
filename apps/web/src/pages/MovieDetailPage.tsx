@@ -800,14 +800,12 @@ export default function MovieDetailPage() {
 
         <div className="mt-8 grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,24rem)]">
           <section className="min-w-0" aria-label="Film record">
-            {/* Each tab is `shrink-0` (Batch U3's browser check). On a touch screen
-                `touch-target`'s 44px minimum width replaces a flex item's automatic one, so
-                at 375px the tabs shrank below their labels and each count spilled onto the
-                next tab. Now the strip scrolls instead. */}
+            {/* AA1 keeps all four answers visible at 375px. A fitted grid lets each label
+                wrap within its own quarter instead of making the person scroll sideways. */}
             <div
               role="tablist"
               aria-label="Film details"
-              className="flex gap-1 overflow-x-auto border-b border-border"
+              className="grid grid-cols-4 gap-1 border-b border-border"
             >
               {tabs.map(({ key, label, count }, index) => (
                 <button
@@ -820,7 +818,7 @@ export default function MovieDetailPage() {
                   tabIndex={tab === key ? 0 : -1}
                   onClick={() => setTab(key)}
                   onKeyDown={(event) => moveTab(event, index)}
-                  className={`touch-target -mb-px min-h-11 shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${tab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  className={`touch-target -mb-px min-h-11 min-w-0 border-b-2 px-1 py-2 text-xs font-semibold leading-tight transition-colors sm:px-3 sm:text-sm ${tab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
                   {label}
                   {count !== undefined && count > 0 ? (
@@ -984,6 +982,47 @@ export default function MovieDetailPage() {
 
             {tab === 'watch' ? (
               <div id="movie-panel-watch" role="tabpanel" aria-labelledby={panelLabelledBy} tabIndex={0} className="mt-6 space-y-8 focus:outline-none">
+                <section className="space-y-3">
+                  <div>
+                    <h2 className="section-heading">On the shelf</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Your copies come first, with their format, location and loan status.</p>
+                  </div>
+                  {copiesState === 'loading' ? (
+                    <StatePanel tone="loading" title="Loading owned copies" description="Checking editions and shelf locations…" />
+                  ) : copiesState === 'offline' ? (
+                    <StatePanel
+                      tone="offline"
+                      title="Copy details are not cached"
+                      description="Reconnect to check editions and locations for this film."
+                      action={<Button type="button" variant="outline" onClick={() => void copiesQuery.refetch()}>Try again</Button>}
+                    />
+                  ) : copiesState === 'error' ? (
+                    <StatePanel
+                      tone="error"
+                      title="Could not load the owned copies"
+                      description={queryErrorMessage(copiesQuery.error, 'The collection record did not respond.')}
+                      action={<Button type="button" variant="outline" onClick={() => void copiesQuery.refetch()}>Try again</Button>}
+                    />
+                  ) : copiesState === 'empty' ? (
+                    <StatePanel tone="empty" title="No live copies in the collection" compact />
+                  ) : (
+                    <div className="grid gap-4 xl:grid-cols-2">
+                      {copies.map((copy) => (
+                        <CopyCard
+                          key={copy.id}
+                          item={copy}
+                          movieId={movie.id}
+                          filmTitle={movie.title}
+                          year={movie.year}
+                          isSeries={movie.mediaType === 'tv'}
+                          canEdit={canEdit}
+                          isAdmin={isAdmin}
+                          onEdit={setEditing}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
                 <section className="space-y-3">
                   <h2 className="section-heading">Streaming</h2>
                   <StreamingPanel movieId={movie.id} />
