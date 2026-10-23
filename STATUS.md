@@ -2,27 +2,29 @@
 
 ## Now
 
-**23 Oct: Group AA sitting 1 is paused at AA10b's owner re-price checkpoint.** AA10a's
+**23 Oct: Group AA sitting 1 is paused while AA10b's re-price finishes.** AA10a's
 first live used-sale pass was read back on 22 Oct: 598 searches, 6,179 active listings,
 no recorded sales yet, and 1,399 of 1,997 tracked pairs still due under its daily cap.
 AA10b's code shipped in [PR #101](https://github.com/CraigR973/mcu-app/pull/101)
 (`deccd87`); the separate browser CI timeout fix shipped first in
 [PR #102](https://github.com/CraigR973/mcu-app/pull/102) (`2df5778`). All seven AA10b PR
-and postmerge jobs passed. Railway and Vercel serve `deccd87`; the API reports `db: ok`
+and postmerge jobs passed. The later checkpoint handoff is `22fa632`: all seven CI jobs
+passed, Railway and Vercel serve that SHA, and the API reports `db: ok`
 and push, AI, eBay, TMDB and Brave configured.
 
-**The live AA10b re-price has not started.** Home's measured before total is £16,867.11
-across 1,290 priced of 1,469 physical discs, with 0 sales-backed values. The old stored
-asking values remain until Craig presses **Home → Collection value → Update values** once.
-The campaign then continues through scheduled runs, at most 750 eBay calls per UTC day,
-until Home says none are due. Read back its after total and priced/sales-backed counts;
-only then close AA10b. The next Group AA sitting is not authorised.
+**Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
+£16,867.11 across 1,290 priced of 1,469 physical discs, with 0 sales-backed values.
+The first run spent 748 of its 750-call budget, checked 748 pairs without failure, and
+left 719 due. Home's interim total is £15,961.05 across 1,314 priced discs, 0 sales-backed.
+The next scheduled valuation runs are 1 and 2 Nov at 04:00 UTC; each can spend up to 750
+calls for its UTC day. Read back the final Home total and priced/sales-backed counts when
+none are due; only then close AA10b. The next Group AA sitting is not authorised.
 
 ## Next
 
-**Group AA sitting 1:** Craig starts AA10b's re-price once on Home. The daily scheduled
-runs finish the backlog; read back Home's total when none are due and compare it with
-£16,867.11. Do not start sitting 2 in this run.
+**Group AA sitting 1:** Wait for the 1–2 Nov scheduled valuation runs to finish AA10b's
+719 due pairs. Read back Home's total when none are due and compare it with £16,867.11.
+Do not start sitting 2 in this run.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -415,6 +417,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-23 (AA10b owner pass started; after-total pending)** — Craig pressed **Home → Collection value → Update values** once. Read-only production queries found one AA10b admin run, `budget_spent`: 748 calls, 675 priced pairs, 73 not priced, 0 failed, 719 remaining. A separate read-only query matching Home's effective-value rule found 1,469 physical discs, 1,314 priced, 0 sales-backed and £15,961.05 total. This is interim against the £16,867.11 before total. The scheduled valuation job runs on 1, 2, 15 and 16 of each month at 04:00 UTC, so its next continuation is 1 Nov, with 2 Nov available if needed. Do not press again or close AA10b until the final readback.
 - **2026-10-23 (AA10b code shipped; owner checkpoint open)** — [PR #101](https://github.com/CraigR973/mcu-app/pull/101) merged as `deccd87` after the separate browser CI timeout repair, [PR #102](https://github.com/CraigR973/mcu-app/pull/102) (`2df5778`). The used Buy It Now lower quartile includes postage; every eBay find, New included, needs to be at least 10% under the disc's used figure. Earlier eBay finds remain stored but are withheld until re-judged. The owner-started re-price covers every existing film-format pair and continues within the 750-call daily share. Local API 1,593 passed with 845 Mac database skips; web/shared 671 passed; lint, type checks and builds passed. All seven PR and postmerge jobs passed, including Postgres 17, image boot, Chromium, Firefox, WebKit and jobs. Production API and web serve `deccd87` with `db: ok` and all integrations configured. No AA10b live re-price was run; Craig's before/after Home total remains open.
 - **2026-10-23 (CI gate repair before AA10b)** — The docs-only main run at `92c494d` hit its 40-minute E2E job limit while Ubuntu was still downloading Playwright dependencies; the rerun was cancelled after the cause was confirmed. PR #102 raised only that job limit to 90 minutes, kept all browser cases, and passed the full gate. Main's exact `2df5778` run and production SHA/readiness also passed before AA10b was merged. AA10b's first Postgres run found six failures (owner-run gate fixtures, a legacy shop reference, and an old deal freshness fixture); its second found one invalid scaled-value test fixture. The third passed without relaxing the gate.
 - **2026-10-22 (AA10a first live pass, owner checkpoint cleared)** — Craig pressed Home's
