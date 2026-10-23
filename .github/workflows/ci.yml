@@ -229,7 +229,9 @@ jobs:
     name: E2E — Chromium · Firefox · WebKit · jobs
     if: github.event_name != 'push' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    # Installing WebKit's Ubuntu dependencies can exceed 40 minutes when the apt mirror
+    # is slow; keep the browser gate intact and allow the packages to finish.
+    timeout-minutes: 90
     services:
       postgres:
         image: postgres:17
