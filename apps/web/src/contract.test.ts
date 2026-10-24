@@ -213,31 +213,48 @@ interface ZodShape {
   acceptsMissing: boolean
 }
 
+/** The contract check deliberately reads Zod's schema definitions. Zod 4 exposes the
+ * discriminator as `type` (rather than Zod 3's `typeName`) and renamed array elements.
+ * Keep that version boundary in one small adapter so the checks below remain the same. */
+interface ZodDef {
+  type: string
+  innerType?: ZodTypeAny
+  getter?: () => ZodTypeAny
+  in?: ZodTypeAny
+  element?: ZodTypeAny
+  valueType?: ZodTypeAny
+  shape?: Record<string, ZodTypeAny>
+  entries?: Record<string, unknown>
+  values?: unknown
+  options?: ZodTypeAny[]
+  checks?: unknown[]
+}
+
+function zodDef(schema: ZodTypeAny): ZodDef {
+  return schema._def as unknown as ZodDef
+}
+
 function unwrapZod(schema: ZodTypeAny): ZodShape {
   let current: ZodTypeAny = schema
   let acceptsNull = false
   let acceptsMissing = false
   for (;;) {
-    const def = current._def as { typeName: string; innerType?: ZodTypeAny; schema?: ZodTypeAny; getter?: () => ZodTypeAny; in?: ZodTypeAny }
-    if (def.typeName === 'ZodOptional') acceptsMissing = true
-    else if (def.typeName === 'ZodNullable') acceptsNull = true
-    else if (def.typeName === 'ZodDefault' || def.typeName === 'ZodCatch') acceptsMissing = true
-    else if (def.typeName === 'ZodEffects') {
-      current = def.schema as ZodTypeAny
+    const def = zodDef(current)
+    if (def.type === 'optional') acceptsMissing = true
+    else if (def.type === 'nullable') acceptsNull = true
+    else if (def.type === 'default') acceptsMissing = true
+    else if (def.type === 'catch') {
+      acceptsMissing = true
+      acceptsNull = true
+    } else if (def.type === 'lazy') {
+      current = def.getter!()
       continue
-    } else if (def.typeName === 'ZodLazy') {
-      current = (def.getter as () => ZodTypeAny)()
-      continue
-    } else if (def.typeName === 'ZodPipeline') {
-      current = def.in as ZodTypeAny
-      continue
-    } else if (def.typeName === 'ZodBranded') {
-      current = (def as unknown as { type: ZodTypeAny }).type
+    } else if (def.type === 'pipe') {
+      current = def.in!
       continue
     } else break
-    current = def.innerType as ZodTypeAny
+    current = def.innerType!
   }
-  if ((current._def as { typeName: string }).typeName === 'ZodCatch') acceptsNull = true
   return { inner: current, acceptsNull, acceptsMissing }
 }
 
@@ -279,11 +296,10 @@ function apiEnum(node: Json): unknown[] | null {
 }
 
 function zodValues(schema: ZodTypeAny): unknown[] | null {
-  const def = schema._def as { typeName: string; values?: unknown; value?: unknown; options?: ZodTypeAny[] }
-  if (def.typeName === 'ZodEnum') return def.values as unknown[]
-  if (def.typeName === 'ZodNativeEnum') return Object.values(def.values as object)
-  if (def.typeName === 'ZodLiteral') return [def.value]
-  if (def.typeName === 'ZodUnion') {
+  const def = zodDef(schema)
+  if (def.type === 'enum') return Object.values(def.entries ?? {})
+  if (def.type === 'literal') return def.values as unknown[]
+  if (def.type === 'union') {
     const parts = (def.options ?? []).map((option) => zodValues(unwrapZod(option).inner))
     if (parts.every((part) => part !== null)) return parts.flat() as unknown[]
   }
@@ -291,11 +307,13 @@ function zodValues(schema: ZodTypeAny): unknown[] | null {
 }
 
 function zodMinimum(schema: ZodTypeAny): number | null {
-  const def = schema._def as { typeName: string; checks?: { kind: string; value?: number; inclusive?: boolean }[] }
-  if (def.typeName !== 'ZodNumber') return null
-  const mins = (def.checks ?? []).filter((check) => check.kind === 'min')
+  const def = zodDef(schema)
+  if (def.type !== 'number') return null
+  const mins = (def.checks ?? [])
+    .map((check) => (check as { _zod?: { def?: { check?: string; value?: number; inclusive?: boolean } } })._zod?.def)
+    .filter((check): check is { check: 'greater_than'; value: number; inclusive?: boolean } => check?.check === 'greater_than' && typeof check.value === 'number')
   if (mins.length === 0) return null
-  return Math.max(...mins.map((check) => (check.inclusive === false ? (check.value as number) + Number.EPSILON : (check.value as number))))
+  return Math.max(...mins.map((check) => (check.inclusive === false ? check.value + Number.EPSILON : check.value)))
 }
 
 function apiMinimum(node: Json): number | null {
@@ -320,8 +338,8 @@ function walk(
 
   if (api.nullable && !zod.acceptsNull) problems.push(`${at}: the API may send null; the schema refuses it`)
 
-  const type = (zod.inner._def as { typeName: string }).typeName
-  if (type === 'ZodUnknown' || type === 'ZodAny') return
+  const type = zodDef(zod.inner).type
+  if (type === 'unknown' || type === 'any') return
 
   const values = zodValues(zod.inner)
   if (values) {
@@ -337,7 +355,7 @@ function walk(
     return
   }
 
-  if (type === 'ZodNumber') {
+  if (type === 'number') {
     const floor = zodMinimum(zod.inner)
     if (floor !== null) {
       const apiFloor = apiMinimum(api.node)
@@ -350,20 +368,20 @@ function walk(
     return
   }
 
-  if (type === 'ZodArray') {
+  if (type === 'array') {
     const items = (api.node.items ?? {}) as Json
-    walk((zod.inner._def as { type: ZodTypeAny }).type, items, `${at}[]`, problems, seen)
+    walk(zodDef(zod.inner).element!, items, `${at}[]`, problems, seen)
     return
   }
 
-  if (type === 'ZodRecord') {
+  if (type === 'record') {
     const values = api.node.additionalProperties
-    if (values && typeof values === 'object') walk((zod.inner._def as { valueType: ZodTypeAny }).valueType, values as Json, `${at}{}`, problems, seen)
+    if (values && typeof values === 'object') walk(zodDef(zod.inner).valueType!, values as Json, `${at}{}`, problems, seen)
     return
   }
 
-  if (type === 'ZodObject') {
-    const shape = (zod.inner as z.AnyZodObject).shape as Record<string, ZodTypeAny>
+  if (type === 'object') {
+    const shape = zodDef(zod.inner).shape!
     // Every property a response model declares is sent: FastAPI serialises the whole model
     // (no route drops unset or null fields), so "may the API leave it out?" is "does it
     // declare it?". `required` in the description reflects defaults, not the wire.

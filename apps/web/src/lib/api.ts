@@ -225,7 +225,7 @@ import {
   type ShelfFacet,
   type MovieListItem,
 } from '@mcu/shared'
-import { z, type ZodType, type ZodTypeDef } from 'zod'
+import { z, type ZodType } from 'zod'
 
 import { authFetch } from './auth-tokens'
 import { formatShortDate } from './utils'
@@ -473,7 +473,7 @@ async function errorMessage(response: Response): Promise<string> {
  * which ruled out `.default()` — and Batch T2 needs one, so a response the service worker
  * cached before a field existed still parses offline.
  */
-type ResponseSchema<T> = ZodType<T, ZodTypeDef, unknown>
+type ResponseSchema<T> = ZodType<T, unknown>
 
 async function parseResponse<T>(response: Response, schema: ResponseSchema<T>): Promise<T> {
   if (!response.ok) throw new ApiError(await errorMessage(response), response.status)

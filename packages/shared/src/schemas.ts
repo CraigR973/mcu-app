@@ -241,8 +241,8 @@ export const collectionCopySchema = z.object({
   condition: z.string().nullable(),
   hasPlaybackIssues: z.boolean(),
   playbackNotes: z.string().nullable(),
-  videoSpecs: z.record(z.unknown()).nullable(),
-  audioSpecs: z.array(z.record(z.unknown())).nullable(),
+  videoSpecs: z.record(z.string(), z.unknown()).nullable(),
+  audioSpecs: z.array(z.record(z.string(), z.unknown())).nullable(),
   specialFeatures: z.array(z.string()).nullable(),
   regionCode: z.string().nullable(),
   releaseLabel: z.string().nullable(),
@@ -655,7 +655,7 @@ export const auditEntrySchema = z.object({
   actionType: auditActionSchema,
   targetTable: z.string().min(1),
   targetId: z.string().min(1),
-  changes: z.record(z.unknown()).nullable(),
+  changes: z.record(z.string(), z.unknown()).nullable(),
   createdAt: z.string(),
 })
 
@@ -1204,7 +1204,7 @@ export const calendarEntrySchema = z.object({
  *  an explicit empty map rather than something the client infers. */
 export const calendarMonthSchema = z.object({
   month: z.string(),
-  days: z.record(z.array(calendarEntrySchema)),
+  days: z.record(z.string(), z.array(calendarEntrySchema)),
   total: z.number().int().nonnegative(),
 })
 
@@ -1299,7 +1299,7 @@ export const retailerSchema = z.object({
   dealsUrl: z.string().nullable(),
   searchUrlTemplate: z.string().nullable(),
   scraperType: scraperTypeSchema,
-  scraperConfig: z.record(z.unknown()),
+  scraperConfig: z.record(z.string(), z.unknown()),
   scrapeFrequency: scrapeFrequencySchema,
   enabled: z.boolean(),
   currency: z.string().length(3),
@@ -1366,7 +1366,7 @@ export const scraperTestSchema = z.object({
 export const builtInScraperSchema = z.object({
   name: z.string().min(1),
   searchUrlTemplate: z.string().min(1),
-  scraperConfig: z.record(z.unknown()),
+  scraperConfig: z.record(z.string(), z.unknown()),
   /** True only after a permitted live check. A selector nobody has run is a guess. */
   verified: z.boolean(),
   note: z.string().nullable(),
@@ -1564,7 +1564,7 @@ export const scrapeRunRecordSchema = z.object({
   failed: z.number().int().nonnegative(),
   written: z.number().int().nonnegative(),
   alertsQueued: z.number().int().nonnegative(),
-  failures: z.array(z.record(z.string())),
+  failures: z.array(z.record(z.string(), z.string())),
   disabledRetailers: z.array(z.string()),
   error: z.string().nullable(),
 })
@@ -1593,7 +1593,7 @@ export const dailyRunSchema = z.object({
   alertsQueued: z.number().int().nonnegative(),
   pushesSent: z.number().int().nonnegative(),
   disabledRetailers: z.array(z.string()),
-  failures: z.array(z.record(z.string())),
+  failures: z.array(z.record(z.string(), z.string())),
   aggregation: aggregationSchema.nullable(),
   dryRun: z.boolean(),
 })
@@ -1700,7 +1700,7 @@ export const aiChatMessageSchema = z.object({
 export const aiPendingToolCallSchema = z.object({
   id: z.string().uuid(),
   toolName: z.string().min(1),
-  input: z.record(z.unknown()),
+  input: z.record(z.string(), z.unknown()),
 })
 
 export const aiConversationDetailSchema = aiConversationSchema.extend({
@@ -1742,7 +1742,7 @@ export const movieNightMatchSchema = z.object({
 export const movieNightSessionSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(['open', 'ended']),
-  filters: z.record(z.unknown()),
+  filters: z.record(z.string(), z.unknown()),
   inviteToken: z.string().min(16),
   invitePath: z.string().min(1),
   participantCount: z.number().int().positive(),
@@ -1902,7 +1902,7 @@ export const ebayPriceEstimateSchema = z.object({
   /** Why the rest were rejected, by reason and count. **Part of the answer, not
    *  diagnostics**: a search matching 4 of 200 is either a rare disc or a broken filter,
    *  and this is what tells the two apart. */
-  rejected: z.record(z.number().int().nonnegative()),
+  rejected: z.record(z.string(), z.number().int().nonnegative()),
   unusable: z.number().int().nonnegative(),
   basis: z.string().min(1),
   /** Batch X6: the disc's value as a used copy. Null when too few used and New listings
