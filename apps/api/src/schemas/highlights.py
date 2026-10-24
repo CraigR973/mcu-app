@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from src.schemas.reviews import ReviewScoreResponse
 from src.schemas.wire import UtcDatetime
 
 
@@ -89,6 +90,10 @@ class BestReviewedFilmResponse(BaseModel):
     outOf: int = Field(gt=0)
     #: The format the review is of: one this film is owned on.
     formatCode: str | None = None
+    #: The part of this disc review which scored best: picture, sound or extras.
+    strength: str
+    #: Kept with the card's link so the review page can show the site headings and scores.
+    scores: list[ReviewScoreResponse] = Field(default_factory=list)
 
 
 class HighlightsResponse(BaseModel):

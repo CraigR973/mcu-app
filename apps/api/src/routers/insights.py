@@ -22,6 +22,7 @@ from src.auth import AdminUser, CurrentUser
 from src.models.collection_item import owned_film
 from src.models.completion_set import CompletionSet, member_display
 from src.models.movie import Movie
+from src.models.wanted import WantedItem
 from src.routers.movies import Database, TmdbClient
 from src.schemas.collections import (
     CompletionFilmResponse,
@@ -54,6 +55,23 @@ async def _owned_by_tmdb_id(db: AsyncSession, tmdb_ids: set[int]) -> dict[int, u
     return {int(tmdb_id): movie_id for tmdb_id, movie_id in rows if tmdb_id is not None}
 
 
+async def _wanted_tmdb_ids(db: AsyncSession, tmdb_ids: set[int]) -> set[int]:
+    """The completion films already on the shared, active Wanted list."""
+    if not tmdb_ids:
+        return set()
+    rows = await db.scalars(
+        select(Movie.tmdb_id)
+        .join(WantedItem, WantedItem.movie_id == Movie.id)
+        .where(
+            Movie.tmdb_id.in_(tmdb_ids),
+            Movie.deleted_at.is_(None),
+            WantedItem.deleted_at.is_(None),
+            WantedItem.is_active.is_(True),
+        )
+    )
+    return {int(tmdb_id) for tmdb_id in rows if tmdb_id is not None}
+
+
 def _summary(row: CompletionSet, owned_ids: set[int]) -> CompletionSetResponse:
     members = row.member_tmdb_ids or []
     total = len(members)
@@ -70,6 +88,11 @@ def _summary(row: CompletionSet, owned_ids: set[int]) -> CompletionSetResponse:
         # "12 of 54" beside it can never tell different stories.
         percentComplete=round(owned * 100 / total) if total else 0,
         lastRefreshed=row.last_refreshed,
+        personProfilePath=(
+            row.set_metadata.get("personProfilePath")
+            if isinstance(row.set_metadata.get("personProfilePath"), str)
+            else None
+        ),
     )
 
 
@@ -116,6 +139,7 @@ async def completion_set_detail(
 
     members = row.member_tmdb_ids or []
     owned = await _owned_by_tmdb_id(db, set(members))
+    wanted = await _wanted_tmdb_ids(db, set(members))
     display = member_display(row.set_metadata or {})
 
     films = [
@@ -129,6 +153,7 @@ async def completion_set_detail(
             posterPath=display.get(tmdb_id, {}).get("posterPath"),
             owned=tmdb_id in owned,
             movieId=owned.get(tmdb_id),
+            wanted=tmdb_id in wanted,
         )
         for tmdb_id in members
     ]

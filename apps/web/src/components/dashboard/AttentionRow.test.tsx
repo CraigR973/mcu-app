@@ -1,13 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
-import { AttentionList } from './AttentionRow'
+import { AttentionList, attentionDestination } from './AttentionRow'
 
 describe('AttentionList — Batch X2 (DS44-01, UX48-02)', () => {
   it('names each problem in words, with when it began', () => {
     const html = renderToStaticMarkup(
-      <AttentionList
+      <MemoryRouter><AttentionList
         attention={{
           checkedAt: '2026-10-13T08:00:00Z',
           items: [
@@ -26,18 +27,18 @@ describe('AttentionList — Batch X2 (DS44-01, UX48-02)', () => {
             { key: 'check:stale', message: "The daily check hasn't run since 11 Oct.", since: null, noteId: null },
           ],
         }}
-      />,
+      /></MemoryRouter>,
     )
     expect(html).toContain('Needs attention')
     expect(html).toContain('No eBay listings read in the last 6 scans (since 9 Oct).')
     expect(html).toContain('Mark has no phone getting notifications.<span class="text-muted-foreground"> · since 13 Oct')
     // Not twice for a message that already says since when.
-    expect(html).toContain('(since 9 Oct).</li>')
+    expect(html).toContain('(since 9 Oct).<a')
     expect(html).toContain('The daily check hasn&#x27;t run since 11 Oct.')
   })
 
   it('is not there at all when nothing is wrong', () => {
-    expect(renderToStaticMarkup(<AttentionList attention={{ checkedAt: null, items: [] }} />)).toBe(
+    expect(renderToStaticMarkup(<MemoryRouter><AttentionList attention={{ checkedAt: null, items: [] }} /></MemoryRouter>)).toBe(
       '',
     )
   })
@@ -45,7 +46,7 @@ describe('AttentionList — Batch X2 (DS44-01, UX48-02)', () => {
   it('shows a line from Mark with a Clear button, and nothing to clear on a check', () => {
     const html = renderToStaticMarkup(
       <QueryClientProvider client={new QueryClient()}>
-        <AttentionList
+        <MemoryRouter><AttentionList
           attention={{
             checkedAt: null,
             items: [
@@ -58,10 +59,24 @@ describe('AttentionList — Batch X2 (DS44-01, UX48-02)', () => {
               { key: 'check:stale', message: 'The daily check has not run.', since: null, noteId: null },
             ],
           }}
-        />
+        /></MemoryRouter>
       </QueryClientProvider>,
     )
     expect(html).toContain('Mark says: the Alien disc is in the Lounge')
     expect(html.match(/Clear/g)).toHaveLength(1)
+  })
+
+  it('maps every health-check family to a repair screen or owner instruction', () => {
+    expect(attentionDestination('job:reminders')).toMatchObject({ to: '/admin' })
+    expect(attentionDestination('ebay:listings')).toMatchObject({ to: '/settings' })
+    expect(attentionDestination('person:1:notifications')).toMatchObject({ to: '/settings' })
+    expect(attentionDestination('specs:halted')).toMatchObject({ to: '/specs' })
+    expect(attentionDestination('api:readiness')).toHaveProperty('advice')
+    expect(attentionDestination('database:size')).toHaveProperty('advice')
+    expect(attentionDestination('person:1:lockout')).toMatchObject({ to: '/settings' })
+    expect(attentionDestination('identify:waiting')).toMatchObject({ to: '/identify' })
+    expect(attentionDestination('deals:freshness')).toMatchObject({ to: '/retailers' })
+    expect(attentionDestination('assistant:failures')).toMatchObject({ to: '/assistant' })
+    expect(attentionDestination('check:stale')).toMatchObject({ to: '/admin' })
   })
 })

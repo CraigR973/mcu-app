@@ -10,11 +10,16 @@ import { useAuth } from '@/context/auth'
 import {
   completionCountLabel,
   fetchCompletionInsights,
+  posterUrl,
   refreshCompletionSets,
   setTypeLabel,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn, formatDate } from '@/lib/utils'
+
+function initials(name: string): string {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
+}
 
 function SetRow({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
   return (
@@ -24,8 +29,15 @@ function SetRow({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
         onClick={onOpen}
         className="w-full rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="truncate font-medium text-foreground">{set.setName}</span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            {set.personProfilePath ? (
+              <img src={posterUrl(set.personProfilePath, 'w185')} alt="" className="h-9 w-9 rounded-full object-cover" />
+            ) : (
+              <div aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">{initials(set.setName)}</div>
+            )}
+            <span className="truncate font-medium text-foreground">{set.setName}</span>
+          </div>
           <span className="shrink-0 text-xs text-muted-foreground">
             {completionCountLabel(set)}
           </span>

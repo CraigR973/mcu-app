@@ -92,11 +92,14 @@ export function PosterCard({
   title,
   posterPath,
   detail,
+  after,
 }: {
   to: string | null
   title: string
   posterPath: string | null
   detail?: ReactNode
+  /** An interactive control that must sit beside, not inside, the film-page link. */
+  after?: ReactNode
 }) {
   const body = (
     <>
@@ -122,6 +125,7 @@ export function PosterCard({
       ) : (
         <div>{body}</div>
       )}
+      {after}
     </li>
   )
 }

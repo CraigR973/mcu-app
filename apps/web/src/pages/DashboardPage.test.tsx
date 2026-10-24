@@ -97,7 +97,7 @@ const HIGHLIGHTS: Highlights = {
   mostValuable: [
     { movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, formatCode: '4k_uhd', price: '34.99', currency: 'GBP', basis: 'current asking prices', sampleSize: 7, valueBasis: 'used', factor: null, low: '30.00', high: '40.00', valuedAs: 'as used copies', checkedAt: '2026-09-26T03:00:00Z', copies: 1 },
   ],
-  bestReviewed: [{ movieId: ALIEN, title: 'Alien', year: 1979, posterPath: null, overall: 4.5, outOf: 5, formatCode: '4k_uhd' }],
+  bestReviewed: [{ movieId: ALIEN, title: 'Alien', year: 1979, posterPath: null, overall: 4.5, outOf: 5, formatCode: '4k_uhd', strength: 'picture', scores: [{ heading: 'Video 4K', score: 5 }] }],
 }
 
 function set(id: string, name: string, owned: number, total: number): CompletionSet {
@@ -111,6 +111,7 @@ function set(id: string, name: string, owned: number, total: number): Completion
     missingCount: total - owned,
     percentComplete: Math.floor((owned / total) * 100),
     lastRefreshed: '2026-09-20T00:00:00Z',
+    personProfilePath: null,
   }
 }
 const SETS = [
@@ -173,7 +174,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
     )
   })
 
-  it('runs the collection first, then disc releases, the highlights, memories, completion and activity', async () => {
+  it('runs the collection first, then disc releases, the highlights, memories and completion', async () => {
     renderHome()
     await screen.findByRole('heading', { level: 2, name: 'Completion' })
     await screen.findByRole('heading', { level: 2, name: 'Coming to disc' })
@@ -186,7 +187,6 @@ describe('Home as rows, the collection first — Batch W2', () => {
       'On this day',
       'Worth a rewatch',
       'Completion',
-      'Recent activity',
     ])
   })
 
@@ -199,7 +199,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
     expect(screen.getByText('Where they live (copies)')).not.toBeNull()
   })
 
-  it('makes every section but Recent activity a row that scrolls sideways', async () => {
+  it('makes every Home section a row that scrolls sideways', async () => {
     renderHome()
     await screen.findByRole('heading', { level: 2, name: 'Completion' })
     for (const heading of screen.getAllByRole('heading', { level: 2 })) {
@@ -208,8 +208,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
       const rows = [...(section as HTMLElement).querySelectorAll('ul')].filter((list) =>
         list.className.split(/\s+/).includes('overflow-x-auto'),
       )
-      if (heading.textContent?.includes('Recent activity')) expect(rows).toHaveLength(0)
-      else expect(rows.length, heading.textContent ?? '').toBeGreaterThan(0)
+      expect(rows.length, heading.textContent ?? '').toBeGreaterThan(0)
     }
   })
 

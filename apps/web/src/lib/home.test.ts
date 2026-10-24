@@ -14,6 +14,7 @@ function set(name: string, owned: number, total: number): CompletionSet {
     missingCount: total - owned,
     percentComplete: Math.floor((owned / total) * 100),
     lastRefreshed: null,
+    personProfilePath: null,
   }
 }
 

@@ -395,6 +395,14 @@ class PersonMovieCredit(BaseModel):
     video: bool | None = None
 
 
+class Person(BaseModel):
+    """The small person record a completion card needs."""
+
+    id: int
+    name: str
+    profile_path: str | None = None
+
+
 class PersonMovieCredits(BaseModel):
     id: int
     cast: list[PersonMovieCredit] = []

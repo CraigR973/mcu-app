@@ -152,8 +152,8 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
   const REVIEWED: Data = {
     ...FULL,
     bestReviewed: [
-      { ...ALIEN, overall: 4.5, outOf: 5, formatCode: '4k_uhd' },
-      { ...HEAT, overall: 4, outOf: 5, formatCode: 'blu_ray' },
+      { ...ALIEN, overall: 4.5, outOf: 5, formatCode: '4k_uhd', strength: 'picture', scores: [{ heading: 'Video 4K', score: 5 }, { heading: 'Audio', score: 4 }] },
+      { ...HEAT, overall: 4, outOf: 5, formatCode: 'blu_ray', strength: 'sound', scores: [{ heading: 'Video 2K', score: 3 }, { heading: 'Audio', score: 4.5 }] },
     ],
   }
 
@@ -166,8 +166,12 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
       `/movies/${HEAT.movieId}`,
     ])
     expect(row.getByText("Blu-ray.com scores the disc's picture, sound and extras, not the film.")).not.toBeNull()
+    expect(row.getByText('Strongest for picture')).not.toBeNull()
+    expect(row.getByText('Strongest for sound')).not.toBeNull()
     expect(row.getByText('4.5/5 · 4K UHD')).not.toBeNull()
     expect(row.getByText('4.0/5 · Blu-ray')).not.toBeNull()
+    expect(row.getAllByText('Scores')).toHaveLength(2)
+    expect(row.getByText('Video 4K 5.0 · Audio 4.0')).not.toBeNull()
   })
 
   it('follows the most valuable discs', async () => {

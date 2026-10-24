@@ -1,9 +1,10 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ChevronRight, LogOut } from 'lucide-react'
+import { Activity, ChevronRight, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { COLLECTION_ICONS } from '@/components/collections/icons'
+import { ActivityFeed } from '@/components/ActivityFeed'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
@@ -168,6 +169,16 @@ export default function YouPage() {
           </div>
         </section>
       ) : null}
+
+      <section className="space-y-3" aria-labelledby="you-activity">
+        <h2 id="you-activity" className="section-heading flex items-center gap-2 text-lg">
+          <Activity className="h-5 w-5 text-primary" aria-hidden />
+          Recent activity
+        </h2>
+        <div className="archive-panel px-4 py-2 sm:px-5">
+          <ActivityFeed limit={10} />
+        </div>
+      </section>
 
       {admin ? <DestinationGroup group={admin} /> : null}
 
