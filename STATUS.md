@@ -2,9 +2,9 @@
 
 ## Now
 
-**24 Oct: the Zod security fix shipped in [PR #106](https://github.com/CraigR973/mcu-app/pull/106) (`900290b`).** The direct web and shared dependencies are now Zod 4.6.7; explicit record keys preserve the response schemas' existing validation, and the API/web contract guard now reads Zod 4 definitions. The dependency audit has no high-severity finding (five unrelated moderate findings remain). All seven PR jobs passed, including WebKit; Railway and Vercel both serve `900290b`, and the API reports `db: ok` with every integration configured.
+**25 Oct: Group AA sitting 2's AA2 Home rows shipped in [PR #105](https://github.com/CraigR973/mcu-app/pull/105) (`836df95`).** Needs attention now links to the repair screen or gives honest owner guidance; Recent activity lives on You; best-disc cards state their strongest stored sub-score and expand to show all scores; and a completion set separates missing films, their TMDB links and shared Wanted state from films on the shelf. All seven PR and post-merge jobs passed, including WebKit; Railway and Vercel serve `836df95`, and the API reports `db: ok` with every integration configured.
 
-**Group AA sitting 2 remains authorised while AA10b's re-price remains open.** AA1 and AA8 shipped on 23 Oct. AA2 is the next Group AA batch; its completion-set refresh remains a separate live checkpoint at Craig's word. Each iPhone must still remove and re-add the app to receive AA1's new start page.
+**The completion-set refresh did not run.** It is a separate live TMDB action that needs Craig's explicit word; until then cards keep their existing initials where no stored portrait exists. AA10b's live re-price remains open. Each iPhone must still remove and re-add the app to receive AA1's new start page.
 
 **Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
 £16,867.11 across 1,290 priced of 1,469 physical discs, with 0 sales-backed values.
@@ -17,8 +17,8 @@ refresh remains a separate live checkpoint at Craig's word.
 
 ## Next
 
-**Group AA sitting 2:** Resume AA2 as its own branch and pull request after the separate Zod
-security fix. Stop before AA2's live completion-set refresh until Craig authorises it.
+**Stop:** Group AA sitting 2 is complete. Do not start sitting 3. Stop before AA2's live
+completion-set refresh until Craig authorises it.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -413,6 +413,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-25 (AA2 shipped, Group AA sitting 2)** — [PR #105](https://github.com/CraigR973/mcu-app/pull/105) merged as `836df95`: Needs attention now opens the repair screen for every actionable check and gives owner guidance for server-only work; Recent activity moved from Home to You; Best discs names the strongest stored picture, sound or extras score and expands to show its sub-scores; and completion sets separate missing films from owned ones, link each missing film to TMDB and show the shared Wanted state. The refresh that stores optional TMDB person portraits was not run: it remains Craig's separate live checkpoint. Local API 1,595 passed with 845 expected Mac database skips; web/shared 676 passed; lint, type checks and builds passed. All seven PR and postmerge CI jobs passed, including Postgres 17, image boot, Chromium, Firefox, WebKit and jobs. Railway and Vercel both serve `836df95`; readiness is `db: ok` and every integration is configured. AA10b's re-price remains open. Sitting 3 has not started.
 - **2026-10-24 (security fix, PR #106)** — The dependency audit newly reported Zod's high-severity memory-exhaustion advisory. Zod moved from 3.25.76 to 4.6.7 in the web and shared packages; explicit string keys preserve every record schema, and the API/web contract guard now uses Zod 4's schema definitions. Local API 1,595 passed with 845 expected Mac database skips; web/shared 826 passed; lint, type checks and builds passed. All seven PR jobs passed, including Postgres 17, image boot, Chromium, Firefox, WebKit and jobs. Railway and Vercel both serve `900290b`; readiness is `db: ok` and every integration is configured. AA2 remains unmerged and its live completion-set refresh remains Craig's checkpoint.
 - **2026-10-23 (AA8 shipped, Group AA sitting 2)** — [PR #104](https://github.com/CraigR973/mcu-app/pull/104) merged as `6b039bf`: the original screen-print emblem now appears at app scale in the top bar, sidebar and loading screen while the 16 px favicon and notification badge remain vector. Home shows the five-image MARKS banner only after bearer-token authentication; its photo files no longer ship as public Vercel assets. The browser proof passed at 375 px and 1,280 px. Local API 1,595 passed with 845 expected Mac database skips; web/shared 672 passed; Chromium 32 passed, Firefox 31 passed with its documented speech skip, and jobs 5 passed. All seven PR and postmerge CI jobs passed, including WebKit. Railway and Vercel both serve `6b039bf`; readiness is `db: ok`, every integration is configured, and anonymous artwork access returns 401. AA10b's re-price remains open; AA2 is next and its live completion-set refresh remains Craig's checkpoint.
 - **2026-10-23 (AA1 shipped, Group AA sitting 2)** — [PR #103](https://github.com/CraigR973/mcu-app/pull/103) merged as `4cc207d`: the PWA starts on Home after each iPhone removes and re-adds it; the dark top bar matches the page with a clear lower rule; Home no longer shows Top rated, labels Best discs accurately and links to the Archive; film tabs fit at 375 px; and Where to watch starts with owned copies. Local API 1,593 passed with 845 expected Mac database skips; web/shared 673 passed; lint, type checks and production build passed. Chromium, Firefox and jobs passed locally; Mac WebKit is unavailable. All seven PR and postmerge CI jobs passed, including WebKit. Railway and Vercel both serve `4cc207d`; readiness is `db: ok` and every integration is configured. AA10b's re-price remains open; AA8 is next, and AA2's live refresh remains Craig's checkpoint.

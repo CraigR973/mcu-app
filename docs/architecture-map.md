@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA8,
-deployed on 23 Oct; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA2,
+deployed on 25 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -28,6 +28,24 @@ The original screen-print emblem remains a public, non-photo app asset and repla
 in-app vector marks. The photo collages moved from Vercel's public directory into the Railway
 image: an unauthenticated route request receives 401, and Home keeps the returned bytes only in
 an in-memory browser object URL. The favicon and notification badge keep their 16 px vector mark.
+
+## AA2, shipped 25 Oct
+
+```mermaid
+flowchart TB
+    Home[Home] --> Attention[Needs attention]
+    Attention --> Destinations[Repair screen or owner guidance]
+    Home --> Highlights[Best discs: strongest score and detail]
+    Home -. activity moved .-> You[You: Recent activity]
+    Insights[Completion set] --> Missing[Missing films]
+    Missing --> Wanted[Shared Wanted status or add action]
+    Missing --> TMDB[TMDB film page]
+```
+
+The completion-set refresh stores an optional TMDB person portrait; cards show initials until
+that separate owner-authorised live refresh runs. The existing completion endpoint reads each
+missing film's shared Wanted state, while the screen separates missing films from those on the
+shelf.
 
 ## AA10a, shipped; first live pass read back 22 Oct
 
