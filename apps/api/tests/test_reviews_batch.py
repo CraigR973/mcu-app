@@ -539,7 +539,14 @@ async def client(db: AsyncSession, admin: Profile) -> AsyncIterator[AsyncClient]
         app.dependency_overrides.clear()
 
 
-async def _scored(db: AsyncSession, movie: Movie, fmt: str, overall: str) -> None:
+async def _scored(
+    db: AsyncSession,
+    movie: Movie,
+    fmt: str,
+    overall: str,
+    *,
+    scores: list[dict[str, float]] | None = None,
+) -> None:
     db.add(
         FilmReview(
             id=uuid.uuid4(),
@@ -552,7 +559,7 @@ async def _scored(db: AsyncSession, movie: Movie, fmt: str, overall: str) -> Non
             else "https://www.blu-ray.com/movies/Dog-Soldiers-Blu-ray/4011/",
             found_via="spec_page",
             found_utc=NOW,
-            scores=[{"heading": "Overall", "score": float(overall)}],
+            scores=scores or [{"heading": "Overall", "score": float(overall)}],
             overall=Decimal(overall),
             out_of=5,
             scores_read_utc=NOW,
@@ -627,7 +634,17 @@ class TestThePagesShowTheReviews:
     ) -> None:
         owned_4k = await _film(db, "Owned In 4K")
         await _owned(db, owned_4k, ["4k_uhd"], None)
-        await _scored(db, owned_4k, "4k_uhd", "4.5")
+        await _scored(
+            db,
+            owned_4k,
+            "4k_uhd",
+            "4.5",
+            scores=[
+                {"heading": "Video 4K", "score": 4.0},
+                {"heading": "Audio", "score": 4.5},
+                {"heading": "Extras", "score": 3.5},
+            ],
+        )
         owned_blu_ray = await _film(db, "Owned On Blu-ray")
         await _owned(db, owned_blu_ray, ["blu_ray"], None)
         await _scored(db, owned_blu_ray, "blu_ray", "3.5")
@@ -643,6 +660,12 @@ class TestThePagesShowTheReviews:
         assert [(film["title"], film["overall"], film["formatCode"]) for film in best] == [
             ("Owned In 4K", 4.5, "4k_uhd"),
             ("Owned On Blu-ray", 3.5, "blu_ray"),
+        ]
+        assert best[0]["strength"] == "sound"
+        assert best[0]["scores"] == [
+            {"heading": "Video 4K", "score": 4.0},
+            {"heading": "Audio", "score": 4.5},
+            {"heading": "Extras", "score": 3.5},
         ]
 
     async def test_adding_a_want_searches_for_its_reviews_after_the_response(

@@ -4,13 +4,17 @@ import type { CompletionSet } from '@mcu/shared'
 
 import { Shelf, ShelfLink } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
-import { completionCountLabel, fetchCompletionInsights, setTypeLabel } from '@/lib/api'
+import { completionCountLabel, fetchCompletionInsights, posterUrl, setTypeLabel } from '@/lib/api'
 import { closestToComplete } from '@/lib/home'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn } from '@/lib/utils'
 
 /** How many sets Home shows; the rest are one tap away on the full view. */
 const SHOWN = 12
+
+function initials(name: string): string {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
+}
 
 function SetCard({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
   return (
@@ -20,7 +24,14 @@ function SetCard({ set, onOpen }: { set: CompletionSet; onOpen: () => void }) {
         onClick={onOpen}
         className="h-full w-full rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
       >
-        <span className="block truncate font-medium text-foreground">{set.setName}</span>
+        <div className="flex items-center gap-2">
+          {set.personProfilePath ? (
+            <img src={posterUrl(set.personProfilePath, 'w185')} alt="" className="h-9 w-9 rounded-full object-cover" />
+          ) : (
+            <div aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">{initials(set.setName)}</div>
+          )}
+          <span className="block truncate font-medium text-foreground">{set.setName}</span>
+        </div>
         <span className="mt-0.5 block text-xs text-muted-foreground">
           {setTypeLabel(set.setType)} · {completionCountLabel(set)}
         </span>

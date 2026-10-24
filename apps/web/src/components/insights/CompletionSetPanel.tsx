@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Bookmark, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, Bookmark, Check, ExternalLink, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import {
   addManyWanted,
+  addWanted,
   completionCountLabel,
   fetchCompletionSet,
   posterUrl,
@@ -78,6 +79,29 @@ function BulkAddMissing({ tmdbIds }: { tmdbIds: number[] }) {
   )
 }
 
+function AddMissingToWanted({ tmdbId, wanted }: { tmdbId: number; wanted: boolean }) {
+  const queryClient = useQueryClient()
+  const add = useMutation({
+    mutationFn: () => addWanted({ tmdbId }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['completion-set'] })
+      void queryClient.invalidateQueries({ queryKey: ['wanted'] })
+      void queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+    },
+  })
+
+  if (wanted) return <span className="text-xs font-medium text-primary">Wanted</span>
+  return (
+    <div className="space-y-1">
+      <Button type="button" size="sm" variant="outline" disabled={add.isPending} onClick={() => add.mutate()}>
+        {add.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" />}
+        Add to Wanted
+      </Button>
+      {add.isError ? <p role="alert" className="text-xs text-destructive">{queryErrorMessage(add.error, 'This film could not be added to Wanted.')}</p> : null}
+    </div>
+  )
+}
+
 /**
  * One set's films — §11.2's "missing films list with posters".
  *
@@ -136,8 +160,10 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
 
           {profile?.role === 'admin' ? <BulkAddMissing tmdbIds={set.films.filter((film) => !film.owned).map((film) => film.tmdbId)} /> : null}
 
-          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-            {set.films.map((film) => {
+          <section aria-labelledby="completion-missing" className="space-y-3">
+            <h2 id="completion-missing" className="text-lg font-semibold">Missing films</h2>
+            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+            {set.films.filter((film) => !film.owned).map((film) => {
               const card = (
                 <div className="space-y-1">
                   <div className="relative">
@@ -166,15 +192,46 @@ export function CompletionSetPanel({ setId, onBack, backLabel = 'All sets' }: Pr
                     {film.title}
                   </p>
                   <p className="text-xs text-muted-foreground">{film.year ?? '—'}</p>
+                  <a
+                    href={`https://www.themoviedb.org/movie/${String(film.tmdbId)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+                  >
+                    TMDB <ExternalLink className="h-3 w-3" aria-hidden />
+                  </a>
+                  {profile?.role === 'admin' ? <AddMissingToWanted tmdbId={film.tmdbId} wanted={film.wanted} /> : film.wanted ? <span className="text-xs font-medium text-primary">Wanted</span> : null}
                 </div>
               )
               return (
                 <li key={film.tmdbId}>
-                  {film.movieId ? <Link to={`/movies/${film.movieId}`}>{card}</Link> : card}
+                  {card}
                 </li>
               )
             })}
-          </ul>
+            </ul>
+          </section>
+
+          <section aria-labelledby="completion-owned" className="space-y-3">
+            <h2 id="completion-owned" className="text-lg font-semibold">On the shelf</h2>
+            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+            {set.films.filter((film) => film.owned).map((film) => {
+              const card = (
+                <div className="space-y-1">
+                  <div className="relative">
+                    <img src={posterUrl(film.posterPath, 'w185')} alt="" loading="lazy" className="aspect-[2/3] w-full rounded object-cover" />
+                    <span className="absolute right-1 top-1 rounded-full bg-primary p-1 text-primary-foreground" aria-label="Owned">
+                      <Check className="h-3 w-3" aria-hidden />
+                    </span>
+                  </div>
+                  <p className="truncate text-xs text-foreground" title={film.title}>{film.title}</p>
+                  <p className="text-xs text-muted-foreground">{film.year ?? '—'}</p>
+                </div>
+              )
+              return <li key={film.tmdbId}>{film.movieId ? <Link to={`/movies/${film.movieId}`}>{card}</Link> : card}</li>
+            })}
+            </ul>
+          </section>
         </>
       )}
     </div>

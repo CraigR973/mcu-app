@@ -18,6 +18,7 @@ interface Card {
   title: string
   posterPath: string | null
   detail: ReactNode
+  after?: ReactNode
 }
 
 /** One row of posters; each film opens its page. A peer of Home's other rows since W2. */
@@ -43,6 +44,7 @@ function PosterRow({
           title={card.title}
           posterPath={card.posterPath}
           detail={card.detail}
+          after={card.after}
         />
       ))}
     </Shelf>
@@ -114,17 +116,33 @@ function rows(data: HighlightsData): ReactNode[] {
         icon={Award}
         title="Best discs"
         caption="Blu-ray.com scores the disc's picture, sound and extras, not the film."
-        cards={data.bestReviewed.map((film) => ({
-          movieId: film.movieId,
-          title: film.title,
-          posterPath: film.posterPath,
-          detail: (
-            <>
-              {film.overall.toFixed(1)}/{film.outOf}
-              {film.formatCode ? ` · ${formatLabel(film.formatCode)}` : ''}
-            </>
-          ),
-        }))}
+        cards={data.bestReviewed.map((film) => {
+          // The response schema supplies these from a fresh API response; older offline Home
+          // entries predate AA2, so retain their existing card instead of crashing it.
+          const scores = film.scores ?? []
+          return {
+            movieId: film.movieId,
+            title: film.title,
+            posterPath: film.posterPath,
+            detail: (
+              <>
+                Strongest for {film.strength ?? 'the disc'}
+                <span className="block">
+                  {film.overall.toFixed(1)}/{film.outOf}
+                  {film.formatCode ? ` · ${formatLabel(film.formatCode)}` : ''}
+                </span>
+              </>
+            ),
+            after: scores.length > 0 ? (
+              <details className="mt-1 text-xs leading-4 text-muted-foreground">
+                <summary className="cursor-pointer text-primary underline-offset-2 hover:underline">Scores</summary>
+                <span className="mt-0.5 block">
+                  {scores.map((score) => `${score.heading} ${score.score.toFixed(1)}`).join(' · ')}
+                </span>
+              </details>
+            ) : undefined,
+          }
+        })}
       />,
     )
   }

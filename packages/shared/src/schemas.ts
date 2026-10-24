@@ -459,6 +459,8 @@ export const bestReviewedFilmSchema = z.object({
   overall: z.number().positive().max(10),
   outOf: z.number().int().positive(),
   formatCode: z.string().nullable(),
+  strength: z.string().min(1).default('the disc'),
+  scores: z.array(z.object({ heading: z.string().min(1), score: z.number().positive() })).default([]),
 })
 
 export const highlightsSchema = z.object({
@@ -830,6 +832,7 @@ export const completionFilmSchema = z.object({
   posterPath: z.string().nullable(),
   owned: z.boolean(),
   movieId: z.string().uuid().nullable(),
+  wanted: z.boolean().default(false),
 })
 
 export const completionSetSchema = z.object({
@@ -843,6 +846,7 @@ export const completionSetSchema = z.object({
   // Computed server-side so the bar's width and the "12 of 61" beside it cannot disagree.
   percentComplete: z.number().int().min(0).max(100),
   lastRefreshed: z.string().nullable(),
+  personProfilePath: z.string().nullable().default(null),
 })
 
 export const completionSetDetailSchema = completionSetSchema.extend({

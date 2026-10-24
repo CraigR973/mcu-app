@@ -38,6 +38,7 @@ from src.schemas.highlights import (
     TopRatedRowResponse,
     ValuableDiscResponse,
 )
+from src.schemas.reviews import ReviewScoreResponse
 from src.services.valuation import current_value, owned_valued_discs
 
 router = APIRouter(prefix="/api/v1", tags=["highlights"])
@@ -255,6 +256,7 @@ async def _best_reviewed(db: AsyncSession) -> list[BestReviewedFilmResponse]:
                 FilmReview.overall,
                 FilmReview.out_of,
                 FilmReview.format_code,
+                FilmReview.scores,
             )
             .join(FilmReview, FilmReview.movie_id == Movie.id)
             .where(
@@ -272,9 +274,30 @@ async def _best_reviewed(db: AsyncSession) -> list[BestReviewedFilmResponse]:
         )
     ).all()
     films: dict[uuid.UUID, BestReviewedFilmResponse] = {}
-    for movie_id, title, year, poster_path, overall, out_of, format_code in rows:
+    for movie_id, title, year, poster_path, overall, out_of, format_code, raw_scores in rows:
         if movie_id in films or overall is None or out_of is None:
             continue
+        scores: list[ReviewScoreResponse] = []
+        for score in raw_scores or []:
+            if (
+                isinstance(score, dict)
+                and isinstance(score.get("heading"), str)
+                and isinstance(score.get("score"), (int, float))
+            ):
+                scores.append(
+                    ReviewScoreResponse(heading=score["heading"], score=float(score["score"]))
+                )
+        by_heading = {score.heading: score.score for score in scores}
+        strengths: list[tuple[str, float]] = [
+            ("picture", by_heading[heading])
+            for heading in ("Video 4K", "Video 2K")
+            if heading in by_heading
+        ]
+        if "Audio" in by_heading:
+            strengths.append(("sound", by_heading["Audio"]))
+        if "Extras" in by_heading:
+            strengths.append(("extras", by_heading["Extras"]))
+        strength = max(strengths, key=lambda item: item[1])[0] if strengths else "the disc"
         films[movie_id] = BestReviewedFilmResponse(
             movieId=movie_id,
             title=title,
@@ -283,6 +306,8 @@ async def _best_reviewed(db: AsyncSession) -> list[BestReviewedFilmResponse]:
             overall=float(overall),
             outOf=int(out_of),
             formatCode=format_code,
+            strength=strength,
+            scores=scores,
         )
     return list(films.values())[:ROW_LENGTH]
 

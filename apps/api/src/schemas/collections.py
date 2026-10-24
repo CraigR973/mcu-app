@@ -257,6 +257,8 @@ class CompletionFilmResponse(BaseModel):
     posterPath: str | None
     owned: bool
     movieId: uuid.UUID | None
+    #: Wanted is shared, so both people can see that someone has already added it.
+    wanted: bool = False
 
 
 class CompletionSetResponse(BaseModel):
@@ -270,6 +272,8 @@ class CompletionSetResponse(BaseModel):
     #: 0–100, computed server-side so the bar and the caption cannot disagree.
     percentComplete: int = Field(ge=0)
     lastRefreshed: UtcDatetime | None
+    #: A TMDB portrait cached only when the owner-authorised refresh runs.
+    personProfilePath: str | None = None
 
 
 class CompletionSetDetailResponse(CompletionSetResponse):

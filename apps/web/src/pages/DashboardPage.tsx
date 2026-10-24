@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, CalendarHeart, Pin, RotateCcw } from 'lucide-react'
+import { CalendarHeart, Pin, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { ActivityFeed } from '@/components/ActivityFeed'
 import { AttentionRow } from '@/components/dashboard/AttentionRow'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { CollectionShelf } from '@/components/dashboard/CollectionShelf'
@@ -199,16 +198,6 @@ export default function DashboardPage() {
           </Shelf>
         ) : null}
 
-        {/* Recent activity stays a list at the foot: a feed reads down, not across. */}
-        <section className="space-y-3" aria-labelledby="activity-heading">
-          <h2 id="activity-heading" className="section-heading flex items-center gap-2 text-lg">
-            <Activity className="h-5 w-5 text-primary" aria-hidden />
-            Recent activity
-          </h2>
-          <div className="archive-panel px-4 py-2 sm:px-5">
-            <ActivityFeed limit={10} />
-          </div>
-        </section>
       </div>
     </div>
   )

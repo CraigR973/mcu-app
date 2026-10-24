@@ -13,6 +13,7 @@ from ..services.scraping.fetcher import bounded_wait
 from .models import (
     Movie,
     MovieKeywords,
+    Person,
     PersonMovieCredits,
     PersonSearchResults,
     ReleaseDates,
@@ -305,6 +306,11 @@ class TMDBClient:
         """
         data = await self._get(f"/person/{person_id}/movie_credits", {"language": language})
         return PersonMovieCredits.model_validate(data)
+
+    async def get_person(self, person_id: int, language: str = "en-US") -> Person:
+        """The name and headshot for a completion card."""
+        data = await self._get(f"/person/{person_id}", {"language": language})
+        return Person.model_validate(data)
 
     async def get_short_film_ids(
         self, person_id: int, *, role: str, max_pages: int = 5

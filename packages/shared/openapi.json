@@ -794,6 +794,17 @@
       ],
       "title": "Posterpath"
      },
+     "scores": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewScoreResponse"
+      },
+      "title": "Scores",
+      "type": "array"
+     },
+     "strength": {
+      "title": "Strength",
+      "type": "string"
+     },
      "title": {
       "title": "Title",
       "type": "string"
@@ -814,7 +825,8 @@
      "movieId",
      "title",
      "overall",
-     "outOf"
+     "outOf",
+     "strength"
     ],
     "title": "BestReviewedFilmResponse",
     "type": "object"
@@ -3471,6 +3483,11 @@
       "title": "Tmdbid",
       "type": "integer"
      },
+     "wanted": {
+      "default": false,
+      "title": "Wanted",
+      "type": "boolean"
+     },
      "year": {
       "anyOf": [
        {
@@ -3619,6 +3636,17 @@
       "title": "Percentcomplete",
       "type": "integer"
      },
+     "personProfilePath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Personprofilepath"
+     },
      "setKey": {
       "title": "Setkey",
       "type": "string"
@@ -3692,6 +3720,17 @@
       "minimum": 0.0,
       "title": "Percentcomplete",
       "type": "integer"
+     },
+     "personProfilePath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Personprofilepath"
      },
      "setKey": {
       "title": "Setkey",

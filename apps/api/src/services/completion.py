@@ -31,7 +31,7 @@ from src.clock import utcnow
 from src.models.collection_item import owned_film
 from src.models.completion_set import MIN_OWNED_FOR_SET, CompletionSet
 from src.models.movie import Movie, MovieCredit
-from src.tmdb import PersonMovieCredit, PersonMovieCredits, TMDBClient
+from src.tmdb import Person, PersonMovieCredit, PersonMovieCredits, TMDBClient
 
 #: Only films this person *directed*. TMDB puts a director's producing and writing credits
 #: in the same ``crew`` array, and "the Hitchcock films" means the ones he directed.
@@ -174,7 +174,9 @@ def select_members(
     return sorted(chosen.values(), key=lambda c: (_year(c.release_date) or 0, c.title))
 
 
-def build_metadata(candidate: SetCandidate, members: Sequence[PersonMovieCredit]) -> dict[str, Any]:
+def build_metadata(
+    candidate: SetCandidate, members: Sequence[PersonMovieCredit], person: Person | None
+) -> dict[str, Any]:
     """The cached display rows §11.2's missing-films list reads, plus provenance."""
     return {
         "members": [
@@ -187,6 +189,7 @@ def build_metadata(candidate: SetCandidate, members: Sequence[PersonMovieCredit]
             for member in members
         ],
         "tmdbPersonId": candidate.tmdb_person_id,
+        "personProfilePath": person.profile_path if person is not None else None,
         "sourceRole": candidate.set_type,
     }
 
@@ -222,6 +225,13 @@ async def refresh_sets(
             result.errors.append(f"{candidate.name} ({candidate.tmdb_person_id}): {exc}")
             continue
 
+        # A portrait improves the card but cannot be allowed to hide a set: TMDB may have a
+        # complete filmography while a person record is temporarily unavailable.
+        try:
+            person = await tmdb.get_person(candidate.tmdb_person_id)
+        except Exception:  # noqa: BLE001 - initials are the deliberate fallback
+            person = None
+
         try:
             shorts = await tmdb.get_short_film_ids(
                 candidate.tmdb_person_id, role=candidate.set_type
@@ -239,7 +249,7 @@ async def refresh_sets(
             continue
 
         member_ids = [member.id for member in members]
-        metadata = build_metadata(candidate, members)
+        metadata = build_metadata(candidate, members, person)
         key = (candidate.set_type, str(candidate.tmdb_person_id))
         row = existing.get(key)
 

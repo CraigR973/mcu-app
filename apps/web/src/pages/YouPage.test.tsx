@@ -20,6 +20,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   fetchNavSections: vi.fn(() => Promise.resolve(state.sections)),
   fetchSmartCollections: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+  fetchActivity: vi.fn().mockResolvedValue({ items: [], total: 0 }),
   tellCraig: state.tellCraig,
 }))
 
@@ -130,5 +131,10 @@ describe('YouPage — Batch T3', () => {
     renderYou()
     await screen.findByRole('link', { name: /Wanted/ })
     expect(screen.queryByText('Tell Craig')).toBeNull()
+  })
+
+  it('moves recent activity from Home into You', async () => {
+    renderYou()
+    expect(await screen.findByRole('heading', { name: 'Recent activity' })).not.toBeNull()
   })
 })

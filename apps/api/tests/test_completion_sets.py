@@ -40,7 +40,7 @@ from src.services.completion import (
     candidate_people,
     refresh_sets,
 )
-from src.tmdb.models import PersonMovieCredit, PersonMovieCredits
+from src.tmdb.models import Person, PersonMovieCredit, PersonMovieCredits
 
 ACTOR_HEADER = "x-test-actor"
 
@@ -127,6 +127,7 @@ class FakePersonClient:
         self._filmographies = filmographies
         self._on_unknown = on_unknown
         self.calls: list[int] = []
+        self.profile_calls: list[int] = []
         #: Batch X12c: the films of 40 minutes or less each person is credited on, by id, and
         #: the people whose shorts lookup should fail.
         self.shorts: dict[int, set[int]] = {}
@@ -148,6 +149,11 @@ class FakePersonClient:
                 return PersonMovieCredits(id=person_id)
             raise RuntimeError(f"TMDB has nothing for {person_id}")
         return self._filmographies[person_id]
+
+    async def get_person(self, person_id: int, language: str = "en-US") -> Person:
+        del language
+        self.profile_calls.append(person_id)
+        return Person(id=person_id, name=f"Person {person_id}", profile_path=f"/{person_id}.jpg")
 
 
 @pytest_asyncio.fixture
@@ -326,6 +332,7 @@ async def test_refresh_creates_sets_then_updates_them_in_place(
         )
     ).scalar_one()
     assert row.member_tmdb_ids == [9_100_031, 9_100_099]
+    assert row.set_metadata["personProfilePath"] == f"/{person[0]}.jpg"
     first_refreshed = row.last_refreshed
 
     after = PersonMovieCredits(
@@ -468,6 +475,7 @@ async def test_insights_reports_owned_and_missing_per_set(
     mine = next(s for s in response.json()["items"] if s["id"] == str(row.id))
     assert (mine["ownedCount"], mine["totalCount"], mine["missingCount"]) == (2, 4, 2)
     assert mine["percentComplete"] == 50
+    assert mine["personProfilePath"] is None
 
 
 async def test_the_detail_view_names_the_films_you_are_missing(

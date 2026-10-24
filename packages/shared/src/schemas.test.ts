@@ -863,6 +863,7 @@ describe('completionSetSchema', () => {
     missingCount: 49,
     percentComplete: 20,
     lastRefreshed: '2026-09-09T00:00:00Z',
+    personProfilePath: null,
   }
 
   it('parses the set §11.1’s acceptance criterion names', () => {
@@ -2118,7 +2119,16 @@ describe('Batch V5 — Home\u2019s Highlights', () => {
         },
       ],
       // Batch V9's fourth row, which the API now always sends.
-      bestReviewed: [{ ...film, overall: 4, outOf: 5, formatCode: '4k_uhd' }],
+      bestReviewed: [
+        {
+          ...film,
+          overall: 4,
+          outOf: 5,
+          formatCode: '4k_uhd',
+          strength: 'picture',
+          scores: [{ heading: 'Video 4K', score: 4.5 }],
+        },
+      ],
     }
     expect(highlightsSchema.parse(highlights)).toEqual(highlights)
   })
