@@ -47,6 +47,8 @@ NAMED: tuple[Film, ...] = (
     Film(1404, "Paper Kite", 2010, "Ines Moreau", 101, ("Drama",)),
     # Not owned at the start: the add-by-scan flow adds this one.
     Film(1101, "Midnight Ferry", 2009, "Nora Quill", 101, ("Mystery",)),
+    # AA5 owns this fixture; the barcode case keeps 1202 to itself.
+    Film(1501, "Velvet Observatory", 2018, "Mina Shore", 107, ("Drama",)),
     # The movie-night shortlist and match.
     Film(1201, "Rooftop Opera", 2014, "Yan Zhou", 112, ("Comedy", "Music")),
     Film(1202, "The Salt Road", 1991, "Kit Marlowe", 127, ("Adventure",)),

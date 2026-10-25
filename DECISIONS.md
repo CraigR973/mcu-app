@@ -6388,3 +6388,16 @@ contemporaneous.
      job is introduced. Both read-only roles gain only this column, never `invite_token`.
      The API contract snapshot gains the agreed planned time and suggestion timestamp fields;
      the snapshot test is retained unchanged.
+
+295. **AA5 keeps film context and IMDb scores attached to their source identity (25 Oct).**
+     Each night shows every participant's last watch and latest explicit personal rating;
+     an unrated rewatch does not erase a rating. Owned-copy places take priority over
+     streaming. A night-only film caches runtime and IMDb identity on its existing
+     suggestion, without creating a catalogue film or copy or replacing its snapshot.
+     Migration 067 adds nullable cache fields and guarded read-only/backup grants.
+     The existing 02:00 UTC spec/review job reads IMDb's designated daily ratings file,
+     keeps only stored ids, and commits only after the complete bounded gzip parses.
+     A bad file, refusal or timeout preserves old scores and reports through the existing
+     heartbeat/health check. A corrected IMDb id hides an old score, and a newer matching
+     cache wins. The UI carries IMDb's required acknowledgement. No new service,
+     credential, hosting setting or live manual refresh is introduced.

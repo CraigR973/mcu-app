@@ -297,3 +297,37 @@ it('opens with Suggest a film, then people’s picks, then random picks', async 
   expect(headings[1]).toMatch(/^Suggested/)
   expect(headings[2]).toMatch(/^Stuck for ideas/)
 })
+
+
+it('shows both people’s own watch and rating, shelf first, IMDb and a Letterboxd link', async () => {
+  mocks.fetchMovieNightCandidates.mockResolvedValue({ items: [{
+    ...RED_SHOES,
+    people: [
+      { personId: CRAIG, personName: 'Craig', lastWatchedAt: '2026-10-20', personalRating: 4.5 },
+      { personId: MARK, personName: 'Mark', lastWatchedAt: null, personalRating: null },
+    ],
+    locations: [{ location: 'Front 2nd shelf', section: 'Front', shelf: '2nd' }],
+    imdbId: 'tt0040725', imdbRating: 8.2, imdbVotes: 1234, imdbCheckedAt: '2026-10-25T02:00:00Z',
+    streamingOn: ['Should be hidden'],
+  }], total: 1 })
+  renderPage()
+  fireEvent.click(await screen.findByRole('button', { name: /The Red Shoes/, expanded: false }))
+  const people = within(screen.getByRole('list', { name: 'Watch history and personal ratings' }))
+  expect(people.getByText(/last watched 20 Oct 2026 · 4.5\/5/)).not.toBeNull()
+  expect(people.getByText(/no watch logged · not rated/)).not.toBeNull()
+  expect(screen.getByText('Front 2nd shelf')).not.toBeNull()
+  expect(screen.queryByText('Should be hidden', { exact: false })).toBeNull()
+  expect(screen.getAllByRole('link', { name: /^IMDb$/ }).map((link) => link.getAttribute('href'))).toContain('https://www.imdb.com/title/tt0040725/')
+  expect(screen.getByText(/8.2\/10 · 1234 votes/)).not.toBeNull()
+  expect(screen.getByRole('link', { name: 'Letterboxd' }).getAttribute('href')).toBe('https://letterboxd.com/imdb/tt0040725/')
+  expect(screen.getByText(/Information courtesy of/)).not.toBeNull()
+})
+
+it('says when a score and runtime are unavailable and keeps a Letterboxd search link', async () => {
+  mocks.fetchMovieNightCandidates.mockResolvedValue({ items: [{ ...RED_SHOES, runtimeMinutes: null }], total: 1 })
+  renderPage()
+  fireEvent.click(await screen.findByRole('button', { name: /The Red Shoes/, expanded: false }))
+  expect(screen.getByText('Runtime unavailable.')).not.toBeNull()
+  expect(screen.getByText(/score unavailable/)).not.toBeNull()
+  expect(screen.getByRole('link', { name: 'Letterboxd' }).getAttribute('href')).toBe('https://letterboxd.com/search/The%20Red%20Shoes/')
+})

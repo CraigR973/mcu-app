@@ -136,6 +136,15 @@ async def check_jobs(db: AsyncSession, now: datetime) -> list[Result]:
             message: str | None = f"{job.label} has never run."
         elif last < now - job.cadence:
             message = f"{job.label} hasn't run since {day(last)}."
+        elif (
+            job.name == heartbeat.SPECS
+            and job.name in beats
+            and (beats[job.name].detail or {}).get("imdbError")
+        ):
+            message = (
+                "IMDb scores could not be refreshed in the nightly job. "
+                "Stored scores have been kept."
+            )
         else:
             message = None
         results.append((f"job:{job.name}", message))

@@ -474,3 +474,205 @@ async def test_unplanned_nights_remain_valid(db: AsyncSession) -> None:
         response = await client.post("/api/v1/movie-night", json={})
     assert response.status_code == 201, response.text
     assert response.json()["plannedStart"] is None
+
+
+async def test_night_details_show_each_person_history_rating_and_the_live_copy_place(
+    db: AsyncSession,
+) -> None:
+    from datetime import date
+    from decimal import Decimal
+
+    from src.models.collection_item import CollectionItem
+    from src.models.watch_log import WatchLog
+    from src.routers.movies import get_tmdb_client
+
+    class NoTmdb:
+        calls = 0
+
+        async def get_watch_providers(self, tmdb_id: int):
+            self.calls += 1
+            raise AssertionError("The shelf copy takes precedence over streaming")
+
+    tmdb = NoTmdb()
+
+    async def override_tmdb():
+        yield tmdb
+
+    craig, mark, outsider = (
+        await _person(db, "Craig"),
+        await _person(db, "Mark"),
+        await _person(db, "Other"),
+    )
+    night = await _night(db, craig, mark)
+    film, suggestion = await _suggest_exorcist(db, night, craig)
+    film.tmdb_id = 9552
+    film.imdb_id = "tt0070047"
+    film.imdb_ratings_id = "tt0070047"
+    film.imdb_rating = Decimal("8.1")
+    film.imdb_vote_count = 12345
+    film.imdb_ratings_checked_utc = datetime(2026, 10, 25, 2)
+    film.runtime_minutes = 122
+    db.add(
+        CollectionItem(
+            id=uuid.uuid4(), movie_id=film.id, formats=["blu_ray"], location="Front 2nd shelf"
+        )
+    )
+    db.add(
+        CollectionItem(
+            id=uuid.uuid4(),
+            movie_id=film.id,
+            formats=["dvd"],
+            location="Sold place",
+            listing_status="sold",
+        )
+    )
+    for person, when, rating, deleted, tmdb_id in [
+        (craig, date(2026, 10, 20), None, None, 9552),
+        (craig, date(2026, 9, 1), Decimal("4.5"), None, 9552),
+        (craig, date(2026, 10, 21), Decimal("1"), utcnow(), 9552),
+        (mark, date(2026, 10, 22), Decimal("2"), None, 9999),
+        (outsider, date(2026, 10, 23), Decimal("5"), None, 9552),
+    ]:
+        db.add(
+            WatchLog(
+                id=uuid.uuid4(),
+                movie_id=film.id,
+                user_id=person.id,
+                watched_at=when,
+                personal_rating=rating,
+                deleted_at=deleted,
+                tmdb_id=tmdb_id,
+            )
+        )
+    await db.flush()
+    async with _as(db, craig) as client:
+        app.dependency_overrides[get_tmdb_client] = override_tmdb
+        response = await client.get(f"/api/v1/movie-night/{night.id}/candidates")
+    assert response.status_code == 200, response.text
+    card = next(c for c in response.json()["items"] if c["suggestionId"] == str(suggestion.id))
+    assert card["people"] == [
+        {
+            "personId": str(craig.id),
+            "personName": craig.display_name,
+            "lastWatchedAt": "2026-10-20",
+            "personalRating": 4.5,
+        },
+        {
+            "personId": str(mark.id),
+            "personName": mark.display_name,
+            "lastWatchedAt": None,
+            "personalRating": None,
+        },
+    ]
+    assert card["locations"] == [{"location": "Front 2nd shelf", "section": None, "shelf": None}]
+    assert (
+        card["runtimeMinutes"],
+        card["imdbRating"],
+        card["imdbVotes"],
+        card["imdbCheckedAt"],
+    ) == (122, 8.1, 12345, "2026-10-25T02:00:00Z")
+    assert card["streamingOn"] == []
+    assert tmdb.calls == 0
+    film.imdb_id = "tt9999999"
+    await db.flush()
+    async with _as(db, craig) as client:
+        app.dependency_overrides[get_tmdb_client] = override_tmdb
+        changed = await client.get(f"/api/v1/movie-night/{night.id}/candidates")
+    changed_card = next(
+        c for c in changed.json()["items"] if c["suggestionId"] == str(suggestion.id)
+    )
+    assert changed_card["imdbId"] == "tt9999999"
+    assert changed_card["imdbRating"] is None and changed_card["imdbCheckedAt"] is None
+    film.deleted_at = utcnow()
+    await db.flush()
+    async with _as(db, craig) as client:
+        app.dependency_overrides[get_tmdb_client] = override_tmdb
+        historical = await client.get(f"/api/v1/movie-night/{night.id}/candidates")
+    historical_card = next(
+        c for c in historical.json()["items"] if c["suggestionId"] == str(suggestion.id)
+    )
+    assert (
+        next(p for p in historical_card["people"] if p["personId"] == str(craig.id))[
+            "lastWatchedAt"
+        ]
+        == "2026-10-20"
+    )
+
+
+async def test_unowned_night_metadata_is_cached_without_catalogue_or_copy_rows(
+    db: AsyncSession,
+) -> None:
+    from sqlalchemy import func
+
+    from src.models.collection_item import CollectionItem
+    from src.routers.movies import get_tmdb_client
+    from src.tmdb.models import Movie as TmdbMovie
+    from src.tmdb.models import WatchProviders
+
+    class Tmdb:
+        calls = 0
+
+        async def get_movie_full(self, tmdb_id: int):
+            assert not db.in_transaction()
+            self.calls += 1
+            return TmdbMovie(
+                id=tmdb_id,
+                title="Unowned",
+                original_title="Unowned",
+                overview="",
+                runtime=99,
+                imdb_id="tt0123456",
+            )
+
+        async def get_watch_providers(self, tmdb_id: int):
+            assert not db.in_transaction()
+            return WatchProviders.model_validate(
+                {
+                    "id": tmdb_id,
+                    "results": {
+                        "GB": {
+                            "link": "https://www.themoviedb.org/watch",
+                            "flatrate": [
+                                {
+                                    "provider_id": 8,
+                                    "provider_name": "A stream",
+                                    "logo_path": "/stream.jpg",
+                                }
+                            ],
+                        }
+                    },
+                }
+            )
+
+    tmdb = Tmdb()
+
+    async def override_tmdb():
+        yield tmdb
+
+    craig = await _person(db, "Craig")
+    night = await _night(db, craig)
+    suggestion = MovieNightSuggestion(
+        id=uuid.uuid4(), session_id=night.id, tmdb_id=98765, title="Unowned", suggested_by=craig.id
+    )
+    db.add(suggestion)
+    await db.flush()
+    before = (
+        await db.scalar(select(func.count()).select_from(Movie)),
+        await db.scalar(select(func.count()).select_from(CollectionItem)),
+    )
+    async with _as(db, craig) as client:
+        app.dependency_overrides[get_tmdb_client] = override_tmdb
+        first = await client.get(f"/api/v1/movie-night/{night.id}/candidates")
+        again = await client.get(f"/api/v1/movie-night/{night.id}/candidates")
+    assert first.status_code == 200, first.text
+    assert again.status_code == 200, again.text
+    card = first.json()["items"][0]
+    assert (card["runtimeMinutes"], card["imdbId"], card["movieId"]) == (99, "tt0123456", None)
+    assert card["streamingOn"] == ["A stream"]
+    assert card["streamingLink"] == "https://www.themoviedb.org/watch"
+    assert tmdb.calls == 1
+    after = (
+        await db.scalar(select(func.count()).select_from(Movie)),
+        await db.scalar(select(func.count()).select_from(CollectionItem)),
+    )
+    assert after == before

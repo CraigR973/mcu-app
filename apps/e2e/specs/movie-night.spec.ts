@@ -1,3 +1,4 @@
+import { runJob } from '../support/cli.ts'
 import { pushesTo, registerDevice } from '../support/push.ts'
 import { expect, test } from '../support/test.ts'
 
@@ -103,4 +104,43 @@ test('a film page adds a random pick to Suggested without losing its vote', asyn
   await expect(headings.nth(1)).toContainText('Suggested')
   await expect(headings.nth(2)).toContainText('Stuck for ideas? A random shortlist')
   await craig.page.screenshot({ path: testInfo.outputPath('aa4-night-375.png'), fullPage: false })
+})
+
+
+test('AA5: night details use personal history, shelf locations and the nightly IMDb file', async ({ api, db, signedIn }, testInfo) => {
+  test.setTimeout(120_000) // Includes the real nightly command, with every provider faked.
+  const craigApi = await api('Craig')
+  await craigApi.post('/collection', { tmdbId: 1501, formats: ['blu_ray'], section: 'Front', shelf: '2nd', hasPlaybackIssues: false })
+  const movieId = db.scalar('SELECT id FROM movies WHERE tmdb_id = 1501')
+  await craigApi.post('/watch-log', { movieId, watchedAt: '2026-10-20', personalRating: 4.5 })
+  const night = await craigApi.post<{ id: string }>('/movie-night', {})
+  await craigApi.post(`/movie-night/${night.id}/send`, {})
+  const picked = await craigApi.post<{ items: { suggestionId: string; movieId: string | null; tmdbId: number | null }[] }>(`/movie-night/${night.id}/suggestions`, { movieId })
+  const shelf = picked.items.find((item) => item.movieId === movieId)
+  expect(shelf).toBeTruthy()
+  const extended = await craigApi.post<typeof picked>(`/movie-night/${night.id}/suggestions`, { tmdbId: 1201, title: 'Rooftop Opera', year: 2014 })
+  const outside = extended.items.find((item) => item.tmdbId === 1201)
+  expect(outside).toBeTruthy()
+  const run = runJob('src.scripts.spec_backfill')
+  expect(run.status, run.output).toBe(0)
+  expect(run.output).toContain('IMDb ratings:')
+  const craig = await signedIn('Craig')
+  await craig.page.setViewportSize({ width: 375, height: 812 })
+  await craig.page.goto(`/movie-night/${night.id}`)
+  await craig.page.getByRole('button', { name: /Velvet Observatory 2018/, expanded: false }).click()
+  const details = craig.page.locator(`#film-details-${shelf!.suggestionId}`)
+  await expect(details.getByRole('list', { name: 'Watch history and personal ratings' })).toContainText('Craig: last watched 20 Oct 2026 · 4.5/5')
+  await expect(details.getByRole('list', { name: 'Watch history and personal ratings' })).toContainText('Mark: no watch logged · not rated')
+  await expect(details.getByText('Our copies')).toBeVisible()
+  await expect(details).toContainText('8.2/10 · 1234 votes')
+  await expect(details.getByRole('link', { name: 'Letterboxd' })).toHaveAttribute('href', 'https://letterboxd.com/imdb/tt0001501/')
+  await details.getByRole('link', { name: 'Letterboxd' }).scrollIntoViewIfNeeded()
+  await craig.page.screenshot({ path: testInfo.outputPath('aa5-details-375.png') })
+  await craig.page.getByRole('button', { name: /Rooftop Opera 2014/, expanded: false }).click()
+  const external = craig.page.locator(`#film-details-${outside!.suggestionId}`)
+  await expect(external).toContainText('1h 52m')
+  await expect(external).toContainText('Fake Stream')
+  await expect(external).toContainText('8.2/10 · 1234 votes')
+  await expect(external.getByRole('link', { name: 'JustWatch via TMDB' })).toHaveAttribute('href', /themoviedb\.org/)
+  expect(db.scalar('SELECT count(*) FROM movies WHERE tmdb_id = 1201')).toBe('0')
 })

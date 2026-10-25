@@ -23,6 +23,8 @@ import {
   streamMovieNightEvents,
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
+import { imdbUrl, letterboxdUrl } from '@/lib/external-links'
+import { placeLabel } from '@/lib/place'
 import { shareLink } from '@/lib/share'
 import { cn, formatShortDate, formatDateTime } from '@/lib/utils'
 
@@ -138,6 +140,10 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
     : null
   const facts = [runtime, card.genres.join(' · ') || null].filter(Boolean).join(' · ')
   const path = filmPath(card)
+  const people = card.people ?? []
+  const locations = card.locations ?? []
+  const hasPlace = locations.some((place) => Boolean(place.location || place.section || place.shelf))
+  const imdb = imdbUrl({ imdbId: card.imdbId ?? null })
   return (
     <div className="space-y-2 px-3 pb-3 text-sm">
       {facts ? <p className="text-xs text-muted-foreground">{facts}</p> : null}
@@ -147,24 +153,50 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
           <span className="font-semibold text-foreground">Starring</span> {card.cast.join(', ')}
         </p>
       ) : null}
-      {/* #157's fourth point: which of the *others* have seen it, and when. */}
-      {card.watchedBy.length > 0 ? (
+      {people.length > 0 ? (
+        <ul className="space-y-1" aria-label="Watch history and personal ratings">
+          {people.map((person) => (
+            <li key={person.personId} className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{person.personName}</span>: {person.lastWatchedAt ? `last watched ${formatShortDate(person.lastWatchedAt)}` : 'no watch logged'}
+              {' · '}{person.personalRating === null ? 'not rated' : `${String(person.personalRating)}/5`}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {/* Older cached nights carry only the other participants' last watch. */}
+      {people.length === 0 && card.watchedBy.length > 0 ? (
         <p className="flex items-start gap-1.5 text-xs text-warning">
           <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           <span>{card.watchedBy.map((seen) => `${seen.personName} saw this on ${formatShortDate(seen.watchedAt)}`).join(' · ')}</span>
         </p>
       ) : null}
-      {card.streamingOn.length > 0 ? (
+      {locations.length > 0 ? (
+        <div className="text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">Our copies</p>
+          <ul>{locations.map((place, index) => <li key={index}>{placeLabel(place)}</li>)}</ul>
+        </div>
+      ) : null}
+      {!hasPlace && card.streamingOn.length > 0 ? (
         <p className="text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">Streaming on</span> {card.streamingOn.join(', ')}{' '}
-          <span className="opacity-80">(JustWatch)</span>
+          {card.streamingLink ? <a href={card.streamingLink} target="_blank" rel="noreferrer" className="underline">JustWatch via TMDB</a> : <span className="opacity-80">(JustWatch)</span>}
         </p>
       ) : null}
-      {path ? (
-        <Link to={path} className="inline-flex min-h-11 items-center text-xs font-semibold text-primary hover:underline">
-          Open its page
-        </Link>
-      ) : null}
+      {!hasPlace && card.streamingOn.length === 0 ? <p className="text-xs text-muted-foreground">No recorded location or streaming service found.</p> : null}
+      {!card.runtimeMinutes ? <p className="text-xs text-muted-foreground">Runtime unavailable.</p> : null}
+      <p className="text-xs text-muted-foreground">
+        {imdb ? <a href={imdb} target="_blank" rel="noreferrer" className="font-semibold text-primary underline">IMDb</a> : 'IMDb'}: {card.imdbRating == null ? (card.imdbCheckedAt ? 'not rated' : 'score unavailable') : `${String(card.imdbRating)}/10`}
+        {card.imdbVotes != null ? ` · ${String(card.imdbVotes)} votes` : ''}
+        {card.imdbCheckedAt ? ` · checked ${formatShortDate(card.imdbCheckedAt)}` : ''}
+      </p>
+      <div className="flex flex-wrap items-center gap-4">
+        <a href={letterboxdUrl({ title: card.title, imdbId: card.imdbId ?? null })} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-xs font-semibold text-primary underline">Letterboxd</a>
+        {path ? (
+          <Link to={path} className="inline-flex min-h-11 items-center text-xs font-semibold text-primary hover:underline">
+            Open its page
+          </Link>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -485,6 +517,7 @@ export default function MovieNightSessionPage() {
       )}
 
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+      <p className="text-xs text-muted-foreground">Information courtesy of <a href="https://www.imdb.com" target="_blank" rel="noreferrer" className="underline">IMDb</a>. Used with permission.</p>
     </div>
   )
 }

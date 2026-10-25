@@ -1792,6 +1792,20 @@ export const movieNightCandidateSchema = z.object({
   /** Null for the films the session was seeded with — nobody suggested those. */
   suggestedBy: z.string().nullable(),
   suggestedAt: z.string().nullable().default(null),
+  people: z.array(z.object({
+    personId: z.string().uuid(),
+    personName: z.string(),
+    lastWatchedAt: z.string().nullable(),
+    personalRating: z.number().min(0.5).max(5).nullable(),
+  })).default([]),
+  locations: z.array(z.object({
+    location: z.string().nullable(), section: z.string().nullable(), shelf: z.string().nullable(),
+  })).default([]),
+  imdbId: z.string().nullable().default(null),
+  imdbRating: z.number().min(0).max(10).nullable().default(null),
+  imdbVotes: z.number().int().nonnegative().nullable().default(null),
+  imdbCheckedAt: z.string().nullable().default(null),
+  streamingLink: z.string().nullable().default(null),
   streamingOn: z.array(z.string()),
   watchedBy: z.array(watchedBySchema),
   /** The caller's own swipe. **Only ever the caller's**: a movie night where each person

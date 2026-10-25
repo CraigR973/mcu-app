@@ -2,14 +2,12 @@
 
 ## Now
 
-**25 Oct: AA4 shipped in [PR #108](https://github.com/CraigR973/mcu-app/pull/108) (`6e9629d`).**
-Movie night opens with Suggest a film, then timestamped people’s suggestions, then a separate
-Archive random shortlist. An optional planned local time is stored once in UTC and appears in
-the nights list and recipient-local invite. Owned and TMDB film pages add to an open night;
-suggesting a random pick moves it into Suggested without losing votes. Migration 066 and its
-role boundaries are verified. PR CI passed all seven jobs; both production hosts serve the
-merge SHA, database ready and all integrations configured. AA5 and AA6 are next in the
-authorised sitting 3. Sitting 4 is not authorised.
+**25 Oct: AA4 shipped; AA5 is implemented and locally verified, awaiting PR CI.**
+AA5 adds every participant's last watch/rating, copy places before streaming, runtime, IMDb
+scores and Letterboxd links to night films. Migration 067 and the existing nightly spec/review
+job provide identity-guarded IMDb caches; no manual live provider refresh has run.
+AA4's shipped suggestion-first layout and planned time remain in place (PR #108, `6e9629d`).
+Only AA6 follows after AA5 closes. Sitting 4 is not authorised.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -24,7 +22,7 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Group AA sitting 3:** AA4 shipped; continue AA5, then AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
+**Group AA sitting 3:** AA4 shipped; close AA5, then AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -418,6 +416,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — AA5 implemented:** personal history, owned-copy places, external-film metadata and bounded IMDb refresh in the existing nightly job; local gate verified, PR CI and production verification next.
 
 - **25 Oct — AA4 shipped** in PR #108 (`6e9629d`), PR CI 40203779045 all seven jobs green. Railway and Vercel serve the merge SHA; readiness is db ok and every integration configured. Read-only production checks prove migration 066, unchanged unplanned nights and both roles’ planned-time grant with invite-token refusal. AA5 → AA6 next; stop before sitting 4.
 
