@@ -397,6 +397,13 @@ async def add_suggestion(
             else (MovieNightSuggestion.tmdb_id == tmdb_id),
         )
     )
+    if clash is not None and clash.suggested_by is None:
+        # A person's pick takes precedence over a random seed, with the same id and votes.
+        clash.suggested_by = user.id
+        clash.created_at_utc = utcnow()
+        await db.flush()
+        await publish(db, session.id, "suggestion", {"suggestionId": str(clash.id)})
+        return clash
     if clash is not None:
         raise SuggestionRefused("That film is already on tonight's list")
 

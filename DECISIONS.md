@@ -6375,3 +6375,16 @@ contemporaneous.
      - **Supersedes #140 only for this signed-in Home banner.** Photo art is no longer confined
        to onboarding, but is still absent from sign-in and every public screen. The choice does
        not make the photographs public brand assets.
+
+
+294. **AA4 distinguishes a person's suggestion from a random Archive pick (25 Oct).**
+     The page opens with Suggest a film, then Suggested (who and when), then the Archive's
+     random shortlist. Explicitly suggesting a random pick promotes its existing suggestion
+     rather than duplicating or refusing it; its id and all votes survive. Re-suggesting a
+     person's existing pick remains a conflict. This is within the owner-approved AA4 scope.
+     A night may have one nullable `planned_start_utc` (migration 066), with no backfill.
+     Entry and display use browser local time; invite pushes use the recipient's existing
+     notification timezone, falling back to Europe/London. No second timezone store or new
+     job is introduced. Both read-only roles gain only this column, never `invite_token`.
+     The API contract snapshot gains the agreed planned time and suggestion timestamp fields;
+     the snapshot test is retained unchanged.

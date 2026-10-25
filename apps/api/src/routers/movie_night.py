@@ -15,7 +15,9 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from typing import Annotated
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
@@ -32,7 +34,7 @@ from src.models.movie_night import (
     MovieNightVote,
     new_invite_token,
 )
-from src.models.notification import Notification, NotificationCategory
+from src.models.notification import Notification, NotificationCategory, NotificationPreference
 from src.models.profile import Profile
 from src.routers.movies import Database, TmdbClient
 from src.schemas.movie_night import (
@@ -164,6 +166,7 @@ async def _response(db: Database, session: MovieNightSession) -> MovieNightSessi
         # origin without trusting the `Host` header.
         invitePath=f"/movie-night/join/{session.invite_token}",
         participantCount=len(people),
+        plannedStart=session.planned_start_utc,
         createdAt=session.created_at,
         endedAt=session.ended_at_utc,
         people=[
@@ -255,6 +258,7 @@ async def create_session(
         created_by=user.id,
         invite_token=new_invite_token(),
         filters=payload.filters,
+        planned_start_utc=payload.plannedStart,
     )
     db.add(session)
     await db.flush()
@@ -346,6 +350,27 @@ def _invite_body(films: int) -> str:
     return f"{films} film{'' if films == 1 else 's'} on the shortlist. Tap to open it."
 
 
+async def _planned_invite_body(
+    db: Database, user_id: uuid.UUID, films: int, planned: datetime | None
+) -> str:
+    body = _invite_body(films)
+    if planned is None:
+        return body
+    timezone = (
+        await db.execute(
+            select(NotificationPreference.quiet_hours_timezone).where(
+                NotificationPreference.user_id == user_id
+            )
+        )
+    ).scalar_one_or_none()
+    try:
+        zone = ZoneInfo(timezone or "Europe/London")
+    except (ZoneInfoNotFoundError, ValueError):
+        zone = ZoneInfo("Europe/London")
+    local = planned.replace(tzinfo=UTC).astimezone(zone)
+    return f"Planned for {local.day} {local:%b %Y at %H:%M %Z}. {body}"
+
+
 @router.post("/movie-night/{session_id}/send", response_model=MovieNightSessionResponse)
 async def send_session(
     session_id: uuid.UUID, payload: SendRequest, user: CurrentUser, db: Database
@@ -387,7 +412,7 @@ async def send_session(
             user_id=person.id,
             category=NotificationCategory.movie_night,
             title=f"{user.display_name} started a movie night",
-            body=_invite_body(films),
+            body=await _planned_invite_body(db, person.id, films, session.planned_start_utc),
             url=f"/movie-night/{session.id}",
             dedupe_key=invite_key(session.id, person.id),
             now=now,
@@ -470,6 +495,7 @@ async def list_candidates(
                 genres=_genre_names(movie),
                 cast=_top_cast(movie),
                 suggestedBy=names.get(suggestion.suggested_by) if suggestion.suggested_by else None,
+                suggestedAt=suggestion.created_at_utc,
                 streamingOn=streaming,
                 watchedBy=[
                     WatchedByResponse(personName=name, watchedAt=when.isoformat())

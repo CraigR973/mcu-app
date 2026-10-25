@@ -2,9 +2,16 @@
 
 ## Now
 
-**25 Oct: Group AA sitting 2's AA2 Home rows shipped in [PR #105](https://github.com/CraigR973/mcu-app/pull/105) (`836df95`).** Needs attention now links to the repair screen or gives honest owner guidance; Recent activity lives on You; best-disc cards state their strongest stored sub-score and expand to show all scores; and a completion set separates missing films, their TMDB links and shared Wanted state from films on the shelf. The portrait metadata fix is [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`); its seven-job retry passed, and Railway and Vercel serve that SHA with `db: ok` and every integration configured.
+**25 Oct: Group AA sitting 3 is authorised: AA4 → AA5 → AA6 only.** AA4 is implemented on
+`feat/aa4-movie-night`: Suggest a film first, separate people’s and Archive lists, an optional
+UTC planned start in the list and recipient-local invite, and Add to movie night from owned
+and TMDB film pages. A person's pick promotes an Archive random pick without losing votes.
+Full local gates and the final 3-case Chromium pass passed; PR CI and deployment remain.
+AA5 and AA6 have not started. Sitting 4 is not authorised.
 
-**The owner-authorised AA2 portrait refresh completed on 25 Oct.** Its dry run proposed 39 metadata updates, then the approved write applied exactly 39 updates with 1 unchanged set and 0 creates, removals, skips or errors. Read-only production evidence confirms all 40 completion sets store a TMDB portrait path; their refresh timestamps span 13:39:28–13:39:54 UTC. No eBay call was made. AA10b's live re-price remains open. Each iPhone must still remove and re-add the app to receive AA1's new start page.
+**AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 completion sets
+have stored TMDB portraits; 39 metadata updates, 1 unchanged, no creates, removals or errors.
+Each iPhone still needs to remove and re-add the app for AA1's new start page.
 
 **Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
 £16,867.11 across 1,290 priced of 1,469 physical discs, with 0 sales-backed values.
@@ -12,11 +19,11 @@ The first run spent 748 of its 750-call budget, checked 748 pairs without failur
 left 719 due. Home's interim total is £15,961.05 across 1,314 priced discs, 0 sales-backed.
 The next scheduled valuation runs are 1 and 2 Nov at 04:00 UTC; each can spend up to 750
 calls for its UTC day. Read back the final Home total and priced/sales-backed counts when
-none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 remains unstarted.
+none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 is now authorised.
 
 ## Next
 
-**Stop:** Do not start Group AA sitting 3. AA2's owner-authorised portrait refresh is complete.
+**Group AA sitting 3:** close out AA4, then AA5, then AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -410,6 +417,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — AA4 implemented for authorised sitting 3:** local API retry 2,435 passed, 9 Unix-socket collection-import skips; shared/web 154/680 passed; Chromium 33, Firefox 32 (one documented dictation skip), jobs 5 passed. Migration 066 reverses to base and re-upgrades; both read-only roles gain planned time and remain unable to read invite tokens. Final 3-case Chromium pass passed; PR CI and deployment pending. AA5/AA6 unstarted; no sitting 4.
 
 - **2026-10-25 (AA2 portrait refresh, owner-authorised)** — The dry run read TMDB only and proposed 0 creates, 39 metadata updates and 0 removals, with 1 unchanged set and 0 errors. Craig authorised that exact write; it applied the same counts. Read-only production evidence then found 40 completion sets and 40 non-null `personProfilePath` values, refreshed from 13:39:28 to 13:39:54 UTC. No eBay call was made. AA2's headshot criterion is met; AA10b remains open and sitting 3 has not started.
 - **2026-10-25 (AA2 portrait metadata fix, PR #107)** — `98a04ed` makes completion-set refreshes update stored metadata whenever the TMDB answer differs, even with the same title and membership; its Postgres regression starts with a cleared portrait and requires exactly one metadata-only update. Local API 1,595 passed with 846 expected database skips; web/shared 676 passed; lint, type checks and production build passed. All seven PR jobs passed. The first post-merge E2E run had one Chromium timeout waiting for an existing movie-night control; its Firefox equivalent passed and WebKit's documented skip remained. One full CI retry passed all seven jobs. Railway and Vercel both serve `98a04ed`; readiness is `db: ok` with every integration configured. The live refresh is still a new owner checkpoint; no eBay call was made. AA10b remains open and sitting 3 has not started.

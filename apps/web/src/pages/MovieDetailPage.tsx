@@ -26,6 +26,7 @@ import { SalePanel } from '@/components/collection/SalePanel'
 import { StoredValue } from '@/components/collection/StoredValue'
 import { UpgradePrompt } from '@/components/collection/UpgradePrompt'
 import { ValuePanel } from '@/components/collection/ValuePanel'
+import { AddToMovieNight } from '@/components/movies/AddToMovieNight'
 import { RecommendationsPanel } from '@/components/movies/RecommendationsPanel'
 import { StreamingPanel } from '@/components/movies/StreamingPanel'
 import { FormatBadge } from '@/components/movies/FormatBadge'
@@ -769,6 +770,8 @@ export default function MovieDetailPage() {
             </Button>
           ) : null}
         </div>
+
+        {!series ? <AddToMovieNight movieId={movie.id} /> : null}
 
         <ReviewLinks reviews={movie.reviews} className="mt-4 max-w-3xl sm:ml-[9.5rem] lg:ml-[10.5rem]" />
 

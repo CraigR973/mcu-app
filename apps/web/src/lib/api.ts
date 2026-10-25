@@ -2376,9 +2376,10 @@ export async function fetchMovieNights(): Promise<MovieNightSessionList> {
 
 export async function createMovieNight(
   filters: Record<string, unknown> = {},
+  plannedStart?: string,
 ): Promise<MovieNightSession> {
   return parseOrThrowApiError(
-    await authFetch('/movie-night', { method: 'POST', body: JSON.stringify({ filters }) }),
+    await authFetch('/movie-night', { method: 'POST', body: JSON.stringify({ filters, plannedStart }) }),
     movieNightSessionSchema,
   )
 }

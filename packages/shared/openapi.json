@@ -7694,6 +7694,17 @@
       "title": "People",
       "type": "array"
      },
+     "plannedStart": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plannedstart"
+     },
      "status": {
       "enum": [
        "open",
@@ -10560,6 +10571,18 @@
       "additionalProperties": true,
       "title": "Filters",
       "type": "object"
+     },
+     "plannedStart": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plannedstart"
      }
     },
     "title": "SessionCreateRequest",
@@ -14529,6 +14552,17 @@
       },
       "title": "Streamingon",
       "type": "array"
+     },
+     "suggestedAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Suggestedat"
      },
      "suggestedBy": {
       "anyOf": [

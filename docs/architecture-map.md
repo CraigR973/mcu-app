@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA2,
-deployed on 25 Oct; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA4,
+implemented on 25 Oct (AA4 deployment pending); the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -69,3 +69,21 @@ marks that listing sold; the figure uses its last advertised price, which can ex
 accepted Best Offer. The run stops at 600 eBay calls per UTC day. Craig started the first
 Admin pass on 22 Oct; the cron path now carries the remaining film-format pairs into later
 daily budgets. AA10b is next.
+
+
+## AA4, implemented 25 Oct; deployment pending
+
+```mermaid
+flowchart TB
+    Film[Owned or TMDB film page] --> Night[Choose an open night]
+    Search[Suggest a film at top of night] --> Picks[Suggested: person and time]
+    Night --> Picks
+    Random[Archive random shortlist] -- person suggests a film --> Picks
+    Picks --> Votes[Existing Add / Added votes and match]
+    Plan[Optional local date and time] --> UTC[(One nullable UTC start)]
+    UTC --> Local[List of nights and recipient-local invite push]
+```
+
+Moving a random pick to Suggested keeps its suggestion id and all existing votes. Existing
+nights remain unplanned. Invite tokens remain withheld from the read-only and backup roles;
+migration 066 grants only the new planned-start column.
