@@ -65,3 +65,17 @@ Both production health and web version report the merge SHA; readiness reports d
 Before deployment the catalogue held 1,940 film rows, 3,794 copy rows, 1,591 watch rows and nine nights. A preliminary read-only count used the wrong plural table name for watch history; the corrected read succeeded. No production writes or manual provider jobs were used for verification.
 
 Final PR browser totals: Chromium 34; Firefox 33 plus documented dictation skip; WebKit 32 plus its two documented platform skips; cron six. Production readback: revision 067, 11 new readable columns for each role, credential columns withheld, no IMDb caches populated yet. At readback there were 1,943 film rows and 3,797 copy rows; watch rows (1,591) and nights (nine) matched the earlier observation. These are observations of an app in use, not a claim of an immutable catalogue. The agent performed no catalogue writes.
+
+## Later audit of the merge run
+
+The merge-SHA workflow 40212807678 (`8f47f39`) failed one existing WebKit login case:
+`page.goto('/retailers')` was interrupted by navigation to `/dashboard` after Mark's onboarding.
+This was found while checking the final sitting-3 workflow list. The final AA5 SHA `07d859a`
+passed all seven jobs in 40212949471, including that unchanged test. A diff confirms no app
+or package source changed between those two SHAs. AA6 PR CI 40229655987 also passes the same
+unchanged login case in all three engines.
+
+This is recorded as an intermittent test-navigation race, not an AA5 film-details failure;
+no unrelated login/test change was folded into AA6 and no assertion was weakened. It remains
+a test-reliability risk, and recurrence in the final required CI must block close-out and be
+handled separately. The previously reported final-SHA green evidence remains valid.
