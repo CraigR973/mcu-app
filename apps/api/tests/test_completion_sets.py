@@ -362,6 +362,38 @@ async def test_refresh_creates_sets_then_updates_them_in_place(
     assert rows[0].last_refreshed is not None and first_refreshed is not None
 
 
+async def test_refresh_updates_metadata_when_membership_is_unchanged(
+    api_session: AsyncSession,
+) -> None:
+    """A stable filmography must not leave a stale completion-card portrait behind."""
+    person = (9_000_006, "A Director Whose Portrait Arrives Later")
+    await _a_collector_of(api_session, person, [9_100_051, 9_100_052, 9_100_053])
+    credits = PersonMovieCredits(
+        id=person[0],
+        crew=[
+            _credit(9_100_051, "One", job="Director"),
+            _credit(9_100_052, "Two", job="Director"),
+            _credit(9_100_053, "Three", job="Director"),
+        ],
+    )
+    fake = FakePersonClient({person[0]: credits})
+    await refresh_sets(api_session, fake, limit_per_type=200)
+
+    row = (
+        await api_session.execute(
+            select(CompletionSet).where(CompletionSet.set_key == str(person[0]))
+        )
+    ).scalar_one()
+    row.set_metadata = {**row.set_metadata, "personProfilePath": None}
+    await api_session.flush()
+
+    result = await refresh_sets(api_session, fake, limit_per_type=200)
+
+    assert result.updated == 1
+    assert result.unchanged == 0
+    assert row.set_metadata["personProfilePath"] == f"/{person[0]}.jpg"
+
+
 async def test_a_dry_run_reads_tmdb_and_writes_nothing(api_session: AsyncSession) -> None:
     person = (9_000_005, "A Director Nobody Commits")
     await _a_collector_of(api_session, person, [9_100_041, 9_100_042, 9_100_043])
