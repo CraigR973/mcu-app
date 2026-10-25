@@ -42,10 +42,12 @@ flowchart TB
     Missing --> TMDB[TMDB film page]
 ```
 
-The completion-set refresh stores an optional TMDB person portrait; cards show initials until
-that separate owner-authorised live refresh runs. The existing completion endpoint reads each
-missing film's shared Wanted state, while the screen separates missing films from those on the
-shelf.
+The owner-authorised refresh ran on 25 Oct: it created one current set and removed one retired
+set without error. It stores an optional TMDB person portrait for a new or changed set, but the
+first run exposed that unchanged rows only advance their timestamp, not their metadata: 1 of 40
+sets gained a portrait. Cards therefore keep initials until a narrow metadata fix and a newly
+authorised re-run. The existing completion endpoint reads each missing film's shared Wanted state,
+while the screen separates missing films from those on the shelf.
 
 ## AA10a, shipped; first live pass read back 22 Oct
 
