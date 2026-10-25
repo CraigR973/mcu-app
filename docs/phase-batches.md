@@ -4507,7 +4507,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | ~~AA2~~ | ~~5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films~~ — **complete 25 Oct `836df95`** ([PR #105](https://github.com/CraigR973/mcu-app/pull/105)); [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`) fixes unchanged-set metadata. Craig authorised the follow-up live refresh: 0 creates, 39 metadata updates, 1 unchanged, 0 removals and 0 errors; read-only proof found portraits on all 40 sets | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA4~~ | ~~16, 17, 18, 20: suggest first, two lists, a planned time, add from a film~~ — **shipped 25 Oct `6e9629d`** ([PR #108](https://github.com/CraigR973/mcu-app/pull/108)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
-| AA5 | 19: each film's details on a night, IMDb's score | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| ~~AA5~~ | ~~19: each film’s details on a night, IMDb’s score~~ — **shipped 25 Oct `8f47f39`** ([PR #109](https://github.com/CraigR973/mcu-app/pull/109)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA6 | 21: feeling lucky, alone on Home and in a night | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA7 | 4: profile pictures | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA8~~ | ~~1: the artwork in the app~~ — **shipped 23 Oct `6b039bf`** ([PR #104](https://github.com/CraigR973/mcu-app/pull/104)) | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
@@ -4572,7 +4572,7 @@ to Craig; the build is planned from his picks. No code before his picks.
   choosing the night when more than one is.
 - Tests (the e2e movie-night case updated, not loosened). Gate green.
 
-### AA5 — The film's details on a night 🟡
+### ~~AA5 — The film’s details on a night~~ 🟡 **shipped 25 Oct (`8f47f39`, [PR #109](https://github.com/CraigR973/mcu-app/pull/109))**
 - **19.** Each film on a night shows, for each person: when they last watched it and their own
   rating (the app's, which already holds their Letterboxd ratings from the diary sync; "not
   rated" otherwise); where to watch it (shelf location first, else streaming); runtime; IMDb's
@@ -4723,7 +4723,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 3 authorised 25 Oct: AA4 shipped; continue AA5 → AA6, then stop before sitting 4.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 3 authorised 25 Oct: AA4 and AA5 shipped; continue AA6, then stop before sitting 4.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

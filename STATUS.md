@@ -2,12 +2,13 @@
 
 ## Now
 
-**25 Oct: AA4 shipped; AA5 is implemented and locally verified, awaiting PR CI.**
-AA5 adds every participant's last watch/rating, copy places before streaming, runtime, IMDb
-scores and Letterboxd links to night films. Migration 067 and the existing nightly spec/review
-job provide identity-guarded IMDb caches; no manual live provider refresh has run.
-AA4's shipped suggestion-first layout and planned time remain in place (PR #108, `6e9629d`).
-Only AA6 follows after AA5 closes. Sitting 4 is not authorised.
+**25 Oct: AA4 and AA5 shipped; AA6 is next in authorised sitting 3.**
+AA5 landed in [PR #109](https://github.com/CraigR973/mcu-app/pull/109) (`8f47f39`): every
+participant's last watch/rating, copy places before streaming, runtime, IMDb scores and
+Letterboxd links. Migration 067 and both role boundaries are verified. All seven PR CI jobs
+passed; both production hosts serve the merge SHA, database ready, all integrations configured.
+The first live IMDb scores await the existing 02:00 UTC nightly job; no manual live provider
+refresh has run. AA4 shipped in PR #108 (`6e9629d`). Stop after AA6; sitting 4 is not authorised.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -22,7 +23,7 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Group AA sitting 3:** AA4 shipped; close AA5, then AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
+**Group AA sitting 3:** AA4 and AA5 shipped; continue AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -416,6 +417,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — AA5 shipped** (PR #109, `8f47f39`): personal film details, suggestion metadata and bounded daily IMDb cache in the existing nightly job. CI 40210873854 all seven green; production SHA/readiness and migration/role checks passed. First live scores await the scheduled job. AA6 next; no sitting 4.
 
 - **25 Oct — AA5 implemented:** personal history, owned-copy places, external-film metadata and bounded IMDb refresh in the existing nightly job; local gate verified, PR CI and production verification next.
 

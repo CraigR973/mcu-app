@@ -1,6 +1,6 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA4,
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA5,
 deployed on 25 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
@@ -89,7 +89,7 @@ nights remain unplanned. Invite tokens remain withheld from the read-only and ba
 migration 066 grants only the new planned-start column.
 
 
-## AA5, implementation ready for deployment
+## AA5, shipped 25 Oct (`8f47f39`)
 
 ```mermaid
 flowchart TB

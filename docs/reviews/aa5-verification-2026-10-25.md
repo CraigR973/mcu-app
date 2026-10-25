@@ -57,3 +57,11 @@ No IMDb file or other live provider acceptance run has been performed by the age
 ## Production limits
 
 The first live IMDb refresh belongs to the existing scheduled 02:00 UTC job; no manual live IMDb/provider acceptance run was started. Until a successful scheduled refresh, the UI honestly says the score is unavailable. Real iPhone/camera/speech/push acceptance remains Craig's (6.2, 5.6, 9.5 and 8.4/16b). The production browser is signed out; signed-in rendering is exercised by the local and CI browser suites, not claimed as a live phone check.
+
+## Shipment
+
+PR [#109](https://github.com/CraigR973/mcu-app/pull/109), source `470242ce35e9f0ad3333aaae1ee63dd2ecad5643`, final PR CI 40210873854: all seven jobs green, including all three browser engines. API 2,469 passed without skips. The first E2E attempt was cancelled after roughly 11 minutes of browser setup; released logs showed slow Ubuntu package downloads, not an application failure. A fresh-runner retry used the same source and unchanged checks. Merge `8f47f39073117de14e577c01297144d2effdea6f`.
+Both production health and web version report the merge SHA; readiness reports db ok and every integration configured. Production migration is 067; guarded cache grants and withheld credentials verified by privilege queries, never credential reads. New cache values are nullable until the scheduled refresh.
+Before deployment the catalogue held 1,940 film rows, 3,794 copy rows, 1,591 watch rows and nine nights. A preliminary read-only count used the wrong plural table name for watch history; the corrected read succeeded. No production writes or manual provider jobs were used for verification.
+
+Final PR browser totals: Chromium 34; Firefox 33 plus documented dictation skip; WebKit 32 plus its two documented platform skips; cron six. Production readback: revision 067, 11 new readable columns for each role, credential columns withheld, no IMDb caches populated yet. At readback there were 1,943 film rows and 3,797 copy rows; watch rows (1,591) and nights (nine) matched the earlier observation. These are observations of an app in use, not a claim of an immutable catalogue. The agent performed no catalogue writes.
