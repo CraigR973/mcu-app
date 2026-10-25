@@ -4,7 +4,7 @@
 
 **25 Oct: Group AA sitting 2's AA2 Home rows shipped in [PR #105](https://github.com/CraigR973/mcu-app/pull/105) (`836df95`).** Needs attention now links to the repair screen or gives honest owner guidance; Recent activity lives on You; best-disc cards state their strongest stored sub-score and expand to show all scores; and a completion set separates missing films, their TMDB links and shared Wanted state from films on the shelf. The portrait metadata fix is [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`); its seven-job retry passed, and Railway and Vercel serve that SHA with `db: ok` and every integration configured.
 
-**The authorised AA2 completion-set refresh ran on 25 Oct.** It created 1 set, removed 1 no-longer-chosen set and left 39 membership sets unchanged, with 0 errors. All 40 have a new refresh timestamp, but only 1 stores a TMDB portrait. The narrow metadata fix shipped in [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`); a newly authorised live re-run is still required before claiming the headshot criterion. AA10b's live re-price remains open. Each iPhone must still remove and re-add the app to receive AA1's new start page.
+**The owner-authorised AA2 portrait refresh completed on 25 Oct.** Its dry run proposed 39 metadata updates, then the approved write applied exactly 39 updates with 1 unchanged set and 0 creates, removals, skips or errors. Read-only production evidence confirms all 40 completion sets store a TMDB portrait path; their refresh timestamps span 13:39:28–13:39:54 UTC. No eBay call was made. AA10b's live re-price remains open. Each iPhone must still remove and re-add the app to receive AA1's new start page.
 
 **Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
 £16,867.11 across 1,290 priced of 1,469 physical discs, with 0 sales-backed values.
@@ -12,13 +12,11 @@ The first run spent 748 of its 750-call budget, checked 748 pairs without failur
 left 719 due. Home's interim total is £15,961.05 across 1,314 priced discs, 0 sales-backed.
 The next scheduled valuation runs are 1 and 2 Nov at 04:00 UTC; each can spend up to 750
 calls for its UTC day. Read back the final Home total and priced/sales-backed counts when
-none are due; only then close AA10b. AA2 is next in the authorised sitting; its completion-set
-refresh remains a separate live checkpoint at Craig's word.
+none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 remains unstarted.
 
 ## Next
 
-**Stop:** Do not start Group AA sitting 3. AA2's metadata fix is deployed, but a newly
-authorised live refresh is still required to populate the remaining portraits.
+**Stop:** Do not start Group AA sitting 3. AA2's owner-authorised portrait refresh is complete.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -413,6 +411,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2026-10-25 (AA2 portrait refresh, owner-authorised)** — The dry run read TMDB only and proposed 0 creates, 39 metadata updates and 0 removals, with 1 unchanged set and 0 errors. Craig authorised that exact write; it applied the same counts. Read-only production evidence then found 40 completion sets and 40 non-null `personProfilePath` values, refreshed from 13:39:28 to 13:39:54 UTC. No eBay call was made. AA2's headshot criterion is met; AA10b remains open and sitting 3 has not started.
 - **2026-10-25 (AA2 portrait metadata fix, PR #107)** — `98a04ed` makes completion-set refreshes update stored metadata whenever the TMDB answer differs, even with the same title and membership; its Postgres regression starts with a cleared portrait and requires exactly one metadata-only update. Local API 1,595 passed with 846 expected database skips; web/shared 676 passed; lint, type checks and production build passed. All seven PR jobs passed. The first post-merge E2E run had one Chromium timeout waiting for an existing movie-night control; its Firefox equivalent passed and WebKit's documented skip remained. One full CI retry passed all seven jobs. Railway and Vercel both serve `98a04ed`; readiness is `db: ok` with every integration configured. The live refresh is still a new owner checkpoint; no eBay call was made. AA10b remains open and sitting 3 has not started.
 - **2026-10-25 (AA2 live completion-set refresh, owner-authorised)** — The required dry run made live TMDB reads only and reported 1 create, 1 remove, 39 unchanged and 0 errors. Craig authorised that exact write; it completed with the same counts and 0 errors. Readback found 40 sets and 40 new `last_refreshed` timestamps, but only 1 stored `personProfilePath`. AA2's refresher updated metadata only when a set's membership changed, so the 39 unchanged rows still show initials. Do not claim the headshot criterion or re-run the live refresh until the narrow metadata fix is deployed and Craig authorises a new live run. No eBay call was made; AA10b remains open and sitting 3 has not started.
 - **2026-10-25 (AA2 shipped, Group AA sitting 2)** — [PR #105](https://github.com/CraigR973/mcu-app/pull/105) merged as `836df95`: Needs attention now opens the repair screen for every actionable check and gives owner guidance for server-only work; Recent activity moved from Home to You; Best discs names the strongest stored picture, sound or extras score and expands to show its sub-scores; and completion sets separate missing films from owned ones, link each missing film to TMDB and show the shared Wanted state. The refresh that stores optional TMDB person portraits was not run: it remains Craig's separate live checkpoint. Local API 1,595 passed with 845 expected Mac database skips; web/shared 676 passed; lint, type checks and builds passed. All seven PR and postmerge CI jobs passed, including Postgres 17, image boot, Chromium, Firefox, WebKit and jobs. Railway and Vercel both serve `836df95`; readiness is `db: ok` and every integration is configured. AA10b's re-price remains open. Sitting 3 has not started.

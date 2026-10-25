@@ -4504,7 +4504,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | Batch | Covers (snag numbers) | Size | Claude Code | Codex |
 |---|---|---|---|---|
 | ~~AA1~~ | ~~2, 3, 6, 8, 10, 14, 15: start page, top bar, Top rated, best-reviewed title, film tabs, our disc first~~ — **shipped 23 Oct `4cc207d`** ([PR #103](https://github.com/CraigR973/mcu-app/pull/103)); each iPhone re-add remains an owner action | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
-| ~~AA2~~ | ~~5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films~~ — **shipped 25 Oct `836df95`** ([PR #105](https://github.com/CraigR973/mcu-app/pull/105)); [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`) fixes unchanged-set metadata. Its owner-authorised refresh created 1 set and removed 1; a new live run remains before portraits backfill unchanged sets | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| ~~AA2~~ | ~~5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films~~ — **complete 25 Oct `836df95`** ([PR #105](https://github.com/CraigR973/mcu-app/pull/105)); [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`) fixes unchanged-set metadata. Craig authorised the follow-up live refresh: 0 creates, 39 metadata updates, 1 unchanged, 0 removals and 0 errors; read-only proof found portraits on all 40 sets | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA4 | 16, 17, 18, 20: suggest first, two lists, a planned time, add from a film | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA5 | 19: each film's details on a night, IMDb's score | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
@@ -4541,7 +4541,7 @@ money and shows on Home. AA1, AA2, AA6 and AA8 are interface work over data the 
   then Streaming. A download names where it is.
 - Tests. Gate green. Browser check at 375 px, both themes.
 
-### ~~AA2 — Home rows~~ 🟡 **shipped 25 Oct (`836df95`, [PR #105](https://github.com/CraigR973/mcu-app/pull/105)); portrait metadata fix shipped (`98a04ed`, [PR #107](https://github.com/CraigR973/mcu-app/pull/107)), but a new live refresh remains**
+### ~~AA2 — Home rows~~ 🟢 **complete 25 Oct (`836df95`, [PR #105](https://github.com/CraigR973/mcu-app/pull/105)); portrait metadata fix (`98a04ed`, [PR #107](https://github.com/CraigR973/mcu-app/pull/107)) and Craig's owner-authorised refresh populated all 40 stored TMDB portraits**
 - **5.** Each Needs attention line opens the screen that fixes it (Identify, Disc specs, Retailers,
   Settings' devices, the assistant settings, Admin's jobs); a line with nothing in the app to do
   (server set-up, database size) says what to do instead. One map from check key to place, with a
@@ -4550,7 +4550,9 @@ money and shows on Home. AA1, AA2, AA6 and AA8 are interface work over data the 
 - **11.** Each best-reviewed card says what the disc is strongest at, from the stored sub-scores
   (picture from Video 4K or 2K, sound from Audio, extras), with the scores on tap.
 - **12.** Completion cards show the person's TMDB headshot, stored by the set refresh, initials
-  when TMDB has none. **The refresh that fills them is a live step at Craig's word.**
+  when TMDB has none. **Craig authorised the live refresh on 25 Oct:** 39 metadata updates,
+  1 unchanged set, 0 creates/removals/errors; read-only production evidence confirms portraits
+  on all 40 sets.
 - **13.** A set's page lists its missing films on their own, each with Add to wanted (or
   "Wanted" when it is), each opening its TMDB film page; the bulk button stays. Mark sees it too
   if Wanted is shared (checked when the batch starts).
