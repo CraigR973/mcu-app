@@ -269,7 +269,11 @@ async def refresh_sets(
                 )
             continue
 
-        if row.member_tmdb_ids == member_ids and row.set_name == candidate.name:
+        if (
+            row.member_tmdb_ids == member_ids
+            and row.set_name == candidate.name
+            and row.set_metadata == metadata
+        ):
             result.unchanged += 1
             # `last_refreshed` still moves: "we checked and nothing changed" is a
             # different fact from "we have not looked since Tuesday", and the weekly job
