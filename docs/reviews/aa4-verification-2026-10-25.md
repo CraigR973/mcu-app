@@ -53,3 +53,15 @@
   Regenerated it with the repo exporter; the test and its assertion are unchanged. Full retry passed.
 - Mac WebKit is unsupported; the PR must prove it in CI, with only documented suite skips.
 - Pre-commit whitespace check found an extra blank line at this report’s end; removed it.
+
+## Concurrent suggestions review
+
+The first PR head passed all seven jobs (CI 40202788997: API 2,444 passed without skips;
+Chromium 33, Firefox 32/one documented skip, WebKit 31/two documented skips, jobs 5).
+Review then identified that simultaneous promotions could overwrite the first person's credit.
+A new two-connection test held the first write open and observed the second waiting for a lock;
+it failed against the first head because both requests succeeded. The existing suggestion is now
+selected FOR UPDATE, so the first credit and timestamp remain, the second gets the existing
+conflict response, and votes survive. All 43 movie-night tests pass. Full API retry: 2,436 passed, 9 documented Unix-socket skips;
+mypy and both Ruff checks passed. New exact-head CI is required before merge. The new test's first lint pass flagged a long SQL
+literal; split the literal without changing the query.

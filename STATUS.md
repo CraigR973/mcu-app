@@ -6,7 +6,10 @@
 `feat/aa4-movie-night`: Suggest a film first, separate people’s and Archive lists, an optional
 UTC planned start in the list and recipient-local invite, and Add to movie night from owned
 and TMDB film pages. A person's pick promotes an Archive random pick without losing votes.
-Full local gates and the final 3-case Chromium pass passed; PR CI and deployment remain.
+The first PR head passed all seven CI jobs. Review found a simultaneous-suggestion credit race;
+a two-connection regression test reproduced it, and the row-lock fix passes all 43 movie-night
+tests. The full API retry passes 2,436 tests (9 documented local skips); exact-head CI and
+deployment remain.
 AA5 and AA6 have not started. Sitting 4 is not authorised.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 completion sets

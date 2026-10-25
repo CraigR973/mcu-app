@@ -25,7 +25,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -181,3 +181,90 @@ async def test_two_likes_at_once_always_make_exactly_one_match(
         assert len(votes) == 2
         assert len({vote.announced_at_utc for vote in votes}) == 1
         assert votes[0].announced_at_utc is not None
+
+
+async def test_two_people_promoting_one_random_pick_keep_the_first_credit_and_votes(
+    engine: AsyncEngine,
+    people: tuple[uuid.UUID, uuid.UUID],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+    session_id, suggestion_id = await _night(sessionmaker, people)
+    async with sessionmaker() as db:
+        suggestion = await db.get(MovieNightSuggestion, suggestion_id)
+        assert suggestion is not None
+        suggestion.suggested_by = None
+        await db.commit()
+    await _like(sessionmaker, session_id, suggestion_id, people[0])
+
+    first_written = asyncio.Event()
+    release_first = asyncio.Event()
+    real_publish = night.publish
+
+    async def publish(db: AsyncSession, session_id: uuid.UUID, kind: str, data: dict) -> None:
+        await real_publish(db, session_id, kind, data)
+        if kind == "suggestion" and not first_written.is_set():
+            first_written.set()
+            await release_first.wait()
+
+    monkeypatch.setattr(night, "publish", publish)
+    app_name = f"aa4-{uuid.uuid4().hex}"
+
+    async def promote(person: uuid.UUID, *, second: bool = False) -> uuid.UUID | None:
+        async with sessionmaker() as db:
+            if second:
+                await db.execute(
+                    text("SELECT set_config('application_name', :name, true)"), {"name": app_name}
+                )
+            session = await db.get(MovieNightSession, session_id)
+            user = await db.get(Profile, person)
+            assert session is not None and user is not None
+            try:
+                result = await night.add_suggestion(
+                    db, session=session, user=user, tmdb_id=1201, title="Rooftop Opera"
+                )
+            except night.SuggestionRefused:
+                await db.rollback()
+                return None
+            await db.commit()
+            return result.id
+
+    first = asyncio.create_task(promote(people[0]))
+    second = None
+    try:
+        await asyncio.wait_for(first_written.wait(), timeout=5)
+        second = asyncio.create_task(promote(people[1], second=True))
+
+        async def wait_for_lock() -> None:
+            async with engine.connect() as conn:
+                while not await conn.scalar(
+                    text(
+                        "SELECT EXISTS (SELECT FROM pg_stat_activity "
+                        "WHERE application_name = :name AND wait_event_type = 'Lock')"
+                    ),
+                    {"name": app_name},
+                ):
+                    # PG caches statistics per transaction; observe a fresh snapshot each time.
+                    await conn.rollback()
+                    await asyncio.sleep(0.01)
+
+        await asyncio.wait_for(wait_for_lock(), timeout=5)
+        release_first.set()
+        results = await asyncio.gather(first, second)
+        assert results == [suggestion_id, None]
+        async with sessionmaker() as db:
+            stored = await db.get(MovieNightSuggestion, suggestion_id)
+            assert stored is not None and stored.suggested_by == people[0]
+            assert (
+                await db.scalar(
+                    select(func.count())
+                    .select_from(MovieNightVote)
+                    .where(MovieNightVote.suggestion_id == suggestion_id)
+                )
+                == 1
+            )
+    finally:
+        release_first.set()
+        await asyncio.gather(
+            first, *([second] if second is not None else []), return_exceptions=True
+        )

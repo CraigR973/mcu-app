@@ -390,12 +390,14 @@ async def add_suggestion(
         raise SuggestionRefused("A film outside the collection needs a title")
 
     clash = await db.scalar(
-        select(MovieNightSuggestion).where(
+        select(MovieNightSuggestion)
+        .where(
             MovieNightSuggestion.session_id == session.id,
             (MovieNightSuggestion.movie_id == movie_id)
             if movie_id is not None
             else (MovieNightSuggestion.tmdb_id == tmdb_id),
         )
+        .with_for_update()
     )
     if clash is not None and clash.suggested_by is None:
         # A person's pick takes precedence over a random seed, with the same id and votes.
