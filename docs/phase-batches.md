@@ -4504,7 +4504,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | Batch | Covers (snag numbers) | Size | Claude Code | Codex |
 |---|---|---|---|---|
 | ~~AA1~~ | ~~2, 3, 6, 8, 10, 14, 15: start page, top bar, Top rated, best-reviewed title, film tabs, our disc first~~ — **shipped 23 Oct `4cc207d`** ([PR #103](https://github.com/CraigR973/mcu-app/pull/103)); each iPhone re-add remains an owner action | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
-| ~~AA2~~ | ~~5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films~~ — **shipped 25 Oct `836df95`** ([PR #105](https://github.com/CraigR973/mcu-app/pull/105)); its owner-authorised refresh created 1 set and removed 1, but a metadata fix and new live run remain before portraits backfill unchanged sets | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| ~~AA2~~ | ~~5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films~~ — **shipped 25 Oct `836df95`** ([PR #105](https://github.com/CraigR973/mcu-app/pull/105)); [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`) fixes unchanged-set metadata. Its owner-authorised refresh created 1 set and removed 1; a new live run remains before portraits backfill unchanged sets | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA4 | 16, 17, 18, 20: suggest first, two lists, a planned time, add from a film | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA5 | 19: each film's details on a night, IMDb's score | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
@@ -4541,7 +4541,7 @@ money and shows on Home. AA1, AA2, AA6 and AA8 are interface work over data the 
   then Streaming. A download names where it is.
 - Tests. Gate green. Browser check at 375 px, both themes.
 
-### ~~AA2 — Home rows~~ 🟡 **shipped 25 Oct (`836df95`, [PR #105](https://github.com/CraigR973/mcu-app/pull/105)); owner-authorised refresh ran, but unchanged-set portrait metadata needs a narrow fix and new live run**
+### ~~AA2 — Home rows~~ 🟡 **shipped 25 Oct (`836df95`, [PR #105](https://github.com/CraigR973/mcu-app/pull/105)); portrait metadata fix shipped (`98a04ed`, [PR #107](https://github.com/CraigR973/mcu-app/pull/107)), but a new live refresh remains**
 - **5.** Each Needs attention line opens the screen that fixes it (Identify, Disc specs, Retailers,
   Settings' devices, the assistant settings, Admin's jobs); a line with nothing in the app to do
   (server set-up, database size) says what to do instead. One map from check key to place, with a
@@ -4721,7 +4721,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix pending) · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Do not start sitting 3 without Craig's go.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised refresh created 1 and removed 1 set without errors, but only 1 of 40 sets gained a portrait because unchanged metadata is not rewritten; fix first, then a new live-refresh authorisation. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: AA4 → AA5 → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Do not start sitting 3 without Craig's go.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised refresh created 1 and removed 1 set without errors, but only 1 of 40 sets gained a portrait because unchanged metadata was not rewritten; `98a04ed` fixes it, and a new live-refresh authorisation is still required. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
