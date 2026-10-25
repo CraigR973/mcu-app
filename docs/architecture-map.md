@@ -87,3 +87,20 @@ flowchart TB
 Moving a random pick to Suggested keeps its suggestion id and all existing votes. Existing
 nights remain unplanned. Invite tokens remain withheld from the read-only and backup roles;
 migration 066 grants only the new planned-start column.
+
+
+## AA5, implementation ready for deployment
+
+```mermaid
+flowchart TB
+    Cron[Existing nightly spec/review job] --> File[Bounded IMDb ratings file]
+    File --> Cache[(Scores for stored IMDb ids only)]
+    Night[Film on a night] --> History[Each participant's watch and rating]
+    Night --> Place[Owned-copy place, else streaming]
+    Night --> Cache
+    Night --> Snapshot[Runtime and IMDb identity on suggestion]
+```
+
+Night-only metadata stays on the existing suggestion; opening a night creates no catalogue
+films or copies. IMDb cache identity and checked time prevent stale scores after an identity
+correction. Failed refreshes keep previous scores and surface through the existing job check.

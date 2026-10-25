@@ -652,3 +652,15 @@ async def test_one_person_cannot_fill_craigs_home(db: AsyncSession) -> None:
         assert (
             await client.post("/api/v1/attention/notes", json={"message": "again"})
         ).status_code == 204
+
+
+async def test_a_fresh_spec_heartbeat_does_not_hide_an_imdb_refresh_failure(
+    db: AsyncSession,
+) -> None:
+    await beat(
+        db, "cron-specs", "IMDb ratings failed", detail={"imdbError": "503 from IMDb"}, now=NOW
+    )
+    failed = _by_key(await health_checks.check_jobs(db, NOW))["job:cron-specs"]
+    assert failed is not None and "IMDb scores could not be refreshed" in failed
+    await beat(db, "cron-specs", "finished", detail={"imdbError": None}, now=NOW)
+    assert _by_key(await health_checks.check_jobs(db, NOW))["job:cron-specs"] is None

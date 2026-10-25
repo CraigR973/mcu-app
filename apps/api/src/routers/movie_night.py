@@ -40,10 +40,12 @@ from src.routers.movies import Database, TmdbClient
 from src.schemas.movie_night import (
     CandidateListResponse,
     CandidateResponse,
+    CopyPlaceResponse,
     MatchResponse,
     MovieNightSessionListResponse,
     MovieNightSessionResponse,
     ParticipantResponse,
+    PersonFilmResponse,
     PersonResponse,
     SendRequest,
     SessionCreateRequest,
@@ -51,6 +53,13 @@ from src.schemas.movie_night import (
     VoteRequest,
     VoteResponse,
     WatchedByResponse,
+)
+from src.services.movie_night.details import (
+    copy_places,
+    fill_suggestion_metadata,
+    films_for_suggestions,
+    imdb_details,
+    people_history,
 )
 from src.services.movie_night.realtime import broadcaster
 from src.services.movie_night.sessions import (
@@ -64,7 +73,6 @@ from src.services.movie_night.sessions import (
     publish,
     record_vote,
     session_suggestions,
-    watched_by_others,
 )
 from src.services.notifications import queue_notification
 
@@ -206,7 +214,9 @@ def _top_cast(movie: Movie | None) -> list[str]:
     ]
 
 
-async def _streaming_names(tmdb: TmdbClient, tmdb_id: int, user: Profile) -> list[str]:
+async def _streaming_names(
+    tmdb: TmdbClient, tmdb_id: int, user: Profile
+) -> tuple[list[str], str | None]:
     """Where a film nobody owns can be watched — `DECISIONS.md` #157's second point.
 
     **Fails quietly to an empty list.** TMDB being slow or down should cost the card its
@@ -215,11 +225,11 @@ async def _streaming_names(tmdb: TmdbClient, tmdb_id: int, user: Profile) -> lis
     try:
         providers = await tmdb.get_watch_providers(tmdb_id)
     except Exception:  # noqa: BLE001 - a missing streaming line must not fail the list
-        return []
+        return [], None
     country = providers.results.get(user.streaming_region or "GB")
     if country is None:
-        return []
-    return [provider.provider_name for provider in (country.flatrate or [])][:4]
+        return [], None
+    return [provider.provider_name for provider in (country.flatrate or [])][:4], country.link
 
 
 @router.get("/movie-night", response_model=MovieNightSessionListResponse)
@@ -445,13 +455,10 @@ async def list_candidates(
     suggestions = await session_suggestions(db, session=session)
     await db.commit()
 
-    owned_ids = [s.movie_id for s in suggestions if s.movie_id is not None]
-    movies = {
-        movie.id: movie
-        for movie in (await db.execute(select(Movie).where(Movie.id.in_(owned_ids)))).scalars()
-        if owned_ids
-    }
-    seen = await watched_by_others(db, session=session, user=user, movie_ids=owned_ids)
+    movies, by_tmdb = await films_for_suggestions(db, suggestions)
+    await fill_suggestion_metadata(db, suggestions, by_tmdb, tmdb)
+    people, history = await people_history(db, session.id, list(movies))
+    places = await copy_places(db, list(movies))
 
     names = {
         person_id: name
@@ -470,39 +477,69 @@ async def list_candidates(
         if vote.suggestion_id is not None
     }
 
+    # No request-pool connection is held while fetching streaming availability.
+    await db.commit()
     items: list[CandidateResponse] = []
     for suggestion in suggestions:
-        movie = movies.get(suggestion.movie_id) if suggestion.movie_id else None
+        face = movies.get(suggestion.movie_id) if suggestion.movie_id else None
+        movie = face or (by_tmdb.get(suggestion.tmdb_id) if suggestion.tmdb_id else None)
+        copies = places.get(movie.id, []) if movie else []
         streaming: list[str] = []
-        if movie is None and suggestion.tmdb_id is not None:
-            # #157: `get_watch_providers` already existed, so the streaming half needed no
-            # new integration. Only asked for films nobody owns — for one on the shelf the
-            # answer is "it is on the shelf".
-            streaming = await _streaming_names(tmdb, suggestion.tmdb_id, user)
+        streaming_link = None
+        provider_id = movie.tmdb_id if movie else suggestion.tmdb_id
+        has_place = any(copy.location or copy.section or copy.shelf for copy in copies)
+        if not has_place and provider_id is not None:
+            streaming, streaming_link = await _streaming_names(tmdb, provider_id, user)
+        imdb_id, imdb_rating, imdb_votes, imdb_checked = imdb_details(movie, suggestion)
+        viewers = []
+        for person_id, name in people:
+            watched, rating = (
+                history.get((movie.id, person_id), (None, None)) if movie else (None, None)
+            )
+            viewers.append(
+                PersonFilmResponse(
+                    personId=person_id,
+                    personName=name,
+                    lastWatchedAt=watched,
+                    personalRating=float(rating) if rating is not None else None,
+                )
+            )
         items.append(
             CandidateResponse(
                 suggestionId=suggestion.id,
                 movieId=suggestion.movie_id,
                 tmdbId=suggestion.tmdb_id,
                 # The film's own title, year and poster when it is on the shelf (X12a).
-                title=movie.title if movie else suggestion.title,
-                year=movie.year if movie else suggestion.year,
-                posterPath=(movie.poster_path or suggestion.poster_path)
-                if movie
+                title=face.title if face else suggestion.title,
+                year=face.year if face else suggestion.year,
+                posterPath=(face.poster_path or suggestion.poster_path)
+                if face
                 else suggestion.poster_path,
                 overview=suggestion.overview,
-                runtimeMinutes=movie.runtime_minutes if movie else None,
+                runtimeMinutes=(movie.runtime_minutes if movie else None)
+                or suggestion.runtime_minutes,
                 genres=_genre_names(movie),
                 cast=_top_cast(movie),
                 suggestedBy=names.get(suggestion.suggested_by) if suggestion.suggested_by else None,
                 suggestedAt=suggestion.created_at_utc,
                 streamingOn=streaming,
                 watchedBy=[
-                    WatchedByResponse(personName=name, watchedAt=when.isoformat())
-                    for name, when in seen.get(suggestion.movie_id, [])
-                ]
-                if suggestion.movie_id
-                else [],
+                    WatchedByResponse(
+                        personName=p.personName, watchedAt=p.lastWatchedAt.isoformat()
+                    )
+                    for p in viewers
+                    if p.personId != user.id and p.lastWatchedAt is not None
+                ],
+                people=viewers,
+                locations=[
+                    CopyPlaceResponse(location=c.location, section=c.section, shelf=c.shelf)
+                    for c in copies
+                ],
+                imdbId=imdb_id,
+                imdbRating=float(imdb_rating) if imdb_rating is not None else None,
+                imdbVotes=imdb_votes,
+                imdbCheckedAt=imdb_checked,
+                streamingLink=streaming_link,
                 myVote=my_votes.get(suggestion.id),
             )
         )

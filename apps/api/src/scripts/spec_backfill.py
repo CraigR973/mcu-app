@@ -29,6 +29,7 @@ from src.database import AsyncSessionLocal
 from src.models.reviews import ReviewRun
 from src.models.specs_backfill import SpecRun
 from src.services import heartbeat
+from src.services.imdb_ratings import refresh_ratings
 from src.services.reviews import batch as reviews
 from src.services.specs.backfill import Coverage, StartOutcome, coverage, start_run, work_run
 from src.services.specs.search import BraveSearch
@@ -89,6 +90,16 @@ def report_reviews(run: ReviewRun | None) -> int:
 
 async def main() -> int:
     async with BraveSearch() as brave, httpx.AsyncClient() as client, AsyncSessionLocal() as db:
+        imdb_code = 0
+        imdb_error = None
+        try:
+            ratings = await refresh_ratings(db, client)
+            print(f"IMDb ratings: {ratings.updated} records, {ratings.matched} matched ids")
+        except Exception as exc:  # noqa: BLE001 - preserve other jobs; fail this nightly pass
+            await db.rollback()
+            imdb_code = 1
+            imdb_error = f"{type(exc).__name__}: {exc}"[:300]
+            print(f"IMDb ratings failed: {imdb_error}", file=sys.stderr)
         outcome = await start_run(db, trigger="job", search_configured=brave.configured)
         run = (
             await work_run(db, outcome.run.id, searcher=brave, client=client)
@@ -99,7 +110,12 @@ async def main() -> int:
         code = report(outcome, run, counts)
         # Batch X2: a beat whatever happened, so "nothing due" reads differently from stopped.
         done = run.status if run is not None else outcome.reason
-        await heartbeat.beat(db, heartbeat.SPECS, done.replace("_", " "))
+        await heartbeat.beat(
+            db,
+            heartbeat.SPECS,
+            "IMDb ratings failed" if imdb_code else done.replace("_", " "),
+            detail={"imdbError": imdb_error},
+        )
         # Its own Brave client, so its run counts only its own searches.
         async with BraveSearch() as review_brave:
             review_run = await reviews.start_run(db, trigger="job")
@@ -107,7 +123,7 @@ async def main() -> int:
                 review_run = await reviews.work_run(
                     db, review_run, searcher=review_brave, client=client
                 )
-    return max(code, report_reviews(review_run))
+    return max(imdb_code, code, report_reviews(review_run))
 
 
 if __name__ == "__main__":

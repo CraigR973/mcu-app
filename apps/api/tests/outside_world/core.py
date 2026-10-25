@@ -68,10 +68,10 @@ def set_scenario(values: dict[str, Any], directory: Path | None = None) -> None:
 
 
 def _routes() -> dict[str, Handler]:
-    from . import anthropic, bluray, brave, ebay, letterboxd, push, shops, tmdb
+    from . import anthropic, bluray, brave, ebay, imdb, letterboxd, push, shops, tmdb
 
     table: dict[str, Handler] = {}
-    for module in (tmdb, ebay, brave, bluray, shops, letterboxd, anthropic, push):
+    for module in (tmdb, ebay, brave, bluray, shops, letterboxd, anthropic, push, imdb):
         for host in module.HOSTS:
             table[host] = module.handle
     return table

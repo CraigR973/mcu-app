@@ -41,6 +41,9 @@ test.describe('the cron jobs, run as Railway runs them', () => {
     expect(run.status, run.output).toBe(0)
     expect(run.output).toContain('spec batch finished')
     expect(run.output).toContain('review batch finished')
+    expect(run.output).toContain('IMDb ratings:')
+    expect(world.calls('datasets.imdbws.com').length).toBe(1)
+    expect(db.scalar('SELECT imdb_rating::text FROM movies WHERE tmdb_id = 1001')).toBe('8.2')
     expect(world.calls('api.search.brave.com').length).toBeGreaterThan(0)
     expect(db.scalar("SELECT count(*) FROM job_heartbeats WHERE job = 'cron-specs'")).toBe('1')
   })
@@ -70,4 +73,15 @@ test.describe('the cron jobs, run as Railway runs them', () => {
     expect(Number(db.scalar("SELECT count(*) FROM disc_valuations WHERE status = 'priced'"))).toBeGreaterThan(0)
     expect(db.scalar("SELECT count(*) FROM job_heartbeats WHERE job = 'cron-values'")).toBe('1')
   })
+})
+
+
+test('a refused IMDb file fails the nightly command without wiping its stored scores', async ({ db }) => {
+  db.sql("UPDATE movies SET imdb_ratings_id = imdb_id, imdb_rating = 6.2, imdb_vote_count = 99, imdb_ratings_checked_utc = '2026-10-24 02:00:00' WHERE tmdb_id = 1001")
+  world.setScenario({ imdb: { status: 503 } })
+  const run = runJob('src.scripts.spec_backfill')
+  expect(run.status, run.output).toBe(1)
+  expect(run.output).toContain('IMDb ratings failed:')
+  expect(db.scalar('SELECT imdb_rating::text FROM movies WHERE tmdb_id = 1001')).toBe('6.2')
+  expect(db.scalar("SELECT detail->>'imdbError' FROM job_heartbeats WHERE job = 'cron-specs'")).toContain('503')
 })

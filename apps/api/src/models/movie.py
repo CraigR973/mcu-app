@@ -59,6 +59,12 @@ class Movie(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
 
     tmdb_rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 1), nullable=True)
     tmdb_vote_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    imdb_ratings_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    imdb_rating: Mapped[Decimal | None] = mapped_column(Numeric(), nullable=True)
+    imdb_vote_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    imdb_ratings_checked_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
 
     #: Full genre objects for display; ``genre_ids`` is the GIN-indexed array the
     #: filters actually query. Both, because a card shows names and a filter matches ids.

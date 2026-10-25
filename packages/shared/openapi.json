@@ -3867,6 +3867,45 @@
     "title": "ConversationResponse",
     "type": "object"
    },
+   "CopyPlaceResponse": {
+    "properties": {
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "section": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section"
+     },
+     "shelf": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shelf"
+     }
+    },
+    "title": "CopyPlaceResponse",
+    "type": "object"
+   },
    "CopyValuationResponse": {
     "description": "A disc's stored value as a used copy: its film on the format it is valued as.",
     "properties": {
@@ -8372,6 +8411,50 @@
      "input"
     ],
     "title": "PendingToolCallResponse",
+    "type": "object"
+   },
+   "PersonFilmResponse": {
+    "properties": {
+     "lastWatchedAt": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lastwatchedat"
+     },
+     "personId": {
+      "format": "uuid",
+      "title": "Personid",
+      "type": "string"
+     },
+     "personName": {
+      "title": "Personname",
+      "type": "string"
+     },
+     "personalRating": {
+      "anyOf": [
+       {
+        "maximum": 5.0,
+        "minimum": 0.5,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Personalrating"
+     }
+    },
+    "required": [
+     "personId",
+     "personName"
+    ],
+    "title": "PersonFilmResponse",
     "type": "object"
    },
    "PersonResponse": {
@@ -14490,6 +14573,60 @@
       "title": "Genres",
       "type": "array"
      },
+     "imdbCheckedAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Imdbcheckedat"
+     },
+     "imdbId": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Imdbid"
+     },
+     "imdbRating": {
+      "anyOf": [
+       {
+        "maximum": 10.0,
+        "minimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Imdbrating"
+     },
+     "imdbVotes": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Imdbvotes"
+     },
+     "locations": {
+      "items": {
+       "$ref": "#/components/schemas/CopyPlaceResponse"
+      },
+      "title": "Locations",
+      "type": "array"
+     },
      "movieId": {
       "anyOf": [
        {
@@ -14524,6 +14661,13 @@
       ],
       "title": "Overview"
      },
+     "people": {
+      "items": {
+       "$ref": "#/components/schemas/PersonFilmResponse"
+      },
+      "title": "People",
+      "type": "array"
+     },
      "posterPath": {
       "anyOf": [
        {
@@ -14545,6 +14689,17 @@
        }
       ],
       "title": "Runtimeminutes"
+     },
+     "streamingLink": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Streaminglink"
      },
      "streamingOn": {
       "items": {

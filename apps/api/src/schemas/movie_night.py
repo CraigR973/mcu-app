@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -88,6 +89,19 @@ class WatchedByResponse(BaseModel):
     watchedAt: str
 
 
+class PersonFilmResponse(BaseModel):
+    personId: uuid.UUID
+    personName: str
+    lastWatchedAt: date | None = None
+    personalRating: float | None = Field(default=None, ge=0.5, le=5)
+
+
+class CopyPlaceResponse(BaseModel):
+    location: str | None = None
+    section: str | None = None
+    shelf: str | None = None
+
+
 class CandidateResponse(BaseModel):
     """A film on tonight's list.
 
@@ -119,6 +133,13 @@ class CandidateResponse(BaseModel):
     #: This person's own swipe, if they have made one. The deck no longer hides what you
     #: have voted on, because a shortlist everyone is adding to is a list you re-read.
     myVote: bool | None = None
+    people: list[PersonFilmResponse] = Field(default_factory=list)
+    locations: list[CopyPlaceResponse] = Field(default_factory=list)
+    imdbId: str | None = None
+    imdbRating: float | None = Field(default=None, ge=0, le=10)
+    imdbVotes: int | None = Field(default=None, ge=0)
+    imdbCheckedAt: UtcDatetime | None = None
+    streamingLink: str | None = None
 
 
 class CandidateListResponse(BaseModel):

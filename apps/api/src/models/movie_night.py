@@ -9,6 +9,7 @@ derived state kept, and it exists solely so a match is announced once.
 import secrets
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
@@ -16,6 +17,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -136,6 +138,18 @@ class MovieNightSuggestion(Base, UUIDPrimaryKeyMixin):
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     poster_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     overview: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: AA5: metadata for a TMDB-only suggestion, without making a catalogue film.
+    runtime_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    imdb_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    metadata_checked_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
+    imdb_ratings_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    imdb_rating: Mapped[Decimal | None] = mapped_column(Numeric(), nullable=True)
+    imdb_vote_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    imdb_ratings_checked_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
 
     created_at_utc: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=UTC_NOW
