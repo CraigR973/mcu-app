@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { CalendarHeart, Pin, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { FeelingLucky } from '@/components/movies/FeelingLucky'
 import { AttentionRow } from '@/components/dashboard/AttentionRow'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { CollectionShelf } from '@/components/dashboard/CollectionShelf'
@@ -96,6 +97,8 @@ export default function DashboardPage() {
         <AttentionRow />
 
         <CollectionShelf />
+
+        <FeelingLucky />
 
         {/* Batch T5's disc releases, second since W2. Hidden when there are none. */}
         <ComingToDisc limit={12} />

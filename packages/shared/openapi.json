@@ -6990,6 +6990,57 @@
     "title": "LogoutRequest",
     "type": "object"
    },
+   "LuckyRequest": {
+    "properties": {
+     "excludedIds": {
+      "items": {
+       "format": "uuid",
+       "type": "string"
+      },
+      "maxItems": 10000,
+      "title": "Excludedids",
+      "type": "array"
+     },
+     "sessionId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sessionid"
+     },
+     "unwatchedOnly": {
+      "default": false,
+      "title": "Unwatchedonly",
+      "type": "boolean"
+     }
+    },
+    "title": "LuckyRequest",
+    "type": "object"
+   },
+   "LuckyResponse": {
+    "properties": {
+     "film": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MovieListItemResponse"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "film"
+    ],
+    "title": "LuckyResponse",
+    "type": "object"
+   },
    "MatchResponse": {
     "properties": {
      "movieId": {
@@ -18424,6 +18475,53 @@
     "summary": "Export Json",
     "tags": [
      "export"
+    ]
+   }
+  },
+  "/api/v1/feeling-lucky": {
+   "post": {
+    "description": "POST carries the exclusion list without a URL-length limit; this only reads.",
+    "operationId": "deal_film_api_v1_feeling_lucky_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LuckyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LuckyResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Deal Film",
+    "tags": [
+     "feeling-lucky"
     ]
    }
   },

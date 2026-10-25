@@ -12,6 +12,7 @@ import type {
 import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
 import { Poster } from '@/components/movies/Poster'
+import { FeelingLucky } from '@/components/movies/FeelingLucky'
 import { SuggestFilmPanel } from '@/components/movies/SuggestFilmPanel'
 import { useAuth } from '@/context/auth'
 import {
@@ -444,6 +445,8 @@ export default function MovieNightSessionPage() {
       </header>
 
       {open ? <SuggestFilmPanel sessionId={id} /> : null}
+
+      {open ? <FeelingLucky sessionId={id} /> : null}
 
       {night && open ? <InviteBar session={night} you={profile?.id} /> : null}
 

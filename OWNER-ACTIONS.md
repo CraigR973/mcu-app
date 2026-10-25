@@ -11,6 +11,14 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Group AA sitting 3, AA6 (25 Oct):** decide whether to add the new authenticated,
+  read-only `/api/v1/feeling-lucky` path to the route-surface test's pinned set. Recommended:
+  approve that one-path inventory addition, retaining set equality and every existing
+  authentication/behaviour assertion. Cost: one expected route; no production data operation.
+  The app and its local browser flows are built and tested; this single local gate failure
+  prevents PR/CI/close-out. Reply "approve the route-list addition" in the current chat.
+  Resume `feat/aa6-feeling-lucky`, not a new branch. Sitting 4 remains unauthorised.
+
 - **Group AA sitting 1, AA10b:** ~~Press Home → Collection value → Update values once.~~
   **Done 23 Oct:** Craig's first run checked 748 pairs with 0 failures and left 719 due.
   The scheduled valuation job next runs 1 Nov at 04:00 UTC, then 2 Nov if needed; no

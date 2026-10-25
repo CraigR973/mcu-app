@@ -2718,3 +2718,7 @@ export const attentionSchema = z.object({
 
 export type AttentionItem = z.infer<typeof attentionItemSchema>
 export type Attention = z.infer<typeof attentionSchema>
+
+// AA6: one ephemeral Archive draw; null means that this run has exhausted its pool.
+export const luckyFilmSchema = z.object({ film: movieListItemSchema.nullable() })
+export type LuckyFilm = z.infer<typeof luckyFilmSchema>
