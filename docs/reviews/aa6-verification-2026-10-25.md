@@ -59,7 +59,7 @@ A read-only production check confirmed the deployed live rows use `film` (1,879)
 (52), agreeing with the eligibility predicate. This was a SELECT, not a provider or catalogue
 mutation. No AA6 production deployment or signed-in live acceptance is claimed yet.
 
-## Final local result and exact resume point
+## Local result at the initial handoff
 
 - Chromium: 36 passed. Firefox: 35 passed and the existing documented dictation skip. Cron: six passed. Both new flows pass in both browsers; the unchanged import checkpoint passes after moving the new cases. Final E2E typecheck passes.
 - Both 375 px screens were visually inspected: title/runtime/watch state/place, Choose and Skip controls fit; the night retains Suggest a film first. New source passed the React checklist: stable scope keys, state owned by the run, no effect that derives state, native controls, disabled pending actions and honest errors.
@@ -70,3 +70,14 @@ mutation. No AA6 production deployment or signed-in live acceptance is claimed y
 The candidate route-list patch is prepared at `/tmp/mcu-aa6-route-allowlist.patch`; the exact
 path above is enough to recreate it if the temporary file is gone. No AA6 PR was opened or
 production deployment claimed while this decision was unanswered.
+
+## Approved continuation, 25 Oct
+
+Craig explicitly approved the one-path route-list addition and said continue. The prepared
+patch is applied: only `/api/v1/feeling-lucky` is added; set equality and every existing route
+and assertion remain. The checkpoint above records the initial pause, not an outstanding
+owner action. The approved full API gate passed: lint/format/mypy and 2,468 tests, with nine documented local Unix-socket skips. PR/CI/production close-out follow.
+
+The installed Git lacks `git branch --show-current`; the read-only branch check was repeated
+with `git rev-parse --abbrev-ref HEAD`, confirming the existing AA6 branch. No branch or
+history mutation resulted from that failed option.

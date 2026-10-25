@@ -6415,3 +6415,5 @@ contemporaneous.
      clears its exclusions. Failures retain the current card and skipped ids.
      The chooser is a labelled fieldset of controls, preserving Home's carousel headings
      and the night's suggestion-first section order without altering their assertions.
+     Craig approved adding only `/api/v1/feeling-lucky` to the pinned route inventory on
+     25 Oct, retaining set equality, every existing path and all access/behaviour checks.
