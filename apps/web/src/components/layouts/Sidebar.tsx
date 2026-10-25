@@ -1,3 +1,4 @@
+import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { Link, NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { LogOut } from 'lucide-react'
@@ -156,9 +157,7 @@ export default function Sidebar() {
         {/* Footer */}
         <div className="safe-bottom space-y-2 border-t border-border bg-surface-sunken/45 px-3 py-3">
           <div className="flex items-center gap-3 rounded-md px-2 py-1">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-display font-semibold text-secondary-foreground">
-              {profile?.displayName?.slice(0, 1).toUpperCase() ?? '—'}
-            </span>
+            <ProfileAvatar profileId={profile?.id} name={profile?.displayName} />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-foreground">{profile?.displayName ?? 'Local preview'}</span>
               <span className="block text-xs capitalize text-muted-foreground">{profile?.role ?? 'Loading profile'}</span>

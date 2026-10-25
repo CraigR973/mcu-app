@@ -49,6 +49,7 @@ from src.routers import (
     navigation,
     notifications,
     photos,
+    profile_photos,
     scraping,
     smart_collections,
     specs,
@@ -201,6 +202,7 @@ app.include_router(ai.router)
 app.include_router(movie_night.router)
 app.include_router(lucky.router)
 app.include_router(photos.router)
+app.include_router(profile_photos.router)
 app.include_router(specs.router)
 app.include_router(ebay.router)
 app.include_router(ebay_watch.router)

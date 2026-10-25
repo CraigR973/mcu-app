@@ -95,6 +95,7 @@ from src.models.price_history import (
     ScrapeRun,
 )
 from src.models.profile import Profile, RefreshToken, UserRole
+from src.models.profile_photo import ProfilePhoto
 from src.models.rate_limit import RateLimitCounter
 from src.models.release_calendar import (
     RELEASE_TYPE_LABELS,
@@ -212,6 +213,7 @@ __all__ = [
     "PriceHistoryDaily",
     "ScrapeRun",
     "Profile",
+    "ProfilePhoto",
     "RATING_MAX",
     "RATING_MIN",
     "RELEASE_TYPES",

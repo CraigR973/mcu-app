@@ -2,17 +2,16 @@
 
 ## Now
 
-**25 Oct: Group AA sitting 3 is shipped and complete. Do not start sitting 4.**
-AA4's suggestion-first nights and planned time shipped in PR #108 (`6e9629d`).
-AA5's personal film details, copy places and nightly IMDb cache shipped in PR #109 (`8f47f39`).
-AA6's Feeling lucky shipped in [PR #110](https://github.com/CraigR973/mcu-app/pull/110) (`54dbc07`):
-Home and a night deal one owned film at a time; skipped films do not repeat in that browser
-run. Home can use only the caller's unwatched films, and a choice confirms a pick without
-logging a watch. Choosing on a night adds/promotes a suggestion while preserving votes.
-All seven PR CI jobs passed; both production hosts serve the merge SHA, db ready and all
-integrations configured. The route-inventory addition was explicitly approved by Craig.
-No migration or hosting change for AA6. First live IMDb scores await the existing 02:00 UTC
-job; no manual provider refresh has run. Real-phone acceptance remains owner-held below.
+**25 Oct: Group AA sitting 4 started; AA7 is local and unshipped. AA11 has not started.**
+Branch `feat/aa7-profile-pictures` holds AA7's photo migration, API, shared avatar, You
+editor, screen integration and tests. Five new API tests pass against disposable local
+Postgres; the full gate has not run. Two avatar unit tests fail (no image renders after
+mocked bytes), and activity integration fails typecheck because activity has no actor id.
+Three avatar test invocations reproduced the rendering failure, so `group-start.md`'s
+three-attempt stop applies. Craig's approval to add AA7's two paths to the pinned route
+inventory is pending; that test has not changed. No PR, push, merge or deployment.
+See `docs/reviews/aa7-verification-2026-10-25.md` for evidence and remaining work.
+Sitting 3 remains shipped: AA4 `6e9629d`, AA5 `8f47f39`, AA6 `54dbc07`.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -27,10 +26,11 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Group AA sitting 3 is complete:** AA4 → AA5 → AA6 each shipped separately. Stop here.
-Sitting 4 (AA7 → AA11) needs its own authorisation; neither batch has started.
-AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
-Home's final total and compare it with £16,867.11.
+**Resume AA7 only after Craig's decision on the route inventory and resuming past the
+three-attempt stop.** Reuse `feat/aa7-profile-pictures`; do not recreate or discard its work.
+Finish AA7's full gate, PR, CI and production verification, then return to clean main.
+Before any AA11 implementation, show Craig the four-state loan story and obtain sign-off.
+Do not start sitting 5. AA10b's independent 1–2 Nov owner checkpoint remains open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -422,6 +422,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — Group AA sitting 4 stopped during AA7 (unshipped).** Five new API tests pass
+  on disposable Postgres; migration 068 applies. Web typecheck fails on activity's absent
+  actor id; two avatar tests fail, reproduced over three runs. Stopped under group-start's
+  three-attempt rule. Two-path inventory approval pending. Full gate/e2e/CI/production
+  unrun. AA11 and sitting 5 unstarted. Evidence: `docs/reviews/aa7-verification-2026-10-25.md`.
 
 - **25 Oct — AA6 shipped and sitting 3 complete** (PR #110, `54dbc07`): Feeling lucky on Home and a night, no repeat within a run, personal unwatched pool and vote-preserving suggestion promotion. PR CI 40229655987 all seven green; API/web exact merge SHA and full readiness verified. Route-list addition owner-approved. AA4/AA5 stay closed; sitting 4 not started.
 

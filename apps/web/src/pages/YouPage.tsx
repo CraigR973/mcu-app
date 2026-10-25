@@ -1,3 +1,5 @@
+import { ProfilePhotoEditor } from '@/components/ProfilePhotoEditor'
+import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Activity, ChevronRight, LogOut } from 'lucide-react'
 import { useState } from 'react'
@@ -142,15 +144,15 @@ export default function YouPage() {
       <PageHeader eyebrow="Your account" title="You" />
 
       <section className="archive-panel flex items-center gap-3 p-4" aria-label="Signed in as">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-lg font-semibold text-secondary-foreground">
-          {profile?.displayName?.slice(0, 1).toUpperCase() ?? '?'}
-        </span>
+        <ProfileAvatar profileId={profile?.id} name={profile?.displayName} className="h-11 w-11 text-lg" />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-semibold text-foreground">{profile?.displayName ?? 'Not signed in'}</span>
           <span className="block text-xs capitalize text-muted-foreground">{profile?.role ?? ''}</span>
         </span>
         <ThemeToggle />
       </section>
+
+      {profile ? <ProfilePhotoEditor profileId={profile.id} /> : null}
 
       {groups.map((group) => <DestinationGroup key={group.label} group={group} />)}
 

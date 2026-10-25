@@ -1,3 +1,4 @@
+import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { useQuery } from '@tanstack/react-query'
 import { formatDate } from '@/lib/utils'
 import { Eye, Pencil, Plus, RotateCcw, Trash2, type LucideIcon } from 'lucide-react'
@@ -28,6 +29,7 @@ function Row({ event }: { event: ActivityEvent }) {
   const title = event.movieTitle ?? event.detail ?? 'something'
   const content = (
     <>
+      <ProfileAvatar profileId={event.actorId} name={event.actorName} className="h-6 w-6 text-xs" />
       <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
       {event.movieTitle ? (
         <img
