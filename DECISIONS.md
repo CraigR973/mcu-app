@@ -6401,3 +6401,19 @@ contemporaneous.
      heartbeat/health check. A corrected IMDb id hides an old score, and a newer matching
      cache wins. The UI carries IMDb's required acknowledgement. No new service,
      credential, hosting setting or live manual refresh is introduced.
+
+296. **AA6's Feeling lucky run belongs to the current person and screen (25 Oct).**
+     One authenticated read-only POST returns one currently owned film, excluding every
+     film already dealt in that browser run. POST carries the bounded exclusion list
+     without putting a growing list in a URL; it creates no run or history rows and calls
+     no provider. Known TV/non-film rows, sold/trash-only films and deleted films cannot
+     be dealt. Home's optional unwatched filter uses the caller's own live watch history.
+     A Home choice confirms a pick without logging a watch. A night applies its existing
+     year/rating filters and excludes people's existing suggestions; taking a film uses
+     the existing suggestion action, preserving a seed's id and votes when promoted.
+     Account/night changes and leaving the screen end a run; Start again explicitly
+     clears its exclusions. Failures retain the current card and skipped ids.
+     The chooser is a labelled fieldset of controls, preserving Home's carousel headings
+     and the night's suggestion-first section order without altering their assertions.
+     Craig approved adding only `/api/v1/feeling-lucky` to the pinned route inventory on
+     25 Oct, retaining set equality, every existing path and all access/behaviour checks.

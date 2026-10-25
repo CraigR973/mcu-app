@@ -4588,6 +4588,12 @@ to Craig; the build is planned from his picks. No code before his picks.
   the night's suggestions. Skipped films are not dealt again in that run.
 - Tests. Gate green.
 
+**25 Oct implementation checkpoint:** code is on `feat/aa6-feeling-lucky`, not shipped.
+Local web/shared gates, Chromium/Firefox and cron cases pass. Craig approved adding only
+`/api/v1/feeling-lucky` to the pinned API route inventory; equality and existing assertions
+remain intact. Complete the full API gate, PR CI and production close-out.
+See `docs/reviews/aa6-verification-2026-10-25.md`; do not begin sitting 4.
+
 ### AA7 — Profile pictures 🟡
 - **4.** An uploaded photo (answer 3). A person's picture shows wherever their initial does now (top bar, You,
   movie night, activity), the initial when there is none. If uploaded: stored in Postgres as copy

@@ -2,13 +2,18 @@
 
 ## Now
 
-**25 Oct: AA4 and AA5 shipped; AA6 is next in authorised sitting 3.**
-AA5 landed in [PR #109](https://github.com/CraigR973/mcu-app/pull/109) (`8f47f39`): every
-participant's last watch/rating, copy places before streaming, runtime, IMDb scores and
-Letterboxd links. Migration 067 and both role boundaries are verified. All seven PR CI jobs
-passed; both production hosts serve the merge SHA, database ready, all integrations configured.
-The first live IMDb scores await the existing 02:00 UTC nightly job; no manual live provider
-refresh has run. AA4 shipped in PR #108 (`6e9629d`). Stop after AA6; sitting 4 is not authorised.
+**25 Oct: AA4 and AA5 are live; AA6 is implemented and completing its gate.**
+AA4's planning/suggestions shipped in PR #108 (`6e9629d`); AA5's personal film details and
+nightly IMDb cache shipped in PR #109 (`8f47f39`). Final main `07d859a` passed all seven
+CI jobs (40212949471), and both production hosts serve it with full readiness.
+AA6 is on `feat/aa6-feeling-lucky`: Home and a night deal one owned film at a time,
+skips do not repeat in that run, and choosing on a night uses the existing suggestion action.
+Shared 154/web 688, lint/types/build, Chromium 36, Firefox 35 plus its documented skip, and
+cron six pass. Craig approved the one-path API route-inventory addition on 25 Oct; it is
+applied with set equality and all existing assertions retained. The full API gate passed: 2,468 tests and nine documented local Unix-socket skips.
+Then complete PR CI including WebKit, deployment and close-out. Do not start sitting 4.
+The first live IMDb scores still await the existing 02:00 UTC job; no manual provider refresh
+has run.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -23,7 +28,9 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Group AA sitting 3:** AA4 and AA5 shipped; continue AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
+**Group AA sitting 3:** finish AA6 on the existing `feat/aa6-feeling-lucky` branch.
+The route-list decision is approved. Complete the API gate, PR CI including WebKit,
+close-out and exact-SHA production verification. AA4/AA5 stay closed; do not begin sitting 4.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -417,6 +424,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — AA6 route-list decision approved:** Craig approved adding only `/api/v1/feeling-lucky` to the pinned route set and said continue. Existing assertions remain intact; the full API gate is rerunning before PR/CI/deployment. Sitting 4 remains unauthorised.
+
+- **25 Oct — AA6 implemented, owner decision pending:** one-film draws on Home and a night, per-run exclusions, personal unwatched filter and vote-preserving suggestion promotion. Shared 154/web 688, lint/types/build, Chromium 36, Firefox 35 plus documented skip, cron six pass. API 2,467 passed, nine local skips, one expected-route inventory failure. Exact one-path allowlist addition awaits Craig; no PR/CI/deploy. Existing branch retained; sitting 4 untouched.
 
 - **25 Oct — AA5 shipped** (PR #109, `8f47f39`): personal film details, suggestion metadata and bounded daily IMDb cache in the existing nightly job. CI 40210873854 all seven green; production SHA/readiness and migration/role checks passed. First live scores await the scheduled job. AA6 next; no sitting 4.
 

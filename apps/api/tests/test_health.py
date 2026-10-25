@@ -110,6 +110,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # web asset; the Home page turns its bytes into an in-memory object URL.
         "/api/v1/brand/heroes/{hero}",
         "/api/v1/movies",
+        # AA6: authenticated, read-only draw; exclusions travel in the POST body.
+        "/api/v1/feeling-lucky",
         "/api/v1/movies/{movie_id}",
         "/api/v1/movies/{movie_id}/copies",
         "/api/v1/collection/facets",

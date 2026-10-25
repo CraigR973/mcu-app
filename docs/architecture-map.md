@@ -104,3 +104,20 @@ flowchart TB
 Night-only metadata stays on the existing suggestion; opening a night creates no catalogue
 films or copies. IMDb cache identity and checked time prevent stale scores after an identity
 correction. Failed refreshes keep previous scores and surface through the existing job check.
+
+## AA6, implementation ready for deployment
+
+```mermaid
+flowchart TB
+    Person[Home or an open night] --> Run[Browser run: dealt film ids]
+    Run --> Draw[Authenticated read-only draw]
+    Draw --> Archive[(Current owned films)]
+    Draw --> One[One film, excluding this run's ids]
+    One -- Skip --> Run
+    One -- Choose on Home --> Pick[Confirmed pick and film link]
+    One -- Choose on a night --> Suggest[Existing suggestion action]
+```
+
+Home can deal only films unwatched by the current person. A night applies its filters;
+a seeded random pick is promoted through AA4 without losing votes. A run creates no database
+rows, provider calls or jobs. Existing API authentication and night membership guard the draw.

@@ -42,6 +42,7 @@ from src.routers import (
     highlights,
     identify,
     insights,
+    lucky,
     memories,
     movie_night,
     movies,
@@ -198,6 +199,7 @@ app.include_router(scraping.router)
 app.include_router(notifications.router)
 app.include_router(ai.router)
 app.include_router(movie_night.router)
+app.include_router(lucky.router)
 app.include_router(photos.router)
 app.include_router(specs.router)
 app.include_router(ebay.router)

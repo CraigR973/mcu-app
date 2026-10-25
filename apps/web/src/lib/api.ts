@@ -39,6 +39,7 @@ import {
   itemPhotoSchema,
   movieDetailSchema,
   moviePageSchema,
+  luckyFilmSchema,
   movieNightCandidateListSchema,
   movieNightSessionListSchema,
   movieNightSessionSchema,
@@ -2715,5 +2716,16 @@ export async function runDealsScrape(dryRun = true): Promise<DealsRun> {
   return parseOrThrowApiError(
     await authFetch(`/deals/scrape?dryRun=${String(dryRun)}`, { method: 'POST' }),
     dealsRunSchema,
+  )
+}
+
+export async function dealLuckyFilm(input: {
+  excludedIds: string[]
+  unwatchedOnly: boolean
+  sessionId?: string
+}) {
+  return parseResponse(
+    await authFetch('/feeling-lucky', { method: 'POST', body: JSON.stringify(input) }),
+    luckyFilmSchema,
   )
 }

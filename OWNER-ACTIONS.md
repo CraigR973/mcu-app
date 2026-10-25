@@ -11,6 +11,11 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- ~~**Group AA sitting 3, AA6: approve the one-path route-inventory addition.**~~
+  **Approved 25 Oct in chat:** `/api/v1/feeling-lucky` is added to the pinned set;
+  equality, all existing paths and authentication/behaviour assertions remain intact.
+  The gate/CI/close-out continue under the existing sitting-3 authorisation; no sitting 4.
+
 - **Group AA sitting 1, AA10b:** ~~Press Home → Collection value → Update values once.~~
   **Done 23 Oct:** Craig's first run checked 748 pairs with 0 failures and left 719 due.
   The scheduled valuation job next runs 1 Nov at 04:00 UTC, then 2 Nov if needed; no
