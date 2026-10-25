@@ -1,7 +1,7 @@
 # MCU App architecture map
 
 `STATUS.md` says which commit is deployed. This map shows the running structure through AA4,
-implemented on 25 Oct (AA4 deployment pending); the April design intent remains in `ARCHITECTURE.md`.
+deployed on 25 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -71,7 +71,7 @@ Admin pass on 22 Oct; the cron path now carries the remaining film-format pairs 
 daily budgets. AA10b is next.
 
 
-## AA4, implemented 25 Oct; deployment pending
+## AA4, shipped 25 Oct (`6e9629d`)
 
 ```mermaid
 flowchart TB

@@ -2,18 +2,16 @@
 
 ## Now
 
-**25 Oct: Group AA sitting 3 is authorised: AA4 → AA5 → AA6 only.** AA4 is implemented on
-`feat/aa4-movie-night`: Suggest a film first, separate people’s and Archive lists, an optional
-UTC planned start in the list and recipient-local invite, and Add to movie night from owned
-and TMDB film pages. A person's pick promotes an Archive random pick without losing votes.
-The first PR head passed all seven CI jobs. Review found a simultaneous-suggestion credit race;
-a two-connection regression test reproduced it, and the row-lock fix passes all 43 movie-night
-tests. The full API retry passes 2,436 tests (9 documented local skips); exact-head CI and
-deployment remain.
-AA5 and AA6 have not started. Sitting 4 is not authorised.
+**25 Oct: AA4 shipped in [PR #108](https://github.com/CraigR973/mcu-app/pull/108) (`6e9629d`).**
+Movie night opens with Suggest a film, then timestamped people’s suggestions, then a separate
+Archive random shortlist. An optional planned local time is stored once in UTC and appears in
+the nights list and recipient-local invite. Owned and TMDB film pages add to an open night;
+suggesting a random pick moves it into Suggested without losing votes. Migration 066 and its
+role boundaries are verified. PR CI passed all seven jobs; both production hosts serve the
+merge SHA, database ready and all integrations configured. AA5 and AA6 are next in the
+authorised sitting 3. Sitting 4 is not authorised.
 
-**AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 completion sets
-have stored TMDB portraits; 39 metadata updates, 1 unchanged, no creates, removals or errors.
+**AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
 
 **Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
@@ -26,7 +24,7 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Group AA sitting 3:** close out AA4, then AA5, then AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
+**Group AA sitting 3:** AA4 shipped; continue AA5, then AA6, one branch/PR at a time. Stop before sitting 4. AA2's owner-authorised portrait refresh is complete.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -420,6 +418,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — AA4 shipped** in PR #108 (`6e9629d`), PR CI 40203779045 all seven jobs green. Railway and Vercel serve the merge SHA; readiness is db ok and every integration configured. Read-only production checks prove migration 066, unchanged unplanned nights and both roles’ planned-time grant with invite-token refusal. AA5 → AA6 next; stop before sitting 4.
 
 - **25 Oct — AA4 implemented for authorised sitting 3:** local API retry 2,435 passed, 9 Unix-socket collection-import skips; shared/web 154/680 passed; Chromium 33, Firefox 32 (one documented dictation skip), jobs 5 passed. Migration 066 reverses to base and re-upgrades; both read-only roles gain planned time and remain unable to read invite tokens. Final 3-case Chromium pass passed; PR CI and deployment pending. AA5/AA6 unstarted; no sitting 4.
 
