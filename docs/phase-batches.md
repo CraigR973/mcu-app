@@ -4508,7 +4508,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA4~~ | ~~16, 17, 18, 20: suggest first, two lists, a planned time, add from a film~~ — **shipped 25 Oct `6e9629d`** ([PR #108](https://github.com/CraigR973/mcu-app/pull/108)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA5~~ | ~~19: each film’s details on a night, IMDb’s score~~ — **shipped 25 Oct `8f47f39`** ([PR #109](https://github.com/CraigR973/mcu-app/pull/109)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
-| AA6 | 21: feeling lucky, alone on Home and in a night | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
+| ~~AA6~~ | ~~21: feeling lucky, alone on Home and in a night~~ — **shipped 25 Oct `54dbc07`** ([PR #110](https://github.com/CraigR973/mcu-app/pull/110)) | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA7 | 4: profile pictures | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA8~~ | ~~1: the artwork in the app~~ — **shipped 23 Oct `6b039bf`** ([PR #104](https://github.com/CraigR973/mcu-app/pull/104)) | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | AA9 | 22: the assistant page, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
@@ -4582,17 +4582,17 @@ to Craig; the build is planned from his picks. No code before his picks.
   granted as above.
 - Tests. Gate green.
 
-### AA6 — Feeling lucky 🟡
+### ~~AA6 — Feeling lucky~~ 🟡 **shipped 25 Oct (`54dbc07`, [PR #110](https://github.com/CraigR973/mcu-app/pull/110))**
 - **21.** "Feeling lucky" deals one film at a time until someone takes one: on Home for the person
   alone (the Archive, optionally unwatched by them), and on a night, where taking it adds it to
   the night's suggestions. Skipped films are not dealt again in that run.
 - Tests. Gate green.
 
-**25 Oct implementation checkpoint:** code is on `feat/aa6-feeling-lucky`, not shipped.
-Local web/shared gates, Chromium/Firefox and cron cases pass. Craig approved adding only
-`/api/v1/feeling-lucky` to the pinned API route inventory; equality and existing assertions
-remain intact. Complete the full API gate, PR CI and production close-out.
-See `docs/reviews/aa6-verification-2026-10-25.md`; do not begin sitting 4.
+**Result:** one-film draws on Home and a night, caller-scoped unwatched filtering,
+per-run exclusions and vote-preserving suggestion promotion. All seven PR CI jobs green
+(40229655987); production API/web report `54dbc07`, database ready, all integrations configured.
+Craig approved the one-path route-inventory addition; equality and access assertions remain.
+See `docs/reviews/aa6-verification-2026-10-25.md`. Sitting 3 is complete; stop before sitting 4.
 
 ### AA7 — Profile pictures 🟡
 - **4.** An uploaded photo (answer 3). A person's picture shows wherever their initial does now (top bar, You,
@@ -4729,7 +4729,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → AA6 · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 3 authorised 25 Oct: AA4 and AA5 shipped; continue AA6, then stop before sitting 4.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: AA7 → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 3 complete 25 Oct: AA4, AA5 and AA6 shipped. Stop before sitting 4; it is not authorised.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

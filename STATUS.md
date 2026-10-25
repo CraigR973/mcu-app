@@ -2,18 +2,17 @@
 
 ## Now
 
-**25 Oct: AA4 and AA5 are live; AA6 is implemented and completing its gate.**
-AA4's planning/suggestions shipped in PR #108 (`6e9629d`); AA5's personal film details and
-nightly IMDb cache shipped in PR #109 (`8f47f39`). Final main `07d859a` passed all seven
-CI jobs (40212949471), and both production hosts serve it with full readiness.
-AA6 is on `feat/aa6-feeling-lucky`: Home and a night deal one owned film at a time,
-skips do not repeat in that run, and choosing on a night uses the existing suggestion action.
-Shared 154/web 688, lint/types/build, Chromium 36, Firefox 35 plus its documented skip, and
-cron six pass. Craig approved the one-path API route-inventory addition on 25 Oct; it is
-applied with set equality and all existing assertions retained. The full API gate passed: 2,468 tests and nine documented local Unix-socket skips.
-Then complete PR CI including WebKit, deployment and close-out. Do not start sitting 4.
-The first live IMDb scores still await the existing 02:00 UTC job; no manual provider refresh
-has run.
+**25 Oct: Group AA sitting 3 is shipped and complete. Do not start sitting 4.**
+AA4's suggestion-first nights and planned time shipped in PR #108 (`6e9629d`).
+AA5's personal film details, copy places and nightly IMDb cache shipped in PR #109 (`8f47f39`).
+AA6's Feeling lucky shipped in [PR #110](https://github.com/CraigR973/mcu-app/pull/110) (`54dbc07`):
+Home and a night deal one owned film at a time; skipped films do not repeat in that browser
+run. Home can use only the caller's unwatched films, and a choice confirms a pick without
+logging a watch. Choosing on a night adds/promotes a suggestion while preserving votes.
+All seven PR CI jobs passed; both production hosts serve the merge SHA, db ready and all
+integrations configured. The route-inventory addition was explicitly approved by Craig.
+No migration or hosting change for AA6. First live IMDb scores await the existing 02:00 UTC
+job; no manual provider refresh has run. Real-phone acceptance remains owner-held below.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -28,9 +27,8 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Group AA sitting 3:** finish AA6 on the existing `feat/aa6-feeling-lucky` branch.
-The route-list decision is approved. Complete the API gate, PR CI including WebKit,
-close-out and exact-SHA production verification. AA4/AA5 stay closed; do not begin sitting 4.
+**Group AA sitting 3 is complete:** AA4 → AA5 → AA6 each shipped separately. Stop here.
+Sitting 4 (AA7 → AA11) needs its own authorisation; neither batch has started.
 AA10b's 1–2 Nov scheduled valuation runs remain independent: when none are due, read back
 Home's final total and compare it with £16,867.11.
 
@@ -424,6 +422,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **25 Oct — AA6 shipped and sitting 3 complete** (PR #110, `54dbc07`): Feeling lucky on Home and a night, no repeat within a run, personal unwatched pool and vote-preserving suggestion promotion. PR CI 40229655987 all seven green; API/web exact merge SHA and full readiness verified. Route-list addition owner-approved. AA4/AA5 stay closed; sitting 4 not started.
 
 - **25 Oct — AA6 route-list decision approved:** Craig approved adding only `/api/v1/feeling-lucky` to the pinned route set and said continue. Existing assertions remain intact; the full API gate is rerunning before PR/CI/deployment. Sitting 4 remains unauthorised.
 

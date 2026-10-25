@@ -81,3 +81,27 @@ owner action. The approved full API gate passed: lint/format/mypy and 2,468 test
 The installed Git lacks `git branch --show-current`; the read-only branch check was repeated
 with `git rev-parse --abbrev-ref HEAD`, confirming the existing AA6 branch. No branch or
 history mutation resulted from that failed option.
+
+## Shipment and completed acceptance
+
+Craig's route-list approval resolved the only decision gate. The approved full API gate
+passed 2,468 tests with the nine documented local Unix-socket skips; lint, formatting and
+mypy passed. Other local gate evidence above remained current; no app source changed after
+its green web/browser runs. PR [#110](https://github.com/CraigR973/mcu-app/pull/110), source `d7b09bbef78cdb0d8ad395671b1b8cbf5774cd57`, CI 40229655987: all seven jobs green,
+including Postgres 17 without local database skips, the real image, full migration reversal,
+and Chromium/Firefox/WebKit/cron. Merge `54dbc079fd9522c84584b09496bc8a4312421cca`.
+
+Both production health and web version report the merge SHA; readiness is db ok with every
+integration configured. The new draw endpoint refuses an unauthenticated POST. No new
+migration or live provider acceptance run was needed for AA6. Signed-in flows and both 375 px
+screens were exercised locally and in CI; the production browser has no authenticated
+session, so a real phone or signed-in production flow is not claimed.
+
+Acceptance 21 is met: Home and a night each deal one owned film at a time; Home optionally
+uses only the caller's unwatched films; skipped ids are excluded until that run ends;
+choosing on a night adds/promotes one suggestion without losing its seed's votes. Local and
+CI gates are green. AA6 is closed; sitting 3 is complete. Sitting 4 was not started.
+
+Final PR totals: API 2,477 passed with no skips; shared 154/web 688; Chromium 36; Firefox 35 plus its documented dictation skip; WebKit 34 plus its two documented platform skips; cron six. Read-only production SQL confirms revision 067, 1,943 films, 3,797 copies, 1,591 watches and nine nights, matching the post-AA5 observation. Both roles still read the 11 AA5 cache columns and cannot read credentials. Both IMDb caches remain empty; cron-specs last ran at 02:00 UTC on 25 Oct, before AA5, with nothing due and no IMDb error. First live refresh remains unverified; the agent did not start one.
+
+Earlier stages: [AA4 verification](aa4-verification-2026-10-25.md) and [AA5 verification](aa5-verification-2026-10-25.md).

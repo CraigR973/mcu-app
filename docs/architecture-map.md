@@ -1,6 +1,6 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA5,
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA6,
 deployed on 25 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
@@ -105,7 +105,7 @@ Night-only metadata stays on the existing suggestion; opening a night creates no
 films or copies. IMDb cache identity and checked time prevent stale scores after an identity
 correction. Failed refreshes keep previous scores and surface through the existing job check.
 
-## AA6, implementation ready for deployment
+## AA6, shipped 25 Oct (`54dbc07`)
 
 ```mermaid
 flowchart TB
