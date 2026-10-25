@@ -52,3 +52,14 @@ describe('MovieNightPage — Batch V3', () => {
     expect(await screen.findByText('The night')).not.toBeNull()
   })
 })
+
+
+it('converts an optional planned local time into a UTC instant', async () => {
+  mocks.fetchMovieNights.mockResolvedValue({ items: [], total: 0 })
+  mocks.createMovieNight.mockResolvedValue({ id: '3f2504e0-4f89-41d3-9a0c-0305e82c3401' })
+  renderPage()
+  const input = screen.getByLabelText('Planned date and time (optional)')
+  fireEvent.change(input, { target: { value: '2026-07-10T20:30' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Start movie night' }))
+  await waitFor(() => expect(mocks.createMovieNight).toHaveBeenCalledWith({}, new Date('2026-07-10T20:30').toISOString()))
+})

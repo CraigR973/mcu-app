@@ -130,21 +130,23 @@ describe('MovieNightSessionPage', () => {
   it('opens on the shortlist, one Add / Added control per film — Batch V3 (#228)', async () => {
     renderPage()
 
-    const list = within(await screen.findByRole('region', { name: /Tonight's shortlist/ }))
+    const list = within(await screen.findByRole('region', { name: /Stuck for ideas/ }))
     expect(list.getByRole('button', { name: /The Red Shoes 1948/, expanded: false })).not.toBeNull()
-    expect(list.getByText(/Suggested by Mark · on MUBI/)).not.toBeNull()
+    const suggested = within(screen.getByRole('region', { name: /^Suggested/ }))
+    expect(suggested.getByText(/Suggested by Mark · on MUBI/)).not.toBeNull()
     // Your own vote, and only yours (#157): the film you added reads "Added", pressed.
     const add = list.getByRole('button', { name: 'Add The Red Shoes' })
-    const added = list.getByRole('button', { name: 'Added The Card Player' })
+    const added = suggested.getByRole('button', { name: 'Added The Card Player' })
     expect(add.getAttribute('aria-pressed')).toBe('false')
     expect(added.getAttribute('aria-pressed')).toBe('true')
-    expect(list.getAllByRole('button', { name: /^Add(ed)? / })).toHaveLength(2)
+    expect(list.getAllByRole('button', { name: /^Add(ed)? / })).toHaveLength(1)
+    expect(suggested.getAllByRole('button', { name: /^Add(ed)? / })).toHaveLength(1)
   })
 
   it('has no deck: no "Start swiping", no Skip, no "N of M" count (#228)', async () => {
     // Retired with the deck: Phase 8.4's swipe-like UI and #207's arrow-key rule.
     renderPage()
-    await screen.findByRole('region', { name: /Tonight's shortlist/ })
+    await screen.findByRole('region', { name: /Stuck for ideas/ })
 
     expect(screen.queryByRole('button', { name: /Start swiping/ })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull()
@@ -239,7 +241,7 @@ describe('MovieNightSessionPage', () => {
 
   it('does not vote from the list with an arrow key', async () => {
     renderPage()
-    await screen.findByRole('region', { name: /Tonight's shortlist/ })
+    await screen.findByRole('region', { name: /Stuck for ideas/ })
 
     fireEvent.keyDown(window, { key: 'ArrowRight' })
 
@@ -281,7 +283,17 @@ describe('MovieNightSessionPage', () => {
 
   it('shows no match banner when the session has none', async () => {
     renderPage()
-    await screen.findByRole('region', { name: /Tonight's shortlist/ })
+    await screen.findByRole('region', { name: /Stuck for ideas/ })
     expect(screen.queryByText("It's a match")).toBeNull()
   })
+})
+
+
+it('opens with Suggest a film, then people’s picks, then random picks', async () => {
+  renderPage()
+  await screen.findByRole('region', { name: /Stuck for ideas/ })
+  const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+  expect(headings[0]).toBe('Suggest a film')
+  expect(headings[1]).toMatch(/^Suggested/)
+  expect(headings[2]).toMatch(/^Stuck for ideas/)
 })

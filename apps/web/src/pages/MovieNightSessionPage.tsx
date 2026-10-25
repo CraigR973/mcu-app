@@ -24,7 +24,7 @@ import {
 } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { shareLink } from '@/lib/share'
-import { cn, formatShortDate } from '@/lib/utils'
+import { cn, formatShortDate, formatDateTime } from '@/lib/utils'
 
 /** "You and Mark", "You, Mark and Sam" — who is in tonight, from where you sit. */
 function peopleLine(session: MovieNightSession, you: string | undefined): string {
@@ -181,11 +181,15 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
  */
 function Shortlist({
   cards,
+  title,
+  headingId,
   pendingId,
   readOnly,
   onToggle,
 }: {
   cards: MovieNightCandidate[]
+  title: string
+  headingId: string
   pendingId: string | null
   readOnly: boolean
   onToggle: (card: MovieNightCandidate) => void
@@ -203,10 +207,10 @@ function Shortlist({
   }
 
   return (
-    <section className="space-y-3" aria-labelledby="shortlist-heading">
+    <section className="space-y-3" aria-labelledby={headingId}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="shortlist-heading" className="section-heading text-base">
-          Tonight's shortlist <span className="font-sans text-sm font-normal text-muted-foreground">· {cards.length} films</span>
+        <h2 id={headingId} className="section-heading text-base">
+          {title} <span className="font-sans text-sm font-normal text-muted-foreground">· {cards.length} {cards.length === 1 ? 'film' : 'films'}</span>
         </h2>
         <p className="text-sm text-muted-foreground">
           {added === 0 ? 'Add the ones you would watch tonight.' : `You've added ${String(added)}.`}
@@ -232,8 +236,8 @@ function Shortlist({
                       <span className="truncate text-sm font-semibold text-foreground">{card.title}</span>
                       {card.year ? <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{card.year}</span> : null}
                     </span>
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                      {card.suggestedBy ? `Suggested by ${card.suggestedBy}` : 'From the Archive'}
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {card.suggestedBy ? `Suggested by ${card.suggestedBy}${card.suggestedAt ? ` · ${formatDateTime(card.suggestedAt)}` : ''}` : 'From the Archive'}
                       {card.movieId ? '' : card.streamingOn.length > 0 ? ` · on ${card.streamingOn.join(', ')}` : ' · not on the shelf'}
                     </span>
                   </span>
@@ -401,11 +405,13 @@ export default function MovieNightSessionPage() {
         </h1>
         {night ? (
           <p className="text-sm text-muted-foreground">
-            {peopleLine(night, profile?.id)} · {formatShortDate(night.createdAt)}
+            {peopleLine(night, profile?.id)} · {night.plannedStart ? `Planned ${formatDateTime(night.plannedStart)}` : formatShortDate(night.createdAt)}
             {night.status === 'ended' ? ' · this one has ended' : ''}
           </p>
         ) : null}
       </header>
+
+      {open ? <SuggestFilmPanel sessionId={id} /> : null}
 
       {night && open ? <InviteBar session={night} you={profile?.id} /> : null}
 
@@ -455,21 +461,30 @@ export default function MovieNightSessionPage() {
           className="w-full"
           tone="empty"
           title="No films on the list yet"
-          description="Suggest one below, or start another night with a wider year range."
+          description="Suggest one above, or start another night with a wider year range."
         />
       ) : (
-        <Shortlist
-          cards={cards}
-          pendingId={vote.isPending ? (vote.variables?.card.suggestionId ?? null) : null}
-          readOnly={night?.status === 'ended'}
-          onToggle={(card) => vote.mutate({ card, liked: card.myVote !== true })}
-        />
+        <>
+          <Shortlist
+            title="Suggested"
+            headingId="suggested-heading"
+            cards={cards.filter((card) => card.suggestedBy !== null)}
+            pendingId={vote.isPending ? (vote.variables?.card.suggestionId ?? null) : null}
+            readOnly={night?.status === 'ended'}
+            onToggle={(card) => vote.mutate({ card, liked: card.myVote !== true })}
+          />
+          <Shortlist
+            title="Stuck for ideas? A random shortlist"
+            headingId="archive-heading"
+            cards={cards.filter((card) => card.suggestedBy === null)}
+            pendingId={vote.isPending ? (vote.variables?.card.suggestionId ?? null) : null}
+            readOnly={night?.status === 'ended'}
+            onToggle={(card) => vote.mutate({ card, liked: card.myVote !== true })}
+          />
+        </>
       )}
 
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
-
-      {/* Batch S7, #157's first point: **anyone in the session can add to the list**. */}
-      {open ? <SuggestFilmPanel sessionId={id} /> : null}
     </div>
   )
 }

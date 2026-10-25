@@ -1746,6 +1746,7 @@ export const movieNightSessionSchema = z.object({
   inviteToken: z.string().min(16),
   invitePath: z.string().min(1),
   participantCount: z.number().int().positive(),
+  plannedStart: z.string().nullable().default(null),
   createdAt: z.string(),
   endedAt: z.string().nullable(),
   /** Batch T4 — who is in tonight, and whether each was sent it as a push. Defaulted, as
@@ -1790,6 +1791,7 @@ export const movieNightCandidateSchema = z.object({
   cast: z.array(z.string()),
   /** Null for the films the session was seeded with — nobody suggested those. */
   suggestedBy: z.string().nullable(),
+  suggestedAt: z.string().nullable().default(null),
   streamingOn: z.array(z.string()),
   watchedBy: z.array(watchedBySchema),
   /** The caller's own swipe. **Only ever the caller's**: a movie night where each person

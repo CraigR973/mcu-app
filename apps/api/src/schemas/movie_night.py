@@ -7,13 +7,14 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from src.schemas.wire import UtcDatetime
+from src.schemas.wire import UtcDatetime, UtcDatetimeIn
 
 
 class SessionCreateRequest(BaseModel):
     """§8.3's "session creation with filters", in Batch 12's smart-collection shape."""
 
     filters: dict[str, Any] = Field(default_factory=dict)
+    plannedStart: UtcDatetimeIn | None = None
 
 
 class PersonResponse(BaseModel):
@@ -62,6 +63,7 @@ class MovieNightSessionResponse(BaseModel):
     #: Batch T4. Who is in tonight, and who could still be sent it (empty once it ends).
     people: list[ParticipantResponse] = Field(default_factory=list)
     invitable: list[PersonResponse] = Field(default_factory=list)
+    plannedStart: UtcDatetime | None = None
     createdAt: UtcDatetime
     endedAt: UtcDatetime | None = None
     #: Batch X12a: the film of the latest match, read back from the session, so a night opened
@@ -108,6 +110,7 @@ class CandidateResponse(BaseModel):
     #: Who put it forward. Null for the films the session was seeded with — nobody
     #: suggested those.
     suggestedBy: str | None = None
+    suggestedAt: UtcDatetime | None = None
     #: Where it can be streamed, for a film nobody owns. #157: `get_watch_providers`
     #: already exists, so the streaming half needed no new integration.
     streamingOn: list[str] = Field(default_factory=list)

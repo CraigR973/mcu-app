@@ -85,7 +85,7 @@ describe('ExternalFilmPage', () => {
   it('offers it to an open movie night, and goes there', async () => {
     mocks.fetchMovieNights.mockResolvedValue({ items: [NIGHT], total: 1 })
     renderCard()
-    fireEvent.click(await screen.findByRole('button', { name: /Suggest for movie night/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /Add to movie night/ }))
 
     await waitFor(() =>
       expect(mocks.suggestMovieNightFilm).toHaveBeenCalledWith(NIGHT.id, {
@@ -99,7 +99,7 @@ describe('ExternalFilmPage', () => {
     renderCard()
     await screen.findByRole('heading', { name: 'The Card Player' })
 
-    expect(screen.queryByRole('button', { name: /Suggest for movie night/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Add to movie night/ })).toBeNull()
   })
 
   it('sends an owned film to its own page instead', async () => {

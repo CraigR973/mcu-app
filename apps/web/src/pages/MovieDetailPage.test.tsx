@@ -28,6 +28,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
   return {
     ...actual,
+    fetchMovieNights: vi.fn().mockResolvedValue({ items: [], total: 0 }),
     fetchMovie: vi.fn(),
     fetchCopies: vi.fn(),
     fetchCandidates: vi.fn(),

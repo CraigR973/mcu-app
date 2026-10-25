@@ -24,6 +24,7 @@ export default function MovieNightPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [decadeFrom, setDecadeFrom] = useState('')
+  const [plannedStart, setPlannedStart] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [copyError, setCopyError] = useState<string | null>(null)
 
@@ -31,7 +32,9 @@ export default function MovieNightPage() {
 
   const start = useMutation({
     mutationFn: () =>
-      createMovieNight(decadeFrom ? { decadeFrom: Number(decadeFrom) } : {}),
+      plannedStart
+        ? createMovieNight(decadeFrom ? { decadeFrom: Number(decadeFrom) } : {}, new Date(plannedStart).toISOString())
+        : createMovieNight(decadeFrom ? { decadeFrom: Number(decadeFrom) } : {}),
     onSuccess: (session) => {
       void queryClient.invalidateQueries({ queryKey: ['movie-nights'] })
       navigate(`/movie-night/${session.id}`)
@@ -89,6 +92,10 @@ export default function MovieNightPage() {
               value={decadeFrom}
               onChange={(event) => setDecadeFrom(event.target.value)}
             />
+          </label>
+          <label className="text-sm">
+            <span className="field-label">Planned date and time (optional)</span>
+            <Input type="datetime-local" value={plannedStart} onChange={(event) => setPlannedStart(event.target.value)} />
           </label>
           <Button type="submit" disabled={start.isPending}>
             {start.isPending ? (
@@ -153,7 +160,7 @@ export default function MovieNightPage() {
                   to={`/movie-night/${session.id}`}
                   className="touch-target flex min-w-0 flex-1 items-center text-sm hover:underline"
                 >
-                  {formatDateTime(session.createdAt)} ·{' '}
+                  {session.plannedStart ? `Planned ${formatDateTime(session.plannedStart)}` : formatDateTime(session.createdAt)} ·{' '}
                   {session.people.length > 1
                     ? `with ${session.people.filter((person) => person.id !== profile?.id).map((person) => person.displayName).join(', ')}`
                     : session.participantCount === 1 ? 'just you' : `${session.participantCount} people`}

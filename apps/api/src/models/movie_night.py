@@ -68,6 +68,9 @@ class MovieNightSession(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     matched_suggestion_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
+    planned_start_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
     ended_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid

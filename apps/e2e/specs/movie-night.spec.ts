@@ -8,6 +8,7 @@ test.describe('movie night', () => {
 
     const craig = await signedIn('Craig')
     await craig.page.goto('/movie-night')
+    await craig.page.getByLabel('Planned date and time (optional)').fill('2026-11-01T20:30')
     await craig.page.getByRole('button', { name: 'Start movie night' }).click()
     await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
     const nightUrl = new URL(craig.page.url()).pathname
@@ -18,9 +19,10 @@ test.describe('movie night', () => {
     const [invite] = pushesTo(markPhone)
     expect(invite.title).toBe('Craig started a movie night')
     expect(invite.url).toBe(nightUrl)
+    expect(invite.body).toContain('Planned for 1 Nov 2026 at 20:30 GMT')
 
     // Both look at the same shortlist; Craig picks the first film on it.
-    const shortlist = craig.page.getByRole('region', { name: /Tonight's shortlist/ })
+    const shortlist = craig.page.getByRole('region', { name: /Stuck for ideas/ })
     const firstAdd = shortlist.getByRole('button', { name: /^Add / }).first()
     const film = (await firstAdd.innerText()).replace(/\s+/g, ' ').replace(/^Add\s*/, '').trim()
     await firstAdd.click()
@@ -62,7 +64,7 @@ test.describe('movie night', () => {
     await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
     const nightUrl = new URL(craig.page.url()).pathname
     await craig.page.getByRole('button', { name: 'Send to Mark' }).click()
-    const shortlist = craig.page.getByRole('region', { name: /Tonight's shortlist/ })
+    const shortlist = craig.page.getByRole('region', { name: /Stuck for ideas/ })
     const firstAdd = shortlist.getByRole('button', { name: /^Add / }).first()
     const film = (await firstAdd.innerText()).replace(/\s+/g, ' ').replace(/^Add\s*/, '').trim()
     await firstAdd.click()
@@ -76,4 +78,29 @@ test.describe('movie night', () => {
     // Craig has not touched his page: the match arrives over the live stream.
     await expect(craig.page.getByText("It's a match")).toBeVisible()
   })
+})
+
+
+test('a film page adds a random pick to Suggested without losing its vote', async ({ signedIn }, testInfo) => {
+  const craig = await signedIn('Craig')
+  await craig.page.goto('/movie-night')
+  await craig.page.getByRole('button', { name: 'Start movie night' }).click()
+  await craig.page.setViewportSize({ width: 375, height: 812 })
+  const random = craig.page.getByRole('region', { name: /Stuck for ideas/ })
+  const row = random.getByRole('listitem').first()
+  const add = row.getByRole('button', { name: /^Add / })
+  const title = (await add.innerText()).replace(/^Add\s*/, '').trim()
+  await add.click()
+  await row.getByRole('button', { expanded: false }).click()
+  await row.getByRole('link', { name: 'Open its page' }).click()
+  await craig.page.getByRole('button', { name: 'Add to movie night' }).click()
+  const suggested = craig.page.getByRole('region', { name: /^Suggested/ })
+  await expect(suggested.getByRole('button', { name: `Added ${title}` })).toBeVisible()
+  await expect(suggested.getByText(/Suggested by Craig/)).toBeVisible()
+  await expect(random.getByRole('button', { name: `Added ${title}` })).toHaveCount(0)
+  const headings = craig.page.getByRole('heading', { level: 2 })
+  await expect(headings.nth(0)).toHaveText('Suggest a film')
+  await expect(headings.nth(1)).toContainText('Suggested')
+  await expect(headings.nth(2)).toContainText('Stuck for ideas? A random shortlist')
+  await craig.page.screenshot({ path: testInfo.outputPath('aa4-night-375.png'), fullPage: false })
 })

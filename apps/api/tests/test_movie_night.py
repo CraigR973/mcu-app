@@ -528,3 +528,21 @@ class TestBroadcaster:
         assert payload["sessionId"] == "s1"
         assert payload["kind"] == "match"
         assert payload["title"] == "Heat"
+
+
+async def test_suggesting_a_random_pick_keeps_its_votes_and_credits_the_person(
+    db: AsyncSession,
+) -> None:
+    craig = await _profile(db)
+    night = await _session(db, craig)
+    film = await _movie(db, "A random pick")
+    await ensure_seeded(db, session=night)
+    (seed,) = await session_suggestions(db, session=night)
+    assert seed.suggested_by is None
+    await record_vote(db, session=night, user=craig, suggestion=seed, liked=True)
+    picked = await add_suggestion(db, session=night, user=craig, movie_id=film.id)
+    assert picked.id == seed.id
+    assert picked.suggested_by == craig.id
+    assert len(await session_suggestions(db, session=night)) == 1
+    vote = await db.scalar(select(MovieNightVote).where(MovieNightVote.suggestion_id == seed.id))
+    assert vote is not None and vote.liked is True

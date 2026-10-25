@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatDate } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Bookmark, Check, ExternalLink, HelpCircle, Loader2, Popcorn } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -190,13 +190,13 @@ export default function ExternalFilmPage() {
                   <select className="select-control" value={chosenNight} onChange={(event) => setNightId(event.target.value)} aria-label="Which movie night">
                     {openNights.map((night) => (
                       <option key={night.id} value={night.id}>
-                        Movie night of {formatDate(night.createdAt)}
+                        {night.plannedStart ? `Planned ${formatDateTime(night.plannedStart)}` : `Started ${formatDateTime(night.createdAt)}`}
                       </option>
                     ))}
                   </select>
                 ) : null}
                 <Button type="button" variant="outline" onClick={() => suggest.mutate(chosenNight)} disabled={suggest.isPending || !chosenNight}>
-                  <Popcorn className="h-4 w-4" aria-hidden /> Suggest for movie night
+                  <Popcorn className="h-4 w-4" aria-hidden /> Add to movie night
                 </Button>
               </span>
             ) : null}

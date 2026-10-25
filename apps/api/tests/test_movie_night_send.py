@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import AsyncIterator
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -439,3 +439,38 @@ async def test_someone_who_cannot_sign_in_is_not_sent_a_night(
     body = response.json()
     assert str(unset.id) not in {person["id"] for person in body["people"]}
     assert str(unset.id) not in {person["id"] for person in body["invitable"]}
+
+
+async def test_planned_start_is_stored_as_utc_and_invite_uses_recipient_timezone(
+    db: AsyncSession, pushes: RecordingSender
+) -> None:
+    craig, mark = await _person(db, "Craig"), await _person(db, "Mark")
+    await _phone(db, mark)
+    preference = await get_or_create_preferences(db, mark.id)
+    preference.quiet_hours_timezone = "America/New_York"
+    await db.flush()
+    async with _as(db, craig) as client:
+        created = await client.post(
+            "/api/v1/movie-night",
+            json={"plannedStart": "2026-07-10T20:30:00+01:00"},
+        )
+        assert created.status_code == 201, created.text
+        assert created.json()["plannedStart"] == "2026-07-10T19:30:00Z"
+        night_id = uuid.UUID(created.json()["id"])
+        night = await db.get(MovieNightSession, night_id)
+        assert night is not None
+        assert night.planned_start_utc == datetime(2026, 7, 10, 19, 30)
+        sent = await client.post(f"/api/v1/movie-night/{night_id}/send", json={})
+        assert sent.status_code == 200, sent.text
+        listed = await client.get("/api/v1/movie-night")
+        assert any(n["plannedStart"] == "2026-07-10T19:30:00Z" for n in listed.json()["items"])
+    (invite,) = await _invites(db, night, mark)
+    assert invite.body.startswith("Planned for 10 Jul 2026 at 15:30 EDT. ")
+
+
+async def test_unplanned_nights_remain_valid(db: AsyncSession) -> None:
+    craig = await _person(db, "Craig")
+    async with _as(db, craig) as client:
+        response = await client.post("/api/v1/movie-night", json={})
+    assert response.status_code == 201, response.text
+    assert response.json()["plannedStart"] is None
