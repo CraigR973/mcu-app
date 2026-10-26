@@ -2,29 +2,21 @@
 
 ## Now
 
-**26 Oct: AA7 shipped; Craig resumed AA11 verification after its browser stop.**
-AA7 PR #111 merged as `e6e5e16`; production API/web serve close-out `d19b7d8`, with all
-seven CI jobs green (40304689184), db ready and all integrations configured. Real-phone
-photo selection remains unverified.
+**26 Oct: AA7 shipped; AA11's complete local gate passes and PR CI is next.**
+AA7 PR #111 merged as `e6e5e16`; production API/web serve close-out `d19b7d8`, all seven
+CI jobs green (40304689184), db ready and all integrations configured. Real-phone photo
+selection remains unverified.
 
-Craig approved AA11's four-state story and its single pinned PATCH path before their
-respective changes. Existing branch `feat/aa11-lend-and-borrow` holds implementation
-`1eefc98` plus row-state presentation fix `fbcc1c9`. Nothing from AA11 has been pushed,
-merged or deployed. The four production loans were re-read: all remain Out at revision 068.
-No live loan, shelf or notification was written. Sitting 5 remains excluded.
+Craig resumed AA11 after the three-attempt browser stop. Separate explicit Section/shelf
+labels fixed the lookup while retaining every behaviour assertion. Source `75adafe` passes
+all ten local checks: API 2,480 passed / 9 known local skips, shared 156, web 700. Full
+Chromium 38, Firefox 37 plus documented dictation skip, and six cron cases pass. WebKit,
+Postgres 17 without skips, migration reversal and image boot remain CI's proof.
 
-The AA11 browser check failed three times: preferences setup used PATCH instead of PUT
-(fixed); exact state text shared a node with borrower/date (fixed); current failure is exact
-label lookup for Section during shelf change. Its accessibility snapshot shows combobox
-name Section and a Back option, but `getByLabel('Section', {exact:true})` times out. Do not
-claim the shelf confirmation flow is proved. Preserve the exact behavioural assertions.
-Craig explicitly resumed AA11. Section and shelf controls now have separate, explicit labels;
-verification is restarting, retaining all behaviour assertions.
-
-Local API suite: 2,480 passed, 9 known Unix-socket skips; ruff/format/mypy pass. Earlier shared
-156 and focused loan UI 16 tests pass; full workspace gate was interrupted at the stop, so
-there is no complete green gate. Full-browser/cron runs, seven-job PR CI and production
-close-out remain unrun. Handoff: `docs/reviews/aa11-verification-2026-10-26.md`.
+AA11 is not yet shipped. Its story and single pinned PATCH path were approved first.
+Read-only production preflight still finds the same four Out loans at revision 068; no
+live loan, shelf or notification write occurred. Sitting 5 remains excluded.
+See `docs/reviews/aa11-verification-2026-10-26.md` for criteria and every fixed failure.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -39,11 +31,9 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Complete the resumed AA11 verification and shipment only.** Reuse `feat/aa11-lend-and-borrow`; fix the shelf
-Section label lookup without weakening behaviour assertions. Then run the complete clean-tree
-local gate and Chromium/Firefox/jobs, seven-job PR CI including WebKit, and normal production
-close-out with exact SHA/readiness and read-only proof that all four old loans are unchanged.
-Do not start sitting 5. AA10b's independent 1–2 Nov checkpoint stays open.
+**Complete AA11's seven-job PR CI and automatic production close-out only.** Verify exact
+API/web SHA, readiness and preservation of all four existing loans. Do not start sitting 5.
+AA10b's independent 1–2 Nov owner checkpoint remains open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);

@@ -4603,8 +4603,7 @@ See `docs/reviews/aa6-verification-2026-10-25.md`. Sitting 3 is complete; stop b
 **AA7 close-out:** caller-owned private photo upload/replacement/removal, all avatar surfaces,
 initial fallbacks, migration 068 and read-role/credential boundaries verified. PR CI
 40299605767 passed all seven jobs. Production API and web serve `e6e5e16`, db ready and
-all integrations configured. Real-phone selection remains unverified. AA11 waits for its
-four-state story sign-off. See `docs/reviews/aa7-verification-2026-10-25.md`.
+all integrations configured. Real-phone selection remains unverified. AA11's four-state story was approved before its implementation. See `docs/reviews/aa7-verification-2026-10-25.md`.
 
 ### ~~AA8 — The artwork~~ 🟢 **shipped 23 Oct (`6b039bf`, [PR #104](https://github.com/CraigR973/mcu-app/pull/104))**
 - **1.** The app-icon art (the original screen-print emblem, not built from stills) shows in the
@@ -4680,13 +4679,12 @@ postage in, until AA10c settles it from recorded sales.
   (state, needed-by, returned-by, shelved-at, all nullable) granted as above.
 - Tests (the e2e loans case extended). Gate green.
 
-**26 Oct checkpoint:** story prepared in `docs/reviews/aa11-loan-story-2026-10-26.md`,
-approved by Craig before implementation (`OWNER-ACTIONS.md` 37, resolved). Preflight
-found four current open loans; the proposal preserves them as out, leaves a request's
-lent date unset until handover, and keeps needed-by separate from return-due. Sitting 5
-remains excluded. Implementation is local only (`1eefc98`, `fbcc1c9`), stopped after three
-Chromium loan-journey failures. Current blocker: exact Section label lookup during shelf change.
-Full gate/PR/shipment outstanding; resume only at Craig's instruction.
+**26 Oct checkpoint:** Craig approved the story and single pinned PATCH path before changes.
+The three-attempt browser stop was honoured; Craig resumed AA11. Explicit Section/shelf labels
+fixed the lookup with every behaviour assertion retained. Complete local gate now passes:
+API 2,480 / 9 known local skips, shared 156, web 700, Chromium 38, Firefox 37 / documented
+skip, six cron cases. PR CI and production close-out remain pending. The four existing loans
+remain Out without a backfill. Sitting 5 remains excluded.
 
 ---
 
