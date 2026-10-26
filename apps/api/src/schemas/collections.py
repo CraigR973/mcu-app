@@ -365,6 +365,8 @@ class LoanCreateRequest(BaseModel):
     collectionItemId: uuid.UUID
     borrowerName: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     borrowerProfileId: uuid.UUID | None = None
+    state: Literal["asked_for", "out"] = "out"
+    neededBy: date | None = None
     lentDate: date | None = None
     dueDate: date | None = None
     notes: str | None = None
@@ -385,6 +387,27 @@ class LoanReturnRequest(BaseModel):
     returnedDate: date | None = None
 
 
+class LoanTransitionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    state: Literal["out", "shelved"]
+    lentDate: date | None = None
+    section: Annotated[str, Field(min_length=1, max_length=100)] | None = None
+    shelf: Annotated[str, Field(min_length=1, max_length=50)] | None = None
+
+    @model_validator(mode="after")
+    def _place(self) -> LoanTransitionRequest:
+        if self.section is not None and self.section not in SECTIONS:
+            raise ValueError("Unknown section")
+        if self.state == "out" and (self.section is not None or self.shelf is not None):
+            raise ValueError("A handover cannot move a shelf")
+        if self.state == "shelved" and self.lentDate is not None:
+            raise ValueError("Shelving cannot change the lent date")
+        if self.shelf is not None and self.section is None:
+            raise ValueError("Choose a section with the shelf")
+        return self
+
+
 class LoanResponse(BaseModel):
     id: uuid.UUID
     collectionItemId: uuid.UUID
@@ -397,7 +420,14 @@ class LoanResponse(BaseModel):
     #: Batch W3. The borrower's profile when they are one of the people who use the app;
     #: null for a friend, and for every loan made before W3.
     borrowerProfileId: uuid.UUID | None
-    lentDate: date
+    lentDate: date | None
+    state: Literal["asked_for", "out", "back", "shelved"] = "out"
+    neededBy: date | None = None
+    returnedByProfileId: uuid.UUID | None = None
+    shelvedAt: UtcDatetime | None = None
+    isCurrent: bool = True
+    section: str | None = None
+    shelf: str | None = None
     dueDate: date | None
     returnedDate: date | None
     #: Derived, never stored: a loan with a due date in the past and no return date. A

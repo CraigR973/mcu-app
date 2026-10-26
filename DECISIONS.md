@@ -6429,3 +6429,18 @@ contemporaneous.
      its object URLs. Activity carries actorId with a null fallback for older offline data,
      rather than guessing identity from a displayed name. Craig approved exactly the two
      pinned photo paths on 26 Oct; no existing route or exact-set assertion was removed.
+
+298. **AA11 separates physical handover, return and shelving (26 Oct).**
+     Craig signed off Asked for → Out → Back, not shelved → Shelved before implementation.
+     A request has needed-by but no actual lent date until Taken; return-due remains separate.
+     Migration 069 adds nullable state, needed-by, returned-by and shelved-at and allows the
+     absent lent date; no existing row is rewritten. Existing open NULL-state loans read Out.
+     Either person records return or confirms shelving, preserving their existing shelf-edit
+     access; Mark's To put back list contains only the current returned loan for each copy.
+     Reborrowing from the return pile is allowed and leaves older history unchanged. Every
+     mutation locks the physical copy first, then its loan, so stale shelving cannot move a
+     newly borrowed copy. Only handover/return/explicit shelf confirmation advances state;
+     overdue reminders never apply to pending requests. Request push uses the existing durable
+     outbox, preferences, quiet hours and retry path. Craig approved only the new authenticated
+     `/api/v1/loans/{loan_id}` PATCH path in the pinned inventory; exact-set equality stays.
+     No live loan/shelf backfill or fabricated production push is authorised. Sitting 5 excluded.

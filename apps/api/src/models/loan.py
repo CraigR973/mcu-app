@@ -6,9 +6,9 @@ object left the house, and if you own it on 4K and DVD only one of them did.
 """
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, ForeignKey, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -46,12 +46,11 @@ class Loan(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
 
     #: ``DATE``, like ``watch_log.watched_at`` and for the same reason: people remember
     #: lending something "last Saturday", not at an instant.
-    lent_date: Mapped[date] = mapped_column(Date, nullable=False)
+    lent_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    #: NULL until it comes back. This column *is* the open/closed state — there is no
-    #: separate status to disagree with it.
+    #: Physical return is separate from shelf confirmation (AA11).
     returned_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     #: §3.8's column, written by `services/reminders.py::notify_overdue_loans` since
@@ -60,7 +59,21 @@ class Loan(Base, UUIDPrimaryKeyMixin, UpdatedAtMixin):
     #: twice is worse than one that fires late.
     reminder_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
+    state: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    needed_by_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    returned_by_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("profiles.id", ondelete="SET NULL", name="fk_loans_returned_by"),
+        nullable=True,
+    )
+    shelved_at_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<Loan {self.collection_item_id} to {self.borrower_name!r}>"
+
+
+def loan_state(loan: Loan) -> str:
+    """No backfill: old open loans remain out; old closed history stays closed."""
+    return loan.state or ("out" if loan.returned_date is None else "shelved")

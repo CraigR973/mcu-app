@@ -991,6 +991,12 @@ describe('loanSchema', () => {
     expect(loanSchema.parse(base).isOverdue).toBe(false)
   })
 
+  it('parses a request without a handover and rejects an unknown state', () => {
+    expect(loanSchema.parse({ ...base, state: 'asked_for', lentDate: null, neededBy: '2026-11-01' }).lentDate).toBeNull()
+    expect(loanSchema.safeParse({ ...base, state: 'returned' }).success).toBe(false)
+    expect(loanSchema.parse({ ...base, state: 'shelved', isCurrent: false, shelvedAt: '2026-10-26T10:00:00Z' }).isCurrent).toBe(false)
+  })
+
   it('allows a negative countdown for an overdue loan', () => {
     // Negative is the whole point: "-10" is ten days late, and a nonnegative schema would
     // reject exactly the loans that matter.

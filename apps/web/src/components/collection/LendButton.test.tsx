@@ -115,3 +115,20 @@ describe('Lend, borrow and returned on a disc — Batch W3', () => {
     expect(screen.queryByRole('button', { name: /Mark returned/ })).toBeNull()
   })
 })
+
+it('requests a copy for yourself with needed-by and no invented lent date', async () => {
+  renderButton()
+  fireEvent.click(await screen.findByRole('button', { name: 'Ask to borrow' }))
+  fireEvent.change(screen.getByLabelText('Needed by'), { target: { value: '2026-11-03' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Send request' }))
+  await waitFor(() => expect(api.lendDisc).toHaveBeenCalledWith({ collectionItemId: ITEM, borrowerProfileId: auth.id, state: 'asked_for', neededBy: '2026-11-03' }))
+})
+
+it('shows asked-for without claiming the disc is with the borrower', async () => {
+  api.fetchLoans.mockResolvedValue(list([loan({ state: 'asked_for', neededBy: '2026-11-03', lentDate: null })]))
+  renderButton()
+  expect(await screen.findByText('Asked for')).not.toBeNull()
+  expect(screen.getByRole('button', { name: 'Taken' })).not.toBeNull()
+  expect(screen.queryByRole('button', { name: 'Returned' })).toBeNull()
+  expect(screen.queryByText('With you')).toBeNull()
+})

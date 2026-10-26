@@ -1,6 +1,6 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA7,
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA11,
 deployed on 26 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
@@ -138,3 +138,21 @@ Pictures remain separate from credentials, with a 300 KiB database ceiling. Both
 can read the photo table but receive no new profile grants. Photo reads bypass the offline
 API cache; removal returns each avatar to the initial. Activity carries the actor's stable
 profile id, with a null fallback for older offline answers. No provider or new service is used.
+
+## AA11, approved and in verification, 26 Oct
+
+```mermaid
+flowchart TD
+    Ask[Asked for: copy + needed-by] --> Out[Out: actual handover]
+    Direct[Take directly] --> Out
+    Out --> Back[Back, not shelved: either person]
+    Back --> Shelf[Shelved: confirm or change home position]
+    Ask --> Push[Durable request notification to other person]
+    Shelf --> Location[Copy location and loan audit update together]
+```
+
+The same state and actions appear on Loans and the film's copy card. To put back lists only
+current returned copies; reborrowing hides the old task without rewriting its history. Existing
+NULL-state open loans read as Out, without a live backfill. Reminders apply only to Out copies.
+Shelf confirmation remains available to both people, matching their existing copy-edit access;
+Mark has the To put back list. No role, credential or hosting permission changes.

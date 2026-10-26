@@ -1,12 +1,6 @@
-"""Trash, purge and lending — roadmap §13.5, §12.5, and §6.5's own endpoints.
+"""Trash is admin-only; both people manage physical loans and shelf confirmations.
 
-Admin-only throughout, except reading the loans list: §6.5 marks `GET /loans` as "Any",
-and it should be — Mark can reasonably want to know where a disc went without being able
-to lend one.
-
-**§13.6's audit UI needs no new endpoint.** Batch 7 built `GET /admin/audit` with actor,
-action, target and diff, and this batch adds the filters §13.6 asks for to that endpoint
-rather than a second one beside it.
+AA11 separates requests, handover, physical return and shelving.
 """
 
 from __future__ import annotations
@@ -23,11 +17,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
-from src.clock import latest_plausible_today, utc_today
+from src.clock import latest_plausible_today, utc_today, utcnow
 from src.models.box_set import BoxSet
-from src.models.collection_item import CollectionItem
-from src.models.loan import LOANS_TABLE, Loan
+from src.models.collection_item import CollectionItem, location_text
+from src.models.loan import LOANS_TABLE, Loan, loan_state
 from src.models.movie import Movie
+from src.models.notification import NotificationCategory
 from src.models.profile import Profile
 from src.models.wanted import Retailer, WantedItem
 from src.models.watch_log import WatchLog
@@ -37,6 +32,7 @@ from src.schemas.collections import (
     LoanListResponse,
     LoanResponse,
     LoanReturnRequest,
+    LoanTransitionRequest,
     PurgePreviewResponse,
     TrashCountResponse,
     TrashListResponse,
@@ -46,6 +42,8 @@ from src.schemas.collections import (
 from src.services import trash as trash_service
 from src.services.audit import record_action
 from src.services.format_names import formats_phrase
+from src.services.movie_night.sessions import deliver_now
+from src.services.notifications import queue_notification
 
 router = APIRouter(prefix="/api/v1", tags=["trash", "loans"])
 
@@ -358,9 +356,11 @@ async def purge_trash(
 # ---------------------------------------------------------------------------
 
 
-def _loan_response(loan: Loan, item: CollectionItem, movie: Movie) -> LoanResponse:
+def _loan_response(
+    loan: Loan, item: CollectionItem, movie: Movie, *, current: bool = True
+) -> LoanResponse:
     today = utc_today()
-    open_loan = loan.returned_date is None
+    open_loan = loan_state(loan) == "out"
     # Derived, never stored: a stored `is_overdue` needs a job to keep it true and is
     # wrong between runs. The only input is a date and today.
     overdue = open_loan and loan.due_date is not None and loan.due_date < today
@@ -376,6 +376,13 @@ def _loan_response(loan: Loan, item: CollectionItem, movie: Movie) -> LoanRespon
         borrowerName=loan.borrower_name,
         borrowerProfileId=loan.borrower_profile_id,
         lentDate=loan.lent_date,
+        state=cast(Any, loan_state(loan)),
+        neededBy=loan.needed_by_date,
+        returnedByProfileId=loan.returned_by_profile_id,
+        shelvedAt=loan.shelved_at_utc,
+        isCurrent=current,
+        section=item.section,
+        shelf=item.shelf,
         dueDate=loan.due_date,
         returnedDate=loan.returned_date,
         isOverdue=overdue,
@@ -399,7 +406,9 @@ async def _loan_rows(
             .order_by(
                 Loan.returned_date.is_(None).desc(),
                 Loan.due_date.asc().nulls_last(),
-                Loan.lent_date.desc(),
+                Loan.updated_at.desc(),
+                Loan.created_at.desc(),
+                Loan.id.desc(),
             )
         )
     ).all()
@@ -415,10 +424,26 @@ async def list_loans(
     """§12.5's loans page — "active and past loans", per §6.5.
 
     Open loans first, soonest due first. Readable by both people: knowing where a disc
-    went is not an admin question, even though lending one is.
+    went and recording its handover are shared actions.
     """
     rows = await _loan_rows(db, open_only=open_only)
-    items = [_loan_response(loan, item, movie) for loan, item, movie in rows]
+    # The first row per copy is current. Returned history never creates duplicate tasks.
+    current_ids: dict[uuid.UUID, uuid.UUID] = {}
+    for loan, _, _ in sorted(
+        rows,
+        key=lambda row: (
+            row[0].returned_date is None,
+            row[0].updated_at,
+            row[0].created_at,
+            row[0].id,
+        ),
+        reverse=True,
+    ):
+        current_ids.setdefault(loan.collection_item_id, loan.id)
+    items = [
+        _loan_response(loan, item, movie, current=current_ids[item.id] == loan.id)
+        for loan, item, movie in rows
+    ]
     return LoanListResponse(
         items=items,
         total=len(items),
@@ -454,39 +479,50 @@ async def _borrower(db: AsyncSession, payload: LoanCreateRequest) -> tuple[str, 
 
 @router.post("/loans", response_model=LoanResponse, status_code=status.HTTP_201_CREATED)
 async def lend_disc(payload: LoanCreateRequest, user: CurrentUser, db: Database) -> LoanResponse:
-    """§12.5's acceptance: "Lending a disc shows it in Loans".
-
-    **Either person lends or borrows** since Batch W3 (`DECISIONS.md` #249): Mark lends the
-    discs as much as Craig does, and Craig borrows them. A borrower who is one of the two is
-    named by ``borrowerProfileId`` and their name is filled in from it; anyone else is a
-    name. The audit row records who made the loan either way.
-
-    **No push is sent from here, and that is deliberate.** §12.5's second clause is
-    "overdue triggers a push" — a statement about a *due date passing*, not about a disc
-    being lent, so it belongs to the scheduled pass rather than to this handler.
-    `notify_overdue_loans` in `services/reminders.py` owns it as of Batch 11, and writes
-    the `loans.reminder_sent` column this table has carried unused since Batch 15.
-    """
-    item = await db.get(CollectionItem, payload.collectionItemId)
+    """Record taking a copy, or request it without inventing a handover date."""
+    item = (
+        await db.execute(
+            select(CollectionItem)
+            .where(CollectionItem.id == payload.collectionItemId)
+            .with_for_update()
+        )
+    ).scalar_one_or_none()
     if item is None or item.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Collection item not found"
+        )
+    if item.listing_status in ("sold", "donated") or item.section == "Digital":
+        raise HTTPException(status_code=422, detail="Only an owned physical copy can be lent")
+    if await db.scalar(
+        select(Loan.id)
+        .where(Loan.collection_item_id == item.id, Loan.returned_date.is_(None))
+        .limit(1)
+    ):
+        raise HTTPException(
+            status_code=409, detail="That disc already has a request or an open loan"
         )
     movie = await db.get(Movie, item.movie_id)
     if movie is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    lent = payload.lentDate or utc_today()
-    if lent > latest_plausible_today():
+    asked = payload.state == "asked_for"
+    lent = None if asked else payload.lentDate or utc_today()
+    if asked and (
+        payload.borrowerProfileId != user.id
+        or payload.neededBy is None
+        or payload.lentDate is not None
+    ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="lentDate cannot be in the future",
+            status_code=422, detail="Ask for yourself with a needed-by date and no lent date"
         )
-    if payload.dueDate is not None and payload.dueDate < lent:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="dueDate cannot be before lentDate",
-        )
+    if payload.neededBy is not None and payload.neededBy < utc_today():
+        raise HTTPException(status_code=422, detail="neededBy cannot be in the past")
+    if lent is not None and lent > latest_plausible_today():
+        raise HTTPException(status_code=422, detail="lentDate cannot be in the future")
+    if payload.dueDate is not None and payload.dueDate < (lent or payload.neededBy or utc_today()):
+        raise HTTPException(status_code=422, detail="dueDate cannot be before lentDate or neededBy")
+    if not asked and payload.neededBy is not None:
+        raise HTTPException(status_code=422, detail="neededBy belongs to a request")
 
     borrower_name, borrower_profile_id = await _borrower(db, payload)
     loan = Loan(
@@ -495,6 +531,8 @@ async def lend_disc(payload: LoanCreateRequest, user: CurrentUser, db: Database)
         borrower_name=borrower_name,
         borrower_profile_id=borrower_profile_id,
         lent_date=lent,
+        state=payload.state,
+        needed_by_date=payload.neededBy,
         due_date=payload.dueDate,
         notes=payload.notes,
     )
@@ -511,6 +549,33 @@ async def lend_disc(payload: LoanCreateRequest, user: CurrentUser, db: Database)
             "item": str(item.id),
         },
     )
+    recipients: list[uuid.UUID] = []
+    if asked:
+        recipients = list(
+            (
+                await db.execute(
+                    select(Profile.id).where(
+                        Profile.id != user.id,
+                        Profile.deleted_at.is_(None),
+                        Profile.is_active.is_(True),
+                    )
+                )
+            ).scalars()
+        )
+        for recipient in recipients:
+            await queue_notification(
+                db,
+                user_id=recipient,
+                category=NotificationCategory.loans,
+                title=f"{borrower_name} asked for {movie.title}",
+                body=(
+                    f"Needed by {payload.neededBy:%-d %B}. "
+                    "Record Taken when the copy is handed over."
+                ),
+                url="/loans",
+                dedupe_key=f"loan-request:{loan.id}:{recipient}",
+                now=utcnow(),
+            )
     try:
         await db.commit()
     except IntegrityError as exc:
@@ -522,6 +587,8 @@ async def lend_disc(payload: LoanCreateRequest, user: CurrentUser, db: Database)
             detail="That disc is already lent out and has not been returned",
         ) from exc
     await db.refresh(loan)
+    if recipients:
+        await deliver_now(db, recipients)
     return _loan_response(loan, item, movie)
 
 
@@ -533,15 +600,14 @@ async def return_disc(
     db: Database,
 ) -> LoanResponse:
     """Mark a disc as returned. §6.5's own verb for this. Either person, since Batch W3."""
-    loan = await db.get(Loan, loan_id)
-    if loan is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Loan not found")
-    if loan.returned_date is not None:
+    loan, item, movie = await _locked_loan(db, loan_id)
+    if loan_state(loan) != "out":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="That loan is already closed"
         )
 
     returned: date = payload.returnedDate or utc_today()
+    assert loan.lent_date is not None
     if returned < loan.lent_date:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -554,6 +620,8 @@ async def return_disc(
         )
 
     loan.returned_date = returned
+    loan.state = "back"
+    loan.returned_by_profile_id = user.id
     record_action(
         db,
         user_id=user.id,
@@ -565,8 +633,98 @@ async def return_disc(
     await db.commit()
     await db.refresh(loan)
 
-    item = await db.get(CollectionItem, loan.collection_item_id)
-    movie = await db.get(Movie, item.movie_id) if item else None
-    if item is None or movie is None:  # pragma: no cover - FK guarantees both
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Disc not found")
+    return _loan_response(loan, item, movie)
+
+
+async def _locked_loan(db: AsyncSession, loan_id: uuid.UUID) -> tuple[Loan, CollectionItem, Movie]:
+    # Every operation locks the copy first, then its loan, including create/reborrow.
+    copy_id = await db.scalar(select(Loan.collection_item_id).where(Loan.id == loan_id))
+    if copy_id is None:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    item = (
+        await db.execute(
+            select(CollectionItem).where(CollectionItem.id == copy_id).with_for_update()
+        )
+    ).scalar_one()
+    loan = (
+        await db.execute(
+            select(Loan)
+            .where(Loan.id == loan_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+    ).scalar_one()
+    movie = await db.get(Movie, item.movie_id)
+    assert movie is not None
+    current_id = await db.scalar(
+        select(Loan.id)
+        .where(Loan.collection_item_id == copy_id)
+        .order_by(
+            Loan.returned_date.is_(None).desc(),
+            Loan.updated_at.desc(),
+            Loan.created_at.desc(),
+            Loan.id.desc(),
+        )
+        .limit(1)
+    )
+    if current_id != loan.id:
+        raise HTTPException(
+            status_code=409, detail="This copy has a newer loan; reload its current state"
+        )
+    return loan, item, movie
+
+
+@router.patch("/loans/{loan_id}", response_model=LoanResponse)
+async def transition_loan(
+    loan_id: uuid.UUID, payload: LoanTransitionRequest, user: CurrentUser, db: Database
+) -> LoanResponse:
+    """Explicit handover or shelf confirmation; dates and jobs never advance a state."""
+    loan, item, movie = await _locked_loan(db, loan_id)
+    before = loan_state(loan)
+    if (before, payload.state) not in (("asked_for", "out"), ("back", "shelved")):
+        raise HTTPException(status_code=409, detail="That loan cannot make this transition")
+    if payload.state == "out":
+        lent = payload.lentDate or utc_today()
+        if lent > latest_plausible_today() or (loan.due_date is not None and lent > loan.due_date):
+            raise HTTPException(
+                status_code=422, detail="Invalid handover date: future or after return due date"
+            )
+        loan.lent_date = lent
+    else:
+        loan.shelved_at_utc = utcnow()
+        if payload.section is not None:
+            old = {"section": item.section, "shelf": item.shelf, "location": item.location}
+            item.section = payload.section
+            item.shelf = payload.shelf
+            item.location = location_text(payload.section, payload.shelf)
+            record_action(
+                db,
+                user_id=user.id,
+                action_type="update",
+                target_table="collection_items",
+                target_id=item.id,
+                changes={
+                    "location": {
+                        "from": old,
+                        "to": {
+                            "section": item.section,
+                            "shelf": item.shelf,
+                            "location": item.location,
+                        },
+                    }
+                },
+            )
+        elif not item.section and not item.location:
+            raise HTTPException(status_code=422, detail="Choose a shelf location before confirming")
+    loan.state = payload.state
+    record_action(
+        db,
+        user_id=user.id,
+        action_type="update",
+        target_table=LOANS_TABLE,
+        target_id=loan.id,
+        changes={"state": {"from": before, "to": payload.state}},
+    )
+    await db.commit()
+    await db.refresh(loan)
     return _loan_response(loan, item, movie)

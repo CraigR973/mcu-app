@@ -194,6 +194,8 @@ async def notify_overdue_loans(
                 .join(Movie, Movie.id == CollectionItem.movie_id)
                 .where(
                     Loan.returned_date.is_(None),
+                    (Loan.state.is_(None) | (Loan.state == "out")),
+                    Loan.lent_date.is_not(None),
                     Loan.reminder_sent.is_(False),
                     Loan.due_date.is_not(None),
                     Loan.due_date < as_of,
@@ -208,6 +210,7 @@ async def notify_overdue_loans(
     people = await _recipients(db)
     for loan, _item, movie in rows:
         assert loan.due_date is not None  # guaranteed by the query's `is_not(None)`
+        assert loan.lent_date is not None
         overdue_days = (as_of - loan.due_date).days
         for person in people:
             who = "You've" if loan.borrower_profile_id == person.id else f"{loan.borrower_name} has"

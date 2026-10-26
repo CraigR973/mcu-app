@@ -851,3 +851,183 @@ async def test_the_permanent_flag_covers_exactly_one_statement(
     ).first()
     assert row is not None, "the row was destroyed — the permanent flag leaked"
     assert row[0] is not None
+
+
+async def test_four_state_request_handover_return_and_changed_shelf(
+    client: AsyncClient,
+    viewer_client: AsyncClient,
+    api_session: AsyncSession,
+    admin: Profile,
+    viewer: Profile,
+    monkeypatch: Any,
+) -> None:
+    from src.models.notification import Notification
+    from src.routers import trash
+
+    delivered: list[uuid.UUID] = []
+
+    async def fake_deliver(_db: AsyncSession, people: list[uuid.UUID]) -> None:
+        delivered.extend(people)
+
+    monkeypatch.setattr(trash, "deliver_now", fake_deliver)
+    movie, disc = await _disc(api_session, "Requested disc")
+    needed = utc_today() + timedelta(days=3)
+    due = needed + timedelta(days=10)
+    result = await client.post(
+        "/api/v1/loans",
+        json={
+            "collectionItemId": str(disc.id),
+            "borrowerProfileId": str(admin.id),
+            "state": "asked_for",
+            "neededBy": needed.isoformat(),
+            "dueDate": due.isoformat(),
+        },
+    )
+    assert result.status_code == 201, result.text
+    loan = result.json()
+    assert loan["state"] == "asked_for" and loan["lentDate"] is None
+    assert loan["neededBy"] == needed.isoformat() and loan["dueDate"] == due.isoformat()
+    assert not loan["isOverdue"] and loan["daysUntilDue"] is None
+    assert viewer.id in delivered and admin.id not in delivered
+    notifications = list(
+        (
+            await api_session.execute(
+                select(Notification).where(
+                    Notification.dedupe_key.like(f"loan-request:{loan['id']}:%")
+                )
+            )
+        ).scalars()
+    )
+    assert any(
+        n.user_id == viewer.id and movie.title in n.title and "Needed by" in n.body
+        for n in notifications
+    )
+    assert (await client.put(f"/api/v1/loans/{loan['id']}/return", json={})).status_code == 409
+    duplicate = await client.post(
+        "/api/v1/loans", json={"collectionItemId": str(disc.id), "borrowerName": "Friend"}
+    )
+    assert duplicate.status_code == 409
+    taken = await viewer_client.patch(f"/api/v1/loans/{loan['id']}", json={"state": "out"})
+    assert taken.status_code == 200, taken.text
+    assert taken.json()["lentDate"] == utc_today().isoformat()
+    assert taken.json()["neededBy"] == needed.isoformat()
+    returned = await client.put(f"/api/v1/loans/{loan['id']}/return", json={})
+    assert returned.status_code == 200, returned.text
+    assert returned.json()["state"] == "back"
+    assert returned.json()["returnedByProfileId"] == str(admin.id)
+    assert returned.json()["shelvedAt"] is None
+    await api_session.refresh(disc)
+    assert disc.section == "Front" and disc.shelf == "2nd"
+    shelved = await viewer_client.patch(
+        f"/api/v1/loans/{loan['id']}", json={"state": "shelved", "section": "Back", "shelf": "3rd"}
+    )
+    assert shelved.status_code == 200, shelved.text
+    assert shelved.json()["state"] == "shelved" and shelved.json()["shelvedAt"].endswith("Z")
+    await api_session.refresh(disc)
+    assert (disc.section, disc.shelf, disc.location) == ("Back", "3rd", "Back 3rd shelf")
+    assert (
+        await viewer_client.patch(f"/api/v1/loans/{loan['id']}", json={"state": "shelved"})
+    ).status_code == 409
+
+
+async def test_reborrow_hides_previous_back_task_without_rewriting_history(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    _, disc = await _disc(api_session, "Borrow twice")
+
+    async def borrow() -> dict[str, Any]:
+        result = await client.post(
+            "/api/v1/loans", json={"collectionItemId": str(disc.id), "borrowerName": "Friend"}
+        )
+        assert result.status_code == 201, result.text
+        return result.json()
+
+    first = await borrow()
+    assert (await client.put(f"/api/v1/loans/{first['id']}/return", json={})).status_code == 200
+    second = await borrow()
+    assert (
+        await client.patch(f"/api/v1/loans/{first['id']}", json={"state": "shelved"})
+    ).status_code == 409
+    assert (await client.put(f"/api/v1/loans/{second['id']}/return", json={})).status_code == 200
+    rows = (await client.get("/api/v1/loans")).json()["items"]
+    ours = {row["id"]: row for row in rows if row["collectionItemId"] == str(disc.id)}
+    assert ours[first["id"]]["state"] == "back" and not ours[first["id"]]["isCurrent"]
+    assert ours[second["id"]]["state"] == "back" and ours[second["id"]]["isCurrent"]
+    confirmed = await client.patch(f"/api/v1/loans/{second['id']}", json={"state": "shelved"})
+    assert confirmed.status_code == 200, confirmed.text
+    await api_session.refresh(disc)
+    assert (disc.section, disc.shelf) == ("Front", "2nd")
+
+
+async def test_legacy_open_loan_stays_out_without_backfill(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    _, disc = await _disc(api_session, "Legacy loan")
+    legacy = Loan(
+        id=uuid.uuid4(),
+        collection_item_id=disc.id,
+        borrower_name="Old friend",
+        lent_date=date(2026, 1, 1),
+    )
+    api_session.add(legacy)
+    await api_session.flush()
+    row = next(
+        row
+        for row in (await client.get("/api/v1/loans")).json()["items"]
+        if row["id"] == str(legacy.id)
+    )
+    assert row["state"] == "out" and row["lentDate"] == "2026-01-01" and row["isCurrent"]
+    await api_session.refresh(legacy)
+    assert legacy.state is None and legacy.needed_by_date is None and legacy.shelved_at_utc is None
+    returned = await client.put(f"/api/v1/loans/{legacy.id}/return", json={})
+    assert returned.status_code == 200 and returned.json()["state"] == "back"
+
+
+async def test_request_requires_own_profile_needed_by_and_no_lent_date(
+    client: AsyncClient,
+    api_session: AsyncSession,
+    admin: Profile,
+    viewer: Profile,
+) -> None:
+    _, disc = await _disc(api_session, "Invalid request")
+    base = {
+        "collectionItemId": str(disc.id),
+        "state": "asked_for",
+        "borrowerProfileId": str(admin.id),
+        "neededBy": (utc_today() + timedelta(days=2)).isoformat(),
+    }
+    for changes in (
+        {"borrowerProfileId": str(viewer.id)},
+        {"neededBy": None},
+        {"lentDate": utc_today().isoformat()},
+        {"neededBy": "2000-01-01"},
+    ):
+        response = await client.post("/api/v1/loans", json=base | changes)
+        assert response.status_code == 422, response.text
+    response = await client.post(
+        "/api/v1/loans", json={"collectionItemId": str(disc.id), "borrowerName": "Friend"}
+    )
+    loan_id = response.json()["id"]
+    assert (
+        await client.patch(f"/api/v1/loans/{loan_id}", json={"state": "shelved"})
+    ).status_code == 409
+    assert (
+        await client.patch(f"/api/v1/loans/{loan_id}", json={"state": "out", "section": "Back"})
+    ).status_code == 422
+
+
+async def test_cannot_request_or_take_a_digital_or_sold_copy(
+    client: AsyncClient,
+    api_session: AsyncSession,
+) -> None:
+    _, disc = await _disc(api_session, "Not a lendable physical copy")
+    for section, listing in (("Digital", "in_collection"), ("Front", "sold"), ("Front", "donated")):
+        disc.section = section
+        disc.listing_status = listing
+        await api_session.flush()
+        response = await client.post(
+            "/api/v1/loans", json={"collectionItemId": str(disc.id), "borrowerName": "Friend"}
+        )
+        assert response.status_code == 422

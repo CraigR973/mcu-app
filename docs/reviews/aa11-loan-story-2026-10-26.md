@@ -1,9 +1,9 @@
 # AA11 — Loan story for Craig's sign-off, 26 Oct 2026
 
-## Decision pending — no implementation
+## Approved by Craig — 26 Oct
 
 AA7 is shipped. This is the next owner checkpoint in Group AA sitting 4.
-Only this story is prepared; no AA11 API, migration, notification or screen has been built.
+Craig approved this story before implementation. AA11 may now be built and verified.
 Sitting 5 remains excluded.
 
 ## The story
@@ -49,7 +49,7 @@ Migration/grant and compatibility checks are required; no hosting or credential 
 Automatically treating a return as shelving was rejected because it recreates the current
 fault: a disc left on Mark's table appears to be back on its shelf.
 
-## What approval would authorise
+## Authorised scope
 
 Build only AA11's four-state loan flow, the request push to Mark, the To put back list,
 copy-state display and shelf confirmation/update, with the compatible migration and full
@@ -71,3 +71,8 @@ production loan. No work on sitting 5 is authorised.
 - The story is shown to Craig as a short flow first and signed off before building. Migration
   (state, needed-by, returned-by, shelved-at, all nullable) granted as above.
 - Tests (the e2e loans case extended). Gate green.
+
+## Route inventory approval
+
+Craig approved adding only `/api/v1/loans/{loan_id}` on 26 Oct, before its pinned
+expectation changed. Exact-set equality and all existing routes and permission assertions remain.
