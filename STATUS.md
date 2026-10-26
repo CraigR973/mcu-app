@@ -2,15 +2,19 @@
 
 ## Now
 
-**26 Oct: AA7 profile pictures are shipped; AA11 waits for its story sign-off.**
-[PR #111](https://github.com/CraigR973/mcu-app/pull/111), merge `e6e5e16`, gives each person
-Choose photo / Use my initial on You, and pictures on the top bar, sidebar, You, activity
-and movie night. Pictures stay private, caller-editable and capped at 300 KiB in Postgres.
-Migration 068 adds only the photo table and guarded read-role grants; credentials stay
-withheld. All seven PR CI jobs passed, including WebKit and Postgres 17. Production API and
-web serve the merge SHA; db ready and every integration configured. Real-phone selection
-remains unverified. AA11 implementation and sitting 5 are unstarted.
-See `docs/reviews/aa7-verification-2026-10-25.md` for criterion evidence and fixed failures.
+**26 Oct: AA7 is complete; AA11's four-state story is ready for Craig's sign-off.**
+AA7 shipped in [PR #111](https://github.com/CraigR973/mcu-app/pull/111), merge `e6e5e16`.
+The final close-out commit `d19b7d8` passed all seven main CI jobs (40304689184), including
+2,482 API tests with zero skips and Chromium/Firefox/WebKit/jobs. Both production hosts
+serve that exact commit; db is ready and all integrations configured. Pictures remain
+private, caller-editable and capped at 300 KiB. Real-phone selection remains unverified.
+
+`feat/aa11-lend-and-borrow` contains only AA11's proposed story and checkpoint docs:
+`docs/reviews/aa11-loan-story-2026-10-26.md`. No AA11 implementation, migration, notification
+or shelf write has begun. Read-only preflight found four loans, all open/out; all four
+are to be preserved. A request must not invent a lent date; the proposal permits an unset
+lent date until handover, and keeps needed-by separate from return-due. Craig must sign
+off the story before any build. Sitting 5 remains excluded.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -25,10 +29,10 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Show Craig AA11's four-state loan story and obtain sign-off before implementation.**
-AA7 has shipped and its ledger is closed. Read the current loan paths, present the short
-flow, then stop for Craig's decision. Do not start sitting 5. AA10b's independent 1–2 Nov
-owner checkpoint remains open.
+**Wait for Craig's sign-off on AA11's four-state loan story (OWNER-ACTIONS.md 37).**
+Then resume AA11 only in `feat/aa11-lend-and-borrow`, re-verify the current loans and follow
+the batch's full gate/PR/production close-out. No implementation before that sign-off.
+Do not start sitting 5. AA10b's independent 1–2 Nov owner checkpoint remains open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -420,6 +424,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — AA7 final proof complete; AA11 story prepared, waiting for Craig.** Final main
+  `d19b7d8`, CI 40304689184, all seven jobs green; both production hosts exact SHA and full
+  readiness. New local AA11 branch holds only story/checkpoint docs. Read-only preflight:
+  four loans, all out. Story separates needed-by from return-due, leaves lent date unset
+  until handover, and keeps the four loans out. No AA11 code/migration/live write, no sitting 5.
 
 - **26 Oct — AA7 shipped (`e6e5e16`, PR #111); AA11 story checkpoint is next.** Local gate:
   API 2,473 plus nine documented Unix-socket import-guard skips, shared 155, web 693;

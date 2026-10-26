@@ -4680,6 +4680,12 @@ postage in, until AA10c settles it from recorded sales.
   (state, needed-by, returned-by, shelved-at, all nullable) granted as above.
 - Tests (the e2e loans case extended). Gate green.
 
+**26 Oct checkpoint:** story prepared in `docs/reviews/aa11-loan-story-2026-10-26.md`,
+awaiting Craig's sign-off (`OWNER-ACTIONS.md` 37). No implementation has begun. Preflight
+found four current open loans; the proposal preserves them as out, leaves a request's
+lent date unset until handover, and keeps needed-by separate from return-due. Sitting 5
+remains excluded.
+
 ---
 
 ## Batch groups
