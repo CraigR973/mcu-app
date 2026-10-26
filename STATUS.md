@@ -2,20 +2,26 @@
 
 ## Now
 
-**26 Oct: AA7 shipped; AA11's complete local gate passes and PR CI is next.**
-AA7 PR #111 merged as `e6e5e16`; production API/web serve close-out `d19b7d8`, all seven
-CI jobs green (40304689184), db ready and all integrations configured. Real-phone photo
-selection remains unverified.
+**26 Oct: Group AA sitting 4 is complete — profile pictures and the four-state loan flow.**
+AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112) as `b1075ec`.
+All seven AA11 PR CI jobs pass (40388842106), including API tests on Postgres 17 with
+zero skips, migration reversal, deploy-image boot and Chromium/Firefox/WebKit/jobs. API and
+web were both verified serving the exact merge SHA, db ready and all integrations configured.
+This documentation-only close-out redeploys the same verified code.
 
-Craig resumed AA11 after the three-attempt browser stop. Separate explicit Section/shelf
-labels fixed the lookup while retaining every behaviour assertion. Source `75adafe` passes
-all ten local checks: API 2,480 passed / 9 known local skips, shared 156, web 700. Full
-Chromium 38, Firefox 37 plus documented dictation skip, and six cron cases pass. WebKit,
-Postgres 17 without skips, migration reversal and image boot remain CI's proof.
+Loans now run Asked for → Out → Back, not shelved → Shelved. Requests carry needed-by and
+push the other person; only Taken records the lent date. Either person records the return;
+To put back confirms or changes the shelf. Both people retain their existing shelf-edit
+access. Reborrowing from the return pile preserves history without duplicate put-back tasks.
+Migration 069 leaves all four old loans Out, preserving their fields and copy places, with
+new metadata NULL. Both read roles see new columns but cannot read PIN hashes/invite tokens.
 
-AA11 is not yet shipped. Its story and single pinned PATCH path were approved first.
-Read-only production preflight still finds the same four Out loans at revision 068; no
-live loan, shelf or notification write occurred. Sitting 5 remains excluded.
+Craig approved the story and single route addition before changes, then resumed after the
+three-attempt stop. The label fix retained every behaviour assertion. Full local gate passed:
+API 2,480 / 9 known local skips, shared 156, web 700; Chromium 38, Firefox 37 plus documented
+skip, six cron cases. CI ran the nine local skips. No live loan/shelf backfill or fabricated
+production push occurred. Real-phone profile-picture selection, request push receipt and
+physical handovers remain owner observations. Sitting 5 has not started.
 See `docs/reviews/aa11-verification-2026-10-26.md` for criteria and every fixed failure.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
@@ -31,9 +37,9 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Complete AA11's seven-job PR CI and automatic production close-out only.** Verify exact
-API/web SHA, readiness and preservation of all four existing loans. Do not start sitting 5.
-AA10b's independent 1–2 Nov owner checkpoint remains open.
+**Stop after sitting 4. Do not start sitting 5.** Its collection/assistant reviews need a
+separate instruction. AA10b's independent 1–2 Nov owner checkpoint remains open; the real
+phone observations above also remain with Craig.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -425,6 +431,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — Group AA sitting 4 complete.** AA11 PR #112 merged `b1075ec` after the approved
+  story, narrow route-inventory gate and resumed browser verification. Full local/seven-job
+  CI gates green; exact API/web merge SHA, readiness and all four existing loans/places
+  preserved. Read-role grants and withheld credentials verified. Earlier browser failures
+  fixed with behaviour assertions retained. No sitting 5 work or synthetic production writes.
 
 - **26 Oct — AA11 built, not shipped; stopped at the group command's three-attempt limit.**
   Story and one pinned route approved before implementation. Local API 2,480 passed / 9 known

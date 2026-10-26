@@ -2,9 +2,11 @@
 
 ## Outcome
 
-Implementation and the complete local gate pass. PR CI, production deployment and final
-read-only preservation checks are pending. AA7 shipped separately in PR #111 (`e6e5e16`).
-Only Group AA sitting 4 is authorised; sitting 5 has not started.
+AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112), merge `b1075ec948455e5b8aecdd734ebb78ac0b31ba26`. All seven PR CI jobs pass
+([run 40388842106](https://github.com/CraigR973/mcu-app/actions/runs/40388842106)).
+Production API and web both served that exact merge SHA; db ready and all five integrations
+configured. Read-only checks preserved all four old loans and their copy places. AA7 shipped
+separately in PR #111 (`e6e5e16`). Sitting 4 is complete; sitting 5 has not started.
 
 Craig approved the four-state story before implementation, then the single pinned path
 `/api/v1/loans/{loan_id}` before its inventory expectation changed. The previous three-attempt
@@ -15,14 +17,14 @@ Main baseline `d19b7d82b36f36f671486b8e664eb4734e7746d9`, CI 40304689184: seven 
 
 | Criterion | Evidence | Status |
 |---|---|---|
-| Asked for with needed-by and push to Mark | Real API/outbox, decrypted fake push and both browser journeys; no lent date until Taken | Pass locally |
-| Direct taking starts Out; Taken records handover | Existing lending/borrowing API and UI tests retained; full request → handover browser flow | Pass locally |
-| Either person records Back, not shelved | Actor stored as returned-by; home position unchanged; API and browser evidence | Pass locally |
-| To put back and shelf confirmation/change | Current returns only; explicit confirmation preserves or atomically changes copy location and audit | Pass locally |
-| State shown on Loans and film | Chromium and Firefox flows, including final Shelved and revised home position | Pass locally |
-| Existing four loans preserved as Out | Read-only baseline and repeat preflight identical; migration has no row backfill | Pre-deploy pass; final check pending |
-| Compatible migration and read-role grants | Local upgrade 069; CI reversal/image boot and live privilege checks still required | Pending CI/deploy |
-| Tests and complete gate | Ten local checks, full Chromium/Firefox and six cron cases pass | Pass locally; seven-job CI pending |
+| Asked for with needed-by and push to Mark | Real API/outbox, decrypted fake push and both browser journeys; no lent date until Taken | Pass |
+| Direct taking starts Out; Taken records handover | Existing lending/borrowing API and UI tests retained; full request → handover browser flow | Pass |
+| Either person records Back, not shelved | Actor stored as returned-by; home position unchanged; API and browser evidence | Pass |
+| To put back and shelf confirmation/change | Current returns only; explicit confirmation preserves or atomically changes copy location and audit | Pass |
+| State shown on Loans and film | Chromium and Firefox flows, including final Shelved and revised home position | Pass |
+| Existing four loans preserved as Out | Read-only baseline and repeat preflight identical; migration has no row backfill | Pass after deploy |
+| Compatible migration and read-role grants | Local upgrade 069; CI reversal/image boot and live privilege checks passed | Pass in CI and production |
+| Tests and complete gate | Ten local checks, full Chromium/Firefox and six cron cases pass | Pass, all seven CI jobs |
 
 ## Complete local gate
 
@@ -31,7 +33,7 @@ All ten `batch-verify.md` commands pass; logs and exact source digest are saved 
 files in `/tmp/mcu-aa11-gate-stamp.json`. Documentation updates after this gate change no source.
 
 - API: **2,480 passed, 9 known Unix-socket skips**, 30 existing deprecation warnings.
-  The 16 derived-field trigger tests run. Postgres 17 CI must run the nine refresh tests too.
+  The 16 derived-field trigger tests run. Postgres 17 CI ran all 2,489 tests with zero skips, including all 16 derived-field trigger tests.
 - Shared: 156 tests; web: 700 tests across 102 files. Lint, types and production builds pass.
   Web lint reports 11 existing React-refresh warnings, zero errors; existing dependency/build
   annotation and bundle warnings are retained rather than suppressed.
@@ -39,7 +41,7 @@ files in `/tmp/mcu-aa11-gate-stamp.json`. Documentation updates after this gate 
 - Cron jobs: six passed. All providers are faked and unexpected outbound calls fail closed.
 - The resumed focused Chromium loan journey passed on its first run with the exact original
   behaviour assertions intact. Full Chromium and Firefox also passed it.
-- Mac WebKit is unavailable on macOS 13; CI must cover it, retaining only its two documented skips.
+- Mac WebKit is unavailable on macOS 13. CI WebKit passed 36 cases with its two documented skips; Chromium passed 38, Firefox 37 plus the documented dictation skip, and cron jobs six.
 
 The 375 px requested-copy and shelf-change screens were visually inspected: state, needed-by,
 Section, shelf and confirmation controls fit without clipping. Screenshots and the stopped-run
@@ -91,7 +93,13 @@ The existing device criteria 6.2, 5.6, 9.5 and 8.4 remain with the owner.
 
 ## Shipment record
 
-Pending seven-job PR CI, merge and exact API/web SHA plus full readiness. After deployment,
-compare all four old loan/copy records with the baseline, verify new metadata remains NULL,
-check both read roles' new grants and withheld credentials, and confirm anonymous PATCH is 401.
-Do not start sitting 5.
+PR #112 merged `b1075ec948455e5b8aecdd734ebb78ac0b31ba26` after seven green jobs on exact head `c2509ead4818497d7e833359018230aeb146f304`.
+API/web served the exact merge SHA and readiness read db ok, push/AI/eBay/TMDB/Brave configured.
+Database revision 069; all four existing loan/copy snapshots equal the baseline. All four new
+metadata fields remain NULL on the four old Out loans. Both mcu_readonly and mcu_backup can
+read all new columns; neither can read PIN hashes or invite tokens. Anonymous loan PATCH is 401.
+Production counts: movies 1,943, copies 3,797, watches
+1,591, movie nights 9. No live test write occurred.
+
+The source tree matches the verified PR tree. The final documentation-only close-out receives
+its own exact-head CI/deployment checks before the session ends. Do not start sitting 5.

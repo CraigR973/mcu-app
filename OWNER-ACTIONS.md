@@ -1551,6 +1551,10 @@ shelved, needed-by separate from return-due, no lent date until handover, four e
 loans preserved as Out. Full AA11 verification and normal shipment authorised; no live
 loan/shelf backfill or fabricated notification. Sitting 5 remains excluded.
 
+AA11 shipped in PR #112 (`b1075ec`), with a decrypted fake push and complete browser flow
+proved. **Owner observation, not another build approval:** real-phone request push receipt
+and physical handovers remain unverified; use Loans → Lend or borrow, then To put back.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database

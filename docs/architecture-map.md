@@ -139,7 +139,7 @@ can read the photo table but receive no new profile grants. Photo reads bypass t
 API cache; removal returns each avatar to the initial. Activity carries the actor's stable
 profile id, with a null fallback for older offline answers. No provider or new service is used.
 
-## AA11, approved and in verification, 26 Oct
+## AA11, shipped 26 Oct (`b1075ec`)
 
 ```mermaid
 flowchart TD
