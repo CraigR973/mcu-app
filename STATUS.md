@@ -20,7 +20,8 @@ flake or waive the red. Final close-out remains incomplete.
 `group-start.md` requires stopping when CI is red. Failure artifacts are downloaded under
 ignored `scratchpad/aa11-verification/final-ci-failure/`; the verification report records
 the exact failure and resume point. Craig resumed on 26 Oct; a separate `fix/login-navigation-readiness` branch now isolates
-login tests from worker takeover and waits for Home before leaving. Verification is pending.
+login tests from worker takeover and waits for Home before leaving. Full local gate and
+Chromium/Firefox/cron passed; seven-job PR CI including WebKit remains pending.
 No later sitting has been started.
 A documentation handoff is committed locally only, leaving local main ahead of origin by one
 commit; production remains at `0d757ed`. The resumed repair preserves that handoff; production remains at `0d757ed`.

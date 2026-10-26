@@ -142,4 +142,8 @@ The login suite now uses the same worker-blocked context isolation as `signedIn(
 the dedicated offline suite continues to enable and test the real worker. Both login
 journeys wait for the Home heading before navigating away. Every original outcome
 assertion, browser project, timeout and zero-retry setting is retained. Verification
-is pending; WebKit must be proved in CI because this Mac cannot run it.
+passed locally at clean source `345ad19d6eeaf2ec85e7d245158ff1ff2797c3d1`: all ten gate
+commands, E2E typecheck, eight focused login cases, Chromium 38, Firefox 37 plus its
+documented dictation skip, and six cron cases. API 2,480 passed with nine known local
+socket skips; shared 156 and web 700 passed. No new local failure occurred during this
+repair. WebKit must be proved in CI because this Mac cannot run it.
