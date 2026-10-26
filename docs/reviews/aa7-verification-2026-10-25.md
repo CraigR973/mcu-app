@@ -1,28 +1,12 @@
-# AA7 verification and stopped handoff — 25 Oct 2026
+# AA7 profile pictures — verification, 25–26 Oct 2026
 
-## Resumed 26 Oct
+## Result
 
-Craig approved the two route additions and then explicitly resumed the stopped run.
-The earlier stop below is historical. The avatar issue was the new test replacing the
-URL constructor with an object, so happy-dom rejected the image URL; spying only on
-createObjectURL/revokeObjectURL preserves real URL validation. The original image-display,
-error-fallback and cleanup assertions remain. No failing expectation was loosened.
+AA7 has passed every local batch gate and the available browser/job suites. PR CI and
+production shipment are next. AA11 implementation has not started; its four-state story
+must be signed off first. Sitting 5 is excluded.
 
-Activity now has actorId beside actorName, with nullable/default-null shared parsing for
-older offline answers. Both photo and activity API checks pass: 23 tests. All 10 focused
-avatar/cache checks pass. Web and e2e typechecks pass. Migration 068 reverses/reapplies on
-local throwaway Postgres; both read roles can read photos and cannot read the PIN hash.
-Private photo reads (including missing pictures) are no-store and excluded from the offline
-cache. Browser and full-gate verification are in progress; nothing has shipped yet.
-
-## Original stop on 25 Oct
-
-AA7 profile pictures are implemented locally on `feat/aa7-profile-pictures` but are not
-verified, pushed, merged or deployed. AA11 has not started. Sitting 5 has not started.
-The stop is `docs/agent-commands/group-start.md`: three runs of the same avatar check
-failed. Craig approved the two route additions on 26 Oct; that narrow update is complete.
-
-## Scope and acceptance, verbatim
+## Agreed acceptance, verbatim
 
 ### AA7 — Profile pictures 🟡
 - **4.** An uploaded photo (answer 3). A person's picture shows wherever their initial does now (top bar, You,
@@ -30,71 +14,78 @@ failed. Craig approved the two route additions on 26 Oct; that narrow update is 
   photos are, resized, size-capped. Migration granted as above.
 - Tests. Gate green.
 
-## Implementation prepared
+## How it works
 
-- Each person can upload, replace or remove only their own picture from You.
-- One photo per person lives in a separate Postgres table, away from profile credentials.
-  Migration 068 creates it without a backfill and grants the two read roles access to it.
-- Existing disc-photo processing orients, re-encodes and resizes the photo. Input is capped
-  at 12 MB; stored data is capped at 300 KiB in the route and database constraint.
-- Authenticated GET returns JPEG bytes with private/no-store headers. The browser creates
-  an object URL. The component is intended to fall back to an initial and revoke URLs on
-  replacement/unmount. Rendering is currently failing the unit check below.
-- Top bar, sidebar, You, night participants and personal history use the shared avatar.
-  Activity integration is unfinished because the current activity JSON has a name but no
-  actor id. This is an implementation gap, not a reason to cast away the type error.
-- The new write responses are empty 204 responses, and the new read is binary; no new JSON
-  response is introduced.
+Each person chooses a photo or Use my initial on You. Only that person can replace/remove
+it; both signed-in people can read it. One row per person in `profile_photos` keeps the
+bytes separate from credentials. The existing disc-photo processor orients, resizes and
+re-encodes uploads, stripping EXIF. Inputs are capped at 12 MiB; the stored image is capped
+at 300 KiB in both the route and database. No provider, service, hosting or credential
+change is involved.
 
-## Decisions made within AA7
+The top bar, sidebar, You, movie-night participants/personal history and activity use one
+avatar component. It fetches private bytes, creates and releases an in-memory object URL,
+and falls back to the initial if there is no picture or the read/decode fails. Activity now
+carries a stable actorId; older offline answers still parse with a null id and show initials.
+Mutable photo reads, including 404s, are no-store and bypass the worker's offline API cache.
 
-- Separate photo table rather than adding image bytes to every authenticated profile read.
-- Caller-only writes, with no administrative route for changing the other person's photo.
-- Existing image pipeline and rectangular images cropped visually into round avatars.
-- Private mutable reads with no-store, rather than a public image URL.
+Migration 068 creates only the photo table, without a backfill. The guarded grants add it
+to mcu_readonly and mcu_backup; local catalogue checks prove both can read the table and
+cannot read profiles.pin_hash. No credential column is selected to test that boundary.
+The architecture map records this flow.
 
-## Checks and failures
+## Local evidence, clean source 318f07ca6d0d9e7e318708d5466244c525a8b4a5
 
-- Clean starting main: `f1e174e2b7fa2376a1ac9ad87b38d1b109f21864`.
-- Starting main CI: run 40230927112, success, before the branch began.
-- Initial disposable pgserver start failed on invalid locale settings. Retried with
-  `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`, successfully, using `/tmp/mcu-aa7-pg`.
-- Local migration upgrade from empty through 068 passed, only on disposable Postgres.
-- New API suite: 5 passed, against disposable Postgres. Covers both roles' own writes,
-  cross-person read, uneditable foreign ids, replace/remove, invalid input retaining the
-  previous photo, anonymous access, bounds, image dimensions and EXIF removal.
-- The role-grant test is conditional on the roles existing; these roles were not created
-  for this local run. Production catalogue privilege checks have not run.
-- Ruff check of the changed Python source passed; the router/test were formatted.
-- Web typecheck failed: ActivityFeed reads `event.actorId`, absent from ActivityEvent.
-- Focused frontend run: 29 passed, 2 failed. Existing You and AppLayout tests passed;
-  the new avatar tests failed because no image element appears after the mocked byte read.
-- A second run of the avatar file reproduced both failures. A third, diagnostic run of
-  the image-rendering case reproduced one failure. The group stopped at that point.
-  The query state showed successful Blob data; no root cause has been established.
-- Full batch gate, migration reversal, image build, browser e2e, manual visual inspection,
-  PR CI, production smoke and exact-SHA deploy verification have NOT run.
+| Criterion | Evidence | Result |
+|---|---|---|
+| Own upload, replace, remove; other person reads | Real API and Postgres, both roles; foreign-id writes refused; bad input keeps old bytes | Pass |
+| Re-encoding, bounds and private delivery | Real images, dimensions, JPEG/EXIF checks, input ceiling, private/no-store headers | Pass |
+| Photo across named screens, initial fallback | Chromium and Firefox: both people, top bar/You/activity/night/sidebar, reload, removal; unit error and URL cleanup cases | Pass |
+| Migration and grants | Local 068 downgrade/reapply with both roles; photo SELECT allowed and PIN SELECT withheld | Pass |
+| Full local batch gate | All 10 commands, real throwaway Postgres | Pass |
 
-## Pending decisions and next work
+Full API: 2,473 passed, nine collection-import cases skipped because their guard requires a
+localhost hostname and this throwaway server uses a Unix socket. Derived-field trigger tests
+ran. CI's Postgres 17 must run all database cases without those skips.
+Shared: 155 passed. Web: 693 passed. API lint/format/mypy, shared typecheck/build and web
+lint/typecheck/build passed. Lint reports 11 existing warnings and no errors. E2E typecheck
+also passed. Chromium: 37 passed. Firefox: 36 passed, one existing documented dictation
+skip. Cron jobs: six passed. Local WebKit cannot run on macOS 13; PR CI must run it, keeping
+only the two previously documented platform skips. All outside services were faked.
 
-Craig approved adding ONLY `/api/v1/profile-photos/me` (PUT/DELETE, self only)
-and `/api/v1/profile-photos/{profile_id}` (authenticated GET) to the exact pinned route
-inventory on 26 Oct. The inventory now includes exactly these additions and the generated
-OpenAPI snapshot was refreshed. A comparison found no existing path changed or removed;
-exact-set equality and all existing checks remain. All 16 health/snapshot tests passed.
-This approval did not authorise resuming debugging past the three-attempt stop.
+The new photo case passed for both people in both available browsers. The 375 px Mark/You
+and 1,280 px Craig/You screenshots were visually inspected: upload controls and photo avatars
+fit, navigation remains usable and the sidebar shows the picture. The photo is a synthetic
+image, not either person's real portrait. Four Chromium screenshots were retained under
+`scratchpad/aa7-verification/` (ignored); the browser reports retain their own screenshots.
 
-After Craig authorises resuming past the three-attempt stop, preserve this checkout and
-its edits; resolve the avatar failure and activity identity properly. Also ensure the
-service worker does not persist these no-store photo reads: its current matcher broadly
-caches API GETs. Add focused coverage for that exclusion. Temporary console debug instrumentation was removed; the diagnostic log remains in
-`/tmp/mcu-aa7-debug.log`. Then complete all gates, role-grant/credential-withholding checks,
-architecture-map update and phone-width visual inspection. Create one AA7 PR, attach it,
-wait for all CI jobs including e2e, merge, verify both production SHAs and readiness,
-then close out the AA7 ledger and session docs.
+The before-production read-only check found revision 067, 1,943 films, 3,797 copies,
+1,591 watch rows and nine nights; no photo table yet. Both read roles could read neither
+PIN hashes nor night invite tokens. No production upload or live provider run was made.
 
-Only after AA7 is shipped and local main is clean: inspect current loans, present AA11's
-short four-state story to Craig, and STOP for sign-off before implementation. The intended
-story is asked for → out → back, not shelved → shelved, with needed-by date, Mark's push,
-either person recording return, and Mark's put-back list confirming/changing the shelf.
-Do not start sitting 5.
+## Failures and decisions, including fixed first attempts
+
+- 25 Oct's initial pgserver start refused invalid locale settings. UTF-8 locale settings
+  fixed the disposable local server start; production was never a test database.
+- The new activity avatar initially failed typecheck because activity JSON had names only.
+  Stable actorId now ships with its shared schema and old-cache fallback, with API assertions.
+- The new avatar tests failed because they replaced the URL constructor with a plain object,
+  making happy-dom reject the image source. Three runs triggered the group stop. Craig
+  explicitly resumed on 26 Oct. A diagnostic reproduced the cause; spying only on the two
+  object-URL methods fixed the fixture. Every image, fallback and cleanup assertion remains.
+- Craig approved exactly two new pinned paths on 26 Oct: `/api/v1/profile-photos/me`
+  (PUT/DELETE, own only) and `/api/v1/profile-photos/{profile_id}` (authenticated GET).
+  Exact-set equality, every old path and all existing checks remain. OpenAPI was regenerated.
+- The first full formatting check found migration 068 unformatted; it was formatted and the
+  complete local gate passed from the clean committed tree.
+- The first screenshot-inspection attempt raced the full runner clearing its output. The
+  final full-run screenshots were inspected and copied outside the runner's output.
+
+Design choices: separate photo storage, caller-only writes, reuse of the disc image pipeline,
+private mutable reads, and initials for old offline answers whose actor id is unavailable.
+
+## Limits and next checkpoint
+
+Real iPhone photo selection/cropping is unverified. No signed-in production upload is claimed.
+Existing owner-only device/push/speech acceptance remains owner-held. No AA10b eBay run or
+collection refresh was started. AA11 waits for its story sign-off; sitting 5 stays unstarted.

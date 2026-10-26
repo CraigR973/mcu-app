@@ -6417,3 +6417,15 @@ contemporaneous.
      and the night's suggestion-first section order without altering their assertions.
      Craig approved adding only `/api/v1/feeling-lucky` to the pinned route inventory on
      25 Oct, retaining set equality, every existing path and all access/behaviour checks.
+
+
+297. **AA7's profile photo belongs to its person, separately from credentials (26 Oct).**
+     One `profile_photos` row per person stores a re-encoded JPEG capped at 300 KiB, through
+     the existing disc-photo pipeline. Both people read; each can replace/remove only their
+     own picture, returning to their initial. The separate table avoids fetching bytes with
+     every authenticated profile read and adds no grant on the credential-bearing profile
+     table. Migration 068 grants both read roles only the photo table, without a backfill.
+     Private mutable reads are no-store and bypass offline API caching; the web releases
+     its object URLs. Activity carries actorId with a null fallback for older offline data,
+     rather than guessing identity from a displayed name. Craig approved exactly the two
+     pinned photo paths on 26 Oct; no existing route or exact-set assertion was removed.

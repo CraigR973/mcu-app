@@ -3,18 +3,13 @@
 ## Now
 
 **26 Oct: Craig authorised resuming AA7; implementation is under full verification.**
-Branch `feat/aa7-profile-pictures` holds AA7's photo migration, API, shared avatar, You
-editor, screen integration and tests. Five new API tests pass against disposable local
-Postgres; the full gate has not run. Two avatar unit tests fail (no image renders after
-mocked bytes), and activity integration fails typecheck because activity has no actor id.
-The 25 Oct avatar failure was the test replacing the URL constructor: preserving the
-constructor makes all 4 avatar tests pass. Private photo reads now bypass the offline cache;
-all 10 focused avatar/cache checks pass. Activity carries a stable actor id, preserving old
-offline answers with a null default. Craig approved the 2 route additions on 26 Oct.
-Local migration 068 reverses/reapplies; both read roles can read photos and cannot read
-profiles.pin_hash. Full gate, browser suite, CI and production proof remain pending.
-No PR, push, merge or deployment. AA11 and sitting 5 remain unstarted.
-See `docs/reviews/aa7-verification-2026-10-25.md` for evidence and remaining work.
+Branch `feat/aa7-profile-pictures` has passed every local gate: API 2,473 passed with nine
+existing Unix-socket import-guard skips; shared 155; web 693; lint/typecheck/build green.
+Chromium 37, Firefox 36 plus its documented dictation skip, cron six. Both people's photo
+journeys pass, with 375/1,280 px screenshots inspected. Local migration 068 reverses/reapplies;
+both roles read photos but not PIN hashes. Craig approved the two pinned routes and resumed
+the prior test-fixture stop. PR CI and production proof are next. AA11 and sitting 5 unstarted.
+See `docs/reviews/aa7-verification-2026-10-25.md` for acceptance evidence and every failure.
 Sitting 3 remains shipped: AA4 `6e9629d`, AA5 `8f47f39`, AA6 `54dbc07`.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
