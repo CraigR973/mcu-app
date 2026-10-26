@@ -6,7 +6,7 @@ AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112), merge 
 ([run 40388842106](https://github.com/CraigR973/mcu-app/actions/runs/40388842106)).
 Production API and web both served that exact merge SHA; db ready and all five integrations
 configured. Read-only checks preserved all four old loans and their copy places. AA7 shipped
-separately in PR #111 (`e6e5e16`). Final close-out completed after the separate login-navigation repair in PR #113 (`30f3607`), seven green jobs 40407597236. Sitting 5 has not started.
+separately in PR #111 (`e6e5e16`). The login-navigation repair in PR #113 (`30f3607`) passed seven PR jobs (40407597236), but close-out stopped again on merge CI 40409200298. Sitting 5 has not started.
 
 Craig approved the four-state story before implementation, then the single pinned path
 `/api/v1/loans/{loan_id}` before its inventory expectation changed. The previous three-attempt
@@ -148,7 +148,7 @@ documented dictation skip, and six cron cases. API 2,480 passed with nine known 
 socket skips; shared 156 and web 700 passed. No new local failure occurred during this
 repair. WebKit must be proved in CI because this Mac cannot run it.
 
-## Resumed close-out completed — 26 Oct
+## Resumed shipment verified before the second CI stop — 26 Oct
 
 Separate [PR #113](https://github.com/CraigR973/mcu-app/pull/113) merged `30f3607805bd94bc6441c88d1b783e6cb7e49dbf`
 after all seven jobs passed on its exact PR head
@@ -161,7 +161,7 @@ Production API and web served that exact merge SHA with db ok and push/AI/eBay/T
 configured. Read-only checks again preserve all four legacy Out loans and their copy places,
 leave all new metadata NULL, verify both read-role grants and withhold PIN/invite credentials.
 The final documentation-only head receives exact-head seven-job CI and production checks
-before the session ends. Group AA sitting 4 is complete; sitting 5 remains excluded.
+before the session ends. Group AA sitting 4 was subsequently blocked by the merge-CI failure below; sitting 5 remains excluded.
 The owner-only phone and physical checks remain unverified.
 
 Repair CI details: API 2,489 passed without skips, including all 16 derived-field trigger
@@ -170,3 +170,27 @@ two documented skips, cron six. Both sign-out and AA11 loan cases passed in ever
 Attempting to fetch a completed API job's log before the entire run finished returned
 “logs will be available when it is complete”; the complete logs were then retrieved
 after the run finished. No repair test failure or waived check occurred.
+
+## Second CI stop — Firefox offline navigation
+
+[Merge CI 40409200298](https://github.com/CraigR973/mcu-app/actions/runs/40409200298)
+failed one of seven jobs, end-to-end, on merge `30f3607805bd94bc6441c88d1b783e6cb7e49dbf`.
+Firefox's unchanged worker-enabled lost-answer replay case failed at `offline.spec.ts:81`,
+its first film-page navigation, with `page.goto: NS_BINDING_ABORTED`, before the replay
+scenario. Root cause is not established. Chromium 38, Firefox 36 / one failure / one
+documented skip, WebKit 36 / two documented skips, cron six. All sign-out and loan
+journeys passed in all three browsers. All six other CI jobs passed.
+
+The group stopped immediately after detecting the red. No offline-test edit, assertion
+change, retry, extra skip, rerun or further batch was started. Failed logs are saved in
+`/tmp/mcu-aa11-ci-fix-merge-failed.log`; downloaded failure artifacts are under ignored
+`scratchpad/aa11-verification/ci-fix-merge-failure/`. Keep this checkout and its local
+handoff. A separately authorised resume must investigate the Firefox trace and fix
+the defect on its own narrow branch before finishing close-out.
+
+The final documentation-only run 40409482751 was already running on
+`65abd7e1e4e20cd4332e91e6cb5d329531d62d7a`; its outcome cannot waive this failure.
+Both production hosts served that exact final SHA with full readiness. Read-only
+checks preserve all four old loans and locations, new metadata NULL, read-role grants
+and withheld credentials. This handoff is local only; no new deployment is triggered.
+Sitting 5 has not started. Real-phone observations remain open.
