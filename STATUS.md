@@ -25,8 +25,8 @@ and physical handovers remain owner observations.
 
 Failure logs and artifacts are retained under ignored
 `scratchpad/aa11-verification/ci-fix-merge-failure/`. The handoff is committed locally
-only, leaving main one commit ahead; production stays at `65abd7e`. Craig must resume
-before any further repair, rerun or close-out. The prior final-CI WebKit stop remains
+only, leaving main one commit ahead; production stays at `65abd7e`. Craig resumed on 26 Oct. A separate `fix/offline-navigation-readiness` repair now waits
+for Add a disc to render after worker-controlled reload; verification is pending. The prior final-CI WebKit stop remains
 in the verification report. No sitting 5 work has started.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
@@ -42,7 +42,7 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Wait for Craig to resume AA11 close-out.** Preserve this checkout and local handoff.
+**Finish the resumed offline-navigation repair and AA11 close-out.** Preserve this checkout and local handoff.
 Investigate Firefox's initial film navigation in the worker-enabled lost-answer replay
 case from merge CI 40409200298; repair it on a separate narrow fix branch, retaining all
 behaviour assertions and worker coverage. Do not rerun or weaken the gate to hide the

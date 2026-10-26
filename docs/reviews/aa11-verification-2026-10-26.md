@@ -194,3 +194,18 @@ Both production hosts served that exact final SHA with full readiness. Read-only
 checks preserve all four old loans and locations, new metadata NULL, read-role grants
 and withheld credentials. This handoff is local only; no new deployment is triggered.
 Sitting 5 has not started. Real-phone observations remain open.
+
+## Offline-navigation repair resumed — 26 Oct
+
+Craig explicitly resumed after the second CI stop. Latest main documentation CI
+40409482751 completed all seven jobs successfully at `65abd7e`, but that does not waive
+the observed merge failure. The existing checkout and local handoff are preserved on
+separate `fix/offline-navigation-readiness`.
+
+The Firefox trace shows `workerInControl` returning after reload and controller presence,
+while the reloaded Add a disc screen still imports its lazy dependencies. Navigation
+starts while CopyForm is pending; that chunk and the target film navigation both abort.
+The existing app handles failed lazy imports by reloading. The test now waits for the
+Add a disc heading, which renders after that screen's imports resolve, before leaving.
+The real worker, lost-answer interception, queue-state and one-copy assertions remain
+unchanged; no retries, extra skips or timeout changes. Verification is pending.
