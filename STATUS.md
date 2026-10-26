@@ -2,27 +2,33 @@
 
 ## Now
 
-**26 Oct: Group AA sitting 4 is complete — profile pictures and the four-state loan flow.**
-AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112) as `b1075ec`.
-All seven AA11 PR CI jobs pass (40388842106), including API tests on Postgres 17 with
-zero skips, migration reversal, deploy-image boot and Chromium/Firefox/WebKit/jobs. API and
-web were both verified serving the exact merge SHA, db ready and all integrations configured.
-This documentation-only close-out redeploys the same verified code.
+**26 Oct: AA11 is live; final close-out is blocked by red main CI. Do not start sitting 5.**
+AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in PR #112 (`b1075ec`). Both production
+hosts serve documentation commit `0d757ed052642983424d25e3b1c7b847c3fbe8a6`, db ready and
+push/AI/eBay/TMDB/Brave configured. Migration 069 is applied. All four existing loans and
+their copy places equal the baseline; new metadata remains NULL. Both read-role grants
+and withheld PIN/invite credentials are verified. No live synthetic loan/push/backfill ran.
 
-Loans now run Asked for → Out → Back, not shelved → Shelved. Requests carry needed-by and
-push the other person; only Taken records the lent date. Either person records the return;
-To put back confirms or changes the shelf. Both people retain their existing shelf-edit
-access. Reborrowing from the return pile preserves history without duplicate put-back tasks.
-Migration 069 leaves all four old loans Out, preserving their fields and copy places, with
-new metadata NULL. Both read roles see new columns but cannot read PIN hashes/invite tokens.
+PR CI 40388842106 and merge CI 40390679557 both passed all seven jobs. Final documentation
+CI **40390928359 failed 1 of 7 jobs**, end-to-end: WebKit hit `page.goto: WebKit encountered
+an internal error` opening `/you` in the unchanged sign-out case, before Sign out was
+clicked. Final counts: Chromium 38, Firefox 37 / documented dictation skip, WebKit 35 /
+1 failure / 2 documented skips, cron six. AA11's loan journey passed in all three browsers.
+The code/source digest is identical to the green PR and merge; do not infer a harmless
+flake or waive the red. Final close-out remains incomplete.
 
-Craig approved the story and single route addition before changes, then resumed after the
-three-attempt stop. The label fix retained every behaviour assertion. Full local gate passed:
-API 2,480 / 9 known local skips, shared 156, web 700; Chromium 38, Firefox 37 plus documented
-skip, six cron cases. CI ran the nine local skips. No live loan/shelf backfill or fabricated
-production push occurred. Real-phone profile-picture selection, request push receipt and
-physical handovers remain owner observations. Sitting 5 has not started.
-See `docs/reviews/aa11-verification-2026-10-26.md` for criteria and every fixed failure.
+`group-start.md` requires stopping when CI is red. Failure artifacts are downloaded under
+ignored `scratchpad/aa11-verification/final-ci-failure/`; the verification report records
+the exact failure and resume point. Craig resumed on 26 Oct; a separate `fix/login-navigation-readiness` branch now isolates
+login tests from worker takeover and waits for Home before leaving. Full local gate and
+Chromium/Firefox/cron passed; seven-job PR CI including WebKit remains pending.
+No later sitting has been started.
+A documentation handoff is committed locally only, leaving local main ahead of origin by one
+commit; production remains at `0d757ed`. The resumed repair preserves that handoff; production remains at `0d757ed`.
+
+Craig's story and route-inventory approvals remain resolved. Loan requests, physical handover,
+Back without shelving, shelf confirmation and reborrowing are implemented. Real-phone photo
+selection, request push receipt and physical handovers remain owner observations.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -37,9 +43,11 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Stop after sitting 4. Do not start sitting 5.** Its collection/assistant reviews need a
-separate instruction. AA10b's independent 1–2 Nov owner checkpoint remains open; the real
-phone observations above also remain with Craig.
+**Finish the resumed AA11 CI repair and close-out.** Preserve the existing checkout and local handoff.
+Investigate the final CI WebKit sign-out navigation failure from its trace; fix a pre-existing
+red on main on its own narrow `fix/` branch, retaining every assertion and no retries/skips.
+Then prove a green full gate/CI and refresh exact served SHA/readiness/data preservation before
+closing AA11. Do not start sitting 5. AA10b's 1–2 Nov owner checkpoint stays independent.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -431,6 +439,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — Final AA11 close-out stopped on red CI after shipment.** PR #112 and merge CI
+  green; API/web serve `0d757ed` ready, all four old loans preserved. Final documentation CI
+  40390928359 failed on WebKit's internal navigation error opening You in the unchanged
+  sign-out case. Loan cases pass in all three browsers. Honoured group-start's CI-red stop;
+  downloaded evidence and saved a local-only handoff. No retry or sitting 5 work.
 
 - **26 Oct — Group AA sitting 4 complete.** AA11 PR #112 merged `b1075ec` after the approved
   story, narrow route-inventory gate and resumed browser verification. Full local/seven-job

@@ -4516,7 +4516,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 | ~~AA10a~~ | ~~23, 24: record used listings and their sales, value on sales~~ — **shipped 22 Oct `eb315c2`** ([PR #100](https://github.com/CraigR973/mcu-app/pull/100)); Craig's first live pass read back: 598 searches, 6,179 active listings, 0 sold yet, 1,399 pairs still due under the daily cap | 🔴 | Opus 5 · `xhigh` | GPT-5.6 Sol · Extra High |
 | AA10b | 23, 24: deals and values on the used stand-in figure — **code live 23 Oct `deccd87`** ([PR #101](https://github.com/CraigR973/mcu-app/pull/101)); Craig started the one-time re-price 23 Oct: 748 pairs checked, 0 failed, 719 due. Final Home after total remains the checkpoint after the 1–2 Nov scheduled runs | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | AA10c | 23: the stand-in settled from recorded sales | 🟢 | Opus 5 · `high` | GPT-5.6 Sol · High |
-| ~~AA11~~ | ~~25: lend and borrow as it happens — asked for, out, back, shelved~~ — **shipped 26 Oct `b1075ec`** ([PR #112](https://github.com/CraigR973/mcu-app/pull/112)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| AA11 | 25: lend and borrow as it happens — asked for, out, back, shelved — **code live 26 Oct `b1075ec`; final close-out blocked by CI 40390928359** ([PR #112](https://github.com/CraigR973/mcu-app/pull/112)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 
 *Why those efforts.* AA10a adds a table of eBay data under a licence risk (#254, #289), a job
 and about 600 calls a day: an irreversible-feeling store and a public provider, so `xhigh`.
@@ -4669,7 +4669,7 @@ postage in, until AA10c settles it from recorded sales.
   reporting Home's total before and after.
 - Tests for the comparison. Gate green.
 
-### ~~AA11 — Lend and borrow as it happens~~ 🟡 **shipped 26 Oct (`b1075ec`, [PR #112](https://github.com/CraigR973/mcu-app/pull/112))**
+### AA11 — Lend and borrow as it happens 🟡 **code live; close-out blocked — 26 Oct (`b1075ec`, [PR #112](https://github.com/CraigR973/mcu-app/pull/112))**
 - **25.** A loan runs **asked for → out → back, not shelved → shelved**. Craig asks in the app
   for a film with a needed-by date (Mark gets a push; Craig's word, 21 Oct), or records taking it
   himself. Either person
@@ -4679,13 +4679,13 @@ postage in, until AA10c settles it from recorded sales.
   (state, needed-by, returned-by, shelved-at, all nullable) granted as above.
 - Tests (the e2e loans case extended). Gate green.
 
-**AA11 close-out:** story and one pinned PATCH path approved before their changes. Full local
+**AA11 shipment proof (final close-out blocked):** story and one pinned PATCH path approved before their changes. Full local
 gate, Chromium/Firefox/jobs, and all seven PR CI jobs (40388842106) pass, including
 WebKit, Postgres 17 without skips, migration reversal and deploy-image boot. Production API
 and web serve `b1075ec`, db ready and all integrations configured. Migration 069 preserved
 all four old loans and their copy places, with new metadata NULL; both read roles can read
 new columns but not PIN hashes or invite tokens. Real-phone push receipt remains unverified.
-See `docs/reviews/aa11-verification-2026-10-26.md`. Sitting 4 is complete; do not start sitting 5.
+See `docs/reviews/aa11-verification-2026-10-26.md`. Final documentation CI 40390928359 subsequently failed on WebKit opening You in the unchanged sign-out test; the loan flow passed in all three browsers. Group stopped; close-out waits for Craig to resume. Do not start sitting 5.
 
 ---
 
@@ -4742,7 +4742,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`) · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 4 complete 26 Oct: AA7 `e6e5e16`, AA11 `b1075ec`. Story and route gates approved; automated and production proofs complete. Do not start sitting 5.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → AA11 (code `b1075ec`; final CI blocked) · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 4 stopped on final CI: AA7 shipped; AA11 code live `b1075ec`, close-out blocked by WebKit sign-out navigation in 40390928359. Production ready and four loans preserved. Wait for Craig to resume; do not start sitting 5.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
