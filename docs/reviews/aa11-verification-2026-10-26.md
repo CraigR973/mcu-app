@@ -208,4 +208,10 @@ starts while CopyForm is pending; that chunk and the target film navigation both
 The existing app handles failed lazy imports by reloading. The test now waits for the
 Add a disc heading, which renders after that screen's imports resolve, before leaving.
 The real worker, lost-answer interception, queue-state and one-copy assertions remain
-unchanged; no retries, extra skips or timeout changes. Verification is pending.
+unchanged; no retries, extra skips or timeout changes.
+
+The clean repair source `123f24b8b44a394c7ca9c0542df7f12f77931d12` passes all ten local
+gate commands and E2E typecheck. API 2,480 passed / nine known local socket skips,
+shared 156 and web 700 passed. Both focused offline cases passed in Chromium and
+Firefox; full Chromium 38, Firefox 37 plus its documented dictation skip, cron six.
+No local test failure occurred on this repair. CI must prove WebKit and Postgres 17.

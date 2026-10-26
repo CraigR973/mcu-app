@@ -26,7 +26,8 @@ and physical handovers remain owner observations.
 Failure logs and artifacts are retained under ignored
 `scratchpad/aa11-verification/ci-fix-merge-failure/`. The handoff is committed locally
 only, leaving main one commit ahead; production stays at `65abd7e`. Craig resumed on 26 Oct. A separate `fix/offline-navigation-readiness` repair now waits
-for Add a disc to render after worker-controlled reload; verification is pending. The prior final-CI WebKit stop remains
+for Add a disc to render after worker-controlled reload. Ten local commands and full
+Chromium/Firefox/cron passed; seven-job PR CI remains pending. The prior final-CI WebKit stop remains
 in the verification report. No sitting 5 work has started.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
