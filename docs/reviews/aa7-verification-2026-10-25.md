@@ -2,9 +2,10 @@
 
 ## Result
 
-AA7 has passed every local batch gate and the available browser/job suites. PR CI and
-production shipment are next. AA11 implementation has not started; its four-state story
-must be signed off first. Sitting 5 is excluded.
+AA7 shipped in [PR #111](https://github.com/CraigR973/mcu-app/pull/111), merge
+`e6e5e1666819ce14e72bc047b15e32e3372436e6`. All seven PR CI jobs passed. Production API and web serve that
+SHA; db is ready and all integrations are configured. AA11 implementation has not started;
+its four-state story must be signed off first. Sitting 5 is excluded.
 
 ## Agreed acceptance, verbatim
 
@@ -89,3 +90,26 @@ private mutable reads, and initials for old offline answers whose actor id is un
 Real iPhone photo selection/cropping is unverified. No signed-in production upload is claimed.
 Existing owner-only device/push/speech acceptance remains owner-held. No AA10b eBay run or
 collection refresh was started. AA11 waits for its story sign-off; sitting 5 stays unstarted.
+
+## Shipment evidence, 26 Oct
+
+PR source `7f17dfffd7b3322308df40ebba43397a2606750f`, CI run 40299605767:
+all seven jobs passed, including Postgres 17, full migration reversal, the deploy image,
+web build, audits and all browsers/jobs. The source tree matches the locally verified code;
+only evidence/status/decision documentation followed the clean local gate.
+
+The GitHub connector refused PR creation with 403 (integration access); the existing gh
+CLI created the PR without any credential or permission change. The PR was attached to
+the chat. The same authorised CLI performs its merge.
+
+Production health and web version report the merge SHA, readiness is db ok with push, AI,
+eBay, TMDB and Brave configured. Read-only catalogue/row-count results are recorded at close-out.
+No signed-in production photo upload was made; anonymous photo reads/writes are checked.
+The close-out documentation commit is followed by a final exact-SHA CI/deployment check.
+
+PR CI totals: API 2,482 passed with zero skips; all 16 derived-field trigger tests ran.
+Shared 155; web 693. Chromium 37; Firefox 36 plus its documented dictation skip;
+WebKit 35 plus its two documented platform skips; cron six. No new skip was introduced.
+Read-only production proof: revision 068, zero photo rows, catalogue/watch/night counts
+unchanged from the before snapshot. Both roles read profile_photos and cannot read PIN hashes
+or night invite tokens. Anonymous GET, PUT and DELETE each return 401.

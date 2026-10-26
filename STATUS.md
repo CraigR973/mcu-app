@@ -2,15 +2,15 @@
 
 ## Now
 
-**26 Oct: Craig authorised resuming AA7; implementation is under full verification.**
-Branch `feat/aa7-profile-pictures` has passed every local gate: API 2,473 passed with nine
-existing Unix-socket import-guard skips; shared 155; web 693; lint/typecheck/build green.
-Chromium 37, Firefox 36 plus its documented dictation skip, cron six. Both people's photo
-journeys pass, with 375/1,280 px screenshots inspected. Local migration 068 reverses/reapplies;
-both roles read photos but not PIN hashes. Craig approved the two pinned routes and resumed
-the prior test-fixture stop. PR CI and production proof are next. AA11 and sitting 5 unstarted.
-See `docs/reviews/aa7-verification-2026-10-25.md` for acceptance evidence and every failure.
-Sitting 3 remains shipped: AA4 `6e9629d`, AA5 `8f47f39`, AA6 `54dbc07`.
+**26 Oct: AA7 profile pictures are shipped; AA11 waits for its story sign-off.**
+[PR #111](https://github.com/CraigR973/mcu-app/pull/111), merge `e6e5e16`, gives each person
+Choose photo / Use my initial on You, and pictures on the top bar, sidebar, You, activity
+and movie night. Pictures stay private, caller-editable and capped at 300 KiB in Postgres.
+Migration 068 adds only the photo table and guarded read-role grants; credentials stay
+withheld. All seven PR CI jobs passed, including WebKit and Postgres 17. Production API and
+web serve the merge SHA; db ready and every integration configured. Real-phone selection
+remains unverified. AA11 implementation and sitting 5 are unstarted.
+See `docs/reviews/aa7-verification-2026-10-25.md` for criterion evidence and fixed failures.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -21,15 +21,14 @@ The first run spent 748 of its 750-call budget, checked 748 pairs without failur
 left 719 due. Home's interim total is £15,961.05 across 1,314 priced discs, 0 sales-backed.
 The next scheduled valuation runs are 1 and 2 Nov at 04:00 UTC; each can spend up to 750
 calls for its UTC day. Read back the final Home total and priced/sales-backed counts when
-none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 is now authorised.
+none are due; only then close AA10b. This owner checkpoint remains independent of sitting 4.
 
 ## Next
 
-**Finish AA7's verification and shipment in the existing checkout.** Craig resumed it on
-26 Oct. Keep `feat/aa7-profile-pictures`; do not recreate or discard its work.
-Complete full gate, browser suite, PR, CI and production verification, then clean main.
-Before any AA11 implementation, show Craig the four-state loan story and obtain sign-off.
-Do not start sitting 5. AA10b's independent 1–2 Nov owner checkpoint remains open.
+**Show Craig AA11's four-state loan story and obtain sign-off before implementation.**
+AA7 has shipped and its ledger is closed. Read the current loan paths, present the short
+flow, then stop for Craig's decision. Do not start sitting 5. AA10b's independent 1–2 Nov
+owner checkpoint remains open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -421,6 +420,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — AA7 shipped (`e6e5e16`, PR #111); AA11 story checkpoint is next.** Local gate:
+  API 2,473 plus nine documented Unix-socket import-guard skips, shared 155, web 693;
+  Chromium 37, Firefox 36 plus its dictation skip, jobs six. All seven PR CI jobs passed.
+  API/web exact merge SHA and complete readiness verified. Local photo reversal/grants and
+  credential-withholding checks passed; real-phone selection remains unverified. The prior
+  rendering failure was a URL-constructor test stub, corrected after Craig resumed. Migration
+  formatting was fixed; connector PR creation 403 used the configured gh CLI. AA11 awaits
+  story sign-off, and sitting 5 is unstarted.
 
 - **26 Oct — AA7's two private photo routes approved and recorded.** Updated only the
   pinned path inventory and generated OpenAPI description; no existing path changed.

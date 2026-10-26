@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA6,
-deployed on 25 Oct; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA7,
+deployed on 26 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -122,7 +122,7 @@ Home can deal only films unwatched by the current person. A night applies its fi
 a seeded random pick is promoted through AA4 without losing votes. A run creates no database
 rows, provider calls or jobs. Existing API authentication and night membership guard the draw.
 
-## AA7, local implementation under verification (26 Oct)
+## AA7, shipped 26 Oct (`e6e5e16`)
 
 ```mermaid
 flowchart TB
