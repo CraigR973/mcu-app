@@ -2,17 +2,28 @@
 
 ## Now
 
-**26 Oct: AA7 is complete; AA11's four-state story is approved and implementation is in progress.**
-AA7 shipped in [PR #111](https://github.com/CraigR973/mcu-app/pull/111), merge `e6e5e16`.
-The final close-out commit `d19b7d8` passed all seven main CI jobs (40304689184), including
-2,482 API tests with zero skips and Chromium/Firefox/WebKit/jobs. Both production hosts
-serve that exact commit; db is ready and all integrations configured. Pictures remain
-private, caller-editable and capped at 300 KiB. Real-phone selection remains unverified.
+**26 Oct: AA7 shipped; AA11 is built but unshipped, stopped after three browser failures.**
+AA7 PR #111 merged as `e6e5e16`; production API/web serve close-out `d19b7d8`, with all
+seven CI jobs green (40304689184), db ready and all integrations configured. Real-phone
+photo selection remains unverified.
 
-`feat/aa11-lend-and-borrow` is implementing the four-state story approved by Craig on
-26 Oct. The four existing loans must stay Out, without changing their dates or shelves.
-Requests have no lent date until handover; needed-by stays separate from return-due.
-Full verification and shipment remain outstanding. Sitting 5 remains excluded.
+Craig approved AA11's four-state story and its single pinned PATCH path before their
+respective changes. Existing branch `feat/aa11-lend-and-borrow` holds implementation
+`1eefc98` plus row-state presentation fix `fbcc1c9`. Nothing from AA11 has been pushed,
+merged or deployed. The four production loans were re-read: all remain Out at revision 068.
+No live loan, shelf or notification was written. Sitting 5 remains excluded.
+
+The AA11 browser check failed three times: preferences setup used PATCH instead of PUT
+(fixed); exact state text shared a node with borrower/date (fixed); current failure is exact
+label lookup for Section during shelf change. Its accessibility snapshot shows combobox
+name Section and a Back option, but `getByLabel('Section', {exact:true})` times out. Do not
+claim the shelf confirmation flow is proved. Preserve the exact behavioural assertions.
+`group-start.md` requires stopping after three attempts; wait for Craig to resume.
+
+Local API suite: 2,480 passed, 9 known Unix-socket skips; ruff/format/mypy pass. Earlier shared
+156 and focused loan UI 16 tests pass; full workspace gate was interrupted at the stop, so
+there is no complete green gate. Full-browser/cron runs, seven-job PR CI and production
+close-out remain unrun. Handoff: `docs/reviews/aa11-verification-2026-10-26.md`.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -27,9 +38,11 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Complete AA11 only in `feat/aa11-lend-and-borrow`.** Follow the full gate/PR/production
-close-out and preserve all four existing loans. Do not start sitting 5. AA10b's independent
-1–2 Nov owner checkpoint remains open.
+**Wait for Craig to resume AA11 only.** Reuse `feat/aa11-lend-and-borrow`; fix the shelf
+Section label lookup without weakening behaviour assertions. Then run the complete clean-tree
+local gate and Chromium/Firefox/jobs, seven-job PR CI including WebKit, and normal production
+close-out with exact SHA/readiness and read-only proof that all four old loans are unchanged.
+Do not start sitting 5. AA10b's independent 1–2 Nov checkpoint stays open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -421,6 +434,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — AA11 built, not shipped; stopped at the group command's three-attempt limit.**
+  Story and one pinned route approved before implementation. Local API 2,480 passed / 9 known
+  skips; types and focused UI green. Browser reached request push, handover and return, then
+  failed selecting the shelf Section by exact label. Full gate and close-out incomplete.
+  Existing branch retained; four production loans unchanged/Out. Sitting 5 excluded.
 
 - **26 Oct — AA7 final proof complete; AA11 story prepared, waiting for Craig.** Final main
   `d19b7d8`, CI 40304689184, all seven jobs green; both production hosts exact SHA and full

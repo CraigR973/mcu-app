@@ -4684,7 +4684,9 @@ postage in, until AA10c settles it from recorded sales.
 approved by Craig before implementation (`OWNER-ACTIONS.md` 37, resolved). Preflight
 found four current open loans; the proposal preserves them as out, leaves a request's
 lent date unset until handover, and keeps needed-by separate from return-due. Sitting 5
-remains excluded.
+remains excluded. Implementation is local only (`1eefc98`, `fbcc1c9`), stopped after three
+Chromium loan-journey failures. Current blocker: exact Section label lookup during shelf change.
+Full gate/PR/shipment outstanding; resume only at Craig's instruction.
 
 ---
 

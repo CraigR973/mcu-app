@@ -18,7 +18,9 @@ Main baseline `d19b7d82b36f36f671486b8e664eb4734e7746d9`, CI 40304689184: seven 
 - Compatible migration, both read roles granted, credential grants withheld.
 - API/shared/web full gate and browser/cron journeys green before normal close-out.
 
-Verification is in progress; no shipment claimed yet.
+**Stopped, unshipped.** `group-start.md` says "Three attempts exhausted on the same failing
+check" is an absolute stop. Three Chromium loan-journey runs failed; no fourth attempt made.
+The implementation is committed locally; no AA11 push, PR, merge or deployment occurred.
 
 ## Implementation choices
 
@@ -48,3 +50,30 @@ tests skip on the local Unix-socket database URL; real Postgres 17 CI must run t
 - OpenAPI snapshot check caught an export preceding a final handler-docstring change; regenerated it.
 - First browser setup used PATCH for notification preferences; the existing contract is PUT. Corrected the test setup.
 - Second browser run reached Back with correct data, but the state shared an unlabelled text node with borrower/date. Gave the state its own visible span; retained the exact visible-state assertion.
+
+- Third browser run reached shelf confirmation but exact Section label lookup timed out.
+  Its accessibility snapshot exposes a combobox named Section and the Back option. The
+  control uses a wrapping label containing all options; explicit label/control association
+  is the next investigation. The behaviour assertion has not been removed or loosened.
+
+## Evidence at stop
+
+- Local full API: **2,480 passed, 9 known Unix-socket skips**, 30 warnings, 187.83 seconds.
+  The 16 derived-field trigger tests run. CI Postgres 17 verification is still outstanding.
+- API ruff, format and mypy pass. OpenAPI/authentication focused suite: 17 passed.
+- Shared: 156 passed. Focused loan UI: 16 passed. An earlier workspace run passed 696 web
+  tests before the four new LoanActions tests were added; it is not the final full gate.
+- Current clean-tree full-gate runner was interrupted after the browser stop; remaining
+  workspace/build checks are not claimed. CI and final browser/cron gate have not run.
+- Browser proved request with no lent date, one decrypted fake push to Mark, Taken, and
+  Craig's return to Back, not shelved. Shelf change/confirmation remains unproved in-browser.
+- Preserved third-run trace, context and requested-state mobile screenshot in ignored
+  `scratchpad/aa11-verification/stopped-browser-3/`. No invented production data.
+
+## Resume point
+
+Reuse the existing branch and commits. Correct the exact Section label lookup, preserve the
+four-state and shelf assertions, rerun the full local gate plus Chromium/Firefox/jobs, then
+seven-job PR CI including WebKit. Only green gates authorise normal close-out. Verify exact
+API/web SHA, readiness, migration/grants and all four pre-existing loans unchanged via the
+read-only baseline comparison. No sitting 5 work and no real synthetic loan/push/backfill.
