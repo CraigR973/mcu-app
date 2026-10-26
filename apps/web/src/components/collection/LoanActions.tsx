@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Loan } from '@mcu/shared'
 
@@ -10,6 +10,8 @@ import { queryErrorMessage } from '@/lib/query-state'
 /** The physical actions are shared by Loans and each film's copy card. */
 export function LoanActions({ loan }: { loan: Loan }) {
   const client = useQueryClient()
+  const sectionId = useId()
+  const shelfId = useId()
   const state = loanState(loan)
   const [puttingBack, setPuttingBack] = useState(false)
   const [changing, setChanging] = useState(false)
@@ -39,15 +41,17 @@ export function LoanActions({ loan }: { loan: Loan }) {
             Change shelf
           </label>
           {changing ? <>
-            <label className="block text-sm">Section
-              <select className="mt-1 min-h-11 w-full rounded-md border border-input bg-background px-3" value={section} required disabled={save.isPending} onChange={(event) => { setSection(event.target.value); setShelf('') }}>
+            <div>
+              <label htmlFor={sectionId} className="block text-sm">Section</label>
+              <select id={sectionId} className="mt-1 min-h-11 w-full rounded-md border border-input bg-background px-3" value={section} required disabled={save.isPending} onChange={(event) => { setSection(event.target.value); setShelf('') }}>
                 <option value="">Choose a section</option>
                 {sections.map((name) => <option key={name}>{name}</option>)}
               </select>
-            </label>
-            <label className="block text-sm">Shelf or side (optional)
-              <Input value={shelf} maxLength={50} disabled={save.isPending} placeholder={section === 'Lounge' ? 'Left or Right' : 'e.g. 2nd'} onChange={(event) => setShelf(event.target.value)} />
-            </label>
+            </div>
+            <div>
+              <label htmlFor={shelfId} className="block text-sm">Shelf or side (optional)</label>
+              <Input id={shelfId} value={shelf} maxLength={50} disabled={save.isPending} placeholder={section === 'Lounge' ? 'Left or Right' : 'e.g. 2nd'} onChange={(event) => setShelf(event.target.value)} />
+            </div>
             {facets.isError ? <p role="alert" className="text-sm text-destructive">Could not load places. Try again.</p> : null}
           </> : null}
           <div className="flex flex-wrap gap-2">

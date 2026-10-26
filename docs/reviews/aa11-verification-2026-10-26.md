@@ -77,3 +77,11 @@ four-state and shelf assertions, rerun the full local gate plus Chromium/Firefox
 seven-job PR CI including WebKit. Only green gates authorise normal close-out. Verify exact
 API/web SHA, readiness, migration/grants and all four pre-existing loans unchanged via the
 read-only baseline comparison. No sitting 5 work and no real synthetic loan/push/backfill.
+
+
+## Resumed at Craig's instruction, 26 Oct
+
+The previous three-attempt stop was honoured. Craig then explicitly said "resume AA11".
+Section and shelf now use separate labels with explicit, unique control associations. This
+keeps the exact browser lookup and every behavioural assertion intact. Full verification
+restarts from a clean commit; no new live-data or sitting scope is authorised.

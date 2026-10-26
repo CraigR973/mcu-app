@@ -2,7 +2,7 @@
 
 ## Now
 
-**26 Oct: AA7 shipped; AA11 is built but unshipped, stopped after three browser failures.**
+**26 Oct: AA7 shipped; Craig resumed AA11 verification after its browser stop.**
 AA7 PR #111 merged as `e6e5e16`; production API/web serve close-out `d19b7d8`, with all
 seven CI jobs green (40304689184), db ready and all integrations configured. Real-phone
 photo selection remains unverified.
@@ -18,7 +18,8 @@ The AA11 browser check failed three times: preferences setup used PATCH instead 
 label lookup for Section during shelf change. Its accessibility snapshot shows combobox
 name Section and a Back option, but `getByLabel('Section', {exact:true})` times out. Do not
 claim the shelf confirmation flow is proved. Preserve the exact behavioural assertions.
-`group-start.md` requires stopping after three attempts; wait for Craig to resume.
+Craig explicitly resumed AA11. Section and shelf controls now have separate, explicit labels;
+verification is restarting, retaining all behaviour assertions.
 
 Local API suite: 2,480 passed, 9 known Unix-socket skips; ruff/format/mypy pass. Earlier shared
 156 and focused loan UI 16 tests pass; full workspace gate was interrupted at the stop, so
@@ -38,7 +39,7 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Wait for Craig to resume AA11 only.** Reuse `feat/aa11-lend-and-borrow`; fix the shelf
+**Complete the resumed AA11 verification and shipment only.** Reuse `feat/aa11-lend-and-borrow`; fix the shelf
 Section label lookup without weakening behaviour assertions. Then run the complete clean-tree
 local gate and Chromium/Firefox/jobs, seven-job PR CI including WebKit, and normal production
 close-out with exact SHA/readiness and read-only proof that all four old loans are unchanged.
