@@ -936,6 +936,8 @@ export const activityEventSchema = z.object({
   kind: activityKindSchema,
   at: z.string(),
   actorName: z.string().nullable(),
+  // Older offline activity answers carry names only.
+  actorId: z.string().uuid().nullable().default(null),
   movieId: z.string().uuid().nullable(),
   movieTitle: z.string().nullable(),
   posterPath: z.string().nullable(),

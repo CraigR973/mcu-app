@@ -30,6 +30,11 @@ describe('the worker keeps API reads', () => {
     expect(read(`${api}/health`)).toBe(false)
   })
 
+  it('never stores mutable profile photos for offline reads', () => {
+    expect(read(`${api}/api/v1/profile-photos/person`)).toBe(false)
+    expect(read(`${page}/api/v1/profile-photos/person`, 'GET', undefined)).toBe(false)
+  })
+
   it('reads the origin from the configured base, path and all', () => {
     expect(apiOriginFor(`${api}/`, page)).toBe(api)
     expect(apiOriginFor('not a url', page)).toBe(page)

@@ -2,16 +2,18 @@
 
 ## Now
 
-**26 Oct: AA7's two route additions are approved and recorded; AA7 remains unshipped.**
+**26 Oct: Craig authorised resuming AA7; implementation is under full verification.**
 Branch `feat/aa7-profile-pictures` holds AA7's photo migration, API, shared avatar, You
 editor, screen integration and tests. Five new API tests pass against disposable local
 Postgres; the full gate has not run. Two avatar unit tests fail (no image renders after
 mocked bytes), and activity integration fails typecheck because activity has no actor id.
-Three avatar test invocations reproduced the rendering failure, so `group-start.md`'s
-three-attempt stop applies. Craig approved AA7's two paths on 26 Oct; the exact pinned
-inventory and OpenAPI snapshot now include them. All 16 health/snapshot tests pass.
-The existing paths and exact-set assertion are unchanged. No PR, push, merge or deployment.
-AA11 and sitting 5 remain unstarted.
+The 25 Oct avatar failure was the test replacing the URL constructor: preserving the
+constructor makes all 4 avatar tests pass. Private photo reads now bypass the offline cache;
+all 10 focused avatar/cache checks pass. Activity carries a stable actor id, preserving old
+offline answers with a null default. Craig approved the 2 route additions on 26 Oct.
+Local migration 068 reverses/reapplies; both read roles can read photos and cannot read
+profiles.pin_hash. Full gate, browser suite, CI and production proof remain pending.
+No PR, push, merge or deployment. AA11 and sitting 5 remain unstarted.
 See `docs/reviews/aa7-verification-2026-10-25.md` for evidence and remaining work.
 Sitting 3 remains shipped: AA4 `6e9629d`, AA5 `8f47f39`, AA6 `54dbc07`.
 
@@ -28,9 +30,9 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Resume AA7 debugging only after Craig authorises resuming past the three-attempt stop.**
-The two route additions were approved and recorded on 26 Oct. Reuse `feat/aa7-profile-pictures`; do not recreate or discard its work.
-Finish AA7's full gate, PR, CI and production verification, then return to clean main.
+**Finish AA7's verification and shipment in the existing checkout.** Craig resumed it on
+26 Oct. Keep `feat/aa7-profile-pictures`; do not recreate or discard its work.
+Complete full gate, browser suite, PR, CI and production verification, then clean main.
 Before any AA11 implementation, show Craig the four-state loan story and obtain sign-off.
 Do not start sitting 5. AA10b's independent 1–2 Nov owner checkpoint remains open.
 

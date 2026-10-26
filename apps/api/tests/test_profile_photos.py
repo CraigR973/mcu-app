@@ -62,7 +62,9 @@ async def test_each_person_uploads_replaces_and_removes_their_own_photo(
     a = await person(db, role)
     b = await person(db, UserRole.viewer)
     async with client(db, a) as c:
-        assert (await c.get(f"/api/v1/profile-photos/{a.id}")).status_code == 404
+        missing = await c.get(f"/api/v1/profile-photos/{a.id}")
+        assert missing.status_code == 404
+        assert missing.headers["cache-control"] == "private, no-store"
         assert (
             await c.put("/api/v1/profile-photos/me", files={"file": image_bytes()})
         ).status_code == 204

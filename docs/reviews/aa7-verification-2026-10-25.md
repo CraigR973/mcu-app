@@ -1,6 +1,21 @@
 # AA7 verification and stopped handoff — 25 Oct 2026
 
-## Result
+## Resumed 26 Oct
+
+Craig approved the two route additions and then explicitly resumed the stopped run.
+The earlier stop below is historical. The avatar issue was the new test replacing the
+URL constructor with an object, so happy-dom rejected the image URL; spying only on
+createObjectURL/revokeObjectURL preserves real URL validation. The original image-display,
+error-fallback and cleanup assertions remain. No failing expectation was loosened.
+
+Activity now has actorId beside actorName, with nullable/default-null shared parsing for
+older offline answers. Both photo and activity API checks pass: 23 tests. All 10 focused
+avatar/cache checks pass. Web and e2e typechecks pass. Migration 068 reverses/reapplies on
+local throwaway Postgres; both read roles can read photos and cannot read the PIN hash.
+Private photo reads (including missing pictures) are no-store and excluded from the offline
+cache. Browser and full-gate verification are in progress; nothing has shipped yet.
+
+## Original stop on 25 Oct
 
 AA7 profile pictures are implemented locally on `feat/aa7-profile-pictures` but are not
 verified, pushed, merged or deployed. AA11 has not started. Sitting 5 has not started.

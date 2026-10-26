@@ -312,6 +312,7 @@ async def test_the_feed_shows_watches_newest_first(
     mine = next(e for e in body["items"] if e["movieTitle"] == "A Film Watched For The Feed")
     assert mine["kind"] == "watched"
     assert mine["actorName"] == admin.display_name
+    assert mine["actorId"] == str(admin.id)
 
 
 async def test_an_audit_row_becomes_a_feed_event_naming_its_film(
@@ -339,6 +340,7 @@ async def test_an_audit_row_becomes_a_feed_event_naming_its_film(
     body = (await client.get("/api/v1/activity?limit=100")).json()
     mine = next(e for e in body["items"] if e["movieTitle"] == "A Newly Catalogued Disc")
     assert mine["kind"] == "added"
+    assert mine["actorId"] == str(admin.id)
     assert mine["movieId"] == str(movie.id)
 
 

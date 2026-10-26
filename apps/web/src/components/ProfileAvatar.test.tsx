@@ -13,9 +13,11 @@ beforeEach(() => {
   api.fetchProfilePhoto.mockResolvedValue(null)
   api.uploadProfilePhoto.mockResolvedValue(undefined)
   api.removeProfilePhoto.mockResolvedValue(undefined)
-  vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:private'), revokeObjectURL: vi.fn() })
+  // Preserve URL's constructor: happy-dom uses it to validate an img's source.
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:private')
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined)
 })
-afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+afterEach(() => { cleanup(); vi.restoreAllMocks() })
 
 function show(editor = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })

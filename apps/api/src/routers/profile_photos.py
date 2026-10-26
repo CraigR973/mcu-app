@@ -62,7 +62,9 @@ async def read_photo(profile_id: uuid.UUID, _user: CurrentUser, db: Database) ->
         )
     ).scalar_one_or_none()
     if photo is None:
-        raise HTTPException(404, "No profile photo.")
+        raise HTTPException(
+            404, "No profile photo.", headers={"Cache-Control": "private, no-store"}
+        )
     # Mutable URL: always re-read, including after deletion. No public or offline cache.
     return Response(
         photo.data,

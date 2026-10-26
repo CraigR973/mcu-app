@@ -933,6 +933,13 @@ describe('statsSchema', () => {
 })
 
 describe('activitySchema', () => {
+  it('keeps stable actor identity while accepting older offline events', () => {
+    const event = { id: 'watch:1', kind: 'watched', at: '2026-10-26T09:00:00Z', actorName: 'Mark', movieId: null, movieTitle: null, posterPath: null, detail: null }
+    const actorId = '3f2504e0-4f89-11d3-9a0c-0305e82c3301'
+    expect(activitySchema.parse({ items: [{ ...event, actorId }], total: 1 }).items[0].actorId).toBe(actorId)
+    expect(activitySchema.parse({ items: [event], total: 1 }).items[0].actorId).toBeNull()
+  })
+
   it('parses an event with no film behind it', () => {
     // An audit row can point at a table that has no poster — a box set, say.
     const parsed = activitySchema.parse({

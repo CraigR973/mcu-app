@@ -3,6 +3,18 @@
   "schemas": {
    "ActivityEvent": {
     "properties": {
+     "actorId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actorid"
+     },
      "actorName": {
       "anyOf": [
        {
