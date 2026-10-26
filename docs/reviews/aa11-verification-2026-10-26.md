@@ -6,7 +6,7 @@ AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112), merge 
 ([run 40388842106](https://github.com/CraigR973/mcu-app/actions/runs/40388842106)).
 Production API and web both served that exact merge SHA; db ready and all five integrations
 configured. Read-only checks preserved all four old loans and their copy places. AA7 shipped
-separately in PR #111 (`e6e5e16`). Sitting 4 is complete; sitting 5 has not started.
+separately in PR #111 (`e6e5e16`). Final close-out is blocked by red main CI; sitting 5 has not started.
 
 Craig approved the four-state story before implementation, then the single pinned path
 `/api/v1/loans/{loan_id}` before its inventory expectation changed. The previous three-attempt
@@ -103,3 +103,28 @@ Production counts: movies 1,943, copies 3,797, watches
 
 The source tree matches the verified PR tree. The final documentation-only close-out receives
 its own exact-head CI/deployment checks before the session ends. Do not start sitting 5.
+
+
+## Final exact-head CI failure — stop point
+
+Production serves `0d757ed052642983424d25e3b1c7b847c3fbe8a6` on both hosts, with full readiness.
+The read-only loan/grant/credential checks were repeated after the CI failure: all four old
+loans/places remain identical and all new metadata remains NULL. The source digest matches
+the green PR; merge CI 40390679557 also passed all seven jobs.
+
+[Final CI 40390928359](https://github.com/CraigR973/mcu-app/actions/runs/40390928359)
+failed its E2E job; the other six jobs passed. Chromium 38 passed, Firefox 37 passed plus
+its documented skip, WebKit 35 passed / one failed / two documented skips, cron six passed.
+AA11's exact loan journey passed in Chromium, Firefox and WebKit on this final run too.
+
+Failure: the unchanged `login.spec.ts` sign-out case signed in and reached the dashboard URL,
+then `page.goto('/you')` failed with **WebKit encountered an internal error**, before the
+Sign out button was clicked. The root cause has not been established. Earlier green runs do
+not justify treating it as harmless or rerunning to hide it. No assertion, skip, retry or
+timeout was altered. Downloaded report, context, trace and logs are retained under ignored
+`scratchpad/aa11-verification/final-ci-failure/`.
+
+`group-start.md` says CI not green is an absolute stop: stop the group, report and wait.
+The handoff is committed locally, without pushing a new run/deployment. On Craig's resume,
+keep this checkout, investigate the navigation trace and fix main's pre-existing red on a
+separate narrow fix branch before completing AA11's final proof. Do not start sitting 5.
