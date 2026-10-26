@@ -19,9 +19,11 @@ flake or waive the red. Final close-out remains incomplete.
 
 `group-start.md` requires stopping when CI is red. Failure artifacts are downloaded under
 ignored `scratchpad/aa11-verification/final-ci-failure/`; the verification report records
-the exact failure and resume point. No rerun, test change or later sitting has been started.
+the exact failure and resume point. Craig resumed on 26 Oct; a separate `fix/login-navigation-readiness` branch now isolates
+login tests from worker takeover and waits for Home before leaving. Verification is pending.
+No later sitting has been started.
 A documentation handoff is committed locally only, leaving local main ahead of origin by one
-commit; production remains at `0d757ed`. Craig must resume before further CI repair/work.
+commit; production remains at `0d757ed`. The resumed repair preserves that handoff; production remains at `0d757ed`.
 
 Craig's story and route-inventory approvals remain resolved. Loan requests, physical handover,
 Back without shelving, shelf confirmation and reborrowing are implemented. Real-phone photo
@@ -40,7 +42,7 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Wait for Craig to resume AA11 close-out.** Preserve the existing checkout and local handoff.
+**Finish the resumed AA11 CI repair and close-out.** Preserve the existing checkout and local handoff.
 Investigate the final CI WebKit sign-out navigation failure from its trace; fix a pre-existing
 red on main on its own narrow `fix/` branch, retaining every assertion and no retries/skips.
 Then prove a green full gate/CI and refresh exact served SHA/readiness/data preservation before

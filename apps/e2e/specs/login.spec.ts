@@ -2,6 +2,10 @@ import { expect, PINS, test } from '../support/test.ts'
 import type { Person } from '../support/test.ts'
 import type { Page } from '@playwright/test'
 
+// Match signedIn()'s isolation: first-install worker takeover can interrupt navigation.
+// The offline suite explicitly enables the worker and proves its lifecycle.
+test.use({ serviceWorkers: 'block' })
+
 async function signInThroughTheForm(page: Page, person: Person, pin: string = PINS[person]) {
   await page.goto('/login')
   await page.getByLabel('Name').fill(person)
@@ -37,6 +41,7 @@ test.describe('login', () => {
     // First-run does not come back.
     await page.goto('/dashboard')
     await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(page.getByRole('main').getByRole('heading', { name: 'Home', level: 1 })).toBeVisible()
 
     // Craig's screens turn Mark away.
     await page.goto('/retailers')
@@ -54,6 +59,7 @@ test.describe('login', () => {
   test('signing out leaves the sign-in form, and the archive is closed behind it', async ({ page }) => {
     await signInThroughTheForm(page, 'Craig')
     await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(page.getByRole('main').getByRole('heading', { name: 'Home', level: 1 })).toBeVisible()
     await page.goto('/you')
     await page.getByRole('main').getByRole('button', { name: 'Sign out' }).click()
     await expect(page).toHaveURL(/\/login/)

@@ -128,3 +128,18 @@ timeout was altered. Downloaded report, context, trace and logs are retained und
 The handoff is committed locally, without pushing a new run/deployment. On Craig's resume,
 keep this checkout, investigate the navigation trace and fix main's pre-existing red on a
 separate narrow fix branch before completing AA11's final proof. Do not start sitting 5.
+
+## Final CI repair resumed — 26 Oct
+
+Craig explicitly resumed AA11 close-out after the final red main run. The separate
+`fix/login-navigation-readiness` branch preserves the local handoff. The failed trace
+shows the dashboard URL assertion finishing before Home starts its API requests; the
+next full-document navigation to `/you` aborts alongside those requests. `/sw.js` was
+also installing in this context. The trace does not establish a production sign-out
+failure: Sign out was never reached.
+
+The login suite now uses the same worker-blocked context isolation as `signedIn()`;
+the dedicated offline suite continues to enable and test the real worker. Both login
+journeys wait for the Home heading before navigating away. Every original outcome
+assertion, browser project, timeout and zero-retry setting is retained. Verification
+is pending; WebKit must be proved in CI because this Mac cannot run it.
