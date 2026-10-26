@@ -2,15 +2,21 @@
 
 ## Now
 
-**26 Oct: AA7 profile pictures are shipped; AA11 waits for its story sign-off.**
-[PR #111](https://github.com/CraigR973/mcu-app/pull/111), merge `e6e5e16`, gives each person
-Choose photo / Use my initial on You, and pictures on the top bar, sidebar, You, activity
-and movie night. Pictures stay private, caller-editable and capped at 300 KiB in Postgres.
-Migration 068 adds only the photo table and guarded read-role grants; credentials stay
-withheld. All seven PR CI jobs passed, including WebKit and Postgres 17. Production API and
-web serve the merge SHA; db ready and every integration configured. Real-phone selection
-remains unverified. AA11 implementation and sitting 5 are unstarted.
-See `docs/reviews/aa7-verification-2026-10-25.md` for criterion evidence and fixed failures.
+**26 Oct: AA7 shipped; AA11's complete local gate passes and PR CI is next.**
+AA7 PR #111 merged as `e6e5e16`; production API/web serve close-out `d19b7d8`, all seven
+CI jobs green (40304689184), db ready and all integrations configured. Real-phone photo
+selection remains unverified.
+
+Craig resumed AA11 after the three-attempt browser stop. Separate explicit Section/shelf
+labels fixed the lookup while retaining every behaviour assertion. Source `75adafe` passes
+all ten local checks: API 2,480 passed / 9 known local skips, shared 156, web 700. Full
+Chromium 38, Firefox 37 plus documented dictation skip, and six cron cases pass. WebKit,
+Postgres 17 without skips, migration reversal and image boot remain CI's proof.
+
+AA11 is not yet shipped. Its story and single pinned PATCH path were approved first.
+Read-only production preflight still finds the same four Out loans at revision 068; no
+live loan, shelf or notification write occurred. Sitting 5 remains excluded.
+See `docs/reviews/aa11-verification-2026-10-26.md` for criteria and every fixed failure.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -25,10 +31,9 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Show Craig AA11's four-state loan story and obtain sign-off before implementation.**
-AA7 has shipped and its ledger is closed. Read the current loan paths, present the short
-flow, then stop for Craig's decision. Do not start sitting 5. AA10b's independent 1–2 Nov
-owner checkpoint remains open.
+**Complete AA11's seven-job PR CI and automatic production close-out only.** Verify exact
+API/web SHA, readiness and preservation of all four existing loans. Do not start sitting 5.
+AA10b's independent 1–2 Nov owner checkpoint remains open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -420,6 +425,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — AA11 built, not shipped; stopped at the group command's three-attempt limit.**
+  Story and one pinned route approved before implementation. Local API 2,480 passed / 9 known
+  skips; types and focused UI green. Browser reached request push, handover and return, then
+  failed selecting the shelf Section by exact label. Full gate and close-out incomplete.
+  Existing branch retained; four production loans unchanged/Out. Sitting 5 excluded.
+
+- **26 Oct — AA7 final proof complete; AA11 story prepared, waiting for Craig.** Final main
+  `d19b7d8`, CI 40304689184, all seven jobs green; both production hosts exact SHA and full
+  readiness. New local AA11 branch holds only story/checkpoint docs. Read-only preflight:
+  four loans, all out. Story separates needed-by from return-due, leaves lent date unset
+  until handover, and keeps the four loans out. No AA11 code/migration/live write, no sitting 5.
 
 - **26 Oct — AA7 shipped (`e6e5e16`, PR #111); AA11 story checkpoint is next.** Local gate:
   API 2,473 plus nine documented Unix-socket import-guard skips, shared 155, web 693;

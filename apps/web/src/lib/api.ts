@@ -1677,6 +1677,8 @@ export async function fetchLoans(openOnly = false): Promise<LoanList> {
  */
 export type LendInput = {
   collectionItemId: string
+  state?: 'asked_for' | 'out'
+  neededBy?: string
   lentDate?: string
   dueDate?: string | null
   notes?: string | null
@@ -1697,6 +1699,21 @@ export async function returnLoan(id: string, returnedDate?: string): Promise<Loa
     }),
     loanSchema,
   )
+}
+
+export async function transitionLoan(id: string, input: { state: 'out' | 'shelved'; section?: string; shelf?: string | null }): Promise<Loan> {
+  return parseOrThrowApiError(
+    await authFetch(`/loans/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    loanSchema,
+  )
+}
+
+export function loanState(loan: Loan): 'asked_for' | 'out' | 'back' | 'shelved' {
+  return loan.state ?? (loan.returnedDate ? 'shelved' : 'out')
+}
+
+export function loanStateLabel(loan: Loan): string {
+  return { asked_for: 'Asked for', out: 'Out', back: 'Back, not shelved', shelved: 'Shelved' }[loanState(loan)]
 }
 
 /** How a loan's timing reads in one line. */

@@ -1544,6 +1544,13 @@ of AA10a's recorded sales. No manual eBay hand check remains (#290).
       due and carry into later daily budgets. All three new tables are readable by the
       `mcu_readonly` and `mcu_backup` roles; the listing table has no title or image column.
 
+### 37. Four-state loan story — AA11 — resolved *(26 Oct)*
+
+Craig approved the story before implementation: asked for → out → back, not shelved →
+shelved, needed-by separate from return-due, no lent date until handover, four existing
+loans preserved as Out. Full AA11 verification and normal shipment authorised; no live
+loan/shelf backfill or fabricated notification. Sitting 5 remains excluded.
+
 ### 22. Rotate the Neon database password — recommended, your call
 
 **12 Oct (wave 1 review):** weightier than it reads, since there is no copy of the database

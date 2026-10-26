@@ -4603,8 +4603,7 @@ See `docs/reviews/aa6-verification-2026-10-25.md`. Sitting 3 is complete; stop b
 **AA7 close-out:** caller-owned private photo upload/replacement/removal, all avatar surfaces,
 initial fallbacks, migration 068 and read-role/credential boundaries verified. PR CI
 40299605767 passed all seven jobs. Production API and web serve `e6e5e16`, db ready and
-all integrations configured. Real-phone selection remains unverified. AA11 waits for its
-four-state story sign-off. See `docs/reviews/aa7-verification-2026-10-25.md`.
+all integrations configured. Real-phone selection remains unverified. AA11's four-state story was approved before its implementation. See `docs/reviews/aa7-verification-2026-10-25.md`.
 
 ### ~~AA8 — The artwork~~ 🟢 **shipped 23 Oct (`6b039bf`, [PR #104](https://github.com/CraigR973/mcu-app/pull/104))**
 - **1.** The app-icon art (the original screen-print emblem, not built from stills) shows in the
@@ -4680,6 +4679,13 @@ postage in, until AA10c settles it from recorded sales.
   (state, needed-by, returned-by, shelved-at, all nullable) granted as above.
 - Tests (the e2e loans case extended). Gate green.
 
+**26 Oct checkpoint:** Craig approved the story and single pinned PATCH path before changes.
+The three-attempt browser stop was honoured; Craig resumed AA11. Explicit Section/shelf labels
+fixed the lookup with every behaviour assertion retained. Complete local gate now passes:
+API 2,480 / 9 known local skips, shared 156, web 700, Chromium 38, Firefox 37 / documented
+skip, six cron cases. PR CI and production close-out remain pending. The four existing loans
+remain Out without a backfill. Sitting 5 remains excluded.
+
 ---
 
 ## Batch groups
@@ -4735,7 +4741,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 4 authorised; AA7 shipped 26 Oct `e6e5e16`. AA11 stops for four-state story sign-off before implementation. Do not start sitting 5.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → AA11 · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 4 authorised; AA7 shipped 26 Oct `e6e5e16`. AA11 story approved 26 Oct; implementation and normal close-out authorised. Do not start sitting 5.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

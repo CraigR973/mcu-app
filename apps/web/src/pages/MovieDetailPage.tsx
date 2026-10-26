@@ -293,7 +293,7 @@ function CopyCard({
           both edit the copy, above, too. Only owned copies get a card, so a sold disc
           never offers a loan. */}
       <div className="border-t border-border pt-3">
-        <LendButton collectionItemId={item.id} />
+        {item.section !== 'Digital' ? <LendButton collectionItemId={item.id} /> : <p className="text-sm text-muted-foreground">Digital copy: no physical handover.</p>}
       </div>
 
       {/* Batch X9 (CT46-01): one copy can be another film, moved on its own; by either person

@@ -147,3 +147,18 @@ describe('Loans: lend or borrow from the page, by scan or search — Batch W3', 
     expect(within(row).getByText('you')).not.toBeNull()
   })
 })
+
+it('keeps only the current returned copy on To put back, preserving history in All', async () => {
+  api.fetchLoans.mockResolvedValue(list([
+    { ...LOAN, state: 'back', isCurrent: false, returnedDate: '2026-10-02' },
+    { ...LOAN, id: '3f2504e0-4f89-41d3-9a0c-0305e82c3202', state: 'back', isCurrent: true, returnedDate: '2026-10-03' },
+  ]))
+  renderLoans()
+  fireEvent.click(await screen.findByRole('button', { name: 'To put back' }))
+  expect(await screen.findAllByRole('link', { name: 'Heat' })).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Put back' }))
+  expect(screen.getByRole('button', { name: 'Confirm shelved' })).not.toBeNull()
+  expect(screen.getByText('Home position: Front · 3')).not.toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'All' }))
+  expect(screen.getAllByRole('link', { name: 'Heat' })).toHaveLength(2)
+})

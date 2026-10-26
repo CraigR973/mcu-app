@@ -24,6 +24,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from src.auth import get_current_user, require_admin
+from src.clock import utc_today
 from src.database import get_db
 from src.main import app
 from src.models.collection_item import CollectionItem
@@ -922,6 +923,20 @@ class TestOverdueLoans:
         await api_session.refresh(loan)
         assert loan.reminder_sent is True
         assert second.overdue_loans == 0
+
+    async def test_pending_request_never_triggers_an_overdue_reminder(
+        self, api_session: AsyncSession, admin: Profile
+    ) -> None:
+        loan = await self._overdue_loan(
+            api_session, due=utc_today() - timedelta(days=3), borrower=admin
+        )
+        loan.state = "asked_for"
+        loan.lent_date = None
+        loan.needed_by_date = utc_today() - timedelta(days=7)
+        await api_session.flush()
+        summary = await run_reminders(api_session, as_of=utc_today(), seed_seasons=False)
+        assert summary.overdue_loans == 0
+        assert not loan.reminder_sent
 
 
 class TestOutbox:

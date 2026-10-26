@@ -6739,6 +6739,18 @@
       ],
       "title": "Lentdate"
      },
+     "neededBy": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Neededby"
+     },
      "notes": {
       "anyOf": [
        {
@@ -6749,6 +6761,15 @@
        }
       ],
       "title": "Notes"
+     },
+     "state": {
+      "default": "out",
+      "enum": [
+       "asked_for",
+       "out"
+      ],
+      "title": "State",
+      "type": "string"
      }
     },
     "required": [
@@ -6849,14 +6870,26 @@
       "title": "Id",
       "type": "string"
      },
+     "isCurrent": {
+      "default": true,
+      "title": "Iscurrent",
+      "type": "boolean"
+     },
      "isOverdue": {
       "title": "Isoverdue",
       "type": "boolean"
      },
      "lentDate": {
-      "format": "date",
-      "title": "Lentdate",
-      "type": "string"
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lentdate"
      },
      "locationLabel": {
       "title": "Locationlabel",
@@ -6870,6 +6903,18 @@
      "movieTitle": {
       "title": "Movietitle",
       "type": "string"
+     },
+     "neededBy": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Neededby"
      },
      "notes": {
       "anyOf": [
@@ -6893,6 +6938,18 @@
       ],
       "title": "Posterpath"
      },
+     "returnedByProfileId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Returnedbyprofileid"
+     },
      "returnedDate": {
       "anyOf": [
        {
@@ -6904,6 +6961,50 @@
        }
       ],
       "title": "Returneddate"
+     },
+     "section": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section"
+     },
+     "shelf": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shelf"
+     },
+     "shelvedAt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shelvedat"
+     },
+     "state": {
+      "default": "out",
+      "enum": [
+       "asked_for",
+       "out",
+       "back",
+       "shelved"
+      ],
+      "title": "State",
+      "type": "string"
      }
     },
     "required": [
@@ -6943,6 +7044,62 @@
      }
     },
     "title": "LoanReturnRequest",
+    "type": "object"
+   },
+   "LoanTransitionRequest": {
+    "additionalProperties": false,
+    "properties": {
+     "lentDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lentdate"
+     },
+     "section": {
+      "anyOf": [
+       {
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section"
+     },
+     "shelf": {
+      "anyOf": [
+       {
+        "maxLength": 50,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shelf"
+     },
+     "state": {
+      "enum": [
+       "out",
+       "shelved"
+      ],
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "state"
+    ],
+    "title": "LoanTransitionRequest",
     "type": "object"
    },
    "LocationResponse": {
@@ -19508,7 +19665,7 @@
   },
   "/api/v1/loans": {
    "get": {
-    "description": "§12.5's loans page — \"active and past loans\", per §6.5.\n\nOpen loans first, soonest due first. Readable by both people: knowing where a disc\nwent is not an admin question, even though lending one is.",
+    "description": "§12.5's loans page — \"active and past loans\", per §6.5.\n\nOpen loans first, soonest due first. Readable by both people: knowing where a disc\nwent and recording its handover are shared actions.",
     "operationId": "list_loans_api_v1_loans_get",
     "parameters": [
      {
@@ -19556,7 +19713,7 @@
     ]
    },
    "post": {
-    "description": "§12.5's acceptance: \"Lending a disc shows it in Loans\".\n\n**Either person lends or borrows** since Batch W3 (`DECISIONS.md` #249): Mark lends the\ndiscs as much as Craig does, and Craig borrows them. A borrower who is one of the two is\nnamed by ``borrowerProfileId`` and their name is filled in from it; anyone else is a\nname. The audit row records who made the loan either way.\n\n**No push is sent from here, and that is deliberate.** §12.5's second clause is\n\"overdue triggers a push\" — a statement about a *due date passing*, not about a disc\nbeing lent, so it belongs to the scheduled pass rather than to this handler.\n`notify_overdue_loans` in `services/reminders.py` owns it as of Batch 11, and writes\nthe `loans.reminder_sent` column this table has carried unused since Batch 15.",
+    "description": "Record taking a copy, or request it without inventing a handover date.",
     "operationId": "lend_disc_api_v1_loans_post",
     "requestBody": {
      "content": {
@@ -19596,6 +19753,66 @@
      }
     ],
     "summary": "Lend Disc",
+    "tags": [
+     "trash",
+     "loans"
+    ]
+   }
+  },
+  "/api/v1/loans/{loan_id}": {
+   "patch": {
+    "description": "Explicit handover or shelf confirmation; dates and jobs never advance a state.",
+    "operationId": "transition_loan_api_v1_loans__loan_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "loan_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Loan Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoanTransitionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LoanResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Transition Loan",
     "tags": [
      "trash",
      "loans"

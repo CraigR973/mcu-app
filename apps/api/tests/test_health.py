@@ -175,6 +175,7 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/trash/{table}/{row_id}/permanent",
         "/api/v1/trash/purge",
         "/api/v1/loans",
+        "/api/v1/loans/{loan_id}",
         "/api/v1/loans/{loan_id}/return",
         # Batch 16. Live TMDB reads, nothing stored — streaming rights move too fast for
         # a cache to be anything but a confidently wrong answer.
@@ -505,3 +506,12 @@ def test_the_error_middleware_sits_inside_cors() -> None:
 
     order = [entry.cls for entry in app.user_middleware]
     assert order.index(CORSMiddleware) < order.index(UnhandledErrorMiddleware)
+
+
+@pytest.mark.asyncio
+async def test_loan_state_transition_requires_authentication() -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.patch(
+            "/api/v1/loans/00000000-0000-0000-0000-000000000001", json={"state": "shelved"}
+        )
+    assert response.status_code == 401

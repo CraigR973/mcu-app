@@ -1020,7 +1020,14 @@ export const loanSchema = z.object({
    *  app ("I'm borrowing it"); null for anyone else. Defaulted, so a web build that reaches
    *  an API from before W3 still parses its loans. */
   borrowerProfileId: z.string().uuid().nullable().default(null),
-  lentDate: z.string(),
+  lentDate: z.string().nullable(),
+  state: z.enum(['asked_for', 'out', 'back', 'shelved']).optional(),
+  neededBy: z.string().nullable().optional(),
+  returnedByProfileId: z.string().uuid().nullable().optional(),
+  shelvedAt: z.string().datetime({ offset: true }).nullable().optional(),
+  isCurrent: z.boolean().optional(),
+  section: z.string().nullable().optional(),
+  shelf: z.string().nullable().optional(),
   dueDate: z.string().nullable(),
   returnedDate: z.string().nullable(),
   /** Derived server-side from the due date and today, never stored: a stored flag needs a

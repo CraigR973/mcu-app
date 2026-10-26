@@ -15,7 +15,7 @@ function FilmCopies({ film, onBack }: { film: Film; onBack: () => void }) {
     queryKey: ['movie-copies', film.movieId, 'owned'],
     queryFn: () => fetchCopies(film.movieId),
   })
-  const copies = copiesQuery.data ?? []
+  const copies = (copiesQuery.data ?? []).filter((copy) => copy.section !== 'Digital')
   const state = listState(copiesQuery, copies.length === 0)
 
   return (
