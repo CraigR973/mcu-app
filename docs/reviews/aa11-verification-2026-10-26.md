@@ -6,7 +6,7 @@ AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112), merge 
 ([run 40388842106](https://github.com/CraigR973/mcu-app/actions/runs/40388842106)).
 Production API and web both served that exact merge SHA; db ready and all five integrations
 configured. Read-only checks preserved all four old loans and their copy places. AA7 shipped
-separately in PR #111 (`e6e5e16`). Final close-out is blocked by red main CI; sitting 5 has not started.
+separately in PR #111 (`e6e5e16`). Final close-out completed after the separate login-navigation repair in PR #113 (`30f3607`), seven green jobs 40407597236. Sitting 5 has not started.
 
 Craig approved the four-state story before implementation, then the single pinned path
 `/api/v1/loans/{loan_id}` before its inventory expectation changed. The previous three-attempt
@@ -147,3 +147,26 @@ commands, E2E typecheck, eight focused login cases, Chromium 38, Firefox 37 plus
 documented dictation skip, and six cron cases. API 2,480 passed with nine known local
 socket skips; shared 156 and web 700 passed. No new local failure occurred during this
 repair. WebKit must be proved in CI because this Mac cannot run it.
+
+## Resumed close-out completed — 26 Oct
+
+Separate [PR #113](https://github.com/CraigR973/mcu-app/pull/113) merged `30f3607805bd94bc6441c88d1b783e6cb7e49dbf`
+after all seven jobs passed on its exact PR head
+([CI 40407597236](https://github.com/CraigR973/mcu-app/actions/runs/40407597236)).
+The CI result and full logs are retained locally. WebKit proves the original sign-out
+and access-boundary assertions; the dedicated offline cases still test worker behaviour.
+No retry, extra skip, timeout increase or expected-result weakening was introduced.
+
+Production API and web served that exact merge SHA with db ok and push/AI/eBay/TMDB/Brave
+configured. Read-only checks again preserve all four legacy Out loans and their copy places,
+leave all new metadata NULL, verify both read-role grants and withhold PIN/invite credentials.
+The final documentation-only head receives exact-head seven-job CI and production checks
+before the session ends. Group AA sitting 4 is complete; sitting 5 remains excluded.
+The owner-only phone and physical checks remain unverified.
+
+Repair CI details: API 2,489 passed without skips, including all 16 derived-field trigger
+tests; Chromium 38, Firefox 37 plus its documented dictation skip, WebKit 36 plus its
+two documented skips, cron six. Both sign-out and AA11 loan cases passed in every browser.
+Attempting to fetch a completed API job's log before the entire run finished returned
+“logs will be available when it is complete”; the complete logs were then retrieved
+after the run finished. No repair test failure or waived check occurred.
