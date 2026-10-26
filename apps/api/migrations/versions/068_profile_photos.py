@@ -24,9 +24,7 @@ def upgrade() -> None:
         sa.Column("data", sa.LargeBinary(), nullable=False),
         sa.Column("checksum", sa.String(64), nullable=False),
         sa.ForeignKeyConstraint(["profile_id"], ["profiles.id"], ondelete="CASCADE"),
-        sa.CheckConstraint(
-            "octet_length(data) BETWEEN 1 AND 307200", name="ck_profile_photo_size"
-        ),
+        sa.CheckConstraint("octet_length(data) BETWEEN 1 AND 307200", name="ck_profile_photo_size"),
     )
     for role in ("mcu_readonly", "mcu_backup"):
         op.execute(
