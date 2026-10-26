@@ -5,7 +5,7 @@
 AA7 profile pictures are implemented locally on `feat/aa7-profile-pictures` but are not
 verified, pushed, merged or deployed. AA11 has not started. Sitting 5 has not started.
 The stop is `docs/agent-commands/group-start.md`: three runs of the same avatar check
-failed. The route-inventory decision is also pending with Craig.
+failed. Craig approved the two route additions on 26 Oct; that narrow update is complete.
 
 ## Scope and acceptance, verbatim
 
@@ -62,11 +62,12 @@ failed. The route-inventory decision is also pending with Craig.
 
 ## Pending decisions and next work
 
-Craig was asked to approve adding ONLY `/api/v1/profile-photos/me` (PUT/DELETE, self only)
+Craig approved adding ONLY `/api/v1/profile-photos/me` (PUT/DELETE, self only)
 and `/api/v1/profile-photos/{profile_id}` (authenticated GET) to the exact pinned route
-inventory. Exact-set equality, all existing routes and access tests must remain. The test
-has not been changed while that decision is pending. The OpenAPI snapshot has not been
-regenerated yet either.
+inventory on 26 Oct. The inventory now includes exactly these additions and the generated
+OpenAPI snapshot was refreshed. A comparison found no existing path changed or removed;
+exact-set equality and all existing checks remain. All 16 health/snapshot tests passed.
+This approval did not authorise resuming debugging past the three-attempt stop.
 
 After Craig authorises resuming past the three-attempt stop, preserve this checkout and
 its edits; resolve the avatar failure and activity identity properly. Also ensure the

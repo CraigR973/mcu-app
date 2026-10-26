@@ -1168,6 +1168,20 @@
     "title": "Body_upload_photo_api_v1_collection__item_id__photos_post",
     "type": "object"
    },
+   "Body_upload_photo_api_v1_profile_photos_me_put": {
+    "properties": {
+     "file": {
+      "contentMediaType": "application/octet-stream",
+      "title": "File",
+      "type": "string"
+     }
+    },
+    "required": [
+     "file"
+    ],
+    "title": "Body_upload_photo_api_v1_profile_photos_me_put",
+    "type": "object"
+   },
    "BoxSetCreateRequest": {
     "additionalProperties": false,
     "description": "Optionally seeds the set with items, so \"create with 4 items\" is one call.\n\n§11.3's acceptance is *\"Admin creates 'Columbia Noir Vol 4' with 4 items\"*. Two calls\nwould leave a half-built set behind whenever the second failed; one transaction\ncannot.",
@@ -21640,6 +21654,108 @@
     "summary": "Serve Photo",
     "tags": [
      "photos"
+    ]
+   }
+  },
+  "/api/v1/profile-photos/me": {
+   "delete": {
+    "operationId": "remove_photo_api_v1_profile_photos_me_delete",
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Remove Photo",
+    "tags": [
+     "profile photos"
+    ]
+   },
+   "put": {
+    "operationId": "upload_photo_api_v1_profile_photos_me_put",
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_photo_api_v1_profile_photos_me_put"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Upload Photo",
+    "tags": [
+     "profile photos"
+    ]
+   }
+  },
+  "/api/v1/profile-photos/{profile_id}": {
+   "get": {
+    "operationId": "read_photo_api_v1_profile_photos__profile_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "profile_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Profile Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Read Photo",
+    "tags": [
+     "profile photos"
     ]
    }
   },

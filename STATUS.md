@@ -2,14 +2,16 @@
 
 ## Now
 
-**25 Oct: Group AA sitting 4 started; AA7 is local and unshipped. AA11 has not started.**
+**26 Oct: AA7's two route additions are approved and recorded; AA7 remains unshipped.**
 Branch `feat/aa7-profile-pictures` holds AA7's photo migration, API, shared avatar, You
 editor, screen integration and tests. Five new API tests pass against disposable local
 Postgres; the full gate has not run. Two avatar unit tests fail (no image renders after
 mocked bytes), and activity integration fails typecheck because activity has no actor id.
 Three avatar test invocations reproduced the rendering failure, so `group-start.md`'s
-three-attempt stop applies. Craig's approval to add AA7's two paths to the pinned route
-inventory is pending; that test has not changed. No PR, push, merge or deployment.
+three-attempt stop applies. Craig approved AA7's two paths on 26 Oct; the exact pinned
+inventory and OpenAPI snapshot now include them. All 16 health/snapshot tests pass.
+The existing paths and exact-set assertion are unchanged. No PR, push, merge or deployment.
+AA11 and sitting 5 remain unstarted.
 See `docs/reviews/aa7-verification-2026-10-25.md` for evidence and remaining work.
 Sitting 3 remains shipped: AA4 `6e9629d`, AA5 `8f47f39`, AA6 `54dbc07`.
 
@@ -26,8 +28,8 @@ none are due; only then close AA10b. Group AA sitting 2 is complete; sitting 3 i
 
 ## Next
 
-**Resume AA7 only after Craig's decision on the route inventory and resuming past the
-three-attempt stop.** Reuse `feat/aa7-profile-pictures`; do not recreate or discard its work.
+**Resume AA7 debugging only after Craig authorises resuming past the three-attempt stop.**
+The two route additions were approved and recorded on 26 Oct. Reuse `feat/aa7-profile-pictures`; do not recreate or discard its work.
 Finish AA7's full gate, PR, CI and production verification, then return to clean main.
 Before any AA11 implementation, show Craig the four-state loan story and obtain sign-off.
 Do not start sitting 5. AA10b's independent 1–2 Nov owner checkpoint remains open.
@@ -422,6 +424,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **26 Oct — AA7's two private photo routes approved and recorded.** Updated only the
+  pinned path inventory and generated OpenAPI description; no existing path changed.
+  All 16 health/snapshot tests passed. AA7's debugging stop remains in force; no push, PR,
+  merge or deployment. AA11 and sitting 5 unstarted.
 
 - **25 Oct — Group AA sitting 4 stopped during AA7 (unshipped).** Five new API tests pass
   on disposable Postgres; migration 068 applies. Web typecheck fails on activity's absent
