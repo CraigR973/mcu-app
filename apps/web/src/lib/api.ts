@@ -2729,3 +2729,24 @@ export async function dealLuckyFilm(input: {
     luckyFilmSchema,
   )
 }
+
+
+/** AA7: binary reads stay private; empty photos are a normal initial fallback. */
+export async function fetchProfilePhoto(profileId: string): Promise<Blob | null> {
+  const response = await authFetch(`/profile-photos/${encodeURIComponent(profileId)}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
+  return response.blob()
+}
+
+export async function uploadProfilePhoto(file: File): Promise<void> {
+  const body = new FormData()
+  body.append('file', file)
+  const response = await authFetch('/profile-photos/me', { method: 'PUT', body })
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
+}
+
+export async function removeProfilePhoto(): Promise<void> {
+  const response = await authFetch('/profile-photos/me', { method: 'DELETE' })
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
+}

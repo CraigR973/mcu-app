@@ -1,3 +1,4 @@
+import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, ChevronDown, Eye, Link2, Plus, Popcorn, Send } from 'lucide-react'
@@ -158,6 +159,7 @@ function FilmDetails({ card }: { card: MovieNightCandidate }) {
         <ul className="space-y-1" aria-label="Watch history and personal ratings">
           {people.map((person) => (
             <li key={person.personId} className="text-xs text-muted-foreground">
+              <ProfileAvatar profileId={person.personId} name={person.personName} className="mr-1 h-6 w-6 align-middle" />
               <span className="font-semibold text-foreground">{person.personName}</span>: {person.lastWatchedAt ? `last watched ${formatShortDate(person.lastWatchedAt)}` : 'no watch logged'}
               {' · '}{person.personalRating === null ? 'not rated' : `${String(person.personalRating)}/5`}
             </li>
@@ -438,6 +440,7 @@ export default function MovieNightSessionPage() {
         </h1>
         {night ? (
           <p className="text-sm text-muted-foreground">
+            <span className="mr-2 inline-flex gap-1 align-middle">{night.people.map((person) => <ProfileAvatar key={person.id} profileId={person.id} name={person.displayName} className="h-6 w-6 text-xs" />)}</span>
             {peopleLine(night, profile?.id)} · {night.plannedStart ? `Planned ${formatDateTime(night.plannedStart)}` : formatShortDate(night.createdAt)}
             {night.status === 'ended' ? ' · this one has ended' : ''}
           </p>

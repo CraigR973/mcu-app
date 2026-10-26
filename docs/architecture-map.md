@@ -121,3 +121,20 @@ flowchart TB
 Home can deal only films unwatched by the current person. A night applies its filters;
 a seeded random pick is promoted through AA4 without losing votes. A run creates no database
 rows, provider calls or jobs. Existing API authentication and night membership guard the draw.
+
+## AA7, local implementation under verification (26 Oct)
+
+```mermaid
+flowchart TB
+    You[You: choose photo or use initial] --> Write[Authenticated own-photo write]
+    Write --> Resize[Existing resize and re-encode pipeline]
+    Resize --> Store[(One photo per person in Postgres)]
+    Screens[Top bar · You · night · activity] --> Read[Authenticated photo read]
+    Read --> Store
+    Read --> Avatar[In-memory object URL, else initial]
+```
+
+Pictures remain separate from credentials, with a 300 KiB database ceiling. Both read roles
+can read the photo table but receive no new profile grants. Photo reads bypass the offline
+API cache; removal returns each avatar to the initial. Activity carries the actor's stable
+profile id, with a null fallback for older offline answers. No provider or new service is used.

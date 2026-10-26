@@ -1,3 +1,4 @@
+import { ProfileAvatar } from '@/components/ProfileAvatar'
 import { useEffect, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -110,7 +111,7 @@ function PhoneTopBar({ onOpenPalette }: { onOpenPalette: () => void }) {
         aria-current={pathname === YOU_ITEM.path ? 'page' : undefined}
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-sm font-semibold text-secondary-foreground ring-offset-background aria-[current=page]:ring-2 aria-[current=page]:ring-primary"
       >
-        {profile?.displayName?.slice(0, 1).toUpperCase() ?? '?'}
+        <ProfileAvatar profileId={profile?.id} name={profile?.displayName} className="h-11 w-11" />
       </Link>
     </div>
   )

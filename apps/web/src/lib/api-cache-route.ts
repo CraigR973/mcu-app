@@ -36,7 +36,9 @@ export function isCachedApiRead(
     // — a rule that reads the API's own instruction rather than listing paths would be
     // better, but a service worker cannot see response headers when deciding whether a
     // route *matches*. Anything new that answers `no-store` belongs on this list.
-    !url.pathname.startsWith('/api/v1/calendar.ics')
+    !url.pathname.startsWith('/api/v1/calendar.ics') &&
+    // Mutable, private profile pictures must disappear after removal.
+    !url.pathname.startsWith('/api/v1/profile-photos/')
   )
 }
 

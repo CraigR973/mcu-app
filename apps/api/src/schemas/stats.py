@@ -84,6 +84,7 @@ class ActivityEvent(BaseModel):
     kind: ActivityKind
     at: UtcDatetime
     actorName: str | None
+    actorId: uuid.UUID | None = None
     movieId: uuid.UUID | None
     movieTitle: str | None
     posterPath: str | None

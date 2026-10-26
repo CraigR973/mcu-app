@@ -109,6 +109,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         # AA8. The personal MARKS collage is bearer-token protected rather than a public
         # web asset; the Home page turns its bytes into an in-memory object URL.
         "/api/v1/brand/heroes/{hero}",
+        # AA7: Craig approved these two private photo paths on 26 Oct.
+        "/api/v1/profile-photos/me",
+        "/api/v1/profile-photos/{profile_id}",
         "/api/v1/movies",
         # AA6: authenticated, read-only draw; exclusions travel in the POST body.
         "/api/v1/feeling-lucky",
