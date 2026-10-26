@@ -47,3 +47,4 @@ tests skip on the local Unix-socket database URL; real Postgres 17 CI must run t
 - Initial mypy caught redundant nullable copy/movie reloads after locked loading; removed them.
 - OpenAPI snapshot check caught an export preceding a final handler-docstring change; regenerated it.
 - First browser setup used PATCH for notification preferences; the existing contract is PUT. Corrected the test setup.
+- Second browser run reached Back with correct data, but the state shared an unlabelled text node with borrower/date. Gave the state its own visible span; retained the exact visible-state assertion.

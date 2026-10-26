@@ -43,7 +43,7 @@ function Row({ loan }: { loan: Loan }) {
             {loan.borrowerProfileId !== null && loan.borrowerProfileId === profile?.id ? 'you' : loan.borrowerName}
           </span>{' '}
           {loan.lentDate ? `since ${formatShortDate(loan.lentDate)}` : `· needed by ${loan.neededBy ? formatShortDate(loan.neededBy) : 'not set'}`}
-          {' · '}{loanStateLabel(loan)}
+          {' · '}<span className="font-medium text-foreground">{loanStateLabel(loan)}</span>
         </p>
         <p
           className={cn(
