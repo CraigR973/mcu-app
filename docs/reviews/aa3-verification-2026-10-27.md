@@ -39,6 +39,11 @@ watch count and identified-owned-title count, with their limits written beside t
 - Before the browser run, review caught that the new fixture would change the import
   journey's pinned 70-title baseline. Its own copy is now removed through the app API in
   `finally`; the import journey's existing expected count remains unchanged.
+- Image inspection caught that the Archive action was content-width rather than the
+  chosen full-width action. Added explicit full width and an exact browser width assertion.
+  Component captures use a taller viewport to keep the fixed navigation out of the crop;
+  functional checks still run at the normal 844 px height. The passing in-progress browser
+  run was stopped for this visual correction; the complete final suite is required again.
 
 The only changed existing layout expectation is Craig's approved collection-only exception
 to the “every Home section is sideways” rule; every other shelf assertion stays. API route
@@ -52,6 +57,9 @@ All ten standard local checks passed from clean commit `c164226`: API 2,491 pass
 zero skips; shared 157 and web 708 passed; lint/typechecks/builds passed. All 16 derived-field
 trigger cases ran. A subsequent E2E-only fixture-cleanup commit changed no tested app source.
 The final markup correction receives a fresh clean gate and browser run before close-out.
+The second clean gate also passed all ten checks on `c1be577` (API 2,491, shared 157,
+web 708, no API skips). Both new AA3 cases then passed in Chromium and Firefox; the final
+full-width action correction receives another clean verification before shipment.
 Browser screenshots, seven-job PR/main CI and exact production SHA/readiness proof remain
 pending. Local WebKit is unavailable on macOS 13; CI must run it.
 Real-phone observations remain owner-only. No live provider call, valuation start, data write

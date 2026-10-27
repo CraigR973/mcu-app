@@ -295,7 +295,7 @@ export function CollectionShelf() {
         icon={BarChart3}
       />
       {body}
-      <Link to="/movies" className="list-link flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+      <Link to="/movies" className="list-link flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
         Browse the archive
       </Link>
       {breakdown}

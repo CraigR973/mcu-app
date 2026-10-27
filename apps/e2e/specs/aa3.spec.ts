@@ -53,14 +53,23 @@ for (const person of ['Craig', 'Mark'] as Person[]) {
         await expect(numbers.locator('li', { hasText: "You've watched" })).toContainText(stats.watchedMovies.toLocaleString('en-GB'))
         await expect(numbers.locator('li', { hasText: 'Matched on TMDB' })).toContainText(stats.identifiedMovies.toLocaleString('en-GB'))
         expect(await section.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+        const archive = section.getByRole('link', { name: 'Browse the archive', exact: true })
+        const sectionBox = await section.boundingBox()
+        const archiveBox = await archive.boundingBox()
+        expect(sectionBox).not.toBeNull()
+        expect(archiveBox).not.toBeNull()
+        expect(Math.round(archiveBox!.width)).toBe(Math.round(sectionBox!.width))
+        // Capture the whole component without the fixed bottom bar obscuring its last lines.
+        // Functional checks use the normal 844px viewport before and after this capture.
+        await page.setViewportSize({ width, height: 1200 })
         await section.screenshot({ path: testInfo.outputPath(`aa3-${person}-${theme}-${width}.png`) })
+        await page.setViewportSize({ width, height: 844 })
         await expect(section.getByRole('heading', { name: 'Formats (copies)', exact: true })).not.toBeVisible()
         await section.getByText('Collection breakdown', { exact: true }).click()
         for (const title of ['Formats (copies)', 'Where they live (copies)', 'Genres (titles)', 'Decades (titles)']) {
           await expect(section.getByRole('heading', { name: title, exact: true })).toBeVisible()
         }
         await expect(section.getByText('Copies can carry more than one format; these counts overlap.')).toBeVisible()
-        const archive = section.getByRole('link', { name: 'Browse the archive', exact: true })
         await expect(archive).toHaveAttribute('href', '/movies')
         await page.setViewportSize({ width: 320, height: 844 })
         expect(await section.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
