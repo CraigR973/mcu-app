@@ -53,7 +53,7 @@ to the “every Home section is sideways” rule; every other shelf assertion st
 inventory and access assertions are untouched. OpenAPI snapshot changes only the two
 approved fields and their required-field entries; its exact comparison stays.
 
-## Evidence pending
+## Earlier verification checkpoints
 
 Focused API/stat/OpenAPI checks passed: 22 tests on disposable Postgres.
 All ten standard local checks passed from clean commit `c164226`: API 2,491 passed with
@@ -80,6 +80,13 @@ Postgres with the outside world faked: **Chromium 41 passed; Firefox 40 passed a
 documented dictation skip; cron jobs six passed**. WebKit is CI-only on this Mac.
 No browser retry or new skip was added. Initial interrupted runs and their failure artefacts
 are retained under the ignored AA3 scratchpad; the final run completed normally.
+
+The final copy-only correction was then verified from clean commit `8a3e844`: all ten
+commands passed again with the same 2,491 / 157 / 708 test counts and zero API skips.
+The full local E2E run above covers the unchanged layout and flows; the clarified value
+explainer has exact unit assertions. The PR's final exact-head seven-job CI is still required.
+GitHub's connector returned integration-write 403; the already-authenticated `gh` CLI
+created PR #115 without changing a credential or permission.
 
 | Acceptance | Evidence | Result |
 |---|---|---|
