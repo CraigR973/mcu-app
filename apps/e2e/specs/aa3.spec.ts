@@ -13,17 +13,22 @@ type Counts = {
 test('AA3 counts a mixed-format combo once as physical and once as download', async ({ api }) => {
   const craig = await api('Craig')
   const before = await craig.get<Counts>('/collection/stats')
-  await craig.post('/collection', {
+  const added = await craig.post<{ id: string }>('/collection', {
     tmdbId: 1701,
     formats: ['4k_uhd', 'blu_ray', 'download'],
     section: 'Front', shelf: '2nd', hasPlaybackIssues: false,
   })
-  for (const person of ['Craig', 'Mark'] as Person[]) {
-    const after = await (await api(person)).get<Counts>('/collection/stats')
-    expect(after.totalItems).toBe(before.totalItems + 1)
-    expect(after.physicalCopies).toBe(before.physicalCopies + 1)
-    expect(after.downloadCopies).toBe(before.downloadCopies + 1)
-    expect(after.physicalAndDownloadCopies).toBe(before.physicalAndDownloadCopies + 1)
+  try {
+    for (const person of ['Craig', 'Mark'] as Person[]) {
+      const after = await (await api(person)).get<Counts>('/collection/stats')
+      expect(after.totalItems).toBe(before.totalItems + 1)
+      expect(after.physicalCopies).toBe(before.physicalCopies + 1)
+      expect(after.downloadCopies).toBe(before.downloadCopies + 1)
+      expect(after.physicalAndDownloadCopies).toBe(before.physicalAndDownloadCopies + 1)
+    }
+  } finally {
+    // The import journey pins 70 seeded titles; leave that invariant intact through the API.
+    await craig.delete(`/collection/${added.id}`)
   }
 })
 
