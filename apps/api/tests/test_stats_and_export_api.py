@@ -188,6 +188,42 @@ async def test_the_dashboard_says_how_many_copies_are_downloads(
     assert labels["download"] == "Downloads"
 
 
+async def test_copy_counts_preserve_overlaps_and_owned_status_for_both_people(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    before = (await client.get("/api/v1/collection/stats")).json()
+    await _disc(api_session, "Physical only", formats=["dvd"])
+    await _disc(api_session, "Download only", formats=["download"])
+    await _disc(api_session, "Combo with download", formats=["4k_uhd", "blu_ray", "download"])
+    _, listed = await _disc(api_session, "Still owned while listed", formats=["blu_ray"])
+    listed.listing_status = "listed_for_sale"
+    _, sold = await _disc(api_session, "Sold mixed copy", formats=["dvd", "download"])
+    sold.listing_status = "sold"
+    _, trashed = await _disc(api_session, "Trashed mixed copy", formats=["dvd", "download"])
+    trashed.deleted_at = datetime(2026, 10, 27)
+    await api_session.flush()
+
+    for actor in ("admin", "viewer"):
+        response = await client.get("/api/v1/collection/stats", headers={ACTOR_HEADER: actor})
+        assert response.status_code == 200
+        after = response.json()
+        assert after["totalItems"] == before["totalItems"] + 4
+        assert after["downloadCopies"] == before["downloadCopies"] + 2
+        assert after["physicalCopies"] == before["physicalCopies"] + 3
+        assert after["physicalAndDownloadCopies"] == before["physicalAndDownloadCopies"] + 1
+        assert after["identifiedMovies"] == before["identifiedMovies"]
+
+
+async def test_empty_copy_counts_are_zero(client: AsyncClient, api_session: AsyncSession) -> None:
+    from sqlalchemy import update
+
+    # A disposable per-test transaction: every active copy is temporarily in the Trash.
+    await api_session.execute(update(CollectionItem).values(deleted_at=datetime(2026, 10, 27)))
+    body = (await client.get("/api/v1/collection/stats")).json()
+    for key in ("totalItems", "downloadCopies", "physicalCopies", "physicalAndDownloadCopies"):
+        assert body[key] == 0
+
+
 async def test_a_film_in_two_genres_counts_once_in_each(
     client: AsyncClient, api_session: AsyncSession
 ) -> None:

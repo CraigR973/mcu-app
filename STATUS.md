@@ -2,12 +2,12 @@
 
 ## Now
 
-**27 Oct: AA3's review picks are recorded and its build is planned; one API decision remains.**
+**27 Oct: AA3's API extension and build approved; implementation is under verification.**
 Craig chose Compact summary and corrections, keeping both watched and identified with
 clearer definitions (#299). The selected five-number mock-up and plan are in
 `docs/reviews/aa3-build-plan-2026-10-27.md`. The plan proposes two additive stats-response
-fields for physical-copy and physical/download-overlap counts. This changes data shape,
-so Craig's rule requires his word before product implementation. No migration or live
+fields for physical-copy and physical/download-overlap counts. Craig approved them and
+the build in chat before implementation. No migration or live
 data/price change is proposed. AA3 remains open; AA9 not started; sitting 6 excluded.
 Fresh review evidence found 134 mixed physical/download copies: Home says 1,338 discs,
 while valuation correctly counts 1,472 physical copies. Personal diary counts stay 500
@@ -46,8 +46,8 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Wait for approval of AA3's two additive stats-response fields, then implement its plan.**
-The layout and content picks are settled. Finish AA3 before AA9's separate review, which
+**Complete AA3's local gate, CI, shipment and production proof.**
+The layout, content and API picks are settled. Finish AA3 before AA9's separate review, which
 stops again for Craig's picks. Do not start sitting 6.
 Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
 1–2 Nov owner checkpoint stays independent. Verify current SHA/CI before any new work.

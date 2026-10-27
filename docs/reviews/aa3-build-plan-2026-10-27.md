@@ -6,10 +6,10 @@
 **keep both watched and identified, with clearer definitions**. The review's recommendation
 to remove them was rejected. This plan follows his picks, not that recommendation.
 
-**One decision before implementation:** approve two additional counts in the existing
+**Approved by Craig before implementation, 27 Oct:** two additional counts in the existing
 stats API response: physical copies, and copies with both physical and download formats.
 This is a data-shape change under Craig's “Before anything consequential” rule.
-Product implementation has not started. No data migration or live data operation is needed.
+Craig explicitly answered “Approve and build AA3”. No data migration or live data operation is needed.
 
 ## How the chosen layout will work
 
@@ -46,7 +46,7 @@ explainer retains AA10b's advertised-price and inferred-sale limits; no stored p
 valuation algorithm changes. Snapshot examples: Craig watches 500, not a replacement with
 482 owned watches; Mark watches 879, not 878. Identification remains 1,902 of 1,903.
 
-## Proposed data change — awaiting approval
+## Approved data change
 
 Add `physicalCopies` and `physicalAndDownloadCopies` to `GET /api/v1/collection/stats`
 and the shared response schema. Both count owned catalogue-copy rows, not discs inside a
@@ -118,7 +118,7 @@ layout authorises the collection-only exception to decision #249, not a redesign
 AA9 starts only after AA3's completed cycle and clean local main. AA9 is its own review and
 stops for Craig's picks before any assistant build plan. Sitting 6 remains excluded.
 
-**Current state: plan and revised mock-up only; API extension awaits Craig's word.**
+**Current state: API extension and build approved; implementation and verification in progress.**
 
 Planning checks: main's latest seven-job run still green at `c454518`; selected mock-up
 opened at 375 px and 320 px, with disclosure interaction checked and no horizontal

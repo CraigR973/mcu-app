@@ -916,6 +916,9 @@ export const statsSchema = z.object({
   /** Of `totalItems`, the copies carrying the download format (Batch X12a). Defaulted for an
    *  API without it yet. */
   downloadCopies: z.number().int().nonnegative().default(0),
+  // Missing on an older API during deployment; absence must never mean zero or be inferred.
+  physicalCopies: z.number().int().nonnegative().optional(),
+  physicalAndDownloadCopies: z.number().int().nonnegative().optional(),
   identifiedMovies: z.number().int().nonnegative(),
   watchedMovies: z.number().int().nonnegative(),
   formats: z.array(countSliceSchema),

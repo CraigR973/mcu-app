@@ -11,8 +11,9 @@ and value explanation whichever layout Craig picks.
 **keep both watched and identified with clearer definitions**. The removal recommendation
 above is superseded by his choice. See [the resulting build plan](aa3-build-plan-2026-10-27.md)
 and [selected layout](aa3-collection-selected-2026-10-27.html). Two additive stats-response
-fields await his approval under the data-shape rule. No product implementation, data write,
-merge or deployment. AA3 remains open; AA9 has not started; sitting 6 remains excluded.
+fields were subsequently approved in chat under the data-shape rule; AA3 implementation
+and verification are in progress. No data write, merge or deployment yet. AA3 remains
+open; AA9 has not started; sitting 6 remains excluded.
 
 ## Acceptance criterion, verbatim
 
@@ -151,6 +152,6 @@ therefore be extra behaviour to decide, not a free link. No new stats route is p
 ## Resume point
 
 The three review picks are recorded in decision #299 and the build plan. Wait for the
-plan's narrowly scoped API-extension decision, then implement and complete AA3's cycle
+plan's verification and close-out (the API extension is now approved), completing AA3's cycle
 before starting AA9's separate review. Stop again for Craig's assistant-page picks.
 Do not start sitting 6.

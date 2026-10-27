@@ -6455,6 +6455,6 @@ contemporaneous.
      The collection section alone is exempt from #249's sideways-row rule: five numbers
      without swiping, existing breakdowns behind an in-place disclosure. All other Home
      shelves retain their order and sideways layout. The build plan proposes two additive
-     stats fields for physical copies and physical/download overlap; **that data-shape
-     extension awaits Craig's word before product implementation**. See
+     stats fields for physical copies and physical/download overlap; **Craig approved
+     that data-shape extension and the AA3 build on 27 Oct before implementation**. See
      `docs/reviews/aa3-build-plan-2026-10-27.md`. AA9 has not started; sitting 6 is excluded.

@@ -12212,6 +12212,16 @@
       "title": "Mostwatched",
       "type": "array"
      },
+     "physicalAndDownloadCopies": {
+      "minimum": 0.0,
+      "title": "Physicalanddownloadcopies",
+      "type": "integer"
+     },
+     "physicalCopies": {
+      "minimum": 0.0,
+      "title": "Physicalcopies",
+      "type": "integer"
+     },
      "sections": {
       "items": {
        "$ref": "#/components/schemas/CountSlice"
@@ -12245,6 +12255,8 @@
     "required": [
      "totalMovies",
      "totalItems",
+     "physicalCopies",
+     "physicalAndDownloadCopies",
      "identifiedMovies",
      "watchedMovies",
      "formats",

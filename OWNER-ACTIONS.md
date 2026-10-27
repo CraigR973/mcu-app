@@ -11,11 +11,11 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AA sitting 5, AA3 — two stats fields (27 Oct):** review picks received: Compact
+- **Group AA sitting 5, AA3 — two stats fields approved (27 Oct):** review picks received: Compact
   summary, corrections approved, watched and identified **both retained** with clearer
   definitions (#299). `docs/reviews/aa3-build-plan-2026-10-27.md` proposes additive physical-
   copy and physical/download-overlap counts in the existing response, preserving old fields.
-  Craig's data-shape rule requires his word before implementation. No migration, live data
+  **Craig approved the extension and build in chat before implementation.** No migration, live data
   write, stored-price change or provider call; provisional build/gate cost 2–4 agent hours.
   AA3 stays open; AA9 not started; sitting 6 excluded.
 

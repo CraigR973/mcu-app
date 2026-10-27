@@ -18,7 +18,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from sqlalchemy import Integer, func, or_, select, true
+from sqlalchemy import Integer, and_, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
@@ -32,6 +32,7 @@ from src.models.collection_item import (
 )
 from src.models.movie import Movie
 from src.models.profile import Profile
+from src.models.valuation import VALUED_FORMATS
 from src.models.watch_log import WatchLog
 from src.routers.movies import Database
 from src.schemas.stats import (
@@ -289,18 +290,26 @@ async def collection_stats(
             )
         ).scalar_one()
     )
-    total_items = int(
-        (await db.execute(select(func.count(CollectionItem.id)).where(owned_copy()))).scalar_one()
+    download = CollectionItem.formats.contains(["download"])
+    physical = and_(
+        Movie.deleted_at.is_(None),
+        or_(*(CollectionItem.formats.contains([code]) for code in VALUED_FORMATS)),
     )
-    downloads = int(
-        (
-            await db.execute(
-                select(func.count(CollectionItem.id)).where(
-                    owned_copy(), CollectionItem.formats.contains(["download"])
-                )
+    # One aggregate snapshot. Format tags overlap: subtracting downloads from copies
+    # loses physical copies that also carry a download, and summing formats counts combos twice.
+    total_items, downloads, physical_copies, physical_and_download = (
+        await db.execute(
+            select(
+                func.count(CollectionItem.id),
+                func.count(CollectionItem.id).filter(download),
+                func.count(CollectionItem.id).filter(physical),
+                func.count(CollectionItem.id).filter(and_(physical, download)),
             )
-        ).scalar_one()
-    )
+            .select_from(CollectionItem)
+            .join(Movie, Movie.id == CollectionItem.movie_id)
+            .where(owned_copy())
+        )
+    ).one()
     identified = int(
         (
             await db.execute(
@@ -328,6 +337,8 @@ async def collection_stats(
         totalMovies=total_movies,
         totalItems=total_items,
         downloadCopies=downloads,
+        physicalCopies=physical_copies,
+        physicalAndDownloadCopies=physical_and_download,
         identifiedMovies=identified,
         watchedMovies=watched,
         formats=await _format_slices(db),
