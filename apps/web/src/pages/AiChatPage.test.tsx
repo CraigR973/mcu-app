@@ -314,6 +314,10 @@ function deferred<T>() {
   const promise = new Promise<T>(done => { resolve = done })
   return { promise, resolve }
 }
+// Reject on consumption, before producing any stream event.
+async function* rejectedStream(message: string) {
+  yield await Promise.reject<never>(new Error(message))
+}
 async function ready(path = `/assistant?c=${CONVERSATION_ID}`) {
   renderPage(path)
   await vi.waitFor(() => expect(screen.queryByText('Checking assistant availability…')).toBeNull())
@@ -463,7 +467,7 @@ describe('AA9 selected layout and recovery', () => {
   })
 
   it('permits an explicit resend only after reload proves the question was not saved', async () => {
-    mocks.streamAiMessage.mockImplementationOnce(() => (async function* () { throw new Error('Lost reply') })())
+    mocks.streamAiMessage.mockImplementationOnce(() => rejectedStream('Lost reply'))
     await ready()
     ask('Keep this unsaved draft')
     await screen.findByText('Lost reply')
@@ -477,7 +481,7 @@ describe('AA9 selected layout and recovery', () => {
   })
 
   it('keeps the recovery guard if reloading itself fails', async () => {
-    mocks.streamAiMessage.mockImplementationOnce(() => (async function* () { throw new Error('Lost reply') })())
+    mocks.streamAiMessage.mockImplementationOnce(() => rejectedStream('Lost reply'))
     await ready()
     ask('Keep the guarded draft')
     await screen.findByText('Lost reply')
@@ -494,7 +498,7 @@ describe('AA9 selected layout and recovery', () => {
     const original = await mocks.fetchAiConversation()
     const card = { id: 'waiting-card', toolName: 'log_watch', input: { title: 'Jaws' } }
     mocks.fetchAiConversation.mockResolvedValueOnce({ ...original, pendingToolCalls: [card] }).mockResolvedValue({ ...original, pendingToolCalls: [] })
-    mocks.resolveAiToolCall.mockImplementationOnce(() => (async function* () { throw new Error('Confirmation disconnected') })())
+    mocks.resolveAiToolCall.mockImplementationOnce(() => rejectedStream('Confirmation disconnected'))
     await ready()
     await screen.findByText('Can I do this?')
     fireEvent.click(screen.getByRole('button', { name: /Yes, do it/ }))

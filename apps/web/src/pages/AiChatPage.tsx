@@ -55,6 +55,7 @@ export default function AiChatPage() {
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const [activeTarget, setActiveTarget] = useState<string | null>(null)
+  const [reloading, setReloading] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [deleting, setDeleting] = useState<AiConversation | null>(null)
   const mounted = useRef(true)
@@ -237,6 +238,7 @@ export default function AiChatPage() {
     const recovery = local.recovery
     const target = conversationId
     if (!target || !begin()) return
+    setReloading(true)
     try {
       const result = await refetchDetail()
       if (!result.isSuccess || !result.data) return
@@ -247,7 +249,7 @@ export default function AiChatPage() {
           : recovery?.question ? 'Your question was not saved. You can edit or send the draft below.'
             : recovery ? 'Saved conversation reloaded. A confirmed action may already have run; check this chat and your diary or Wanted before asking again.' : undefined,
       }))
-    } finally { finish() }
+    } finally { if (mounted.current) setReloading(false); finish() }
   }
 
   function fillStarter(value: string) {
@@ -286,9 +288,9 @@ export default function AiChatPage() {
           {transcript.map((turn, index) => <div key={index} className={cn('min-w-0 rounded-lg text-sm', turn.role === 'user' ? 'ml-auto max-w-[92%] whitespace-pre-wrap break-words bg-primary px-3 py-2 text-primary-foreground [overflow-wrap:anywhere]' : 'mr-auto w-full py-1')}>
             {turn.role === 'assistant' ? <AssistantText text={turn.text} /> : turn.text}
           </div>)}
-          {busy && !remove.isPending ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{ownReply ? 'The assistant is answering…' : 'A reply is finishing. Chat controls will unlock when it ends.'}</p> : null}
+          {busy && !remove.isPending ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{reloading ? 'Reloading saved conversation…' : ownReply ? 'The assistant is answering…' : 'A reply is finishing. Chat controls will unlock when it ends.'}</p> : null}
           {pending.map(call => <div key={call.id} className="rounded-lg border border-warning/50 bg-warning/10 p-3"><p className="text-sm font-medium">Can I do this?</p><p className="mt-1 break-words text-sm">{describeToolCall(call)}</p><p className="mt-1 text-xs text-muted-foreground">{call.toolName === 'log_watch' ? 'This changes only your diary.' : 'This changes the shared wanted list.'}</p><div className="mt-3 flex flex-wrap gap-2"><Button type="button" size="sm" onClick={() => void resolve(call, true)} disabled={busy || Boolean(local.recovery) || !online}><Check aria-hidden />Yes, do it</Button><Button type="button" size="sm" variant="outline" onClick={() => void resolve(call, false)} disabled={busy || Boolean(local.recovery) || !online}><X aria-hidden />No</Button></div></div>)}
-          {!online ? <p role="status" className="text-sm text-muted-foreground">You are offline. Keep a draft or read saved chats; sending needs a connection.</p>
+          {!online ? <p role="status" className="text-sm text-muted-foreground">You are offline. Your draft is kept; sending needs a connection.</p>
             : status.isPending || usage.isPending ? <p role="status" className="text-sm text-muted-foreground">Checking assistant availability…</p>
               : status.isError || usage.isError ? <p role="alert" className="text-sm text-destructive">Assistant availability is unknown. Your draft is kept. <button type="button" className="min-h-11 underline" onClick={() => { void status.refetch(); void usage.refetch() }}>Retry availability</button></p>
                 : status.data && !status.data.configured ? <p role="alert" className="text-sm text-destructive">The assistant is unavailable. Craig needs to check its server setup. Your draft is kept.</p>

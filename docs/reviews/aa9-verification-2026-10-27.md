@@ -73,7 +73,10 @@ change is performed by this batch.
 6. A concurrent lint run caught Vite deleting a temporary timestamped config file while
    ESLint was reading it (ENOENT). No lint rule changed; the clean gate runs lint and build
    sequentially and E2E separately.
-7. Source review after the initial browser run caught that lengthy recovery text could crowd
+7. The next lint run caught three new failure-stream test doubles declaring generators
+   without yielding. Their shared generator now rejects its awaited first event, preserving
+   the same failure-before-any-text scenario; no rule was disabled.
+8. Source review after the initial browser run caught that lengthy recovery text could crowd
    the composer on short screens. Recovery/availability messages now scroll inside the transcript
    and the header has a height limit. Added an exact above-navigation composer assertion at
    375 × 500 after recovery. Existing 320/375 px initial-screen assertions remain.
