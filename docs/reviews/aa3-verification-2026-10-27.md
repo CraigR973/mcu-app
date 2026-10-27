@@ -32,6 +32,13 @@ watch count and identified-owned-title count, with their limits written beside t
   Enabled loopback-only TCP for this disposable server so the clean gate can exercise them.
   The restart caller initially waited on the daemon's inherited output pipe; interrupted
   that caller, verified the running server and updated only ignored local test URLs.
+- The first Chromium run passed the mixed-format API assertion but both new UI cases
+  could not locate the physical/download line exactly: it shared a DOM text container
+  with the overlap line. Each line now has its own span, preserving all exact expected
+  values and assertions. Focused dashboard tests passed after this markup correction.
+- Before the browser run, review caught that the new fixture would change the import
+  journey's pinned 70-title baseline. Its own copy is now removed through the app API in
+  `finally`; the import journey's existing expected count remains unchanged.
 
 The only changed existing layout expectation is Craig's approved collection-only exception
 to the “every Home section is sideways” rule; every other shelf assertion stays. API route
@@ -41,7 +48,11 @@ approved fields and their required-field entries; its exact comparison stays.
 ## Evidence pending
 
 Focused API/stat/OpenAPI checks passed: 22 tests on disposable Postgres.
-Full clean-commit local gate, browser screenshots, seven-job PR/main CI and exact production
-SHA/readiness proof remain pending. Local WebKit is unavailable on macOS 13; CI must run it.
+All ten standard local checks passed from clean commit `c164226`: API 2,491 passed with
+zero skips; shared 157 and web 708 passed; lint/typechecks/builds passed. All 16 derived-field
+trigger cases ran. A subsequent E2E-only fixture-cleanup commit changed no tested app source.
+The final markup correction receives a fresh clean gate and browser run before close-out.
+Browser screenshots, seven-job PR/main CI and exact production SHA/readiness proof remain
+pending. Local WebKit is unavailable on macOS 13; CI must run it.
 Real-phone observations remain owner-only. No live provider call, valuation start, data write
 or synthetic production account/session is authorised or performed.

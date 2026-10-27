@@ -25,7 +25,7 @@ function copiesDetail(stats: Stats): ReactNode {
   }
   return (
     <>
-      {COUNT.format(stats.physicalCopies)} physical · {COUNT.format(stats.downloadCopies)} download
+      <span className="block">{COUNT.format(stats.physicalCopies)} physical · {COUNT.format(stats.downloadCopies)} download</span>
       <span className="mt-1 block">{COUNT.format(stats.physicalAndDownloadCopies)} include both</span>
     </>
   )
