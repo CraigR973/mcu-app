@@ -1,12 +1,14 @@
 # AA9 — assistant verification
 
-27 Oct · build in progress on `feat/aa9-assistant`; not yet shipped.
+27 Oct · local verification complete on `feat/aa9-assistant`; PR CI and deployment pending.
 
 Craig picked Conversation first and Include shared corrections after the review, before
 planning (#300). Sitting 5 authorises AA3 then AA9 only; sitting 6 is excluded. AA3 is
 already live in PR #115 (`1c73d90`), with final close-out head `b904457` and seven-job CI
 40535930619 green before AA9 began. The API and web matched that SHA and full readiness
 passed before this review. The concrete acceptance plan is `aa9-build-plan-2026-10-27.md`.
+[AA3 verification and its complete repair record](aa3-verification-2026-10-27.md)
+are retained separately; batches did not share a product branch.
 
 ## How it works
 
@@ -113,12 +115,12 @@ short-screen recovery geometry also passed. Final full clean gate/browser eviden
 
 | Acceptance | Proof | Result |
 |---|---|---|
-| Chosen layout and role-aware first screen | Both roles, both themes, 320/375 px, short and desktop viewports; starters do not call the model | In progress |
-| Multiline draft, allowance and truthful failures | Unit states, known call/spend cap, offline, status/usage failures, fixture unconfigured page | In progress |
-| Safe recovery and chat isolation | Premature EOF after real server save, no duplicate send, lost confirmation, URL-change origin isolation | In progress |
-| History and named delete confirmation | Loading/error/reload, separate drafts, cancel/confirm deletion; confirmed diary entry survives | In progress |
-| Readable answers and reader control | Safe text/links tests, partial markup, scroll-away/latest behaviour | In progress |
-| Existing app contracts and full journey | All ten local checks, full available E2E, exact-head seven-job CI | Pending |
+| Chosen layout and role-aware first screen | Both roles, both themes, 320/375 px, short and desktop viewports; starters do not call the model | Local pass |
+| Multiline draft, allowance and truthful failures | Unit states, known call/spend cap, offline, status/usage failures, fixture unconfigured page | Local pass |
+| Safe recovery and chat isolation | Premature EOF after real server save, no duplicate send, lost confirmation, URL-change origin isolation | Local pass |
+| History and named delete confirmation | Loading/error/reload, separate drafts, cancel/confirm deletion; confirmed diary entry survives | Local pass |
+| Readable answers and reader control | Safe text/links tests, partial markup, scroll-away/latest behaviour | Local pass |
+| Existing app contracts and full journey | All ten local checks and full available E2E pass; exact-head seven-job CI follows | Local pass; CI pending |
 | Production deployment | Exact API/web merge and final docs SHA; db and five integration readiness fields | Pending |
 
 ## Rendered evidence
@@ -145,3 +147,25 @@ enforcement. No assertion or skip changed. A fresh clean full gate follows on th
 ![Recovered saved question, fixture app](assets/aa9-2026-10-27/aa9-recovered-saved-question.png)
 
 ![Named deletion, fixture app](assets/aa9-2026-10-27/aa9-delete-confirmation.png)
+
+## Final clean local gate — `cf28d05`
+
+All ten `batch-verify.md` commands passed on clean commit
+`cf28d051562ff5a2c61894aaacb6a3f539ac2bcc`; the tree remained clean. API **2,492 passed,
+zero skips** (including all 16 derived-field trigger cases); shared **157 passed**; web
+**727 passed**. Python/web lint, Python formatting/mypy, both typechecks and builds passed.
+Web lint retains 11 existing Fast Refresh warnings; there is no new exception. E2E typecheck
+also passed. The prior `8a34095` clean gate passed all ten with 2,491 API tests before the
+additional fixture-ID regression; it does not replace this final gate.
+
+The final full local run has completed Chromium **47 passed** and Firefox **46 passed, one
+existing documented dictation skip**. All **six cron cases passed** on a fresh fixture database. WebKit is CI-only on this Mac.
+No new skip or retry was added. The combined repair-run captures above were visually inspected
+at phone size: recovery keeps the saved answer and locked draft readable, and the delete sheet
+names the chat and warns that confirmed actions survive. A 375 × 500 assertion pins Send above
+the navigation after recovery; expanded screen captures are fixtures, not physical iPhones.
+
+All local E2E projects completed normally on this final run. The app/shared/test source is
+unchanged from the clean `cf28d05` gate; the following review/status checkpoint changes only
+documentation. Seven exact-head PR jobs, then merge/main CI and production API/web SHA/full
+readiness, remain required before calling this shipped.

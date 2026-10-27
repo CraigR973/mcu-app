@@ -2,7 +2,7 @@
 
 ## Now
 
-**27 Oct: AA3 is live; AA9's build is under verification.**
+**27 Oct: AA3 is live; AA9 passes local verification and awaits PR CI.**
 AA9 is on `feat/aa9-assistant`, with its report and three interactive layouts in
 `docs/reviews/aa9-assistant-review-2026-10-27.md`. Recommendation: Conversation first and the
 shared guidance/limit/recovery corrections. Craig selected both in chat after the review.
@@ -15,7 +15,9 @@ named deletion confirmation. Focused checks: 25 unit cases and all six Chromium 
 including short-height composer geometry and no duplicate send after a saved answer is lost.
 Web/E2E typechecks pass. Actual fixture-app screens were inspected at 375 px in both themes;
 normal repository E2E required no bypass of the review's in-app-browser API block.
-Final clean local gate, full available browsers, seven-job PR CI and deployment are pending.
+All ten checks passed from clean `cf28d05`: API 2,492, shared 157 and web 727; zero API
+skips and all 16 derived-field trigger cases ran. Full local E2E: Chromium 47, Firefox 46 plus
+one existing dictation skip, jobs six. WebKit is CI-only. Seven-job PR CI and deployment are pending.
 Failures and repairs are in `docs/reviews/aa9-verification-2026-10-27.md`.
 
 AA3 shipped in PR #115, merge `1c73d90`; final close-out head `b904457` is clean on main.
@@ -39,7 +41,7 @@ and final Home-total comparison stay open, independently of this review.
 
 ## Next
 
-**Finish AA9 verification and automatic close-out from Craig's picks.**
+**Run AA9 through exact-head seven-job PR CI and automatic close-out.**
 Continue under the existing sitting-5 authorisation.
 Any newly discovered consequential contract change needs its own decision before implementation.
 AA9 is open; its ledger row stays unstruck. Do not start sitting 6.

@@ -25,9 +25,11 @@ AA3's referenced method, verbatim:
 > A UI/UX review of Home's collection row as its own report (`docs/reviews/`), with mock-ups, sent
 > to Craig; the build is planned from his picks. No code before his picks.
 
-This is the assistant review/report/mock-up stage. **There is no assistant build plan or
-product implementation.** AA9 stays open at Craig's picks checkpoint. Sitting 6 is excluded.
-A selected design will become a separate concrete plan only after those picks.
+At delivery this was the review/report/mock-up stage, with no build plan or product code.
+The run stopped for Craig's picks. He then selected Conversation first and Include shared
+corrections (#300); only then was `aa9-build-plan-2026-10-27.md` written and implementation
+started. `aa9-verification-2026-10-27.md` carries the subsequent build evidence. Findings below
+describe the baseline at review time. Sitting 6 remains excluded.
 
 ## What exists today
 
