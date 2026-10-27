@@ -118,9 +118,9 @@ layout authorises the collection-only exception to decision #249, not a redesign
 AA9 starts only after AA3's completed cycle and clean local main. AA9 is its own review and
 stops for Craig's picks before any assistant build plan. Sitting 6 remains excluded.
 
-**Current state: API extension and build approved; implementation and verification in progress.**
+**Current state: build and local verification complete; PR/main CI and shipment pending.**
 
-Planning checks: main's latest seven-job run still green at `c454518`; selected mock-up
+At the planning checkpoint, main's latest seven-job run was green at `c454518`; selected mock-up
 opened at 375 px and 320 px, with disclosure interaction checked and no horizontal
-overflow at 320 px. Documentation diff whitespace check passed. Full implementation
-gate has not run because product implementation has not started.
+overflow at 320 px. Documentation diff whitespace check passed. The later full implementation
+gate and evidence are recorded in `aa3-verification-2026-10-27.md`.

@@ -1,6 +1,6 @@
 # AA3 — collection summary verification
 
-27 Oct · implementation verification in progress; not a shipment claim.
+27 Oct · local verification complete; PR/main CI and shipment pending.
 
 Craig approved Compact summary, corrections, both personal/match numbers retained with
 clearer definitions, and the two additive stats fields before implementation (#299).
@@ -64,3 +64,52 @@ Browser screenshots, seven-job PR/main CI and exact production SHA/readiness pro
 pending. Local WebKit is unavailable on macOS 13; CI must run it.
 Real-phone observations remain owner-only. No live provider call, valuation start, data write
 or synthetic production account/session is authorised or performed.
+
+## Final local evidence — clean commit `b837148`
+
+All ten `batch-verify.md` commands passed from a clean tree, and it remained clean:
+API **2,491 passed, zero skips**; shared **157 passed**; web **708 passed**; Python/web
+lint, formatting, mypy, both typechecks and both builds passed. Web lint retains 11 existing
+Fast Refresh warnings; no new exception, ignore or disabled check. The E2E typecheck passed.
+
+The complete available local E2E suite then passed against disposable loopback-only
+Postgres with the outside world faked: **Chromium 41 passed; Firefox 40 passed and one
+documented dictation skip; cron jobs six passed**. WebKit is CI-only on this Mac.
+No browser retry or new skip was added. Initial interrupted runs and their failure artefacts
+are retained under the ignored AA3 scratchpad; the final run completed normally.
+
+| Acceptance | Evidence | Result |
+|---|---|---|
+| Five metrics without sideways navigation | Both people, both themes, 375 px/desktop, 320 px overflow checks; exact Archive action width | Local pass |
+| Accurate physical/download overlap | API fixtures: physical-only, download-only, mixed combo, sold/trash, listed-for-sale, empty; both roles | Pass |
+| Retain diary and identification meaning | Exact personal/match values and explanatory text in unit/browser assertions | Pass |
+| Honest value and purchase-price coverage | No-value, loading, offline, failed value/refresh, partial/sales coverage and tap-readable month figures | Pass |
+| Existing breakdowns stay reachable | Native disclosure opens formats, places, genres and decades; spending keeps its data/empty explanation | Pass |
+| Other Home shelves and access boundaries | Existing order/sideways assertions retained except the owner-approved collection exception; route inventory unchanged | Pass |
+| Full CI and production exact SHA/readiness | Required before close-out | Pending |
+
+## Read-only production evidence
+
+The current stats router was called against production using a connection whose every
+transaction is read-only. Both new response counts agreed with independent SELECTs and
+valuation's existing copy eligibility: 1,472 physical copies, 589 download copies, 134 in
+both, 1,927 total catalogue copies. Both people own the same 1,903 titles; their existing
+diary values remain Craig 500 and Mark 879, and matched titles 1,902.
+Stored value was £15,939.38 across 1,311 of 1,472 physical copies, zero sales-backed.
+This remains an interim observation, **not AA10b's final after-total checkpoint**.
+
+The new four-count aggregate was also explained on production under a read-only transaction:
+first observation 370.6 ms execution / 69.7 ms planning; a warm repeat 4.8 ms / 1.3 ms.
+These are database timings, not whole-request latency. No server cache or extra API request
+was added. The valuation GET was avoided because it may abandon a stale job as housekeeping.
+
+## Screens inspected
+
+Actual built-app component captures, using the disposable E2E catalogue (70 titles), not
+production or a physical phone. Functional tests use an 844 px viewport; the captures use
+a taller viewport so the fixed navigation does not obscure the component. The full-width
+Archive action and complete breakdown trigger were inspected after the visual repair.
+
+![Craig, dark theme, 375 px](assets/aa3-craig-dark-375.png)
+
+![Mark, light theme, 375 px](assets/aa3-mark-light-375.png)

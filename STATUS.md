@@ -2,7 +2,7 @@
 
 ## Now
 
-**27 Oct: AA3's API extension and build approved; implementation is under verification.**
+**27 Oct: AA3 build and local gate complete; PR/main CI and shipment next.**
 Craig chose Compact summary and corrections, keeping both watched and identified with
 clearer definitions (#299). The selected five-number mock-up and plan are in
 `docs/reviews/aa3-build-plan-2026-10-27.md`. The plan proposes two additive stats-response
