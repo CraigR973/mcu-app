@@ -11,12 +11,19 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Group AA sitting 5, AA9 — two assistant review picks (27 Oct):** choose Conversation
+  first (recommended), Task first or History first; then approve or narrow the shared
+  guidance/limit/recovery corrections. Report and interactive layouts:
+  `docs/reviews/aa9-assistant-review-2026-10-27.md`. Comparative build cost: 3–6 agent hours
+  plus CI/deployment waiting, uncertain until planning. No cap, role, model or stored-history
+  change is proposed. AA9 is open; **no build plan/code before these picks**; sitting 6 excluded.
+
 - ~~**Group AA sitting 5, AA3 — approve review picks and two stats fields.**~~
   **Done 27 Oct:** Compact summary, corrections and both diary/match numbers retained (#299).
   Craig approved the two additive counts before build. Shipped in PR #115 (`1c73d90`), all
   seven PR/merge jobs and exact production API/web SHA/readiness passed. No migration, live
-  data/price write or provider call. Real-phone observation remains open. AA9 review is next;
-  its picks are a separate checkpoint before planning. Sitting 6 remains excluded.
+  data/price write or provider call. Real-phone observation remains open. AA9 review now has
+  its own picks checkpoint before planning. Sitting 6 remains excluded.
 
 - ~~**Group AA sitting 3, AA6: approve the one-path route-inventory addition.**~~
   **Approved 25 Oct in chat:** `/api/v1/feeling-lucky` is added to the pinned set;
