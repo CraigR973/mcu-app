@@ -920,6 +920,18 @@ describe('statsSchema', () => {
     const parsed = statsSchema.parse(base)
     expect(parsed.mostWatched).toEqual([])
     expect(parsed.itemsWithPrice).toBe(0)
+    expect(parsed.physicalCopies).toBeUndefined()
+    expect(parsed.physicalAndDownloadCopies).toBeUndefined()
+  })
+
+  it('keeps physical and download overlap explicit, rejecting invalid counts', () => {
+    const input = { ...base, totalItems: 1927, downloadCopies: 589, physicalCopies: 1472, physicalAndDownloadCopies: 134 }
+    expect(statsSchema.parse(input).physicalAndDownloadCopies).toBe(134)
+    expect(statsSchema.parse(input).physicalCopies).toBe(1472)
+    for (const key of ['physicalCopies', 'physicalAndDownloadCopies']) {
+      expect(statsSchema.safeParse({ ...input, [key]: -1 }).success).toBe(false)
+      expect(statsSchema.safeParse({ ...input, [key]: 1.5 }).success).toBe(false)
+    }
   })
 
   it('keeps money in integer pence', () => {

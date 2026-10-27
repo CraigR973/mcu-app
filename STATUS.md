@@ -2,7 +2,19 @@
 
 ## Now
 
-**27 Oct: Group AA sitting 4 is complete — AA7 and AA11 shipped. Stop before sitting 5.**
+**27 Oct: AA3 build and local gate complete; PR/main CI and shipment next.**
+Craig chose Compact summary and corrections, keeping both watched and identified with
+clearer definitions (#299). The selected five-number mock-up and plan are in
+`docs/reviews/aa3-build-plan-2026-10-27.md`. The plan proposes two additive stats-response
+fields for physical-copy and physical/download-overlap counts. Craig approved them and
+the build in chat before implementation. No migration or live
+data/price change is proposed. AA3 remains open; AA9 not started; sitting 6 excluded.
+Fresh review evidence found 134 mixed physical/download copies: Home says 1,338 discs,
+while valuation correctly counts 1,472 physical copies. Personal diary counts stay 500
+for Craig and 879 for Mark, explicitly including titles not owned. Main remains `c454518`,
+its latest seven-job CI green; the review verified API/web exact SHA and full readiness.
+
+**Group AA sitting 4 is complete — AA7 and AA11 shipped.**
 AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in PR #112 (`b1075ec`). Separate
 navigation repairs shipped in PR #113 (`30f3607`) and PR #114 (`0b4a416`). The latter
 passed all seven PR and merge jobs (40414279164, 40479165450), including all three browsers.
@@ -19,7 +31,7 @@ Exact API/web merge SHA and full readiness passed. Migration 069 preserves all f
 old Out loans and their copy places, with new metadata NULL. Both read roles can read
 the new fields and cannot read PIN hashes or invite tokens. The final documentation
 head receives the same exact-SHA CI/deployment checks before the session ends.
-No sitting 5 work has started.
+Sitting 5 now proceeds only to each review's owner-picks checkpoint.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -34,7 +46,9 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Stop before Group AA sitting 5 (AA3 → AA9).** It requires separate authorisation.
+**Complete AA3's local gate, CI, shipment and production proof.**
+The layout, content and API picks are settled. Finish AA3 before AA9's separate review, which
+stops again for Craig's picks. Do not start sitting 6.
 Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
 1–2 Nov owner checkpoint stays independent. Verify current SHA/CI before any new work.
 
@@ -428,6 +442,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **27 Oct — AA3 picks and build plan:** Craig selected Compact summary, approved the corrections, and retained watched/identified with clearer definitions. Recorded #299 and wrote the build plan plus selected five-number mock-up. Proposed two additive counts in the existing stats response, preserving old fields and handling deployment skew without invented zeros. Stopped before product implementation under Craig's data-shape rule; no migration, data write, re-price, provider call, merge or deploy. Existing main `c454518` remains green. Full implementation gate not run; AA9/sitting 6 not started.
+
+- **27 Oct — AA3 review checkpoint, Group AA sitting 5:** Craig authorised AA3 → AA9 with a stop after each review before build planning; sitting 6 excluded. Verified clean current main, seven-job CI 40480668409 and exact API/web baseline SHA `c454518` with full readiness. Wrote the collection review and three interactive layout mock-ups. Fresh read-only counts proved the 134 physical/download overlap, 500 diary versus 482 owned watches for Craig, and 879 versus 878 for Mark. No product change, provider call, live write, build plan, close-out or deployment. AA3 remains open awaiting three picks; AA9 has not started. Full local implementation gate deferred to an authorised build.
 
 - **27 Oct — AA11 close-out completed after both navigation repairs.** PR #114 (`0b4a416`), seven green PR and merge jobs (40414279164, 40479165450); ten local commands, Chromium 38, Firefox 37 plus documented dictation skip, cron six. Exact API/web merge readiness and four-loan/read-role preservation verified. Earlier failures retained in the report. Sitting 4 complete; sitting 5 not started; phone observations remain owner-only.
 

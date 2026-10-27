@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -45,6 +45,8 @@ const STATS: Stats = {
   totalMovies: 1888,
   totalItems: 1880,
   downloadCopies: 422,
+  physicalCopies: 1880,
+  physicalAndDownloadCopies: 422,
   identifiedMovies: 1678,
   watchedMovies: 594,
   formats: [{ key: 'bluray', label: 'Blu-ray', itemCount: 900, movieCount: 880 }],
@@ -137,8 +139,7 @@ function fill() {
   api.fetchActivity.mockResolvedValue({ items: [] })
 }
 
-function renderHome() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+function renderHome(client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
   render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -160,6 +161,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  onlineManager.setOnline(true)
   vi.clearAllMocks()
 })
 
@@ -192,14 +194,16 @@ describe('Home as rows, the collection first — Batch W2', () => {
 
   it('says what each count is: films owned, and copies split into discs and downloads — Batch X12a', async () => {
     renderHome()
-    expect(await screen.findByText('Films owned')).not.toBeNull()
-    expect(screen.getByText('Copies')).not.toBeNull()
-    expect(screen.getByText('1,458 discs, 422 downloads')).not.toBeNull()
+    expect(await screen.findByText('Titles owned')).not.toBeNull()
+    expect(screen.getByText('Copies catalogued')).not.toBeNull()
+    expect(screen.getByText('1,880 physical · 422 download')).not.toBeNull()
+    expect(screen.getByText('422 include both')).not.toBeNull()
+    fireEvent.click(screen.getByText('Collection breakdown'))
     expect(screen.getByText('Formats (copies)')).not.toBeNull()
     expect(screen.getByText('Where they live (copies)')).not.toBeNull()
   })
 
-  it('makes every Home section a row that scrolls sideways', async () => {
+  it('keeps other Home shelves sideways and makes the collection summary fixed — owner pick AA3', async () => {
     renderHome()
     await screen.findByRole('heading', { level: 2, name: 'Completion' })
     for (const heading of screen.getAllByRole('heading', { level: 2 })) {
@@ -208,7 +212,12 @@ describe('Home as rows, the collection first — Batch W2', () => {
       const rows = [...(section as HTMLElement).querySelectorAll('ul')].filter((list) =>
         list.className.split(/\s+/).includes('overflow-x-auto'),
       )
-      expect(rows.length, heading.textContent ?? '').toBeGreaterThan(0)
+      if (heading.textContent === 'The collection') {
+        expect(rows.length).toBe(0)
+        expect(within(section as HTMLElement).getByRole('list', { name: 'The collection in numbers' }).className).toContain('grid-cols-2')
+      } else {
+        expect(rows.length, heading.textContent ?? '').toBeGreaterThan(0)
+      }
     }
   })
 
@@ -225,7 +234,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
     expect(await numbers.findByText('≈ £1,903')).not.toBeNull()
-    expect(numbers.getByText('1,454 of 1,880 discs priced')).not.toBeNull()
+    expect(numbers.getByText('1,454 of 1,880 physical copies priced')).not.toBeNull()
     expect(numbers.getByText('1,888')).not.toBeNull()
   })
 
@@ -241,16 +250,94 @@ describe('Home as rows, the collection first — Batch W2', () => {
     api.fetchCollectionValue.mockResolvedValue({ ...VALUE, salesBackedDiscs: 3 })
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
-    expect(numbers.getByText('1,454 of 1,880 discs priced; 3 based on sales')).not.toBeNull()
+    expect(numbers.getByText('1,454 of 1,880 physical copies priced')).not.toBeNull()
+    expect(numbers.getByText('3 based on observed sales')).not.toBeNull()
+    fireEvent.click(numbers.getByText('How this estimate works'))
+    expect(numbers.getByText(/At least three observed sales in 90 days use the median/)).not.toBeNull()
+    expect(numbers.getByText(/a Best Offer may have closed below its advertised price/)).not.toBeNull()
   })
 
-  it('leaves the worth out for a viewer until there is a total', async () => {
+  it('tells a viewer explicitly when there is no stored estimate', async () => {
     auth.role = 'viewer'
     api.fetchCollectionValue.mockResolvedValue({ ...VALUE, total: null, pricedDiscs: 0 })
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
     await waitFor(() => expect(api.fetchCollectionValue).toHaveBeenCalled())
-    expect(numbers.queryByText('Worth')).toBeNull()
+    expect(numbers.getByText('Estimated used value')).not.toBeNull()
+    expect(numbers.getByText('Not valued yet')).not.toBeNull()
+    expect(numbers.queryByRole('link', { name: 'Value it in Admin' })).toBeNull()
+  })
+
+  it('keeps actual physical counts and overlap when valuation fails', async () => {
+    api.fetchStats.mockResolvedValue({ ...STATS, totalItems: 1927, downloadCopies: 589, physicalCopies: 1472, physicalAndDownloadCopies: 134 })
+    api.fetchCollectionValue.mockRejectedValue(new Error('Value service unavailable'))
+    renderHome()
+    const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
+    expect(numbers.getByText('1,472 physical · 589 download')).not.toBeNull()
+    expect(numbers.getByText('134 include both')).not.toBeNull()
+    expect(numbers.queryByText(/1,338/)).toBeNull()
+    await waitFor(() => expect(numbers.getByText('Unavailable')).not.toBeNull())
+  })
+
+  it('keeps the Archive available while stats load and when they fail', async () => {
+    api.fetchStats.mockRejectedValue(new Error('Stats unavailable'))
+    renderHome()
+    expect(screen.getByRole('link', { name: 'Browse the archive' })).not.toBeNull()
+    expect(await screen.findByText('The collection ledger is unavailable')).not.toBeNull()
+    expect(screen.getByRole('link', { name: 'Browse the archive' })).not.toBeNull()
+  })
+
+  it('shows cached counts and an explicit offline value state when value was never cached', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client.setQueryData(['stats'], STATS)
+    onlineManager.setOnline(false)
+    renderHome(client)
+    expect(await screen.findByText('Reconnect to load the stored estimate. Collection counts are still available.')).not.toBeNull()
+    expect(screen.getByText('1,880 physical · 422 download')).not.toBeNull()
+    expect(screen.queryByText('Loading the stored estimate')).toBeNull()
+  })
+
+  it('keeps a cached value with an explicit failed-refresh warning', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client.setQueryData(['collection-value'], VALUE)
+    api.fetchCollectionValue.mockRejectedValue(new Error('Refresh failed'))
+    renderHome(client)
+    expect(await screen.findByText('The latest value could not be loaded; showing the stored estimate.')).not.toBeNull()
+    expect(screen.getByText('≈ £1,903')).not.toBeNull()
+  })
+
+  it('does not invent a physical count when an older API omits the new fields', async () => {
+    const oldStats = { ...STATS }
+    delete oldStats.physicalCopies
+    delete oldStats.physicalAndDownloadCopies
+    api.fetchStats.mockResolvedValue(oldStats)
+    renderHome()
+    expect(await screen.findByText('Physical/download split is temporarily unavailable.')).not.toBeNull()
+    expect(screen.queryByText(/1,458 physical/)).toBeNull()
+    expect(screen.getByText('Copies catalogued')).not.toBeNull()
+  })
+
+  it.each(['admin', 'viewer'] as const)('retains diary and TMDB counts with their true meaning for %s', async (role) => {
+    auth.role = role
+    renderHome()
+    const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
+    expect(numbers.getByText("You've watched")).not.toBeNull()
+    expect(numbers.getByText('594')).not.toBeNull()
+    expect(numbers.getByText("Distinct titles in your diary, including titles you don't own")).not.toBeNull()
+    expect(numbers.getByText('Matched on TMDB')).not.toBeNull()
+    expect(numbers.getByText('1,678')).not.toBeNull()
+    expect(numbers.getByText('Of 1,888 owned titles. A match can still need checking.')).not.toBeNull()
+  })
+
+  it('makes dated purchase values available without hover and explains limited coverage', async () => {
+    api.fetchStats.mockResolvedValue({ ...STATS, itemsWithPrice: 2, spendOverTime: [{ month: '2026-09', spentCents: 1299, cumulativeCents: 1299, itemCount: 1 }] })
+    renderHome()
+    await screen.findByRole('list', { name: 'The collection in numbers' })
+    fireEvent.click(screen.getByText('Collection breakdown'))
+    expect(screen.getByText('Recorded spending')).not.toBeNull()
+    expect(screen.getByText(/not the collection's lifetime cost/)).not.toBeNull()
+    fireEvent.click(screen.getByText('Monthly spending figures'))
+    expect(screen.getByText('£12.99 · £12.99 total')).not.toBeNull()
   })
 
   it('hides a row with nothing in it', async () => {

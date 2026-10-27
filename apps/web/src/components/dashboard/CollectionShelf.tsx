@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { formatMonth } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
 import type { CountSlice, Stats } from '@mcu/shared'
 
-import { ShelfHeading, ShelfLink, ShelfRow } from '@/components/dashboard/Shelf'
+import { ShelfHeading, ShelfLink } from '@/components/dashboard/Shelf'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
 import { fetchCollectionValue, fetchStats, poundsFromCents, type CollectionValue } from '@/lib/api'
@@ -18,19 +19,24 @@ function pounds(total: string, currency: string): string {
   )
 }
 
-/** "1,335 discs, 588 downloads", and "1 disc, 1 download" when it is one of each. */
-function copiesDetail(discs: number, downloads: number): string {
-  const discWord = discs === 1 ? 'disc' : 'discs'
-  const downloadWord = downloads === 1 ? 'download' : 'downloads'
-  return `${COUNT.format(discs)} ${discWord}, ${COUNT.format(downloads)} ${downloadWord}`
+function copiesDetail(stats: Stats): ReactNode {
+  if (stats.physicalCopies === undefined || stats.physicalAndDownloadCopies === undefined) {
+    return <>Physical/download split is temporarily unavailable.</>
+  }
+  return (
+    <>
+      <span className="block">{COUNT.format(stats.physicalCopies)} physical · {COUNT.format(stats.downloadCopies)} download</span>
+      <span className="mt-1 block">{COUNT.format(stats.physicalAndDownloadCopies)} include both</span>
+    </>
+  )
 }
 
-function NumberCard({ label, value, detail }: { label: string; value: string; detail?: ReactNode }) {
+function NumberCard({ label, value, detail, wide = false }: { label: string; value: string; detail?: ReactNode; wide?: boolean }) {
   return (
-    <li className="w-40 shrink-0 snap-start">
+    <li className={`min-w-0 ${wide ? 'col-span-2' : ''}`}>
       <dl className="h-full border-l-2 border-l-accent bg-card px-4 py-3 shadow-soft">
         <dt className="metadata-label">{label}</dt>
-        <dd className="mt-1 whitespace-nowrap font-display text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+        <dd className="mt-1 break-words font-display text-2xl font-semibold tabular-nums tracking-tight text-foreground">
           {value}
         </dd>
         {detail ? <dd className="mt-0.5 text-xs leading-4 text-muted-foreground">{detail}</dd> : null}
@@ -41,7 +47,7 @@ function NumberCard({ label, value, detail }: { label: string; value: string; de
 
 function ChartCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <li className="w-72 shrink-0 snap-start self-start sm:w-80">
+    <li className="min-w-0 self-start">
       <section className="archive-panel h-full space-y-3 p-4">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {children}
@@ -70,8 +76,8 @@ function BarChart({
       {slices.map((slice) => {
         const count = countOf(slice)
         return (
-          <li key={slice.key} className="flex items-center gap-2">
-            <span className="w-24 shrink-0 truncate text-xs text-muted-foreground">{slice.label}</span>
+          <li key={slice.key} className="grid grid-cols-[minmax(0,1fr)_minmax(2rem,1fr)_3rem] items-center gap-2">
+            <span className="break-words text-xs text-muted-foreground">{slice.label}</span>
             <span className="h-2.5 flex-1 overflow-hidden rounded-sm bg-muted" aria-hidden>
               <span
                 className="block h-full rounded-sm bg-primary/70"
@@ -91,11 +97,14 @@ function BarChart({
 function SpendChart({ stats }: { stats: Stats }) {
   const points = stats.spendOverTime
   const peak = Math.max(1, ...points.map((p) => p.cumulativeCents))
+  const datedCopies = points.reduce((sum, point) => sum + point.itemCount, 0)
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">
         {poundsFromCents(points[points.length - 1]?.cumulativeCents ?? 0)} across{' '}
-        {stats.itemsWithPrice.toLocaleString()} priced discs
+        {datedCopies.toLocaleString()} copies with a purchase date and price.
+        {' '}{stats.itemsWithPrice.toLocaleString()} copies have a recorded purchase price.
+        {' '}This is recorded spending, not the collection&apos;s lifetime cost or estimated used value.
       </p>
       <ul className="flex h-24 items-end gap-1">
         {points.map((point) => (
@@ -114,6 +123,17 @@ function SpendChart({ stats }: { stats: Stats }) {
       <p className="text-xs text-muted-foreground">
         {formatMonth(points[0]?.month ?? '')} – {formatMonth(points[points.length - 1]?.month ?? '')}
       </p>
+      <details className="text-xs">
+        <summary className="list-link flex min-h-11 cursor-pointer items-center text-primary">Monthly spending figures</summary>
+        <ul className="space-y-2">
+          {points.map((point) => (
+            <li key={point.month} className="flex flex-wrap justify-between gap-x-3 gap-y-1">
+              <span>{formatMonth(point.month)}</span>
+              <span>{poundsFromCents(point.spentCents)} · {poundsFromCents(point.cumulativeCents)} total</span>
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   )
 }
@@ -121,33 +141,51 @@ function SpendChart({ stats }: { stats: Stats }) {
 /**
  * The worth card: the stored used-copy figure, with observed sales counted when present.
  * "Update values" and the bid trial moved to Admin's "Collection value" with W2 (#249).
- * Hidden from a viewer until there is a total, as before; an admin sees where to start one.
+ * Both people see an explicit no-value state; only an admin sees where to start one.
  */
-function WorthCard({ value, isAdmin }: { value: CollectionValue | undefined; isAdmin: boolean }) {
-  if (!value) return null
+function WorthCard({ value, isAdmin, pending, error, offline }: { value: CollectionValue | undefined; isAdmin: boolean; pending: boolean; error: boolean; offline: boolean }) {
+  if (!value) return <NumberCard wide label="Estimated used value" value={pending && !offline ? '…' : 'Unavailable'} detail={offline ? 'Reconnect to load the stored estimate. Collection counts are still available.' : pending ? 'Loading the stored estimate' : 'The value could not be loaded. Collection counts are still available.'} />
   const running = value.run?.status === 'running'
   if (value.total === null) {
-    if (!isAdmin && !running) return null
     return (
       <NumberCard
-        label="Worth"
-        value="—"
-        detail={running ? 'Pricing now' : <ShelfLink to="/valuation">Value it in Admin</ShelfLink>}
+        wide
+        label="Estimated used value"
+        value="Not valued yet"
+        detail={running ? 'Pricing now' : isAdmin ? <ShelfLink to="/valuation">Value it in Admin</ShelfLink> : 'No stored estimate is available yet.'}
       />
     )
   }
   return (
     <NumberCard
-      label="Worth"
+      wide
+      label="Estimated used value"
       value={`≈ ${pounds(value.total, value.currency)}`}
-      detail={running ? 'Pricing now' : `${COUNT.format(value.pricedDiscs)} of ${COUNT.format(value.discs)} discs priced${value.salesBackedDiscs ? `; ${COUNT.format(value.salesBackedDiscs)} based on sales` : ''}`}
+      detail={
+        <>
+          <span className="block">{COUNT.format(value.pricedDiscs)} of {COUNT.format(value.discs)} physical copies priced</span>
+          <span className="mt-1 block">{COUNT.format(value.salesBackedDiscs)} based on observed sales</span>
+          {running ? <span className="mt-1 block" role="status">Pricing now</span> : null}
+          {error ? <span className="mt-1 block" role="status">The latest value could not be loaded; showing the stored estimate.</span> : null}
+          <details className="mt-2 border-t border-border pt-1">
+            <summary className="list-link flex min-h-11 cursor-pointer items-center text-primary">How this estimate works</summary>
+            <p className="pb-2 leading-5">
+              Each physical copy is valued as used, including postage. At least three observed sales
+              in 90 days use the median of their last advertised listing prices; otherwise a current used asking-price stand-in is
+              used, with a scaled New-price fallback when used listings are scarce. A listing that disappears
+              is only an inferred sale; a Best Offer may have closed below its advertised price.
+              Downloads have no value here.
+            </p>
+          </details>
+        </>
+      }
     />
   )
 }
 
 /**
- * The collection, first on Home — Batch W2 (#249: "maybe also have the collection section
- * at the top"). Two sideways rows under one heading: the numbers, then the charts.
+ * AA3 (#299): five visible metrics, then an in-place breakdown. Craig approved this
+ * collection-only exception to W2's sideways shelves and retained both personal/match counts.
  *
  * **Most watched is gone** (snag 4): on 5 Oct 8 of its 10 films were also in Highlights' Most
  * rewatched, which counts the same viewings and says whose. The stats API still returns it,
@@ -171,6 +209,7 @@ export function CollectionShelf() {
   const state = listState(statsQuery, false)
 
   let body: ReactNode
+  let breakdown: ReactNode = null
   if (state === 'offline') {
     body = (
       <StatePanel
@@ -199,29 +238,34 @@ export function CollectionShelf() {
           ? 'Spend over time appears once purchase prices are recorded; the imported spreadsheet never carried one.'
           : 'Spend over time appears once the recorded prices carry a purchase date.'
     body = (
-      <>
-        <ShelfRow label="The collection in numbers">
-          <NumberCard label="Films owned" value={COUNT.format(stats.totalMovies)} detail="with a copy" />
+        <ul aria-label="The collection in numbers" className="grid grid-cols-2 gap-3">
+          <NumberCard label="Titles owned" value={COUNT.format(stats.totalMovies)} detail="Films and TV series" />
           <NumberCard
-            label="Copies"
+            label="Copies catalogued"
             value={COUNT.format(stats.totalItems)}
-            detail={copiesDetail(stats.totalItems - stats.downloadCopies, stats.downloadCopies)}
+            detail={copiesDetail(stats)}
           />
-          <WorthCard value={value} isAdmin={isAdmin} />
-          <NumberCard label="You've watched" value={COUNT.format(stats.watchedMovies)} />
-          <NumberCard label="Identified" value={COUNT.format(stats.identifiedMovies)} />
-        </ShelfRow>
-        <ShelfRow label="The collection's shape">
+          <WorthCard value={value} isAdmin={isAdmin} pending={valueQuery.isPending} error={valueQuery.isError} offline={listState(valueQuery, false) === 'offline'} />
+          <NumberCard label="You've watched" value={COUNT.format(stats.watchedMovies)} detail="Distinct titles in your diary, including titles you don't own" />
+          <NumberCard label="Matched on TMDB" value={COUNT.format(stats.identifiedMovies)} detail={<>Of {COUNT.format(stats.totalMovies)} owned titles. A match can still need checking.</>} />
+        </ul>
+    )
+    breakdown = (
+        <details className="border-t border-border">
+          <summary className="list-link flex min-h-11 cursor-pointer items-center text-sm font-semibold text-primary">Collection breakdown</summary>
+          <ul aria-label="The collection's shape" className="grid grid-cols-1 gap-3 pb-3 sm:grid-cols-2">
           <ChartCard title="Formats (copies)">
             <BarChart slices={stats.formats} countOf={(s) => s.itemCount} />
+            <p className="text-xs text-muted-foreground">Copies can carry more than one format; these counts overlap.</p>
           </ChartCard>
           <ChartCard title="Where they live (copies)">
             <BarChart slices={stats.sections} countOf={(s) => s.itemCount} />
           </ChartCard>
-          <ChartCard title="Genres">
+          <ChartCard title="Genres (titles)">
             <BarChart slices={stats.genres.slice(0, 12)} countOf={(s) => s.movieCount} />
+            <p className="text-xs text-muted-foreground">The 12 most common genres. A title can have more than one.</p>
           </ChartCard>
-          <ChartCard title="Decades">
+          <ChartCard title="Decades (titles)">
             <BarChart
               slices={stats.decades.map((d) => ({
                 key: String(d.decade),
@@ -233,13 +277,13 @@ export function CollectionShelf() {
             />
           </ChartCard>
           {stats.spendOverTime.length > 0 ? (
-            <ChartCard title="Spend over time">
+            <ChartCard title="Recorded spending">
               <SpendChart stats={stats} />
             </ChartCard>
           ) : null}
-        </ShelfRow>
+          </ul>
         {spendNote ? <p className="text-xs leading-5 text-muted-foreground">{spendNote}</p> : null}
-      </>
+        </details>
     )
   }
 
@@ -249,14 +293,12 @@ export function CollectionShelf() {
         id="home-collection"
         title="The collection"
         icon={BarChart3}
-        caption={
-          value?.total
-            ? `Worth is ${value.valuedAs ? `${value.valuedAs}, ` : ''}at eBay asking prices, which usually run above what discs sell for.`
-            : undefined
-        }
-        action={<ShelfLink to="/movies">Browse the archive</ShelfLink>}
       />
       {body}
+      <Link to="/movies" className="list-link flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+        Browse the archive
+      </Link>
+      {breakdown}
     </section>
   )
 }

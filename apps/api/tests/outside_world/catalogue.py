@@ -51,6 +51,8 @@ NAMED: tuple[Film, ...] = (
     Film(1501, "Velvet Observatory", 2018, "Mina Shore", 107, ("Drama",)),
     # AA6 owns a unique year-bounded draw fixture.
     Film(1601, "The Copper Lantern", 1931, "Lina Reed", 84, ("Drama",)),
+    # AA3 owns this mixed-format copy; it must not collide with another case's add.
+    Film(1701, "Canal At Dusk", 1997, "Ada North", 102, ("Drama",)),
     # The movie-night shortlist and match.
     Film(1201, "Rooftop Opera", 2014, "Yan Zhou", 112, ("Comedy", "Music")),
     Film(1202, "The Salt Road", 1991, "Kit Marlowe", 127, ("Adventure",)),

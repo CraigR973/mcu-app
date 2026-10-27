@@ -51,9 +51,10 @@ class SpendPoint(BaseModel):
 class StatsResponse(BaseModel):
     totalMovies: int = Field(ge=0)
     totalItems: int = Field(ge=0)
-    #: Batch X12a: how many of `totalItems` carry the download format, so Home can say
-    #: "1,923: 1,335 discs, 588 downloads" and the discs it counts are the ones it names.
+    #: Format tags overlap; downloads are not the complement of physical copies.
     downloadCopies: int = Field(default=0, ge=0)
+    physicalCopies: int = Field(ge=0)
+    physicalAndDownloadCopies: int = Field(ge=0)
     identifiedMovies: int = Field(ge=0)
     watchedMovies: int = Field(ge=0)
 
