@@ -40,7 +40,8 @@ Disable new/select/delete while creating, sending or resolving, including synchr
 double-click guards. Bind streamed transcript, errors and pending cards to their originating
 conversation so browser Back/URL changes cannot show a finishing reply under another chat.
 On unmount, stop updating that page's local state but let the existing request finish and
-refresh its stored-query cache; no cosmetic cancellation or rollback.
+refresh its stored-query cache; no cosmetic cancellation or rollback. A deletion finishing
+after the page is left refreshes cache without navigating the person back to the assistant.
 
 Retain the exact-film write card, Yes/No meanings, role enforcement and the stale-read race
 protection (#287). Scope stream-freshness counts by conversation rather than letting an old

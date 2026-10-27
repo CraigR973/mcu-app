@@ -2,7 +2,7 @@
 
 ## Now
 
-**27 Oct: AA3 is live; AA9 passes local verification and awaits PR CI.**
+**27 Oct: AA3 is live; AA9 PR #116 is open; a final navigation guard is being verified.**
 AA9 is on `feat/aa9-assistant`, with its report and three interactive layouts in
 `docs/reviews/aa9-assistant-review-2026-10-27.md`. Recommendation: Conversation first and the
 shared guidance/limit/recovery corrections. Craig selected both in chat after the review.
@@ -17,7 +17,10 @@ Web/E2E typechecks pass. Actual fixture-app screens were inspected at 375 px in 
 normal repository E2E required no bypass of the review's in-app-browser API block.
 All ten checks passed from clean `cf28d05`: API 2,492, shared 157 and web 727; zero API
 skips and all 16 derived-field trigger cases ran. Full local E2E: Chromium 47, Firefox 46 plus
-one existing dictation skip, jobs six. WebKit is CI-only. Seven-job PR CI and deployment are pending.
+one existing dictation skip, jobs six. WebKit is CI-only. PR #116 head `5e4eda9` entered seven-job CI. A subsequent source
+review reproduced a deletion callback reopening the assistant after navigation; its guard
+passes all 26 focused cases and now receives a fresh clean gate/browser run and new exact-head
+CI before merge. AA9 is not deployed.
 Failures and repairs are in `docs/reviews/aa9-verification-2026-10-27.md`.
 
 AA3 shipped in PR #115, merge `1c73d90`; final close-out head `b904457` is clean on main.

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { MemoryRouter, useNavigate } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AiChatPage from './AiChatPage'
@@ -43,7 +43,8 @@ async function* emptyStream() {
 
 function NavigationProbe() {
   const navigate = useNavigate()
-  return <button onClick={() => navigate('/assistant?c=3f2504e0-4f89-41d3-9a0c-0305e82c3309')}>Browser history to another chat</button>
+  const location = useLocation()
+  return <><button onClick={() => navigate('/assistant?c=3f2504e0-4f89-41d3-9a0c-0305e82c3309')}>Browser history to another chat</button><button onClick={() => navigate('/elsewhere')}>Leave assistant</button><p data-testid="location">{location.pathname}{location.search}</p></>
 }
 
 function renderPage(path = `/assistant?c=${CONVERSATION_ID}`) {
@@ -53,7 +54,7 @@ function renderPage(path = `/assistant?c=${CONVERSATION_ID}`) {
   render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>
-        <NavigationProbe /><AiChatPage />
+        <NavigationProbe /><Routes><Route path="/assistant" element={<AiChatPage />} /><Route path="/elsewhere" element={<h1>Another page</h1>} /></Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -419,6 +420,20 @@ describe('AA9 selected layout and recovery', () => {
     expect(mocks.deleteAiConversation).toHaveBeenCalledWith(CONVERSATION_ID)
     await act(async () => removed.resolve())
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('does not reopen the assistant when a deletion finishes after leaving its page', async () => {
+    const removed = deferred<void>()
+    mocks.deleteAiConversation.mockReturnValueOnce(removed.promise)
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete this conversation' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete chat' }))
+    await vi.waitFor(() => expect(mocks.deleteAiConversation).toHaveBeenCalledTimes(1))
+    fireEvent.click(screen.getByRole('button', { name: 'Leave assistant' }))
+    expect(await screen.findByRole('heading', { name: 'Another page' })).not.toBeNull()
+    await act(async () => { removed.resolve(); await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(screen.getByTestId('location').textContent).toBe('/elsewhere')
+    expect(screen.getByRole('heading', { name: 'Another page' })).not.toBeNull()
   })
 
   it('isolates a finishing reply/card from a browser-history change to another chat', async () => {

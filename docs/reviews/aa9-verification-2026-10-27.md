@@ -1,6 +1,6 @@
 # AA9 — assistant verification
 
-27 Oct · local verification complete on `feat/aa9-assistant`; PR CI and deployment pending.
+27 Oct · PR #116 is open; an additional deletion/navigation repair is under verification. Not yet shipped.
 
 Craig picked Conversation first and Include shared corrections after the review, before
 planning (#300). Sitting 5 authorises AA3 then AA9 only; sitting 6 is excluded. AA3 is
@@ -100,6 +100,15 @@ change is performed by this batch.
     Stopped this in-progress browser run before repeating the same known issues in Firefox;
     it is not a completed full suite. No browser retry or assertion change.
 
+11. Final source review found that deletion's success callback could use its old router
+    after the assistant page unmounted. The new regression's first run caught a test-helper
+    scope mistake (`settle` was inside another describe); corrected the test harness. The
+    next run reproduced the real navigation from `/elsewhere` back to `/assistant` when
+    the held deletion finished. The success callback now refreshes shared cache regardless,
+    but changes page state/URL only while that page is mounted. All **26 focused cases passed**
+    after the guard, including the unchanged exact `/elsewhere` assertion. The first PR
+    head's CI is superseded for merge purposes; the repaired head needs fresh full proof.
+
 The empty successful stream fake now emits the real protocol's `done` frame. A separate
 premature-EOF case proves recovery rather than allowing silent completion. The owner-picked
 layout updates the old native-select assertion to Recent chats/New chat while retaining stored
@@ -169,3 +178,10 @@ All local E2E projects completed normally on this final run. The app/shared/test
 unchanged from the clean `cf28d05` gate; the following review/status checkpoint changes only
 documentation. Seven exact-head PR jobs, then merge/main CI and production API/web SHA/full
 readiness, remain required before calling this shipped.
+
+## Post-review navigation repair
+
+The earlier complete clean/local browser evidence above belongs to `cf28d05`. The small
+additional deletion guard has a focused real-router unmount regression. A new clean ten-check
+gate and full available browser suite follow before merging; the final exact-head PR CI also
+runs all three browsers. No production deployment has occurred for AA9.

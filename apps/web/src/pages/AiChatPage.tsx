@@ -156,8 +156,10 @@ export default function AiChatPage() {
       queryClient.removeQueries({ queryKey: ['ai-conversation', id], exact: true })
       writeDraft(id, '')
       update(id, () => EMPTY)
-      setDeleting(null)
-      if (selected.current === id) setParams({})
+      if (mounted.current) {
+        setDeleting(null)
+        if (selected.current === id) setParams({})
+      }
     },
   })
 
