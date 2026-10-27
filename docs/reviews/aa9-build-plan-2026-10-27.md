@@ -23,7 +23,9 @@ people get collection/shelf/viewing guidance; only Craig is told he can add to W
 optional existing mic still fills the draft and never sends. Enter adds a new line; Send
 is explicit. The page uses the height given by the existing shell rather than calculating
 another full-viewport height inside it. At narrow/short heights the answer scrolls and the
-composer remains available above the app navigation. Physical iPhone keyboard/speech checks
+composer remains available above the app navigation. Recovery/availability messages live
+inside the scrolling conversation and the compact header has a bounded height, so longer
+failures and expanded allowance details cannot force the composer below the navigation. Physical iPhone keyboard/speech checks
 remain owner-only; reduced desktop viewports do not prove an iOS keyboard.
 
 The allowance is explicitly **AI calls**, not questions. Existing remaining/cap, blocked,
@@ -74,6 +76,8 @@ Craig's picked layout replaces the native mobile conversation select with Recent
 New chat. Update that existing UI-control assertion to the selected controls while retaining
 its complete stored-history/follow-up assertions. The existing card-race, Yes/No write and
 allowance enforcement assertions remain; clarify the allowance label without weakening them.
+The known-cap browser case now asserts disabled Send and still calls the real chat endpoint
+to pin its SSE refusal; the server-enforcement proof is retained.
 If a unit fake closes with no terminal frame, make it follow the actual done/confirm protocol
 and add a separate premature-close recovery assertion, rather than accepting silent closure.
 

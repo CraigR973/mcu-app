@@ -105,8 +105,15 @@ test.describe('chat session', () => {
     await expect(page.getByText(/1 of \d+ left today/)).toBeVisible()
     await ask(page, 'One message left')
     await expect(page.getByText(/You asked: One message left/)).toBeVisible()
-    await ask(page, 'And one more')
+    // #300: a known limit blocks Send before a futile request; pin server refusal too.
+    await page.getByRole('textbox', { name: 'Message to the assistant' }).fill('And one more')
+    await expect(page.getByRole('button', { name: 'Send message' })).toBeDisabled()
     await expect(page.getByRole('alert')).toContainText("You have used all 1 of today's messages.")
+    const id = new URL(page.url()).searchParams.get('c')
+    expect(id).toBeTruthy()
+    const refusal = await craig.postStream(`/ai/conversations/${id}/messages`, { prompt: 'And one more' })
+    expect(refusal).toContain('"kind": "error"')
+    expect(refusal).toContain("You have used all 1 of today's messages.")
     await craig.put('/ai/settings', { dailyMessageCap: 50 })
   })
 

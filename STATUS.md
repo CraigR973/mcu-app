@@ -2,21 +2,21 @@
 
 ## Now
 
-**27 Oct: AA3 is live; AA9's picks are received and its build is starting.**
+**27 Oct: AA3 is live; AA9's build is under verification.**
 AA9 is on `feat/aa9-assistant`, with its report and three interactive layouts in
 `docs/reviews/aa9-assistant-review-2026-10-27.md`. Recommendation: Conversation first and the
 shared guidance/limit/recovery corrections. Craig selected both in chat after the review.
 The concrete build/recovery plan is `docs/reviews/aa9-build-plan-2026-10-27.md` (#300).
 No API change or migration is needed; sitting 6 is excluded.
 
-The current assistant's blank initial guidance is confirmed by source and a local query-state
-probe. Mark's guidance promises an admin-only Wanted action; the allowance counts model calls,
-not questions, and the page ignores existing blocked/reset information. Stream/chat-switch
-isolation is a source hazard, not a browser reproduction. Current phone geometry remains
-unverified: the in-app browser blocked the disposable fixture API, although local HTTP/CORS
-and readiness passed. No safety control was bypassed. Mock-ups were browser-checked at
-320/375 px, with light/dark inspection and local draft/card/history interactions. They are
-proposals using illustrative fixture content, not production screenshots or live model replies.
+The AA9 build now has role-aware starters, truthful AI-call/availability states, separate
+multiline drafts, origin-bound streams, guarded reload recovery, safe answer formatting and
+named deletion confirmation. Focused checks: 25 unit cases and all six Chromium cases pass,
+including short-height composer geometry and no duplicate send after a saved answer is lost.
+Web/E2E typechecks pass. Actual fixture-app screens were inspected at 375 px in both themes;
+normal repository E2E required no bypass of the review's in-app-browser API block.
+Final clean local gate, full available browsers, seven-job PR CI and deployment are pending.
+Failures and repairs are in `docs/reviews/aa9-verification-2026-10-27.md`.
 
 AA3 shipped in PR #115, merge `1c73d90`; final close-out head `b904457` is clean on main.
 All seven final PR, merge and docs-head CI jobs passed (40531726901 / 40533923150 /
@@ -39,7 +39,7 @@ and final Home-total comparison stay open, independently of this review.
 
 ## Next
 
-**Build and verify AA9 from Craig's two picks and the concrete plan.**
+**Finish AA9 verification and automatic close-out from Craig's picks.**
 Continue under the existing sitting-5 authorisation.
 Any newly discovered consequential contract change needs its own decision before implementation.
 AA9 is open; its ledger row stays unstruck. Do not start sitting 6.

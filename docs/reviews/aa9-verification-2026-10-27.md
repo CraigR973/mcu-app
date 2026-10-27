@@ -1,0 +1,116 @@
+# AA9 — assistant verification
+
+27 Oct · build in progress on `feat/aa9-assistant`; not yet shipped.
+
+Craig picked Conversation first and Include shared corrections after the review, before
+planning (#300). Sitting 5 authorises AA3 then AA9 only; sitting 6 is excluded. AA3 is
+already live in PR #115 (`1c73d90`), with final close-out head `b904457` and seven-job CI
+40535930619 green before AA9 began. The API and web matched that SHA and full readiness
+passed before this review. The concrete acceptance plan is `aa9-build-plan-2026-10-27.md`.
+
+## How it works
+
+The existing top-bar entry opens a conversation-first page. Recent chats takes one tap on
+phones and stays alongside the conversation on desktop. Examples fill the multiline draft;
+Enter adds a line and only Send submits. Mark gets read/shared-Wanted guidance; Craig also
+gets the existing admin Wanted action. Existing roles, models, caps and APIs are unchanged.
+
+```mermaid
+flowchart TB
+    Draft[Draft for this chat] --> Send[Explicit Send]
+    Send --> Origin[Reply and exact-film card stay with originating chat]
+    Origin --> Success[Stored reply or confirmation card]
+    Origin --> Lost[Failure or incomplete stream: keep draft]
+    Lost --> Reload[Reload saved conversation]
+    Reload --> Saved[Already saved: read before a different question]
+    Reload --> Unsaved[Not saved: explicit edit or send]
+```
+
+Known limits block Send and the allowance says AI calls, since a question can use several.
+Unknown availability has a retry state; an unconfigured server and offline device have their
+own explanation. A failed/incomplete answer never resends automatically. A confirmation's
+lost response is also reloaded because its viewing/Wanted action may already have happened.
+Deleting a named chat asks first and never promises to undo confirmed actions.
+
+The transcript scrolls within the shell's height; recovery messages scroll with it and a
+bounded header keeps long details from displacing the composer. Streaming follows only while
+the reader is near the end. Answer text has paragraphs, simple headings/lists, emphasis,
+inline code and HTTP(S) links, with no raw HTML, image fetches or guessed film links.
+
+## Decisions made within Craig's picks
+
+- Recent chats replaces the mobile native select; the desktop history stays visible.
+- New chat remains local until its first Send; drafts remain separate while this page is mounted.
+- A lost answer requires Reload before another send; already-saved questions cannot be resent
+  through that draft. Reload failure keeps the guard.
+- Active replies finish on their originating chat even after browser navigation; navigation
+  never claims to cancel or undo a server operation.
+- Formatting uses a small React text renderer, without adding a package or changing AI output.
+
+Drafts are page memory, not durable browser storage: leaving/reloading the whole page can lose
+an unsent draft. Stored chats remain server-backed. Real iPhone keyboard, on-device dictation
+and a live follow-up remain owner observations. Fixture browsers do not prove those criteria.
+No production chat, live provider/model call, data rewrite, migration, credential or hosting
+change is performed by this batch.
+
+## Failures and repairs
+
+1. First focused unit run: four passed, two failed. A fresh but not-yet-caught-up stored read
+   could remove the live answer; local turns now remain until saved turns catch up. A question
+   legitimately appears in both transcript and preserved draft, so its unchanged exact transcript
+   assertion is scoped to the message log.
+2. Second focused run: 23 passed, two failed because the new tests used a matcher unavailable
+   in Vitest 2. Replaced it with equivalent call-count-one and exact-argument assertions.
+3. Third focused run: 24 passed, deletion failed its exact-argument assertion. Passing the API
+   function directly let TanStack add mutation context; the mutation now explicitly calls the API
+   with only its chat ID. The fourth run passed all 25 cases.
+4. The second web typecheck caught Playwright's `exact` option used with Testing Library in
+   new unit tests. Removed that unsupported option; Testing Library string names already match
+   exactly. The third typecheck passed. E2E typecheck passed on its first run.
+5. First focused Chromium run: five passed, one failed. The new browser-Back case inherited
+   Desktop Chrome's viewport while asserting a phone-only Recent chats control. Set its phone
+   viewport explicitly; the disabled-control assertions remain unchanged.
+6. A concurrent lint run caught Vite deleting a temporary timestamped config file while
+   ESLint was reading it (ENOENT). No lint rule changed; the clean gate runs lint and build
+   sequentially and E2E separately.
+7. Source review after the initial browser run caught that lengthy recovery text could crowd
+   the composer on short screens. Recovery/availability messages now scroll inside the transcript
+   and the header has a height limit. Added an exact above-navigation composer assertion at
+   375 × 500 after recovery. Existing 320/375 px initial-screen assertions remain.
+
+The empty successful stream fake now emits the real protocol's `done` frame. A separate
+premature-EOF case proves recovery rather than allowing silent completion. The owner-picked
+layout updates the old native-select assertion to Recent chats/New chat while retaining stored
+history/follow-up and stale-confirmation-race assertions. The known-cap browser case asserts
+disabled Send and still directly proves the real endpoint's SSE denial; server enforcement,
+route inventory and role assertions remain intact. No new skip, retry, ignore or disabled check.
+
+## Verification checkpoints
+
+Focused unit checkpoint: **25 passed**. Web and E2E typechecks passed. Initial web lint passed
+with 11 existing Fast Refresh warnings, without new exceptions. All **six focused Chromium cases passed** after the explicit viewport correction. The
+short-screen recovery geometry also passed. Final full clean gate/browser evidence is pending.
+
+| Acceptance | Proof | Result |
+|---|---|---|
+| Chosen layout and role-aware first screen | Both roles, both themes, 320/375 px, short and desktop viewports; starters do not call the model | In progress |
+| Multiline draft, allowance and truthful failures | Unit states, known call/spend cap, offline, status/usage failures, fixture unconfigured page | In progress |
+| Safe recovery and chat isolation | Premature EOF after real server save, no duplicate send, lost confirmation, URL-change origin isolation | In progress |
+| History and named delete confirmation | Loading/error/reload, separate drafts, cancel/confirm deletion; confirmed diary entry survives | In progress |
+| Readable answers and reader control | Safe text/links tests, partial markup, scroll-away/latest behaviour | In progress |
+| Existing app contracts and full journey | All ten local checks, full available E2E, exact-head seven-job CI | Pending |
+| Production deployment | Exact API/web merge and final docs SHA; db and five integration readiness fields | Pending |
+
+## Rendered evidence
+
+Actual built-app fixture screenshots are saved after browser checks and visually inspected.
+They use disposable Postgres and the outside-world fixture; they are not production accounts
+or model replies. The earlier review's in-app browser API block was not bypassed; these are
+normal repository E2E checks of the built app.
+
+Inspected initial screens at 375 px: Craig in dark mode and Mark in light mode. Both
+show the correct role guidance, allowance, multiline draft and Send above the five tabs.
+
+![Craig, fixture app, dark mode](assets/aa9-2026-10-27/aa9-Craig-dark-375.png)
+
+![Mark, fixture app, light mode](assets/aa9-2026-10-27/aa9-Mark-light-375.png)

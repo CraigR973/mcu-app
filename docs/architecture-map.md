@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA11,
-deployed on 26 Oct; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA11 plus the AA9 assistant build,
+reviewed on 27 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -156,3 +156,24 @@ current returned copies; reborrowing hides the old task without rewriting its hi
 NULL-state open loans read as Out, without a live backfill. Reminders apply only to Out copies.
 Shelf confirmation remains available to both people, matching their existing copy-edit access;
 Mark has the To put back list. No role, credential or hosting permission changes.
+
+
+## AA9, build on 27 Oct
+
+```mermaid
+flowchart TB
+    Draft[Multiline draft per chat] --> Send[Explicit Send]
+    Send --> API[Existing assistant stream API]
+    API --> Origin[Transcript and exact-film card for origin chat]
+    Origin --> Stored[(Existing stored conversation)]
+    API --> Failure[Lost or failed answer: keep draft]
+    Failure --> Reload[Reload stored conversation before another send]
+    Reload --> Stored
+```
+
+The page keeps active stream state keyed by conversation, so browser Back cannot move a reply
+or card into another chat. Controls lock during a request; the request still finishes if its
+page is left. A saved question is read before a different question; an unsaved draft can be
+sent only explicitly after a successful reload. Existing confirmation, server roles, caps,
+model, endpoints and database shapes remain unchanged. Recent chats and named deletion use
+the existing private history; deleting chat never undoes confirmed diary/Wanted actions.
