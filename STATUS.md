@@ -2,33 +2,24 @@
 
 ## Now
 
-**26 Oct: AA11 is live; close-out stopped again on a different browser failure. Do not start sitting 5.**
-AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in PR #112 (`b1075ec`). The separate
-login-navigation repair shipped in PR #113 (`30f3607`) after seven green PR jobs
-(40407597236). Sign-out and the AA11 loan journey passed in all three browsers there
-and in merge CI. Every original assertion and worker-enabled offline case is retained.
+**27 Oct: Group AA sitting 4 is complete — AA7 and AA11 shipped. Stop before sitting 5.**
+AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in PR #112 (`b1075ec`). Separate
+navigation repairs shipped in PR #113 (`30f3607`) and PR #114 (`0b4a416`). The latter
+passed all seven PR and merge jobs (40414279164, 40479165450), including all three browsers.
+The earlier WebKit sign-out and Firefox offline-navigation failures remain documented;
+no retries, extra skips, weakened assertions or worker-coverage reductions were used.
 
-Merge CI **40409200298 failed 1 of 7 jobs**, end-to-end: Firefox's unchanged lost-answer
-replay case failed at its initial film-page navigation with `page.goto: NS_BINDING_ABORTED`
-(`offline.spec.ts:81`), before the replay scenario. Chromium 38, Firefox 36 / one failure /
-one documented skip, WebKit 36 / two documented skips, cron six. No retries, extra skips,
-timeout changes or offline-test edits were made. The group stopped; do not waive this
-because the separate PR run was green. Final documentation CI 40409482751 was already
-running on `65abd7e`; its result does not erase the merge failure.
+Loans show Asked for → Out → Back, not shelved → Shelved. Requests carry needed-by
+separately from return-due; handover starts the lent date; returning leaves the shelf
+unchanged; shelf confirmation finishes the task. Owner-only real-phone picture selection,
+request push receipt and physical handovers remain unverified. No synthetic live loan,
+shelf mutation, notification or agent-run backfill was performed.
 
-Production API and web serve `65abd7e1e4e20cd4332e91e6cb5d329531d62d7a`, db ready and
-push/AI/eBay/TMDB/Brave configured. Migration 069 preserves all four old Out loans and
-their copy places; all new metadata remains NULL. Both read roles can read the new
-fields and cannot read PIN hashes or invite tokens. No live synthetic loan, shelf
-mutation, push test or backfill ran. Real-phone picture selection, request push receipt
-and physical handovers remain owner observations.
-
-Failure logs and artifacts are retained under ignored
-`scratchpad/aa11-verification/ci-fix-merge-failure/`. The handoff is committed locally
-only, leaving main one commit ahead; production stays at `65abd7e`. Craig resumed on 26 Oct. A separate `fix/offline-navigation-readiness` repair now waits
-for Add a disc to render after worker-controlled reload. Ten local commands and full
-Chromium/Firefox/cron passed; seven-job PR CI remains pending. The prior final-CI WebKit stop remains
-in the verification report. No sitting 5 work has started.
+Exact API/web merge SHA and full readiness passed. Migration 069 preserves all four
+old Out loans and their copy places, with new metadata NULL. Both read roles can read
+the new fields and cannot read PIN hashes or invite tokens. The final documentation
+head receives the same exact-SHA CI/deployment checks before the session ends.
+No sitting 5 work has started.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -43,12 +34,9 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Finish the resumed offline-navigation repair and AA11 close-out.** Preserve this checkout and local handoff.
-Investigate Firefox's initial film navigation in the worker-enabled lost-answer replay
-case from merge CI 40409200298; repair it on a separate narrow fix branch, retaining all
-behaviour assertions and worker coverage. Do not rerun or weaken the gate to hide the
-failure. Then repeat the full gate/CI and exact production proof before completing
-sitting 4. Do not start sitting 5. AA10b's 1–2 Nov checkpoint stays independent.
+**Stop before Group AA sitting 5 (AA3 → AA9).** It requires separate authorisation.
+Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
+1–2 Nov owner checkpoint stays independent. Verify current SHA/CI before any new work.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -440,6 +428,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **27 Oct — AA11 close-out completed after both navigation repairs.** PR #114 (`0b4a416`), seven green PR and merge jobs (40414279164, 40479165450); ten local commands, Chromium 38, Firefox 37 plus documented dictation skip, cron six. Exact API/web merge readiness and four-loan/read-role preservation verified. Earlier failures retained in the report. Sitting 4 complete; sitting 5 not started; phone observations remain owner-only.
 
 - **26 Oct — AA11 second CI stop.** Login repair PR #113 passed seven jobs and shipped. Merge CI 40409200298 then failed Firefox's unchanged offline lost-answer case at initial film navigation (`NS_BINDING_ABORTED`), before replay. All loan/sign-out cases passed. Production exact `65abd7e`, full readiness and four-loan/grant preservation verified. Handoff local only; no rerun, no offline-test edit, no sitting 5. Wait for Craig to resume.
 

@@ -2,11 +2,13 @@
 
 ## Outcome
 
-AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112), merge `b1075ec948455e5b8aecdd734ebb78ac0b31ba26`. All seven PR CI jobs pass
-([run 40388842106](https://github.com/CraigR973/mcu-app/actions/runs/40388842106)).
-Production API and web both served that exact merge SHA; db ready and all five integrations
-configured. Read-only checks preserved all four old loans and their copy places. AA7 shipped
-separately in PR #111 (`e6e5e16`). The login-navigation repair in PR #113 (`30f3607`) passed seven PR jobs (40407597236), but close-out stopped again on merge CI 40409200298. Sitting 5 has not started.
+AA11 shipped in [PR #112](https://github.com/CraigR973/mcu-app/pull/112), merge
+`b1075ec948455e5b8aecdd734ebb78ac0b31ba26`. Separate navigation repairs shipped in
+PR #113 (`30f3607`) and [PR #114](https://github.com/CraigR973/mcu-app/pull/114)
+(`0b4a4167128b7a17d3c3d8f7b133ac720c9563cb`). The latter passes all seven PR and merge CI jobs
+(40414279164, 40479165450). Production API/web exact merge SHA, full readiness and read-only
+four-loan/grant/credential preservation are verified. AA7 shipped separately in PR #111.
+Both previous CI stops are preserved below. Sitting 4 is complete; sitting 5 has not started.
 
 Craig approved the four-state story before implementation, then the single pinned path
 `/api/v1/loans/{loan_id}` before its inventory expectation changed. The previous three-attempt
@@ -215,3 +217,24 @@ gate commands and E2E typecheck. API 2,480 passed / nine known local socket skip
 shared 156 and web 700 passed. Both focused offline cases passed in Chromium and
 Firefox; full Chromium 38, Firefox 37 plus its documented dictation skip, cron six.
 No local test failure occurred on this repair. CI must prove WebKit and Postgres 17.
+
+## Offline repair and resumed close-out completed — 27 Oct
+
+PR #114 merged `0b4a4167128b7a17d3c3d8f7b133ac720c9563cb` after exact-head [PR CI 40414279164](https://github.com/CraigR973/mcu-app/actions/runs/40414279164)
+passed all seven jobs. [Merge CI 40479165450](https://github.com/CraigR973/mcu-app/actions/runs/40479165450)
+also passed all seven before the final close-out documentation was pushed. Chromium 38,
+Firefox 37 plus its documented dictation skip, WebKit 36 plus its two documented skips,
+cron six. Both repaired navigation cases and the complete loan flow pass. API 2,489
+passed without skips, including all 16 derived-field trigger cases.
+
+The production API and web served the exact merge SHA; db ok and all five integrations
+configured. Read-only checks preserve all four old Out loans and copy places, leave all
+new metadata NULL, verify both read-role grants and withhold PIN/invite credentials.
+The final documentation head receives the same exact-SHA seven-job CI and deployment
+checks before this session ends. No live synthetic mutation or backfill occurred.
+Real-phone observations remain unverified. Sitting 5 has not started.
+
+PR CI browser installation took 46 min 32 sec before the suite ran and passed. The
+existing 90-minute job limit was retained; no workflow/configuration change or rerun
+was used. Merge CI subsequently completed all seven jobs in its ordinary run. The
+resumed offline repair introduced no local or CI test failure.
