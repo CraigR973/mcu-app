@@ -75,6 +75,9 @@ test.describe('offline, against an API on another origin', () => {
     const { context, page } = await signedIn('Craig', { worker: true })
     await page.goto('/collection/add')
     await workerInControl(page)
+    // Worker control precedes React's lazy screen: leaving before its chunks finish
+    // aborts their imports and the app's recovery reload cancels the next navigation.
+    await expect(page.getByRole('main').getByRole('heading', { name: 'Add a disc', level: 1 })).toBeVisible()
     // Open the film's own screen once while there is a connection, so the page has its code in
     // hand when the add sends the person there: WebKit under Playwright cannot fetch a lazy chunk
     // offline, which is a limit of its offline switch, not the point of this case.
