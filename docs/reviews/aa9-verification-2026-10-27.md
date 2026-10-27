@@ -81,6 +81,12 @@ change is performed by this batch.
    and the header has a height limit. Added an exact above-navigation composer assertion at
    375 × 500 after recovery. Existing 320/375 px initial-screen assertions remain.
 
+9. The first clean full gate ran API **2,491 passed, zero skips**, shared **157 passed**,
+   and web **726 passed, one failed**. The unchanged date-consistency guard caught two new
+   screens formatting dates themselves. Both now use the existing shared date/date-time
+   helpers, retaining viewer-local reset time and the exact guard. The remaining frontend
+   commands were not run after this failure; the next clean gate reruns all ten.
+
 The empty successful stream fake now emits the real protocol's `done` frame. A separate
 premature-EOF case proves recovery rather than allowing silent completion. The owner-picked
 layout updates the old native-select assertion to Recent chats/New chat while retaining stored

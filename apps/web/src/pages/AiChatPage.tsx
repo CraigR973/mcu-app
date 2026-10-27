@@ -19,7 +19,7 @@ import {
   type ChatStreamEvent,
 } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 interface Turn { role: 'user' | 'assistant'; text: string }
 interface Recovery { question: string | null; since: number; stage: 'reload' | 'saved' }
@@ -276,7 +276,7 @@ export default function AiChatPage() {
             {conversationId && detail.data ? <Button type="button" variant="ghost" size="icon" className="ml-auto" aria-label="Delete this conversation" disabled={busy || remove.isPending} onClick={() => { remove.reset(); setDeleting(detail.data) }}><Trash2 aria-hidden /></Button> : null}
           </div>
           {historyError ? <p role="alert" className="text-sm text-destructive">Recent chats unavailable. <button type="button" className="min-h-11 underline" onClick={() => void conversations.refetch()}>Reload recent chats</button></p> : null}
-          {usage.data ? <details className="border-b border-border pb-1 text-xs text-muted-foreground"><summary className="flex min-h-11 cursor-pointer items-center">AI calls: {usage.data.messagesRemaining} of {usage.data.messageCap} left today <ChevronDown className="ml-1 h-3 w-3" aria-hidden /></summary><p className="pb-2 leading-5">One question can use more than one call. A daily spending limit also applies. Resets {new Date(usage.data.resetsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} in your time zone.</p></details> : null}
+          {usage.data ? <details className="border-b border-border pb-1 text-xs text-muted-foreground"><summary className="flex min-h-11 cursor-pointer items-center">AI calls: {usage.data.messagesRemaining} of {usage.data.messageCap} left today <ChevronDown className="ml-1 h-3 w-3" aria-hidden /></summary><p className="pb-2 leading-5">One question can use more than one call. A daily spending limit also applies. Resets {formatDateTime(usage.data.resetsAt)} in your time zone.</p></details> : null}
         </header>
 
         <div ref={logRef} className="archive-panel min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4" role="log" aria-label="Conversation messages" aria-live={ownReply ? 'off' : 'polite'} aria-busy={ownReply}

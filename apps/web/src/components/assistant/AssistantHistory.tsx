@@ -3,7 +3,7 @@ import { Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { StatePanel } from '@/components/ui/state-panel'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 
 interface Props {
   items: AiConversation[]
@@ -34,7 +34,7 @@ export function AssistantHistory({ items, selectedId, loading, error, busy, open
           <li key={item.id} className="flex items-start gap-1">
             <button type="button" disabled={busy} aria-current={item.id === selectedId ? 'page' : undefined} onClick={() => onSelect(item.id)} className={cn('min-h-11 min-w-0 flex-1 rounded-md px-2 py-2 text-left text-sm hover:bg-muted disabled:opacity-50', item.id === selectedId && 'bg-primary/10 text-primary')}>
               <span className="block break-words [overflow-wrap:anywhere]">{item.title}</span>
-              <time className="mt-1 block text-xs text-muted-foreground" dateTime={item.updatedAt}>{new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(item.updatedAt))}</time>
+              <time className="mt-1 block text-xs text-muted-foreground" dateTime={item.updatedAt}>{formatDate(item.updatedAt)}</time>
             </button>
             <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => onDelete(item)}><Trash2 aria-hidden /></Button>
           </li>
