@@ -1,6 +1,6 @@
 # AA3 — collection summary verification
 
-27 Oct · local verification complete; PR/main CI and shipment pending.
+27 Oct · shipped in PR #115, merge `1c73d904828d8643b56a10096a38059519147e10`.
 
 Craig approved Compact summary, corrections, both personal/match numbers retained with
 clearer definitions, and the two additive stats fields before implementation (#299).
@@ -63,8 +63,8 @@ The final markup correction receives a fresh clean gate and browser run before c
 The second clean gate also passed all ten checks on `c1be577` (API 2,491, shared 157,
 web 708, no API skips). Both new AA3 cases then passed in Chromium and Firefox; the final
 full-width action correction receives another clean verification before shipment.
-Browser screenshots, seven-job PR/main CI and exact production SHA/readiness proof remain
-pending. Local WebKit is unavailable on macOS 13; CI must run it.
+The later completed evidence below supersedes these intermediate checkpoints.
+Local WebKit is unavailable on macOS 13; exact-head CI ran it.
 Real-phone observations remain owner-only. No live provider call, valuation start, data write
 or synthetic production account/session is authorised or performed.
 
@@ -84,7 +84,7 @@ are retained under the ignored AA3 scratchpad; the final run completed normally.
 The final copy-only correction was then verified from clean commit `8a3e844`: all ten
 commands passed again with the same 2,491 / 157 / 708 test counts and zero API skips.
 The full local E2E run above covers the unchanged layout and flows; the clarified value
-explainer has exact unit assertions. The PR's final exact-head seven-job CI is still required.
+explainer has exact unit assertions. The PR's final exact-head seven-job CI subsequently passed, as did the merge run below.
 GitHub's connector returned integration-write 403; the already-authenticated `gh` CLI
 created PR #115 without changing a credential or permission.
 
@@ -96,7 +96,31 @@ created PR #115 without changing a credential or permission.
 | Honest value and purchase-price coverage | No-value, loading, offline, failed value/refresh, partial/sales coverage and tap-readable month figures | Pass |
 | Existing breakdowns stay reachable | Native disclosure opens formats, places, genres and decades; spending keeps its data/empty explanation | Pass |
 | Other Home shelves and access boundaries | Existing order/sideways assertions retained except the owner-approved collection exception; route inventory unchanged | Pass |
-| Full CI and production exact SHA/readiness | Required before close-out | Pending |
+| Full CI and production exact SHA/readiness | Final PR 40531726901; merge 40533923150; API/web exact `1c73d90`, db ready and all five integrations configured | Pass |
+
+## Final CI and deployment evidence
+
+Final PR head `19abe3facf095c9756fa404748499333bb26e0f4` passed all seven jobs in
+[40531726901](https://github.com/CraigR973/mcu-app/actions/runs/40531726901).
+Merge `1c73d904828d8643b56a10096a38059519147e10` passed all seven jobs in
+[40533923150](https://github.com/CraigR973/mcu-app/actions/runs/40533923150).
+All three new AA3 browser cases passed in Chromium, Firefox and WebKit. Only the existing
+three documented browser skips remain: Firefox dictation and WebKit's lost-write-answer
+and open-page live-match cases. API: 2,491 passed, zero skips; all 16 derived-field trigger
+cases ran. App/shared source is identical to the final clean local gate commit `8a3e844`.
+
+Production health and web version both report the exact merge SHA; readiness is `db: ok`
+and push/ai/ebay/tmdb/brave all configured. The deployment reached this state without any
+transient HTTP error. The initial poll saw web ahead of API during normal rollout.
+A fresh post-deployment read-only stats/independent-count snapshot agrees with the counts
+below. This is database/router-backed production proof plus actual built-app fixture
+browser proof; no authenticated live UI or physical phone interaction is claimed.
+The final documentation-only commit receives its own exact-head CI/deployment verification.
+
+GitHub connector writes returned 403, so the already-authenticated CLI created the PR.
+The installed CLI's PR-edit command also hit GitHub's retired projectCards field; the same
+exact description was updated using GitHub REST, then the exact expected head was merged.
+Neither fallback changed credentials or permissions.
 
 ## Read-only production evidence
 

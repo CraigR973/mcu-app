@@ -118,7 +118,7 @@ layout authorises the collection-only exception to decision #249, not a redesign
 AA9 starts only after AA3's completed cycle and clean local main. AA9 is its own review and
 stops for Craig's picks before any assistant build plan. Sitting 6 remains excluded.
 
-**Current state: build and local verification complete; PR/main CI and shipment pending.**
+**Current state: shipped in PR #115 (`1c73d90`); local gate, seven-job PR/merge CI and exact production API/web SHA/full readiness passed.**
 
 At the planning checkpoint, main's latest seven-job run was green at `c454518`; selected mock-up
 opened at 375 px and 320 px, with disclosure interaction checked and no horizontal

@@ -11,13 +11,12 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AA sitting 5, AA3 — two stats fields approved (27 Oct):** review picks received: Compact
-  summary, corrections approved, watched and identified **both retained** with clearer
-  definitions (#299). `docs/reviews/aa3-build-plan-2026-10-27.md` proposes additive physical-
-  copy and physical/download-overlap counts in the existing response, preserving old fields.
-  **Craig approved the extension and build in chat before implementation.** No migration, live data
-  write, stored-price change or provider call; provisional build/gate cost 2–4 agent hours.
-  AA3 stays open; AA9 not started; sitting 6 excluded.
+- ~~**Group AA sitting 5, AA3 — approve review picks and two stats fields.**~~
+  **Done 27 Oct:** Compact summary, corrections and both diary/match numbers retained (#299).
+  Craig approved the two additive counts before build. Shipped in PR #115 (`1c73d90`), all
+  seven PR/merge jobs and exact production API/web SHA/readiness passed. No migration, live
+  data/price write or provider call. Real-phone observation remains open. AA9 review is next;
+  its picks are a separate checkpoint before planning. Sitting 6 remains excluded.
 
 - ~~**Group AA sitting 3, AA6: approve the one-path route-inventory addition.**~~
   **Approved 25 Oct in chat:** `/api/v1/feeling-lucky` is added to the pinned set;

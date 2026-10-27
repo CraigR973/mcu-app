@@ -11,17 +11,19 @@ and value explanation whichever layout Craig picks.
 **keep both watched and identified with clearer definitions**. The removal recommendation
 above is superseded by his choice. See [the resulting build plan](aa3-build-plan-2026-10-27.md)
 and [selected layout](aa3-collection-selected-2026-10-27.html). Two additive stats-response
-fields were subsequently approved in chat under the data-shape rule; AA3 implementation
-and verification are in progress. No data write, merge or deployment yet. AA3 remains
-open; AA9 has not started; sitting 6 remains excluded.
+fields were subsequently approved in chat under the data-shape rule. AA3 shipped in
+PR #115 (`1c73d90`), with the full local gate, seven-job PR/merge CI and exact production
+API/web SHA/readiness verified. No live data/price write or provider request. See
+[the verification report](aa3-verification-2026-10-27.md). AA9 is the next separate review;
+sitting 6 remains excluded.
 
 ## Acceptance criterion, verbatim
 
 > A UI/UX review of Home's collection row as its own report (`docs/reviews/`), with mock-ups, sent
 > to Craig; the build is planned from his picks. No code before his picks.
 
-The review/report/mock-up stage is complete when delivered. The owner-picks checkpoint and
-any resulting build remain outstanding; the batch must not be struck or closed out yet.
+The review/report/mock-up stage was delivered before Craig's picks. The subsequent build
+followed those picks and his explicit API-field approval; AA3 is now shipped.
 
 ## What the section does today
 

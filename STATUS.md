@@ -2,53 +2,38 @@
 
 ## Now
 
-**27 Oct: AA3 build and local gate complete; PR/main CI and shipment next.**
-Craig chose Compact summary and corrections, keeping both watched and identified with
-clearer definitions (#299). The selected five-number mock-up and plan are in
-`docs/reviews/aa3-build-plan-2026-10-27.md`. The plan proposes two additive stats-response
-fields for physical-copy and physical/download-overlap counts. Craig approved them and
-the build in chat before implementation. No migration or live
-data/price change is proposed. AA3 remains open; AA9 not started; sitting 6 excluded.
-Fresh review evidence found 134 mixed physical/download copies: Home says 1,338 discs,
-while valuation correctly counts 1,472 physical copies. Personal diary counts stay 500
-for Craig and 879 for Mark, explicitly including titles not owned. Main remains `c454518`,
-its latest seven-job CI green; the review verified API/web exact SHA and full readiness.
+**27 Oct: AA3 is shipped; AA9's separate assistant review is next.**
+PR #115 merged as `1c73d90`. All seven final PR and merge CI jobs passed
+(40531726901 / 40533923150), including Chromium, Firefox and WebKit. Production API and
+web serve the merge SHA; db is ready and all five integrations configured. Close-out docs
+receive their own exact-head CI/deployment verification before AA9 begins.
 
-**Group AA sitting 4 is complete — AA7 and AA11 shipped.**
-AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in PR #112 (`b1075ec`). Separate
-navigation repairs shipped in PR #113 (`30f3607`) and PR #114 (`0b4a416`). The latter
-passed all seven PR and merge jobs (40414279164, 40479165450), including all three browsers.
-The earlier WebKit sign-out and Firefox offline-navigation failures remain documented;
-no retries, extra skips, weakened assertions or worker-coverage reductions were used.
+Home's collection shows five readable metrics without swiping: titles, copies, estimated
+used value, personal diary titles and TMDB-matched titles. Charts expand in place; the
+Archive action remains available during loading and errors. Physical copies and overlap
+come directly from one stats aggregate. Craig approved both response fields before build
+(#299); existing fields keep their meaning. Other Home shelves keep their sideways layout.
 
-Loans show Asked for → Out → Back, not shelved → Shelved. Requests carry needed-by
-separately from return-due; handover starts the lent date; returning leaves the shelf
-unchanged; shelf confirmation finishes the task. Owner-only real-phone picture selection,
-request push receipt and physical handovers remain unverified. No synthetic live loan,
-shelf mutation, notification or agent-run backfill was performed.
+Read-only production checks: 1,903 titles; 1,927 copies; 1,472 physical; 589 download;
+134 in both. Craig's diary count remains 500; Mark's 879; 1,902 titles matched on TMDB.
+Stored value £15,939.38 across 1,311 of 1,472 physical copies, zero sales-backed: an interim
+observation, **not AA10b's final after-total checkpoint**. No migration, live data/price
+write, provider request, hosting or credential change was performed. Real-phone behaviour
+remains unverified; actual built-app fixture screenshots and all failures/repairs are in
+`docs/reviews/aa3-verification-2026-10-27.md`.
 
-Exact API/web merge SHA and full readiness passed. Migration 069 preserves all four
-old Out loans and their copy places, with new metadata NULL. Both read roles can read
-the new fields and cannot read PIN hashes or invite tokens. The final documentation
-head receives the same exact-SHA CI/deployment checks before the session ends.
-Sitting 5 now proceeds only to each review's owner-picks checkpoint.
-
-**AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
-Each iPhone still needs to remove and re-add the app for AA1's new start page.
-
-**Craig started the live AA10b re-price once on 23 Oct.** The measured before total was
-£16,867.11 across 1,290 priced of 1,469 physical discs, with 0 sales-backed values.
-The first run spent 748 of its 750-call budget, checked 748 pairs without failure, and
-left 719 due. Home's interim total is £15,961.05 across 1,314 priced discs, 0 sales-backed.
-The next scheduled valuation runs are 1 and 2 Nov at 04:00 UTC; each can spend up to 750
-calls for its UTC day. Read back the final Home total and priced/sales-backed counts when
-none are due; only then close AA10b. This owner checkpoint remains independent of sitting 4.
+AA7/AA11 and their navigation repairs remain shipped. Real-phone picture selection,
+request push receipt and physical handovers remain owner observations. AA2's authorised
+portrait refresh populated all 40 sets; both iPhones still need removing/re-adding the app.
+AA10b's 1–2 Nov scheduled runs and final Home-total comparison remain open. AA9 must stop
+after its report/mock-ups for Craig's picks **before** any assistant build plan.
+Sitting 6 is excluded.
 
 ## Next
 
-**Complete AA3's local gate, CI, shipment and production proof.**
-The layout, content and API picks are settled. Finish AA3 before AA9's separate review, which
-stops again for Craig's picks. Do not start sitting 6.
+**Review the assistant page (AA9), then stop for Craig's picks.**
+Start only after AA3's final docs CI/deployment proof and clean main. Deliver its own report
+and mock-ups before planning the build. Do not start sitting 6.
 Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
 1–2 Nov owner checkpoint stays independent. Verify current SHA/CI before any new work.
 
@@ -442,6 +427,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **27 Oct — AA3 shipped:** PR #115, merge `1c73d90`; five collection metrics, direct physical/overlap counts and expandable breakdowns (#299). Clean local gate (2,491 API / 157 shared / 708 web), all seven exact-head PR/merge CI jobs, API/web exact SHA and full readiness passed. Read-only production counts agreed; no live write/provider call. Full failure/repair record and fixture screenshots in the AA3 verification report. AA9 review next after final docs proof; owner phone checks and AA10b remain open; no sitting 6.
 
 - **27 Oct — AA3 picks and build plan:** Craig selected Compact summary, approved the corrections, and retained watched/identified with clearer definitions. Recorded #299 and wrote the build plan plus selected five-number mock-up. Proposed two additive counts in the existing stats response, preserving old fields and handling deployment skew without invented zeros. Stopped before product implementation under Craig's data-shape rule; no migration, data write, re-price, provider call, merge or deploy. Existing main `c454518` remains green. Full implementation gate not run; AA9/sitting 6 not started.
 

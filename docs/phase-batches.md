@@ -4505,7 +4505,7 @@ merging: each batch keeps its own branch and pull request, so any one can be rev
 |---|---|---|---|---|
 | ~~AA1~~ | ~~2, 3, 6, 8, 10, 14, 15: start page, top bar, Top rated, best-reviewed title, film tabs, our disc first~~ — **shipped 23 Oct `4cc207d`** ([PR #103](https://github.com/CraigR973/mcu-app/pull/103)); each iPhone re-add remains an owner action | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
 | ~~AA2~~ | ~~5, 7, 11, 12, 13: attention links, activity moved, picture and sound, headshots, missing films~~ — **complete 25 Oct `836df95`** ([PR #105](https://github.com/CraigR973/mcu-app/pull/105)); [PR #107](https://github.com/CraigR973/mcu-app/pull/107) (`98a04ed`) fixes unchanged-set metadata. Craig authorised the follow-up live refresh: 0 creates, 39 metadata updates, 1 unchanged, 0 removals and 0 errors; read-only proof found portraits on all 40 sets | 🟢 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
-| AA3 | 9: the collection section, reviewed then rebuilt | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
+| ~~AA3~~ | ~~9: the collection section, reviewed then rebuilt~~ | **shipped 27 Oct** `1c73d90` ([#115](https://github.com/CraigR973/mcu-app/pull/115)) | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA4~~ | ~~16, 17, 18, 20: suggest first, two lists, a planned time, add from a film~~ — **shipped 25 Oct `6e9629d`** ([PR #108](https://github.com/CraigR973/mcu-app/pull/108)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA5~~ | ~~19: each film’s details on a night, IMDb’s score~~ — **shipped 25 Oct `8f47f39`** ([PR #109](https://github.com/CraigR973/mcu-app/pull/109)) | 🟡 | Opus 5 · `high` | GPT-5.6 Sol · High |
 | ~~AA6~~ | ~~21: feeling lucky, alone on Home and in a night~~ — **shipped 25 Oct `54dbc07`** ([PR #110](https://github.com/CraigR973/mcu-app/pull/110)) | 🟡 | Sonnet 5 · `high` | GPT-5.6 Terra · High |
@@ -4558,7 +4558,7 @@ money and shows on Home. AA1, AA2, AA6 and AA8 are interface work over data the 
   if Wanted is shared (checked when the batch starts).
 - Tests. Gate green. Browser check at 375 px.
 
-### AA3 — The collection section 🟡
+### ~~AA3 — The collection section~~ 🟡 **shipped 27 Oct (`1c73d90`, [PR #115](https://github.com/CraigR973/mcu-app/pull/115))**
 A UI/UX review of Home's collection row as its own report (`docs/reviews/`), with mock-ups, sent
 to Craig; the build is planned from his picks. No code before his picks.
 
@@ -4567,9 +4567,15 @@ corrections approved; **keep watched and identified with clearer definitions**.
 See `docs/reviews/aa3-collection-review-2026-10-27.md` and
 `docs/reviews/aa3-build-plan-2026-10-27.md`, with the selected layout. The plan proposes two
 additive stats-response fields (physical copies and physical/download overlap); Craig
-approved the extension and build before implementation. Implementation is under verification;
-AA3 remains open.
-AA9 has not started; sitting 6 excluded.
+approved the extension and build before implementation. Shipped in PR #115 (`1c73d90`):
+five metrics without swiping, explicit physical/download overlap, both diary/match meanings,
+expandable charts and full-width Archive action. All ten clean local commands passed
+(2,491 API, zero skips; 157 shared; 708 web), all seven PR/merge CI jobs passed
+(40531726901 / 40533923150), and API/web exact merge SHA plus full readiness passed.
+Read-only production counts agreed; fixture screenshots inspected. No live data/price write,
+provider request or migration. Real-phone observation remains owner-only. See
+`docs/reviews/aa3-verification-2026-10-27.md` for criterion evidence and every failure/repair.
+AA9 review is next after final close-out docs proof; sitting 6 excluded.
 
 ### ~~AA4 — Movie night: suggest first, two lists, a planned time~~ 🟡 **shipped 25 Oct (`6e9629d`, [PR #108](https://github.com/CraigR973/mcu-app/pull/108))**
 - **16, 17.** The night opens with Suggest a film; below it "Suggested" (people's picks, who and
@@ -4759,7 +4765,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 4** | X9 → X10 | top tier · xhigh | top tier · Extra High | Same identification code; X10's title key builds on X9's state. `xhigh` from X9's live identification |
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
-| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: AA3 → AA9 (reviews) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 4 complete: AA7 `e6e5e16`, AA11 `b1075ec`; navigation repairs `30f3607` and `0b4a416`. Seven-job PR/merge CI and exact production SHA/readiness/data preservation verified. Real-phone observations remain open. Sitting 5 authorised 27 Oct: AA3 picks recorded, both watched/identified retained; two additive stats fields and build approved (#299), implementation under verification. AA9 not started. Do not start sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → AA9 (review) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 4 complete: AA7 `e6e5e16`, AA11 `b1075ec`; navigation repairs `30f3607` and `0b4a416`. Seven-job PR/merge CI and exact production SHA/readiness/data preservation verified. Real-phone observations remain open. Sitting 5 authorised 27 Oct: AA3 shipped in PR #115 (`1c73d90`) from Craig's picks (#299); all seven PR/merge jobs and exact API/web SHA/full readiness passed. AA9's separate review is next after final docs proof, stopping for picks before its build plan. Do not start sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
