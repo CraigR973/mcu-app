@@ -6458,3 +6458,14 @@ contemporaneous.
      stats fields for physical copies and physical/download overlap; **Craig approved
      that data-shape extension and the AA3 build on 27 Oct before implementation**. See
      `docs/reviews/aa3-build-plan-2026-10-27.md`. AA9 has not started; sitting 6 is excluded.
+
+
+300. **AA9 follows Craig's Conversation first and shared-corrections picks (27 Oct).**
+     Craig selected both after the assistant review/mock-ups were delivered. Recent chats
+     replaces the phone's native conversation select; starters fill a multiline draft,
+     guidance respects roles, and the allowance is labelled AI calls (superseding #262's
+     choice to retain the older wording, not its cap algorithm). No role, model or cap changes.
+     A stream interruption requires reading stored state before a manual resend; a question
+     already saved is not silently sent again. Existing exact-film cards and their stale-read
+     protection stay. Safe basic text formatting adds no structured model contract or raw HTML.
+     See `docs/reviews/aa9-build-plan-2026-10-27.md`. Sitting 6 remains excluded.

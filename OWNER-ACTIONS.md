@@ -11,12 +11,11 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AA sitting 5, AA9 — two assistant review picks (27 Oct):** choose Conversation
-  first (recommended), Task first or History first; then approve or narrow the shared
-  guidance/limit/recovery corrections. Report and interactive layouts:
-  `docs/reviews/aa9-assistant-review-2026-10-27.md`. Comparative build cost: 3–6 agent hours
-  plus CI/deployment waiting, uncertain until planning. No cap, role, model or stored-history
-  change is proposed. AA9 is open; **no build plan/code before these picks**; sitting 6 excluded.
+- ~~**Group AA sitting 5, AA9 — two assistant review picks.**~~
+  **Done 27 Oct:** Craig chose Conversation first and Include shared corrections (#300).
+  The concrete plan is `docs/reviews/aa9-build-plan-2026-10-27.md`; build continues under the
+  existing sitting-5 authorisation. No API extension or new consequential change is needed
+  by this plan. Phone/speech observations remain open; sitting 6 excluded.
 
 - ~~**Group AA sitting 5, AA3 — approve review picks and two stats fields.**~~
   **Done 27 Oct:** Compact summary, corrections and both diary/match numbers retained (#299).

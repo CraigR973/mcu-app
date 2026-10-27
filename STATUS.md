@@ -2,11 +2,12 @@
 
 ## Now
 
-**27 Oct: AA3 is live; AA9's assistant review is delivered and stopped for Craig's picks.**
-AA9 is on `chore/aa9-assistant-review`, with its report and three interactive layouts in
+**27 Oct: AA3 is live; AA9's picks are received and its build is starting.**
+AA9 is on `feat/aa9-assistant`, with its report and three interactive layouts in
 `docs/reviews/aa9-assistant-review-2026-10-27.md`. Recommendation: Conversation first and the
-shared guidance/limit/recovery corrections. **Two picks are unanswered; no assistant build
-plan, product code, API change, merge or deployment.** Sitting 6 is excluded.
+shared guidance/limit/recovery corrections. Craig selected both in chat after the review.
+The concrete build/recovery plan is `docs/reviews/aa9-build-plan-2026-10-27.md` (#300).
+No API change or migration is needed; sitting 6 is excluded.
 
 The current assistant's blank initial guidance is confirmed by source and a local query-state
 probe. Mark's guidance promises an admin-only Wanted action; the allowance counts model calls,
@@ -38,8 +39,8 @@ and final Home-total comparison stay open, independently of this review.
 
 ## Next
 
-**Wait for Craig's two AA9 picks: layout and shared corrections.**
-Then plan the assistant build from those picks under the existing sitting-5 authorisation.
+**Build and verify AA9 from Craig's two picks and the concrete plan.**
+Continue under the existing sitting-5 authorisation.
 Any newly discovered consequential contract change needs its own decision before implementation.
 AA9 is open; its ledger row stays unstruck. Do not start sitting 6.
 Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
