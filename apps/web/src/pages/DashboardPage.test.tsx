@@ -252,6 +252,9 @@ describe('Home as rows, the collection first — Batch W2', () => {
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
     expect(numbers.getByText('1,454 of 1,880 physical copies priced')).not.toBeNull()
     expect(numbers.getByText('3 based on observed sales')).not.toBeNull()
+    fireEvent.click(numbers.getByText('How this estimate works'))
+    expect(numbers.getByText(/At least three observed sales in 90 days use the median/)).not.toBeNull()
+    expect(numbers.getByText(/a Best Offer may have closed below its advertised price/)).not.toBeNull()
   })
 
   it('tells a viewer explicitly when there is no stored estimate', async () => {

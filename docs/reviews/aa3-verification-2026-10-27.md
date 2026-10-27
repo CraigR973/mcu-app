@@ -44,6 +44,9 @@ watch count and identified-owned-title count, with their limits written beside t
   Component captures use a taller viewport to keep the fixed navigation out of the crop;
   functional checks still run at the normal 844 px height. The passing in-progress browser
   run was stopped for this visual correction; the complete final suite is required again.
+- Final copy review made the sale threshold explicit: at least three observed sales in
+  90 days, using their advertised-price median. Added exact unit assertions for the
+  threshold/window and the Best Offer limitation; no price algorithm or stored value changes.
 
 The only changed existing layout expectation is Craig's approved collection-only exception
 to the “every Home section is sideways” rule; every other shelf assertion stays. API route

@@ -170,8 +170,8 @@ function WorthCard({ value, isAdmin, pending, error, offline }: { value: Collect
           <details className="mt-2 border-t border-border pt-1">
             <summary className="list-link flex min-h-11 cursor-pointer items-center text-primary">How this estimate works</summary>
             <p className="pb-2 leading-5">
-              Each physical copy is valued as used, including postage. Three observed sales use the median
-              of their last advertised listing prices; otherwise a current used asking-price stand-in is
+              Each physical copy is valued as used, including postage. At least three observed sales
+              in 90 days use the median of their last advertised listing prices; otherwise a current used asking-price stand-in is
               used, with a scaled New-price fallback when used listings are scarce. A listing that disappears
               is only an inferred sale; a Best Offer may have closed below its advertised price.
               Downloads have no value here.
