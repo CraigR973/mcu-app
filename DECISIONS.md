@@ -6444,3 +6444,17 @@ contemporaneous.
      outbox, preferences, quiet hours and retry path. Craig approved only the new authenticated
      `/api/v1/loans/{loan_id}` PATCH path in the pinned inventory; exact-set equality stays.
      No live loan/shelf backfill or fabricated production push is authorised. Sitting 5 excluded.
+
+299. **AA3's collection layout follows Craig's review picks (27 Oct).**
+     Craig chose Compact summary and the count/label/value-explanation corrections,
+     but retained both watched and identified with clearer definitions, rejecting the
+     review's recommendation to remove them. “You've watched” keeps its whole-diary
+     distinct-title count, explicitly including titles not owned; “Matched on TMDB” keeps
+     the existing identified-owned count and explains that a match can still need checking.
+     Neither becomes a verified-match figure or a collection-watch percentage.
+     The collection section alone is exempt from #249's sideways-row rule: five numbers
+     without swiping, existing breakdowns behind an in-place disclosure. All other Home
+     shelves retain their order and sideways layout. The build plan proposes two additive
+     stats fields for physical copies and physical/download overlap; **that data-shape
+     extension awaits Craig's word before product implementation**. See
+     `docs/reviews/aa3-build-plan-2026-10-27.md`. AA9 has not started; sitting 6 is excluded.

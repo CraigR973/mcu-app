@@ -7,9 +7,12 @@ without swiping. Put the charts behind an in-place “Collection breakdown” di
 Remove watched and identified from this collection summary. Correct the count definitions
 and value explanation whichever layout Craig picks.
 
-**Checkpoint: waiting for Craig's picks.** This is a review and mock-ups only. No product
-code, build plan, data write, merge or deployment. AA3 remains open. AA9 has not started;
-sitting 6 remains excluded. The three layouts are proposals, not decisions taken for Craig.
+**Craig's picks received, 27 Oct:** Compact summary; corrections approved;
+**keep both watched and identified with clearer definitions**. The removal recommendation
+above is superseded by his choice. See [the resulting build plan](aa3-build-plan-2026-10-27.md)
+and [selected layout](aa3-collection-selected-2026-10-27.html). Two additive stats-response
+fields await his approval under the data-shape rule. No product implementation, data write,
+merge or deployment. AA3 remains open; AA9 has not started; sitting 6 remains excluded.
 
 ## Acceptance criterion, verbatim
 
@@ -147,6 +150,7 @@ therefore be extra behaviour to decide, not a free link. No new stats route is p
 
 ## Resume point
 
-Wait for Craig's three picks. Only then plan AA3's build and its acceptance checks.
-Complete AA3's authorised cycle before starting AA9's separate review; stop again for
-Craig's assistant-page picks. Do not start sitting 6.
+The three review picks are recorded in decision #299 and the build plan. Wait for the
+plan's narrowly scoped API-extension decision, then implement and complete AA3's cycle
+before starting AA9's separate review. Stop again for Craig's assistant-page picks.
+Do not start sitting 6.

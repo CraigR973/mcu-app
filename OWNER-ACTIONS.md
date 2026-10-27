@@ -11,12 +11,13 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AA sitting 5, AA3 — collection review picks (27 Oct):** choose Compact summary
-  (recommended), Browse first, Open ledger, or retain sideways rows; approve the count/label/
-  value-explanation corrections; decide whether watched/identified leave this summary.
-  Report: `docs/reviews/aa3-collection-review-2026-10-27.md`, with interactive mock-ups.
-  No build plan before these picks. AA3 stays open; AA9's separate review follows only after
-  AA3, and stops for its own picks. Sitting 6 is excluded.
+- **Group AA sitting 5, AA3 — two stats fields (27 Oct):** review picks received: Compact
+  summary, corrections approved, watched and identified **both retained** with clearer
+  definitions (#299). `docs/reviews/aa3-build-plan-2026-10-27.md` proposes additive physical-
+  copy and physical/download-overlap counts in the existing response, preserving old fields.
+  Craig's data-shape rule requires his word before implementation. No migration, live data
+  write, stored-price change or provider call; provisional build/gate cost 2–4 agent hours.
+  AA3 stays open; AA9 not started; sitting 6 excluded.
 
 - ~~**Group AA sitting 3, AA6: approve the one-path route-inventory addition.**~~
   **Approved 25 Oct in chat:** `/api/v1/feeling-lucky` is added to the pinned set;
