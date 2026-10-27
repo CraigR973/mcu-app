@@ -2,7 +2,17 @@
 
 ## Now
 
-**27 Oct: Group AA sitting 4 is complete — AA7 and AA11 shipped. Stop before sitting 5.**
+**27 Oct: Group AA sitting 5 authorised; AA3's collection review is ready for Craig's picks.**
+The report and three interactive mock-ups are in `docs/reviews/aa3-collection-review-2026-10-27.md`
+and `aa3-collection-mockups-2026-10-27.html`. Recommendation: Compact summary, corrected
+copy counts and value explanation, watched/identified removed from this summary.
+No build plan or product code before Craig's picks. AA3 stays open; AA9 has not started.
+Sitting 6 remains excluded. Fresh read-only production evidence found 134 copies tagged
+both physical and download: Home's subtraction says 1,338 discs while valuation correctly
+counts 1,472 physical copies. The review also distinguishes diary watches from owned titles.
+Baseline `c454518` passed all seven CI jobs and was served by API/web with full readiness.
+
+**Group AA sitting 4 is complete — AA7 and AA11 shipped.**
 AA7 shipped in PR #111 (`e6e5e16`); AA11 shipped in PR #112 (`b1075ec`). Separate
 navigation repairs shipped in PR #113 (`30f3607`) and PR #114 (`0b4a416`). The latter
 passed all seven PR and merge jobs (40414279164, 40479165450), including all three browsers.
@@ -19,7 +29,7 @@ Exact API/web merge SHA and full readiness passed. Migration 069 preserves all f
 old Out loans and their copy places, with new metadata NULL. Both read roles can read
 the new fields and cannot read PIN hashes or invite tokens. The final documentation
 head receives the same exact-SHA CI/deployment checks before the session ends.
-No sitting 5 work has started.
+Sitting 5 now proceeds only to each review's owner-picks checkpoint.
 
 **AA2's owner-authorised portrait refresh is complete (25 Oct).** All 40 sets store portraits.
 Each iPhone still needs to remove and re-add the app for AA1's new start page.
@@ -34,7 +44,9 @@ none are due; only then close AA10b. This owner checkpoint remains independent o
 
 ## Next
 
-**Stop before Group AA sitting 5 (AA3 → AA9).** It requires separate authorisation.
+**Wait for AA3's layout, count/explanation and watched/identified picks.**
+Only then plan its build. Finish AA3 before AA9's separate review, which stops again
+for Craig's picks. Do not start sitting 6.
 Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
 1–2 Nov owner checkpoint stays independent. Verify current SHA/CI before any new work.
 
@@ -428,6 +440,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **27 Oct — AA3 review checkpoint, Group AA sitting 5:** Craig authorised AA3 → AA9 with a stop after each review before build planning; sitting 6 excluded. Verified clean current main, seven-job CI 40480668409 and exact API/web baseline SHA `c454518` with full readiness. Wrote the collection review and three interactive layout mock-ups. Fresh read-only counts proved the 134 physical/download overlap, 500 diary versus 482 owned watches for Craig, and 879 versus 878 for Mark. No product change, provider call, live write, build plan, close-out or deployment. AA3 remains open awaiting three picks; AA9 has not started. Full local implementation gate deferred to an authorised build.
 
 - **27 Oct — AA11 close-out completed after both navigation repairs.** PR #114 (`0b4a416`), seven green PR and merge jobs (40414279164, 40479165450); ten local commands, Chromium 38, Firefox 37 plus documented dictation skip, cron six. Exact API/web merge readiness and four-loan/read-role preservation verified. Earlier failures retained in the report. Sitting 4 complete; sitting 5 not started; phone observations remain owner-only.
 
