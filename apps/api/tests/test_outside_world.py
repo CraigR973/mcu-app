@@ -168,3 +168,51 @@ def test_nothing_gets_out_by_a_raw_socket_or_a_name_lookup(tmp_path: Path) -> No
     assert done.returncode == 0, done.stderr
     assert done.stdout.count("blocked:") == 2
     assert len([e for e in logged(tmp_path) if e["kind"] == "unfaked"]) >= 2
+
+
+def test_recorded_model_tool_ids_are_unique_across_requests(tmp_path: Path) -> None:
+    """Two chats must not collide on the real database's unique tool-use constraint."""
+    (tmp_path / "scenario.json").write_text(
+        json.dumps(
+            {
+                "anthropic": {
+                    "rules": [
+                        {
+                            "lastUserContains": "tool fixture",
+                            "toolUse": {
+                                "name": "log_watch",
+                                "input": {"title": "The Quiet Engine"},
+                            },
+                        }
+                    ]
+                }
+            }
+        )
+    )
+    done = run(
+        """
+        import asyncio, anthropic
+        async def go():
+            client = anthropic.AsyncAnthropic(api_key="not-a-key")
+            ids = []
+            for streaming in (False, True):
+                for _ in range(2):
+                    args = dict(model="claude-sonnet-5", max_tokens=100,
+                                messages=[{"role": "user", "content": "tool fixture"}])
+                    if streaming:
+                        async with client.messages.stream(**args) as stream:
+                            message = await stream.get_final_message()
+                    else:
+                        message = await client.messages.create(**args)
+                    ids.extend(block.id for block in message.content if block.type == "tool_use")
+            assert len(ids) == 4, ids
+            assert len(set(ids)) == 4, ids
+            assert all(value.startswith("toolu_e2e_") for value in ids)
+            print("four unique tool uses")
+        asyncio.run(go())
+        """,
+        tmp_path,
+        LOCAL,
+    )
+    assert done.returncode == 0, done.stderr
+    assert "four unique tool uses" in done.stdout

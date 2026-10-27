@@ -87,6 +87,17 @@ change is performed by this batch.
    helpers, retaining viewer-local reset time and the exact guard. The remaining frontend
    commands were not run after this failure; the next clean gate reruns all ten.
 
+10. First full Chromium journey exposed two integration failures after the clean gate:
+    the selected chat title had moved into the log and exactly duplicated its first user
+    turn; it now says “Chat:” before the title, leaving the existing exact message-count
+    assertion unchanged. The older confirmation-race case then found the fixture model's
+    hard-coded `toolu_e2e_1` colliding with AA9's earlier write card in the database's unique
+    constraint. The fake now emits a fresh tool ID per response (streamed and ordinary),
+    matching the real contract; production source/constraints are unchanged. Added a fixture
+    regression using the real SDK to prove four distinct tool uses across both response forms.
+    Stopped this in-progress browser run before repeating the same known issues in Firefox;
+    it is not a completed full suite. No browser retry or assertion change.
+
 The empty successful stream fake now emits the real protocol's `done` frame. A separate
 premature-EOF case proves recovery rather than allowing silent completion. The owner-picked
 layout updates the old native-select assertion to Recent chats/New chat while retaining stored
@@ -123,3 +134,14 @@ show the correct role guidance, allowance, multiline draft and Send above the fi
 ![Craig, fixture app, dark mode](assets/aa9-2026-10-27/aa9-Craig-dark-375.png)
 
 ![Mark, fixture app, light mode](assets/aa9-2026-10-27/aa9-Mark-light-375.png)
+
+## Integration repair checkpoint
+
+The fixture regression passed **nine cases** including real-SDK streamed and ordinary tool
+IDs. The combined AA9 and existing chat browser cases passed **all ten in Chromium** after
+the title/fixture repairs, including #287's held early-record write-card race and call-cap
+enforcement. No assertion or skip changed. A fresh clean full gate follows on the new tree.
+
+![Recovered saved question, fixture app](assets/aa9-2026-10-27/aa9-recovered-saved-question.png)
+
+![Named deletion, fixture app](assets/aa9-2026-10-27/aa9-delete-confirmation.png)

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from uuid import uuid4
 
 import httpx
 
@@ -117,7 +118,7 @@ def _stream(model: str, text: str | None, tool: dict[str, Any] | None) -> bytes:
                     "index": index,
                     "content_block": {
                         "type": "tool_use",
-                        "id": "toolu_e2e_1",
+                        "id": f"toolu_e2e_{uuid4().hex}",
                         "name": tool["name"],
                         "input": {},
                     },
@@ -208,7 +209,7 @@ def handle(request: httpx.Request, world: Any) -> httpx.Response:
             content.append(
                 {
                     "type": "tool_use",
-                    "id": "toolu_e2e_1",
+                    "id": f"toolu_e2e_{uuid4().hex}",
                     "name": tool["name"],
                     "input": tool["input"],
                 }
