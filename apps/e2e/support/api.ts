@@ -38,6 +38,17 @@ export class Api {
     return (text ? JSON.parse(text) : undefined) as T
   }
 
+  /** The real chat endpoint is SSE, including a cap refusal; do not parse it as JSON. */
+  async postStream(path: string, body: unknown): Promise<string> {
+    const response = await fetch(`${API_ORIGIN}/api/v1${path}`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!response.ok) throw new Error(`POST ${path} answered ${response.status}`)
+    return response.text()
+  }
+
   get<T = unknown>(path: string): Promise<T> {
     return this.call<T>('GET', path)
   }
