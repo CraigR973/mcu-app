@@ -4799,6 +4799,11 @@ source adapters further if warranted, with Craig's revised-plan approval.
 
 ### AB2 — Collection descriptions, watched coverage and visible breakdown
 
+**28 Oct review delivered; owner picks pending.** See
+`docs/reviews/ab2-collection-review-2026-10-28.md`: Summary cards (recommended) versus
+Plain rows, with the exact one-field stats proposal. Review only; no implementation or
+contract approval. All acceptance criteria below remain in force.
+
 - **Checkpoint before build:** present phone-size layout/wording alternatives; stop for
   Craig's pick. Recommendation: short descriptions, owned-watched coverage, small visible
   breakdown preview and expandable full charts. Existing five meanings stay available.

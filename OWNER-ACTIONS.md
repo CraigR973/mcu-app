@@ -14,7 +14,9 @@ conversation still maps onto this file.*
 - **Group AB — sitting 1 authorised 28 Oct; AB1 shipped, AB2 picks remain.** Seven batches/five sittings are in
   `docs/reviews/group-ab-plan-2026-10-28.md`, with canonical criteria in the batch ledger.
   Sitting 1: AB1 is live (`ad2c992`, PR #118); next is the collection mock-up and exact
-  additive stats-contract approval before AB2 implementation.
+  additive stats-contract approval before AB2 implementation. Review delivered in
+  `docs/reviews/ab2-collection-review-2026-10-28.md`: choose Summary cards (recommended)
+  or Plain rows and approve the exact `ownedWatchedMovies` proposal; no build has begun.
   Sitting 2: new-title versus extra-copy trigger, stable Mark identity, notification
   preference/migration and wording. Sitting 3: affected installed-iPhone evidence before
   diagnosis/repair, then real-device verification. Sitting 4: cinema source, coverage,

@@ -2,33 +2,39 @@
 
 ## Now
 
-**28 Oct: Group AB sitting 1 — AB1 is live; AB2 review/approval is next.**
-The three approved planning commits are preserved in PR #117, merge `d413b4d`, with all
-seven PR/main jobs green before implementation from clean main. AB1 shipped via PR #118,
-merge `ad2c992` (#302). Home's identification warnings now use the current owned/unresolved
-queue rules and reconcile on every read, without writing a check, refreshing the daily
-heartbeat or sending a push. Resolution and manual/automatic replay refresh attention.
-Actions reach the real Settings tabs/identification/job controls or give owner guidance.
-Another person's phone warning no longer opens Craig's device settings.
+**28 Oct: Group AB sitting 1 is stopped at AB2's owner checkpoint.**
+AB1 is fully closed out. Planning PR #117 preserved all three approved commits before
+implementation from clean main. Product PR #118 merged `ad2c992`; final documentation
+head `86e7d56` passed all seven CI jobs (40759704615), and API/web served that exact SHA
+with db ready and push/AI/eBay/TMDB/Brave configured. Clean local gate: API 2,519, shared
+157, web 729; E2E Chromium 49, Firefox 48 plus its existing skip, cron six. PR/merge CI also
+proved WebKit 47 plus its two documented skips. The live read-only comparison agrees at
+0 queue/0 doubt films/0 attention items while retaining historical saved 1/48 evidence.
+Every failure/repair and the limits of live verification are in
+`docs/reviews/ab1-verification-2026-10-28.md`.
 
-All ten local checks passed on clean `65ccf0e`: API 2,519 with zero skips, including all
-16 derived-trigger cases; shared 157; web 729. Local E2E: Chromium 49, Firefox 48 plus its
-existing dictation skip, cron six. PR CI 40755436621 and merge CI 40757500111 passed all
-seven jobs, including WebKit 47 plus its two existing documented skips. No new skip/retry.
-API/web served `ad2c992`; database ready and push/AI/eBay/TMDB/Brave configured. Read-only
-live application queries agree at queue 0/doubts 0/attention 0, while preserving the saved
-1/48 daily snapshot and historical evidence. No production sign-in, provider run, live data
-write or fabricated push. Every repair is recorded in `docs/reviews/ab1-verification-2026-10-28.md`.
+AB2's review is `docs/reviews/ab2-collection-review-2026-10-28.md`, with 375 px light/dark
+screenshots of Summary cards (recommended) and Plain rows. Both keep five meanings, short
+explanations, visible format bars, full breakdowns and Archive navigation. The exact proposed
+contract adds `ownedWatchedMovies` to existing GET `/api/v1/collection/stats`, keeps
+`watchedMovies` as the whole diary, and shows Unavailable if the new field is absent.
+Craig must approve the layout/wording and this exact contract before build planning/code.
+No choice or API extension is approved by presenting this review.
 
-AB2 has not been implemented. Present phone-size layout/wording alternatives and obtain
-Craig's layout pick plus exact additive `ownedWatchedMovies` contract approval first.
-Sitting 2 and AA10c remain excluded. Existing AA10b final-total and phone/live-assistant
-owner observations remain open independently.
+Read-only 28 Oct examples: Craig 482 owned watches / 1,903 titles versus 500 diary; Mark
+878 / 1,903 versus 879. The stored £15,939.38 across 1,311 of 1,472 physical copies, zero
+sales-backed, remains interim and is not AA10b's final-total checkpoint. No live price,
+collection, diary, provider or model write/run was made. AB2 has only review docs/screenshots
+on `feat/ab2-collection-coverage`; no product implementation, push, merge or deployment.
+
+Sitting 2 and AA10c remain excluded. Existing phone/live-assistant observations and AA10b's
+1–2 Nov final-total comparison remain open independently.
 
 ## Next
 
-AB1 is shipped. Start AB2's collection review from clean main, then stop for Craig's layout
-and exact stats-contract approval before writing product code. Do not start sitting 2 or AA10c.
+Wait for Craig's AB2 layout/wording pick and exact `ownedWatchedMovies` contract approval.
+The review is complete. After both approvals, use the existing review branch, write the
+concrete AB2 build plan, then implement only AB2 under sitting 1. Do not start sitting 2 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -423,6 +429,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct 2026** — **AB2 review delivered; build stops for two owner picks.** Summary cards
+  (recommended) and Plain rows have phone-size light/dark previews and a read-only live
+  snapshot. Exact one-field stats proposal preserves whole-diary history and treats an absent
+  older field as unavailable. Prototype checks passed, including narrow layouts, carousel,
+  full breakdown, per-person examples and older responses. No product implementation or
+  AB2 push/merge/deploy. AB1 final main `86e7d56` has seven-job CI and exact production proof.
+  Sitting 2 and AA10c remain excluded.
 
 - **28 Oct 2026** — **AB1 shipped; AB2 owner checkpoint next.** Planning PR #117 preserved
   all three approved commits; PR #118 (`ad2c992`) fixes false identification attention and
