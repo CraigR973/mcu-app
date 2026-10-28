@@ -6478,3 +6478,17 @@ contemporaneous.
      This approves the grouping, not a named sitting's execution or its unresolved design,
      contract, notification, device, source/cost or build checkpoints. Preserve one branch/PR
      per code batch and normal gates; AA10c remains excluded.
+
+
+302. **AB1 attention follows current actions, while daily operations remain snapshots (28 Oct).**
+     Sitting 1 is authorised after preserving the three planning commits in PR #117.
+     Identification checks share the waiting queue's current owned/unidentified rules and
+     the doubts list's open/current-copy rules; disc/review year warnings require a showing
+     specs/review doubt, not leftover provider evidence. Home reconciles those warnings on
+     read without writing a GET, changing the daily heartbeat or pushing. The genuine daily
+     check still records results and pushes once per new problem. Successful mutations and
+     manual/automatic offline replay invalidate attention. Settings actions select the real
+     tabs; another person's phone, PIN locks and Railway-only jobs receive honest guidance.
+     Craig approved the scoped obsolete test expectations before implementation; route/access
+     assertions stay intact. No schema, API shape, hosting, credential or live-data write.
+     AB2 still requires layout and exact stats-contract approval; other sittings and AA10c excluded.

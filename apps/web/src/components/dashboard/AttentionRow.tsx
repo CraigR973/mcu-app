@@ -10,18 +10,28 @@ import { formatDayMonth } from '@/lib/utils'
 type AttentionDestination = { to: string; label: string } | { advice: string }
 
 /** AA2: every health-check key has one repair destination, or honest owner guidance. */
-export function attentionDestination(key: string): AttentionDestination {
-  if (key.startsWith('job:')) return { to: '/admin', label: 'Open Admin jobs' }
-  if (key === 'ebay:listings') return { to: '/settings', label: 'Open eBay settings' }
-  if (key.endsWith(':notifications')) return { to: '/settings', label: 'Open device settings' }
+export function attentionDestination(key: string, currentPersonId?: string): AttentionDestination {
+  if (key === 'job:cron-specs') return { to: '/specs', label: 'Open Disc specs' }
+  if (key === 'job:cron-values') return { to: '/valuation', label: 'Open Collection value' }
+  if (key === 'job:cron-scrape') return { to: '/retailers', label: 'Open Retailers' }
+  if (key.startsWith('job:') || key === 'check:stale') {
+    return { advice: 'Ask Craig to check this scheduled job in Railway.' }
+  }
+  if (key === 'ebay:listings') return { to: '/settings?tab=ebay', label: 'Open eBay settings' }
+  if (key.endsWith(':notifications')) {
+    if (currentPersonId && key === `person:${currentPersonId}:notifications`) {
+      return { to: '/settings?tab=notifications', label: 'Open your device settings' }
+    }
+    return { advice: 'Ask this person to open Settings → Notifications on their own phone.' }
+  }
   if (key === 'specs:halted') return { to: '/specs', label: 'Open Disc specs' }
-  if (key.endsWith(':lockout')) return { to: '/settings', label: 'Open Settings' }
+  if (key.endsWith(':lockout')) return { advice: 'Ask Craig to review the PIN lock; Settings cannot clear it.' }
+  if (key === 'identify:year-doubt') return { to: '/identify#identify-doubts-heading', label: 'Open films in doubt' }
   if (key.startsWith('identify:')) return { to: '/identify', label: 'Open Identify films' }
   if (key === 'deals:freshness') return { to: '/retailers', label: 'Open Retailers' }
-  if (key === 'assistant:failures') return { to: '/assistant', label: 'Open Assistant settings' }
+  if (key === 'assistant:failures') return { to: '/settings?tab=assistant', label: 'Open Assistant settings' }
   if (key === 'api:readiness') return { advice: 'Ask Craig to complete the server set-up.' }
   if (key === 'database:size') return { advice: 'Ask Craig to review the database size.' }
-  if (key === 'check:stale') return { to: '/admin', label: 'Open Admin jobs' }
   return { advice: 'Ask Craig to review this check.' }
 }
 
@@ -40,7 +50,7 @@ export function AttentionRow() {
   const isAdmin = profile?.role === 'admin'
   const query = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: isAdmin })
   if (!isAdmin || !query.data) return null
-  return <AttentionList attention={query.data} />
+  return <AttentionList attention={query.data} currentPersonId={profile?.id} />
 }
 
 /** Batch X12a: a line from Mark stays until Craig has read it and says so. */
@@ -64,7 +74,7 @@ function ClearNote({ noteId }: { noteId: string }) {
   )
 }
 
-export function AttentionList({ attention }: { attention: Attention }) {
+export function AttentionList({ attention, currentPersonId }: { attention: Attention; currentPersonId?: string }) {
   if (attention.items.length === 0) return null
   return (
     <section
@@ -87,7 +97,7 @@ export function AttentionList({ attention }: { attention: Attention }) {
               <span className="text-muted-foreground"> · since {formatDayMonth(item.since)}</span>
             ) : null}
             {item.noteId ? <ClearNote noteId={item.noteId} /> : null}
-            {!item.noteId ? <AttentionAction destination={attentionDestination(item.key)} /> : null}
+            {!item.noteId ? <AttentionAction destination={attentionDestination(item.key, currentPersonId)} /> : null}
           </li>
         ))}
       </ul>

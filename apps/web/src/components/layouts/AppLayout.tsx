@@ -151,6 +151,7 @@ export default function AppLayout({ children }: Props) {
         void queryClient.invalidateQueries({ queryKey: ['search'] })
         void queryClient.invalidateQueries({ queryKey: ['facets'] })
         void queryClient.invalidateQueries({ queryKey: ['movie-copies'] })
+        void queryClient.invalidateQueries({ queryKey: ['attention'] })
       }),
     [queryClient],
   )

@@ -104,6 +104,22 @@ def _unidentified_on_shelf() -> Any:
     )
 
 
+async def count_old_waiting(db: AsyncSession, *, before: datetime) -> int:
+    """Old proposals still present in the waiting list, rather than historic lookups."""
+    return int(
+        await db.scalar(
+            select(func.count(Movie.id))
+            .join(IdentifyLookup, IdentifyLookup.movie_id == Movie.id)
+            .where(
+                *_unidentified_on_shelf(),
+                IdentifyLookup.status == "needs_you",
+                IdentifyLookup.created_utc < before,
+            )
+        )
+        or 0
+    )
+
+
 async def overview(db: AsyncSession) -> Overview:
     """How many films wait, and what has become of the rest."""
     conditions = _unidentified_on_shelf()
