@@ -4729,6 +4729,185 @@ and physical handovers remain owner observations. Sitting 4 is complete; do not 
 
 ---
 
+## Group AB — the 28 Oct snags, grouping approved 28 Oct
+
+**Grouping approved 28 Oct (#301); no sitting's execution go yet.** Craig confirmed the
+grouping and requested per-sitting settings. Detailed owner checkpoints remain unresolved.
+Planning approval does not authorise implementation, merge, deployment or provider runs.
+Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
+`3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
+Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
+
+**Seven batches, five separately authorised sittings.** One branch/PR and full normal
+verification/close-out per implementation batch; clean local `main` between batches,
+sequential execution, no stacked branches or parallel agents. A sitting's approval does
+not approve the next. Preserve AA10b's final-total checkpoint and all existing owner
+actions; AA10c is excluded. Approved planning docs must reach `main` through normal
+review/CI before batch branches start; preserve the current unpushed planning commits.
+
+Settings preserve this ledger's existing model mapping, rather than reviewing current
+product lineups. Deep = Opus 5 / GPT-5.6 Sol; Standard = Sonnet 5 / GPT-5.6 Terra. The
+strictest batch sets its sitting's effort. Resolve an unavailable model with Craig.
+
+| Sitting | Ordered work and checkpoints | Claude Code / Codex |
+|---|---|---|
+| 1 | AB1 truthful attention → AB2 collection review/build; layout and API picks before AB2 implementation | Opus 5 `high` / GPT-5.6 Sol High |
+| 2 | AB3 Mark's addition notifications; exact event and preference design approved before implementation | Opus 5 `high` / GPT-5.6 Sol High |
+| 3 | AB4 installed-iPhone launch/top bar; reproduce before repair, owner verifies result | Opus 5 `high` / GPT-5.6 Sol High |
+| 4 | AB5 cinema source feasibility; report only, stop for source/coverage/cost picks | Opus 5 `high` / GPT-5.6 Sol High |
+| 5 | AB6 cinema ingestion → AB7 discovery screen; conditional on AB5 and a separately approved build contract | Opus 5 `xhigh` / GPT-5.6 Sol Extra High |
+
+Sitting 1 shares Home's surface and tests. AB3 introduces an event/preference; AB4 needs
+the installed phone. Neither needs to hold up the confirmed Home fixes. Cinema discovery
+must establish feasibility before promising a nine-venue build; AB7 consumes AB6's contract.
+Cost: five sittings, owner stops and full gate/CI/deployment per implementation batch.
+Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
+
+| Batch | Scope and size | Claude Code / Codex |
+|---|---|---|
+| AB1 | Actionable attention and correct links (snag 5), 🟡 | Opus 5 `high` / GPT-5.6 Sol High |
+| AB2 | Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡 | Opus 5 `high` / GPT-5.6 Sol High |
+| AB3 | Mark's new-title notifications (snag 4), 🟡 | Opus 5 `high` / GPT-5.6 Sol High |
+| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High |
+| AB5 | Nine-cinema source feasibility (snag 8, report), 🟡 | Opus 5 `high` / GPT-5.6 Sol High |
+| AB6 | Cinema programme ingestion (conditional), 🔴 provisional | Opus 5 `xhigh` / GPT-5.6 Sol Extra High |
+| AB7 | Local-cinema discovery screen (conditional), 🟡 provisional | Sonnet 5 `high` / GPT-5.6 Terra High |
+
+Deep/high: AB1 has silent wrong actions despite passing tests; AB2 needs meaning/design
+review; AB3 needs transactional/idempotent notifications; AB4 must challenge unsuccessful
+diagnoses; AB5 must establish source feasibility. AB6 is Extra High because unfamiliar
+sources can silently persist wrong showtimes. AB7 becomes Standard against an accepted
+contract. Revalidate AB6/AB7 scope, size and criteria from AB5 before a build go; split
+source adapters further if warranted, with Craig's revised-plan approval.
+
+### AB1 — Needs attention must describe something actionable
+
+- Reproduce the reported 1 waiting proposal and 48 year disagreements with zero actionable
+  queue/doubts. Health checks use the destination's current ownership, identity and
+  unresolved-state rules. Never delete historical evidence just to hide warnings.
+- Regress resolved/kept/moved/binned/sold cases, still-owned unresolved cases and a genuine
+  old proposal. A resolved old lookup cannot keep a warning alive.
+- Resolution refreshes attention. Reconcile/refresh the server's saved daily result as
+  needed; browser invalidation alone cannot fix a false saved warning. Preserve operational
+  checks and once-per-new-problem push behaviour; no fabricated live check or notification.
+- Links reach the correct settings tab/list: eBay, assistant, identification and jobs.
+  Owner-only issues give guidance. Another person's device warning must not imply that
+  Craig's own device settings repair it. Test the destination's content, not just hrefs.
+- Full local gate/E2E, exact-head seven-job PR/main CI and production SHA/readiness;
+  read-only live comparison of attention versus its actionable lists.
+
+### AB2 — Collection descriptions, watched coverage and visible breakdown
+
+- **Checkpoint before build:** present phone-size layout/wording alternatives; stop for
+  Craig's pick. Recommendation: short descriptions, owned-watched coverage, small visible
+  breakdown preview and expandable full charts. Existing five meanings stay available.
+- Watched becomes the signed-in person's distinct watched currently owned titles against
+  current owned titles. Rewatches/extra copies count once; downloads count; sold/donated/
+  binned copies follow the canonical ownership rule. Preserve the diary and account privacy.
+- Propose additive `ownedWatchedMovies` in existing stats/shared-zod contracts, preserving
+  `watchedMovies` as the whole-diary metric. Obtain exact API approval with layout picks;
+  old/cached responses cannot invent zero when the new field is absent.
+- Explain titles/copies, overlapping formats, value coverage and matching. Keep identified
+  meaning intact. Record a scoped supersession of #299 for watched and chosen presentation.
+  Preserve format/location/genre/decade data and missing-spend caveats, without re-pricing.
+- Regress both counts after watches and collection changes, account isolation, old responses
+  and chosen design at 375 px/both themes. Full gate/E2E, exact-head CI and production
+  readback; live snapshot numbers are examples, not pinned expected counts. No data rewrite.
+
+### AB3 — Notify other people when Mark adds a new film
+
+- **Checkpoint before build:** approve the exact trigger, stable identification of Mark,
+  preference/contract change and wording. Recommended: first currently owned copy of a
+  title; an extra edition alone does not notify. Do not silently generalise to all senders,
+  compare mutable display names, or assume every viewer is Mark.
+- Each other active profile gets one event; Mark gets none. Link to the title. Cancelled,
+  failed and duplicate-refused additions send nothing. Edits, imports, restores, identity
+  corrections and historic additions do not trigger a retrospective flood.
+- Queue atomically with the collection addition in the existing outbox. Concurrent adds,
+  offline replay and lost-response retries cannot duplicate the event. Delivery failure
+  cannot roll back a committed add. Prove these cases against real Postgres and fake push.
+- Proposed category `collection_additions`; DB `collection_additions_enabled`; JSON
+  `collectionAdditionsEnabled`; default on. Preserve existing quiet-hours/digest/device/
+  suppression rules. Approve the exact additive migration/DTO/shared-schema plan first;
+  guarded read/backup grants must preserve withheld credential columns.
+- Full gate/E2E/exact-head CI and production SHA/readiness. A genuine later addition and
+  real-phone receipt remain owner acceptance; no production test film or fabricated push.
+
+### AB4 — Installed-iPhone launch and blurred top bar
+
+- Establish affected phone/browser mode, served version, re-add history, theme, Search
+  state and cold launch versus page resumption. Live `/` manifest and opaque CSS already
+  exist; neither is a successful reproduction of the reported problem.
+- **Checkpoint:** obtain affected-device observations, then show the cause and proposed
+  repair before changing launch/navigation/iOS chrome. If re-adding fixes launch, record
+  that without inventing a code repair. If evidence is unavailable, report the open criterion.
+- Preserve login returns, notification/deep links, back/offline behaviour, normal resume
+  state, safe areas and search keyboard focus. Never force every foreground/navigation
+  event to Home. Separate the app header from the iOS clock/battery region and modal dimming.
+- Compare actual device before/after, both themes and Search states. Any code repair gets
+  full gate/E2E/exact-head CI and production SHA/readiness. Keep device acceptance open
+  until observed; token-level tests cannot close a real-iPhone appearance report.
+
+### AB5 — Can the nine cinemas supply reliable programmes?
+
+- Report on all nine intended venues: Odeon Kilmarnock, Glasgow Silverburn Cineworld,
+  Odeon Glasgow Quay, Odeon Braehead, Odeon East Kilbride, Glasgow Science Centre,
+  Glasgow Film Theatre, Everyman Glasgow and Vue St Enoch. Verify current identities;
+  do not silently substitute a branch or promise unsupported venues.
+- Per source: showtimes/reissue coverage, representative real shape, stable film/screening
+  identity, booking links, horizon, freshness/cancellations, access permissions, authentication,
+  licence/retention, request limits and fees. Public-source research is intended; any live
+  integration/sample run stops for exact read-scope approval under `group-start.md` first.
+  No bulk scraper, production ingest, account purchase, geolocation or credential change.
+- Distinguish original film year from reissue/event date and unknown metadata. Check older-
+  release coverage against real approved programme examples; absent evidence is a gap,
+  never proof a venue has nothing showing. Do not guess provider payloads for fixtures.
+- Propose source options, phone-size concept, freshness/failure policy, coverage matrix,
+  fees/request load/maintenance and revised AB6/AB7 scope. Reduced venue coverage needs
+  Craig's decision. **Stop after the report** for source, cost, coverage and concept picks.
+- Report-only completion needs document/source verification, not an invented app gate or
+  deploy. No schema/API/job/hosting choice is approved by discovery alone.
+
+### AB6 — Cinema programme ingestion (conditional)
+
+**Not ready to start.** AB5's evidence and Craig's source/coverage/cost picks come first,
+then approval of a concrete schema/API/job/refresh/retention plan. Re-plan/split adapters
+if feasibility changes the scope. No new paid service, hosting or credential is pre-approved.
+
+- Implement approved sources/coverage from approved real specimens. Programmes are separate
+  from the release calendar and owned catalogue; browsing creates no copies or diary entries.
+- Preserve stable identity/bookings, deduplicate ingestion/source overlap and handle
+  cancellations. UTC storage and Europe/London display/DST must agree. Original release
+  year, reissue date and missing identity/year remain distinct; ambiguous film matches stay
+  unresolved rather than being linked to the wrong catalogue title.
+- Failed/empty/stale/partial/healthy refreshes have distinct coverage/timestamps. Bound
+  requests and retention. A stale screening cannot masquerade as bookable; a fetch failure
+  cannot mean “nothing showing”. Follow approved licence, rate and attribution conditions.
+- Authenticated shared-zod API, approved route-inventory additions, guarded read/backup
+  grants and reversible migration. Reuse existing jobs only if suitable; hosting/variables/
+  credentials need owner approval. Update the architecture map when the pipeline changes.
+- Real-Postgres/provider-fixture/job/DST/failure regressions, full gate/exact-head seven-job
+  CI and production SHA/readiness. Stop before approved live acceptance runs; report actual
+  venue coverage and freshness without a blanket “nine cinemas work” assertion.
+
+### AB7 — Find a film showing nearby (conditional)
+
+**Not ready to start.** Depends on AB6's accepted data contract/coverage and Craig's AB5
+concept pick. A separately authorised sitting 5 is still required.
+
+- One view grouped by film, with approved venue selection, date/time and validated booking
+  links. Multiple venues/showtimes remain distinct under a film. Show coverage and freshness;
+  booking opens the venue, never buys a ticket. Preserve the current disc/release calendar.
+- Make older/reissue screenings discoverable under the approved definition, including
+  watched favourites. Ownership and personal watch status may explain relevance; “older”
+  cannot mean “unwatched”. Clearly label uncertain identity/year; no paid/model ranking assumed.
+- Honest loading/empty/failed/stale/partial states. Settle navigation in the picked design,
+  retain route/access assertions and seek approval for intentional inventory additions.
+- Fixtures-backed browser → API → programme flow, personal watch isolation, multiple
+  venues/showtimes, bookings and provider failure at 375 px/both themes. Full gate/exact-
+  head seven-job CI/production SHA/readiness. Actual programme reads need separate live
+  acceptance authorisation; show the delivered coverage, including any approved gaps.
+
 ## Batch groups
 
 **Grouping rule:** batches share a group when they touch the same files, share a
@@ -4783,6 +4962,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
 | **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → ~~AA9~~ (`aecdf8d`) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 5 complete, 28 Oct: AA3 PR #115 (`1c73d90`) and AA9 PR #116 (`aecdf8d`), each with its own review stop, owner picks, build plan and full close-out. Final PR/merge seven-job CI and exact production API/web SHA/full readiness passed. AA9's complete repair record is in its verification report; real-phone/live-AI observations remain open. No sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
+| **AB** | 1: AB1 → AB2 · 2: AB3 · 3: AB4 · 4: AB5 report · 5: AB6 → AB7, conditional | By sitting: Group AB table | By sitting: Group AB table | **Grouping approved 28 Oct (#301); no implementation go.** Home corrections share a sitting; notification semantics and installed-device diagnosis have separate owner stops. Cinema sources/coverage/costs must be approved before an ingestion/screen build. Each sitting separately authorised; one branch/PR per implementation batch. AA10c and existing valuation/device checkpoints stay outside this run. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to

@@ -11,6 +11,17 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Group AB — grouping approved 28 Oct (#301); no execution go yet.** Seven batches/five sittings are in
+  `docs/reviews/group-ab-plan-2026-10-28.md`, with canonical criteria in the batch ledger.
+  Sitting 1: collection mock-up and exact additive stats contract after the attention fix.
+  Sitting 2: new-title versus extra-copy trigger, stable Mark identity, notification
+  preference/migration and wording. Sitting 3: affected installed-iPhone evidence before
+  diagnosis/repair, then real-device verification. Sitting 4: cinema source, coverage,
+  cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
+  conditional schema/API/job/refresh/retention build contract before implementation.
+  Approving the grouping is not a go for every sitting or a hosting/credential/live-write
+  approval. Existing AA1 phone and AA10b/AA10c boundaries below remain in force.
+
 - ~~**Group AA sitting 5, AA9 — two assistant review picks.**~~
   **Done 27 Oct:** Craig chose Conversation first and Include shared corrections (#300).
   **Shipped 28 Oct:** PR #116 (`aecdf8d`), all seven final PR/merge jobs and exact API/web
