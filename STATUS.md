@@ -2,7 +2,18 @@
 
 ## Now
 
-**28 Oct, later: eight new owner snags reconciled; implementation has not started.**
+**28 Oct, later: Group AB proposed — seven batches across five sittings; no build go.**
+Craig asked for the eight reconciled snags to be batched. The complete proposal is
+`docs/reviews/group-ab-plan-2026-10-28.md`, with canonical criteria/settings and a group
+manifest in `docs/phase-batches.md`. Sitting 1: truthful attention → collection review/build;
+2: Mark's new-title notifications; 3: installed-iPhone launch/top-bar diagnosis;
+4: nine-cinema source/coverage/cost report; 5: conditional programme ingestion → discovery
+screen. Each sitting needs its own go. Collection design/API, notification event/preference,
+device evidence and cinema source/build contracts have explicit owner stops.
+Planning docs remain on `chore/owner-snags-2026-10-28`; no push/merge/deploy or product change.
+Integrate approved planning commits through normal review/CI before implementation from main.
+
+**28 Oct: eight owner snags reconciled; evidence, not completed repairs.**
 `docs/owner-snags-2026-10-28.md` records the findings against clean `3e07c19` and the same
 production API/web SHA, green exact-main CI and full readiness. Read-only live checks prove
 Home's identification attention is false: 1 waiting proposal and 48 year disagreements,
@@ -15,7 +26,7 @@ exist; the breakdown is collapsed. Home start URL `/` is live and the top bar's 
 but both reported iPhone problems remain unverified. Nearby cinema programmes are a new
 feature; venue/source research has not begun. Focused existing tests: 42 passed with harness
 warnings; no full gate or phone/browser run. Report and handoff only, no product/live-data
-change, push or deploy. A new execution plan waits for Craig's review and go.
+change, push or deploy. Group AB is now proposed and waits for Craig's review and go.
 
 **28 Oct: Group AA sitting 5 is complete — AA3 and AA9 are live.**
 AA9 shipped in PR #116, merge `aecdf8d`, from Craig's Conversation first and shared-corrections
@@ -50,8 +61,8 @@ AA10b's scheduled runs on 1–2 Nov and final Home-total comparison stay open in
 
 ## Next
 
-Review the eight-point reconciliation in `docs/owner-snags-2026-10-28.md`, then propose the
-whole scoped batch/sitting plan before starting any new run. No new build is authorised.
+Review `docs/reviews/group-ab-plan-2026-10-28.md` and wait for Craig's grouping approval
+and a named sitting's go. No new build is authorised. Do not start all of Group AB at once.
 
 **Stop here: sitting 5 is complete; sitting 6 has no authorisation.**
 AA10c remains the separate sitting from 25 Nov. Do not start it automatically.
@@ -448,6 +459,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct — Group AB proposed at Craig's request:** seven batches/five separately authorised sittings, canonical ledger criteria/models/efforts and a phone-readable plan. Home corrections share sitting 1; notifications and iPhone diagnosis stand alone; cinema feasibility precedes conditional ingestion/screen builds. Owner stops cover design/API, event/preference/migration, real device and source/coverage/cost/build contracts. No implementation, provider research, app gate, push, merge or deployment; documentation checks only. AA10b/AA10c and existing device checkpoints preserved. Wait for grouping approval and a named sitting's go.
 
 - **28 Oct — eight new owner snags reconciled:** report `docs/owner-snags-2026-10-28.md`, source/live SHA `3e07c19`, green main CI 40663082493 and db ready. Read-only application functions prove false identification attention (1 + 48 reported; actionable queue/doubts both 0). Owned watched: Craig 482 and Mark 878 of 1,903; existing diary totals 500/879. No collection-add push sender; descriptions/charts exist, charts collapsed; iPhone launch/top bar remain open despite live `/` manifest and opaque header CSS. Nine cinema venues captured, source feasibility not researched. Focused 42 tests passed with harness warnings; full gate/E2E/phone checks not run. Documentation only; no build, provider call, live write, push, deploy or sitting 6. Full proposed run needs Craig's go.
 
