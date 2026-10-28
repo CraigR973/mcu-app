@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA11 plus the AA9 assistant build,
-reviewed on 27 Oct; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map shows the running structure through AA9,
+shipped on 28 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -158,7 +158,7 @@ Shelf confirmation remains available to both people, matching their existing cop
 Mark has the To put back list. No role, credential or hosting permission changes.
 
 
-## AA9, build on 27 Oct
+## AA9, shipped 28 Oct (`aecdf8d`)
 
 ```mermaid
 flowchart TB
@@ -177,3 +177,6 @@ page is left. A saved question is read before a different question; an unsaved d
 sent only explicitly after a successful reload. Existing confirmation, server roles, caps,
 model, endpoints and database shapes remain unchanged. Recent chats and named deletion use
 the existing private history; deleting chat never undoes confirmed diary/Wanted actions.
+
+A deletion finishing after page navigation refreshes shared history cache but cannot reopen
+the assistant. No service, database shape or provider contract was added by AA9.

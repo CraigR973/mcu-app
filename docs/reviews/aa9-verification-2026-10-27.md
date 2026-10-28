@@ -1,6 +1,7 @@
 # AA9 — assistant verification
 
-27 Oct · PR #116 is open; an additional deletion/navigation repair is under verification. Not yet shipped.
+28 Oct · shipped in [PR #116](https://github.com/CraigR973/mcu-app/pull/116), merge `aecdf8d0c56c540b3e4f6f0777fea8fb4c43aa2c`.
+Review and owner picks were on 27 Oct.
 
 Craig picked Conversation first and Include shared corrections after the review, before
 planning (#300). Sitting 5 authorises AA3 then AA9 only; sitting 6 is excluded. AA3 is
@@ -116,11 +117,11 @@ history/follow-up and stale-confirmation-race assertions. The known-cap browser 
 disabled Send and still directly proves the real endpoint's SSE denial; server enforcement,
 route inventory and role assertions remain intact. No new skip, retry, ignore or disabled check.
 
-## Verification checkpoints
+## Earlier verification checkpoints
 
 Focused unit checkpoint: **25 passed**. Web and E2E typechecks passed. Initial web lint passed
 with 11 existing Fast Refresh warnings, without new exceptions. All **six focused Chromium cases passed** after the explicit viewport correction. The
-short-screen recovery geometry also passed. Final full clean gate/browser evidence is pending.
+short-screen recovery geometry also passed. The final shipment proof below supersedes this checkpoint.
 
 | Acceptance | Proof | Result |
 |---|---|---|
@@ -129,8 +130,8 @@ short-screen recovery geometry also passed. Final full clean gate/browser eviden
 | Safe recovery and chat isolation | Premature EOF after real server save, no duplicate send, lost confirmation, URL-change origin isolation | Local pass |
 | History and named delete confirmation | Loading/error/reload, separate drafts, cancel/confirm deletion; confirmed diary entry survives | Local pass |
 | Readable answers and reader control | Safe text/links tests, partial markup, scroll-away/latest behaviour | Local pass |
-| Existing app contracts and full journey | All ten local checks and full available E2E pass; exact-head seven-job CI follows | Local pass; CI pending |
-| Production deployment | Exact API/web merge and final docs SHA; db and five integration readiness fields | Pending |
+| Existing app contracts and full journey | Clean bcc80f3 gate; final PR/merge all seven jobs including three-browser E2E | Pass |
+| Production deployment | Exact API/web merge SHA, db and all five integration fields; served assistant bundle | Pass; final docs head checked after push |
 
 ## Rendered evidence
 
@@ -157,7 +158,7 @@ enforcement. No assertion or skip changed. A fresh clean full gate follows on th
 
 ![Named deletion, fixture app](assets/aa9-2026-10-27/aa9-delete-confirmation.png)
 
-## Final clean local gate — `cf28d05`
+## Earlier clean local gate — `cf28d05`
 
 All ten `batch-verify.md` commands passed on clean commit
 `cf28d051562ff5a2c61894aaacb6a3f539ac2bcc`; the tree remained clean. API **2,492 passed,
@@ -182,6 +183,37 @@ readiness, remain required before calling this shipped.
 ## Post-review navigation repair
 
 The earlier complete clean/local browser evidence above belongs to `cf28d05`. The small
-additional deletion guard has a focused real-router unmount regression. A new clean ten-check
-gate and full available browser suite follow before merging; the final exact-head PR CI also
-runs all three browsers. No production deployment has occurred for AA9.
+additional deletion guard has a focused real-router unmount regression. At this checkpoint a new clean ten-check
+gate, full available browser suite and exact-head three-browser CI were still required.
+AA9 had not been deployed. The final shipment proof below records their completion.
+
+## Final shipment proof — 28 Oct
+
+The navigation repair received a new complete gate from clean
+`bcc80f3424fa356e761ac777835ec1623d673396`, with the tree still clean afterwards:
+API **2,492 passed, zero skips**, all 16 derived-field trigger cases; shared **157**;
+web **728**; all ten lint/format/typecheck/test/build commands green. All **26 focused**
+assistant/text cases pass, including the exact real-router deletion/unmount regression.
+The final available local E2E completed normally: **Chromium 47; Firefox 46 plus its one
+existing dictation skip; cron six**. App/shared source is identical in the merge.
+
+Final PR head `bcc80f3424fa356e761ac777835ec1623d673396` passed all seven jobs in
+[40584011191](https://github.com/CraigR973/mcu-app/actions/runs/40584011191).
+Merge `aecdf8d0c56c540b3e4f6f0777fea8fb4c43aa2c` passed all seven jobs in
+[40661157229](https://github.com/CraigR973/mcu-app/actions/runs/40661157229).
+CI's full suite: **Chromium 47; Firefox 46 + one skip; WebKit 45 + two skips; cron six**.
+Only the three existing documented browser skips remain; all six new AA9 cases run in all
+three browsers. No timeout, route inventory, role/cap assertion or skip policy was weakened.
+The first PR head also passed seven jobs (40581307446), but was deliberately superseded by
+the source-review deletion guard and its new regression rather than treated as final proof.
+
+Production API and web both reported `aecdf8d0c56c540b3e4f6f0777fea8fb4c43aa2c`; `/health/ready` reported db `ok` and
+push, AI, eBay, TMDB and Brave `configured`. A read-only fetch of the served assistant chunk
+`AiChatPage-31XaKAqL.js` found the new calls label, recent chats, saved-question recovery,
+kept-draft and no-Undo deletion copy. This proves the deployed assets and readiness; it is
+not a production sign-in, live AI/provider call, real-phone or live follow-up test.
+
+The close-out docs update the ledger, architecture map/reconciliation, owner actions and
+session log. Their separate final push receives its own exact-head seven-job CI and API/web
+SHA/readiness check; the completion reply records that final head. Real-phone/live-AI and
+AA10b owner checkpoints remain open. Sitting 6 was not started.

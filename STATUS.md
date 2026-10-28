@@ -2,54 +2,43 @@
 
 ## Now
 
-**27 Oct: AA3 is live; AA9 PR #116 is open; a final navigation guard is being verified.**
-AA9 is on `feat/aa9-assistant`, with its report and three interactive layouts in
-`docs/reviews/aa9-assistant-review-2026-10-27.md`. Recommendation: Conversation first and the
-shared guidance/limit/recovery corrections. Craig selected both in chat after the review.
-The concrete build/recovery plan is `docs/reviews/aa9-build-plan-2026-10-27.md` (#300).
-No API change or migration is needed; sitting 6 is excluded.
+**28 Oct: Group AA sitting 5 is complete — AA3 and AA9 are live.**
+AA9 shipped in PR #116, merge `aecdf8d`, from Craig's Conversation first and shared-corrections
+picks (#300). Both reviews stopped for picks before their build plans. Sitting 6 has not started.
+The assistant keeps asking central, offers recent chats and role-aware starters, labels the
+allowance as AI calls, preserves multiline drafts during errors/chat switches, and binds replies
+and confirmation cards to their originating chat. Lost answers require reloading saved state
+before another send. Named deletion asks first and preserves confirmed diary/Wanted actions;
+a finishing deletion cannot reopen a page the person has left. Basic answer formatting is safe
+React text, without a new dependency, model contract, API shape, cap or role change.
 
-The AA9 build now has role-aware starters, truthful AI-call/availability states, separate
-multiline drafts, origin-bound streams, guarded reload recovery, safe answer formatting and
-named deletion confirmation. Focused checks: 25 unit cases and all six Chromium cases pass,
-including short-height composer geometry and no duplicate send after a saved answer is lost.
-Web/E2E typechecks pass. Actual fixture-app screens were inspected at 375 px in both themes;
-normal repository E2E required no bypass of the review's in-app-browser API block.
-All ten checks passed from clean `cf28d05`: API 2,492, shared 157 and web 727; zero API
-skips and all 16 derived-field trigger cases ran. Full local E2E: Chromium 47, Firefox 46 plus
-one existing dictation skip, jobs six. WebKit is CI-only. PR #116 head `5e4eda9` entered seven-job CI. A subsequent source
-review reproduced a deletion callback reopening the assistant after navigation; its guard
-passes all 26 focused cases and now receives a fresh clean gate/browser run and new exact-head
-CI before merge. AA9 is not deployed.
-Failures and repairs are in `docs/reviews/aa9-verification-2026-10-27.md`.
+All ten checks passed on clean `bcc80f3`: API 2,492 (zero skips, all 16 derived-field trigger
+cases), shared 157 and web 728. Full local E2E: Chromium 47; Firefox 46 plus its existing
+dictation skip; cron six. Final PR CI 40584011191 and merge CI 40661157229 passed all seven
+jobs, including WebKit (45 plus its two existing documented skips). No new skip or retry.
+Production API and web matched `aecdf8d`; db is ready and push/AI/eBay/TMDB/Brave are configured.
+The served assistant bundle contains the picked controls/recovery copy. That was a read-only
+asset check, not a production sign-in or model conversation. All repairs and fixture captures
+are in `docs/reviews/aa9-verification-2026-10-27.md`.
 
-AA3 shipped in PR #115, merge `1c73d90`; final close-out head `b904457` is clean on main.
-All seven final PR, merge and docs-head CI jobs passed (40531726901 / 40533923150 /
-40535930619). The docs-head browser setup was restarted once on the same commit after slow
-Ubuntu downloads; no assertion/check/skip changed. Its complete second suite passed:
-Chromium 41; Firefox 40 plus one documented skip; WebKit 39 plus two documented skips; jobs six.
-Production API/web exact `b904457` and full readiness were reverified before AA9 began.
+AA3 shipped in PR #115 (`1c73d90`), with final docs head `b904457` and seven-job exact-head CI
+plus API/web SHA/readiness proof. Home retains five collection meanings, direct physical/overlap
+counts, expandable breakdowns and its Archive action (#299). The 27 Oct read-only snapshot was
+1,903 titles, 1,927 copies, 1,472 physical, 589 download and 134 in both. Stored £15,939.38 across
+1,311 of 1,472 physical copies, zero sales-backed, was interim and **not AA10b's final checkpoint**.
+No live collection/price write or provider/model call was used to verify either build.
 
-Home retains five collection meanings, direct physical/overlap counts, expandable breakdowns
-and the Archive action in every state (#299). Read-only production evidence: 1,903 titles;
-1,927 copies; 1,472 physical; 589 download; 134 in both. Personal diary counts remain Craig 500,
-Mark 879; matched titles 1,902. Stored £15,939.38 across 1,311 of 1,472 physical copies, zero
-sales-backed, is interim and **not AA10b's final after-total checkpoint**. No live data/price
-write, provider request, migration, hosting or credential change was performed.
-
-AA7/AA11 and navigation repairs remain shipped. Real-phone picture selection, request push
-receipt and physical handovers remain owner observations. AA2's portrait refresh populated all
-40 sets; both iPhones still need removing/re-adding the app. AA10b's 1–2 Nov scheduled runs
-and final Home-total comparison stay open, independently of this review.
+Real iPhone keyboard/dictation and a live assistant follow-up remain owner observations, as do
+picture selection, request push receipt, physical handovers and removing/re-adding the PWA on
+both iPhones. Unsent drafts are page memory and do not survive leaving/reloading the whole page.
+AA10b's scheduled runs on 1–2 Nov and final Home-total comparison stay open independently.
 
 ## Next
 
-**Run AA9 through exact-head seven-job PR CI and automatic close-out.**
-Continue under the existing sitting-5 authorisation.
-Any newly discovered consequential contract change needs its own decision before implementation.
-AA9 is open; its ledger row stays unstruck. Do not start sitting 6.
-Craig's real-phone picture/push/physical-handover observations remain open. AA10b's
-1–2 Nov owner checkpoint stays independent. Verify current SHA/CI before any new work.
+**Stop here: sitting 5 is complete; sitting 6 has no authorisation.**
+AA10c remains the separate sitting from 25 Nov. Do not start it automatically.
+Craig's phone/live-assistant observations and AA10b's 1–2 Nov final-total checkpoint remain open.
+Verify current SHA/CI before any newly authorised work.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -441,6 +430,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct — Group AA sitting 5 complete:** AA9 shipped in PR #116 (`aecdf8d`) after Craig's two picks (#300), following AA3's separate review/build/close-out. Final clean gate: API 2,492 (zero skips), shared 157, web 728; local Chromium 47, Firefox 46 plus documented dictation skip, cron six. Final PR CI 40584011191 and merge CI 40661157229 passed all seven jobs, including WebKit. Exact production API/web merge SHA, full readiness and served assistant bundle verified. The deletion/unmount regression was reproduced and fixed before merge; every repair is retained in the AA9 report. Real-phone/live-AI and AA10b owner checks stay open. No sitting 6.
 
 - **27 Oct — AA9 review checkpoint:** AA3 final docs head `b904457` passed all seven jobs (40535930619, one same-commit infrastructure restart) and exact production API/web SHA/full readiness. Started a separate AA9 review branch, wrote the assistant report and three interactive layouts, and confirmed the blank landing condition with the installed query library. Current-app phone browser proof was blocked by the in-app browser; local fixture HTTP/CORS/readiness passed, no bypass or live provider call. Mock-ups and local interactions checked at 320/375 px; prototype repairs and all limits are in the report. Stopped for two picks before any assistant build plan/code; no sitting 6.
 
