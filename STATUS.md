@@ -16,7 +16,8 @@ Every failure/repair and the limits of live verification are in
 Craig approved AB2 Summary cards and its shown wording, plus the exact additive
 `ownedWatchedMovies` contract on 28 Oct. Decision #303 and
 `docs/reviews/ab2-build-plan-2026-10-28.md` record the scope before implementation.
-The existing review branch is retained; AB2 implementation/gates are next.
+The existing review branch is retained; AB2 implementation is complete; all ten clean local checks and the full available local
+E2E suite passed. PR exact-head CI, merge and production proof are next.
 
 Read-only 28 Oct examples: Craig 482 owned watches / 1,903 titles versus 500 diary; Mark
 878 / 1,903 versus 879. The stored £15,939.38 across 1,311 of 1,472 physical copies, zero
@@ -28,7 +29,7 @@ Sitting 2 and AA10c remain excluded. Existing phone/live-assistant observations 
 
 ## Next
 
-Implement and verify the approved AB2 build plan on the existing review branch.
+Review the AB2 diff, run exact-head seven-job PR/main CI and verify production.
 Close out only AB2 after all gates; do not start sitting 2 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
@@ -424,6 +425,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct 2026** — **AB2 built to approved Summary cards and exact contract.** Clean 8e61dd6: all ten checks passed (2,523 API/158 shared/732 web, no API skips); full Chromium 54/Firefox 53 plus existing skip/cron six passed. Read-only current-live comparison agrees at Craig 482 and Mark 878 of 1,903, diary 500/879 unchanged. PR/merge/production proof next; sitting 2/AA10c excluded.
 
 - **28 Oct 2026** — Craig approved AB2 Summary cards/wording and the exact ownedWatchedMovies contract in chat. Recorded #303 and concrete build plan before code; no broader sitting or data-write approval.
 

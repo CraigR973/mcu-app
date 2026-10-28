@@ -1,7 +1,7 @@
 # Approved grouping for the 28 Oct snags
 
 **Seven batches across five sittings; sitting 1 authorised 28 Oct. AB1 shipped (`ad2c992`);
-AB2 layout and exact stats-contract approval remain before implementation.**
+AB2 Summary cards/wording and exact stats contract approved (#303); local gates passed, CI next.**
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
 

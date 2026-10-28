@@ -166,3 +166,9 @@ migration is changed. The review is committed locally for handoff; no AB2 push/m
 Craig chose Summary cards (including shown wording) and approved the exact contract above
 in chat. Decision #303 and the separate build plan record the approval before code.
 Earlier review-only statements describe the state when this review was presented.
+
+
+Build verification note: the explicit transaction READ ONLY check found the connection's
+startup read-only preference was not honoured by Neon. The build probe now sets and checks
+the transaction mode before reading. The earlier review issued only SELECTs and deliberately
+avoided the repairing valuation service; no live write or provider/model request was made.
