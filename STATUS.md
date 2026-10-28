@@ -2,6 +2,21 @@
 
 ## Now
 
+**28 Oct, later: eight new owner snags reconciled; implementation has not started.**
+`docs/owner-snags-2026-10-28.md` records the findings against clean `3e07c19` and the same
+production API/web SHA, green exact-main CI and full readiness. Read-only live checks prove
+Home's identification attention is false: 1 waiting proposal and 48 year disagreements,
+but the actual queue and open-doubt services both return 0; re-evaluating the check still
+returns those warnings. It counts historical lookup/evidence rather than current actions.
+Craig now wants watched against the collection: 482 of 1,903 for Craig and 878 for Mark,
+versus the current whole-diary counts of 500 and 879. This changes #299's watched choice.
+Mark's new-film addition has no notification sender. The breakdown and descriptions already
+exist; the breakdown is collapsed. Home start URL `/` is live and the top bar's CSS is opaque,
+but both reported iPhone problems remain unverified. Nearby cinema programmes are a new
+feature; venue/source research has not begun. Focused existing tests: 42 passed with harness
+warnings; no full gate or phone/browser run. Report and handoff only, no product/live-data
+change, push or deploy. A new execution plan waits for Craig's review and go.
+
 **28 Oct: Group AA sitting 5 is complete — AA3 and AA9 are live.**
 AA9 shipped in PR #116, merge `aecdf8d`, from Craig's Conversation first and shared-corrections
 picks (#300). Both reviews stopped for picks before their build plans. Sitting 6 has not started.
@@ -34,6 +49,9 @@ both iPhones. Unsent drafts are page memory and do not survive leaving/reloading
 AA10b's scheduled runs on 1–2 Nov and final Home-total comparison stay open independently.
 
 ## Next
+
+Review the eight-point reconciliation in `docs/owner-snags-2026-10-28.md`, then propose the
+whole scoped batch/sitting plan before starting any new run. No new build is authorised.
 
 **Stop here: sitting 5 is complete; sitting 6 has no authorisation.**
 AA10c remains the separate sitting from 25 Nov. Do not start it automatically.
@@ -430,6 +448,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct — eight new owner snags reconciled:** report `docs/owner-snags-2026-10-28.md`, source/live SHA `3e07c19`, green main CI 40663082493 and db ready. Read-only application functions prove false identification attention (1 + 48 reported; actionable queue/doubts both 0). Owned watched: Craig 482 and Mark 878 of 1,903; existing diary totals 500/879. No collection-add push sender; descriptions/charts exist, charts collapsed; iPhone launch/top bar remain open despite live `/` manifest and opaque header CSS. Nine cinema venues captured, source feasibility not researched. Focused 42 tests passed with harness warnings; full gate/E2E/phone checks not run. Documentation only; no build, provider call, live write, push, deploy or sitting 6. Full proposed run needs Craig's go.
 
 - **28 Oct — Group AA sitting 5 complete:** AA9 shipped in PR #116 (`aecdf8d`) after Craig's two picks (#300), following AA3's separate review/build/close-out. Final clean gate: API 2,492 (zero skips), shared 157, web 728; local Chromium 47, Firefox 46 plus documented dictation skip, cron six. Final PR CI 40584011191 and merge CI 40661157229 passed all seven jobs, including WebKit. Exact production API/web merge SHA, full readiness and served assistant bundle verified. The deletion/unmount regression was reproduced and fixed before merge; every repair is retained in the AA9 report. Real-phone/live-AI and AA10b owner checks stay open. No sitting 6.
 
