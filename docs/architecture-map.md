@@ -1,7 +1,7 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map records AA9's shipped structure and
-AB1's attention repair under verification on 28 Oct; the April design intent remains in
+`STATUS.md` says which commit is deployed. This map records the shipped structure through
+AB1 on 28 Oct; the April design intent remains in
 `ARCHITECTURE.md`.
 
 ```mermaid
@@ -50,7 +50,7 @@ sets gained a portrait. Cards therefore keep initials until a narrow metadata fi
 authorised re-run. The existing completion endpoint reads each missing film's shared Wanted state,
 while the screen separates missing films from those on the shelf.
 
-## AB1, attention repair under verification, 28 Oct
+## AB1, shipped 28 Oct (`ad2c992`)
 
 ```mermaid
 flowchart TB

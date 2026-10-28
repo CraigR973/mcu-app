@@ -56,8 +56,8 @@ empty. The saved daily snapshot remains 1/48 and its timestamp is unchanged. Thi
 query verification against live rows, not a deployed authenticated browser observation.
 
 The focused Chromium flow proves a real Keep clears Home's cached warning on client
-navigation, without another daily run or lost historical evidence. Full AB1 gate/E2E,
-exact-head CI and deployment verification remain pending; this is not shipment.
+navigation, without another daily run or lost historical evidence. The completed full
+gate/E2E, exact-head CI and deployment verification are recorded below.
 
 ## Failures and repairs
 
@@ -82,3 +82,45 @@ attention in dark/light and the mixed destinations/guidance. Existing collection
 was not redesigned. React review found no hook-order, role/accessibility, unsafe rendering,
 new dependency or bundle concern in the changed components. Manual replay also refreshes
 attention, alongside automatic replay and successful mutations.
+
+
+## Completed gate and close-out
+
+All ten local checks passed on clean `65ccf0ee5483550428e7144428b3e8ce408344d9`.
+API: 2,519 passed, zero skips (all 16 derived-field trigger cases); shared 157; web 729.
+Full local E2E: Chromium 49; Firefox 48 plus the existing documented dictation skip; cron 6.
+WebKit is unavailable on this Mac's macOS 13, so its evidence is CI, not a local claim.
+
+PR #118 exact-head CI 40755436621 passed all seven jobs. Merge `ad2c992` has exactly the
+same Git tree as the clean local gate commit; merge CI 40757500111 passed all seven jobs.
+CI browsers: Chromium 49, Firefox 48 plus one documented skip, WebKit 47 plus two documented
+skips; cron 6. No new skip or retry. Both new AB1 flows passed in all three CI browsers.
+API and web served the full merge SHA with db ready and push/AI/eBay/TMDB/Brave configured.
+
+### Acceptance outcome
+
+1. Reproduction: live application reads reproduced saved/calculated 1/48 against 0 queue and
+   0 open-doubt films. Corrected shared predicates return no identification warning.
+2. Regression: resolved film/series, skipped/set-aside, kept/corrected/moved doubts,
+   copy move/bin/sale/donation, deleted film, still-owned open doubt and genuine old proposal
+   are covered against real disposable Postgres; historical rows survive.
+3. Freshness: a real Keep clears cached Home on client navigation; successful mutation and
+   manual/automatic replay refresh attention. Read reconciliation neither mutates the saved
+   rows nor queues a notification; existing daily-record/push-once tests and cron flow pass.
+4. Destinations: browser tests open real eBay/Assistant/Notifications panels, Disc specs,
+   Collection value and identification content. Other-person devices and Railway-only jobs
+   show guidance. There is no fictional Admin jobs screen and no route-inventory change.
+5. Gate/deployment: full local, exact-head PR/main seven-job CI and API/web SHA/readiness
+   passed. Read-only live comparison is queue 0, doubt films 0 and attention response empty,
+   with the historical saved 1/48 and daily timestamp unchanged.
+
+The live-data comparison invokes the merged application's real functions/attention handler
+inside a read-only transaction. It is not a production browser sign-in or an authenticated
+HTTP attention response. Browser → API → Postgres behaviour is established by the complete
+fixture-backed E2E suite. No live collection/evidence write, provider/model request or push.
+
+Additional workflow repair: gh pr edit hit GitHub's retired Projects API; the exact PR body
+was updated via the supported REST endpoint. No product or gate change was needed.
+
+AB1 is complete. AB2 starts with review only and stops for layout/exact stats-contract picks.
+Sitting 2, AA10c and the existing valuation/device checkpoints remain outside this close-out.

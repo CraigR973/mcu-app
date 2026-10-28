@@ -2,73 +2,36 @@
 
 ## Now
 
-**28 Oct, later: Group AB grouping approved — seven batches/five sittings; no build go (#301).**
-Craig asked for the eight reconciled snags to be batched. The complete proposal is
-`docs/reviews/group-ab-plan-2026-10-28.md`, with canonical criteria/settings and a group
-manifest in `docs/phase-batches.md`. Sitting 1: truthful attention → collection review/build;
-2: Mark's new-title notifications; 3: installed-iPhone launch/top-bar diagnosis;
-4: nine-cinema source/coverage/cost report; 5: conditional programme ingestion → discovery
-screen. Craig approved the grouping and requested per-sitting model/effort; both tool
-settings and five copy-ready prompts are in the plan. Each sitting needs its own go. Collection design/API, notification event/preference,
-device evidence and cinema source/build contracts have explicit owner stops.
-Planning docs remain on `chore/owner-snags-2026-10-28`; no push/merge/deploy or product change.
-Integrate approved planning commits through normal review/CI before implementation from main.
+**28 Oct: Group AB sitting 1 — AB1 is live; AB2 review/approval is next.**
+The three approved planning commits are preserved in PR #117, merge `d413b4d`, with all
+seven PR/main jobs green before implementation from clean main. AB1 shipped via PR #118,
+merge `ad2c992` (#302). Home's identification warnings now use the current owned/unresolved
+queue rules and reconcile on every read, without writing a check, refreshing the daily
+heartbeat or sending a push. Resolution and manual/automatic replay refresh attention.
+Actions reach the real Settings tabs/identification/job controls or give owner guidance.
+Another person's phone warning no longer opens Craig's device settings.
 
-**28 Oct: eight owner snags reconciled; evidence, not completed repairs.**
-`docs/owner-snags-2026-10-28.md` records the findings against clean `3e07c19` and the same
-production API/web SHA, green exact-main CI and full readiness. Read-only live checks prove
-Home's identification attention is false: 1 waiting proposal and 48 year disagreements,
-but the actual queue and open-doubt services both return 0; re-evaluating the check still
-returns those warnings. It counts historical lookup/evidence rather than current actions.
-Craig now wants watched against the collection: 482 of 1,903 for Craig and 878 for Mark,
-versus the current whole-diary counts of 500 and 879. This changes #299's watched choice.
-Mark's new-film addition has no notification sender. The breakdown and descriptions already
-exist; the breakdown is collapsed. Home start URL `/` is live and the top bar's CSS is opaque,
-but both reported iPhone problems remain unverified. Nearby cinema programmes are a new
-feature; venue/source research has not begun. Focused existing tests: 42 passed with harness
-warnings; no full gate or phone/browser run. Report and handoff only, no product/live-data
-change, push or deploy. Group AB's grouping is approved; execution waits for a named sitting's go.
+All ten local checks passed on clean `65ccf0e`: API 2,519 with zero skips, including all
+16 derived-trigger cases; shared 157; web 729. Local E2E: Chromium 49, Firefox 48 plus its
+existing dictation skip, cron six. PR CI 40755436621 and merge CI 40757500111 passed all
+seven jobs, including WebKit 47 plus its two existing documented skips. No new skip/retry.
+API/web served `ad2c992`; database ready and push/AI/eBay/TMDB/Brave configured. Read-only
+live application queries agree at queue 0/doubts 0/attention 0, while preserving the saved
+1/48 daily snapshot and historical evidence. No production sign-in, provider run, live data
+write or fabricated push. Every repair is recorded in `docs/reviews/ab1-verification-2026-10-28.md`.
 
-**28 Oct: Group AA sitting 5 is complete — AA3 and AA9 are live.**
-AA9 shipped in PR #116, merge `aecdf8d`, from Craig's Conversation first and shared-corrections
-picks (#300). Both reviews stopped for picks before their build plans. Sitting 6 has not started.
-The assistant keeps asking central, offers recent chats and role-aware starters, labels the
-allowance as AI calls, preserves multiline drafts during errors/chat switches, and binds replies
-and confirmation cards to their originating chat. Lost answers require reloading saved state
-before another send. Named deletion asks first and preserves confirmed diary/Wanted actions;
-a finishing deletion cannot reopen a page the person has left. Basic answer formatting is safe
-React text, without a new dependency, model contract, API shape, cap or role change.
-
-All ten checks passed on clean `bcc80f3`: API 2,492 (zero skips, all 16 derived-field trigger
-cases), shared 157 and web 728. Full local E2E: Chromium 47; Firefox 46 plus its existing
-dictation skip; cron six. Final PR CI 40584011191 and merge CI 40661157229 passed all seven
-jobs, including WebKit (45 plus its two existing documented skips). No new skip or retry.
-Production API and web matched `aecdf8d`; db is ready and push/AI/eBay/TMDB/Brave are configured.
-The served assistant bundle contains the picked controls/recovery copy. That was a read-only
-asset check, not a production sign-in or model conversation. All repairs and fixture captures
-are in `docs/reviews/aa9-verification-2026-10-27.md`.
-
-AA3 shipped in PR #115 (`1c73d90`), with final docs head `b904457` and seven-job exact-head CI
-plus API/web SHA/readiness proof. Home retains five collection meanings, direct physical/overlap
-counts, expandable breakdowns and its Archive action (#299). The 27 Oct read-only snapshot was
-1,903 titles, 1,927 copies, 1,472 physical, 589 download and 134 in both. Stored £15,939.38 across
-1,311 of 1,472 physical copies, zero sales-backed, was interim and **not AA10b's final checkpoint**.
-No live collection/price write or provider/model call was used to verify either build.
-
-Real iPhone keyboard/dictation and a live assistant follow-up remain owner observations, as do
-picture selection, request push receipt, physical handovers and removing/re-adding the PWA on
-both iPhones. Unsent drafts are page memory and do not survive leaving/reloading the whole page.
-AA10b's scheduled runs on 1–2 Nov and final Home-total comparison stay open independently.
+AB2 has not been implemented. Present phone-size layout/wording alternatives and obtain
+Craig's layout pick plus exact additive `ownedWatchedMovies` contract approval first.
+Sitting 2 and AA10c remain excluded. Existing AA10b final-total and phone/live-assistant
+owner observations remain open independently.
 
 ## Next
 
-Use the settings/prompts in `docs/reviews/group-ab-plan-2026-10-28.md` when Craig authorises
-a named sitting. Grouping is approved; no new build is authorised. Do not start all of AB at once.
+AB1 is shipped. Start AB2's collection review from clean main, then stop for Craig's layout
+and exact stats-contract approval before writing product code. Do not start sitting 2 or AA10c.
 
-**Stop here: sitting 5 is complete; sitting 6 has no authorisation.**
-AA10c remains the separate sitting from 25 Nov. Do not start it automatically.
-Craig's phone/live-assistant observations and AA10b's 1–2 Nov final-total checkpoint remain open.
-Verify current SHA/CI before any newly authorised work.
+AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
+comparison and existing real-phone/live-assistant owner observations remain open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -460,6 +423,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct 2026** — **AB1 shipped; AB2 owner checkpoint next.** Planning PR #117 preserved
+  all three approved commits; PR #118 (`ad2c992`) fixes false identification attention and
+  destinations without deleting evidence or fabricating a daily check/push. Clean full local
+  gate/E2E, seven-job PR/main CI and exact API/web SHA/full readiness passed. Live read-only
+  comparison is 0/0/0 despite the saved historical 1/48. The complete failure/repair record is
+  `docs/reviews/ab1-verification-2026-10-28.md`. AB2 requires layout/API approval before build;
+  sitting 2 and AA10c remain excluded.
 
 - **28 Oct — Group AB grouping approved (#301):** Craig confirmed the five-sitting grouping and requested model/effort for each. Preserved settings: sittings 1–4 Opus 5 high / GPT-5.6 Sol High; sitting 5 Opus 5 xhigh / GPT-5.6 Sol Extra High. Plan lists each separately with five copy-ready prompts. Detailed owner picks and all execution go decisions stay open. Documentation validation only; no implementation, push, merge or deploy.
 

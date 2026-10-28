@@ -1,6 +1,7 @@
 # Approved grouping for the 28 Oct snags
 
-**Seven batches across five sittings; grouping approved 28 Oct (#301). Nothing has started.**
+**Seven batches across five sittings; sitting 1 authorised 28 Oct. AB1 shipped (`ad2c992`);
+AB2 layout and exact stats-contract approval remain before implementation.**
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
 
@@ -67,8 +68,9 @@ starting. No agent delegation is part of this proposal.
 
 ## Execution boundaries
 
-Craig approved the grouping, not every implementation detail or execution of the five
-sittings. Start only a separately authorised named sitting; stop at the checkpoints above. Approval to run a
+Craig approved the grouping and then separately authorised sitting 1 on 28 Oct. AB1 shipped;
+AB2 retains its layout/API checkpoint. Sittings 2–5 remain unauthorised. Start only a
+separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance
 checks, under this repo's procedure. Hosting, credentials, destructive data writes and
 live-provider acceptance still have their explicit boundaries.
