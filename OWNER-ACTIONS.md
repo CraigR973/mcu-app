@@ -11,7 +11,7 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AB — proposed 28 Oct; no execution go yet.** Seven batches/five sittings are in
+- **Group AB — grouping approved 28 Oct (#301); no execution go yet.** Seven batches/five sittings are in
   `docs/reviews/group-ab-plan-2026-10-28.md`, with canonical criteria in the batch ledger.
   Sitting 1: collection mock-up and exact additive stats contract after the attention fix.
   Sitting 2: new-title versus extra-copy trigger, stable Mark identity, notification

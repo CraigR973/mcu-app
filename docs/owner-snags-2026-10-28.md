@@ -1,6 +1,6 @@
 # Owner snags — 28 Oct 2026, reconciled against the code
 
-**Status: reconciled; Group AB proposed later on 28 Oct, awaiting Craig's go.**
+**Status: reconciled; Group AB grouping approved 28 Oct (#301), no execution go.**
 `docs/reviews/group-ab-plan-2026-10-28.md` summarises seven batches across five sittings;
 the canonical criteria/settings are in `docs/phase-batches.md`. No product changes or
 new batch run authorised.
@@ -229,10 +229,11 @@ and localhost:3000 connection-refused noise; the test process still exited succe
 These are source/fixture checks, not the full gate, browser E2E or iPhone proof. No assertions
 were changed. No cinema site, eBay/TMDB/AI provider or live push was exercised.
 
-## Next step — proposed Group AB awaits approval
+## Next step — approved Group AB awaits a named sitting's go
 
 Craig subsequently asked for these points to be batched. Group AB's proposed ledger rows
 cover the attention fix, collection review/build, Mark's notifications, installed-iPhone
 diagnosis, cinema feasibility and conditional programme/screen builds. The whole plan is
-in `docs/reviews/group-ab-plan-2026-10-28.md`; wait for Craig's go before execution.
+in `docs/reviews/group-ab-plan-2026-10-28.md`; Craig approved the grouping and requested
+per-sitting settings. Wait for a named sitting's go before execution.
 AA10c and existing valuation/phone owner checkpoints remain outside that approval.

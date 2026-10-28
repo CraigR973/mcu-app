@@ -6469,3 +6469,12 @@ contemporaneous.
      already saved is not silently sent again. Existing exact-film cards and their stale-read
      protection stay. Safe basic text formatting adds no structured model contract or raw HTML.
      See `docs/reviews/aa9-build-plan-2026-10-27.md`. Sitting 6 remains excluded.
+
+301. **Group AB's grouping is approved; execution remains per sitting (28 Oct).**
+     Craig said “yes, group with model and effort for each” to seven batches across five
+     sittings: Home attention/collection, Mark's addition notifications, installed-iPhone
+     diagnosis, nine-cinema source report, then conditional ingestion/discovery screen.
+     Record the ledger-mapped settings for each sitting and separate copy-ready prompts.
+     This approves the grouping, not a named sitting's execution or its unresolved design,
+     contract, notification, device, source/cost or build checkpoints. Preserve one branch/PR
+     per code batch and normal gates; AA10c remains excluded.
