@@ -62,3 +62,20 @@ describe('the app query client', () => {
     expect(client.getDefaultOptions().queries?.networkMode).toBe('always')
   })
 })
+
+
+it('refreshes attention after a successful resolution, but never treats a refused write as resolved', async () => {
+  const client = createQueryClient()
+  client.setQueryData(['attention'], { items: ['a waiting proposal'] })
+  client.setQueryData(['movies'], ['existing film'])
+  const refused = client.getMutationCache().build(client, {
+    mutationFn: async () => { throw new Error('refused') },
+  })
+  await expect(refused.execute(undefined)).rejects.toThrow('refused')
+  expect(client.getQueryState(['attention'])?.isInvalidated).toBe(false)
+  const resolved = client.getMutationCache().build(client, { mutationFn: async () => 'kept' })
+  await resolved.execute(undefined)
+  expect(client.getQueryState(['attention'])?.isInvalidated).toBe(true)
+  expect(client.getQueryState(['movies'])?.isInvalidated).toBe(false)
+  client.clear()
+})

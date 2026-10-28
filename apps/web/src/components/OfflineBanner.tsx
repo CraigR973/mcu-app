@@ -33,6 +33,7 @@ export default function OfflineBanner() {
       void queryClient.invalidateQueries({ queryKey: ['facets'] })
       void queryClient.invalidateQueries({ queryKey: ['movie-copies'] })
       void queryClient.invalidateQueries({ queryKey: ['trash'] })
+      void queryClient.invalidateQueries({ queryKey: ['attention'] })
     } finally {
       setSyncing(false)
     }

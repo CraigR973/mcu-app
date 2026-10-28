@@ -36,7 +36,7 @@ from src.models.collection_item import CollectionItem
 from src.models.deal import Deal
 from src.models.ebay_watch import EbayWatchRun
 from src.models.health import HealthCheck, JobHeartbeat
-from src.models.identify import IdentifyLookup
+from src.models.identify import IdentifyDoubt, IdentifyLookup
 from src.models.movie import Movie
 from src.models.notification import (
     Notification,
@@ -297,6 +297,7 @@ async def test_old_proposals_and_films_a_page_says_are_another_year(db: AsyncSes
     old = await _film(db, "The Bridge on the River Kwai")
     new = await _film(db, "A recent film")
     for film, age in ((old, timedelta(days=15)), (new, timedelta(days=2))):
+        db.add(CollectionItem(id=uuid.uuid4(), movie_id=film.id, formats=["blu_ray"]))
         db.add(
             IdentifyLookup(
                 id=uuid.uuid4(), movie_id=film.id, status="needs_you", created_utc=NOW - age
@@ -326,6 +327,26 @@ async def test_old_proposals_and_films_a_page_says_are_another_year(db: AsyncSes
             url="https://www.blu-ray.com/movies/dead-mans-shoes/1/",
             found_utc=NOW,
         )
+    )
+    db.add(CollectionItem(id=uuid.uuid4(), movie_id=by_review.id, formats=["download"]))
+    db.add_all(
+        [
+            IdentifyDoubt(
+                id=uuid.uuid4(),
+                movie_id=by_page.id,
+                collection_item_id=item.id,
+                source="specs",
+                status="open",
+                note="Another year's disc page",
+            ),
+            IdentifyDoubt(
+                id=uuid.uuid4(),
+                movie_id=by_review.id,
+                source="review",
+                status="open",
+                note="Another year's review",
+            ),
+        ]
     )
     await db.flush()
 
@@ -664,3 +685,164 @@ async def test_a_fresh_spec_heartbeat_does_not_hide_an_imdb_refresh_failure(
     assert failed is not None and "IMDb scores could not be refreshed" in failed
     await beat(db, "cron-specs", "finished", detail={"imdbError": None}, now=NOW)
     assert _by_key(await health_checks.check_jobs(db, NOW))["job:cron-specs"] is None
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "identified",
+        "series",
+        "deleted_film",
+        "binned",
+        "sold",
+        "donated",
+        "skipped",
+        "set_aside",
+    ],
+)
+async def test_old_lookup_is_only_attention_while_in_the_current_queue(
+    db: AsyncSession, state: str
+) -> None:
+    from src.services.identify.queue import queue
+
+    film = await _film(db, "Historical proposal")
+    item = CollectionItem(id=uuid.uuid4(), movie_id=film.id, formats=["download"])
+    lookup = IdentifyLookup(
+        id=uuid.uuid4(), movie_id=film.id, status="needs_you", created_utc=NOW - timedelta(days=20)
+    )
+    db.add_all([item, lookup])
+    await db.flush()
+    assert (await queue(db, limit=10))[1] == 1
+    assert dict(await health_checks.check_identification(db, NOW))["identify:waiting"] is not None
+    if state == "identified":
+        film.tmdb_id = 991_000_001
+    elif state == "series":
+        film.tmdb_tv_id = 991_000_001
+    elif state == "deleted_film":
+        film.deleted_at = NOW
+    elif state == "binned":
+        item.deleted_at = NOW
+    elif state in {"sold", "donated"}:
+        item.listing_status = state
+    elif state == "skipped":
+        lookup.status = "skipped"
+    else:
+        lookup.status = "set_aside"
+        lookup.set_aside_as = "not_film"
+    await db.flush()
+    assert (await queue(db, limit=10))[1] == 0
+    assert dict(await health_checks.check_identification(db, NOW))["identify:waiting"] is None
+    assert await db.get(IdentifyLookup, lookup.id) is lookup  # Evidence survives.
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "open",
+        "kept",
+        "corrected",
+        "moved",
+        "binned",
+        "sold",
+        "donated",
+        "moved_copy",
+        "deleted_film",
+    ],
+)
+@pytest.mark.parametrize("named_copy", [True, False])
+async def test_year_attention_agrees_with_actionable_doubts(
+    db: AsyncSession, state: str, named_copy: bool
+) -> None:
+    from src.services.identify.doubts import open_doubts
+
+    film = await _film(db, "Doubted film", tmdb_id=991_000_002)
+    item = CollectionItem(id=uuid.uuid4(), movie_id=film.id, formats=["blu_ray"])
+    db.add(item)
+    await db.flush()
+    doubt = IdentifyDoubt(
+        id=uuid.uuid4(),
+        movie_id=film.id,
+        collection_item_id=item.id if named_copy else None,
+        source="specs",
+        status="open",
+        note="Other year",
+        created_utc=NOW - timedelta(days=20),
+    )
+    db.add(doubt)
+    if state in {"kept", "corrected", "moved"}:
+        doubt.status = state
+        doubt.decided_utc = NOW
+    elif state == "binned":
+        item.deleted_at = NOW
+    elif state in {"sold", "donated"}:
+        item.listing_status = state
+    elif state == "moved_copy":
+        item.movie_id = (await _film(db, "Copy's new identity", tmdb_id=991_000_003)).id
+    elif state == "deleted_film":
+        film.deleted_at = NOW
+    await db.flush()
+    page = await open_doubts(db, limit=10)
+    checks = dict(await health_checks.check_identification(db, NOW))
+    assert page.films == (1 if state == "open" else 0)
+    assert bool(checks["identify:year-doubt"]) == bool(page.films)
+    assert bool(checks["identify:waiting"]) == bool(page.films)
+    assert await db.get(IdentifyDoubt, doubt.id) is doubt
+
+
+async def test_attention_reconciles_a_saved_false_warning_without_writing_or_pushing(
+    db: AsyncSession,
+) -> None:
+    from src.services.identify.doubts import keep
+
+    craig = await _person(db, UserRole.admin)
+    old = NOW - timedelta(days=1)
+    rows = [
+        HealthCheck(
+            check_key=key,
+            ok=False,
+            message=message,
+            checked_utc=NOW,
+            failing_since_utc=old,
+            pushed_utc=old,
+        )
+        for key, message in [
+            ("identify:waiting", "1 old proposal"),
+            ("identify:year-doubt", "48 historical disagreements"),
+            ("ebay:listings", "The scan is blind"),
+        ]
+    ]
+    db.add_all(rows)
+    await db.flush()
+    assert [row.check_key for row in await health_checks.current_problems(db, now=NOW)] == [
+        "ebay:listings"
+    ]
+    assert not db.dirty
+    assert await _attention(db, craig) == []
+    assert await health_checks.last_checked(db) == NOW
+    assert rows[1].message == "48 historical disagreements" and not rows[1].ok
+
+    film = await _film(db, "Still owned", tmdb_id=991_000_004)
+    db.add(CollectionItem(id=uuid.uuid4(), movie_id=film.id, formats=["download"]))
+    doubt = IdentifyDoubt(
+        id=uuid.uuid4(),
+        movie_id=film.id,
+        source="review",
+        status="open",
+        note="Other year",
+        created_utc=NOW - timedelta(days=20),
+    )
+    db.add(doubt)
+    await db.flush()
+    current = {row.check_key: row for row in await health_checks.current_problems(db, now=NOW)}
+    assert current["identify:year-doubt"].message.startswith("1 identified film has")
+    assert current["identify:year-doubt"].failing_since_utc == old
+    # A real settlement commits its own transaction. Home must clear immediately,
+    # without a daily-check write, and preserve the operational warning.
+    await keep(db, doubt.id, by=craig.id)
+    async with _as(db, craig.id) as client:
+        attention = (await client.get("/api/v1/attention")).json()
+    assert [row["key"] for row in attention["items"] if row["key"] != "check:stale"] == [
+        "ebay:listings"
+    ]
+    assert await _attention(db, craig) == []
+    assert rows[1].message == "48 historical disagreements" and not rows[1].ok

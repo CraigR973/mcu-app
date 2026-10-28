@@ -349,6 +349,18 @@ async def count_old(db: AsyncSession, now: datetime) -> int:
     )
 
 
+async def count_page_disagreements(db: AsyncSession) -> int:
+    """Open disc/review doubts the destination can actually show, one per owned film."""
+    return int(
+        await db.scalar(
+            select(func.count(func.distinct(IdentifyDoubt.movie_id)))
+            .join(Movie, Movie.id == IdentifyDoubt.movie_id)
+            .where(*_showing_on_live_film(), IdentifyDoubt.source.in_(("specs", "review")))
+        )
+        or 0
+    )
+
+
 async def doubts_for_film(db: AsyncSession, movie_id: uuid.UUID) -> list[IdentifyDoubt]:
     """The film's showing doubts, oldest first, for the film page (every one since Batch Y4)."""
     found = await db.scalars(

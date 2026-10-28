@@ -1,8 +1,12 @@
 """Home's "Needs attention" row, for Craig — Batch X2 (DS44-01, UX48-02).
 
-**It reads what the daily check recorded** (`services/health_checks.py`, run at 08:00 inside
-the reminders job), so it works when push is what broke, and adds one problem of its own: the
-check itself not having run for more than a day, which nothing else could say.
+**It reads operational problems the daily check recorded**
+(`services/health_checks.py`, run at 08:00 inside the reminders job), so it works when push
+is what broke, and adds one problem of its own: the check itself not having run for more
+than a day, which nothing else could say.
+
+Identification warnings are reconciled against the current actionable lists on every read.
+This does not record a check, change the daily heartbeat or queue a notification.
 
 Admin only: the problems are operational, and Mark has nothing to act on.
 """
@@ -52,7 +56,7 @@ async def attention(_user: AdminUser, db: Database) -> AttentionResponse:
         AttentionItemResponse(
             key=row.check_key, message=row.message or "", since=row.failing_since_utc
         )
-        for row in await current_problems(db)
+        for row in await current_problems(db, now=now)
     ]
     if checked is None or checked < now - CHECK_STALE_AFTER:
         when = f"since {day(checked)}" if checked is not None else "yet"

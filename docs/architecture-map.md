@@ -1,7 +1,8 @@
 # MCU App architecture map
 
-`STATUS.md` says which commit is deployed. This map shows the running structure through AA9,
-shipped on 28 Oct; the April design intent remains in `ARCHITECTURE.md`.
+`STATUS.md` says which commit is deployed. This map records AA9's shipped structure and
+AB1's attention repair under verification on 28 Oct; the April design intent remains in
+`ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -48,6 +49,24 @@ first run exposed that unchanged rows only advance their timestamp, not their me
 sets gained a portrait. Cards therefore keep initials until a narrow metadata fix and a newly
 authorised re-run. The existing completion endpoint reads each missing film's shared Wanted state,
 while the screen separates missing films from those on the shelf.
+
+## AB1, attention repair under verification, 28 Oct
+
+```mermaid
+flowchart TB
+    Home[Home attention read] --> Current[Current identification queues]
+    Home --> Saved[Saved operational checks]
+    Current --> Rules[Shared ownership and unresolved-state rules]
+    Resolve[Resolution or collection change] --> Refresh[Invalidate attention]
+    Refresh --> Home
+    Daily[Real daily check] --> Saved
+    Daily --> Push[Push once per new problem]
+```
+
+Identification warnings now reconcile the daily snapshot with the lists people can act on.
+Reading Home neither writes a check nor sends a push. Historical lookup/spec/review evidence
+stays intact. Settings actions select the eBay, Assistant or own-device tab; other people's
+devices and Railway-only jobs receive owner guidance rather than a misleading repair link.
 
 ## AA10a, shipped; first live pass read back 22 Oct
 

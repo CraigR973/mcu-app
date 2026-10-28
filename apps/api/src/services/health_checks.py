@@ -20,18 +20,15 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import structlog
-from sqlalchemy import and_, distinct, func, or_, select, text
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from src.clock import utcnow
 from src.models.ai import AiUsageLogEntry
-from src.models.collection_item import CollectionItem
 from src.models.deal import Deal, live_deal
 from src.models.ebay_watch import EbayWatchRun
 from src.models.health import HealthCheck, JobHeartbeat
-from src.models.identify import IdentifyLookup
-from src.models.movie import Movie
 from src.models.notification import (
     Notification,
     NotificationCategory,
@@ -40,12 +37,13 @@ from src.models.notification import (
 )
 from src.models.price_history import ScrapeRun
 from src.models.profile import Profile, UserRole
-from src.models.reviews import FilmReview
-from src.models.specs_backfill import SpecLookup, SpecRun
+from src.models.specs_backfill import SpecRun
 from src.models.specs_state import SINGLETON_ID, SpecsIntegrationState
 from src.models.valuation import ValuationRun
 from src.services import heartbeat
 from src.services.identify.doubts import count_old as count_old_doubts
+from src.services.identify.doubts import count_page_disagreements
+from src.services.identify.queue import count_old_waiting
 from src.services.notifications import queue_notification
 
 logger = structlog.get_logger(__name__)
@@ -267,31 +265,9 @@ async def check_identification(db: AsyncSession, now: datetime) -> list[Result]:
 
     Batch X9: a doubt about an identified film is a proposal too, and counts once it is a
     fortnight old."""
-    waiting = int(
-        await db.scalar(
-            select(func.count(IdentifyLookup.id)).where(
-                IdentifyLookup.status == "needs_you",
-                IdentifyLookup.created_utc < now - PROPOSAL_AGE,
-            )
-        )
-        or 0
-    ) + await count_old_doubts(db, now)
-    spec_doubt = (
-        select(CollectionItem.movie_id)
-        .join(SpecLookup, SpecLookup.collection_item_id == CollectionItem.id)
-        .where(SpecLookup.note.like("The page is for a % film and this one is from %"))
-    )
-    review_doubt = select(FilmReview.movie_id).where(FilmReview.status == "mismatch")
-    doubted = int(
-        await db.scalar(
-            select(func.count(distinct(Movie.id))).where(
-                Movie.deleted_at.is_(None),
-                Movie.tmdb_id.is_not(None),
-                or_(Movie.id.in_(spec_doubt), Movie.id.in_(review_doubt)),
-            )
-        )
-        or 0
-    )
+    waiting = await count_old_waiting(db, before=now - PROPOSAL_AGE)
+    waiting += await count_old_doubts(db, now)
+    doubted = await count_page_disagreements(db)
     return [
         (
             "identify:waiting",
@@ -489,16 +465,43 @@ async def run_daily_check(db: AsyncSession, *, now: datetime | None = None) -> C
     )
 
 
-async def current_problems(db: AsyncSession) -> list[HealthCheck]:
-    """The checks failing as of the last run, oldest problem first, for the Home row."""
-    return list(
-        (
-            await db.scalars(
-                select(HealthCheck)
-                .where(HealthCheck.ok.is_(False))
-                .order_by(HealthCheck.failing_since_utc, HealthCheck.check_key)
+@dataclass(frozen=True)
+class CurrentProblem:
+    check_key: str
+    message: str
+    failing_since_utc: datetime | None
+
+
+async def current_problems(
+    db: AsyncSession, *, now: datetime | None = None
+) -> list[CurrentProblem]:
+    """Operational snapshots plus identification's current actionable state.
+
+    Reconcile historical saved identification warnings at read time without writing a GET,
+    refreshing the daily heartbeat or pushing. Only the real daily run records/notifies.
+    """
+    now = now or utcnow()
+    saved = list((await db.scalars(select(HealthCheck).where(HealthCheck.ok.is_(False)))).all())
+    identification = dict(await check_identification(db, now))
+    by_key = {row.check_key: row for row in saved}
+    problems = [
+        CurrentProblem(row.check_key, row.message or "", row.failing_since_utc)
+        for row in saved
+        if row.check_key not in identification
+    ]
+    for key, message in identification.items():
+        if message is not None:
+            previous = by_key.get(key)
+            problems.append(
+                CurrentProblem(key, message, previous.failing_since_utc if previous else None)
             )
-        ).all()
+    return sorted(
+        problems,
+        key=lambda row: (
+            row.failing_since_utc is None,
+            row.failing_since_utc or now,
+            row.check_key,
+        ),
     )
 
 

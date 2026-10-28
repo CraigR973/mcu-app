@@ -10,11 +10,16 @@ import { reportIfOutOfDate } from './describe-error'
  * see the comments below, and `DECISIONS.md` #47.
  */
 export function createQueryClient(): QueryClient {
-  return new QueryClient({
+  const client: QueryClient = new QueryClient({
     // Batch X8: an answer this build cannot read raises the "newest version" banner, from
     // whichever screen met it first.
     queryCache: new QueryCache({ onError: reportIfOutOfDate }),
-    mutationCache: new MutationCache({ onError: reportIfOutOfDate }),
+    mutationCache: new MutationCache({
+      onError: reportIfOutOfDate,
+      // AB1: every successful resolution/collection change makes Home re-read the
+      // actionable state. Central ownership covers both Identify and film-page actions.
+      onSuccess: () => { void client.invalidateQueries({ queryKey: ['attention'] }) },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5,
@@ -43,4 +48,5 @@ export function createQueryClient(): QueryClient {
       },
     },
   })
+  return client
 }
