@@ -57,6 +57,7 @@ class StatsResponse(BaseModel):
     physicalAndDownloadCopies: int = Field(ge=0)
     identifiedMovies: int = Field(ge=0)
     watchedMovies: int = Field(ge=0)
+    ownedWatchedMovies: int = Field(ge=0)
 
     formats: list[CountSlice]
     genres: list[CountSlice]

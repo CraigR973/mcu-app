@@ -16,6 +16,7 @@ from collections.abc import AsyncIterator
 from datetime import date, datetime
 from decimal import Decimal
 
+import pytest
 import pytest_asyncio
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
@@ -220,7 +221,14 @@ async def test_empty_copy_counts_are_zero(client: AsyncClient, api_session: Asyn
     # A disposable per-test transaction: every active copy is temporarily in the Trash.
     await api_session.execute(update(CollectionItem).values(deleted_at=datetime(2026, 10, 27)))
     body = (await client.get("/api/v1/collection/stats")).json()
-    for key in ("totalItems", "downloadCopies", "physicalCopies", "physicalAndDownloadCopies"):
+    for key in (
+        "totalMovies",
+        "ownedWatchedMovies",
+        "totalItems",
+        "downloadCopies",
+        "physicalCopies",
+        "physicalAndDownloadCopies",
+    ):
         assert body[key] == 0
 
 
@@ -323,6 +331,77 @@ async def test_watched_count_is_about_the_person_asking(
     body = (await client.get("/api/v1/collection/stats")).json()
     del admin
     assert isinstance(body["watchedMovies"], int)
+
+
+async def test_owned_watches_are_a_distinct_personal_intersection_not_the_diary(
+    client: AsyncClient, api_session: AsyncSession, admin: Profile, viewer: Profile
+) -> None:
+    before = (await client.get("/api/v1/collection/stats")).json()
+    physical, _ = await _disc(api_session, "AB2 owned", formats=["dvd"])
+    download, _ = await _disc(api_session, "AB2 download", formats=["download"])
+    departed, item = await _disc(api_session, "AB2 departed", formats=["dvd"])
+    item.listing_status = "sold"
+    deleted, _ = await _disc(api_session, "AB2 deleted movie", formats=["dvd"])
+    deleted.deleted_at = datetime(2026, 10, 28)
+    unwatched, _ = await _disc(api_session, "AB2 only deleted watch", formats=["dvd"])
+    other, _ = await _disc(api_session, "AB2 other person", formats=["dvd"])
+    api_session.add(CollectionItem(movie_id=physical.id, formats=["blu_ray"]))
+    for movie in (physical, physical, download, departed, deleted):
+        api_session.add(WatchLog(movie_id=movie.id, user_id=admin.id, watched_at=date(2026, 1, 1)))
+    api_session.add(
+        WatchLog(
+            movie_id=unwatched.id,
+            user_id=admin.id,
+            watched_at=date(2026, 1, 1),
+            deleted_at=datetime(2026, 10, 28),
+        )
+    )
+    api_session.add(WatchLog(movie_id=other.id, user_id=viewer.id, watched_at=date(2026, 1, 1)))
+    await api_session.flush()
+    mine = (await client.get("/api/v1/collection/stats")).json()
+    theirs = (await client.get("/api/v1/collection/stats", headers={ACTOR_HEADER: "viewer"})).json()
+    assert mine["ownedWatchedMovies"] == 2
+    assert mine["watchedMovies"] == 4  # Whole diary still includes departed/deleted movies.
+    assert theirs["ownedWatchedMovies"] == theirs["watchedMovies"] == 1
+    assert mine["totalMovies"] == theirs["totalMovies"] == before["totalMovies"] + 4
+    # A caller cannot choose another person's history through an extra query parameter.
+    attempted = (await client.get(f"/api/v1/collection/stats?userId={viewer.id}")).json()
+    assert attempted["ownedWatchedMovies"] == mine["ownedWatchedMovies"]
+
+
+@pytest.mark.parametrize("departure", ["sold", "donated", "trash"])
+async def test_owned_coverage_tracks_watch_removal_and_last_copy_departure(
+    client: AsyncClient, api_session: AsyncSession, admin: Profile, departure: str
+) -> None:
+    movie, first = await _disc(api_session, "AB2 changing ownership", formats=["download"])
+    second = CollectionItem(movie_id=movie.id, formats=["dvd"], listing_status="listed_for_sale")
+    watch = WatchLog(movie_id=movie.id, user_id=admin.id, watched_at=date(2026, 1, 1))
+    rewatch = WatchLog(movie_id=movie.id, user_id=admin.id, watched_at=date(2026, 1, 2))
+    api_session.add_all([second, watch, rewatch])
+    await api_session.flush()
+
+    async def counts(owned: int, diary: int) -> None:
+        await api_session.flush()
+        body = (await client.get("/api/v1/collection/stats")).json()
+        assert body["ownedWatchedMovies"] == owned
+        assert body["watchedMovies"] == diary
+
+    await counts(1, 1)
+    watch.deleted_at = datetime(2026, 10, 28)
+    await counts(1, 1)  # Remaining rewatch still counts once.
+    rewatch.deleted_at = datetime(2026, 10, 28)
+    await counts(0, 0)
+    rewatch.deleted_at = None
+    first.listing_status = "sold"
+    await counts(1, 1)  # A remaining listed-for-sale copy is still owned.
+    if departure == "trash":
+        second.deleted_at = datetime(2026, 10, 28)
+    else:
+        second.listing_status = departure
+    await counts(0, 1)  # Ownership never erases the diary.
+    second.deleted_at = None
+    second.listing_status = "in_collection"
+    await counts(1, 1)
 
 
 # ---------------------------------------------------------------------------

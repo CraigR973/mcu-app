@@ -2,7 +2,7 @@
 
 ## Now
 
-**28 Oct: Group AB sitting 1 is stopped at AB2's owner checkpoint.**
+**28 Oct: Group AB sitting 1 — AB2 owner picks approved; build in progress.**
 AB1 is fully closed out. Planning PR #117 preserved all three approved commits before
 implementation from clean main. Product PR #118 merged `ad2c992`; final documentation
 head `86e7d56` passed all seven CI jobs (40759704615), and API/web served that exact SHA
@@ -13,28 +13,23 @@ proved WebKit 47 plus its two documented skips. The live read-only comparison ag
 Every failure/repair and the limits of live verification are in
 `docs/reviews/ab1-verification-2026-10-28.md`.
 
-AB2's review is `docs/reviews/ab2-collection-review-2026-10-28.md`, with 375 px light/dark
-screenshots of Summary cards (recommended) and Plain rows. Both keep five meanings, short
-explanations, visible format bars, full breakdowns and Archive navigation. The exact proposed
-contract adds `ownedWatchedMovies` to existing GET `/api/v1/collection/stats`, keeps
-`watchedMovies` as the whole diary, and shows Unavailable if the new field is absent.
-Craig must approve the layout/wording and this exact contract before build planning/code.
-No choice or API extension is approved by presenting this review.
+Craig approved AB2 Summary cards and its shown wording, plus the exact additive
+`ownedWatchedMovies` contract on 28 Oct. Decision #303 and
+`docs/reviews/ab2-build-plan-2026-10-28.md` record the scope before implementation.
+The existing review branch is retained; AB2 implementation/gates are next.
 
 Read-only 28 Oct examples: Craig 482 owned watches / 1,903 titles versus 500 diary; Mark
 878 / 1,903 versus 879. The stored £15,939.38 across 1,311 of 1,472 physical copies, zero
 sales-backed, remains interim and is not AA10b's final-total checkpoint. No live price,
-collection, diary, provider or model write/run was made. AB2 has only review docs/screenshots
-on `feat/ab2-collection-coverage`; no product implementation, push, merge or deployment.
+collection, diary, provider or model write/run was made. AB2 remains on `feat/ab2-collection-coverage`; no push, merge or deployment yet.
 
 Sitting 2 and AA10c remain excluded. Existing phone/live-assistant observations and AA10b's
 1–2 Nov final-total comparison remain open independently.
 
 ## Next
 
-Wait for Craig's AB2 layout/wording pick and exact `ownedWatchedMovies` contract approval.
-The review is complete. After both approvals, use the existing review branch, write the
-concrete AB2 build plan, then implement only AB2 under sitting 1. Do not start sitting 2 or AA10c.
+Implement and verify the approved AB2 build plan on the existing review branch.
+Close out only AB2 after all gates; do not start sitting 2 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -429,6 +424,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **28 Oct 2026** — Craig approved AB2 Summary cards/wording and the exact ownedWatchedMovies contract in chat. Recorded #303 and concrete build plan before code; no broader sitting or data-write approval.
 
 - **28 Oct 2026** — **AB2 review delivered; build stops for two owner picks.** Summary cards
   (recommended) and Plain rows have phone-size light/dark previews and a read-only live

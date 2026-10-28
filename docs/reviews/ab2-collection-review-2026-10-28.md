@@ -159,3 +159,10 @@ The source was read back as literal markup and remains below 1 MB, with no netwo
 
 This review and its screenshots are the only AB2 changes. No product source, schema or
 migration is changed. The review is committed locally for handoff; no AB2 push/merge/deploy.
+
+
+## Owner picks received — 28 Oct
+
+Craig chose Summary cards (including shown wording) and approved the exact contract above
+in chat. Decision #303 and the separate build plan record the approval before code.
+Earlier review-only statements describe the state when this review was presented.

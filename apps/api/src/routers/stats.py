@@ -332,6 +332,21 @@ async def collection_stats(
         ).scalar_one()
     )
 
+    owned_watched = int(
+        (
+            await db.execute(
+                select(func.count(func.distinct(WatchLog.movie_id)))
+                .join(Movie, Movie.id == WatchLog.movie_id)
+                .where(
+                    WatchLog.user_id == user.id,
+                    WatchLog.deleted_at.is_(None),
+                    Movie.deleted_at.is_(None),
+                    owned_film(),
+                )
+            )
+        ).scalar_one()
+    )
+
     spend, items_with_price = await _spend_over_time(db)
     return StatsResponse(
         totalMovies=total_movies,
@@ -341,6 +356,7 @@ async def collection_stats(
         physicalAndDownloadCopies=physical_and_download,
         identifiedMovies=identified,
         watchedMovies=watched,
+        ownedWatchedMovies=owned_watched,
         formats=await _format_slices(db),
         genres=await _genre_slices(db),
         decades=await _decade_slices(db),

@@ -6492,3 +6492,17 @@ contemporaneous.
      Craig approved the scoped obsolete test expectations before implementation; route/access
      assertions stay intact. No schema, API shape, hosting, credential or live-data write.
      AB2 still requires layout and exact stats-contract approval; other sittings and AA10c excluded.
+
+
+303. **AB2 follows Craig's Summary cards and exact owned-watch contract approval (28 Oct).**
+     Craig selected Summary cards with its shown wording and approved ownedWatchedMovies
+     on the existing authenticated collection stats response before build. It counts the
+     signed-in person's distinct active watched/currently owned titles, downloads included,
+     and uses totalMovies as denominator. Rewatches/extra copies count once. Existing
+     watchedMovies remains the whole diary; no history rewrite. Shared old-response parsing
+     permits absence with no zero default and Home shows Unavailable. This supersedes #299
+     only for Home's watched meaning and the selected collection presentation/copy label;
+     identified-title meaning, other Home shelves, access and route assertions remain intact.
+     Scoped obsolete UI expectations may change to this approved meaning with regression
+     coverage retained/extended. Build plan: docs/reviews/ab2-build-plan-2026-10-28.md.
+     No migration, re-price, hosting, credential or live-write approval. Sitting 2/AA10c excluded.

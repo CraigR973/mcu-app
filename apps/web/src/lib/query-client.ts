@@ -18,7 +18,11 @@ export function createQueryClient(): QueryClient {
       onError: reportIfOutOfDate,
       // AB1: every successful resolution/collection change makes Home re-read the
       // actionable state. Central ownership covers both Identify and film-page actions.
-      onSuccess: () => { void client.invalidateQueries({ queryKey: ['attention'] }) },
+      onSuccess: () => {
+        void client.invalidateQueries({ queryKey: ['attention'] })
+        // AB2: watches and copy ownership change both collection and diary counts.
+        void client.invalidateQueries({ queryKey: ['stats'] })
+      },
     }),
     defaultOptions: {
       queries: {

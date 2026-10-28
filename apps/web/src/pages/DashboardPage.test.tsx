@@ -49,6 +49,7 @@ const STATS: Stats = {
   physicalAndDownloadCopies: 422,
   identifiedMovies: 1678,
   watchedMovies: 594,
+  ownedWatchedMovies: 482,
   formats: [{ key: 'bluray', label: 'Blu-ray', itemCount: 900, movieCount: 880 }],
   genres: [{ key: 'drama', label: 'Drama', itemCount: 700, movieCount: 690 }],
   decades: [{ decade: 1990, label: '1990s', movieCount: 300 }],
@@ -195,7 +196,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
   it('says what each count is: films owned, and copies split into discs and downloads — Batch X12a', async () => {
     renderHome()
     expect(await screen.findByText('Titles owned')).not.toBeNull()
-    expect(screen.getByText('Copies catalogued')).not.toBeNull()
+    expect(screen.getByText('Copies owned')).not.toBeNull()
     expect(screen.getByText('1,880 physical · 422 download')).not.toBeNull()
     expect(screen.getByText('422 include both')).not.toBeNull()
     fireEvent.click(screen.getByText('Collection breakdown'))
@@ -289,7 +290,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
 
   it('shows cached counts and an explicit offline value state when value was never cached', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    client.setQueryData(['stats'], STATS)
+    client.setQueryData(['stats', 'p'], STATS)
     onlineManager.setOnline(false)
     renderHome(client)
     expect(await screen.findByText('Reconnect to load the stored estimate. Collection counts are still available.')).not.toBeNull()
@@ -314,19 +315,46 @@ describe('Home as rows, the collection first — Batch W2', () => {
     renderHome()
     expect(await screen.findByText('Physical/download split is temporarily unavailable.')).not.toBeNull()
     expect(screen.queryByText(/1,458 physical/)).toBeNull()
-    expect(screen.getByText('Copies catalogued')).not.toBeNull()
+    expect(screen.getByText('Copies owned')).not.toBeNull()
   })
 
-  it.each(['admin', 'viewer'] as const)('retains diary and TMDB counts with their true meaning for %s', async (role) => {
+  it.each(['admin', 'viewer'] as const)('shows approved owned-watch coverage and unchanged TMDB meaning for %s', async (role) => {
     auth.role = role
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
     expect(numbers.getByText("You've watched")).not.toBeNull()
-    expect(numbers.getByText('594')).not.toBeNull()
-    expect(numbers.getByText("Distinct titles in your diary, including titles you don't own")).not.toBeNull()
+    expect(numbers.getByText('482 / 1,888')).not.toBeNull()
+    expect(numbers.getByText("Your watched titles still in the collection, including downloads.")).not.toBeNull()
     expect(numbers.getByText('Matched on TMDB')).not.toBeNull()
     expect(numbers.getByText('1,678')).not.toBeNull()
-    expect(numbers.getByText('Of 1,888 owned titles. A match can still need checking.')).not.toBeNull()
+    expect(numbers.getByText('Of 1,888 owned titles linked to a film or series record. A match can still need checking.')).not.toBeNull()
+  })
+
+  it('does not replace absent owned-watch coverage with the diary count or an invented zero', async () => {
+    const oldStats = { ...STATS }
+    delete oldStats.ownedWatchedMovies
+    api.fetchStats.mockResolvedValue(oldStats)
+    renderHome()
+    const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
+    expect(numbers.getByText('Unavailable')).not.toBeNull()
+    expect(numbers.getByText('Watched coverage is unavailable in this saved response.')).not.toBeNull()
+    expect(numbers.queryByText('594')).toBeNull()
+    expect(numbers.queryByText('0 / 1,888')).toBeNull()
+  })
+
+  it('shows genuine zero and an empty collection without percentage arithmetic', async () => {
+    api.fetchStats.mockResolvedValue({ ...STATS, totalMovies: 0, ownedWatchedMovies: 0 })
+    renderHome()
+    expect(await screen.findByText('0 / 0')).not.toBeNull()
+    expect(screen.queryByText('Watched coverage is unavailable in this saved response.')).toBeNull()
+  })
+
+  it('shows format bars before the full breakdown is opened', async () => {
+    renderHome()
+    const preview = await screen.findByRole('region', { name: 'Formats at a glance' })
+    expect(within(preview).getByText('Blu-ray')).not.toBeNull()
+    expect(within(preview).getByText('900')).not.toBeNull()
+    expect(within(preview).getByText('Copies can carry more than one format; these counts overlap.')).not.toBeNull()
   })
 
   it('makes dated purchase values available without hover and explains limited coverage', async () => {

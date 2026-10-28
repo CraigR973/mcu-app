@@ -934,6 +934,15 @@ describe('statsSchema', () => {
     }
   })
 
+  it('distinguishes owned-watch zero from missing older coverage and rejects malformed counts', () => {
+    expect(statsSchema.parse(base).ownedWatchedMovies).toBeUndefined()
+    expect(statsSchema.parse({ ...base, watchedMovies: 99, ownedWatchedMovies: 0 }).ownedWatchedMovies).toBe(0)
+    expect(statsSchema.parse({ ...base, ownedWatchedMovies: 482 }).ownedWatchedMovies).toBe(482)
+    for (const ownedWatchedMovies of [-1, 1.5, null, '482']) {
+      expect(statsSchema.safeParse({ ...base, ownedWatchedMovies }).success).toBe(false)
+    }
+  })
+
   it('keeps money in integer pence', () => {
     const parsed = statsSchema.parse({
       ...base,

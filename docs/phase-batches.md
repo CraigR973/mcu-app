@@ -4731,10 +4731,10 @@ and physical handovers remain owner observations. Sitting 4 is complete; do not 
 
 ## Group AB — the 28 Oct snags, grouping approved 28 Oct
 
-**Sitting 1 authorised 28 Oct; AB1 shipped, AB2 review/approval is next.** Planning approval
+**Sitting 1 authorised 28 Oct; AB1 shipped, AB2 build approved.** Planning approval
 (#301) was followed by Craig's named sitting-1 go. AB1 shipped via PR #118 (`ad2c992`), with
-all local/PR/main gates and production SHA/readiness. AB2 layout and exact stats-contract
-approval remain required before its build. Sittings 2–5 and AA10c remain unauthorised.
+all local/PR/main gates and production SHA/readiness. Craig approved Summary cards/wording and the exact one-field stats contract (#303)
+before AB2 build. Sittings 2–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
@@ -4767,7 +4767,7 @@ Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
 | Batch | Scope and size | Claude Code / Codex | Status | Result |
 |---|---|---|---|---|
 | ~~AB1~~ | ~~Actionable attention and correct links (snag 5), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #118, merge `ad2c992`; current actionable identification, read-time reconciliation, precise destinations/guidance and mutation/replay refresh. Full local/PR/main gates and exact API/web SHA/readiness; live read-only queue/doubt comparison agrees at zero. |
-| AB2 | Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | owner checkpoint | Layout and exact additive stats contract must be approved before implementation. |
+| AB2 | Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | in progress | Summary cards/wording and exact additive contract approved 28 Oct (#303); build plan recorded. |
 | AB3 | Mark's new-title notifications (snag 4), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
 | AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
 | AB5 | Nine-cinema source feasibility (snag 8, report), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
@@ -4799,10 +4799,11 @@ source adapters further if warranted, with Craig's revised-plan approval.
 
 ### AB2 — Collection descriptions, watched coverage and visible breakdown
 
-**28 Oct review delivered; owner picks pending.** See
+**28 Oct review delivered; Craig approved Summary cards/wording and the exact one-field
+contract (#303) before build.** See
 `docs/reviews/ab2-collection-review-2026-10-28.md`: Summary cards (recommended) versus
-Plain rows, with the exact one-field stats proposal. Review only; no implementation or
-contract approval. All acceptance criteria below remain in force.
+Plain rows, with the exact one-field stats proposal. Build plan:
+`docs/reviews/ab2-build-plan-2026-10-28.md`. All acceptance criteria below remain in force.
 
 - **Checkpoint before build:** present phone-size layout/wording alternatives; stop for
   Craig's pick. Recommendation: short descriptions, owned-watched coverage, small visible
