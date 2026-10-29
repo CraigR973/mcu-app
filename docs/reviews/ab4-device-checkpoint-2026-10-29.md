@@ -74,7 +74,7 @@ installed stale bundle or establish which layout change will remove the effect.
 Keep the original installation in place. Light theme, Search-open and separate app-switch
 resume observations remain open.
 
-## Controlled phone experiment AB4-1 — standalone run not confirmed
+## Controlled phone experiment AB4-1 — standalone blur reproduced in all positions
 
 The next step establishes the layout mechanism before proposing a product repair.
 A separate static diagnostic page reconstructs the relevant shell: 100dvh flex column,
@@ -137,52 +137,74 @@ Original deployment failure: CLI rejected --skip-domain because it is only valid
 production. No deployment was created by that attempt. Retrying without that flag while
 retaining --target preview succeeded. No production flag, protection change or gate weakening.
 
-## AB4-1 owner result and corrected interpretation
+## AB4-1 owner result — confirmed standalone reproduction
 
-Craig first replied **“sharp for all”** to Relative → Sticky → Fixed. Asked to confirm
-the test panel, he then replied **“no”** for Home Screen. The sharp result therefore does
-not demonstrate a run in the required standalone mode. Treat it as browser-mode evidence
-until the actual launch mode is confirmed; the indicator alone does not inspect iOS itself.
-Do not record this as an installed baseline failing to reproduce or as evidence against
-the positioning mechanism. The standalone result is outstanding, and no repair is justified.
+The observation sequence is retained:
 
-Craig also confirms that the real MCU app returns to **Archive** after deliberately
-leaving it on **Home**, swiping it away and reopening its icon. That controls the page
-left before reopening and narrows the launch problem beyond merely resuming the last
-screen. It is consistent with the old /movies installation target, but the installed
-manifest/OS restoration state and bundle are not directly inspected; cause remains open.
+1. Craig first reported all three modes sharp, then said the panel showed Home Screen: no.
+   That result did not demonstrate standalone behaviour and is not an installed negative.
+2. After the corrected installation instructions, Craig reports **“says yes and all are
+   blurry”**. Relative, Sticky and Fixed all reproduce blur with Home Screen: yes.
 
-Next test: use Safari Share → Add to Home Screen, explicitly enable **Open as Web App**,
-name the new diagnostic icon AB4 Test, tap Add, then open that icon. Check the panel says
-**Home Screen: yes** before comparing Relative → Sticky → Fixed. If it still says no,
-stop and report that mode issue rather than repeating a browser-only comparison.
-Apple's [iOS 27 installation instructions](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/27/ios/27)
-confirm the Open as Web App toggle. This changes only the temporary diagnostic installation;
-leave the original MCU installation and its local data in place.
+This reproduces the affected behaviour in a fresh, isolated installed sample with no
+MCU auth, collection/profile data, cache or header blur declaration. The corresponding
+browser-mode sample and real-app Safari screen were sharp. Installation mode is a proven
+condition for this phone's reproduction; changing positioning did not remove it. The
+native installed-web-app top-edge effect is the evidence-backed working cause. Its exact
+internal iOS implementation has not been inspected. Do not prescribe a fixed/sticky
+header repair or infer that fresh installation alone resolves blur.
 
-No new deployment, product repair or original-app re-add was performed. Re-add of the
-real app remains conditional on local-state/login/push safeguards and owner review.
+The launch issue remains distinct: the real MCU app returns to Archive after being left
+on Home, swiped away and reopened. This fits a retained /movies launch target; installed
+manifest/OS restoration/bundle have not been directly read. No forced Home-on-resume fix.
+
+## Clearance experiment AB4-2 — ready, phone measurement pending
+
+Before proposing an app repair, measure whether moving controls below the native band
+actually clears them on this phone. AB4-2 keeps the relative header and status metadata;
+More space/Less space/Reset change only additional top clearance in 8px increments from
+0 to 48px. The same clearance applies to its Search panel. Both themes remain available.
+No guessed constant or user-agent detection has been added to the application.
+
+**Owner test:** add the separate **AB4 Space** diagnostic as a web app, open its icon,
+confirm Home Screen: yes, verify blur at 0px, then increase clearance until the whole
+header title and striped circle are sharp. Report the smallest sharp number or “still
+blurred at 48px”. Check light theme at the same number if practical; Search's own text
+can be checked separately, while its dimmed background is intentionally blurred.
+Keep the original MCU installation. Cost: one temporary diagnostic icon and a measured
+number of taps; adopting a clearance later would reduce visible content by that height.
+This is measurement, not approval or implementation of a production repair.
+
+Preview: https://mcu-m3m6app0n-craigr973s-projects.vercel.app
+Deployment `dpl_62BHZu2cktSq22iSTf3dtgjkxrmk`, READY, target preview (API target null).
+A 23-hour share link is in chat; its token is not stored in this repository. Reproducible
+sources are in `docs/reviews/ab4-diagnostic-2026-10-29/clearance/`; static prebuilt output
+was published through the existing linked project. **Never promote either diagnostic.**
+Project build/root/output/install/framework/node/protection settings were compared before
+and after and are unchanged. Production web remains f341d10 with full API readiness.
+
+Checks: 14 desktop combinations (seven 0–48px values × two themes), expected header heights
+and flush main position, no horizontal overflow, upper bound, decrement and reset controls,
+Search focus/close, zero JS errors. Protected preview shows the right page, its control
+reaches 16px, and its authenticated manifest returns 200/name AB4 Space. No phone clarity
+claim follows from these checks. No new failure or gate weakening occurred for AB4-2.
+No app product code, PR, push, full app gate or production deployment occurred.
 
 ## Next owner observation
 
-Dark/Search-closed before image, same-phone sharp Safari header and exact iOS 27.0.1 are
-captured. AB4-1 all-sharp lacked standalone confirmation (Home Screen: no); run it from a proper web-app
-icon and confirm Home Screen: yes first. Original MCU Home → close → reopen now confirms
-Archive. Capture Search-open/light-theme states when the diagnosis calls for them.
+Run AB4-2 to establish the smallest useful clearance and its cost. Then present the
+measured cause/repair checkpoint before any app chrome change. If 0px is sharp, the
+baseline did not reproduce; if 48px still blurs, clearance is not demonstrated as useful.
+Do not keep adding arbitrary space or claim a repair from source tests.
 
-Craig confirms Archive even after leaving the app on Home before swiping it away. The
-separate brief-app-switch comparison remains outstanding: record its destination and
-the page left before switching away. A force-close/reopen is an operational comparison, not proof
-that iOS discarded all restoration state. Do not erase that distinction in the diagnosis.
+Original app light theme, Search-open, brief-switch resume, installed version and actual
+app before/after remain open. The dark/Search-closed image, same-phone sharp Safari,
+iOS 27.0.1, original Home → close → Archive and AB4-1 standalone all-blurry results are
+already supplied; do not ask for them again.
 
-The public version below is the server baseline, not proof of the installed client's
-bundle. Correlate installed version through evidence available on the affected device;
-do not assume that opening version.json in separate Safari proves the PWA's cached bundle.
-
-After these observations, decide which diagnostic comparison is needed. If re-add is
-used, explain its local-state/login/push implications before the owner acts. If re-add
-alone fixes launch, record the before/after and do not invent a code repair. Show an
-evidenced cause and concrete proposed repair before any launch/navigation/iOS-chrome edit.
+Original-app re-add remains separate, after preserving unsynced local changes and
+explaining login/push consequences. If re-add resolves launch, record that result without
+inventing a code repair. Never force every foreground/navigation event to Home.
 
 ## Fresh baseline, 29 Oct
 
@@ -222,8 +244,9 @@ was corrected to the verified Git remote CraigR973/mcu-app and succeeded.
 
 AB4 is yellow; the ledger setting is Opus 5 high / GPT-5.6 Sol High. No delegation.
 Branch: `fix/ab4-iphone-diagnosis`, checkpoint documents and isolated diagnostic sources.
-No product repair, PR, push or production deployment; only the static AB4-1 preview above.
+No product repair, PR, push or production deployment; only the static AB4-1/AB4-2 previews above.
 The batch row stays open. No architecture change or new product decision was made.
-Resume with AB4 Test installed as a web app and Home Screen: yes before interpreting
-the three positioning modes. The prior all-sharp result lacked standalone confirmation. Original MCU
-Home → close → reopen returns to Archive. Establish cause before the repair checkpoint; launch remains a separate re-add comparison after local-state safeguards. Device before/after remains open even if later source tests pass.
+Resume with AB4-2 clearance measurement, then the concrete app repair checkpoint. AB4-1
+has reproduced blur in all three positions with standalone confirmed; do not repeat it.
+Launch remains a separate retained-installation/re-add investigation with local-state
+safeguards. Device app before/after stays open even if later source tests pass.

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" data-mode="relative" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AB4 Space">
+  <meta name="theme-color" content="#120F0D">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>AB4 Clearance Test</title>
+  <style>
+    * { box-sizing:border-box }
+    :root { --bg:#120f0d; --fg:#f1ece4; --line:#554b41; --panel:#241e1a; --pink:#c87391; --head-height:120px; --clearance:0px; color-scheme:dark }
+    :root[data-theme="light"] { --bg:#f4efe6; --fg:#251e18; --line:#b5a89a; --panel:#e4d9cc; --pink:#833f58; color-scheme:light }
+    html,body { margin:0; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif }
+    button,input { font:inherit; color:inherit }
+    button { border:1px solid var(--line); border-radius:8px; min-height:44px; padding:8px; background:var(--panel) }
+    button[aria-pressed="true"] { border:2px solid var(--pink); font-weight:700 }
+    button:focus-visible { outline:3px solid var(--pink); outline-offset:2px }
+    .shell { display:flex; height:100dvh; min-height:0; overflow:hidden; background:var(--bg) }
+    .column { display:flex; flex:1; min-width:0; flex-direction:column; overflow:hidden }
+    .header { position:relative; flex-shrink:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--line); padding-top:calc(env(safe-area-inset-top) + var(--clearance)) }
+    .header-row { display:flex; align-items:center; gap:12px; height:56px; padding:0 12px }
+    .title { flex:1; margin:0; font:600 21px Georgia,serif }
+    .bot { font-size:24px }
+    .avatar { width:44px; height:44px; border-radius:50%; background:repeating-linear-gradient(0deg,#fafafa 0 2px,#252525 2px 4px); border:2px solid var(--pink) }
+    .spacer { display:none; flex-shrink:0 }
+    :root[data-mode="sticky"] .header { position:sticky; top:0 }
+    :root[data-mode="fixed"] .header { position:fixed; top:0; left:0; right:0 }
+    :root[data-mode="fixed"] .spacer { display:block; height:var(--head-height) }
+    main { min-height:0; flex:1; overflow-y:auto; padding:12px 12px 160px }
+    .notice { font-size:14px; line-height:1.4; margin:0 0 12px; max-width:42rem }
+    .status { padding:12px; border:1px solid var(--line); border-radius:8px; font-size:14px; line-height:1.5; overflow-wrap:anywhere }
+    .instructions { line-height:1.5; max-width:42rem; padding-left:24px }
+    .sample { border-bottom:1px solid var(--line); padding:18px 0 }
+    nav { position:fixed; bottom:0; left:0; right:0; z-index:30; background:var(--panel); border-top:1px solid var(--line); padding:8px 8px max(8px,env(safe-area-inset-bottom)); display:grid; grid-template-columns:repeat(3,1fr); gap:8px }
+    .secondary { grid-column:1/-1; display:flex; gap:8px }
+    .secondary button { flex:1 }
+    .sheet { position:fixed; inset:0; z-index:50 }
+    .sheet[hidden] { display:none }
+    .shade { position:absolute; inset:0; border:0; border-radius:0; background:#120f0db3; backdrop-filter:blur(2px) }
+    .search-panel { position:absolute; inset:0 0 auto; padding:calc(env(safe-area-inset-top) + var(--clearance) + 12px) 12px 12px; background:var(--bg); border-bottom:1px solid var(--line) }
+    .search-row { display:flex; gap:8px }
+    input { min-width:0; flex:1; height:44px; border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:8px }
+    .search-panel p { font-size:14px; margin:8px 0 0 }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="column">
+      <header class="header" aria-label="Test top bar">
+        <div class="header-row"><span aria-hidden="true">AB4</span><h1 class="title">Header clearance test</h1><span class="bot" aria-hidden="true">♧</span><span class="avatar" aria-label="Sharp stripe pattern"></span></div>
+      </header>
+      <div class="spacer" aria-hidden="true"></div>
+      <main>
+        <p class="notice">Diagnostic page AB4-2 · sample content only. This page has no MCU login, API calls, collection data or push subscription.</p>
+        <div class="status" aria-live="polite"></div>
+        <ol class="instructions">
+          <li>In Safari: Share → Add to Home Screen, name <strong>AB4 Space</strong>, with Open as Web App enabled. Open that new icon.</li>
+          <li>Check the panel says <strong>Home Screen: yes</strong>. At 0px, check whether the title and striped circle blur.</li>
+          <li>Tap <strong>More space</strong> until the whole title and striped circle are sharp. Each tap adds 8px. <strong>Less space</strong> helps find the smallest sharp value.</li>
+          <li>Report that number, or “still blurred at 48px”. Repeat in light theme if practical, then try Search. The page behind Search intentionally dims and blurs.</li>
+        </ol>
+        <div id="samples"></div>
+      </main>
+    </div>
+  </div>
+  <nav aria-label="Diagnostic controls">
+    <button id="less" type="button">Less space</button>
+    <button id="reset" type="button">Reset to 0px</button>
+    <button id="more" type="button">More space</button>
+    <div class="secondary"><button id="theme" type="button">Use light theme</button><button id="search" type="button">Open Search</button></div>
+  </nav>
+  <section class="sheet" hidden>
+    <button class="shade" aria-label="Close Search" type="button"></button>
+    <div class="search-panel" role="dialog" aria-modal="true" aria-label="Test Search">
+      <div class="search-row"><input placeholder="Check this text is sharp" aria-label="Test search input"><button id="cancel" type="button">Cancel</button></div>
+      <p>Search is a separate fixed panel. Its background intentionally dims and blurs the page.</p>
+    </div>
+  </section>
+  <script>
+    let clearance = 0;
+    const root = document.documentElement;
+    const header = document.querySelector('.header');
+    const sheet = document.querySelector('.sheet');
+    const input = document.querySelector('input');
+    const status = document.querySelector('.status');
+    function updateStatus() {
+      const r = header.getBoundingClientRect();
+      status.textContent = `AB4-2 · Extra top space: ${clearance}px · ${root.dataset.theme}. Home Screen: ${navigator.standalone === true ? 'yes' : 'no'}. Display-mode standalone: ${matchMedia('(display-mode: standalone)').matches ? 'yes' : 'no'}. Header top ${r.top.toFixed(1)}px; bottom ${r.bottom.toFixed(1)}px. Viewport ${innerWidth} × ${innerHeight}.`;
+    }
+    function measure() {
+      root.style.setProperty('--head-height', `${header.getBoundingClientRect().height}px`);
+      updateStatus();
+    }
+    function setClearance(value) {
+      clearance = Math.max(0, Math.min(48, value));
+      root.style.setProperty('--clearance', `${clearance}px`);
+      document.querySelector('#less').disabled = clearance === 0;
+      document.querySelector('#more').disabled = clearance === 48;
+      measure();
+    }
+    document.querySelector('#less').addEventListener('click', () => setClearance(clearance - 8));
+    document.querySelector('#more').addEventListener('click', () => setClearance(clearance + 8));
+    document.querySelector('#reset').addEventListener('click', () => setClearance(0));
+    document.querySelector('#theme').addEventListener('click', event => {
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      event.currentTarget.textContent = root.dataset.theme === 'dark' ? 'Use light theme' : 'Use dark theme';
+      document.querySelector('meta[name="theme-color"]').content = root.dataset.theme === 'dark' ? '#120F0D' : '#f4efe6';
+      updateStatus();
+    });
+    function closeSearch() { sheet.hidden = true; document.querySelector('#search').focus(); }
+    document.querySelector('#search').addEventListener('click', () => { sheet.hidden = false; input.focus(); });
+    document.querySelector('#cancel').addEventListener('click', closeSearch);
+    document.querySelector('.shade').addEventListener('click', closeSearch);
+    document.addEventListener('keydown', event => { if(event.key === 'Escape' && !sheet.hidden) closeSearch(); });
+    for(let n=1;n<=18;n++) { const row=document.createElement('div'); row.className='sample'; row.textContent=`Sample row ${n} — the list scrolls separately from the header`; document.querySelector('#samples').append(row); }
+    new ResizeObserver(measure).observe(header);
+    window.addEventListener('resize', measure);
+    setClearance(0);
+  </script>
+</body>
+</html>

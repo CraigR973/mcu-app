@@ -22,15 +22,13 @@ conversation still maps onto this file.*
   `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`. AB3 shipped PR #121 (`5cfa467`), full
   local/PR/main gates and exact production proof. Yours on the next real addition: a genuine qualifying add by Mark and Craig's real-phone receipt;
   no fabricated production test film/push. Receipt remains unverified until observed.
-  Sitting 3 authorised 29 Oct (#307): iPhone 16 Pro Max, iOS 27.0.1, installed app opens
-  Archive and blurs its header; dark/Search-closed screenshot captured, same dark Safari
-  header sharp. AB4-1 all-sharp result lacked standalone confirmation (Home Screen: no). Install the
-  temporary AB4 Test with Open as Web App enabled and require Home Screen: yes before
-  comparing its modes. Real MCU Home → swipe away → reopen is confirmed Archive.
-  Cause/repair checkpoint remains open; installed version and remaining
-  resume/theme/Search observations remain unverified. Keep the real installation in place.
-  Report/link-refresh procedure: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
-  Real-device app acceptance remains open; no desktop token/diagnostic check closes it.
+  Sitting 3 authorised 29 Oct (#307): iPhone 16 Pro Max/iOS 27.0.1 installed header blurry,
+  Safari sharp; original Home → close → reopen returns Archive. AB4-1 corrected run confirms
+  Home Screen: yes, Relative/Sticky/Fixed all blurry (earlier sharp result was not confirmed
+  standalone). Next: temporary AB4 Space test AB4-2 measures the smallest extra top clearance
+  that makes title/stripe circle sharp, 0–48px. Keep MCU installed. Value/light/Search checks
+  precede a concrete repair review; app acceptance/installed version/resume stay open.
+  Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
   conditional schema/API/job/refresh/retention build contract before implementation.

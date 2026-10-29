@@ -2,44 +2,43 @@
 
 ## Now
 
-**29 Oct: Group AB sitting 3 (AB4), standalone diagnostic still outstanding.**
-Craig confirms iPhone 16 Pro Max, Home Screen app, iOS 27.0.1, no re-add since launch
-change, Archive on reopening, dark theme and blur always visible. His dark/Search-closed
-screenshot shows softened app title/icon/upper avatar; the same dark Archive in Safari
-is sharp. The installation/mode-specific difference is established. An iOS overlay and
-relative-header edge classification remain unestablished leads. Craig now confirms Archive
-on reopening even after deliberately leaving the real app on Home.
-Installed app version and remaining resume/light/Search observations remain open.
+**29 Oct: Group AB sitting 3 (AB4), standalone blur reproduced; clearance measurement next.**
+Craig confirms iPhone 16 Pro Max/iOS 27.0.1, dark installed-app blur, sharp same-phone
+Safari, no re-add since launch change, and Archive on reopening even after leaving Home.
+Dark/Search-closed screenshot is captured. AB4-1 initially all-sharp was not confirmed
+standalone (Home Screen: no); corrected installed run now says Home Screen: yes and
+Relative/Sticky/Fixed **all blurry**. Installation mode reproduces the effect independently
+of MCU code/data/cache; changing header positioning provides no demonstrated benefit.
+Native installed top-edge rendering is the working cause; precise iOS internals uninspected.
 
-AB4-1 is a separate sample-only phone diagnostic: Relative/Sticky/Fixed modes at equal
-header height, both themes, Search sheet, no MCU API/login/data/push. Static preview is
-READY at https://mcu-cs0wuuuu4-craigr973s-projects.vercel.app; a 23-hour access link is in
-chat. Add only its temporary AB4 Test icon, leaving the real app installed. Desktop six-mode/
-theme geometry, Search and zero-JS-error checks pass; protected preview/manifest verified.
-Craig reports all three modes sharp but confirms the panel said Home Screen: no. This
-did not confirm a standalone run and is not an installed baseline failure; standalone comparison remains
-outstanding. No positioning repair or real-app acceptance follows from that result.
+AB4-2 is a new isolated sample-only clearance test: 0–48px additional top space in 8px
+steps, both themes/Search, no MCU API/login/data/push. Preview READY:
+https://mcu-m3m6app0n-craigr973s-projects.vercel.app; 23-hour access link in chat.
+Install only its temporary AB4 Space icon; keep MCU installed. Desktop 14 value/theme
+combinations, controls, geometry, Search and zero-JS-error checks pass; protected preview/
+manifest verified. No phone clearance result yet. No product repair proposed/implemented.
 
-Production API/web still serve `f341d1084cc75863c7c00d3830a93347fc265436`, with full
-readiness; its main CI 40891874070 passed all seven jobs. Project configuration/protection
-unchanged. No product code, app gate, PR, push, production deployment, data write,
-hosting/credential change, sitting 4 or AA10c. Diagnostic CLI's rejected --skip-domain
-attempt and corrected preview-only deployment are retained in the report.
+Production web remains `f341d1084cc75863c7c00d3830a93347fc265436`, with full API readiness;
+main CI 40891874070 was seven-job green. Project settings/protection unchanged. No product
+code, app gate, PR, push, production deployment, live data write, hosting/credential change,
+sitting 4 or AA10c. Both diagnostic previews must never be promoted.
 
 Evidence/handoff: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
-Sources: `docs/reviews/ab4-diagnostic-2026-10-29/`; branch `fix/ab4-iphone-diagnosis`.
-AB4 stays open. AB3 real-phone receipt, speech/live-assistant and AA10b/AA10c checks stay open.
+Sources: `docs/reviews/ab4-diagnostic-2026-10-29/` (AB4-2 in clearance/), branch
+`fix/ab4-iphone-diagnosis`. AB4 acceptance stays open, as do existing AB3 phone/speech/
+live-assistant/AA10b/AA10c owner checks.
 
 ## Next
 
-Install the temporary AB4 Test through Safari Share → Add to Home Screen with Open as Web
-App enabled, then open that icon. Require its panel to show Home Screen: yes before the
-Relative → Sticky → Fixed comparison; if no, resolve test mode first. The real app Home →
-swipe away → reopen result is already Archive; do not ask for it again. Keep installed
-version and remaining resume/theme/Search criteria open. Establish cause before repair.
-Launch re-add remains separate, after protecting unsynced local changes and explaining
-login/push consequences. Keep normal resume/deep links intact; device before/after in both
-themes/Search states remains mandatory. Do not promote AB4-1, start sitting 4 or AA10c.
+Owner opens AB4 Space as an installed web app, confirms Home Screen: yes and blur at 0px,
+then increases More space until title and stripe circle are sharp. Report smallest useful
+value (or still blurry at 48px), checking light theme at that value if practical. The real
+cost is reduced visible content if adopted; measure it before a concrete app repair review.
+No fixed/sticky repair is justified by AB4-1. Do not repeat its confirmed test or the
+original Home → close → Archive comparison. Original installed version, remaining light/
+Search/resume observations and actual app before/after remain open. Original-app re-add
+stays separate after unsynced-state/login/push safeguards; never force normal resume to
+Home. Stop at repair review; do not start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -434,6 +433,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — AB4-1 standalone reproduction confirmed; AB4-2 measurement ready:** Craig reports Home Screen: yes and Relative/Sticky/Fixed all blurry; prior all-sharp/no result was not standalone. Fresh installed sample reproduces without MCU data/cache; positioning does not remove the effect on this phone. Built isolated 0–48px clearance test AB4-2; 14 desktop value/theme combinations, controls/Search/geometry and protected preview/manifest checks pass. Preview dpl_62BHZu2cktSq22iSTf3dtgjkxrmk READY, temporary link in chat; project settings and production f341d10/readiness unchanged. Await smallest sharp clearance before proposing app repair; no production/app change, sitting 4 or AA10c.
 
 - **29 Oct — AB4 diagnostic mode corrected; launch comparison confirmed:** Craig says AB4 Test panel Home Screen: no, so the earlier all-sharp modes were browser-only, not a failed standalone reproduction. Corrected the current diagnosis/next step; proper Open as Web App installation and Home Screen: yes precede interpreting the test. Real MCU returns to Archive even after leaving it on Home before swipe-away/reopen. No product repair or new deployment; sitting 4/AA10c excluded.
 
