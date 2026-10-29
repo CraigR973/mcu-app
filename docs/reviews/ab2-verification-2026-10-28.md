@@ -1,6 +1,6 @@
 # AB2 verification — collection coverage and Summary cards
 
-28 Oct. Sitting 1 only. Owner picks and exact additive contract were approved in chat
+Review/build began 28 Oct; shipped 29 Oct. Sitting 1 only. Owner picks and exact additive contract were approved in chat
 before build plan/code; decision #303 records the scoped supersession of #299.
 Clean starting main 86e7d56 passed all seven CI jobs (40759704615). The existing review
 commit c2a6784 is preserved on the branch; implementation commit is 8e61dd6.
@@ -41,7 +41,7 @@ missing-price/date explanations remain. Other Home shelves retain their sideways
 | Exact additive contract/older answers | Pydantic required integer; OpenAPI exact snapshot; shared nonnegative/integer validation; genuine zero and absent-field unit/browser cases | Pass |
 | Approved presentation and existing meanings | Both people/both themes 375 px/desktop, 320 px overflow, exact current numerator/denominator, visible preview/full charts and Archive width | Pass |
 | Refresh after real changes | Browser watch mutation returns to previously cached Home with new numerator; API rewatch/copy sale/listing/return/watch removal; central mutation and replay invalidation | Pass |
-| Full verification and production readback | Completed evidence below | Pending |
+| Full verification and production readback | Exact-head PR/main CI, SHA/full readiness and read-only live comparison below | Pass |
 
 Existing AA3 browser assertions were updated only for the approved copy label and watched
 meaning; the old cases remain. New assertions extend coverage. No route/access inventory,
@@ -94,7 +94,16 @@ warnings; API emitted 30 existing warnings, with no new suppression. E2E typeche
 Complete local E2E: Chromium 54 passed; Firefox 53 passed plus its existing documented
 no-dictation skip; cron six passed. No new skip or retry. All provider/model calls in this
 suite use the outside-world fakes against disposable loopback-only Postgres.
-Exact-head PR/main CI and API/web exact SHA/full readiness remain required before merge/close-out. Local WebKit is unavailable on macOS 13 and must be proved by CI.
+PR #119: https://github.com/CraigR973/mcu-app/pull/119, exact head 497d01d.
+PR CI 40790276329 and merge CI 40791938628 passed all seven jobs. Merge: `c187ed7d5f5a9f904c19440664b2ab98d7c35c9c`.
+The application/shared/migration/test tree is identical to clean local gate 8e61dd6;
+497d01d adds only verification/review documentation and screenshots.
+CI E2E: Chromium 54, Firefox 53 plus its one existing skip, WebKit 52 plus its two
+existing documented skips, cron six. No new skip/retry. All five new AB2 cases passed
+in every CI browser. API and web served the exact merged SHA with db ready and all
+push/AI/eBay/TMDB/Brave flags configured. Unauthenticated stats remained 401.
+Read-only live handler comparison repeated from the merge matches the independent SQL
+for both people; their whole-diary counts remain unchanged. Local WebKit is unavailable on macOS 13 and must be proved by CI.
 Real-phone observations and AA10b's final-total checkpoint remain owner-only; AB2 cannot
 claim those passed. Sitting 2 and AA10c remain outside this run.
 
@@ -109,3 +118,17 @@ consistent catalogue snapshot or live-value evidence.
 ![Summary cards, dark, large-number fixture](assets/ab2-2026-10-28/implemented-summary-dark-375.png)
 
 ![Summary cards, light, large-number fixture](assets/ab2-2026-10-28/implemented-summary-light-375.png)
+
+
+## Close-out — 29 Oct
+
+AB2 shipped as `c187ed7d5f5a9f904c19440664b2ab98d7c35c9c` in PR #119. AB1 and AB2 complete Group AB sitting 1;
+planning PR #117's approved commits remain in normal reviewed/CI-tested history.
+The ledger, architecture reconciliation/map, owner actions, grouping status and session
+handoff are updated. Closing documentation changes no application/shared/migration/test
+source; its exact-head CI and API/web readback are checked again before the session ends.
+Sitting 2 and AA10c are not started. AA10b final-total and existing real-phone/live-assistant
+owner observations remain open independently.
+
+Workflow repair: this gh version has no `pr diff --stat` flag; reviewed the actual PR patch
+with `gh pr diff` and the summary with `git diff --stat`. No gate/product change.

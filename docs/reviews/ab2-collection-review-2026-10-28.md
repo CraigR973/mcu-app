@@ -172,3 +172,6 @@ Build verification note: the explicit transaction READ ONLY check found the conn
 startup read-only preference was not honoured by Neon. The build probe now sets and checks
 the transaction mode before reading. The earlier review issued only SELECTs and deliberately
 avoided the repairing valuation service; no live write or provider/model request was made.
+
+AB2 subsequently shipped in PR #119 (`c187ed7d5f5a9f904c19440664b2ab98d7c35c9c`) after the approved build plan,
+full local/CI gates and exact production verification. See the separate AB2 verification report.

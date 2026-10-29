@@ -2,35 +2,40 @@
 
 ## Now
 
-**28 Oct: Group AB sitting 1 — AB2 owner picks approved; build in progress.**
-AB1 is fully closed out. Planning PR #117 preserved all three approved commits before
-implementation from clean main. Product PR #118 merged `ad2c992`; final documentation
-head `86e7d56` passed all seven CI jobs (40759704615), and API/web served that exact SHA
-with db ready and push/AI/eBay/TMDB/Brave configured. Clean local gate: API 2,519, shared
-157, web 729; E2E Chromium 49, Firefox 48 plus its existing skip, cron six. PR/merge CI also
-proved WebKit 47 plus its two documented skips. The live read-only comparison agrees at
-0 queue/0 doubt films/0 attention items while retaining historical saved 1/48 evidence.
-Every failure/repair and the limits of live verification are in
-`docs/reviews/ab1-verification-2026-10-28.md`.
+**29 Oct: Group AB sitting 1 complete — AB1 and AB2 are live.**
+Planning PR #117 preserved all three approved planning commits through review/CI before
+implementation from clean main. AB1 shipped PR #118 (`ad2c992`), followed by its exact
+final-main CI and production proof. AB2 shipped PR #119 (`c187ed7`) after Craig selected
+Summary cards/wording and approved the exact ownedWatchedMovies contract before build (#303).
 
-Craig approved AB2 Summary cards and its shown wording, plus the exact additive
-`ownedWatchedMovies` contract on 28 Oct. Decision #303 and
-`docs/reviews/ab2-build-plan-2026-10-28.md` record the scope before implementation.
-The existing review branch is retained; AB2 implementation is complete; all ten clean local checks and the full available local
-E2E suite passed. PR exact-head CI, merge and production proof are next.
+Home now shows your distinct watched titles still owned, including downloads, against
+current owned titles. Rewatches/extra copies count once. Whole-diary watchedMovies remains
+unchanged. Older answers show Unavailable. Profile-scoped stats cache and mutation/manual/
+automatic replay invalidation refresh coverage. Five explained figures, visible overlapping
+format bars, full existing charts, Archive navigation and value/spend caveats are retained.
 
-Read-only 28 Oct examples: Craig 482 owned watches / 1,903 titles versus 500 diary; Mark
-878 / 1,903 versus 879. The stored £15,939.38 across 1,311 of 1,472 physical copies, zero
-sales-backed, remains interim and is not AA10b's final-total checkpoint. No live price,
-collection, diary, provider or model write/run was made. AB2 remains on `feat/ab2-collection-coverage`; no push, merge or deployment yet.
+AB2 clean local 8e61dd6: all ten checks green; API 2,523 with zero skips/all 16 derived-trigger
+cases, shared 158, web 732. Full local Chromium 54, Firefox 53 plus its existing dictation
+skip, cron six passed. PR CI 40790276329 and merge CI 40791938628 passed all seven jobs,
+including WebKit 52 plus its two existing documented skips. No new skip/retry. API/web
+served `c187ed7d5f5a9f904c19440664b2ab98d7c35c9c` with db ready and push/AI/eBay/TMDB/Brave configured;
+unauthenticated stats remained 401. The closing documentation receives its own exact-head
+CI and API/web readback before the session ends. Every repair/verification limit is in
+`docs/reviews/ab2-verification-2026-10-28.md`; AB1 has its own verification report.
 
-Sitting 2 and AA10c remain excluded. Existing phone/live-assistant observations and AA10b's
-1–2 Nov final-total comparison remain open independently.
+Confirmed read-only live handler/independent SQL comparison: Craig 482 / 1,903 owned titles
+versus 500 diary; Mark 878 / 1,903 versus 879. These are observations, not fixed tests. This
+is not a production authenticated HTTP/browser session; fixture E2E proves the complete flow.
+No production collection/history write, price refresh, provider/model call, migration,
+hosting or credential change. AA10b's interim value is not a final-total acceptance.
+
+Sitting 2 and AA10c were not started. Existing phone/live-assistant observations and AA10b's
+1–2 Nov final-total comparison remain owner-only and open independently.
 
 ## Next
 
-Review the AB2 diff, run exact-head seven-job PR/main CI and verify production.
-Close out only AB2 after all gates; do not start sitting 2 or AA10c.
+Stop here: Group AB sitting 1 is complete. Wait for a separate named sitting's go.
+Do not start sitting 2/AB3 or AA10c. Preserve the existing owner/device/value checkpoints.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -425,6 +430,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct 2026** — **AB2 shipped; Group AB sitting 1 complete.** PR #119, merge `c187ed7`; owner-approved Summary cards/wording and exact owned-watch stats contract (#303), full clean local gate/E2E and seven-job exact-head PR/main CI (40791938628). API/web exact merged SHA/full readiness and read-only live count comparison passed. No migration, re-price, history write or provider/model call. All repairs in the AB2 verification report. Sitting 2/AA10c not started; owner phone/value checks remain.
 
 - **28 Oct 2026** — **AB2 built to approved Summary cards and exact contract.** Clean 8e61dd6: all ten checks passed (2,523 API/158 shared/732 web, no API skips); full Chromium 54/Firefox 53 plus existing skip/cron six passed. Read-only current-live comparison agrees at Craig 482 and Mark 878 of 1,903, diary 500/879 unchanged. PR/merge/production proof next; sitting 2/AA10c excluded.
 

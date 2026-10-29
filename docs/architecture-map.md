@@ -1,7 +1,7 @@
 # MCU App architecture map
 
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
-AB1 on 28 Oct; the April design intent remains in
+AB2 on 29 Oct; the April design intent remains in
 `ARCHITECTURE.md`.
 
 ```mermaid
@@ -67,6 +67,21 @@ Identification warnings now reconcile the daily snapshot with the lists people c
 Reading Home neither writes a check nor sends a push. Historical lookup/spec/review evidence
 stays intact. Settings actions select the eBay, Assistant or own-device tab; other people's
 devices and Railway-only jobs receive owner guidance rather than a misleading repair link.
+
+## AB2, shipped 29 Oct (`c187ed7`)
+
+```mermaid
+flowchart TB
+    Change[Watch or copy change] --> Refresh[Invalidate profile stats]
+    Refresh --> Request[Existing collection stats request]
+    Request --> Count[Personal watched titles intersect current ownership]
+    Count --> Home[Home coverage and Summary cards]
+```
+
+The existing endpoint adds ownedWatchedMovies; the whole-diary watchedMovies field stays
+unchanged. Home shows owned coverage against totalMovies, or Unavailable for older answers.
+Profile-scoped stats cache isolates each person's numerator. Visible overlapping format bars
+preview the retained full breakdowns. No database shape, provider, service or history change.
 
 ## AA10a, shipped; first live pass read back 22 Oct
 
