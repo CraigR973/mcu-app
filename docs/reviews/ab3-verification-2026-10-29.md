@@ -1,6 +1,6 @@
 # AB3 — Mark's addition notifications, verification 29 Oct
 
-**Local verification complete; PR/CI/shipment pending.** Sitting 2 only; sitting 3 and
+**Shipped PR #121, implementation merge 5cfa4676c0c6fb4049785044b5968e575a14e4b1.** Sitting 2 only; sitting 3 and
 AA10c excluded. Craig approved all four pre-build picks (#306), including the exact additive
 migration and optional clientRequestId/receipt contract, before any implementation.
 Approved details: `ab3-owner-checkpoint-2026-10-29.md`. Current flow: `../architecture-map.md`.
@@ -43,7 +43,7 @@ lock-screen disclosure of title/year were included in the owner's approved cost/
 | Atomicity, replay and concurrency | Real Postgres tests force two-connection commit/rollback, same/different request IDs, two actors, preference creation and delivery claim races. A separate real-commit test injects transport failure and replays from a fresh session. |
 | Preference and migration | Head → base → 069 → head → base → head passed on disposable Postgres. Pre-070 preference row gained true. Both mcu_readonly/mcu_backup can read the new preference/receipt table and cannot read profiles.pin_hash or refresh_tokens (catalogue privilege checks only). |
 | Browser and fake push | Four new Chromium journeys passed: 375 px light/dark settings persistence, approved wording, old-response Unavailable, Mark's actual add screen, stable client request ID, decrypted Craig push/body/URL, no Mark push, retry/edition silence and title destination. |
-| Full gate / CI / deployment | Pending below. Genuine later addition and Craig's real-phone receipt remain owner acceptance. |
+| Full gate / CI / deployment | Full local/PR/main gates and exact production proof passed below. Genuine later addition and Craig's real-phone receipt remain owner acceptance. |
 
 The preflight main was clean at 588e552b2a93f140fc603bf51ae80c348cc0f835 after fetch.
 Main CI 40858327603 succeeded; production API/web served that exact SHA with full readiness.
@@ -108,5 +108,26 @@ React best-practices review covered stable request identity, hook placement, swi
 old-response state and mutation handling. Local source review found no remaining blocker.
 
 Fresh origin/main remained 588e552, with latest CI still green before PR publication.
-PR/merge exact-head seven-job CI and production SHA/readiness remain pending. A genuine
-later addition and Craig's real-phone receipt remain owner acceptance. No next sitting.
+PR **#121**, exact head **4801182f56cc3c95a7279262f70b8027e00a8782**: CI **40887477795**
+passed all seven jobs. API 2,549/zero skips; Chromium 58; Firefox 57 + existing dictation skip;
+WebKit 56 + its two existing documented skips; jobs six. No new skip, retry or weakened gate.
+The GitHub connector returned 403 (integration cannot create PRs); the repo's authorised gh
+workflow created and merged the PR without any credential or permission change.
+
+Implementation merge **5cfa4676c0c6fb4049785044b5968e575a14e4b1**, CI **40889823113**:
+all seven jobs passed. The merge tree exactly matches the tested PR head. Both production
+API/web served that exact merge; full readiness (db ok; push/ai/ebay/tmdb/brave configured)
+and unauthenticated preferences 401 passed. During rollout the web advanced first, then API;
+no readiness gap was hidden or mistaken for completed deployment.
+
+Read-only live transaction: both mcu_readonly/mcu_backup can read the new preference/receipt
+and cannot read profiles.pin_hash or refresh_tokens. The category constraint retains all six
+old categories plus collection_additions. Both people remain active/non-deleted at the verified
+UUIDs. Their new preferences were on, digest off, quiet hours unset, Europe/London. Initial
+receipts/events were zero: no agent-generated production add or push.
+
+A genuine later qualifying Mark addition and Craig's real-phone receipt remain owner acceptance.
+Existing two-device (6.2), price-drop push (5.6), spoken query (9.5) and both-people notification
+(8.4) observations remain with the owner; AB3's green gates do not close them. The final
+documentation push receives its own exact-head CI and served-SHA/readiness check before session
+completion is reported. Sitting 3/AB4 needs its own go/device observations. AA10c is excluded.

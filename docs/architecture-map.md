@@ -1,7 +1,7 @@
 # MCU App architecture map
 
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
-AB2 and the separate movie-night repair on 29 Oct; the April design intent remains in
+AB3 and the separate movie-night repair on 29 Oct; the April design intent remains in
 `ARCHITECTURE.md`.
 
 ```mermaid
@@ -230,7 +230,7 @@ The lock is per night and works across API workers. A waiting caller reads the c
 shortlist, or seeds after rollback. Existing vote lock ordering is retained. No new database
 shape, service, provider or API contract. Real-phone push/match acceptance remains Craig's.
 
-## AB3, implementation after owner approval 29 Oct (#306)
+## AB3, shipped 29 Oct (`5cfa467`), after owner approval (#306)
 
 ```mermaid
 flowchart TB

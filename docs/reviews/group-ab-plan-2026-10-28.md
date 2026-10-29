@@ -1,10 +1,11 @@
 # Approved grouping for the 28 Oct snags
 
-**Seven batches across five sittings; sitting 1 complete.** AB1 (`ad2c992`) and AB2 (`c187ed7`)
+**Seven batches across five sittings; sittings 1 and 2 complete.** AB1 (`ad2c992`) and AB2 (`c187ed7`)
 shipped after their owner checkpoints. Final CI's real movie-night race was stopped, then
 repaired with Craig's separate approval in PR #120 (`bf0eb36`), all full gates and exact
-production proof. Sitting 2 was authorised on 29 Oct and is at its pre-build owner checkpoint;
-all four pre-build picks were approved before implementation (#306), as recorded in `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`.
+production proof. Sitting 2 shipped AB3 in PR #121 (`5cfa467`) after all four pre-build owner picks (#306),
+full local/PR/main gates and exact production proof. Genuine later add/real-phone receipt remains
+owner acceptance; approved contract: `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`.
 Sittings 3–5 and AA10c remain excluded. The verification reports retain
 the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
@@ -20,7 +21,7 @@ more complex than current evidence can establish. No time estimate is yet eviden
 | Sitting | Batches | Result and owner stop |
 |---|---|---|
 | 1 | AB1 attention → AB2 collection | Truthful attention; clearer collection with owned-watched count and visible breakdown. Pick the layout/API extension before collection build. |
-| 2 | AB3 Mark's additions | Notify everyone else when Mark adds a new title. Approve exact trigger, preference and wording first. |
+| 2 | ~~AB3~~ Mark's additions (`5cfa467`) | Complete after all four picks; genuine later add/real-phone receipt remains owner acceptance. |
 | 3 | AB4 iPhone | Diagnose Home launch and blurred top bar on the affected installation; verify any repair there. |
 | 4 | AB5 cinema sources | Nine-venue source, coverage and cost report. Pick sources and concept; stop before implementation. |
 | 5 | AB6 programmes → AB7 discovery | Approved programme pipeline, then a screen for choosing a film/venue/showtime. Conditional on the research and build-contract approval. |
@@ -75,8 +76,8 @@ starting. No agent delegation is part of this proposal.
 
 Craig approved the grouping and then separately authorised sitting 1 on 28 Oct. AB1 shipped;
 AB2 shipped `c187ed7` after both owner picks. Sitting 1 completed after the approved race
-repair PR #120 (`bf0eb36`). Sitting 2 is authorised on 29 Oct; all four pre-build owner
-picks are approved (#306), and AB3 implementation is under verification. Sittings 3–5 remain unauthorised. Start only a
+repair PR #120 (`bf0eb36`). Sitting 2 shipped AB3 (`5cfa467`) on 29 Oct after all four pre-build owner
+picks (#306), full gates and exact production proof; genuine add/real-phone receipt remains owner acceptance. Sittings 3–5 remain unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance
 checks, under this repo's procedure. Hosting, credentials, destructive data writes and
