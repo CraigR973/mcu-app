@@ -5,8 +5,9 @@
 **29 Oct: Group AB sitting 3 (AB4) authorised; stopped at affected-device evidence.**
 Craig reports the Home Screen app on an iPhone 16 Pro Max, “latest ios” (exact version
 unconfirmed), not removed/re-added since the launch change. The affected region is
-“just below the clock and batter area”. Theme, Search state, installed served version,
-cold-launch/resume destinations and an image of the affected surface remain unconfirmed.
+“just below the clock and batter area”. Craig subsequently reports Archive on reopening,
+dark theme and blur “always visible”. Separate brief-switch resume, individual Search
+states, installed served version and an image remain unconfirmed.
 These observations narrow the context; they do not establish either cause.
 
 Fetched clean main/origin `f341d1084cc75863c7c00d3830a93347fc265436`; main CI
@@ -25,7 +26,7 @@ Existing speech, live-assistant and AA10b/AA10c owner checks remain open.
 ## Next
 
 Resume AB4 at the device-evidence checkpoint: capture the affected header before changing
-the installation; identify theme/Search state and cold-launch versus resume destinations,
+the installation; identify the affected layer/Search states and the separate brief-switch resume destination,
 then correlate installed version and establish the cause. Show the evidenced cause and
 proposed repair to Craig before changing launch/navigation/iOS chrome. Re-add is a diagnostic
 option only after the original observations are retained; if it resolves launch, record
@@ -425,6 +426,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — AB4 owner evidence extended:** Craig reports reopening reaches Archive, dark theme, blur always visible. Source history confirms AA1 changed manifest /movies → / on 23 Oct, consistent with an old installation target but not proof of this device’s retained state. Screenshot, exact installed/iOS versions and separate resume/Search comparisons remain open; no cause or repair established. Documents only; sitting 4/AA10c excluded.
 
 - **29 Oct — Group AB sitting 3 authorised; AB4 device checkpoint open:** clean fetched main `f341d10`, all seven main CI jobs (40891874070) and exact public API/web SHA/full readiness verified; manifest starts at /. Craig reports Home Screen app, iPhone 16 Pro Max, “latest ios” without exact version, not re-added since launch change, blur just below clock/battery area. Installed version, theme/Search state, cold-launch/resume comparison and image remain missing; cause unestablished, no repair proposed. Documents only on `fix/ab4-iphone-diagnosis`; no AB4 full gate, push, PR or deployment. Resume at affected-device evidence, not sitting 4 or AA10c.
 

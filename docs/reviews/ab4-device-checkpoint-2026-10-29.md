@@ -12,15 +12,27 @@ No repair is proposed. Sitting 4 and AA10c are excluded.
 | iOS | Owner says “latest ios”; exact version unconfirmed |
 | Remove/re-add since launch change | No |
 | Affected region | Owner says “just below the clock and batter area” |
-| Theme and Search state | Not yet supplied |
-| Cold-launch versus resume destination | Not yet supplied |
+| Theme and Search state | Dark theme; blur “always visible”; individual Search states not separately described |
+| Cold-launch versus resume destination | Owner answers reopen question: “it opens archive”; separate brief-app-switch result not supplied |
 | Installed app served version | Unconfirmed |
 | Screenshot/recording of affected surface | Not yet supplied |
 
 The region description narrows where to inspect; it does not prove which rendered
 layer is affected or why. No re-add since the launch change makes a retained installation
 a diagnostic lead, not an established cause. No affected-iPhone session has been operated
-or visually inspected by the agent. Neither reported problem is reproduced yet.
+or visually inspected by the agent. Craig has confirmed the reported symptoms on the affected device; the agent has not
+visually inspected or independently reproduced them. Neither cause is established.
+
+## Source comparison after the latest owner observation
+
+The AA1 implementation merge `4cc207d9a1c04e8e99746f3de47c5664c59125d7` changed
+manifest start_url from `/movies` to `/` on 23 Oct. The current root route sends an
+authenticated person to `/dashboard`; `/movies` is the collection route. These facts
+make a retained installation launch target consistent with Craig's Archive report,
+but they do not prove what this installation has retained. No code repair follows yet.
+The screenshot remains necessary to identify the blurred layer and guide diagnosis.
+A source lookup initially used components/layout rather than components/layouts;
+the path was corrected through rg --files. No product file changed.
 
 ## Next owner observation
 
@@ -28,8 +40,8 @@ Preserve the affected installation first. Capture the blurred region with Search
 and open, identifying the active theme. Include the clock/battery area and app header in
 the image so those layers can be distinguished. Establish the exact iOS version.
 
-Compare tapping the Home Screen icon after swiping the app away with returning after a
-brief app switch. Record Home/Archive/other destination in each case, including the page
+Craig reports Archive in response to the swipe-away/reopen question. The separate
+brief-app-switch comparison remains outstanding: record its destination and the page
 left before switching away. A force-close/reopen is an operational comparison, not proof
 that iOS discarded all restoration state. Do not erase that distinction in the diagnosis.
 

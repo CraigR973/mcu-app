@@ -24,8 +24,8 @@ conversation still maps onto this file.*
   no fabricated production test film/push. Receipt remains unverified until observed.
   Sitting 3 authorised 29 Oct (#307), stopped at affected-device evidence: Home Screen
   app on iPhone 16 Pro Max, not re-added since launch change; affected region just below
-  clock/battery. Exact iOS/installed version, theme/Search state, cold-launch/resume
-  comparison and image remain unconfirmed; neither cause is established and no repair
+  clock/battery. Reopening reaches Archive; dark theme, blur always visible. Exact
+  iOS/installed version, separate resume/Search comparisons and image remain unconfirmed; neither cause is established and no repair
   is proposed. Preserve the original observations before any re-add. See
   `docs/reviews/ab4-device-checkpoint-2026-10-29.md`; real-device acceptance remains open.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
