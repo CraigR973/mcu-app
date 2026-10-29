@@ -50,5 +50,32 @@ the disposable test database. The one earlier test copy/movie was removed by exa
 that loopback-only database. No trigger or production row was changed. The corrected red
 run fails on the intended concurrency assertion, with cleanup working.
 
-Full clean local gate, E2E and exact-head CI/production proof remain pending. Existing red CI artefact/logs are retained in
-the ignored AB2 scratchpad; the AB2 report records the original diagnosis and stop.
+The full ten-command local gate passed from clean implementation commit
+c27d531837ebbea587a88662983bfd37aed36d8f, with a clean tree afterwards: 2,525 API tests
+(no skips), 158 shared tests and 732 web tests; lint, formatting, types and builds pass.
+The only service change is the per-night row lock; no existing E2E or push assertion changed.
+
+Postgres concurrency review followed the short-transaction and consistent-lock-order
+checklist. The lock uses the existing night primary key, matching the vote path's night-first
+order. Candidate GET commits before metadata lookups; Send commits before push delivery.
+Different nights lock different rows. The lock is released by the existing transaction,
+including rollback; no application-process mutex or additional service is introduced.
+
+The complete available local E2E returned nonzero: Chromium 53 passed and one existing
+shop-price-alert case timed out at its unchanged 60-second limit; Firefox 53 passed with
+its documented dictation skip, and cron six passed. All movie-night invite/push/match and
+AB1/AB2 cases passed. The Chromium failure occurred before the first test assertion or
+browser page was created; native fetch calls were not instrumented in its retained trace.
+The machine showed load averages 13.46/53.13/57.74 after the run; this is context, not proof
+that load caused the timeout. Earlier progress messages incorrectly reported Chromium54;
+the final nonzero result was inspected and that claim explicitly corrected. No timeout,
+retry, assertion, skip or product change has been made. Request-timing diagnosis in ignored tooling passed the unchanged isolated case in22.3s:
+login918ms, Wanted writes762/184ms, subscription111ms, daily scraper200 in17,181ms;
+the expected under-limit push and over-limit exclusion both held. No endpoint error or
+movie-night lock was involved. This does not prove what held the original request or rule
+out a preceding-state effect. One full Chromium sequence with the same timing observation
+will check that remaining concern; the original failure is retained rather than erased.
+
+Complete green local E2E and exact-head CI/production proof remain pending. Existing red CI
+artefact/logs are retained in the ignored AB2 scratchpad; the AB2 report records the original
+diagnosis and stop.

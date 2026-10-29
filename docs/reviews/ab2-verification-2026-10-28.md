@@ -166,3 +166,12 @@ it is not another CI/deployment attempt.
 
 Production cf28806 was read back after the failure: API/web exact SHA, full readiness
 and unauthenticated stats 401 pass. This does not waive the red E2E gate.
+
+
+## Separate repair approved, 29 Oct
+
+Craig approved the per-night serialisation and deterministic concurrency regression, with
+all existing push assertions and full gates retained (#304). The repair is on its own
+fix/movie-night-seeding-race branch and preserves the local diagnostic handoff 5a1ccad.
+The detailed red/green evidence and remaining gates are recorded in
+`movie-night-seeding-race-2026-10-29.md`. Sitting 2 and AA10c remain excluded.

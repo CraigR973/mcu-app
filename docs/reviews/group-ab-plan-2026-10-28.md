@@ -2,7 +2,8 @@
 
 **Seven batches across five sittings; AB1 (`ad2c992`) and AB2 (`c187ed7`) code shipped.
 Final close-out is blocked by red CI 40793684816: a movie-night seeding race.
-A separate fix awaits Craig's go. Sittings 2–5 and AA10c remain excluded.**
+Craig approved the separate per-night serialisation repair on 29 Oct (#304); full verification
+is underway. Sittings 2–5 and AA10c remain excluded.**
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
 

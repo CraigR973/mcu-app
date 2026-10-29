@@ -20,7 +20,11 @@ The group command requires a stop on red CI. Craig approved the separate fix bra
 push/access expectations, full local/PR/main gates and exact production proof. Verification
 allowance roughly 45–60 minutes plus repair. The repair plan is recorded before code on fix/movie-night-seeding-race. Diagnostic
 handoff is committed locally only, not pushed as another deployment/CI attempt.
-Full evidence: `docs/reviews/ab2-verification-2026-10-28.md`.
+The repair's clean ten-command gate passes (2,525 API/no skips,158 shared,732 web).
+Available full E2E has one unrelated Chromium shop-alert60s timeout; movie-night and AB1/AB2
+cases pass, Firefox53+existing skip and cron6 pass. An unchanged instrumented isolated
+shop case passes22.3s; full-sequence diagnosis remains pending, so no merge is authorised
+by those passing subsets. Full evidence: `docs/reviews/movie-night-seeding-race-2026-10-29.md`.
 
 Home's new owned-watch coverage preserves the whole diary and account isolation; old answers
 show Unavailable. Visible format bars and all existing charts/value caveats remain.
