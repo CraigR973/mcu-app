@@ -24,9 +24,9 @@ conversation still maps onto this file.*
   no fabricated production test film/push. Receipt remains unverified until observed.
   Sitting 3 authorised 29 Oct (#307): iPhone 16 Pro Max, iOS 27.0.1, installed app opens
   Archive and blurs its header; dark/Search-closed screenshot captured, same dark Safari
-  header sharp. Next: the separate AB4-1 diagnostic preview (temporary AB4 Test Home Screen
-  icon) compares Relative/Sticky/Fixed header positioning without altering the real app.
-  Actual layout cause/repair checkpoint remains open; installed version and remaining
+  header sharp. AB4-1 result: Relative/Sticky/Fixed all reported sharp; baseline did not
+  reproduce, no positioning repair justified. Next: confirm AB4 Test Home Screen status
+  and original MCU Home → swipe away → reopen destination. Cause/repair checkpoint open; installed version and remaining
   resume/theme/Search observations remain unverified. Keep the real installation in place.
   Report/link-refresh procedure: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
   Real-device app acceptance remains open; no desktop token/diagnostic check closes it.

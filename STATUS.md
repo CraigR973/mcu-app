@@ -2,12 +2,13 @@
 
 ## Now
 
-**29 Oct: Group AB sitting 3 (AB4), controlled phone diagnosis pending.**
+**29 Oct: Group AB sitting 3 (AB4), diagnostic baseline did not reproduce.**
 Craig confirms iPhone 16 Pro Max, Home Screen app, iOS 27.0.1, no re-add since launch
 change, Archive on reopening, dark theme and blur always visible. His dark/Search-closed
 screenshot shows softened app title/icon/upper avatar; the same dark Archive in Safari
 is sharp. The installation/mode-specific difference is established. An iOS overlay and
-relative-header edge classification are supported leads, not yet a controlled layout cause.
+relative-header edge classification remain unestablished leads; the simplified baseline
+did not reproduce the blur.
 Installed app version and remaining resume/light/Search observations remain open.
 
 AB4-1 is a separate sample-only phone diagnostic: Relative/Sticky/Fixed modes at equal
@@ -15,7 +16,9 @@ header height, both themes, Search sheet, no MCU API/login/data/push. Static pre
 READY at https://mcu-cs0wuuuu4-craigr973s-projects.vercel.app; a 23-hour access link is in
 chat. Add only its temporary AB4 Test icon, leaving the real app installed. Desktop six-mode/
 theme geometry, Search and zero-JS-error checks pass; protected preview/manifest verified.
-None proves iPhone clarity. Await its actual phone result before proposing the app repair.
+Craig reports “sharp for all” three modes. The baseline did not reproduce; this supplies
+no evidence for a positioning repair or app acceptance. Test Home Screen status/theme were
+not separately captured; a real-app cause remains unestablished.
 
 Production API/web still serve `f341d1084cc75863c7c00d3830a93347fc265436`, with full
 readiness; its main CI 40891874070 passed all seven jobs. Project configuration/protection
@@ -29,11 +32,11 @@ AB4 stays open. AB3 real-phone receipt, speech/live-assistant and AA10b/AA10c ch
 
 ## Next
 
-Owner opens AB4-1 in Safari, adds AB4 Test to Home Screen, then compares Relative → Sticky
-→ Fixed in the test icon (dark, then light if practical). Same-process positioning changes
-separate layout from colour, bundle or reinstall changes. If the baseline does not reproduce
-or every mode blurs, continue diagnosis. Show established cause and proposed app repair
-before changing launch/navigation/iOS chrome. No product repair is proposed yet.
+Confirm whether AB4 Test showed Home Screen: yes. In the original app, tap Home, swipe
+it away, then reopen its icon and report Home/Archive. These non-destructive checks control
+test mode and the page left before reopening. Keep the installed version and remaining
+resume/theme/Search criteria open. No product repair is proposed; the all-sharp simplified
+experiment must not justify a positioning change. Establish cause before the repair review.
 Launch re-add remains separate, after protecting unsynced local changes and explaining
 login/push consequences. Keep normal resume/deep links intact; device before/after in both
 themes/Search states remains mandatory. Do not promote AB4-1, start sitting 4 or AA10c.
@@ -431,6 +434,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — AB4-1 owner result: “sharp for all”:** Relative, Sticky and Fixed all reported sharp; the diagnostic baseline did not reproduce MCU blur, so it does not justify a positioning repair. Asked for its Home Screen status-panel value and original MCU Home → swipe away → reopen destination. Actual test mode/theme, installed bundle and cause remain unverified; no app repair, new deployment or acceptance claim. Sitting 4/AA10c excluded.
 
 - **29 Oct — AB4 iOS/Safari comparison and controlled diagnostic:** Craig confirms iOS 27.0.1 and sharp dark header in Safari versus blurred installed app. WebKit source excludes relative bars from fixed/sticky edge classification; exact phone mechanism still needs a controlled comparison. Built sample-only AB4-1 with three equal-height header modes, both themes/Search; six desktop geometry combinations and protected preview/manifest checks pass, no phone clarity claim. Preview dpl_9nYYXk3kta54rvg2CH6Vs3bmeHSQ READY; temporary share link in chat. One CLI --skip-domain rejection corrected while retaining preview target; original failure retained. API/web f341d10/full readiness and project configuration unchanged. Await phone result, then cause/repair checkpoint; no production repair, sitting 4 or AA10c.
 

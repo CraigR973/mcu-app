@@ -74,7 +74,7 @@ installed stale bundle or establish which layout change will remove the effect.
 Keep the original installation in place. Light theme, Search-open and separate app-switch
 resume observations remain open.
 
-## Controlled phone experiment AB4-1 — ready, result pending
+## Controlled phone experiment AB4-1 — all modes reported sharp; baseline not reproduced
 
 The next step establishes the layout mechanism before proposing a product repair.
 A separate static diagnostic page reconstructs the relevant shell: 100dvh flex column,
@@ -137,11 +137,36 @@ Original deployment failure: CLI rejected --skip-domain because it is only valid
 production. No deployment was created by that attempt. Retrying without that flag while
 retaining --target preview succeeded. No production flag, protection change or gate weakening.
 
+## AB4-1 owner result and its limit
+
+Craig replied **“sharp for all”** to the Relative → Sticky → Fixed comparison.
+The requested test was in the temporary Home Screen app, dark theme first; no separate
+status-panel reading, screenshot or theme confirmation accompanied the reply. Record the
+result as reported, without inventing those missing observations.
+
+The relative baseline did not reproduce the affected MCU header's blur. Consequently,
+this experiment supplies no evidence that changing MCU's header positioning would repair
+it. It does not prove positioning is irrelevant to the full app; the simplified page and
+new installation differ from the affected full app and its retained installation state.
+The iOS-overlay/edge-classification lead remains unestablished. No production repair is
+proposed and no app code is changed. Do not turn three sharp modes into AB4 acceptance.
+
+Two non-destructive observations were requested next:
+
+1. Does AB4 Test's status panel show **Home Screen: yes**? If no, the result is a Safari
+   comparison, not a standalone reproduction; use the actual test icon before interpreting it.
+2. In the original MCU app, tap Home, swipe the app away, then reopen its icon: Home or
+   Archive? This controls the page left before closing without deleting local state.
+
+Keep both observations separate from the still-unverified installed bundle version.
+No new diagnostic deployment, app repair or re-add of the real app was performed. Re-add remains conditional on local-state/login/push safeguards and owner review.
+
 ## Next owner observation
 
 Dark/Search-closed before image, same-phone sharp Safari header and exact iOS 27.0.1 are
-captured. Run AB4-1 before deciding the repair. Capture the original app Search-open and
-light-theme states when the diagnostic result calls for them.
+captured. AB4-1 reports all modes sharp and has not reproduced the baseline. Confirm its
+Home Screen status and the original app Home → close → reopen destination before deciding
+the next comparison. Capture Search-open/light-theme states when the diagnosis calls for them.
 
 Craig reports Archive in response to the swipe-away/reopen question. The separate
 brief-app-switch comparison remains outstanding: record its destination and the page
@@ -197,5 +222,6 @@ AB4 is yellow; the ledger setting is Opus 5 high / GPT-5.6 Sol High. No delegati
 Branch: `fix/ab4-iphone-diagnosis`, checkpoint documents and isolated diagnostic sources.
 No product repair, PR, push or production deployment; only the static AB4-1 preview above.
 The batch row stays open. No architecture change or new product decision was made.
-Resume with the AB4-1 phone result, establish the layout cause, then present the repair
-checkpoint; launch remains a separate re-add comparison after local-state safeguards. Device before/after remains open even if later source tests pass.
+Resume with AB4 Test standalone confirmation and the original app Home → close → reopen
+result; the reported all-sharp experiment did not establish a layout cause. Establish
+cause before presenting the repair checkpoint; launch remains a separate re-add comparison after local-state safeguards. Device before/after remains open even if later source tests pass.
