@@ -76,6 +76,16 @@ credentials. These are baseline facts, not AB3 shipment proof.
   aware-UTC models. It now checks the exact serialized API payload, which is the approved
   replay contract; no timestamp or response-field assertion is relaxed.
 
+- First clean-tree full gate (9811f3b): API lint/format/typecheck passed; pytest stopped
+  with 2 failed, 2,522 passed and 25 skipped. The committed OpenAPI snapshot had not yet
+  been regenerated for the owner-approved fields/category. The scratch roles were created
+  after the original test database migrated, leaving earlier photo grants absent. The
+  synchronous trigger tests could not use the async-driver URL and skipped. Regenerated
+  only the approved schema delta, created a fresh database with roles present before
+  migration, and switched the test URL to plain postgresql so both drivers can connect.
+  The first export command omitted PROCESS_ROLE=web and its process-role guard refused;
+  reran the documented web-role export. No snapshot test, grant assertion or skip rule changed.
+
 ## Clean-tree full gate and shipment
 
 Pending. Record the exact tested tree, all local commands, CI heads/results, review,
