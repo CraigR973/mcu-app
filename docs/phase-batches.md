@@ -4746,8 +4746,9 @@ Evidence: `docs/reviews/ab3-verification-2026-10-29.md`.
 **Sitting 3 authorised 29 Oct (#307); AB4 stopped at affected-device evidence.**
 Craig reports Home Screen app/iPhone 16 Pro Max, not re-added since launch change, affected
 region just below clock/battery; reopening reaches Archive, dark theme, blur always visible.
-Installed version, exact iOS, separate resume/Search comparisons and image remain
-unconfirmed; cause not established,
+Dark/Search-closed screenshot received and inspected: app header affected. Exact iOS,
+installed version, Safari comparison and remaining resume/theme/Search observations stay
+open; an iOS overlay is a hypothesis, cause not established,
 no repair proposed. Evidence: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
 Sittings 4–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live

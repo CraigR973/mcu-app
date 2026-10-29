@@ -15,13 +15,12 @@ No repair is proposed. Sitting 4 and AA10c are excluded.
 | Theme and Search state | Dark theme; blur “always visible”; individual Search states not separately described |
 | Cold-launch versus resume destination | Owner answers reopen question: “it opens archive”; separate brief-app-switch result not supplied |
 | Installed app served version | Unconfirmed |
-| Screenshot/recording of affected surface | Not yet supplied |
+| Screenshot/recording of affected surface | Received and inspected: Photo 1.jpg, dark Archive, Search closed |
 
 The region description narrows where to inspect; it does not prove which rendered
 layer is affected or why. No re-add since the launch change makes a retained installation
-a diagnostic lead, not an established cause. No affected-iPhone session has been operated
-or visually inspected by the agent. Craig has confirmed the reported symptoms on the affected device; the agent has not
-visually inspected or independently reproduced them. Neither cause is established.
+a diagnostic lead, not an established cause. The screenshot now supplies visual evidence of the affected app header. The agent has
+not operated the iPhone or independently reproduced the symptoms. Neither cause is established.
 
 ## Source comparison after the latest owner observation
 
@@ -30,15 +29,54 @@ manifest start_url from `/movies` to `/` on 23 Oct. The current root route sends
 authenticated person to `/dashboard`; `/movies` is the collection route. These facts
 make a retained installation launch target consistent with Craig's Archive report,
 but they do not prove what this installation has retained. No code repair follows yet.
-The screenshot remains necessary to identify the blurred layer and guide diagnosis.
+The screenshot identifies the app header as affected; layer attribution still requires a
+controlled comparison.
 A source lookup initially used components/layout rather than components/layouts;
 the path was corrected through rg --files. No product file changed.
 
+## Screenshot inspection and diagnostic status
+
+Craig supplied Photo 1.jpg on 29 Oct. The image shows dark theme, Archive selected,
+Search closed and no visible modal. The app title/assistant icon and upper part of the
+profile photo appear softened; the clock/battery and collection list appear sharper.
+This places the reported effect on visible app-header content, below the system icons.
+It is a still image, not evidence about scrolling, a Safari tab, a light theme or Search open.
+
+An unmodified local copy is retained under gitignored
+`scratchpad/ab4/affected-header-before.jpg`; the original remains the conversation
+attachment. SHA-256: `e9ed586032be86ffc1a99710b21a78f313492f1fad02e4e7d90ae6c0ecd59ab1`. The personal image is not committed.
+
+Current source inspection at the recorded baseline finds:
+
+- The header is relative, outside the scrolling main area, with an opaque background,
+  border and safe-area padding. It has no declared filter or backdrop-filter.
+- Search's blur overlay is conditional on Search being open; this screenshot shows it closed.
+- The bottom bar has its own intentional backdrop blur; it is a separate rendered surface.
+- The document requests black-translucent iOS status-bar treatment and viewport-fit=cover.
+- Existing header tests assert class tokens; they do not inspect iOS compositor output.
+
+The leading hypothesis is an iOS status-bar/scroll-edge overlay extending into the header.
+This is an inference from the image and source, not an established MCU-device cause.
+First-hand reports in [Actual issue 8899](https://github.com/actualbudget/actual/issues/8899)
+and [MeshMonitor issue 5286](https://github.com/Yeraze/meshmonitor/issues/5286) describe
+similar iOS 27 PWA symptoms. MeshMonitor's
+[initial investigation](https://github.com/Yeraze/meshmonitor/pull/5309) reports on-device
+comparisons, but that project later revised its approach. Neither report proves this
+phone's OS, installed bundle or appropriate repair. No workaround is proposed for MCU.
+Apple's [scroll-view guidance](https://developer.apple.com/design/human-interface-guidelines/scroll-views)
+explains native scroll-edge effects; native controls are not a web-app opt-out contract.
+
+Next comparison requested from Craig: open the same `/movies` screen in Safari on the
+same phone in dark theme and report sharp/blurred, and supply the exact iOS version from
+Settings → General → About. A difference narrows the fault to installation/mode-specific
+behaviour; it does not by itself exclude an installed stale bundle. Keep the installation
+in place. Light theme, Search-open and separate app-switch resume observations remain open.
+
 ## Next owner observation
 
-Preserve the affected installation first. Capture the blurred region with Search closed
-and open, identifying the active theme. Include the clock/battery area and app header in
-the image so those layers can be distinguished. Establish the exact iOS version.
+The dark/Search-closed before image is captured. Preserve the affected installation while
+comparing the same screen in Safari and establishing the exact iOS version. Capture the
+Search-open and light-theme states when the diagnostic comparison calls for them.
 
 Craig reports Archive in response to the swipe-away/reopen question. The separate
 brief-app-switch comparison remains outstanding: record its destination and the page

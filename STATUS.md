@@ -6,9 +6,11 @@
 Craig reports the Home Screen app on an iPhone 16 Pro Max, “latest ios” (exact version
 unconfirmed), not removed/re-added since the launch change. The affected region is
 “just below the clock and batter area”. Craig subsequently reports Archive on reopening,
-dark theme and blur “always visible”. Separate brief-switch resume, individual Search
-states, installed served version and an image remain unconfirmed.
-These observations narrow the context; they do not establish either cause.
+dark theme and blur “always visible”. His screenshot now confirms the affected app header
+on dark Archive with Search closed; title/icon and upper avatar are softened. The leading
+hypothesis is an iOS overlay extending below the clock area, not an established cause.
+Exact iOS/installed version, same-phone Safari comparison, separate brief-switch resume,
+light theme and Search-open observations remain unconfirmed.
 
 Fetched clean main/origin `f341d1084cc75863c7c00d3830a93347fc265436`; main CI
 40891874070 passed all seven jobs, including E2E. Fresh public API health/web version
@@ -25,9 +27,9 @@ Existing speech, live-assistant and AA10b/AA10c owner checks remain open.
 
 ## Next
 
-Resume AB4 at the device-evidence checkpoint: capture the affected header before changing
-the installation; identify the affected layer/Search states and the separate brief-switch resume destination,
-then correlate installed version and establish the cause. Show the evidenced cause and
+Resume AB4 at the device-evidence checkpoint: the dark/Search-closed screenshot is captured.
+Obtain exact iOS and same-phone dark Safari /movies comparison, then correlate installed
+version and establish the cause; retain the separate resume/theme/Search observations. Show the evidenced cause and
 proposed repair to Craig before changing launch/navigation/iOS chrome. Re-add is a diagnostic
 option only after the original observations are retained; if it resolves launch, record
 that without inventing a code repair. Real-device before/after remains mandatory in both
@@ -426,6 +428,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — AB4 screenshot received and inspected:** dark Archive, Search closed, title/icon and upper avatar softened while system icons/list are sharper. Unmodified personal image retained in gitignored scratchpad; fingerprint and source research recorded in the checkpoint report. Current source declares no header blur, but that and peer iOS 27 reports do not prove this installed device’s cause. Asked for exact iOS and same-phone dark Safari comparison before any repair. No product change, gate, push or deployment; sitting 4/AA10c excluded.
 
 - **29 Oct — AB4 owner evidence extended:** Craig reports reopening reaches Archive, dark theme, blur always visible. Source history confirms AA1 changed manifest /movies → / on 23 Oct, consistent with an old installation target but not proof of this device’s retained state. Screenshot, exact installed/iOS versions and separate resume/Search comparisons remain open; no cause or repair established. Documents only; sitting 4/AA10c excluded.
 
