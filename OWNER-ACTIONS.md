@@ -16,10 +16,12 @@ conversation still maps onto this file.*
   seeding race was stopped and repaired separately with Craig's approval (#304): PR #120
   (`bf0eb36`), full local/PR/merge gates and production proof. The preserved report records
   one unrelated local shop-alert timeout and unchanged passing timed diagnostics; no test
-  weakening or claimed repair of that delay. **Sitting 2 authorised 29 Oct; stopped before
-  implementation for four picks:** exact new-title/reacquisition/series trigger, verified
-  Mark UUID binding, preference/additive migration and retry contract, and wording. Review
-  `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`; these remain recommendations, not approvals.
+  weakening or claimed repair of that delay. **Sitting 2 authorised 29 Oct; all four pre-build
+  picks approved before implementation (#306).** Exact trigger/reacquisition/series scope,
+  verified Mark UUID, additive preference/migration/retry contract and wording follow
+  `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`. Agent verification/shipment is in progress.
+  After shipment, yours: a genuine qualifying add by Mark and Craig's real-phone receipt;
+  no fabricated production test film/push. Receipt remains unverified until observed.
   Sittings 3–5 remain unauthorised. Sitting 3: affected installed-iPhone evidence before
   diagnosis/repair, then real-device verification. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:

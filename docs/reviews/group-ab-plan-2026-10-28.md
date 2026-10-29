@@ -4,7 +4,7 @@
 shipped after their owner checkpoints. Final CI's real movie-night race was stopped, then
 repaired with Craig's separate approval in PR #120 (`bf0eb36`), all full gates and exact
 production proof. Sitting 2 was authorised on 29 Oct and is at its pre-build owner checkpoint;
-the four pending picks are in `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`.
+all four pre-build picks were approved before implementation (#306), as recorded in `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`.
 Sittings 3–5 and AA10c remain excluded. The verification reports retain
 the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
@@ -75,8 +75,8 @@ starting. No agent delegation is part of this proposal.
 
 Craig approved the grouping and then separately authorised sitting 1 on 28 Oct. AB1 shipped;
 AB2 shipped `c187ed7` after both owner picks. Sitting 1 completed after the approved race
-repair PR #120 (`bf0eb36`). Sitting 2 is authorised on 29 Oct, but its four pre-build owner
-picks are unanswered; no AB3 implementation has begun. Sittings 3–5 remain unauthorised. Start only a
+repair PR #120 (`bf0eb36`). Sitting 2 is authorised on 29 Oct; all four pre-build owner
+picks are approved (#306), and AB3 implementation is under verification. Sittings 3–5 remain unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance
 checks, under this repo's procedure. Hosting, credentials, destructive data writes and

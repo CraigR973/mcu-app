@@ -121,6 +121,7 @@ class CollectionItemCreateRequest(CollectionItemFieldsMixin):
     cases do genuinely different work and a caller always knows which it has.
     """
 
+    clientRequestId: uuid.UUID | None = None
     movieId: uuid.UUID | None = None
     tmdbId: int | None = Field(default=None, gt=0)
     #: Batch Y5 (#277): a TMDB **series**, by its own id, which is never a film's.

@@ -38,10 +38,16 @@ const CATEGORIES: Array<{
     | 'releasesEnabled'
     | 'loansEnabled'
     | 'movieNightEnabled'
+    | 'collectionAdditionsEnabled'
   >
   label: string
   description: string
 }> = [
+  {
+    key: 'collectionAdditionsEnabled',
+    label: "Mark's additions",
+    description: 'When Mark adds the first owned copy of a film or series. Extra copies and editions stay quiet.',
+  },
   {
     key: 'dealsEnabled',
     label: 'Deals',
@@ -316,7 +322,7 @@ export function DeviceSection() {
   )
 }
 
-function PreferencesSection() {
+export function PreferencesSection() {
   const queryClient = useQueryClient()
   const preferences = useQuery({
     queryKey: ['notification-preferences'],
@@ -356,12 +362,16 @@ function PreferencesSection() {
                 {category.description}
               </p>
             </div>
-            <Toggle
-              label={category.label}
-              checked={current[category.key]}
-              disabled={save.isPending}
-              onChange={(next) => save.mutate({ [category.key]: next })}
-            />
+            {current[category.key] === undefined ? (
+              <span className="text-sm text-muted-foreground" role="status">Unavailable — refresh settings</span>
+            ) : (
+              <Toggle
+                label={category.label}
+                checked={current[category.key] === true}
+                disabled={save.isPending}
+                onChange={(next) => save.mutate({ [category.key]: next })}
+              />
+            )}
           </li>
         ))}
       </ul>

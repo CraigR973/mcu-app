@@ -1,6 +1,7 @@
 # AB3 — Mark's addition notifications: owner checkpoint
 
-29 Oct. **Proposal only; implementation is blocked on the four picks below.**
+29 Oct. **All four picks approved by Craig before implementation (#306).**
+The text below preserves the exact proposal he approved; subsequent verification is separate.
 Craig authorised Group AB sitting 2 using `group-start.md`, with its pre-build stops intact.
 Sitting 3, AA10c, hosting/credentials and live test additions/pushes remain excluded.
 
@@ -189,7 +190,7 @@ roll back the whole transaction. No transport call occurs inside that transactio
 - Owner only after shipment: a genuine later qualifying addition by Mark and a push received
   on Craig's real phone. This remains open until observed; no synthetic production event.
 
-## Preflight evidence and handoff
+## Original preflight evidence and handoff (before approval)
 
 Clean local main and origin/main were `588e552b2a93f140fc603bf51ae80c348cc0f835` after fetch.
 Latest main CI **40858327603** succeeded; API health and web version both served that exact
@@ -204,3 +205,9 @@ is `feat/ab3-mark-additions`, with checkpoint/handoff documents only. No PR/depl
 AB3 full gate has run. Resume only after Craig explicitly resolves decisions 1–4; record
 his choices and revise this proposal before implementation. Stop again if that review
 changes the approved schema/API scope. Sitting 3 and AA10c must not start.
+
+## Approval resolved
+
+Craig approved all four presented cards on 29 Oct (#306). The preflight-only handoff
+above is historical; implementation may now proceed within this approved contract.
+Verification and shipment are recorded separately in `ab3-verification-2026-10-29.md`.

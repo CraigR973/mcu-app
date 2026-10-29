@@ -20,6 +20,7 @@ from src.models.base import (
     UUIDPrimaryKeyMixin,
 )
 from src.models.box_set import BOX_SETS_TABLE, BoxSet, BoxSetItem
+from src.models.collection_add_request import CollectionAddRequest
 from src.models.collection_item import (
     CONDITIONS,
     FORMAT_RANK,
@@ -169,6 +170,7 @@ __all__ = [
     "COLLECTION_ITEMS_TABLE",
     "CONDITIONS",
     "CollectionItem",
+    "CollectionAddRequest",
     "CompletionSet",
     "MIN_OWNED_FOR_SET",
     "SET_TYPES",

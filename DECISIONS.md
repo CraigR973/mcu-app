@@ -6529,3 +6529,15 @@ contemporaneous.
      ID/receipt contract are recommendations awaiting Craig, not approved decisions.
      No code/schema/API implementation, live test addition/push, hosting or credential
      change is authorised by this checkpoint record. Sitting 3 and AA10c remain excluded.
+
+306. **AB3's four owner picks are approved before implementation (29 Oct).**
+     Craig approved all four cards: first currently owned film/series title (manual and
+     downloads included; a new add after zero owned copies notifies again), Mark bound to
+     verified UUID d900b8bc-a46c-4691-9c16-cde3b4d72cd5, default-on collection_additions
+     preference with additive migration 070 and optional clientRequestId/durable receipt
+     contract, and the exact wording in docs/reviews/ab3-owner-checkpoint-2026-10-29.md.
+     This resolves #305's four unanswered picks. Only Mark's authenticated Add generates
+     an event for each other active/non-deleted profile; extra editions and non-add changes
+     stay quiet. Atomic queueing, serialised adds, replay receipts and existing delivery
+     rules are required. No fabricated live addition/push, hosting/credential change,
+     sitting 3 or AA10c is included. Real-phone receipt remains owner acceptance.
