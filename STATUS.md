@@ -2,37 +2,35 @@
 
 ## Now
 
-**29 Oct: Group AB sitting 2 is complete; AB3 is live in PR #121 (`5cfa467`).**
-Craig approved all four pre-build picks (#306): first currently owned film/series/manual title,
-reacquisition through a new Add, verified Mark UUID, default-on preference and durable retry
-contract/migration, and exact wording. Extra editions, restores, imports and corrections stay quiet.
+**29 Oct: Group AB sitting 3 (AB4) authorised; stopped at affected-device evidence.**
+Craig reports the Home Screen app on an iPhone 16 Pro Max, “latest ios” (exact version
+unconfirmed), not removed/re-added since the launch change. The affected region is
+“just below the clock and batter area”. Theme, Search state, installed served version,
+cold-launch/resume destinations and an image of the affected surface remain unconfirmed.
+These observations narrow the context; they do not establish either cause.
 
-The copy, audit, successful request receipt and each other active profile's event commit
-atomically. Stable request IDs survive offline queueing/retry; existing lost-response readback
-stays intact. Request/reference/title locks and delivery row claims prevent concurrent duplicate
-adds/events/sends. Push transport cannot roll back an already committed addition.
+Fetched clean main/origin `f341d1084cc75863c7c00d3830a93347fc265436`; main CI
+40891874070 passed all seven jobs, including E2E. Fresh public API health/web version
+serve that exact SHA; readiness is db ok with every reported integration configured;
+manifest start_url remains /. Server observations do not prove the installed phone's
+version, launch destination or appearance. No desktop token tests were used as acceptance.
 
-Clean local source 8fee563: all ten checks; 2,549 API/zero skips, 159 shared, 736 web.
-Chromium 58, Firefox 57 + its existing dictation skip, jobs six passed locally. Exact-head
-PR CI 40887477795 and merge CI 40889823113 passed all seven jobs, including WebKit 56 + its
-two documented skips. API/web served exact implementation merge 5cfa467 with full readiness;
-unauthenticated preferences returned 401. Live readback proves new grants and category,
-with PIN/refresh credentials withheld; both new preferences on, digest off, no quiet hours.
-Zero receipts/events at that readback; no fabricated production add or push.
-
-Real-phone receipt on a genuine later qualifying Mark addition remains owner acceptance.
-All original failures/corrections and the live evidence are in
-`docs/reviews/ab3-verification-2026-10-29.md`; the current flow is in `docs/architecture-map.md`.
-No collection/history rewrite, hosting/credential change, sitting 3 or AA10c. Existing phone,
-speech, live-assistant and AA10b/AA10c owner checks remain open. Final documentation CI and
-served-SHA/readiness are checked before reporting the session complete.
+Checkpoint report: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
+Only handoff/checkpoint documents changed on `fix/ab4-iphone-diagnosis`.
+No product repair proposed or implemented, full AB4 gate, PR, push, deployment, data write,
+hosting/credential change, sitting 4 or AA10c. AB4 remains incomplete. AB3 is live in
+PR #121 (`5cfa467`); genuine later Mark-add/Craig-phone receipt remains owner acceptance.
+Existing speech, live-assistant and AA10b/AA10c owner checks remain open.
 
 ## Next
 
-Stop after Group AB sitting 2. Sitting 3/AB4 needs its own named go and affected-device
-observations before diagnosis/repair; do not start it automatically. AB3's owner observation
-is a genuine later qualifying Mark addition and receipt on Craig's real phone. No synthetic
-production test. AA10c remains excluded; preserve all existing device/value checkpoints.
+Resume AB4 at the device-evidence checkpoint: capture the affected header before changing
+the installation; identify theme/Search state and cold-launch versus resume destinations,
+then correlate installed version and establish the cause. Show the evidenced cause and
+proposed repair to Craig before changing launch/navigation/iOS chrome. Re-add is a diagnostic
+option only after the original observations are retained; if it resolves launch, record
+that without inventing a code repair. Real-device before/after remains mandatory in both
+themes/Search states. Do not start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -427,6 +425,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — Group AB sitting 3 authorised; AB4 device checkpoint open:** clean fetched main `f341d10`, all seven main CI jobs (40891874070) and exact public API/web SHA/full readiness verified; manifest starts at /. Craig reports Home Screen app, iPhone 16 Pro Max, “latest ios” without exact version, not re-added since launch change, blur just below clock/battery area. Installed version, theme/Search state, cold-launch/resume comparison and image remain missing; cause unestablished, no repair proposed. Documents only on `fix/ab4-iphone-diagnosis`; no AB4 full gate, push, PR or deployment. Resume at affected-device evidence, not sitting 4 or AA10c.
 
 - **29 Oct — Group AB sitting 2 complete, AB3 live:** four pre-build picks approved (#306); PR #121 (`5cfa467`), clean full local gate (2,549 API/no skips, 159 shared, 736 web), Chromium 58/Firefox 57+existing skip/jobs six, exact-head seven-job PR and merge CI including WebKit 56+two existing skips. Production API/web exact merge/full readiness/401 and credential-safe live grant/preference/category readback passed. Zero initial receipts/events; no production test addition/push. Genuine Mark-add/Craig-phone receipt remains owner acceptance. Every failure retained in the verification report. Stop before sitting 3 and AA10c.
 

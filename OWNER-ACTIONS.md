@@ -22,8 +22,13 @@ conversation still maps onto this file.*
   `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`. AB3 shipped PR #121 (`5cfa467`), full
   local/PR/main gates and exact production proof. Yours on the next real addition: a genuine qualifying add by Mark and Craig's real-phone receipt;
   no fabricated production test film/push. Receipt remains unverified until observed.
-  Sittings 3–5 remain unauthorised. Sitting 3: affected installed-iPhone evidence before
-  diagnosis/repair, then real-device verification. Sitting 4: cinema source, coverage,
+  Sitting 3 authorised 29 Oct (#307), stopped at affected-device evidence: Home Screen
+  app on iPhone 16 Pro Max, not re-added since launch change; affected region just below
+  clock/battery. Exact iOS/installed version, theme/Search state, cold-launch/resume
+  comparison and image remain unconfirmed; neither cause is established and no repair
+  is proposed. Preserve the original observations before any re-add. See
+  `docs/reviews/ab4-device-checkpoint-2026-10-29.md`; real-device acceptance remains open.
+  Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
   conditional schema/API/job/refresh/retention build contract before implementation.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

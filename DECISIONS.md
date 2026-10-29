@@ -6541,3 +6541,14 @@ contemporaneous.
      stay quiet. Atomic queueing, serialised adds, replay receipts and existing delivery
      rules are required. No fabricated live addition/push, hosting/credential change,
      sitting 3 or AA10c is included. Real-phone receipt remains owner acceptance.
+
+
+307. **Group AB sitting 3 is authorised; AB4's evidence gate remains open (29 Oct).**
+     Craig requested AB4 using `group-start.md`, requiring affected-iPhone evidence and an
+     established cause before any repair proposal, with sitting 4 and AA10c excluded.
+     Home Screen app/iPhone 16 Pro Max, no re-add since launch change and a region just
+     below clock/battery are owner observations; “latest ios” is not an exact OS version.
+     No cause or repair follows from that alone. Preserve the original installation's
+     evidence before a re-add comparison, and retain real-device acceptance separately
+     from server version, manifest, CSS, desktop tests and CI. Checkpoint evidence and
+     outstanding observations: docs/reviews/ab4-device-checkpoint-2026-10-29.md.
