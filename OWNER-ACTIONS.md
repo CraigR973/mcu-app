@@ -22,14 +22,14 @@ conversation still maps onto this file.*
   `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`. AB3 shipped PR #121 (`5cfa467`), full
   local/PR/main gates and exact production proof. Yours on the next real addition: a genuine qualifying add by Mark and Craig's real-phone receipt;
   no fabricated production test film/push. Receipt remains unverified until observed.
-  Sitting 3 authorised 29 Oct (#307), stopped at affected-device evidence: Home Screen
-  app on iPhone 16 Pro Max, not re-added since launch change; affected region just below
-  clock/battery. Reopening reaches Archive; dark theme, blur always visible. Exact
-  iOS/installed version and separate resume/theme/Search comparisons remain unconfirmed.
-  Dark/Search-closed screenshot received: app header visibly softened. Next: same-phone
-  dark Safari comparison and exact iOS; an iOS overlay is a hypothesis only; neither cause is established and no repair
-  is proposed. Preserve the original observations before any re-add. See
-  `docs/reviews/ab4-device-checkpoint-2026-10-29.md`; real-device acceptance remains open.
+  Sitting 3 authorised 29 Oct (#307): iPhone 16 Pro Max, iOS 27.0.1, installed app opens
+  Archive and blurs its header; dark/Search-closed screenshot captured, same dark Safari
+  header sharp. Next: the separate AB4-1 diagnostic preview (temporary AB4 Test Home Screen
+  icon) compares Relative/Sticky/Fixed header positioning without altering the real app.
+  Actual layout cause/repair checkpoint remains open; installed version and remaining
+  resume/theme/Search observations remain unverified. Keep the real installation in place.
+  Report/link-refresh procedure: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
+  Real-device app acceptance remains open; no desktop token/diagnostic check closes it.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
   conditional schema/API/job/refresh/retention build contract before implementation.

@@ -9,12 +9,13 @@ No repair is proposed. Sitting 4 and AA10c are excluded.
 |---|---|
 | Launch mode | Home Screen app |
 | Device | iPhone 16 Pro Max |
-| iOS | Owner says “latest ios”; exact version unconfirmed |
+| iOS | 27.0.1, supplied by Craig |
 | Remove/re-add since launch change | No |
 | Affected region | Owner says “just below the clock and batter area” |
 | Theme and Search state | Dark theme; blur “always visible”; individual Search states not separately described |
 | Cold-launch versus resume destination | Owner answers reopen question: “it opens archive”; separate brief-app-switch result not supplied |
 | Installed app served version | Unconfirmed |
+| Same-phone Safari comparison | Craig confirms dark Archive header is not blurred |
 | Screenshot/recording of affected surface | Received and inspected: Photo 1.jpg, dark Archive, Search closed |
 
 The region description narrows where to inspect; it does not prove which rendered
@@ -62,21 +63,85 @@ and [MeshMonitor issue 5286](https://github.com/Yeraze/meshmonitor/issues/5286) 
 similar iOS 27 PWA symptoms. MeshMonitor's
 [initial investigation](https://github.com/Yeraze/meshmonitor/pull/5309) reports on-device
 comparisons, but that project later revised its approach. Neither report proves this
-phone's OS, installed bundle or appropriate repair. No workaround is proposed for MCU.
+phone's OS, installed bundle or appropriate repair. No product repair is proposed for MCU before the controlled test below.
 Apple's [scroll-view guidance](https://developer.apple.com/design/human-interface-guidelines/scroll-views)
 explains native scroll-edge effects; native controls are not a web-app opt-out contract.
 
-Next comparison requested from Craig: open the same `/movies` screen in Safari on the
-same phone in dark theme and report sharp/blurred, and supply the exact iOS version from
-Settings → General → About. A difference narrows the fault to installation/mode-specific
-behaviour; it does not by itself exclude an installed stale bundle. Keep the installation
-in place. Light theme, Search-open and separate app-switch resume observations remain open.
+Craig has now supplied that comparison: the dark Archive header is not blurred in Safari,
+and iOS is 27.0.1. This establishes the installation/mode-specific difference on the affected
+phone. It strengthens the system-overlay diagnosis but does not by itself exclude an
+installed stale bundle or establish which layout change will remove the effect.
+Keep the original installation in place. Light theme, Search-open and separate app-switch
+resume observations remain open.
+
+## Controlled phone experiment AB4-1 — ready, result pending
+
+The next step establishes the layout mechanism before proposing a product repair.
+A separate static diagnostic page reconstructs the relevant shell: 100dvh flex column,
+non-scrolling header with safe-area padding, independently scrolling main area, opaque
+surface and the same black-translucent metadata. It contains sample text and a striped
+circle, not collection/profile data. It has no MCU login/API, push, analytics or service worker.
+It does not change the original app or its installation.
+
+On the same page/build, Relative, Sticky and Fixed controls change only header positioning.
+Fixed mode reserves the measured header height, so title height stays constant. Both
+colour themes and a separate Search sheet are available. The measurement panel reports
+Home Screen mode and geometry. The experiment is not a reconstruction of the full app or
+proof of its installed bundle version.
+
+Why test these modes: [WebKit's LocalFrameView.cpp](https://github.com/WebKit/WebKit/blob/main/Source/WebCore/page/LocalFrameView.cpp)
+`fixedContainerEdges` accepts fixed/sticky candidates and excludes relative positioning
+from its edge-container classification, then samples eligible background colours. The
+MCU header is relative. This is engine-source support for a mechanism, not proof that
+this current WebKit main revision is the exact implementation shipped in iOS 27.0.1.
+MeshMonitor's [later layout investigation](https://github.com/Yeraze/meshmonitor/pull/5328)
+revised its earlier blanket claim that fixed bars behave the same; do not copy its first
+padding workaround or treat another project's checks as MCU phone acceptance.
+
+**Owner test:** open the preview in Safari, Add to Home Screen as **AB4 Test** (Open as Web
+App enabled), then open the new test icon. Leave the real MCU installation in place.
+Compare Relative → Sticky → Fixed and report which are sharp/blurred, first in dark theme,
+then light if practical. This costs one temporary icon and three comparisons per theme;
+no original-app removal, account change or collection write. If protection prompts again
+inside the test icon, report that; do not disable project protection.
+
+If Relative reproduces blur and Sticky/Fixed clears it in the same installed test process,
+that supplies controlled layout evidence for the repair checkpoint. If Relative stays sharp
+or all modes blur, the mechanism is not established: retain the result and continue diagnosis.
+A working diagnostic mode still needs a concrete app repair review, full app gates and
+actual app before/after in both themes/Search states; this test cannot close AB4 acceptance.
+
+Preview: https://mcu-cs0wuuuu4-craigr973s-projects.vercel.app
+Deployment `dpl_9nYYXk3kta54rvg2CH6Vs3bmeHSQ`, READY, target preview (API target null),
+no aliases. A 23-hour share link was supplied in chat through Vercel's protected-preview
+access tool. Its access token is not stored in this repository; obtain another temporary
+link if it expires. The original production version/API health remain `f341d10`, with full
+readiness. Project build/root/output/install/framework/node/protection settings were compared
+before/after and are unchanged. No domains, environment variables or paid service changed.
+**Never promote this diagnostic deployment to production.**
+
+Reproducible static sources: `docs/reviews/ab4-diagnostic-2026-10-29/`.
+The index/manifest were copied unchanged into a separate local .vercel/output/static;
+output-config.json became .vercel/output/config.json. Existing project identity was linked
+locally; CLI --prebuilt --target preview published only those static outputs. The connector
+can create source deployments but does not expose the prebuilt option, so CLI was used.
+No application build, PR, branch push, production deployment or repair was made.
+
+Verification: six desktop geometry combinations (three modes × two themes), equal header
+position/height and no main overlap/horizontal overflow; Search focus/close and zero JS
+errors. The actual protected preview renders the expected page, all three controls switch,
+and its authenticated manifest read returns 200 with standalone mode/name AB4 Test.
+These checks validate the experiment controls, not iPhone rendering or installation.
+
+Original deployment failure: CLI rejected --skip-domain because it is only valid with
+production. No deployment was created by that attempt. Retrying without that flag while
+retaining --target preview succeeded. No production flag, protection change or gate weakening.
 
 ## Next owner observation
 
-The dark/Search-closed before image is captured. Preserve the affected installation while
-comparing the same screen in Safari and establishing the exact iOS version. Capture the
-Search-open and light-theme states when the diagnostic comparison calls for them.
+Dark/Search-closed before image, same-phone sharp Safari header and exact iOS 27.0.1 are
+captured. Run AB4-1 before deciding the repair. Capture the original app Search-open and
+light-theme states when the diagnostic result calls for them.
 
 Craig reports Archive in response to the swipe-away/reopen question. The separate
 brief-app-switch comparison remains outstanding: record its destination and the page
@@ -129,7 +194,8 @@ was corrected to the verified Git remote CraigR973/mcu-app and succeeded.
 ## Handoff
 
 AB4 is yellow; the ledger setting is Opus 5 high / GPT-5.6 Sol High. No delegation.
-Branch: `fix/ab4-iphone-diagnosis`, documents only. No PR, push or deployment.
+Branch: `fix/ab4-iphone-diagnosis`, checkpoint documents and isolated diagnostic sources.
+No product repair, PR, push or production deployment; only the static AB4-1 preview above.
 The batch row stays open. No architecture change or new product decision was made.
-Resume at the outstanding affected-device observations, establish cause, then present
-the repair checkpoint. Device before/after remains open even if later source tests pass.
+Resume with the AB4-1 phone result, establish the layout cause, then present the repair
+checkpoint; launch remains a separate re-add comparison after local-state safeguards. Device before/after remains open even if later source tests pass.

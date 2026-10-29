@@ -2,38 +2,41 @@
 
 ## Now
 
-**29 Oct: Group AB sitting 3 (AB4) authorised; stopped at affected-device evidence.**
-Craig reports the Home Screen app on an iPhone 16 Pro Max, “latest ios” (exact version
-unconfirmed), not removed/re-added since the launch change. The affected region is
-“just below the clock and batter area”. Craig subsequently reports Archive on reopening,
-dark theme and blur “always visible”. His screenshot now confirms the affected app header
-on dark Archive with Search closed; title/icon and upper avatar are softened. The leading
-hypothesis is an iOS overlay extending below the clock area, not an established cause.
-Exact iOS/installed version, same-phone Safari comparison, separate brief-switch resume,
-light theme and Search-open observations remain unconfirmed.
+**29 Oct: Group AB sitting 3 (AB4), controlled phone diagnosis pending.**
+Craig confirms iPhone 16 Pro Max, Home Screen app, iOS 27.0.1, no re-add since launch
+change, Archive on reopening, dark theme and blur always visible. His dark/Search-closed
+screenshot shows softened app title/icon/upper avatar; the same dark Archive in Safari
+is sharp. The installation/mode-specific difference is established. An iOS overlay and
+relative-header edge classification are supported leads, not yet a controlled layout cause.
+Installed app version and remaining resume/light/Search observations remain open.
 
-Fetched clean main/origin `f341d1084cc75863c7c00d3830a93347fc265436`; main CI
-40891874070 passed all seven jobs, including E2E. Fresh public API health/web version
-serve that exact SHA; readiness is db ok with every reported integration configured;
-manifest start_url remains /. Server observations do not prove the installed phone's
-version, launch destination or appearance. No desktop token tests were used as acceptance.
+AB4-1 is a separate sample-only phone diagnostic: Relative/Sticky/Fixed modes at equal
+header height, both themes, Search sheet, no MCU API/login/data/push. Static preview is
+READY at https://mcu-cs0wuuuu4-craigr973s-projects.vercel.app; a 23-hour access link is in
+chat. Add only its temporary AB4 Test icon, leaving the real app installed. Desktop six-mode/
+theme geometry, Search and zero-JS-error checks pass; protected preview/manifest verified.
+None proves iPhone clarity. Await its actual phone result before proposing the app repair.
 
-Checkpoint report: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
-Only handoff/checkpoint documents changed on `fix/ab4-iphone-diagnosis`.
-No product repair proposed or implemented, full AB4 gate, PR, push, deployment, data write,
-hosting/credential change, sitting 4 or AA10c. AB4 remains incomplete. AB3 is live in
-PR #121 (`5cfa467`); genuine later Mark-add/Craig-phone receipt remains owner acceptance.
-Existing speech, live-assistant and AA10b/AA10c owner checks remain open.
+Production API/web still serve `f341d1084cc75863c7c00d3830a93347fc265436`, with full
+readiness; its main CI 40891874070 passed all seven jobs. Project configuration/protection
+unchanged. No product code, app gate, PR, push, production deployment, data write,
+hosting/credential change, sitting 4 or AA10c. Diagnostic CLI's rejected --skip-domain
+attempt and corrected preview-only deployment are retained in the report.
+
+Evidence/handoff: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
+Sources: `docs/reviews/ab4-diagnostic-2026-10-29/`; branch `fix/ab4-iphone-diagnosis`.
+AB4 stays open. AB3 real-phone receipt, speech/live-assistant and AA10b/AA10c checks stay open.
 
 ## Next
 
-Resume AB4 at the device-evidence checkpoint: the dark/Search-closed screenshot is captured.
-Obtain exact iOS and same-phone dark Safari /movies comparison, then correlate installed
-version and establish the cause; retain the separate resume/theme/Search observations. Show the evidenced cause and
-proposed repair to Craig before changing launch/navigation/iOS chrome. Re-add is a diagnostic
-option only after the original observations are retained; if it resolves launch, record
-that without inventing a code repair. Real-device before/after remains mandatory in both
-themes/Search states. Do not start sitting 4 or AA10c.
+Owner opens AB4-1 in Safari, adds AB4 Test to Home Screen, then compares Relative → Sticky
+→ Fixed in the test icon (dark, then light if practical). Same-process positioning changes
+separate layout from colour, bundle or reinstall changes. If the baseline does not reproduce
+or every mode blurs, continue diagnosis. Show established cause and proposed app repair
+before changing launch/navigation/iOS chrome. No product repair is proposed yet.
+Launch re-add remains separate, after protecting unsynced local changes and explaining
+login/push consequences. Keep normal resume/deep links intact; device before/after in both
+themes/Search states remains mandatory. Do not promote AB4-1, start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -428,6 +431,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — AB4 iOS/Safari comparison and controlled diagnostic:** Craig confirms iOS 27.0.1 and sharp dark header in Safari versus blurred installed app. WebKit source excludes relative bars from fixed/sticky edge classification; exact phone mechanism still needs a controlled comparison. Built sample-only AB4-1 with three equal-height header modes, both themes/Search; six desktop geometry combinations and protected preview/manifest checks pass, no phone clarity claim. Preview dpl_9nYYXk3kta54rvg2CH6Vs3bmeHSQ READY; temporary share link in chat. One CLI --skip-domain rejection corrected while retaining preview target; original failure retained. API/web f341d10/full readiness and project configuration unchanged. Await phone result, then cause/repair checkpoint; no production repair, sitting 4 or AA10c.
 
 - **29 Oct — AB4 screenshot received and inspected:** dark Archive, Search closed, title/icon and upper avatar softened while system icons/list are sharper. Unmodified personal image retained in gitignored scratchpad; fingerprint and source research recorded in the checkpoint report. Current source declares no header blur, but that and peer iOS 27 reports do not prove this installed device’s cause. Asked for exact iOS and same-phone dark Safari comparison before any repair. No product change, gate, push or deployment; sitting 4/AA10c excluded.
 

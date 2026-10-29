@@ -4743,13 +4743,12 @@ Full local gate/E2E, seven-job exact-head PR/main CI and exact production API/we
 readiness passed. Live category/preference/grant readback preserves withheld credentials.
 Genuine later Mark addition and Craig's real-phone receipt remain owner acceptance.
 Evidence: `docs/reviews/ab3-verification-2026-10-29.md`.
-**Sitting 3 authorised 29 Oct (#307); AB4 stopped at affected-device evidence.**
-Craig reports Home Screen app/iPhone 16 Pro Max, not re-added since launch change, affected
-region just below clock/battery; reopening reaches Archive, dark theme, blur always visible.
-Dark/Search-closed screenshot received and inspected: app header affected. Exact iOS,
-installed version, Safari comparison and remaining resume/theme/Search observations stay
-open; an iOS overlay is a hypothesis, cause not established,
-no repair proposed. Evidence: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
+**Sitting 3 authorised 29 Oct (#307); AB4 controlled phone diagnosis pending.**
+Affected iPhone 16 Pro Max/iOS 27.0.1: installed app opens Archive, dark header always
+blurred; screenshot inspected, same dark Safari header sharp. Layout mechanism still
+unproven: sample-only AB4-1 preview compares Relative/Sticky/Fixed within one installation.
+Owner phone result precedes proposed product repair; no product code/production deployment.
+Evidence and exact remaining observations: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
 Sittings 4–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
@@ -4785,7 +4784,7 @@ Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
 | ~~AB1~~ | ~~Actionable attention and correct links (snag 5), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #118, merge `ad2c992`; current actionable identification, read-time reconciliation, precise destinations/guidance and mutation/replay refresh. Full local/PR/main gates and exact API/web SHA/readiness; live read-only queue/doubt comparison agrees at zero. |
 | ~~AB2~~ | ~~Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #119, merge `c187ed7`; approved Summary cards, exact owned-watch count, older-response Unavailable, profile cache isolation and mutation/replay refresh. Full local/PR/main gates and API/web exact SHA/readiness; live read-only comparison agrees for both people. |
 | ~~AB3~~ | ~~Mark's new-title notifications (snag 4), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #121, merge `5cfa467`; approved Mark-only first-owned-title trigger, default-on preference, atomic outbox/receipt and retry/concurrency safety. Full local/PR/main gates and exact API/web SHA/full readiness; live credential-safe grants/category/preferences verified. Genuine later add/real-phone receipt remains owner acceptance. |
-| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **device checkpoint open** | Sitting 3 authorised 29 Oct (#307); partial owner observations recorded, cause unestablished, no repair proposed/implemented; real-device acceptance open. |
+| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **device checkpoint open** | Sitting 3 authorised 29 Oct (#307); iOS 27.0.1 installed blur/Safari sharp confirmed; isolated AB4-1 phone comparison pending, cause/repair checkpoint and real-device app acceptance open. |
 | AB5 | Nine-cinema source feasibility (snag 8, report), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
 | AB6 | Cinema programme ingestion (conditional), 🔴 provisional | Opus 5 `xhigh` / GPT-5.6 Sol Extra High | planned | — |
 | AB7 | Local-cinema discovery screen (conditional), 🟡 provisional | Sonnet 5 `high` / GPT-5.6 Terra High | planned | — |
