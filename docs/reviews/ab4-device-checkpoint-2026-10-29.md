@@ -13,7 +13,7 @@ No repair is proposed. Sitting 4 and AA10c are excluded.
 | Remove/re-add since launch change | No |
 | Affected region | Owner says “just below the clock and batter area” |
 | Theme and Search state | Dark theme; blur “always visible”; individual Search states not separately described |
-| Cold-launch versus resume destination | Owner answers reopen question: “it opens archive”; separate brief-app-switch result not supplied |
+| Cold-launch versus resume destination | Original app Home → swipe away → reopen icon returns to Archive; brief-switch resume still unobserved |
 | Installed app served version | Unconfirmed |
 | Same-phone Safari comparison | Craig confirms dark Archive header is not blurred |
 | Screenshot/recording of affected surface | Received and inspected: Photo 1.jpg, dark Archive, Search closed |
@@ -74,7 +74,7 @@ installed stale bundle or establish which layout change will remove the effect.
 Keep the original installation in place. Light theme, Search-open and separate app-switch
 resume observations remain open.
 
-## Controlled phone experiment AB4-1 — all modes reported sharp; baseline not reproduced
+## Controlled phone experiment AB4-1 — standalone run not confirmed
 
 The next step establishes the layout mechanism before proposing a product repair.
 A separate static diagnostic page reconstructs the relevant shell: 100dvh flex column,
@@ -137,40 +137,42 @@ Original deployment failure: CLI rejected --skip-domain because it is only valid
 production. No deployment was created by that attempt. Retrying without that flag while
 retaining --target preview succeeded. No production flag, protection change or gate weakening.
 
-## AB4-1 owner result and its limit
+## AB4-1 owner result and corrected interpretation
 
-Craig replied **“sharp for all”** to the Relative → Sticky → Fixed comparison.
-The requested test was in the temporary Home Screen app, dark theme first; no separate
-status-panel reading, screenshot or theme confirmation accompanied the reply. Record the
-result as reported, without inventing those missing observations.
+Craig first replied **“sharp for all”** to Relative → Sticky → Fixed. Asked to confirm
+the test panel, he then replied **“no”** for Home Screen. The sharp result therefore does
+not demonstrate a run in the required standalone mode. Treat it as browser-mode evidence
+until the actual launch mode is confirmed; the indicator alone does not inspect iOS itself.
+Do not record this as an installed baseline failing to reproduce or as evidence against
+the positioning mechanism. The standalone result is outstanding, and no repair is justified.
 
-The relative baseline did not reproduce the affected MCU header's blur. Consequently,
-this experiment supplies no evidence that changing MCU's header positioning would repair
-it. It does not prove positioning is irrelevant to the full app; the simplified page and
-new installation differ from the affected full app and its retained installation state.
-The iOS-overlay/edge-classification lead remains unestablished. No production repair is
-proposed and no app code is changed. Do not turn three sharp modes into AB4 acceptance.
+Craig also confirms that the real MCU app returns to **Archive** after deliberately
+leaving it on **Home**, swiping it away and reopening its icon. That controls the page
+left before reopening and narrows the launch problem beyond merely resuming the last
+screen. It is consistent with the old /movies installation target, but the installed
+manifest/OS restoration state and bundle are not directly inspected; cause remains open.
 
-Two non-destructive observations were requested next:
+Next test: use Safari Share → Add to Home Screen, explicitly enable **Open as Web App**,
+name the new diagnostic icon AB4 Test, tap Add, then open that icon. Check the panel says
+**Home Screen: yes** before comparing Relative → Sticky → Fixed. If it still says no,
+stop and report that mode issue rather than repeating a browser-only comparison.
+Apple's [iOS 27 installation instructions](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/27/ios/27)
+confirm the Open as Web App toggle. This changes only the temporary diagnostic installation;
+leave the original MCU installation and its local data in place.
 
-1. Does AB4 Test's status panel show **Home Screen: yes**? If no, the result is a Safari
-   comparison, not a standalone reproduction; use the actual test icon before interpreting it.
-2. In the original MCU app, tap Home, swipe the app away, then reopen its icon: Home or
-   Archive? This controls the page left before closing without deleting local state.
-
-Keep both observations separate from the still-unverified installed bundle version.
-No new diagnostic deployment, app repair or re-add of the real app was performed. Re-add remains conditional on local-state/login/push safeguards and owner review.
+No new deployment, product repair or original-app re-add was performed. Re-add of the
+real app remains conditional on local-state/login/push safeguards and owner review.
 
 ## Next owner observation
 
 Dark/Search-closed before image, same-phone sharp Safari header and exact iOS 27.0.1 are
-captured. AB4-1 reports all modes sharp and has not reproduced the baseline. Confirm its
-Home Screen status and the original app Home → close → reopen destination before deciding
-the next comparison. Capture Search-open/light-theme states when the diagnosis calls for them.
+captured. AB4-1 all-sharp lacked standalone confirmation (Home Screen: no); run it from a proper web-app
+icon and confirm Home Screen: yes first. Original MCU Home → close → reopen now confirms
+Archive. Capture Search-open/light-theme states when the diagnosis calls for them.
 
-Craig reports Archive in response to the swipe-away/reopen question. The separate
-brief-app-switch comparison remains outstanding: record its destination and the page
-left before switching away. A force-close/reopen is an operational comparison, not proof
+Craig confirms Archive even after leaving the app on Home before swiping it away. The
+separate brief-app-switch comparison remains outstanding: record its destination and
+the page left before switching away. A force-close/reopen is an operational comparison, not proof
 that iOS discarded all restoration state. Do not erase that distinction in the diagnosis.
 
 The public version below is the server baseline, not proof of the installed client's
@@ -222,6 +224,6 @@ AB4 is yellow; the ledger setting is Opus 5 high / GPT-5.6 Sol High. No delegati
 Branch: `fix/ab4-iphone-diagnosis`, checkpoint documents and isolated diagnostic sources.
 No product repair, PR, push or production deployment; only the static AB4-1 preview above.
 The batch row stays open. No architecture change or new product decision was made.
-Resume with AB4 Test standalone confirmation and the original app Home → close → reopen
-result; the reported all-sharp experiment did not establish a layout cause. Establish
-cause before presenting the repair checkpoint; launch remains a separate re-add comparison after local-state safeguards. Device before/after remains open even if later source tests pass.
+Resume with AB4 Test installed as a web app and Home Screen: yes before interpreting
+the three positioning modes. The prior all-sharp result lacked standalone confirmation. Original MCU
+Home → close → reopen returns to Archive. Establish cause before the repair checkpoint; launch remains a separate re-add comparison after local-state safeguards. Device before/after remains open even if later source tests pass.
