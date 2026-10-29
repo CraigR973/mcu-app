@@ -1,6 +1,6 @@
 # AB3 — Mark's addition notifications, verification 29 Oct
 
-**Implementation under verification; not shipped yet.** Sitting 2 only; sitting 3 and
+**Local verification complete; PR/CI/shipment pending.** Sitting 2 only; sitting 3 and
 AA10c excluded. Craig approved all four pre-build picks (#306), including the exact additive
 migration and optional clientRequestId/receipt contract, before any implementation.
 Approved details: `ab3-owner-checkpoint-2026-10-29.md`. Current flow: `../architecture-map.md`.
@@ -88,5 +88,25 @@ credentials. These are baseline facts, not AB3 shipment proof.
 
 ## Clean-tree full gate and shipment
 
-Pending. Record the exact tested tree, all local commands, CI heads/results, review,
-merged SHA and production API/web/readiness before marking shipped. No new sitting starts.
+Clean local source/document tree **8fee563ec0c74f5cd6ca70c56b9c3dd739c66f88** passed all ten
+batch-verify commands. Final API run: **2,549 passed, zero skips**. Shared **159**, web **736**;
+API lint/format/mypy, shared typecheck/build and web lint/typecheck/build passed. Eleven
+existing web fast-refresh warnings remain outside changed screens; no lint errors.
+
+The second API invocation had 2,540 passed and nine collection-refresh skips because the
+socket-only DSN had no hostname. The final localhost-labelled socket URL was verified by
+current_database()/inet_server_addr() to reach the same disposable database, and ran all
+nine cases without changing their localhost safety guard. All derived-field tests ran.
+
+Full local E2E on that same clean tree: Chromium **58 passed**; Firefox **57 passed + one
+existing dictation skip**; jobs **six passed**. WebKit cannot run on this Mac and must run
+in CI; its two pre-existing documented limitations remain visible. No new skips/retries.
+The 375 px light/dark settings screenshots were visually inspected: approved wording,
+wrapping, switch alignment and contrast; no horizontal overflow. Mark's screen add,
+decrypted fake push, retry/edition silence and title destination passed in both browsers.
+React best-practices review covered stable request identity, hook placement, switch semantics,
+old-response state and mutation handling. Local source review found no remaining blocker.
+
+Fresh origin/main remained 588e552, with latest CI still green before PR publication.
+PR/merge exact-head seven-job CI and production SHA/readiness remain pending. A genuine
+later addition and Craig's real-phone receipt remain owner acceptance. No next sitting.
