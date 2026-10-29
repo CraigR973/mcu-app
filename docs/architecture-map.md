@@ -1,7 +1,7 @@
 # MCU App architecture map
 
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
-AB2 on 29 Oct; the April design intent remains in
+AB2 and the separate movie-night repair on 29 Oct; the April design intent remains in
 `ARCHITECTURE.md`.
 
 ```mermaid
@@ -214,3 +214,18 @@ the existing private history; deleting chat never undoes confirmed diary/Wanted 
 
 A deletion finishing after page navigation refreshes shared history cache but cannot reopen
 the assistant. No service, database shape or provider contract was added by AA9.
+
+
+## First movie-night seeding, repaired 29 Oct (`bf0eb36`)
+
+```mermaid
+flowchart TB
+    Requests[Candidate loading or Send] --> Lock[Lock existing night row]
+    Lock --> Seed[Recheck shortlist and seed if empty]
+    Seed --> Commit[Commit releases lock]
+    Commit --> Work[Metadata or invite push]
+```
+
+The lock is per night and works across API workers. A waiting caller reads the committed
+shortlist, or seeds after rollback. Existing vote lock ordering is retained. No new database
+shape, service, provider or API contract. Real-phone push/match acceptance remains Craig's.

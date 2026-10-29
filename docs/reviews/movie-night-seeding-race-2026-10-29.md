@@ -1,9 +1,8 @@
-# Movie-night seeding race — approved repair, 29 Oct
+# Movie-night seeding race — shipped repair, 29 Oct
 
 Craig approved the separate race fix in chat after the red-CI stop. The original AB1/AB2
-implementation and approved planning history are preserved. Local handoff 5a1ccad is kept
-on this repair branch and will go through the same PR/CI; it has not been pushed to main.
-Starting main source cf28806 is red (40793684816); this fix is separate from AB2 and does
+implementation and approved planning history are preserved. Diagnostic handoff 5a1ccad is preserved through the repair PR/CI and merge.
+Starting main source cf28806 was red (40793684816); this fix is separate from AB2 and does
 not start sitting 2 or AA10c.
 
 ## Approved goal and criteria (verbatim from the owner-approved proposal)
@@ -36,7 +35,7 @@ the invite path. A per-night database lock makes the read/seed decision atomic a
 workers, and automatically releases on commit/rollback. Different nights retain separate locks.
 Verification allowance is roughly 45–60 minutes plus repair, not a completion promise.
 
-## Verification and failures
+## Verification and failures — running record
 
 The corrected regression fails on the unpatched service with “Second seeder read the empty
 shortlist before the first transaction finished”. After the six-line per-night lock change,
@@ -67,15 +66,50 @@ its documented dictation skip, and cron six passed. All movie-night invite/push/
 AB1/AB2 cases passed. The Chromium failure occurred before the first test assertion or
 browser page was created; native fetch calls were not instrumented in its retained trace.
 The machine showed load averages 13.46/53.13/57.74 after the run; this is context, not proof
-that load caused the timeout. Earlier progress messages incorrectly reported Chromium54;
+that load caused the timeout. Earlier progress messages incorrectly reported Chromium 54;
 the final nonzero result was inspected and that claim explicitly corrected. No timeout,
-retry, assertion, skip or product change has been made. Request-timing diagnosis in ignored tooling passed the unchanged isolated case in22.3s:
-login918ms, Wanted writes762/184ms, subscription111ms, daily scraper200 in17,181ms;
+retry, assertion, skip or product change has been made. Request-timing diagnosis in ignored tooling passed the unchanged isolated case in 22.3s:
+login 918ms, Wanted writes 762/184ms, subscription 111ms, daily scraper 200 in 17,181ms;
 the expected under-limit push and over-limit exclusion both held. No endpoint error or
 movie-night lock was involved. This does not prove what held the original request or rule
-out a preceding-state effect. One full Chromium sequence with the same timing observation
-will check that remaining concern; the original failure is retained rather than erased.
+out a preceding-state effect. The full preceding Chromium sequence was then run with the same timing observation; final
+results below supersede this checkpoint. The original failure is retained rather than erased.
 
-Complete green local E2E and exact-head CI/production proof remain pending. Existing red CI
+At that checkpoint, green local E2E and exact-head CI/production proof remained pending. Existing red CI
 artefact/logs are retained in the ignored AB2 scratchpad; the AB2 report records the original
 diagnosis and stop.
+
+
+## Final verification and acceptance, 29 Oct
+
+The full diagnostic Chromium sequence passed 54/54 from clean 7e465f1 (source/tests identical
+to clean-gate c27d531). Its shop-alert request returned 200 in 24,609ms and the case passed
+26.5s with the expected push; the preceding-state sequence did not reproduce the timeout.
+Firefox 53 plus one documented dictation skip and cron 6 passed in the complete first run.
+Verification exceeded the 45–60 minute allowance: the first local projects alone took 6.4/9.9/17.7 minutes,
+then the timed diagnosis/full-sequence run and normal CI/deployment gates were still required.
+The original timeout's exact delay remains unconfirmed; it is not claimed fixed by this PR.
+No timeout, retry, skip, assertion or product change was made for it.
+
+PR #120 head 7e465f19fa47357a54c29f4b78208bdbdded06cf passed CI 40854587486, all seven jobs.
+Merge bf0eb365fe2eedf348f01871e1e09c9637c311a2 passed CI 40856393675, all seven jobs. Both runs include 2,525 API tests with no skips,
+158 shared/732 web; Chromium 54, Firefox 53+one existing skip, WebKit 52+two existing skips,
+cron 6. The skips remain Firefox dictation, plus WebKit's lost replay-answer and live open-page
+match limitations from `apps/e2e/README.md`; no new skip. Migration reversal and the actual Railway image boot pass. Logs/proofs are retained
+in the ignored repair scratchpad; no gate was weakened.
+
+Production API health and web version both report bf0eb365fe2eedf348f01871e1e09c9637c311a2. Readiness: db: ok and
+push/ai/ebay/tmdb/brave: configured. Unauthenticated stats: 401. These read-only receipts do
+not claim a production invitation or real-device push; existing owner checks remain open.
+
+- Per-night atomic first-seed decision: existing row lock before emptiness check, confirmed
+  by deterministic two-connection database lock observation.
+- Commit and rollback: both regressions pass; selected ids are unique and complete.
+- Existing invite/push/match/access expectations: retained unchanged, full browser suites pass.
+- Full verification/history/boundary: ten clean local checks, full available local E2E,
+  exact-head PR/main seven jobs, API/web SHA/full readiness; 5a1ccad and approved planning
+  commits preserved. No schema/API change, next sitting, AA10c, production invite, provider
+  call, live data rewrite, hosting or credential change.
+
+Final closing docs change no source/test/schema. Their exact-head seven-job CI and production
+API/web SHA/full readiness are checked again before the session ends.

@@ -175,3 +175,15 @@ all existing push assertions and full gates retained (#304). The repair is on it
 fix/movie-night-seeding-race branch and preserves the local diagnostic handoff 5a1ccad.
 The detailed red/green evidence and remaining gates are recorded in
 `movie-night-seeding-race-2026-10-29.md`. Sitting 2 and AA10c remain excluded.
+
+
+## Final stop resolved by separate repair, 29 Oct
+
+Craig's approved repair #304 shipped in PR #120, merge bf0eb365fe2eedf348f01871e1e09c9637c311a2. PRCI 40854587486 and mainCI 40856393675
+pass all seven jobs. API/web exact mergeSHA and every readiness field pass; unauthenticated
+stats remains401. The original failure/stop above is retained. The separate repair report
+records deterministic red/green commit/rollback evidence, all local checks, unchanged push
+assertions and the unrelated first local shop-alert timeout's still-unconfirmed delay.
+
+Sitting 1 is complete. Sitting 2 and AA10c were not started; existing phone/live-assistant
+and AA10b 1–2 Nov final-total owner checkpoints remain open.

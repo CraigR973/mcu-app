@@ -1,9 +1,10 @@
 # Approved grouping for the 28 Oct snags
 
-**Seven batches across five sittings; AB1 (`ad2c992`) and AB2 (`c187ed7`) code shipped.
-Final close-out is blocked by red CI 40793684816: a movie-night seeding race.
-Craig approved the separate per-night serialisation repair on 29 Oct (#304); full verification
-is underway. Sittings 2–5 and AA10c remain excluded.**
+**Seven batches across five sittings; sitting 1 complete.** AB1 (`ad2c992`) and AB2 (`c187ed7`)
+shipped after their owner checkpoints. Final CI's real movie-night race was stopped, then
+repaired with Craig's separate approval in PR #120 (`bf0eb36`), all full gates and exact
+production proof. Sittings 2–5 and AA10c remain excluded. The verification reports retain
+the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
 

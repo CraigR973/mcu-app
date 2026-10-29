@@ -2,43 +2,39 @@
 
 ## Now
 
-**29 Oct: AB1 and AB2 code is live; sitting 1 final close-out is blocked by red CI.**
-AB1 shipped PR #118 (`ad2c992`); AB2 shipped PR #119 (`c187ed7`) after Craig approved
-Summary cards/wording and the exact ownedWatchedMovies contract (#303). The three approved
-planning commits remain preserved via PR #117, reviewed/CI-green before clean-main build.
-AB2's clean local gate (2,523 API/158 shared/732 web; no API skips), full available local
-E2E and exact-head PR/merge seven-job CI passed; production merge SHA/readiness and
-independent read-only live counts agreed. Source and schema are unchanged since that gate.
+**29 Oct: Group AB sitting 1 is complete; AB1 and AB2 are live, with the separate movie-night race repaired.**
+The three approved planning commits reached main via reviewed, seven-job-green PR #117
+(`d413b4d`) before implementation from clean main. AB1 shipped PR #118 (`ad2c992`).
+Craig approved Summary cards/wording and the exact ownedWatchedMovies contract (#303)
+before AB2 shipped PR #119 (`c187ed7`). Existing watch history and all five meanings remain.
 
-**Final main cf28806 is red:** CI 40793684816 passed six jobs but failed one existing
-Chromium movie-night invite case. All AB2 cases passed in all three browsers. The API
-artefact proves Send returned 500 because concurrent shortlist loading and Send both seeded
-the same night, violating uq_movie_night_suggestion_movie. No invitation push was sent.
-This is a real seeding race, not permission to loosen the expected push or retry to green.
+Final AB2 docs CI 40793684816 exposed a genuine concurrent shortlist-seeding race: Send 500
+prevented its invite push. The group stopped; Craig approved a separate repair on 29 Oct
+(#304). PR #120 (`bf0eb36`) holds the existing night row before the empty-list check;
+second requests wait/recheck, and rollback permits seeding. No schema/API or push assertion
+changed. Both callers commit before metadata/push work. Diagnostic handoff 5a1ccad is preserved.
 
-The group command requires a stop on red CI. Craig approved the separate fix branch on 29 Oct: serialise per-night seeding, deterministic concurrency regression, unchanged
-push/access expectations, full local/PR/main gates and exact production proof. Verification
-allowance roughly 45–60 minutes plus repair. The repair plan is recorded before code on fix/movie-night-seeding-race. Diagnostic
-handoff is committed locally only, not pushed as another deployment/CI attempt.
-The repair's clean ten-command gate passes (2,525 API/no skips,158 shared,732 web).
-Available full E2E has one unrelated Chromium shop-alert60s timeout; movie-night and AB1/AB2
-cases pass, Firefox53+existing skip and cron6 pass. An unchanged instrumented isolated
-shop case passes22.3s; full-sequence diagnosis remains pending, so no merge is authorised
-by those passing subsets. Full evidence: `docs/reviews/movie-night-seeding-race-2026-10-29.md`.
+Repair verification: all ten clean local checks, 2,525 API/no skips, 158 shared, 732 web;
+Chromium 54, Firefox 53+existing dictation skip, cron 6 locally. PR CI 40854587486 and merge 40856393675
+pass all seven jobs, including WebKit 52+its two documented skips. Production API/web report
+exact merge bf0eb365fe2eedf348f01871e1e09c9637c311a2; full readiness and unauthenticated stats 401 pass.
+The first local Chromium run had an unrelated shop-alert 60s timeout; isolated/full-sequence
+timing diagnostics then passed unchanged. Its original delay remains unconfirmed and is
+recorded, not claimed repaired. Final docs CI/SHA/readiness are checked before session end.
 
-Home's new owned-watch coverage preserves the whole diary and account isolation; old answers
-show Unavailable. Visible format bars and all existing charts/value caveats remain.
-Read-only live comparison: Craig 482 / 1,903 versus 500 diary; Mark 878 / 1,903 versus 879.
-This is not a production authenticated HTTP/browser session; fixture E2E proves the flow.
-No live collection/history/price write, provider/model call, schema migration or hosting/
-credential change. Sitting 2 and AA10c were not started. Existing phone/live-assistant and
-AA10b's 1–2 Nov final-total owner checkpoints remain open independently.
+AB2's independent read-only live comparison agreed: Craig 482/1,903 versus 500 whole-diary;
+Mark 878/1,903 versus 879. This was not an authenticated production browser session.
+No live collection/history/price write, provider/model call, migration or hosting/credential
+change. Sitting 2 and AA10c were not started. Existing phone/live-assistant and AA10b's
+1–2 Nov final-total checkpoints remain owner actions. Evidence:
+`docs/reviews/ab1-verification-2026-10-28.md`, `docs/reviews/ab2-verification-2026-10-28.md`,
+`docs/reviews/movie-night-seeding-race-2026-10-29.md`.
 
 ## Next
 
-Complete the approved separate movie-night seeding-race fix and all normal gates. The AB2
-implementation is live, but final main CI must be repaired before sitting 1 closes.
-Do not start sitting 2/AB3 or AA10c; preserve the existing owner/device/value checkpoints.
+Stop after Group AB sitting 1. Sitting 2/AB3 needs a fresh named go and its exact notification
+trigger/preference/wording checkpoint; AA10c is excluded. Preserve existing owner/device/value
+checkpoints. No later sitting starts automatically.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -433,6 +429,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — Group AB sitting 1 complete after approved separate race repair:** PR #120 (`bf0eb36`), all clean local/PR/merge gates and exact API/web SHA/full readiness. First seeding now serialises per night; deterministic commit/rollback tests and unchanged invite pushes pass. The unrelated first local shop-alert timeout and passing timed diagnostics remain recorded with cause unconfirmed. Original planning history preserved; AB1/AB2 approved checkpoints honoured. Stop before sitting 2 and AA10c; phone and AA10b owner checks remain open.
 
 - **29 Oct 2026** — Craig approved the separate movie-night seeding-race repair, deterministic concurrency regression and full gates. Preserved local handoff 5a1ccad on fix/movie-night-seeding-race; no schema/API change or broader sitting approval. Plan/evidence: docs/reviews/movie-night-seeding-race-2026-10-29.md.
 
