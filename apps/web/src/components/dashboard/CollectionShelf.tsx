@@ -184,8 +184,8 @@ function WorthCard({ value, isAdmin, pending, error, offline }: { value: Collect
 }
 
 /**
- * AA3 (#299): five visible metrics, then an in-place breakdown. Craig approved this
- * collection-only exception to W2's sideways shelves and retained both personal/match counts.
+ * AB2 (#303): approved Summary cards, owned-watch coverage and a visible format preview.
+ * Full breakdowns and AA3's collection-only exception to sideways shelves remain.
  *
  * **Most watched is gone** (snag 4): on 5 Oct 8 of its 10 films were also in Highlights' Most
  * rewatched, which counts the same viewings and says whose. The stats API still returns it,
@@ -197,7 +197,7 @@ function WorthCard({ value, isAdmin, pending, error, offline }: { value: Collect
 export function CollectionShelf() {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
-  const statsQuery = useQuery({ queryKey: ['stats'], queryFn: fetchStats })
+  const statsQuery = useQuery({ queryKey: ['stats', profile?.id], queryFn: fetchStats })
   const valueQuery = useQuery({
     queryKey: ['collection-value'],
     queryFn: fetchCollectionValue,
@@ -239,15 +239,19 @@ export function CollectionShelf() {
           : 'Spend over time appears once the recorded prices carry a purchase date.'
     body = (
         <ul aria-label="The collection in numbers" className="grid grid-cols-2 gap-3">
-          <NumberCard label="Titles owned" value={COUNT.format(stats.totalMovies)} detail="Films and TV series" />
+          <NumberCard label="Titles owned" value={COUNT.format(stats.totalMovies)} detail="Each film or series counts once, however many copies." />
           <NumberCard
-            label="Copies catalogued"
+            label="Copies owned"
             value={COUNT.format(stats.totalItems)}
             detail={copiesDetail(stats)}
           />
           <WorthCard value={value} isAdmin={isAdmin} pending={valueQuery.isPending} error={valueQuery.isError} offline={listState(valueQuery, false) === 'offline'} />
-          <NumberCard label="You've watched" value={COUNT.format(stats.watchedMovies)} detail="Distinct titles in your diary, including titles you don't own" />
-          <NumberCard label="Matched on TMDB" value={COUNT.format(stats.identifiedMovies)} detail={<>Of {COUNT.format(stats.totalMovies)} owned titles. A match can still need checking.</>} />
+          <NumberCard
+            label="You've watched"
+            value={stats.ownedWatchedMovies === undefined ? 'Unavailable' : `${COUNT.format(stats.ownedWatchedMovies)} / ${COUNT.format(stats.totalMovies)}`}
+            detail={stats.ownedWatchedMovies === undefined ? 'Watched coverage is unavailable in this saved response.' : 'Your watched titles still in the collection, including downloads.'}
+          />
+          <NumberCard label="Matched on TMDB" value={COUNT.format(stats.identifiedMovies)} detail={<>Of {COUNT.format(stats.totalMovies)} owned titles linked to a film or series record. A match can still need checking.</>} />
         </ul>
     )
     breakdown = (
@@ -295,6 +299,13 @@ export function CollectionShelf() {
         icon={BarChart3}
       />
       {body}
+      {stats ? (
+        <section aria-labelledby="collection-format-preview" className="archive-panel space-y-3 p-4">
+          <h3 id="collection-format-preview" className="text-sm font-semibold text-foreground">Formats at a glance</h3>
+          <BarChart slices={stats.formats} countOf={(slice) => slice.itemCount} />
+          <p className="text-xs text-muted-foreground">Copies can carry more than one format; these counts overlap.</p>
+        </section>
+      ) : null}
       <Link to="/movies" className="list-link flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
         Browse the archive
       </Link>

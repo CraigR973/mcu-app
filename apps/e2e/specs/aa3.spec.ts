@@ -2,6 +2,8 @@ import { expect, test } from '../support/test.ts'
 import type { Person } from '../harness/env.ts'
 
 type Counts = {
+  totalMovies: number
+  ownedWatchedMovies: number
   totalItems: number
   downloadCopies: number
   physicalCopies: number
@@ -43,16 +45,17 @@ for (const person of ['Craig', 'Mark'] as Person[]) {
         await page.goto('/dashboard')
         const section = page.getByRole('region', { name: 'The collection', exact: true })
         const numbers = section.getByRole('list', { name: 'The collection in numbers' })
-        for (const label of ['Titles owned', 'Copies catalogued', 'Estimated used value', "You've watched", 'Matched on TMDB']) {
+        for (const label of ['Titles owned', 'Copies owned', 'Estimated used value', "You've watched", 'Matched on TMDB']) {
           await expect(numbers.getByText(label, { exact: true })).toBeVisible()
         }
         await expect(numbers.getByText(`${stats.physicalCopies.toLocaleString('en-GB')} physical · ${stats.downloadCopies.toLocaleString('en-GB')} download`, { exact: true })).toBeVisible()
         await expect(numbers.getByText(`${stats.physicalAndDownloadCopies.toLocaleString('en-GB')} include both`, { exact: true })).toBeVisible()
-        await expect(numbers.getByText("Distinct titles in your diary, including titles you don't own", { exact: true })).toBeVisible()
+        await expect(numbers.getByText("Your watched titles still in the collection, including downloads.", { exact: true })).toBeVisible()
         await expect(numbers.getByText(/A match can still need checking/)).toBeVisible()
-        await expect(numbers.locator('li', { hasText: "You've watched" })).toContainText(stats.watchedMovies.toLocaleString('en-GB'))
+        await expect(numbers.locator('li', { hasText: "You've watched" })).toContainText(`${stats.ownedWatchedMovies.toLocaleString('en-GB')} / ${stats.totalMovies.toLocaleString('en-GB')}`)
         await expect(numbers.locator('li', { hasText: 'Matched on TMDB' })).toContainText(stats.identifiedMovies.toLocaleString('en-GB'))
         expect(await section.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+        await expect(section.getByRole('region', { name: 'Formats at a glance' })).toBeVisible()
         const archive = section.getByRole('link', { name: 'Browse the archive', exact: true })
         const sectionBox = await section.boundingBox()
         const archiveBox = await archive.boundingBox()
@@ -69,7 +72,7 @@ for (const person of ['Craig', 'Mark'] as Person[]) {
         for (const title of ['Formats (copies)', 'Where they live (copies)', 'Genres (titles)', 'Decades (titles)']) {
           await expect(section.getByRole('heading', { name: title, exact: true })).toBeVisible()
         }
-        await expect(section.getByText('Copies can carry more than one format; these counts overlap.')).toBeVisible()
+        await expect(section.getByText('Copies can carry more than one format; these counts overlap.')).toHaveCount(2)
         await expect(archive).toHaveAttribute('href', '/movies')
         await page.setViewportSize({ width: 320, height: 844 })
         expect(await section.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)

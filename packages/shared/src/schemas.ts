@@ -921,6 +921,8 @@ export const statsSchema = z.object({
   physicalAndDownloadCopies: z.number().int().nonnegative().optional(),
   identifiedMovies: z.number().int().nonnegative(),
   watchedMovies: z.number().int().nonnegative(),
+  // AB2: absence in an older response is unavailable coverage, never an invented zero.
+  ownedWatchedMovies: z.number().int().nonnegative().optional(),
   formats: z.array(countSliceSchema),
   genres: z.array(countSliceSchema),
   decades: z.array(decadeSliceSchema),
