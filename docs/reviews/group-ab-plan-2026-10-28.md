@@ -1,7 +1,9 @@
 # Approved grouping for the 28 Oct snags
 
-**Seven batches across five sittings; sitting 1 complete 29 Oct. AB1 (`ad2c992`) and
-AB2 (`c187ed7`) shipped after owner picks, full gates and production proof. Sittings 2–5 excluded.**
+**Seven batches across five sittings; AB1 (`ad2c992`) and AB2 (`c187ed7`) code shipped.
+Final close-out is blocked by red CI 40793684816: a movie-night seeding race.
+Craig approved the separate per-night serialisation repair on 29 Oct (#304); full verification
+is underway. Sittings 2–5 and AA10c remain excluded.**
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
 
@@ -69,7 +71,7 @@ starting. No agent delegation is part of this proposal.
 ## Execution boundaries
 
 Craig approved the grouping and then separately authorised sitting 1 on 28 Oct. AB1 shipped;
-AB2 shipped `c187ed7` after both owner picks. Sitting 1 is complete. Sittings 2–5 remain unauthorised. Start only a
+AB2 shipped `c187ed7` after both owner picks. Sitting 1 final close-out is blocked on the separate race-fix decision. Sittings 2–5 remain unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance
 checks, under this repo's procedure. Hosting, credentials, destructive data writes and

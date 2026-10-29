@@ -2,40 +2,43 @@
 
 ## Now
 
-**29 Oct: Group AB sitting 1 complete — AB1 and AB2 are live.**
-Planning PR #117 preserved all three approved planning commits through review/CI before
-implementation from clean main. AB1 shipped PR #118 (`ad2c992`), followed by its exact
-final-main CI and production proof. AB2 shipped PR #119 (`c187ed7`) after Craig selected
-Summary cards/wording and approved the exact ownedWatchedMovies contract before build (#303).
+**29 Oct: AB1 and AB2 code is live; sitting 1 final close-out is blocked by red CI.**
+AB1 shipped PR #118 (`ad2c992`); AB2 shipped PR #119 (`c187ed7`) after Craig approved
+Summary cards/wording and the exact ownedWatchedMovies contract (#303). The three approved
+planning commits remain preserved via PR #117, reviewed/CI-green before clean-main build.
+AB2's clean local gate (2,523 API/158 shared/732 web; no API skips), full available local
+E2E and exact-head PR/merge seven-job CI passed; production merge SHA/readiness and
+independent read-only live counts agreed. Source and schema are unchanged since that gate.
 
-Home now shows your distinct watched titles still owned, including downloads, against
-current owned titles. Rewatches/extra copies count once. Whole-diary watchedMovies remains
-unchanged. Older answers show Unavailable. Profile-scoped stats cache and mutation/manual/
-automatic replay invalidation refresh coverage. Five explained figures, visible overlapping
-format bars, full existing charts, Archive navigation and value/spend caveats are retained.
+**Final main cf28806 is red:** CI 40793684816 passed six jobs but failed one existing
+Chromium movie-night invite case. All AB2 cases passed in all three browsers. The API
+artefact proves Send returned 500 because concurrent shortlist loading and Send both seeded
+the same night, violating uq_movie_night_suggestion_movie. No invitation push was sent.
+This is a real seeding race, not permission to loosen the expected push or retry to green.
 
-AB2 clean local 8e61dd6: all ten checks green; API 2,523 with zero skips/all 16 derived-trigger
-cases, shared 158, web 732. Full local Chromium 54, Firefox 53 plus its existing dictation
-skip, cron six passed. PR CI 40790276329 and merge CI 40791938628 passed all seven jobs,
-including WebKit 52 plus its two existing documented skips. No new skip/retry. API/web
-served `c187ed7d5f5a9f904c19440664b2ab98d7c35c9c` with db ready and push/AI/eBay/TMDB/Brave configured;
-unauthenticated stats remained 401. The closing documentation receives its own exact-head
-CI and API/web readback before the session ends. Every repair/verification limit is in
-`docs/reviews/ab2-verification-2026-10-28.md`; AB1 has its own verification report.
+The group command requires a stop on red CI. Craig approved the separate fix branch on 29 Oct: serialise per-night seeding, deterministic concurrency regression, unchanged
+push/access expectations, full local/PR/main gates and exact production proof. Verification
+allowance roughly 45–60 minutes plus repair. The repair plan is recorded before code on fix/movie-night-seeding-race. Diagnostic
+handoff is committed locally only, not pushed as another deployment/CI attempt.
+The repair's clean ten-command gate passes (2,525 API/no skips,158 shared,732 web).
+Available full E2E has one unrelated Chromium shop-alert60s timeout; movie-night and AB1/AB2
+cases pass, Firefox53+existing skip and cron6 pass. An unchanged instrumented isolated
+shop case passes22.3s; full-sequence diagnosis remains pending, so no merge is authorised
+by those passing subsets. Full evidence: `docs/reviews/movie-night-seeding-race-2026-10-29.md`.
 
-Confirmed read-only live handler/independent SQL comparison: Craig 482 / 1,903 owned titles
-versus 500 diary; Mark 878 / 1,903 versus 879. These are observations, not fixed tests. This
-is not a production authenticated HTTP/browser session; fixture E2E proves the complete flow.
-No production collection/history write, price refresh, provider/model call, migration,
-hosting or credential change. AA10b's interim value is not a final-total acceptance.
-
-Sitting 2 and AA10c were not started. Existing phone/live-assistant observations and AA10b's
-1–2 Nov final-total comparison remain owner-only and open independently.
+Home's new owned-watch coverage preserves the whole diary and account isolation; old answers
+show Unavailable. Visible format bars and all existing charts/value caveats remain.
+Read-only live comparison: Craig 482 / 1,903 versus 500 diary; Mark 878 / 1,903 versus 879.
+This is not a production authenticated HTTP/browser session; fixture E2E proves the flow.
+No live collection/history/price write, provider/model call, schema migration or hosting/
+credential change. Sitting 2 and AA10c were not started. Existing phone/live-assistant and
+AA10b's 1–2 Nov final-total owner checkpoints remain open independently.
 
 ## Next
 
-Stop here: Group AB sitting 1 is complete. Wait for a separate named sitting's go.
-Do not start sitting 2/AB3 or AA10c. Preserve the existing owner/device/value checkpoints.
+Complete the approved separate movie-night seeding-race fix and all normal gates. The AB2
+implementation is live, but final main CI must be repaired before sitting 1 closes.
+Do not start sitting 2/AB3 or AA10c; preserve the existing owner/device/value checkpoints.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -430,6 +433,10 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct 2026** — Craig approved the separate movie-night seeding-race repair, deterministic concurrency regression and full gates. Preserved local handoff 5a1ccad on fix/movie-night-seeding-race; no schema/API change or broader sitting approval. Plan/evidence: docs/reviews/movie-night-seeding-race-2026-10-29.md.
+
+- **29 Oct 2026** — **Final AB2 close-out blocked on CI 40793684816.** Six jobs passed; existing Chromium invite-push case failed. Artefact proves concurrent candidate/Send shortlist seeding caused a uniqueness violation and HTTP 500 before notification delivery. All AB2 cases passed in all engines. No gate weakening, skip or re-run; separate serialisation/concurrency-regression fix proposed for Craig's go under group-start's red-CI stop. Diagnostic handoff local only. Sitting 2/AA10c remain excluded.
 
 - **29 Oct 2026** — **AB2 shipped; Group AB sitting 1 complete.** PR #119, merge `c187ed7`; owner-approved Summary cards/wording and exact owned-watch stats contract (#303), full clean local gate/E2E and seven-job exact-head PR/main CI (40791938628). API/web exact merged SHA/full readiness and read-only live count comparison passed. No migration, re-price, history write or provider/model call. All repairs in the AB2 verification report. Sitting 2/AA10c not started; owner phone/value checks remain.
 

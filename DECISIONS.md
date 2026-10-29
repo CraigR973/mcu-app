@@ -6506,3 +6506,14 @@ contemporaneous.
      Scoped obsolete UI expectations may change to this approved meaning with regression
      coverage retained/extended. Build plan: docs/reviews/ab2-build-plan-2026-10-28.md.
      No migration, re-price, hosting, credential or live-write approval. Sitting 2/AA10c excluded.
+
+
+304. **First movie-night seeding is serialised per night (29 Oct, approved repair).**
+     Craig approved a separate fix after final AB2 CI exposed candidate loading and Send
+     both reading an empty shortlist and inserting duplicate suggestions; Send returned 500
+     before the invite push. Hold the existing night row before the emptiness check, as
+     voting already does, until commit/rollback. Keep every push/access expectation and add
+     deterministic two-connection commit/rollback regressions; do not catch/retry uniqueness
+     errors or weaken CI. No schema/API, hosting or credential change, production invite or
+     data rewrite. Full normal gates and exact production proof remain required. The repair
+     is separate from AB2; sitting 2 and AA10c remain excluded.
