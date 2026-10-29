@@ -2,39 +2,35 @@
 
 ## Now
 
-**29 Oct: Group AB sitting 1 is complete; AB1 and AB2 are live, with the separate movie-night race repaired.**
-The three approved planning commits reached main via reviewed, seven-job-green PR #117
-(`d413b4d`) before implementation from clean main. AB1 shipped PR #118 (`ad2c992`).
-Craig approved Summary cards/wording and the exact ownedWatchedMovies contract (#303)
-before AB2 shipped PR #119 (`c187ed7`). Existing watch history and all five meanings remain.
+**29 Oct: Group AB sitting 2 is authorised; AB3 has stopped at its pre-build owner checkpoint.**
+The exact trigger, stable Mark binding, preference/migration/retry contract and wording are
+proposals, not approved choices. Review: `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`.
+The proposal includes first-currently-owned film/series titles (including reacquisition),
+Mark's verified UUID, a default-on category and additive migration 070, plus durable optional
+clientRequestId/receipts because the current collection add has no request identity.
+No product code, tests, migration, API shape or live data changed. Working branch:
+`feat/ab3-mark-additions`, checkpoint/handoff documents only; no PR or deployment.
 
-Final AB2 docs CI 40793684816 exposed a genuine concurrent shortlist-seeding race: Send 500
-prevented its invite push. The group stopped; Craig approved a separate repair on 29 Oct
-(#304). PR #120 (`bf0eb36`) holds the existing night row before the empty-list check;
-second requests wait/recheck, and rollback permits seeding. No schema/API or push assertion
-changed. Both callers commit before metadata/push work. Diagnostic handoff 5a1ccad is preserved.
+Fresh baseline after fetch: main/origin `588e552b2a93f140fc603bf51ae80c348cc0f835`, clean tree,
+latest main CI 40858327603 successful. Production API/web serve that exact SHA; full readiness
+reports db ok and push configured. Read-only profile query confirms Mark's UUID
+`d900b8bc-a46c-4691-9c16-cde3b4d72cd5`; both profiles active/non-deleted. No credential contents
+selected. These are baseline checks, not AB3 verification or real-phone push acceptance.
 
-Repair verification: all ten clean local checks, 2,525 API/no skips, 158 shared, 732 web;
-Chromium 54, Firefox 53+existing dictation skip, cron 6 locally. PR CI 40854587486 and merge 40856393675
-pass all seven jobs, including WebKit 52+its two documented skips. Production API/web report
-exact merge bf0eb365fe2eedf348f01871e1e09c9637c311a2; full readiness and unauthenticated stats 401 pass.
-The first local Chromium run had an unrelated shop-alert 60s timeout; isolated/full-sequence
-timing diagnostics then passed unchanged. Its original delay remains unconfirmed and is
-recorded, not claimed repaired. Final docs CI/SHA/readiness are checked before session end.
-
-AB2's independent read-only live comparison agreed: Craig 482/1,903 versus 500 whole-diary;
-Mark 878/1,903 versus 879. This was not an authenticated production browser session.
-No live collection/history/price write, provider/model call, migration or hosting/credential
-change. Sitting 2 and AA10c were not started. Existing phone/live-assistant and AA10b's
-1–2 Nov final-total checkpoints remain owner actions. Evidence:
-`docs/reviews/ab1-verification-2026-10-28.md`, `docs/reviews/ab2-verification-2026-10-28.md`,
-`docs/reviews/movie-night-seeding-race-2026-10-29.md`.
+Sitting 1 remains complete: AB1 PR #118 (`ad2c992`), AB2 PR #119 (`c187ed7`), approved separate
+movie-night race repair PR #120 (`bf0eb36`). Full gate/CI/production proof and original failures
+remain in `docs/reviews/ab1-verification-2026-10-28.md`, `docs/reviews/ab2-verification-2026-10-28.md`
+and `docs/reviews/movie-night-seeding-race-2026-10-29.md`. The unrelated local shop-alert
+timeout's cause remains unconfirmed; no assertion was weakened or repair claimed.
+Sitting 3 and AA10c were not started. Existing phone/live-assistant and AA10b's 1–2 Nov
+final-total checkpoints remain owner actions.
 
 ## Next
 
-Stop after Group AB sitting 1. Sitting 2/AB3 needs a fresh named go and its exact notification
-trigger/preference/wording checkpoint; AA10c is excluded. Preserve existing owner/device/value
-checkpoints. No later sitting starts automatically.
+Wait for Craig's four AB3 picks in `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`; record the
+approved trigger, stable identity, additive migration/contract and wording before implementation.
+Then resume AB3 only under `group-start.md`. Sitting 3 and AA10c are excluded. Preserve all
+existing owner/device/value checkpoints. No later sitting starts automatically.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -429,6 +425,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct — Group AB sitting 2 preflight; owner checkpoint, no implementation:** Craig authorised AB3 with explicit stops. Clean main `588e552`, latest CI 40858327603 successful, exact production API/web SHA/full readiness verified. Read-only profile query confirms stable Mark UUID. Saved four concrete picks, including additive retry ID/receipt proposal needed by lost-response safety, in `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`. Documents only on `feat/ab3-mark-additions`; no full AB3 gate, PR, migration, deployment, live write or push. Resume after picks, not sitting 3 or AA10c.
 
 - **29 Oct — Group AB sitting 1 complete after approved separate race repair:** PR #120 (`bf0eb36`), all clean local/PR/merge gates and exact API/web SHA/full readiness. First seeding now serialises per night; deterministic commit/rollback tests and unchanged invite pushes pass. The unrelated first local shop-alert timeout and passing timed diagnostics remain recorded with cause unconfirmed. Original planning history preserved; AB1/AB2 approved checkpoints honoured. Stop before sitting 2 and AA10c; phone and AA10b owner checks remain open.
 
