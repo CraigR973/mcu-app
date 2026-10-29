@@ -268,3 +268,116 @@ async def test_two_people_promoting_one_random_pick_keep_the_first_credit_and_vo
         await asyncio.gather(
             first, *([second] if second is not None else []), return_exceptions=True
         )
+
+
+@pytest.mark.parametrize("rollback_first", [False, True], ids=["commit", "rollback"])
+async def test_concurrent_first_seed_waits_then_rechecks_the_committed_shortlist(
+    engine: AsyncEngine,
+    people: tuple[uuid.UUID, uuid.UUID],
+    monkeypatch: pytest.MonkeyPatch,
+    rollback_first: bool,
+) -> None:
+    """Candidate GET and Send must share one first-seed decision, even across workers."""
+    from src.models.collection_item import CollectionItem
+    from src.models.movie import Movie
+
+    sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+    movie_id, session_id = uuid.uuid4(), uuid.uuid4()
+    async with sessionmaker() as db:
+        db.add(Movie(id=movie_id, title="Seeding race", original_title="Seeding race", year=2097))
+        db.add(
+            MovieNightSession(
+                id=session_id,
+                created_by=people[0],
+                invite_token=new_invite_token(),
+                filters={"decadeFrom": 2090, "decadeTo": 2099},
+            )
+        )
+        await db.flush()
+        db.add(CollectionItem(movie_id=movie_id, formats=["download"]))
+        await db.commit()
+
+    first_read, release_first, second_read = asyncio.Event(), asyncio.Event(), asyncio.Event()
+    real_candidates = night.seeded_candidates
+    selections: list[set[uuid.UUID]] = []
+
+    async def candidates(db: AsyncSession, **kwargs: object) -> list[Movie]:
+        rows = await real_candidates(db, **kwargs)
+        selections.append({row.id for row in rows})
+        if len(selections) == 1:
+            first_read.set()
+            await release_first.wait()
+        else:
+            second_read.set()
+        return rows
+
+    monkeypatch.setattr(night, "seeded_candidates", candidates)
+    app_name = f"seed-{uuid.uuid4().hex}"
+
+    async def seed(*, second: bool = False) -> None:
+        async with sessionmaker() as db:
+            if second:
+                await db.execute(
+                    text("SELECT set_config('application_name', :name, true)"), {"name": app_name}
+                )
+            session = await db.get(MovieNightSession, session_id)
+            assert session is not None
+            await night.ensure_seeded(db, session=session)
+            if not second and rollback_first:
+                await db.rollback()
+            else:
+                await db.commit()
+
+    first = asyncio.create_task(seed())
+    second = None
+    try:
+        await asyncio.wait_for(first_read.wait(), timeout=5)
+        assert movie_id in selections[0]
+        second = asyncio.create_task(seed(second=True))
+
+        async def blocked_before_read() -> bool:
+            async with engine.connect() as conn:
+                while not second_read.is_set():
+                    blocked = await conn.scalar(
+                        text(
+                            "SELECT EXISTS (SELECT FROM pg_stat_activity "
+                            "WHERE application_name = :name AND wait_event_type = 'Lock')"
+                        ),
+                        {"name": app_name},
+                    )
+                    await conn.rollback()  # Refresh PostgreSQL's statistics snapshot.
+                    if blocked:
+                        return True
+                    await asyncio.sleep(0.01)
+                return False
+
+        assert await asyncio.wait_for(blocked_before_read(), timeout=5), (
+            "Second seeder read the empty shortlist before the first transaction finished"
+        )
+        release_first.set()
+        await asyncio.wait_for(asyncio.gather(first, second), timeout=5)
+        assert len(selections) == (2 if rollback_first else 1)
+        async with sessionmaker() as db:
+            rows = list(
+                (
+                    await db.execute(
+                        select(MovieNightSuggestion.movie_id).where(
+                            MovieNightSuggestion.session_id == session_id
+                        )
+                    )
+                ).scalars()
+            )
+            assert len(rows) == len(set(rows))
+            assert set(rows) == selections[0]
+    finally:
+        release_first.set()
+        await asyncio.gather(
+            first, *([second] if second is not None else []), return_exceptions=True
+        )
+        async with sessionmaker() as db:
+            # This disposable test committed its own copy; ordinary DELETE soft-deletes it.
+            await db.execute(text("SET LOCAL app.permanent_delete = 'on'"))
+            await db.execute(delete(MovieNightSession).where(MovieNightSession.id == session_id))
+            await db.execute(delete(CollectionItem).where(CollectionItem.movie_id == movie_id))
+            await db.execute(delete(Movie).where(Movie.id == movie_id))
+            await db.commit()

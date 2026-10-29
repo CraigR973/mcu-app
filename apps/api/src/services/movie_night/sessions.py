@@ -325,6 +325,12 @@ async def ensure_seeded(db: AsyncSession, *, session: MovieNightSession, limit: 
     writing thirty rows, and means a session created before Batch S7 gets its shortlist
     the moment it is next opened.
     """
+    # Candidate loading and Send can arrive together, on different workers. Hold the
+    # night's row before checking emptiness, as voting does, until the caller commits or
+    # rolls back. The waiting caller then sees the committed list (or seeds after rollback).
+    await db.execute(
+        select(MovieNightSession.id).where(MovieNightSession.id == session.id).with_for_update()
+    )
     already = await db.scalar(
         select(func.count(MovieNightSuggestion.id)).where(
             MovieNightSuggestion.session_id == session.id

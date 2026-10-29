@@ -16,10 +16,9 @@ artefact proves Send returned 500 because concurrent shortlist loading and Send 
 the same night, violating uq_movie_night_suggestion_movie. No invitation push was sent.
 This is a real seeding race, not permission to loosen the expected push or retry to green.
 
-The group command requires a stop on red CI. A separate fix branch is proposed and awaits
-Craig's go: serialise per-night seeding, deterministic concurrency regression, unchanged
+The group command requires a stop on red CI. Craig approved the separate fix branch on 29 Oct: serialise per-night seeding, deterministic concurrency regression, unchanged
 push/access expectations, full local/PR/main gates and exact production proof. Verification
-allowance roughly 45–60 minutes plus repair. No repair code or re-run has begun. Diagnostic
+allowance roughly 45–60 minutes plus repair. The repair plan is recorded before code on fix/movie-night-seeding-race. Diagnostic
 handoff is committed locally only, not pushed as another deployment/CI attempt.
 Full evidence: `docs/reviews/ab2-verification-2026-10-28.md`.
 
@@ -33,7 +32,7 @@ AA10b's 1–2 Nov final-total owner checkpoints remain open independently.
 
 ## Next
 
-Wait for Craig's go on the separately proposed movie-night seeding-race fix. The AB2
+Complete the approved separate movie-night seeding-race fix and all normal gates. The AB2
 implementation is live, but final main CI must be repaired before sitting 1 closes.
 Do not start sitting 2/AB3 or AA10c; preserve the existing owner/device/value checkpoints.
 
@@ -430,6 +429,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **29 Oct 2026** — Craig approved the separate movie-night seeding-race repair, deterministic concurrency regression and full gates. Preserved local handoff 5a1ccad on fix/movie-night-seeding-race; no schema/API change or broader sitting approval. Plan/evidence: docs/reviews/movie-night-seeding-race-2026-10-29.md.
 
 - **29 Oct 2026** — **Final AB2 close-out blocked on CI 40793684816.** Six jobs passed; existing Chromium invite-push case failed. Artefact proves concurrent candidate/Send shortlist seeding caused a uniqueness violation and HTTP 500 before notification delivery. All AB2 cases passed in all engines. No gate weakening, skip or re-run; separate serialisation/concurrency-regression fix proposed for Craig's go under group-start's red-CI stop. Diagnostic handoff local only. Sitting 2/AA10c remain excluded.
 

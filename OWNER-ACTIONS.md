@@ -16,8 +16,8 @@ conversation still maps onto this file.*
   Sitting 1: AB1 is live (`ad2c992`, PR #118). Craig approved AB2 Summary cards/wording
   and the exact ownedWatchedMovies contract on 28 Oct (#303); AB2 shipped PR #119 (`c187ed7`),
   local/PR/merge gates and production proof passed. Final docs CI 40793684816 is red on an
-  existing movie-night shortlist-seeding race (Send 500, no push). Separate fix awaits your go;
-  no gate weakening/retry or repair begun. Sittings 2–5 remain unauthorised.
+  existing movie-night shortlist-seeding race (Send 500, no push). Separate fix approved 29 Oct (#304), with deterministic concurrency regression and full gates;
+  implementation/verification is underway, without gate weakening or retry-to-green. Sittings 2–5 remain unauthorised.
   Sitting 2: new-title versus extra-copy trigger, stable Mark identity, notification
   preference/migration and wording. Sitting 3: affected installed-iPhone evidence before
   diagnosis/repair, then real-device verification. Sitting 4: cinema source, coverage,

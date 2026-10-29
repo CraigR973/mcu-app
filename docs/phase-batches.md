@@ -4736,7 +4736,8 @@ and physical handovers remain owner observations. Sitting 4 is complete; do not 
 all local/PR/main gates and production SHA/readiness. Craig approved Summary cards/wording and the exact one-field stats contract (#303)
 before AB2 build; PR #119 shipped `c187ed7` with full local/PR/merge gates and production proof.
 Closing docs cf28806 then failed final CI 40793684816 on an existing movie-night seeding race;
-all AB2 cases passed. Stop for Craig's go on a separate fix; no retry-to-green. Sittings 2–5 and AA10c remain unauthorised.
+all AB2 cases passed. Craig approved the separate per-night serialisation/concurrency-regression repair on 29 Oct (#304);
+normal gates remain required, with no retry-to-green. Sittings 2–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
