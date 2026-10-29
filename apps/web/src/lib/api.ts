@@ -852,6 +852,7 @@ export async function checkDuplicate(
 }
 
 export type AddCollectionItemInput = CollectionItemFields & {
+  clientRequestId?: string
   movieId?: string
   tmdbId?: number
   /** Batch Y5: a TMDB series, by its own id. */
@@ -870,6 +871,8 @@ export async function addCollectionItem(
     const body: unknown = await response.json()
     const parsed = z.object({ detail: duplicateCheckSchema }).safeParse(body)
     if (parsed.success) throw new DuplicateItemError(parsed.data.detail)
+    const reused = z.object({ detail: z.object({ code: z.literal('CLIENT_REQUEST_ID_REUSED'), message: z.string() }) }).safeParse(body)
+    if (reused.success) throw new ApiError(reused.data.detail.message, 409)
     throw new Error('This film is already in the collection')
   }
   return parseOrThrowApiError(response, collectionItemSchema)
@@ -2073,6 +2076,7 @@ export async function fetchNotificationPreferences(): Promise<NotificationPrefer
 }
 
 export interface NotificationPreferenceInput {
+  collectionAdditionsEnabled?: boolean
   dealsEnabled?: boolean
   saleEventsEnabled?: boolean
   releasesEnabled?: boolean

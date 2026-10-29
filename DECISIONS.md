@@ -6517,3 +6517,27 @@ contemporaneous.
      errors or weaken CI. No schema/API, hosting or credential change, production invite or
      data rewrite. Full normal gates and exact production proof remain required. The repair
      is separate from AB2; sitting 2 and AA10c remain excluded.
+
+
+305. **Group AB sitting 2 is authorised; its pre-build choices are still unanswered (29 Oct).**
+     Craig requested AB3 using `group-start.md`, explicitly stopping for the exact trigger,
+     stable Mark identity, preference/migration and wording before implementation. This
+     supersedes #301's execution boundary only for sitting 2, not any owner checkpoint.
+     Fresh main/CI/production and read-only identity checks support the concrete proposal
+     in `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`; first-owned/reacquisition/series
+     semantics, a UUID binding, default-on preference, migration 070 and optional request
+     ID/receipt contract are recommendations awaiting Craig, not approved decisions.
+     No code/schema/API implementation, live test addition/push, hosting or credential
+     change is authorised by this checkpoint record. Sitting 3 and AA10c remain excluded.
+
+306. **AB3's four owner picks are approved before implementation (29 Oct).**
+     Craig approved all four cards: first currently owned film/series title (manual and
+     downloads included; a new add after zero owned copies notifies again), Mark bound to
+     verified UUID d900b8bc-a46c-4691-9c16-cde3b4d72cd5, default-on collection_additions
+     preference with additive migration 070 and optional clientRequestId/durable receipt
+     contract, and the exact wording in docs/reviews/ab3-owner-checkpoint-2026-10-29.md.
+     This resolves #305's four unanswered picks. Only Mark's authenticated Add generates
+     an event for each other active/non-deleted profile; extra editions and non-add changes
+     stay quiet. Atomic queueing, serialised adds, replay receipts and existing delivery
+     rules are required. No fabricated live addition/push, hosting/credential change,
+     sitting 3 or AA10c is included. Real-phone receipt remains owner acceptance.

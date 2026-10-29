@@ -494,3 +494,40 @@ describe('signing out', () => {
     expect(await listQueue()).toHaveLength(0)
   })
 })
+
+describe('AB3 stable create request identity', () => {
+  it('retains the same request ID through a lost response and queue replay', async () => {
+    const sent: Array<Record<string, unknown>> = []
+    const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      if (init?.method !== 'POST') return new Response('[]', { status: 200 })
+      sent.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+      if (sent.length === 1) throw new TypeError('network error')
+      return itemResponse(201)
+    })
+    vi.stubGlobal('fetch', fetcher)
+    await addOrQueue({ movieId: MOVIE_ID, formats: ['dvd'], hasPlaybackIssues: false })
+    const [waiting] = await listQueue()
+    expect(waiting.state).toBe('unconfirmed')
+    const requestId = (waiting.body as { clientRequestId: string }).clientRequestId
+    expect(requestId).toMatch(/^[0-9a-f-]{36}$/)
+    expect((await flushQueue()).sent).toBe(1)
+    expect(sent).toHaveLength(2)
+    expect(sent[0].clientRequestId).toBe(requestId)
+    expect(sent[1]).toEqual(sent[0])
+    expect(await listQueue()).toEqual([])
+  })
+
+  it('preserves an explicit ID and gives different deliberate submissions different IDs', async () => {
+    const sent: Array<Record<string, unknown>> = []
+    vi.stubGlobal('fetch', vi.fn(async (_url: unknown, init?: RequestInit) => {
+      sent.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+      return itemResponse(201)
+    }))
+    const input = { movieId: MOVIE_ID, formats: ['dvd' as const], hasPlaybackIssues: false }
+    await addOrQueue({ ...input, clientRequestId: '2fc7f599-f871-41fb-96ad-c30531773dce' })
+    await addOrQueue(input)
+    await addOrQueue(input)
+    expect(sent[0].clientRequestId).toBe('2fc7f599-f871-41fb-96ad-c30531773dce')
+    expect(sent[1].clientRequestId).not.toBe(sent[2].clientRequestId)
+  })
+})

@@ -11,7 +11,9 @@ from pydantic import BaseModel, Field, model_validator
 
 from src.schemas.wire import UtcDatetime
 
-NotificationCategoryName = Literal["deals", "sale_events", "releases", "loans", "movie_night"]
+NotificationCategoryName = Literal[
+    "deals", "sale_events", "releases", "loans", "movie_night", "collection_additions"
+]
 NotificationStatusName = Literal["queued", "sent", "suppressed", "failed"]
 
 #: The two base64url lengths a valid subscription has: a 65-byte P-256 point and a 16-byte
@@ -116,6 +118,7 @@ class NotificationPreferenceResponse(BaseModel):
     releasesEnabled: bool
     loansEnabled: bool
     movieNightEnabled: bool
+    collectionAdditionsEnabled: bool
     digestMode: bool
     digestHourLocal: int = Field(ge=0, le=23)
     quietHoursStart: time | None = None
@@ -136,6 +139,7 @@ class NotificationPreferenceUpdateRequest(BaseModel):
     releasesEnabled: bool | None = None
     loansEnabled: bool | None = None
     movieNightEnabled: bool | None = None
+    collectionAdditionsEnabled: bool | None = None
     digestMode: bool | None = None
     digestHourLocal: int | None = Field(default=None, ge=0, le=23)
     quietHoursStart: time | None = None

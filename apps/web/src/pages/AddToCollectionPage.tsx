@@ -168,15 +168,20 @@ export default function AddToCollectionPage() {
   // page needs to know it was arrived at by upgrading.
   const [confirmedAs, setConfirmedAs] = useState<DuplicateReason | null>(null)
 
+  const addAttempt = useRef<{ body: string; id: string } | null>(null)
+
   const add = useMutation({
     mutationFn: (confirmDuplicate?: DuplicateReason) => {
       if (!film) throw new Error('Choose a film first')
-      return addOrQueue({
+      const input = {
         ...fields,
         ...filmRef(film),
         ...(scannedBarcode ? { barcode: scannedBarcode } : {}),
         confirmDuplicate,
-      })
+      }
+      const body = JSON.stringify(input)
+      if (addAttempt.current?.body !== body) addAttempt.current = { body, id: crypto.randomUUID() }
+      return addOrQueue({ ...input, clientRequestId: addAttempt.current.id })
     },
     onSuccess: ({ item, queued }) => {
       void queryClient.invalidateQueries({ queryKey: ['movies'] })
@@ -201,7 +206,10 @@ export default function AddToCollectionPage() {
     onError: (error) => {
       // The 409 is not a failure to report — it is §3.5's prompt arriving the other way
       // round, for a save that skipped or outran the preflight check.
-      if (error instanceof DuplicateItemError) setDuplicate(error.duplicate)
+      if (error instanceof DuplicateItemError) {
+        addAttempt.current = null
+        setDuplicate(error.duplicate)
+      }
     },
   })
 

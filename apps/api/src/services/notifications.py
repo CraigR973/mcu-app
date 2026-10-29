@@ -58,6 +58,7 @@ _CATEGORY_COLUMNS: dict[NotificationCategory, str] = {
     NotificationCategory.releases: "releases_enabled",
     NotificationCategory.loans: "loans_enabled",
     NotificationCategory.movie_night: "movie_night_enabled",
+    NotificationCategory.collection_additions: "collection_additions_enabled",
 }
 
 #: How long a push service should hold an undelivered message. Four hours: long enough for
@@ -167,10 +168,17 @@ async def get_or_create_preferences(db: AsyncSession, user_id: object) -> Notifi
     if existing is not None:
         return existing
 
-    preference = NotificationPreference(user_id=user_id)
-    db.add(preference)
-    await db.flush()
-    return preference
+    # Two different senders may initialise the same recipient concurrently.
+    await db.execute(
+        pg_insert(NotificationPreference)
+        .values(id=uuid.uuid4(), user_id=user_id)
+        .on_conflict_do_nothing(index_elements=[NotificationPreference.user_id])
+    )
+    return (
+        await db.execute(
+            select(NotificationPreference).where(NotificationPreference.user_id == user_id)
+        )
+    ).scalar_one()
 
 
 def _zone(preference: NotificationPreference) -> ZoneInfo:
@@ -493,7 +501,13 @@ async def deliver_pending(
         query = query.where(Notification.user_id == user_id)
 
     due = list(
-        (await db.execute(query.order_by(Notification.created_at_utc.asc()))).scalars().all()
+        (
+            await db.execute(
+                query.order_by(Notification.created_at_utc.asc()).with_for_update(skip_locked=True)
+            )
+        )
+        .scalars()
+        .all()
     )
     summary.considered = len(due)
     if not due:

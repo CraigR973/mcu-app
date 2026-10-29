@@ -2569,3 +2569,16 @@ describe('Batch Y5 — series, Film Noir and a title-only disc', () => {
     expect(smartCollectionFiltersSchema.parse({ ...saved, keywordId: 9807 }).keywordId).toBe(9807)
   })
 })
+
+describe('AB3 addition preference compatibility', () => {
+  const old = { dealsEnabled: true, saleEventsEnabled: true, releasesEnabled: true, loansEnabled: true,
+    movieNightEnabled: true, digestMode: false, digestHourLocal: 9, quietHoursStart: null,
+    quietHoursEnd: null, quietHoursTimezone: 'Europe/London' }
+  it('preserves absence and both Boolean values without a default', () => {
+    expect(notificationPreferenceSchema.parse(old).collectionAdditionsEnabled).toBeUndefined()
+    for (const enabled of [true, false]) {
+      expect(notificationPreferenceSchema.parse({ ...old, collectionAdditionsEnabled: enabled }).collectionAdditionsEnabled).toBe(enabled)
+    }
+    expect(notificationPreferenceSchema.safeParse({ ...old, collectionAdditionsEnabled: 'true' }).success).toBe(false)
+  })
+})

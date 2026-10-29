@@ -1493,6 +1493,7 @@ export const notificationPreferenceSchema = z.object({
   releasesEnabled: z.boolean(),
   loansEnabled: z.boolean(),
   movieNightEnabled: z.boolean(),
+  collectionAdditionsEnabled: z.boolean().optional(),
   digestMode: z.boolean(),
   digestHourLocal: z.number().int().min(0).max(23),
   quietHoursStart: z.string().nullable(),

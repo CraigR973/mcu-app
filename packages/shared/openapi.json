@@ -2545,6 +2545,18 @@
       ],
       "title": "Barcode"
      },
+     "clientRequestId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Clientrequestid"
+     },
      "condition": {
       "anyOf": [
        {
@@ -8229,6 +8241,10 @@
    "NotificationPreferenceResponse": {
     "description": "§6.1's toggles as the settings page reads them.",
     "properties": {
+     "collectionAdditionsEnabled": {
+      "title": "Collectionadditionsenabled",
+      "type": "boolean"
+     },
      "dealsEnabled": {
       "title": "Dealsenabled",
       "type": "boolean"
@@ -8294,6 +8310,7 @@
      "releasesEnabled",
      "loansEnabled",
      "movieNightEnabled",
+     "collectionAdditionsEnabled",
      "digestMode",
      "digestHourLocal",
      "quietHoursTimezone"
@@ -8308,6 +8325,17 @@
       "default": false,
       "title": "Clearquiethours",
       "type": "boolean"
+     },
+     "collectionAdditionsEnabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collectionadditionsenabled"
      },
      "dealsEnabled": {
       "anyOf": [

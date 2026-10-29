@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import AdminUser, CurrentUser
 from src.models.admin_action import COLLECTION_ITEMS_TABLE, AdminAction
+from src.models.collection_add_request import CollectionAddRequest
 from src.models.collection_item import (
     FORMAT_RANK,
     OWNED_LISTING_STATUSES,
@@ -65,6 +66,13 @@ from src.schemas.collection import (
 )
 from src.services.audit import diff_snapshots, item_snapshot, record_action
 from src.services.barcode import check_digit_valid, normalise
+from src.services.collection_additions import (
+    deliver_additions,
+    hold_add_lock,
+    queue_addition,
+    replay_add,
+    request_hash,
+)
 from src.services.film_rows import held_row, make_row
 from src.services.identification import IdentifyError, set_aside
 from src.services.identify.matcher import find_series
@@ -515,6 +523,22 @@ async def add_collection_item(
     ``/collection/duplicate-check`` still gets everything §3.5's prompt needs and the
     confirmation cannot be bypassed by not asking.
     """
+    replayed = await replay_add(db, user.id, payload)
+    if replayed is not None:
+        await db.commit()
+        return replayed
+    # Serialise resolution too: two first adds must not create separate manual titles
+    # or race the unique TMDB reference before there is a movie row to lock.
+    reference = (
+        f"movie:{payload.movieId}"
+        if payload.movieId is not None
+        else f"tmdb:{payload.tmdbId}"
+        if payload.tmdbId is not None
+        else f"tv:{payload.tmdbTvId}"
+        if payload.tmdbTvId is not None
+        else f"title:{(payload.title or '').lower()}"
+    )
+    await hold_add_lock(db, f"collection-reference:{reference}")
     barcode: str | None = None
     if payload.barcode is not None:
         barcode = normalise(payload.barcode)
@@ -537,6 +561,9 @@ async def add_collection_item(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=FILM_REFERENCE_ERROR
         )
 
+    # Every actor takes this row lock, even an add that cannot generate a notification.
+    # Different references to the same title share its zero-to-one ownership decision.
+    await db.execute(select(Movie.id).where(Movie.id == movie.id).with_for_update())
     # Batch X10: a barcode already on an owned copy is refused unconfirmed, as the same film
     # is; the title lookalike is the check's question alone, so it is not asked here.
     duplicate = await _duplicate_state(db, movie, payload.formats, barcode=barcode)
@@ -571,9 +598,23 @@ async def add_collection_item(
         target_id=item.id,
         changes=changes,
     )
+    response = _item_response(item, movie.title)
+    recipients = []
+    if not duplicate.existingCopies:
+        recipients = await queue_addition(db, actor=user, movie=movie, item_id=item.id)
+    if payload.clientRequestId is not None:
+        db.add(
+            CollectionAddRequest(
+                user_id=user.id,
+                client_request_id=payload.clientRequestId,
+                request_hash=request_hash(payload),
+                item_id=item.id,
+                response_payload=response.model_dump(mode="json"),
+            )
+        )
     await db.commit()
-    await db.refresh(item)
-    return _item_response(item, movie.title)
+    await deliver_additions(db, recipients)
+    return response
 
 
 # ---------------------------------------------------------------------------

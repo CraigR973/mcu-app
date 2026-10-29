@@ -34,7 +34,8 @@ import {
  *    stays `queued` and the flush stops — there is no point trying the rest.
  * 3. **Silence is a question, not a failure.** A request that left and got nothing back
  *    becomes `unconfirmed` and is *read back*, never re-sent. Re-sending a create that
- *    landed makes a second disc; re-sending an edit that landed can revert a newer one.
+ *    landed on an older client can make a second disc; an edit can revert a newer one.
+ *    New adds keep a request ID as a second safeguard if readback finds the copy absent.
  * 4. **Order is preserved and a failure halts the flush.** Writes replay oldest-first and
  *    a stuck entry stops the ones behind it, because a later edit of the same disc must
  *    not overtake the create that gives it an id.
@@ -75,15 +76,16 @@ function describeAdd(input: AddCollectionItemInput): string {
 export async function addOrQueue(
   input: AddCollectionItemInput,
 ): Promise<{ item: Awaited<ReturnType<typeof addCollectionItem>> | null; queued: boolean }> {
+  const request = { ...input, clientRequestId: input.clientRequestId ?? crypto.randomUUID() }
   try {
-    return { item: await addCollectionItem(input), queued: false }
+    return { item: await addCollectionItem(request), queued: false }
   } catch (error) {
     if (!(error instanceof NetworkError) || !queueIsAvailable()) throw error
     await enqueue({
       operation: 'create',
       movieId: input.movieId,
       label: describeAdd(input),
-      body: input,
+      body: request,
       // A request that may have landed must not be replayed blind; one the browser
       // never sent is safe to send again the moment there is a connection.
       state: error.mayHaveLanded ? 'unconfirmed' : 'queued',

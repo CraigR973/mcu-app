@@ -11,6 +11,7 @@ import sys
 import psycopg2
 
 from src.auth import hash_pin
+from src.services.collection_additions import MARK_PROFILE_ID
 
 PINS = {"Craig": "4827", "Mark": "7391"}
 
@@ -20,6 +21,8 @@ def main() -> None:
     conn = psycopg2.connect(url)
     conn.autocommit = True
     with conn.cursor() as cur:
+        # AB3: the fixture binds Mark explicitly, as production does; never by role.
+        cur.execute("UPDATE profiles SET id = %s WHERE display_name = %s", (str(MARK_PROFILE_ID), "Mark"))
         for name, pin in PINS.items():
             cur.execute(
                 "UPDATE profiles SET pin_hash = %s, failed_login_count = 0, locked_until_utc = NULL, "

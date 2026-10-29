@@ -229,3 +229,25 @@ flowchart TB
 The lock is per night and works across API workers. A waiting caller reads the committed
 shortlist, or seeds after rollback. Existing vote lock ordering is retained. No new database
 shape, service, provider or API contract. Real-phone push/match acceptance remains Craig's.
+
+## AB3, implementation after owner approval 29 Oct (#306)
+
+```mermaid
+flowchart TB
+    Add[Mark adds first currently owned title] --> Request[Serialise request ID and title]
+    Request --> Commit[One transaction: copy + audit + receipt + recipient outbox]
+    Retry[Offline or lost-response retry] --> Request
+    Request --> Receipt[Existing receipt: return saved result]
+    Commit --> Deliver[Existing delivery: category / quiet hours / digest / devices]
+    Deliver --> Detail[Craig taps through to the title]
+```
+
+Mark's verified profile UUID selects the sender; roles and display names do not. New
+film/series/manual titles and reacquisition through Add qualify; editions and restores do
+not. Optional clientRequestId and durable receipts preserve the successful response through
+replay, including after a copy is removed. Existing offline readback remains the first check.
+Each other active profile gets one event, default on. Delivery claims queued rows under a
+lock so concurrent API/cron passes cannot send the same row concurrently. Transport runs
+after the add commits and cannot roll it back. Migration 070 adds the preference, receipts
+and category vocabulary; existing collection and watch-history rows are not rewritten.
+Real-phone receipt remains owner acceptance after shipment.
