@@ -1,5 +1,9 @@
 # AB2 verification — collection coverage and Summary cards
 
+**Current outcome: code shipped; final close-out blocked by CI 40793684816.**
+All AB2 cases passed; an existing movie-night seeding race caused one Chromium failure.
+Separate fix awaits Craig's go. The final-head diagnosis below supersedes completion wording.
+
 Review/build began 28 Oct; shipped 29 Oct. Sitting 1 only. Owner picks and exact additive contract were approved in chat
 before build plan/code; decision #303 records the scoped supersession of #299.
 Clean starting main 86e7d56 passed all seven CI jobs (40759704615). The existing review
@@ -132,3 +136,33 @@ owner observations remain open independently.
 
 Workflow repair: this gh version has no `pr diff --stat` flag; reviewed the actual PR patch
 with `gh pr diff` and the summary with `git diff --stat`. No gate/product change.
+
+
+## Final-head failure — close-out blocked, 29 Oct
+
+Closing documentation cf2880684c3b62296f9503e4a127bc1c2a16e5b8 failed CI 40793684816:
+six jobs passed; the E2E job failed one existing Chromium movie-night invite case.
+All five AB2 cases passed in Chromium, Firefox and WebKit. Firefox 53, WebKit 52 and
+cron six passed with only their existing skips; Chromium passed 53 and failed one.
+The clean local gate and PR/merge seven-job runs above remain valid evidence, but they
+do not make final main green. Sitting 1's final close-out is blocked, not complete.
+
+The failure artefact establishes a real server race, not a missing test wait: POST
+/movie-night/<id>/send returned HTTP 500 with UniqueViolationError on
+uq_movie_night_suggestion_movie. Candidate loading and Send both call ensure_seeded;
+it checks the suggestion count and inserts without a per-night lock. Two requests can
+both observe an empty shortlist and insert the same (session_id, movie_id). The failed
+Send therefore never reaches invite notification delivery. No push assertion is to change.
+
+The actual CI artefact/API traceback and failed logs are retained under the ignored AB2
+scratchpad. No repair code, retry-to-green, new skip, hosting change or production invite
+was performed. The group-start procedure explicitly stops on red CI. Craig has been asked
+to authorise a separate fix branch: serialise first seeding per night, add a deterministic
+concurrent-request regression while retaining every existing push/access assertion, then
+run the full local/PR/main gate and exact production proof. Allow roughly 45–60 minutes
+for verification plus investigation/repair; no schema/API change is proposed.
+Sitting 2 and AA10c remain excluded. The diagnostic handoff is committed locally only;
+it is not another CI/deployment attempt.
+
+Production cf28806 was read back after the failure: API/web exact SHA, full readiness
+and unauthenticated stats 401 pass. This does not waive the red E2E gate.

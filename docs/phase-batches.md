@@ -4731,10 +4731,12 @@ and physical handovers remain owner observations. Sitting 4 is complete; do not 
 
 ## Group AB — the 28 Oct snags, grouping approved 28 Oct
 
-**Sitting 1 complete 29 Oct: AB1 and AB2 shipped.** Planning approval
+**AB1 and AB2 code shipped; sitting 1 final close-out blocked on red CI (29 Oct).** Planning approval
 (#301) was followed by Craig's named sitting-1 go. AB1 shipped via PR #118 (`ad2c992`), with
 all local/PR/main gates and production SHA/readiness. Craig approved Summary cards/wording and the exact one-field stats contract (#303)
-before AB2 build; PR #119 shipped `c187ed7` with all gates and production proof. Sittings 2–5 and AA10c remain unauthorised.
+before AB2 build; PR #119 shipped `c187ed7` with full local/PR/merge gates and production proof.
+Closing docs cf28806 then failed final CI 40793684816 on an existing movie-night seeding race;
+all AB2 cases passed. Stop for Craig's go on a separate fix; no retry-to-green. Sittings 2–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
@@ -4752,7 +4754,7 @@ strictest batch sets its sitting's effort. Resolve an unavailable model with Cra
 
 | Sitting | Ordered work and checkpoints | Claude Code / Codex |
 |---|---|---|
-| 1 | ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`), complete; both owner picks approved before AB2 build | Opus 5 `high` / GPT-5.6 Sol High |
+| 1 | ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`), code shipped; final red-CI stop; both owner picks approved before AB2 build | Opus 5 `high` / GPT-5.6 Sol High |
 | 2 | AB3 Mark's addition notifications; exact event and preference design approved before implementation | Opus 5 `high` / GPT-5.6 Sol High |
 | 3 | AB4 installed-iPhone launch/top bar; reproduce before repair, owner verifies result | Opus 5 `high` / GPT-5.6 Sol High |
 | 4 | AB5 cinema source feasibility; report only, stop for source/coverage/cost picks | Opus 5 `high` / GPT-5.6 Sol High |
@@ -4969,7 +4971,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
 | **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → ~~AA9~~ (`aecdf8d`) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 5 complete, 28 Oct: AA3 PR #115 (`1c73d90`) and AA9 PR #116 (`aecdf8d`), each with its own review stop, owner picks, build plan and full close-out. Final PR/merge seven-job CI and exact production API/web SHA/full readiness passed. AA9's complete repair record is in its verification report; real-phone/live-AI observations remain open. No sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
-| **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: AB3 · 3: AB4 · 4: AB5 report · 5: AB6 → AB7, conditional | By sitting: Group AB table | By sitting: Group AB table | **Sitting 1 authorised 28 Oct: AB1 shipped in PR #118 (`ad2c992`), all gates/readiness passed; AB2 shipped PR #119 (`c187ed7`) after both owner picks, full gates and production proof. Sitting 1 complete. Other sittings remain unauthorised.** Home corrections share a sitting; notification semantics and installed-device diagnosis have separate owner stops. Cinema sources/coverage/costs must be approved before an ingestion/screen build. Each sitting separately authorised; one branch/PR per implementation batch. AA10c and existing valuation/device checkpoints stay outside this run. |
+| **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: AB3 · 3: AB4 · 4: AB5 report · 5: AB6 → AB7, conditional | By sitting: Group AB table | By sitting: Group AB table | **Sitting 1 authorised 28 Oct: AB1 shipped in PR #118 (`ad2c992`), all gates/readiness passed; AB2 shipped PR #119 (`c187ed7`) after both owner picks, full gates and production proof. Sitting 1 final close-out blocked by CI 40793684816 (movie-night seeding race); separate fix awaits go. Other sittings remain unauthorised.** Home corrections share a sitting; notification semantics and installed-device diagnosis have separate owner stops. Cinema sources/coverage/costs must be approved before an ingestion/screen build. Each sitting separately authorised; one branch/PR per implementation batch. AA10c and existing valuation/device checkpoints stay outside this run. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
