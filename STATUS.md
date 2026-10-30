@@ -2,56 +2,48 @@
 
 ## Now
 
-**30 Oct: Group AB sitting 3 (AB4), approved 32px header/Search repair implemented; owner acceptance open.**
-The iPhone 16 Pro Max/iOS 27.0.1 blurs installed-mode top-edge content while Safari is
-sharp. Isolated installed tests reproduce all three header positions; owner measurement
-32px and approval (#308) precede the repair. One startup Apple standalone marker enables
-the shared gap only below 1024px with positive top safe area, including approved older
-Apple phone layouts. Header and Search share it; visible content loses 32px. No launch,
-status metadata, navigation, auth, API/schema or hosting/credential change.
+**30 Oct: AB4 approved 32px repair implemented; Craig reports all four preview states sharp.**
+The actual repaired-app sample preview question covers Archive and Search in dark and
+light themes. Craig replies “all are sharp”. Its explicit Home Screen status and Search
+keyboard behaviour were not separately answered; those two observations are requested.
+Do not infer standalone acceptance from sharpness alone. Original MCU stays installed.
 
-The ten-command clean-source gate passes at 4f2a12b: API 2,549/zero skips (initial socket
-URI skipped nine, corrected through a full disposable-localhost rerun), shared 159, web
-736, lint/types/build. Chromium 61, Firefox 60 + existing dictation skip, jobs 6 pass;
-no new skips/retries. Draft PR #122 holds the exact-head seven-job CI outcome. Earlier head 90dc73d passed
-all seven; d8fb9cd failed one new WebKit test during a premature first theme reload.
-The trace shows auth/lazy Home startup still in flight; a real Home-readiness assertion
-is added before reload, preserving every existing assertion/timeout/retry/skip.
-14bfbb1 then passes all AB4 cases in all engines, but exposes an existing offline-test
-readiness race: it reads the queue before its asynchronous write commits, using the
-earlier offline banner as readiness. Add an exact persisted-state wait before retaining
-the unchanged immediate queue assertion; offline product code and all values/checks stay
-unchanged. Read its
-current checks before release. Native phone appearance is separate. Main CI
-40891874070 remains green.
+The shared 32px gap applies below the top safe area to Apple Home Screen phone layouts
+under 1024px with positive top inset, including approved older Apple layouts (#308).
+Header and Search share the gap; visible content loses 32px. No launch/status metadata,
+navigation, auth, API/schema or hosting/credential change. Actual app source remains 4f2a12b.
 
-Actual repaired-app preview AB4-3 uses read-only sample responses and dummy local
-identifiers, with no live account/collection. Its 83 compiled application JS/CSS assets
-match the isolated build; write methods fail 405, unknown reads 503, external connections
-are refused. Protected preview smoke passes in both themes with worker blocked and active.
-Final preview dpl_EcQczpRG6CkZq1g5r6maaek4pFZE is READY; refresh temporary access using the
-Vercel tool. Details: `docs/reviews/ab4-verification-2026-10-30.md`.
+Clean local gate: API 2,549/zero skips, shared 159, web 736, lint/types/build. Final review
+head 97b36e4 passes all seven CI jobs in 41044309324: Chromium 61, Firefox 60 + documented
+dictation skip, WebKit 59 + its two documented limitations, jobs 6. Focused corrected
+AB4/offline cases pass 5 each in Chromium/Firefox. The initial 9 socket-guarded API skips
+were resolved by a full disposable-localhost rerun. Two CI test-readiness failures and
+all tooling errors remain in the verification audit; original assertions/values,
+timeouts/retries/skips are retained. PR #122 remains a draft, open and unmerged.
 
-Craig has the separate-install preview question: Home Screen yes; Archive/Search sharp
-in dark/light; Search keyboard normal. Original MCU stays installed. Original Home →
-close → reopen still reaches Archive; retained old /movies target is consistent but
-unconfirmed. No deletion/re-add approved. Exact original installed version, actual phone
-remaining observations and production after remain open. AB4 stays unstruck; sitting 3
-is incomplete, sitting 4/AA10c excluded.
+AB4-3 preview dpl_EcQczpRG6CkZq1g5r6maaek4pFZE serves actual compiled app code with
+read-only sample responses and dummy local identifiers, no live account/collection.
+Details, access refresh and evidence: `docs/reviews/ab4-verification-2026-10-30.md`.
 
-Production API/web remain baseline f341d1084cc75863c7c00d3830a93347fc265436 with full readiness.
-No repair is merged or deployed to production. Existing AB3 phone/speech/live-assistant/
-AA10b/AA10c checks remain open.
+Original Home → close → reopen still reaches Archive. An old retained /movies target
+is consistent with the source history but unconfirmed. Original installed version,
+normal resume and production after remain open; no deletion/re-add is approved.
+AB4 stays unstruck and sitting 3 incomplete. Sitting 4 and AA10c have not started.
+Last live readback (30 Oct, 11:12 UTC): API/web exact f341d10, full readiness. No production
+deployment in this turn. Existing AB3 phone/speech/live-assistant/AA10b/AA10c checks stay open.
+
+This evidence-only documentation update is committed locally while owner checkpoints
+remain open; verified remote review head remains 97b36e4. Push accumulated documentation
+and require fresh exact-head seven-job CI before any eventual merge.
 
 ## Next
 
-Remain on fix/ab4-iphone-diagnosis / draft PR #122 at the real-phone/launch checkpoint,
-not close-out. Before any merge, require all seven CI jobs green on the current PR head. Obtain the
-same-iPhone actual-app preview dark/light header/Search and keyboard observations. Keep
-original-installation observations distinct from the preview. Launch/re-add needs a fresh
-online/no-pending-or-blocked-changes check, preservation of all local-only work, PIN/push
-consequences and the owner's exact decision before any removal. Do not repeat supplied
-phone facts or count desktop geometry as native acceptance. Do not start sitting 4 or AA10c.
+Confirm only the two unanswered preview observations: Home Screen status yes/no and
+whether Search opens its keyboard normally. All four sharpness states are now recorded;
+do not ask for them again. Then address the separate original-installation launch/
+version/resume checkpoint. Any removal/re-add needs a fresh online/no-pending-or-blocked-
+changes check, preservation of local-only work, PIN/push consequences and the owner's
+exact decision before removal. Remain at AB4, not close-out; do not start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -446,6 +438,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **30 Oct — AB4 owner reports all four actual-app preview states sharp:** Craig replies “all are sharp” to Archive/Search in both themes. Record all four appearance observations, with explicit Home Screen status and keyboard still unanswered; original MCU stays installed. Verified review head 97b36e4 / CI 41044309324 passes all seven jobs; full and focused results plus both corrected readiness failures remain in the audit. Documentation only, held locally at the owner checkpoint; no product change, production release, removal/re-add, AB4 completion, sitting 4 or AA10c.
 
 - **30 Oct — AB4 cross-engine checks pass; existing offline test readiness corrected:** 14bfbb1 CI 41042161988 passes all nine AB4 browser cases but fails the Chromium lost-answer offline test: immediate queue read [] before async IndexedDB persistence; later snapshot already shows Show change (pending > 0). Added an exact-state wait before retaining the original queued-state assertion, all lost-answer/copy-count checks and timeouts/retries/skips unchanged. No offline app-code change. Focused AB4/offline and final corrective full CI follow; retain red history and stop after a third E2E failure, never rerun to fish for green. Phone/launch acceptance and production hold remain.
 

@@ -28,9 +28,10 @@ conversation still maps onto this file.*
   standalone). On 30 Oct Craig reports 32px from AB4-2 and explicitly approves the exact
   header/Search repair (#308), including older Apple Home Screen phone-layout scope and
   screen-space cost. Shared clearance is implemented and the clean local gate passes.
-  Actual repaired-app sample preview (AB4-3) is ready for same-iPhone dark/light header and
-  Search/keyboard checks; install it separately with Open as Web App on and confirm Home
-  Screen: yes. Light/Search/full-app after/installed original version stay open. Keep MCU
+  Actual repaired-app sample preview (AB4-3): Craig now reports “all are sharp” for
+  Archive/Search in both themes. Only its explicit Home Screen status and Search keyboard
+  observation remain unanswered; do not repeat the four sharpness checks. Original
+  installed version/resume/production after and Archive launch remain open. Keep MCU
   installed; launch/re-add is a separate decision. Preview details and verification:
   `docs/reviews/ab4-verification-2026-10-30.md`.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.

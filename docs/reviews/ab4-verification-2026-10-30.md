@@ -216,3 +216,27 @@ full exact-head seven-job CI. Keep all failed runs visible. This is the final co
 full-CI attempt before the command's three-attempt stop if E2E fails again; do not keep
 rerunning until it happens to pass. The production repair remains held at the iPhone/
 launch checkpoint, with the original installation preserved and sitting 4/AA10c excluded.
+
+## Final automated result and owner response, 30 Oct
+
+Review head 97b36e41033b6531b9708674b9f4a8825a65d0c9 passed all seven jobs in
+[CI 41044309324](https://github.com/CraigR973/mcu-app/actions/runs/41044309324).
+Chromium 61, Firefox 60 + existing dictation skip, WebKit 59 + its two documented
+limitations, jobs 6. All nine AB4 engine cases passed. Corrected focused AB4/offline
+checks also passed five cases each in local Chromium and Firefox; E2E types passed.
+Both earlier red runs and their readiness corrections remain above. No expected value,
+timeout, test retry or skip was weakened. The original application repair remains 4f2a12b.
+
+Craig now replies **“all are sharp”** to the actual repaired-app preview question asking
+about Archive and Search in dark and light themes. Record this as owner-reported
+sharpness for all four requested states on the same affected iPhone, using sample data.
+The reply does not separately confirm the launcher's Home Screen status or Search
+keyboard behaviour; those two short observations remain requested. Do not infer them,
+or call installed-mode acceptance closed from a sharp result without the mode value.
+
+The original MCU remains installed. Original installed bundle version, normal resume,
+production after, and the original Home → close → Archive launch investigation remain
+open. No removal/re-add or launch rewrite is approved. AB4 remains unshipped and unstruck;
+sitting 4 and AA10c remain excluded. This observation update changes documentation only.
+The verified remote review head stays 97b36e4 while these owner checkpoints are open;
+local evidence-only commits can be pushed together before fresh exact-head final CI.
