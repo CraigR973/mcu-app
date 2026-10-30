@@ -54,7 +54,7 @@ coverage-incomplete first API run and scratch-helper corrections.
 | Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. Installed original bundle version, remaining theme/Search/resume observations open. |
 | Evidence and cause before approved repair | Isolated installed AB4-1 reproduced blur at all three positions; AB4-2 owner measurement 32px, then explicit Approve 32px repair (#308). Exact internal iOS compositor not inspected. |
 | Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; native keyboard/resume observations remain owner work. |
-| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Actual affected-iPhone app after/light/Search, Archive-launch investigation and exact-head CI/production remain open. The actual repaired-app sample preview is available below. Prototype or desktop tests do not close them. |
+| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Actual affected-iPhone app after/light/Search, Archive-launch investigation and production release remain open. Exact-head CI is on draft PR #122; the actual repaired-app sample preview is available below. Prototype or desktop tests do not close them. |
 
 ## Release boundary
 
@@ -147,9 +147,9 @@ is shipped and no merged-SHA proof is claimed.
 
 ## Review and stop point
 
-The branch is prepared as a draft PR so the existing seven-job CI can run the exact
-review head, including WebKit, Postgres 17, migration reversal, deployed-image boot and
-dependency audit. Read the attached PR checks for the final head/run outcome; a feature-
+[Draft PR #122](https://github.com/CraigR973/mcu-app/pull/122) carries the existing
+seven-job CI for its exact review head, including WebKit, Postgres 17, migration reversal,
+deployed-image boot and dependency audit. Read its current checks for the final head/run outcome; a feature-
 branch push with skipped E2E is insufficient. All local results above refer to the clean
 implementation source; later handoff edits are documentation only.
 

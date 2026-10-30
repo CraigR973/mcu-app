@@ -13,8 +13,8 @@ status metadata, navigation, auth, API/schema or hosting/credential change.
 The ten-command clean-source gate passes at 4f2a12b: API 2,549/zero skips (initial socket
 URI skipped nine, corrected through a full disposable-localhost rerun), shared 159, web
 736, lint/types/build. Chromium 61, Firefox 60 + existing dictation skip, jobs 6 pass;
-no new skips/retries. Exact-head seven-job draft PR CI is the next automated check; its
-final outcome is on the attached PR. Native phone appearance is separate. Main CI
+no new skips/retries. Draft PR #122 holds the exact-head seven-job CI outcome; read its
+current checks before release. Native phone appearance is separate. Main CI
 40891874070 remains green.
 
 Actual repaired-app preview AB4-3 uses read-only sample responses and dummy local
@@ -37,8 +37,8 @@ AA10b/AA10c checks remain open.
 
 ## Next
 
-Finish exact-head seven-job draft PR CI; remain on
-fix/ab4-iphone-diagnosis at the real-phone/launch checkpoint, not close-out. Obtain the
+Remain on fix/ab4-iphone-diagnosis / draft PR #122 at the real-phone/launch checkpoint,
+not close-out. Before any merge, require all seven CI jobs green on the current PR head. Obtain the
 same-iPhone actual-app preview dark/light header/Search and keyboard observations. Keep
 original-installation observations distinct from the preview. Launch/re-add needs a fresh
 online/no-pending-or-blocked-changes check, preservation of all local-only work, PIN/push
@@ -439,7 +439,7 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
-- **30 Oct — AB4 approved repair verified locally; actual-app preview checkpoint:** shared 32px header/Search clearance implemented at 4f2a12b after exact owner approval (#308). Ten-command clean gate passes; API first skipped 9 socket-host-guarded cases, then all 2,549 pass on verified disposable localhost without changing guards/tests; shared 159/web 736 and E2E types pass. Actual compiled-app preview AB4-3 uses read-only sample endpoints, no live account/collection; protected dark/light geometry/focus, worker reload and read/write isolation smoke pass, final dpl_EcQczpRG6CkZq1g5r6maaek4pFZE READY. Production remains f341d10/full readiness. Chromium 61/Firefox 60 + documented dictation skip/jobs 6 pass; exact-head draft PR CI and actual iPhone/launch acceptance are separately tracked; no production merge, original app removal, AB4 completion, sitting 4 or AA10c.
+- **30 Oct — AB4 approved repair verified locally; actual-app preview checkpoint:** shared 32px header/Search clearance implemented at 4f2a12b after exact owner approval (#308). Ten-command clean gate passes; API first skipped 9 socket-host-guarded cases, then all 2,549 pass on verified disposable localhost without changing guards/tests; shared 159/web 736 and E2E types pass. Actual compiled-app preview AB4-3 uses read-only sample endpoints, no live account/collection; protected dark/light geometry/focus, worker reload and read/write isolation smoke pass, final dpl_EcQczpRG6CkZq1g5r6maaek4pFZE READY. Production remains f341d10/full readiness. Chromium 61/Firefox 60 + documented dictation skip/jobs 6 pass; draft PR #122 carries exact-head CI; actual iPhone/launch acceptance remains separate; no production merge, original app removal, AB4 completion, sitting 4 or AA10c.
 
 - **30 Oct — AB4 exact 32px repair approved (#308):** Craig selected Approve 32px repair, including older Apple standalone phone-layout scope and screen-space cost. Implemented one shared safe-area clearance for header/Search, tagged before React mounts; no navigation/status metadata/API/schema change. Focused browser geometry/focus checks and full verification in progress. Real-phone after/light/Search and Archive-launch/re-add checkpoints remain open; sitting 4/AA10c excluded.
 
