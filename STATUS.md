@@ -2,35 +2,48 @@
 
 ## Now
 
-**30 Oct: Group AB sitting 3 (AB4), exact 32px repair approved (#308), implementation under verification.**
-Craig's iPhone 16 Pro Max/iOS 27.0.1 reproduces blur only in installed mode. AB4-1 confirms
-Relative/Sticky/Fixed all blurry with Home Screen: yes; browser-mode result was sharp.
-Fresh isolated sample reproduction separates this effect from MCU code/data/cache.
-Craig now reports 32px from AB4-2 as the smallest useful extra clearance. Light theme and
-Search were not separately confirmed; installed app version and actual app after remain open.
-Original MCU Home → close → reopen returns Archive; launch remains separately unresolved.
+**30 Oct: Group AB sitting 3 (AB4), approved 32px header/Search repair implemented; owner acceptance open.**
+The iPhone 16 Pro Max/iOS 27.0.1 blurs installed-mode top-edge content while Safari is
+sharp. Isolated installed tests reproduce all three header positions; owner measurement
+32px and approval (#308) precede the repair. One startup Apple standalone marker enables
+the shared gap only below 1024px with positive top safe area, including approved older
+Apple phone layouts. Header and Search share it; visible content loses 32px. No launch,
+status metadata, navigation, auth, API/schema or hosting/credential change.
 
-Proposal: `docs/reviews/ab4-repair-proposal-2026-10-30.md`. Add 32px below the top safe
-area to phone header and Search only in Apple Home Screen mode with a non-zero top inset.
-The deliberately simple scope includes older Apple installations using phone layout;
-it costs 32px of visible content. No positioning/status metadata/navigation, schema/API,
-hosting or credential change. Craig explicitly selected Approve 32px repair. The shared
-clearance is implemented; startup tagging and browser regression checks are under verification.
+The ten-command clean-source gate passes at 4f2a12b: API 2,549/zero skips (initial socket
+URI skipped nine, corrected through a full disposable-localhost rerun), shared 159, web
+736, lint/types/build. Chromium 61, Firefox 60 + existing dictation skip, jobs 6 pass;
+no new skips/retries. Exact-head seven-job draft PR CI is the next automated check; its
+final outcome is on the attached PR. Native phone appearance is separate. Main CI
+40891874070 remains green.
 
-Fresh fetched origin/main, API health and web version remain exact
-f341d1084cc75863c7c00d3830a93347fc265436; main CI 40891874070 succeeded, full readiness.
-No completed full app gate, PR, push or deployment for this repair yet. Branch fix/ab4-iphone-diagnosis
-holds checkpoint documents and isolated diagnostic sources. Both diagnostic previews must
-never be promoted. AB4 and existing AB3 phone/speech/live-assistant/AA10b/AA10c checks stay open.
+Actual repaired-app preview AB4-3 uses read-only sample responses and dummy local
+identifiers, with no live account/collection. Its 83 compiled application JS/CSS assets
+match the isolated build; write methods fail 405, unknown reads 503, external connections
+are refused. Protected preview smoke passes in both themes with worker blocked and active.
+Final preview dpl_EcQczpRG6CkZq1g5r6maaek4pFZE is READY; refresh temporary access using the
+Vercel tool. Details: `docs/reviews/ab4-verification-2026-10-30.md`.
+
+Craig has the separate-install preview question: Home Screen yes; Archive/Search sharp
+in dark/light; Search keyboard normal. Original MCU stays installed. Original Home →
+close → reopen still reaches Archive; retained old /movies target is consistent but
+unconfirmed. No deletion/re-add approved. Exact original installed version, actual phone
+remaining observations and production after remain open. AB4 stays unstruck; sitting 3
+is incomplete, sitting 4/AA10c excluded.
+
+Production API/web remain baseline f341d1084cc75863c7c00d3830a93347fc265436 with full readiness.
+No repair is merged or deployed to production. Existing AB3 phone/speech/live-assistant/
+AA10b/AA10c checks remain open.
 
 ## Next
 
-Complete the approved 32px header/Search implementation and run full gates, browser E2E,
-exact-head CI and production checks under the normal procedure, retaining actual iPhone acceptance in both
-themes/Search states. Do not repeat already supplied device observations or treat prototype/
-desktop checks as full-app proof. Launch remains a separate re-add comparison after a fresh
-local unsynced-state check, preserving local-only work and explaining PIN/push consequences;
-approval of header repair does not approve removal. Do not start sitting 4 or AA10c.
+Finish exact-head seven-job draft PR CI; remain on
+fix/ab4-iphone-diagnosis at the real-phone/launch checkpoint, not close-out. Obtain the
+same-iPhone actual-app preview dark/light header/Search and keyboard observations. Keep
+original-installation observations distinct from the preview. Launch/re-add needs a fresh
+online/no-pending-or-blocked-changes check, preservation of all local-only work, PIN/push
+consequences and the owner's exact decision before any removal. Do not repeat supplied
+phone facts or count desktop geometry as native acceptance. Do not start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -425,6 +438,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **30 Oct — AB4 approved repair verified locally; actual-app preview checkpoint:** shared 32px header/Search clearance implemented at 4f2a12b after exact owner approval (#308). Ten-command clean gate passes; API first skipped 9 socket-host-guarded cases, then all 2,549 pass on verified disposable localhost without changing guards/tests; shared 159/web 736 and E2E types pass. Actual compiled-app preview AB4-3 uses read-only sample endpoints, no live account/collection; protected dark/light geometry/focus, worker reload and read/write isolation smoke pass, final dpl_EcQczpRG6CkZq1g5r6maaek4pFZE READY. Production remains f341d10/full readiness. Chromium 61/Firefox 60 + documented dictation skip/jobs 6 pass; exact-head draft PR CI and actual iPhone/launch acceptance are separately tracked; no production merge, original app removal, AB4 completion, sitting 4 or AA10c.
 
 - **30 Oct — AB4 exact 32px repair approved (#308):** Craig selected Approve 32px repair, including older Apple standalone phone-layout scope and screen-space cost. Implemented one shared safe-area clearance for header/Search, tagged before React mounts; no navigation/status metadata/API/schema change. Focused browser geometry/focus checks and full verification in progress. Real-phone after/light/Search and Archive-launch/re-add checkpoints remain open; sitting 4/AA10c excluded.
 

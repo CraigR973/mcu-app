@@ -27,8 +27,12 @@ conversation still maps onto this file.*
   Home Screen: yes, Relative/Sticky/Fixed all blurry (earlier sharp result was not confirmed
   standalone). On 30 Oct Craig reports 32px from AB4-2 and explicitly approves the exact
   header/Search repair (#308), including older Apple Home Screen phone-layout scope and
-  screen-space cost. Implementation/gates in progress. Light/Search/full-app
-  after/installed version stay open. Keep MCU installed; launch/re-add is a separate decision.
+  screen-space cost. Shared clearance is implemented and the clean local gate passes.
+  Actual repaired-app sample preview (AB4-3) is ready for same-iPhone dark/light header and
+  Search/keyboard checks; install it separately with Open as Web App on and confirm Home
+  Screen: yes. Light/Search/full-app after/installed original version stay open. Keep MCU
+  installed; launch/re-add is a separate decision. Preview details and verification:
+  `docs/reviews/ab4-verification-2026-10-30.md`.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
