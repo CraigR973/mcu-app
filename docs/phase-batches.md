@@ -4749,8 +4749,11 @@ sharp, original Home → close → reopen returns Archive. AB4-1 Home Screen: ye
 Relative/Sticky/Fixed all blurry; earlier all-sharp run lacked standalone confirmation.
 AB4-2 yields owner-reported 32px. Concrete header/Search repair is approved (#308), including
 older Apple standalone phone-layout scope and content-space cost; see
-`docs/reviews/ab4-repair-proposal-2026-10-30.md`. Light/Search/full-app after and launch
-remain open. Clean ten-command/local browser/jobs gates pass; draft PR CI precedes the remaining owner checkpoint. No production deployment or app acceptance claim.
+`docs/reviews/ab4-repair-proposal-2026-10-30.md`. Craig confirms the actual repaired-app
+sample preview is sharp in all four Archive/Search/theme states, Home Screen: yes, and
+normal Search keyboard. Original installed version/resume/launch and production-after
+remain open. Clean local gates and seven-job review CI pass at 97b36e4; evidence-only
+documentation is held locally until owner checkpoints clear. No production deployment.
 Evidence: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
 Sittings 4–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
@@ -4787,7 +4790,7 @@ Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
 | ~~AB1~~ | ~~Actionable attention and correct links (snag 5), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #118, merge `ad2c992`; current actionable identification, read-time reconciliation, precise destinations/guidance and mutation/replay refresh. Full local/PR/main gates and exact API/web SHA/readiness; live read-only queue/doubt comparison agrees at zero. |
 | ~~AB2~~ | ~~Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #119, merge `c187ed7`; approved Summary cards, exact owned-watch count, older-response Unavailable, profile cache isolation and mutation/replay refresh. Full local/PR/main gates and API/web exact SHA/readiness; live read-only comparison agrees for both people. |
 | ~~AB3~~ | ~~Mark's new-title notifications (snag 4), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #121, merge `5cfa467`; approved Mark-only first-owned-title trigger, default-on preference, atomic outbox/receipt and retry/concurrency safety. Full local/PR/main gates and exact API/web SHA/full readiness; live credential-safe grants/category/preferences verified. Genuine later add/real-phone receipt remains owner acceptance. |
-| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **device checkpoint open** | Sitting 3 authorised 29 Oct (#307); iOS 27.0.1 installed blur/Safari sharp confirmed; AB4-1 Home Screen: yes, all three positions blurry; AB4-2 owner measurement 32px; exact repair approved (#308), implemented with full local/seven-job review CI (97b36e4). Owner reports all four actual-app sample preview states sharp; explicit standalone status/keyboard remain unanswered. Real app Home → close → Archive confirmed; phone/launch acceptance remains open. |
+| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **device checkpoint open** | Sitting 3 authorised 29 Oct (#307); iOS 27.0.1 installed blur/Safari sharp confirmed; AB4-1 Home Screen: yes, all three positions blurry; AB4-2 owner measurement 32px; exact repair approved (#308), implemented with full local/seven-job review CI (97b36e4). Owner confirms all four actual-app sample preview states sharp, Home Screen: yes and normal Search keyboard. Real app Home → close → Archive confirmed; original resume/local-state preflight requested. Original launch/version and production-after acceptance remain open. |
 | AB5 | Nine-cinema source feasibility (snag 8, report), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
 | AB6 | Cinema programme ingestion (conditional), 🔴 provisional | Opus 5 `xhigh` / GPT-5.6 Sol Extra High | planned | — |
 | AB7 | Local-cinema discovery screen (conditional), 🟡 provisional | Sonnet 5 `high` / GPT-5.6 Terra High | planned | — |

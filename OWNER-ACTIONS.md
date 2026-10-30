@@ -29,10 +29,13 @@ conversation still maps onto this file.*
   header/Search repair (#308), including older Apple Home Screen phone-layout scope and
   screen-space cost. Shared clearance is implemented and the clean local gate passes.
   Actual repaired-app sample preview (AB4-3): Craig now reports “all are sharp” for
-  Archive/Search in both themes. Only its explicit Home Screen status and Search keyboard
-  observation remain unanswered; do not repeat the four sharpness checks. Original
-  installed version/resume/production after and Archive launch remain open. Keep MCU
-  installed; launch/re-add is a separate decision. Preview details and verification:
+  Archive/Search in both themes, then confirms “yes to both”: Home Screen: yes and
+  normal Search keyboard. Those installed preview observations are accepted; do not
+  repeat them. Original installed version/resume/production after and Archive launch
+  remain open. Normal resume and a fresh online check for pending/blocked changes,
+  unfinished forms and Move tray contents are requested. Keep MCU installed; any
+  removal/re-add needs local-state preservation, PIN/push costs and a separate decision.
+  Preview details and verification:
   `docs/reviews/ab4-verification-2026-10-30.md`.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,

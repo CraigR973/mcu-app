@@ -2,11 +2,11 @@
 
 ## Now
 
-**30 Oct: AB4 approved 32px repair implemented; Craig reports all four preview states sharp.**
-The actual repaired-app sample preview question covers Archive and Search in dark and
-light themes. Craig replies “all are sharp”. Its explicit Home Screen status and Search
-keyboard behaviour were not separately answered; those two observations are requested.
-Do not infer standalone acceptance from sharpness alone. Original MCU stays installed.
+**30 Oct: AB4 installed preview appearance and Search keyboard confirmed on the affected iPhone.**
+Craig reports Archive and Search sharp in dark and light themes, then explicitly confirms
+“yes to both”: Home Screen status yes and Search opens the keyboard normally. This closes
+those preview observations using the actual repaired app with read-only sample data.
+Original MCU stays installed; production-after and the separate launch checkpoint remain open.
 
 The shared 32px gap applies below the top safe area to Apple Home Screen phone layouts
 under 1024px with positive top inset, including approved older Apple layouts (#308).
@@ -38,12 +38,15 @@ and require fresh exact-head seven-job CI before any eventual merge.
 
 ## Next
 
-Confirm only the two unanswered preview observations: Home Screen status yes/no and
-whether Search opens its keyboard normally. All four sharpness states are now recorded;
-do not ask for them again. Then address the separate original-installation launch/
-version/resume checkpoint. Any removal/re-add needs a fresh online/no-pending-or-blocked-
-changes check, preservation of local-only work, PIN/push consequences and the owner's
-exact decision before removal. Remain at AB4, not close-out; do not start sitting 4 or AA10c.
+In original MCU, tap Home, briefly switch apps and return without swiping MCU away:
+record whether Home resumes or Archive appears. While online, obtain a fresh check for
+pending/blocked changes, unfinished Add/edit forms and discs in the Move tray. These
+non-destructive observations are requested; keep the original installation in place.
+Any removal/re-add needs preservation of local-only work, PIN/push consequences and the
+owner's exact decision before removal. All four installed preview sharpness states and
+normal Search keyboard are confirmed; do not repeat those checks. Original installed
+version/launch and production-after remain open. Remain at AB4, not close-out; do not
+start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -438,6 +441,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **30 Oct — AB4 native preview observations confirmed:** Craig confirms Home Screen: yes and normal Search keyboard after reporting Archive/Search sharp in both themes. Original-app normal resume and fresh online/local-state checks requested before any separate re-add decision; no removal, merge or production deployment. Evidence-only documentation remains local pending owner checkpoints.
 
 - **30 Oct — AB4 owner reports all four actual-app preview states sharp:** Craig replies “all are sharp” to Archive/Search in both themes. Record all four appearance observations, with explicit Home Screen status and keyboard still unanswered; original MCU stays installed. Verified review head 97b36e4 / CI 41044309324 passes all seven jobs; full and focused results plus both corrected readiness failures remain in the audit. Documentation only, held locally at the owner checkpoint; no product change, production release, removal/re-add, AB4 completion, sitting 4 or AA10c.
 

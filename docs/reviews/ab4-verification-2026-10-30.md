@@ -240,3 +240,27 @@ open. No removal/re-add or launch rewrite is approved. AB4 remains unshipped and
 sitting 4 and AA10c remain excluded. This observation update changes documentation only.
 The verified remote review head stays 97b36e4 while these owner checkpoints are open;
 local evidence-only commits can be pushed together before fresh exact-head final CI.
+
+## Native preview confirmation, 30 Oct
+
+Craig replies **“yes to both”** to the two explicitly remaining observations: the
+Header Check status said “Home Screen: yes”, and tapping Search opened the keyboard
+normally. Combined with the earlier four sharp Archive/Search/light/dark states, this
+confirms the repaired actual-app sample preview's installed-mode appearance and Search
+keyboard on the affected iPhone 16 Pro Max/iOS 27.0.1. These are owner observations;
+desktop targeting/geometry tests are not substituted for them. Do not repeat these checks.
+
+The original MCU installation is preserved. Its Home → close → Archive cold launch is
+confirmed; normal resume after briefly switching apps remains unanswered. Ask that
+non-destructive comparison and a fresh online check for pending/blocked changes, unfinished
+Add/edit forms and Move tray contents. The tray uses localStorage key mcu-move-tray; an
+old screenshot without a banner is not a fresh queue/local-state clearance. No removal
+is approved. Any later removal/re-add proposal must preserve local-only work, explain
+PIN sign-in/notification re-enablement/local-state loss, and obtain the exact owner decision.
+
+Original installed bundle version, launch cause and production-after remain open. No
+launch rewrite, merge, promotion or production deployment occurs. AB4 stays unstruck;
+sitting 4 and AA10c have not started. This documentation-only update does not rerun the
+application gate: source remains 4f2a12b and verified remote review head 97b36e4, all seven
+jobs green in 41044309324. Accumulate local evidence commits for one final push and fresh
+exact-head CI after owner checkpoints clear.
