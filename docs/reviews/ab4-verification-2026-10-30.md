@@ -187,3 +187,32 @@ head/checks. Native iPhone acceptance and the original launch checkpoint remain 
 PR metadata tooling also failed once on GitHub's deprecated classic-project GraphQL field;
 a REST invocation first rejected an unsupported repository flag locally, then the fully
 qualified REST update succeeded. No product/source/test effect from those metadata errors.
+
+## CI offline-persistence readiness failure and correction
+
+Head 14bfbb1 / run 41042161988 passed all three AB4 cases in Chromium, Firefox and
+WebKit. The new Home-readiness prerequisite passed its full-engine verification. The
+run nevertheless remains red: the existing Chromium lost-answer offline-replay case
+read [] where it requires exactly [["queued",null]]. Six other CI jobs passed;
+Chromium's other 60 cases passed, Firefox 60 + its documented skip, WebKit 59 + its two
+documented skips, jobs 6. The failure is not removed by those passing results.
+
+Its retained trace/error snapshot shows the distinction: the test waits for the offline
+banner, which can appear immediately on the browser's offline event before Add commits
+to IndexedDB. Its immediate queue read saw []; the later error snapshot already shows
+Show change, which OfflineBanner renders only with pending > 0. Source inspection also
+confirms asynchronous enqueue. This is a readiness race in the test, rather than evidence
+that the header repair changed queue persistence. No offline product code is changed.
+
+Add one exact-state persistence wait before the existing immediate queued-state assertion.
+The original assertion remains byte-for-byte, as do every unconfirmed-state, server-copy,
+lost-answer and no-duplicate check. The test still requires exactly one queued/error-free
+write before returning online, then exactly one server copy through the lost-answer replay.
+No expected value, timeout, test retry or skip changes; a queue that never persists still
+fails. The other existing immediate assertions after the observed completed sync remain.
+
+The next review head requires focused Chromium/Firefox AB4 + offline verification and
+full exact-head seven-job CI. Keep all failed runs visible. This is the final corrective
+full-CI attempt before the command's three-attempt stop if E2E fails again; do not keep
+rerunning until it happens to pass. The production repair remains held at the iPhone/
+launch checkpoint, with the original installation preserved and sitting 4/AA10c excluded.

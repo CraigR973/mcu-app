@@ -108,6 +108,9 @@ test.describe('offline, against an API on another origin', () => {
       // thinks it is online, so the same banner says a change is waiting. Either is the banner, and
       // the queue's state is what is asserted.
       await expect(banner).toContainText(/You’re offline|waiting to sync/)
+      // Offline is announced before the async IndexedDB write commits. Wait for
+      // persistence itself, then retain the original exact queued-state assertion.
+      await expect.poll(() => queueState(page)).toBe('[["queued",null]]')
       expect(await queueState(page)).toBe('[["queued",null]]')
 
       const seen: string[] = []

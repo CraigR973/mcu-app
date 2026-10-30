@@ -16,7 +16,12 @@ URI skipped nine, corrected through a full disposable-localhost rerun), shared 1
 no new skips/retries. Draft PR #122 holds the exact-head seven-job CI outcome. Earlier head 90dc73d passed
 all seven; d8fb9cd failed one new WebKit test during a premature first theme reload.
 The trace shows auth/lazy Home startup still in flight; a real Home-readiness assertion
-is added before reload, preserving every existing assertion/timeout/retry/skip. Read its
+is added before reload, preserving every existing assertion/timeout/retry/skip.
+14bfbb1 then passes all AB4 cases in all engines, but exposes an existing offline-test
+readiness race: it reads the queue before its asynchronous write commits, using the
+earlier offline banner as readiness. Add an exact persisted-state wait before retaining
+the unchanged immediate queue assertion; offline product code and all values/checks stay
+unchanged. Read its
 current checks before release. Native phone appearance is separate. Main CI
 40891874070 remains green.
 
@@ -441,6 +446,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **30 Oct — AB4 cross-engine checks pass; existing offline test readiness corrected:** 14bfbb1 CI 41042161988 passes all nine AB4 browser cases but fails the Chromium lost-answer offline test: immediate queue read [] before async IndexedDB persistence; later snapshot already shows Show change (pending > 0). Added an exact-state wait before retaining the original queued-state assertion, all lost-answer/copy-count checks and timeouts/retries/skips unchanged. No offline app-code change. Focused AB4/offline and final corrective full CI follow; retain red history and stop after a third E2E failure, never rerun to fish for green. Phone/launch acceptance and production hold remain.
 
 - **30 Oct — AB4 final-head WebKit setup race stopped:** d8fb9cd CI 41039699513 failed the new non-Apple standalone case at page.reload (Frame load interrupted); earlier 90dc73d run 41039099660 passed all seven jobs. Trace retains initial auth/lazy Home graph still in flight when test reloaded. Added a visible real-Home prerequisite before that first reload, with no app change, expectation/timeout/retry/skip change; focused verification and exact-head CI follow. Failure is not hidden by the earlier pass; phone/launch checkpoints and production hold remain.
 
