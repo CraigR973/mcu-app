@@ -251,3 +251,22 @@ lock so concurrent API/cron passes cannot send the same row concurrently. Transp
 after the add commits and cannot roll it back. Migration 070 adds the preference, receipts
 and category vocabulary; existing collection and watch-history rows are not rewritten.
 Real-phone receipt remains owner acceptance after shipment.
+
+
+## AB4, approved 30 Oct (#308), implementation under verification
+
+```mermaid
+flowchart TD
+    Apple[Apple Home Screen signal before React mounts] --> Gate[Phone layout and non-zero top safe area]
+    Gate --> Gap[Shared 32px clearance below safe area]
+    Gap --> Header[Phone header controls]
+    Gap --> Search[Search sheet controls]
+```
+
+Browser tabs, Android installations, desktop layout and zero-top-inset orientation get
+zero extra clearance. The header remains relative in the existing flex shell; its main
+scroll area gives up 32px where the rule applies. Both themes use their existing solid
+surface. No status metadata, navigation, login-return, deep-link or normal-resume rule
+changes. Native sharpness still requires actual affected-iPhone app acceptance; the
+prototype's measured value and simulated browser geometry are separate evidence.
+Archive launch remains the retained-installation/re-add owner checkpoint.

@@ -6552,3 +6552,17 @@ contemporaneous.
      evidence before a re-add comparison, and retain real-device acceptance separately
      from server version, manifest, CSS, desktop tests and CI. Checkpoint evidence and
      outstanding observations: docs/reviews/ab4-device-checkpoint-2026-10-29.md.
+
+
+308. **AB4's measured 32px header/Search clearance is approved (30 Oct).**
+     Craig chose “Approve 32px repair” at the explicit repair checkpoint after affected
+     iPhone 16 Pro Max/iOS 27.0.1 evidence: Safari sharp, installed relative/sticky/fixed
+     diagnostic all blurry, then 32px clearance reported sharp. Apply the shared gap only
+     to Apple Home Screen phone layout with a non-zero top safe-area inset, including
+     older Apple installations as explicitly approved; the cost is 32px of visible content.
+     Desktop/browser/Android layouts get no gap. Preserve relative positioning, theme,
+     Search focus/modal dimming, routes, normal resume and existing status metadata.
+     Approval is the exact scope in docs/reviews/ab4-repair-proposal-2026-10-30.md, not
+     acceptance of the actual app's light/Search/after appearance, an Archive-launch
+     rewrite, removal/re-add of the original installation, hosting/credentials, sitting 4
+     or AA10c. Full gates and real-device acceptance remain distinct and mandatory.

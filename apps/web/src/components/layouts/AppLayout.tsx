@@ -164,8 +164,8 @@ export default function AppLayout({ children }: Props) {
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* AA1: keep the iOS clock and page on the same surface, with a clear rule below. */}
-        <header aria-label="Top bar" className="relative z-20 border-b border-border bg-background pt-[env(safe-area-inset-top)]">
+        {/* AA1's shared surface; AB4 adds the measured Apple Home Screen clearance. */}
+        <header aria-label="Top bar" className="phone-chrome-top relative z-20 border-b border-border bg-background">
           <PhoneTopBar onOpenPalette={() => setPaletteOpen(true)} />
           <div className="hidden min-h-[4.5rem] items-center gap-3 px-7 lg:flex">
           <div className="w-full max-w-2xl flex-1">
@@ -230,7 +230,7 @@ export default function AppLayout({ children }: Props) {
             aria-modal="true"
             aria-label="Search the archive"
             // Search covers the top bar, so its surface follows AA1's bar colour.
-            className="absolute inset-x-0 top-0 border-b border-border bg-background px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-lift"
+            className="phone-search-top absolute inset-x-0 top-0 border-b border-border bg-background px-3 pb-3 shadow-lift"
           >
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">

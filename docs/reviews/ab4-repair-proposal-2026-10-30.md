@@ -1,6 +1,6 @@
 # AB4 — measured header clearance: proposed repair
 
-30 Oct. **Proposal awaiting Craig's approval. No app repair implemented.**
+30 Oct. **Craig approved the exact 32px scope (#308); implementation authorised.**
 This is the owner checkpoint before changing app header/Search/iOS chrome.
 Sitting 4 and AA10c are excluded. AB4 and its real-phone acceptance remain open.
 
@@ -19,7 +19,7 @@ that changing positioning alone does not remove it on this phone.
 
 The separate AB4-2 clearance test changes only additional top space. Craig now reports
 **32px** in response to the smallest-sharp-value request. Treat this as the owner-reported
-diagnostic measurement, not an approval to build. The exact internal iOS compositor is
+diagnostic measurement; the later explicit “Approve 32px repair” authorises this scope. The exact internal iOS compositor is
 not inspected. Light-theme and Search results were not separately supplied. The full
 app's updated rendering and installed bundle version are not yet verified.
 

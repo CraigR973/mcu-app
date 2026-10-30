@@ -10,6 +10,7 @@ import './index.css'
 import { createQueryClient } from './lib/query-client'
 import { registerServiceWorker } from './lib/register-sw'
 import { reloadOnceForNewBuild } from './lib/describe-error'
+import { applyAppleStandaloneChrome } from './lib/apple-standalone-chrome'
 
 const queryClient = createQueryClient()
 
@@ -19,6 +20,8 @@ const queryClient = createQueryClient()
 window.addEventListener('vite:preloadError', (event) => {
   if (reloadOnceForNewBuild()) event.preventDefault()
 })
+
+applyAppleStandaloneChrome()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -16,6 +16,22 @@
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     --spacing-2xl: 3rem;
+    --mcu-safe-area-top: env(safe-area-inset-top, 0px);
+    --mcu-ios-chrome-clearance: 0px;
+  }
+
+  /* AB4, #308: the owner measured this in an installed iPhone test. A positive
+     native inset enables the 32px gap; a zero inset (normally landscape) removes it.
+     Apple Home Screen phone layouts include older iOS versions by owner approval.
+     Browser tabs, Android installs and desktop layouts retain zero extra clearance. */
+  :root[data-apple-standalone] {
+    --mcu-ios-chrome-clearance: min(32px, calc(var(--mcu-safe-area-top) * 1000));
+  }
+
+  @media (min-width: 1024px) {
+    :root[data-apple-standalone] {
+      --mcu-ios-chrome-clearance: 0px;
+    }
   }
 
   * {
@@ -109,6 +125,14 @@
 }
 
 @layer components {
+  .phone-chrome-top {
+    padding-top: calc(var(--mcu-safe-area-top) + var(--mcu-ios-chrome-clearance));
+  }
+
+  .phone-search-top {
+    padding-top: calc(var(--mcu-safe-area-top) + var(--mcu-ios-chrome-clearance) + 0.75rem);
+  }
+
   .page-shell {
     @apply mx-auto w-full max-w-[96rem] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-12;
   }

@@ -2,7 +2,7 @@
 
 ## Now
 
-**30 Oct: Group AB sitting 3 (AB4), 32px measured; app repair awaits owner approval.**
+**30 Oct: Group AB sitting 3 (AB4), exact 32px repair approved (#308), implementation under verification.**
 Craig's iPhone 16 Pro Max/iOS 27.0.1 reproduces blur only in installed mode. AB4-1 confirms
 Relative/Sticky/Fixed all blurry with Home Screen: yes; browser-mode result was sharp.
 Fresh isolated sample reproduction separates this effect from MCU code/data/cache.
@@ -14,19 +14,19 @@ Proposal: `docs/reviews/ab4-repair-proposal-2026-10-30.md`. Add 32px below the t
 area to phone header and Search only in Apple Home Screen mode with a non-zero top inset.
 The deliberately simple scope includes older Apple installations using phone layout;
 it costs 32px of visible content. No positioning/status metadata/navigation, schema/API,
-hosting or credential change. Measurement is not approval; no app repair implemented.
+hosting or credential change. Craig explicitly selected Approve 32px repair. The shared
+clearance is implemented; startup tagging and browser regression checks are under verification.
 
 Fresh fetched origin/main, API health and web version remain exact
 f341d1084cc75863c7c00d3830a93347fc265436; main CI 40891874070 succeeded, full readiness.
-No full app gate, PR, push or deployment for this proposal. Branch fix/ab4-iphone-diagnosis
+No completed full app gate, PR, push or deployment for this repair yet. Branch fix/ab4-iphone-diagnosis
 holds checkpoint documents and isolated diagnostic sources. Both diagnostic previews must
 never be promoted. AB4 and existing AB3 phone/speech/live-assistant/AA10b/AA10c checks stay open.
 
 ## Next
 
-Craig approves or revises the exact 32px header/Search repair scope and its older-Apple/
-screen-space cost. Only then implement and run full gates, browser E2E, exact-head CI and
-production checks under the normal procedure, retaining actual iPhone acceptance in both
+Complete the approved 32px header/Search implementation and run full gates, browser E2E,
+exact-head CI and production checks under the normal procedure, retaining actual iPhone acceptance in both
 themes/Search states. Do not repeat already supplied device observations or treat prototype/
 desktop checks as full-app proof. Launch remains a separate re-add comparison after a fresh
 local unsynced-state check, preserving local-only work and explaining PIN/push consequences;
@@ -425,6 +425,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **30 Oct — AB4 exact 32px repair approved (#308):** Craig selected Approve 32px repair, including older Apple standalone phone-layout scope and screen-space cost. Implemented one shared safe-area clearance for header/Search, tagged before React mounts; no navigation/status metadata/API/schema change. Focused browser geometry/focus checks and full verification in progress. Real-phone after/light/Search and Archive-launch/re-add checkpoints remain open; sitting 4/AA10c excluded.
 
 - **30 Oct — AB4 clearance measured, repair checkpoint prepared:** Craig reports 32px from AB4-2. Saved concrete header/Search proposal with Apple standalone/phone-layout/non-zero-top-inset targeting, explicit older-Apple scope and 32px content cost; no app code until owner approval. Light/Search/full-app after remain unconfirmed, and Archive launch remains separate from repair/re-add approval. Fresh fetched main/latest CI/API/web exact f341d10/full readiness green. Documents only, no new diagnostic or production deployment, app gate, PR or push; sitting 4/AA10c excluded.
 
