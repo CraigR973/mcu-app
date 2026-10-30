@@ -25,9 +25,10 @@ conversation still maps onto this file.*
   Sitting 3 authorised 29 Oct (#307): iPhone 16 Pro Max/iOS 27.0.1 installed header blurry,
   Safari sharp; original Home → close → reopen returns Archive. AB4-1 corrected run confirms
   Home Screen: yes, Relative/Sticky/Fixed all blurry (earlier sharp result was not confirmed
-  standalone). Next: temporary AB4 Space test AB4-2 measures the smallest extra top clearance
-  that makes title/stripe circle sharp, 0–48px. Keep MCU installed. Value/light/Search checks
-  precede a concrete repair review; app acceptance/installed version/resume stay open.
+  standalone). On 30 Oct Craig reports 32px from AB4-2. Next: approve/revise the exact
+  header/Search repair in `docs/reviews/ab4-repair-proposal-2026-10-30.md`, including 32px
+  screen-space cost and older Apple Home Screen phone-layout scope. Light/Search/full-app
+  after/installed version stay open. Keep MCU installed; launch/re-add is a separate decision.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:

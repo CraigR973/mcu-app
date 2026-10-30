@@ -6,8 +6,9 @@ repaired with Craig's separate approval in PR #120 (`bf0eb36`), all full gates a
 production proof. Sitting 2 shipped AB3 in PR #121 (`5cfa467`) after all four pre-build owner picks (#306),
 full local/PR/main gates and exact production proof. Genuine later add/real-phone receipt remains
 owner acceptance; approved contract: `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`.
-Sitting 3 authorised 29 Oct (#307): installed blur reproduced in isolated AB4-1; measured
-clearance test AB4-2 and app repair checkpoint remain open. Sittings 4–5 and AA10c remain excluded. The verification reports retain
+Sitting 3 authorised 29 Oct (#307): installed blur reproduced in isolated AB4-1;
+AB4-2 yielded 32px (30 Oct), and exact app repair approval remains open.
+Sittings 4–5 and AA10c remain excluded. The verification reports retain
 the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
@@ -79,8 +80,8 @@ Craig approved the grouping and then separately authorised sitting 1 on 28 Oct. 
 AB2 shipped `c187ed7` after both owner picks. Sitting 1 completed after the approved race
 repair PR #120 (`bf0eb36`). Sitting 2 shipped AB3 (`5cfa467`) on 29 Oct after all four pre-build owner
 picks (#306), full gates and exact production proof; genuine add/real-phone receipt remains owner acceptance. Sitting 3 authorised 29 Oct (#307); AB4 is at the affected-device evidence
-checkpoint: standalone AB4-1 blurs in all positions; AB4-2 clearance measurement precedes
-any proposed app repair. See
+checkpoint: standalone AB4-1 blurs in all positions; AB4-2 measured 32px and the exact header/Search repair awaits approval
+(`ab4-repair-proposal-2026-10-30.md`). See
 `docs/reviews/ab4-device-checkpoint-2026-10-29.md`. Sittings 4–5 remain unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance

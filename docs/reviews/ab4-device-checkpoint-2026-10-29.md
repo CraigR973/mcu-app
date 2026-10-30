@@ -1,7 +1,7 @@
 # AB4 — affected-iPhone evidence checkpoint
 
-29 Oct. Sitting 3 is authorised; diagnosis and acceptance remain incomplete.
-No repair is proposed. Sitting 4 and AA10c are excluded.
+30 Oct update. Sitting 3 is authorised; measured 32px repair proposal awaits approval.
+No app repair is implemented; acceptance remains incomplete. Sitting 4 and AA10c are excluded.
 
 ## Evidence received from Craig
 
@@ -158,7 +158,7 @@ The launch issue remains distinct: the real MCU app returns to Archive after bei
 on Home, swiped away and reopened. This fits a retained /movies launch target; installed
 manifest/OS restoration/bundle have not been directly read. No forced Home-on-resume fix.
 
-## Clearance experiment AB4-2 — ready, phone measurement pending
+## Clearance experiment AB4-2 — owner reports 32px; app repair approval pending
 
 Before proposing an app repair, measure whether moving controls below the native band
 actually clears them on this phone. AB4-2 keeps the relative header and status metadata;
@@ -190,12 +190,24 @@ reaches 16px, and its authenticated manifest returns 200/name AB4 Space. No phon
 claim follows from these checks. No new failure or gate weakening occurred for AB4-2.
 No app product code, PR, push, full app gate or production deployment occurred.
 
+## 30 Oct measurement and repair checkpoint
+
+Craig replies **“32px”** to the smallest-clearance request. This is the reported sharp
+value in AB4-2; it is not an app build approval. Light theme and Search were requested
+but no separate results were supplied, so their phone criteria remain open.
+
+Concrete proposal: `ab4-repair-proposal-2026-10-30.md`. Add the measured 32px below the
+safe area to phone header and Search controls in Apple standalone mode with a non-zero
+top inset. This includes older Apple installations in phone layout and costs 32px of
+visible content; desktop/browser/Android layouts get no extra clearance. No navigation,
+status-bar metadata, schema/API, hosting or credential change is proposed. Craig's
+approval is required before app chrome is changed. Launch/re-add approval stays separate.
+
 ## Next owner observation
 
-Run AB4-2 to establish the smallest useful clearance and its cost. Then present the
-measured cause/repair checkpoint before any app chrome change. If 0px is sharp, the
-baseline did not reproduce; if 48px still blurs, clearance is not demonstrated as useful.
-Do not keep adding arbitrary space or claim a repair from source tests.
+The 32px measurement is recorded. Resolve the concrete app repair checkpoint before
+any chrome change; do not repeat the confirmed positioning, clearance or launch tests.
+Light/Search and full-app before/after remain owner acceptance, not inferred passes.
 
 Original app light theme, Search-open, brief-switch resume, installed version and actual
 app before/after remain open. The dark/Search-closed image, same-phone sharp Safari,
@@ -246,7 +258,8 @@ AB4 is yellow; the ledger setting is Opus 5 high / GPT-5.6 Sol High. No delegati
 Branch: `fix/ab4-iphone-diagnosis`, checkpoint documents and isolated diagnostic sources.
 No product repair, PR, push or production deployment; only the static AB4-1/AB4-2 previews above.
 The batch row stays open. No architecture change or new product decision was made.
-Resume with AB4-2 clearance measurement, then the concrete app repair checkpoint. AB4-1
+Resume at Craig’s approval of ab4-repair-proposal-2026-10-30.md; 32px is measured, not
+approved for implementation. AB4-1
 has reproduced blur in all three positions with standalone confirmed; do not repeat it.
 Launch remains a separate retained-installation/re-add investigation with local-state
 safeguards. Device app before/after stays open even if later source tests pass.
