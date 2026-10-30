@@ -19,6 +19,9 @@ for (const mode of [
       }
     }, mode)
     await page.goto('/dashboard')
+    // The document load finishes before auth and the lazy Home graph. Wait for the
+    // real screen before asking WebKit to reload it for the first theme.
+    await expect(page.getByRole('list', { name: 'The collection in numbers' })).toBeVisible()
 
     for (const theme of ['dark', 'light']) {
       await page.evaluate(value => localStorage.setItem('mcu-theme', value), theme)

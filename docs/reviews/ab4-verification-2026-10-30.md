@@ -159,3 +159,31 @@ keyboard normal), then address the original-installation launch/version/resume c
 Keep the original app installed; no removal is authorised. Any real-app re-add comparison
 needs a fresh sync/local-state check and exact owner decision. AB4 is not shipped or
 complete, and Group AB sitting 4 / AA10c have not started.
+
+## CI navigation-readiness failure and correction
+
+Initial review head 90dc73d passed all seven jobs in run 41039099660: Chromium 61,
+Firefox 60 + one documented dictation skip, WebKit 59 + its two documented limitations,
+jobs 6. All three new AB4 cases passed in WebKit.
+
+The documentation-only head d8fb9cd then failed run 41039699513 in the new non-Apple
+standalone WebKit case: page.reload raised Frame load interrupted at its first theme
+reload. Six other jobs passed, as did Chromium 61, Firefox 60 + its existing skip,
+WebKit's other 58 cases + two existing skips, and jobs 6. Do not substitute the earlier
+green run for this failed head or label this final CI green.
+
+The retained trace shows initial /dashboard document load returning before /auth/me
+and the lazy Home module graph had settled. The test requested its first reload while
+that startup was still in flight; it had no initial Home-readiness assertion. The exact
+WebKit internal cancellation mechanism is unconfirmed. The test now requires the actual
+collection-numbers list to be visible before the first theme/reload sequence. Every
+existing geometry, targeting, theme, focus and overlap assertion remains; no timeout,
+retry, skip, expected value or product code changes. This adds a stronger prerequisite,
+rather than treating a browser document load as completed application startup.
+
+Corrected focused Chromium/Firefox and exact-head CI results belong to the next review
+head/checks. Native iPhone acceptance and the original launch checkpoint remain open.
+
+PR metadata tooling also failed once on GitHub's deprecated classic-project GraphQL field;
+a REST invocation first rejected an unsupported repository flag locally, then the fully
+qualified REST update succeeded. No product/source/test effect from those metadata errors.

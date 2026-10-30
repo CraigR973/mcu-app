@@ -13,7 +13,10 @@ status metadata, navigation, auth, API/schema or hosting/credential change.
 The ten-command clean-source gate passes at 4f2a12b: API 2,549/zero skips (initial socket
 URI skipped nine, corrected through a full disposable-localhost rerun), shared 159, web
 736, lint/types/build. Chromium 61, Firefox 60 + existing dictation skip, jobs 6 pass;
-no new skips/retries. Draft PR #122 holds the exact-head seven-job CI outcome; read its
+no new skips/retries. Draft PR #122 holds the exact-head seven-job CI outcome. Earlier head 90dc73d passed
+all seven; d8fb9cd failed one new WebKit test during a premature first theme reload.
+The trace shows auth/lazy Home startup still in flight; a real Home-readiness assertion
+is added before reload, preserving every existing assertion/timeout/retry/skip. Read its
 current checks before release. Native phone appearance is separate. Main CI
 40891874070 remains green.
 
@@ -438,6 +441,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **30 Oct — AB4 final-head WebKit setup race stopped:** d8fb9cd CI 41039699513 failed the new non-Apple standalone case at page.reload (Frame load interrupted); earlier 90dc73d run 41039099660 passed all seven jobs. Trace retains initial auth/lazy Home graph still in flight when test reloaded. Added a visible real-Home prerequisite before that first reload, with no app change, expectation/timeout/retry/skip change; focused verification and exact-head CI follow. Failure is not hidden by the earlier pass; phone/launch checkpoints and production hold remain.
 
 - **30 Oct — AB4 approved repair verified locally; actual-app preview checkpoint:** shared 32px header/Search clearance implemented at 4f2a12b after exact owner approval (#308). Ten-command clean gate passes; API first skipped 9 socket-host-guarded cases, then all 2,549 pass on verified disposable localhost without changing guards/tests; shared 159/web 736 and E2E types pass. Actual compiled-app preview AB4-3 uses read-only sample endpoints, no live account/collection; protected dark/light geometry/focus, worker reload and read/write isolation smoke pass, final dpl_EcQczpRG6CkZq1g5r6maaek4pFZE READY. Production remains f341d10/full readiness. Chromium 61/Firefox 60 + documented dictation skip/jobs 6 pass; draft PR #122 carries exact-head CI; actual iPhone/launch acceptance remains separate; no production merge, original app removal, AB4 completion, sitting 4 or AA10c.
 
