@@ -11,7 +11,7 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AB — sittings 1–3 complete, 31 Oct.** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
+- **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night
   seeding race was stopped and repaired separately with Craig's approval (#304): PR #120
   (`bf0eb36`), full local/PR/merge gates and production proof. The preserved report records
@@ -35,12 +35,13 @@ conversation still maps onto this file.*
   historical sample GET returned HTTP 403 at 12:39 UTC: zero rows, no retry/alternate read.
   Original programme/older-film/cancellation evidence remains unmet; report acceptance is complete.
   **Final report accepted 31 Oct (#313):** “report complete; programme feasibility unproven”.
-  No AB5 owner decision remains. PR #123 integration waits for green CI; missing evidence
+  No AB5 owner decision remains. PR #123 merged b9f7dd7 with seven-job CI and exact
+  API/web/readiness verified; final handoff proof in its description. Missing evidence
   stays explicit and does not waive future integration checks.
   Any later link-screen build needs revised scope/separate go; a new sample needs new approval.
   Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
-  Sitting 5 remains unauthorised:
-  conditional schema/API/job/refresh/retention build contract before implementation.
+  Sitting 5 remains unauthorised and requires re-planning from the free-links choice;
+  no schema/API/job/refresh/retention or replacement link-screen build is approved.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

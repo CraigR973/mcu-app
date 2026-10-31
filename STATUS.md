@@ -2,40 +2,40 @@
 
 ## Now
 
-**31 Oct: AB5 finalisation prepared in PR #123 — owner report acceptance recorded; green CI pending.**
-All nine intended venues remain in scope; no paid provider, trial, ingestion or build is
-approved. Official links cannot deliver grouped films/showtimes; Film first is the future
-concept preference. A link-screen build would require a revised scope and a separate go.
-Sitting 5 and AA10c remain excluded.
+**31 Oct: Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
+Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
+unmet original programme-evidence criterion for this report only (#313). Free official
+programme links for all nine venues are the chosen direction; Film first is the future
+concept. No unified programme feed, ingestion, link screen, purchase or trial was built.
+Any next cinema build needs re-planning and its own go; sitting 5 and AA10c remain excluded.
 
-Craig approved the exact one-file historical sample. The single GET at 12:39 UTC returned
-HTTP 403 Forbidden; no rows obtained, no retry or alternate request. Its 2 MB cap, zero
-retries and no account/payment/API key/bookings/production-write scope were preserved.
-Nine-venue real shapes, older-film coverage, links, horizon and cancellation evidence
-remain unmet. Craig explicitly accepted “report complete; programme feasibility unproven”
-with that evidence gap retained (#313). Ledger close-out waits for green integration.
+The single approved historical archive GET returned HTTP 403, zero rows, no retry or
+alternate request. Nine-venue real shapes, older-film coverage, stable IDs, booking links,
+horizon and cancellations remain unverified. Future ingestion gates are not waived.
 
 Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
-Concepts: docs/reviews/ab5-concept-2026-10-31.html (illustrative listings only).
-Sample audit: docs/reviews/ab5-historical-sample-2026-10-31.json.
-Public research/documents only; no application/schema/API/job/credential/hosting change,
-main push or deployment. Document checks and 320px/375px light/dark concept checks pass.
-Starting main a3e41f1 had green CI 41193175977; no app gate or production smoke is claimed.
+Acceptance/close-out: docs/reviews/ab5-finalisation-2026-10-31.md.
+Concepts and sample audit are alongside them. Ledger is struck as report complete, not
+an implemented programme feature. Architecture structure and application code are unchanged.
 
-AB4 remains complete: PR #122 (df6824a), full gates/production proof and native production
-phone acceptance; no further reinstall/test requested. AB3 real-phone receipt and unrelated
-camera/speech/valuation owner actions remain open.
+Document/source and 320px/375px light/dark concept checks pass. Exact-head PR CI
+41205867259 passes all seven jobs at b9f7dd7. Post-merge API/web serve that exact commit,
+db ok and all five readiness integrations configured. Final documentation handoff also
+requires exact-head main CI and matching API/web/readiness; the completed handoff evidence
+is retained in PR #123's description. No extra programme/source request is part of it.
+Earlier PR 41203387374's Firefox navigation timeout remains audited, cause unconfirmed;
+fresh full CI passed without an application, test, assertion or timeout change.
+
+AB4 remains complete and production-phone accepted; no further reinstall/test requested.
+AB3 real-phone receipt and unrelated camera/speech/valuation owner observations remain open.
 
 ## Next
 
-Craig requested finalisation before the next sitting. PR #123 contains the report and
-accepted finalisation contract: report complete with failed/unavailable programme evidence
-recorded, not passed. PR run 41203387374 failed an unchanged Firefox offline replay click;
-no app/test change or root cause is claimed. Require fresh exact-head PR CI before merge,
-then integrate the accepted documentation to clean main with version/readiness checks. No further source
-request, ingestion or implementation is authorised. If Craig asks to build a free official-links screen,
-first propose the revised scope: no unified films/showtimes, all nine venues retained.
-A new sample needs new exact approval; never retry the 403 on the exhausted one-read scope.
+Stop: Group AB sitting 4 is complete as an accepted source report. No next sitting,
+source retry or implementation is authorised. Sitting 5's original ingestion/discovery
+plan requires re-planning: free official links do not provide unified Film first results.
+A free-links screen needs a separate revised contract/go; future samples need exact scope
+approval and future ingestion still needs real programme evidence. Do not start AA10c.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -429,6 +429,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB5 report complete, sitting 4 closed:** owner accepted report complete /
+  programme feasibility unproven (#313); PR #123 merged b9f7dd7 after exact-head seven-job
+  CI 41205867259. API/web served b9f7dd7 with db ok/all readiness integrations configured.
+  Ledger/architecture/handoff updated. Original real-programme evidence remains unmet,
+  explicitly excluded only from report close-out; failed one-read sample and earlier
+  Firefox CI timeout retained. Final documentation head follows normal exact-head main
+  CI/version/readiness verification recorded in PR #123. No app build, source retry,
+  purchase, next sitting or AA10c.
 
 - **31 Oct — AB5 final report accepted (#313):** Craig replied “accept” to report complete /
   programme feasibility unproven, preserving failed/unavailable evidence and excluding

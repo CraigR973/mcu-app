@@ -38,19 +38,22 @@ AB6 and AB7 remain unstarted and require re-planning before a separately authori
 ## Integration and handoff
 
 The final report, sample-failure audit, concept and project handoff documents are committed
-on `chore/ab5-cinema-feasibility`. Normal PR CI must pass before integration to clean `main`.
+on `chore/ab5-cinema-feasibility`. PR #123 merged b9f7dd7 after exact-head PR CI 41205867259 passed all seven jobs;
+post-merge API/web matched with db ok and all five integrations configured.
 Although this is documentation only, a main push triggers the existing hosting rebuilds;
-no deployment configuration, application behaviour or source request changes. Verify the
-resulting exact CI head and normal version/readiness checks if integration proceeds.
+no deployment configuration, application behaviour or source request changes. The final documentation handoff requires exact-head main CI and normal version/readiness
+checks; completed evidence is retained in PR #123's description.
 No new live programme/sample read is part of finalisation.
 
 **Owner accepted on 31 Oct:** Craig replied “accept” to the explicit report-complete /
 programme-feasibility-unproven outcome, with missing evidence retained and documentation
 integration after green CI. This answers the final report-acceptance checkpoint; no failed
-programme criterion is represented as passed. PR #123 integration still waits for CI.
+programme criterion is represented as passed. PR #123 is merged; report acceptance and integration are complete, with final handoff
+verification evidence retained in the PR description.
 
 The first PR run 41203332844 passed. Run 41203387374 then failed the unchanged Firefox
 offline replay test while locating the Search title tab (10-second click timeout), before
 that part of the replay assertion. Chromium, WebKit and cron jobs passed. The change is
 documentation only; root cause remains unconfirmed and no repair is claimed. Preserve
-the failure and require a fresh exact-head PR run before merge; no timeout/test changes.
+the failure and require a fresh exact-head PR run before merge; no timeout/test changes. Run 41205867259 then
+passed all seven jobs at b9f7dd7; the cause of the earlier failure is still unconfirmed.

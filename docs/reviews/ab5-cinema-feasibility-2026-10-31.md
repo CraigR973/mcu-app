@@ -10,7 +10,7 @@ contract; the programme ingestion/discovery sitting is not authorised by these p
 No rows were obtained or retained; no retry or alternate source request was made. This
 provides no historical coverage, real payload, booking or older-film evidence. AB5's
 original programme-evidence criteria remain unmet; Craig explicitly accepted the report
-as complete with programme feasibility unproven. Integration waits for green CI.
+as complete with programme feasibility unproven. PR #123 merged b9f7dd7 after green CI.
 Sitting 5, AB6/AB7 implementation and AA10c remain excluded.
 
 Accepted finalisation contract: `ab5-finalisation-2026-10-31.md`.
@@ -32,7 +32,9 @@ Documentation examples are provider-authored examples, not real samples of these
 
 No application code, schema, endpoint, job, route or architecture structure changes.
 Document/source checks replace the application gate for this report, as AB5 specifies.
-No PR merge, main push or app deployment is part of reaching this owner checkpoint.
+The initial owner checkpoint involved no PR merge or main push. Accepted report
+finalisation later merged documentation through PR #123, causing normal hosting rebuilds
+without application/configuration changes; exact version/readiness checks apply.
 
 ## The nine intended venues
 
@@ -312,9 +314,20 @@ the original ingestion-evidence criteria. No build acceptance, all-nine programm
 acceptance or purchase is inferred. Craig subsequently replied “accept” to finalising AB5
 as report complete / programme feasibility unproven, explicitly excluding the unmet
 programme-evidence criterion from report close-out only (#313). This waives nothing for
-future ingestion. PR #123 still requires green exact-head CI; no automatic sitting 5 or AA10c.
+future ingestion. PR #123 merged b9f7dd7 after exact-head seven-job CI 41205867259; API/web then served
+that exact commit with db ok and all five integrations configured. Final documentation
+handoff CI/version/readiness proof is retained in PR #123. No next sitting or AA10c.
 
 Finalisation CI audit: PR run 41203332844 passed; subsequent run 41203387374 failed the
 unchanged Firefox offline replay test at the Search title tab (10-second click timeout).
 Chromium, WebKit and jobs passed. No root cause, repair or programme evidence is inferred;
-no assertion/timeout/retry setting changed. Fresh exact-head CI is required before merge.
+no assertion/timeout/retry setting changed. Fresh exact-head PR CI 41205867259 passed all seven jobs, without changing application
+code, tests, assertions, timeouts or retry configuration. This is not a claimed root-cause fix.
+
+Finalisation tooling audit: `gh pr edit` failed on deprecated Projects (classic) GraphQL
+fields; the PR description was updated successfully through GitHub REST. An artifact-file
+search initially omitted ignored scratchpad contents; using `rg --no-ignore` exposed the
+already downloaded Firefox trace. A redundant artifact download and two guessed source
+file-path searches added no evidence or product changes. The trace confirms the first
+Add a copy navigation remained on the film page before the Search title timeout; why it
+failed is unconfirmed. All final checks retain the original failure rather than label it fixed.
