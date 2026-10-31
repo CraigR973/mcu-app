@@ -1,0 +1,13 @@
+{
+  "sourceUrl": "https://uk-cinema-api.co.uk/api/archive/showtimes/gb/2026-10-29.csv.gz",
+  "checkedAtUtc": "2026-10-31T12:39:22.555719+00:00",
+  "approval": "One GET, maximum 2000000 compressed bytes, no retries; retain nine-venue rows only",
+  "attempts": 1,
+  "fee": "Published free archive; no account or payment",
+  "attribution": "UK Cinema API \u2014 https://uk-cinema-api.co.uk/archive",
+  "limitations": "Historical only; compilation licence does not grant underlying cinema/TMDB rights; no future coverage or booking-link proof",
+  "status": "failed_no_retry",
+  "errorType": "HTTPError",
+  "error": "HTTP Error 403: Forbidden",
+  "httpStatus": 403
+}

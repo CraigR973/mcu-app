@@ -1,15 +1,16 @@
 # Nine-cinema source feasibility — 31 Oct 2026
 
-**Verdict: a single-provider route is worth evaluating; nine-venue ingestion is not yet proven or approved.**
-The lowest published candidate is UK Cinema API Lite at £9.99/month for up to ten cinemas.
-Its chain coverage claims cover seven intended branches in principle; Glasgow Film Theatre
-and Glasgow Science Centre need explicit coverage evidence. Even those seven individual
-branches have not been verified in an approved provider sample. Do not buy or build yet.
+**Owner choice: keep it free with official programme links; Film first concept selected.**
+Craig chose £0 provider subscription and no unified showtimes yet. All nine intended
+venues remain in scope; no omissions were approved. Paid API routes below remain research
+alternatives, not the selected direction. A future link-based screen needs a revised build
+contract; the programme ingestion/discovery sitting is not authorised by these picks.
 
-**Owner stop:** source, budget, coverage and concept picks; exact specimen-read approval.
-Public research is delivered. Approved real specimens, cancellation behaviour, booking-link
-validation and venue-by-venue older-film coverage remain open. AB5 stays at this checkpoint,
-not complete. Sitting 5, AB6/AB7 implementation and AA10c remain excluded.
+**Approved historical sample failed:** one GET of the 29 Oct UK archive returned HTTP 403.
+No rows were obtained or retained; no retry or alternate source request was made. This
+provides no historical coverage, real payload, booking or older-film evidence. AB5's
+original programme-evidence criteria remain unmet; it is not marked complete.
+Sitting 5, AB6/AB7 implementation and AA10c remain excluded.
 
 ## Authority and evidence boundary
 
@@ -19,7 +20,8 @@ Starting checkout: clean `main`, `a3e41f1`; fetched origin matches. Main CI 4119
 passed before research. Working branch: `chore/ab5-cinema-feasibility`.
 
 Public venue pages, indexed public descriptions, provider documentation, pricing and terms
-were read. No programme extraction script, API data request, archive download, account,
+were read. After the report, Craig approved exactly one bounded historical archive GET;
+it returned 403 before any programme data was obtained. No API data request, account,
 trial, purchase, form submission, booking journey, geolocation, credential change or
 production request/write was made. Search results incidentally contain titles and dates;
 these are research leads, not approved programme specimens or current availability proof.
@@ -54,7 +56,7 @@ especially important to the older-film goal and cannot silently become out-of-sc
 
 ## Source options and permissions
 
-### UK Cinema API — first evaluation candidate
+### UK Cinema API — evaluated paid alternative, not selected
 
 [Published coverage](https://uk-cinema-api.co.uk/) names ODEON, Cineworld, Vue and Everyman,
 plus independents. The operator says collection updates daily. “All UK” marketing is not
@@ -73,8 +75,8 @@ The [free historical archive](https://uk-cinema-api.co.uk/archive) is a useful e
 option, not a live source. It publishes daily compressed CSVs after screenings have started;
 one row per film per showing, shared showing ID for multi-film events. Its licence covers
 the provider's compilation rights only, with attribution; it grants no rights over underlying
-cinema or TMDB data. It cannot prove upcoming coverage or booking-link health. No file was
-downloaded. An exact one-file approval proposal appears below.
+cinema or TMDB data. It cannot prove upcoming coverage or booking-link health. The one approved file request returned 403; no file or rows were obtained. Its exact
+scope and result appear below.
 
 ### MovieGlu — quote-based alternative
 
@@ -184,12 +186,15 @@ one aggregator adapter plus nine coverage checks versus up to six direct-source 
 plus nine checks. Any hybrid adds adapters and permissions. Price the build only after
 samples establish matching, cancellation, pagination and independent-venue gaps.
 
-## Phone concept and policy proposals — unapproved
+## Phone concept — Film first selected; policy details unapproved
 
 Open the companion `ab5-concept-2026-10-31.html` for two 375px concepts.
-**Film first** is recommended: film/original year → venues → individual times → venue booking.
-**Date first** is the alternative: one day's film list → venues/times. Both group by film,
-preserve venue/session differences, and show coverage separately from film availability.
+**Film first** was selected from the two concepts: film/original year → venues → individual
+times → venue booking. **Date first** remains the comparison. These demonstrate a future
+programme experience; they are not deliverable from official links alone. Under the chosen
+free-links direction, the immediate possible product is nine official programme links,
+without film grouping, showtimes or an older-film filter. Do not fabricate film cards to
+imitate the chosen future concept. No link screen has been built or authorised.
 
 “Older films” proposal: original release year at least five years before the viewing year
 (2021 or earlier in 2026), or an explicitly identified reissue/restoration. Unknown year gets
@@ -217,7 +222,13 @@ cancellations remain unavailable/pending confirmation; do not invent a cancelled
 
 ## Revised sitting-5 shape — proposal only
 
-AB6 should begin only after source picks and specimens, with a concrete contract covering
+Craig's free-links choice changes the build premise: a nine-venue link screen does not
+need ingestion and cannot supply unified Film first results. Propose a separate link-screen
+contract only if Craig later asks to build it. The chosen Film first concept remains the
+future preference should a free permissioned programme source become available. Do not
+convert the links choice into permission for six scrapers or an archive-based live feed.
+
+Any future AB6 ingestion work should begin only after source picks and specimens, with a concrete contract covering
 nine venue IDs, licence/retention, original-year matching, cancellation evidence, requests,
 timezone/DST, storage, schema/API, job schedule, failure reporting and costs. No migration,
 new job, provider credentials or hosting topology is selected here.
@@ -228,32 +239,33 @@ separate adapter batches with permission/specimen gates before revising sitting 
 coverage requires Craig's explicit list of accepted omissions and visible fallbacks.
 Do not silently start with seven venues. AB7 only consumes the accepted AB6 contract.
 
-## Owner picks and exact specimen checkpoint
+## Owner picks and exact specimen checkpoint — answered 31 Oct
 
-1. **Source and cost direction:** recommend evaluate UK Cinema API Lite first, with a
-   provisional ceiling of £9.99/month if all nine pass and omitted format/accessibility tags
-   are acceptable. Alternative Pro is £49/month for those tags. This is a shortlist/budget
-   preference, not authorisation to subscribe, start a trial, store a key or build.
-2. **Coverage:** recommend keep all nine mandatory, especially GFT and Science Centre.
-   If a source misses a venue, return with the exact gap and alternative; no automatic
-   reduction. Cost: possible further permission/quote work and delayed implementation.
-3. **Concept:** recommend Film first, with older/watched favourites and visible venue gaps.
-   Date first is available for comparison. Pick the original-year threshold/navigation
-   before a build; no automatic acceptance of the policy numbers in this report.
-4. **First specimen scope:** recommend one free historical file before any paid API trial:
-   `GET https://uk-cinema-api.co.uk/api/archive/showtimes/gb/2026-10-29.csv.gz` once,
-   maximum compressed transfer 2 MB (index currently lists 856 KB / 19,922 UK showtimes).
-   This downloads one national day, not only these nine venues. Stream/filter locally to
-   the nine named venues; retain only their rows and a coverage/count summary with source
-   attribution, discard all other rows/raw download after analysis. No retries, other dates,
-   accounts, API keys, payment, booking navigation or production writes. One read, £0
-   published data charge; network/time and upstream rights limitations still apply.
+1. **Source/cost:** Craig chose “Keep it free — official programme links; no unified
+   showtimes yet”. No paid provider, trial, subscription, key or recurring request budget
+   is approved. The proposed paid Lite evaluation is not the selected direction.
+2. **Coverage:** all nine intended venues remain; the question retained this condition.
+   No reduced venue list was proposed or accepted.
+3. **Concept:** Craig chose Film first. This selects the future grouped-film layout, not
+   invented data or approval of the proposed five-year threshold, navigation or freshness
+   numbers. Official links alone cannot provide that film grouping.
+4. **Historical specimen:** Craig approved the exact one-file read below. It was attempted
+   once at 12:39 UTC on 31 Oct and returned HTTP 403 Forbidden. No retry, redirect follow,
+   alternative date/host or subsequent request was made. No CSV shape or venue data was
+   obtained. Audit evidence: `ab5-historical-sample-2026-10-31.json`.
 
-That first specimen is historical only: it can establish past IDs/shape and coverage leads,
-not upcoming programmes. A subsequent live scope must name the selected provider/host,
-exact endpoints and venue IDs, date window, maximum requests/bytes/retries, any booking
-navigation, licence and fee cap, and credential/trial implications. Return for that exact
-approval before issuing requests. No placeholder endpoint/payload becomes a fixture.
+Exact approved request: `GET https://uk-cinema-api.co.uk/api/archive/showtimes/gb/2026-10-29.csv.gz`.
+Maximum compressed transfer: 2 MB (enforced as 2,000,000 bytes); zero retries. The published
+index describes one national day, so the approved processing was to retain only the nine
+venues' rows and a summary with attribution, discarding national/raw data. No account,
+API key, payment, booking navigation or production write. The server refused access;
+no downloaded national file or filtered venue rows exist.
+
+A failed read is not evidence of a missing venue, an empty programme, or permission to
+retry through a different browser/proxy. Future source specimens require a new exact
+scope/approval. No further action is implied by the successful choice submissions.
+The next possible work is a separately requested revised free-links build proposal or
+new evidence scope, not sitting 5's ingestion pipeline. Stop here.
 
 ## Verification and failures
 
@@ -261,8 +273,8 @@ approval before issuing requests. No placeholder endpoint/payload becomes a fixt
 |---|---|
 | All nine intended identities; no silent branch replacement | Public-source verification done; machine source identity still awaits approved specimens. |
 | Per-source shape/IDs/bookings/horizon/freshness/access/licence/limits/fees | Published findings and unknowns recorded; real nine-venue shapes/bookings/cancellations unverified. |
-| Older-film coverage against real approved examples | Open: public leads found, no approved specimens collected. |
-| Source options, phone concept, failure policy, coverage/cost/load/maintenance, revised scope | Delivered as proposals, awaiting owner picks. |
+| Older-film coverage against real approved examples | Unmet: public leads found; approved historical GET failed 403, no specimens obtained. |
+| Source options, phone concept, failure policy, coverage/cost/load/maintenance, revised scope | Delivered; free official links and Film first selected. No implementation or policy-number approval. |
 | Document/source verification; no invented app gate/deploy | Report, source links, nine-row count, cost arithmetic, concept interaction and document diff checks apply. No product tests or production smoke are claimed. |
 
 Tool failures retained: first `gh run list` used an incorrect repository slug and returned
@@ -280,7 +292,14 @@ coverage disclosure and no horizontal overflow; zero browser script errors. Visu
 One concept-check attempt timed out targeting the hidden variant-picker option directly;
 using the visible Next/Previous variant controls passes. No product change was needed.
 
+The concept export initially refused to overwrite its existing generated HTML; rerunning
+with the documented replacement option succeeded. No app/source request was involved.
+
+The approved historical request's 403 is an additional source-access failure. No retries
+were permitted or attempted. Its audit JSON records no credentials or response body.
+
 Source pages are time-sensitive snapshots checked 31 Oct; no current ticket availability
-is asserted. No build acceptance, all-nine source acceptance, purchase or owner pick has
-been inferred. Next action is Craig's picks/explicit specimen approval, then AB5 evidence
-completion; no automatic sitting 5 or AA10c.
+is asserted. Free official links and Film first are recorded owner picks; they do not meet
+the original ingestion-evidence criteria. No build acceptance, all-nine programme source
+acceptance or purchase is inferred. AB5 remains open for unmet evidence/scope acceptance;
+no automatic sitting 5 or AA10c.

@@ -13,9 +13,9 @@ approved original-app re-add now cold-launches/resumes Home without problems (#3
 PR #122 code is deployed at df6824a with final seven-job CI and exact production proof;
 original production iPhone Archive/Search/both themes/keyboard acceptance now confirmed.
 Sitting 3 is complete; no AB4 owner check remains.
-Sitting 4 authorised 31 Oct: AB5 public report/concepts delivered; source/cost/coverage/
-concept picks and exact specimen approval remain open. Zero approved provider specimens;
-AB5 is not complete. Sitting 5 and AA10c remain excluded. The verification reports retain
+Sitting 4: AB5 report delivered 31 Oct; Craig chose free official links and Film first,
+all nine retained. One exact approved historical GET returned 403, zero rows/no retries;
+original programme evidence remains unmet and AB5 is not complete. Sitting 5 and AA10c remain excluded. The verification reports retain
 the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
 have their own sittings. Cinema sources are researched before their build is committed.
@@ -32,7 +32,7 @@ more complex than current evidence can establish. No time estimate is yet eviden
 | 1 | AB1 attention → AB2 collection | Truthful attention; clearer collection with owned-watched count and visible breakdown. Pick the layout/API extension before collection build. |
 | 2 | ~~AB3~~ Mark's additions (`5cfa467`) | Complete after all four picks; genuine later add/real-phone receipt remains owner acceptance. |
 | 3 | ~~AB4~~ iPhone (`df6824a`) | Complete 31 Oct: measured/approved 32px repair, production-phone appearance/keyboard accepted; approved re-add fixes Home launch/resume. |
-| 4 | AB5 cinema sources | Authorised 31 Oct; public report/concepts delivered, source/cost/coverage/concept and specimen checkpoint open. No implementation. |
+| 4 | AB5 cinema sources | Report delivered; free links / Film first selected. Approved historical GET returned 403, no rows/retry. Original evidence unmet; no implementation. |
 | 5 | AB6 programmes → AB7 discovery | Approved programme pipeline, then a screen for choosing a film/venue/showtime. Conditional on the research and build-contract approval. |
 
 Each sitting needs its own go. Each code batch retains its own branch, full gate, CI,
@@ -93,7 +93,8 @@ header/Search repair was approved (#308), implemented and verified
 re-add launch/resume comparison now pass (#309/#310); code deployed PR #122 (df6824a),
 full final CI/readiness pass; production-phone after is accepted and sitting 3 complete. See
 `docs/reviews/ab4-device-checkpoint-2026-10-29.md`. Sitting 4 authorised 31 Oct for report
-only; docs/reviews/ab5-cinema-feasibility-2026-10-31.md records the open picks/specimen gate.
+only; docs/reviews/ab5-cinema-feasibility-2026-10-31.md records free links / Film first picks
+and the single approved historical sample's 403. No retries or build authorised.
 Sitting 5 remains unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance

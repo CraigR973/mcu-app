@@ -6606,3 +6606,18 @@ contemporaneous.
      remain unanswered. No purchase, trial, credential, schema/API/job or hosting choice
      follows from discovery. AB5 remains at the owner checkpoint; no ingestion, sitting 5
      or AA10c is authorised. This supersedes #301's sitting-4 execution boundary only.
+
+
+312. **AB5 follows free official links and Film first; the single historical read is exhausted (31 Oct).**
+     Craig chose “Keep it free — official programme links; no unified showtimes yet” and
+     Film first, with all nine venues still required. No paid provider, trial, credential,
+     unified programme feed or implementation follows. Film first is a future preference;
+     official links alone cannot supply it. Any link-screen build needs a revised contract
+     and separate go, not automatic AB6 ingestion or sitting 5.
+     Craig separately approved exactly one GET of the UK Cinema API GB 29 Oct historical
+     CSV, at most 2 MB/no retries; filter to the nine, retain only their rows/summary with
+     attribution, no account/key/payment/bookings/production writes. The one GET at 12:39
+     UTC returned HTTP 403: zero rows, no retry or alternate request. Source evidence stays
+     unmet and AB5 open; a new request requires new exact approval. Report and audit are
+     in docs/reviews/ab5-cinema-feasibility-2026-10-31.md and its sample-audit JSON. Sitting
+     5 and AA10c remain excluded. This answers #311's picks/sample gate only as stated.

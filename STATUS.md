@@ -2,36 +2,35 @@
 
 ## Now
 
-**31 Oct: Group AB sitting 4 authorised — AB5 public-source report and phone concepts delivered; owner checkpoint open.**
-Nine venue identities have public-source support; zero of nine have approved provider
-programme specimens. UK Cinema API Lite is a £9.99/month evaluation candidate, with
-format/accessibility tags omitted; Pro is £49/month. GFT and Science Centre require
-explicit independent-venue coverage proof. Published chain coverage is not branch acceptance.
+**31 Oct: AB5 source report delivered — Craig chose free official programme links and Film first.**
+All nine intended venues remain in scope; no paid provider, trial, ingestion or build is
+approved. Official links cannot deliver grouped films/showtimes; Film first is the future
+concept preference. A link-screen build would require a revised scope and a separate go.
+Sitting 5 and AA10c remain excluded.
+
+Craig approved the exact one-file historical sample. The single GET at 12:39 UTC returned
+HTTP 403 Forbidden; no rows obtained, no retry or alternate request. Its 2 MB cap, zero
+retries and no account/payment/API key/bookings/production-write scope were preserved.
+Nine-venue real shapes, older-film coverage, links, horizon and cancellation evidence
+remain unmet. AB5 stays open, not struck or accepted complete.
 
 Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
 Concepts: docs/reviews/ab5-concept-2026-10-31.html (illustrative listings only).
-No source/cost/coverage/concept choice is approved. Exact first-specimen proposal is one
-29 Oct national historical archive file, at most 2 MB, filtered to the nine venues, with
-no account/payment/API/bookings; it has not been requested. Future live reads need their
-own exact scope/approval. Real shapes, older-film coverage, links, horizon and cancellation
-behaviour remain open. AB5 is not struck or accepted complete.
+Sample audit: docs/reviews/ab5-historical-sample-2026-10-31.json.
+Public research/documents only; no application/schema/API/job/credential/hosting change,
+main push or deployment. Document checks and 320px/375px light/dark concept checks pass.
+Starting main a3e41f1 had green CI 41193175977; no app gate or production smoke is claimed.
 
-Public research/documents only: no application, data, schema/API/job, credential, hosting
-or architecture change. Clean main a3e41f1 had green CI 41193175977 before research.
-Report documents tool/source-access failures. Document/concept verification applies;
-no app gate, PR merge, main push, production smoke or deployment is claimed for AB5.
-
-AB4 remains complete: PR #122 (df6824a), full gates/production proof and Craig's native
-production Archive/Search/both themes/keyboard acceptance. Approved re-add restores Home
-cold launch/resume; no further phone test/reinstall is requested. Existing AB3 real-phone
-receipt and unrelated camera/speech/valuation owner actions remain open.
-Sitting 5 and AA10c are excluded.
+AB4 remains complete: PR #122 (df6824a), full gates/production proof and native production
+phone acceptance; no further reinstall/test requested. AB3 real-phone receipt and unrelated
+camera/speech/valuation owner actions remain open.
 
 ## Next
 
-Stop at AB5's owner checkpoint: source/budget direction, all-nine coverage requirement,
-Film first versus Date first concept and exact specimen-read approval. Then finish AB5's
-approved evidence only. Do not subscribe, sample, ingest or begin sitting 5 from the report.
+Stop after AB5's recorded picks and failed approved sample. No further request, ingestion
+or implementation is authorised. If Craig asks to build a free official-links screen,
+first propose the revised scope: no unified films/showtimes, all nine venues retained.
+A new sample needs new exact approval; never retry the 403 on the exhausted one-read scope.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -425,6 +424,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB5 owner picks recorded; approved sample returned 403:** Craig chose free
+  official programme links, Film first, all nine venues retained. One exact approved
+  historical archive GET attempted at 12:39 UTC, HTTP 403, zero rows, no retries/alternate
+  request. No paid source/build/ingestion/sitting 5/AA10c approval. Report/audit updated;
+  original programme evidence remains unmet and AB5 remains open.
 
 - **2026-10-31** — **AB5 sitting 4 public research/report delivered; owner stop.** Nine
   identities supported; UK Cinema API Lite £9.99/month candidate, Pro £49/month for
