@@ -253,7 +253,7 @@ and category vocabulary; existing collection and watch-history rows are not rewr
 Real-phone receipt remains owner acceptance after shipment.
 
 
-## AB4, approved 30 Oct (#308), implementation under verification
+## AB4, approved 30 Oct (#308), pre-release device evidence complete 31 Oct
 
 ```mermaid
 flowchart TD
@@ -267,6 +267,8 @@ Browser tabs, Android installations, desktop layout and zero-top-inset orientati
 zero extra clearance. The header remains relative in the existing flex shell; its main
 scroll area gives up 32px where the rule applies. Both themes use their existing solid
 surface. No status metadata, navigation, login-return, deep-link or normal-resume rule
-changes. Native sharpness still requires actual affected-iPhone app acceptance; the
-prototype's measured value and simulated browser geometry are separate evidence.
-Archive launch remains the retained-installation/re-add owner checkpoint.
+changes. The affected iPhone confirms the actual repaired sample app sharp for Archive/
+Search in both themes, Home Screen: yes and normal keyboard. The production-phone after
+check remains for release; simulated browser geometry is separate evidence. Original
+Archive cold launch resolved through the approved re-add (#309/#310); normal resume
+preserves Home, no navigation code change. Old bundle/internal launcher target uninspected.

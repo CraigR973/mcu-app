@@ -6581,3 +6581,16 @@ contemporaneous.
      Approval is not an observed result: retain the open launch cause, installed-version
      limitation and production-after acceptance until evidence. Procedure and conditional
      conclusions: docs/reviews/ab4-repair-proposal-2026-10-30.md, 31 Oct section.
+
+
+310. **AB4 launch resolves by approved installation refresh; no navigation repair (31 Oct).**
+     After #309's one-time original-MCU re-add, Craig explicitly confirms cold launch
+     opens Home, normal resume preserves Home, and no login/sync/notification problems.
+     Before refresh, cold launch opened Archive while normal resume preserved Home.
+     Record that observed resolution without inventing a code change. A retained old
+     /movies launcher target fits history, but the old bundle/internal target was not
+     inspected and the exact iOS mechanism is unproven. Native repaired-app sample preview
+     is separately confirmed sharp in Archive/Search/both themes, Home Screen: yes,
+     keyboard normal. Release only #308's approved code after final exact-head gates;
+     production-phone header-after remains an owner checkpoint. No further reinstall,
+     forced Home handler, hosting change, sitting 4 or AA10c follows from these results.

@@ -1,9 +1,10 @@
 # AB4 — approved 32px clearance: verification
 
-30 Oct. **Approved repair implemented; AB4 owner acceptance remains open.**
-Craig approved the exact measured repair (#308), including older Apple Home Screen
-phone layouts and the 32px screen-space cost. Original-app removal/re-add, launch
-rewrites, sitting 4 and AA10c remain excluded.
+Updated 31 Oct. **Native sample-preview and original launch checkpoints met; final CI/release next.**
+Craig approved the exact 32px repair (#308) and separately the original-app re-add (#309).
+Native sample preview appearance/keyboard and re-added Home cold-launch/resume/no-problem
+results are explicitly confirmed (#310). Production-phone header-after remains open.
+No launch rewrite, sitting 4 or AA10c is included.
 
 ## How the repair works
 
@@ -40,7 +41,7 @@ local URI. No test/migration points at Neon and no live data or provider/push wa
 - Initial dark/light Search screenshots were inspected: existing solid themed Search
   surfaces, native-inset-plus-clearance geometry and intentional background dimming.
   Final actual-app sample-preview header/Search screenshots were also inspected below;
-  actual native-iPhone after and production release remain open.
+  Native repaired sample after is now explicitly accepted below; production-phone after and release remain open.
 
 One exploratory read used apps/e2e/tests instead of the actual specs directory; the
 path was corrected without changing any test. The earlier diagnostic-only --skip-domain
@@ -51,10 +52,10 @@ coverage-incomplete first API run and scratch-helper corrections.
 
 | Ledger criterion | Evidence / remaining owner work |
 |---|---|
-| Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. 31 Oct normal resume preserves Home. Repaired actual-app sample preview confirms all four theme/Search states, Home Screen: yes and normal keyboard; original installed bundle version/launch cause remain open. |
+| Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. 31 Oct normal resume preserves Home. Repaired actual-app sample preview confirms all four theme/Search states, Home Screen: yes and normal keyboard; Approved re-add now cold-launches/resumes Home with no login/sync/notification problems. Record installation-refresh resolution; historical bundle/internal target uninspected. |
 | Evidence and cause before approved repair | Isolated installed AB4-1 reproduced blur at all three positions; AB4-2 owner measurement 32px, then explicit Approve 32px repair (#308). Exact internal iOS compositor not inspected. |
 | Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; Native preview keyboard normal and original-app normal resume preserving Home are now owner-confirmed; production-after remains open. |
-| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch cause, installed bundle version and production-after remain open. Seven-job review CI passes at 97b36e4; draft PR #122 is unmerged. Sample acceptance does not prove production-after. |
+| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch resolved by approved re-add; old bundle/internal target uninspected. Production-after remains open. Seven-job review CI passes at 97b36e4; draft PR #122 is unmerged. Sample acceptance does not prove production-after. |
 
 ## Release boundary
 
@@ -323,3 +324,38 @@ preview appearance/keyboard observations remain closed; production-after remains
 Documentation only: no code/test change or rerun, no push/merge/deployment. Exact remote
 review CI remains 97b36e4 / 41044309324; a final documentation push requires fresh exact-head
 CI before eventual merge. AB4 remains unstruck; sitting 4 and AA10c remain excluded.
+
+## Named re-add results and final release candidate, 31 Oct
+
+Craig explicitly replies “yes” to the clarification: re-added original MCU opens Home
+after swiping away/reopening its icon, keeps Home after briefly switching apps, and has
+no login/sync/notification problems. This closes the launch/resume checkpoint with actual
+affected-phone evidence. Record the before/after as installation-refresh resolution,
+not a code repair. The old bundle/internal saved target was never inspected; the specific
+retained-/movies explanation remains an inference, not a proven iOS internal mechanism.
+No further reinstall, launcher redirect or owner repetition is needed.
+
+Native actual-app sample appearance/keyboard acceptance is also complete: four sharp
+Archive/Search/theme states, Home Screen: yes, Search keyboard normal. This supports
+releasing the exact approved header code after final checks. The production original
+phone's header-after remains a post-deploy owner checkpoint; do not strike AB4 or call
+sitting 3 complete until required after acceptance. No desktop test closes that criterion.
+
+Fresh pre-release checks confirm origin/main f341d10, successful main CI 40891874070,
+API/web exact f341d10 and db ok/all five readiness integrations configured. Vercel MCP
+confirms intended mcu-app project/team/domain and unchanged protection. Product source
+remains 4f2a12b and tests remain 97b36e4; all later changes are evidence documents. Review
+finds one synchronous pre-mount marker, shared CSS, unchanged relative flex header and
+focus/dimming/navigation/auth/worker behaviour; no extra React state/listeners or data
+fetches. No unrelated work, dependency, schema, live data or hosting changes.
+
+An exploratory read of non-existent apps/web/src/lib/version-check.ts returned file-not-found;
+the existing registration helper was read successfully. This inspection error changed no
+source. All earlier tool/test failures remain recorded above.
+
+Push the accumulated docs once, run seven-job CI on that exact head, and record its result
+in PR metadata/ignored evidence without manufacturing another doc-only head before merge.
+The old 97b36e4 green run remains historical proof, not the new-head result. On success,
+release the normal Git application build only, never a diagnostic/sample deployment,
+verify exact API/web SHA and full readiness, then stop at production-phone after acceptance.
+Sitting 4 and AA10c remain excluded.

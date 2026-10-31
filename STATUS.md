@@ -2,57 +2,50 @@
 
 ## Now
 
-**31 Oct: Craig reports “all looks fine” after the approved original-MCU re-add comparison.**
-Record this as a positive overall owner report, not an explicit page-name observation.
-One short confirmation is requested: the re-added icon cold-launches Home, normal resume
-keeps Home, and no login/sync/notification problems. No test repetition is requested.
-Before re-add, cold launch reached Archive while normal resume preserved Home; the owner
-reported no pending/blocked changes, unfinished forms or Move tray contents while online.
-The retained old launch-target explanation remains unproven pending the named result.
+**31 Oct: AB4 pre-release device checkpoints cleared; final review CI next.**
+Craig explicitly confirms the re-added original MCU cold-launches Home, normal resume
+keeps Home, and no login/sync/notification problems. Before the approved re-add (#309),
+cold launch reached Archive while normal resume preserved Home. Record installation-
+refresh resolution, with no navigation repair (#310). The previous installation's bundle
+version/internal target was not inspected; do not claim its exact iOS mechanism is proven.
 
-The actual repaired-app sample preview is confirmed sharp for Archive/Search in both
-themes, Home Screen: yes, Search keyboard normal (30 Oct). Those observations are closed;
-production-after and the original launch checkpoint remain open.
+The affected iPhone 16 Pro Max/iOS 27.0.1 also confirms the actual repaired-app sample
+preview sharp for Archive and Search in both themes, Home Screen: yes, Search keyboard
+normal. This is native owner evidence, not desktop token/geometry acceptance. The approved
+32px gap (#308) is implemented only for Apple Home Screen phone layout with positive top
+safe area; header and Search share it and visible content loses 32px. No launch/status
+metadata, navigation, auth, API/schema, hosting or credential change. App source 4f2a12b.
 
-The shared 32px gap applies below the top safe area to Apple Home Screen phone layouts
-under 1024px with positive top inset, including approved older Apple layouts (#308).
-Header and Search share the gap; visible content loses 32px. No launch/status metadata,
-navigation, auth, API/schema or hosting/credential change. Actual app source remains 4f2a12b.
+The clean local ten-command gate passed: API 2,549/zero skips, shared 159, web 736,
+lint/types/build; local Chromium 61, Firefox 60 + documented dictation skip, jobs 6.
+Review head 97b36e4 passed all seven CI jobs in 41044309324, including WebKit 59 + two
+existing documented limitations. Both CI readiness failures and stronger prerequisites
+remain audited with all original assertions, expected values, timeouts/retries/skips.
+Later source changes are documentation only. Accumulated evidence now goes to draft
+PR #122 for a fresh exact-head seven-job run before release; the previous green run
+must not be labelled current-head CI. The branch contains only AB4 work and is clean.
 
-Clean local gate: API 2,549/zero skips, shared 159, web 736, lint/types/build. Final review
-head 97b36e4 passes all seven CI jobs in 41044309324: Chromium 61, Firefox 60 + documented
-dictation skip, WebKit 59 + its two documented limitations, jobs 6. Focused corrected
-AB4/offline cases pass 5 each in Chromium/Firefox. The initial 9 socket-guarded API skips
-were resolved by a full disposable-localhost rerun. Two CI test-readiness failures and
-all tooling errors remain in the verification audit; original assertions/values,
-timeouts/retries/skips are retained. PR #122 remains a draft, open and unmerged.
+Fresh pre-release readback on 31 Oct: API and web serve f341d10; db ok and all five
+readiness integrations configured. Origin/main is unchanged and latest main CI 40891874070
+passes. Intended Vercel target is mcu-app / prj_bEFA3s1Ov10EIAeWVNWXb1h5aPmC in
+team_MVQMOaFtYHlwO5QVzSOZQ0Ud; production root mcu-app-fawn.vercel.app. Protection unchanged.
+Sample deployment dpl_EcQczpRG6CkZq1g5r6maaek4pFZE is preview-only and must never promote.
 
-AB4-3 preview dpl_EcQczpRG6CkZq1g5r6maaek4pFZE serves actual compiled app code with
-read-only sample responses and dummy local identifiers, no live account/collection.
-Details, access refresh and evidence: `docs/reviews/ab4-verification-2026-10-30.md`.
-
-Before re-add, Home → close → reopen reached Archive, while normal resume preserved Home.
-The old /movies target was changed to / on 23 Oct; fresh 31 Oct public manifest readback
-confirms / and web version f341d10. The original installed bundle version and exact launch
-cause remain unconfirmed. Production-after is open; the one-time installation comparison
-was approved (#309). The overall after report is positive; exact page results are requested.
-AB4 stays unstruck and sitting 3 incomplete. Sitting 4 and AA10c have not started.
-Last live readback (30 Oct, 11:12 UTC): API/web exact f341d10, full readiness. No production
-deployment in this turn. Existing AB3 phone/speech/live-assistant/AA10b/AA10c checks stay open.
-
-This evidence-only documentation update is committed locally while owner checkpoints
-remain open; verified remote review head remains 97b36e4. Push accumulated documentation
-and require fresh exact-head seven-job CI before any eventual merge.
+Production header after-check remains a separate owner checkpoint after actual release;
+AB4 stays unstruck until its required after evidence is observed. No production deployment
+has occurred yet. Sitting 4 and AA10c have not started. Existing AB3 receipt, speech,
+live-assistant and AA10b/AA10c owner items remain open. Full evidence/failure audit:
+docs/reviews/ab4-verification-2026-10-30.md.
 
 ## Next
 
-Obtain only the named-result confirmation for “all looks fine”: re-added icon cold-launch
-Home, normal resume Home, no login/sync/notification problem. No reinstall or test repeat
-is requested. Record installation-refresh resolution only if that is confirmed; do not
-claim the exact internal launcher mechanism was inspected or invent a navigation repair.
-Then push accumulated evidence documentation and require fresh exact-head seven-job CI
-before any eventual release; production-after acceptance remains separate. The production
-header is still unrepaired. Remain at AB4; sitting 4 and AA10c stay excluded.
+Push the accumulated AB4 evidence and require all seven CI jobs on the exact final PR
+head, including E2E. If green, release only the approved 32px header/Search app change
+under the standing group-start authorisation, verify exact API/web SHA and full readiness,
+then stop for the original production iPhone's Archive/Search in both themes and normal
+keyboard. Keep the already-resolved launch/re-add evidence closed; no more reinstalls
+or forced Home handlers. Do not strike AB4 until required production-after acceptance.
+No sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -447,6 +440,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB4 launch resolution confirmed (#310):** Craig says yes to cold-launch Home, resumed Home and no login/sync/notification problems after the approved re-add. Native repaired sample preview appearance/keyboard already accepted. No navigation repair; original bundle/internal-target limitation retained. Pre-release main/production/Vercel target rechecked; final accumulated-docs exact-head CI and approved-code release precede the production-phone after checkpoint.
 
 - **31 Oct — AB4 re-add overall report positive:** Craig answers “all looks fine” to the approved comparison. Requested one clarification of cold-launch Home, resumed Home and no login/sync/notification problems, without repeating tests or reinstall. Do not infer named page results yet; no release or new code.
 

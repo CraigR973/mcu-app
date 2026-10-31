@@ -33,13 +33,12 @@ conversation still maps onto this file.*
   normal Search keyboard. Those installed preview observations are accepted; do not
   repeat them. On 31 Oct Craig confirms normal resume preserves Home, and while online
   reports no pending/blocked changes, unfinished forms or Move tray contents. Original
-  installed version/production after and Archive-launch cause remain open. Craig now
-  explicitly approves one original-MCU removal/re-add comparison (#309), with PIN/push/
-  local-cache costs stated. Craig reports “all looks fine” afterwards; one clarification
-  asks whether that means cold launch Home, resumed Home and no login/sync/notification
-  problems. No test repetition or further removal is requested. Exact page results and
-  production-after remain open. No account/collection deletion or Safari website-data
-  clearing is in scope.
+  old bundle/internal-target limitation remains recorded. Craig explicitly confirms the
+  approved re-add (#309) cold-launches Home, resumes Home and has no login/sync/notification
+  problems (#310). Launch is resolved by installation refresh; do not ask those checks
+  again or invent a navigation repair. The original production iPhone's header/Search
+  after-check in both themes and normal keyboard remains for after code deployment.
+  No further removal, account/collection deletion or Safari-data clearing is requested.
   Preview details and verification:
   `docs/reviews/ab4-verification-2026-10-30.md`.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.

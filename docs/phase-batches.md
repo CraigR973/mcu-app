@@ -4743,21 +4743,18 @@ Full local gate/E2E, seven-job exact-head PR/main CI and exact production API/we
 readiness passed. Live category/preference/grant readback preserves withheld credentials.
 Genuine later Mark addition and Craig's real-phone receipt remain owner acceptance.
 Evidence: `docs/reviews/ab3-verification-2026-10-29.md`.
-**Sitting 3 authorised 29 Oct (#307); AB4 32px measured and exact repair approved 30 Oct (#308), implemented; owner acceptance open.**
-Affected iPhone 16 Pro Max/iOS 27.0.1: installed dark header blurry, same-phone Safari
-sharp, original Home → close → reopen returns Archive. AB4-1 Home Screen: yes confirms
-Relative/Sticky/Fixed all blurry; earlier all-sharp run lacked standalone confirmation.
-AB4-2 yields owner-reported 32px. Concrete header/Search repair is approved (#308), including
-older Apple standalone phone-layout scope and content-space cost; see
-`docs/reviews/ab4-repair-proposal-2026-10-30.md`. Craig confirms the actual repaired-app
-sample preview is sharp in all four Archive/Search/theme states, Home Screen: yes, and
-normal Search keyboard. On 31 Oct Craig confirms normal resume preserves Home and no
-pending/blocked changes, unfinished forms or Move tray contents while online. Original
-installed version/launch cause and production-after remain open. Craig approves one
-original-app removal/re-add comparison (#309), then reports “all looks fine”. Named
-cold-launch/resume page and no-problem confirmation requested without repeat testing. Clean local gates and seven-job review CI pass at 97b36e4; evidence-only
-documentation is held locally until owner checkpoints clear. No production deployment.
-Evidence: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
+**Sitting 3 authorised 29 Oct (#307); AB4 pre-release device checkpoints cleared 31 Oct.**
+Affected iPhone 16 Pro Max/iOS 27.0.1: original installed blur/Safari sharp, isolated
+installed Relative/Sticky/Fixed all blurry, then owner-measured 32px clearance. The exact
+header/Search repair was approved (#308) and implemented. Actual repaired-app installed
+sample preview is owner-confirmed sharp for Archive/Search in both themes with normal
+keyboard and Home Screen: yes. The separately approved original-app re-add (#309) now
+cold-launches Home, resumes Home and has no login/sync/notification problems (#310).
+Record installation-refresh launch resolution; original bundle/internal target uninspected,
+no navigation repair. Clean local gates and prior seven-job CI 97b36e4 pass; accumulated
+evidence requires fresh exact-head CI before release. Production iPhone header-after
+acceptance remains for post-deploy; AB4 stays unstruck. No production deployment yet.
+Evidence: `docs/reviews/ab4-verification-2026-10-30.md` and the device/repair reports.
 Sittings 4–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
@@ -4793,7 +4790,7 @@ Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
 | ~~AB1~~ | ~~Actionable attention and correct links (snag 5), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #118, merge `ad2c992`; current actionable identification, read-time reconciliation, precise destinations/guidance and mutation/replay refresh. Full local/PR/main gates and exact API/web SHA/readiness; live read-only queue/doubt comparison agrees at zero. |
 | ~~AB2~~ | ~~Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #119, merge `c187ed7`; approved Summary cards, exact owned-watch count, older-response Unavailable, profile cache isolation and mutation/replay refresh. Full local/PR/main gates and API/web exact SHA/readiness; live read-only comparison agrees for both people. |
 | ~~AB3~~ | ~~Mark's new-title notifications (snag 4), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #121, merge `5cfa467`; approved Mark-only first-owned-title trigger, default-on preference, atomic outbox/receipt and retry/concurrency safety. Full local/PR/main gates and exact API/web SHA/full readiness; live credential-safe grants/category/preferences verified. Genuine later add/real-phone receipt remains owner acceptance. |
-| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **device checkpoint open** | Sitting 3 authorised 29 Oct (#307); iOS 27.0.1 installed blur/Safari sharp confirmed; AB4-1 Home Screen: yes, all three positions blurry; AB4-2 owner measurement 32px; exact repair approved (#308), implemented with full local/seven-job review CI (97b36e4). Owner confirms all four actual-app sample preview states sharp, Home Screen: yes and normal Search keyboard. Real app Home → close → Archive confirmed; 31 Oct normal resume preserves Home and owner reports no pending/blocked changes, unfinished forms or Move tray contents while online. One original-app removal/re-add comparison approved (#309); owner says “all looks fine”, exact Home/cold-launch/resume/no-problem meaning requested without repeat testing. Original launch/version and production-after acceptance remain open. |
+| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **pre-release device checkpoints met; production after open** | Sitting 3 (#307): native installed blur isolated, 32px measured and exact repair approved (#308). Actual repaired-app sample installed preview sharp in Archive/Search, both themes, keyboard normal. Approved original-app re-add (#309) now cold-launches/resumes Home without login/sync/notification problems (#310); no launch code repair. Full local/prior seven-job review CI passes; final evidence requires exact-head CI before release. Production-phone after acceptance open; unshipped. |
 | AB5 | Nine-cinema source feasibility (snag 8, report), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
 | AB6 | Cinema programme ingestion (conditional), 🔴 provisional | Opus 5 `xhigh` / GPT-5.6 Sol Extra High | planned | — |
 | AB7 | Local-cinema discovery screen (conditional), 🟡 provisional | Sonnet 5 `high` / GPT-5.6 Terra High | planned | — |

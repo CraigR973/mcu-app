@@ -104,7 +104,7 @@ and isolated diagnostic sources. No full app gate or new deployment is claimed f
 proposal. Detailed observations and both diagnostic sources/deployments remain in
 ab4-device-checkpoint-2026-10-29.md and ab4-diagnostic-2026-10-29/.
 
-## Original-installation comparison, 31 Oct — approved (#309), results pending
+## Original-installation comparison, 31 Oct — approved (#309), Home results confirmed (#310)
 
 Craig confirms the original MCU preserves Home on normal resume after briefly switching
 apps without swiping MCU away. He separately reports no pending/Needs attention changes,
@@ -153,3 +153,11 @@ approval gate (#309); do not request it again. The earlier online/no-local-work 
 stands, with a stop if new work appears. The owner performs the phone steps above and
 reports first settled page, cold launch, normal resume and any login/sync/notification
 problem. No result or production header acceptance follows from approval alone.
+
+### Named result, 31 Oct
+
+Craig explicitly confirms yes: cold-launch Home, resumed Home, no login/sync/notification
+problems. Record installation-refresh resolution (#310), without claiming the old saved
+target or exact internal iOS mechanism was inspected. No launch/navigation repair or
+further reinstall is needed. Native repaired sample appearance/keyboard is accepted;
+production-phone header-after remains for deployment. Sitting 4 and AA10c remain excluded.
