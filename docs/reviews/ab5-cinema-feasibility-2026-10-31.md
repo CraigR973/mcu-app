@@ -12,6 +12,8 @@ provides no historical coverage, real payload, booking or older-film evidence. A
 original programme-evidence criteria remain unmet; it is not marked complete.
 Sitting 5, AB6/AB7 implementation and AA10c remain excluded.
 
+Finalisation acceptance proposal: `ab5-finalisation-2026-10-31.md`.
+
 ## Authority and evidence boundary
 
 Craig authorised sitting 4 only on 31 Oct using `group-start.md`. The ledger maps AB5 to
@@ -40,15 +42,20 @@ as aliases, never used to substitute a different venue. [ODEON branch list](http
 
 | Intended venue / current identity | Public-source evidence | Programme / older-film coverage |
 |---|---|---|
-| ODEON Kilmarnock | Operator help lists Kilmarnock; official cinema URL returned a redirect loop to the research browser. | UK Cinema API names ODEON as a chain. This branch, horizon, reissues and links unverified. |
-| Cineworld Glasgow — Silverburn | [Silverburn venue host](https://www.shopsilverburn.com/retailer/cineworld/) confirms Cineworld; operator page returned 403. | Chain claimed by UK Cinema API. Individual programme/reissues unverified. Do not substitute Renfrew Street or Science Centre. |
-| ODEON Luxe Glasgow Quay | [The Quay venue host](https://www.thequayglasgow.com/cinema/) confirms Luxe Glasgow Quay. Operator page looped. | Same ODEON candidate; branch-specific programme/reissues unverified. |
-| ODEON Braehead | [IMAX theatre directory](https://www.imax.com/theatre/odeon-braehead-imax) confirms Braehead at X-scape, Kings Inch Road. Operator page looped. | Same ODEON candidate; IMAX venue capability is not proof a particular screening is IMAX. |
-| ODEON Luxe East Kilbride | [EK venue host](https://eklife.co.uk/shops/odeon-luxe/) confirms ODEON Luxe in The Hub. Operator page looped. | Same ODEON candidate; branch-specific programme/reissues unverified. |
-| IMAX at Glasgow Science Centre | [Science Centre](https://www.glasgowsciencecentre.org/imax) says it owns/manages this independent cinema, with Ticket Tailor box office. | Public page advertises older-film returns, including The Shining, alongside features and educational shorts. Provider inclusion and exact screening evidence unverified. |
-| Glasgow Film Theatre (GFT) | [Official listings](https://www.glasgowfilm.org/all-listings/) and [Now Booking A–Z](https://www.glasgowfilm.org/now-booking-a-z/) establish the venue/programme. | Index includes anniversary/restoration labels such as Donnie Darko and Pan's Labyrinth. Strong repertory research lead; provider coverage unverified. |
-| Everyman Glasgow, Princes Square | [Official venue](https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/) confirms Glasgow, Unit 3–5 Princes Square. | Chain claimed by UK Cinema API. Everyman advertises Throwback nationally; Glasgow-specific older-film availability unverified. |
-| Vue Glasgow St Enoch | [Official venue](https://www.myvue.com/cinema/glasgow-st-enoch/whats-on) confirms St Enoch Centre, 55 St Enoch Square. | Chain claimed by UK Cinema API. Parsed page showed a no-matching-showings shell; that is not evidence of an empty programme. |
+| [ODEON Kilmarnock](https://www.odeon.co.uk/cinemas/kilmarnock/) | Operator help lists Kilmarnock; official cinema URL returned a redirect loop to the research browser. | UK Cinema API names ODEON as a chain. This branch, horizon, reissues and links unverified. |
+| [Cineworld Glasgow — Silverburn](https://www.cineworld.co.uk/cinemas/glasgow-silverburn) | [Silverburn venue host](https://www.shopsilverburn.com/retailer/cineworld/) confirms Cineworld; operator page returned 403. | Chain claimed by UK Cinema API. Individual programme/reissues unverified. Do not substitute Renfrew Street or Science Centre. |
+| [ODEON Luxe Glasgow Quay](https://www.odeon.co.uk/cinemas/glasgow-quay/) | [The Quay venue host](https://www.thequayglasgow.com/cinema/) confirms Luxe Glasgow Quay. Operator page looped. | Same ODEON candidate; branch-specific programme/reissues unverified. |
+| [ODEON Braehead](https://www.odeon.co.uk/cinemas/braehead/) | [IMAX theatre directory](https://www.imax.com/theatre/odeon-braehead-imax) confirms Braehead at X-scape, Kings Inch Road. Operator page looped. | Same ODEON candidate; IMAX venue capability is not proof a particular screening is IMAX. |
+| [ODEON Luxe East Kilbride](https://www.odeon.co.uk/cinemas/east-kilbride/) | [EK venue host](https://eklife.co.uk/shops/odeon-luxe/) confirms ODEON Luxe in The Hub. Operator page looped. | Same ODEON candidate; branch-specific programme/reissues unverified. |
+| [IMAX at Glasgow Science Centre](https://www.glasgowsciencecentre.org/imax) | [Science Centre](https://www.glasgowsciencecentre.org/imax) says it owns/manages this independent cinema, with Ticket Tailor box office. | Public page advertises older-film returns, including The Shining, alongside features and educational shorts. Provider inclusion and exact screening evidence unverified. |
+| [Glasgow Film Theatre (GFT)](https://www.glasgowfilm.org/all-listings/) | [Official listings](https://www.glasgowfilm.org/all-listings/) and [Now Booking A–Z](https://www.glasgowfilm.org/now-booking-a-z/) establish the venue/programme. | Index includes anniversary/restoration labels such as Donnie Darko and Pan's Labyrinth. Strong repertory research lead; provider coverage unverified. |
+| [Everyman Glasgow, Princes Square](https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/) | [Official venue](https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/) confirms Glasgow, Unit 3–5 Princes Square. | Chain claimed by UK Cinema API. Everyman advertises Throwback nationally; Glasgow-specific older-film availability unverified. |
+| [Vue Glasgow St Enoch](https://www.myvue.com/cinema/glasgow-st-enoch/whats-on) | [Official venue](https://www.myvue.com/cinema/glasgow-st-enoch/whats-on) confirms St Enoch Centre, 55 St Enoch Square. | Chain claimed by UK Cinema API. Parsed page showed a no-matching-showings shell; that is not evidence of an empty programme. |
+
+The venue names above link to the nine official programme targets found during research.
+ODEON redirect loops and Cineworld 403 remain unresolved access limits; those links are
+not represented as validated booking journeys. No new source requests were made to add
+these already researched targets to the report.
 
 Count: nine identities supported; seven branches belong to explicitly advertised API chains;
 zero of nine have an approved provider coverage specimen. The two independent venues are
