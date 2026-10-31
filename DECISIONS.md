@@ -6664,3 +6664,19 @@ contemporaneous.
      All nine remain in scope. A reduced-coverage build is not approved. Retain AB6/AB7's
      revised-plan/concrete-build-contract checkpoints and the AA10c/other-sitting exclusion.
      Evidence: docs/reviews/ab-cinema-scrape-results-2026-10-31.md and its minimal sample JSON.
+
+
+316. **The authorised browser comparison yields all-nine screening evidence, not a production collector (31 Oct).**
+     Craig said “try it” to the free browser comparison after #315's first probe. Normal
+     Chrome/Safari/native surfaces were unavailable; Codex's in-app browser was used and
+     must be named accurately. It yielded Kilmarnock 15, Quay 28, Braehead 25, East Kilbride
+     18 and Silverburn 25 displayed time rows (111 additional; 110 booking references plus
+     one explicitly expired/unlinked Cineworld time). With the earlier 115 rows, all nine
+     venues now have real specimens, collected at different times/windows. Queue/403 and
+     UI-loading failures remain audited. No CAPTCHA/access-control workaround or booking
+     navigation occurred. Samples do not establish an unattended deployable refresh method,
+     full horizon, cancellation, original-year matching, stable identity or a data licence.
+     Re-plan from this improved feasibility before implementation: preserve all nine,
+     prove the collection method in its intended environment and approve the concrete
+     AB6/AB7 contract. No paid source, hosting, production write, app build or other sitting
+     is authorised. Evidence: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md and JSON.

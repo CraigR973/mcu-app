@@ -44,10 +44,15 @@ conversation still maps onto this file.*
   before exact sample approval; that boundary was subsequently broadened by #315.
   **All-nine attempts explicitly authorised/completed (#315):** Craig permitted trying all
   websites including restricted ones. Four venues yielded 115 screening rows; four ODEON
-  queue redirects and Cineworld schedule 403 prevent all-nine coverage. No repeat approval
+  queue redirects and Cineworld schedule 403 prevented coverage in that first probe. No repeat approval
   needed merely for those attempted reads/restrictive terms. Results and exact remaining
   build prerequisites: docs/reviews/ab-cinema-scrape-results-2026-10-31.md. No operator contact,
   paid source or access-control bypass is authorised; no reduced venue list is accepted.
+  **Browser comparison succeeds (#316):** in-app browser supplied 111 additional time rows
+  across those five venues; all nine now have real samples (226 rows across different times/
+  windows). Normal Chrome/Safari was not connected. No further sample approval is needed
+  for those completed attempts. A deployable repeatable collector and complete build contract
+  remain unproved/unapproved. Evidence: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

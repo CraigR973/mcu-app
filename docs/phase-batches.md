@@ -4770,6 +4770,12 @@ queue redirects and Cineworld schedule 403 leave five source gaps. All nine rema
 no reduced-coverage build follows. Results/revised prerequisites:
 docs/reviews/ab-cinema-scrape-results-2026-10-31.md. AB6/AB7 still need complete source/build
 acceptance; no app implementation, paid source, access-control bypass or AA10c is authorised.
+Later browser comparison (#316) supplies real times for the remaining five via the in-app
+browser: Kilmarnock 15/Quay 28/Braehead 25/East Kilbride 18/Silverburn 25, 111 additional rows.
+All nine now have specimens (226 rows across different times/windows). Normal Chrome/Safari
+was unavailable; a reliable deployable collector is not yet proved. Source feasibility has
+improved: re-plan/prove collection and approve the complete build contract before AB6/AB7.
+Evidence: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md. Batch status stays planned.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

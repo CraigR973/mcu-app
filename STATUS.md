@@ -2,19 +2,20 @@
 
 ## Now
 
-**31 Oct: all nine cinema sites attempted — four yielded 115 real screening rows (#315).**
-Craig explicitly authorised scraping attempts including restricted sites, then “continue”.
-GFT: 20 rows; Vue St Enoch: 31; Everyman Glasgow: 11; Science Centre IMAX: 53.
-All four ODEON branches redirect to a queue (representative browser attempt 403);
-Cineworld venue HTML works but its real schedule requests return 403. All nine remain
-intended; no four-venue product or link-screen build is approved. Do not repeat the sample
-permission question merely because sites have restrictive terms/robots.
-Results/audit: docs/reviews/ab-cinema-scrape-results-2026-10-31.md and
-docs/reviews/ab-cinema-scrape-samples-2026-10-31.json. Counts are bounded snapshots, not
-complete coverage or currently bookable rows. Original year, cancellation/identity stability,
+**31 Oct: browser comparison succeeds — all nine venues now have real screening samples (#316).**
+The five previously blocked venues yielded 111 additional displayed time rows: Kilmarnock
+15, Quay 28, Braehead 25, East Kilbride 18 and Cineworld Silverburn 25. Codex's in-app browser
+was used; Craig's normal Chrome/Safari was not connected. There are 110 booking references
+plus one expired/unlinked Cineworld row. The earlier GFT 20/Vue 31/Everyman 11/Science Centre
+53 remain a separate 115-row sample. Combined evidence: nine venues/226 rows, different
+times/windows, not a complete or synchronised bookable programme.
+Current findings/audit: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md and JSON.
+Earlier queue/403 observations remain recorded, not rewritten. Plain HTTP/headless failures
+are no longer proof the data is inaccessible, but the successful in-app session is not a
+deployable unattended collector. Original year, repeatability, cancellation/identity,
 DST transition and complete horizon remain unproved. Sample/document checks pass.
-Raw evidence/scripts are gitignored; no app edit, recurring collector, operator contact,
-purchase, PR, push, deployment or other sitting. Current branch holds planning/research only.
+No app, job, hosting, production data, subscription/trial, PR/push/deployment or other sitting.
+Current branch holds planning/research only; the concrete AB6/AB7 build gate remains open.
 
 **Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
@@ -47,13 +48,13 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop before implementation: five source-access gaps prevent the intended all-nine build.
-Use the revised prerequisites in docs/reviews/ab-cinema-scrape-results-2026-10-31.md: resolve
-the four ODEON branches and Cineworld, finish source acceptance, then approve the complete
-AB6/AB7 contract and any adapter-batch split. The all-nine sample attempt is complete and
-authorised; do not revert to the superseded four-GET pilot approval question. Do not bypass
-the observed controls, silently reduce coverage, build the parked links proposal, retry the
-archive, start AA10c or any other sitting.
+Stop before application implementation. All nine now have samples; next prove a bounded,
+repeatable collection method in the intended deployment environment, then approve the
+complete AB6/AB7 source/schema/API/job/refresh/retention/navigation contract and adapter split.
+Use docs/reviews/ab-cinema-browser-comparison-2026-10-31.md. Do not equate the in-app browser
+with Craig's normal Chrome/Safari or a production worker. Existing test authorisation stands;
+do not repeat the superseded four-GET permission question or silently reduce venue coverage.
+No hosting change, parked links-screen build, archive retry, AA10c or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -447,6 +448,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — authorised browser comparison obtains the other five venues (#316):** in-app
+  browser DOM yields Kilmarnock 15/Quay 28/Braehead 25/East Kilbride 18/Silverburn 25 time
+  rows; 111 additional, 226 with the earlier four venues. Normal Chrome/Safari unavailable;
+  no production-collector claim. Initial loading/navigation/locator failures and one expired
+  control misclassification are preserved/corrected in the report. 110 booking IDs plus one
+  explicitly expired/no-link row; sample/document checks pass. No app/hosting/push/deployment.
 
 - **31 Oct — all-nine scraping attempts completed at Craig's explicit word (#315):** real
   times from GFT 20/Vue 31/Everyman 11/Science Centre 53 = 115 rows; four ODEON queue redirects

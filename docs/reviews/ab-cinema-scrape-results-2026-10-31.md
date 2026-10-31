@@ -1,5 +1,11 @@
 # Nine-cinema scraping results — 31 Oct
 
+**Later browser comparison supersedes the five-venue access-gap verdict below:** all five
+yielded 111 additional real time rows in the in-app browser. All nine now have samples,
+but deployable/repeatable collection is unproved. See
+`ab-cinema-browser-comparison-2026-10-31.md` (#316). The first probe and its failures are
+retained below as historical evidence, not rewritten as passes.
+
 **Four of nine venues yielded real screening times: 115 rows in this bounded sample.**
 GFT, Vue St Enoch, Everyman Glasgow and Science Centre IMAX are technically promising.
 The four ODEON branches redirect to a queue; Cineworld's schedule requests return 403.

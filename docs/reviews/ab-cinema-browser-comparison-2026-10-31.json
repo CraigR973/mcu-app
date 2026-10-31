@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "browser": "Codex In-app Browser",
+  "normalChromeSafariConnected": false,
+  "purpose": "Visible-page comparison only; no deployable recurring collector proved",
+  "dateSampled": "2026-10-31",
+  "newVenueCount": 5,
+  "additionalRows": 111,
+  "bookingLinksPresent": 110,
+  "expiredWithoutBookingLink": 1,
+  "combinedEarlierAndLaterSampleRows": 226,
+  "combinedEvidenceVenueCount": 9,
+  "differentCollectionTimes": true,
+  "observations": [
+    {
+      "venue": "ODEON Glasgow Quay",
+      "url": "https://www.odeon.co.uk/cinemas/glasgow-quay/",
+      "observedUtc": "2026-10-31T17:33:14.847Z",
+      "dateSelection": "Today — 31 Oct 2026",
+      "screenings": 28,
+      "filmsWithCapturedTimes": 14,
+      "uniqueSourceShowingIds": 28,
+      "bookingLinksPresent": 28,
+      "expiredWithoutBookingLink": 0,
+      "originalYearVerified": false,
+      "bookingLinksFollowed": false,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=530-105832",
+          "filmId": "ho00008986",
+          "screen": "Screen 7",
+          "time": "17:30",
+          "title": "Ghosts: The Possession of Button House"
+        },
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=530-105831",
+          "filmId": "ho00008986",
+          "screen": "Screen 7",
+          "time": "20:00",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "ODEON Braehead",
+      "url": "https://www.odeon.co.uk/cinemas/braehead/",
+      "observedUtc": "2026-10-31T17:34:10.863Z",
+      "dateSelection": "Today — 31 Oct 2026",
+      "screenings": 25,
+      "filmsWithCapturedTimes": 18,
+      "uniqueSourceShowingIds": 25,
+      "bookingLinksPresent": 25,
+      "expiredWithoutBookingLink": 0,
+      "originalYearVerified": false,
+      "bookingLinksFollowed": false,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=615-99392",
+          "filmId": "ho00008986",
+          "screen": "Screen 3",
+          "time": "17:30",
+          "title": "Ghosts: The Possession of Button House"
+        },
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=615-99391",
+          "filmId": "ho00008986",
+          "screen": "Screen 3",
+          "time": "20:00",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "ODEON East Kilbride",
+      "url": "https://www.odeon.co.uk/cinemas/east-kilbride/",
+      "observedUtc": "2026-10-31T17:35:01.816Z",
+      "dateSelection": "Today — 31 Oct 2026",
+      "screenings": 18,
+      "filmsWithCapturedTimes": 10,
+      "uniqueSourceShowingIds": 18,
+      "bookingLinksPresent": 18,
+      "expiredWithoutBookingLink": 0,
+      "originalYearVerified": false,
+      "bookingLinksFollowed": false,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=923-80643",
+          "filmId": "ho00008986",
+          "screen": "Screen 1",
+          "time": "17:10",
+          "title": "Ghosts: The Possession of Button House"
+        },
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=923-80650",
+          "filmId": "ho00008986",
+          "screen": "Screen 1",
+          "time": "19:40",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "Cineworld Glasgow Silverburn",
+      "url": "https://www.cineworld.co.uk/cinemas/x0vq1-cineworld-cinema-glasgow-silverburn/",
+      "observedUtc": "2026-10-31T17:35:28.289Z",
+      "dateSelection": "Sat 31 — 31 Oct 2026",
+      "screenings": 25,
+      "filmsWithCapturedTimes": 12,
+      "uniqueSourceShowingIds": 24,
+      "bookingLinksPresent": 24,
+      "expiredWithoutBookingLink": 1,
+      "originalYearVerified": false,
+      "bookingLinksFollowed": false,
+      "examples": [
+        {
+          "bookingUrl": "https://web.cineworld.co.uk/order/showtimes/088-225565/seats",
+          "expired": false,
+          "filmPath": "/films/322884-wicker/?theater=X0VQ1",
+          "time": "17:40",
+          "title": "Wicker"
+        },
+        {
+          "bookingUrl": "https://web.cineworld.co.uk/order/showtimes/088-225548/seats",
+          "expired": false,
+          "filmPath": "/films/322884-wicker/?theater=X0VQ1",
+          "time": "19:10",
+          "title": "Wicker"
+        }
+      ],
+      "unbookableExample": {
+        "bookingUrl": null,
+        "expired": true,
+        "filmPath": "/films/1000049433-everest-the-other-side/?theater=X0VQ1",
+        "time": "17:10",
+        "title": "Everest: The Other Side",
+        "expiredEvidence": "role=button, aria-disabled=true, accessible label says expired"
+      }
+    },
+    {
+      "venue": "ODEON Kilmarnock",
+      "url": "https://www.odeon.co.uk/cinemas/kilmarnock/",
+      "observedUtc": "2026-10-31T17:36:56.350Z",
+      "dateSelection": "Today — 31 Oct 2026",
+      "screenings": 15,
+      "filmsWithCapturedTimes": 9,
+      "uniqueSourceShowingIds": 15,
+      "bookingLinksPresent": 15,
+      "expiredWithoutBookingLink": 0,
+      "originalYearVerified": false,
+      "bookingLinksFollowed": false,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=019-72076",
+          "filmId": "ho00008986",
+          "screen": "Screen 5",
+          "time": "17:10",
+          "title": "Ghosts: The Possession of Button House"
+        },
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=019-72077",
+          "filmId": "ho00008986",
+          "screen": "Screen 5",
+          "time": "19:40",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    }
+  ],
+  "normalisationCorrection": "Expired Cineworld span controls use role=button/aria-disabled, not native button.disabled; initial extraction retained separately.",
+  "evidence": {
+    "localRawFile": "scratchpad/ab-cinema-research/browser-comparison-2026-10-31/five-venue-dom-samples.json",
+    "rawSha256": "3020321d63d98acb9305017343246eead74b10535dc2db78543905d199a6b8f4",
+    "screenshotLocalPath": "/Users/craigrobinson/mcu_app/scratchpad/ab-cinema-research/browser-comparison-2026-10-31/cineworld-visible-times.jpg",
+    "screenshotSha256": "076187c098b532740965a95b4333f52f939523c744de0a4625f2fa6728f3b8b6"
+  }
+}
