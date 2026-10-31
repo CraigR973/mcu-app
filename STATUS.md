@@ -2,13 +2,16 @@
 
 ## Now
 
-**31 Oct: sitting 5 re-check — AB5 complete; revised build contract awaits approval.**
-Craig asked to retry after the other session's update. Clean local/remote main c63bc06
-and green exact-head main CI 41207241130 confirm AB5 finalisation. The current ledger
-still blocks AB6/AB7 implementation. A revised proposal recommends one AB6 official-links
-screen for all nine venues and deferring AB7's Film first discovery; this is unapproved.
-Proposal: docs/reviews/ab-sitting-5-replan-2026-10-31.md.
-No application edit, source request, PR, deployment or other sitting was started here.
+**31 Oct: direct-scraping investigation complete; exact first diagnostic awaits approval.**
+Craig authorised permission/access research before sample reads (#314); the unapproved
+links-only proposal is parked. All nine venues remain intended. Vue expressly restricts
+automated extraction, Cineworld/Everyman restrict reuse, ODEON access/terms remain unresolved.
+Science Centre's attributed-copying policy is a lead whose programme scope needs clarification;
+GFT reuse permission is unestablished. No recurring collector is ready for implementation.
+Report/exact proposed four-request diagnostic:
+docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md.
+Public legal/robots/API documentation only; no programme sample, operator contact, app edit,
+PR, deployment or other sitting. Document checks pass. Current branch is planning only.
 
 **Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
@@ -39,11 +42,12 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop at revised sitting-5 scope approval. Review the proposed AB6 nine-venue links screen
-and AB7 deferral in docs/reviews/ab-sitting-5-replan-2026-10-31.md before changing the ledger
-or application. AB5 is complete; report acceptance does not approve ingestion or this
-replacement screen. Future samples need exact scope approval and future ingestion still
-needs real programme evidence. Do not start AA10c or any other sitting.
+Stop before the proposed independent-cinema diagnostic: exact four-GET scope and byte/stop
+limits are in docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. It requires Craig's
+approval under group-start.md; it is not yet executed or an ongoing-use licence. Chain
+permission/access gates remain open and all nine venues remain in scope. AB6/AB7 still
+need real evidence, revised plan approval and a concrete build contract before implementation.
+Do not build the parked links proposal, retry the archive, start AA10c or any other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -437,6 +441,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — scraping investigation authorised, research complete (#314):** six-family/nine-
+  venue policy matrix and exact unexecuted four-request GFT/Science Centre diagnostic saved.
+  Vue automated-extraction restrictions found in embedded legal terms; Cineworld/Everyman
+  reuse gates confirmed. Science Centre FOI copying clause found with programme-scope caveat;
+  ODEON policy access and source permissions remain unresolved. No programme sample, contact,
+  app change, PR or deployment. Links-only proposal parked, not approved; document checks pass.
 
 - **31 Oct — sitting 5 retry stops at revised build contract:** verified AB5 accepted/merged,
   clean local/remote main c63bc06 and green exact-head CI 41207241130. No AB5 report decision

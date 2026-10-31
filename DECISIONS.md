@@ -6633,3 +6633,17 @@ contemporaneous.
      remain the picks. Normal green-CI documentation integration/rebuilds are authorised;
      no retry, paid source, app build, ingestion, sitting 5 or AA10c. Any future build needs
      re-planning and its own go. See docs/reviews/ab5-finalisation-2026-10-31.md.
+
+
+314. **Investigate direct cinema scraping before choosing a links-only build (31 Oct).**
+     Craig asked whether programmes could be scraped into the app and replied “proceed”
+     to investigating permitted access before exact bounded sample requests and build
+     approval. Park the unapproved links-screen proposal; retain all nine venues and
+     Film first as the intended programme experience. Public policy/feed research is
+     authorised, not recurring collectors, source-permission assumptions, operator contact,
+     paid services, application/schema/API/job changes or implementation. Exact live
+     diagnostic scope must be presented for approval first under group-start.md. The
+     original historical GET remains exhausted; AB5 report acceptance and future source
+     gates remain as #313. Findings and the unexecuted four-request independent-cinema
+     diagnostic: docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. No AA10c or
+     other sitting is included.

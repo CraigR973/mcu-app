@@ -40,8 +40,12 @@ conversation still maps onto this file.*
   stays explicit and does not waive future integration checks.
   Any later link-screen build needs revised scope/separate go; a new sample needs new approval.
   Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
-  Sitting 5 remains unauthorised and requires re-planning from the free-links choice;
-  no schema/API/job/refresh/retention or replacement link-screen build is approved.
+  **Later 31 Oct (#314):** Craig authorised direct-scraping permission/access investigation
+  before exact sample approval. Findings and unexecuted four-request GFT/Science Centre
+  diagnostic: docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. All nine remain;
+  chain permission/access and future build gates stay open. No operator contact authorised.
+  Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
+  replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

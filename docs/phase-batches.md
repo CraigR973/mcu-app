@@ -4758,6 +4758,11 @@ exact-head seven-job PR CI and API/web version/readiness verified. Free official
 all nine retained, Film first future concept. One approved historical GET returned 403;
 original programme evidence remains unmet and is excluded from report close-out only.
 Programme feasibility is unproven. Sitting 5 requires re-planning; AA10c excluded. Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
+Later 31 Oct (#314): Craig authorised direct-scraping permission/access investigation before
+exact sample approval. Six-family findings and proposed unexecuted four-request independent-
+cinema diagnostic: docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. All nine venues
+remain; source permissions, exact samples and concrete build contract are still gates.
+The unapproved links-only proposal is parked; AB6/AB7 scope/status is not rewritten here.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

@@ -2,6 +2,10 @@
 
 **Proposal awaiting Craig's approval. No implementation is authorised by this document.**
 
+**Later 31 Oct: parked while Craig's authorised scraping investigation runs (#314).**
+This links-only proposal was not approved. The scraping findings and proposed exact first
+diagnostic are in `ab-cinema-scraping-investigation-2026-10-31.md`; no source/build gate is waived.
+
 ## Verified starting point
 
 AB5 is report complete under decision #313, integrated through PR #123. Local and remote
