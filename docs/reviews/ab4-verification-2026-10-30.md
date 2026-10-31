@@ -51,10 +51,10 @@ coverage-incomplete first API run and scratch-helper corrections.
 
 | Ledger criterion | Evidence / remaining owner work |
 |---|---|
-| Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. Installed original bundle version, remaining theme/Search/resume observations open. |
+| Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. 31 Oct normal resume preserves Home. Repaired actual-app sample preview confirms all four theme/Search states, Home Screen: yes and normal keyboard; original installed bundle version/launch cause remain open. |
 | Evidence and cause before approved repair | Isolated installed AB4-1 reproduced blur at all three positions; AB4-2 owner measurement 32px, then explicit Approve 32px repair (#308). Exact internal iOS compositor not inspected. |
-| Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; native keyboard/resume observations remain owner work. |
-| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Actual affected-iPhone app after/light/Search, Archive-launch investigation and production release remain open. Exact-head CI is on draft PR #122; the actual repaired-app sample preview is available below. Prototype or desktop tests do not close them. |
+| Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; Native preview keyboard normal and original-app normal resume preserving Home are now owner-confirmed; production-after remains open. |
+| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch cause, installed bundle version and production-after remain open. Seven-job review CI passes at 97b36e4; draft PR #122 is unmerged. Sample acceptance does not prove production-after. |
 
 ## Release boundary
 
@@ -264,3 +264,30 @@ sitting 4 and AA10c have not started. This documentation-only update does not re
 application gate: source remains 4f2a12b and verified remote review head 97b36e4, all seven
 jobs green in 41044309324. Accumulate local evidence commits for one final push and fresh
 exact-head CI after owner checkpoints clear.
+
+## Original resume and local-state preflight, 31 Oct
+
+Craig reports “home remains” after original MCU Home → switch apps → return without
+swiping MCU away. He answers “none to any of that” to the online check for waiting/Needs
+attention changes, unfinished Add/edit forms and discs in the Move tray. Normal resume
+is now observed and must not be labelled unanswered. No local work was reported to preserve.
+This is owner-reported preflight, not direct inspection of all device storage.
+
+Fresh public readback at 00:14 UTC returns manifest start_url / and web version f341d10;
+retained JSON is scratchpad/ab4/launch-preflight-2026-10-31.json (ignored). Source commit
+4cc207d changed start_url from /movies to / on 23 Oct. The original installed bundle
+version and launch target remain uninspected. The retained-target explanation fits cold
+Archive versus normal Home resume, but is not proven by that correlation.
+
+A concrete one-time remove/re-add comparison and its costs/stop conditions are prepared
+in the repair proposal's 31 Oct section. It requires a separate owner decision before
+removal: about 3–5 minutes, possible PIN sign-in/notification re-enablement and loss of
+local cache/settings. It excludes account/collection deletion and Safari website-data
+clearing. No removal has been authorised or performed. Production still serves the old
+header; this proposed comparison addresses launch only. Native repaired sample appearance
+and Search keyboard acceptance remain confirmed, without substituting desktop tests.
+
+This evidence-only update changes no product code or tests. Verified remote head remains
+97b36e4 with all seven CI jobs green in 41044309324; local documentation is held for a
+final push/exact-head CI after owner checkpoints. AB4 remains unshipped and unstruck;
+sitting 4 and AA10c have not started.

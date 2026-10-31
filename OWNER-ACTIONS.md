@@ -31,10 +31,12 @@ conversation still maps onto this file.*
   Actual repaired-app sample preview (AB4-3): Craig now reports “all are sharp” for
   Archive/Search in both themes, then confirms “yes to both”: Home Screen: yes and
   normal Search keyboard. Those installed preview observations are accepted; do not
-  repeat them. Original installed version/resume/production after and Archive launch
-  remain open. Normal resume and a fresh online check for pending/blocked changes,
-  unfinished forms and Move tray contents are requested. Keep MCU installed; any
-  removal/re-add needs local-state preservation, PIN/push costs and a separate decision.
+  repeat them. On 31 Oct Craig confirms normal resume preserves Home, and while online
+  reports no pending/blocked changes, unfinished forms or Move tray contents. Original
+  installed version/production after and Archive-launch cause remain open. The concrete
+  removal/re-add comparison awaits a separate owner decision, with PIN/push/local-cache
+  costs stated; keep MCU installed until approved. No account/collection deletion or
+  Safari website-data clearing is in scope.
   Preview details and verification:
   `docs/reviews/ab4-verification-2026-10-30.md`.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.

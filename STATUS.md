@@ -2,11 +2,16 @@
 
 ## Now
 
-**30 Oct: AB4 installed preview appearance and Search keyboard confirmed on the affected iPhone.**
-Craig reports Archive and Search sharp in dark and light themes, then explicitly confirms
-“yes to both”: Home Screen status yes and Search opens the keyboard normally. This closes
-those preview observations using the actual repaired app with read-only sample data.
-Original MCU stays installed; production-after and the separate launch checkpoint remain open.
+**31 Oct: original MCU resumes Home normally; local-state preflight clear by owner report.**
+Craig confirms Home remains after switching apps without swiping MCU away. While online,
+he reports no pending/blocked changes, unfinished Add/edit forms or Move tray contents.
+Cold launch still opens Archive. A retained old installation target is consistent with
+these observations, but its cause is not yet proven. A separate remove/re-add comparison
+is prepared and awaits the owner's exact decision; keep the original MCU installed.
+
+The actual repaired-app sample preview is confirmed sharp for Archive/Search in both
+themes, Home Screen: yes, Search keyboard normal (30 Oct). Those observations are closed;
+production-after and the original launch checkpoint remain open.
 
 The shared 32px gap applies below the top safe area to Apple Home Screen phone layouts
 under 1024px with positive top inset, including approved older Apple layouts (#308).
@@ -25,9 +30,10 @@ AB4-3 preview dpl_EcQczpRG6CkZq1g5r6maaek4pFZE serves actual compiled app code w
 read-only sample responses and dummy local identifiers, no live account/collection.
 Details, access refresh and evidence: `docs/reviews/ab4-verification-2026-10-30.md`.
 
-Original Home → close → reopen still reaches Archive. An old retained /movies target
-is consistent with the source history but unconfirmed. Original installed version,
-normal resume and production after remain open; no deletion/re-add is approved.
+Original Home → close → reopen still reaches Archive, while normal resume preserves Home.
+The old /movies target was changed to / on 23 Oct; fresh 31 Oct public manifest readback
+confirms / and web version f341d10. The original installed bundle version and exact launch
+cause remain unconfirmed. Production-after is open; no deletion/re-add is approved.
 AB4 stays unstruck and sitting 3 incomplete. Sitting 4 and AA10c have not started.
 Last live readback (30 Oct, 11:12 UTC): API/web exact f341d10, full readiness. No production
 deployment in this turn. Existing AB3 phone/speech/live-assistant/AA10b/AA10c checks stay open.
@@ -38,15 +44,16 @@ and require fresh exact-head seven-job CI before any eventual merge.
 
 ## Next
 
-In original MCU, tap Home, briefly switch apps and return without swiping MCU away:
-record whether Home resumes or Archive appears. While online, obtain a fresh check for
-pending/blocked changes, unfinished Add/edit forms and discs in the Move tray. These
-non-destructive observations are requested; keep the original installation in place.
-Any removal/re-add needs preservation of local-only work, PIN/push consequences and the
-owner's exact decision before removal. All four installed preview sharpness states and
-normal Search keyboard are confirmed; do not repeat those checks. Original installed
-version/launch and production-after remain open. Remain at AB4, not close-out; do not
-start sitting 4 or AA10c.
+Await the owner's separate decision on removing/re-adding only the original MCU Home
+Screen app from the production root URL, to compare its cold launch before/after. The
+fresh online local-state check is clear by owner report on 31 Oct. Explain PIN sign-in,
+notification re-enablement and loss of local cache/settings; do not clear Safari website
+data, delete an account/collection, or remove the separate Header Check preview. The
+concrete procedure and stop conditions are in the AB4 repair proposal. If approved,
+obtain the cold-launch result and repeat normal resume; keep the installed-version
+limitation explicit. The deployed header is still unrepaired, so this is a launch-only
+comparison. No navigation repair is justified before that evidence. Remain at AB4;
+do not start sitting 4 or AA10c.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -441,6 +448,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB4 original-app preflight:** Craig confirms Home resumes after switching apps and no pending/blocked changes, unfinished forms or Move tray contents while online. Public manifest still starts at /; web serves f341d10. Cold launch remains Archive; retained old target remains an unproven explanation. Prepared the exact removal/re-add comparison with local-state/PIN/push costs, awaiting owner approval. No removal, source change, merge or deployment.
 
 - **30 Oct — AB4 native preview observations confirmed:** Craig confirms Home Screen: yes and normal Search keyboard after reporting Archive/Search sharp in both themes. Original-app normal resume and fresh online/local-state checks requested before any separate re-add decision; no removal, merge or production deployment. Evidence-only documentation remains local pending owner checkpoints.
 

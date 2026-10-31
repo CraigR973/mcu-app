@@ -103,3 +103,44 @@ fix/ab4-iphone-diagnosis started this update clean and holds only diagnosis docu
 and isolated diagnostic sources. No full app gate or new deployment is claimed for this
 proposal. Detailed observations and both diagnostic sources/deployments remain in
 ab4-device-checkpoint-2026-10-29.md and ab4-diagnostic-2026-10-29/.
+
+## Original-installation comparison, 31 Oct — awaiting owner decision
+
+Craig confirms the original MCU preserves Home on normal resume after briefly switching
+apps without swiping MCU away. He separately reports no pending/Needs attention changes,
+unfinished Add/edit forms or Move tray contents while online. These are fresh owner
+observations, not an agent inspection of the phone's storage. Cold launch after deliberately
+leaving Home still returns Archive. Source history shows the 23 Oct change from /movies
+to /; 31 Oct 00:14 UTC public readback confirms start_url / and web f341d10. The original
+installed bundle version and internal launch target have not been read. A retained old
+installation target is consistent with the cold/resume distinction, not a proven cause.
+
+**Recommendation:** approve one removal/re-add comparison of the original MCU Home Screen
+app using https://mcu-app-fawn.vercel.app/ in Safari. Replacing navigation with a forced Home
+redirect is rejected because normal resume already works and the launcher target remains
+unconfirmed; it could disrupt deep links, login returns and page resumption.
+
+Scope and cost: about 3–5 minutes, possible PIN sign-in and notification re-enablement,
+and possible loss of local caches/settings. The owner reports no queued writes, drafts or
+Move tray items to preserve. This action targets only the phone installation; no server
+account/collection deletion, Safari website-data clearing, hosting change or sample-preview
+promotion. Approval of the 32px repair does not authorise this separate action.
+
+After explicit approval, the owner performs the comparison:
+
+1. If any new pending/blocked change, unfinished form or tray item appears, stop and
+   sync/preserve it before removal. Ensure the PIN is available and note whether push is enabled.
+2. Remove only the original MCU Home Screen app. Keep the separate MCU Header Check preview.
+   Do not clear Safari website data or delete anything through MCU's account/collection UI.
+3. Open the production root URL in Safari and add it to the Home Screen as a web app.
+   Open its icon, sign in if requested and observe the first page after sign-in settles.
+4. Select Home, swipe the app away, reopen its icon and report Home or Archive. Then
+   select Home, briefly switch apps and return without swiping it away; report the resumed page.
+5. Restore notifications if previously enabled. Stop and report any login/sync/notification
+   problem; do not repeat reinstall attempts or change navigation without new evidence.
+
+If the new installation cold-launches Home and resumes normally, record the before/after
+as an installation-refresh resolution; do not invent a code repair or claim the exact
+internal iOS mechanism was inspected. If it still cold-launches Archive, retain the open
+launch criterion and investigate the new evidence. The production header remains unrepaired
+at this point; the installed sample preview's accepted sharpness is a separate result.
