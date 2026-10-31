@@ -33,11 +33,14 @@ conversation still maps onto this file.*
   normal Search keyboard. Those installed preview observations are accepted; do not
   repeat them. On 31 Oct Craig confirms normal resume preserves Home, and while online
   reports no pending/blocked changes, unfinished forms or Move tray contents. Original
-  old bundle/internal-target limitation remains recorded. Craig explicitly confirms the
+  bundle/internal-target limitation remains recorded. Craig explicitly confirms the
   approved re-add (#309) cold-launches Home, resumes Home and has no login/sync/notification
   problems (#310). Launch is resolved by installation refresh; do not ask those checks
   again or invent a navigation repair. The original production iPhone's header/Search
-  after-check in both themes and normal keyboard remains for after code deployment.
+  after-check in both themes and normal keyboard is now requested: code deployed in
+  PR #122 (df6824a), exact API/web SHA/full readiness and read-only login smoke pass.
+  Reopen the original MCU icon online to load it; do not reinstall. AB4 stays unstruck
+  until this production-phone observation; sample/desktop checks cannot replace it.
   No further removal, account/collection deletion or Safari-data clearing is requested.
   Preview details and verification:
   `docs/reviews/ab4-verification-2026-10-30.md`.

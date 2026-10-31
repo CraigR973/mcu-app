@@ -10,7 +10,8 @@ Sitting 3 authorised 29 Oct (#307): installed blur reproduced in isolated AB4-1;
 AB4-2 yielded 32px (30 Oct), and the exact header/Search repair is approved (#308) and implemented.
 Native actual-app sample preview is accepted in all four states with normal keyboard;
 approved original-app re-add now cold-launches/resumes Home without problems (#309/#310).
-Final exact-head CI/release precede the production-phone header-after checkpoint.
+PR #122 code is deployed at df6824a with final seven-job CI and exact production proof;
+the production-phone header-after checkpoint remains open.
 Sittings 4–5 and AA10c remain excluded. The verification reports retain
 the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
@@ -85,8 +86,8 @@ repair PR #120 (`bf0eb36`). Sitting 2 shipped AB3 (`5cfa467`) on 29 Oct after al
 picks (#306), full gates and exact production proof; genuine add/real-phone receipt remains owner acceptance. Sitting 3 authorised 29 Oct (#307); AB4 is at the affected-device evidence
 checkpoint: standalone AB4-1 blurs in all positions; AB4-2 measured 32px and the exact header/Search repair is approved (#308) and implemented
 (`ab4-repair-proposal-2026-10-30.md`). Native sample acceptance and the approved original-app
-re-add launch/resume comparison now pass (#309/#310); final release checks and production
-phone after remain. See
+re-add launch/resume comparison now pass (#309/#310); code deployed PR #122 (df6824a),
+full final CI/readiness pass; production-phone after remains. See
 `docs/reviews/ab4-device-checkpoint-2026-10-29.md`. Sittings 4–5 remain unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance

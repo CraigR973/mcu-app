@@ -1,6 +1,6 @@
 # AB4 — approved 32px clearance: verification
 
-Updated 31 Oct. **Native sample-preview and original launch checkpoints met; final CI/release next.**
+Updated 31 Oct. **Code deployed in PR #122 (df6824a); production-phone after remains open.**
 Craig approved the exact 32px repair (#308) and separately the original-app re-add (#309).
 Native sample preview appearance/keyboard and re-added Home cold-launch/resume/no-problem
 results are explicitly confirmed (#310). Production-phone header-after remains open.
@@ -41,7 +41,7 @@ local URI. No test/migration points at Neon and no live data or provider/push wa
 - Initial dark/light Search screenshots were inspected: existing solid themed Search
   surfaces, native-inset-plus-clearance geometry and intentional background dimming.
   Final actual-app sample-preview header/Search screenshots were also inspected below;
-  Native repaired sample after is now explicitly accepted below; production-phone after and release remain open.
+  Native repaired sample after is now explicitly accepted below; production-phone after remains open; release proof is recorded in the 31 Oct section.
 
 One exploratory read used apps/e2e/tests instead of the actual specs directory; the
 path was corrected without changing any test. The earlier diagnostic-only --skip-domain
@@ -55,7 +55,7 @@ coverage-incomplete first API run and scratch-helper corrections.
 | Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. 31 Oct normal resume preserves Home. Repaired actual-app sample preview confirms all four theme/Search states, Home Screen: yes and normal keyboard; Approved re-add now cold-launches/resumes Home with no login/sync/notification problems. Record installation-refresh resolution; historical bundle/internal target uninspected. |
 | Evidence and cause before approved repair | Isolated installed AB4-1 reproduced blur at all three positions; AB4-2 owner measurement 32px, then explicit Approve 32px repair (#308). Exact internal iOS compositor not inspected. |
 | Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; Native preview keyboard normal and original-app normal resume preserving Home are now owner-confirmed; production-after remains open. |
-| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch resolved by approved re-add; old bundle/internal target uninspected. Production-after remains open. Seven-job review CI passes at 97b36e4; draft PR #122 is unmerged. Sample acceptance does not prove production-after. |
+| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch resolved by approved re-add; old bundle/internal target uninspected. Production-after remains open. Final seven-job PR CI passes at df6824a (41150581181); PR #122 is merged and exact API/web SHA/full readiness pass. Sample acceptance does not prove production-after. |
 
 ## Release boundary
 
@@ -359,3 +359,45 @@ The old 97b36e4 green run remains historical proof, not the new-head result. On 
 release the normal Git application build only, never a diagnostic/sample deployment,
 verify exact API/web SHA and full readiness, then stop at production-phone after acceptance.
 Sitting 4 and AA10c remain excluded.
+
+## Final exact-head release and production proof, 31 Oct
+
+Final candidate df6824af2b23b5052b3df220637da4c1a1ebf35a passes all seven jobs in
+[PR CI 41150581181](https://github.com/CraigR973/mcu-app/actions/runs/41150581181).
+API 2,549 with zero skips, shared 159, web 736; Chromium 61, Firefox 60 + existing
+dictation skip, WebKit 59 + its two documented limitations, jobs 6. All AB4 cases pass.
+The previous 97b36e4 run is historical, not substituted for this result. The product/test
+tree comparison from 97b36e4 to df6824a is empty; only accumulated evidence docs changed.
+The branch was clean, main was unchanged/green at f341d10, and the ready PR head exactly
+matched the tested candidate before the fast-forward merge/push. GitHub marks PR #122
+merged at 00:46 UTC with mergeCommit df6824a. Main CI also runs on that exact commit.
+
+Normal Git deployments, not samples: Vercel dpl_iRi1C1z12uegi6jD4vmuvq5ZMCrj is READY,
+target production, intended mcu-app project/team, main df6824a. Railway API deployment
+3deecc8f-0df9-46ff-a130-f54de8d88f05 is SUCCESS at the same SHA. Protection/config/env
+was only inspected, not changed. No diagnostic or fixture deployment was promoted.
+
+At 00:47 UTC public API health and web version both return exact df6824a. Ready returns
+status ready, db ok, push/ai/ebay/tmdb/brave configured. The read-only production Chromium
+smoke exits zero: unauthenticated root settles on login, Name/PIN fields visible; served
+JS contains the standalone marker and served CSS both shared clearance classes; captured
+JS/CSS all HTTP 200, zero page errors, zero API writes. Screenshot inspected: intact dark
+phone login, aligned fields/button, no clipping. Service workers are blocked in this
+isolated smoke and no account sign-in was attempted. It proves public bootstrap and the
+new build are served, not authenticated journeys, native blur, keyboard or phone cache
+uptake. Native acceptance remains the owner, never desktop smoke.
+
+Ignored evidence: ci-release-candidate-result.json/.log, release-candidate-preflight.json,
+production-release-smoke.json and production-release-login.png in scratchpad/ab4. A completed
+job log request while its parent workflow still ran reported logs unavailable; it was read
+successfully after completion. GitHub's --required query reports no configured required
+checks; all seven jobs were therefore checked explicitly, including the non-skipped PR
+E2E job. No gate was weakened and no branch protection setting was changed.
+
+The final owner question now asks the original production MCU icon reopened online,
+Archive/Search sharp in dark/light and keyboard normal. No reinstall or repeat of the
+resolved launch comparison is requested. Until this observed result, leave AB4 unstruck
+and sitting 3 incomplete despite released code. Sitting 4 and AA10c have not started.
+Subsequent handoff-only commits require the same exact-head main CI and served-SHA check;
+record final runtime proof in the final response/CI metadata without creating an endless
+new documentation head solely to name its own SHA.
