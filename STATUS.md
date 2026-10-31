@@ -2,7 +2,15 @@
 
 ## Now
 
-**31 Oct: Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
+**31 Oct: sitting 5 re-check — AB5 complete; revised build contract awaits approval.**
+Craig asked to retry after the other session's update. Clean local/remote main c63bc06
+and green exact-head main CI 41207241130 confirm AB5 finalisation. The current ledger
+still blocks AB6/AB7 implementation. A revised proposal recommends one AB6 official-links
+screen for all nine venues and deferring AB7's Film first discovery; this is unapproved.
+Proposal: docs/reviews/ab-sitting-5-replan-2026-10-31.md.
+No application edit, source request, PR, deployment or other sitting was started here.
+
+**Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
 unmet original programme-evidence criterion for this report only (#313). Free official
 programme links for all nine venues are the chosen direction; Film first is the future
@@ -31,11 +39,11 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop: Group AB sitting 4 is complete as an accepted source report. No next sitting,
-source retry or implementation is authorised. Sitting 5's original ingestion/discovery
-plan requires re-planning: free official links do not provide unified Film first results.
-A free-links screen needs a separate revised contract/go; future samples need exact scope
-approval and future ingestion still needs real programme evidence. Do not start AA10c.
+Stop at revised sitting-5 scope approval. Review the proposed AB6 nine-venue links screen
+and AB7 deferral in docs/reviews/ab-sitting-5-replan-2026-10-31.md before changing the ledger
+or application. AB5 is complete; report acceptance does not approve ingestion or this
+replacement screen. Future samples need exact scope approval and future ingestion still
+needs real programme evidence. Do not start AA10c or any other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -429,6 +437,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — sitting 5 retry stops at revised build contract:** verified AB5 accepted/merged,
+  clean local/remote main c63bc06 and green exact-head CI 41207241130. No AB5 report decision
+  remains, but AB6/AB7's build gate is unresolved. Prepared an unapproved concrete proposal
+  for one AB6 nine-venue official-links screen and AB7 deferral; ledger and application
+  unchanged. Document checks only; no provider request, deployment or other sitting.
 
 - **31 Oct — AB5 report complete, sitting 4 closed:** owner accepted report complete /
   programme feasibility unproven (#313); PR #123 merged b9f7dd7 after exact-head seven-job
