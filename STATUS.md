@@ -2,7 +2,7 @@
 
 ## Now
 
-**31 Oct: AB5 source report delivered — Craig chose free official programme links and Film first.**
+**31 Oct: AB5 finalisation prepared in PR #123 — owner report acceptance and green CI pending.**
 All nine intended venues remain in scope; no paid provider, trial, ingestion or build is
 approved. Official links cannot deliver grouped films/showtimes; Film first is the future
 concept preference. A link-screen build would require a revised scope and a separate go.
@@ -27,8 +27,12 @@ camera/speech/valuation owner actions remain open.
 
 ## Next
 
-Stop after AB5's recorded picks and failed approved sample. No further request, ingestion
-or implementation is authorised. If Craig asks to build a free official-links screen,
+Craig requested finalisation before the next sitting. PR #123 contains the report and
+explicit finalisation proposal: accept this report with the failed/unavailable programme
+evidence recorded, not passed. Await that specific owner answer and exact-head PR CI,
+then integrate the accepted documentation to clean main with normal version/readiness
+verification. Do not mark AB5 complete or merge before that answer. No further source
+request, ingestion or implementation is authorised. If Craig asks to build a free official-links screen,
 first propose the revised scope: no unified films/showtimes, all nine venues retained.
 A new sample needs new exact approval; never retry the 403 on the exhausted one-read scope.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
@@ -424,6 +428,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB5 finalisation requested:** prepared explicit report-acceptance exception
+  in docs/reviews/ab5-finalisation-2026-10-31.md, added all nine researched official
+  programme targets to the report, and opened PR #123. One owner decision pending:
+  finish the report with original programme evidence explicitly unmet. Normal PR CI is
+  running; no merge, retry, next sitting or implementation before the relevant gates.
 
 - **31 Oct — AB5 owner picks recorded; approved sample returned 403:** Craig chose free
   official programme links, Film first, all nine venues retained. One exact approved

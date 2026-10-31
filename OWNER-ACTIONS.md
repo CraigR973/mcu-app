@@ -34,8 +34,9 @@ conversation still maps onto this file.*
   future preference; links alone do not give unified films/showtimes. The exact approved
   historical sample GET returned HTTP 403 at 12:39 UTC: zero rows, no retry/alternate read.
   Original programme/older-film/cancellation evidence remains unmet; AB5 is not complete.
-  No new owner action is requested now. Any later link-screen build needs a revised scope
-  and separate go; a new sample needs a new exact approval.
+  Finalisation requested: accept the explicit report-only outcome with programme evidence
+  unmet (docs/reviews/ab5-finalisation-2026-10-31.md); PR #123 waits on that answer and CI.
+  Any later link-screen build needs revised scope/separate go; a new sample needs new approval.
   Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
   Sitting 5 remains unauthorised:
   conditional schema/API/job/refresh/retention build contract before implementation.
