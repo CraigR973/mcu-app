@@ -2,7 +2,7 @@
 
 ## Now
 
-**31 Oct: AB5 finalisation prepared in PR #123 — owner report acceptance and green CI pending.**
+**31 Oct: AB5 finalisation prepared in PR #123 — owner report acceptance recorded; green CI pending.**
 All nine intended venues remain in scope; no paid provider, trial, ingestion or build is
 approved. Official links cannot deliver grouped films/showtimes; Film first is the future
 concept preference. A link-screen build would require a revised scope and a separate go.
@@ -12,7 +12,8 @@ Craig approved the exact one-file historical sample. The single GET at 12:39 UTC
 HTTP 403 Forbidden; no rows obtained, no retry or alternate request. Its 2 MB cap, zero
 retries and no account/payment/API key/bookings/production-write scope were preserved.
 Nine-venue real shapes, older-film coverage, links, horizon and cancellation evidence
-remain unmet. AB5 stays open, not struck or accepted complete.
+remain unmet. Craig explicitly accepted “report complete; programme feasibility unproven”
+with that evidence gap retained (#313). Ledger close-out waits for green integration.
 
 Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
 Concepts: docs/reviews/ab5-concept-2026-10-31.html (illustrative listings only).
@@ -28,10 +29,10 @@ camera/speech/valuation owner actions remain open.
 ## Next
 
 Craig requested finalisation before the next sitting. PR #123 contains the report and
-explicit finalisation proposal: accept this report with the failed/unavailable programme
-evidence recorded, not passed. Await that specific owner answer and exact-head PR CI,
-then integrate the accepted documentation to clean main with normal version/readiness
-verification. Do not mark AB5 complete or merge before that answer. No further source
+accepted finalisation contract: report complete with failed/unavailable programme evidence
+recorded, not passed. PR run 41203387374 failed an unchanged Firefox offline replay click;
+no app/test change or root cause is claimed. Require fresh exact-head PR CI before merge,
+then integrate the accepted documentation to clean main with version/readiness checks. No further source
 request, ingestion or implementation is authorised. If Craig asks to build a free official-links screen,
 first propose the revised scope: no unified films/showtimes, all nine venues retained.
 A new sample needs new exact approval; never retry the 403 on the exhausted one-read scope.
@@ -428,6 +429,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB5 final report accepted (#313):** Craig replied “accept” to report complete /
+  programme feasibility unproven, preserving failed/unavailable evidence and excluding
+  ingestion/next sitting. PR #123 merge waits: run 41203387374 failed Firefox offline
+  replay's Search title tab click; earlier run 41203332844 passed. Fresh CI required;
+  no assertion/timeout/test change or claimed fix.
 
 - **31 Oct — AB5 finalisation requested:** prepared explicit report-acceptance exception
   in docs/reviews/ab5-finalisation-2026-10-31.md, added all nine researched official

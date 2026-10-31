@@ -6621,3 +6621,15 @@ contemporaneous.
      unmet and AB5 open; a new request requires new exact approval. Report and audit are
      in docs/reviews/ab5-cinema-feasibility-2026-10-31.md and its sample-audit JSON. Sitting
      5 and AA10c remain excluded. This answers #311's picks/sample gate only as stated.
+
+
+313. **AB5 report acceptance is complete with source feasibility explicitly unproven (31 Oct).**
+     After requesting finalisation, Craig replied “accept” to closing AB5 as “report complete;
+     programme feasibility unproven”, with the failed sample and missing programme evidence
+     retained. This explicitly excludes the original real-programme/older-film evidence
+     criterion from this report's close-out only. It does not mark that criterion passed
+     or waive future source permissions, real specimens, IDs, booking, horizon, cancellation,
+     fixtures or integration acceptance. Free official links, all nine venues and Film first
+     remain the picks. Normal green-CI documentation integration/rebuilds are authorised;
+     no retry, paid source, app build, ingestion, sitting 5 or AA10c. Any future build needs
+     re-planning and its own go. See docs/reviews/ab5-finalisation-2026-10-31.md.

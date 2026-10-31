@@ -33,9 +33,10 @@ conversation still maps onto this file.*
   all nine venues retained. No paid provider/trial/build is approved. Film first is the
   future preference; links alone do not give unified films/showtimes. The exact approved
   historical sample GET returned HTTP 403 at 12:39 UTC: zero rows, no retry/alternate read.
-  Original programme/older-film/cancellation evidence remains unmet; AB5 is not complete.
-  Finalisation requested: accept the explicit report-only outcome with programme evidence
-  unmet (docs/reviews/ab5-finalisation-2026-10-31.md); PR #123 waits on that answer and CI.
+  Original programme/older-film/cancellation evidence remains unmet; report acceptance is complete.
+  **Final report accepted 31 Oct (#313):** “report complete; programme feasibility unproven”.
+  No AB5 owner decision remains. PR #123 integration waits for green CI; missing evidence
+  stays explicit and does not waive future integration checks.
   Any later link-screen build needs revised scope/separate go; a new sample needs new approval.
   Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
   Sitting 5 remains unauthorised:

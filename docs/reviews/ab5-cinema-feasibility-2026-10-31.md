@@ -9,10 +9,11 @@ contract; the programme ingestion/discovery sitting is not authorised by these p
 **Approved historical sample failed:** one GET of the 29 Oct UK archive returned HTTP 403.
 No rows were obtained or retained; no retry or alternate source request was made. This
 provides no historical coverage, real payload, booking or older-film evidence. AB5's
-original programme-evidence criteria remain unmet; it is not marked complete.
+original programme-evidence criteria remain unmet; Craig explicitly accepted the report
+as complete with programme feasibility unproven. Integration waits for green CI.
 Sitting 5, AB6/AB7 implementation and AA10c remain excluded.
 
-Finalisation acceptance proposal: `ab5-finalisation-2026-10-31.md`.
+Accepted finalisation contract: `ab5-finalisation-2026-10-31.md`.
 
 ## Authority and evidence boundary
 
@@ -292,7 +293,7 @@ returned 403 to a single direct documentation GET. No access bypass attempted. T
 research-access limits, not proof those venues are closed or their programmes empty.
 
 Document checks passed: nine venue rows, source-link syntax, monthly/yearly cost and
-request arithmetic, preserved STATUS headings and unstruck AB5. Chromium concept checks
+request arithmetic, preserved STATUS headings and accurate report-versus-programme acceptance status. Chromium concept checks
 cover 320px/375px in light/dark, both carousel variants, All films, local-only ticket action,
 coverage disclosure and no horizontal overflow; zero browser script errors. Visual dark
 375px inspection passed. These verify the proposal, not the app or real listings.
@@ -308,5 +309,12 @@ were permitted or attempted. Its audit JSON records no credentials or response b
 Source pages are time-sensitive snapshots checked 31 Oct; no current ticket availability
 is asserted. Free official links and Film first are recorded owner picks; they do not meet
 the original ingestion-evidence criteria. No build acceptance, all-nine programme source
-acceptance or purchase is inferred. AB5 remains open for unmet evidence/scope acceptance;
-no automatic sitting 5 or AA10c.
+acceptance or purchase is inferred. Craig subsequently replied “accept” to finalising AB5
+as report complete / programme feasibility unproven, explicitly excluding the unmet
+programme-evidence criterion from report close-out only (#313). This waives nothing for
+future ingestion. PR #123 still requires green exact-head CI; no automatic sitting 5 or AA10c.
+
+Finalisation CI audit: PR run 41203332844 passed; subsequent run 41203387374 failed the
+unchanged Firefox offline replay test at the Search title tab (10-second click timeout).
+Chromium, WebKit and jobs passed. No root cause, repair or programme evidence is inferred;
+no assertion/timeout/retry setting changed. Fresh exact-head CI is required before merge.
