@@ -447,3 +447,10 @@ sitting is authorised.
 Fresh pre-close-out readback at 10:27 UTC again confirms exact e04ba53 API/web SHA, all
 readiness fields, manifest / and successful read-only login/served-bundle smoke with zero
 page errors/API writes. Final close-out documents do not change the product/test tree.
+
+Close-out tooling correction: the first Railway status read on 31 Oct used a shell without
+the repo-required Node 20 PATH and returned command-not-found; its empty pipe then caused
+a JSON decode error. Reran with the documented Node 20 prefix and pipefail; Railway reports
+SUCCESS for close-out 8e47a3e and Vercel READY at the same SHA. No deployment/config/data
+mutation or application failure occurred. This final audit note changes documentation
+only and receives fresh exact-head CI/served-SHA verification before handoff.
