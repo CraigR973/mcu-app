@@ -6647,3 +6647,20 @@ contemporaneous.
      gates remain as #313. Findings and the unexecuted four-request independent-cinema
      diagnostic: docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. No AA10c or
      other sitting is included.
+
+
+315. **Attempt all nine cinema websites, including restricted sources, at Craig's explicit word (31 Oct).**
+     Craig stated: “I give you permission to try and scrape all the websites, including
+     the ones that have restrictions”, then “continue”. This authorises bounded ordinary
+     public HTTP/browser programme tests across all nine intended venues, their actual
+     public page-data requests and linked public box-office event pages. It supersedes
+     #314's investigation-only/sample stop and the proposed independent-only pilot for
+     this test; do not ask the same permission again on account of operator terms/robots.
+     Preserve those published restrictions factually without claiming operator consent.
+     No access-control bypass, account/payment, operator contact, production write, paid
+     service, recurring collector or application/schema/API/job/hosting build is included.
+     The completed test yielded GFT 20, Vue 31, Everyman 11 and Science Centre 53 screening
+     rows (115 total); four ODEON branches queue and Cineworld schedule calls return 403.
+     All nine remain in scope. A reduced-coverage build is not approved. Retain AB6/AB7's
+     revised-plan/concrete-build-contract checkpoints and the AA10c/other-sitting exclusion.
+     Evidence: docs/reviews/ab-cinema-scrape-results-2026-10-31.md and its minimal sample JSON.

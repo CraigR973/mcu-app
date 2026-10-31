@@ -2,16 +2,19 @@
 
 ## Now
 
-**31 Oct: direct-scraping investigation complete; exact first diagnostic awaits approval.**
-Craig authorised permission/access research before sample reads (#314); the unapproved
-links-only proposal is parked. All nine venues remain intended. Vue expressly restricts
-automated extraction, Cineworld/Everyman restrict reuse, ODEON access/terms remain unresolved.
-Science Centre's attributed-copying policy is a lead whose programme scope needs clarification;
-GFT reuse permission is unestablished. No recurring collector is ready for implementation.
-Report/exact proposed four-request diagnostic:
-docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md.
-Public legal/robots/API documentation only; no programme sample, operator contact, app edit,
-PR, deployment or other sitting. Document checks pass. Current branch is planning only.
+**31 Oct: all nine cinema sites attempted — four yielded 115 real screening rows (#315).**
+Craig explicitly authorised scraping attempts including restricted sites, then “continue”.
+GFT: 20 rows; Vue St Enoch: 31; Everyman Glasgow: 11; Science Centre IMAX: 53.
+All four ODEON branches redirect to a queue (representative browser attempt 403);
+Cineworld venue HTML works but its real schedule requests return 403. All nine remain
+intended; no four-venue product or link-screen build is approved. Do not repeat the sample
+permission question merely because sites have restrictive terms/robots.
+Results/audit: docs/reviews/ab-cinema-scrape-results-2026-10-31.md and
+docs/reviews/ab-cinema-scrape-samples-2026-10-31.json. Counts are bounded snapshots, not
+complete coverage or currently bookable rows. Original year, cancellation/identity stability,
+DST transition and complete horizon remain unproved. Sample/document checks pass.
+Raw evidence/scripts are gitignored; no app edit, recurring collector, operator contact,
+purchase, PR, push, deployment or other sitting. Current branch holds planning/research only.
 
 **Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
@@ -21,8 +24,10 @@ concept. No unified programme feed, ingestion, link screen, purchase or trial wa
 Any next cinema build needs re-planning and its own go; sitting 5 and AA10c remain excluded.
 
 The single approved historical archive GET returned HTTP 403, zero rows, no retry or
-alternate request. Nine-venue real shapes, older-film coverage, stable IDs, booking links,
-horizon and cancellations remain unverified. Future ingestion gates are not waived.
+alternate request. Later direct-source samples now establish four real shapes and older/
+reissue leads, with booking URLs obtained but not followed. All-nine coverage, original-year
+matching, horizon completeness, stable identities and cancellation behaviour remain unverified.
+Future ingestion/build gates are not waived.
 
 Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
 Acceptance/close-out: docs/reviews/ab5-finalisation-2026-10-31.md.
@@ -42,12 +47,13 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop before the proposed independent-cinema diagnostic: exact four-GET scope and byte/stop
-limits are in docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. It requires Craig's
-approval under group-start.md; it is not yet executed or an ongoing-use licence. Chain
-permission/access gates remain open and all nine venues remain in scope. AB6/AB7 still
-need real evidence, revised plan approval and a concrete build contract before implementation.
-Do not build the parked links proposal, retry the archive, start AA10c or any other sitting.
+Stop before implementation: five source-access gaps prevent the intended all-nine build.
+Use the revised prerequisites in docs/reviews/ab-cinema-scrape-results-2026-10-31.md: resolve
+the four ODEON branches and Cineworld, finish source acceptance, then approve the complete
+AB6/AB7 contract and any adapter-batch split. The all-nine sample attempt is complete and
+authorised; do not revert to the superseded four-GET pilot approval question. Do not bypass
+the observed controls, silently reduce coverage, build the parked links proposal, retry the
+archive, start AA10c or any other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -441,6 +447,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — all-nine scraping attempts completed at Craig's explicit word (#315):** real
+  times from GFT 20/Vue 31/Everyman 11/Science Centre 53 = 115 rows; four ODEON queue redirects
+  and Cineworld schedule 403 remain gaps. Minimal real samples, audit, limitations and revised
+  all-nine build prerequisites saved. Earlier Everyman static-load failure, GFT diagnostic
+  browser filter limitation and JSON-capture instrumentation race retained, not hidden.
+  Sample/document checks pass. No app, job, production write, PR/push/deployment or other sitting.
 
 - **31 Oct — scraping investigation authorised, research complete (#314):** six-family/nine-
   venue policy matrix and exact unexecuted four-request GFT/Science Centre diagnostic saved.

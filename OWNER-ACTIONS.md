@@ -41,9 +41,13 @@ conversation still maps onto this file.*
   Any later link-screen build needs revised scope/separate go; a new sample needs new approval.
   Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
   **Later 31 Oct (#314):** Craig authorised direct-scraping permission/access investigation
-  before exact sample approval. Findings and unexecuted four-request GFT/Science Centre
-  diagnostic: docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. All nine remain;
-  chain permission/access and future build gates stay open. No operator contact authorised.
+  before exact sample approval; that boundary was subsequently broadened by #315.
+  **All-nine attempts explicitly authorised/completed (#315):** Craig permitted trying all
+  websites including restricted ones. Four venues yielded 115 screening rows; four ODEON
+  queue redirects and Cineworld schedule 403 prevent all-nine coverage. No repeat approval
+  needed merely for those attempted reads/restrictive terms. Results and exact remaining
+  build prerequisites: docs/reviews/ab-cinema-scrape-results-2026-10-31.md. No operator contact,
+  paid source or access-control bypass is authorised; no reduced venue list is accepted.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

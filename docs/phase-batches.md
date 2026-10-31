@@ -4763,6 +4763,13 @@ exact sample approval. Six-family findings and proposed unexecuted four-request 
 cinema diagnostic: docs/reviews/ab-cinema-scraping-investigation-2026-10-31.md. All nine venues
 remain; source permissions, exact samples and concrete build contract are still gates.
 The unapproved links-only proposal is parked; AB6/AB7 scope/status is not rewritten here.
+Subsequent explicit all-website scraping authorisation (#315) supersedes the investigation-
+only/sample stop for the completed attempts, including restrictive sites. Four venues
+yielded real times (GFT 20/Vue 31/Everyman 11/Science Centre 53; 115 rows total). Four ODEON
+queue redirects and Cineworld schedule 403 leave five source gaps. All nine remain intended;
+no reduced-coverage build follows. Results/revised prerequisites:
+docs/reviews/ab-cinema-scrape-results-2026-10-31.md. AB6/AB7 still need complete source/build
+acceptance; no app implementation, paid source, access-control bypass or AA10c is authorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

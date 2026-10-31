@@ -1,5 +1,11 @@
 # Cinema scraping investigation — 31 Oct
 
+**Later 31 Oct: Craig authorised trying every website, including restricted sources (#315).**
+The earlier four-request proposal below is historical, not the executed scope. All-nine
+attempts, four real-data successes/115 rows and five blocked venues are recorded in
+`ab-cinema-scrape-results-2026-10-31.md` and its minimal sample-audit JSON. No further owner
+permission was requested merely because of restrictive site terms; no application build follows.
+
 **Finding: investigate further; no all-nine scraping build is ready.** Six source families
 cover the nine venues. Three publish express access/reuse restrictions, ODEON's policy
 access is unresolved, and the independent cinemas need technical evidence and reuse-scope

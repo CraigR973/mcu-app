@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Bounded feasibility evidence only; no production ingestion or full coverage acceptance",
+  "ownerAuthorisation": "Decision 315: all nine public venue sources, including restricted sites, may be attempted",
+  "collectedUtcFirst": "2026-10-31T14:40:58.276845+00:00",
+  "collectedUtcLast": "2026-10-31T14:46:00.511Z",
+  "totals": {
+    "intendedVenues": 9,
+    "initialVenuePagesAttempted": 9,
+    "venuesWithScreenings": 4,
+    "screenings": 115,
+    "blockedOrNoScreenings": [
+      "odeon-kilmarnock",
+      "odeon-glasgow-quay",
+      "odeon-braehead",
+      "odeon-east-kilbride",
+      "cineworld-silverburn"
+    ]
+  },
+  "browserProbe": {
+    "contexts": 6,
+    "allowedRequests": 260,
+    "jsonBodiesSaved": 54,
+    "jsonBodyBytesSaved": 6828300
+  },
+  "initialAttempts": [
+    {
+      "venue": "odeon-kilmarnock",
+      "url": "https://www.odeon.co.uk/cinemas/kilmarnock/",
+      "startedUtc": "2026-10-31T14:40:58.276845+00:00",
+      "finishedUtc": "2026-10-31T14:40:59.060298+00:00",
+      "hops": [
+        {
+          "url": "https://www.odeon.co.uk/cinemas/kilmarnock/",
+          "status": 302
+        }
+      ],
+      "outcome": "redirect_outside_operator",
+      "redirectTarget": "https://odeon.queue-it.net/"
+    },
+    {
+      "venue": "cineworld-silverburn",
+      "url": "https://www.cineworld.co.uk/cinemas/glasgow-silverburn",
+      "startedUtc": "2026-10-31T14:40:59.061046+00:00",
+      "finishedUtc": "2026-10-31T14:41:00.316273+00:00",
+      "hops": [
+        {
+          "url": "https://www.cineworld.co.uk/cinemas/glasgow-silverburn",
+          "status": 302
+        },
+        {
+          "url": "https://www.cineworld.co.uk/cinemas/x0vq1-cineworld-cinema-glasgow-silverburn/",
+          "status": 200
+        }
+      ],
+      "status": 200,
+      "outcome": "html_retrieved",
+      "bytes": 270864,
+      "sha256": "dc4700619e2c165fc703988075c714b836cb6e45ae46bcc0d8b83e3f3db32238",
+      "finalUrl": "https://www.cineworld.co.uk/cinemas/x0vq1-cineworld-cinema-glasgow-silverburn/"
+    },
+    {
+      "venue": "odeon-glasgow-quay",
+      "url": "https://www.odeon.co.uk/cinemas/glasgow-quay/",
+      "startedUtc": "2026-10-31T14:41:00.317158+00:00",
+      "finishedUtc": "2026-10-31T14:41:00.613188+00:00",
+      "hops": [
+        {
+          "url": "https://www.odeon.co.uk/cinemas/glasgow-quay/",
+          "status": 302
+        }
+      ],
+      "outcome": "redirect_outside_operator",
+      "redirectTarget": "https://odeon.queue-it.net/"
+    },
+    {
+      "venue": "odeon-braehead",
+      "url": "https://www.odeon.co.uk/cinemas/braehead/",
+      "startedUtc": "2026-10-31T14:41:00.615621+00:00",
+      "finishedUtc": "2026-10-31T14:41:00.728072+00:00",
+      "hops": [
+        {
+          "url": "https://www.odeon.co.uk/cinemas/braehead/",
+          "status": 302
+        }
+      ],
+      "outcome": "redirect_outside_operator",
+      "redirectTarget": "https://odeon.queue-it.net/"
+    },
+    {
+      "venue": "odeon-east-kilbride",
+      "url": "https://www.odeon.co.uk/cinemas/east-kilbride/",
+      "startedUtc": "2026-10-31T14:41:00.728716+00:00",
+      "finishedUtc": "2026-10-31T14:41:00.944916+00:00",
+      "hops": [
+        {
+          "url": "https://www.odeon.co.uk/cinemas/east-kilbride/",
+          "status": 302
+        }
+      ],
+      "outcome": "redirect_outside_operator",
+      "redirectTarget": "https://odeon.queue-it.net/"
+    },
+    {
+      "venue": "science-centre-imax",
+      "url": "https://www.glasgowsciencecentre.org/imax",
+      "startedUtc": "2026-10-31T14:41:00.945474+00:00",
+      "finishedUtc": "2026-10-31T14:41:01.311613+00:00",
+      "hops": [
+        {
+          "url": "https://www.glasgowsciencecentre.org/imax",
+          "status": 200
+        }
+      ],
+      "status": 200,
+      "outcome": "html_retrieved",
+      "bytes": 99050,
+      "sha256": "7055fef1a94f97f297dd87fe5150bca8dba95fa587ca89488f9c750d0a31fd33",
+      "finalUrl": "https://www.glasgowsciencecentre.org/imax"
+    },
+    {
+      "venue": "gft",
+      "url": "https://www.glasgowfilm.org/all-listings/",
+      "startedUtc": "2026-10-31T14:41:01.312155+00:00",
+      "finishedUtc": "2026-10-31T14:41:01.988992+00:00",
+      "hops": [
+        {
+          "url": "https://www.glasgowfilm.org/all-listings/",
+          "status": 200
+        }
+      ],
+      "status": 200,
+      "outcome": "html_retrieved",
+      "bytes": 72979,
+      "sha256": "c8f6507f4e4049119b877097d2dd4410de2ac1baa3fe2117fe53b05748198049",
+      "finalUrl": "https://www.glasgowfilm.org/all-listings/"
+    },
+    {
+      "venue": "everyman-glasgow",
+      "url": "https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/",
+      "startedUtc": "2026-10-31T14:41:01.989933+00:00",
+      "finishedUtc": "2026-10-31T14:41:02.359709+00:00",
+      "hops": [
+        {
+          "url": "https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/",
+          "status": 200
+        }
+      ],
+      "status": 200,
+      "outcome": "html_retrieved",
+      "bytes": 215628,
+      "sha256": "5bf7d3cf81022dab5e8f9b9feb884b445b73c825d077f5d65141b9d147e17260",
+      "finalUrl": "https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/"
+    },
+    {
+      "venue": "vue-st-enoch",
+      "url": "https://www.myvue.com/cinema/glasgow-st-enoch/whats-on",
+      "startedUtc": "2026-10-31T14:41:02.360500+00:00",
+      "finishedUtc": "2026-10-31T14:41:03.368581+00:00",
+      "hops": [
+        {
+          "url": "https://www.myvue.com/cinema/glasgow-st-enoch/whats-on",
+          "status": 200
+        }
+      ],
+      "status": 200,
+      "outcome": "html_retrieved",
+      "bytes": 346861,
+      "sha256": "efcd691a859c9ddbb1f983c353cf821bb27c56e23d39aa7f0c3b5ba51d8ece4e",
+      "finalUrl": "https://www.myvue.com/cinema/glasgow-st-enoch/whats-on"
+    }
+  ],
+  "sources": {
+    "gft": {
+      "screenings": 20,
+      "titles": 11,
+      "dateFirst": "2026-10-31",
+      "dateLast": "2026-11-02",
+      "distinctDates": 3,
+      "bookingLinksPresent": 20,
+      "originalYearVerified": 0,
+      "pastAndFutureIncluded": true,
+      "sourcePage": "https://www.glasgowfilm.org/all-listings/",
+      "method": "HTML dated headings and showing links",
+      "examples": [
+        {
+          "venue": "Glasgow Film Theatre",
+          "title": "Take 2: Hocus Pocus",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T11:30:00+00:00",
+          "startsUtc": "2026-10-31T11:30:00+00:00",
+          "showingId": "489354",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "www.glasgowfilm.org",
+          "bookingPathPattern": "/checkout/showing/hocus-pocus/489354/"
+        },
+        {
+          "venue": "Glasgow Film Theatre",
+          "title": "Donnie Darko - 25th Anniversary - 4K",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T17:10:00+00:00",
+          "startsUtc": "2026-10-31T17:10:00+00:00",
+          "showingId": "488166",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "www.glasgowfilm.org",
+          "bookingPathPattern": "/checkout/showing/donnie-darko---25th-anniversary---4k/488166/"
+        }
+      ],
+      "evidence": {
+        "localFile": "scratchpad/ab-cinema-research/public-probe-2026-10-31/gft.html",
+        "sha256": "c8f6507f4e4049119b877097d2dd4410de2ac1baa3fe2117fe53b05748198049"
+      }
+    },
+    "vue-st-enoch": {
+      "screenings": 31,
+      "titles": 16,
+      "dateFirst": "2026-10-31",
+      "dateLast": "2026-10-31",
+      "distinctDates": 1,
+      "bookingLinksPresent": 31,
+      "originalYearVerified": 0,
+      "pastAndFutureIncluded": true,
+      "sourcePage": "https://www.myvue.com/cinema/glasgow-st-enoch/whats-on",
+      "method": "Public JSON requested by venue page",
+      "examples": [
+        {
+          "venue": "Vue Glasgow St Enoch",
+          "title": "Hocus Pocus (1993)",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T14:45:00+00:00",
+          "startsUtc": "2026-10-31T14:45:00+00:00",
+          "filmId": "HO00021519",
+          "cinemaId": "10097",
+          "sessionId": "112717",
+          "soldOut": false,
+          "bookingAvailable": true,
+          "sourceReleaseDate": "2026-10-02T00:00:00",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "www.myvue.com",
+          "bookingPathPattern": "/book-tickets/summary/10097/HO00021519/112717"
+        },
+        {
+          "venue": "Vue Glasgow St Enoch",
+          "title": "Scream (30th Anniversary)",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T20:50:00+00:00",
+          "startsUtc": "2026-10-31T20:50:00+00:00",
+          "filmId": "HO00021001",
+          "cinemaId": "10097",
+          "sessionId": "112068",
+          "soldOut": false,
+          "bookingAvailable": true,
+          "sourceReleaseDate": "2026-10-23T00:00:00",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "www.myvue.com",
+          "bookingPathPattern": "/book-tickets/summary/10097/HO00021001/112068"
+        }
+      ],
+      "evidence": {
+        "localFile": "scratchpad/ab-cinema-research/public-probe-2026-10-31/vue-st-enoch-browser-json-7.json",
+        "sha256": "b06e7125e177d4d68c8805d5ba7abe2900b2393fddd2f5bba5544545995a654f"
+      }
+    },
+    "everyman-glasgow": {
+      "screenings": 11,
+      "titles": 6,
+      "dateFirst": "2026-10-31",
+      "dateLast": "2026-10-31",
+      "distinctDates": 1,
+      "bookingLinksPresent": 11,
+      "originalYearVerified": 0,
+      "pastAndFutureIncluded": true,
+      "sourcePage": "https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/",
+      "method": "Public JSON requested by venue page",
+      "examples": [
+        {
+          "venue": "Everyman Glasgow",
+          "title": "Verity",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T12:30:00+00:00",
+          "startsUtc": "2026-10-31T12:30:00+00:00",
+          "venueId": "X11DQ",
+          "movieId": "1000015739",
+          "sourceShowingId": "1000015739-2026-10-31 12:30:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+          "screenName": "2",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "purchase.everymancinema.com",
+          "bookingPathPattern": "/launch/ticketing/<reference>"
+        },
+        {
+          "venue": "Everyman Glasgow",
+          "title": "Wildwood",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T13:15:00+00:00",
+          "startsUtc": "2026-10-31T13:15:00+00:00",
+          "venueId": "X11DQ",
+          "movieId": "296439",
+          "sourceShowingId": "296439-2026-10-31 13:15:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+          "screenName": "3",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "purchase.everymancinema.com",
+          "bookingPathPattern": "/launch/ticketing/<reference>"
+        }
+      ],
+      "evidence": {
+        "localFile": "scratchpad/ab-cinema-research/public-probe-2026-10-31/everyman-glasgow-render2-browser-json-17.json",
+        "sha256": "45e2d95bce36461cbc8abdf681c1d9d5b835164cc8cea98c3072d210e81d164a"
+      }
+    },
+    "science-centre-imax": {
+      "screenings": 53,
+      "titles": 9,
+      "dateFirst": "2026-10-31",
+      "dateLast": "2026-12-22",
+      "distinctDates": 28,
+      "bookingLinksPresent": 53,
+      "originalYearVerified": 0,
+      "pastAndFutureIncluded": true,
+      "sourcePage": "https://www.tickettailor.com/events/gscimax",
+      "method": "Event JSON-LD from public box-office event pages",
+      "examples": [
+        {
+          "venue": "IMAX Theatre at Glasgow Science Centre",
+          "title": "The Shining - IMAX 2D (15)",
+          "originalYear": null,
+          "startsLocal": "2026-10-31T15:00:00+00:00",
+          "startsUtc": "2026-10-31T15:00:00+00:00",
+          "eventId": "2449409",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "www.tickettailor.com",
+          "bookingPathPattern": "/events/gscimax/2449409"
+        },
+        {
+          "venue": "IMAX Theatre at Glasgow Science Centre",
+          "title": "The Polar Express - IMAX 3D (U)",
+          "originalYear": null,
+          "startsLocal": "2026-12-05T13:00:00+00:00",
+          "startsUtc": "2026-12-05T13:00:00+00:00",
+          "eventId": "2470370",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "bookingFollowed": false,
+          "bookingUrlPresent": true,
+          "bookingHost": "www.tickettailor.com",
+          "bookingPathPattern": "/events/gscimax/2470370"
+        }
+      ],
+      "evidence": {
+        "localFile": "scratchpad/ab-cinema-research/public-probe-2026-10-31/science-centre-boxoffice.html",
+        "sha256": "eb4cbcb23525f976574e55cdf98ea70dd6bed02b6892ce99ff20bc2d7433a326"
+      }
+    }
+  },
+  "limitations": [
+    "Some captured sessions had already started at collection time.",
+    "No booking links were followed and none is validated as a working purchase flow.",
+    "No original film year was verified; source release dates may be reissue dates.",
+    "No cancellation, repeatability or complete future-window guarantee is established.",
+    "Owner authorisation of tests does not assert permission from the site operators."
+  ]
+}
