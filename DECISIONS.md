@@ -6680,3 +6680,21 @@ contemporaneous.
      prove the collection method in its intended environment and approve the concrete
      AB6/AB7 contract. No paid source, hosting, production write, app build or other sitting
      is authorised. Evidence: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md and JSON.
+
+
+317. **Repeat source tests in the actual runtime; stop before adding a browser worker (31 Oct).**
+     Craig's “proceed” after #316 authorises the next bounded repeatability investigation
+     and preparation of a concrete contract, not an unreviewed schema/job/hosting build.
+     Nine repeat samples retain 177 unchanged identities/starts; all disappeared rows are
+     past, not proved cancellations. The existing Railway API runtime was reached through
+     existing SSH access for 11 anonymous source GETs: GFT/Vue/Everyman/Cineworld/Science
+     Centre answer; four ODEON venue pages return 403 and one observed anonymous ODEON
+     schedule 401. No API-header/key extraction or remote file/DB/install/config change.
+     Its image has no Playwright/Chromium, so a new browser runtime/service is a separate
+     explicit hosting checkpoint, not another source-permission question. Proposed exact
+     temporary experiment and full ingestion/screen contract, including a proposed AB6a/
+     AB6b split, are saved but not approved. No reduced venue list, app implementation,
+     recurring collector, paid source, archive retry, AA10c or other sitting is authorised.
+     Evidence: docs/reviews/ab-cinema-repeatability-2026-10-31.md and JSON; proposed next
+     scope: docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md. The live architecture
+     map remains unchanged because no pipeline has been built.

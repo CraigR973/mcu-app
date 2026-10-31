@@ -4776,6 +4776,15 @@ All nine now have specimens (226 rows across different times/windows). Normal Ch
 was unavailable; a reliable deployable collector is not yet proved. Source feasibility has
 improved: re-plan/prove collection and approve the complete build contract before AB6/AB7.
 Evidence: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md. Batch status stays planned.
+Repeat/runtime research (#317): all nine repeat (177 unchanged identities/starts), all
+disappeared rows past. GFT/Vue/Everyman/Cineworld/Science Centre answer from actual Railway
+Linux; four ODEON pages 403 and one observed anonymous API 401. API has no browser. No
+remote install/DB/file/config change. Proposed exact temporary-worker experiment, full
+schema/API/job/refresh/retention/year/navigation contract and AB6a/AB6b split are in
+docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md; **unapproved**. Stop for hosting
+approval before the experiment, then re-plan/accept the full build before implementation.
+This note adds no batch row or scope approval. Source audit:
+docs/reviews/ab-cinema-repeatability-2026-10-31.md and JSON. AA10c/other sittings excluded.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

@@ -2,20 +2,23 @@
 
 ## Now
 
-**31 Oct: browser comparison succeeds — all nine venues now have real screening samples (#316).**
-The five previously blocked venues yielded 111 additional displayed time rows: Kilmarnock
-15, Quay 28, Braehead 25, East Kilbride 18 and Cineworld Silverburn 25. Codex's in-app browser
-was used; Craig's normal Chrome/Safari was not connected. There are 110 booking references
-plus one expired/unlinked Cineworld row. The earlier GFT 20/Vue 31/Everyman 11/Science Centre
-53 remain a separate 115-row sample. Combined evidence: nine venues/226 rows, different
-times/windows, not a complete or synchronised bookable programme.
-Current findings/audit: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md and JSON.
-Earlier queue/403 observations remain recorded, not rewritten. Plain HTTP/headless failures
-are no longer proof the data is inaccessible, but the successful in-app session is not a
-deployable unattended collector. Original year, repeatability, cancellation/identity,
-DST transition and complete horizon remain unproved. Sample/document checks pass.
-No app, job, hosting, production data, subscription/trial, PR/push/deployment or other sitting.
-Current branch holds planning/research only; the concrete AB6/AB7 build gate remains open.
+**31 Oct: repeatability research reaches the actual Railway runtime (#317).**
+All nine have repeat samples: 177 retained identities with unchanged titles/starts; all 49
+removed rows are past starts, not demonstrated cancellations. Kilmarnock/Silverburn also
+yield next-day samples. Existing in-app-browser session only; fresh unattended Linux browser
+behaviour remains unproved. Source research used 22 local + 11 Railway anonymous HTTP GETs.
+Railway returns GFT/Vue/Everyman/Cineworld/public Science Centre event data; all four ODEON
+venue pages return 403 and the observed East Kilbride schedule URL returns anonymous 401.
+The running API has no Playwright/Chromium. Source-only SSH used existing access: no remote
+file, database, environment, service, install or configuration change. API remains c63bc06,
+readiness db ok/all integrations configured. No production collector was run or installed.
+Evidence: docs/reviews/ab-cinema-repeatability-2026-10-31.md and minimal JSON. GFT fallback
+HTML and source discovery/horizon, original year, cancellation/reschedule/DST and sustained
+access remain open. Failed body-equality and extraction/loading checks stay in the audit.
+Proposed complete contract and AB6 split: docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md.
+It is unapproved: next decision is only a temporary isolated Railway browser experiment.
+No app, schema, recurring job, hosting, production-data write, subscription/trial,
+PR/push/deployment or other sitting. Planning/research branch only; AB6/AB7 gate stays open.
 
 **Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
@@ -26,7 +29,7 @@ Any next cinema build needs re-planning and its own go; sitting 5 and AA10c rema
 
 The single approved historical archive GET returned HTTP 403, zero rows, no retry or
 alternate request. Later direct-source samples now establish four real shapes and older/
-reissue leads, with booking URLs obtained but not followed. All-nine coverage, original-year
+reissue leads, with booking URLs obtained but not followed. Recurring all-nine coverage, original-year
 matching, horizon completeness, stable identities and cancellation behaviour remain unverified.
 Future ingestion/build gates are not waived.
 
@@ -48,13 +51,15 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop before application implementation. All nine now have samples; next prove a bounded,
-repeatable collection method in the intended deployment environment, then approve the
-complete AB6/AB7 source/schema/API/job/refresh/retention/navigation contract and adapter split.
-Use docs/reviews/ab-cinema-browser-comparison-2026-10-31.md. Do not equate the in-app browser
-with Craig's normal Chrome/Safari or a production worker. Existing test authorisation stands;
-do not repeat the superseded four-GET permission question or silently reduce venue coverage.
-No hosting change, parked links-screen build, archive retry, AA10c or other sitting.
+Stop at the hosting decision before the proposed temporary isolated cinema-probe service.
+Exact two-pass/four-ODEON scope, limits/cost/cleanup and the later full ingestion contract
+are in docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md. Existing runtime HTTP reads
+were possible without changing hosting; installing a browser/new worker is a different action.
+Do not infer hosting or build approval from source-test permission or the latest “proceed”.
+After the experiment, approve/revise the full source/schema/API/job/refresh/retention/year/
+navigation plan and proposed AB6a/AB6b split before application implementation. Three
+implementation PRs are proposed, not accepted ledger entries. Retain all nine and Film first.
+No parked links-screen build, archive retry, AA10c or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -448,6 +453,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — repeat samples and source-only Railway probe (#317):** nine venues retain
+  177 unchanged identities/starts; disappeared rows all past. Kilmarnock 34/Silverburn 53
+  next-day times. Five programme sources answer from actual Linux runtime; four ODEON pages
+  403, one observed anonymous schedule 401; API has no browser. No remote file/DB/config/
+  install/service changes. Proposed complete build contract and temporary browser experiment
+  saved; hosting/build approval remains pending. Source/document checks only; no app gate.
 
 - **31 Oct — authorised browser comparison obtains the other five venues (#316):** in-app
   browser DOM yields Kilmarnock 15/Quay 28/Braehead 25/East Kilbride 18/Silverburn 25 time

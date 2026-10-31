@@ -53,6 +53,14 @@ conversation still maps onto this file.*
   windows). Normal Chrome/Safari was not connected. No further sample approval is needed
   for those completed attempts. A deployable repeatable collector and complete build contract
   remain unproved/unapproved. Evidence: docs/reviews/ab-cinema-browser-comparison-2026-10-31.md.
+  **Repeatability/runtime research (#317):** all nine repeat with 177 retained identities;
+  removed rows all past. Five sources answer in the existing Railway Linux runtime. Four
+  ODEON pages return 403 and one observed anonymous schedule 401; API has no browser.
+  Source-only SSH used existing access with no file/DB/install/config change. Next decision:
+  approve only the temporary isolated cinema-probe worker's exact scope/cost/cleanup in
+  docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md. This is a new hosting action,
+  not another request to approve already authorised source tests. Full proposed ingestion/
+  discovery contract and AB6a/AB6b split still require a later go; no scope is silently adopted.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

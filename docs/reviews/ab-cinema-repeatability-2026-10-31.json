@@ -1,0 +1,658 @@
+{
+  "date": "2026-10-31",
+  "status": "source-research-only; build and hosting not approved",
+  "localExplicitHttpRequests": 22,
+  "railwayExplicitHttpRequests": 11,
+  "browserSubrequestsCounted": false,
+  "browser": "Codex In-app Browser",
+  "freshBrowserProfileProved": false,
+  "retainedProgrammeRows": 177,
+  "comparison": [
+    {
+      "venue": "vue-st-enoch",
+      "previousRows": 31,
+      "repeatRows": 19,
+      "commonIdentities": 19,
+      "changedTitleOrStart": 0,
+      "removedRows": 12,
+      "addedRows": 0,
+      "removedStarts": [
+        "2026-10-31T14:35:00+00:00",
+        "2026-10-31T14:45:00+00:00",
+        "2026-10-31T14:50:00+00:00",
+        "2026-10-31T15:05:00+00:00",
+        "2026-10-31T15:25:00+00:00",
+        "2026-10-31T15:40:00+00:00",
+        "2026-10-31T16:10:00+00:00",
+        "2026-10-31T16:50:00+00:00",
+        "2026-10-31T17:05:00+00:00",
+        "2026-10-31T17:15:00+00:00",
+        "2026-10-31T17:30:00+00:00",
+        "2026-10-31T17:40:00+00:00"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "everyman-glasgow",
+      "previousRows": 11,
+      "repeatRows": 6,
+      "commonIdentities": 6,
+      "changedTitleOrStart": 0,
+      "removedRows": 5,
+      "addedRows": 0,
+      "removedStarts": [
+        "2026-10-31T12:30:00+00:00",
+        "2026-10-31T13:15:00+00:00",
+        "2026-10-31T14:30:00+00:00",
+        "2026-10-31T15:20:00+00:00",
+        "2026-10-31T16:15:00+00:00"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "gft",
+      "previousRows": 20,
+      "repeatRows": 20,
+      "commonIdentities": 20,
+      "changedTitleOrStart": 0,
+      "removedRows": 0,
+      "addedRows": 0,
+      "removedStarts": [],
+      "addedStarts": []
+    },
+    {
+      "venue": "science-centre-imax",
+      "previousRows": 53,
+      "repeatRows": 52,
+      "commonIdentities": 52,
+      "changedTitleOrStart": 0,
+      "removedRows": 1,
+      "addedRows": 0,
+      "removedStarts": [
+        "2026-10-31T15:00:00+00:00"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "odeon-kilmarnock",
+      "previousRows": 15,
+      "repeatRows": 10,
+      "commonIdentities": 10,
+      "changedTitleOrStart": 0,
+      "removedRows": 5,
+      "addedRows": 0,
+      "removedStarts": [
+        "17:10",
+        "17:40",
+        "17:45",
+        "17:50",
+        "18:00"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "cineworld-silverburn",
+      "previousRows": 25,
+      "repeatRows": 19,
+      "commonIdentities": 19,
+      "changedTitleOrStart": 0,
+      "removedRows": 6,
+      "addedRows": 0,
+      "removedStarts": [
+        "17:10",
+        "17:40",
+        "17:40",
+        "18:00",
+        "18:10",
+        "18:20"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "odeon-glasgow-quay",
+      "previousRows": 28,
+      "repeatRows": 21,
+      "commonIdentities": 21,
+      "changedTitleOrStart": 0,
+      "removedRows": 7,
+      "addedRows": 0,
+      "removedStarts": [
+        "17:15",
+        "17:20",
+        "17:30",
+        "17:30",
+        "17:30",
+        "17:40",
+        "18:00"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "odeon-braehead",
+      "previousRows": 25,
+      "repeatRows": 17,
+      "commonIdentities": 17,
+      "changedTitleOrStart": 0,
+      "removedRows": 8,
+      "addedRows": 0,
+      "removedStarts": [
+        "17:15",
+        "17:30",
+        "17:30",
+        "17:30",
+        "17:40",
+        "17:40",
+        "17:50",
+        "18:00"
+      ],
+      "addedStarts": []
+    },
+    {
+      "venue": "odeon-east-kilbride",
+      "previousRows": 18,
+      "repeatRows": 13,
+      "commonIdentities": 13,
+      "changedTitleOrStart": 0,
+      "removedRows": 5,
+      "addedRows": 0,
+      "removedStarts": [
+        "17:10",
+        "17:30",
+        "17:40",
+        "18:00",
+        "18:20"
+      ],
+      "addedStarts": []
+    }
+  ],
+  "tomorrowSelections": {
+    "ODEON Kilmarnock": 34,
+    "Cineworld Silverburn": 53
+  },
+  "browserObservations": [
+    {
+      "venue": "ODEON Kilmarnock",
+      "dateSelection": "31 Oct 2026",
+      "observedUtc": "2026-10-31T18:49:40.478Z",
+      "rows": 10,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=019-72077",
+          "filmId": "ho00008986",
+          "screen": "Screen 5",
+          "time": "19:40",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "Cineworld Silverburn",
+      "dateSelection": "31 Oct 2026",
+      "observedUtc": "2026-10-31T18:50:24.721Z",
+      "rows": 19,
+      "examples": [
+        {
+          "bookingUrl": "https://web.cineworld.co.uk/order/showtimes/088-225548/seats",
+          "expired": false,
+          "filmPath": "/films/322884-wicker/?theater=X0VQ1",
+          "time": "19:10",
+          "title": "Wicker"
+        }
+      ]
+    },
+    {
+      "venue": "ODEON Kilmarnock",
+      "dateSelection": "1 Nov 2026",
+      "observedUtc": "2026-10-31T18:50:26.347Z",
+      "rows": 34,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=019-72109",
+          "filmId": "ho00008986",
+          "screen": "Screen 5",
+          "time": "12:10",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "ODEON Glasgow Quay",
+      "dateSelection": "31 Oct 2026",
+      "observedUtc": "2026-10-31T18:50:42.410Z",
+      "rows": 21,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=530-105831",
+          "filmId": "ho00008986",
+          "screen": "Screen 7",
+          "time": "20:00",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "Cineworld Silverburn",
+      "dateSelection": "1 Nov 2026",
+      "observedUtc": "2026-10-31T18:51:21.450Z",
+      "rows": 53,
+      "examples": [
+        {
+          "bookingUrl": "https://web.cineworld.co.uk/order/showtimes/088-226711/seats",
+          "expired": false,
+          "filmPath": "/films/322884-wicker/?theater=X0VQ1",
+          "time": "13:50",
+          "title": "Wicker"
+        }
+      ]
+    },
+    {
+      "venue": "ODEON Braehead",
+      "dateSelection": "31 Oct 2026",
+      "observedUtc": "2026-10-31T18:51:21.469Z",
+      "rows": 17,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=615-99391",
+          "filmId": "ho00008986",
+          "screen": "Screen 3",
+          "time": "20:00",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    },
+    {
+      "venue": "ODEON East Kilbride",
+      "dateSelection": "31 Oct 2026",
+      "observedUtc": "2026-10-31T18:51:58.111Z",
+      "rows": 13,
+      "examples": [
+        {
+          "bookingPath": "/ticketing/seat-picker/?showtimeId=923-80650",
+          "filmId": "ho00008986",
+          "screen": "Screen 1",
+          "time": "19:40",
+          "title": "Ghosts: The Possession of Button House"
+        }
+      ]
+    }
+  ],
+  "railwayRuntime": {
+    "os": "Linux",
+    "python": "3.12.16",
+    "httpx": true,
+    "playwright": false,
+    "chromiumExecutable": false,
+    "newInstallation": false,
+    "databaseAccessed": false,
+    "filesWrittenRemotely": false
+  },
+  "railwaySources": [
+    {
+      "source": "odeon-kilmarnock",
+      "url": "https://www.odeon.co.uk/cinemas/kilmarnock/",
+      "startedUtc": "2026-10-31T18:55:30.665183+00:00",
+      "finishedUtc": "2026-10-31T18:55:30.745321+00:00",
+      "status": 403,
+      "outcome": "http_response",
+      "bytes": 5623,
+      "sha256": "4487cdf73c874997cb7c7c7d47802d2b7035a78123c00b17dcf041529843dd94"
+    },
+    {
+      "source": "odeon-glasgow-quay",
+      "url": "https://www.odeon.co.uk/cinemas/glasgow-quay/",
+      "startedUtc": "2026-10-31T18:55:30.745396+00:00",
+      "finishedUtc": "2026-10-31T18:55:30.772493+00:00",
+      "status": 403,
+      "outcome": "http_response",
+      "bytes": 5629,
+      "sha256": "5e88f6693c1a7db70ab1118356413778aaf8694e1d1175bd7ea0092a13a5dbfc"
+    },
+    {
+      "source": "odeon-braehead",
+      "url": "https://www.odeon.co.uk/cinemas/braehead/",
+      "startedUtc": "2026-10-31T18:55:30.772612+00:00",
+      "finishedUtc": "2026-10-31T18:55:30.793767+00:00",
+      "status": 403,
+      "outcome": "http_response",
+      "bytes": 5617,
+      "sha256": "29bbe9a1c9748016de36b4ec89d32ecb90656a73520877ac524de257fab101ee"
+    },
+    {
+      "source": "odeon-east-kilbride",
+      "url": "https://www.odeon.co.uk/cinemas/east-kilbride/",
+      "startedUtc": "2026-10-31T18:55:30.793826+00:00",
+      "finishedUtc": "2026-10-31T18:55:30.831415+00:00",
+      "status": 403,
+      "outcome": "http_response",
+      "bytes": 5632,
+      "sha256": "6676c94f9788992ea5873130deef900b2a398eb17b78fe3977c18578c65aab2c"
+    },
+    {
+      "source": "gft",
+      "url": "https://www.glasgowfilm.org/all-listings/",
+      "startedUtc": "2026-10-31T18:55:30.831476+00:00",
+      "finishedUtc": "2026-10-31T18:55:31.166833+00:00",
+      "status": 200,
+      "outcome": "http_response",
+      "bytes": 72979,
+      "sha256": "c8f6507f4e4049119b877097d2dd4410de2ac1baa3fe2117fe53b05748198049",
+      "rawShowingReferenceCount": 80,
+      "uniqueShowingReferences": 20
+    },
+    {
+      "source": "vue-schedule",
+      "url": "https://www.myvue.com/api/microservice/showings/cinemas/10097/films?showingDate=2026-10-31T00:00:00&minEmbargoLevel=3&includesSession=true&includeSessionAttributes=true",
+      "startedUtc": "2026-10-31T18:55:31.166908+00:00",
+      "finishedUtc": "2026-10-31T18:55:31.239239+00:00",
+      "status": 200,
+      "outcome": "http_response",
+      "bytes": 68915,
+      "sha256": "c7962997efbfdb84036c2982594b6effac20fa48c8db5ac810312a068db1e579",
+      "sourceRowsCount": 19,
+      "examples": [
+        {
+          "id": "112766",
+          "start": "2026-10-31T20:30:00+00:00"
+        },
+        {
+          "id": "113309",
+          "start": "2026-10-31T21:45:00+00:00"
+        }
+      ]
+    },
+    {
+      "source": "everyman-schedule",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-10-31T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-01T03%3A00%3A00",
+      "startedUtc": "2026-10-31T18:55:31.239331+00:00",
+      "finishedUtc": "2026-10-31T18:55:31.418955+00:00",
+      "status": 200,
+      "outcome": "http_response",
+      "bytes": 4622,
+      "sha256": "75c6998c28b8e4fd15e9608a5a8df4ca3ce36d714e8fd89538cb92afcd3397c2",
+      "sourceRowsCount": 6,
+      "examples": [
+        {
+          "id": "322884-2026-10-31 18:00:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+          "start": "2026-10-31T18:00:00"
+        },
+        {
+          "id": "322884-2026-10-31 20:00:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+          "start": "2026-10-31T20:00:00"
+        }
+      ]
+    },
+    {
+      "source": "science-centre-event-2449409",
+      "url": "https://www.tickettailor.com/events/gscimax/2449409",
+      "startedUtc": "2026-10-31T18:55:31.419030+00:00",
+      "finishedUtc": "2026-10-31T18:55:31.816154+00:00",
+      "status": 200,
+      "outcome": "http_response",
+      "bytes": 48672,
+      "sha256": "fc5aebd8f9b99c459b0e2ca1795a37dbc2029a736277953d273a51b6e368e61e",
+      "eventStartFields": 0
+    },
+    {
+      "source": "cineworld-schedule",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-10-31T03%3A00%3A00&nin=Showtime.Category.ExhibitorSelection&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-01T03%3A00%3A00",
+      "startedUtc": "2026-10-31T18:55:31.816212+00:00",
+      "finishedUtc": "2026-10-31T18:55:31.957427+00:00",
+      "status": 200,
+      "outcome": "http_response",
+      "bytes": 14894,
+      "sha256": "646088b007d4f37a3f46a44b2d0bd5c8b2005507b7df481494b2c98d9cf37296",
+      "sourceRowsCount": 18,
+      "examples": [
+        {
+          "id": "296439-2026-10-31 19:50:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+          "start": "2026-10-31T19:50:00"
+        },
+        {
+          "id": "314939-2026-10-31 20:30:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+          "start": "2026-10-31T20:30:00"
+        }
+      ]
+    },
+    {
+      "source": "odeon-east-kilbride-schedule",
+      "url": "https://vwc.odeon.co.uk/WSVistaWebClient/ocapi/v1/showtimes/by-business-date/first?siteIds=923",
+      "startedUtc": "2026-10-31T18:55:31.957520+00:00",
+      "finishedUtc": "2026-10-31T18:55:32.051194+00:00",
+      "status": 401,
+      "outcome": "http_response",
+      "bytes": 371,
+      "sha256": "c1397d4dd914ab5207aca8dc7577f723a58400db7510f9b5c19fdbab46e29903"
+    },
+    {
+      "source": "science-centre-event-2482702",
+      "url": "https://www.tickettailor.com/events/gscimax/2482702",
+      "startedUtc": "2026-10-31T18:57:23.094483+00:00",
+      "finishedUtc": "2026-10-31T18:57:23.434607+00:00",
+      "status": 200,
+      "outcome": "http_response",
+      "bytes": 89214,
+      "sha256": "209681b6aef380960432addb82f3995ebc651bbee51d5b628207d85fcdf085af",
+      "eventStartFields": 20
+    }
+  ],
+  "limitations": [
+    "Same-day specimens, not sustained access or full horizon",
+    "GFT fallback HTML; 80 regex references are 20 unique showing IDs",
+    "Past Ticket Tailor event no longer emits Event JSON-LD",
+    "Science Centre future page has 20 startDate fields; byte equality failed despite equal length",
+    "Cineworld earlier 403 remains unexplained",
+    "ODEON page 403 / unauthenticated schedule 401 on Railway",
+    "Original year, cancellation, DST and all-nine unattended collection remain unproved"
+  ],
+  "productionHealthObservation": {
+    "commitSha": "c63bc06a7c7d317783b03a3379eb7b2b53852728",
+    "db": "ok",
+    "deployPerformed": false
+  },
+  "rawEvidenceHashes": {
+    "browser-repeat.json": {
+      "bytes": 42581,
+      "sha256": "b0dd9cf05384f8a8cf9e448a8791747e1a64cba75de1b8386be011e2b13a6bce"
+    },
+    "cineworld-http-audit.json": {
+      "bytes": 1270,
+      "sha256": "e22972fc7c81532341e3801f91f63aaea1679ae3639528bd630a9335e2eaf755"
+    },
+    "cineworld-next-day.jpg": {
+      "bytes": 52077,
+      "sha256": "0ce0da3fde6d1e933783989d48ed304d11ed62252d5b97b9bfca3340e0df613f"
+    },
+    "cineworld-schedule-embedded.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "cineworld-schedule.html": {
+      "bytes": 15689,
+      "sha256": "f779942f6f4bf8354350758f8dc6750997b5354cec3ceec3edc05add020c49ec"
+    },
+    "cineworld-silverburn-embedded.json": {
+      "bytes": 4982,
+      "sha256": "24a3d16ed2f59ef73c6a2810312e7c52fe4724d71153367284cdcfbe872f3fb5"
+    },
+    "cineworld-silverburn-normalised.json": {
+      "bytes": 4284,
+      "sha256": "618cfe82a098bd58740d0bbea25766312722765bfb3c936461ffe4c04364ee26"
+    },
+    "cineworld-silverburn.html": {
+      "bytes": 270864,
+      "sha256": "8319578a5bc8195da9ded242eeadf0a7efe59e8b5194c0498f42dbc59f77ea0d"
+    },
+    "everyman-glasgow-embedded.json": {
+      "bytes": 2720,
+      "sha256": "ce7e6fdd7d1d705c3dde392755cf9fccc06b477cc7283b01e8ebb2e1bef6a758"
+    },
+    "everyman-glasgow-normalised.json": {
+      "bytes": 1378,
+      "sha256": "5b23bf71c194769949c1701a55e1f892c38885f72b09a1edc99093351789c986"
+    },
+    "everyman-glasgow.html": {
+      "bytes": 215628,
+      "sha256": "5bf7d3cf81022dab5e8f9b9feb884b445b73c825d077f5d65141b9d147e17260"
+    },
+    "everyman-schedule-embedded.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "everyman-schedule.html": {
+      "bytes": 4622,
+      "sha256": "75c6998c28b8e4fd15e9608a5a8df4ca3ce36d714e8fd89538cb92afcd3397c2"
+    },
+    "gft-embedded.json": {
+      "bytes": 61342,
+      "sha256": "339fca10f4616b9fc5f2371eaf7b9c1e0e08edc202962fe40842cf1cceb41cce"
+    },
+    "gft-normalised.json": {
+      "bytes": 2315,
+      "sha256": "46b252d5a38a902103d1f8bebfb3f35cf93f726f32fa196046d4737fd35885d2"
+    },
+    "gft.html": {
+      "bytes": 72979,
+      "sha256": "c8f6507f4e4049119b877097d2dd4410de2ac1baa3fe2117fe53b05748198049"
+    },
+    "http-audit.json": {
+      "bytes": 27633,
+      "sha256": "aec87c522a8c83af724e5dfe3068ebd9f5e481da8f4d179693edd21be37648eb"
+    },
+    "odeon-braehead-normalised.json": {
+      "bytes": 3106,
+      "sha256": "ec7d27363f09fa505174f3fa8918902485c08395c933006c1a4715f70ecb40e1"
+    },
+    "odeon-east-kilbride-http-audit.json": {
+      "bytes": 721,
+      "sha256": "670ac901a3fbfb585d40da8616b2e9bd66e41f1bdf5604c10dd7937da52de946"
+    },
+    "odeon-east-kilbride-normalised.json": {
+      "bytes": 2343,
+      "sha256": "474122ca3004b64926aadb60637e6a9a8cd1bb28fe566b59c5af7f75975e2ed7"
+    },
+    "odeon-glasgow-quay-normalised.json": {
+      "bytes": 3776,
+      "sha256": "468ac20a013736c2eb623aa85cb823a98a6c38aeeb7f86feddcab3fbe9cca506"
+    },
+    "odeon-kilmarnock-normalised.json": {
+      "bytes": 1814,
+      "sha256": "3175eb1d485ec84c6c49a8c55a450d4241e3dfa02b29e426dea1472c2ee9f682"
+    },
+    "railway-science-future-audit.json": {
+      "bytes": 542,
+      "sha256": "9526095d4845fd5c81bc4f17d087bb0ab7ff74fb4fd3574a533f8413555bca77"
+    },
+    "railway-source-audit.json": {
+      "bytes": 11676,
+      "sha256": "8f6ae68089ff7467f4382708af264a7e1c51835d6e33494b5024b52906783f6e"
+    },
+    "repeat-summary.json": {
+      "bytes": 3689,
+      "sha256": "0b632136e925ccefd2349f2d57924a7df13b5eb8cf250a34cb6ca4a27d3884ca"
+    },
+    "science-centre-event-2409291-embedded.json": {
+      "bytes": 5162,
+      "sha256": "68f8d25d4264c5c2d00f672123601d0c2f6cba7812265ac75948bf1c57fecb2f"
+    },
+    "science-centre-event-2409291.html": {
+      "bytes": 52858,
+      "sha256": "95bffea1334ac95a8b360ebdc24fc68020ed3dd8d02f66ddb2ced18c3aedb22c"
+    },
+    "science-centre-event-2449409-embedded.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "science-centre-event-2449409.html": {
+      "bytes": 48672,
+      "sha256": "aab2735e03b8a2d975866cf2d8e964739aff60aea2f58d40c790e2cd4503c87f"
+    },
+    "science-centre-event-2449574-embedded.json": {
+      "bytes": 2572,
+      "sha256": "a52da66744abf53039a298f2de59cad70bd6a0ad0f1fabbba1046b50d9af2ef0"
+    },
+    "science-centre-event-2449574.html": {
+      "bytes": 50416,
+      "sha256": "6e48e8f193b56ce5368923b1fe283878c74701825b121ba6d0707d156eceba51"
+    },
+    "science-centre-event-2456480-embedded.json": {
+      "bytes": 20698,
+      "sha256": "df15aa05b1bfb9a23ca441df3ce20a84fed8aef2fe2384c1de03bb33a59213b9"
+    },
+    "science-centre-event-2456480.html": {
+      "bytes": 64758,
+      "sha256": "2692e2f8133c2e4c412588d736dc0749f6476208c931345476254b54a21d1f88"
+    },
+    "science-centre-event-2456601-embedded.json": {
+      "bytes": 15476,
+      "sha256": "fee96c7998757b680d7ffa357a3c582756c04b8693e3cba7688f606e87ce93de"
+    },
+    "science-centre-event-2456601.html": {
+      "bytes": 60658,
+      "sha256": "48da6b22721bcbe3b72ccbcab4697e536dff55bd2cb4956c46b8d9cf20ca7da7"
+    },
+    "science-centre-event-2470370-embedded.json": {
+      "bytes": 15610,
+      "sha256": "e13b926c08de6d187a1198337d60c0951f245b6e94c047b9c529e1ab0b82459b"
+    },
+    "science-centre-event-2470370.html": {
+      "bytes": 60359,
+      "sha256": "2ee973c450cde567e5a81cebab03a5f8bb433e3243cbde1b2cfcddd8c08232d8"
+    },
+    "science-centre-event-2482702-embedded.json": {
+      "bytes": 51402,
+      "sha256": "edee20101c9e79f8765c12b719b227bb6805c0b46c44bfd8ee3b2550358f72e5"
+    },
+    "science-centre-event-2482702.html": {
+      "bytes": 89214,
+      "sha256": "993513aa9d7b2a80ba8c5e4ad12c713e4f29d2ea900902ba4bc04001e53f31e9"
+    },
+    "science-centre-event-2485283-embedded.json": {
+      "bytes": 5146,
+      "sha256": "e49312ef4d8c9b57d28d90311d3164d9e4bd324cacf55e9c848a6d78bc2e3d9c"
+    },
+    "science-centre-event-2485283.html": {
+      "bytes": 52285,
+      "sha256": "d3e6ee7314ceaac341850cb58bbb4b8e1e2a74d7635571579af0d258e107db21"
+    },
+    "science-centre-event-2504281-embedded.json": {
+      "bytes": 12972,
+      "sha256": "45cb18ba5db926490b27a54b37c753614689a4f85dfd6cb9212f75f431a4d766"
+    },
+    "science-centre-event-2504281.html": {
+      "bytes": 58325,
+      "sha256": "2a373270d53d227b62083239afc361169d1489d9aedc852beb3135fa4e51447e"
+    },
+    "science-centre-imax-embedded.json": {
+      "bytes": 562,
+      "sha256": "76697e54e87a86d2433a751e29450a2740492e485ffc8e285768efe5d9f9fad3"
+    },
+    "science-centre-imax-normalised.json": {
+      "bytes": 9997,
+      "sha256": "36cd8c81909e478353ed4fa0cd27196f98cfbd3b8b2614e59b3e5167706f9686"
+    },
+    "science-centre-imax.html": {
+      "bytes": 99050,
+      "sha256": "7055fef1a94f97f297dd87fe5150bca8dba95fa587ca89488f9c750d0a31fd33"
+    },
+    "vue-schedule-embedded.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "vue-schedule.html": {
+      "bytes": 68915,
+      "sha256": "c7962997efbfdb84036c2982594b6effac20fa48c8db5ac810312a068db1e579"
+    },
+    "vue-st-enoch-embedded.json": {
+      "bytes": 740545,
+      "sha256": "48ba0ce45c3dff6ae4eeea8660ccc7c9d3fa08394b69afec6712870ca5641c00"
+    },
+    "vue-st-enoch-normalised.json": {
+      "bytes": 4373,
+      "sha256": "c37479db1dc435ee227b9f94cb51663a55f7bea748bf1c1447df6ad63718ee5b"
+    },
+    "vue-st-enoch.html": {
+      "bytes": 346861,
+      "sha256": "0f02b54c5e3f71f37061ee26596bc0d6ac0f9143a57d16d28324c205f273c837"
+    }
+  }
+}
