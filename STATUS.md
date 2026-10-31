@@ -2,12 +2,13 @@
 
 ## Now
 
-**31 Oct: one original-MCU removal/re-add comparison approved; phone result pending (#309).**
-Craig confirms Home remains after switching apps without swiping MCU away. While online,
-he reports no pending/blocked changes, unfinished Add/edit forms or Move tray contents.
-Cold launch still opens Archive. A retained old installation target is consistent with
-these observations, but its cause is not yet proven. Craig explicitly approved the one-time removal/re-add comparison after the local-state
-preflight and PIN/push/cache costs. Owner instructions are ready; no result is reported yet.
+**31 Oct: Craig reports “all looks fine” after the approved original-MCU re-add comparison.**
+Record this as a positive overall owner report, not an explicit page-name observation.
+One short confirmation is requested: the re-added icon cold-launches Home, normal resume
+keeps Home, and no login/sync/notification problems. No test repetition is requested.
+Before re-add, cold launch reached Archive while normal resume preserved Home; the owner
+reported no pending/blocked changes, unfinished forms or Move tray contents while online.
+The retained old launch-target explanation remains unproven pending the named result.
 
 The actual repaired-app sample preview is confirmed sharp for Archive/Search in both
 themes, Home Screen: yes, Search keyboard normal (30 Oct). Those observations are closed;
@@ -30,11 +31,11 @@ AB4-3 preview dpl_EcQczpRG6CkZq1g5r6maaek4pFZE serves actual compiled app code w
 read-only sample responses and dummy local identifiers, no live account/collection.
 Details, access refresh and evidence: `docs/reviews/ab4-verification-2026-10-30.md`.
 
-Original Home → close → reopen still reaches Archive, while normal resume preserves Home.
+Before re-add, Home → close → reopen reached Archive, while normal resume preserved Home.
 The old /movies target was changed to / on 23 Oct; fresh 31 Oct public manifest readback
 confirms / and web version f341d10. The original installed bundle version and exact launch
 cause remain unconfirmed. Production-after is open; the one-time installation comparison
-is approved (#309), but no removal/re-add result has yet been observed.
+was approved (#309). The overall after report is positive; exact page results are requested.
 AB4 stays unstruck and sitting 3 incomplete. Sitting 4 and AA10c have not started.
 Last live readback (30 Oct, 11:12 UTC): API/web exact f341d10, full readiness. No production
 deployment in this turn. Existing AB3 phone/speech/live-assistant/AA10b/AA10c checks stay open.
@@ -45,15 +46,13 @@ and require fresh exact-head seven-job CI before any eventual merge.
 
 ## Next
 
-Craig performs the approved one-time original-MCU removal/re-add comparison (#309)
-from https://mcu-app-fawn.vercel.app/ in Safari, then reports the first settled page,
-Home → swipe away → reopen page, and Home → briefly switch apps → return page. Restore
-notifications if previously enabled. Stop if new pending/blocked changes, unfinished
-forms or tray contents appear before removal, or if login/sync/notification fails.
-Keep the separate Header Check preview; no account/collection deletion or Safari
-website-data clearing. Record resolution only after the phone result, without claiming
-the exact internal launcher mechanism is known. The production header is still unrepaired;
-this comparison addresses launch only. Remain at AB4, not sitting 4 or AA10c.
+Obtain only the named-result confirmation for “all looks fine”: re-added icon cold-launch
+Home, normal resume Home, no login/sync/notification problem. No reinstall or test repeat
+is requested. Record installation-refresh resolution only if that is confirmed; do not
+claim the exact internal launcher mechanism was inspected or invent a navigation repair.
+Then push accumulated evidence documentation and require fresh exact-head seven-job CI
+before any eventual release; production-after acceptance remains separate. The production
+header is still unrepaired. Remain at AB4; sitting 4 and AA10c stay excluded.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -448,6 +447,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB4 re-add overall report positive:** Craig answers “all looks fine” to the approved comparison. Requested one clarification of cold-launch Home, resumed Home and no login/sync/notification problems, without repeating tests or reinstall. Do not infer named page results yet; no release or new code.
 
 - **31 Oct — AB4 original installation comparison approved (#309):** Craig chose “Approve removal/re-add comparison” after the fresh online/no-local-work report and explicit PIN/push/cache costs. Prepared owner steps for one original-MCU reinstall from the production root, cold launch and normal resume. Results remain pending; no code change, merge, deployment, sitting 4 or AA10c.
 

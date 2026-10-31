@@ -308,3 +308,18 @@ needed for this documentation-only approval record; git diff --check is the appl
 check. Review source/CI remains 97b36e4 / seven-job run 41044309324, with accumulated local
 documentation held for final exact-head verification after the remaining checkpoint.
 AB4 stays unstruck and unshipped; sitting 4 and AA10c have not started.
+
+## Overall re-add report, 31 Oct — named results requested
+
+Craig answers “all looks fine” to the approved original-app re-add comparison covering
+first settled page, cold launch, normal resume and any login/sync/notification problems.
+This is a positive overall report. It does not explicitly name Home or Archive, so one
+clarification asks whether it means cold-launch Home, resumed Home and no problems. The
+owner is not asked to repeat tests or reinstall again. No exact page result or internal
+launcher cause is inferred before that answer. Historical pre-re-add evidence remains
+Archive cold launch and Home on normal resume. The accepted repaired installed sample
+preview appearance/keyboard observations remain closed; production-after remains open.
+
+Documentation only: no code/test change or rerun, no push/merge/deployment. Exact remote
+review CI remains 97b36e4 / 41044309324; a final documentation push requires fresh exact-head
+CI before eventual merge. AB4 remains unstruck; sitting 4 and AA10c remain excluded.
