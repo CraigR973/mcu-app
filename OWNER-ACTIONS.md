@@ -29,8 +29,14 @@ conversation still maps onto this file.*
   without login/sync/notification problems. AB4 has no remaining owner check; do not ask
   these tests or another reinstall. Historical old bundle/internal target uninspected;
   no launch code repair. Full evidence: docs/reviews/ab4-verification-2026-10-30.md.
-  Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
-  cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
+  **Sitting 4 authorised 31 Oct: AB5 public report/concepts delivered; owner checkpoint.**
+  Pick source/cost direction, all-nine coverage and Film first / Date first concept.
+  UK Cinema API Lite £9.99/month is an evaluation candidate, not an approved purchase;
+  Pro £49/month includes formats/accessibility. Zero approved provider specimens;
+  GFT/Science Centre inclusion especially needs evidence. Approve the exact proposed
+  one-file historical sample scope before its GET; no live/API/booking reads yet.
+  Report/scope: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
+  Sitting 5 remains unauthorised:
   conditional schema/API/job/refresh/retention build contract before implementation.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.

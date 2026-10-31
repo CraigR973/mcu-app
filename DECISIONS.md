@@ -6594,3 +6594,15 @@ contemporaneous.
      keyboard normal. Release only #308's approved code after final exact-head gates;
      production-phone header-after remains an owner checkpoint. No further reinstall,
      forced Home handler, hosting change, sitting 4 or AA10c follows from these results.
+
+
+311. **Group AB sitting 4 is report-only; specimen and source picks remain explicit (31 Oct).**
+     Craig authorised AB5 using group-start.md, requiring exact approval before live
+     integration/sample requests and a nine-venue source/coverage/cost report plus concept.
+     Public-source research may proceed; provider claims and indexed programme leads are
+     not approved specimens or nine-venue coverage acceptance. Report and two illustrative
+     concepts are delivered at docs/reviews/ab5-cinema-feasibility-2026-10-31.md and its
+     companion HTML. Source/cost/coverage/concept picks and the exact first specimen scope
+     remain unanswered. No purchase, trial, credential, schema/API/job or hosting choice
+     follows from discovery. AB5 remains at the owner checkpoint; no ingestion, sitting 5
+     or AA10c is authorised. This supersedes #301's sitting-4 execution boundary only.

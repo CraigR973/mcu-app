@@ -2,47 +2,38 @@
 
 ## Now
 
-**31 Oct: Group AB sitting 3 complete — AB4 shipped in PR #122 (`df6824a`), production iPhone accepted.**
-Craig explicitly confirms yes to the original MCU reopened online: Archive and Search
-sharp in dark and light themes, Search keyboard normal. This closes production-after
-with affected-iPhone evidence, not desktop tests or the sample preview. Earlier native
-sample acceptance and approved re-add cold-launch Home / resumed Home / no login, sync
-or notification problems are also confirmed. No further phone test or reinstall is needed.
+**31 Oct: Group AB sitting 4 authorised — AB5 public-source report and phone concepts delivered; owner checkpoint open.**
+Nine venue identities have public-source support; zero of nine have approved provider
+programme specimens. UK Cinema API Lite is a £9.99/month evaluation candidate, with
+format/accessibility tags omitted; Pro is £49/month. GFT and Science Centre require
+explicit independent-venue coverage proof. Published chain coverage is not branch acceptance.
 
-The approved 32px clearance sits below the top safe area in Apple Home Screen phone
-layouts with a positive inset; header and Search share it. It costs 32px of visible
-content, including approved older Apple layouts. Browser/Android/desktop/zero-inset get
-no extra gap. Header remains relative; no navigation, manifest/status metadata, auth,
-API/schema, data, hosting or credential change. Launch resolved by installation refresh;
-the old bundle/internal target was uninspected, so the exact iOS mechanism is unproven.
+Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
+Concepts: docs/reviews/ab5-concept-2026-10-31.html (illustrative listings only).
+No source/cost/coverage/concept choice is approved. Exact first-specimen proposal is one
+29 Oct national historical archive file, at most 2 MB, filtered to the nine venues, with
+no account/payment/API/bookings; it has not been requested. Future live reads need their
+own exact scope/approval. Real shapes, older-film coverage, links, horizon and cancellation
+behaviour remain open. AB5 is not struck or accepted complete.
 
-Full clean local gate passes: API 2,549/zero skips, shared 159, web 736, lint/types/build;
-local Chromium 61, Firefox 60 + documented dictation skip, jobs 6. Exact-head PR CI
-41150581181 and both main runs 41151986202 (df6824a), 41152283641 (e04ba53) pass all seven
-jobs, including WebKit 59 + two existing documented limitations. Both corrected CI
-readiness races and every tool/test failure remain in the verification report. App source
-4f2a12b, test source 97b36e4; later close-out commits change documentation only.
+Public research/documents only: no application, data, schema/API/job, credential, hosting
+or architecture change. Clean main a3e41f1 had green CI 41193175977 before research.
+Report documents tool/source-access failures. Document/concept verification applies;
+no app gate, PR merge, main push, production smoke or deployment is claimed for AB5.
 
-API and web served exact handoff e04ba53 with db ok/all five readiness integrations and
-read-only login/bundle smoke passing. The final documentation head requires the same
-seven-job exact-head CI and served-SHA checks before handoff. Clean main is the close-out
-target; no diagnostic/sample deployment is promoted, no protection/env setting changes.
-
-AB4 is struck in the ledger; no AB4 owner acceptance remains. Sittings 4–5 are not
-authorised and AA10c has not started. Existing AB3 real-phone receipt, W3 camera scan,
-Mark's AA1 device, speech/live-assistant and AA10b/AA10c observations remain open.
-Evidence, acceptance matrix and full failure audit:
-docs/reviews/ab4-verification-2026-10-30.md.
+AB4 remains complete: PR #122 (df6824a), full gates/production proof and Craig's native
+production Archive/Search/both themes/keyboard acceptance. Approved re-add restores Home
+cold launch/resume; no further phone test/reinstall is requested. Existing AB3 real-phone
+receipt and unrelated camera/speech/valuation owner actions remain open.
+Sitting 5 and AA10c are excluded.
 
 ## Next
 
-Stop: Group AB sitting 3 is complete. Do not start sitting 4 or AA10c. A later explicit
-go may authorise sitting 4 (AB5's cinema feasibility report), retaining its source/live-
-request/coverage/cost checkpoints. Preserve unrelated owner actions; no automatic next
-sitting or fresh iPhone reinstall/test is implied by AB4 acceptance.
-
-AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
-comparison and existing real-phone/live-assistant owner observations remain open.
+Stop at AB5's owner checkpoint: source/budget direction, all-nine coverage requirement,
+Film first versus Date first concept and exact specimen-read approval. Then finish AB5's
+approved evidence only. Do not subscribe, sample, ingest or begin sitting 5 from the report.
+AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
+real-phone/live-assistant observations remain open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -434,6 +425,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-10-31** — **AB5 sitting 4 public research/report delivered; owner stop.** Nine
+  identities supported; UK Cinema API Lite £9.99/month candidate, Pro £49/month for
+  formats/accessibility. Zero approved venue specimens, independent coverage unresolved.
+  Report and two illustrative phone concepts saved; source/cost/coverage/concept picks
+  and exact one-file historical specimen approval pending. No live integration/sample,
+  account/purchase, app/data/hosting change, main push or deployment. AB5 remains open;
+  sitting 5 and AA10c excluded. Source/tool failures retained in the report.
 
 - **31 Oct — AB4 production iPhone accepted; sitting 3 complete:** Craig confirms original MCU Archive/Search sharp in both themes and keyboard normal after loading the production repair. Re-add launch/resume/no-problem acceptance already confirmed; no launch code repair. PR #122 df6824a, final PR CI and main df6824a/e04ba53 all seven jobs pass, exact API/web SHA/full readiness and read-only bootstrap smoke verified. Ledger/architecture/owner records closed; final close-out docs retain exact-head CI/readiness requirement. Sitting 4 and AA10c not started.
 
