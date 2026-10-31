@@ -61,6 +61,15 @@ conversation still maps onto this file.*
   docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md. This is a new hosting action,
   not another request to approve already authorised source tests. Full proposed ingestion/
   discovery contract and AB6a/AB6b split still require a later go; no scope is silently adopted.
+  **Hosting experiment approved/completed (#318/#319):** Craig's “approve” covered only
+  the isolated temporary worker. Three sandbox-enabled Chromium launches failed before
+  any cinema request; all temporary services removed within 15m55s, original deployments/
+  API SHA/readiness unchanged. No all-nine unattended source proof. Three-failure stop:
+  choose a revised runtime policy before another attempt. Recommend keeping Chromium's
+  sandbox and planning a compatible host; the separately bounded sandbox-off diagnostic
+  is an unapproved alternative, with reduced browser isolation. Exact options/cost/limits:
+  docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md. No fourth launch, new provider,
+  recurring job or full app contract is authorised by the previous approval.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

@@ -35,6 +35,16 @@ recorded High setting against the accepted contract. No new model/effort is inve
 
 ## Immediate next experiment — exact approval scope
 
+**Approved 31 Oct (#318):** Craig replied “approve” to this temporary experiment only.
+The later application contract and batch split remain unapproved. Execution/results are
+recorded separately; this approval does not enable a recurring source job.
+
+**Completed with a runtime block (#319):** three sandbox-enabled browser launches failed
+before any cinema request; all temporary services removed. Results and the next runtime
+policy decision: `ab-cinema-hosted-browser-probe-2026-10-31.md`. The proposed browser stage
+below is on hold. The previous approval does not approve sandbox-off operation, another
+host or the full build. Re-plan from that evidence before AB6/AB7 implementation.
+
 Create one temporary Railway service **cinema-probe**, isolated from the API and every cron.
 It has no database, app, VAPID, TMDB, model, eBay or other credentials; no inherited production
 variables or volumes; no public domain or schedule. Use a pinned ordinary Chromium/Playwright

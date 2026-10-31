@@ -4785,6 +4785,13 @@ docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md; **unapproved**. Stop fo
 approval before the experiment, then re-plan/accept the full build before implementation.
 This note adds no batch row or scope approval. Source audit:
 docs/reviews/ab-cinema-repeatability-2026-10-31.md and JSON. AA10c/other sittings excluded.
+Temporary hosting explicitly approved (#318) and experiment completed with a runtime block
+(#319): three non-root/sandbox-enabled Chromium launches fail before any cinema request.
+All temporary services removed within 15m55s; six original deployments/API/readiness
+unchanged. Stop at the three-failure limit. The proposed Railway browser stage is on hold;
+re-plan runtime/security from docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md before
+another attempt or application build. Sandbox-off/alternative hosting/full contract/AB6
+split remain unapproved. No ODEON source availability result is inferred from a launch failure.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

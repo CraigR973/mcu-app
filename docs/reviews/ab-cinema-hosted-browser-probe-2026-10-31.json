@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-31",
+  "approval": {
+    "ownerReply": "approve",
+    "decision": 318,
+    "scope": "Temporary isolated ODEON worker only; full app contract not approved"
+  },
+  "outcome": "Runtime startup blocked before any cinema request; three-launch stop reached",
+  "originalWindow": {
+    "createdUtc": "2026-10-31T19:40:12.165829+00:00",
+    "finalDeletedUtc": "2026-10-31T19:56:06.839061+00:00",
+    "elapsedSeconds": 954.673232,
+    "approvedMaximumSeconds": 1800
+  },
+  "image": "mcr.microsoft.com/playwright:v1.60.0-noble",
+  "imageManifestDigest": "sha256:9bd26ad900bb5e0f4dee75839e957a89ae89c2b7ab1e76050e559790e946b948",
+  "package": "playwright@1.60.0",
+  "deploymentManifestChecks": {
+    "region": "ams",
+    "replicas": 1,
+    "cpu": 1,
+    "memoryBytes": 2000000000,
+    "restart": "NEVER",
+    "cron": null,
+    "publicDomain": null
+  },
+  "temporaryServices": [
+    {
+      "serviceId": "a8d5ba89-5e7a-4b64-8f0a-8bf5a46ef304",
+      "createdUtc": "2026-10-31T19:40:12.165829+00:00",
+      "deletedUtc": "2026-10-31T19:44:58.615633+00:00",
+      "deleted": true
+    },
+    {
+      "serviceId": "c1c2754b-cbe2-49cb-bd9a-60c9a4ef7e8f",
+      "createdUtc": "2026-10-31T19:47:13.723233+00:00",
+      "deletedUtc": "2026-10-31T19:51:54.376061+00:00",
+      "deleted": true
+    },
+    {
+      "serviceId": "d03b7529-deea-41a9-bbe4-1ce09d021fff",
+      "createdUtc": "2026-10-31T19:54:03.094478+00:00",
+      "deletedUtc": "2026-10-31T19:56:06.839061+00:00",
+      "deleted": true
+    }
+  ],
+  "launches": [
+    {
+      "deploymentId": "915d39ec-0277-417e-9f1d-9f0d7f982b0f",
+      "mode": "headless-shell / initial diagnostic",
+      "startedUtc": "2026-10-31T19:49:21.185Z",
+      "platform": "linux",
+      "node": "v24.15.0",
+      "uid": 1001,
+      "credentialsPresent": false,
+      "outcome": "browser_launch_failed",
+      "sandboxEnabled": true,
+      "sandboxPermissionDeniedConfirmed": false,
+      "cinemaRequests": 0,
+      "contexts": 0,
+      "screenings": 0
+    },
+    {
+      "deploymentId": "2ce51ada-ded4-46c4-ab17-ecd9460368de",
+      "mode": "headless-shell / complete diagnostic",
+      "startedUtc": "2026-10-31T19:51:36.669Z",
+      "platform": "linux",
+      "node": "v24.15.0",
+      "uid": 1001,
+      "credentialsPresent": false,
+      "outcome": "browser_launch_failed",
+      "sandboxEnabled": true,
+      "sandboxPermissionDeniedConfirmed": true,
+      "cinemaRequests": 0,
+      "contexts": 0,
+      "screenings": 0
+    },
+    {
+      "deploymentId": "40e696b8-35ad-415b-9bad-2842879e4ca3",
+      "mode": "full chromium / sandbox enabled",
+      "startedUtc": "2026-10-31T19:55:54.570Z",
+      "platform": "linux",
+      "node": "v24.15.0",
+      "uid": 1001,
+      "credentialsPresent": false,
+      "outcome": "browser_launch_failed",
+      "sandboxEnabled": true,
+      "sandboxPermissionDeniedConfirmed": true,
+      "cinemaRequests": 0,
+      "contexts": 0,
+      "screenings": 0
+    }
+  ],
+  "venues": {
+    "ODEON Kilmarnock": "not_attempted_runtime_blocked",
+    "ODEON Glasgow Quay": "not_attempted_runtime_blocked",
+    "ODEON Braehead": "not_attempted_runtime_blocked",
+    "ODEON East Kilbride": "not_attempted_runtime_blocked"
+  },
+  "totals": {
+    "browserLaunchAttempts": 3,
+    "browserContexts": 0,
+    "cinemaRequests": 0,
+    "screeningRows": 0,
+    "successfulScreenshots": 0
+  },
+  "cleanup": {
+    "temporaryServicesAbsent": true,
+    "originalServicesCount": 6,
+    "originalDeploymentIdsUnchanged": true,
+    "temporaryLocalUploadBundleRemoved": true,
+    "managedImageCachePurgeIndependentlyVerified": false,
+    "productionHealth": {
+      "health": {
+        "status": "ok",
+        "commitSha": "c63bc06a7c7d317783b03a3379eb7b2b53852728"
+      },
+      "health/ready": {
+        "status": "ready",
+        "db": "ok",
+        "push": "configured",
+        "ai": "configured",
+        "ebay": "configured",
+        "tmdb": "configured",
+        "brave": "configured"
+      }
+    }
+  },
+  "offlineProbeTests": {
+    "passed": 4,
+    "failed": 0,
+    "scope": [
+      "credential isolation",
+      "network/booking/request-byte policy",
+      "stale date and duplicate identity rejection",
+      "London date selection"
+    ]
+  },
+  "applicationFullGateRun": false,
+  "actualHostingBillMeasured": false,
+  "appBuildApproved": false,
+  "nextRuntimeChoiceApproved": false,
+  "rawEvidenceHashes": {
+    "first-setup-state.json": {
+      "bytes": 303,
+      "sha256": "280d555115d6fced10e2d7d951e1925577710024c87671cdc5b5851d424aa5fe"
+    },
+    "first-launch-deployment-logs.jsonl": {
+      "bytes": 2356,
+      "sha256": "697eb08640f702128fff4ad33831b4015565aa7617c88eda1240657cca5ef96b"
+    },
+    "headless-shell-attempt/worker-events.json": {
+      "bytes": 4340,
+      "sha256": "3893db653db9b1e066ea137647f59c72a9f214bb57637d2f007b4100704590e6"
+    },
+    "headless-shell-attempt/deployment-status.json": {
+      "bytes": 2152,
+      "sha256": "39681dcbadc8609ac9f2bd9ad66549f55de59794bbed0b27414417f46abacf19"
+    },
+    "headless-shell-attempt/service-state.json": {
+      "bytes": 362,
+      "sha256": "482bd9ddbbdfe29d164e4fe00519cea30cfae5dbfa9a5c947f0e1fd2e2b34ff5"
+    },
+    "worker-events.json": {
+      "bytes": 4365,
+      "sha256": "860c9e11247ab9428eab0577e560f016ff02edbe5d5231198f26dd51ec249487"
+    },
+    "deployment-status.json": {
+      "bytes": 2141,
+      "sha256": "30355c87858dd92f70bdb159ca857cf03ed2a2fb52a205910465bcd243391da0"
+    },
+    "service-state.json": {
+      "bytes": 362,
+      "sha256": "68a4e2ddb3afb55ca929bcfd38b00a40e4f694a9a6873001391debc0ee800819"
+    },
+    "post-cleanup-verification.json": {
+      "bytes": 1406,
+      "sha256": "89fbb184758cb1297195322758860fac5259b023e4a265b8a80fbdc67107d4b8"
+    },
+    "deployed-railway.json": {
+      "bytes": 370,
+      "sha256": "b41f467907c59aacdc4baa44dd5c5f7bae474c115c9fee3125c21b9bae29656d"
+    },
+    "Dockerfile": {
+      "bytes": 349,
+      "sha256": "eb91f82c358445958797c174e564407b455d9de2b763025fa1ffc5ec5c022a02"
+    },
+    "package-lock.json": {
+      "bytes": 1697,
+      "sha256": "eaf16f2bc5b4268e21bb102ded5dd85f8a90e6de53cbfbaacb7311bcad17e6f1"
+    },
+    "probe.cjs": {
+      "bytes": 10229,
+      "sha256": "468aaf54093c8c4ea1186c47ad5e81eb9c8ea8afaa02414efec08d4687945633"
+    },
+    "probe.test.cjs": {
+      "bytes": 2218,
+      "sha256": "538549285c23a8e7640767137e7d2b4e9b7273b4884bab3ee2022325c9f22707"
+    },
+    "run_hosted_probe.py": {
+      "bytes": 5852,
+      "sha256": "2703474541f2eedb21d6829424e0d6058fe0fb4d80b46b770fe359be9436aecc"
+    },
+    "cleanup_guard.py": {
+      "bytes": 1128,
+      "sha256": "c726708cd90bbef7476dd6cbf83154a52575919e2739ea532660327128dcc5dc"
+    }
+  },
+  "unexecutedSandboxOffCandidate": {
+    "executed": false,
+    "approved": false,
+    "path": "scratchpad/ab-cinema-research/isolated-worker/sandbox-off-candidate.cjs",
+    "sha256": "6e004a8b3c6d6d99205194c97df47ddc5e30128d09bc2ec0edc169159bd6f4db",
+    "changes": [
+      "Chromium sandbox requested false",
+      "Diagnostic flag reports sandbox requested false"
+    ],
+    "otherLimitsChanged": false
+  }
+}

@@ -2,23 +2,24 @@
 
 ## Now
 
-**31 Oct: repeatability research reaches the actual Railway runtime (#317).**
-All nine have repeat samples: 177 retained identities with unchanged titles/starts; all 49
-removed rows are past starts, not demonstrated cancellations. Kilmarnock/Silverburn also
-yield next-day samples. Existing in-app-browser session only; fresh unattended Linux browser
-behaviour remains unproved. Source research used 22 local + 11 Railway anonymous HTTP GETs.
-Railway returns GFT/Vue/Everyman/Cineworld/public Science Centre event data; all four ODEON
-venue pages return 403 and the observed East Kilbride schedule URL returns anonymous 401.
-The running API has no Playwright/Chromium. Source-only SSH used existing access: no remote
-file, database, environment, service, install or configuration change. API remains c63bc06,
-readiness db ok/all integrations configured. No production collector was run or installed.
-Evidence: docs/reviews/ab-cinema-repeatability-2026-10-31.md and minimal JSON. GFT fallback
-HTML and source discovery/horizon, original year, cancellation/reschedule/DST and sustained
-access remain open. Failed body-equality and extraction/loading checks stay in the audit.
-Proposed complete contract and AB6 split: docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md.
-It is unapproved: next decision is only a temporary isolated Railway browser experiment.
-No app, schema, recurring job, hosting, production-data write, subscription/trial,
-PR/push/deployment or other sitting. Planning/research branch only; AB6/AB7 gate stays open.
+**31 Oct: approved isolated hosting experiment reaches a browser-startup block (#318/#319).**
+Three sandbox-enabled Chromium launches failed before a browser context or cinema request.
+Two complete diagnostics confirm sandbox credentials Permission denied (13); no new ODEON
+programme/access result. Three-launch stop reached; no fourth launch or sandbox-off run.
+All temporary cinema-probe services removed, within 15m55s of first creation (30m approved).
+One service active at a time; setup replacements and logging/configuration failures audited.
+1 vCPU/2 GB/one replica/NEVER restart/no domain/no schedule/non-root UID 1001/no app credentials
+verified. Six original service deployment IDs remain unchanged; API still c63bc06 and readiness
+db ok/all five integrations configured. Local upload bundle removed; managed cache purge
+unverified. Actual build/runtime bill unmeasured. Four offline probe checks pass; hosted
+launch check fails. No app build, migration, source write, recurring worker, PR/push or other sitting.
+Report/audit: docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md and JSON.
+Earlier evidence remains: all nine have in-app-browser/HTTP repeat samples (177 retained
+identities); five sources answered HTTP in Railway (#317). No all-nine unattended method,
+complete horizon, original-year matching, cancellation/reschedule/DST or sustained access proof.
+The full proposed contract/AB6 split remains unapproved. Next owner choice: preserve Chromium
+sandboxing and plan a compatible runtime (recommended), or explicitly consider the separately
+bounded sandbox-off diagnostic in the new report. No runtime change is implied by the old approval.
 
 **Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
@@ -51,14 +52,15 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop at the hosting decision before the proposed temporary isolated cinema-probe service.
-Exact two-pass/four-ODEON scope, limits/cost/cleanup and the later full ingestion contract
-are in docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md. Existing runtime HTTP reads
-were possible without changing hosting; installing a browser/new worker is a different action.
-Do not infer hosting or build approval from source-test permission or the latest “proceed”.
-After the experiment, approve/revise the full source/schema/API/job/refresh/retention/year/
-navigation plan and proposed AB6a/AB6b split before application implementation. Three
-implementation PRs are proposed, not accepted ledger entries. Retain all nine and Film first.
+Stop after the three browser launch failures. The approved temporary hosting test is finished
+and cleaned up; no fourth attempt, sandbox-off fallback or alternative hosting is approved.
+Present the runtime-policy choice in docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md.
+Choosing another host means planning/pricing first; no supplier/credential/spend is selected.
+Any sandbox-off test needs the explicit bounded security/hosting decision described there.
+Then approve/revise the full source/schema/API/job/refresh/retention/year/navigation/security
+plan and proposed AB6a/AB6b split before application implementation. The proposed Railway
+browser stage is on hold. Three implementation PRs remain proposed, not accepted ledger
+entries. Retain all nine and Film first; no reduced-coverage build follows.
 No parked links-screen build, archive retry, AA10c or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
@@ -453,6 +455,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — isolated hosting approved and tested, startup blocked (#318/#319):** three
+  non-root/sandbox-enabled Chromium launches fail before any cinema request. Sandbox
+  credentials Permission denied in complete diagnostics; source comparison/two-pass test
+  unrun. All temporary services removed within 15m55s/original 30m window; original six
+  deployment IDs/API c63bc06/readiness unchanged. Four guard tests pass; runtime test fails.
+  Setup/logging/region corrections and actual-bill/cache-purge limits retained in report.
+  Stop before further runtime choice/full ingestion contract; no app/recurring job/other sitting.
 
 - **31 Oct — repeat samples and source-only Railway probe (#317):** nine venues retain
   177 unchanged identities/starts; disappeared rows all past. Kilmarnock 34/Silverburn 53

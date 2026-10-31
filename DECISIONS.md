@@ -6698,3 +6698,36 @@ contemporaneous.
      Evidence: docs/reviews/ab-cinema-repeatability-2026-10-31.md and JSON; proposed next
      scope: docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md. The live architecture
      map remains unchanged because no pipeline has been built.
+
+
+318. **Approve the isolated ODEON Railway experiment only (31 Oct).**
+     Craig replied “approve” to creating/running/removing the temporary browser-test
+     service, maximum 30 minutes at one replica/1 vCPU/2 GB, no app/database credentials,
+     no domain or recurring schedule. The exact two-pass/four-venue scope, refusal stops,
+     request/transfer/time limits, estimated runtime compute plus unmeasured build/network/
+     tax and cleanup are in docs/reviews/ab-cinema-ingestion-contract-2026-10-31.md.
+     This is explicit hosting approval for that bounded experiment, not approval of the
+     full proposed ingestion contract, AB6a/AB6b split, recurring worker, production
+     programme writes, paid provider or another sitting. Existing app/cron services,
+     variables, secrets, database and source-test no-bypass boundaries remain outside it.
+
+
+319. **The hosted browser experiment is runtime-blocked; re-plan before another launch (31 Oct).**
+     Under #318, three sandbox-enabled Chromium launches (two headless shell, one full
+     Chromium) fail before a browser context/cinema request. Complete diagnostics show
+     sandbox credentials Permission denied (13) in the tested Railway configuration.
+     This is not an ODEON refusal, empty programme, universal Railway/browser verdict or
+     all-nine feasibility proof. The three-launch stop is reached; no fourth attempt,
+     sandbox disabling or host privilege expansion was taken. Setup/logging/legacy-region
+     failures and corrections remain in the audit. Resource/replica/credential boundaries
+     stayed intact. Three temporary service IDs were used sequentially, never concurrently;
+     all were removed within 15m55s of first creation, retaining the original 30m deadline.
+     Final inventory has the same six original deployment IDs; API c63bc06/readiness
+     unchanged. Local upload bundle removed; actual hosting bill and managed image/cache
+     purge unverified. Four offline probe tests pass; hosted launch check fails. Re-plan
+     the runtime/security choice before another experiment, then approve the full app
+     contract before AB6/AB7. Recommend retaining sandboxing and assessing a compatible
+     host; a separately bounded sandbox-off test is an unapproved security trade-off.
+     No reduced venue list, recurring worker, app/schema/source write, paid provider,
+     archive retry, AA10c or other sitting follows. Evidence and exact next choices:
+     docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md and minimal JSON.
