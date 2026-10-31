@@ -1,6 +1,6 @@
 # Approved grouping for the 28 Oct snags
 
-**Seven batches across five sittings; sittings 1 and 2 complete.** AB1 (`ad2c992`) and AB2 (`c187ed7`)
+**Seven batches across five sittings; sittings 1–3 complete.** AB1 (`ad2c992`) and AB2 (`c187ed7`)
 shipped after their owner checkpoints. Final CI's real movie-night race was stopped, then
 repaired with Craig's separate approval in PR #120 (`bf0eb36`), all full gates and exact
 production proof. Sitting 2 shipped AB3 in PR #121 (`5cfa467`) after all four pre-build owner picks (#306),
@@ -11,7 +11,8 @@ AB4-2 yielded 32px (30 Oct), and the exact header/Search repair is approved (#30
 Native actual-app sample preview is accepted in all four states with normal keyboard;
 approved original-app re-add now cold-launches/resumes Home without problems (#309/#310).
 PR #122 code is deployed at df6824a with final seven-job CI and exact production proof;
-the production-phone header-after checkpoint remains open.
+original production iPhone Archive/Search/both themes/keyboard acceptance now confirmed.
+Sitting 3 is complete; no AB4 owner check remains.
 Sittings 4–5 and AA10c remain excluded. The verification reports retain
 the failures and the unrelated local shop-alert timeout's unconfirmed cause.
 The first sitting fixes misleading Home information. Notifications and iPhone problems
@@ -28,7 +29,7 @@ more complex than current evidence can establish. No time estimate is yet eviden
 |---|---|---|
 | 1 | AB1 attention → AB2 collection | Truthful attention; clearer collection with owned-watched count and visible breakdown. Pick the layout/API extension before collection build. |
 | 2 | ~~AB3~~ Mark's additions (`5cfa467`) | Complete after all four picks; genuine later add/real-phone receipt remains owner acceptance. |
-| 3 | AB4 iPhone | Diagnose Home launch and blurred top bar on the affected installation; verify any repair there. |
+| 3 | ~~AB4~~ iPhone (`df6824a`) | Complete 31 Oct: measured/approved 32px repair, production-phone appearance/keyboard accepted; approved re-add fixes Home launch/resume. |
 | 4 | AB5 cinema sources | Nine-venue source, coverage and cost report. Pick sources and concept; stop before implementation. |
 | 5 | AB6 programmes → AB7 discovery | Approved programme pipeline, then a screen for choosing a film/venue/showtime. Conditional on the research and build-contract approval. |
 
@@ -83,11 +84,12 @@ starting. No agent delegation is part of this proposal.
 Craig approved the grouping and then separately authorised sitting 1 on 28 Oct. AB1 shipped;
 AB2 shipped `c187ed7` after both owner picks. Sitting 1 completed after the approved race
 repair PR #120 (`bf0eb36`). Sitting 2 shipped AB3 (`5cfa467`) on 29 Oct after all four pre-build owner
-picks (#306), full gates and exact production proof; genuine add/real-phone receipt remains owner acceptance. Sitting 3 authorised 29 Oct (#307); AB4 is at the affected-device evidence
-checkpoint: standalone AB4-1 blurs in all positions; AB4-2 measured 32px and the exact header/Search repair is approved (#308) and implemented
+picks (#306), full gates and exact production proof; genuine add/real-phone receipt remains owner acceptance. Sitting 3 authorised 29 Oct (#307) and completed 31 Oct. AB4 first stopped at the device
+checkpoint: standalone AB4-1 blurred in all positions; AB4-2 measured 32px and the exact
+header/Search repair was approved (#308), implemented and verified
 (`ab4-repair-proposal-2026-10-30.md`). Native sample acceptance and the approved original-app
 re-add launch/resume comparison now pass (#309/#310); code deployed PR #122 (df6824a),
-full final CI/readiness pass; production-phone after remains. See
+full final CI/readiness pass; production-phone after is accepted and sitting 3 complete. See
 `docs/reviews/ab4-device-checkpoint-2026-10-29.md`. Sittings 4–5 remain unauthorised. Start only a
 separately authorised named sitting; stop at the checkpoints above. Approval to run a
 code batch includes normal automatic close-out/deployment after its gate and acceptance

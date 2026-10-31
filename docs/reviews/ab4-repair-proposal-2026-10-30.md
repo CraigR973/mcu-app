@@ -2,7 +2,8 @@
 
 30 Oct. **Craig approved the exact 32px scope (#308); implementation authorised.**
 This is the owner checkpoint before changing app header/Search/iOS chrome.
-Sitting 4 and AA10c are excluded. AB4 and its real-phone acceptance remain open.
+Sitting 4 and AA10c are excluded. **31 Oct: AB4 shipped, original production iPhone
+appearance/keyboard and re-add launch/resume acceptance confirmed.**
 
 ## Evidence and cause
 
@@ -161,3 +162,11 @@ problems. Record installation-refresh resolution (#310), without claiming the ol
 target or exact internal iOS mechanism was inspected. No launch/navigation repair or
 further reinstall is needed. Native repaired sample appearance/keyboard is accepted;
 production-phone header-after remains for deployment. Sitting 4 and AA10c remain excluded.
+
+### Production acceptance, 31 Oct
+
+Craig explicitly confirms yes to original MCU reopened online: Archive and Search sharp
+in dark/light themes, keyboard normal. This is production affected-device acceptance,
+separate from the earlier sample and browser tests. AB4 is complete in PR #122 (df6824a)
+with exact PR/main CI, served-SHA and readiness proof in the verification report. No
+further reinstall, launch code repair, sitting 4 or AA10c is implied.

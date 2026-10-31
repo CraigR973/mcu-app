@@ -1,8 +1,8 @@
 # MCU App architecture map
 
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
-AB3 and the separate movie-night repair on 29 Oct, plus AB4 code released 31 Oct; the April design intent remains in
-`ARCHITECTURE.md`.
+AB3 and the separate movie-night repair on 29 Oct, plus AB4 shipped/phone-accepted
+31 Oct; the April design intent remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -253,7 +253,7 @@ and category vocabulary; existing collection and watch-history rows are not rewr
 Real-phone receipt remains owner acceptance after shipment.
 
 
-## AB4, code deployed 31 Oct (PR #122, df6824a); production-phone after open
+## AB4, shipped and production iPhone accepted 31 Oct (PR #122, df6824a)
 
 ```mermaid
 flowchart TD
@@ -267,8 +267,8 @@ Browser tabs, Android installations, desktop layout and zero-top-inset orientati
 zero extra clearance. The header remains relative in the existing flex shell; its main
 scroll area gives up 32px where the rule applies. Both themes use their existing solid
 surface. No status metadata, navigation, login-return, deep-link or normal-resume rule
-changes. The affected iPhone confirms the actual repaired sample app sharp for Archive/
-Search in both themes, Home Screen: yes and normal keyboard. The production-phone after
-check is now requested after verified release; simulated browser geometry is separate evidence. Original
+changes. The affected iPhone confirms both the installed actual-app sample and original
+production MCU sharp for Archive/Search in both themes, with normal keyboard. Native
+production acceptance is complete; simulated browser geometry is separate evidence. Original
 Archive cold launch resolved through the approved re-add (#309/#310); normal resume
 preserves Home, no navigation code change. Old bundle/internal launcher target uninspected.

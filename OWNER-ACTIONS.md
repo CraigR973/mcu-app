@@ -11,7 +11,7 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Group AB — sittings 1 and 2 complete, 29 Oct.** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
+- **Group AB — sittings 1–3 complete, 31 Oct.** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night
   seeding race was stopped and repaired separately with Craig's approval (#304): PR #120
   (`bf0eb36`), full local/PR/merge gates and production proof. The preserved report records
@@ -22,34 +22,18 @@ conversation still maps onto this file.*
   `docs/reviews/ab3-owner-checkpoint-2026-10-29.md`. AB3 shipped PR #121 (`5cfa467`), full
   local/PR/main gates and exact production proof. Yours on the next real addition: a genuine qualifying add by Mark and Craig's real-phone receipt;
   no fabricated production test film/push. Receipt remains unverified until observed.
-  Sitting 3 authorised 29 Oct (#307): iPhone 16 Pro Max/iOS 27.0.1 installed header blurry,
-  Safari sharp; original Home → close → reopen returns Archive. AB4-1 corrected run confirms
-  Home Screen: yes, Relative/Sticky/Fixed all blurry (earlier sharp result was not confirmed
-  standalone). On 30 Oct Craig reports 32px from AB4-2 and explicitly approves the exact
-  header/Search repair (#308), including older Apple Home Screen phone-layout scope and
-  screen-space cost. Shared clearance is implemented and the clean local gate passes.
-  Actual repaired-app sample preview (AB4-3): Craig now reports “all are sharp” for
-  Archive/Search in both themes, then confirms “yes to both”: Home Screen: yes and
-  normal Search keyboard. Those installed preview observations are accepted; do not
-  repeat them. On 31 Oct Craig confirms normal resume preserves Home, and while online
-  reports no pending/blocked changes, unfinished forms or Move tray contents. Original
-  bundle/internal-target limitation remains recorded. Craig explicitly confirms the
-  approved re-add (#309) cold-launches Home, resumes Home and has no login/sync/notification
-  problems (#310). Launch is resolved by installation refresh; do not ask those checks
-  again or invent a navigation repair. The original production iPhone's header/Search
-  after-check in both themes and normal keyboard is now requested: code deployed in
-  PR #122 (df6824a), exact API/web SHA/full readiness and read-only login smoke pass.
-  Reopen the original MCU icon online to load it; do not reinstall. AB4 stays unstruck
-  until this production-phone observation; sample/desktop checks cannot replace it.
-  No further removal, account/collection deletion or Safari-data clearing is requested.
-  Preview details and verification:
-  `docs/reviews/ab4-verification-2026-10-30.md`.
-  Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.
+  **Sitting 3 complete, 31 Oct:** AB4 PR #122 (df6824a), owner-measured/approved 32px
+  header/Search repair (#308), full local/seven-job PR/main gates and exact production
+  SHA/readiness. Craig confirms original production MCU Archive/Search sharp in both
+  themes and keyboard normal. Approved re-add (#309/#310) now cold-launches/resumes Home
+  without login/sync/notification problems. AB4 has no remaining owner check; do not ask
+  these tests or another reinstall. Historical old bundle/internal target uninspected;
+  no launch code repair. Full evidence: docs/reviews/ab4-verification-2026-10-30.md.
   Sittings 4–5 remain unauthorised. Sitting 4: cinema source, coverage,
   cost and concept picks; exact sample/live-request scope before those runs. Sitting 5:
   conditional schema/API/job/refresh/retention build contract before implementation.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
-  approval. Existing AA1 phone and AA10b/AA10c boundaries below remain in force.
+  approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 
 - ~~**Group AA sitting 5, AA9 — two assistant review picks.**~~
   **Done 27 Oct:** Craig chose Conversation first and Include shared corrections (#300).
@@ -77,8 +61,9 @@ conversation still maps onto this file.*
   second press is needed. When Home says none are due, send its total and priced/sales-backed
   disc counts to compare with the measured before total, **£16,867.11**. Sitting 2 remains
   closed until its own go.
-- **Group AA sitting 2, AA1:** after AA1 is live, remove and re-add the app on each iPhone.
-  It will then open Home, rather than the Archive, from its new start page.
+- **Group AA sitting 2, AA1:** Craig’s iPhone launch check is resolved through the approved
+  AB4 re-add on 31 Oct: cold launch and normal resume both Home. Mark’s iPhone remains
+  unverified; no further removal/re-add of Craig’s app is requested.
 - ~~**Group AA sitting 1, AA10a (item 36):** start and read back the first live used-sale
   pass.~~ **Done 22 Oct:** Craig started it; 598 searches stored 6,179 listings, and the run
   ended at its daily budget without an error. AA10b may proceed.
@@ -143,8 +128,8 @@ conversation still maps onto this file.*
   The first nightly read, 4 Oct, scored 81 reviews with no halt. Also yours: the two-phone
   movie night check for V3 (16b).
 - **Group W** (`docs/phase-batches.md`, your 5 Oct snags): **W1, W2 and W3 are live (5 Oct).**
-  **30:** on your iPhone, the search keyboard and the top bar (a screenshot if the bar still
-  looks faded), then a real scan on Loans' **Lend or borrow**.
+  **30:** W1 Search keyboard/top bar confirmed on Craig’s production iPhone through AB4
+  on 31 Oct. A real W3 scan on Loans’ **Lend or borrow** remains open.
 - **Optional:** Brave's free search credit ran out on 28 Sep, so the nightly spec search
   waits for it to renew (probably 1 Oct); raising its spending limit would finish the 335
   discs left for about £1.30 (item 20).
@@ -1430,16 +1415,17 @@ config apply can no longer delete them.
 
 No eBay password goes to the app or to an agent: both of you type it on eBay's own page.
 
-### 30. Three phone checks — W1's keyboard and top bar, W3's scan *(new 5 Oct)*
+### 30. W1 keyboard/top bar resolved 31 Oct; W3 camera scan remains open
 
 **New 5 Oct.** W1 changes two things only an iPhone can confirm (`docs/phase-batches.md`,
-Group W; `DECISIONS.md` #249). Neither blocks W2 or W3.
+Group W; `DECISIONS.md` #249). Neither blocks W2 or W3. **31 Oct: checks 1–2 are
+confirmed on Craig’s original production iPhone through AB4; only camera check 3 stays open.**
 
-1. **Search opens with the keyboard up.** Tap Search on the bottom bar: the keyboard should
+1. **Confirmed 31 Oct (AB4): Search opens with the keyboard up.** Tap Search on the bottom bar: the keyboard should
    rise at once, with no second tap on the box. The box is now focused inside your tap, which
    is what iOS asks before it shows a keyboard; a browser test proves the focus, but only your
    phone proves the keyboard.
-2. **The top bar no longer looks faded, Search open or not.** It is now a raised panel, the
+2. **Confirmed 31 Oct (AB4): top bar/Search sharp in both themes.** Historical W1 context: it is now a raised panel, the
    bottom bar's surface with a shadow, and its back arrow and assistant icon are at full
    strength. On 5 Oct you saw it faded again with Search open, in the dark theme: the search
    sheet covers the bar and had kept the page's colour; it takes the bar's surface since [#44](https://github.com/CraigR973/mcu-app/pull/44).

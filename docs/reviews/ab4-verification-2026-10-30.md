@@ -1,9 +1,10 @@
 # AB4 — approved 32px clearance: verification
 
-Updated 31 Oct. **Code deployed in PR #122 (df6824a); production-phone after remains open.**
+Updated 31 Oct. **AB4 shipped in PR #122 (df6824a); original production iPhone accepted.**
 Craig approved the exact 32px repair (#308) and separately the original-app re-add (#309).
 Native sample preview appearance/keyboard and re-added Home cold-launch/resume/no-problem
-results are explicitly confirmed (#310). Production-phone header-after remains open.
+results are explicitly confirmed (#310). Craig now also confirms original production
+Archive/Search sharp in both themes and keyboard normal. No AB4 owner criterion remains.
 No launch rewrite, sitting 4 or AA10c is included.
 
 ## How the repair works
@@ -41,7 +42,7 @@ local URI. No test/migration points at Neon and no live data or provider/push wa
 - Initial dark/light Search screenshots were inspected: existing solid themed Search
   surfaces, native-inset-plus-clearance geometry and intentional background dimming.
   Final actual-app sample-preview header/Search screenshots were also inspected below;
-  Native repaired sample after is now explicitly accepted below; production-phone after remains open; release proof is recorded in the 31 Oct section.
+  Native repaired sample and original production after are explicitly accepted below; release proof is recorded in the 31 Oct sections.
 
 One exploratory read used apps/e2e/tests instead of the actual specs directory; the
 path was corrected without changing any test. The earlier diagnostic-only --skip-domain
@@ -52,10 +53,10 @@ coverage-incomplete first API run and scratch-helper corrections.
 
 | Ledger criterion | Evidence / remaining owner work |
 |---|---|
-| Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, original installed app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. 31 Oct normal resume preserves Home. Repaired actual-app sample preview confirms all four theme/Search states, Home Screen: yes and normal keyboard; Approved re-add now cold-launches/resumes Home with no login/sync/notification problems. Record installation-refresh resolution; historical bundle/internal target uninspected. |
+| Affected mode/version/re-add/theme/Search/launch versus resume | iPhone 16 Pro Max/iOS 27.0.1, before-repair original app not re-added, dark/Search-closed image, same-phone Safari sharp, original Home → close → Archive confirmed. 31 Oct normal resume preserves Home. Repaired actual-app sample preview confirms all four theme/Search states, Home Screen: yes and normal keyboard; approved re-add now cold-launches/resumes Home with no login/sync/notification problems. Record installation-refresh resolution; historical bundle/internal target uninspected. |
 | Evidence and cause before approved repair | Isolated installed AB4-1 reproduced blur at all three positions; AB4-2 owner measurement 32px, then explicit Approve 32px repair (#308). Exact internal iOS compositor not inspected. |
-| Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; Native preview keyboard normal and original-app normal resume preserving Home are now owner-confirmed; production-after remains open. |
-| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch resolved by approved re-add; old bundle/internal target uninspected. Production-after remains open. Final seven-job PR CI passes at df6824a (41150581181); PR #122 is merged and exact API/web SHA/full readiness pass. Sample acceptance does not prove production-after. |
+| Preserve login/deep links/back/offline/resume/safe areas/focus/dimming | No navigation/auth/service-worker/status metadata changes. New computed geometry/focus cases and clean local regression results are below; native preview and original production keyboard normal, plus original-app normal resume preserving Home, are owner-confirmed; production-after is accepted. |
+| Actual app before/after, both themes/Search, full gates/CI/production | Original dark/Search-closed before captured. Repaired actual-app sample preview is owner-confirmed sharp in both themes with Search closed/open, Home Screen: yes and keyboard normal. Original launch resolved by approved re-add; old bundle/internal target uninspected. Original production after is now owner-confirmed sharp in all four Archive/Search/theme states, keyboard normal. Final seven-job PR CI passes at df6824a (41150581181), main df6824a/e04ba53 all seven jobs pass; PR #122 is merged and exact API/web SHA/full readiness pass. Production acceptance is an actual phone observation, not inferred from the sample. |
 
 ## Release boundary
 
@@ -401,3 +402,48 @@ and sitting 3 incomplete despite released code. Sitting 4 and AA10c have not sta
 Subsequent handoff-only commits require the same exact-head main CI and served-SHA check;
 record final runtime proof in the final response/CI metadata without creating an endless
 new documentation head solely to name its own SHA.
+
+## Original production acceptance and sitting 3 close-out, 31 Oct
+
+Craig explicitly replies **“yes”** to: original MCU reopened online, Archive and Search
+sharp in dark/light themes, Search keyboard normal. This closes the final production
+phone criterion on the affected iPhone 16 Pro Max/iOS 27.0.1. No sample/desktop/token test
+is substituted. Earlier approved re-add already resolved cold-launch Home, normal-resume
+Home and no login/sync/notification problems. No repeated test or further reinstall.
+
+Main CI [41151986202](https://github.com/CraigR973/mcu-app/actions/runs/41151986202) at
+df6824a and [41152283641](https://github.com/CraigR973/mcu-app/actions/runs/41152283641)
+at e04ba53 both complete successfully with exactly seven successful jobs. Neither E2E
+job is skipped. PR #122 merge remains df6824a; e04ba53 is handoff documentation only.
+All prior failures and corrections remain in this report; no expectation, timeout, retry,
+skip or safety guard was weakened. Main was clean and unchanged at e04ba53 before this
+close-out update. Final documents get a new exact-head seven-job main CI and exact API/
+web SHA/full-readiness check before the final handoff; runtime evidence/PR metadata will
+record that result without another commit merely to name its own SHA.
+
+Criterion verdicts:
+
+- Affected mode/baseline/launch/resume: met by actual iPhone report/screenshot, public
+  served-version readbacks, pre-change no-re-add history, controlled cold and normal
+  resume comparisons, and the explicitly approved re-add result. Historical old bundle/
+  internal target remains uninspected; no exact vendor mechanism is claimed.
+- Cause/repair checkpoint: met before code; installed-only top-edge effect reproduced
+  independently of MCU, positioning-only alternatives failed, 32px measured and exact
+  scope/cost approved. No launch repair invented after re-add resolved it.
+- Preservation: source leaves navigation/auth/worker/status metadata unchanged; full
+  regression gates cover login/deep links/back/offline, computed geometry/focus/overlap;
+  phone confirms resume, keyboard and no login/sync/notification problems.
+- Actual before/after and shipping: original dark/Search-closed blur screenshot and
+  always-visible report retained; sample then original production all four requested
+  after states are sharp with normal keyboard. Full clean local, exact PR/main CI,
+  production SHA/readiness and read-only bootstrap checks pass.
+
+The ledger is struck, architecture reconciled and owner actions updated. Craig’s AA1
+launch and W1 appearance/keyboard are now resolved; Mark’s device, W3 real camera scan,
+AB3 genuine push receipt, speech/live-assistant and AA10b/AA10c remain separate/open.
+Group AB sitting 3 is complete. Sitting 4 and AA10c have not started; no automatic next
+sitting is authorised.
+
+Fresh pre-close-out readback at 10:27 UTC again confirms exact e04ba53 API/web SHA, all
+readiness fields, manifest / and successful read-only login/served-bundle smoke with zero
+page errors/API writes. Final close-out documents do not change the product/test tree.

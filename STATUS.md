@@ -2,41 +2,44 @@
 
 ## Now
 
-**31 Oct: AB4 code deployed in PR #122 (`df6824a`); production-phone after checkpoint open.**
-The approved 32px header/Search clearance is live. At 00:47 UTC, API and web both serve
-exact df6824af2b23b5052b3df220637da4c1a1ebf35a, db ok and push/ai/ebay/tmdb/brave configured.
-Normal Git production builds are READY/SUCCESS on the intended Vercel/Railway services;
-no diagnostic/sample deployment was promoted and hosting/protection/env stayed unchanged.
-Read-only Chromium bootstrap smoke passes: login fields visible, actual served marker/CSS
-present, all captured JS/CSS 200, zero page errors or API writes. This is not phone proof.
+**31 Oct: Group AB sitting 3 complete — AB4 shipped in PR #122 (`df6824a`), production iPhone accepted.**
+Craig explicitly confirms yes to the original MCU reopened online: Archive and Search
+sharp in dark and light themes, Search keyboard normal. This closes production-after
+with affected-iPhone evidence, not desktop tests or the sample preview. Earlier native
+sample acceptance and approved re-add cold-launch Home / resumed Home / no login, sync
+or notification problems are also confirmed. No further phone test or reinstall is needed.
 
-Final exact-head PR CI 41150581181 passed all seven jobs at df6824a: API 2,549/zero skips,
-shared 159, web 736, Chromium 61, Firefox 60 + documented dictation skip, WebKit 59 + two
-existing documented limitations, jobs 6. The clean ten-command local gate/full local
-browser/jobs evidence and both corrected CI readiness races remain in the verification
-report. App source remains 4f2a12b; test source 97b36e4; all later changes are documents.
-Any subsequent handoff-only head still requires full exact-head CI and served-SHA checks.
+The approved 32px clearance sits below the top safe area in Apple Home Screen phone
+layouts with a positive inset; header and Search share it. It costs 32px of visible
+content, including approved older Apple layouts. Browser/Android/desktop/zero-inset get
+no extra gap. Header remains relative; no navigation, manifest/status metadata, auth,
+API/schema, data, hosting or credential change. Launch resolved by installation refresh;
+the old bundle/internal target was uninspected, so the exact iOS mechanism is unproven.
 
-Actual affected iPhone 16 Pro Max/iOS 27.0.1 sample-preview acceptance is confirmed:
-Archive/Search sharp in both themes, Home Screen: yes, keyboard normal. The approved
-original-MCU re-add (#309) now cold-launches Home, resumes Home, no login/sync/notification
-problems (#310). Launch is resolved by installation refresh, with no navigation repair;
-the old bundle/internal launcher target was not inspected. Do not ask those tests again.
+Full clean local gate passes: API 2,549/zero skips, shared 159, web 736, lint/types/build;
+local Chromium 61, Firefox 60 + documented dictation skip, jobs 6. Exact-head PR CI
+41150581181 and both main runs 41151986202 (df6824a), 41152283641 (e04ba53) pass all seven
+jobs, including WebKit 59 + two existing documented limitations. Both corrected CI
+readiness races and every tool/test failure remain in the verification report. App source
+4f2a12b, test source 97b36e4; later close-out commits change documentation only.
 
-Only the production original-MCU header-after check is requested: reopen online to load
-the release, Archive/Search sharp in both themes, normal Search keyboard. No further
-reinstall. Until observed, AB4 remains unstruck and sitting 3 incomplete despite released
-code and native sample acceptance. Sitting 4 and AA10c have not started. Existing AB3
-receipt, speech/live-assistant and AA10b/AA10c observations remain open. Evidence and all
-failure history: docs/reviews/ab4-verification-2026-10-30.md.
+API and web served exact handoff e04ba53 with db ok/all five readiness integrations and
+read-only login/bundle smoke passing. The final documentation head requires the same
+seven-job exact-head CI and served-SHA checks before handoff. Clean main is the close-out
+target; no diagnostic/sample deployment is promoted, no protection/env setting changes.
+
+AB4 is struck in the ledger; no AB4 owner acceptance remains. Sittings 4–5 are not
+authorised and AA10c has not started. Existing AB3 real-phone receipt, W3 camera scan,
+Mark's AA1 device, speech/live-assistant and AA10b/AA10c observations remain open.
+Evidence, acceptance matrix and full failure audit:
+docs/reviews/ab4-verification-2026-10-30.md.
 
 ## Next
 
-Stop at the production-phone checkpoint already requested: original MCU Home Screen
-icon reopened online, Archive and Search in dark/light themes, keyboard normal. Do not
-substitute login smoke, desktop geometry or the sample preview for this production-after
-observation. On acceptance, record it and complete the remaining AB4 documentation/ledger
-close-out with fresh exact-head gates/readiness; do not start sitting 4 or AA10c.
+Stop: Group AB sitting 3 is complete. Do not start sitting 4 or AA10c. A later explicit
+go may authorise sitting 4 (AB5's cinema feasibility report), retaining its source/live-
+request/coverage/cost checkpoints. Preserve unrelated owner actions; no automatic next
+sitting or fresh iPhone reinstall/test is implied by AB4 acceptance.
 
 AA10c remains the separate Group AA sitting 6 from 25 Nov. AA10b's 1–2 Nov final-total
 comparison and existing real-phone/live-assistant owner observations remain open.
@@ -431,6 +434,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **31 Oct — AB4 production iPhone accepted; sitting 3 complete:** Craig confirms original MCU Archive/Search sharp in both themes and keyboard normal after loading the production repair. Re-add launch/resume/no-problem acceptance already confirmed; no launch code repair. PR #122 df6824a, final PR CI and main df6824a/e04ba53 all seven jobs pass, exact API/web SHA/full readiness and read-only bootstrap smoke verified. Ledger/architecture/owner records closed; final close-out docs retain exact-head CI/readiness requirement. Sitting 4 and AA10c not started.
 
 - **31 Oct — AB4 code released, production-phone after open:** exact-head PR CI 41150581181 passes all seven jobs at df6824a; PR #122 fast-forward merged/pushed to main, auto-builds ready. API/web exact merged SHA and all readiness fields pass at 00:47 UTC; read-only login/bundle smoke passes without API writes. Native sample preview and re-add launch/resume already accepted. Requested production Archive/Search/both themes/keyboard; AB4 remains unstruck until observed. No sitting 4 or AA10c.
 

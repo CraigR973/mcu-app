@@ -4743,19 +4743,16 @@ Full local gate/E2E, seven-job exact-head PR/main CI and exact production API/we
 readiness passed. Live category/preference/grant readback preserves withheld credentials.
 Genuine later Mark addition and Craig's real-phone receipt remain owner acceptance.
 Evidence: `docs/reviews/ab3-verification-2026-10-29.md`.
-**Sitting 3 authorised 29 Oct (#307); AB4 code deployed 31 Oct, production-phone checkpoint open.**
-Affected iPhone 16 Pro Max/iOS 27.0.1: original installed blur/Safari sharp, isolated
-installed Relative/Sticky/Fixed all blurry, then owner-measured 32px clearance. The exact
-header/Search repair was approved (#308) and implemented. Actual repaired-app installed
-sample preview is owner-confirmed sharp for Archive/Search in both themes with normal
-keyboard and Home Screen: yes. The separately approved original-app re-add (#309) now
-cold-launches Home, resumes Home and has no login/sync/notification problems (#310).
-Record installation-refresh launch resolution; original bundle/internal target uninspected,
-no navigation repair. Final seven-job PR CI 41150581181 passes at df6824a; PR #122 merged
-and normal Git production builds serve exact API/web df6824a with full readiness.
-Read-only login/bundle smoke passes. Production iPhone header-after/both themes/Search/
-keyboard requested; AB4 stays unstruck and sitting 3 incomplete until observed.
-Evidence: `docs/reviews/ab4-verification-2026-10-30.md` and the device/repair reports.
+**Sitting 3 complete, 31 Oct: AB4 shipped PR #122 (`df6824a`), production iPhone accepted.**
+Affected iPhone 16 Pro Max/iOS 27.0.1 reproduced installed blur independently of MCU;
+owner measured 32px and approved the exact header/Search scope (#308). Native sample
+preview then original production MCU are confirmed sharp in Archive/Search/both themes,
+keyboard normal. Approved re-add (#309/#310) cold-launches/resumes Home without login,
+sync or notification problems; launch resolved through installation refresh, no navigation
+repair. Old bundle/internal target was not inspected. Full local/seven-job PR CI
+41150581181, main CI 41151986202 and 41152283641, exact API/web SHA/full readiness and
+read-only bootstrap smoke pass. Subsequent close-out docs retain exact-head verification.
+Evidence and failure audit: `docs/reviews/ab4-verification-2026-10-30.md`.
 Sittings 4–5 and AA10c remain unauthorised.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
@@ -4776,7 +4773,7 @@ strictest batch sets its sitting's effort. Resolve an unavailable model with Cra
 |---|---|---|
 | 1 | ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`), complete; separate race repair PR #120 (`bf0eb36`); both owner picks approved before AB2 build | Opus 5 `high` / GPT-5.6 Sol High |
 | 2 | ~~AB3~~ (`5cfa467`), complete; all four pre-build picks approved, real-phone receipt remains owner acceptance | Opus 5 `high` / GPT-5.6 Sol High |
-| 3 | AB4 installed-iPhone launch/top bar; reproduce before repair, owner verifies result | Opus 5 `high` / GPT-5.6 Sol High |
+| 3 | ~~AB4~~ (`df6824a`), complete 31 Oct; native production header/Search/both themes/keyboard accepted; approved re-add cold-launch/resume Home | Opus 5 `high` / GPT-5.6 Sol High |
 | 4 | AB5 cinema source feasibility; report only, stop for source/coverage/cost picks | Opus 5 `high` / GPT-5.6 Sol High |
 | 5 | AB6 cinema ingestion → AB7 discovery screen; conditional on AB5 and a separately approved build contract | Opus 5 `xhigh` / GPT-5.6 Sol Extra High |
 
@@ -4791,7 +4788,7 @@ Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
 | ~~AB1~~ | ~~Actionable attention and correct links (snag 5), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #118, merge `ad2c992`; current actionable identification, read-time reconciliation, precise destinations/guidance and mutation/replay refresh. Full local/PR/main gates and exact API/web SHA/readiness; live read-only queue/doubt comparison agrees at zero. |
 | ~~AB2~~ | ~~Collection meanings, watched coverage and breakdown (snags 2, 3, 7), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #119, merge `c187ed7`; approved Summary cards, exact owned-watch count, older-response Unavailable, profile cache isolation and mutation/replay refresh. Full local/PR/main gates and API/web exact SHA/readiness; live read-only comparison agrees for both people. |
 | ~~AB3~~ | ~~Mark's new-title notifications (snag 4), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #121, merge `5cfa467`; approved Mark-only first-owned-title trigger, default-on preference, atomic outbox/receipt and retry/concurrency safety. Full local/PR/main gates and exact API/web SHA/full readiness; live credential-safe grants/category/preferences verified. Genuine later add/real-phone receipt remains owner acceptance. |
-| AB4 | iPhone launch and top bar (snags 1, 6), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | **code deployed; production-phone checkpoint open** | PR #122, df6824a: full local/seven-job exact-head PR CI 41150581181 and exact API/web SHA/full readiness pass. Native actual-app sample preview sharp for Archive/Search/both themes, keyboard normal (#308). Approved original-MCU re-add cold-launches/resumes Home without problems (#309/#310); no launch code repair. Production-phone header-after requested; do not strike until observed. |
+| ~~AB4~~ | ~~iPhone launch and top bar (snags 1, 6), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped 31 Oct** | PR #122, merge df6824a: owner-approved measured 32px header/Search gap, native original production Archive/Search sharp in both themes and keyboard normal. Approved re-add restores cold launch Home and preserves Home resume without problems; no navigation repair. Full local/seven-job PR/main CI, exact API/web SHA/full readiness and read-only bootstrap smoke pass. All AB4 owner checks met; old bundle/internal launcher mechanism uninspected. |
 | AB5 | Nine-cinema source feasibility (snag 8, report), 🟡 | Opus 5 `high` / GPT-5.6 Sol High | planned | — |
 | AB6 | Cinema programme ingestion (conditional), 🔴 provisional | Opus 5 `xhigh` / GPT-5.6 Sol Extra High | planned | — |
 | AB7 | Local-cinema discovery screen (conditional), 🟡 provisional | Sonnet 5 `high` / GPT-5.6 Terra High | planned | — |
@@ -4867,7 +4864,13 @@ and Craig's real-phone receipt remain owner acceptance; no fabricated production
 - Full gate/E2E/exact-head CI and production SHA/readiness. A genuine later addition and
   real-phone receipt remain owner acceptance; no production test film or fabricated push.
 
-### AB4 — Installed-iPhone launch and blurred top bar
+### ~~AB4 — Installed-iPhone launch and blurred top bar~~ 🟡 **shipped 31 Oct (`df6824a`, PR #122)**
+
+**Acceptance met:** affected-device reproduction/measurement before approved repair; native
+original production Archive/Search sharp in both themes, keyboard normal. Approved re-add
+restores Home cold launch and preserves Home resume; no launch repair. Full gates, exact
+PR/main CI and production SHA/readiness pass. Old installed bundle/internal target remains
+uninspected historical evidence, not a claimed vendor mechanism. No AB4 owner check remains.
 
 - Establish affected phone/browser mode, served version, re-add history, theme, Search
   state and cold launch versus page resumption. Live `/` manifest and opaque CSS already
@@ -4996,7 +4999,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **X · 5** | X11 → X12 | mid tier · high | mid tier · High | Interface work with clear criteria |
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
 | **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → ~~AA9~~ (`aecdf8d`) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 5 complete, 28 Oct: AA3 PR #115 (`1c73d90`) and AA9 PR #116 (`aecdf8d`), each with its own review stop, owner picks, build plan and full close-out. Final PR/merge seven-job CI and exact production API/web SHA/full readiness passed. AA9's complete repair record is in its verification report; real-phone/live-AI observations remain open. No sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
-| **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: ~~AB3~~ (`5cfa467`) · 3: AB4 · 4: AB5 report · 5: AB6 → AB7, conditional | By sitting: Group AB table | By sitting: Group AB table | **Sitting 1 authorised 28 Oct: AB1 shipped in PR #118 (`ad2c992`), all gates/readiness passed; AB2 shipped PR #119 (`c187ed7`) after both owner picks, full gates and production proof. Sitting 1 complete after approved separate movie-night race repair PR #120 (`bf0eb36`), full gates/production proof. Sitting 2 complete: AB3 PR #121 (`5cfa467`) after all four picks (#306), full gates/production proof; real-phone receipt remains owner acceptance. Sitting 3 authorised 29 Oct (#307), AB4 native blur reproduced, exact 32px repair approved (#308) and code deployed PR #122 (df6824a), full gates/readiness; sample appearance accepted, launch resolved by approved re-add (#309/#310). Production-phone after checkpoint remains open; sitting 3 incomplete. Sittings 4–5 remain unauthorised.** Home corrections share a sitting; notification semantics and installed-device diagnosis have separate owner stops. Cinema sources/coverage/costs must be approved before an ingestion/screen build. Each sitting separately authorised; one branch/PR per implementation batch. AA10c and existing valuation/device checkpoints stay outside this run. |
+| **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: ~~AB3~~ (`5cfa467`) · 3: ~~AB4~~ (`df6824a`) · 4: AB5 report · 5: AB6 → AB7, conditional | By sitting: Group AB table | By sitting: Group AB table | **Sitting 1 authorised 28 Oct: AB1 shipped in PR #118 (`ad2c992`), all gates/readiness passed; AB2 shipped PR #119 (`c187ed7`) after both owner picks, full gates and production proof. Sitting 1 complete after approved separate movie-night race repair PR #120 (`bf0eb36`), full gates/production proof. Sitting 2 complete: AB3 PR #121 (`5cfa467`) after all four picks (#306), full gates/production proof; real-phone receipt remains owner acceptance. Sitting 3 complete 31 Oct: AB4 PR #122 (df6824a), full gates/readiness and native production Archive/Search/both themes/keyboard accepted. Launch resolves through approved re-add (#309/#310), no navigation repair. Sittings 4–5 remain unauthorised.** Home corrections share a sitting; notification semantics and installed-device diagnosis have separate owner stops. Cinema sources/coverage/costs must be approved before an ingestion/screen build. Each sitting separately authorised; one branch/PR per implementation batch. AA10c and existing valuation/device checkpoints stay outside this run. |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
