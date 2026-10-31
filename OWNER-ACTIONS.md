@@ -33,10 +33,11 @@ conversation still maps onto this file.*
   normal Search keyboard. Those installed preview observations are accepted; do not
   repeat them. On 31 Oct Craig confirms normal resume preserves Home, and while online
   reports no pending/blocked changes, unfinished forms or Move tray contents. Original
-  installed version/production after and Archive-launch cause remain open. The concrete
-  removal/re-add comparison awaits a separate owner decision, with PIN/push/local-cache
-  costs stated; keep MCU installed until approved. No account/collection deletion or
-  Safari website-data clearing is in scope.
+  installed version/production after and Archive-launch cause remain open. Craig now
+  explicitly approves one original-MCU removal/re-add comparison (#309), with PIN/push/
+  local-cache costs stated. Owner cold-launch/resume results and notification restoration
+  remain pending. Stop for any new local work before removal. No account/collection
+  deletion or Safari website-data clearing is in scope.
   Preview details and verification:
   `docs/reviews/ab4-verification-2026-10-30.md`.
   Evidence/access-link refresh: `docs/reviews/ab4-device-checkpoint-2026-10-29.md`.

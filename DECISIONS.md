@@ -6566,3 +6566,18 @@ contemporaneous.
      acceptance of the actual app's light/Search/after appearance, an Archive-launch
      rewrite, removal/re-add of the original installation, hosting/credentials, sitting 4
      or AA10c. Full gates and real-device acceptance remain distinct and mandatory.
+
+
+309. **One original-MCU removal/re-add comparison is approved (31 Oct).**
+     Craig explicitly chose “Approve removal/re-add comparison” after confirming normal
+     resume preserves Home and, while online, no pending/Needs attention changes,
+     unfinished Add/edit forms or Move tray contents. Exact scope: one original MCU
+     Home Screen app removal/re-add from https://mcu-app-fawn.vercel.app/ in Safari to
+     compare cold launch and normal resume. Costs stated before approval: 3–5 minutes,
+     possible PIN sign-in and notification re-enablement, local cache/settings loss.
+     Stop if new local work appears; keep the separate Header Check preview. No server
+     account/collection deletion, Safari website-data clearing, hosting change, forced
+     Home navigation, production header deployment, sitting 4 or AA10c is authorised.
+     Approval is not an observed result: retain the open launch cause, installed-version
+     limitation and production-after acceptance until evidence. Procedure and conditional
+     conclusions: docs/reviews/ab4-repair-proposal-2026-10-30.md, 31 Oct section.

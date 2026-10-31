@@ -291,3 +291,20 @@ This evidence-only update changes no product code or tests. Verified remote head
 97b36e4 with all seven CI jobs green in 41044309324; local documentation is held for a
 final push/exact-head CI after owner checkpoints. AB4 remains unshipped and unstruck;
 sitting 4 and AA10c have not started.
+
+## Original-installation comparison approved, 31 Oct
+
+Craig chooses “Approve removal/re-add comparison” at the exact separate owner checkpoint.
+Decision #309 records the production-root, original-installation-only scope, previously
+clear online/local-work report, 3–5 minute cost, possible PIN sign-in, notification
+re-enablement and local cache/settings loss. No approval repeat is needed. The phone
+procedure is ready in the repair proposal; owner first-page/cold-launch/normal-resume
+results and any login/sync/notification problems remain pending. Stop if new pending/
+blocked work, unfinished forms or Move tray items appear before removal.
+
+No app code, tests, navigation, manifest, account/collection data or hosting changes in
+this turn. No removal/re-add outcome is claimed on the owner's behalf. No test rerun is
+needed for this documentation-only approval record; git diff --check is the applicable
+check. Review source/CI remains 97b36e4 / seven-job run 41044309324, with accumulated local
+documentation held for final exact-head verification after the remaining checkpoint.
+AB4 stays unstruck and unshipped; sitting 4 and AA10c have not started.

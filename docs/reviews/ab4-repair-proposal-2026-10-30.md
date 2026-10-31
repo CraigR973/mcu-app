@@ -104,7 +104,7 @@ and isolated diagnostic sources. No full app gate or new deployment is claimed f
 proposal. Detailed observations and both diagnostic sources/deployments remain in
 ab4-device-checkpoint-2026-10-29.md and ab4-diagnostic-2026-10-29/.
 
-## Original-installation comparison, 31 Oct — awaiting owner decision
+## Original-installation comparison, 31 Oct — approved (#309), results pending
 
 Craig confirms the original MCU preserves Home on normal resume after briefly switching
 apps without swiping MCU away. He separately reports no pending/Needs attention changes,
@@ -144,3 +144,12 @@ as an installation-refresh resolution; do not invent a code repair or claim the 
 internal iOS mechanism was inspected. If it still cold-launches Archive, retain the open
 launch criterion and investigate the new evidence. The production header remains unrepaired
 at this point; the installed sample preview's accepted sharpness is a separate result.
+
+### Owner decision, 31 Oct
+
+Craig explicitly chose “Approve removal/re-add comparison” in response to the exact
+one-time scope and 3–5 minute/PIN/push/local-cache costs above. This resolves the separate
+approval gate (#309); do not request it again. The earlier online/no-local-work report
+stands, with a stop if new work appears. The owner performs the phone steps above and
+reports first settled page, cold launch, normal resume and any login/sync/notification
+problem. No result or production header acceptance follows from approval alone.
