@@ -2,16 +2,22 @@
 
 ## Now
 
-**1 Nov: sandbox-preserving VM proposal prepared; new hosting approval open (#320).**
-Craig's “continue” is being taken as the recommended planning/research route after #319,
-not sandbox-off or a new-host go. One 30-minute Vercel Sandbox VM is proposed: existing
-MCU project, iad1, 1 CPU/2 GB, non-root sandbox-on browser, no ports/credentials/persistence.
-Internet-denied launch check precedes any four-venue ODEON source work. Compute estimate
-US$0.0852006 plus transfer/tax; account plan/quota and sandbox compatibility unverified.
-Connected reads confirm project/team only. No VM created or hosting setting changed.
-Plan/cost/stop contract: docs/reviews/ab-cinema-vm-proposal-2026-11-01.md.
-AB6/AB7/full contract/split remain unapproved; all nine and Film first retained.
-No application implementation, production recheck, PR/push or other sitting this session.
+**1 Nov: approved VM launches Chromium; a probe check defect stops before source work (#321).**
+Craig's “proceed” approved #320's one-off Vercel Sandbox experiment. One VM, iad1/1 CPU/
+2 GB/non-root UID 1000/Ubuntu 26.04/Node v24.22.1/Playwright 1.64.1. Dependency installation
+succeeds; internet denied and read back before one browser launch. Captured status confirms
+Layer 1 Namespace, PID/network namespaces Yes and seccomp-BPF Yes. My predicate expected
+the wrong field label and returned false; subsequent renderer-command/local rendering and
+all cinema source checks were not reached. This is a probe defect, not a runtime/source refusal.
+One creation/one launch/zero cinema requests/zero rows. VM stopped after 4m13.490s; persistence
+false, no public route/snapshot/running project VM. Local guard absent/upload archive removed.
+Hobby account active, no upgrade/new credential scope; invoice/remaining quota unqueried.
+Corrected parser and negative/missing/duplicate evidence tests pass offline (eight checks total).
+No second VM or retry. Result/audit: docs/reviews/ab-cinema-vm-result-2026-11-01.md and JSON.
+API still c63bc06, db ok/all five integrations configured; no Vercel app deployment during test.
+No app implementation, migration, production write, recurring job, push/PR or other sitting.
+Fresh approval is required for the proposed same-limits replacement VM; full AB6/AB7 contract/
+split remain unapproved. All nine and Film first retained; four-venue source access still untested.
 
 **31 Oct: approved isolated hosting experiment reaches a browser-startup block (#318/#319).**
 Three sandbox-enabled Chromium launches failed before a browser context or cinema request.
@@ -62,10 +68,11 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop at the new hosting checkpoint in docs/reviews/ab-cinema-vm-proposal-2026-11-01.md.
-Recommend its one-off sandbox-preserving Vercel VM experiment; no creation is authorised yet.
-The earlier Railway test is finished and cleaned up; no fourth Railway attempt or
-sandbox-off fallback is approved. No new credential, subscription or plan upgrade is implied.
+Stop at the replacement hosting checkpoint in docs/reviews/ab-cinema-vm-result-2026-11-01.md.
+Recommend one same-limits VM with corrected status recognition and the tested image digest;
+the one-creation approval was used, so no replacement/resume/retry is authorised yet.
+Both earlier hosting experiments are stopped/cleaned up. No fourth Railway attempt,
+sandbox-off fallback, new credential scope, subscription or plan upgrade is approved.
 Then approve/revise the full source/schema/API/job/refresh/retention/year/navigation/security
 plan and proposed AB6a/AB6b split before application implementation. The proposed Railway
 browser stage is on hold. Three implementation PRs remain proposed, not accepted ledger
@@ -464,6 +471,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **1 Nov — approved Vercel VM experiment (#321):** Chromium launches with affirmative
+  namespace/seccomp status, but my check expects the wrong label and ends before source work.
+  One VM/one launch/zero cinema requests, stopped after 4m13.490s, no snapshot/running VM.
+  Corrected parser plus negative regressions pass; eight offline checks total. API c63bc06/
+  readiness unchanged, no app deployment. Replacement VM needs a new go; no AB6/AB7/AA10c.
 
 - **1 Nov — compatible-runtime planning (#320):** researched a sandbox-preserving Vercel
   VM option after “continue”; exact one-off scope, cost and cleanup proposal saved. Existing

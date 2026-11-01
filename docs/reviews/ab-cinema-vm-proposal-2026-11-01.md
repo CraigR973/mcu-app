@@ -2,6 +2,13 @@
 
 1 Nov 2026. Proposal only; not a hosting or application approval.
 
+**Later 1 Nov (#321): Craig's “proceed” approved this one-off hosting experiment.** It
+finished after one creation/one browser launch: Chromium's namespace/seccomp status was
+affirmative, but a probe label-recognition defect stopped before cinema requests. VM stopped,
+no snapshot/running probe; correction tested offline, no replacement authorised. Current
+result and exact repeat checkpoint: `ab-cinema-vm-result-2026-11-01.md` and JSON. Preparation
+and uncertainty statements below describe the pre-run planning snapshot, not current results.
+
 Craig's “continue” follows the recommendation to retain Chromium sandboxing and research
 a compatible runtime. No sandbox-off selection is inferred. This report completes that
 planning step; #318's temporary Railway approval is spent and does not cover Vercel Sandbox.

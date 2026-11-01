@@ -4799,6 +4799,13 @@ Compute estimate US$0.0852006 plus transfer/tax; account plan/quota and compatib
 unverified. Existing project/team confirmed read-only; no VM created. Exact new hosting
 checkpoint: docs/reviews/ab-cinema-vm-proposal-2026-11-01.md. No implementation row/split
 is accepted; AB6/AB7 still stop for full contract approval. AA10c/other sittings excluded.
+**1 Nov one-off VM approved/completed (#321):** “proceed” authorises the exact proposed
+experiment only. One VM/one launch confirms namespace/seccomp status, but a probe label
+predicate defect stops before any cinema request. VM stopped after 4m13.490s, no snapshot/
+public route/running VM. Corrected guard/negative regressions pass offline (eight checks).
+No replacement VM or source retry; exact fresh hosting checkpoint and result:
+docs/reviews/ab-cinema-vm-result-2026-11-01.md and JSON. Full app contract/AB6 split/AB6/AB7
+remain unapproved. No other sitting follows; no source availability verdict from probe failure.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

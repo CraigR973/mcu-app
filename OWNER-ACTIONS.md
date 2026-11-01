@@ -75,9 +75,15 @@ conversation still maps onto this file.*
   one VM/30m/1 CPU/2 GB/iad1, no credentials/ports/persistence; deny-all sandbox launch check
   before four-venue source work. Compute estimate US$0.0852006 plus transfer/tax; current
   account plan/quota and compatibility unverified. Existing project/team confirmed only.
-  New hosting approval remains required; no creation, new credential or upgrade approved.
-  Review/approve only the bounded experiment in
-  docs/reviews/ab-cinema-vm-proposal-2026-11-01.md; source permission is already granted.
+  The proposal was subsequently approved below; no new credential scope or upgrade included.
+  **VM experiment approved/completed (#321):** Craig's “proceed” covered that exact one-off
+  test. One VM/one launch: namespace/seccomp status affirmative, but my probe expected the
+  wrong label and stopped before cinema requests. No source result. VM stopped after
+  4m13.490s, persistence false, no snapshot/public route/running VM; guard/upload archive gone.
+  Corrected predicate rejects negative/missing/duplicate evidence; eight offline checks pass.
+  No second VM/retry. Fresh hosting go needed for one same-limits replacement with corrected
+  guard/tested image digest; exact proposal in docs/reviews/ab-cinema-vm-result-2026-11-01.md.
+  This is not another source-permission request. Full build contract/split remain unapproved.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

@@ -1,0 +1,73 @@
+{
+  "decision": 321,
+  "ownerAuthorisation": "proceed after exact one-off Vercel VM proposal",
+  "experiment": "completed_one_creation_no_retry",
+  "name": "mcu-ab-odeon-vm-1793529844381",
+  "sessionId": "sbx_GwuRTA7SlBumBBLv2z6zErCVEkxY",
+  "requestedAt": 1793529845657,
+  "stoppedAt": 1793530099176,
+  "durationMs": 253490,
+  "resources": {
+    "vcpus": 1,
+    "memoryMB": 2048,
+    "region": "iad1",
+    "architecture": "amd64"
+  },
+  "image": "vercel/sandbox/node@sha256:6927dfce823159a574dc3b87fa327cde48533c7498b92492c31179a5477c9fd6",
+  "node": "v24.22.1",
+  "playwright": "1.64.1",
+  "browserInstall": "Chrome for Testing 156.0.8078.4, Playwright Chromium build 1248; installed successfully. Runtime browser.version() was not emitted before check failure.",
+  "accountPlan": "hobby",
+  "credentialVariablesPresent": false,
+  "nonRootUid": 1000,
+  "namespaceAndSeccompStatus": {
+    "layer1": "Namespace",
+    "pidNamespaces": "Yes",
+    "networkNamespaces": "Yes",
+    "seccompBpf": "Yes",
+    "seccompTsync": "Yes"
+  },
+  "preflight": {
+    "exitCode": 1,
+    "error": "Namespace/seccomp evidence absent or ambiguous",
+    "cause": "Probe expected Namespace Sandbox Yes; Chromium reports Layer 1 Sandbox Namespace and separate PID/network namespace Yes fields",
+    "rendererCommandAndLocalRenderingChecks": "not reached",
+    "launches": 1,
+    "cinemaRequests": 0,
+    "screeningRows": 0
+  },
+  "usage": {
+    "activeCpuMs": 23946,
+    "ingressBytes": 324254196,
+    "egressBytes": 510206,
+    "traffic": "Dependency setup only; source phase not enabled",
+    "actualInvoice": "not queried; existing Hobby account, no plan upgrade"
+  },
+  "cleanup": {
+    "status": "stopped",
+    "persistent": false,
+    "networkPolicy": "deny-all",
+    "publicRoutes": 0,
+    "snapshots": 0,
+    "runningSandboxCount": 0,
+    "deadlineGuard": "terminated and absent",
+    "temporaryUploadArchive": "removed",
+    "providerInternalErasure": "not independently verified"
+  },
+  "offlineRegressionTests": 8,
+  "production": {
+    "apiSha": "c63bc06a7c7d317783b03a3379eb7b2b53852728",
+    "ready": "db ok and all five integrations configured",
+    "newVercelAppDeploymentsDuringExperiment": 0
+  },
+  "replacementExperimentApproved": false,
+  "applicationImplementationApproved": false,
+  "localEvidenceSha256": {
+    "worker/probe.cjs": "468aaf54093c8c4ea1186c47ad5e81eb9c8ea8afaa02414efec08d4687945633",
+    "worker/preflight.cjs": "275d528e7c017ca71da42114a770cb7adc7e1344aaa5a89488ad3f79bf5c1680",
+    "worker/preflight.test.cjs": "5e4502f456902aaeb57240f5c87a047ca8233338c946904cdae193549a850fc7",
+    "worker/package-lock.json": "2adc4683f6b2e8d55fbcf39d1a7679fe52d298e074722f1107e6a74a1ba800ad",
+    "sandbox-status.txt": "ce79ff14c85761b6be5adc93e04e1af54bf0558f95d59d60d329775a9699a6b3",
+    "vm-tool-results.json": "c43474f4a71589185c49845ddd32e02006937e10cedff119084d71cc712a4f39"
+  }
+}

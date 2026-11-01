@@ -6748,3 +6748,27 @@ contemporaneous.
      docs/reviews/ab-cinema-vm-proposal-2026-11-01.md. Source-read permission persists;
      the open decision is new hosting. Full ingestion/build contract, AB6 split, recurring
      operation, AA10c and other sittings remain outside this step.
+
+321. **One-off Vercel VM approved; valid sandbox evidence misread by the probe, no replacement implied (1 Nov).**
+     Craig's “proceed” approves #320's exact one-off hosting proposal, not an app build.
+     One iad1 VM/1 CPU/2 GB/non-root/30m cap/no ports/persistence/mounts/app credentials.
+     Existing CLI OAuth login refreshed normally after cached reads returned 403; no new
+     credential scope, account, environment pull or plan upgrade. Active Hobby account.
+     The connector does expose command/stop/file operations under session names; corrected
+     prior discovery and used connected tools, with an independent local SDK deadline guard.
+     Ubuntu 26.04/Node v24.22.1/Playwright 1.64.1; pinned resolved image retained in audit.
+     Libraries/browser install successfully. Firewall deny-all read back before one browser
+     launch. Chromium reports Layer 1 Namespace, PID/network namespaces Yes and seccomp-BPF
+     Yes. My predicate incorrectly expects Namespace Sandbox Yes, fails closed and stops.
+     This is a probe defect, not a Vercel runtime failure or ODEON refusal. Later renderer-
+     command/local-rendering checks and all source work remain unrun: zero cinema requests/
+     rows. One VM stopped after 4m13.490s; no running project VM/public route/snapshot;
+     guard/upload archive removed. API c63bc06/readiness unchanged, no Vercel app deployment.
+     Corrected status recognition still requires affirmative layer-one/PID/network/seccomp
+     fields and rejects negative/missing/duplicate evidence. Eight offline checks pass;
+     no application gate changed/run. The one-creation/no-retry approval is spent: propose
+     one same-limits replacement with corrected guard and tested image digest, but wait for
+     a fresh hosting go before creating it. Actual invoice/remaining quota unqueried; no paid
+     upgrade. Result/renewal contract: docs/reviews/ab-cinema-vm-result-2026-11-01.md and JSON.
+     Full ingestion/discovery contract, proposed split, recurring hosting, AB6/AB7, AA10c
+     and other sittings remain outside this experiment.
