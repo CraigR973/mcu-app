@@ -15,6 +15,15 @@ supplied capture/import workflow, before revising this contract. All nine/Film f
 intended; no route/split/build/recurring host is approved. Current result and audit limits:
 `ab-cinema-vm-source-result-2026-11-01.md` and JSON. Earlier experiment text is historical.
 
+**1 Nov research direction (#323):** owner delegates feed-access research. UK Cinema API
+Lite is the first coverage/evaluation enquiry candidate, not an approved source or budget.
+If it proves suitable, prefer one HTTP API for all nine; assess a hybrid only against actual
+coverage without losing either independent. Lite format omissions, mostly-nightly upstream
+collection versus this draft's six-hour polls/eight-hour freshness, and cancellation-time
+cache/fixture/backup deletion require explicit re-planning. No recurring browser VM or
+unchanged adapter split should be assumed. Unsent enquiry and comparison:
+`ab-cinema-feed-research-2026-11-01.md`. Contact, evaluation and full build gates remain open.
+
 ## Evidence-driven change to the plan
 
 Five venues have structured/HTML programme responses in the existing Railway Linux runtime:

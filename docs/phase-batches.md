@@ -4814,6 +4814,14 @@ post-stop process exit status retained. Source availability failed in this teste
 not universally. Stop/re-plan the four ODEON source/coverage/cost route before full contract/
 AB6 split/AB6/AB7 approval. No identical VM retry or provider/account/payment implied.
 Current result and checkpoint: docs/reviews/ab-cinema-vm-source-result-2026-11-01.md and JSON.
+**1 Nov feed research chosen (#323):** owner delegates the planning direction; research
+feed access, no manual or paid provider acceptance. Six candidates compared; UK Cinema API
+Lite is the first enquiry candidate (£9.99/month displayed, ten cinemas), not a verified
+nine-venue source. Formats omitted; trial billing/VAT/retention/upstream freshness unresolved.
+Earlier £0 subscription pick unchanged. Unsent supplier enquiry/.eml prepared; stop before
+contact/account/trial/key/payment/live feed sampling, then exact full contract approval.
+Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md. No batch/split/source scope change;
+AB6/AB7 remain unstarted, AA10c/other sittings excluded.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

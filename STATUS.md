@@ -2,6 +2,23 @@
 
 ## Now
 
+**1 Nov: feed research selected; UK Cinema API Lite is the first enquiry candidate (#323).**
+Craig said “proceed with what you think is best” after the feed/manual planning choice.
+Proceed with feed-access research to preserve automated all-nine updates, not manual capture.
+Six candidates compared using public documentation. Lite displays £9.99/month/up to ten
+cinemas and advertises ODEON; exact nine-venue coverage/IDs/API access remain unproved.
+Lite omits formats/accessibility/prices; UK Pro displays £49/month if those fields are needed.
+Trial billing/VAT and cache/fixture/backup rights need confirmation. Provider collection is
+mostly nightly; API retrieval time cannot establish upstream freshness or prompt cancellations.
+No subscription/source/provider/build choice is accepted; the earlier £0 subscription pick
+is not waived. Enquiry and ready-to-open unsent email prepared, with nine exact venue names.
+Public recipient hey@filmchase.com belongs to the same publisher; no message was sent.
+No email-sending connector is available. Explicit contact instruction/owner delivery is next,
+before any account/trial/key/live feed sample/payment, then full source/build contract approval.
+Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md; draft enquiry alongside it.
+No VM/provider API programme request/app/hosting/credential/data change, push/PR or other sitting.
+Documentation/source/draft checks apply; no application gate or production recheck this step.
+
 **1 Nov: replacement VM passes launch check; all four ODEON venue URLs return 403 (#322).**
 Craig's “approve” covered one same-limits replacement. Eight offline checks pass, then the
 complete remote preflight passes: non-root sandbox-enabled Chromium, namespace/seccomp,
@@ -70,11 +87,12 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop at the source/coverage/cost checkpoint after four HTTP 403 results in
-docs/reviews/ab-cinema-vm-source-result-2026-11-01.md. Re-plan an obtainable source for the
-four ODEON programmes or an explicitly accepted owner-supplied capture/import workflow;
-neither is selected/proved. No identical hosting retry, sandbox-off fallback, new account/
-credential scope, operator contact, trial or payment follows. All temporary VMs are stopped.
+Next checkpoint: supplier contact/owner delivery of the unsent enquiry in
+docs/reviews/ab-cinema-feed-enquiry-2026-11-01.md (.eml alongside). Feed research is the
+chosen planning direction; no provider/paid plan/manual workflow is accepted. Recommend
+confirming UK Cinema API's actual nine-venue coverage and evaluation terms before a trial.
+No contact/account/key/trial/payment or fresh programme request follows from research go.
+No identical hosting retry/sandbox-off fallback; all temporary VMs remain stopped.
 Then approve/revise the full source/schema/API/job/refresh/retention/year/navigation/security
 plan and proposed AB6a/AB6b split before application implementation. The proposed Railway
 browser stage is on hold. Three implementation PRs remain proposed, not accepted ledger
@@ -473,6 +491,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **1 Nov — feed research direction (#323):** public documentation compared across six
+  candidates; recommend UK Cinema API Lite coverage/evaluation enquiry before signup.
+  Price £9.99/month, branch coverage unproved, format omissions/trial billing/retention/
+  upstream freshness unresolved. Unsent Markdown/.eml enquiry ready; no contact/account/
+  trial/payment/API programme request/VM/app change. Stop at contact/source/build checkpoints.
 
 - **1 Nov — approved replacement reaches source refusals (#322):** full remote sandbox/
   renderer/local-rendering preflight passes, then four ODEON venue GETs return 403, zero

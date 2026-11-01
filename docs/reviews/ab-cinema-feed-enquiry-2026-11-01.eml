@@ -1,0 +1,59 @@
+To: Film Chase / UK Cinema API support <hey@filmchase.com>
+Subject: Nine Glasgow-area cinemas =?utf-8?b?4oCU?= coverage and Lite
+ evaluation for a private app
+X-Unsent: 1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hi Karl,
+
+I'm evaluating UK Cinema API for a private, two-person film app. I'm consider=
+ing Lite,
+advertised at =C2=A39.99/month, and want to confirm suitability before openin=
+g an account or trial.
+
+The intended venues are:
+
+- ODEON Kilmarnock; ODEON Luxe Glasgow Quay; ODEON Braehead; ODEON Luxe East =
+Kilbride.
+- Cineworld Glasgow Silverburn; Everyman Glasgow at Princes Square; Vue Glasg=
+ow St Enoch.
+- Glasgow Film Theatre; the independent IMAX at Glasgow Science Centre.
+
+Could you confirm:
+
+1. Which of these nine you currently cover, their API cinema IDs, the availab=
+le future
+   horizon and any gaps in repertory, reissue or special-event programmes? Pl=
+ease keep
+   Science Centre IMAX distinct from Cineworld Silverburn.
+2. What Lite supplies for film/showing identity, original release year versus=
+ reissue date,
+   TMDB/IMDb matching, booking links, date/timezone offsets, upstream collect=
+ion timestamps
+   and withdrawals/cancellations? A small redacted example and field document=
+ation would
+   help. I understand formats/accessibility are omitted from Lite; please con=
+firm the limits.
+3. The total monthly price including any VAT, trial card/auto-renewal/cancell=
+ation terms,
+   and whether a bounded evaluation can be provided without a paid commitment=
+ or locking
+   an incorrect cinema selection for a month?
+4. Whether the private app can display/cache data during evaluation, and how =
+the published
+   post-subscription deletion requirement applies to test fixtures and backup=
+s?
+5. Whether the live API supports an ordinary authenticated server-side HTTPS =
+client without
+   a browser/challenge? An earlier unauthenticated public archive GET returne=
+d 403 in our
+   environment; we have not tested authenticated API access.
+
+Please reply with coverage and evaluation terms; we will decide separately ab=
+out an account,
+trial or subscription.
+
+Thanks,
+Craig

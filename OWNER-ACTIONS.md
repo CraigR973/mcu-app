@@ -93,6 +93,16 @@ conversation still maps onto this file.*
   an owner-supplied capture/import workflow before full build approval. Neither route is
   selected/proved; no operator contact, new account/trial/payment or identical VM retry follows.
   Exact result/re-plan boundary: docs/reviews/ab-cinema-vm-source-result-2026-11-01.md.
+  **Feed research direction chosen (#323):** “proceed with what you think is best” selects
+  feed-access research, not a paid plan/manual workflow/build. Six candidates compared;
+  recommend UK Cinema API Lite enquiry (displayed £9.99/month, ten cinemas) before signup.
+  Four ODEON/all-nine coverage unproved; format omissions, trial billing/VAT, retention/
+  fixture/backup rights and upstream freshness remain open. Earlier £0 budget is not waived.
+  **Owner action:** explicitly authorise contact or send the prepared enquiry to public
+  support hey@filmchase.com. No email-sending connector is available here. Reviewable draft:
+  docs/reviews/ab-cinema-feed-enquiry-2026-11-01.md and .eml. No message sent. No account/
+  trial/key/payment/programme API request follows. Supplier reply precedes exact evaluation
+  approval, then full source/build go. Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

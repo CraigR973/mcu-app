@@ -1,0 +1,57 @@
+{
+  "decision": 323,
+  "date": "2026-11-01",
+  "authorisation": "Feed-access research/planning after owner delegated the choice",
+  "suppliers": [
+    {
+      "supplier": "UK Cinema API",
+      "coverage": "https://uk-cinema-api.co.uk/",
+      "pricing": "https://uk-cinema-api.co.uk/pricing",
+      "terms": "https://uk-cinema-api.co.uk/terms",
+      "status": "first enquiry candidate, exact nine-venue coverage unproved"
+    },
+    {
+      "supplier": "MovieGlu",
+      "pricing": "https://movieglu.com/pricing/",
+      "status": "quote-based reserve"
+    },
+    {
+      "supplier": "International Showtimes",
+      "product": "https://www.internationalshowtimes.com/",
+      "status": "trial advertised, offer/coverage unproved"
+    },
+    {
+      "supplier": "CinemaData",
+      "pricing": "https://cinemadata.uk/pricing",
+      "terms": "https://cinemadata.uk/terms",
+      "status": "licensing/service terms not published on inspected terms page"
+    },
+    {
+      "supplier": "amodb",
+      "coverage": "https://amodb.dev/cinema-api/united-kingdom/",
+      "status": "ODEON omitted from inspected older dated UK table, no current API test"
+    },
+    {
+      "supplier": "API Cinema",
+      "product": "https://api-cinema.com/en",
+      "status": "France/US documented, UK/ODEON not evidenced"
+    }
+  ],
+  "programmeApiRequests": 0,
+  "archiveRetries": 0,
+  "messagesSent": 0,
+  "accountsCreated": 0,
+  "trialsStarted": 0,
+  "payments": 0,
+  "hostingChanges": 0,
+  "applicationChanges": 0,
+  "fullApplicationGate": "not run; documentation-only research",
+  "contactCheckpoint": "explicit contact instruction or owner delivery; no email-sending connector available",
+  "draftRecipient": "hey@filmchase.com",
+  "draftVerifiedNineVenues": true,
+  "hashes": {
+    "ab-cinema-feed-research-2026-11-01.md": "9012bee52faeb2d95efdb6d72c845730f8c58e19ee259caaa58cdc5610b2cfb7",
+    "ab-cinema-feed-enquiry-2026-11-01.md": "f4c570fe23319cf3d053b50b9345343cd99515773377df5e0fde598427974d6f",
+    "ab-cinema-feed-enquiry-2026-11-01.eml": "515fa2863976d48aa6aca112adba6fd9006b19bde9b5e5602abece5be128328b"
+  }
+}

@@ -6797,3 +6797,21 @@ contemporaneous.
      or owner-supplied workflow is selected by this approval. All nine/Film first remain
      intended. AA10c and other sittings excluded. Current result/checkpoint:
      docs/reviews/ab-cinema-vm-source-result-2026-11-01.md and JSON.
+
+323. **Choose feed-access research; enquire before any trial or budget change (1 Nov).**
+     Craig says “proceed with what you think is best” after the feed/manual planning choice.
+     Select feed research to preserve automated nine-venue discovery. Six public-document
+     candidates compared; UK Cinema API Lite is the first enquiry recommendation, not a
+     selected paid source: displayed £9.99/month/ten cinemas, ODEON chain claim, no exact
+     nine-venue/API access specimen. No operator contact, account, trial, key, payment or
+     programme API request made. Earlier £0 subscription preference remains unchanged.
+     Lite omits formats/accessibility/prices; Pro's displayed £49/month is not adopted.
+     Trial/card/renewal/VAT and cache/fixture/backup rights need confirmation before signup.
+     Mostly-nightly collection means six-hour API polling cannot prove upstream freshness
+     or prompt cancellations; re-plan the draft's freshness/retention and adapter split from
+     evidence. Prefer one API only if all nine are verified; otherwise assess a hybrid
+     without silently omitting either independent. Public support hey@filmchase.com belongs
+     to the same publisher. Reviewable unsent enquiry and .eml prepared; no email-sending
+     connector available. Explicit contact instruction/owner delivery is the next checkpoint,
+     then an exact evaluation contract, then full source/build approval. No VM/app/hosting/
+     credential/data change or other sitting. Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md.
