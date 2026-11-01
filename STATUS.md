@@ -2,22 +2,25 @@
 
 ## Now
 
-**1 Nov: feed research selected; UK Cinema API Lite is the first enquiry candidate (#323).**
-Craig said “proceed with what you think is best” after the feed/manual planning choice.
-Proceed with feed-access research to preserve automated all-nine updates, not manual capture.
-Six candidates compared using public documentation. Lite displays £9.99/month/up to ten
-cinemas and advertises ODEON; exact nine-venue coverage/IDs/API access remain unproved.
-Lite omits formats/accessibility/prices; UK Pro displays £49/month if those fields are needed.
-Trial billing/VAT and cache/fixture/backup rights need confirmation. Provider collection is
-mostly nightly; API retrieval time cannot establish upstream freshness or prompt cancellations.
-No subscription/source/provider/build choice is accepted; the earlier £0 subscription pick
-is not waived. Enquiry and ready-to-open unsent email prepared, with nine exact venue names.
-Public recipient hey@filmchase.com belongs to the same publisher; no message was sent.
-No email-sending connector is available. Explicit contact instruction/owner delivery is next,
-before any account/trial/key/live feed sample/payment, then full source/build contract approval.
-Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md; draft enquiry alongside it.
-No VM/provider API programme request/app/hosting/credential/data change, push/PR or other sitting.
-Documentation/source/draft checks apply; no application gate or production recheck this step.
+**1 Nov: £0 requirement reaffirmed; free ODEON source works on the existing host (#324).**
+Craig requires this to be free. The paid-provider recommendation and unsent enquiry (#323)
+are parked; no supplier contact/account/trial/payment is next. CinemaTimes public HTML
+returned 869 dated screenings across Quay 269/Braehead 262/East Kilbride 201/Kilmarnock 137,
+1–7 Nov, both locally (16:40 UTC) and from the existing Railway API runtime (16:42 UTC).
+All four body/programme hashes match. No browser VM/new host/install/config/data/app change.
+JSON-LD covers only 50 rows/page; HTML supplies all 869. Kilmarnock's 34 IDs/times match the
+31 Oct official specimen for 1 Nov; two titles differ, including a double bill reduced to
+one title. Identity conflicts stay unresolved. Publisher says twice-daily sync; update label
+Sunday 06:19 is not a dated/offset upstream timestamp. Freshness/cancellation/full horizon,
+original year and sustained access remain unproved. Other free candidate What’s On returned
+four 429s, once per venue, no retry/bypass. First SSH command had a quoting SyntaxError
+before source requests; corrected transport exits 0. Offline specimen checks pass.
+Propose original AB6 → AB7, one branch/PR each, six HTTP adapter families; withdraw the
+browser-dependent AB6a/AB6b split recommendation. All nine/Film first retained. Complete
+revised source/build/recurring execution contract remains an owner checkpoint, not waived.
+Report/audit: docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
+No subscription/new hosting/recurring spend approved. Existing host billing is unmeasured,
+not guaranteed free compute. Full app gate/readiness not run this research step. No push/PR.
 
 **1 Nov: replacement VM passes launch check; all four ODEON venue URLs return 403 (#322).**
 Craig's “approve” covered one same-limits replacement. Eight offline checks pass, then the
@@ -87,16 +90,14 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Next checkpoint: supplier contact/owner delivery of the unsent enquiry in
-docs/reviews/ab-cinema-feed-enquiry-2026-11-01.md (.eml alongside). Feed research is the
-chosen planning direction; no provider/paid plan/manual workflow is accepted. Recommend
-confirming UK Cinema API's actual nine-venue coverage and evaluation terms before a trial.
-No contact/account/key/trial/payment or fresh programme request follows from research go.
-No identical hosting retry/sandbox-off fallback; all temporary VMs remain stopped.
-Then approve/revise the full source/schema/API/job/refresh/retention/year/navigation/security
-plan and proposed AB6a/AB6b split before application implementation. The proposed Railway
-browser stage is on hold. Three implementation PRs remain proposed, not accepted ledger
-entries. Retain all nine and Film first; no reduced-coverage build follows.
+Next checkpoint: revise and review the complete £0 source/build contract using the free
+CinemaTimes HTTP specimens for four ODEON venues and the earlier five direct-source
+specimens. No paid enquiry/trial, identical browser-host retry or reduced venue list.
+Validate source freshness/title conflicts, full discovery/horizon, original-year and DST/
+cancellation semantics; then approve the concrete schema/API/job/retention/navigation and
+recurring execution/cost plan before AB6 → AB7. Recommend the original two batches, one
+branch/PR each; the browser-dependent three-PR split is no longer recommended. No recurring
+host/schedule/data write is authorised by source tests. See the #324 report for exact limits.
 No parked links-screen build, archive retry, AA10c or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
@@ -491,6 +492,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **1 Nov — free source works in the app runtime (#324):** Craig reaffirms £0; paid enquiry
+  parked. CinemaTimes yields 869 rows/1–7 Nov across all four ODEON venues, identical local/
+  Railway specimens. 34 Kilmarnock official IDs/times match; two title conflicts include a
+  double bill. Eight successful GETs plus four What’s On 429s, no retries. No new hosting/
+  app/data/config/subscription; full contract/freshness/identity/recurring-cost gates remain.
+  Offline audit checks pass; full application/production checks not run. No push/PR.
 
 - **1 Nov — feed research direction (#323):** public documentation compared across six
   candidates; recommend UK Cinema API Lite coverage/evaluation enquiry before signup.

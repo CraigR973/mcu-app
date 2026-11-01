@@ -4822,6 +4822,17 @@ Earlier £0 subscription pick unchanged. Unsent supplier enquiry/.eml prepared; 
 contact/account/trial/key/payment/live feed sampling, then exact full contract approval.
 Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md. No batch/split/source scope change;
 AB6/AB7 remain unstarted, AA10c/other sittings excluded.
+**1 Nov £0 reaffirmed/free source obtained (#324):** paid-provider enquiry (#323) parked.
+CinemaTimes dated HTML returns 869 rows/1–7 Nov across all four ODEON venues, with identical
+local/existing-Railway body and programme hashes. No new browser/runtime/hosting/app/data
+change. JSON-LD capped at 50/page; parse HTML. Kilmarnock's 34 official IDs/times agree;
+two title conflicts include a double bill. Upstream twice-daily sync, full horizon, original
+year, cancellation/DST and sustained access remain explicit gaps. What’s On four 429s,
+no retries. Propose original AB6 → AB7, one branch/PR each; withdraw browser-dependent
+AB6a/AB6b recommendation. Full revised source/build/recurring execution/cost contract is
+still an owner checkpoint. £0 subscription, no new hosting/paid enquiry/trial/payment.
+Report/audit: docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
+AB6/AB7 remain unstarted; no AA10c or other sitting.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.

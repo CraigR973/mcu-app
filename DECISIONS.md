@@ -6815,3 +6815,25 @@ contemporaneous.
      connector available. Explicit contact instruction/owner delivery is the next checkpoint,
      then an exact evaluation contract, then full source/build approval. No VM/app/hosting/
      credential/data change or other sitting. Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md.
+
+324. **Require £0 data; test free public listings before any paid route (1 Nov).**
+     Craig says “I want this to be free, we must be able to get the data”. Paid API enquiry
+     recommendation #323 and unsent email are parked; no contact/account/trial/payment.
+     Bounded anonymous public-page research yields 869 screenings from all four ODEON
+     venues on CinemaTimes, 1–7 Nov. Four local GETs and four GETs from the existing Railway
+     API return 200 with equal body/programme hashes. No new host/browser/install/variable/
+     credential/app/data change. Initial SSH quoting SyntaxError occurs before any source
+     request; corrected transport exits 0. What’s On four distinct venue GETs return 429;
+     no retry/bypass. JSON-LD exposes only 50 events/page; dated HTML supplies the full sample.
+     All 200 JSON-LD starts agree with HTML. Kilmarnock's 34 IDs/times match the earlier
+     official specimen; two title conflicts include a double bill reduced to one title.
+     Do not conflate showing identity with film identity. Upstream twice-daily collection,
+     unqualified update label, full horizon, cancellation/DST/original year and sustained
+     access remain explicit limits. Owner test permission is not operator consent; recurring
+     reuse conditions remain open. Recommend five direct-source families plus CinemaTimes
+     ODEON HTML, original AB6 → AB7/one branch/PR each; withdraw the browser-dependent split
+     recommendation. Complete revised source/build/recurring-cost contract still needs
+     approval. No new paid hosting/recurring spend; existing compute billing unmeasured.
+     All nine and Film first retained; no reduced coverage/links-only fallback. No full
+     app gate/production recheck/push/PR/AA10c/other sitting this research step. Evidence:
+     docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.

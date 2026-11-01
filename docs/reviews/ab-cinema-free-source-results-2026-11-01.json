@@ -1,0 +1,1263 @@
+{
+  "decision": 324,
+  "date": "2026-11-01",
+  "ownerConstraint": "£0 data subscription; no paid alternative, signup or new hosting enabled",
+  "scope": "bounded anonymous public-page source research, not app ingestion",
+  "localRequests": [
+    {
+      "name": "cinematimes-quay",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-glasgow-springfield-quay/",
+      "requestedAtUtc": "2026-11-01T16:40:12.776386+00:00",
+      "status": 200,
+      "bytes": 311387,
+      "sha256": "b1db6299ad5e213cf12296fa12c7eb3de108e33f52a7ecee47d7c7799bfb1e90",
+      "headers": {
+        "date": "Sun, 01 Nov 2026 16:40:13 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "10203",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Sun, 01 Nov 2026 10:32:47 GMT"
+      },
+      "title": "ODEON Glasgow Quay, Glasgow — Today's Showtimes & Tickets | CinemaTimes",
+      "h1": [
+        "ODEON Glasgow Quay"
+      ],
+      "scripts": [
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 415
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 1020
+        },
+        {
+          "type": null,
+          "id": "plausible-script",
+          "src": "https://plausible.io/js/script.pageview-props.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2045
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/Analytics.astro_astro_type_script_index_0_lang.CwnU8Y05.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 557
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 616
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1179
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1141
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 56762
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2431
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopNav.astro_astro_type_script_index_0_lang.B_NNQJ07.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopSidebar.astro_astro_type_script_index_0_lang.D23G4m2J.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationPill.astro_astro_type_script_index_0_lang.CrZrgY_W.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 4637
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DateStrip.astro_astro_type_script_index_0_lang.LU0KA_ap.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 5147
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 425
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/NewsletterSignup.astro_astro_type_script_index_0_lang.ArQHNv9a.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 816
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 130
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 3462
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationModal.astro_astro_type_script_index_0_lang.6qOLKp-o.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/WelcomeLocationPopup.astro_astro_type_script_index_0_lang.CC4KM42F.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/SiteSearch.astro_astro_type_script_index_0_lang.ZgT3HZm5.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/json",
+          "id": "link-rewriter-data",
+          "src": null,
+          "bytes": 837
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 1037
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/index.astro_astro_type_script_index_0_lang.CB1MSu_-.js",
+          "bytes": 0
+        }
+      ],
+      "dateElements": 0,
+      "odeonLinks": 272,
+      "headings": [
+        "Sun 1 Nov",
+        "Mon 2 Nov",
+        "Tue 3 Nov",
+        "Wed 4 Nov",
+        "Thu 5 Nov",
+        "Fri 6 Nov",
+        "Sat 7 Nov",
+        "A clear view of the week in Glasgow",
+        "Screens",
+        "Nearby",
+        "Last 30 days at ODEON Glasgow Quay",
+        "Change location"
+      ]
+    },
+    {
+      "name": "cinematimes-braehead",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-braehead-renfrew/",
+      "requestedAtUtc": "2026-11-01T16:40:14.457111+00:00",
+      "status": 200,
+      "bytes": 309903,
+      "sha256": "1fdbc5e0e4355c282855c585a7aa2c49b081f22faf23fe788f1ec68497b3cc8b",
+      "headers": {
+        "date": "Sun, 01 Nov 2026 16:40:14 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "23030",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Sun, 01 Nov 2026 10:16:24 GMT"
+      },
+      "title": "ODEON Braehead, Renfrew — Today's Showtimes & Tickets | CinemaTimes",
+      "h1": [
+        "ODEON Braehead"
+      ],
+      "scripts": [
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 415
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 1020
+        },
+        {
+          "type": null,
+          "id": "plausible-script",
+          "src": "https://plausible.io/js/script.pageview-props.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2045
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/Analytics.astro_astro_type_script_index_0_lang.CwnU8Y05.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 557
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 604
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1119
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1034
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 57564
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2431
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopNav.astro_astro_type_script_index_0_lang.B_NNQJ07.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopSidebar.astro_astro_type_script_index_0_lang.D23G4m2J.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationPill.astro_astro_type_script_index_0_lang.CrZrgY_W.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 4637
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DateStrip.astro_astro_type_script_index_0_lang.LU0KA_ap.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 5147
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 425
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/NewsletterSignup.astro_astro_type_script_index_0_lang.ArQHNv9a.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 816
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 130
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 3462
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationModal.astro_astro_type_script_index_0_lang.6qOLKp-o.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/WelcomeLocationPopup.astro_astro_type_script_index_0_lang.CC4KM42F.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/SiteSearch.astro_astro_type_script_index_0_lang.ZgT3HZm5.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/json",
+          "id": "link-rewriter-data",
+          "src": null,
+          "bytes": 837
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 1037
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/index.astro_astro_type_script_index_0_lang.CB1MSu_-.js",
+          "bytes": 0
+        }
+      ],
+      "dateElements": 0,
+      "odeonLinks": 265,
+      "headings": [
+        "Sun 1 Nov",
+        "Mon 2 Nov",
+        "Tue 3 Nov",
+        "Wed 4 Nov",
+        "Thu 5 Nov",
+        "Fri 6 Nov",
+        "Sat 7 Nov",
+        "A clear view of the week in Glasgow",
+        "Screens",
+        "Nearby",
+        "Last 30 days at ODEON Braehead",
+        "Change location"
+      ]
+    },
+    {
+      "name": "cinematimes-east-kilbride",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-east-kilbride-glasgow/",
+      "requestedAtUtc": "2026-11-01T16:40:15.995806+00:00",
+      "status": 200,
+      "bytes": 268014,
+      "sha256": "30ca060a4e5027223c17b551c88df70a477d639f8dd0d79e8ec771016ab9b3f7",
+      "headers": {
+        "date": "Sun, 01 Nov 2026 16:40:16 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "31",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Sun, 01 Nov 2026 16:39:44 GMT"
+      },
+      "title": "ODEON East Kilbride, east kilbride — Today's Showtimes & Tickets | CinemaTimes",
+      "h1": [
+        "ODEON East Kilbride"
+      ],
+      "scripts": [
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 415
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 1020
+        },
+        {
+          "type": null,
+          "id": "plausible-script",
+          "src": "https://plausible.io/js/script.pageview-props.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2045
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/Analytics.astro_astro_type_script_index_0_lang.CwnU8Y05.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 557
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 614
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1159
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1154
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 58908
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2431
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopNav.astro_astro_type_script_index_0_lang.B_NNQJ07.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopSidebar.astro_astro_type_script_index_0_lang.D23G4m2J.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationPill.astro_astro_type_script_index_0_lang.CrZrgY_W.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 4637
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DateStrip.astro_astro_type_script_index_0_lang.LU0KA_ap.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 5147
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 425
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/NewsletterSignup.astro_astro_type_script_index_0_lang.ArQHNv9a.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 816
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 130
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 3462
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationModal.astro_astro_type_script_index_0_lang.6qOLKp-o.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/WelcomeLocationPopup.astro_astro_type_script_index_0_lang.CC4KM42F.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/SiteSearch.astro_astro_type_script_index_0_lang.ZgT3HZm5.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/json",
+          "id": "link-rewriter-data",
+          "src": null,
+          "bytes": 837
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 1037
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/index.astro_astro_type_script_index_0_lang.CB1MSu_-.js",
+          "bytes": 0
+        }
+      ],
+      "dateElements": 0,
+      "odeonLinks": 204,
+      "headings": [
+        "Sun 1 Nov",
+        "Mon 2 Nov",
+        "Tue 3 Nov",
+        "Wed 4 Nov",
+        "Thu 5 Nov",
+        "Fri 6 Nov",
+        "Sat 7 Nov",
+        "A clear view of the week in Glasgow",
+        "Screens",
+        "Nearby",
+        "Last 30 days at ODEON East Kilbride",
+        "Change location"
+      ]
+    },
+    {
+      "name": "cinematimes-kilmarnock",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-kilmarnock/",
+      "requestedAtUtc": "2026-11-01T16:40:17.306431+00:00",
+      "status": 200,
+      "bytes": 235543,
+      "sha256": "f036b8828900ebaa402cce9203f2df6e7740f2bb39b14f3d44e9923f997881e4",
+      "headers": {
+        "date": "Sun, 01 Nov 2026 16:40:17 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "32",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Sun, 01 Nov 2026 16:39:44 GMT"
+      },
+      "title": "ODEON Kilmarnock, Kilmarnock — Today's Showtimes & Tickets | CinemaTimes",
+      "h1": [
+        "ODEON Kilmarnock"
+      ],
+      "scripts": [
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 415
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 1020
+        },
+        {
+          "type": null,
+          "id": "plausible-script",
+          "src": "https://plausible.io/js/script.pageview-props.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2045
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/Analytics.astro_astro_type_script_index_0_lang.CwnU8Y05.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 557
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 600
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1079
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 1014
+        },
+        {
+          "type": "application/ld+json",
+          "id": null,
+          "src": null,
+          "bytes": 58351
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 2431
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopNav.astro_astro_type_script_index_0_lang.B_NNQJ07.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DesktopSidebar.astro_astro_type_script_index_0_lang.D23G4m2J.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationPill.astro_astro_type_script_index_0_lang.CrZrgY_W.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 4637
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/DateStrip.astro_astro_type_script_index_0_lang.LU0KA_ap.js",
+          "bytes": 0
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 5147
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 425
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/NewsletterSignup.astro_astro_type_script_index_0_lang.ArQHNv9a.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 816
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 130
+        },
+        {
+          "type": null,
+          "id": null,
+          "src": null,
+          "bytes": 3462
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/LocationModal.astro_astro_type_script_index_0_lang.6qOLKp-o.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/WelcomeLocationPopup.astro_astro_type_script_index_0_lang.CC4KM42F.js",
+          "bytes": 0
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/SiteSearch.astro_astro_type_script_index_0_lang.ZgT3HZm5.js",
+          "bytes": 0
+        },
+        {
+          "type": "application/json",
+          "id": "link-rewriter-data",
+          "src": null,
+          "bytes": 837
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": null,
+          "bytes": 1037
+        },
+        {
+          "type": "module",
+          "id": null,
+          "src": "/_astro/index.astro_astro_type_script_index_0_lang.CB1MSu_-.js",
+          "bytes": 0
+        }
+      ],
+      "dateElements": 0,
+      "odeonLinks": 140,
+      "headings": [
+        "Sun 1 Nov",
+        "Mon 2 Nov",
+        "Tue 3 Nov",
+        "Wed 4 Nov",
+        "Thu 5 Nov",
+        "Fri 6 Nov",
+        "Sat 7 Nov",
+        "A clear view of the week in Glasgow",
+        "Screens",
+        "Nearby",
+        "Last 30 days at ODEON Kilmarnock",
+        "Change location"
+      ]
+    },
+    {
+      "name": "whats-on-quay",
+      "url": "https://whats-on.co.uk/cinema/glasgow-quay",
+      "requestedAtUtc": "2026-11-01T16:40:18.583353+00:00",
+      "status": 429,
+      "bytes": 40671,
+      "sha256": "a1c62d20a0645b82932b126c0947f2863ba08e58af65efb2907843b5034a7b3b",
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Sun, 01 Nov 2026 16:40:18 GMT"
+      }
+    },
+    {
+      "name": "whats-on-braehead",
+      "url": "https://whats-on.co.uk/cinema/braehead",
+      "requestedAtUtc": "2026-11-01T16:40:19.717684+00:00",
+      "status": 429,
+      "bytes": 40671,
+      "sha256": "e605283ee3a80752024f40f320dcdafae2ec5a22934b1ef50c1c8f68200fd3ee",
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Sun, 01 Nov 2026 16:40:19 GMT"
+      }
+    },
+    {
+      "name": "whats-on-east-kilbride",
+      "url": "https://whats-on.co.uk/cinema/east-kilbride",
+      "requestedAtUtc": "2026-11-01T16:40:20.747204+00:00",
+      "status": 429,
+      "bytes": 40671,
+      "sha256": "c82258fb697ba9f35de4eca40043f21487f0bf3c19725af1bd1e4cb29a18a17a",
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Sun, 01 Nov 2026 16:40:20 GMT"
+      }
+    },
+    {
+      "name": "whats-on-kilmarnock",
+      "url": "https://whats-on.co.uk/cinema/kilmarnock",
+      "requestedAtUtc": "2026-11-01T16:40:21.776146+00:00",
+      "status": 429,
+      "bytes": 40671,
+      "sha256": "462ebbeecc529605a7bd672dec00a299d9c8fd63bcdda77a6b705bf564676c4a",
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Sun, 01 Nov 2026 16:40:21 GMT"
+      }
+    }
+  ],
+  "localProgrammes": [
+    {
+      "venue": "ODEON Braehead",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "King's Inch Road",
+        "addressLocality": "Renfrew",
+        "addressRegion": "Scotland - Renfrewshire",
+        "postalCode": "PA4 8XU",
+        "addressCountry": "GB"
+      },
+      "officialVenueUrl": "https://www.odeon.co.uk/cinemas/braehead/154/",
+      "rowCount": 262,
+      "uniqueIds": 262,
+      "films": 36,
+      "dates": {
+        "2026-11-01": 58,
+        "2026-11-02": 47,
+        "2026-11-03": 47,
+        "2026-11-04": 47,
+        "2026-11-05": 46,
+        "2026-11-06": 7,
+        "2026-11-07": 10
+      },
+      "futureRowsAtParse": 226,
+      "jsonLdEvents": 50,
+      "jsonLdMatchedDom": 50,
+      "sourceUpdatedLabels": [
+        "Times from ODEON, updated Sunday 06:19"
+      ],
+      "normalisedSha256": "704cedb3edcbef26250dd81141082283a5e9bbbbd67cdad8a2e4b92348ed9bec",
+      "name": "cinematimes-braehead"
+    },
+    {
+      "venue": "ODEON East Kilbride",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Rothesay Street",
+        "addressLocality": "east kilbride",
+        "addressRegion": "Scotland - South Lanarkshire",
+        "postalCode": "G74 1PG",
+        "addressCountry": "GB"
+      },
+      "officialVenueUrl": "https://www.odeon.co.uk/cinemas/east_kilbride/33/",
+      "rowCount": 201,
+      "uniqueIds": 201,
+      "films": 28,
+      "dates": {
+        "2026-11-01": 46,
+        "2026-11-02": 35,
+        "2026-11-03": 36,
+        "2026-11-04": 35,
+        "2026-11-05": 35,
+        "2026-11-06": 7,
+        "2026-11-07": 7
+      },
+      "futureRowsAtParse": 172,
+      "jsonLdEvents": 50,
+      "jsonLdMatchedDom": 50,
+      "sourceUpdatedLabels": [
+        "Times from ODEON, updated Sunday 06:19"
+      ],
+      "normalisedSha256": "65ee91cd39ce82747322096495a743f252d4a6d318fb03537fb2ca501174894d",
+      "name": "cinematimes-east-kilbride"
+    },
+    {
+      "venue": "ODEON Kilmarnock",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Queen's Drive",
+        "addressLocality": "Kilmarnock",
+        "addressRegion": "Scotland - East Ayrshire",
+        "postalCode": "KA1 3XF",
+        "addressCountry": "GB"
+      },
+      "officialVenueUrl": "https://www.odeon.co.uk/cinemas/kilmarnock/101/",
+      "rowCount": 137,
+      "uniqueIds": 137,
+      "films": 20,
+      "dates": {
+        "2026-11-01": 34,
+        "2026-11-02": 20,
+        "2026-11-03": 27,
+        "2026-11-04": 21,
+        "2026-11-05": 20,
+        "2026-11-06": 7,
+        "2026-11-07": 8
+      },
+      "futureRowsAtParse": 117,
+      "jsonLdEvents": 50,
+      "jsonLdMatchedDom": 50,
+      "sourceUpdatedLabels": [
+        "Times from ODEON, updated Sunday 06:19"
+      ],
+      "normalisedSha256": "a10fb5e4483828eb6108a50e49505b1bd1ded0269b27a16e8d97591dc30638a0",
+      "name": "cinematimes-kilmarnock"
+    },
+    {
+      "venue": "ODEON Glasgow Quay",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Paisley Road",
+        "addressLocality": "Glasgow",
+        "addressRegion": "Scotland - Glasgow City",
+        "postalCode": "G5 8NP",
+        "addressCountry": "GB"
+      },
+      "officialVenueUrl": "https://www.odeon.co.uk/cinemas/glasgow_quay/120/",
+      "rowCount": 269,
+      "uniqueIds": 269,
+      "films": 37,
+      "dates": {
+        "2026-11-01": 60,
+        "2026-11-02": 47,
+        "2026-11-03": 48,
+        "2026-11-04": 46,
+        "2026-11-05": 42,
+        "2026-11-06": 13,
+        "2026-11-07": 13
+      },
+      "futureRowsAtParse": 232,
+      "jsonLdEvents": 50,
+      "jsonLdMatchedDom": 50,
+      "sourceUpdatedLabels": [
+        "Times from ODEON, updated Sunday 06:19"
+      ],
+      "normalisedSha256": "de827bfe3929430ceaebec038406b8adf694538fa8d1f1e0a290a1119d309dbb",
+      "name": "cinematimes-quay"
+    }
+  ],
+  "existingRailwayRuntime": {
+    "firstTransportAttempt": {
+      "exitCode": 1,
+      "error": "CLI forwarded shell quote literally; Python SyntaxError before any source request"
+    },
+    "correctedTransport": {
+      "exitCode": 0,
+      "method": "source-only Python over existing authorised SSH, script encoded as hex in command; no remote file/install/app import/environment read/DB/configuration change"
+    },
+    "requests": [
+      {
+        "name": "cinematimes-quay",
+        "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-glasgow-springfield-quay/",
+        "requestedAtUtc": "2026-11-01T16:42:31.598419+00:00",
+        "status": 200,
+        "bytes": 311387,
+        "sha256": "b1db6299ad5e213cf12296fa12c7eb3de108e33f52a7ecee47d7c7799bfb1e90",
+        "headers": {
+          "date": "Sun, 01 Nov 2026 16:42:31 GMT",
+          "content-type": "text/html; charset=utf-8",
+          "age": "166",
+          "cache-control": "public, max-age=14400, must-revalidate",
+          "last-modified": "Sun, 01 Nov 2026 16:39:44 GMT"
+        },
+        "programme": {
+          "venue": "ODEON Glasgow Quay",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Paisley Road",
+            "addressLocality": "Glasgow",
+            "addressRegion": "Scotland - Glasgow City",
+            "postalCode": "G5 8NP",
+            "addressCountry": "GB"
+          },
+          "officialVenueUrl": "https://www.odeon.co.uk/cinemas/glasgow_quay/120/",
+          "rowCount": 269,
+          "uniqueIds": 269,
+          "films": 37,
+          "dates": {
+            "2026-11-01": 60,
+            "2026-11-02": 47,
+            "2026-11-03": 48,
+            "2026-11-04": 46,
+            "2026-11-05": 42,
+            "2026-11-06": 13,
+            "2026-11-07": 13
+          },
+          "futureRowsAtParse": 232,
+          "jsonLdEvents": 50,
+          "jsonLdMatchedDom": 50,
+          "sourceUpdatedLabels": [
+            "Times from ODEON, updated Sunday 06:19"
+          ],
+          "normalisedSha256": "de827bfe3929430ceaebec038406b8adf694538fa8d1f1e0a290a1119d309dbb"
+        }
+      },
+      {
+        "name": "cinematimes-braehead",
+        "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-braehead-renfrew/",
+        "requestedAtUtc": "2026-11-01T16:42:32.815605+00:00",
+        "status": 200,
+        "bytes": 309903,
+        "sha256": "1fdbc5e0e4355c282855c585a7aa2c49b081f22faf23fe788f1ec68497b3cc8b",
+        "headers": {
+          "date": "Sun, 01 Nov 2026 16:42:32 GMT",
+          "content-type": "text/html; charset=utf-8",
+          "age": "167",
+          "cache-control": "public, max-age=14400, must-revalidate",
+          "last-modified": "Sun, 01 Nov 2026 16:39:44 GMT"
+        },
+        "programme": {
+          "venue": "ODEON Braehead",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "King's Inch Road",
+            "addressLocality": "Renfrew",
+            "addressRegion": "Scotland - Renfrewshire",
+            "postalCode": "PA4 8XU",
+            "addressCountry": "GB"
+          },
+          "officialVenueUrl": "https://www.odeon.co.uk/cinemas/braehead/154/",
+          "rowCount": 262,
+          "uniqueIds": 262,
+          "films": 36,
+          "dates": {
+            "2026-11-01": 58,
+            "2026-11-02": 47,
+            "2026-11-03": 47,
+            "2026-11-04": 47,
+            "2026-11-05": 46,
+            "2026-11-06": 7,
+            "2026-11-07": 10
+          },
+          "futureRowsAtParse": 226,
+          "jsonLdEvents": 50,
+          "jsonLdMatchedDom": 50,
+          "sourceUpdatedLabels": [
+            "Times from ODEON, updated Sunday 06:19"
+          ],
+          "normalisedSha256": "704cedb3edcbef26250dd81141082283a5e9bbbbd67cdad8a2e4b92348ed9bec"
+        }
+      },
+      {
+        "name": "cinematimes-east-kilbride",
+        "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-east-kilbride-glasgow/",
+        "requestedAtUtc": "2026-11-01T16:42:33.964371+00:00",
+        "status": 200,
+        "bytes": 268014,
+        "sha256": "30ca060a4e5027223c17b551c88df70a477d639f8dd0d79e8ec771016ab9b3f7",
+        "headers": {
+          "date": "Sun, 01 Nov 2026 16:42:34 GMT",
+          "content-type": "text/html; charset=utf-8",
+          "age": "0",
+          "cache-control": "public, max-age=14400, must-revalidate",
+          "last-modified": "Sun, 01 Nov 2026 16:42:34 GMT"
+        },
+        "programme": {
+          "venue": "ODEON East Kilbride",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Rothesay Street",
+            "addressLocality": "east kilbride",
+            "addressRegion": "Scotland - South Lanarkshire",
+            "postalCode": "G74 1PG",
+            "addressCountry": "GB"
+          },
+          "officialVenueUrl": "https://www.odeon.co.uk/cinemas/east_kilbride/33/",
+          "rowCount": 201,
+          "uniqueIds": 201,
+          "films": 28,
+          "dates": {
+            "2026-11-01": 46,
+            "2026-11-02": 35,
+            "2026-11-03": 36,
+            "2026-11-04": 35,
+            "2026-11-05": 35,
+            "2026-11-06": 7,
+            "2026-11-07": 7
+          },
+          "futureRowsAtParse": 172,
+          "jsonLdEvents": 50,
+          "jsonLdMatchedDom": 50,
+          "sourceUpdatedLabels": [
+            "Times from ODEON, updated Sunday 06:19"
+          ],
+          "normalisedSha256": "65ee91cd39ce82747322096495a743f252d4a6d318fb03537fb2ca501174894d"
+        }
+      },
+      {
+        "name": "cinematimes-kilmarnock",
+        "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-kilmarnock/",
+        "requestedAtUtc": "2026-11-01T16:42:35.424704+00:00",
+        "status": 200,
+        "bytes": 235543,
+        "sha256": "f036b8828900ebaa402cce9203f2df6e7740f2bb39b14f3d44e9923f997881e4",
+        "headers": {
+          "date": "Sun, 01 Nov 2026 16:42:35 GMT",
+          "content-type": "text/html; charset=utf-8",
+          "age": "17031",
+          "cache-control": "public, max-age=14400, must-revalidate",
+          "last-modified": "Sun, 01 Nov 2026 11:58:43 GMT"
+        },
+        "programme": {
+          "venue": "ODEON Kilmarnock",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Queen's Drive",
+            "addressLocality": "Kilmarnock",
+            "addressRegion": "Scotland - East Ayrshire",
+            "postalCode": "KA1 3XF",
+            "addressCountry": "GB"
+          },
+          "officialVenueUrl": "https://www.odeon.co.uk/cinemas/kilmarnock/101/",
+          "rowCount": 137,
+          "uniqueIds": 137,
+          "films": 20,
+          "dates": {
+            "2026-11-01": 34,
+            "2026-11-02": 20,
+            "2026-11-03": 27,
+            "2026-11-04": 21,
+            "2026-11-05": 20,
+            "2026-11-06": 7,
+            "2026-11-07": 8
+          },
+          "futureRowsAtParse": 117,
+          "jsonLdEvents": 50,
+          "jsonLdMatchedDom": 50,
+          "sourceUpdatedLabels": [
+            "Times from ODEON, updated Sunday 06:19"
+          ],
+          "normalisedSha256": "a10fb5e4483828eb6108a50e49505b1bd1ded0269b27a16e8d97591dc30638a0"
+        }
+      }
+    ]
+  },
+  "officialHistoricalComparison": {
+    "officialObservedUtc": "2026-10-31T18:50:26.347Z",
+    "date": "2026-11-01",
+    "officialCount": 34,
+    "cinematimesCount": 34,
+    "sharedIds": 34,
+    "sameTitleAndLocalTime": 32,
+    "newIds": [],
+    "missingIds": [],
+    "differences": [
+      {
+        "id": "019-66281",
+        "officialTitle": "RBO Cinema Season 2026-27: Manon",
+        "publisherTitle": "Royal Ballet And Opera 202627 Manon",
+        "officialTime": "14:00",
+        "publisherTime": "14:00"
+      },
+      {
+        "id": "019-72123",
+        "officialTitle": "Tabby McTat + The Room on the Broom",
+        "publisherTitle": "Tabby McTat",
+        "officialTime": "10:00",
+        "publisherTime": "10:00"
+      }
+    ],
+    "sameLocalTime": 34
+  },
+  "explicitProgrammeGets": 12,
+  "successfulProgrammeGets": 8,
+  "http429": 4,
+  "retriesAfterSourceRefusal": 0,
+  "programmeRowsPerSuccessfulPass": 869,
+  "jsonLdRowsPerPass": 200,
+  "jsonLdMatchedHtmlPerPass": 200,
+  "normalisedLocalRemoteMatches": 4,
+  "observedDateFrom": "2026-11-01",
+  "observedDateTo": "2026-11-07",
+  "accounts": 0,
+  "payments": 0,
+  "newHosting": 0,
+  "messagesSent": 0,
+  "applicationChanges": 0,
+  "productionProgrammeWrites": 0,
+  "fullApplicationGate": "not run; source research only",
+  "remainingGates": [
+    "sustained freshness and upstream timestamp meaning",
+    "full horizon/discovery evidence for all nine",
+    "source title and original-year identity, including double bills",
+    "reschedule/cancellation and DST semantics",
+    "ongoing reuse conditions; owner test permission is not operator consent",
+    "complete revised source/build contract and recurring execution cost/hosting approval"
+  ],
+  "rawEvidenceLocation": "scratchpad/ab-cinema-research/free-source-2026-11-01/ (gitignored)",
+  "sourceScriptsSha256": {
+    "parse.py": "3d42c336cfd36269581cc1d257a577c7aa063b372dff10da8ad841d7ffad3523",
+    "remote-source.py": "4c4d0b89ce0d05d82b61f009cbfd41292af7f84c3bf09929dd67b848f96c65f1"
+  }
+}

@@ -98,11 +98,21 @@ conversation still maps onto this file.*
   recommend UK Cinema API Lite enquiry (displayed £9.99/month, ten cinemas) before signup.
   Four ODEON/all-nine coverage unproved; format omissions, trial billing/VAT, retention/
   fixture/backup rights and upstream freshness remain open. Earlier £0 budget is not waived.
-  **Owner action:** explicitly authorise contact or send the prepared enquiry to public
-  support hey@filmchase.com. No email-sending connector is available here. Reviewable draft:
-  docs/reviews/ab-cinema-feed-enquiry-2026-11-01.md and .eml. No message sent. No account/
-  trial/key/payment/programme API request follows. Supplier reply precedes exact evaluation
-  approval, then full source/build go. Report: docs/reviews/ab-cinema-feed-research-2026-11-01.md.
+  **Superseded by #324:** the paid recommendation and unsent enquiry/.eml are parked.
+  Do not send it or request signup/trial/payment as the next owner action.
+  **£0 reaffirmed; free source obtained (#324, 1 Nov):** CinemaTimes public HTML yields
+  869 screenings across all four ODEON venues/1–7 Nov. Ordinary local and existing Railway
+  HTTP return 200 with matching body/programme hashes; no browser/new hosting/install/
+  configuration/app/data change. Kilmarnock's 34 IDs/times match the earlier official sample;
+  two titles conflict, including a double bill reduced to one title. JSON-LD is capped at
+  50/page, so parse dated HTML. Twice-daily upstream sync/update label does not establish
+  the draft's eight-hour freshness; full horizon/cancellation/DST/year remain unproved.
+  What’s On returns four 429s, no retry. No source fee/account/trial/contact/payment.
+  **Owner checkpoint:** review the complete revised £0 source/build/recurring-cost contract
+  after these gaps are resolved or explicitly represented; no paid enquiry or VM retry.
+  Recommend original AB6 → AB7, one PR each; earlier browser-dependent split withdrawn as
+  a recommendation, not accepted into the ledger. Existing compute billing is unmeasured.
+  Report: docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

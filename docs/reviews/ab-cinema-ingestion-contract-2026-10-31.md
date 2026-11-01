@@ -24,6 +24,28 @@ cache/fixture/backup deletion require explicit re-planning. No recurring browser
 unchanged adapter split should be assumed. Unsent enquiry and comparison:
 `ab-cinema-feed-research-2026-11-01.md`. Contact, evaluation and full build gates remain open.
 
+## Current source amendment — £0, 1 Nov (#324)
+
+This amendment supersedes the paid enquiry recommendation and browser-stage/split proposal
+below; those sections are historical drafts, not executable instructions. Craig requires
+free data. Four CinemaTimes public pages yield 869 dated ODEON screenings both locally and
+from the existing Railway runtime, with equal body/programme hashes. No new hosting needed
+for this source test. Use dated HTML: JSON-LD truncates at 50 events per venue. Retain five
+previously tested direct-source families plus CinemaTimes for ODEON; all nine/Film first.
+Recommend original AB6 → AB7, one branch/PR each, six HTTP families, rather than the earlier
+browser-dependent AB6a/AB6b split. No split/batch is silently added or approved.
+
+The full contract is still unapproved and requires revision before build: upstream freshness
+versus fetch time, observed seven-date ODEON window versus the 14-day target, original-year/
+combined-programme identity, request ceilings and recurring execution/cost. A double bill
+is reduced to one title in one source row: matching booking IDs cannot justify automatic
+film matching. Twice-daily sync cannot support the old eight-hour freshness rule merely by
+six-hour polling. No new recurring host/schedule is selected; existing compute cost is not
+measured or guaranteed £0. No paid enquiry/account/trial/contact/payment is next.
+Evidence, exact source requests, current re-plan and remaining gates:
+`ab-cinema-free-source-results-2026-11-01.md` and JSON. No AB6/AB7 implementation follows
+until the complete revised source/build contract is accepted.
+
 ## Evidence-driven change to the plan
 
 Five venues have structured/HTML programme responses in the existing Railway Linux runtime:
