@@ -1,0 +1,117 @@
+{
+  "decision": 322,
+  "approval": "Craig: approve, after same-limits replacement proposal",
+  "name": "mcu-ab-odeon-vm-1793531246652",
+  "sessionId": "sbx_pANXt86RuG2Tw0ApHxm7KeR3ELXS",
+  "image": "vercel/sandbox/node@sha256:6927dfce823159a574dc3b87fa327cde48533c7498b92492c31179a5477c9fd6",
+  "resources": {
+    "region": "iad1",
+    "vcpus": 1,
+    "memoryMB": 2048,
+    "architecture": "amd64"
+  },
+  "requestedAt": 1793531247193,
+  "stoppedAt": 1793531458292,
+  "durationMs": 211070,
+  "launchCount": 2,
+  "preflight": {
+    "exitCode": 0,
+    "diagnostic": {
+      "event": "preflight_passed",
+      "uid": 1000,
+      "node": "v24.22.1",
+      "browser": "156.0.8078.4",
+      "sandboxRequested": true,
+      "rendererCount": 3
+    },
+    "network": "deny-all verified before launch"
+  },
+  "source": {
+    "allowedHosts": [
+      "www.odeon.co.uk",
+      "vwc.odeon.co.uk"
+    ],
+    "method": "GET",
+    "requests": 4,
+    "contexts": 4,
+    "successfulContexts": 0,
+    "screeningRows": 0,
+    "repeats": 0,
+    "venues": [
+      {
+        "venue": "kilmarnock",
+        "httpStatus": 403,
+        "requests": 1,
+        "samples": 0
+      },
+      {
+        "venue": "glasgow-quay",
+        "httpStatus": 403,
+        "requests": 1,
+        "samples": 0
+      },
+      {
+        "venue": "braehead",
+        "httpStatus": 403,
+        "requests": 1,
+        "samples": 0
+      },
+      {
+        "venue": "east-kilbride",
+        "httpStatus": 403,
+        "requests": 1,
+        "samples": 0
+      }
+    ],
+    "issuer": "not determined; response headers/bodies not captured",
+    "receivedByteCounter": "0 reported because contexts close at refusal before requestfinished accounting; not a zero-transfer claim",
+    "completedEventPrefixObserved": true,
+    "processExitCode": "unavailable: command status requested after stop returned 410 sandbox_stopped"
+  },
+  "capture": {
+    "sourceLogReportedBytes": 3053,
+    "rawLog": "partial; connector truncated base64 string at 2000 characters",
+    "progress": "four complete refusal objects retained; final completed event prefix/counters retained, resource-usage tail truncated",
+    "stderrBytes": 0
+  },
+  "cleanup": {
+    "status": "stopped",
+    "persistent": false,
+    "publicRoutes": 0,
+    "runningProjectSandboxes": 0,
+    "snapshots": 0,
+    "guardPid": 27683,
+    "guard": "terminated and absent",
+    "uploadArchive": "removed",
+    "providerInternalErasure": "not verified"
+  },
+  "usage": {
+    "activeCpuMs": 37948,
+    "ingressBytes": 323569061,
+    "egressBytes": 400986,
+    "account": "existing active Hobby account; no upgrade",
+    "invoiceAndRemainingQuota": "not queried"
+  },
+  "checks": {
+    "offline": 8,
+    "preflight": "pass",
+    "source": "four HTTP 403 refusals",
+    "applicationGate": "not run; no application implementation"
+  },
+  "production": {
+    "apiSha": "c63bc06a7c7d317783b03a3379eb7b2b53852728",
+    "readiness": "db ok and all five integrations configured"
+  },
+  "furtherExperimentApproved": false,
+  "buildContractApproved": false,
+  "localEvidenceSha256": {
+    "replacement-source-summary.json": "7274442b4548862ac99527be320b7de1283e65a8ec2b7aed4cc384996d55b85a",
+    "replacement-progress-prefix.txt": "fbd02ad33adb455825fa2d0762f132cfb3fb5ef4576138cf3dc526dd1ca7075c",
+    "replacement-source-log-prefix.partial.txt": "a76ef1861e7e6753d45a377102fae7973100b1ca4b1ed1f16ce30f8fe14b6fb0",
+    "replacement_status_file.txt": "ce79ff14c85761b6be5adc93e04e1af54bf0558f95d59d60d329775a9699a6b3",
+    "replacement-tool-results.json": "6e0108f7117632db31ae4970c03a3d2830373c0dcb49e1436fdd51b00a546930",
+    "worker/probe.cjs": "468aaf54093c8c4ea1186c47ad5e81eb9c8ea8afaa02414efec08d4687945633",
+    "worker/preflight.cjs": "275d528e7c017ca71da42114a770cb7adc7e1344aaa5a89488ad3f79bf5c1680",
+    "worker/package-lock.json": "2adc4683f6b2e8d55fbcf39d1a7679fe52d298e074722f1107e6a74a1ba800ad"
+  }
+}

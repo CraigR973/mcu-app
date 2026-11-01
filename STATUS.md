@@ -2,22 +2,24 @@
 
 ## Now
 
-**1 Nov: approved VM launches Chromium; a probe check defect stops before source work (#321).**
-Craig's “proceed” approved #320's one-off Vercel Sandbox experiment. One VM, iad1/1 CPU/
-2 GB/non-root UID 1000/Ubuntu 26.04/Node v24.22.1/Playwright 1.64.1. Dependency installation
-succeeds; internet denied and read back before one browser launch. Captured status confirms
-Layer 1 Namespace, PID/network namespaces Yes and seccomp-BPF Yes. My predicate expected
-the wrong field label and returned false; subsequent renderer-command/local rendering and
-all cinema source checks were not reached. This is a probe defect, not a runtime/source refusal.
-One creation/one launch/zero cinema requests/zero rows. VM stopped after 4m13.490s; persistence
-false, no public route/snapshot/running project VM. Local guard absent/upload archive removed.
-Hobby account active, no upgrade/new credential scope; invoice/remaining quota unqueried.
-Corrected parser and negative/missing/duplicate evidence tests pass offline (eight checks total).
-No second VM or retry. Result/audit: docs/reviews/ab-cinema-vm-result-2026-11-01.md and JSON.
-API still c63bc06, db ok/all five integrations configured; no Vercel app deployment during test.
-No app implementation, migration, production write, recurring job, push/PR or other sitting.
-Fresh approval is required for the proposed same-limits replacement VM; full AB6/AB7 contract/
-split remain unapproved. All nine and Film first retained; four-venue source access still untested.
+**1 Nov: replacement VM passes launch check; all four ODEON venue URLs return 403 (#322).**
+Craig's “approve” covered one same-limits replacement. Eight offline checks pass, then the
+complete remote preflight passes: non-root sandbox-enabled Chromium, namespace/seccomp,
+renderer flags and local rendering, with internet denied. Only the two ODEON hosts then
+enabled/read back. Four main-page GETs return 403: Kilmarnock/Quay/Braehead/East Kilbride.
+Zero samples/rows, no date selection/screenshot/repeat or new source method. 403 issuer not
+identified from retained data; received-byte counter zero is not a zero-transfer claim.
+Four complete refusal summaries retained; original log/base64 truncated by connector and
+source process exit code unavailable after stop (410). Audit limitations explicit, not green.
+One VM/two launches, stopped after 3m31.070s; no running project VM/public route/snapshot/
+persistence. Deadline guard absent, temporary upload removed. No replacement/retry approved.
+Hobby account, no upgrade/new credential scope; invoice/remaining quota unqueried.
+API still c63bc06, db ok/all five integrations configured. No app implementation, migration,
+live collection write, recurring job, push/PR or other sitting. No full application gate run.
+Result/audit: docs/reviews/ab-cinema-vm-source-result-2026-11-01.md and JSON.
+The browser-runtime check now passes; the proposed unattended ODEON source route does not.
+Stop/re-plan source/coverage/cost before full AB6/AB7 contract/split approval. All nine and
+Film first retained; five earlier HTTP source specimens remain historical, not all-nine proof.
 
 **31 Oct: approved isolated hosting experiment reaches a browser-startup block (#318/#319).**
 Three sandbox-enabled Chromium launches failed before a browser context or cinema request.
@@ -68,11 +70,11 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop at the replacement hosting checkpoint in docs/reviews/ab-cinema-vm-result-2026-11-01.md.
-Recommend one same-limits VM with corrected status recognition and the tested image digest;
-the one-creation approval was used, so no replacement/resume/retry is authorised yet.
-Both earlier hosting experiments are stopped/cleaned up. No fourth Railway attempt,
-sandbox-off fallback, new credential scope, subscription or plan upgrade is approved.
+Stop at the source/coverage/cost checkpoint after four HTTP 403 results in
+docs/reviews/ab-cinema-vm-source-result-2026-11-01.md. Re-plan an obtainable source for the
+four ODEON programmes or an explicitly accepted owner-supplied capture/import workflow;
+neither is selected/proved. No identical hosting retry, sandbox-off fallback, new account/
+credential scope, operator contact, trial or payment follows. All temporary VMs are stopped.
 Then approve/revise the full source/schema/API/job/refresh/retention/year/navigation/security
 plan and proposed AB6a/AB6b split before application implementation. The proposed Railway
 browser stage is on hold. Three implementation PRs remain proposed, not accepted ledger
@@ -471,6 +473,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **1 Nov — approved replacement reaches source refusals (#322):** full remote sandbox/
+  renderer/local-rendering preflight passes, then four ODEON venue GETs return 403, zero
+  samples/rows/repeats. One VM/two launches, stopped after 3m31.070s, no running VM/snapshot;
+  guard/upload removed. Eight offline checks pass. Raw-log truncation/post-stop exit-code
+  gap retained. API c63bc06/readiness unchanged. Source-route checkpoint, no AB6/AB7/AA10c.
 
 - **1 Nov — approved Vercel VM experiment (#321):** Chromium launches with affirmative
   namespace/seccomp status, but my check expects the wrong label and ends before source work.

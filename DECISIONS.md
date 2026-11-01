@@ -6772,3 +6772,28 @@ contemporaneous.
      upgrade. Result/renewal contract: docs/reviews/ab-cinema-vm-result-2026-11-01.md and JSON.
      Full ingestion/discovery contract, proposed split, recurring hosting, AB6/AB7, AA10c
      and other sittings remain outside this experiment.
+
+322. **Replacement VM approved; browser preflight passes but all four ODEON pages return 403 (1 Nov).**
+     Craig's “approve” covers #321's same-limits replacement only: one creation/30m/iad1/
+     1 CPU/2 GB/pinned tested image/Playwright 1.64.1/non-root sandbox-on/no persistence/
+     ports/mounts/app credentials. Eight offline checks pass. The full remote preflight
+     passes with deny-all verified: namespace/seccomp, three renderers without disabled
+     sandbox flags, local rendering. Enable/read back only www.odeon.co.uk/vwc.odeon.co.uk.
+     Fresh collector makes four main-page GETs, one per Kilmarnock/Quay/Braehead/East Kilbride;
+     all return 403. Zero programme samples/rows/date selections/screenshots/repeats, no
+     schedule API or alternate provider/bypass. This is a source-access result in this
+     tested configuration, not a browser failure, universal refusal or empty programme.
+     403 issuer unconfirmed from captured metadata. Byte counter zero follows immediate
+     refusal closure, not zero network transfer. Four complete refusal summaries survive;
+     connector truncates raw-file base64/progress strings at 2,000 characters. Raw log is
+     partial and a post-stop command-status request returns 410; process exit code unverified.
+     Progress-reader syntax error corrected read-only without restarting source work. Capture
+     gaps remain explicit; no extra experiment was made to repair the audit. One VM/two
+     browser launches, stopped after 3m31.070s; no running project VM/public route/snapshot/
+     persistence. Guard/upload archive removed. API c63bc06/db ok/five integrations unchanged.
+     Existing Hobby account, no paid upgrade/new credential scope; invoice/quota unqueried.
+     Stop/re-plan the four ODEON source/coverage/cost route before full contract/AB6 split/
+     AB6/AB7 acceptance. No identical runtime retry, operator contact, account/trial/payment
+     or owner-supplied workflow is selected by this approval. All nine/Film first remain
+     intended. AA10c and other sittings excluded. Current result/checkpoint:
+     docs/reviews/ab-cinema-vm-source-result-2026-11-01.md and JSON.

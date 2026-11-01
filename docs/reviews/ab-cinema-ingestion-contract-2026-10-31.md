@@ -5,6 +5,16 @@ schema/API/job/refresh/retention/navigation decisions below still need his appro
 Group AB's owner checkpoint. All nine venues and the Film first concept remain the intent.
 This replaces neither the ledger nor the deployed architecture map until accepted/built.
 
+**1 Nov source re-plan hold (#322):** after the earlier runtime/check-defect stops, the
+approved replacement VM passes the full sandbox/renderer/local-rendering check. All four
+ODEON venue URLs then return HTTP 403: four GETs, zero samples, no repeat. The VM is stopped
+and cleaned up. The proposed ordinary hosted-browser stage has not met source acceptance;
+do not start AB6a/AB6b/AB7 or approve the staged build on that assumption. Establish a new
+obtainable ODEON programme route and its coverage/cost, or an explicitly accepted owner-
+supplied capture/import workflow, before revising this contract. All nine/Film first remain
+intended; no route/split/build/recurring host is approved. Current result and audit limits:
+`ab-cinema-vm-source-result-2026-11-01.md` and JSON. Earlier experiment text is historical.
+
 ## Evidence-driven change to the plan
 
 Five venues have structured/HTML programme responses in the existing Railway Linux runtime:
@@ -215,12 +225,15 @@ or failure reporting. The actual shipped map is updated when the pipeline change
 
 ## Decisions still required
 
-1. **Now: approve only the temporary isolated Railway experiment above.** Recommended to
-   resolve the actual Linux/browser gap before paying the implementation cost. Cost is
-   bounded new worker runtime with an unmeasured Railway charge; no app/DB/schedule change.
-2. **After its result: accept/revise the full build contract and AB6 split.** Proposed cost:
+1. **Now: resolve the four ODEON sources/coverage/cost after #322.** The approved runtime
+   tests are finished; the sandbox-capable VM reaches four HTTP 403s. No further identical
+   runtime test is proposed. A programme feed/access arrangement or owner-supplied capture
+   workflow needs concrete feasibility, permission, coverage, freshness and cost evidence;
+   no supplier/account/contact/trial/payment or alternative workflow is selected here.
+2. **After source evidence: accept/revise the full build contract and AB6 split.** Proposed cost:
    three separately verified implementation PRs, six adapter families, new programme tables
-   and one recurring worker. Subscription £0 on the proposed source route; ongoing compute,
+   and one recurring worker. Subscription £0 was the earlier proposed direct-source route;
+   an alternative source's fees are unknown. Ongoing compute,
    maintenance hours and source reliability remain unmeasured. No guarantee of all-nine
    recurring access can be made yet. No implementation is authorised merely by approving
    the temporary experiment.

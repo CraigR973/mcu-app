@@ -2,6 +2,11 @@
 
 1 Nov 2026. Owner-authorised experiment (#321), one VM only; completed and stopped.
 
+**Later 1 Nov (#322): the replacement below was approved and completed.** Full preflight
+passed; all four ODEON venue URLs returned HTTP 403, no samples/repeat. That VM is stopped.
+The current source checkpoint is in `ab-cinema-vm-source-result-2026-11-01.md` and JSON;
+the replacement approval question below is historical, not an open hosting request.
+
 Chromium launched non-root with namespace and seccomp sandboxing. **My status check used
 the wrong field label**, rejected that valid evidence and ended the experiment before any
 cinema request. This is a probe defect, not a Vercel sandbox failure or an ODEON access result.

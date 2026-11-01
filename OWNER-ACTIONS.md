@@ -84,6 +84,15 @@ conversation still maps onto this file.*
   No second VM/retry. Fresh hosting go needed for one same-limits replacement with corrected
   guard/tested image digest; exact proposal in docs/reviews/ab-cinema-vm-result-2026-11-01.md.
   This is not another source-permission request. Full build contract/split remain unapproved.
+  **Replacement approved/completed (#322):** Craig's “approve” covered one same-limits VM.
+  Full sandbox/renderer/local-rendering preflight passed. Four ODEON main-page GETs returned
+  403, zero samples/rows, no repeat. VM stopped after 3m31.070s; no running VM/public route/
+  snapshot/persistence, guard/upload removed. Four complete refusal summaries retained;
+  raw log truncated and process exit code unavailable after stop. No source success inferred.
+  Source/coverage/cost checkpoint is now open: establish an obtainable ODEON feed or choose
+  an owner-supplied capture/import workflow before full build approval. Neither route is
+  selected/proved; no operator contact, new account/trial/payment or identical VM retry follows.
+  Exact result/re-plan boundary: docs/reviews/ab-cinema-vm-source-result-2026-11-01.md.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
