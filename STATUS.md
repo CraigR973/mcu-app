@@ -2,6 +2,17 @@
 
 ## Now
 
+**1 Nov: sandbox-preserving VM proposal prepared; new hosting approval open (#320).**
+Craig's “continue” is being taken as the recommended planning/research route after #319,
+not sandbox-off or a new-host go. One 30-minute Vercel Sandbox VM is proposed: existing
+MCU project, iad1, 1 CPU/2 GB, non-root sandbox-on browser, no ports/credentials/persistence.
+Internet-denied launch check precedes any four-venue ODEON source work. Compute estimate
+US$0.0852006 plus transfer/tax; account plan/quota and sandbox compatibility unverified.
+Connected reads confirm project/team only. No VM created or hosting setting changed.
+Plan/cost/stop contract: docs/reviews/ab-cinema-vm-proposal-2026-11-01.md.
+AB6/AB7/full contract/split remain unapproved; all nine and Film first retained.
+No application implementation, production recheck, PR/push or other sitting this session.
+
 **31 Oct: approved isolated hosting experiment reaches a browser-startup block (#318/#319).**
 Three sandbox-enabled Chromium launches failed before a browser context or cinema request.
 Two complete diagnostics confirm sandbox credentials Permission denied (13); no new ODEON
@@ -17,9 +28,8 @@ Report/audit: docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md and JSON
 Earlier evidence remains: all nine have in-app-browser/HTTP repeat samples (177 retained
 identities); five sources answered HTTP in Railway (#317). No all-nine unattended method,
 complete horizon, original-year matching, cancellation/reschedule/DST or sustained access proof.
-The full proposed contract/AB6 split remains unapproved. Next owner choice: preserve Chromium
-sandboxing and plan a compatible runtime (recommended), or explicitly consider the separately
-bounded sandbox-off diagnostic in the new report. No runtime change is implied by the old approval.
+The full proposed contract/AB6 split remains unapproved. The 1 Nov proposal continues the
+recommended sandbox-preserving planning route; no runtime change follows from old approval.
 
 **Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
 Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
@@ -52,11 +62,10 @@ AB3 real-phone receipt and unrelated camera/speech/valuation owner observations 
 
 ## Next
 
-Stop after the three browser launch failures. The approved temporary hosting test is finished
-and cleaned up; no fourth attempt, sandbox-off fallback or alternative hosting is approved.
-Present the runtime-policy choice in docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md.
-Choosing another host means planning/pricing first; no supplier/credential/spend is selected.
-Any sandbox-off test needs the explicit bounded security/hosting decision described there.
+Stop at the new hosting checkpoint in docs/reviews/ab-cinema-vm-proposal-2026-11-01.md.
+Recommend its one-off sandbox-preserving Vercel VM experiment; no creation is authorised yet.
+The earlier Railway test is finished and cleaned up; no fourth Railway attempt or
+sandbox-off fallback is approved. No new credential, subscription or plan upgrade is implied.
 Then approve/revise the full source/schema/API/job/refresh/retention/year/navigation/security
 plan and proposed AB6a/AB6b split before application implementation. The proposed Railway
 browser stage is on hold. Three implementation PRs remain proposed, not accepted ledger
@@ -455,6 +464,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **1 Nov — compatible-runtime planning (#320):** researched a sandbox-preserving Vercel
+  VM option after “continue”; exact one-off scope, cost and cleanup proposal saved. Existing
+  project/team confirmed read-only; plan/quota/launch compatibility unverified. No VM or
+  app implementation, hosting change, production recheck, push/PR or other sitting.
 
 - **31 Oct — isolated hosting approved and tested, startup blocked (#318/#319):** three
   non-root/sandbox-enabled Chromium launches fail before any cinema request. Sandbox

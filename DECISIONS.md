@@ -6731,3 +6731,20 @@ contemporaneous.
      No reduced venue list, recurring worker, app/schema/source write, paid provider,
      archive retry, AA10c or other sitting follows. Evidence and exact next choices:
      docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md and minimal JSON.
+
+320. **Continue sandbox-preserving runtime planning; new hosting still needs its own go (1 Nov).**
+     Craig said “continue” after #319's recommended compatible-runtime research option.
+     Proceed with planning/research only; do not interpret it as sandbox-off, a fourth
+     Railway attempt or approval of a new host. Proposed one ephemeral Vercel Sandbox VM
+     on the existing MCU project: iad1, 1 CPU/2 GB, 30m including setup, no ports/mounts/
+     persistence/app credentials. Require a non-root sandbox-enabled offline launch check
+     before bounded four-venue source work, then stop/verify cleanup. Managed Ubuntu 26.04
+     image requires a newer probe-only browser package; pin Playwright 1.64.1 independently
+     of application dependencies. Existing team/project confirmed with connected read tools;
+     account plan/quota, launch and complete lifecycle remain unproved. Compute estimate
+     US$0.0852006 plus transfer/tax from current official iad1 rates, not an invoice cap.
+     No new credential, upgrade, subscription, VM creation, app change or production
+     recheck occurs in this research step. Exact contract/checkpoint is
+     docs/reviews/ab-cinema-vm-proposal-2026-11-01.md. Source-read permission persists;
+     the open decision is new hosting. Full ingestion/build contract, AB6 split, recurring
+     operation, AA10c and other sittings remain outside this step.

@@ -70,6 +70,14 @@ conversation still maps onto this file.*
   is an unapproved alternative, with reduced browser isolation. Exact options/cost/limits:
   docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md. No fourth launch, new provider,
   recurring job or full app contract is authorised by the previous approval.
+  **Compatible-runtime proposal prepared 1 Nov (#320):** “continue” was taken as the
+  recommended sandbox-preserving planning route. Exact proposed Vercel Sandbox experiment:
+  one VM/30m/1 CPU/2 GB/iad1, no credentials/ports/persistence; deny-all sandbox launch check
+  before four-venue source work. Compute estimate US$0.0852006 plus transfer/tax; current
+  account plan/quota and compatibility unverified. Existing project/team confirmed only.
+  New hosting approval remains required; no creation, new credential or upgrade approved.
+  Review/approve only the bounded experiment in
+  docs/reviews/ab-cinema-vm-proposal-2026-11-01.md; source permission is already granted.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

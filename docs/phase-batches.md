@@ -4792,6 +4792,13 @@ unchanged. Stop at the three-failure limit. The proposed Railway browser stage i
 re-plan runtime/security from docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md before
 another attempt or application build. Sandbox-off/alternative hosting/full contract/AB6
 split remain unapproved. No ODEON source availability result is inferred from a launch failure.
+**1 Nov compatible-runtime planning (#320):** continued the recommended sandbox-preserving
+research route, not a host go. Proposed one 30m Vercel Sandbox VM/1 CPU/2 GB/iad1 with
+deny-all launch preflight before four-venue source work; no persistence/ports/app credentials.
+Compute estimate US$0.0852006 plus transfer/tax; account plan/quota and compatibility remain
+unverified. Existing project/team confirmed read-only; no VM created. Exact new hosting
+checkpoint: docs/reviews/ab-cinema-vm-proposal-2026-11-01.md. No implementation row/split
+is accepted; AB6/AB7 still stop for full contract approval. AA10c/other sittings excluded.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
