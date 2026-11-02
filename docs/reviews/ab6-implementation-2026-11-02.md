@@ -146,3 +146,23 @@ later disabled-deployment, production write-count and nine-row enable checkpoint
 Do not merge/strike AB6 or begin AB7 with these acceptance gates unresolved. Owner approval
 of a staged disabled deployment is required if real import acceptance needs the additive
 schema deployed before final AB6 acceptance; do not treat a green PR as that approval.
+
+## Approved live dry-run result — 2 Nov (#328)
+
+The exact live-read checkpoint above was approved and executed once on clean 1cfd9b9.
+It is complete, not awaiting another approval. Full report/audit and proposed re-plan:
+docs/reviews/ab6-live-dry-run-2026-11-02.md and .json.
+
+Actual 2–15 Nov result: 49 GETs, 5,307,435 decoded bytes, 55.122 seconds; eight venues
+return 1,185 dated records, of which 1,102 were future/non-expired/non-cancelled at
+preparation. Vue St Enoch returns 401; no further Vue request, retry or alternate. No
+adapter proves complete dates, all classifications/global identities remain unverified.
+Before/after disposable DB counts and nine disabled flags match. The exact hashed
+artifact is independently refused by the all-nine import gate. No production DB access,
+deployment/write/enable, further implementation or AB7.
+
+Keep all nine/£0 and stop for a new, concrete report-only free-gap investigation decision:
+Vue ordinary public request-format comparison (hypothesis, not a diagnosis), and a small
+existing-TMDB classification-evidence feasibility sample. Extra metadata requests and a
+new experiment after refusal require the owner go described in the new report. Do not
+attempt a partial import or silently change the approved category meaning.

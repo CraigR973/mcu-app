@@ -150,6 +150,20 @@ conversation still maps onto this file.*
   and migration/credential-withholding proofs pass. Final documentation CI is linked in PR.
   No merge/deployment/source run/production write/enable. The bounded all-nine local
   dry-run above is now concrete and reviewable; no repeat full-contract approval needed.
+  **Approved dry-run completed (#328, 2 Nov):** Craig approved that exact one-pass scope.
+  It uses 49 GETs/5,307,435 decoded bytes/55.122s and yields eight venues/1,185 dated rows,
+  1,102 future at preparation. Vue returns 401 and stops without another Vue request.
+  All dates lack proved completeness; all run categories are Unclassified. The exact
+  diagnostic artifact fails the all-nine import gate. Disposable counts/nine disabled
+  flags unchanged; no production connection/write/deploy/enable. Do not ask to approve
+  this completed dry-run again or ask to import a reduced eight-venue result.
+  **New owner checkpoint:** accept/reject the proposed report-only free-gap investigation
+  in docs/reviews/ab6-live-dry-run-2026-11-02.md: up to 14 Vue ordinary public date GETs,
+  stop on refusal, plus up to 12 existing-TMDB evidence/documentation GETs; 26/five-minute
+  combined cap, £0 source fees, no writes/new credentials/hosting. Extra metadata calls
+  and a new Vue experiment after a refusal were not approved by #327/#328. Re-plan before
+  implementation resumes; actual all-nine artifact/count/deployment/write/enable remains
+  separate. AB7/AA10c/other sittings remain unstarted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

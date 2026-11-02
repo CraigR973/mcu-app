@@ -1,0 +1,477 @@
+{
+  "approvalDecision": 328,
+  "scope": {
+    "approvedBy": "Craig: approved after exact capped all-nine request",
+    "head": "1cfd9b97c4f026918c72fd340ef76884a7cdc657",
+    "startedUtc": "2026-11-02T16:36:22.631486+00:00",
+    "dateFrom": "2026-11-02",
+    "dateTo": "2026-11-15",
+    "maxGets": 120,
+    "maxSeconds": 300,
+    "maxResponseBytes": 2097152,
+    "maxDecodedBytes": 67108864,
+    "productionWrites": false,
+    "database": "owned disposable localhost Postgres"
+  },
+  "result": {
+    "head": "1cfd9b97c4f026918c72fd340ef76884a7cdc657",
+    "exitCode": 2,
+    "elapsedSeconds": 55.122,
+    "databaseCountsAndEnableFlagsUnchanged": true,
+    "artifact": "scratchpad/ab6/live-2026-11-02T163622Z",
+    "finishedUtc": "2026-11-02T16:37:18.703093+00:00"
+  },
+  "report": {
+    "categoryCountsFromSourceEvidence": {
+      "newRelease": 0,
+      "olderFilm": 0,
+      "unclassified": 1185
+    },
+    "changes": {
+      "cineworld-silverburn": {
+        "added": 372,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "everyman-glasgow": {
+        "added": 72,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "gft": {
+        "added": 20,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "odeon-braehead": {
+        "added": 209,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "odeon-east-kilbride": {
+        "added": 163,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "odeon-glasgow-quay": {
+        "added": 223,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "odeon-kilmarnock": {
+        "added": 112,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "science-centre-imax": {
+        "added": 14,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      },
+      "vue-st-enoch": {
+        "added": 0,
+        "deleted": 0,
+        "unconfirmed": 0,
+        "updated": 0,
+        "withdrawn": 0
+      }
+    },
+    "dateFrom": "2026-11-02",
+    "dateTo": "2026-11-15",
+    "decodedBodyBytes": 5307435,
+    "mode": "dryRun",
+    "requests": 49,
+    "rows": 1185,
+    "snapshotSha256": "3c7bdc6fcf3be1b9e15999be68c623ef2ae5b2d00f8c843d34ffa75977f8d3ba",
+    "sourcesObserved": false,
+    "venues": {
+      "cineworld-silverburn": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09",
+          "2026-11-10",
+          "2026-11-11",
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15"
+        ],
+        "rows": 372
+      },
+      "everyman-glasgow": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09",
+          "2026-11-10",
+          "2026-11-14",
+          "2026-11-15"
+        ],
+        "rows": 72
+      },
+      "gft": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "rows": 20
+      },
+      "odeon-braehead": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08"
+        ],
+        "rows": 209
+      },
+      "odeon-east-kilbride": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08"
+        ],
+        "rows": 163
+      },
+      "odeon-glasgow-quay": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08"
+        ],
+        "rows": 223
+      },
+      "odeon-kilmarnock": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08"
+        ],
+        "rows": 112
+      },
+      "science-centre-imax": {
+        "completeDates": [],
+        "errors": [],
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15"
+        ],
+        "rows": 14
+      },
+      "vue-st-enoch": {
+        "completeDates": [],
+        "errors": [
+          "Source host refused HTTP 401; no retry"
+        ],
+        "failed": true,
+        "observedDates": [],
+        "rows": 0
+      }
+    }
+  },
+  "venueFacts": {
+    "odeon-kilmarnock": {
+      "rows": 112,
+      "futureAtPreparation": 105,
+      "sourceFilmKeys": 19,
+      "dates": 7,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-08",
+      "refusedHost": null,
+      "sourceUpdateLabel": "Times from ODEON, updated Monday 06:17",
+      "upstreamUtc": null,
+      "bookings": 105,
+      "errors": []
+    },
+    "odeon-glasgow-quay": {
+      "rows": 223,
+      "futureAtPreparation": 198,
+      "sourceFilmKeys": 32,
+      "dates": 7,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-08",
+      "refusedHost": null,
+      "sourceUpdateLabel": "Times from ODEON, updated Monday 06:17",
+      "upstreamUtc": null,
+      "bookings": 198,
+      "errors": []
+    },
+    "odeon-braehead": {
+      "rows": 209,
+      "futureAtPreparation": 186,
+      "sourceFilmKeys": 32,
+      "dates": 7,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-08",
+      "refusedHost": null,
+      "sourceUpdateLabel": "Times from ODEON, updated Monday 06:17",
+      "upstreamUtc": null,
+      "bookings": 186,
+      "errors": []
+    },
+    "odeon-east-kilbride": {
+      "rows": 163,
+      "futureAtPreparation": 144,
+      "sourceFilmKeys": 27,
+      "dates": 7,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-08",
+      "refusedHost": null,
+      "sourceUpdateLabel": "Times from ODEON, updated Monday 06:17",
+      "upstreamUtc": null,
+      "bookings": 144,
+      "errors": []
+    },
+    "cineworld-silverburn": {
+      "rows": 372,
+      "futureAtPreparation": 371,
+      "sourceFilmKeys": 43,
+      "dates": 14,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-15",
+      "refusedHost": null,
+      "sourceUpdateLabel": null,
+      "upstreamUtc": null,
+      "bookings": 371,
+      "errors": []
+    },
+    "vue-st-enoch": {
+      "rows": 0,
+      "futureAtPreparation": 0,
+      "sourceFilmKeys": 0,
+      "dates": 0,
+      "firstDate": null,
+      "lastDate": null,
+      "refusedHost": "www.myvue.com",
+      "sourceUpdateLabel": null,
+      "upstreamUtc": null,
+      "bookings": 0,
+      "errors": [
+        "Source host refused HTTP 401; no retry"
+      ]
+    },
+    "everyman-glasgow": {
+      "rows": 72,
+      "futureAtPreparation": 69,
+      "sourceFilmKeys": 21,
+      "dates": 11,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-15",
+      "refusedHost": null,
+      "sourceUpdateLabel": null,
+      "upstreamUtc": null,
+      "bookings": 69,
+      "errors": []
+    },
+    "gft": {
+      "rows": 20,
+      "futureAtPreparation": 15,
+      "sourceFilmKeys": 20,
+      "dates": 2,
+      "firstDate": "2026-11-02",
+      "lastDate": "2026-11-03",
+      "refusedHost": null,
+      "sourceUpdateLabel": null,
+      "upstreamUtc": null,
+      "bookings": 15,
+      "errors": []
+    },
+    "science-centre-imax": {
+      "rows": 14,
+      "futureAtPreparation": 14,
+      "sourceFilmKeys": 2,
+      "dates": 9,
+      "firstDate": "2026-11-03",
+      "lastDate": "2026-11-15",
+      "refusedHost": null,
+      "sourceUpdateLabel": null,
+      "upstreamUtc": null,
+      "bookings": 14,
+      "errors": []
+    }
+  },
+  "databaseBefore": {
+    "counts": {
+      "admin_actions": 0,
+      "cinema_coverage": 0,
+      "cinema_films": 0,
+      "cinema_refresh_runs": 0,
+      "cinema_screenings": 0,
+      "cinema_venues": 9,
+      "collection_items": 0,
+      "job_heartbeats": 0,
+      "movies": 0,
+      "release_calendar": 0,
+      "watch_log": 0
+    },
+    "venues": [
+      [
+        "cineworld-silverburn",
+        false
+      ],
+      [
+        "everyman-glasgow",
+        false
+      ],
+      [
+        "gft",
+        false
+      ],
+      [
+        "odeon-braehead",
+        false
+      ],
+      [
+        "odeon-east-kilbride",
+        false
+      ],
+      [
+        "odeon-glasgow-quay",
+        false
+      ],
+      [
+        "odeon-kilmarnock",
+        false
+      ],
+      [
+        "science-centre-imax",
+        false
+      ],
+      [
+        "vue-st-enoch",
+        false
+      ]
+    ]
+  },
+  "databaseAfter": {
+    "counts": {
+      "admin_actions": 0,
+      "cinema_coverage": 0,
+      "cinema_films": 0,
+      "cinema_refresh_runs": 0,
+      "cinema_screenings": 0,
+      "cinema_venues": 9,
+      "collection_items": 0,
+      "job_heartbeats": 0,
+      "movies": 0,
+      "release_calendar": 0,
+      "watch_log": 0
+    },
+    "venues": [
+      [
+        "cineworld-silverburn",
+        false
+      ],
+      [
+        "everyman-glasgow",
+        false
+      ],
+      [
+        "gft",
+        false
+      ],
+      [
+        "odeon-braehead",
+        false
+      ],
+      [
+        "odeon-east-kilbride",
+        false
+      ],
+      [
+        "odeon-glasgow-quay",
+        false
+      ],
+      [
+        "odeon-kilmarnock",
+        false
+      ],
+      [
+        "science-centre-imax",
+        false
+      ],
+      [
+        "vue-st-enoch",
+        false
+      ]
+    ]
+  },
+  "snapshotSha256Verified": true,
+  "importEligibility": "refused: vue-st-enoch source acceptance unresolved; no reduced-coverage write",
+  "productionDatabaseConnected": false,
+  "productionWrites": 0,
+  "implementationChanged": false,
+  "ab7Started": false,
+  "nextExperimentAuthorised": false
+}

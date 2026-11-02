@@ -6900,3 +6900,24 @@ contemporaneous.
      completeness assertion from historic samples, no reduced coverage/links fallback,
      no paid enquiry/browser retry/AA10c/other sitting. Main preflight CI 41207241130 is
      green at c63bc06; no implementation or live write is performed by recording acceptance.
+
+328. **Approve and execute one bounded all-nine cinema dry-run; stop on the unmet result (2 Nov).**
+     Craig says “approved” to the exact PR #125 proposal: all nine, run day through +13
+     London dates, at most 120 anonymous GETs/five minutes/15 seconds each/2 MiB per
+     response/64 MiB total, two global slots and one request/second/host; source refusals
+     stop without retry. Owned disposable localhost DB only, saved normalised artifact/
+     digest/counts, £0 source fees, no production writes/enablement/hosting/credentials.
+     One pass on 1cfd9b9 uses 49 GETs/5,307,435 bytes/55.122 seconds for 2–15 Nov.
+     Eight venues yield 1,185 dated rows, 1,102 future at preparation; Vue returns 401.
+     No retry/alternate request followed. No date is proved complete, all run categories
+     remain Unclassified and global identity unverified. Exact artifact hash
+     3c7bdc6fcf3be1b9e15999be68c623ef2ae5b2d00f8c843d34ffa75977f8d3ba is refused
+     by the all-nine import gate; disposable counts/nine disabled flags unchanged.
+     No production DB connection, app deployment/write or enablement. Do not reduce to
+     eight venues or begin AB7. Report/audit: docs/reviews/ab6-live-dry-run-2026-11-02.*.
+     A new report-only free-gap experiment (Vue ordinary public request-format check,
+     up to 14 dates if successful, plus at most 12 existing-TMDB evidence requests;
+     total 26/five minutes, no writes/new credentials/hosting/fees) is proposed, not
+     accepted or run. It needs exact owner approval because a source refused and #327
+     excluded extra metadata calls. No further implementation until that re-plan is
+     accepted. Count review and exact production deployment/write/enable remain separate.

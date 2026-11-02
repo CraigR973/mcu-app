@@ -2,28 +2,30 @@
 
 ## Now
 
-**2 Nov: AB6 ingestion in draft PR #125; live acceptance remains (#327).**
-Five isolated tables, six real-specimen adapters, authenticated/shared-zod programme API,
-disabled morning child/CLI, bounded retention and updated architecture map are on
-feat/ab6-cinema-ingestion. Focused real-Postgres suite: 43 pass; shared schema: eight new
-checks pass. Clean code 483c1f6 passes all ten local checks (API 2,592/no skips, shared
-167, web 737) and all seven PR CI jobs (41464465764). Local Chromium 61, Firefox 60 plus
-documented dictation skip, jobs six pass. Final handoff CI evidence is in PR #125.
-These checks do not close live programme acceptance.
-Main/production remain PR #124's green 6b4199f; AB6 is neither deployed nor enabled.
-All nine seeds disabled; no source requests or production writes performed by AB6.
-Saved specimens currently yield zero verified release-run categories/global mappings;
-unknown metadata remains Unclassified. Useful New/Older filtering needs real evidence.
-Exact live dry-run/read scope, row counts, production write and enable remain owner stops;
-see docs/reviews/ab6-implementation-2026-11-02.md for the bounded local dry-run proposal.
-AB7 waits for accepted AB6. No AA10c, other sitting, paid service or hosting/config change.
+**2 Nov: approved AB6 dry-run complete; 8/9 venues, Vue 401, re-plan required (#328).**
+Craig approved one all-nine capped live read. Clean 1cfd9b9 ran for 2–15 Nov: 49 GETs,
+5,307,435 decoded bytes, 55.122 seconds; 1,185 dated records/1,102 future at preparation.
+Vue St Enoch returned 401 and stopped without retry. No venue proves complete dates.
+All 1,185 run categories/global identities remain unverified; New/Older tagging unresolved.
+The exact artifact is refused for import because Vue failed. Database counts and all nine
+disabled flags unchanged; no production DB connection/write, deployment or enablement.
+Draft PR #125 remains unmerged on feat/ab6-cinema-ingestion. Implementation is unchanged:
+clean code 483c1f6 passes all ten local checks (API 2,592/no skips, shared 167/web 737);
+code CI 41464465764 and handoff 1cfd9b9 CI 41479764764 both pass seven jobs. Local
+Chromium 61/Firefox 60+documented skip/jobs six and migration/privilege proofs pass.
+Main/production remain green 6b4199f. Report/audit and the proposed bounded free-gap
+investigation: docs/reviews/ab6-live-dry-run-2026-11-02.md and .json. No further source
+request, implementation or reduced eight-venue import is authorised by this result.
+AB7, AA10c and other sittings remain unstarted; no paid service/hosting/credential change.
 
 ## Next
 
-Obtain the exact live read/dry-run decision in draft PR #125's reviewable scope.
-Record actual venue horizons, unknown identities/categories,
-request/byte counts and prospective changes before any production ingest/enable.
-Do not merge/close AB6 with unmet all-nine or run-category acceptance.
+Owner checkpoint: review the observed Vue refusal and missing classification evidence,
+then accept or reject the report-only free-gap re-plan (at most 14 Vue + 12 existing-TMDB
+read-only GETs/five minutes, no writes/configuration changes). That new experiment is not
+yet authorised. Re-plan before further implementation; keep all nine and £0 source fees.
+Do not import this failed artifact, merge/close AB6 or start AB7. Fresh all-nine artifact,
+actual count review and production deployment/write/enable decisions remain later stops.
 AB7 follows only accepted AB6 from clean green main; no new hosting or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
@@ -418,6 +420,14 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — approved cinema live dry-run (#328):** 49 GETs/5.06 MiB/55.122s against a
+  verified disposable localhost DB; 8/9 venues yield 1,185 dated records, 1,102 future at
+  preparation. Vue 401, no retry; all dates partial/unproved complete, all categories
+  Unclassified. Exact artifact import refused; before/after counts and disabled flags
+  unchanged, no production connection/write/deploy/enable or AB7. Source feasibility
+  checkpoint reopened for Vue plus classification; concrete £0 report-only gap plan
+  prepared, not approved/run. Existing code and handoff seven-job CI remain green.
 
 - **2 Nov — AB6 code verification green, owner live gate remains:** draft PR #125/code
   483c1f6; all ten local checks, API 2,592/no skips/shared 167/web 737, exact-head seven-job
