@@ -173,6 +173,14 @@ async def test_complete_absence_withdraws_and_explicit_cancellation_suppresses(
     api_session, run, admin
 ):
     await store.promote(api_session, VENUE, snapshot(showing()), DAY, DAY, run.id)
+    partial = await store.promote(api_session, VENUE, snapshot(), DAY, DAY, run.id)
+    assert partial["unconfirmed"] == 1
+    again = await store.promote(api_session, VENUE, snapshot(), DAY, DAY, run.id)
+    assert again["unconfirmed"] == 0
+    reviewed = prepared()
+    reviewed.snapshots[VENUE.slug].complete_dates = {DAY}
+    prediction = await refresh.preview(api_session, reviewed)
+    assert prediction["changes"][VENUE.slug]["withdrawn"] == 1
     result = await store.promote(
         api_session, VENUE, snapshot(complete_dates={DAY}), DAY, DAY, run.id
     )

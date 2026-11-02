@@ -197,14 +197,16 @@ async def promote(
                 and row.deleted_at is None
                 and row.starts_utc > now
                 and row.local_date in snapshot.observed_dates
-                and row.confirmation == "confirmed"
+                and row.confirmation in ("confirmed", "unconfirmed")
             ):
-                row.confirmation = (
+                confirmation = (
                     "withdrawn" if row.local_date in snapshot.complete_dates else "unconfirmed"
                 )
                 # Keep the original URL as history; the read path never exposes it as
                 # a showing action while unconfirmed/withdrawn/cancelled/stale.
-                counts["withdrawn" if row.confirmation == "withdrawn" else "unconfirmed"] += 1
+                if row.confirmation != confirmation:
+                    row.confirmation = confirmation
+                    counts["withdrawn" if confirmation == "withdrawn" else "unconfirmed"] += 1
     by_date = {d: sum(x.start.date() == d for x in snapshot.rows) for d in dates}
     for day in dates:
         record = coverage.get(day)

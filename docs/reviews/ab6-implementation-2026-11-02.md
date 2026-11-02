@@ -94,6 +94,12 @@ them showing-scoped (original row-count assertions retained). Ruff formatting/im
 length and one mypy variable-name conflict corrected. OpenAPI export initially refused the
 inherited job role; rerun with the documented PROCESS_ROLE=web. No existing gate assertion
 was loosened. The route inventory adds exactly the GET approved in #327.
+Review additionally found a state-transition gap: a later complete absence must withdraw
+an already-Unconfirmed showing. Promotion and exact dry-run counts now agree, with the
+extended regression suite passing all 43 checks. The disposable migration proof also
+passes fresh/repeat upgrade, nine disabled seeds, both roles' access to all five tables,
+PIN/token privilege withholding, populated downgrade refusal and empty downgrade base.
+Draft PR #125 holds final gate/CI results; it remains unmerged pending live acceptance.
 
 ## Next owner checkpoint: bounded live read, no production writes
 

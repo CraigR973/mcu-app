@@ -2,11 +2,12 @@
 
 ## Now
 
-**2 Nov: AB6 ingestion implemented locally; verification/live acceptance remains (#327).**
+**2 Nov: AB6 ingestion in draft PR #125; live acceptance remains (#327).**
 Five isolated tables, six real-specimen adapters, authenticated/shared-zod programme API,
 disabled morning child/CLI, bounded retention and updated architecture map are on
 feat/ab6-cinema-ingestion. Focused real-Postgres suite: 43 pass; shared schema: eight new
-checks pass. Full ten-command gate/exact-head PR CI are next, not yet claimed green.
+checks pass. PR #125 holds the current full local gate and exact-head CI evidence;
+those checks do not close live programme acceptance.
 Main/production remain PR #124's green 6b4199f; AB6 is neither deployed nor enabled.
 All nine seeds disabled; no source requests or production writes performed by AB6.
 Saved specimens currently yield zero verified release-run categories/global mappings;
@@ -17,8 +18,8 @@ AB7 waits for accepted AB6. No AA10c, other sitting, paid service or hosting/con
 
 ## Next
 
-Finish AB6's clean full gate and exact-head draft PR CI, then stop for the concrete live
-read/dry-run proposal. Record actual venue horizons, unknown identities/categories,
+Complete the verification record in draft PR #125, then obtain the exact live read/dry-run
+decision. Record actual venue horizons, unknown identities/categories,
 request/byte counts and prospective changes before any production ingest/enable.
 Do not merge/close AB6 with unmet all-nine or run-category acceptance.
 AB7 follows only accepted AB6 from clean green main; no new hosting or other sitting.
@@ -422,6 +423,10 @@ it renders — and report what was observed rather than what passed.
   new shared checks pass. Full gate/PR CI next. Saved real metadata currently gives no
   verified run category/global identity; live evidence and later write/enable remain
   explicit stops. Main/production unchanged at 6b4199f; no AB7/AA10c/other sitting.
+  Draft PR #125 carries final verification evidence. Review also fixed Unconfirmed →
+  Withdrawn on later proved complete absence, including exact dry-run prediction; the
+  extended 43-check regression suite passes. Local migration/grant/credential-withholding
+  proof, populated rollback refusal and empty full reversal/re-upgrade pass.
 
 - **2 Nov — planning integrated, AB6 starts:** PR #124/main 6b4199f, clean full local gate
   and exact-head seven-job PR/main CI, exact API/web/full readiness verified. AB6 branch

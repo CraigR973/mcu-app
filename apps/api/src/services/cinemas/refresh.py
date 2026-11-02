@@ -266,9 +266,13 @@ async def preview(db: AsyncSession, prepared: PreparedRun) -> dict[str, Any]:
             r
             for key, r in existing.items()
             if key not in incoming
+            and r.deleted_at is None
             and r.starts_utc > utcnow()
             and r.local_date in snapshot.observed_dates
-            and r.confirmation == "confirmed"
+            and (
+                r.confirmation == "confirmed"
+                or (r.confirmation == "unconfirmed" and r.local_date in snapshot.complete_dates)
+            )
             and not snapshot.failed
         ]
         changes[slug] = {
