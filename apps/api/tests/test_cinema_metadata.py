@@ -10,7 +10,7 @@ import httpx
 import pytest
 from sqlalchemy import select
 
-from src.models.cinema import CinemaFilm, CinemaScreening
+from src.models.cinema import CinemaFilm, CinemaRefreshRun, CinemaScreening
 from src.services.cinemas import collect, metadata, refresh, store
 from src.services.cinemas.domain import Snapshot, SourceError, release_category
 from src.services.cinemas.fetch import Budget, Refused
@@ -364,7 +364,20 @@ async def test_persisted_metadata_refusal_pauses_until_owner_reviewed_new_artifa
     run.report = {"metadata": {"refused": True}}
     await api_session.flush()
     assert await refresh.metadata_is_paused(api_session)
-    run.report = {"metadata": {"status": "complete"}}
+    later = CinemaRefreshRun(
+        trigger="test",
+        adapter_version="ab6-2",
+        status="partial",
+        started_utc=NOW,
+        finished_utc=NOW + timedelta(seconds=1),
+        heartbeat_utc=NOW,
+        lease_expires_utc=NOW + timedelta(minutes=10),
+        report={"metadata": {"status": "noToken", "successfulRequests": 0}},
+    )
+    api_session.add(later)
+    await api_session.flush()
+    assert await refresh.metadata_is_paused(api_session)
+    later.report = {"metadata": {"status": "complete", "successfulRequests": 3}}
     await api_session.flush()
     assert not await refresh.metadata_is_paused(api_session)
 
@@ -474,3 +487,9 @@ def test_a_film_named_restoration_is_not_a_returning_label():
         ]
         is True
     )
+
+
+def test_explicit_external_identity_changes_invalidate_candidate_cache():
+    row = film("Pan's Labyrinth")
+    assert metadata.fingerprint(row) != metadata.fingerprint(replace(row, tmdb_id=157336))
+    assert metadata.fingerprint(row) != metadata.fingerprint(replace(row, imdb_id="tt0816692"))

@@ -57,7 +57,7 @@ this changed build.
 Import without mapping selections leaves new candidates unverified. To accept selected
 mappings in a later owner-approved import, provide a JSON array of `source`, `film_key`
 and `tmdb_id` objects through `--reviewed-mappings`, plus the exact
-`--confirm-mapping-count`; the existing `--confirm-digest`, `--confirm-count` and
+`--confirm-mapping-count` and SHA-256 `--confirm-mapping-digest`; the existing `--confirm-digest`, `--confirm-count` and
 `--actor-profile-id` remain required. Each selected candidate must still be fresh, bound
 to its observed source facts and independently corroborated. Duplicate/missing/conflicting
 or title-only selections refuse before a write. The bulk-import audit records the admin
@@ -100,7 +100,11 @@ Failures found and fixed: initial long-line/import formatting and optional-candi
 narrowing; test helper shifted a fixture start but not its end (both now shift together);
 initial infrastructure plan rejected an old CLI (compatible isolated CLI succeeds).
 Review additionally tightened the restoration-label guard so a film named Restoration or
-Reissue is not itself an edition marker. Existing assertions, auth, pinned routes and
+Reissue is not itself an edition marker. A later review found explicit global-ID changes
+also needed cache fingerprint invalidation and candidate/global-ID agreement; both are
+now guarded. The in-progress e0a8d85 gate was deliberately terminated as superseded,
+not counted as a pass; final clean-code gates must cover the corrected tree. Exact mapping
+selection files also require their own reviewed SHA-256, preventing a same-count file swap. Existing assertions, auth, pinned routes and
 skip policy remain unchanged.
 
 ## Remaining owner checkpoints

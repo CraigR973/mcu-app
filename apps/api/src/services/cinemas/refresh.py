@@ -251,6 +251,9 @@ async def prepare(
                     observed_utc=utcnow(),
                 )
     metadata_report["requests"] = fetch.metadata_requests
+    metadata_report["successfulRequests"] = fetch.metadata_successes
+    if "api.themoviedb.org" in fetch.refused:
+        metadata_report["refused"] = True
     if metadata_report["status"] == "deadline":
         metadata_report["pending"] = len(selected_rows(snapshots))
     return PreparedRun(
@@ -443,6 +446,8 @@ async def _promote_all(
             "partial"
             if any(
                 s.failed
+                or prepared.metadata_report.get("pending", 0)
+                or prepared.metadata_report.get("refused", False)
                 or set(days_between(prepared.date_from, prepared.date_to)) != s.complete_dates
                 for s in prepared.snapshots.values()
             )
@@ -548,15 +553,22 @@ async def refresh_due(engine: AsyncEngine) -> dict[str, Any]:
 
 
 async def metadata_is_paused(db: AsyncSession) -> bool:
-    report = await db.scalar(
+    reports = await db.scalars(
         select(CinemaRefreshRun.report)
         .where(
             CinemaRefreshRun.finished_utc.is_not(None), CinemaRefreshRun.report.has_key("metadata")
         )
         .order_by(CinemaRefreshRun.finished_utc.desc())
-        .limit(1)
+        .limit(10000)
     )
-    return bool(report and report.get("metadata", {}).get("refused"))
+    for report in reports:
+        outcome = report.get("metadata", {})
+        if outcome.get("refused"):
+            return True
+        # A tokenless, cached-only or failed experiment cannot clear an older pause.
+        if outcome.get("successfulRequests", 0) > 0:
+            return False
+    return False
 
 
 async def metadata_cache(db: AsyncSession) -> dict[tuple[str, str], Metadata]:

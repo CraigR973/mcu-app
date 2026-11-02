@@ -8,6 +8,7 @@ an owner checkpoint under group-start; never run it as part of tests or deployme
 
 import argparse
 import asyncio
+import hashlib
 import json
 import uuid
 from datetime import UTC, date, timedelta
@@ -53,6 +54,7 @@ def arguments(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--reviewed-mappings", type=Path)
     parser.add_argument("--confirm-mapping-count", type=int)
+    parser.add_argument("--confirm-mapping-digest")
     parser.add_argument("--actor-profile-id", type=uuid.UUID)
     parser.add_argument("--date-from", type=date.fromisoformat)
     parser.add_argument("--date-to", type=date.fromisoformat)
@@ -69,10 +71,19 @@ def arguments(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--resume-metadata requires a separately approved --dry-run")
     if args.confirm_count is not None and args.confirm_count < 0:
         parser.error("--confirm-count cannot be negative")
-    if args.reviewed_mappings is not None or args.confirm_mapping_count is not None:
-        if not args.write or args.reviewed_mappings is None or args.confirm_mapping_count is None:
+    if (
+        args.reviewed_mappings is not None
+        or args.confirm_mapping_count is not None
+        or args.confirm_mapping_digest is not None
+    ):
+        if (
+            not args.write
+            or args.reviewed_mappings is None
+            or args.confirm_mapping_count is None
+            or not args.confirm_mapping_digest
+        ):
             parser.error(
-                "Mapping selections need --write, --reviewed-mappings and --confirm-mapping-count"
+                "Mappings need --write, --reviewed-mappings, exact mapping count and digest"
             )
         if args.confirm_mapping_count < 0:
             parser.error("--confirm-mapping-count cannot be negative")
@@ -124,9 +135,10 @@ async def run(args: argparse.Namespace) -> dict[str, Any]:
             if args.reviewed_mappings is not None:
                 if args.reviewed_mappings.stat().st_size > 1024 * 1024:
                     raise SourceError("Mapping selection file exceeds 1 MiB")
-                picks = TypeAdapter(list[MappingPick]).validate_json(
-                    args.reviewed_mappings.read_bytes()
-                )
+                data = args.reviewed_mappings.read_bytes()
+                if hashlib.sha256(data).hexdigest() != args.confirm_mapping_digest:
+                    raise SourceError("Reviewed mapping digest differs; no write")
+                picks = TypeAdapter(list[MappingPick]).validate_json(data)
                 if len(picks) != args.confirm_mapping_count:
                     raise SourceError("Reviewed mapping count differs; no write")
             return await apply_prepared(engine, prepared, args.actor_profile_id, picks)

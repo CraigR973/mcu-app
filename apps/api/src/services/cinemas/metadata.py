@@ -72,6 +72,8 @@ class MappingPick(EvidenceModel):
 def fingerprint(row: Showing) -> str:
     value = {
         "title": row.title,
+        "tmdbId": row.tmdb_id,
+        "imdbId": row.imdb_id,
         "facts": row.identity_facts,
         "sourceRelease": row.source_release.isoformat() if row.source_release else None,
     }
@@ -263,6 +265,7 @@ async def enrich(
             if isinstance(exc, Refused):
                 report["refused"] = True
     report["requests"] = fetch.metadata_requests
+    report["successfulRequests"] = fetch.metadata_successes
     report["status"] = "noToken" if not token else "partial" if report["pending"] else "complete"
     report["records"] = len(records)
     return records, report

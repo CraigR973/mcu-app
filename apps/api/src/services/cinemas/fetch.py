@@ -29,6 +29,7 @@ class Budget:
         self.last_start: dict[str, float] = {}
         self.slots = asyncio.Semaphore(2)
         self.metadata_requests = 0
+        self.metadata_successes = 0
 
     async def get(self, url: str) -> str:
         return await self._get(url)
@@ -113,4 +114,6 @@ class Budget:
                     ):
                         self.refused.add(host)
                         raise Refused(host, 200)
+                    if token is not None:
+                        self.metadata_successes += 1
                     return body

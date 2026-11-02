@@ -83,8 +83,16 @@ async def _film(
         film.identity_status == "verified"
         and metadata
         and metadata.candidate
-        and prior_evidence.get("tmdbId")
-        and metadata.candidate.tmdb_id != prior_evidence["tmdbId"]
+        and (
+            (
+                prior_evidence.get("tmdbId")
+                and metadata.candidate.tmdb_id != prior_evidence["tmdbId"]
+            )
+            or (
+                prior_evidence.get("imdbId")
+                and metadata.candidate.imdb_id != prior_evidence["imdbId"]
+            )
+        )
         and not picked
     ):
         conflict = True
@@ -247,9 +255,23 @@ async def promote(
             row.source_expired = source.expired
             row.booking_url = source.booking
             record = film.evidence.get("metadata")
-            evidence = category_evidence(
-                source, Metadata.model_validate(record) if record else None
-            )
+            matched = Metadata.model_validate(record) if record else None
+            if (
+                matched
+                and matched.candidate
+                and (
+                    (
+                        film.evidence.get("tmdbId")
+                        and film.evidence["tmdbId"] != matched.candidate.tmdb_id
+                    )
+                    or (
+                        film.evidence.get("imdbId")
+                        and film.evidence["imdbId"] != matched.candidate.imdb_id
+                    )
+                )
+            ):
+                matched = None
+            evidence = category_evidence(source, matched)
             row.release_category = release_category(
                 evidence, identity_verified=film.identity_status == "verified"
             )
