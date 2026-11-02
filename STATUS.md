@@ -2,23 +2,22 @@
 
 ## Now
 
-**2 Nov: revised cinema contract accepted; integrating planning before AB6 (#327).**
-Craig's latest “proceed” accepts the complete contract including new/older run-category
-filters: docs/reviews/ab-cinema-build-contract-2026-11-02.md. All nine/Film first/£0 data,
-daily existing 08:00 UTC job phase, uncertain evidence and disabled initial collection.
-Original AB6 ingestion → AB7 discovery, one branch/PR each; no repeat contract decision.
-Exact live dry-run/read/count/write/enable stops persist. No new host/config/credential/
-paid tier; existing resource cost unmeasured. No AA10c/other sitting.
-Clean research branch; main's exact c63bc06 CI 41207241130 passes. No open research PR yet.
-Next: clean local gate, planning PR/exact-head CI, merge and matching API/web/readiness,
-then AB6 from clean green main. No implementation or live programme write yet.
+**2 Nov: planning handoff integrated; AB6 ingestion implementation starting (#327).**
+PR #124 merged 6b4199f. Local ten-command gate passes, API 2,549/no skips, seven-job
+PR CI 41443729954 and main CI 41445893500 pass. API/web exact 6b4199f, db ok/five
+integrations configured. Initial local locale/socket-guard issues resolved without
+changing tests. Accepted contract: docs/reviews/ab-cinema-build-contract-2026-11-02.md.
+Clean green main → feat/ab6-cinema-ingestion. Ingestion only (Extra High), one PR;
+AB7 waits for accepted AB6. Verbatim criteria: docs/reviews/ab6-implementation-2026-11-02.md.
+Source/production dry-run/count/write/enable checkpoints remain; seeds disabled.
+All nine/Film first/£0 source data; no new hosting/config/credential/paid tier/other sitting.
 
 ## Next
 
-Integrate the accepted research/planning handoff through normal review/CI/served-SHA proof.
-Then run AB6 → AB7 under group-start, one branch/PR each, with accepted #327 contract.
-Stop for exact live dry-run/read/count/write/enable checkpoints and unmet source acceptance.
-No new hosting/credentials/paid source, reduced venue list, browser retry or other sitting.
+Build AB6 against the accepted #327 contract and real specimens. Verify its five-table,
+six-adapter, authenticated shared-zod API and disabled daily-job/CLI/retention pipeline.
+Stop before exact live dry-run/count/write/enable checkpoints or unmet all-nine acceptance.
+AB7 follows only accepted AB6 from clean green main; no new hosting or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -412,6 +411,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — planning integrated, AB6 starts:** PR #124/main 6b4199f, clean full local gate
+  and exact-head seven-job PR/main CI, exact API/web/full readiness verified. AB6 branch
+  created from green main; criteria restated verbatim. App implementation starting,
+  no live source/write/enable action or AB7/AA10c/other sitting.
 
 - **2 Nov — revised contract accepted (#327):** latest “proceed” clears the full build
   contract/run-category checkpoint. Integrate planning then AB6 → AB7, one PR each.
