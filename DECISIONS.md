@@ -6945,3 +6945,19 @@ contemporaneous.
      still unresolved/separate. No new live pass/import/production action or AB7/AA10c.
      Source report JSON/audit totals and documentation diff checked; implementation gates
      remain the previously green exact code/report CI, not newly claimed app acceptance.
+
+330. **Accept the revised AB6 coverage/metadata build; keep production gates explicit (2 Nov).**
+     Craig says “proceed” to the concrete #329 amendment: Vue today/tomorrow only with
+     explicit later-date coverage gaps; bounded free TMDB enrichment after source collection,
+     at most 12 metadata GETs inside the existing combined 120/five-minute/64-MiB caps;
+     positive metadata cache 30 days and negative/ambiguous seven days; exact reviewed
+     corroborated source-key/global-ID mappings, never title/poster-only auto-linking.
+     Strict first UK run versus returning/reissue definitions remain; unknown stays
+     Unclassified. No promise that New releases becomes populated. Preserve source facts,
+     conflicts and metadata across refreshes; no catalogue/diary writes/new table/browser
+     schema expansion. Authorise preparation of one existing API-token reference into the
+     existing morning job and its read-only Railway plan; actual apply remains a separate
+     explicit decision. Implement/test on the existing AB6 branch/draft PR #125 only.
+     No new live source pass, production deployment/import/enable or AB7/AA10c/other sitting
+     is authorised by this acceptance. Costs include another full verification cycle,
+     metadata backlog and maintenance; £0 source fees, existing resources unpriced.

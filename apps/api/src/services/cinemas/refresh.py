@@ -19,7 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from src.clock import utcnow
 from src.models.admin_action import AdminAction
-from src.models.cinema import CinemaCoverage, CinemaRefreshRun, CinemaScreening, CinemaVenue
+from src.models.cinema import (
+    CinemaCoverage,
+    CinemaFilm,
+    CinemaRefreshRun,
+    CinemaScreening,
+    CinemaVenue,
+)
 from src.models.profile import Profile, UserRole
 from src.services import heartbeat
 from src.services.cinemas.collect import ADAPTER_VERSION, collect_venue
@@ -31,6 +37,15 @@ from src.services.cinemas.domain import (
     release_category,
 )
 from src.services.cinemas.fetch import Budget
+from src.services.cinemas.metadata import (
+    MappingPick,
+    Metadata,
+    corroboration,
+    enrich,
+    fingerprint,
+    selected_rows,
+    validate_picks,
+)
 from src.services.cinemas.store import fence, promote, retain
 from src.services.cinemas.venues import BY_SLUG, VENUES, Venue
 
@@ -42,13 +57,15 @@ HEARTBEAT = "cinema-programme"
 
 class PreparedRun(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    adapter_version: Literal["ab6-1"] = "ab6-1"
+    adapter_version: Literal["ab6-2"] = "ab6-2"
     prepared_utc: NaiveDatetime
     date_from: date
     date_to: date
     snapshots: dict[str, Snapshot]
     requests: int = Field(ge=0, le=120)
     decoded_bytes: int = Field(ge=0, le=64 * 1024 * 1024)
+    metadata: list[Metadata] = Field(default_factory=list, max_length=10000)
+    metadata_report: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_scope(self) -> "PreparedRun":
@@ -68,6 +85,18 @@ class PreparedRun(BaseModel):
                 raise ValueError("Artifact dates exceed observed/requested coverage")
             if any(row.start.date() not in dates for row in snapshot.rows):
                 raise ValueError("Artifact showing is outside its selected civil dates")
+        rows = selected_rows(self.snapshots)
+        seen = set()
+        for record in self.metadata:
+            key = (record.source, record.film_key)
+            if (
+                key in seen
+                or key not in rows
+                or record.fingerprint != fingerprint(rows[key])
+                or record.fetched_utc > self.prepared_utc
+            ):
+                raise ValueError("Metadata differs from its observed source identity/scope/time")
+            seen.add(key)
         return self
 
     @property
@@ -187,10 +216,19 @@ async def exclusive(
 
 
 async def prepare(
-    venues: list[Venue], start: date, end: date, client: httpx.AsyncClient
+    venues: list[Venue],
+    start: date,
+    end: date,
+    client: httpx.AsyncClient,
+    *,
+    token: str = "",
+    cache: dict[tuple[str, str], Metadata] | None = None,
+    metadata_paused: bool = False,
 ) -> PreparedRun:
     fetch = Budget(client)
     snapshots: dict[str, Snapshot] = {}
+    metadata: list[Metadata] = []
+    metadata_report: dict[str, Any] = {"status": "deadline", "requests": 0}
     try:
         # Reserve time inside the five-minute pass for atomic promotion/reporting.
         async with asyncio.timeout(240):
@@ -199,6 +237,11 @@ async def prepare(
                 if sum(len(s.rows) for s in snapshots.values()) + len(snapshot.rows) > 10000:
                     raise SourceError("Programme run normalised-row ceiling reached")
                 snapshots[venue.slug] = snapshot
+            metadata, metadata_report = await enrich(
+                snapshots, fetch, "" if metadata_paused else token, cache or {}
+            )
+            if metadata_paused:
+                metadata_report.update(status="paused", refused=True)
     except (TimeoutError, SourceError) as exc:
         for venue in venues:
             if venue.slug not in snapshots:
@@ -207,6 +250,9 @@ async def prepare(
                     errors=[str(exc) or "Programme source deadline reached"],
                     observed_utc=utcnow(),
                 )
+    metadata_report["requests"] = fetch.metadata_requests
+    if metadata_report["status"] == "deadline":
+        metadata_report["pending"] = len(selected_rows(snapshots))
     return PreparedRun(
         prepared_utc=utcnow(),
         date_from=start,
@@ -214,6 +260,8 @@ async def prepare(
         snapshots=snapshots,
         requests=fetch.requests,
         decoded_bytes=fetch.bytes_read,
+        metadata=metadata,
+        metadata_report=metadata_report,
     )
 
 
@@ -227,6 +275,7 @@ def summary(prepared: PreparedRun) -> dict[str, Any]:
                         row.evidence, identity_verified=bool(row.tmdb_id or row.imdb_id)
                     )
                 ] += 1
+    source_rows = selected_rows(prepared.snapshots)
     return {
         "rows": prepared.row_count,
         "requests": prepared.requests,
@@ -234,6 +283,24 @@ def summary(prepared: PreparedRun) -> dict[str, Any]:
         "categoryCountsFromSourceEvidence": categories,
         "dateFrom": prepared.date_from.isoformat(),
         "dateTo": prepared.date_to.isoformat(),
+        "metadata": {
+            **prepared.metadata_report,
+            "candidates": [
+                {
+                    "source": m.source,
+                    "filmKey": m.film_key,
+                    "sourceTitle": source_rows[(m.source, m.film_key)].title,
+                    "sourceFacts": source_rows[(m.source, m.film_key)].identity_facts,
+                    "candidate": m.candidate.model_dump(mode="json"),
+                    "corroboration": corroboration(
+                        source_rows[(m.source, m.film_key)], m.candidate
+                    ),
+                    "mappingReview": "candidate data is not an approval",
+                }
+                for m in prepared.metadata
+                if m.candidate is not None
+            ],
+        },
         "venues": {
             slug: {
                 "rows": len(s.rows),
@@ -287,16 +354,20 @@ async def preview(db: AsyncSession, prepared: PreparedRun) -> dict[str, Any]:
 
 
 async def apply_prepared(
-    engine: AsyncEngine, prepared: PreparedRun, actor: uuid.UUID
+    engine: AsyncEngine,
+    prepared: PreparedRun,
+    actor: uuid.UUID,
+    picks: list[MappingPick] | None = None,
 ) -> dict[str, Any]:
     prepared.require_all_nine()
+    approved = validate_picks(prepared.snapshots, prepared.metadata, picks or [])
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with asyncio.timeout(295):
         async with factory() as db:
             await _admin(db, actor)
         async with exclusive(engine, "manual", _scope(prepared)) as run_id:
             assert run_id is not None
-            return await _promote_all(engine, prepared, run_id, actor)
+            return await _promote_all(engine, prepared, run_id, actor, set(approved))
 
 
 def _scope(prepared: PreparedRun) -> dict[str, Any]:
@@ -316,14 +387,30 @@ def _depends_on(venue: Venue, host: str) -> bool:
 
 
 async def _promote_all(
-    engine: AsyncEngine, prepared: PreparedRun, run_id: uuid.UUID, actor: uuid.UUID | None = None
+    engine: AsyncEngine,
+    prepared: PreparedRun,
+    run_id: uuid.UUID,
+    actor: uuid.UUID | None = None,
+    picks: set[tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     factory = async_sessionmaker(engine, expire_on_commit=False)
-    report: dict[str, Any] = {**_scope(prepared), "venues": {}}
+    report: dict[str, Any] = {
+        **_scope(prepared),
+        "venues": {},
+        "metadata": prepared.metadata_report,
+    }
+    metadata = {(m.source, m.film_key): m for m in prepared.metadata}
     for slug, snapshot in prepared.snapshots.items():
         async with factory() as db, db.begin():
             counts = await promote(
-                db, BY_SLUG[slug], snapshot, prepared.date_from, prepared.date_to, run_id
+                db,
+                BY_SLUG[slug],
+                snapshot,
+                prepared.date_from,
+                prepared.date_to,
+                run_id,
+                metadata,
+                picks,
             )
             report["venues"][slug] = counts
             if snapshot.refused_host:
@@ -377,7 +464,19 @@ async def _promote_all(
                     action_type="bulk_import",
                     target_table="cinema_screenings",
                     target_id=str(run_id),
-                    changes={"rows": prepared.row_count, "venues": len(prepared.snapshots)},
+                    changes={
+                        "rows": prepared.row_count,
+                        "venues": len(prepared.snapshots),
+                        "reviewedMappings": [
+                            {
+                                "source": source,
+                                "filmKey": key,
+                                "tmdbId": candidate.tmdb_id,
+                            }
+                            for source, key in sorted(picks or set())
+                            if (candidate := metadata[(source, key)].candidate) is not None
+                        ],
+                    },
                 )
             )
     # Heartbeat's helper commits/rolls back its session. Keep that boundary separate
@@ -411,6 +510,8 @@ async def refresh_due(engine: AsyncEngine) -> dict[str, Any]:
                     )
                 ).all()
             )
+            cache = await metadata_cache(db) if selected else {}
+            paused = await metadata_is_paused(db) if selected else False
         if not selected:
             return {"status": "disabled", "requests": 0}
         venues = [v for v in VENUES if v.slug in selected]
@@ -427,13 +528,51 @@ async def refresh_due(engine: AsyncEngine) -> dict[str, Any]:
                 async with httpx.AsyncClient(
                     timeout=15, headers={"User-Agent": "MCU-private-cinema-programme/1.0"}
                 ) as client:
-                    prepared = await prepare(venues, start, end, client)
+                    from src.config import settings
+
+                    prepared = await prepare(
+                        venues,
+                        start,
+                        end,
+                        client,
+                        token=settings.tmdb_read_token,
+                        cache=cache,
+                        metadata_paused=paused,
+                    )
                 report = await _promote_all(engine, prepared, run_id)
         log.info("cinema_programme_finished", **report)
         return report
     except Exception as exc:  # noqa: BLE001 - separate child phase, never roll back reminders
         log.warning("cinema_programme_failed", error_type=type(exc).__name__)
         return {"status": "failed", "error": type(exc).__name__}
+
+
+async def metadata_is_paused(db: AsyncSession) -> bool:
+    report = await db.scalar(
+        select(CinemaRefreshRun.report)
+        .where(
+            CinemaRefreshRun.finished_utc.is_not(None), CinemaRefreshRun.report.has_key("metadata")
+        )
+        .order_by(CinemaRefreshRun.finished_utc.desc())
+        .limit(1)
+    )
+    return bool(report and report.get("metadata", {}).get("refused"))
+
+
+async def metadata_cache(db: AsyncSession) -> dict[tuple[str, str], Metadata]:
+    cache = {}
+    for film in (
+        await db.scalars(select(CinemaFilm).where(CinemaFilm.deleted_at.is_(None)).limit(10000))
+    ).all():
+        value = (film.evidence or {}).get("metadata")
+        if value:
+            try:
+                record = Metadata.model_validate(value)
+                if (record.source, record.film_key) == (film.source, film.source_key):
+                    cache[(film.source, film.source_key)] = record
+            except ValueError:
+                log.warning("cinema_metadata_cache_invalid")
+    return cache
 
 
 async def set_enabled(engine: AsyncEngine, actor: uuid.UUID, enabled: bool, expected: int) -> int:

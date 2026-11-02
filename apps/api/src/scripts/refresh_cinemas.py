@@ -15,15 +15,19 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.clock import utcnow
 from src.config import settings
 from src.services.cinemas.domain import LONDON, SourceError, days_between
+from src.services.cinemas.metadata import MappingPick
 from src.services.cinemas.refresh import (
     apply_prepared,
     exclusive,
     load_artifact,
+    metadata_cache,
+    metadata_is_paused,
     prepare,
     preview,
     save_artifact,
@@ -42,6 +46,13 @@ def arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--snapshot", type=Path)
     parser.add_argument("--confirm-digest")
     parser.add_argument("--confirm-count", type=int)
+    parser.add_argument(
+        "--resume-metadata",
+        action="store_true",
+        help="Owner-approved new dry-run after metadata host refusal",
+    )
+    parser.add_argument("--reviewed-mappings", type=Path)
+    parser.add_argument("--confirm-mapping-count", type=int)
     parser.add_argument("--actor-profile-id", type=uuid.UUID)
     parser.add_argument("--date-from", type=date.fromisoformat)
     parser.add_argument("--date-to", type=date.fromisoformat)
@@ -54,8 +65,17 @@ def arguments(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--write requires the reviewed --confirm-digest")
     if not args.dry_run and (args.date_from or args.date_to):
         parser.error("Imported dates come from the reviewed artifact")
+    if args.resume_metadata and not args.dry_run:
+        parser.error("--resume-metadata requires a separately approved --dry-run")
     if args.confirm_count is not None and args.confirm_count < 0:
         parser.error("--confirm-count cannot be negative")
+    if args.reviewed_mappings is not None or args.confirm_mapping_count is not None:
+        if not args.write or args.reviewed_mappings is None or args.confirm_mapping_count is None:
+            parser.error(
+                "Mapping selections need --write, --reviewed-mappings and --confirm-mapping-count"
+            )
+        if args.confirm_mapping_count < 0:
+            parser.error("--confirm-mapping-count cannot be negative")
     return args
 
 
@@ -68,10 +88,21 @@ async def run(args: argparse.Namespace) -> dict[str, Any]:
             days_between(start, end)
             factory = async_sessionmaker(engine, expire_on_commit=False)
             async with asyncio.timeout(295), exclusive(engine, None, {}):
+                async with factory() as db:
+                    cache = await metadata_cache(db)
+                    paused = await metadata_is_paused(db) and not args.resume_metadata
                 async with httpx.AsyncClient(
                     timeout=15, headers={"User-Agent": "MCU-private-cinema-programme/1.0"}
                 ) as client:
-                    prepared = await prepare(list(VENUES), start, end, client)
+                    prepared = await prepare(
+                        list(VENUES),
+                        start,
+                        end,
+                        client,
+                        token=settings.tmdb_read_token,
+                        cache=cache,
+                        metadata_paused=paused,
+                    )
                 async with factory() as db:
                     report = await preview(db, prepared)
                 digest = save_artifact(prepared, args.snapshot)
@@ -89,7 +120,16 @@ async def run(args: argparse.Namespace) -> dict[str, Any]:
             }
         if args.write:
             prepared = load_artifact(args.snapshot, args.confirm_digest, args.confirm_count)
-            return await apply_prepared(engine, prepared, args.actor_profile_id)
+            picks = []
+            if args.reviewed_mappings is not None:
+                if args.reviewed_mappings.stat().st_size > 1024 * 1024:
+                    raise SourceError("Mapping selection file exceeds 1 MiB")
+                picks = TypeAdapter(list[MappingPick]).validate_json(
+                    args.reviewed_mappings.read_bytes()
+                )
+                if len(picks) != args.confirm_mapping_count:
+                    raise SourceError("Reviewed mapping count differs; no write")
+            return await apply_prepared(engine, prepared, args.actor_profile_id, picks)
         changed = await set_enabled(engine, args.actor_profile_id, args.enable, args.confirm_count)
         return {"mode": "enable" if args.enable else "disable", "changed": changed}
     finally:

@@ -107,6 +107,12 @@ export default defineRailway(() => {
 
   const reminders = service('cron-reminders', {
     ...cronDefaults,
+    env: {
+      ...cronDefaults.env,
+      // AB6 metadata only; the existing API secret is referenced, never copied.
+      // Preparing this diff does not authorise config apply or cinema enablement.
+      TMDB_READ_TOKEN: api.env.TMDB_READ_TOKEN,
+    },
     deploy: {
       // 08:00 UTC — a reminder about tonight's release is worth having in the morning.
       cronSchedule: '0 8 * * *',

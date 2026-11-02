@@ -1,0 +1,338 @@
+[
+  {
+    "source": "cineworld",
+    "sourceFilmKey": "1000016901",
+    "sourceTitle": "Clayface",
+    "searchQuery": "Clayface",
+    "identity": "unverified candidate; no application mapping",
+    "runCategory": "unclassified",
+    "candidates": [
+      {
+        "id": 1400940,
+        "title": "Clayface",
+        "original_title": "Clayface",
+        "release_date": "2026-10-19",
+        "poster_path": "/9l1NuFjel2j89hiuiJbsxfblqjy.jpg",
+        "original_language": "en"
+      }
+    ],
+    "candidateId": 1400940,
+    "details": {
+      "id": 1400940,
+      "title": "Clayface",
+      "original_title": "Clayface",
+      "release_date": "2026-10-19",
+      "runtime": 109,
+      "imdb_id": "tt34890576",
+      "poster_path": "/9l1NuFjel2j89hiuiJbsxfblqjy.jpg",
+      "original_language": "en",
+      "directors": [
+        {
+          "id": 63306,
+          "name": "James Watkins"
+        }
+      ]
+    },
+    "gbReleaseEvents": [
+      {
+        "type": 2,
+        "release_date": "2026-10-19T00:00:00.000Z",
+        "note": "",
+        "certification": "18",
+        "iso_639_1": ""
+      },
+      {
+        "type": 3,
+        "release_date": "2026-10-23T00:00:00.000Z",
+        "note": "",
+        "certification": "18",
+        "iso_639_1": ""
+      }
+    ],
+    "status": "metadata candidate captured; source identity/current run not automatically verified"
+  },
+  {
+    "source": "cineworld",
+    "sourceFilmKey": "114782",
+    "sourceTitle": " (IMAX) Interstellar",
+    "searchQuery": "Interstellar",
+    "identity": "unverified candidate; no application mapping",
+    "runCategory": "unclassified",
+    "candidates": [
+      {
+        "id": 157336,
+        "title": "Interstellar",
+        "original_title": "Interstellar",
+        "release_date": "2014-11-04",
+        "poster_path": "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 529107,
+        "title": "Inside 'Interstellar'",
+        "original_title": "Inside 'Interstellar'",
+        "release_date": "2015-03-31",
+        "poster_path": "/xWA7Bbo9VeahPcKCFYiC7NZXNoV.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 398188,
+        "title": "Interstellar Wars",
+        "original_title": "Interstellar Wars",
+        "release_date": "2016-06-09",
+        "poster_path": "/4uWZ8cdrXMLiyLNgdmqQCIM6z40.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 649745,
+        "title": "Interstellar Wandering",
+        "original_title": "\u661f\u9645\u6d41\u6d6a",
+        "release_date": "2019-08-02",
+        "poster_path": "/oUWDbde5bWu9syBZglWDIwB1SPm.jpg",
+        "original_language": "zh"
+      },
+      {
+        "id": 336592,
+        "title": "The Science of Interstellar",
+        "original_title": "The Science of Interstellar",
+        "release_date": "2014-11-13",
+        "poster_path": "/pUvbuOTHKQWrLuGY1x2pHd1evPL.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 1443305,
+        "title": "Container Interstellar",
+        "original_title": "Container Interstellar",
+        "release_date": "2001-01-01",
+        "poster_path": "/dp7ch6CGdNnNpcidyzBaFabmEJW.jpg",
+        "original_language": "de"
+      },
+      {
+        "id": 1786250,
+        "title": "Short cuts : Interstellar",
+        "original_title": "Short cuts - Interstellar de Christopher Nolan",
+        "release_date": "2026-10-01",
+        "poster_path": "/pnI0ILKxYFy0q7oLz9nvcL1e25c.jpg",
+        "original_language": "fr"
+      },
+      {
+        "id": 287954,
+        "title": "Lolita from Interstellar Space",
+        "original_title": "Lolita from Interstellar Space",
+        "release_date": "2014-03-08",
+        "poster_path": "/nhWlip1s5YzhRFKGlHABGJrBhZn.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 1391726,
+        "title": "Interstellar Stella",
+        "original_title": "Interstellar Stella",
+        "release_date": "2006-12-11",
+        "poster_path": "/eRdr1AvBrFTXMKNf8rjgvVTbDWU.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 1282990,
+        "title": "Interstellar Interference",
+        "original_title": "Interstellar Interference",
+        "release_date": "2023-04-22",
+        "poster_path": "/2yHZyjf9DC2y2wsOckiTmn7ZJLp.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 301959,
+        "title": "Interstellar: Nolan's Odyssey",
+        "original_title": "Interstellar: Nolan's Odyssey",
+        "release_date": "2014-11-05",
+        "poster_path": "/i4PpBcuLvdcJwIf3hkcV9QDR1iH.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 1642987,
+        "title": "Primus Interstellar Drum Derby",
+        "original_title": "Primus Interstellar Drum Derby",
+        "release_date": "2025-02-20",
+        "poster_path": "/l4u0AIIdZUXPQGj8ZpZXYZ8Xt2B.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 1450827,
+        "title": "Interstellar Political Prisoner",
+        "original_title": "Interstellar Political Prisoner",
+        "release_date": "2016-09-25",
+        "poster_path": "/1A0wLpRmpMLaoDRGhzvctyeoogp.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 716603,
+        "title": "Only Interstellar Pinball Lives Forever",
+        "original_title": "Only Interstellar Pinball Lives Forever",
+        "release_date": "2010-06-28",
+        "poster_path": "/uLJMGZlrkmvAO9Ria9zrp8GUqjx.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 460616,
+        "title": "Interstellar Civil War: Shadows of the Empire",
+        "original_title": "Interstellar Civil War: Shadows of the Empire",
+        "release_date": "2017-03-18",
+        "poster_path": "/1lDY7ZpEKOl3OaIQURjRbmFPfT8.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 660698,
+        "title": "Faster Than Light: the Dream of Interstellar Flight",
+        "original_title": "Faster Than Light: the Dream of Interstellar Flight",
+        "release_date": "2017-06-07",
+        "poster_path": "/mbgJxB70uMFK2H8DXHUj5lAMgXx.jpg",
+        "original_language": "en"
+      },
+      {
+        "id": 763179,
+        "title": "Cosmic Journey: The Voyager Interstellar Mission and Message",
+        "original_title": "Cosmic Journey: The Voyager Interstellar Mission and Message",
+        "release_date": "2003-01-16",
+        "poster_path": null,
+        "original_language": "en"
+      },
+      {
+        "id": 552531,
+        "title": "The Prom Goer's Interstellar Excursion",
+        "original_title": "The Prom Goer's Interstellar Excursion",
+        "release_date": "",
+        "poster_path": null,
+        "original_language": "en"
+      },
+      {
+        "id": 1501040,
+        "title": "The Future is Now: A Look Back at Interstellar",
+        "original_title": "The Future is Now: A Look Back at Interstellar",
+        "release_date": "2024-12-10",
+        "poster_path": null,
+        "original_language": "en"
+      },
+      {
+        "id": 986255,
+        "title": "How to Colonize the Stars: The Challenge of Interstellar Flight",
+        "original_title": "How to Colonize the Stars: The Challenge of Interstellar Flight",
+        "release_date": "2009-06-09",
+        "poster_path": "/ddYoMPJioxY7qQxt7JyUaLCWMjw.jpg",
+        "original_language": "en"
+      }
+    ],
+    "candidateId": 157336,
+    "details": {
+      "id": 157336,
+      "title": "Interstellar",
+      "original_title": "Interstellar",
+      "release_date": "2014-11-04",
+      "runtime": 169,
+      "imdb_id": "tt0816692",
+      "poster_path": "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+      "original_language": "en",
+      "directors": [
+        {
+          "id": 525,
+          "name": "Christopher Nolan"
+        }
+      ]
+    },
+    "gbReleaseEvents": [
+      {
+        "type": 1,
+        "release_date": "2014-10-29T00:00:00.000Z",
+        "note": "London, England",
+        "certification": "",
+        "iso_639_1": ""
+      },
+      {
+        "type": 3,
+        "release_date": "2014-11-07T00:00:00.000Z",
+        "note": "",
+        "certification": "12A",
+        "iso_639_1": ""
+      },
+      {
+        "type": 3,
+        "release_date": "2024-09-20T00:00:00.000Z",
+        "note": "IMAX 10th Anniversary re-release",
+        "certification": "12A",
+        "iso_639_1": ""
+      },
+      {
+        "type": 4,
+        "release_date": "2015-03-31T00:00:00.000Z",
+        "note": "",
+        "certification": "12A",
+        "iso_639_1": ""
+      },
+      {
+        "type": 5,
+        "release_date": "2015-03-31T00:00:00.000Z",
+        "note": "Blu-ray / DVD",
+        "certification": "12",
+        "iso_639_1": ""
+      },
+      {
+        "type": 5,
+        "release_date": "2024-12-09T00:00:00.000Z",
+        "note": "10th Anniversary Limited Edition 4K Ultra HD",
+        "certification": "12",
+        "iso_639_1": ""
+      }
+    ],
+    "status": "metadata candidate captured; source identity/current run not automatically verified"
+  },
+  {
+    "source": "cineworld",
+    "sourceFilmKey": "1000045847",
+    "sourceTitle": "Pan's Labyrinth 20th Anniversary 4K Restoration",
+    "searchQuery": "Pan's Labyrinth",
+    "identity": "unverified candidate; no application mapping",
+    "runCategory": "unclassified",
+    "candidates": [
+      {
+        "id": 1417,
+        "title": "Pan's Labyrinth",
+        "original_title": "El laberinto del fauno",
+        "release_date": "2006-10-11",
+        "poster_path": "/khBQ6nN5FLfg9XgPXIZDkABJjqo.jpg",
+        "original_language": "es"
+      }
+    ],
+    "candidateId": 1417,
+    "details": {
+      "id": 1417,
+      "title": "Pan's Labyrinth",
+      "original_title": "El laberinto del fauno",
+      "release_date": "2006-10-11",
+      "runtime": 118,
+      "imdb_id": "tt0457430",
+      "poster_path": "/khBQ6nN5FLfg9XgPXIZDkABJjqo.jpg",
+      "original_language": "es",
+      "directors": [
+        {
+          "id": 10828,
+          "name": "Guillermo del Toro"
+        }
+      ]
+    },
+    "gbReleaseEvents": [
+      {
+        "type": 1,
+        "release_date": "2006-08-25T00:00:00.000Z",
+        "note": "London FrightFest Film Festival",
+        "certification": "",
+        "iso_639_1": ""
+      },
+      {
+        "type": 3,
+        "release_date": "2006-11-24T00:00:00.000Z",
+        "note": "",
+        "certification": "15",
+        "iso_639_1": ""
+      }
+    ],
+    "status": "metadata candidate captured; source identity/current run not automatically verified"
+  }
+]

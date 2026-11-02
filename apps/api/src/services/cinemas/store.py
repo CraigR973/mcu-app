@@ -1,6 +1,7 @@
 """Atomic venue promotion, conservative disappearance and fenced writers."""
 
 import uuid
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -22,6 +23,7 @@ from src.services.cinemas.domain import (
     days_between,
     release_category,
 )
+from src.services.cinemas.metadata import Metadata, category_evidence, corroboration, fingerprint
 from src.services.cinemas.venues import Venue
 
 
@@ -39,7 +41,14 @@ async def fence(db: AsyncSession, run_id: uuid.UUID) -> CinemaRefreshRun:
     return run
 
 
-async def _film(db: AsyncSession, source: str, row: Showing, observed: datetime) -> CinemaFilm:
+async def _film(
+    db: AsyncSession,
+    source: str,
+    row: Showing,
+    observed: datetime,
+    metadata: Metadata | None = None,
+    picked: bool = False,
+) -> CinemaFilm:
     film = await db.scalar(
         select(CinemaFilm).where(CinemaFilm.source == source, CinemaFilm.source_key == row.film_key)
     )
@@ -47,16 +56,38 @@ async def _film(db: AsyncSession, source: str, row: Showing, observed: datetime)
         film = CinemaFilm(source=source, source_key=row.film_key, title=row.title)
         db.add(film)
     prior_evidence = film.evidence or {}
+    source_fingerprint = fingerprint(row)
+    changed = bool(
+        prior_evidence.get("sourceFingerprint")
+        and prior_evidence["sourceFingerprint"] != source_fingerprint
+    )
+    if picked:
+        if (
+            metadata is None
+            or metadata.candidate is None
+            or not corroboration(row, metadata.candidate)
+        ):
+            raise SourceError("Reviewed mapping lacks corroboration")
+        row = replace(row, tmdb_id=metadata.candidate.tmdb_id, imdb_id=metadata.candidate.imdb_id)
     conflict = bool(
         row.evidence.get("conflict")
         or row.evidence.get("combinedProgramme")
-        or film.identity_status == "conflict"
+        or (film.identity_status == "conflict" and not picked)
     )
-    if film.identity_status == "verified" and film.title != row.title:
+    if film.identity_status == "verified" and (film.title != row.title or changed) and not picked:
         conflict = True
     for key, supplied in (("tmdbId", row.tmdb_id), ("imdbId", row.imdb_id)):
-        if supplied and prior_evidence.get(key) and supplied != prior_evidence[key]:
+        if supplied and prior_evidence.get(key) and supplied != prior_evidence[key] and not picked:
             conflict = True
+    if (
+        film.identity_status == "verified"
+        and metadata
+        and metadata.candidate
+        and prior_evidence.get("tmdbId")
+        and metadata.candidate.tmdb_id != prior_evidence["tmdbId"]
+        and not picked
+    ):
+        conflict = True
     tmdb_id = row.tmdb_id
     imdb_id = row.imdb_id
     if film.identity_status == "verified" and not conflict:
@@ -97,10 +128,36 @@ async def _film(db: AsyncSession, source: str, row: Showing, observed: datetime)
     identified = bool(movie or conditions) and not conflict
     film.title = row.title
     film.movie_id = movie.id if movie and not conflict else None
-    film.original_year = movie.year if movie and not conflict else None
+    film.original_year = (
+        movie.year
+        if movie and not conflict
+        else (film.original_year if identified and not changed and not picked else None)
+    )
     film.identity_status = "conflict" if conflict else "verified" if identified else "unverified"
     film.source_release_date = row.source_release
-    film.evidence = {**row.evidence, "tmdbId": tmdb_id, "imdbId": imdb_id, "conflict": conflict}
+    retained = (
+        {}
+        if changed
+        else {k: v for k, v in prior_evidence.items() if k in {"metadata", "reviewedMapping"}}
+    )
+    if metadata is not None:
+        retained["metadata"] = metadata.model_dump(mode="json")
+    if picked:
+        assert metadata is not None and metadata.candidate is not None
+        retained["reviewedMapping"] = {
+            "tmdbId": tmdb_id,
+            "fingerprint": source_fingerprint,
+            "corroboration": corroboration(row, metadata.candidate),
+        }
+    film.evidence = {
+        **retained,
+        **row.evidence,
+        "tmdbId": tmdb_id,
+        "imdbId": imdb_id,
+        "conflict": conflict,
+        "sourceIdentity": row.identity_facts,
+        "sourceFingerprint": source_fingerprint,
+    }
     film.last_seen_utc = observed
     film.deleted_at = None
     await db.flush()
@@ -114,6 +171,8 @@ async def promote(
     start: date,
     end: date,
     run_id: uuid.UUID,
+    metadata: dict[tuple[str, str], Metadata] | None = None,
+    picks: set[tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Caller owns the transaction: either this entire venue/date window lands or none."""
     await fence(db, run_id)
@@ -158,7 +217,15 @@ async def promote(
                 raise SourceError("A source row lies outside the requested civil window")
             film = films.get(source.film_key)
             if film is None:
-                film = await _film(db, venue.source, source, observed)
+                key = (venue.source, source.film_key)
+                film = await _film(
+                    db,
+                    venue.source,
+                    source,
+                    observed,
+                    (metadata or {}).get(key),
+                    key in (picks or set()),
+                )
                 films[source.film_key] = film
             elif film.title != source.title:
                 raise SourceError("One film identity has conflicting programme titles")
@@ -179,10 +246,14 @@ async def promote(
             row.formats = list(source.formats)
             row.source_expired = source.expired
             row.booking_url = source.booking
-            row.release_category = release_category(
-                source.evidence, identity_verified=film.identity_status == "verified"
+            record = film.evidence.get("metadata")
+            evidence = category_evidence(
+                source, Metadata.model_validate(record) if record else None
             )
-            row.category_evidence = source.evidence
+            row.release_category = release_category(
+                evidence, identity_verified=film.identity_status == "verified"
+            )
+            row.category_evidence = evidence
             row.confirmation = "cancelled" if source.cancelled else "confirmed"
             if source.expired:
                 row.booking_url = None

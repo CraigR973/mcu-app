@@ -134,6 +134,7 @@ class Showing:
     tmdb_id: int | None = None
     imdb_id: str | None = None
     source_release: date | None = None
+    identity_facts: dict[str, str | int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.start.tzinfo is None or (self.end is not None and self.end.tzinfo is None):
@@ -154,6 +155,14 @@ class Showing:
             raise SourceError("Invalid explicit TMDB identity")
         if self.imdb_id is not None and not re.fullmatch(r"tt\d{7,10}", self.imdb_id):
             raise SourceError("Invalid explicit IMDb identity")
+        if set(self.identity_facts) - {"director", "originalTitle", "runtimeMinutes"}:
+            raise SourceError("Unexpected source identity fact")
+        for key, value in self.identity_facts.items():
+            if key == "runtimeMinutes":
+                if type(value) is not int or not 0 < value <= 1000:
+                    raise SourceError("Invalid source runtime")
+            elif not isinstance(value, str) or not value.strip() or len(value) > 500:
+                raise SourceError("Invalid source identity text")
         if set(self.evidence) - {
             "run",
             "sourceUrl",
@@ -161,6 +170,7 @@ class Showing:
             "conflict",
             "combinedProgramme",
             "reissue",
+            "returningLabel",
         }:
             raise SourceError("Unexpected programme evidence fields; no raw payload storage")
 
@@ -187,6 +197,8 @@ class Snapshot:
             previous = films.get(row.film_key)
             if previous and (
                 previous.title != row.title
+                or previous.identity_facts != row.identity_facts
+                or previous.source_release != row.source_release
                 or (previous.tmdb_id and row.tmdb_id and previous.tmdb_id != row.tmdb_id)
                 or (previous.imdb_id and row.imdb_id and previous.imdb_id != row.imdb_id)
             ):

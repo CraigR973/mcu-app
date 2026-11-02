@@ -103,3 +103,14 @@ applying a regenerated secret would sign both people out.
 Every variable is preserved from Railway and supplied as a service variable; none is stored
 in this repository. That now includes the two JWT secrets, which Batch 3 consumes and which
 were generated once when the service was created.
+
+## AB6 proposal, 2 Nov — not applied
+
+The AB6 branch prepares an existing `api.TMDB_READ_TOKEN` reference for `cron-reminders`
+only, for bounded cinema metadata after reminders commit. No secret is copied, no new
+service or schedule is added, and cinema seeds remain disabled. Read-only plan: zero
+additions, two changes (this reference plus the known API restart-policy drift), zero
+deletions. Exact apply remains an owner checkpoint. Evidence and compatible isolated CLI
+command: `docs/reviews/ab6-metadata-railway-plan-2026-11-02.json`. The installed CLI was too
+old for railway/iac 3.11.0; an isolated CLI 5.42.1 under Node 22 produced the plan without
+a global upgrade. Never assume `config plan` authorises `config apply`.

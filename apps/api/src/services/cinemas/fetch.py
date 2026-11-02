@@ -28,13 +28,26 @@ class Budget:
         self.host_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
         self.last_start: dict[str, float] = {}
         self.slots = asyncio.Semaphore(2)
+        self.metadata_requests = 0
 
     async def get(self, url: str) -> str:
+        return await self._get(url)
+
+    async def metadata(self, url: str, token: str) -> str:
+        # Authentication can travel only to this exact existing API host/path.
+        parsed = urlsplit(url)
+        if parsed.hostname != "api.themoviedb.org" or not parsed.path.startswith("/3/"):
+            raise SourceError("Unexpected metadata URL; no credential sent")
+        if not token or self.metadata_requests >= 12:
+            raise SourceError("Metadata credential unavailable or 12-GET sub-cap reached")
+        return await self._get(url, token=token)
+
+    async def _get(self, url: str, *, token: str | None = None) -> str:
         parsed = urlsplit(url)
         host = parsed.hostname or ""
         if (
             parsed.scheme != "https"
-            or host not in ALLOWED_HOSTS
+            or host not in (ALLOWED_HOSTS if token is None else {"api.themoviedb.org"})
             or parsed.username
             or parsed.password
             or parsed.port not in (None, 443)
@@ -55,9 +68,26 @@ class Budget:
             ):
                 raise SourceError("Programme run request/byte/time limit reached")
             self.last_start[host] = time.monotonic()
+            if token is not None:
+                if self.metadata_requests >= 12:
+                    raise SourceError("Metadata 12-GET sub-cap reached")
+                self.metadata_requests += 1
             self.requests += 1
+            headers = {}
+            if token is not None:
+                headers["Authorization"] = "Bearer " + token
+            elif host == "www.myvue.com":
+                headers = {
+                    "User-Agent": (
+                        "MCU-source-feasibility/1.0 (private two-person film app; bounded research)"
+                    ),
+                    "Accept": "text/html,application/xhtml+xml",
+                    "Accept-Encoding": "identity",
+                }
             async with asyncio.timeout(min(15, 300 - (time.monotonic() - self.started))):
-                async with self.client.stream("GET", url, follow_redirects=False) as response:
+                async with self.client.stream(
+                    "GET", url, headers=headers, follow_redirects=False
+                ) as response:
                     if response.status_code in (401, 403, 429):
                         self.refused.add(host)
                         raise Refused(host, response.status_code)

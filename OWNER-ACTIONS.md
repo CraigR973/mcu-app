@@ -164,15 +164,16 @@ conversation still maps onto this file.*
   original-title evidence corroborates two candidates; no mappings/classifications applied.
   No fresh eligible all-nine artifact or current first-run proof. No implementation,
   DB/production connection/write, config/credential/hosting change or additional live pass.
-  **New owner checkpoint:** accept/reject the concrete revised build in
-  docs/reviews/ab6-free-gap-investigation-2026-11-02.md: Vue today/tomorrow with explicit
-  later-date gaps; capped cached TMDB metadata/reviewed corroborated mappings inside the
-  existing budget; strict New/Older rules retained. Recommend preparing one reference to
-  the existing API TMDB token in the existing morning job. Accepting the amendment permits
-  its diff/read-only plan, not actual Railway apply. Extra implementation/full verification,
-  metadata backlog and potentially many Unclassified rows are the costs. Fresh all-nine
-  live acceptance/count/mapping review and exact apply/deployment/import/nine-row enable
-  remain later stops. Do not re-approve/repeat the completed investigation or start AB7.
+  **Revised build accepted (#330, 2 Nov):** Craig says “proceed” to the complete amendment.
+  Vue today/tomorrow; capped cached TMDB inside existing limits; independently corroborated
+  reviewed mappings; strict New/Older/Unclassified retained. AB6 implementation resumes on
+  draft PR #125 only. Existing-token reference and read-only plan preparation authorised;
+  actual Railway apply is not. Plan succeeds: 0 add/2 change/0 destroy (token reference plus
+  known API restart-policy drift), no apply. Implementation/verification report:
+  docs/reviews/ab6-metadata-amendment-2026-11-02.md. Full amended gate is in progress.
+  **Remaining owner checkpoints:** fresh exact all-nine acceptance read, actual row/horizon/
+  category/mapping review; exact config apply/disabled deployment/production import/nine-row
+  enable. No new source pass is covered by the build go. No AB7 before accepted AB6.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

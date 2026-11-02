@@ -153,6 +153,20 @@ def parse_vue(data: dict[str, Any], day: date, venue: Venue) -> Snapshot:
                             end=parsed_end,
                             screen=showing.get("screenName"),
                             source_release=_release_date(film.get("releaseDate")),
+                            identity_facts={
+                                **({"director": film["director"]} if film.get("director") else {}),
+                                **(
+                                    {"originalTitle": film["originalTitle"]}
+                                    if film.get("originalTitle")
+                                    else {}
+                                ),
+                                **(
+                                    {"runtimeMinutes": film["runningTime"]}
+                                    if film.get("runningTime")
+                                    else {}
+                                ),
+                            },
+                            evidence=_returning_label(film["filmTitle"], venue.programme_url),
                         )
                     )
                     result.observed_dates.add(start.date())
@@ -169,6 +183,19 @@ def _release_date(value: str | None) -> date | None:
         return date.fromisoformat(value[:10])
     except ValueError:
         return None
+
+
+def _returning_label(title: str, url: str) -> dict[str, Any]:
+    label = re.search(
+        r"\b(?:\d+(?:st|nd|rd|th) anniversary(?:\)?\s+[248]K restoration)?"
+        r"|[248]K restoration|re-release|reissue)\)?\s*$",
+        title,
+        re.I,
+    )
+    if len(title) <= 300 and label and title[: label.start()].strip(" ()-–:"):
+        # A label is evidence about this programme, not yet a verified film/run.
+        return {"returningLabel": True, "sourceUrl": url, "quote": title}
+    return {}
 
 
 def movie_metadata(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -231,6 +258,7 @@ def parse_boxoffice(
                             ),
                             expired=showing.get("isExpired") is True,
                             source_release=_release_date(film.get("release")),
+                            evidence=_returning_label(film["title"], venue.programme_url),
                         )
                     )
                     result.observed_dates.add(start.date())

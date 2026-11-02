@@ -13,7 +13,7 @@ passes. This is **not a fresh eligible all-nine artifact**, proof of recurring a
 or proof of Vue's full 14-day coverage. The eight-venue artifact from #328 remains
 ineligible. The Vue research snapshot must not be spliced into it or imported.
 
-Implementation remains stopped at the revised-build checkpoint below. AB7, AA10c and
+Craig subsequently accepted the revised build below (#330); AB6 implementation may resume. AB7, AA10c and
 all other sittings remain unstarted. PR #125 stays draft/unmerged; main/production
 remain at 6b4199f. No production merge/deployment/import/enable is authorised here.
 
@@ -119,7 +119,7 @@ This supports a reviewed, corroborated matching path for some films, while Inter
 and source records lacking corroboration stay unresolved. No title-only linking, automatic
 poster-key linking, catalogue creation or cross-provider grouping is justified by this pass.
 
-## Proposed revised build contract — not accepted or implemented
+## Revised build contract — accepted for implementation (#330)
 
 This is an amendment to the accepted #327 contract, within AB6 on its existing branch/PR.
 AB7 remains its own later branch/PR. All unchanged coverage, privacy, failure, retention,
@@ -185,7 +185,7 @@ estimate or zero hosting-bill guarantee is established. Wrong identity could gro
 films and mislabel screenings; failed access could leave dates unavailable. These risks are
 why candidate review, unknown states, refusal stops and the exact production gates remain.
 
-## Decision needed
+## Acceptance recorded
 
 1. Accept the proposed amendment as a whole: Vue today/tomorrow, capped free TMDB metadata,
    reviewed corroborated mappings, unchanged strict New/Older rules, and preparation of the
@@ -194,5 +194,5 @@ why candidate review, unknown states, refusal stops and the exact production gat
    backlog and potentially many Unclassified films. This does not authorise a new live
    source pass, production configuration apply, deployment/import/enable or AB7 start.
 
-If rejected, keep the current draft unchanged and do not substitute a smaller or differently
-labelled build. This report closes only the authorised investigation.
+Craig accepted this amendment with “proceed” (#330). This acceptance permits implementation
+and configuration-plan preparation only; later live/production gates remain unchanged.

@@ -2,14 +2,14 @@
 
 import json
 import re
-from datetime import date, timedelta
+from datetime import UTC, date, timedelta
 from typing import Any
 from urllib.parse import urlencode, urlsplit
 
 import httpx
 
 from src.clock import utcnow
-from src.services.cinemas.domain import Snapshot, SourceError, days_between
+from src.services.cinemas.domain import LONDON, Snapshot, SourceError, days_between
 from src.services.cinemas.fetch import Budget, Refused
 from src.services.cinemas.parsers import (
     movie_metadata,
@@ -22,7 +22,7 @@ from src.services.cinemas.parsers import (
 )
 from src.services.cinemas.venues import Venue
 
-ADAPTER_VERSION = "ab6-1"
+ADAPTER_VERSION = "ab6-2"
 
 
 def _merge(into: Snapshot, other: Snapshot) -> None:
@@ -56,14 +56,18 @@ async def collect_venue(venue: Venue, start: date, end: date, fetch: Budget) -> 
         elif venue.source == "gft":
             result = parse_gft(await fetch.get(venue.programme_url))
         elif venue.source == "vue":
-            for day in days:
+            # This approved adapter observes only today/tomorrow, even when the
+            # caller selects later dates. Later coverage remains explicitly unchecked.
+            today = checked_utc.replace(tzinfo=UTC).astimezone(LONDON).date()
+            for day in (d for d in days if today <= d <= today + timedelta(days=1)):
                 query = urlencode(
                     {
                         "showingDate": day.isoformat() + "T00:00:00",
                         "minEmbargoLevel": 3,
                         "includesSession": "true",
                         "includeSessionAttributes": "true",
-                    }
+                    },
+                    safe=":",
                 )
                 url = "https://www.myvue.com/api/microservice/showings/cinemas/10097/films?" + query
                 _merge(result, parse_vue(json.loads(await fetch.get(url)), day, venue))

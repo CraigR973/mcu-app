@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-02",
+  "command": "PATH=\"$HOME/.nvm/versions/node/v22.23.2/bin:$PATH\" pnpm dlx @railway/cli@5.42.1 config plan",
+  "readOnly": true,
+  "applied": false,
+  "exitCode": 0,
+  "add": 0,
+  "change": 2,
+  "destroy": 0,
+  "changes": [
+    {
+      "service": "cron-reminders",
+      "field": "env.TMDB_READ_TOKEN",
+      "proposedValue": "reference api.TMDB_READ_TOKEN",
+      "newSecret": false
+    },
+    {
+      "service": "api",
+      "field": "deploy.restartPolicyType",
+      "before": null,
+      "after": "ON_FAILURE",
+      "knownDrift": true
+    }
+  ],
+  "initialAttempt": "Installed CLI too old for installed railway/iac; isolated compatible CLI used, no global upgrade."
+}

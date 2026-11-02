@@ -1,0 +1,14 @@
+{
+  "vue-film-facts.json": {
+    "sourceFile": "scratchpad/ab-cinema-research/repeatability-2026-10-31/vue-schedule.html",
+    "sourceSha256": "c7962997efbfdb84036c2982594b6effac20fa48c8db5ac810312a068db1e579",
+    "fixtureSha256": "af433b3a33e4bbc1fc382c5aca6f50471be9ca9edf070750d85517d4670c348d",
+    "redaction": "Exact director/originalTitle/runningTime fields, keyed by filmId; no plots/images."
+  },
+  "tmdb-gap-samples.json": {
+    "sourceFile": "scratchpad/ab6/gap-2026-11-02T171018Z/report.json",
+    "sourceSha256": "508f2e86619005f79b35bb5c7570017b5838e3b20a81d620e950b90caadc4c43",
+    "fixtureSha256": "e8a7691b797395da809d9de89c48cd46f71c731b351c9fe09fb047ef29e7e083",
+    "redaction": "Normalised captured metadata/search/GB-history, not original full wire responses; all three remain unverified candidates."
+  }
+}

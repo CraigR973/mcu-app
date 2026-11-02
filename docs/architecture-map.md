@@ -22,8 +22,9 @@ flowchart TB
     Reminder[Existing morning job<br/>reminders committed first] --> Disabled{Cinema collection enabled?}
     Disabled -- no: zero HTTP --> Stop[Return cinema disabled]
     Disabled -- yes --> Public[Six public source families<br/>nine approved venues]
-    Public --> Fence[Bounded fetch and fenced atomic venue promotion]
-    Review[Owner-reviewed dry-run artifact<br/>exact hash and row count] --> Fence
+    Public --> Metadata[Optional cached TMDB candidates<br/>12 GETs inside the same run budget]
+    Metadata --> Fence[Bounded fetch and fenced atomic venue promotion]
+    Review[Owner-reviewed artifact and mappings<br/>exact hash and counts] --> Fence
     Fence --> Cinema[(Five isolated cinema tables)]
     Cinema --> Read[Authenticated stored programme API<br/>shared zod contract]
     Catalogue[(Existing catalogue and personal diary)] -- read only --> Read
@@ -35,8 +36,13 @@ Observed partial dates, missing/failing coverage, upstream age and unconfirmed s
 remain explicit; stale or unconfirmed observations never expose showing booking actions.
 Original year, source release date and evidenced release run are independent. Unknown
 identities/categories stay unknown. The cinema child uses independent sessions/heartbeat
-after reminder delivery, without a hosting schedule or credential change. Live dry-run,
-exact write/enable approvals and AB6 acceptance remain outstanding.
+after reminder delivery. The #330 amendment limits Vue to today/tomorrow and adds free
+TMDB metadata after source collection, with candidate review, 30-day positive/seven-day
+negative cache, source fingerprints and refusal pause. An existing API-token reference
+into the existing morning job is prepared, with a read-only plan; it has not been applied.
+No new service/schedule/table/browser API is added by the amendment. New run status remains
+unclassified without proof. Fresh all-nine acceptance, exact configuration apply,
+production deployment/import/mapping/enable approvals and AB6 acceptance remain outstanding.
 
 ## AA8, shipped 23 Oct
 

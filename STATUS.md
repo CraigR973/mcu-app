@@ -2,36 +2,30 @@
 
 ## Now
 
-**2 Nov: approved AB6 free-gap investigation complete; revised build awaits acceptance (#329).**
-One report-only pass on clean 64df306 used 13 GETs/634,850 decoded bytes/12.921s.
-Vue yielded 73 showings for 2–3 Nov, then 4 Nov returned 401; Vue stopped without retry.
-TMDB confirmed free non-commercial use with attribution and supplied three candidates'
-metadata. Saved Vue director/original-title evidence corroborates two candidates; no mapping
-or category was applied. Current first-run evidence remains unproved. Some programmes are
-observed across all nine in separate passes, not a fresh eligible all-nine artifact.
-The failed #328 artifact remains refused; no database write/production connection,
-implementation/configuration change, deployment or enablement. All nine stay disabled.
-Draft PR #125 remains unmerged on feat/ab6-cinema-ingestion. Clean code 483c1f6 passes
-all ten local checks (API 2,592/no skips, shared 167/web 737); code CI 41464465764,
-handoff CI 41479764764 and report 64df306 CI 41485187551 each pass seven jobs.
-Local Chromium 61/Firefox 60+documented skip/jobs six and migration/privilege proofs pass.
-Main/production remain 6b4199f; no new deployment. Report/evidence/revised-build proposal:
-docs/reviews/ab6-free-gap-investigation-2026-11-02.md and .json.
-AB7, AA10c and other sittings remain unstarted; no paid service/new secret/hosting change.
+**2 Nov: revised AB6 build accepted (#330); amended implementation/gate in progress.**
+Craig approved Vue today/tomorrow and capped cached TMDB metadata inside existing limits,
+reviewed corroborated mappings and unchanged strict run categories. Implementation is
+prepared on the existing feat/ab6-cinema-ingestion / draft PR #125; full amended gate
+remains pending. Focused cinema checks pass (56 before final title-guard regression);
+whole-source mypy passes. Proposed existing-token reference/read-only Railway plan succeeds:
+0 add/2 change/0 destroy, including the known API restart-policy drift. No config apply.
+New metadata uses existing cinema evidence fields; no table/browser contract or catalogue/
+diary writes. No new live source acceptance pass or production DB connection/deployment/
+import/enable. Vue recurring access/current first-run coverage remain unproved. All nine
+stay disabled. Main/last verified production remain 6b4199f; main CI is green. Previous
+report a2fd402 passes exact-head seven-job PR CI 41491477814. AB7/AA10c/other sittings unstarted.
+Report: docs/reviews/ab6-metadata-amendment-2026-11-02.md; sanitised config plan alongside it.
 
 ## Next
 
-Owner checkpoint: accept or reject the concrete amendment in the free-gap report before
-implementation resumes. Recommend Vue today/tomorrow with later dates explicitly unchecked;
-12 metadata GETs inside the existing combined 120/five-minute daily cap; reviewed corroborated
-mappings; unchanged strict New/Older rules, with unproved runs Unclassified. Automatic
-metadata needs a proposed reference to the API's existing TMDB token in the existing morning
-job. Prepare its diff/read-only plan only after build approval; actual apply remains explicit.
-The investigation is approved and complete: do not ask to approve it again or repeat refused
-Vue requests. No new live pass, reduced import or production action follows from its result.
-Fresh all-nine acceptance read/count/mapping review and exact configuration-apply/deployment/
-production import/nine-row enable remain later stops. AB7 follows only accepted AB6 from
-clean green main, on its own branch/PR; no other sitting.
+Complete amended AB6 full clean local gate, browser/jobs, migration proof and exact-head
+seven-job PR CI. Then stop for one fresh exact bounded all-nine acceptance-read approval;
+no new source pass is authorised by the build go. Review actual horizon/category/mapping/
+row counts before any production action. Configuration apply, disabled deployment if
+needed, exact production import/mapping selections and nine-row enable remain explicit.
+Do not merge/close AB6 or begin AB7 until these acceptance/production gates are resolved.
+The #329 investigation and #330 amendment are approved: do not ask to approve them again.
+AB7 follows accepted AB6 from clean green main on its own branch/PR; no other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -426,6 +420,13 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2 Nov — revised AB6 build accepted (#330), implementation prepared:** Vue two-date
+  coverage, bounded cached TMDB candidates and explicit corroborated mapping selections;
+  no title/year shortcut, no new table/browser contract/catalogue writes. Source metadata
+  survives stable refreshes; conflicts clear grouping; metadata refusals pause automatic
+  reads. 56 focused checks/whole-source mypy pass before final title-guard regression;
+  full clean gate/CI next. Read-only Railway plan via isolated compatible CLI succeeds
+  (0/2/0, token reference plus known drift), no apply. No live pass/production action/AB7.
 - **2 Nov — approved free cinema gap investigation (#329):** 13 GETs/634,850 bytes/12.921s
   on 64df306; Vue 2–3 Nov 200/73 showings, 4 Nov 401/host stopped. TMDB FAQ confirms
   £0 non-commercial/attribution basis; three metadata candidates, two corroborated by
