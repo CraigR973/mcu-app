@@ -1,5 +1,11 @@
 # Nine-venue cinema discovery — revised build contract
 
+> Accepted amendment (#330): Vue today/tomorrow, bounded cached free TMDB candidates,
+> exact reviewed corroborated mappings, strict run definitions retained, and preparation
+> of one existing-job token reference. This supersedes this original contract's exclusion
+> of metadata requests/token-reference preparation, not its explicit live/production gates.
+> Current implementation/verification stop: [amendment report](ab6-metadata-amendment-2026-11-02.md).
+
 2 Nov 2026 · decisions #325/#326/#327 · **build contract accepted by Craig**.
 
 This is the complete current proposal for Group AB sitting 5. It supersedes the 31 Oct

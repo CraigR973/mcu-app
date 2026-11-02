@@ -2,30 +2,33 @@
 
 ## Now
 
-**2 Nov: revised AB6 build accepted (#330); amended implementation/gate in progress.**
-Craig approved Vue today/tomorrow and capped cached TMDB metadata inside existing limits,
-reviewed corroborated mappings and unchanged strict run categories. Implementation is
-prepared on the existing feat/ab6-cinema-ingestion / draft PR #125; full amended gate
-remains pending. Focused cinema checks pass (56 before final title-guard regression);
-whole-source mypy passes. Proposed existing-token reference/read-only Railway plan succeeds:
-0 add/2 change/0 destroy, including the known API restart-policy drift. No config apply.
-New metadata uses existing cinema evidence fields; no table/browser contract or catalogue/
-diary writes. No new live source acceptance pass or production DB connection/deployment/
-import/enable. Vue recurring access/current first-run coverage remain unproved. All nine
-stay disabled. Main/last verified production remain 6b4199f; main CI is green. Previous
-report a2fd402 passes exact-head seven-job PR CI 41491477814. AB7/AA10c/other sittings unstarted.
-Report: docs/reviews/ab6-metadata-amendment-2026-11-02.md; sanitised config plan alongside it.
+**2 Nov: revised AB6 implementation prepared; local assistant browser failure stops verification.**
+Craig accepted the #330 amendment. Final code 5800f5d on feat/ab6-cinema-ingestion / draft
+PR #125 passes all ten clean local checks: API 2,609/no skips, shared 167/web 737 plus
+lint/types/format/build. Seventeen new metadata/source regressions cover priority, reviewed
+identity/cache/conflicts/budgets/refusals/disabled behaviour. Migration/privilege proof passes.
+Exact-code CI 41501937660 snapshot: all seven jobs pass. Local E2E is red: Chromium 60 pass/one
+assistant starter-draft failure (Mark, 375×500), Firefox 60 pass/documented dictation skip,
+jobs six pass. This run began 840e44c before the final metadata-priority change; do not
+claim final exact-head local E2E. Assistant page/test unchanged from main; cause unconfirmed.
+No assertion/timeout/skip change or retry-to-green. All 840e44c CI jobs passed, which does
+not clear this observed failure. Proposed narrow separate repair requires an owner go.
+Read-only Railway plan succeeds 0 add/2 change/0 destroy (token reference plus known API
+restart-policy drift); never applied. All nine venues stay disabled. No new live source
+pass/production DB connection/config apply/deployment/import/enable. Main/last verified
+production remain 6b4199f. AB7/AA10c/other sittings unstarted. Report/evidence:
+docs/reviews/ab6-metadata-amendment-2026-11-02.md and ab6-metadata-verification-2026-11-02.json.
 
 ## Next
 
-Complete amended AB6 full clean local gate, browser/jobs, migration proof and exact-head
-seven-job PR CI. Then stop for one fresh exact bounded all-nine acceptance-read approval;
-no new source pass is authorised by the build go. Review actual horizon/category/mapping/
-row counts before any production action. Configuration apply, disabled deployment if
-needed, exact production import/mapping selections and nine-row enable remain explicit.
-Do not merge/close AB6 or begin AB7 until these acceptance/production gates are resolved.
-The #329 investigation and #330 amendment are approved: do not ask to approve them again.
-AB7 follows accepted AB6 from clean green main on its own branch/PR; no other sitting.
+Stop for owner scope decision on a separate assistant failure investigation/repair; do not
+fold it into AB6 or waive the failed case because CI is green. Preserve this branch/PR.
+Only after the full AB6 verification gate is green, obtain exact approval for a fresh
+all-nine bounded acceptance read. Review actual rows/horizons/categories/mapping evidence
+and backlog before any production action. Exact config apply, disabled deployment if
+needed, production import/mapping selections and nine-row enable remain separate stops.
+The #329 investigation/#330 build are already accepted; do not ask to approve them again.
+No new source pass, AB6 merge/close-out, AB7 or other sitting is authorised at this stop.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -420,6 +423,15 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **2 Nov — amended AB6 verified code, unresolved local browser stop:** final 5800f5d
+  passes all ten clean checks (API 2,609/no skips/shared 167/web 737), 17 new regressions,
+  repeated migration/privilege proof. Exact-code CI 41501937660: all seven jobs pass. Local Chromium
+  assistant starter click leaves Mark's draft empty at 375×500; 60 pass/one fail. Firefox
+  60 pass/one documented skip, jobs six pass. Local run began 840e44c, before priority
+  change; no exact-final local browser claim. Trace preserved, assistant source/test match
+  main; cause unconfirmed/no repair/no retry/expectation weakening. Earlier gates were
+  superseded for ID/date/priority guards, not counted as final passes. Stop for a separate
+  repair scope decision. No live source pass/production action/AB7/AA10c.
 - **2 Nov — revised AB6 build accepted (#330), implementation prepared:** Vue two-date
   coverage, bounded cached TMDB candidates and explicit corroborated mapping selections;
   no title/year shortcut, no new table/browser contract/catalogue writes. Source metadata

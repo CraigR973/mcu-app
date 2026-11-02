@@ -1,0 +1,186 @@
+{
+  "codeHead": "5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d",
+  "pullRequest": 125,
+  "localGate": {
+    "head": "5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d",
+    "cleanAfter": true,
+    "checks": [
+      {
+        "name": "ruff-check",
+        "exitCode": 0,
+        "seconds": 0.7
+      },
+      {
+        "name": "ruff-format",
+        "exitCode": 0,
+        "seconds": 0.1
+      },
+      {
+        "name": "mypy",
+        "exitCode": 0,
+        "seconds": 11.7
+      },
+      {
+        "name": "pytest",
+        "exitCode": 0,
+        "seconds": 243.5
+      },
+      {
+        "name": "pnpm-tests",
+        "exitCode": 0,
+        "seconds": 123.6
+      },
+      {
+        "name": "shared-typecheck",
+        "exitCode": 0,
+        "seconds": 9.7
+      },
+      {
+        "name": "shared-build",
+        "exitCode": 0,
+        "seconds": 9.1
+      },
+      {
+        "name": "web-lint",
+        "exitCode": 0,
+        "seconds": 8.8
+      },
+      {
+        "name": "web-typecheck",
+        "exitCode": 0,
+        "seconds": 19.3
+      },
+      {
+        "name": "web-build",
+        "exitCode": 0,
+        "seconds": 39.4
+      }
+    ]
+  },
+  "localApi": {
+    "passed": 2609,
+    "skipped": 0
+  },
+  "shared": {
+    "passed": 167
+  },
+  "web": {
+    "passed": 737
+  },
+  "newMetadataRegressions": 17,
+  "localE2E": {
+    "exitCode": 1,
+    "startedHead": "840e44cb7bdafa6a5ab953b74f39ef4ea5c2e328",
+    "endedHead": "5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d",
+    "seconds": 976.8,
+    "note": "Metadata-only prioritisation changed during the run; do not claim exact-final-head local browser coverage.",
+    "chromium": {
+      "passed": 60,
+      "failed": 1
+    },
+    "firefox": {
+      "passed": 60,
+      "skipped": 1,
+      "skipReason": "documented lack of dictation"
+    },
+    "jobs": {
+      "passed": 6
+    },
+    "failure": {
+      "case": "AA9 gives Mark a usable first screen, role guidance and a reachable composer",
+      "viewport": {
+        "width": 375,
+        "height": 500
+      },
+      "action": "Click Unwatched 4Ks",
+      "expected": "Which 4Ks have I not watched?",
+      "actual": "empty draft after 10-second assertion timeout",
+      "trace": "apps/e2e/test-results/chromium/aa9-AA9-gives-Mark-a-usabl-0175c-ce-and-a-reachable-composer-chromium/trace.zip",
+      "traceSha256": "8a10db6ea0ec4be96943cce0032d8870597b2eb966d57fcda5da1ca6a719fec7",
+      "assistantPageBlobSameAsMain": "2f2c862215463753265d2af45e95d619744b2321",
+      "rootCause": "unconfirmed",
+      "fixed": false,
+      "waived": false,
+      "rerunToGreen": false
+    }
+  },
+  "exactCodeCi": {
+    "runId": 41501937660,
+    "head": "5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "API \u2014 pytest + Postgres 17",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Image \u2014 build \u00b7 migrate \u00b7 boot",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Web \u2014 lint \u00b7 typecheck \u00b7 test \u00b7 build",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "E2E \u2014 Chromium \u00b7 Firefox \u00b7 WebKit \u00b7 jobs",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Database \u2014 upgrade head \u00b7 downgrade base",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "API \u2014 lint \u00b7 typecheck",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Dependencies \u2014 Python \u00b7 pnpm",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "browserCounts": {
+      "chromium": {
+        "passed": 61
+      },
+      "firefox": {
+        "passed": 60,
+        "skipped": 1
+      },
+      "webkit": {
+        "passed": 59,
+        "skipped": 2
+      },
+      "jobs": {
+        "passed": 6
+      },
+      "skipPolicy": "Only the three documented E2E README exceptions."
+    }
+  },
+  "migrationProof": {
+    "database": "disposable localhost",
+    "checks": [
+      "fresh upgrade head",
+      "nine disabled seeds; both roles read five tables and cannot read PIN/token credentials",
+      "populated downgrade refused",
+      "empty downgrade base",
+      "repeat upgrade head"
+    ]
+  },
+  "production": {
+    "sourcePassesSinceBuildGo": 0,
+    "databaseConnections": 0,
+    "configApplies": 0,
+    "deployments": 0,
+    "imports": 0,
+    "enabledVenues": 0
+  },
+  "stop": "Local Chromium failure remains unresolved; no merge, live cinema acceptance or AB7. Separate assistant investigation/repair requires owner scope decision."
+}

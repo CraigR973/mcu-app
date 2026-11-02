@@ -89,14 +89,56 @@ under TMDB's confirmed private non-commercial/attribution basis. Existing comput
 quota/storage usage remains unpriced. Actual config apply remains a separate explicit
 owner decision on this exact plan; no apply has run.
 
-## Verification record
+## Verification record — stop, not close-out
 
-Focused cinema regressions: 56 passed before the final bare-title guard regression;
-full gate and exact-head CI results are appended below once complete. Full-source mypy
-passes (262 modules). Fixtures preserve recorded provenance: exact Vue identity fields
-from the saved 31 Oct response and normalised metadata from the approved #329 sample.
-Test mock envelopes wrap those captured fields; they are not represented as original
-full HTTP bodies. No new source sample was taken to construct fixtures.
+Final code `5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d` passes all ten local batch-verify commands from a clean tree:
+API 2,609 passed/no skips, shared 167 and web 737; API/web/shared lint, types, format and
+builds all pass. The 17 new metadata/source regressions include cold-cache priority under
+the unchanged budget, candidate versus approved identity, independent corroboration,
+source/global-ID fingerprint changes, cache expiry, host/auth isolation, wrong-day Vue
+responses, refusal atomicity/pause persistence and missing-token behaviour. Fixtures use
+recorded Vue identity fields and normalised approved TMDB evidence, not newly fetched or
+invented films. Full-source mypy checks 262 modules.
+
+Fresh migration/reversal/privilege proof was repeated in another owned localhost database:
+head upgrade, nine disabled seeds, both read/backup roles' five-table access, credential
+privileges withheld, populated downgrade refused, empty downgrade to base, repeat head
+upgrade. No Neon/production connection. The migration schema is unchanged by the later
+metadata-priority/date guards; exact-head CI additionally exercises migrations/image boot.
+
+[Exact-code CI 41501937660](https://github.com/CraigR973/mcu-app/actions/runs/41501937660):
+All seven jobs pass: Chromium 61, Firefox 60 plus its documented dictation skip,
+WebKit 59 plus its two documented #285 skips, jobs six. This snapshot is recorded in
+[portable verification evidence](ab6-metadata-verification-2026-11-02.json).
+Earlier code 840e44c passed all seven CI jobs (41499948485); that result does not erase a
+local browser failure or certify the later priority change. Latest documentation CI is
+separate from these code results and may still be pending at handoff.
+
+Local E2E is **red**, no retries: Chromium 60 passed/one failed; Firefox 60 passed/one
+documented dictation skip; jobs six passed. The run began on 840e44c; Python metadata
+prioritisation changed while it continued, so it is not exact-final-head browser proof.
+The failed Chromium case completed before that priority change. The Mac cannot run
+Playwright WebKit; CI runs it. No real-phone or active-cinema UI acceptance is claimed.
+
+### Unresolved assistant failure, outside AB6 implementation scope
+
+At 375×500, Mark's assistant first-screen case clicked Unwatched 4Ks; the composer stayed
+empty instead of `Which 4Ks have I not watched?` for the full ten-second assertion window.
+The trace records a completed click, not a missing/disabled button. The same Firefox case
+passed. The assistant page and case are unchanged from main; the page blob is `2f2c862215463753265d2af45e95d619744b2321`.
+This establishes an unresolved observed failure, not a proved cause or a conclusion that
+cinema code did/did not cause it. No assistant repair or test expectation change was made.
+
+The local trace/error context are preserved under the path and digest in the JSON evidence.
+Do not treat a later green CI, a second successful attempt, a longer timeout, a skipped
+case or a source-only test pass as a repair. The E2E runbook calls a case that passes only
+on a second try a defect. No retry-to-green was performed.
+
+All six jobs cases pass, including real reminder entry-point execution with nine disabled
+cinema venues, zero cinema runs and zero cinema-provider calls. This is fixture-backed
+job isolation, not live source feasibility. The complete gate therefore remains unmet
+because the local Chromium failure is unresolved. No merge, source acceptance pass,
+production configuration apply/deployment/import/enable or AB7 follows.
 
 Failures found and fixed: initial long-line/import formatting and optional-candidate type
 narrowing; test helper shifted a fixture start but not its end (both now shift together);
@@ -119,12 +161,21 @@ skip policy remain unchanged.
 
 ## Remaining owner checkpoints
 
-After the amended clean full local gate, browser/jobs, migration proof and exact-head
-seven-job CI, propose one fresh all-nine bounded acceptance read. Do not execute it without
-its exact go. Its actual rows, horizons, categories, independent mapping evidence and
-backlog must be reviewed before production actions. Vue may refuse again; all nine observed
-in earlier separate experiments does not satisfy that acceptance gate.
+The immediate stop is the unresolved local Chromium assistant failure. Recommend a
+separate narrowly scoped investigation/repair, preserving AB6 on this branch and using
+its own branch/PR from green main. Establish the cause, preserve existing starter/draft/
+role/viewport behaviour and test assertions, then prove the affected case and full normal
+gate/CI before returning to AB6. This is a proposed scope decision, not an authorised
+assistant change or another sitting started. Cost: one additional repair PR/full checks;
+no source fees, provider requests or production data changes are part of that proposal.
 
-Configuration apply, disabled deployment if needed, exact reviewed production import,
-mapping selections and nine-row enable remain separately explicit. No merge/close AB6 or
-start AB7 while those gates are unresolved. See the current STATUS/OWNER-ACTIONS/ledger.
+After the failure is resolved and AB6's complete verification gate is green, propose one
+fresh all-nine bounded acceptance read. It remains unapproved: run day through +13 London
+dates, Vue today/tomorrow only; same six source families; at most 120 GETs total including
+at most 12 existing-token TMDB metadata GETs, five minutes/15 seconds per request/2 MiB
+per response/64 MiB total/two global slots/one start per second per host. Refusal stops the
+affected host without retry or alternate. Owned disposable localhost DB only, saved
+normalised artifact/hash/counts/mapping evidence, £0 source fees, no production writes.
+No mapping is accepted by the build go. Actual source/horizon/category/identity/row/backlog
+review, exact config apply/disabled deployment/production import/mapping selections/nine-row
+enable remain later owner stops. Do not start AB7, AA10c or any other sitting.

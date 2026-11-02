@@ -1,5 +1,10 @@
 # AB6 — Cinema programme ingestion
 
+> Current checkpoint (#330): revised build accepted and implemented. Ten local checks pass,
+> but an unresolved local Chromium assistant failure stops the complete gate. See the
+> [amended implementation and verification](ab6-metadata-amendment-2026-11-02.md).
+> No further live pass or production action is authorised by the build acceptance.
+
 > Current checkpoint update (#329): Craig approved the report-only free-gap investigation
 > below; it is now complete. Vue yielded two dates then refused; TMDB supplied three
 > metadata candidates. See [the current evidence and revised-build decision](ab6-free-gap-investigation-2026-11-02.md).

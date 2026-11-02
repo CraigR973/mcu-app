@@ -170,7 +170,15 @@ conversation still maps onto this file.*
   draft PR #125 only. Existing-token reference and read-only plan preparation authorised;
   actual Railway apply is not. Plan succeeds: 0 add/2 change/0 destroy (token reference plus
   known API restart-policy drift), no apply. Implementation/verification report:
-  docs/reviews/ab6-metadata-amendment-2026-11-02.md. Full amended gate is in progress.
+  docs/reviews/ab6-metadata-amendment-2026-11-02.md. All ten clean local checks now pass
+  on 5800f5d (API 2,609/no skips/shared 167/web 737),
+  but local Chromium's assistant starter-draft case fails for Mark at 375×500. Firefox and
+  jobs pass; cause unconfirmed, source/test unchanged from main. No retry-to-green or
+  waived assertion. Exact-code CI 41501937660 passes all seven jobs; it does not clear
+  the observed local failure.
+  **Immediate owner decision:** recommend a separate narrow assistant investigation/repair,
+  its own branch/PR/full gates, before resuming AB6. No assistant change/other sitting has
+  started and no go is inferred. Preserve AB6 draft PR #125; live acceptance stays stopped.
   **Remaining owner checkpoints:** fresh exact all-nine acceptance read, actual row/horizon/
   category/mapping review; exact config apply/disabled deployment/production import/nine-row
   enable. No new source pass is covered by the build go. No AB7 before accepted AB6.
