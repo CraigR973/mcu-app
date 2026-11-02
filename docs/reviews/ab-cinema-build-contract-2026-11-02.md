@@ -1,11 +1,13 @@
 # Nine-venue cinema discovery — revised build contract
 
-2 Nov 2026 · decisions #325/#326 · **proposal awaiting Craig's approval**.
+2 Nov 2026 · decisions #325/#326/#327 · **build contract accepted by Craig**.
 
 This is the complete current proposal for Group AB sitting 5. It supersedes the 31 Oct
 contract and its browser/paid-provider amendments. “Proceed” after #324 authorises preparing
 this contract and bounded source checks, not accepting new data/refresh/navigation choices.
-No implementation, migration, production programme write or recurring collection has started.
+Craig’s subsequent “proceed” accepts this revised contract (#327), including the run-based
+release filters. Integrate the planning handoff before implementation. Exact production
+dry-run/write/enable checkpoints remain separate; collection seeds disabled.
 Craig subsequently requested newer films and a New releases versus any Older films filter
 (#326). That scope is included below; the earlier ten-year Older films proposal is withdrawn.
 
@@ -146,7 +148,7 @@ This removes the unapproved ten-year cut-off. A film first released last year an
 now can qualify as Older films; it need not be ten years old or unwatched. An older original
 film's first UK theatrical run can qualify as New releases, while still displaying its
 original year. These are proposed run-based definitions, not an assumed 90-day/12-month
-age rule. Craig can revise the definitions before accepting the full contract.
+age rule. Craig accepted these definitions in #327; a later change needs a superseding decision.
 
 Classification needs explicit source run/reissue evidence or corroborated release history
 and a resolved film/screening identity. A recent year, dateCreated, booking link, collected
@@ -289,8 +291,8 @@ available, exact-head seven-job PR/main CI with no unexplained skips, merged API
 and db:ok readiness. Report local DB/browser platform limits honestly; never test against
 Neon to fill that gap. No production ingestion acceptance from green fixtures alone.
 
-Owner stops remain: accept this full source/cost/coverage/year/freshness/navigation contract;
-approve exact live dry-run/read scope where not already covered; review dry-run row counts,
+The full source/cost/coverage/year/freshness/navigation contract is accepted (#327).
+Owner stops remain: approve exact live dry-run/read scope where not already covered; review dry-run row counts,
 identity conflicts and coverage before any write; approve the nine-row enable; re-plan
 source/hosting/credential/budget changes or unmet all-nine acceptance. No silent five-venue
 close-out. Runtime tests already approved/completed are not being re-approved.
@@ -300,7 +302,7 @@ schema/migration/E2E work and ongoing markup maintenance. Source changes may req
 approved split. No reliable completion-time or hosting-bill estimate exists yet. AB6 must
 report request bytes/duration/new row counts/storage delta so enablement is reviewable.
 
-**Requested decision:** approve this contract as the build basis, including daily refresh,
+**Accepted decision (#327):** this contract is the build basis, including daily refresh,
 30-hour observation/36-hour evidenced-upstream stale limits, variable explicit horizons,
 All/New releases/Older films/Unclassified run-category filter without an age cut-off,
 uncertain identity/disappearance handling and the existing-job

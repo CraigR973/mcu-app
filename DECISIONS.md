@@ -6882,3 +6882,21 @@ contemporaneous.
      source/hosting change, implementation, recurring run or other sitting. Complete build
      contract and live dry-run/write/enable checkpoints remain unresolved. Documentation
      consistency/diff checks apply; application/CI/production checks not run.
+
+327. **Accept the revised free cinema contract and authorise sitting 5 implementation (2 Nov).**
+     Craig says “proceed” after the explicit New releases/Older films/Unclassified definition
+     and full-contract checkpoint. Accept docs/reviews/ab-cinema-build-contract-2026-11-02.md
+     including #326: new is evidenced first UK theatrical run; older is returning/reissue
+     of any age; unknown evidence is Unclassified, independent of original-year confidence.
+     All nine/Film first, six HTTP adapters, five programme tables/read API, daily 08:00 UTC
+     existing morning-job phase, 30-hour observation/36-hour evidenced-upstream stale limits,
+     variable explicit horizons, uncertain disappearances and approved navigation apply.
+     Source subscription £0; no new hosting/configuration/credential/paid tier or budget
+     increase. Existing resource use remains unpriced, not guaranteed zero invoice increase.
+     First integrate the research/planning handoff through normal review/CI/served-SHA proof,
+     then original AB6 → AB7 sequentially, one branch/PR per batch from clean green main.
+     Exact live dry-run/count review, production programme writes and enabling the nine
+     seeded-disabled venues remain later owner checkpoints. No blanket all-nine freshness/
+     completeness assertion from historic samples, no reduced coverage/links fallback,
+     no paid enquiry/browser retry/AA10c/other sitting. Main preflight CI 41207241130 is
+     green at c63bc06; no implementation or live write is performed by recording acceptance.

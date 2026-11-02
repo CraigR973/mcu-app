@@ -130,11 +130,13 @@ conversation still maps onto this file.*
   Category is per showing and separate from original-year confidence. Unknown status
   stays visible; no title/year-only first-run guess or new metadata provider. Exact
   definitions remain part of full contract approval, not a rule Craig has already picked.
-  **Owner action:** accept/revise this complete contract. Then normal planning integration
-  and separate AB6/AB7 branches/PRs. Exact live dry-run counts/write/enable remain later
-  gates; no app implementation or recurring collection approved yet. No AA10c.
-  Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
-  replacement link-screen build is approved. The links-only proposal is parked, not accepted.
+  **Contract accepted (#327, 2 Nov):** Craig's latest “proceed” accepts the revised
+  source/cost/coverage/schema/API/job/refresh/retention/run-category/navigation contract.
+  No repeat approval is needed for that build basis. Integrate the planning handoff via
+  normal review/checks, then AB6 ingestion → AB7 discovery, one branch/PR each. AB7 waits
+  for accepted AB6. Exact live dry-run/read scope, row-count review, programme write and
+  enabling the nine seeded-disabled venues remain explicit later owner checkpoints.
+  No new hosting/configuration/credentials/subscription or other sitting is authorised.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

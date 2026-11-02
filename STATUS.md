@@ -2,46 +2,23 @@
 
 ## Now
 
-**2 Nov: new/older release-category filtering added to the proposed contract (#326).**
-Craig's “proceed” authorised revising the nine-venue plan, not approving the newly specified
-schema/refresh/year/navigation choices. Current proposal:
-docs/reviews/ab-cinema-build-contract-2026-11-02.md. It supersedes the 31 Oct contract and
-browser/paid amendments. AB6 → AB7, one branch/PR each; all nine/Film first retained.
-Recommend six HTTP adapter families, five programme tables, authenticated GET/shared zod,
-daily refresh after the existing 08:00 UTC maintenance/reminders run, no new hosting/
-credential/configuration/subscription. Daily refresh is a proposed change from six-hour
-polling: same-day changes can be delayed. Existing compute/storage cost is unmeasured,
-not guaranteed £0 incremental hosting. No paid tier/service/spending-limit change.
-Proposal: 30-hour observation/36-hour evidenced-upstream stale limits and explicit variable
-source horizons. Craig requests newer films and a New releases versus any Older films filter.
-Replace the unapproved ten-year cut-off with All films/New releases/Older films/Unclassified.
-Propose evidenced first UK run versus returning/reissue of any age; exact definitions stay
-pending full contract approval. Category uncertainty and original-year confidence are
-separate. Missing future showings stay Unconfirmed with showing booking disabled. Production
-collection seeds disabled; exact dry-run row-count/write/enable approvals remain separate.
-
-Four previously successful CinemaTimes pages rechecked locally at 10:58 UTC on 2 Nov:
-707 rows/2–8 Nov; 667 retained IDs/starts, 40 new IDs, 202 removals. Of removals, 198 are
-past and four future Braehead Wicker starts have unexplained disappearance. No cancellation
-claim. Update label Monday 06:17; upstream date/zone still unverified. No new Railway test,
-booking, refusal retry, source switch, VM, app/schema/hosting/data change or recurring run.
-Earlier four-venue Railway success and five other source specimens remain dated evidence,
-not a synchronised complete nine-venue programme. Audit:
-docs/reviews/ab-cinema-source-repeat-2026-11-02.json. Source/doc checks pass; full application/
-CI/production-readiness checks not run for this planning-only step. No push/PR/other sitting.
-AB5 remains accepted report-only; AB4 phone acceptance stays complete. AB3 real-phone
-receipt and unrelated camera/speech/valuation owner observations remain open.
+**2 Nov: revised cinema contract accepted; integrating planning before AB6 (#327).**
+Craig's latest “proceed” accepts the complete contract including new/older run-category
+filters: docs/reviews/ab-cinema-build-contract-2026-11-02.md. All nine/Film first/£0 data,
+daily existing 08:00 UTC job phase, uncertain evidence and disabled initial collection.
+Original AB6 ingestion → AB7 discovery, one branch/PR each; no repeat contract decision.
+Exact live dry-run/read/count/write/enable stops persist. No new host/config/credential/
+paid tier; existing resource cost unmeasured. No AA10c/other sitting.
+Clean research branch; main's exact c63bc06 CI 41207241130 passes. No open research PR yet.
+Next: clean local gate, planning PR/exact-head CI, merge and matching API/web/readiness,
+then AB6 from clean green main. No implementation or live programme write yet.
 
 ## Next
 
-Next checkpoint: Craig approves/revises the complete source/cost/coverage/schema/API/job/
-retention/year/navigation proposal in docs/reviews/ab-cinema-build-contract-2026-11-02.md.
-Recommend free HTTP sources, all nine venues, daily existing-job refresh and two batches.
-No approval of that newly concrete contract is inferred from “proceed” to preparing it.
-After acceptance, integrate the research/planning handoff through normal review/checks,
-then start AB6 from clean green main. Stop for exact live dry-run/write/enable decisions
-and unproved all-nine acceptance; AB7 follows only accepted AB6. No paid enquiry/trial,
-new hosting, identical browser retry, links-only fallback, AA10c or other sitting.
+Integrate the accepted research/planning handoff through normal review/CI/served-SHA proof.
+Then run AB6 → AB7 under group-start, one branch/PR each, with accepted #327 contract.
+Stop for exact live dry-run/read/count/write/enable checkpoints and unmet source acceptance.
+No new hosting/credentials/paid source, reduced venue list, browser retry or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -435,6 +412,12 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — revised contract accepted (#327):** latest “proceed” clears the full build
+  contract/run-category checkpoint. Integrate planning then AB6 → AB7, one PR each.
+  Live dry-run/count/write/enable remains separate, seeds disabled. Clean branch and
+  c63bc06 main CI preflight verified. Planning gate/PR/integration underway; no app/data/
+  hosting change at acceptance. No other sitting.
 
 - **2 Nov — newer/any-older filter requested (#326):** current programmes already include
   new releases. Revise the proposed contract/API to All films/New releases/Older films/

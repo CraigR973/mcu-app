@@ -4850,6 +4850,12 @@ Propose evidenced first UK run versus returning/reissue films of any age; classi
 showing, independently of original-year confidence. Unknown evidence stays explicit.
 API query becomes releaseCategory, replacing olderOnly in the draft. No new source/cost/
 hosting/app change; exact definitions and complete contract approval still stop AB6/AB7.
+**2 Nov contract accepted/sitting 5 implementation authorised (#327):** Craig's “proceed”
+accepts the complete revised contract including #326 run-category definitions. Integrate
+planning through normal review/CI/production SHA proof, then original AB6 → AB7, one branch/
+PR each. No further full-contract approval is pending. Exact live dry-run/read/count/write/
+enable gates remain; collection seeds disabled. All nine/Film first/£0 data retained; no
+new hosting/configuration/credential/paid tier, no AA10c or other sitting.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
@@ -5009,11 +5015,11 @@ this exception closes only the report, never asserts source feasibility or waive
 
 ### AB6 — Cinema programme ingestion (conditional)
 
-**Not ready to start.** AB5's report-only acceptance does not establish an ingestible source.
-Craig requires free data; the complete revised proposal is
-`docs/reviews/ab-cinema-build-contract-2026-11-02.md` (#325), awaiting approval.
-Real source evidence/picks and the concrete schema/API/job/refresh/retention contract come first. Re-plan/split adapters
-if feasibility changes the scope. No new paid service, hosting or credential is pre-approved.
+**Contract accepted 2 Nov (#327).** Complete source/build basis:
+`docs/reviews/ab-cinema-build-contract-2026-11-02.md`, including #326 release-category filters.
+Start after planning integration on clean green main. Real all-nine coverage/dry-run/count/
+write/enable checkpoints remain; historic evidence does not prove complete horizons.
+Re-plan if source feasibility changes scope. No new paid service, hosting or credential.
 
 - Implement approved sources/coverage from approved real specimens. Programmes are separate
   from the release calendar and owned catalogue; browsing creates no copies or diary entries.
@@ -5033,15 +5039,16 @@ if feasibility changes the scope. No new paid service, hosting or credential is 
 
 ### AB7 — Find a film showing nearby (conditional)
 
-**Not ready to start.** Depends on AB6's accepted data contract/coverage and Craig's AB5
-concept pick. A separately authorised sitting 5 is still required.
+**Authorised within sitting 5 (#327); waits for accepted AB6.** Film first and the full
+contract including #326 categories are accepted. Do not start before AB6 closes on clean
+green main with actual source/coverage acceptance and exact live checkpoints met.
 
 - One view grouped by film, with approved venue selection, date/time and validated booking
   links. Multiple venues/showtimes remain distinct under a film. Show coverage and freshness;
   booking opens the venue, never buys a ticket. Preserve the current disc/release calendar.
 - Include current new releases and older/reissue screenings, with the proposed
   All films/New releases/Older films/Unclassified selector (#326). Final run-category
-  definitions require owner acceptance; Older films has no unapproved ten-year cut-off.
+  definitions are accepted in #327; Older films has no ten-year cut-off.
   Keep watched older favourites discoverable. Ownership and personal watch status may explain relevance; “older”
   cannot mean “unwatched”. Clearly label uncertain identity/year; no paid/model ranking assumed.
 - Honest loading/empty/failed/stale/partial states. Settle navigation in the picked design,
