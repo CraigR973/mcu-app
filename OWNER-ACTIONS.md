@@ -113,6 +113,20 @@ conversation still maps onto this file.*
   Recommend original AB6 → AB7, one PR each; earlier browser-dependent split withdrawn as
   a recommendation, not accepted into the ledger. Existing compute billing is unmeasured.
   Report: docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
+  **Revised full contract prepared (#325, 2 Nov):** “proceed” authorises the promised
+  re-plan, not acceptance of its new choices. Review:
+  docs/reviews/ab-cinema-build-contract-2026-11-02.md, replacing the 31 Oct draft.
+  Recommend all nine/Film first, six HTTP source families, five programme tables/read API,
+  daily refresh after the existing 08:00 UTC reminders/maintenance job, no new service/
+  credential/hosting config; 30-hour observation/36-hour evidenced-upstream stale limits,
+  variable explicit horizons, ten-year Older films rule, source-scoped unknown identities
+  and Unconfirmed future disappearances with showing booking links disabled. £0 data,
+  existing compute/storage unpriced; no guaranteed £0 increase in hosting bills.
+  Four local repeats: 707 rows/2–8 Nov, 667 stable IDs/starts, four unexplained future
+  Braehead removals. No cancellation inference or fresh Railway test. Audit alongside.
+  **Owner action:** accept/revise this complete contract. Then normal planning integration
+  and separate AB6/AB7 branches/PRs. Exact live dry-run counts/write/enable remain later
+  gates; no app implementation or recurring collection approved yet. No AA10c.
   Sitting 5 implementation remains unauthorised: no schema/API/job/refresh/retention or
   replacement link-screen build is approved. The links-only proposal is parked, not accepted.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write

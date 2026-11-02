@@ -1,0 +1,295 @@
+{
+  "decision": 325,
+  "date": "2026-11-02",
+  "scope": "bounded repeat of four previously successful public CinemaTimes venue pages; revised contract preparation only",
+  "requests": [
+    {
+      "name": "cinematimes-quay",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-glasgow-springfield-quay/",
+      "requestedAtUtc": "2026-11-02T10:58:33.698056+00:00",
+      "status": 200,
+      "bytes": 279318,
+      "sha256": "a89f04b65b66b995359c8cf7a56d0a58895c86d8e59ed774468f5a0dce0e7f2a",
+      "headers": {
+        "date": "Mon, 02 Nov 2026 10:58:34 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "0",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 10:58:34 GMT"
+      },
+      "comparison": {
+        "commonIds": 209,
+        "sameStart": 209,
+        "changedTitles": 0,
+        "addedIds": 14,
+        "removedIds": 60,
+        "removedDates": [
+          "2026-11-01"
+        ],
+        "removedPastCount": 60,
+        "removedFuture": []
+      },
+      "programme": {
+        "venue": "ODEON Glasgow Quay",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Paisley Road",
+          "addressLocality": "Glasgow",
+          "addressRegion": "Scotland - Glasgow City",
+          "postalCode": "G5 8NP",
+          "addressCountry": "GB"
+        },
+        "officialVenueUrl": "https://www.odeon.co.uk/cinemas/glasgow_quay/120/",
+        "rowCount": 223,
+        "uniqueIds": 223,
+        "films": 27,
+        "dates": {
+          "2026-11-02": 47,
+          "2026-11-03": 48,
+          "2026-11-04": 46,
+          "2026-11-05": 42,
+          "2026-11-06": 13,
+          "2026-11-07": 13,
+          "2026-11-08": 14
+        },
+        "futureRowsAtParse": 223,
+        "jsonLdEvents": 50,
+        "jsonLdMatchedDom": 50,
+        "sourceUpdatedLabels": [
+          "Times from ODEON, updated Monday 06:17"
+        ],
+        "normalisedSha256": "3daf140547247abb3805a105db30519f3778c279b2d8f035e8e302ec5d75cfbc"
+      },
+      "elapsedSeconds": 0.768
+    },
+    {
+      "name": "cinematimes-braehead",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-braehead-renfrew/",
+      "requestedAtUtc": "2026-11-02T10:58:35.469314+00:00",
+      "status": 200,
+      "bytes": 280001,
+      "sha256": "eb850bebe5e9895d727b0e7bd23e78eb99ad274a451e475ba58c6c4f66477107",
+      "headers": {
+        "date": "Mon, 02 Nov 2026 10:58:35 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "7840",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 08:47:55 GMT"
+      },
+      "comparison": {
+        "commonIds": 200,
+        "sameStart": 200,
+        "changedTitles": 0,
+        "addedIds": 9,
+        "removedIds": 62,
+        "removedDates": [
+          "2026-11-01",
+          "2026-11-02"
+        ],
+        "removedPastCount": 58,
+        "removedFuture": [
+          {
+            "id": "615-99529",
+            "title": "Wicker",
+            "startUtc": "2026-11-02T12:20:00+00:00"
+          },
+          {
+            "id": "615-99231",
+            "title": "Wicker",
+            "startUtc": "2026-11-02T15:00:00+00:00"
+          },
+          {
+            "id": "615-99233",
+            "title": "Wicker",
+            "startUtc": "2026-11-02T17:40:00+00:00"
+          },
+          {
+            "id": "615-99232",
+            "title": "Wicker",
+            "startUtc": "2026-11-02T20:20:00+00:00"
+          }
+        ]
+      },
+      "programme": {
+        "venue": "ODEON Braehead",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "King's Inch Road",
+          "addressLocality": "Renfrew",
+          "addressRegion": "Scotland - Renfrewshire",
+          "postalCode": "PA4 8XU",
+          "addressCountry": "GB"
+        },
+        "officialVenueUrl": "https://www.odeon.co.uk/cinemas/braehead/154/",
+        "rowCount": 209,
+        "uniqueIds": 209,
+        "films": 29,
+        "dates": {
+          "2026-11-02": 43,
+          "2026-11-03": 47,
+          "2026-11-04": 47,
+          "2026-11-05": 46,
+          "2026-11-06": 7,
+          "2026-11-07": 10,
+          "2026-11-08": 9
+        },
+        "futureRowsAtParse": 209,
+        "jsonLdEvents": 50,
+        "jsonLdMatchedDom": 50,
+        "sourceUpdatedLabels": [
+          "Times from ODEON, updated Monday 06:17"
+        ],
+        "normalisedSha256": "34c5b3147db5989b796982aa99a70eeb797a4b1f0eae0e69fdce21b7fdc0c6f8"
+      },
+      "elapsedSeconds": 0.432
+    },
+    {
+      "name": "cinematimes-east-kilbride",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-east-kilbride-glasgow/",
+      "requestedAtUtc": "2026-11-02T10:58:36.905822+00:00",
+      "status": 200,
+      "bytes": 247181,
+      "sha256": "f0b4693460d938f087015fbb1d3d145d191bddc113202de46ae0ab696c2b8180",
+      "headers": {
+        "date": "Mon, 02 Nov 2026 10:58:37 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "0",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 10:58:37 GMT"
+      },
+      "comparison": {
+        "commonIds": 155,
+        "sameStart": 155,
+        "changedTitles": 0,
+        "addedIds": 8,
+        "removedIds": 46,
+        "removedDates": [
+          "2026-11-01"
+        ],
+        "removedPastCount": 46,
+        "removedFuture": []
+      },
+      "programme": {
+        "venue": "ODEON East Kilbride",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Rothesay Street",
+          "addressLocality": "east kilbride",
+          "addressRegion": "Scotland - South Lanarkshire",
+          "postalCode": "G74 1PG",
+          "addressCountry": "GB"
+        },
+        "officialVenueUrl": "https://www.odeon.co.uk/cinemas/east_kilbride/33/",
+        "rowCount": 163,
+        "uniqueIds": 163,
+        "films": 24,
+        "dates": {
+          "2026-11-02": 35,
+          "2026-11-03": 36,
+          "2026-11-04": 35,
+          "2026-11-05": 35,
+          "2026-11-06": 7,
+          "2026-11-07": 7,
+          "2026-11-08": 8
+        },
+        "futureRowsAtParse": 163,
+        "jsonLdEvents": 50,
+        "jsonLdMatchedDom": 50,
+        "sourceUpdatedLabels": [
+          "Times from ODEON, updated Monday 06:17"
+        ],
+        "normalisedSha256": "b25afa6dfaf48c7a738891ff9972cc14aacd76bdb60c4eb4b8f80ed7aa4750fa"
+      },
+      "elapsedSeconds": 0.493
+    },
+    {
+      "name": "cinematimes-kilmarnock",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-kilmarnock/",
+      "requestedAtUtc": "2026-11-02T10:58:38.402287+00:00",
+      "status": 200,
+      "bytes": 220222,
+      "sha256": "6af74b64219c182d73d91c4b47043a3d0490011e634fb0ab5678e97ef5f26cee",
+      "headers": {
+        "date": "Mon, 02 Nov 2026 10:58:38 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "age": "0",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 10:58:38 GMT"
+      },
+      "comparison": {
+        "commonIds": 103,
+        "sameStart": 103,
+        "changedTitles": 0,
+        "addedIds": 9,
+        "removedIds": 34,
+        "removedDates": [
+          "2026-11-01"
+        ],
+        "removedPastCount": 34,
+        "removedFuture": []
+      },
+      "programme": {
+        "venue": "ODEON Kilmarnock",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Queen's Drive",
+          "addressLocality": "Kilmarnock",
+          "addressRegion": "Scotland - East Ayrshire",
+          "postalCode": "KA1 3XF",
+          "addressCountry": "GB"
+        },
+        "officialVenueUrl": "https://www.odeon.co.uk/cinemas/kilmarnock/101/",
+        "rowCount": 112,
+        "uniqueIds": 112,
+        "films": 19,
+        "dates": {
+          "2026-11-02": 20,
+          "2026-11-03": 27,
+          "2026-11-04": 21,
+          "2026-11-05": 20,
+          "2026-11-06": 7,
+          "2026-11-07": 8,
+          "2026-11-08": 9
+        },
+        "futureRowsAtParse": 112,
+        "jsonLdEvents": 50,
+        "jsonLdMatchedDom": 50,
+        "sourceUpdatedLabels": [
+          "Times from ODEON, updated Monday 06:17"
+        ],
+        "normalisedSha256": "fbc7b98d4037cb176b5ba227d91527930e45d7323fb87c05135c30a7a4e5a4c1"
+      },
+      "elapsedSeconds": 0.517
+    }
+  ],
+  "totals": {
+    "requests": 4,
+    "rows": 707,
+    "retainedIds": 667,
+    "unchangedRetainedStarts": 667,
+    "addedIds": 40,
+    "removedIds": 202,
+    "removedPast": 198,
+    "removedFuture": 4,
+    "jsonLdMatches": 200,
+    "decodedBytes": 1026722
+  },
+  "interpretation": "Four missing future Braehead showings have unknown cause, not verified cancellation. All retained IDs preserve start/title; rolling date window advances. HTTP cache dates are not upstream collection time.",
+  "limits": {
+    "localHttpOnly": true,
+    "existingRailwayRechecked": false,
+    "decodedBodyCap": 4194304,
+    "httpTimeoutSeconds": 20,
+    "redirectsFollowed": 0,
+    "retries": 0,
+    "bookingNavigations": 0,
+    "newProviderOrHosting": false,
+    "appChanges": 0,
+    "databaseWrites": 0,
+    "recurringCollection": false,
+    "fullApplicationGate": "not run; source research/planning only"
+  },
+  "evidenceLocation": "scratchpad/ab-cinema-research/free-source-2026-11-02/ (gitignored)",
+  "proposal": "ab-cinema-build-contract-2026-11-02.md",
+  "contractApproval": "pending"
+}

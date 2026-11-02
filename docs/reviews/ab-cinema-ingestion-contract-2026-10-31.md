@@ -1,5 +1,9 @@
 # Nine-cinema ingestion and discovery — proposed contract, 31 Oct
 
+**Superseded 2 Nov (#325).** Current complete proposal:
+[ab-cinema-build-contract-2026-11-02.md](ab-cinema-build-contract-2026-11-02.md).
+This file and its browser/paid amendments are historical; none supplies build approval.
+
 **Proposal for review, not build approval.** Craig authorised source experiments; the
 schema/API/job/refresh/retention/navigation decisions below still need his approval under
 Group AB's owner checkpoint. All nine venues and the Film first concept remain the intent.

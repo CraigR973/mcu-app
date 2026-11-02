@@ -4833,6 +4833,17 @@ AB6a/AB6b recommendation. Full revised source/build/recurring execution/cost con
 still an owner checkpoint. £0 subscription, no new hosting/paid enquiry/trial/payment.
 Report/audit: docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
 AB6/AB7 remain unstarted; no AA10c or other sitting.
+**2 Nov complete revised contract prepared (#325):**
+docs/reviews/ab-cinema-build-contract-2026-11-02.md supersedes the old contract/amendments.
+All nine/Film first; proposed original AB6 → AB7/two PRs, six HTTP adapters/five tables,
+read API and daily refresh after the existing 08:00 UTC maintenance job, no new hosting/
+credentials/configuration. Daily cadence, 30-hour observation/36-hour evidenced-upstream
+stale limits, variable horizons, ten-year Older films rule, uncertainty/Unconfirmed and
+navigation choices need owner approval. £0 data; existing hosting usage unmeasured.
+Four local repeats: 707 rows/667 retained IDs/starts; four unexplained missing future
+Braehead starts, no cancellation claim. Audit: ab-cinema-source-repeat-2026-11-02.json.
+“Proceed” covered preparation, not the resulting full contract. Implementation stays
+planned/unstarted; exact live dry-run/write/enable gates persist. No AA10c/other sitting.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
@@ -4993,8 +5004,9 @@ this exception closes only the report, never asserts source feasibility or waive
 ### AB6 — Cinema programme ingestion (conditional)
 
 **Not ready to start.** AB5's report-only acceptance does not establish an ingestible source.
-Craig chose free official links; re-plan before a build go. Real source evidence and picks come first,
-then approval of a concrete schema/API/job/refresh/retention plan. Re-plan/split adapters
+Craig requires free data; the complete revised proposal is
+`docs/reviews/ab-cinema-build-contract-2026-11-02.md` (#325), awaiting approval.
+Real source evidence/picks and the concrete schema/API/job/refresh/retention contract come first. Re-plan/split adapters
 if feasibility changes the scope. No new paid service, hosting or credential is pre-approved.
 
 - Implement approved sources/coverage from approved real specimens. Programmes are separate

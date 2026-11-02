@@ -6837,3 +6837,28 @@ contemporaneous.
      All nine and Film first retained; no reduced coverage/links-only fallback. No full
      app gate/production recheck/push/PR/AA10c/other sitting this research step. Evidence:
      docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
+
+325. **Prepare the complete free-source contract; seek acceptance before coding (2 Nov).**
+     Craig says “proceed” after #324 promised to revise the nine-venue build contract.
+     Prepare docs/reviews/ab-cinema-build-contract-2026-11-02.md; this is not owner acceptance
+     of the new schema/job/year/navigation policies. Supersede the 31 Oct historical draft
+     and its browser/paid amendments. Recommend original AB6 → AB7/two PRs, six HTTP adapter
+     families/five new tables/one authenticated GET and Film first. Propose daily collection
+     after the existing 08:00 UTC maintenance/reminders job, with independent sessions,
+     post-delivery execution, lease/fencing, own outcome and a five-minute bound. No new
+     host/schedule/configuration/credential/subscription. Data £0; existing hosting resource
+     cost unmeasured, not a guarantee of no invoice increase. Daily cadence can miss later
+     changes and needs explicit acceptance. New rows seed disabled; exact production
+     dry-run/count/write/enable approval remains separate. Propose 30-hour observation/
+     36-hour evidenced-upstream stale limits, variable explicit horizons, ten-year Older
+     films rule, uncertain identities/combined programmes without title-only catalogue
+     links, and missing future rows Unconfirmed with showing booking actions disabled.
+     Four local public CinemaTimes repeats at 10:58 UTC yield 707 rows/2–8 Nov, 667 stable
+     retained IDs/starts, 40 additions and 202 removals: 198 past, four future Braehead
+     Wicker starts unexplained. No confirmed cancellation. Label changes to Monday 06:17,
+     no precise upstream date/zone proof; all 200 JSON-LD starts match HTML. Four GETs/no
+     retry/new host/booking; no Railway recheck, production write or app/hosting change.
+     Source/JSON/doc checks pass; no full application/CI/production-readiness gate. All nine/
+     Film first retained; full owner contract gate stops implementation, then integrate
+     planning on green main before AB6. No paid enquiry/browser retry/AA10c/other sitting.
+     Audit: docs/reviews/ab-cinema-source-repeat-2026-11-02.json.

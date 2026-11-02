@@ -2,103 +2,43 @@
 
 ## Now
 
-**1 Nov: £0 requirement reaffirmed; free ODEON source works on the existing host (#324).**
-Craig requires this to be free. The paid-provider recommendation and unsent enquiry (#323)
-are parked; no supplier contact/account/trial/payment is next. CinemaTimes public HTML
-returned 869 dated screenings across Quay 269/Braehead 262/East Kilbride 201/Kilmarnock 137,
-1–7 Nov, both locally (16:40 UTC) and from the existing Railway API runtime (16:42 UTC).
-All four body/programme hashes match. No browser VM/new host/install/config/data/app change.
-JSON-LD covers only 50 rows/page; HTML supplies all 869. Kilmarnock's 34 IDs/times match the
-31 Oct official specimen for 1 Nov; two titles differ, including a double bill reduced to
-one title. Identity conflicts stay unresolved. Publisher says twice-daily sync; update label
-Sunday 06:19 is not a dated/offset upstream timestamp. Freshness/cancellation/full horizon,
-original year and sustained access remain unproved. Other free candidate What’s On returned
-four 429s, once per venue, no retry/bypass. First SSH command had a quoting SyntaxError
-before source requests; corrected transport exits 0. Offline specimen checks pass.
-Propose original AB6 → AB7, one branch/PR each, six HTTP adapter families; withdraw the
-browser-dependent AB6a/AB6b split recommendation. All nine/Film first retained. Complete
-revised source/build/recurring execution contract remains an owner checkpoint, not waived.
-Report/audit: docs/reviews/ab-cinema-free-source-results-2026-11-01.md and JSON.
-No subscription/new hosting/recurring spend approved. Existing host billing is unmeasured,
-not guaranteed free compute. Full app gate/readiness not run this research step. No push/PR.
+**2 Nov: complete free-source build contract prepared; owner approval is next (#325).**
+Craig's “proceed” authorised revising the nine-venue plan, not approving the newly specified
+schema/refresh/year/navigation choices. Current proposal:
+docs/reviews/ab-cinema-build-contract-2026-11-02.md. It supersedes the 31 Oct contract and
+browser/paid amendments. AB6 → AB7, one branch/PR each; all nine/Film first retained.
+Recommend six HTTP adapter families, five programme tables, authenticated GET/shared zod,
+daily refresh after the existing 08:00 UTC maintenance/reminders run, no new hosting/
+credential/configuration/subscription. Daily refresh is a proposed change from six-hour
+polling: same-day changes can be delayed. Existing compute/storage cost is unmeasured,
+not guaranteed £0 incremental hosting. No paid tier/service/spending-limit change.
+Proposal: 30-hour observation/36-hour evidenced-upstream stale limits, explicit variable
+source horizons, verified original year at least ten years old, unknown identity/year
+visible, missing future showings Unconfirmed with showing booking disabled. Production
+collection seeds disabled; exact dry-run row-count/write/enable approvals remain separate.
 
-**1 Nov: replacement VM passes launch check; all four ODEON venue URLs return 403 (#322).**
-Craig's “approve” covered one same-limits replacement. Eight offline checks pass, then the
-complete remote preflight passes: non-root sandbox-enabled Chromium, namespace/seccomp,
-renderer flags and local rendering, with internet denied. Only the two ODEON hosts then
-enabled/read back. Four main-page GETs return 403: Kilmarnock/Quay/Braehead/East Kilbride.
-Zero samples/rows, no date selection/screenshot/repeat or new source method. 403 issuer not
-identified from retained data; received-byte counter zero is not a zero-transfer claim.
-Four complete refusal summaries retained; original log/base64 truncated by connector and
-source process exit code unavailable after stop (410). Audit limitations explicit, not green.
-One VM/two launches, stopped after 3m31.070s; no running project VM/public route/snapshot/
-persistence. Deadline guard absent, temporary upload removed. No replacement/retry approved.
-Hobby account, no upgrade/new credential scope; invoice/remaining quota unqueried.
-API still c63bc06, db ok/all five integrations configured. No app implementation, migration,
-live collection write, recurring job, push/PR or other sitting. No full application gate run.
-Result/audit: docs/reviews/ab-cinema-vm-source-result-2026-11-01.md and JSON.
-The browser-runtime check now passes; the proposed unattended ODEON source route does not.
-Stop/re-plan source/coverage/cost before full AB6/AB7 contract/split approval. All nine and
-Film first retained; five earlier HTTP source specimens remain historical, not all-nine proof.
-
-**31 Oct: approved isolated hosting experiment reaches a browser-startup block (#318/#319).**
-Three sandbox-enabled Chromium launches failed before a browser context or cinema request.
-Two complete diagnostics confirm sandbox credentials Permission denied (13); no new ODEON
-programme/access result. Three-launch stop reached; no fourth launch or sandbox-off run.
-All temporary cinema-probe services removed, within 15m55s of first creation (30m approved).
-One service active at a time; setup replacements and logging/configuration failures audited.
-1 vCPU/2 GB/one replica/NEVER restart/no domain/no schedule/non-root UID 1001/no app credentials
-verified. Six original service deployment IDs remain unchanged; API still c63bc06 and readiness
-db ok/all five integrations configured. Local upload bundle removed; managed cache purge
-unverified. Actual build/runtime bill unmeasured. Four offline probe checks pass; hosted
-launch check fails. No app build, migration, source write, recurring worker, PR/push or other sitting.
-Report/audit: docs/reviews/ab-cinema-hosted-browser-probe-2026-10-31.md and JSON.
-Earlier evidence remains: all nine have in-app-browser/HTTP repeat samples (177 retained
-identities); five sources answered HTTP in Railway (#317). No all-nine unattended method,
-complete horizon, original-year matching, cancellation/reschedule/DST or sustained access proof.
-The full proposed contract/AB6 split remains unapproved. The 1 Nov proposal continues the
-recommended sandbox-preserving planning route; no runtime change follows from old approval.
-
-**Group AB sitting 4 complete — AB5 report accepted and merged in PR #123 (b9f7dd7).**
-Outcome: report complete; programme feasibility unproven. Craig explicitly accepted the
-unmet original programme-evidence criterion for this report only (#313). Free official
-programme links for all nine venues are the chosen direction; Film first is the future
-concept. No unified programme feed, ingestion, link screen, purchase or trial was built.
-Any next cinema build needs re-planning and its own go; sitting 5 and AA10c remain excluded.
-
-The single approved historical archive GET returned HTTP 403, zero rows, no retry or
-alternate request. Later direct-source samples now establish four real shapes and older/
-reissue leads, with booking URLs obtained but not followed. Recurring all-nine coverage, original-year
-matching, horizon completeness, stable identities and cancellation behaviour remain unverified.
-Future ingestion/build gates are not waived.
-
-Report: docs/reviews/ab5-cinema-feasibility-2026-10-31.md.
-Acceptance/close-out: docs/reviews/ab5-finalisation-2026-10-31.md.
-Concepts and sample audit are alongside them. Ledger is struck as report complete, not
-an implemented programme feature. Architecture structure and application code are unchanged.
-
-Document/source and 320px/375px light/dark concept checks pass. Exact-head PR CI
-41205867259 passes all seven jobs at b9f7dd7. Post-merge API/web serve that exact commit,
-db ok and all five readiness integrations configured. Final documentation handoff also
-requires exact-head main CI and matching API/web/readiness; the completed handoff evidence
-is retained in PR #123's description. No extra programme/source request is part of it.
-Earlier PR 41203387374's Firefox navigation timeout remains audited, cause unconfirmed;
-fresh full CI passed without an application, test, assertion or timeout change.
-
-AB4 remains complete and production-phone accepted; no further reinstall/test requested.
-AB3 real-phone receipt and unrelated camera/speech/valuation owner observations remain open.
+Four previously successful CinemaTimes pages rechecked locally at 10:58 UTC on 2 Nov:
+707 rows/2–8 Nov; 667 retained IDs/starts, 40 new IDs, 202 removals. Of removals, 198 are
+past and four future Braehead Wicker starts have unexplained disappearance. No cancellation
+claim. Update label Monday 06:17; upstream date/zone still unverified. No new Railway test,
+booking, refusal retry, source switch, VM, app/schema/hosting/data change or recurring run.
+Earlier four-venue Railway success and five other source specimens remain dated evidence,
+not a synchronised complete nine-venue programme. Audit:
+docs/reviews/ab-cinema-source-repeat-2026-11-02.json. Source/doc checks pass; full application/
+CI/production-readiness checks not run for this planning-only step. No push/PR/other sitting.
+AB5 remains accepted report-only; AB4 phone acceptance stays complete. AB3 real-phone
+receipt and unrelated camera/speech/valuation owner observations remain open.
 
 ## Next
 
-Next checkpoint: revise and review the complete £0 source/build contract using the free
-CinemaTimes HTTP specimens for four ODEON venues and the earlier five direct-source
-specimens. No paid enquiry/trial, identical browser-host retry or reduced venue list.
-Validate source freshness/title conflicts, full discovery/horizon, original-year and DST/
-cancellation semantics; then approve the concrete schema/API/job/retention/navigation and
-recurring execution/cost plan before AB6 → AB7. Recommend the original two batches, one
-branch/PR each; the browser-dependent three-PR split is no longer recommended. No recurring
-host/schedule/data write is authorised by source tests. See the #324 report for exact limits.
-No parked links-screen build, archive retry, AA10c or other sitting.
+Next checkpoint: Craig approves/revises the complete source/cost/coverage/schema/API/job/
+retention/year/navigation proposal in docs/reviews/ab-cinema-build-contract-2026-11-02.md.
+Recommend free HTTP sources, all nine venues, daily existing-job refresh and two batches.
+No approval of that newly concrete contract is inferred from “proceed” to preparing it.
+After acceptance, integrate the research/planning handoff through normal review/checks,
+then start AB6 from clean green main. Stop for exact live dry-run/write/enable decisions
+and unproved all-nine acceptance; AB7 follows only accepted AB6. No paid enquiry/trial,
+new hosting, identical browser retry, links-only fallback, AA10c or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
 
@@ -492,6 +432,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — revised free build contract ready (#325):** propose original AB6 → AB7/two PRs,
+  six HTTP adapters, five programme tables, daily existing-morning-job refresh and explicit
+  uncertainty/freshness/horizon/year/navigation rules. £0 data; existing hosting usage
+  unpriced, no new service/config/credential. Four local ODEON repeats yield 707 rows,
+  667 stable IDs/starts; four missing future Braehead starts remain unexplained. Source/
+  JSON/doc checks pass, application/CI/production checks not run. No build/data/hosting/
+  recurring/push/PR/other-sitting action. Stop for concrete contract approval, then exact
+  production dry-run/write/enable gates. Report/contract and machine audit retained.
 
 - **1 Nov — free source works in the app runtime (#324):** Craig reaffirms £0; paid enquiry
   parked. CinemaTimes yields 869 rows/1–7 Nov across all four ODEON venues, identical local/
