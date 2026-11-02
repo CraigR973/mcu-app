@@ -6914,3 +6914,9 @@ contemporaneous.
      resumes only after this repair; fresh all-nine acceptance and later production actions
      retain separate owner checkpoints. Numbers 328–330 belong to the preserved AB6 branch;
      this decision does not import that branch's unmerged implementation onto main.
+     Repair shipped as 7b67375 in PR #126: scrolling an empty log inserted Latest answer,
+     shrinking its visible area by 48px and clipping the click centre. Follow/latest now
+     require messages. Both regressions fail before/pass after; all ten clean local gates,
+     full local browsers/jobs, seven PR jobs and exact code production proof pass. Main/docs
+     head verification remains mandatory before returning to AB6. No assertion/timeout/skip,
+     source/model, API/data, hosting or credential change.

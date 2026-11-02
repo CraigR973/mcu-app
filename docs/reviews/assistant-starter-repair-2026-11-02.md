@@ -55,8 +55,24 @@ controlled click probe fails with the same empty-draft assertion as the original
 After repair, all 24 assistant page unit cases pass, including pending availability,
 single starter activation/focus, draft retention and streamed-answer scrolling.
 
-Targeted browser tests, full local gates/browser suites, exact-head PR/merge CI and
-production proof are pending. This report does not claim acceptance or shipment yet.
+All seven targeted assistant browser cases pass in Chromium and Firefox. On clean
+`7b67375f2966afd34c16aa440c0fa4019ada2a49`, all ten local gate commands pass: API 2,549
+with zero skips, shared 159, web 737, lint/types/format/build. Full local E2E starts and
+ends on that same commit: Chromium 62 pass, Firefox 61 pass plus its documented dictation
+skip, jobs six pass. No retries or new skips. The Mac cannot run Playwright WebKit.
+
+PR #126, exact-head CI 41512031733, passes all seven jobs including Chromium 62, Firefox
+61 plus one documented skip, WebKit 60 plus its two documented skips, jobs six. Migration
+reversal and image build/migrate/boot pass. PR #126 merged as `7b67375`; production API
+and web both serve that exact commit, db is ok and all five integrations are configured.
+The first deployment sample showed the old web SHA while the API had updated; 21 seconds
+later both matched. No configuration/readiness error. Captures inspected for Mark at
+375×500 in both themes show the filled, focused draft, reachable Send and no Latest answer.
+
+Portable gate/CI/deployment evidence: `assistant-starter-verification-2026-11-02.json`.
+Main code CI 41545752108 and the subsequent documentation head receive their own automatic
+runs. Final exact-head CI/deployment close-out evidence is recorded in PR #126's description
+before handoff; this code proof does not substitute for that final check.
 
 Investigation tooling: the old Mac Git does not support `branch --show-current`; branch
 inspection uses supported commands. An initial combined documentation patch did not match
@@ -68,11 +84,11 @@ lacked its ESM package marker and failed before browser/API startup; adding a sc
 
 | Criterion | Evidence/status |
 |---|---|
-| Demonstrated cause; fails before/passes after | Probe and both regressions fail before; unit passes after; browser after pending |
-| Single activation fills/focuses without chat/model call | Unit passes; browser pending |
-| Existing roles/themes/viewports/drafts/recovery retained | Assertions retained; full suites pending |
-| All ten gates, local browser/jobs, seven-job CI and production proof | Pending |
-| Scope boundaries | No provider/source/model/live-data/configuration/credential change; AB6 paused |
+| Demonstrated cause; fails before/passes after | Probe and both regressions fail before; unit and browser regressions pass after |
+| Single activation fills/focuses without chat/model call | Unit and both-browser/both-person/theme checks pass; no new chats/model calls |
+| Existing roles/themes/viewports/drafts/recovery retained | Assertions retained; full local and three-browser PR CI suites pass |
+| All ten gates, local browser/jobs, seven-job CI and production proof | Ten local checks/full suites/seven PR jobs pass; exact code API/web/readiness verified; final docs head checked separately |
+| Scope boundaries | No provider/source/model/live-data/configuration/credential change; AB6 resumes only after final repair proof |
 
 To observe after shipment: Assistant → scroll examples on a short screen → Unwatched 4Ks.
 The question appears in the composer with focus; Send remains explicit. In a conversation

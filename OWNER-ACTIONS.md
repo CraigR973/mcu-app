@@ -140,11 +140,11 @@ conversation still maps onto this file.*
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 
-- **Assistant starter repair prerequisite (#331, 2 Nov): approved.**
+- ~~**Assistant starter repair prerequisite (#331, 2 Nov).**~~ **Shipped 2 Nov, PR #126 (`7b67375`).**
   Craig approved the separate investigation/repair PR after AB6's Mark/375×500 failure.
   Cause reproduced: empty-chat scrolling inserts Latest answer and clips the click point.
-  Full repair verification is in progress; no new decision is needed for that scope.
-  Cinema branch/draft PR #125 is preserved and paused. Fresh all-nine source acceptance
+  Full local/PR checks and exact code production API/web/readiness pass; final main/docs
+  evidence is recorded in PR #126. Cinema branch/draft PR #125 is preserved. Fresh all-nine source acceptance
   and subsequent production configuration/import/enable remain explicit stops. No new
   source/model call or other sitting is authorised by this repair approval.
 

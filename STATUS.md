@@ -2,27 +2,27 @@
 
 ## Now
 
-**2 Nov: separate assistant starter repair authorised (#331); verification in progress.**
-Main was green at 6b4199f (seven-job CI 41445893500). Preserve cinema branch
-feat/ab6-cinema-ingestion / draft PR #125 at 0285b72. Its local Mark/375×500 failure
-is reproduced independently: scrolling empty examples inserts Latest answer, shrinking
-and clipping the starter's click point by 48px. The click lands on the surrounding page.
-The narrow fix limits answer-following to transcripts containing messages; starter/send/
-role/draft/API behaviour stays. Both new regressions fail before repair; all 24 assistant
-unit cases pass afterwards. Targeted browser/full gates/CI/production proof are pending.
-No live source/model request, production data/configuration/credential change or other
-sitting. AB6 stays paused until repair acceptance; fresh all-nine source acceptance and
-later production actions retain explicit owner checkpoints. Report:
-docs/reviews/assistant-starter-repair-2026-11-02.md.
+**2 Nov: separately approved assistant repair shipped in PR #126 (`7b67375`, #331).**
+Empty-chat scrolling inserted Latest answer, shrinking and clipping the starter's click
+point by 48px. Following/latest now require messages; drafts and explicit Send stay.
+Both regressions fail before/pass after. Clean 7b67375: all ten checks, API 2,549/no skips,
+shared 159/web 737; local Chromium 62, Firefox 61 plus its documented skip, jobs six.
+Seven-job PR CI 41512031733 passes, including WebKit 60 plus its two documented skips.
+Production API/web both serve exact 7b67375, db ok/all five integrations configured.
+Main code CI 41545752108/final documentation head still need their own verification before
+handoff/AB6 resumption; final proof belongs in PR #126's description. No source/model call,
+production data/configuration/credential change or other sitting. Report/portable evidence:
+docs/reviews/assistant-starter-repair-2026-11-02.md and assistant-starter-verification JSON.
+Cinema branch feat/ab6-cinema-ingestion / draft PR #125 remains preserved at 0285b72.
 
 ## Next
 
-Finish the separately approved assistant repair on its own branch/PR with full gates,
-exact CI and production API/web/readiness proof. Return to the preserved AB6 branch and
-integrate the repair normally; never waive the original failed case because CI was green.
-The revised cinema contract/build is already accepted; fresh bounded all-nine acceptance,
-production configuration/import/mapping/enable remain separate owner stops. No AB7 until
-AB6 acceptance and close-out; no AA10c/other sitting. AA10c remains separate from 25 Nov.
+Verify final repair main/docs CI and matching production API/web/readiness, then return to
+preserved AB6 and merge the repair normally. Run AB6's complete gate on the resulting clean
+tree; only then propose the exact fresh all-nine bounded source acceptance read. The cinema
+build/amendment is already accepted; the fresh read, actual evidence/mappings/count review,
+production configuration/import/mapping/enable remain separate owner stops. No AB7 before
+AB6 acceptance/close-out; no AA10c/other sitting. AA10c remains separate from 25 Nov.
 AA10b's 1–2 Nov final-total comparison and real-phone/live-assistant observations stay open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -415,6 +415,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — Assistant starter prerequisite repair (#331), PR #126, 7b67375.** Original
+  main's empty-chat scrolling inserted Latest answer and clipped the click point by 48px;
+  browser/event/geometry evidence established before code. Following/latest require
+  messages; both new regressions fail before/pass after, original assertions unchanged.
+  All ten clean local checks (API 2,549/no skips/shared 159/web 737), local C62/F61+1/jobs6,
+  seven exact PR CI jobs (W60+2) and exact code API/web/full readiness pass. Final main/docs
+  CI/served proof still required before handoff, recorded in PR #126. Original/probe red
+  cases and tooling failures retained in the report. Cinema PR #125 preserved; no source/
+  model/live-data/hosting/credential action or other sitting.
 
 - **2 Nov — revised contract accepted (#327):** latest “proceed” clears the full build
   contract/run-category checkpoint. Integrate planning then AB6 → AB7, one PR each.

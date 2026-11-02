@@ -4654,9 +4654,9 @@ Unsent drafts are page memory, not durable browser storage. Full failures, accep
 fixture captures: `docs/reviews/aa9-verification-2026-10-27.md`.
 **Sitting 5 is complete. Sitting 6 is excluded. AA10b's final-total checkpoint remains open.**
 
-### Assistant starter repair — separate prerequisite fix (#331, 2 Nov)
+### ~~Assistant starter repair — separate prerequisite fix (#331, 2 Nov)~~ **shipped 2 Nov (`7b67375`, [PR #126](https://github.com/CraigR973/mcu-app/pull/126))**
 
-**Authorised; investigation in progress.** This is a separate fix branch/PR from green
+**Shipped; final documentation proof remains part of the handoff.** This is a separate fix branch/PR from green
 main, not a new sitting or part of AB6. Preserve cinema branch/draft PR #125 and the
 original Mark/375×500 Chromium trace. Cause is not assumed from the failed value check.
 
@@ -4675,6 +4675,17 @@ composer, without weakening existing first-screen, draft, role or viewport guara
 - No provider/live-source request, production data/configuration/credential change or other
   sitting. AB6 resumes afterwards; fresh source acceptance and production actions retain
   their explicit owner stops. Physical-phone/keyboard/speech acceptance remains Craig's.
+
+**Result:** empty-landing scrolling inserted Latest answer and clipped the measured click
+point by 48px. Follow/latest controls now require messages; empty availability changes
+leave scroll position alone. Both regressions fail before and pass after. Clean 7b67375:
+all ten checks (API 2,549/no skips, shared 159/web 737); local Chromium 62, Firefox 61 plus
+one documented skip, jobs six. Exact-head PR CI 41512031733 passes all seven jobs, including
+WebKit 60 plus its two documented skips. Merged 7b67375; exact production API/web SHA,
+db ok and all five integrations configured. Report/portable evidence:
+docs/reviews/assistant-starter-repair-2026-11-02.md. Final main/docs checks are recorded in
+PR #126 before handoff. No phone/model/source/data/hosting claim; AB6's exact acceptance
+and production checkpoints stay explicit, AB7/AA10c/other sittings unstarted.
 
 ### ~~AA10 — What a disc really sells for: values and deals, a design note~~ 🔴 **written 21 Oct (`8a33c19`, `docs/reviews/values-and-deals-2026-10-21.md`)**
 - **23, 24.** One note, not code, because both rest on the same missing number: eBay gives only
