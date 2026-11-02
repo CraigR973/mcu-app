@@ -1,0 +1,63 @@
+{
+  "data": {
+    "allMovie": {
+      "nodes": [
+        {
+          "id": "326355",
+          "title": " (IMAX) Sinners",
+          "release": null
+        },
+        {
+          "id": "1000052295",
+          "title": "2026 Classic Secret Screaming",
+          "release": null
+        },
+        {
+          "id": "1000019133",
+          "title": "Animol",
+          "release": null
+        },
+        {
+          "id": "1000016901",
+          "title": "Clayface",
+          "release": null
+        },
+        {
+          "id": "1000044641",
+          "title": "Ghosts: The Possession Of Button House",
+          "release": null
+        },
+        {
+          "id": "1000023068",
+          "title": "Other Mommy",
+          "release": null
+        },
+        {
+          "id": "1000013908",
+          "title": "Primetime",
+          "release": null
+        },
+        {
+          "id": "1000018854",
+          "title": "Resident Evil",
+          "release": null
+        },
+        {
+          "id": "314939",
+          "title": "Street Fighter",
+          "release": null
+        },
+        {
+          "id": "322884",
+          "title": "Wicker",
+          "release": null
+        },
+        {
+          "id": "296439",
+          "title": "Wildwood",
+          "release": null
+        }
+      ]
+    }
+  }
+}

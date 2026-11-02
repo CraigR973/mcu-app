@@ -414,6 +414,16 @@ const matched = all
 const UNREAD: string[] = []
 
 describe('the web reads what the API sends', () => {
+  it('accepts the stored cinema API contract before the AB7 screen is built', () => {
+    const operation = operationFor('GET', '/cinemas/programme')
+    expect(operation).not.toBeNull()
+    const response = responseSchema(operation!)
+    expect(response).not.toBeNull()
+    const problems: string[] = []
+    walk(shared.cinemaProgrammeResponseSchema, response!, 'cinemaProgramme', problems)
+    expect(problems).toEqual([])
+  })
+
   it('finds the endpoint of every function that parses an answer', () => {
     const lost = [
       ...all.filter((call) => call.path === null).map((call) => call.fn),

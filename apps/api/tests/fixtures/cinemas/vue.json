@@ -1,0 +1,298 @@
+{
+  "responseCode": 0,
+  "errorMessage": null,
+  "result": [
+    {
+      "filmId": "HO00020288",
+      "filmTitle": "Clayface",
+      "releaseDate": "2026-10-23T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112766",
+              "bookingUrl": "/book-tickets/summary/10097/HO00020288/112766",
+              "showTimeWithTimeZone": "2026-10-31T20:30:00+00:00",
+              "endTime": "2026-10-31T22:43:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 3"
+            },
+            {
+              "sessionId": "113309",
+              "bookingUrl": "/book-tickets/summary/10097/HO00020288/113309",
+              "showTimeWithTimeZone": "2026-10-31T21:45:00+00:00",
+              "endTime": "2026-10-31T23:58:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 6"
+            },
+            {
+              "sessionId": "112767",
+              "bookingUrl": "/book-tickets/summary/10097/HO00020288/112767",
+              "showTimeWithTimeZone": "2026-10-31T22:30:00+00:00",
+              "endTime": "2026-11-01T00:43:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021404",
+      "filmTitle": "Wicker",
+      "releaseDate": "2026-10-30T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112784",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021404/112784",
+              "showTimeWithTimeZone": "2026-10-31T17:55:00+00:00",
+              "endTime": "2026-10-31T20:05:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 3"
+            },
+            {
+              "sessionId": "112837",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021404/112837",
+              "showTimeWithTimeZone": "2026-10-31T19:15:00+00:00",
+              "endTime": "2026-10-31T21:25:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 6"
+            },
+            {
+              "sessionId": "112785",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021404/112785",
+              "showTimeWithTimeZone": "2026-10-31T20:25:00+00:00",
+              "endTime": "2026-10-31T22:35:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 4"
+            },
+            {
+              "sessionId": "112749",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021404/112749",
+              "showTimeWithTimeZone": "2026-10-31T22:50:00+00:00",
+              "endTime": "2026-11-01T01:00:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021244",
+      "filmTitle": "Ghosts: The Possession of Button House",
+      "releaseDate": "2026-10-23T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112803",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021244/112803",
+              "showTimeWithTimeZone": "2026-10-31T18:10:00+00:00",
+              "endTime": "2026-10-31T20:12:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 4"
+            },
+            {
+              "sessionId": "112886",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021244/112886",
+              "showTimeWithTimeZone": "2026-10-31T19:45:00+00:00",
+              "endTime": "2026-10-31T21:47:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 9"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021488",
+      "filmTitle": "Primetime",
+      "releaseDate": "2026-10-30T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112804",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021488/112804",
+              "showTimeWithTimeZone": "2026-10-31T20:00:00+00:00",
+              "endTime": "2026-10-31T22:15:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 2"
+            },
+            {
+              "sessionId": "113055",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021488/113055",
+              "showTimeWithTimeZone": "2026-10-31T21:30:00+00:00",
+              "endTime": "2026-10-31T23:45:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021230",
+      "filmTitle": "Verity",
+      "releaseDate": "2026-10-02T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112868",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021230/112868",
+              "showTimeWithTimeZone": "2026-10-31T20:10:00+00:00",
+              "endTime": "2026-10-31T22:32:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 8"
+            },
+            {
+              "sessionId": "112869",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021230/112869",
+              "showTimeWithTimeZone": "2026-10-31T22:45:00+00:00",
+              "endTime": "2026-11-01T01:07:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021406",
+      "filmTitle": "Other Mommy",
+      "releaseDate": "2026-10-09T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112887",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021406/112887",
+              "showTimeWithTimeZone": "2026-10-31T23:00:00+00:00",
+              "endTime": "2026-11-01T00:58:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00020943",
+      "filmTitle": "Resident Evil",
+      "releaseDate": "2026-09-18T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112709",
+              "bookingUrl": "/book-tickets/summary/10097/HO00020943/112709",
+              "showTimeWithTimeZone": "2026-10-31T18:30:00+00:00",
+              "endTime": "2026-10-31T20:29:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021063",
+      "filmTitle": "Obsession",
+      "releaseDate": "2026-05-15T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112710",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021063/112710",
+              "showTimeWithTimeZone": "2026-10-31T21:00:00+00:00",
+              "endTime": "2026-10-31T23:14:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021001",
+      "filmTitle": "Scream (30th Anniversary)",
+      "releaseDate": "2026-10-23T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112068",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021001/112068",
+              "showTimeWithTimeZone": "2026-10-31T20:50:00+00:00",
+              "endTime": "2026-10-31T23:06:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021577",
+      "filmTitle": "Bad Day at the Office",
+      "releaseDate": "2026-10-30T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112786",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021577/112786",
+              "showTimeWithTimeZone": "2026-10-31T22:05:00+00:00",
+              "endTime": "2026-11-01T00:22:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 9"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filmId": "HO00021545",
+      "filmTitle": "Pan's Labyrinth (20th Anniversary)",
+      "releaseDate": "2026-10-30T00:00:00",
+      "showingGroups": [
+        {
+          "sessions": [
+            {
+              "sessionId": "112067",
+              "bookingUrl": "/book-tickets/summary/10097/HO00021545/112067",
+              "showTimeWithTimeZone": "2026-10-31T18:00:00+00:00",
+              "endTime": "2026-10-31T20:27:00",
+              "isSoldOut": false,
+              "isBookingAvailable": true,
+              "screenName": "Screen 7"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

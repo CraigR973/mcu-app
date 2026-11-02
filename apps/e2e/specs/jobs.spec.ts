@@ -34,6 +34,16 @@ test.describe('the cron jobs, run as Railway runs them', () => {
     expect(run.output).toMatch(/daily check:\s+\d+ checks/)
     expect(Number(db.scalar('SELECT count(*) FROM health_checks'))).toBeGreaterThan(0)
     expect(db.scalar("SELECT count(*) FROM job_heartbeats WHERE job = 'cron-reminders'")).toBe('1')
+    // AB6: the installed child phase stays idle until the separate owner enable.
+    expect(run.output).toMatch(/cinema programme:\s+disabled/)
+    expect(db.scalar('SELECT count(*) FROM cinema_venues')).toBe('9')
+    expect(db.scalar('SELECT count(*) FROM cinema_venues WHERE collection_enabled')).toBe('0')
+    expect(db.scalar('SELECT count(*) FROM cinema_refresh_runs')).toBe('0')
+    for (const host of ['cinematimes.com', 'www.myvue.com', 'www.everymancinema.com',
+      'www.cineworld.co.uk', 'www.glasgowfilm.org', 'www.glasgowsciencecentre.org',
+      'www.tickettailor.com', 'cms-assets.webediamovies.pro']) {
+      expect(world.calls(host)).toHaveLength(0)
+    }
   })
 
   test('the disc spec and review job searches for pages with Brave and finishes its batch', async ({ db }) => {

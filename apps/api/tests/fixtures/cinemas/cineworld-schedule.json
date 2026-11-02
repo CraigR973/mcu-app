@@ -1,0 +1,632 @@
+{
+  "X0VQ1": {
+    "schedule": {
+      "296439": {
+        "2026-10-31": [
+          {
+            "id": "296439-2026-10-31 19:50:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T19:50:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226977/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.296439&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners&perfd=20261031&perft=19:50&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "13"
+            }
+          }
+        ]
+      },
+      "314939": {
+        "2026-10-31": [
+          {
+            "id": "314939-2026-10-31 20:30:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T20:30:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226957/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.314939&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners&perfd=20261031&perft=20:30&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "4"
+            }
+          }
+        ]
+      },
+      "322884": {
+        "2026-10-31": [
+          {
+            "id": "322884-2026-10-31 19:10:00-Format.Projection.Digital,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T19:10:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-225548/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.322884&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners&perfd=20261031&perft=19:10&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "14"
+            }
+          },
+          {
+            "id": "322884-2026-10-31 20:20:00-Format.Projection.Digital,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T20:20:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-225566/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.322884&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners&perfd=20261031&perft=20:20&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "10"
+            }
+          },
+          {
+            "id": "322884-2026-10-31 21:50:00-Format.Projection.Digital,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T21:50:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-225549/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.322884&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners&perfd=20261031&perft=21:50&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "14"
+            }
+          }
+        ]
+      },
+      "326355": {
+        "2026-10-31": [
+          {
+            "id": "326355-2026-10-31 20:00:00-Format.Projection.Imax,Showtime.Event.BigScreenClassics",
+            "startsAt": "2026-10-31T20:00:00",
+            "tags": [
+              "Format.Projection.Imax",
+              "Showtime.Event.BigScreenClassics"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226601/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.326355&tags=Format.Projection.Imax,Showtime.Event.BigScreenClassics&perfd=20261031&perft=20:00&code=CF; "
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "1000013908": {
+        "2026-10-31": [
+          {
+            "id": "1000013908-2026-10-31 19:20:00-Format.Projection.Digital,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut",
+            "startsAt": "2026-10-31T19:20:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners",
+              "Internal.Data.AlmostSoldOut"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-224779/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000013908&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut&perfd=20261031&perft=19:20&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "7"
+            }
+          },
+          {
+            "id": "1000013908-2026-10-31 20:40:00-Format.Projection.Digital,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T20:40:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-224791/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000013908&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners&perfd=20261031&perft=20:40&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "3"
+            }
+          },
+          {
+            "id": "1000013908-2026-10-31 22:00:00-Format.Projection.Digital,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T22:00:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-224783/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000013908&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners&perfd=20261031&perft=22:00&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "7"
+            }
+          }
+        ]
+      },
+      "1000016901": {
+        "2026-10-31": [
+          {
+            "id": "1000016901-2026-10-31 19:40:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut",
+            "startsAt": "2026-10-31T19:40:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners",
+              "Internal.Data.AlmostSoldOut"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226873/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000016901&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut&perfd=20261031&perft=19:40&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "8"
+            }
+          },
+          {
+            "id": "1000016901-2026-10-31 21:00:00-Auditorium.Experience.4dx,Showtime.Accessibility.AudioDescription,Format.Projection.Digital",
+            "startsAt": "2026-10-31T21:00:00",
+            "tags": [
+              "Auditorium.Experience.4dx",
+              "Showtime.Accessibility.AudioDescription",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226897/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000016901&tags=Auditorium.Experience.4dx,Showtime.Accessibility.AudioDescription,Format.Projection.Digital&perfd=20261031&perft=21:00&code=4DX; AD"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "4"
+            }
+          },
+          {
+            "id": "1000016901-2026-10-31 22:20:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T22:20:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226874/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000016901&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners&perfd=20261031&perft=22:20&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "8"
+            }
+          }
+        ]
+      },
+      "1000018854": {
+        "2026-10-31": [
+          {
+            "id": "1000018854-2026-10-31 18:30:00-Auditorium.Experience.4dx,Showtime.Accessibility.AudioDescription,Format.Projection.Digital",
+            "startsAt": "2026-10-31T18:30:00",
+            "tags": [
+              "Auditorium.Experience.4dx",
+              "Showtime.Accessibility.AudioDescription",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226916/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000018854&tags=Auditorium.Experience.4dx,Showtime.Accessibility.AudioDescription,Format.Projection.Digital&perfd=20261031&perft=18:30&code=4DX; AD"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "4"
+            }
+          },
+          {
+            "id": "1000018854-2026-10-31 22:10:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T22:10:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226738/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000018854&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners&perfd=20261031&perft=22:10&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "1"
+            }
+          }
+        ]
+      },
+      "1000019133": {
+        "2026-10-31": [
+          {
+            "id": "1000019133-2026-10-31 20:50:00-Format.Projection.Digital,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T20:50:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226808/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000019133&tags=Format.Projection.Digital,Auditorium.Comfort.Recliners&perfd=20261031&perft=20:50&code=2D; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "5"
+            }
+          }
+        ]
+      },
+      "1000023068": {
+        "2026-10-31": [
+          {
+            "id": "1000023068-2026-10-31 20:45:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T20:45:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226756/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000023068&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners&perfd=20261031&perft=20:45&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "2"
+            }
+          },
+          {
+            "id": "1000023068-2026-10-31 22:00:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners",
+            "startsAt": "2026-10-31T22:00:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226849/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000023068&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners&perfd=20261031&perft=22:00&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "6"
+            }
+          }
+        ]
+      },
+      "1000044641": {
+        "2026-10-31": [
+          {
+            "id": "1000044641-2026-10-31 19:30:00-Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut",
+            "startsAt": "2026-10-31T19:30:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Accessibility.AudioDescription",
+              "Auditorium.Comfort.Recliners",
+              "Internal.Data.AlmostSoldOut"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-226837/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000044641&tags=Format.Projection.Digital,Showtime.Accessibility.AudioDescription,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut&perfd=20261031&perft=19:30&code=2D; AD; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "6"
+            }
+          }
+        ]
+      },
+      "1000052295": {
+        "2026-10-31": [
+          {
+            "id": "1000052295-2026-10-31 19:45:00-Format.Projection.Digital,Showtime.Event.BigScreenClassics,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut",
+            "startsAt": "2026-10-31T19:45:00",
+            "tags": [
+              "Format.Projection.Digital",
+              "Showtime.Event.BigScreenClassics",
+              "Auditorium.Comfort.Recliners",
+              "Internal.Data.AlmostSoldOut"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://web.cineworld.co.uk/order/showtimes/088-223326/seats"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X0VQ1&gid_entity=movie.movie._.1000052295&tags=Format.Projection.Digital,Showtime.Event.BigScreenClassics,Auditorium.Comfort.Recliners,Internal.Data.AlmostSoldOut&perfd=20261031&perft=19:45&code=2D; CF; REC"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "1"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

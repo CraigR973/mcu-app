@@ -99,6 +99,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
     """
     assert set(app.openapi()["paths"]) == {
         "/api/v1/health",
+        # AB6's single read route, explicitly approved in the #327 contract.
+        "/api/v1/cinemas/programme",
         "/api/v1/health/ready",
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",

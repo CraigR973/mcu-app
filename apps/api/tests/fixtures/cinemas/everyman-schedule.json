@@ -1,0 +1,198 @@
+{
+  "X11DQ": {
+    "schedule": {
+      "322884": {
+        "2026-10-31": [
+          {
+            "id": "322884-2026-10-31 18:00:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+            "startsAt": "2026-10-31T18:00:00",
+            "tags": [
+              "Auditorium.Comfort.ReservedSeating",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://purchase.everymancinema.com/launch/ticketing/c1f188de-41dc-585e-8c78-d8eec2aea89b"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X11DQ&gid_entity=movie.movie._.322884&tags=Auditorium.Comfort.ReservedSeating,Format.Projection.Digital&perfd=20261031&perft=18:00&code=ReservedSeating"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "2"
+            }
+          },
+          {
+            "id": "322884-2026-10-31 20:00:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+            "startsAt": "2026-10-31T20:00:00",
+            "tags": [
+              "Auditorium.Comfort.ReservedSeating",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://purchase.everymancinema.com/launch/ticketing/f89356f5-0dfa-5cbd-ae4c-04e1ef138795"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X11DQ&gid_entity=movie.movie._.322884&tags=Auditorium.Comfort.ReservedSeating,Format.Projection.Digital&perfd=20261031&perft=20:00&code=ReservedSeating"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "1"
+            }
+          },
+          {
+            "id": "322884-2026-10-31 21:30:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+            "startsAt": "2026-10-31T21:30:00",
+            "tags": [
+              "Auditorium.Comfort.ReservedSeating",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://purchase.everymancinema.com/launch/ticketing/58613c65-50c0-512d-a983-c381ff0381c5"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X11DQ&gid_entity=movie.movie._.322884&tags=Auditorium.Comfort.ReservedSeating,Format.Projection.Digital&perfd=20261031&perft=21:30&code=ReservedSeating"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "3"
+            }
+          }
+        ]
+      },
+      "1000013908": {
+        "2026-10-31": [
+          {
+            "id": "1000013908-2026-10-31 17:15:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+            "startsAt": "2026-10-31T17:15:00",
+            "tags": [
+              "Auditorium.Comfort.ReservedSeating",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://purchase.everymancinema.com/launch/ticketing/59d98cd6-0f98-5e98-98aa-6633480d26d7"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X11DQ&gid_entity=movie.movie._.1000013908&tags=Auditorium.Comfort.ReservedSeating,Format.Projection.Digital&perfd=20261031&perft=17:15&code=ReservedSeating"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "1"
+            }
+          },
+          {
+            "id": "1000013908-2026-10-31 20:45:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+            "startsAt": "2026-10-31T20:45:00",
+            "tags": [
+              "Auditorium.Comfort.ReservedSeating",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://purchase.everymancinema.com/launch/ticketing/df7f82fe-6601-5211-8ee0-2d56774030d6"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X11DQ&gid_entity=movie.movie._.1000013908&tags=Auditorium.Comfort.ReservedSeating,Format.Projection.Digital&perfd=20261031&perft=20:45&code=ReservedSeating"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "2"
+            }
+          }
+        ]
+      },
+      "1000044641": {
+        "2026-10-31": [
+          {
+            "id": "1000044641-2026-10-31 19:00:00-Auditorium.Comfort.ReservedSeating,Format.Projection.Digital",
+            "startsAt": "2026-10-31T19:00:00",
+            "tags": [
+              "Auditorium.Comfort.ReservedSeating",
+              "Format.Projection.Digital"
+            ],
+            "isExpired": false,
+            "data": {
+              "ticketing": [
+                {
+                  "urls": [
+                    "https://purchase.everymancinema.com/launch/ticketing/85d24889-e211-535e-b49b-f2dd4c713683"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "default"
+                },
+                {
+                  "urls": [
+                    "https://relay.mvtx.us/ticketing/dbz?code_theater=X11DQ&gid_entity=movie.movie._.1000044641&tags=Auditorium.Comfort.ReservedSeating,Format.Projection.Digital&perfd=20261031&perft=19:00&code=ReservedSeating"
+                  ],
+                  "type": "DESKTOP",
+                  "provider": "relay"
+                }
+              ]
+            },
+            "screen": {
+              "name": "3"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

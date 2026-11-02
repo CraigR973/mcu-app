@@ -15,6 +15,29 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
+## AB6, implementation under review, 2 Nov (not deployed or enabled)
+
+```mermaid
+flowchart TB
+    Reminder[Existing morning job<br/>reminders committed first] --> Disabled{Cinema collection enabled?}
+    Disabled -- no: zero HTTP --> Stop[Return cinema disabled]
+    Disabled -- yes --> Public[Six public source families<br/>nine approved venues]
+    Public --> Fence[Bounded fetch and fenced atomic venue promotion]
+    Review[Owner-reviewed dry-run artifact<br/>exact hash and row count] --> Fence
+    Fence --> Cinema[(Five isolated cinema tables)]
+    Cinema --> Read[Authenticated stored programme API<br/>shared zod contract]
+    Catalogue[(Existing catalogue and personal diary)] -- read only --> Read
+    Read -. AB7 remains gated .-> Discovery[Future cinema screen]
+```
+
+All nine venue seeds default to disabled. No source fetch happens on programme reads.
+Observed partial dates, missing/failing coverage, upstream age and unconfirmed showings
+remain explicit; stale or unconfirmed observations never expose showing booking actions.
+Original year, source release date and evidenced release run are independent. Unknown
+identities/categories stay unknown. The cinema child uses independent sessions/heartbeat
+after reminder delivery, without a hosting schedule or credential change. Live dry-run,
+exact write/enable approvals and AB6 acceptance remain outstanding.
+
 ## AA8, shipped 23 Oct
 
 ```mermaid

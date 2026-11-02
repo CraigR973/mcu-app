@@ -1,0 +1,74 @@
+{
+  "cinematimes-kilmarnock.html": {
+    "sourceFile": "free-source-2026-11-01/cinematimes-kilmarnock.html",
+    "sourceSha256": "f036b8828900ebaa402cce9203f2df6e7740f2bb39b14f3d44e9923f997881e4",
+    "fixtureSha256": "fbeba5ce98fea20860e7449fdb53905bbc2c54780604a35089bc5406b1dceb2c",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cinematimes-quay.html": {
+    "sourceFile": "free-source-2026-11-01/cinematimes-quay.html",
+    "sourceSha256": "b1db6299ad5e213cf12296fa12c7eb3de108e33f52a7ecee47d7c7799bfb1e90",
+    "fixtureSha256": "edd1e26e60999de5379d91b344c28a1aaa0369ca750e8f532a15aca4c9275572",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cinematimes-braehead.html": {
+    "sourceFile": "free-source-2026-11-01/cinematimes-braehead.html",
+    "sourceSha256": "1fdbc5e0e4355c282855c585a7aa2c49b081f22faf23fe788f1ec68497b3cc8b",
+    "fixtureSha256": "5f281addb39bb0495410f4044c996ce95ea8cc2342a423316f8602fb38665871",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cinematimes-east-kilbride.html": {
+    "sourceFile": "free-source-2026-11-01/cinematimes-east-kilbride.html",
+    "sourceSha256": "30ca060a4e5027223c17b551c88df70a477d639f8dd0d79e8ec771016ab9b3f7",
+    "fixtureSha256": "1a45929345ba5fb0a6b7d1d59766bf027b040973408027abdb6cea102e719541",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cinematimes-braehead-next.html": {
+    "sourceFile": "free-source-2026-11-02/cinematimes-braehead.html",
+    "sourceSha256": "eb850bebe5e9895d727b0e7bd23e78eb99ad274a451e475ba58c6c4f66477107",
+    "fixtureSha256": "ee1dd8580e2337ab6a9ab76b45ccfa45b5a62ea1231bc7a748fe0c136b65a22e",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "vue.json": {
+    "sourceFile": "repeatability-2026-10-31/vue-schedule.html",
+    "sourceSha256": "c7962997efbfdb84036c2982594b6effac20fa48c8db5ac810312a068db1e579",
+    "fixtureSha256": "2b61b200c69b1c8ab9198183ce27440f5f653f613c1191f80142402eee733a3d",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "everyman-schedule.json": {
+    "sourceFile": "repeatability-2026-10-31/everyman-schedule.html",
+    "sourceSha256": "75c6998c28b8e4fd15e9608a5a8df4ca3ce36d714e8fd89538cb92afcd3397c2",
+    "fixtureSha256": "ee7cfc7bb142edcd4316fc5320e9239cb48d1a115a9506e389efd4782a28aebf",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "everyman-metadata.json": {
+    "sourceFile": "public-probe-2026-10-31/everyman-public-static-1.json",
+    "sourceSha256": "0503ac4021d6bf24b36530babbc4a98bf935c67901f443daa4a7c86e319a8f51",
+    "fixtureSha256": "0bf2a375fa4253aab4684cb2f78401f99eb3de77396e69435d85b47ce291bdfa",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cineworld-schedule.json": {
+    "sourceFile": "repeatability-2026-10-31/cineworld-schedule.html",
+    "sourceSha256": "f779942f6f4bf8354350758f8dc6750997b5354cec3ceec3edc05add020c49ec",
+    "fixtureSha256": "475f43ca39f4d114a3a28dc6accb23b98a712e741fc561cb3ffc9ad66a54b7a4",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "cineworld-metadata.json": {
+    "sourceFile": "public-probe-2026-10-31/cineworld-silverburn-browser-json-15.json",
+    "sourceSha256": "3bf31ea0663a9669e9a5e92fe180dcdcef795935c8afaa65b0892b0048c774cf",
+    "fixtureSha256": "64c094fb7b2f7f4c661a02c2b8fc7e7f96c2b855eac73b82410238533f795ae7",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "gft.html": {
+    "sourceFile": "repeatability-2026-10-31/gft.html",
+    "sourceSha256": "c8f6507f4e4049119b877097d2dd4410de2ac1baa3fe2117fe53b05748198049",
+    "fixtureSha256": "69b70ff5de2999fd96f0f27fcf20b28f26fd0cfe521d6641943fe3305f997bb7",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  },
+  "science-event.html": {
+    "sourceFile": "repeatability-2026-10-31/science-centre-event-2456601.html",
+    "sourceSha256": "48da6b22721bcbe3b72ccbcab4697e536dff55bd2cb4956c46b8d9cf20ca7da7",
+    "fixtureSha256": "cf7457a17d36640cb8b318861b780b8fff36f7f708198f5fc4f05d91de15eb08",
+    "redaction": "public programme identifiers/titles/times and required structural fields only; no plots, images, cookies or users"
+  }
+}

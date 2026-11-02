@@ -2737,3 +2737,74 @@ export type Attention = z.infer<typeof attentionSchema>
 // AA6: one ephemeral Archive draw; null means that this run has exhausted its pool.
 export const luckyFilmSchema = z.object({ film: movieListItemSchema.nullable() })
 export type LuckyFilm = z.infer<typeof luckyFilmSchema>
+
+// AB6: stored programmes, with certainty independent of original year/ownership.
+export const cinemaReleaseCategorySchema = z.enum(['newRelease', 'olderFilm', 'unclassified'])
+const cinemaUtcSchema = z.string().datetime({ offset: true })
+const cinemaDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+const cinemaCoverageSchema = z.object({
+  localDate: cinemaDateSchema,
+  status: z.enum(['notEnabled', 'unavailable', 'failed', 'empty', 'partial', 'healthy', 'stale']),
+  observed: z.boolean(),
+  complete: z.boolean(),
+  lastAttemptUtc: cinemaUtcSchema.nullable(),
+  lastSuccessUtc: cinemaUtcSchema.nullable(),
+  sourceUpdateLabel: z.string().nullable(),
+  upstreamUtc: cinemaUtcSchema.nullable(),
+  upstreamAge: z.enum(['unknown', 'current', 'stale']),
+  error: z.string().nullable(),
+})
+const cinemaShowingSchema = z.object({
+  id: z.string().uuid(),
+  venueId: z.string().uuid(),
+  sourceTitle: z.string().min(1),
+  startsAtUtc: cinemaUtcSchema,
+  endsAtUtc: cinemaUtcSchema.nullable(),
+  screen: z.string().nullable(),
+  formats: z.array(z.string()),
+  releaseCategory: cinemaReleaseCategorySchema,
+  sourceReleaseDate: cinemaDateSchema.nullable(),
+  reissue: z.boolean().nullable(),
+  categoryConfidence: z.enum(['verified', 'unverified']),
+  categoryEvidence: z.object({ sourceUrl: z.string().url().nullable(), description: z.string() }),
+  confirmation: z.enum(['confirmed', 'unconfirmed']),
+  lastSeenUtc: cinemaUtcSchema,
+  observationStale: z.boolean(),
+  upstreamAge: z.enum(['unknown', 'current', 'stale']),
+  bookingUrl: z.string().url().nullable(),
+})
+export const cinemaProgrammeResponseSchema = z.object({
+  generatedAtUtc: cinemaUtcSchema,
+  window: z.object({ dateFrom: cinemaDateSchema, dateTo: cinemaDateSchema }),
+  venues: z.array(z.object({
+    id: z.string().uuid(),
+    slug: z.string().min(1),
+    name: z.string().min(1),
+    source: z.string().min(1),
+    sourceUrl: z.string().url(),
+    officialUrl: z.string().url(),
+    collectionEnabled: z.boolean(),
+    coverage: z.array(cinemaCoverageSchema),
+  })),
+  films: z.array(z.object({
+    id: z.string().min(1),
+    title: z.string().min(1),
+    movieId: z.string().uuid().nullable(),
+    originalYear: z.number().int().nullable(),
+    yearConfidence: z.enum(['verified', 'unverified']),
+    identityStatus: z.enum(['verified', 'unverified', 'conflict']),
+    owned: z.boolean().nullable(),
+    watched: z.boolean().nullable(),
+    showings: z.array(cinemaShowingSchema),
+  })),
+  categoryCounts: z.object({
+    newRelease: z.number().int().nonnegative(),
+    olderFilm: z.number().int().nonnegative(),
+    unclassified: z.number().int().nonnegative(),
+  }),
+  matchedShowingCount: z.number().int().nonnegative(),
+  returnedShowingCount: z.number().int().nonnegative(),
+  truncated: z.boolean(),
+  selectionComplete: z.boolean(),
+})
+export type CinemaProgrammeResponse = z.infer<typeof cinemaProgrammeResponseSchema>

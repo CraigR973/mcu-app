@@ -2198,6 +2198,65 @@
     "title": "ChatMessageResponse",
     "type": "object"
    },
+   "CinemaProgrammeResponse": {
+    "properties": {
+     "categoryCounts": {
+      "$ref": "#/components/schemas/ProgrammeCategoryCounts"
+     },
+     "films": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeFilm"
+      },
+      "title": "Films",
+      "type": "array"
+     },
+     "generatedAtUtc": {
+      "title": "Generatedatutc",
+      "type": "string"
+     },
+     "matchedShowingCount": {
+      "minimum": 0.0,
+      "title": "Matchedshowingcount",
+      "type": "integer"
+     },
+     "returnedShowingCount": {
+      "minimum": 0.0,
+      "title": "Returnedshowingcount",
+      "type": "integer"
+     },
+     "selectionComplete": {
+      "title": "Selectioncomplete",
+      "type": "boolean"
+     },
+     "truncated": {
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "venues": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeVenue"
+      },
+      "title": "Venues",
+      "type": "array"
+     },
+     "window": {
+      "$ref": "#/components/schemas/ProgrammeWindow"
+     }
+    },
+    "required": [
+     "generatedAtUtc",
+     "window",
+     "venues",
+     "films",
+     "categoryCounts",
+     "matchedShowingCount",
+     "returnedShowingCount",
+     "truncated",
+     "selectionComplete"
+    ],
+    "title": "CinemaProgrammeResponse",
+    "type": "object"
+   },
    "CollectionCopyResponse": {
     "properties": {
      "audioSpecs": {
@@ -9078,6 +9137,482 @@
      "hasPin"
     ],
     "title": "ProfileResponse",
+    "type": "object"
+   },
+   "ProgrammeCategoryCounts": {
+    "properties": {
+     "newRelease": {
+      "minimum": 0.0,
+      "title": "Newrelease",
+      "type": "integer"
+     },
+     "olderFilm": {
+      "minimum": 0.0,
+      "title": "Olderfilm",
+      "type": "integer"
+     },
+     "unclassified": {
+      "minimum": 0.0,
+      "title": "Unclassified",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "newRelease",
+     "olderFilm",
+     "unclassified"
+    ],
+    "title": "ProgrammeCategoryCounts",
+    "type": "object"
+   },
+   "ProgrammeCategoryEvidence": {
+    "properties": {
+     "description": {
+      "title": "Description",
+      "type": "string"
+     },
+     "sourceUrl": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sourceurl"
+     }
+    },
+    "required": [
+     "sourceUrl",
+     "description"
+    ],
+    "title": "ProgrammeCategoryEvidence",
+    "type": "object"
+   },
+   "ProgrammeDateCoverage": {
+    "properties": {
+     "complete": {
+      "title": "Complete",
+      "type": "boolean"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "lastAttemptUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lastattemptutc"
+     },
+     "lastSuccessUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lastsuccessutc"
+     },
+     "localDate": {
+      "format": "date",
+      "title": "Localdate",
+      "type": "string"
+     },
+     "observed": {
+      "title": "Observed",
+      "type": "boolean"
+     },
+     "sourceUpdateLabel": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sourceupdatelabel"
+     },
+     "status": {
+      "enum": [
+       "notEnabled",
+       "unavailable",
+       "failed",
+       "empty",
+       "partial",
+       "healthy",
+       "stale"
+      ],
+      "title": "Status",
+      "type": "string"
+     },
+     "upstreamAge": {
+      "enum": [
+       "unknown",
+       "current",
+       "stale"
+      ],
+      "title": "Upstreamage",
+      "type": "string"
+     },
+     "upstreamUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Upstreamutc"
+     }
+    },
+    "required": [
+     "localDate",
+     "status",
+     "observed",
+     "complete",
+     "lastAttemptUtc",
+     "lastSuccessUtc",
+     "sourceUpdateLabel",
+     "upstreamUtc",
+     "upstreamAge",
+     "error"
+    ],
+    "title": "ProgrammeDateCoverage",
+    "type": "object"
+   },
+   "ProgrammeFilm": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "identityStatus": {
+      "enum": [
+       "verified",
+       "unverified",
+       "conflict"
+      ],
+      "title": "Identitystatus",
+      "type": "string"
+     },
+     "movieId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Movieid"
+     },
+     "originalYear": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Originalyear"
+     },
+     "owned": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owned"
+     },
+     "showings": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeShowing"
+      },
+      "title": "Showings",
+      "type": "array"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "watched": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Watched"
+     },
+     "yearConfidence": {
+      "enum": [
+       "verified",
+       "unverified"
+      ],
+      "title": "Yearconfidence",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "title",
+     "movieId",
+     "originalYear",
+     "yearConfidence",
+     "identityStatus",
+     "owned",
+     "watched",
+     "showings"
+    ],
+    "title": "ProgrammeFilm",
+    "type": "object"
+   },
+   "ProgrammeShowing": {
+    "properties": {
+     "bookingUrl": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bookingurl"
+     },
+     "categoryConfidence": {
+      "enum": [
+       "verified",
+       "unverified"
+      ],
+      "title": "Categoryconfidence",
+      "type": "string"
+     },
+     "categoryEvidence": {
+      "$ref": "#/components/schemas/ProgrammeCategoryEvidence"
+     },
+     "confirmation": {
+      "enum": [
+       "confirmed",
+       "unconfirmed"
+      ],
+      "title": "Confirmation",
+      "type": "string"
+     },
+     "endsAtUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Endsatutc"
+     },
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "lastSeenUtc": {
+      "title": "Lastseenutc",
+      "type": "string"
+     },
+     "observationStale": {
+      "title": "Observationstale",
+      "type": "boolean"
+     },
+     "reissue": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reissue"
+     },
+     "releaseCategory": {
+      "enum": [
+       "newRelease",
+       "olderFilm",
+       "unclassified"
+      ],
+      "title": "Releasecategory",
+      "type": "string"
+     },
+     "screen": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Screen"
+     },
+     "sourceReleaseDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sourcereleasedate"
+     },
+     "sourceTitle": {
+      "title": "Sourcetitle",
+      "type": "string"
+     },
+     "startsAtUtc": {
+      "title": "Startsatutc",
+      "type": "string"
+     },
+     "upstreamAge": {
+      "enum": [
+       "unknown",
+       "current",
+       "stale"
+      ],
+      "title": "Upstreamage",
+      "type": "string"
+     },
+     "venueId": {
+      "format": "uuid",
+      "title": "Venueid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "venueId",
+     "sourceTitle",
+     "startsAtUtc",
+     "endsAtUtc",
+     "screen",
+     "formats",
+     "releaseCategory",
+     "sourceReleaseDate",
+     "reissue",
+     "categoryConfidence",
+     "categoryEvidence",
+     "confirmation",
+     "lastSeenUtc",
+     "observationStale",
+     "upstreamAge",
+     "bookingUrl"
+    ],
+    "title": "ProgrammeShowing",
+    "type": "object"
+   },
+   "ProgrammeVenue": {
+    "properties": {
+     "collectionEnabled": {
+      "title": "Collectionenabled",
+      "type": "boolean"
+     },
+     "coverage": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeDateCoverage"
+      },
+      "title": "Coverage",
+      "type": "array"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "officialUrl": {
+      "title": "Officialurl",
+      "type": "string"
+     },
+     "slug": {
+      "title": "Slug",
+      "type": "string"
+     },
+     "source": {
+      "title": "Source",
+      "type": "string"
+     },
+     "sourceUrl": {
+      "title": "Sourceurl",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "slug",
+     "name",
+     "source",
+     "sourceUrl",
+     "officialUrl",
+     "collectionEnabled",
+     "coverage"
+    ],
+    "title": "ProgrammeVenue",
+    "type": "object"
+   },
+   "ProgrammeWindow": {
+    "properties": {
+     "dateFrom": {
+      "format": "date",
+      "title": "Datefrom",
+      "type": "string"
+     },
+     "dateTo": {
+      "format": "date",
+      "title": "Dateto",
+      "type": "string"
+     }
+    },
+    "required": [
+     "dateFrom",
+     "dateTo"
+    ],
+    "title": "ProgrammeWindow",
     "type": "object"
    },
    "PurgePreviewResponse": {
@@ -16913,6 +17448,114 @@
     "summary": "Subscribe To Calendar",
     "tags": [
      "calendar"
+    ]
+   }
+  },
+  "/api/v1/cinemas/programme": {
+   "get": {
+    "operationId": "get_programme_api_v1_cinemas_programme_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "dateFrom",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "format": "date",
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Datefrom"
+      }
+     },
+     {
+      "in": "query",
+      "name": "dateTo",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "format": "date",
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Dateto"
+      }
+     },
+     {
+      "in": "query",
+      "name": "venueIds",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "items": {
+          "format": "uuid",
+          "type": "string"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Venueids"
+      }
+     },
+     {
+      "in": "query",
+      "name": "releaseCategory",
+      "required": false,
+      "schema": {
+       "default": "all",
+       "enum": [
+        "all",
+        "newRelease",
+        "olderFilm",
+        "unclassified"
+       ],
+       "title": "Releasecategory",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaProgrammeResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Programme",
+    "tags": [
+     "cinemas"
     ]
    }
   },

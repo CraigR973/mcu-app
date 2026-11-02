@@ -2,21 +2,25 @@
 
 ## Now
 
-**2 Nov: planning handoff integrated; AB6 ingestion implementation starting (#327).**
-PR #124 merged 6b4199f. Local ten-command gate passes, API 2,549/no skips, seven-job
-PR CI 41443729954 and main CI 41445893500 pass. API/web exact 6b4199f, db ok/five
-integrations configured. Initial local locale/socket-guard issues resolved without
-changing tests. Accepted contract: docs/reviews/ab-cinema-build-contract-2026-11-02.md.
-Clean green main → feat/ab6-cinema-ingestion. Ingestion only (Extra High), one PR;
-AB7 waits for accepted AB6. Verbatim criteria: docs/reviews/ab6-implementation-2026-11-02.md.
-Source/production dry-run/count/write/enable checkpoints remain; seeds disabled.
-All nine/Film first/£0 source data; no new hosting/config/credential/paid tier/other sitting.
+**2 Nov: AB6 ingestion implemented locally; verification/live acceptance remains (#327).**
+Five isolated tables, six real-specimen adapters, authenticated/shared-zod programme API,
+disabled morning child/CLI, bounded retention and updated architecture map are on
+feat/ab6-cinema-ingestion. Focused real-Postgres suite: 43 pass; shared schema: eight new
+checks pass. Full ten-command gate/exact-head PR CI are next, not yet claimed green.
+Main/production remain PR #124's green 6b4199f; AB6 is neither deployed nor enabled.
+All nine seeds disabled; no source requests or production writes performed by AB6.
+Saved specimens currently yield zero verified release-run categories/global mappings;
+unknown metadata remains Unclassified. Useful New/Older filtering needs real evidence.
+Exact live dry-run/read scope, row counts, production write and enable remain owner stops;
+see docs/reviews/ab6-implementation-2026-11-02.md for the bounded local dry-run proposal.
+AB7 waits for accepted AB6. No AA10c, other sitting, paid service or hosting/config change.
 
 ## Next
 
-Build AB6 against the accepted #327 contract and real specimens. Verify its five-table,
-six-adapter, authenticated shared-zod API and disabled daily-job/CLI/retention pipeline.
-Stop before exact live dry-run/count/write/enable checkpoints or unmet all-nine acceptance.
+Finish AB6's clean full gate and exact-head draft PR CI, then stop for the concrete live
+read/dry-run proposal. Record actual venue horizons, unknown identities/categories,
+request/byte counts and prospective changes before any production ingest/enable.
+Do not merge/close AB6 with unmet all-nine or run-category acceptance.
 AB7 follows only accepted AB6 from clean green main; no new hosting or other sitting.
 AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
 real-phone/live-assistant observations remain open.
@@ -411,6 +415,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — AB6 implementation prepared:** five-table programme domain, six HTTP adapters,
+  shared-schema authenticated GET, disabled daily child/CLI, conservative disappearance/
+  booking rules and architecture map. Forty-three focused real-Postgres checks and eight
+  new shared checks pass. Full gate/PR CI next. Saved real metadata currently gives no
+  verified run category/global identity; live evidence and later write/enable remain
+  explicit stops. Main/production unchanged at 6b4199f; no AB7/AA10c/other sitting.
 
 - **2 Nov — planning integrated, AB6 starts:** PR #124/main 6b4199f, clean full local gate
   and exact-head seven-job PR/main CI, exact API/web/full readiness verified. AB6 branch

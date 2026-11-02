@@ -20,6 +20,13 @@ from src.models.base import (
     UUIDPrimaryKeyMixin,
 )
 from src.models.box_set import BOX_SETS_TABLE, BoxSet, BoxSetItem
+from src.models.cinema import (
+    CinemaCoverage,
+    CinemaFilm,
+    CinemaRefreshRun,
+    CinemaScreening,
+    CinemaVenue,
+)
 from src.models.collection_add_request import CollectionAddRequest
 from src.models.collection_item import (
     CONDITIONS,
@@ -151,6 +158,11 @@ from src.models.wanted import (
 from src.models.watch_log import RATING_MAX, RATING_MIN, WatchLog
 
 __all__ = [
+    "CinemaCoverage",
+    "CinemaFilm",
+    "CinemaRefreshRun",
+    "CinemaScreening",
+    "CinemaVenue",
     "ACTION_TYPES",
     "MESSAGE_ROLES",
     "TOOL_CALL_STATUSES",

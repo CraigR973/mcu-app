@@ -44,6 +44,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from src.clock import utc_today, utcnow
 from src.config import settings
 from src.services import heartbeat
+from src.services.cinemas.refresh import refresh_due
 from src.services.health_checks import CheckSummary, run_daily_check
 from src.services.letterboxd.sync import SyncResult, sync_due
 from src.services.notifications import deliver_pending
@@ -107,6 +108,10 @@ async def _run(*, as_of: date | None, deliver: bool) -> int:
                     failed = delivery.failed
             await db.commit()
             await heartbeat.beat(db, heartbeat.REMINDERS, "ran")
+        # AB6: independent sessions after delivery/commit. Disabled venue seeds cause
+        # zero source requests. Cinema status is separate from the reminder exit code.
+        cinema = await refresh_due(engine)
+        print(f"cinema programme:  {cinema['status']}")
     finally:
         await engine.dispose()
     return report(

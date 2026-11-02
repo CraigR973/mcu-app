@@ -137,6 +137,14 @@ conversation still maps onto this file.*
   for accepted AB6. Exact live dry-run/read scope, row-count review, programme write and
   enabling the nine seeded-disabled venues remain explicit later owner checkpoints.
   No new hosting/configuration/credentials/subscription or other sitting is authorised.
+  **AB6 local implementation prepared (2 Nov):** 43 focused Postgres checks/eight new shared
+  checks pass; full gate and draft PR CI next. Source classifications/global mappings are
+  currently unverified in the saved specimens. Concrete next proposal: one all-nine local
+  dry-run, today +13 days, at most 120 GETs/five minutes, bounded bodies, no retry after
+  refusal, saved normalised artifact/hash/counts, disposable local DB only and no production
+  writes. Full scope/limits in docs/reviews/ab6-implementation-2026-11-02.md. Review real
+  category/horizon gaps before any staged disabled deployment/import/enable; do not merge
+  or close AB6 merely because fixtures and CI pass. AB7 remains gated.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 
