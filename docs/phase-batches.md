@@ -4844,6 +4844,12 @@ Four local repeats: 707 rows/667 retained IDs/starts; four unexplained missing f
 Braehead starts, no cancellation claim. Audit: ab-cinema-source-repeat-2026-11-02.json.
 “Proceed” covered preparation, not the resulting full contract. Implementation stays
 planned/unstarted; exact live dry-run/write/enable gates persist. No AA10c/other sitting.
+**2 Nov newer/any-older filter request (#326):** revise the same proposed contract to
+All films/New releases/Older films/Unclassified, withdrawing the unapproved ten-year rule.
+Propose evidenced first UK run versus returning/reissue films of any age; classify per
+showing, independently of original-year confidence. Unknown evidence stays explicit.
+API query becomes releaseCategory, replacing olderOnly in the draft. No new source/cost/
+hosting/app change; exact definitions and complete contract approval still stop AB6/AB7.
 Source: eight points in `docs/owner-snags-2026-10-28.md`, reconciled against source/live
 `3e07c19`. Phone-readable proposal: `docs/reviews/group-ab-plan-2026-10-28.md`.
 Criteria below were authored on 28 Oct, not recovered from April. Re-verify at batch start.
@@ -5033,8 +5039,10 @@ concept pick. A separately authorised sitting 5 is still required.
 - One view grouped by film, with approved venue selection, date/time and validated booking
   links. Multiple venues/showtimes remain distinct under a film. Show coverage and freshness;
   booking opens the venue, never buys a ticket. Preserve the current disc/release calendar.
-- Make older/reissue screenings discoverable under the approved definition, including
-  watched favourites. Ownership and personal watch status may explain relevance; “older”
+- Include current new releases and older/reissue screenings, with the proposed
+  All films/New releases/Older films/Unclassified selector (#326). Final run-category
+  definitions require owner acceptance; Older films has no unapproved ten-year cut-off.
+  Keep watched older favourites discoverable. Ownership and personal watch status may explain relevance; “older”
   cannot mean “unwatched”. Clearly label uncertain identity/year; no paid/model ranking assumed.
 - Honest loading/empty/failed/stale/partial states. Settle navigation in the picked design,
   retain route/access assertions and seek approval for intentional inventory additions.

@@ -124,6 +124,12 @@ conversation still maps onto this file.*
   existing compute/storage unpriced; no guaranteed £0 increase in hosting bills.
   Four local repeats: 707 rows/2–8 Nov, 667 stable IDs/starts, four unexplained future
   Braehead removals. No cancellation inference or fresh Railway test. Audit alongside.
+  **Newer/any-older filter requested (#326, 2 Nov):** include All films/New releases/
+  Older films/Unclassified. Withdraw the unapproved ten-year cut-off; propose evidenced
+  current first UK theatrical run versus returning/reissue screenings of any age.
+  Category is per showing and separate from original-year confidence. Unknown status
+  stays visible; no title/year-only first-run guess or new metadata provider. Exact
+  definitions remain part of full contract approval, not a rule Craig has already picked.
   **Owner action:** accept/revise this complete contract. Then normal planning integration
   and separate AB6/AB7 branches/PRs. Exact live dry-run counts/write/enable remain later
   gates; no app implementation or recurring collection approved yet. No AA10c.

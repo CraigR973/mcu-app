@@ -2,7 +2,7 @@
 
 ## Now
 
-**2 Nov: complete free-source build contract prepared; owner approval is next (#325).**
+**2 Nov: new/older release-category filtering added to the proposed contract (#326).**
 Craig's “proceed” authorised revising the nine-venue plan, not approving the newly specified
 schema/refresh/year/navigation choices. Current proposal:
 docs/reviews/ab-cinema-build-contract-2026-11-02.md. It supersedes the 31 Oct contract and
@@ -12,9 +12,12 @@ daily refresh after the existing 08:00 UTC maintenance/reminders run, no new hos
 credential/configuration/subscription. Daily refresh is a proposed change from six-hour
 polling: same-day changes can be delayed. Existing compute/storage cost is unmeasured,
 not guaranteed £0 incremental hosting. No paid tier/service/spending-limit change.
-Proposal: 30-hour observation/36-hour evidenced-upstream stale limits, explicit variable
-source horizons, verified original year at least ten years old, unknown identity/year
-visible, missing future showings Unconfirmed with showing booking disabled. Production
+Proposal: 30-hour observation/36-hour evidenced-upstream stale limits and explicit variable
+source horizons. Craig requests newer films and a New releases versus any Older films filter.
+Replace the unapproved ten-year cut-off with All films/New releases/Older films/Unclassified.
+Propose evidenced first UK run versus returning/reissue of any age; exact definitions stay
+pending full contract approval. Category uncertainty and original-year confidence are
+separate. Missing future showings stay Unconfirmed with showing booking disabled. Production
 collection seeds disabled; exact dry-run row-count/write/enable approvals remain separate.
 
 Four previously successful CinemaTimes pages rechecked locally at 10:58 UTC on 2 Nov:
@@ -432,6 +435,13 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — newer/any-older filter requested (#326):** current programmes already include
+  new releases. Revise the proposed contract/API to All films/New releases/Older films/
+  Unclassified; withdraw the ten-year cut-off. Propose evidenced first UK run versus
+  returning films of any age, per-showing category/evidence and explicit unknown counts.
+  Definitions/full build approval remain open. No new source request, app/data/hosting
+  change or deployment. Document checks pass; application gates not run. No other sitting.
 
 - **2 Nov — revised free build contract ready (#325):** propose original AB6 → AB7/two PRs,
   six HTTP adapters, five programme tables, daily existing-morning-job refresh and explicit

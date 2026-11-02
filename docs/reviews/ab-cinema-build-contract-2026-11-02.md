@@ -1,16 +1,19 @@
 # Nine-venue cinema discovery — revised build contract
 
-2 Nov 2026 · decision #325 · **proposal awaiting Craig's approval**.
+2 Nov 2026 · decisions #325/#326 · **proposal awaiting Craig's approval**.
 
 This is the complete current proposal for Group AB sitting 5. It supersedes the 31 Oct
 contract and its browser/paid-provider amendments. “Proceed” after #324 authorises preparing
 this contract and bounded source checks, not accepting new data/refresh/navigation choices.
 No implementation, migration, production programme write or recurring collection has started.
+Craig subsequently requested newer films and a New releases versus any Older films filter
+(#326). That scope is included below; the earlier ten-year Older films proposal is withdrawn.
 
 ## The decision in plain English
 
 Use free public listings for all nine venues, refresh them each morning using the existing
-08:00 UTC maintenance/reminders job, and show one film-first cinema page. No extra hosted
+08:00 UTC maintenance/reminders job, and show one film-first cinema page with All films,
+New releases, Older films and Unclassified filters. No extra hosted
 service, subscription, browser VM, credential or hosting configuration is proposed.
 
 Daily updates can miss changes later that day. CinemaTimes itself publishes twice-daily
@@ -100,8 +103,8 @@ Five new tables, UUID IDs, UTC_NOW defaults, naive UTC domain timestamps and sof
 | Table | Contents and uniqueness |
 |---|---|
 | cinema_venues | Nine seeded venue rows, source/operator IDs, timezone, source/official URLs, collectionEnabled default false. Unique source/operator venue pair. |
-| cinema_films | Source film/event key and title, nullable verified TMDB/catalogue ID, original year/evidence, separate source release/reissue date, identity status and provenance. Unique source/film key. |
-| cinema_screenings | Venue/source showing key, film/event, UTC start and optional end, original local/date/offset, formats/screens, validated booking URL, first/last seen, confirmation state/evidence. Unique venue/source showing key. |
+| cinema_films | Source film/event key/title, nullable verified TMDB/catalogue ID, original year/evidence, separately evidenced first UK theatrical/source/reissue dates, identity status and provenance. Unique source/film key. |
+| cinema_screenings | Venue/source showing key, film/event, UTC start and optional end, original local/date/offset, formats/screens, validated booking URL, release category/confidence/evidence, first/last seen, confirmation state/evidence. Unique venue/source showing key. |
 | cinema_refresh_runs | Adapter version, run trigger/state, bounded counters, lease/expiry, started/finished UTC and per-venue/date outcome snapshots for history. No raw bodies or credentials. |
 | cinema_coverage | Venue/local date, requested/observed bounds, completeness, last attempt/success, source update label and optional evidenced upstream timestamp, per-venue outcome. Unique venue/local date. |
 
@@ -126,10 +129,43 @@ The earlier official sample is historical evidence, not a permanent title overri
 Original year is nullable and separate from a reissue/source release date. A source's
 dateCreated or release year alone cannot establish original release. Use verified existing
 identity/year or corroborated original-year evidence, otherwise “Year unverified”.
-**Older films means original year at least ten calendar years before the screening year**:
-2016 or earlier for a 2026 screening. Reissue is a separate evidenced badge. Unknown-year
-rows remain in All films, with their count visible beside the Older films filter. Watched
-favourites remain eligible. Ownership uses owned_copy(); watch status is personal.
+
+### Release-category filter — revised after Craig's request (#326)
+
+The collector gathers current programmes without excluding new releases. All films is the
+default; provide one release-category selector with these choices:
+
+| Choice | Proposed meaning |
+|---|---|
+| All films | Every observed programme, including uncertain identity/category and live events. |
+| New releases | Evidenced current first UK theatrical run. |
+| Older films | Evidenced return/repertory/reissue showing after an earlier release, of any age. |
+| Unclassified | First-run versus returning status lacks evidence, conflicts, or does not apply to a combined programme/live event. |
+
+This removes the unapproved ten-year cut-off. A film first released last year and returning
+now can qualify as Older films; it need not be ten years old or unwatched. An older original
+film's first UK theatrical run can qualify as New releases, while still displaying its
+original year. These are proposed run-based definitions, not an assumed 90-day/12-month
+age rule. Craig can revise the definitions before accepting the full contract.
+
+Classification needs explicit source run/reissue evidence or corroborated release history
+and a resolved film/screening identity. A recent year, dateCreated, booking link, collected
+time or a reissue's current release date is insufficient. Do not infer first-run status
+solely from a first UK release date or the absence of a reissue tag. No new live metadata
+provider/API/credential or model call is authorised to fill gaps. Classification completeness
+is unproved for the existing specimens; source limitations may leave many rows Unclassified.
+
+Store a per-screening release category and its evidence, because the same film can have a
+normal run and a distinct retrospective/event showing. Preserve film release-history
+evidence separately. API category values are newRelease, olderFilm or unclassified;
+filter value all includes every category. Return category/confidence plus original-year
+confidence independently; a verified original year need not establish the screening's run.
+
+Show category counts for the selected date/venues before applying the category filter and
+keep Unclassified visible. “No verified older films found” must not imply no older films
+exist when unclassified rows remain. Original-year uncertainty, reissue badges, observation
+freshness and coverage are separate labels. Watched favourites remain eligible. Ownership
+uses owned_copy(); watch status is personal.
 
 Preserve local date/time, business-day boundary and source offset. Convert once to UTC;
 display Europe/London. A local DST fold/gap without an offset is quarantined, not guessed.
@@ -197,10 +233,12 @@ venue/date prevents a blanket “all nine checked” claim for that selection.
 ## API, screen and retention
 
 Add authenticated GET `/api/v1/cinemas/programme` only. Query dateFrom/dateTo (inclusive,
-maximum 14 local dates, default today), venueIds and olderOnly; reject unknown venues,
+maximum 14 local dates, default today), venueIds and releaseCategory
+(all/newRelease/olderFilm/unclassified, default all); reject unknown categories/venues,
 inverted dates and oversized ranges. Return a direct camelCase response: generatedAtUtc,
 window, all nine venue/coverage records, film groups and distinct showing rows. Include
-identity/year confidence, observation/source-age states and nullable validated booking URL.
+identity/year confidence, per-showing release category/confidence/evidence, category counts,
+observation/source-age states and nullable validated booking URL.
 Limit the response to 2,000 showings; expose truncation and a clear “Narrow your date or
 venue selection” message, never silently present a complete programme. Ordering is stable
 by start/venue/showing ID. No source requests, refresh or writes on GET.
@@ -212,7 +250,7 @@ columns remain withheld by privilege queries. No collection, diary, releases or 
 watch/matching records are rewritten by programme ingestion or browsing.
 
 AB7 adds authenticated `/cinemas`, grouped by verified film identity; unresolved groups
-stay separate and labelled. Date/venue filters, Older films filter and per-showing venue,
+stay separate and labelled. Date/venue filters, the release-category selector and per-showing venue,
 time, format if actually supplied, freshness and Check tickets. Home discovery link plus
 desktop Plan a screening/command palette and mobile You entry; retain the five bottom
 tabs and existing disc-release calendar. Navigation/access inventory changes require this
@@ -243,8 +281,8 @@ history or AB7 code into AB6. No force push/amend, worktree switch or unrelated 
 
 | Batch | Scope | Required acceptance |
 |---|---|---|
-| AB6 — ingestion | Five tables, six adapters, GET/shared schema, disabled morning phase/CLI, retention/coverage and architecture map. Ledger setting: Opus 5 xhigh / GPT-5.6 Sol Extra High. | Real-specimen fixtures; real-Postgres atomicity/lease/fencing/rollback; IDs/overlap/double bill/year/DST/midnight/failure/zero/unconfirmed regressions; migration/grants/backup/image/job tests. All-nine live discovery and exact dry-run review before approved ingest/enable. |
-| AB7 — discovery | Film-first `/cinemas`, filters/labels/coverage/navigation/links and map. Ledger setting: Sonnet 5 high / GPT-5.6 Terra High. | Accepted AB6 coverage and approved contract; browser → API → stored fixture journey, personal isolation, 375 px/themes and all failure/offline/link states. Read-only real programme/render comparison after deployment. |
+| AB6 — ingestion | Five tables, six adapters, GET/shared schema, disabled morning phase/CLI, retention/coverage and architecture map. Ledger setting: Opus 5 xhigh / GPT-5.6 Sol Extra High. | Real-specimen fixtures; real-Postgres atomicity/lease/fencing/rollback; IDs/overlap/double bill/year/run-category/DST/midnight/failure/zero/unconfirmed regressions; migration/grants/backup/image/job tests. New first run, last-year returning film, old-film reissue, first UK release of an older original, mixed/unknown categories and invalid category cases. All-nine live discovery and exact dry-run review before approved ingest/enable. |
+| AB7 — discovery | Film-first `/cinemas`, category/date/venue filters/labels/coverage/navigation/links and map. Ledger setting: Sonnet 5 high / GPT-5.6 Terra High. | Accepted AB6 coverage and approved contract; browser → API → stored fixture journey for each category/count, unknown coverage, watched older favourites, personal isolation, 375 px/themes and all failure/offline/link states. Read-only real programme/render comparison after deployment. |
 
 Each batch needs every batch-verify command, meaningful local throwaway DB/E2E checks where
 available, exact-head seven-job PR/main CI with no unexplained skips, merged API/web SHA
@@ -264,7 +302,8 @@ report request bytes/duration/new row counts/storage delta so enablement is revi
 
 **Requested decision:** approve this contract as the build basis, including daily refresh,
 30-hour observation/36-hour evidenced-upstream stale limits, variable explicit horizons,
-ten-year Older films rule, uncertain identity/disappearance handling and the existing-job
+All/New releases/Older films/Unclassified run-category filter without an age cut-off,
+uncertain identity/disappearance handling and the existing-job
 integration. This approval starts AB6 only after the planning handoff is integrated on
 clean green main; AB7 follows accepted AB6. It does not approve production writes/enabling,
 paid access, new hosting/credentials or AA10c/any other sitting.

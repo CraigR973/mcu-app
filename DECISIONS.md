@@ -6862,3 +6862,23 @@ contemporaneous.
      Film first retained; full owner contract gate stops implementation, then integrate
      planning on green main before AB6. No paid enquiry/browser retry/AA10c/other sitting.
      Audit: docs/reviews/ab-cinema-source-repeat-2026-11-02.json.
+
+326. **Include newer films and filter new releases versus any older film (2 Nov).**
+     Craig asks to include newer films and filter whether a showing is a new release or
+     any older film. Current programme collection already includes new releases; make the
+     filter explicit in docs/reviews/ab-cinema-build-contract-2026-11-02.md. Withdraw the
+     unapproved ten-year cut-off in #325. Propose All films (default), New releases, Older
+     films and Unclassified. Recommend evidenced current first UK theatrical run versus
+     returning/repertory/reissue screenings of any age. These exact run-based definitions
+     are a recommendation awaiting full contract acceptance, not a chosen 90-day/12-month
+     age threshold or a rule already approved by Craig. Store category/evidence per
+     screening, with film release history and original-year confidence separate. A film
+     released last year and returning now can qualify as older; an older original's first
+     UK run can qualify as new. Source reissue dates/recent year/dateCreated alone cannot
+     establish the category. Double bills/live events/unknown evidence remain Unclassified;
+     category counts stay visible and watched favourites remain eligible. Draft API query
+     releaseCategory replaces olderOnly; no extra metadata request/provider/credential/model
+     call authorised. Current classification completeness is unproved. No app/schema/data/
+     source/hosting change, implementation, recurring run or other sitting. Complete build
+     contract and live dry-run/write/enable checkpoints remain unresolved. Documentation
+     consistency/diff checks apply; application/CI/production checks not run.
