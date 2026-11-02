@@ -6900,3 +6900,17 @@ contemporaneous.
      completeness assertion from historic samples, no reduced coverage/links fallback,
      no paid enquiry/browser retry/AA10c/other sitting. Main preflight CI 41207241130 is
      green at c63bc06; no implementation or live write is performed by recording acceptance.
+
+331. **Authorise a separate assistant starter investigation/repair (2 Nov).**
+     Craig says “approved” to the narrowly scoped separate repair proposed after AB6's
+     local Chromium failure: Mark's Unwatched 4Ks click at 375×500 left the composer empty.
+     Cause remains unconfirmed at approval; the page/test match main. Preserve the original
+     trace and cinema branch/draft PR #125; investigate from clean green main on a fix branch
+     and its own PR. Establish the cause, add a meaningful regression, preserve starter,
+     role, draft, viewport and existing browser assertions, then run the full normal gates
+     and automatic code-only close-out. Do not waive the failure because remote CI passes,
+     increase timeouts, skip it or rerun until green. No provider/model/live-source request,
+     production data/configuration/credential change or other sitting is authorised. AB6
+     resumes only after this repair; fresh all-nine acceptance and later production actions
+     retain separate owner checkpoints. Numbers 328–330 belong to the preserved AB6 branch;
+     this decision does not import that branch's unmerged implementation onto main.

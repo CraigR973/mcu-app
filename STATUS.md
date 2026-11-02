@@ -2,25 +2,28 @@
 
 ## Now
 
-**2 Nov: revised cinema contract accepted; integrating planning before AB6 (#327).**
-Craig's latest “proceed” accepts the complete contract including new/older run-category
-filters: docs/reviews/ab-cinema-build-contract-2026-11-02.md. All nine/Film first/£0 data,
-daily existing 08:00 UTC job phase, uncertain evidence and disabled initial collection.
-Original AB6 ingestion → AB7 discovery, one branch/PR each; no repeat contract decision.
-Exact live dry-run/read/count/write/enable stops persist. No new host/config/credential/
-paid tier; existing resource cost unmeasured. No AA10c/other sitting.
-Clean research branch; main's exact c63bc06 CI 41207241130 passes. No open research PR yet.
-Next: clean local gate, planning PR/exact-head CI, merge and matching API/web/readiness,
-then AB6 from clean green main. No implementation or live programme write yet.
+**2 Nov: separate assistant starter repair authorised (#331); verification in progress.**
+Main was green at 6b4199f (seven-job CI 41445893500). Preserve cinema branch
+feat/ab6-cinema-ingestion / draft PR #125 at 0285b72. Its local Mark/375×500 failure
+is reproduced independently: scrolling empty examples inserts Latest answer, shrinking
+and clipping the starter's click point by 48px. The click lands on the surrounding page.
+The narrow fix limits answer-following to transcripts containing messages; starter/send/
+role/draft/API behaviour stays. Both new regressions fail before repair; all 24 assistant
+unit cases pass afterwards. Targeted browser/full gates/CI/production proof are pending.
+No live source/model request, production data/configuration/credential change or other
+sitting. AB6 stays paused until repair acceptance; fresh all-nine source acceptance and
+later production actions retain explicit owner checkpoints. Report:
+docs/reviews/assistant-starter-repair-2026-11-02.md.
 
 ## Next
 
-Integrate the accepted research/planning handoff through normal review/CI/served-SHA proof.
-Then run AB6 → AB7 under group-start, one branch/PR each, with accepted #327 contract.
-Stop for exact live dry-run/read/count/write/enable checkpoints and unmet source acceptance.
-No new hosting/credentials/paid source, reduced venue list, browser retry or other sitting.
-AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
-real-phone/live-assistant observations remain open.
+Finish the separately approved assistant repair on its own branch/PR with full gates,
+exact CI and production API/web/readiness proof. Return to the preserved AB6 branch and
+integrate the repair normally; never waive the original failed case because CI was green.
+The revised cinema contract/build is already accepted; fresh bounded all-nine acceptance,
+production configuration/import/mapping/enable remain separate owner stops. No AB7 until
+AB6 acceptance and close-out; no AA10c/other sitting. AA10c remains separate from 25 Nov.
+AA10b's 1–2 Nov final-total comparison and real-phone/live-assistant observations stay open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);

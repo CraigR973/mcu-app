@@ -357,6 +357,27 @@ describe('AA9 selected layout and recovery', () => {
     expect(mocks.streamAiMessage).not.toHaveBeenCalled()
   })
 
+  it('keeps the blank landing under reader control when scrolling and availability settles', async () => {
+    const status = deferred<{ configured: boolean; model: string }>()
+    mocks.fetchAiStatus.mockReturnValueOnce(status.promise)
+    renderPage('/assistant')
+    await screen.findByText(/AI calls:/)
+    const log = screen.getByRole('log')
+    Object.defineProperty(log, 'scrollHeight', { configurable: true, value: 1000 })
+    Object.defineProperty(log, 'clientHeight', { configurable: true, value: 200 })
+    log.scrollTop = 100
+    fireEvent.scroll(log)
+
+    expect(screen.queryByRole('button', { name: 'Latest answer' })).toBeNull()
+    await act(async () => status.resolve({ configured: true, model: 'test' }))
+    expect(log.scrollTop).toBe(100)
+    fireEvent.click(screen.getByRole('button', { name: 'Unwatched 4Ks' }))
+    expect(draft().value).toBe('Which 4Ks have I not watched?')
+    expect(document.activeElement).toBe(draft())
+    expect(mocks.createAiConversation).not.toHaveBeenCalled()
+    expect(mocks.streamAiMessage).not.toHaveBeenCalled()
+  })
+
   it('shows the spending limit even with calls left and explains the call/reset meaning', async () => {
     mocks.fetchAiUsage.mockResolvedValue({ messages: 1, messageCap: 50, messagesRemaining: 49, costUsd: '2.00', costCapUsd: '2.00', blocked: true, limitMessage: 'Today’s spending limit is reached.', resetsAt: '2026-10-28T00:00:00Z' })
     await ready('/assistant')

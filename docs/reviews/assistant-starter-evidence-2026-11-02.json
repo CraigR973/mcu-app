@@ -1,0 +1,149 @@
+{
+  "baseline": "6b4199fea20a22f2c631f19634add46317c2669c",
+  "originalPageBlob": "2f2c862215463753265d2af45e95d619744b2321",
+  "originalTraceSha256": "8a10db6ea0ec4be96943cce0032d8870597b2eb966d57fcda5da1ca6a719fec7",
+  "reproducedTraceSha256": "c511cf4544264550ad308cf1ca681f7096c88596cc877fe3f4e8238ed67b3820",
+  "geometry": {
+    "before": {
+      "x": 25,
+      "y": 204.09375,
+      "width": 325,
+      "height": 44,
+      "top": 204.09375,
+      "right": 350,
+      "bottom": 248.09375,
+      "left": 25
+    },
+    "after": {
+      "x": 25,
+      "y": 204.09375,
+      "width": 325,
+      "height": 44,
+      "top": 204.09375,
+      "right": 350,
+      "bottom": 248.09375,
+      "left": 25
+    },
+    "logBefore": {
+      "x": 12,
+      "y": 185.09375,
+      "width": 351,
+      "height": 82.90625,
+      "top": 185.09375,
+      "right": 363,
+      "bottom": 268,
+      "left": 12
+    },
+    "logAfter": {
+      "x": 12,
+      "y": 185.09375,
+      "width": 351,
+      "height": 34.90625,
+      "top": 185.09375,
+      "right": 363,
+      "bottom": 220,
+      "left": 12
+    }
+  },
+  "events": [
+    {
+      "type": "scroll",
+      "t": 621.7999999821186,
+      "target": "Ask about your collectionFind films and shelves, check what you have watched, or",
+      "y": 63,
+      "height": 44,
+      "logHeight": 133,
+      "scroll": 243,
+      "latest": false,
+      "draft": ""
+    },
+    {
+      "type": "scroll",
+      "t": 981.2999999821186,
+      "target": "Ask about your collectionFind films and shelves, check what you have watched, or",
+      "y": 99.09375,
+      "height": 44,
+      "logHeight": 81,
+      "scroll": 259,
+      "latest": false,
+      "draft": ""
+    },
+    {
+      "type": "scroll",
+      "t": 1423.699999988079,
+      "target": "Ask about your collectionFind films and shelves, check what you have watched, or",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 81,
+      "scroll": 154,
+      "latest": false,
+      "draft": ""
+    },
+    {
+      "type": "pointerdown",
+      "t": 1457.5999999940395,
+      "target": "AssistantRecent chatsNew chatAI calls: 50 of 50 left today One question can use ",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 33,
+      "scroll": 154,
+      "latest": true,
+      "draft": ""
+    },
+    {
+      "type": "mousedown",
+      "t": 1457.7999999821186,
+      "target": "AssistantRecent chatsNew chatAI calls: 50 of 50 left today One question can use ",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 33,
+      "scroll": 154,
+      "latest": true,
+      "draft": ""
+    },
+    {
+      "type": "focusin",
+      "t": 1458,
+      "target": "Recent chatsYour latest 50 chats. Only you can read them.No saved chats yet. You",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 33,
+      "scroll": 154,
+      "latest": true,
+      "draft": ""
+    },
+    {
+      "type": "pointerup",
+      "t": 1458.7999999821186,
+      "target": "AssistantRecent chatsNew chatAI calls: 50 of 50 left today One question can use ",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 33,
+      "scroll": 154,
+      "latest": true,
+      "draft": ""
+    },
+    {
+      "type": "mouseup",
+      "t": 1459,
+      "target": "AssistantRecent chatsNew chatAI calls: 50 of 50 left today One question can use ",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 33,
+      "scroll": 154,
+      "latest": true,
+      "draft": ""
+    },
+    {
+      "type": "click",
+      "t": 1459.199999988079,
+      "target": "AssistantRecent chatsNew chatAI calls: 50 of 50 left today One question can use ",
+      "y": 204.09375,
+      "height": 44,
+      "logHeight": 33,
+      "scroll": 154,
+      "latest": true,
+      "draft": ""
+    }
+  ]
+}

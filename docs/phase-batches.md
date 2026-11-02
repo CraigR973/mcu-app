@@ -4654,6 +4654,28 @@ Unsent drafts are page memory, not durable browser storage. Full failures, accep
 fixture captures: `docs/reviews/aa9-verification-2026-10-27.md`.
 **Sitting 5 is complete. Sitting 6 is excluded. AA10b's final-total checkpoint remains open.**
 
+### Assistant starter repair — separate prerequisite fix (#331, 2 Nov)
+
+**Authorised; investigation in progress.** This is a separate fix branch/PR from green
+main, not a new sitting or part of AB6. Preserve cinema branch/draft PR #125 and the
+original Mark/375×500 Chromium trace. Cause is not assumed from the failed value check.
+
+**Goal:** establish and repair the mechanism that leaves a starter click with an empty
+composer, without weakening existing first-screen, draft, role or viewport guarantees.
+
+**Acceptance criteria:**
+- Demonstrate the cause with browser/event evidence and a regression that fails before
+  the repair and passes afterwards; no timeout increase, skip or retry-to-green.
+- A single starter activation fills and focuses the composer without creating a chat or
+  making a model call; manual scrolling must not move its target during activation.
+- Existing dark/light, Craig/Mark, four-viewport, multiline-draft, history/recovery and
+  role assertions remain intact; non-empty conversations retain latest-answer navigation.
+- All ten local gate commands, full available local browser/jobs suites and all seven
+  exact-head PR/merge CI jobs pass; exact production API/web SHA and readiness are verified.
+- No provider/live-source request, production data/configuration/credential change or other
+  sitting. AB6 resumes afterwards; fresh source acceptance and production actions retain
+  their explicit owner stops. Physical-phone/keyboard/speech acceptance remains Craig's.
+
 ### ~~AA10 — What a disc really sells for: values and deals, a design note~~ 🔴 **written 21 Oct (`8a33c19`, `docs/reviews/values-and-deals-2026-10-21.md`)**
 - **23, 24.** One note, not code, because both rest on the same missing number: eBay gives only
   asking prices, never sold ones (#16, #228). A value is a used asking median; a deal is 30%

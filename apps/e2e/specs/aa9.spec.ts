@@ -48,6 +48,41 @@ for (const person of ['Craig', 'Mark'] as const) {
   })
 }
 
+test('blank assistant scrolling keeps starter targets stable until activation', async ({ signedIn, api }, testInfo) => {
+  const modelCallsBefore = world.log().filter(call => call.kind === 'model').length
+  for (const person of ['Craig', 'Mark'] as const) {
+    const client = await api(person)
+    const before = await client.get<{ total: number }>('/ai/conversations')
+    const { page, context } = await signedIn(person)
+    await page.setViewportSize({ width: 375, height: 500 })
+    for (const theme of ['dark', 'light']) {
+      await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
+      await page.goto('/assistant')
+      await expect(page.getByText(/AI calls: \d+ of \d+ left today/)).toBeVisible()
+      const starter = page.getByRole('button', { name: 'Unwatched 4Ks', exact: true })
+      const geometry = await starter.evaluate(async button => {
+        // Scrolling a short landing used to insert "Latest answer" before the click,
+        // shrinking the log and moving/clipping the target after its position was read.
+        button.scrollIntoView({ block: 'center' })
+        const log = button.closest('[role="log"]')!
+        const before = { buttonY: button.getBoundingClientRect().y, logHeight: log.clientHeight }
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+        return { before, after: { buttonY: button.getBoundingClientRect().y, logHeight: log.clientHeight } }
+      })
+      expect(geometry.after.logHeight).toBe(geometry.before.logHeight)
+      expect(geometry.after.buttonY).toBeCloseTo(geometry.before.buttonY, 0)
+      await expect(page.getByRole('button', { name: 'Latest answer' })).toHaveCount(0)
+      await starter.click()
+      const draft = page.getByRole('textbox', { name: 'Message to the assistant' })
+      await expect(draft).toHaveValue('Which 4Ks have I not watched?')
+      await expect(draft).toBeFocused()
+      await page.screenshot({ path: testInfo.outputPath(`stable-starter-${person}-${theme}-375x500.png`) })
+    }
+    expect((await client.get<{ total: number }>('/ai/conversations')).total).toBe(before.total)
+  }
+  expect(world.log().filter(call => call.kind === 'model')).toHaveLength(modelCallsBefore)
+})
+
 test('AA9 reloads an interrupted answer instead of sending its already-saved question twice', async ({ signedIn, api }, testInfo) => {
   const { page } = await signedIn('Mark')
   await page.setViewportSize({ width: 375, height: 500 })
