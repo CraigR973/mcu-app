@@ -173,7 +173,17 @@ async def enrich(
     rows = selected_rows(snapshots)
     records = []
     report: dict[str, Any] = {"requests": 0, "cached": 0, "pending": 0, "errors": []}
-    for (source, key), row in rows.items():
+    # Spend the cold-cache budget where independent source evidence can support a
+    # reviewed match, especially explicit returning programmes. All programmes were
+    # already collected; this never filters the listings or changes the request cap.
+    ordered = sorted(
+        rows.items(),
+        key=lambda item: (
+            not (item[1].evidence.get("returningLabel") and item[1].identity_facts),
+            not bool(item[1].identity_facts),
+        ),
+    )
+    for (source, key), row in ordered:
         prior = cache.get((source, key))
         if prior and prior.fingerprint == fingerprint(row) and prior.fresh():
             records.append(prior)

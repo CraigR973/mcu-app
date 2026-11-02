@@ -25,7 +25,9 @@ owner-approved new dry-run and reviewed artifact clears it; no automatic provide
 Search produces source-scoped candidates. Positive metadata is reused for 30 days,
 negative/ambiguous results for seven; transient HTTP/parser errors aren't negative matches.
 Source title/director/original-title/runtime/release-date changes invalidate that source's
-cache fingerprint. Provider plots/images/auth headers are never stored. Candidate details
+cache fingerprint. Provider plots/images/auth headers are never stored. Cold-cache requests prioritise explicit returning programmes with source identity facts,
+then other evidence-bearing programmes, within the same cap. This does not exclude any
+programme or apply a mapping/category automatically. Candidate details
 include bounded director/runtime/IMDb evidence and GB limited/wide theatrical events;
 festival/premiere/digital/disc events are not cinema-history substitutes.
 
@@ -107,7 +109,12 @@ not counted as a pass; final clean-code gates must cover the corrected tree. Exa
 selection files also require their own reviewed SHA-256, preventing a same-count file swap.
 Final review also quarantines wrong-day Vue groups/sessions instead of filtering them into
 an apparently complete empty date. The first 7809d40 local gate is superseded by this
-additional source-response guard; final verification must cover it. Existing assertions, auth, pinned routes and
+additional source-response guard. That commit subsequently passed all ten local checks
+(API 2,608/no skips, shared 167/web 737), but cold-cache review then found metadata budget
+could be consumed by uncorroborated CinemaTimes candidates before reaching Vue anniversary
+films. Evidence-bearing returning programmes are now prioritised within the unchanged cap.
+Its local browser run/CI were superseded by this priority fix; final verification must
+cover the resulting tree. Existing assertions, auth, pinned routes and
 skip policy remain unchanged.
 
 ## Remaining owner checkpoints

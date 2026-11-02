@@ -503,3 +503,26 @@ def test_vue_wrong_day_response_cannot_become_a_complete_empty_day():
     wrong_group = parse_vue(data, date(2026, 10, 31), VENUE)
     assert any("group date" in e for e in wrong_group.errors)
     assert not wrong_group.complete_dates
+
+
+async def test_cold_budget_reaches_corroborated_returning_film_before_bare_title_candidates():
+    returning = film("Pan's Labyrinth")
+    bare = [
+        replace(film("Clayface"), key=f"bare-{i}", film_key=f"bare-{i}", identity_facts={})
+        for i in range(5)
+    ]
+    seen = []
+    snaps = {
+        BY_SLUG["odeon-braehead"].slug: Snapshot(rows=bare, observed_utc=NOW),
+        VENUE.slug: snapshot(returning),
+    }
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler_for(SAMPLES[2], seen))
+    ) as client:
+        fetch = Budget(client)
+        fetch.requests = fetch.metadata_requests = 9  # Three GETs left in the metadata sub-cap.
+        records, report = await metadata.enrich(snaps, fetch, "fixture-token", {})
+    assert len(seen) == 3 and len(records) == 1
+    assert records[0].film_key == returning.film_key and records[0].candidate.tmdb_id == 1417
+    assert report["pending"] == 5
+    assert returning.tmdb_id is None  # Prioritisation is not identity approval.
