@@ -493,3 +493,13 @@ def test_explicit_external_identity_changes_invalidate_candidate_cache():
     row = film("Pan's Labyrinth")
     assert metadata.fingerprint(row) != metadata.fingerprint(replace(row, tmdb_id=157336))
     assert metadata.fingerprint(row) != metadata.fingerprint(replace(row, imdb_id="tt0816692"))
+
+
+def test_vue_wrong_day_response_cannot_become_a_complete_empty_day():
+    data = json.loads(body("vue.json"))
+    wrong_day = parse_vue(data, DAY, VENUE)
+    assert wrong_day.errors and not wrong_day.rows and not wrong_day.complete_dates
+    data["result"][0]["showingGroups"][0]["date"] = "2026-11-02T00:00:00"
+    wrong_group = parse_vue(data, date(2026, 10, 31), VENUE)
+    assert any("group date" in e for e in wrong_group.errors)
+    assert not wrong_group.complete_dates

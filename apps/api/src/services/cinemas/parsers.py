@@ -123,12 +123,17 @@ def parse_vue(data: dict[str, Any], day: date, venue: Venue) -> Snapshot:
     result = Snapshot(observed_dates={day}, complete_dates={day})
     for film in data["result"]:
         for group in film["showingGroups"]:
+            if group.get("date") and _release_date(group["date"]) != day:
+                result.errors.append("Vue group date differs from the requested civil date")
+                continue
             for showing in group["sessions"]:
                 try:
                     stamp = showing["showTimeWithTimeZone"]
                     if datetime.fromisoformat(stamp).tzinfo is None:
                         raise SourceError("Vue showing offset is missing")
                     start = local_start(stamp)
+                    if start.date() != day:
+                        raise SourceError("Vue showing differs from the requested civil date")
                     url = _booking(urljoin("https://www.myvue.com", showing["bookingUrl"]), "vue")
                     expected = (
                         f"/book-tickets/summary/{venue.source_id}/"

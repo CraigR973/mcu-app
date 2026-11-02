@@ -104,7 +104,10 @@ Reissue is not itself an edition marker. A later review found explicit global-ID
 also needed cache fingerprint invalidation and candidate/global-ID agreement; both are
 now guarded. The in-progress e0a8d85 gate was deliberately terminated as superseded,
 not counted as a pass; final clean-code gates must cover the corrected tree. Exact mapping
-selection files also require their own reviewed SHA-256, preventing a same-count file swap. Existing assertions, auth, pinned routes and
+selection files also require their own reviewed SHA-256, preventing a same-count file swap.
+Final review also quarantines wrong-day Vue groups/sessions instead of filtering them into
+an apparently complete empty date. The first 7809d40 local gate is superseded by this
+additional source-response guard; final verification must cover it. Existing assertions, auth, pinned routes and
 skip policy remain unchanged.
 
 ## Remaining owner checkpoints
