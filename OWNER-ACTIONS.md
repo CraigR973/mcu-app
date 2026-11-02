@@ -145,6 +145,11 @@ conversation still maps onto this file.*
   writes. Full scope/limits in docs/reviews/ab6-implementation-2026-11-02.md. Review real
   category/horizon gaps before any staged disabled deployment/import/enable; do not merge
   or close AB6 merely because fixtures and CI pass. AB7 remains gated.
+  **Verification complete, live gate open (2 Nov):** draft PR #125/code 483c1f6 passes the
+  full clean ten-command gate and exact-head seven-job CI 41464465764; local browser/job
+  and migration/credential-withholding proofs pass. Final documentation CI is linked in PR.
+  No merge/deployment/source run/production write/enable. The bounded all-nine local
+  dry-run above is now concrete and reviewable; no repeat full-contract approval needed.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

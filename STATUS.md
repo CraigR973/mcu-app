@@ -6,8 +6,10 @@
 Five isolated tables, six real-specimen adapters, authenticated/shared-zod programme API,
 disabled morning child/CLI, bounded retention and updated architecture map are on
 feat/ab6-cinema-ingestion. Focused real-Postgres suite: 43 pass; shared schema: eight new
-checks pass. PR #125 holds the current full local gate and exact-head CI evidence;
-those checks do not close live programme acceptance.
+checks pass. Clean code 483c1f6 passes all ten local checks (API 2,592/no skips, shared
+167, web 737) and all seven PR CI jobs (41464465764). Local Chromium 61, Firefox 60 plus
+documented dictation skip, jobs six pass. Final handoff CI evidence is in PR #125.
+These checks do not close live programme acceptance.
 Main/production remain PR #124's green 6b4199f; AB6 is neither deployed nor enabled.
 All nine seeds disabled; no source requests or production writes performed by AB6.
 Saved specimens currently yield zero verified release-run categories/global mappings;
@@ -18,8 +20,8 @@ AB7 waits for accepted AB6. No AA10c, other sitting, paid service or hosting/con
 
 ## Next
 
-Complete the verification record in draft PR #125, then obtain the exact live read/dry-run
-decision. Record actual venue horizons, unknown identities/categories,
+Obtain the exact live read/dry-run decision in draft PR #125's reviewable scope.
+Record actual venue horizons, unknown identities/categories,
 request/byte counts and prospective changes before any production ingest/enable.
 Do not merge/close AB6 with unmet all-nine or run-category acceptance.
 AB7 follows only accepted AB6 from clean green main; no new hosting or other sitting.
@@ -416,6 +418,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — AB6 code verification green, owner live gate remains:** draft PR #125/code
+  483c1f6; all ten local checks, API 2,592/no skips/shared 167/web 737, exact-head seven-job
+  CI 41464465764, local Chromium 61/Firefox 60+documented skip/jobs six pass. Migration/
+  role privileges/credential withholding/populated rollback refusal/full reversal pass.
+  Superseded checks cancelled after reviewed absence-transition fix; final checks restarted
+  from clean final code. Final documentation CI evidence in PR #125. No source request,
+  production deploy/write/enable or AB7/AA10c/other sitting; next is exact all-nine live
+  read scope, with known category/global-identity evidence still absent in saved specimens.
 
 - **2 Nov — AB6 implementation prepared:** five-table programme domain, six HTTP adapters,
   shared-schema authenticated GET, disabled daily child/CLI, conservative disappearance/

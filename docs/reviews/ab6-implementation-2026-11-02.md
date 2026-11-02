@@ -101,6 +101,32 @@ passes fresh/repeat upgrade, nine disabled seeds, both roles' access to all five
 PIN/token privilege withholding, populated downgrade refusal and empty downgrade base.
 Draft PR #125 holds final gate/CI results; it remains unmerged pending live acceptance.
 
+### Final code verification, 2 Nov
+
+Code commit `483c1f6f57bd96afd38612824591dd91f5734c7c` passes all ten batch-verify
+commands from a clean tree: API **2,592 passed, zero skips**, shared 167, web 737, both
+Python static checks/format and all shared/web lint, types and builds. Verification uses
+only the owned disposable localhost Postgres, with data_directory checked before use.
+
+Exact-head seven-job PR CI **41464465764** passes, including real Postgres 17, migration
+reversal, production-image import/migrate/readiness, dependency audit and all three browser
+projects plus jobs. Local browser run: Chromium 61 pass, Firefox 60 pass/one documented
+dictation skip, jobs six pass. WebKit runs in CI because this Mac has no supported build.
+The local browser run began at parent `20b81be`; the final disabled-job case ran after the
+absence fix. Final-head CI, the final local full API suite and focused transition/count
+regression cover that fix; no local active-cinema browser acceptance is claimed.
+
+The superseded parent gate was interrupted after the absence fix; its terminated pytest/
+pnpm checks are not passes. Its old CI run was cancelled after six successful jobs. Final
+verification restarts on the clean final code commit and passes. A fresh disposable database
+was migrated with both roles already present, so privilege checks do not pass by absence
+of production roles. Local evidence: scratchpad/ab6/implementation-gate/result.json,
+migration-proof.json, e2e.log and final-pr-ci-483c.log (gitignored; PR description carries
+the portable results). No test/assertion/skip was weakened.
+
+The final handoff documentation's exact-head CI is linked in PR #125. Main/production are
+unchanged at `6b4199f`; this is a verified draft, not a shipped or accepted AB6 batch.
+
 ## Next owner checkpoint: bounded live read, no production writes
 
 Recommend one local CLI dry-run using the owned disposable Postgres, not production. Select
