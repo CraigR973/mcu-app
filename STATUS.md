@@ -2,35 +2,30 @@
 
 ## Now
 
-**2 Nov: revised AB6 implementation prepared; local assistant browser failure stops verification.**
-Craig accepted the #330 amendment. Final code 5800f5d on feat/ab6-cinema-ingestion / draft
-PR #125 passes all ten clean local checks: API 2,609/no skips, shared 167/web 737 plus
-lint/types/format/build. Seventeen new metadata/source regressions cover priority, reviewed
-identity/cache/conflicts/budgets/refusals/disabled behaviour. Migration/privilege proof passes.
-Exact-code CI 41501937660 snapshot: all seven jobs pass. Local E2E is red: Chromium 60 pass/one
-assistant starter-draft failure (Mark, 375×500), Firefox 60 pass/documented dictation skip,
-jobs six pass. This run began 840e44c before the final metadata-priority change; do not
-claim final exact-head local E2E. Assistant page/test unchanged from main; cause unconfirmed.
-No assertion/timeout/skip change or retry-to-green. All 840e44c CI jobs passed, which does
-not clear this observed failure. Proposed narrow separate repair requires an owner go.
-Read-only Railway plan succeeds 0 add/2 change/0 destroy (token reference plus known API
-restart-policy drift); never applied. All nine venues stay disabled. No new live source
-pass/production DB connection/config apply/deployment/import/enable. Main/last verified
-production remain 6b4199f. AB7/AA10c/other sittings unstarted. Report/evidence:
-docs/reviews/ab6-metadata-amendment-2026-11-02.md and ab6-metadata-verification-2026-11-02.json.
+**2 Nov: assistant repair complete; AB6 integrating green main for renewed verification.**
+PR #126/7b67375 repairs the 48px empty-log clipping mechanism; both regressions fail
+before/pass after, original assertions unchanged. All ten repair checks, local browsers/
+jobs and seven PR/merged-code/final-doc jobs pass. Final main/production API/web 6d0f676,
+db ok/all five integrations configured. Served assistant bundle contains the guard.
+Preserved cinema draft PR #125 now merges that green main; only STATUS/DECISIONS conflicted,
+resolved preserving both histories. No cinema source/metadata, API contract or hosting
+scope change. The resulting AB6 tree needs its own full clean gate/local E2E/exact-head CI.
+Prior amended AB6 code 5800f5d passes all ten checks/API 2,609/no skips/shared 167/web 737,
+17 new regressions and migration/privilege proof; this is historical, not combined-tree proof.
+All nine venues remain disabled. Read-only Railway plan 0 add/2 change/0 destroy is never
+applied. No fresh source acceptance, production DB/config/deploy/import/mapping/enable
+or AB7/AA10c/other sitting. Reports: assistant-starter repair and AB6 metadata amendment.
 
 ## Next
 
-Stop for owner scope decision on a separate assistant failure investigation/repair; do not
-fold it into AB6 or waive the failed case because CI is green. Preserve this branch/PR.
-Only after the full AB6 verification gate is green, obtain exact approval for a fresh
-all-nine bounded acceptance read. Review actual rows/horizons/categories/mapping evidence
-and backlog before any production action. Exact config apply, disabled deployment if
-needed, production import/mapping selections and nine-row enable remain separate stops.
-The #329 investigation/#330 build are already accepted; do not ask to approve them again.
-No new source pass, AB6 merge/close-out, AB7 or other sitting is authorised at this stop.
-AA10c remains separate from 25 Nov. AA10b's 1–2 Nov final-total comparison and existing
-real-phone/live-assistant observations remain open.
+Run all ten AB6 checks and full available local browsers/jobs on the resulting clean
+commit; verify all seven exact-head PR jobs. Then stop for the exact fresh all-nine bounded
+acceptance-read approval. The #329 investigation/#330 build and #331 repair are accepted;
+do not ask to approve them again. Actual source/horizon/category/identity/backlog review,
+exact config apply/disabled deployment/production import/reviewed mappings/nine-row enable
+remain later owner stops. Re-plan if fresh feasibility changes scope; no reduced venue
+coverage or category guesses. No AB7 until accepted AB6; no AA10c/other sitting.
+AA10c remains separate from 25 Nov; AA10b/real-phone/live-assistant observations stay open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -422,6 +417,23 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2 Nov — AB6 resumes after separately approved assistant repair (#331):** PR #126
+  merged 7b67375; PR/merged-code 41545752108/final-doc 41545982931 all seven jobs pass,
+  exact API/web 6d0f676/db ok/five integrations configured. Main merged normally into
+  preserved cinema branch/PR #125. STATUS/DECISIONS conflicts retain both histories;
+  app/tests merge without conflict. Full combined-tree verification next; no new source
+  pass, production programme/config action or AB7/AA10c/other sitting.
+
+- **2 Nov — Assistant starter prerequisite repair (#331), PR #126, 7b67375.** Original
+  main's empty-chat scrolling inserted Latest answer and clipped the click point by 48px;
+  browser/event/geometry evidence established before code. Following/latest require
+  messages; both new regressions fail before/pass after, original assertions unchanged.
+  All ten clean local checks (API 2,549/no skips/shared 159/web 737), local C62/F61+1/jobs6,
+  seven exact PR CI jobs (W60+2) and exact code API/web/full readiness pass. Final main/docs
+  CI/served proof still required before handoff, recorded in PR #126. Original/probe red
+  cases and tooling failures retained in the report. Cinema PR #125 preserved; no source/
+  model/live-data/hosting/credential action or other sitting.
 
 - **2 Nov — amended AB6 verified code, unresolved local browser stop:** final 5800f5d
   passes all ten clean checks (API 2,609/no skips/shared 167/web 737), 17 new regressions,

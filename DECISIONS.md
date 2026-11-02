@@ -6961,3 +6961,27 @@ contemporaneous.
      No new live source pass, production deployment/import/enable or AB7/AA10c/other sitting
      is authorised by this acceptance. Costs include another full verification cycle,
      metadata backlog and maintenance; £0 source fees, existing resources unpriced.
+
+331. **Authorise a separate assistant starter investigation/repair (2 Nov).**
+     Craig says “approved” to the narrowly scoped separate repair proposed after AB6's
+     local Chromium failure: Mark's Unwatched 4Ks click at 375×500 left the composer empty.
+     Cause remains unconfirmed at approval; the page/test match main. Preserve the original
+     trace and cinema branch/draft PR #125; investigate from clean green main on a fix branch
+     and its own PR. Establish the cause, add a meaningful regression, preserve starter,
+     role, draft, viewport and existing browser assertions, then run the full normal gates
+     and automatic code-only close-out. Do not waive the failure because remote CI passes,
+     increase timeouts, skip it or rerun until green. No provider/model/live-source request,
+     production data/configuration/credential change or other sitting is authorised. AB6
+     resumes only after this repair; fresh all-nine acceptance and later production actions
+     retain separate owner checkpoints. Numbers 328–330 belong to the preserved AB6 branch;
+     this decision does not import that branch's unmerged implementation onto main.
+     Repair shipped as 7b67375 in PR #126: scrolling an empty log inserted Latest answer,
+     shrinking its visible area by 48px and clipping the click centre. Follow/latest now
+     require messages. Both regressions fail before/pass after; all ten clean local gates,
+     full local browsers/jobs, seven PR jobs and exact code production proof pass. Main/docs
+     head verification remains mandatory before returning to AB6. No assertion/timeout/skip,
+     source/model, API/data, hosting or credential change.
+     Final repair proof: merged-code CI 41545752108 and documentation-head CI 41545982931
+     pass all seven jobs, including all browser suites; exact production API/web 6d0f676,
+     db ok/five integrations configured. Repair accepted; resume the preserved AB6 branch
+     by normal merge and full verification, with fresh source/production stops unchanged.

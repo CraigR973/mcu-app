@@ -225,6 +225,8 @@ Mark has the To put back list. No role, credential or hosting permission changes
 
 ```mermaid
 flowchart TB
+    Empty[Empty chat: reader scrolls examples] --> Starter[Starter fills and focuses draft]
+    Starter --> Draft
     Draft[Multiline draft per chat] --> Send[Explicit Send]
     Send --> API[Existing assistant stream API]
     API --> Origin[Transcript and exact-film card for origin chat]
@@ -243,6 +245,10 @@ the existing private history; deleting chat never undoes confirmed diary/Wanted 
 
 A deletion finishing after page navigation refreshes shared history cache but cannot reopen
 the assistant. No service, database shape or provider contract was added by AA9.
+
+The 2 Nov starter repair (`7b67375`, PR #126, #331) limits automatic following and Latest answer to transcripts
+with messages. Scrolling the empty examples cannot insert a control that shrinks their
+visible area mid-click. Availability updates leave that landing's scroll position alone.
 
 
 ## First movie-night seeding, repaired 29 Oct (`bf0eb36`)

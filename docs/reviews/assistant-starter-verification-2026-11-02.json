@@ -1,0 +1,189 @@
+{
+  "commit": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+  "clean": true,
+  "codeBlobs": {
+    "apps/web/src/pages/AiChatPage.tsx": "64c312be49f592537bb618ef3f6099162d70b37a",
+    "apps/web/src/pages/AiChatPage.test.tsx": "c9a4dd9858d8e0febbf10652e771005309586d03",
+    "apps/e2e/specs/aa9.spec.ts": "29e4177d110c165e761618fb8febd7f04d9deddf"
+  },
+  "gate": {
+    "head": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+    "cleanAfter": true,
+    "checks": [
+      {
+        "name": "ruff-check",
+        "exitCode": 0,
+        "seconds": 0.2
+      },
+      {
+        "name": "ruff-format",
+        "exitCode": 0,
+        "seconds": 0.1
+      },
+      {
+        "name": "mypy",
+        "exitCode": 0,
+        "seconds": 18.2
+      },
+      {
+        "name": "pytest",
+        "exitCode": 0,
+        "seconds": 418.0
+      },
+      {
+        "name": "pnpm-tests",
+        "exitCode": 0,
+        "seconds": 185.4
+      },
+      {
+        "name": "shared-typecheck",
+        "exitCode": 0,
+        "seconds": 12.0
+      },
+      {
+        "name": "shared-build",
+        "exitCode": 0,
+        "seconds": 12.7
+      },
+      {
+        "name": "web-lint",
+        "exitCode": 0,
+        "seconds": 14.3
+      },
+      {
+        "name": "web-typecheck",
+        "exitCode": 0,
+        "seconds": 95.5
+      },
+      {
+        "name": "web-build",
+        "exitCode": 0,
+        "seconds": 149.8
+      }
+    ]
+  },
+  "newRegressionBefore": {
+    "head": "6b4199fea20a22f2c631f19634add46317c2669c",
+    "endHead": "6b4199fea20a22f2c631f19634add46317c2669c",
+    "exit": 1,
+    "seconds": 17.1,
+    "args": [
+      "chromium",
+      "--",
+      "specs/aa9.spec.ts",
+      "--grep",
+      "blank assistant scrolling"
+    ]
+  },
+  "captures": {
+    "stable-starter-Craig-light-375x500.png": "97c7c8bbd5758e245a638bda8ce6903b90753fc77561f8a90e8762613710f67d",
+    "stable-starter-Mark-dark-375x500.png": "8436f2271a518849b0e5e8a2b0aafebdc8bb0c44aade4804b0da244cca924d9b",
+    "stable-starter-Mark-light-375x500.png": "60a5e7b6b0f50cb6ae71c425d58d39e9fdccfe0fcb68ab58cb7635b046975708",
+    "stable-starter-Craig-dark-375x500.png": "99cacaf002ee0da62ffeec2d2d8d9e619dacd2073a21d77bce5c2e92c198b63d"
+  },
+  "fullLocalE2E": {
+    "head": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+    "endHead": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+    "exit": 0,
+    "seconds": 1024.6,
+    "args": [
+      "chromium",
+      "firefox",
+      "jobs"
+    ],
+    "chromium": {
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "firefox": {
+      "passed": 61,
+      "failed": 0,
+      "skipped": 1,
+      "reason": "documented unsupported dictation"
+    },
+    "jobs": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "cleanAfterE2E": true,
+  "pr": {
+    "number": 126,
+    "url": "https://github.com/CraigR973/mcu-app/pull/126",
+    "runId": 41512031733,
+    "head": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+    "jobs": [
+      {
+        "name": "API \u2014 lint \u00b7 typecheck",
+        "conclusion": "success"
+      },
+      {
+        "name": "Database \u2014 upgrade head \u00b7 downgrade base",
+        "conclusion": "success"
+      },
+      {
+        "name": "Web \u2014 lint \u00b7 typecheck \u00b7 test \u00b7 build",
+        "conclusion": "success"
+      },
+      {
+        "name": "E2E \u2014 Chromium \u00b7 Firefox \u00b7 WebKit \u00b7 jobs",
+        "conclusion": "success"
+      },
+      {
+        "name": "API \u2014 pytest + Postgres 17",
+        "conclusion": "success"
+      },
+      {
+        "name": "Dependencies \u2014 Python \u00b7 pnpm",
+        "conclusion": "success"
+      },
+      {
+        "name": "Image \u2014 build \u00b7 migrate \u00b7 boot",
+        "conclusion": "success"
+      }
+    ],
+    "browsers": {
+      "chromium": {
+        "passed": 62,
+        "skipped": 0
+      },
+      "firefox": {
+        "passed": 61,
+        "skipped": 1
+      },
+      "webkit": {
+        "passed": 60,
+        "skipped": 2
+      },
+      "jobs": {
+        "passed": 6,
+        "skipped": 0
+      }
+    }
+  },
+  "production": {
+    "expected": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+    "verified": true,
+    "state": {
+      "api": {
+        "status": "ok",
+        "commitSha": "7b67375f2966afd34c16aa440c0fa4019ada2a49"
+      },
+      "ready": {
+        "status": "ready",
+        "db": "ok",
+        "push": "configured",
+        "ai": "configured",
+        "ebay": "configured",
+        "tmdb": "configured",
+        "brave": "configured"
+      },
+      "web": {
+        "commit": "7b67375f2966afd34c16aa440c0fa4019ada2a49"
+      }
+    },
+    "transientErrors": []
+  }
+}

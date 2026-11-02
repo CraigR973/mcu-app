@@ -127,8 +127,10 @@ export default function AiChatPage() {
   }, [conversationId])
   useEffect(() => {
     const node = logRef.current
-    if (node && following.current) node.scrollTop = node.scrollHeight
-  }, [local.turns, local.pending, local.error, local.recovery, local.notice, detail.data, conversationId, online, status.isPending, status.isError, status.data, usage.isPending, usage.isError, usage.data])
+    // The landing has examples, not answers. Leave its scroll position to the reader:
+    // following it to the bottom hides the introduction on a short screen.
+    if (node && transcript.length > 0 && following.current) node.scrollTop = node.scrollHeight
+  }, [transcript.length, local.turns, local.pending, local.error, local.recovery, local.notice, detail.data, conversationId, online, status.isPending, status.isError, status.data, usage.isPending, usage.isError, usage.data])
 
   function selectConversation(id: string | null) {
     if (busyRef.current || remove.isPending) return
@@ -282,7 +284,7 @@ export default function AiChatPage() {
         </header>
 
         <div ref={logRef} className="archive-panel min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4" role="log" aria-label="Conversation messages" aria-live={ownReply ? 'off' : 'polite'} aria-busy={ownReply}
-          onScroll={event => { const node = event.currentTarget; const near = node.scrollHeight - node.clientHeight - node.scrollTop < 64; following.current = near; setAway(!near) }}>
+          onScroll={event => { if (transcript.length === 0) return; const node = event.currentTarget; const near = node.scrollHeight - node.clientHeight - node.scrollTop < 64; following.current = near; setAway(!near) }}>
           {detail.data ? <h2 className="break-words text-sm font-medium [overflow-wrap:anywhere]">Chat: {detail.data.title}</h2> : null}
           {opening ? <StatePanel compact tone="loading" title="Opening conversation" /> : null}
           {readFailed ? <StatePanel compact tone="error" title="Conversation unavailable" description={queryErrorMessage(detail.error, 'That conversation could not be loaded.')} action={!local.recovery ? <Button type="button" variant="outline" onClick={() => void reloadConversation()} disabled={busy}>Reload conversation</Button> : undefined} /> : null}
@@ -302,7 +304,7 @@ export default function AiChatPage() {
           {local.recovery?.stage === 'reload' ? <div className="space-y-2"><p className="text-sm text-muted-foreground">The answer may already be saved. Reload this chat before deciding what to send next.</p><Button type="button" variant="outline" onClick={() => void reloadConversation()} disabled={busy || !online}>Reload conversation</Button></div> : null}
           {local.recovery?.stage === 'saved' ? <Button type="button" variant="outline" onClick={() => { writeDraft(conversationId, ''); update(conversationId, value => ({ ...value, recovery: undefined, notice: undefined })); draftRef.current?.focus() }}>Start a different question</Button> : null}
         </div>
-        {away ? <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={showLatest}><ChevronDown aria-hidden />Latest answer</Button> : null}
+        {away && transcript.length > 0 ? <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={showLatest}><ChevronDown aria-hidden />Latest answer</Button> : null}
 
         <div className="shrink-0 space-y-2">
           <form className="rounded-lg border border-input bg-card p-2" onSubmit={event => { event.preventDefault(); void send() }}>

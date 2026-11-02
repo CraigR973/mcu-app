@@ -4654,6 +4654,39 @@ Unsent drafts are page memory, not durable browser storage. Full failures, accep
 fixture captures: `docs/reviews/aa9-verification-2026-10-27.md`.
 **Sitting 5 is complete. Sitting 6 is excluded. AA10b's final-total checkpoint remains open.**
 
+### ~~Assistant starter repair — separate prerequisite fix (#331, 2 Nov)~~ **shipped 2 Nov (`7b67375`, [PR #126](https://github.com/CraigR973/mcu-app/pull/126))**
+
+**Shipped; final documentation proof remains part of the handoff.** This is a separate fix branch/PR from green
+main, not a new sitting or part of AB6. Preserve cinema branch/draft PR #125 and the
+original Mark/375×500 Chromium trace. Cause is not assumed from the failed value check.
+
+**Goal:** establish and repair the mechanism that leaves a starter click with an empty
+composer, without weakening existing first-screen, draft, role or viewport guarantees.
+
+**Acceptance criteria:**
+- Demonstrate the cause with browser/event evidence and a regression that fails before
+  the repair and passes afterwards; no timeout increase, skip or retry-to-green.
+- A single starter activation fills and focuses the composer without creating a chat or
+  making a model call; manual scrolling must not move its target during activation.
+- Existing dark/light, Craig/Mark, four-viewport, multiline-draft, history/recovery and
+  role assertions remain intact; non-empty conversations retain latest-answer navigation.
+- All ten local gate commands, full available local browser/jobs suites and all seven
+  exact-head PR/merge CI jobs pass; exact production API/web SHA and readiness are verified.
+- No provider/live-source request, production data/configuration/credential change or other
+  sitting. AB6 resumes afterwards; fresh source acceptance and production actions retain
+  their explicit owner stops. Physical-phone/keyboard/speech acceptance remains Craig's.
+
+**Result:** empty-landing scrolling inserted Latest answer and clipped the measured click
+point by 48px. Follow/latest controls now require messages; empty availability changes
+leave scroll position alone. Both regressions fail before and pass after. Clean 7b67375:
+all ten checks (API 2,549/no skips, shared 159/web 737); local Chromium 62, Firefox 61 plus
+one documented skip, jobs six. Exact-head PR CI 41512031733 passes all seven jobs, including
+WebKit 60 plus its two documented skips. Merged 7b67375; exact production API/web SHA,
+db ok and all five integrations configured. Report/portable evidence:
+docs/reviews/assistant-starter-repair-2026-11-02.md. Final main/docs checks are recorded in
+PR #126 before handoff. No phone/model/source/data/hosting claim; AB6's exact acceptance
+and production checkpoints stay explicit, AB7/AA10c/other sittings unstarted.
+
 ### ~~AA10 — What a disc really sells for: values and deals, a design note~~ 🔴 **written 21 Oct (`8a33c19`, `docs/reviews/values-and-deals-2026-10-21.md`)**
 - **23, 24.** One note, not code, because both rest on the same missing number: eBay gives only
   asking prices, never sold ones (#16, #228). A value is a used asking median; a deal is 30%
@@ -5029,9 +5062,12 @@ docs/reviews/ab6-free-gap-investigation-2026-11-02.md is accepted for implementa
 Vue two-date limit, bounded/cached metadata within existing caps, reviewed identities,
 strict categories retained, and preparation of an existing-job token-reference diff/plan.
 Token-reference read-only plan succeeds (0 add/2 change/0 destroy); no apply. Amended full
-local ten-command gate passes, but the observed assistant Chromium failure remains an
-absolute verification stop (see amendment report). Actual config apply/new live pass/deployment/import/enable
-remain separate owner decisions.
+local ten-command gate passes. The observed assistant Chromium failure was an absolute
+verification stop; approved separate #331 repair PR #126/7b67375 establishes the 48px
+empty-log clipping cause and repairs it without weakening assertions. All repair local/
+PR/main/final-doc gates and exact API/web 6d0f676/readiness pass. Green main merges into
+preserved PR #125; complete combined-tree verification is next. Actual config apply/new
+live pass/deployment/import/mapping/enable remain separate owner decisions.
 The completed investigation is not a renewed source permission or an AB7 go.
 
 - Implement approved sources/coverage from approved real specimens. Programmes are separate

@@ -1,5 +1,21 @@
 # AB6 metadata amendment — 2 Nov
 
+## Current prerequisite status — separate repair completed
+
+Owner-approved #331 repair shipped in separate PR #126/7b67375, final green main 6d0f676.
+Browser/event/geometry evidence proves that scrolling an empty log inserted Latest answer,
+shrinking its visible area by 48px and clipping the click centre. Following/latest now
+require messages. Both new regressions fail before/pass after; original assertions,
+timeouts and skip policy remain. All ten repair checks/full local suites/seven-job PR,
+merged-code and final-doc CI pass; exact production API/web 6d0f676/full readiness verified.
+The repair report/JSON and PR #126 preserve complete evidence. The historical red record
+below is retained, not waived by a rerun or erased by later green CI.
+
+Green main is merging normally into preserved AB6 draft PR #125. App/tests merge cleanly;
+STATUS/DECISIONS conflicts retain both histories. Complete combined-tree verification is
+next. No new source request, metadata candidate, production data/config/deploy/import/
+mapping/enable or AB7 follows from this integration. Remaining source/production stops stay.
+
 ## Accepted scope and implementation
 
 Craig accepted the complete free-gap amendment with “proceed” (#330). AB6 continues on
@@ -89,7 +105,7 @@ under TMDB's confirmed private non-commercial/attribution basis. Existing comput
 quota/storage usage remains unpriced. Actual config apply remains a separate explicit
 owner decision on this exact plan; no apply has run.
 
-## Verification record — stop, not close-out
+## Historical verification record before the separate repair
 
 Final code `5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d` passes all ten local batch-verify commands from a clean tree:
 API 2,609 passed/no skips, shared 167 and web 737; API/web/shared lint, types, format and
@@ -120,7 +136,7 @@ prioritisation changed while it continued, so it is not exact-final-head browser
 The failed Chromium case completed before that priority change. The Mac cannot run
 Playwright WebKit; CI runs it. No real-phone or active-cinema UI acceptance is claimed.
 
-### Unresolved assistant failure, outside AB6 implementation scope
+### Historical assistant failure, resolved separately by #331
 
 At 375×500, Mark's assistant first-screen case clicked Unwatched 4Ks; the composer stayed
 empty instead of `Which 4Ks have I not watched?` for the full ten-second assertion window.
@@ -161,13 +177,10 @@ skip policy remain unchanged.
 
 ## Remaining owner checkpoints
 
-The immediate stop is the unresolved local Chromium assistant failure. Recommend a
-separate narrowly scoped investigation/repair, preserving AB6 on this branch and using
-its own branch/PR from green main. Establish the cause, preserve existing starter/draft/
-role/viewport behaviour and test assertions, then prove the affected case and full normal
-gate/CI before returning to AB6. This is a proposed scope decision, not an authorised
-assistant change or another sitting started. Cost: one additional repair PR/full checks;
-no source fees, provider requests or production data changes are part of that proposal.
+The separate assistant repair checkpoint is complete (#331, PR #126); see current status
+above. No new repair decision is needed. Complete combined-tree AB6 verification before
+proposing the fresh all-nine acceptance read below. This remains a proposal, not permission
+to repeat a refused source or apply mappings/configuration/imports/enables.
 
 After the failure is resolved and AB6's complete verification gate is green, propose one
 fresh all-nine bounded acceptance read. It remains unapproved: run day through +13 London
