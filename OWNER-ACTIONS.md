@@ -157,13 +157,22 @@ conversation still maps onto this file.*
   diagnostic artifact fails the all-nine import gate. Disposable counts/nine disabled
   flags unchanged; no production connection/write/deploy/enable. Do not ask to approve
   this completed dry-run again or ask to import a reduced eight-venue result.
-  **New owner checkpoint:** accept/reject the proposed report-only free-gap investigation
-  in docs/reviews/ab6-live-dry-run-2026-11-02.md: up to 14 Vue ordinary public date GETs,
-  stop on refusal, plus up to 12 existing-TMDB evidence/documentation GETs; 26/five-minute
-  combined cap, £0 source fees, no writes/new credentials/hosting. Extra metadata calls
-  and a new Vue experiment after a refusal were not approved by #327/#328. Re-plan before
-  implementation resumes; actual all-nine artifact/count/deployment/write/enable remains
-  separate. AB7/AA10c/other sittings remain unstarted.
+  **Approved free-gap investigation complete (#329, 2 Nov):** Craig's “proceed” accepted
+  the exact 26-GET/five-minute report-only scope. Actual 13 GETs/634,850 bytes/12.921s:
+  Vue returned 73 showings for 2–3 Nov, then 4 Nov 401/stopped; TMDB metadata for all
+  three examples and £0 non-commercial/attribution basis verified. Historical Vue director/
+  original-title evidence corroborates two candidates; no mappings/classifications applied.
+  No fresh eligible all-nine artifact or current first-run proof. No implementation,
+  DB/production connection/write, config/credential/hosting change or additional live pass.
+  **New owner checkpoint:** accept/reject the concrete revised build in
+  docs/reviews/ab6-free-gap-investigation-2026-11-02.md: Vue today/tomorrow with explicit
+  later-date gaps; capped cached TMDB metadata/reviewed corroborated mappings inside the
+  existing budget; strict New/Older rules retained. Recommend preparing one reference to
+  the existing API TMDB token in the existing morning job. Accepting the amendment permits
+  its diff/read-only plan, not actual Railway apply. Extra implementation/full verification,
+  metadata backlog and potentially many Unclassified rows are the costs. Fresh all-nine
+  live acceptance/count/mapping review and exact apply/deployment/import/nine-row enable
+  remain later stops. Do not re-approve/repeat the completed investigation or start AB7.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

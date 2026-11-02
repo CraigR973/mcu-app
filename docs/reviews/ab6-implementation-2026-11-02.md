@@ -1,5 +1,11 @@
 # AB6 — Cinema programme ingestion
 
+> Current checkpoint update (#329): Craig approved the report-only free-gap investigation
+> below; it is now complete. Vue yielded two dates then refused; TMDB supplied three
+> metadata candidates. See [the current evidence and revised-build decision](ab6-free-gap-investigation-2026-11-02.md).
+> Historical “not authorised” statements below describe the preceding stage. No further
+> implementation/new live pass/production action is approved by this result.
+
 Accepted contract: docs/reviews/ab-cinema-build-contract-2026-11-02.md (#327).
 
 ## Ledger acceptance criteria, verbatim

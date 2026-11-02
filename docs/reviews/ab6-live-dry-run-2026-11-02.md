@@ -1,5 +1,11 @@
 # AB6 approved live dry-run — 2 Nov
 
+> Current checkpoint update (#329): Craig approved the report-only free-gap investigation
+> below; it is now complete. Vue yielded two dates then refused; TMDB supplied three
+> metadata candidates. See [the current evidence and revised-build decision](ab6-free-gap-investigation-2026-11-02.md).
+> Historical “not authorised” statements below describe the preceding stage. No further
+> implementation/new live pass/production action is approved by this result.
+
 ## Result and stop
 
 Craig approved the exact capped all-nine live dry-run after reviewing draft PR #125.

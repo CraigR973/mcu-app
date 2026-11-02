@@ -6921,3 +6921,27 @@ contemporaneous.
      accepted or run. It needs exact owner approval because a source refused and #327
      excluded extra metadata calls. No further implementation until that re-plan is
      accepted. Count review and exact production deployment/write/enable remain separate.
+
+329. **Approve and complete the free cinema gap investigation; stop for revised build (2 Nov).**
+     Craig says “proceed” to the exact report-only proposal after #328: at most 14 ordinary
+     Vue date GETs plus 12 existing-TMDB/docs GETs, 26/five minutes combined with the same
+     timeout/body/rate/refusal limits, £0 source fees, no writes/new credentials/hosting.
+     Clean 64df306 pass uses 13 GETs/634,850 decoded bytes/12.921s. Vue returns 200 for
+     2–3 Nov/73 showings, then 4 Nov 401; Vue stops without retry/alternate. TMDB FAQ
+     confirms non-commercial free use with attribution; nine API GETs return three
+     candidates' details/GB histories. Historical saved Vue director/original-title data
+     corroborates Clayface and Pan's Labyrinth; no identity mappings/classifications are
+     applied. Release dates alone do not prove current first UK run; past reissue events
+     cannot classify a different current showing. Some listings observed across nine in
+     separate passes is not a fresh eligible all-nine artifact or recurring access proof.
+     No implementation, DB write/production connection, configuration, deployment or enable.
+     Report/portable audit and concrete proposed amendment:
+     docs/reviews/ab6-free-gap-investigation-2026-11-02.*. Implementation remains stopped
+     for acceptance: recommend Vue today/tomorrow, at most 12 daily cached metadata GETs
+     within the accepted combined 120/five-minute cap, reviewed corroborated mappings,
+     unchanged strict New/Older/Unclassified definitions. The tracked morning job has no
+     TMDB token reference; propose preparing a reference to the existing API secret, not
+     a new credential/service. Build amendment acceptance and actual Railway apply are
+     still unresolved/separate. No new live pass/import/production action or AB7/AA10c.
+     Source report JSON/audit totals and documentation diff checked; implementation gates
+     remain the previously green exact code/report CI, not newly claimed app acceptance.
