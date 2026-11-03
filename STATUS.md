@@ -2,14 +2,14 @@
 
 ## Now
 
-**3 Nov23:20: AB6 fully closed; AB7 discovery implementation starts alone.**
-Clean main354f34c final CI41683888744 passes all seven jobs/API2621/no skips/C63/F62+1/
-W61+2/jobs6; exact production API/web/full readiness freshly rechecked. PR125 ingestion
-fully accepted/all-nine1838-row exact import/enable9/role/both-profile read proof retained.
-No new source request or data/hosting action. New branch feat/ab7-cinema-discovery under
-accepted327/330/334/latest continue. Verbatim criteria/concrete scope recorded before
-code: docs/reviews/ab7-implementation-contract-2026-11-03.md. Data limitations unchanged:
-partial horizons, unclassified releases/unknown years, future access/scheduled run unproved.
+**3 Nov23:44: AB7 discovery implemented on its own branch; verification in progress.**
+AB6 is fully closed at354f34c/exact seven-job CI41683888744/API+web/full readiness;
+all-nine production programme/import proof retained. `/cinemas` now reads stored programmes,
+with Home/You/sidebar/palette navigation, date/venue/category controls, personal watch
+isolation and current-clock/offline booking guards. Focused38 pass; six new real-DB/API
+browser journeys are being checked. Clean full gates/CI/production UI acceptance remain
+before shipment. Report: docs/reviews/ab7-implementation-2026-11-03.md. No new source pass,
+data/config/fee change, AA10c or other sitting. Standing #334 covers the remaining work.
 
 ## Next
 

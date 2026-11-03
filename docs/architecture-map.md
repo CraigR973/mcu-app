@@ -16,7 +16,7 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
-## AB6, shipped 3 Nov (PR125/72ff0bd); AB7 screen not built yet
+## AB6, shipped 3 Nov (PR125/72ff0bd); AB7 implemented on its branch; deployment pending
 
 ```mermaid
 flowchart TB
@@ -31,7 +31,10 @@ flowchart TB
     Fence --> Cinema[(Five isolated cinema tables)]
     Cinema --> Read[Authenticated stored programme API<br/>shared zod contract]
     Catalogue[(Existing catalogue and personal diary)] -- read only --> Read
-    Read -. AB7 after clean final close-out .-> Discovery[Authorised future cinema screen]
+    Read --> Discovery[AB7 branch: authenticated Cinemas screen<br/>profile/date/venue/category query keys]
+    Entries[Home · You · sidebar · command palette] --> Discovery
+    Discovery --> Safety[Current clock + online + source coverage guards]
+    Safety --> Tickets[Check tickets opens cinema<br/>official programme fallback]
 ```
 
 Migration071 seeds all nine disabled. The reviewed1838-row/3mapping import and enable9

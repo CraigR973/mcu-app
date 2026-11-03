@@ -55,6 +55,7 @@ export const navItems: NavItem[] = [
   { label: 'Collections', path: '/collections', icon: Sparkles, showWhen: 'collections' },
   // Batch S6: one destination, because the two pages answered the same question from two
   // sources. `/discover` redirects here.
+  { label: 'Cinemas', path: '/cinemas', icon: Popcorn },
   { label: 'Releases', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
   // Batch X2 (#154, #165 amended for Deals alone): always shown. When it hid on empty, a
@@ -121,7 +122,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: 'Plan a screening',
-    items: [byPath('/movie-night'), byPath('/calendar')],
+    items: [byPath('/movie-night'), byPath('/cinemas'), byPath('/calendar')],
   },
   {
     label: 'Explore',

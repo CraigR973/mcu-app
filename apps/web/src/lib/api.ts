@@ -1,5 +1,7 @@
 import {
   activitySchema,
+  cinemaProgrammeResponseSchema,
+  type CinemaProgrammeResponse,
   aiAnswerSchema,
   aiConversationDetailSchema,
   aiConversationListSchema,
@@ -2770,4 +2772,14 @@ export async function uploadProfilePhoto(file: File): Promise<void> {
 export async function removeProfilePhoto(): Promise<void> {
   const response = await authFetch('/profile-photos/me', { method: 'DELETE' })
   if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
+}
+
+/** Stored programme only; browsing never starts a cinema-source refresh. */
+export async function fetchCinemaProgramme(filters: {
+  dateFrom: string; dateTo: string; venueIds: string[] | null;
+  releaseCategory: 'all' | 'newRelease' | 'olderFilm' | 'unclassified';
+}): Promise<CinemaProgrammeResponse> {
+  const params = new URLSearchParams({ dateFrom: filters.dateFrom, dateTo: filters.dateTo, releaseCategory: filters.releaseCategory })
+  for (const id of filters.venueIds ?? []) params.append('venueIds', id)
+  return parseResponse(await authFetch(`/cinemas/programme?${params.toString()}`), cinemaProgrammeResponseSchema)
 }

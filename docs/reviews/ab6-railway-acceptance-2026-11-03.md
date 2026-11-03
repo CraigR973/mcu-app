@@ -5,8 +5,8 @@ exact PR CI41678065707 jobs passed. The disabled deployment serves that exact AP
 SHA, db ok and all five integrations configured. Migration071 adds five isolated tables
 and seeds nine disabled venues. No source run happens in a person's programme GET.
 Main code CI41681152577 passes all seven jobs/API2621/no skips/C63/F62+1/W61+2/jobs6.
-All AB6 production criteria are met at merge72ff0bd. Final handoff CI/readiness remains
-mandatory before AB7 starts.
+All AB6 production criteria are met at merge72ff0bd. Final handoff354f34c passes exact seven-job main CI41683888744; exact API/web/full
+readiness was freshly rechecked23:20UTC before the separate authorised AB7 branch.
 
 ## Existing Railway runtime source proof
 
@@ -66,7 +66,7 @@ Disabled programme reads first returned zero films/nine disabled venues for both
 ## Authenticated production read proof
 
 Eight enabled GETs (Craig/Mark × All/New/Older/Unclassified) all200; unauthenticated401.
-All14-day reads return1,739 future showings/152 programme groups/1,738 validated booking
+All-films14-day reads return1,739 future showings/152 programme groups/1,738 validated booking
 links, three verified film identities, no truncation, selectionComplete=false. Per-filter
 counts remain independent of category selection:New0/Older1/Unclassified1,738. Older
 returns Pan's Labyrinth's19:30 anniversary showing. Original year/ownership/watch remain

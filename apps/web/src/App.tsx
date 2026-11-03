@@ -16,6 +16,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const ExternalFilmPage = lazy(() => import('./pages/ExternalFilmPage'))
+const CinemasPage = lazy(() => import('./pages/CinemasPage'))
 const YouPage = lazy(() => import('./pages/YouPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
@@ -180,6 +181,7 @@ export default function App() {
               path="/movies/:id"
               element={<AppShell><MovieDetailPage /></AppShell>}
             />
+            <Route path="/cinemas" element={<AppShell><CinemasPage /></AppShell>} />
             {/* Batch T3. Everything the phone's five bottom tabs do not carry. */}
             <Route
               path="/you"

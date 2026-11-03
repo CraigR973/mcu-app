@@ -100,6 +100,11 @@ export default function DashboardPage() {
 
         <FeelingLucky />
 
+        <Link to="/cinemas" className="archive-panel block p-5 transition-colors hover:bg-muted" aria-label="At the cinema">
+          <span className="font-display text-xl font-semibold">At the cinema</span>
+          <span className="mt-1 block text-sm text-muted-foreground">Find films and events at your cinemas. Choose dates, venues and release categories.</span>
+        </Link>
+
         {/* Batch T5's disc releases, second since W2. Hidden when there are none. */}
         <ComingToDisc limit={12} />
 
