@@ -6955,3 +6955,11 @@ contemporaneous.
      and a type-narrowing correction are preserved, not used as app-cause evidence.
      No assertion/timeout/skip/random-seed waiver. Full local/after-fix WebKit proof
      required before code-only close-out; no production change yet.
+
+     Repair completed as PR #127/3d71b71: all ten clean local gates/API2549/no skips/
+     shared159/web737, full local C63/F62+1/jobs6, all seven exact PR CI 41665030709
+     jobs including W61+2. Controlled height regression and original flow pass after
+     causal geometry repair. Normal fast-forward main push; production API/web exact
+     3d71b71/db ok/five integrations verified. Main code CI 41668022890/final docs proof
+     still mandatory before resuming AB6. No cinema/model/data/config action. Report
+     and sanitised before/after evidence: docs/reviews/movie-night-poster-layout-2026-11-03.*.

@@ -21,5 +21,150 @@
     "Layout offset measurement initially needed HTMLButtonElement type narrowing; fixed without ignore/cast"
   ],
   "finalRegressionLayoutInvariant": "Exact offsetTop equality, independent of intentional press transform; height tolerance and physical pointer-release/navigation check retained",
-  "afterProof": "pending"
+  "afterProof": {
+    "codeSha": "3d71b717a4378e18ae40f127a95021d3eb44eeff",
+    "localGate": {
+      "head": "3d71b717a4378e18ae40f127a95021d3eb44eeff",
+      "cleanAfter": true,
+      "checks": [
+        {
+          "name": "ruff-check",
+          "exitCode": 0,
+          "seconds": 0.5
+        },
+        {
+          "name": "ruff-format",
+          "exitCode": 0,
+          "seconds": 0.0
+        },
+        {
+          "name": "mypy",
+          "exitCode": 0,
+          "seconds": 13.1
+        },
+        {
+          "name": "pytest",
+          "exitCode": 0,
+          "seconds": 217.6
+        },
+        {
+          "name": "pnpm-tests",
+          "exitCode": 0,
+          "seconds": 128.7
+        },
+        {
+          "name": "shared-typecheck",
+          "exitCode": 0,
+          "seconds": 10.9
+        },
+        {
+          "name": "shared-build",
+          "exitCode": 0,
+          "seconds": 9.5
+        },
+        {
+          "name": "web-lint",
+          "exitCode": 0,
+          "seconds": 7.6
+        },
+        {
+          "name": "web-typecheck",
+          "exitCode": 0,
+          "seconds": 19.8
+        },
+        {
+          "name": "web-build",
+          "exitCode": 0,
+          "seconds": 36.7
+        }
+      ]
+    },
+    "localBrowser": {
+      "head": "3d71b717a4378e18ae40f127a95021d3eb44eeff",
+      "endHead": "3d71b717a4378e18ae40f127a95021d3eb44eeff",
+      "exit": 0,
+      "seconds": 712.9,
+      "args": [
+        "chromium",
+        "firefox",
+        "jobs"
+      ]
+    },
+    "localCounts": {
+      "chromium": 63,
+      "firefox": 62,
+      "firefoxDocumentedSkip": 1,
+      "jobs": 6
+    },
+    "prCi": {
+      "run": 41665030709,
+      "head": "3d71b717a4378e18ae40f127a95021d3eb44eeff",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Database \u2014 upgrade head \u00b7 downgrade base",
+          "conclusion": "success"
+        },
+        {
+          "name": "API \u2014 lint \u00b7 typecheck",
+          "conclusion": "success"
+        },
+        {
+          "name": "API \u2014 pytest + Postgres 17",
+          "conclusion": "success"
+        },
+        {
+          "name": "Dependencies \u2014 Python \u00b7 pnpm",
+          "conclusion": "success"
+        },
+        {
+          "name": "Image \u2014 build \u00b7 migrate \u00b7 boot",
+          "conclusion": "success"
+        },
+        {
+          "name": "Web \u2014 lint \u00b7 typecheck \u00b7 test \u00b7 build",
+          "conclusion": "success"
+        },
+        {
+          "name": "E2E \u2014 Chromium \u00b7 Firefox \u00b7 WebKit \u00b7 jobs",
+          "conclusion": "success"
+        }
+      ],
+      "chromium": 63,
+      "firefox": 62,
+      "webkit": 61,
+      "documentedSkips": [
+        1,
+        2
+      ],
+      "jobsPassed": 6,
+      "apiPassed": 2549,
+      "apiSkips": 0
+    },
+    "production": {
+      "api": {
+        "status": "ok",
+        "commitSha": "3d71b717a4378e18ae40f127a95021d3eb44eeff"
+      },
+      "ready": {
+        "status": "ready",
+        "db": "ok",
+        "push": "configured",
+        "ai": "configured",
+        "ebay": "configured",
+        "tmdb": "configured",
+        "brave": "configured"
+      },
+      "web": {
+        "commit": "3d71b717a4378e18ae40f127a95021d3eb44eeff"
+      }
+    },
+    "verifiedUtc": "2026-11-03T15:53:17.315956+00:00",
+    "mainCodeCi": {
+      "run": 41668022890,
+      "status": "in_progress_at_documentation_preparation"
+    },
+    "finalDocumentationCi": "must be verified before resuming AB6"
+  },
+  "controlledBeforeTraceSha256": "7e1d175439f1646150fcb8ec5ca5b1aecba2c92d016db46fe8ae00c380ff113b"
 }

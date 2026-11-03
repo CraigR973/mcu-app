@@ -1,5 +1,13 @@
 # Movie-night film-page click investigation — 3 Nov
 
+**Repair deployed in PR #127, code 3d71b71.** Controlled WebKit poster-height failure
+141→94px before repair; all three browsers pass after reserving the parent geometry.
+All ten clean local checks and exact seven-job PR CI 41665030709 pass; exact production
+API/web SHA/db ok/five integrations verified. Merged-code main CI 41668022890 and final
+documentation-head CI must finish before returning to AB6; evidence goes in PR #127.
+Standing #334 approval covers continuation without another known-stage permission ask.
+
+
 Owner completion approval #334 covers the separate cause-first prerequisite fix and the
 known remaining cinema work. AB6 branch/draft PR #125 is preserved at cf2cdf5; this fix
 starts from main 6d0f676, whose exact seven-job CI 41545982931 is green.
@@ -71,3 +79,23 @@ page's poster geometry only, rather than change every poster component or wait f
 The parent border contributes at most a one-pixel artwork-size difference at the phone
 width; no uncertainty is hidden and the action remains in stable flow. Full local/CI
 verification pending; WebKit after-fix proof remains mandatory.
+
+## Verification and release
+
+Clean 3d71b71: API 2,549/no skips/shared 159/web 737, all ten normal commands green.
+Full local C63/F62+one documented skip/jobs6, identical start/end SHA/no retries. Exact
+PR CI 41665030709: all seven jobs, API 2,549/no skips/C63/F62+1/W61+2/jobs6, migration
+reversal/real image boot. Only the three documented browser skips. Original vote/promotion
+assertions and new height/layout/pointer/navigation regression pass on all three browsers.
+
+Normal fast-forward main push marks PR #127 merged at the tested 3d71b71. Production
+API/web serve exactly that SHA; db ok and push/ai/ebay/tmdb/brave configured. No hosting,
+credential, API/schema, catalogue/diary or source/model action. No new real-iPhone evidence
+is claimed. Architecture pipeline/routes/data shape unchanged; only film-detail poster
+layout reservation changes. Preserved AB6 branch/PR #125 remains undeployed.
+
+Failure history retained: original WebKit dropped-click CI; controlled pre-fix 47px
+height failure; two probe coordinate setups caught intended active animation; offsetTop
+needed HTMLButtonElement type narrowing. None was waived or hidden by a later pass;
+only the causal parent-geometry repair clears the original failure. Merged-code and
+final-doc exact-head CI/deployment evidence is recorded in PR #127 before AB6 resumes.

@@ -17,7 +17,10 @@ conversation still maps onto this file.*
   reference, programme-only import/nine-row enable and normal verification/deployment.
   Preserve every evidence/gate/cost/identity/category limit; no repeated known-stage go.
   No new fees/credentials/destructive catalogue writes or other sitting. AB6 branch/PR
-  stays preserved while the prerequisite fix runs on its own branch/PR from green main.
+  stays preserved. Prerequisite repair PR #127/3d71b71 is now code-deployed: controlled
+  WebKit 47px poster collapse repaired, all ten local/full browser/PR gates and exact
+  API/web readiness pass. Final main/docs verification remains before AB6 integration;
+  no new owner approval needed for that or the known remaining feature stages.
 
 - **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night

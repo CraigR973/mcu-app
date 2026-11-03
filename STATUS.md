@@ -2,30 +2,30 @@
 
 ## Now
 
-**3 Nov: standing cinema completion approval (#334); separate movie-night repair in progress.**
-Craig approves the cause-first repair and all known remaining sitting 5 stages through
-feature completion. Preserve cinema branch/draft PR #125 at cf2cdf5. On a separate fix
-branch from seven-job-green main 6d0f676, investigate WebKit 41643751573: final click records
-no suggestion POST and stays on film detail. Saved frames show a poster-size transition
-moving the button at the click. Controlled pre-fix WebKit CI 41662029373 proves
-141→94px collapse (47px). Minimal film-page parent aspect reservation/image fit applied;
-no click/vote/navigation change. Full local/after-fix CI pending, no production change. Accepted next source amendment: ordinary public
-Vue page before its today/tomorrow date requests, unchanged caps. No repeat owner go for
-prepared source/build/metadata/mapping/config/deploy/import/enable/AB7 steps; evidence
-and normal gates remain mandatory. No AA10c/other sitting/new fees/destructive writes.
+**3 Nov: movie-night prerequisite repair deployed; final main verification in progress.**
+PR #127 fast-forward merged/deployed at exact tested 3d71b71. WebKit poster 404 collapsed
+height 141→94px during press/release (47px), losing the click. Parent now reserves 2:3
+and image fills it; selection/votes/promotion/navigation unchanged. Controlled height
+regression fails before/pass after. All ten clean local checks/API 2,549/no skips/shared
+159/web 737; full local C63/F62+1/jobs6. Exact PR CI 41665030709 passes all seven jobs,
+W61+two documented skips. Exact production API/web 3d71b71/db ok/five integrations
+verified. Main code CI 41668022890 and final documentation-head CI/deployment must finish
+before AB6 resumes. Full report/JSON: docs/reviews/movie-night-poster-layout-2026-11-03.*.
+Initial probe animation-baseline/type corrections retained; no assertion/timeout/skip
+waiver. Standing completion approval #334 accepted, no repeat known-stage go. Cinema
+branch/PR #125 at cf2cdf5 preserved/undeployed; no source/model/data/config change.
 
 ## Next
 
-Establish the movie-night cause and failing regression, minimally repair on its own PR,
-run full gates/code-only close-out, then normally merge green main into preserved AB6
-and verify. Complete approved public-page-first source build, bounded all-nine acceptance,
-evidence-backed identities/categories/config/import/enable and AB7 sequentially, one PR
-per batch. Keep exact live scopes/counts/digests and config diffs reviewable before writes.
-Approval covers the prepared existing-job token reference and programme-only operations;
-no new fees/credentials/destructive catalogue writes or other sitting. Stop only for
-unresolved facts/requirements outside this standing approval, not the already approved
-routine checkpoints. Strict categories/failed-prefix/all-nine rules and real-device
-limits remain; no fixture/CI claim can substitute missing live evidence.
+Finish exact merged-code/final-doc main CI and production proof, then normally merge green
+main into the preserved AB6 branch and verify. Complete approved public-page-first Vue
+build, bounded all-nine acceptance, evidence-backed mappings/categories/prepared existing
+job token reference/programme-only import/nine-row enable, then AB7 sequentially, one PR
+per batch. #334 is standing approval for those known stages; record exact live scopes,
+counts/digests/config diffs before actions rather than ask again. All nine/£0 source fees/
+unchanged caps/strict identity/run rules stay. No new paid service/credential, destructive
+catalogue or diary write, AA10c or other sitting. Evidence and gates remain mandatory;
+missing facts are never turned into accepted data. Existing resource cost unpriced.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -417,6 +417,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — Movie-night click prerequisite shipped, PR #127/3d71b71 (#334).** Controlled
+  pre-fix WebKit proves poster height 141→94px (47px); reserve parent 2:3 geometry and
+  fit image so error/fallback cannot move click target. New regression and original
+  vote/promotion case pass on all browsers; no assertion/timeout/skip waiver. Ten clean
+  local commands/API2549/shared159/web737, full local C63/F62+1/jobs6; seven PR CI
+  41665030709 jobs including W61+2. Exact production API/web/db ok/five integrations
+  verified. Final merged-code/docs CI/deployment proof pending before preserved AB6
+  integration. Two probe animation measurements/type narrowing corrected and retained.
+  No source/model/production data/config action; standing feature-completion go continues.
 
 - **2 Nov — Assistant starter prerequisite repair (#331), PR #126, 7b67375.** Original
   main's empty-chat scrolling inserted Latest answer and clipped the click point by 48px;
