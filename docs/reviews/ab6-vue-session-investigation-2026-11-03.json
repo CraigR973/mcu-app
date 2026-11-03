@@ -1,0 +1,855 @@
+{
+  "decision": 333,
+  "ownerApproval": "Craig: approved to exact two-request/45-second Vue public-page/session plan",
+  "codeHead": "a1604e86e9a1aac9a07904bba099d907789a77e7",
+  "exactCodeCi": 41611271232,
+  "startedUtc": "2026-11-03T13:14:14.745398+00:00",
+  "londonExecutionDate": "2026-11-03",
+  "programmeDate": "2026-11-04",
+  "limits": {
+    "gets": 2,
+    "seconds": 45,
+    "secondsPerRequest": 15,
+    "decodedBytesPerResponse": 2097152,
+    "decodedBytesTotal": 4194304,
+    "concurrency": 1,
+    "secondsBetweenStarts": 1
+  },
+  "audit": [
+    {
+      "number": 1,
+      "method": "GET",
+      "url": "https://www.myvue.com/cinema/glasgow-st-enoch/whats-on",
+      "startedUtc": "2026-11-03T13:14:14.992669+00:00",
+      "startSeconds": 0.247272,
+      "sessionCookieSent": false,
+      "status": 200,
+      "setCookiePresent": true,
+      "sessionHasCookiesAfterResponse": true,
+      "decodedBytes": 347160,
+      "bodySha256": "636aa4b4d27962a24e4d2fe628ebb63253456138b2a6567a86272efc77f7aefd",
+      "endSeconds": 1.143607,
+      "htmlTitle": "Vue Glasgow St Enoch Lux Cinema Film Listings & Times | Vue",
+      "challengeDetected": false
+    },
+    {
+      "number": 2,
+      "method": "GET",
+      "url": "https://www.myvue.com/api/microservice/showings/cinemas/10097/films?showingDate=2026-11-04T00:00:00&minEmbargoLevel=3&includesSession=true&includeSessionAttributes=true",
+      "startedUtc": "2026-11-03T13:14:16.004349+00:00",
+      "startSeconds": 1.258909,
+      "sessionCookieSent": true,
+      "status": 200,
+      "setCookiePresent": false,
+      "sessionHasCookiesAfterResponse": true,
+      "decodedBytes": 134152,
+      "bodySha256": "531468f8fab369bc7de6be3aff055a9f98b9a8009d1040bb097dfb6b6f1189f1",
+      "endSeconds": 1.407851,
+      "htmlTitle": null,
+      "challengeDetected": false
+    }
+  ],
+  "decodedBytes": 481312,
+  "stopReason": "bounded public session experiment complete; cause and recurring feasibility unproved",
+  "ordinarySessionCauseEstablished": false,
+  "allNineAcceptance": false,
+  "diagnosticOnlyNotImportArtifact": true,
+  "databaseConnected": false,
+  "productionActions": [],
+  "metadataRequests": 0,
+  "implementationChanged": false,
+  "sourceFeesGbp": 0,
+  "existingResourceUse": "unpriced",
+  "cookieOrHeaderValuesSaved": false,
+  "redirectsFollowed": false,
+  "retries": 0,
+  "publicPageInspection": {
+    "parseableJsonScriptCount": 1,
+    "embeddedRequestedDateSessions": [],
+    "embeddedRequestedDateSessionsTotal": 0
+  },
+  "programmeObservation": {
+    "rows": 48,
+    "observedDates": [
+      "2026-11-04"
+    ],
+    "completeDates": [
+      "2026-11-04"
+    ],
+    "errors": [],
+    "facts": [
+      {
+        "sessionKey": "113079",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T10:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/113079",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112899",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T12:20:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/112899",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112965",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T13:50:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/112965",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112916",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T14:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/112916",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113038",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T15:50:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/113038",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112901",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T17:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/112901",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113039",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T18:10:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/113039",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112934",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T19:10:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/112934",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112935",
+        "sourceFilmKey": "HO00021404",
+        "title": "Wicker",
+        "sourceLocal": "2026-11-04T21:35:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021404/112935",
+        "identityFacts": {
+          "director": "Alex Huston Fischer, Eleanor Wilson",
+          "originalTitle": "Wicker",
+          "runtimeMinutes": 105
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113080",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T10:15:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/113080",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112915",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T12:05:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/112915",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112932",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T14:15:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/112932",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112933",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T16:45:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/112933",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112949",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T18:50:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/112949",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112987",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T20:15:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/112987",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113006",
+        "sourceFilmKey": "HO00021488",
+        "title": "Primetime",
+        "sourceLocal": "2026-11-04T21:10:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021488/113006",
+        "identityFacts": {
+          "director": "Lance Oppenheim",
+          "originalTitle": "Primetime",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113084",
+        "sourceFilmKey": "HO00021244",
+        "title": "Ghosts: The Possession of Button House",
+        "sourceLocal": "2026-11-04T10:45:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021244/113084",
+        "identityFacts": {
+          "director": "Simon Hynd",
+          "originalTitle": "Ghosts: The Possession of Button House",
+          "runtimeMinutes": 97
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112931",
+        "sourceFilmKey": "HO00021244",
+        "title": "Ghosts: The Possession of Button House",
+        "sourceLocal": "2026-11-04T12:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021244/112931",
+        "identityFacts": {
+          "director": "Simon Hynd",
+          "originalTitle": "Ghosts: The Possession of Button House",
+          "runtimeMinutes": 97
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113021",
+        "sourceFilmKey": "HO00021244",
+        "title": "Ghosts: The Possession of Button House",
+        "sourceLocal": "2026-11-04T15:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021244/113021",
+        "identityFacts": {
+          "director": "Simon Hynd",
+          "originalTitle": "Ghosts: The Possession of Button House",
+          "runtimeMinutes": 97
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112986",
+        "sourceFilmKey": "HO00021244",
+        "title": "Ghosts: The Possession of Button House",
+        "sourceLocal": "2026-11-04T17:55:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021244/112986",
+        "identityFacts": {
+          "director": "Simon Hynd",
+          "originalTitle": "Ghosts: The Possession of Button House",
+          "runtimeMinutes": 97
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112967",
+        "sourceFilmKey": "HO00021244",
+        "title": "Ghosts: The Possession of Button House",
+        "sourceLocal": "2026-11-04T19:25:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021244/112967",
+        "identityFacts": {
+          "director": "Simon Hynd",
+          "originalTitle": "Ghosts: The Possession of Button House",
+          "runtimeMinutes": 97
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113003",
+        "sourceFilmKey": "HO00020945",
+        "title": "Forgotten Island",
+        "sourceLocal": "2026-11-04T13:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020945/113003",
+        "identityFacts": {
+          "director": "Joel Crawford, Januel Mercado",
+          "originalTitle": "Forgotten Island",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113004",
+        "sourceFilmKey": "HO00020945",
+        "title": "Forgotten Island",
+        "sourceLocal": "2026-11-04T16:05:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020945/113004",
+        "identityFacts": {
+          "director": "Joel Crawford, Januel Mercado",
+          "originalTitle": "Forgotten Island",
+          "runtimeMinutes": 109
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113083",
+        "sourceFilmKey": "HO00020288",
+        "title": "Clayface",
+        "sourceLocal": "2026-11-04T10:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020288/113083",
+        "identityFacts": {
+          "director": "James Watkins",
+          "originalTitle": "Clayface",
+          "runtimeMinutes": 108
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112984",
+        "sourceFilmKey": "HO00020288",
+        "title": "Clayface",
+        "sourceLocal": "2026-11-04T13:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020288/112984",
+        "identityFacts": {
+          "director": "James Watkins",
+          "originalTitle": "Clayface",
+          "runtimeMinutes": 108
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113022",
+        "sourceFilmKey": "HO00020288",
+        "title": "Clayface",
+        "sourceLocal": "2026-11-04T17:15:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020288/113022",
+        "identityFacts": {
+          "director": "James Watkins",
+          "originalTitle": "Clayface",
+          "runtimeMinutes": 108
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113023",
+        "sourceFilmKey": "HO00020288",
+        "title": "Clayface",
+        "sourceLocal": "2026-11-04T19:40:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020288/113023",
+        "identityFacts": {
+          "director": "James Watkins",
+          "originalTitle": "Clayface",
+          "runtimeMinutes": 108
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113040",
+        "sourceFilmKey": "HO00020288",
+        "title": "Clayface",
+        "sourceLocal": "2026-11-04T20:35:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020288/113040",
+        "identityFacts": {
+          "director": "James Watkins",
+          "originalTitle": "Clayface",
+          "runtimeMinutes": 108
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112918",
+        "sourceFilmKey": "HO00020288",
+        "title": "Clayface",
+        "sourceLocal": "2026-11-04T22:15:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020288/112918",
+        "identityFacts": {
+          "director": "James Watkins",
+          "originalTitle": "Clayface",
+          "runtimeMinutes": 108
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113082",
+        "sourceFilmKey": "HO00021405",
+        "title": "Wildwood",
+        "sourceLocal": "2026-11-04T10:45:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021405/113082",
+        "identityFacts": {
+          "director": "Travis Knight",
+          "originalTitle": "Wildwood",
+          "runtimeMinutes": 132
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113037",
+        "sourceFilmKey": "HO00021405",
+        "title": "Wildwood",
+        "sourceLocal": "2026-11-04T13:05:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021405/113037",
+        "identityFacts": {
+          "director": "Travis Knight",
+          "originalTitle": "Wildwood",
+          "runtimeMinutes": 132
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112966",
+        "sourceFilmKey": "HO00021405",
+        "title": "Wildwood",
+        "sourceLocal": "2026-11-04T16:20:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021405/112966",
+        "identityFacts": {
+          "director": "Travis Knight",
+          "originalTitle": "Wildwood",
+          "runtimeMinutes": 132
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113020",
+        "sourceFilmKey": "HO00021289",
+        "title": "Heart of the Beast",
+        "sourceLocal": "2026-11-04T12:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021289/113020",
+        "identityFacts": {
+          "director": "David Ayer",
+          "originalTitle": "Heart of the Beast",
+          "runtimeMinutes": 101
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112903",
+        "sourceFilmKey": "HO00021406",
+        "title": "Other Mommy",
+        "sourceLocal": "2026-11-04T22:45:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021406/112903",
+        "identityFacts": {
+          "director": "Rob Savage",
+          "originalTitle": "Other Mommy",
+          "runtimeMinutes": 93
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112988",
+        "sourceFilmKey": "HO00020943",
+        "title": "Resident Evil",
+        "sourceLocal": "2026-11-04T22:45:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00020943/112988",
+        "identityFacts": {
+          "director": "Zach Cregger",
+          "originalTitle": "Resident Evil",
+          "runtimeMinutes": 94
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113087",
+        "sourceFilmKey": "HO00021468",
+        "title": "We're Going on a Bear Hunt + The Tiger Who Came to Tea",
+        "sourceLocal": "2026-11-04T10:20:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021468/113087",
+        "identityFacts": {
+          "director": "Joanna Harrison, Robin Shaw",
+          "originalTitle": "We're Going on a Bear Hunt + The Tiger Who Came to Tea",
+          "runtimeMinutes": 60
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113085",
+        "sourceFilmKey": "HO00021510",
+        "title": "Everest: The Other Side",
+        "sourceLocal": "2026-11-04T10:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021510/113085",
+        "identityFacts": {
+          "director": "Jimmy Chin, Elizabeth Chai Vasarhelyi",
+          "originalTitle": "Everest: The Other Side",
+          "runtimeMinutes": 115
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113024",
+        "sourceFilmKey": "HO00021510",
+        "title": "Everest: The Other Side",
+        "sourceLocal": "2026-11-04T22:05:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021510/113024",
+        "identityFacts": {
+          "director": "Jimmy Chin, Elizabeth Chai Vasarhelyi",
+          "originalTitle": "Everest: The Other Side",
+          "runtimeMinutes": 115
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113086",
+        "sourceFilmKey": "HO00021514",
+        "title": "Kiri and Lou Go Raaa!",
+        "sourceLocal": "2026-11-04T10:15:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021514/113086",
+        "identityFacts": {
+          "director": "Harry Sinclair",
+          "originalTitle": "Kiri and Lou Go Raaa!",
+          "runtimeMinutes": 62
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "110452",
+        "sourceFilmKey": "HO00021516",
+        "title": "Rammstein - Live in Mexico City",
+        "sourceLocal": "2026-11-04T19:45:00+00:00",
+        "booking": null,
+        "identityFacts": {
+          "director": "Paul Dugdale",
+          "originalTitle": "Rammstein - Live in Mexico City",
+          "runtimeMinutes": 110
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112948",
+        "sourceFilmKey": "HO00021618",
+        "title": "The Irregular at Magic High School : Yotsuba Succession Arc (Japanese)",
+        "sourceLocal": "2026-11-04T16:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021618/112948",
+        "identityFacts": {
+          "director": "Jimmy Stone",
+          "originalTitle": "The Irregular at Magic High School THE MOVIE - Yotsuba Succession Arc -",
+          "runtimeMinutes": 104
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113081",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T11:10:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/113081",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112947",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T13:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/112947",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112900",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T14:45:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/112900",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112917",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T17:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/112917",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "113005",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T18:30:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/113005",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112902",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T20:00:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/112902",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      },
+      {
+        "sessionKey": "112950",
+        "sourceFilmKey": "HO00021133",
+        "title": "Wild Horse Nine",
+        "sourceLocal": "2026-11-04T21:20:00+00:00",
+        "booking": "https://www.myvue.com/book-tickets/summary/10097/HO00021133/112950",
+        "identityFacts": {
+          "director": "Martin McDonagh",
+          "originalTitle": "Wild Horse Nine",
+          "runtimeMinutes": 117
+        },
+        "runEvidence": {}
+      }
+    ],
+    "uniqueSourceFilms": 15,
+    "rowsWithIndependentIdentityFacts": 48,
+    "rowsWithBookingLink": 47,
+    "categories": {
+      "newRelease": 0,
+      "olderFilm": 0,
+      "unclassified": 48
+    },
+    "completeDatesMeaning": "Existing parser marker for this one successful date response; not independent proof of full horizon, absence, cancellation or ticket availability."
+  },
+  "finishedUtc": "2026-11-03T13:14:16.199373+00:00",
+  "elapsedSeconds": 1.453969,
+  "requests": 2,
+  "candidateComparisons": [
+    {
+      "title": "Clayface",
+      "source": "vue",
+      "sourceFilmKey": "HO00020288",
+      "observedUtc": "2026-11-03T13:14:16.004349+00:00",
+      "vueFacts": {
+        "director": "James Watkins",
+        "originalTitle": "Clayface",
+        "runtimeMinutes": 108
+      },
+      "priorTmdbSource": "cinematimes",
+      "priorTmdbFilmKey": "/uk/glasgow/movies/clayface/",
+      "candidate": {
+        "tmdb_id": 1400940,
+        "title": "Clayface",
+        "original_title": "Clayface",
+        "directors": [
+          "James Watkins"
+        ],
+        "runtime": 109,
+        "imdb_id": "tt34890576",
+        "primary_release_date": "2026-10-19",
+        "gb_theatrical": [
+          {
+            "date": "2026-10-19",
+            "type": 2,
+            "note": ""
+          },
+          {
+            "date": "2026-10-23",
+            "type": 3,
+            "note": ""
+          }
+        ]
+      },
+      "existingCorroborationFunction": [
+        "director"
+      ],
+      "runtimeDifferenceMinutes": -1,
+      "sameSourceMetadataRecordPresent": false,
+      "mappingApproved": false,
+      "currentFirstUkRunEstablished": false,
+      "priorTmdbFetchedAtUtc": "2026-11-03T09:08:03.134665"
+    },
+    {
+      "title": "Ghosts: The Possession of Button House",
+      "source": "vue",
+      "sourceFilmKey": "HO00021244",
+      "observedUtc": "2026-11-03T13:14:16.004349+00:00",
+      "vueFacts": {
+        "director": "Simon Hynd",
+        "originalTitle": "Ghosts: The Possession of Button House",
+        "runtimeMinutes": 97
+      },
+      "priorTmdbSource": "cinematimes",
+      "priorTmdbFilmKey": "/uk/glasgow/movies/ghosts-the-possession-of-button-house/",
+      "candidate": {
+        "tmdb_id": 1643567,
+        "title": "Ghosts: The Possession of Button House",
+        "original_title": "Ghosts: The Possession of Button House",
+        "directors": [
+          "Simon Hynd"
+        ],
+        "runtime": 97,
+        "imdb_id": "tt40311603",
+        "primary_release_date": "2026-10-23",
+        "gb_theatrical": [
+          {
+            "date": "2026-10-23",
+            "type": 3,
+            "note": ""
+          }
+        ]
+      },
+      "existingCorroborationFunction": [
+        "director"
+      ],
+      "runtimeDifferenceMinutes": 0,
+      "sameSourceMetadataRecordPresent": false,
+      "mappingApproved": false,
+      "currentFirstUkRunEstablished": false,
+      "priorTmdbFetchedAtUtc": "2026-11-03T09:08:07.014534"
+    },
+    {
+      "title": "Kiri and Lou Go Raaa!",
+      "source": "vue",
+      "sourceFilmKey": "HO00021514",
+      "observedUtc": "2026-11-03T13:14:16.004349+00:00",
+      "vueFacts": {
+        "director": "Harry Sinclair",
+        "originalTitle": "Kiri and Lou Go Raaa!",
+        "runtimeMinutes": 62
+      },
+      "priorTmdbSource": "cinematimes",
+      "priorTmdbFilmKey": "/uk/glasgow/movies/kiri-and-lou-go-raaa/",
+      "candidate": {
+        "tmdb_id": 1705387,
+        "title": "Kiri and Lou Go Raaa!",
+        "original_title": "Kiri and Lou Go Raaa!",
+        "directors": [
+          "Antony Elworthy",
+          "Harry Sinclair"
+        ],
+        "runtime": 61,
+        "imdb_id": "tt43201279",
+        "primary_release_date": "2026-08-08",
+        "gb_theatrical": [
+          {
+            "date": "2026-10-16",
+            "type": 3,
+            "note": ""
+          }
+        ]
+      },
+      "existingCorroborationFunction": [
+        "director"
+      ],
+      "runtimeDifferenceMinutes": 1,
+      "sameSourceMetadataRecordPresent": false,
+      "mappingApproved": false,
+      "currentFirstUkRunEstablished": false,
+      "priorTmdbFetchedAtUtc": "2026-11-03T09:08:10.009760"
+    }
+  ],
+  "mappingGateCheck": {
+    "testWasReadOnly": true,
+    "eligible": false,
+    "error": "Mapping pick missing, duplicate or not an observed candidate",
+    "reason": "Existing candidate records are CinemaTimes keys; Vue facts are not transferred to them and no Vue-specific metadata record is fabricated."
+  },
+  "evidenceLimit": "Two 200 responses after public page/session; no same-time no-session control. Time/cache/source changes remain alternative explanations. No causal or recurring-access claim.",
+  "rawResponseBodiesSaved": false,
+  "rawLogDirectory": "scratchpad/ab6/vue-session-2026-11-03T131414Z",
+  "approvedScopeFile": "docs/reviews/ab6-vue-session-plan-2026-11-03.md",
+  "nextBuildAmendmentApproved": false
+}

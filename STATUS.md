@@ -2,36 +2,39 @@
 
 ## Now
 
-**3 Nov: approved fresh cinema read complete; all-nine live acceptance unmet (#332).**
-One pass on clean a038709 after all seven exact-head PR CI 41550182406 jobs passed:
-62 GETs/12 metadata GETs, 6,135,897 bytes/60.197 seconds. Eight venues yield 1,800 future
-screenings at preparation. Vue returns 49 rows for 3 Nov, then 4 Nov 401; host stops,
-49 prefix rows quarantined. No retry or alternative. Real artifact loader refuses the
-exact digest/count under the unchanged all-nine gate. Every disposable DB table count
-and nine disabled flags are unchanged. All 1,800 rows Unclassified; three unapproved
-metadata candidates lack independent corroboration, one ambiguous record/backlog 143.
-No complete dates/current first UK run/verified global identities established.
-Cinema implementation is unchanged and undeployed on draft PR #125. Separate assistant
-repair remains main/production 6d0f676; API/web exact SHA/db ok/five integrations freshly
-verified. Existing-token plan 0 add/2 change/0 destroy is unapplied. No production DB,
-config/deploy/import/mapping/enable, AB7, AA10c or other sitting. Full report/audit/artifact:
-docs/reviews/ab6-acceptance-read-2026-11-03.md/JSON and compressed snapshot alongside.
+**3 Nov: approved Vue anonymous-session experiment succeeds; all-nine gate still unmet (#333).**
+One report-only pass on clean a1604e8/all-seven PR CI 41611271232: public St Enoch page
+200 sets an ordinary anonymous cookie, then same-session 4 Nov JSON 200/48 screenings
+for 15 films. Two GETs/481,312 bytes/1.454s; starts 1.011637s apart. No further request,
+TMDB/DB connection, raw-body/cookie/header-value storage, code or production action.
+This observes a successful sequence, not session causality/recurring access: the previous
+401 was four hours earlier. All 48 diagnostic rows Unclassified; no mappings approved.
+Three director comparisons now have independent Vue facts, but existing metadata records
+are CinemaTimes keys; the real read-only mapping validator still refuses Vue picks.
+The earlier #332 1,800-row/eight-venue all-nine artifact stays failed and unchanged;
+new rows are not spliced into it. Full report/audit/facts:
+docs/reviews/ab6-vue-session-investigation-2026-11-03.md/JSON.
+Cinema implementation remains unchanged/undeployed on draft PR #125, nine disabled.
+Main/production was last verified at 6d0f676/db ok/five configured integrations; no deploy
+by this experiment. Existing-token Railway plan 0 add/2 change/0 destroy stays unapplied.
+No AB7, AA10c or other sitting.
 
 ## Next
 
-Stop and re-plan before implementation: accepted Vue today/tomorrow feasibility is unmet.
-Recommend the concrete report-only ordinary anonymous Vue public-page/session experiment
-in docs/reviews/ab6-vue-session-plan-2026-11-03.md: at most two GETs/45 seconds, £0 source
-fees, no TMDB/database/application/production writes. It is UNAPPROVED and unrun; ordinary
-session state is a hypothesis, not a proved cause. Today's completed one-pass approval
-is spent; no retry/alternate is implied. Do not silently reduce coverage to eight/today-only,
-admit the failed prefix, or relax identities/categories. No repeat approval of completed
-#328/#329 research, #330 build or #331 repair. Any changed source/build scope needs a
-concrete revised contract accepted before implementation. Further fresh all-nine acceptance,
-actual row/horizon/category/identity review, selected mappings, exact configuration apply,
-disabled deployment, production import and nine-row enable remain separate owner stops.
-No AB6 merge/close-out or AB7 from fixture/CI success. AA10c remains separate from 25 Nov;
-AA10b/real-phone/live-assistant observations stay open.
+Stop for the concrete source/build amendment in
+docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md, UNAPPROVED/unimplemented.
+Recommend one ordinary Vue public-page GET before its selected today/tomorrow date GETs,
+same in-memory client/session, counted inside unchanged 120 GET/12 metadata/five-minute/
+body/rate/refusal limits. Any page/date failure fails Vue; no fallback/prefix acceptance.
+No new data shape, fee, service, credential, configuration or category/identity rule.
+The new protocol costs at most one GET per Vue pass within existing totals plus a full
+verification cycle; existing resource use unpriced. No new live request is covered by
+build approval; completed #333 two-request permission is spent. No repeat acceptance of
+completed research, #330 build or #331 repair. Changed build needs this concrete owner go,
+then full verification and separately approved fresh all-nine acceptance/actual row/horizon/
+category/identity review. Exact mappings, config apply/disabled deployment/production import/
+nine-row enable remain owner stops. New population remains unproved. No AB6 merge/close-out
+or AB7 from tests. AA10c separate from 25 Nov; other device/live-assistant gates unchanged.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -423,6 +426,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — Vue ordinary anonymous session experiment complete (#333), no implementation.**
+  On clean a1604e8/all-seven CI 41611271232, approved two GETs both return 200: public page
+  sets session state; same-session 4 Nov response yields 48 sessions/15 films. 481,312 bytes/
+  1.454s, no retry/redirect/extra request or cookie/header-value/raw-body storage. Session
+  causality remains unproved versus changed time/cache. Three director comparisons support
+  later candidate review, but source-specific metadata/mapping/all-nine gates remain unmet;
+  all rows Unclassified, old failed artifact unchanged. Report/audit/facts saved. Concrete
+  public-page-first build amendment prepared UNAPPROVED; no app/DB/production change or
+  other sitting. Stop for that build decision, not another approval of spent research.
 
 - **2026-11-03** — **AB6 approved fresh acceptance read completed; live gate unmet (#332).**
   Clean a038709/all-seven exact PR CI 41550182406 before one bounded pass: 62 GETs,

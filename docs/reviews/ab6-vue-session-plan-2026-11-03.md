@@ -1,6 +1,11 @@
 # Proposed free Vue session investigation — 3 Nov
 
-**Not approved. Report only; no implementation or production action.**
+**Approved and completed once (#333, 3 Nov). Permission spent; no implementation.**
+Craig said “approved”. Both GETs returned 200 at 13:14 UTC; 48 dated Vue screenings,
+481,312 bytes/1.454s. Full report/audit/facts: ab6-vue-session-investigation-2026-11-03.md/JSON.
+Ordinary session causality/recurrence remain unproved. The separate concrete build amendment
+ab6-vue-session-build-amendment-2026-11-03.md is UNAPPROVED/unimplemented. The following is
+the approved historical experiment scope, not permission for another request.
 
 The approved 3 Nov pass returned 49 Vue showings for 3 Nov, then HTTP 401 for 4 Nov.
 The same 4 Nov date failed in the separately approved 2 Nov experiment. This disproves

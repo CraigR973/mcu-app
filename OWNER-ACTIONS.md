@@ -193,15 +193,24 @@ conversation still maps onto this file.*
   one ambiguous record/backlog 143. Exact artifact loader refuses all-nine import; every
   disposable table count/nine disabled flags unchanged. Full report/audit/complete snapshot:
   docs/reviews/ab6-acceptance-read-2026-11-03.*. No implementation/production action.
-  **Remaining owner checkpoints:** the accepted two-date Vue assumption is unmet: stop and
-  re-plan before implementation. Concrete recommendation is the UNAPPROVED report-only
-  two-GET/45-second ordinary public-page/session experiment in
-  docs/reviews/ab6-vue-session-plan-2026-11-03.md; no TMDB, writes or changed implementation.
-  Session state is only a hypothesis. Completed #332 permission is spent; no further source
-  request/retry/alternate follows. No repeat approval for completed research/build/repair.
-  Changed scope needs a concrete accepted build contract, then fresh all-nine acceptance,
-  actual row/horizon/category/identity/mapping review; exact config apply/disabled deployment/
-  production import/nine-row enable. No AB6 close-out/AB7 before accepted AB6.
+  **Vue session experiment approved/completed (#333, 3 Nov):** Craig's “approved” accepted
+  the exact two-GET/45-second report-only plan. On clean a1604e8/all-seven CI 41611271232,
+  page 200 sets ordinary anonymous state; same-session 4 Nov JSON 200 yields 48 sessions/
+  15 films. Two GETs/481,312 bytes/1.454s, no extra request. Cookies/headers/raw bodies
+  not saved; no TMDB/DB/code/production action. Session causality/recurrence remain unproved
+  against time/cache changes. New Vue director facts support three comparisons, but prior
+  metadata is CinemaTimes-scoped: real mapping validator still refuses Vue picks. All 48
+  Unclassified; old failed artifact unchanged. Report: ab6-vue-session-investigation-2026-11-03.*.
+  **Remaining owner checkpoints:** concrete public-page-first build amendment in
+  docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md is UNAPPROVED/unimplemented.
+  Recommend one public-page GET per active Vue pass before its selected today/tomorrow
+  requests in the same anonymous client, inside unchanged combined caps; no weaker coverage,
+  categories or mapping gate. Costs one bounded GET within the cap plus full verification;
+  £0 source fees/resource use unpriced. Completed #333 scope is spent, no new request implied.
+  No repeat approval for completed research/build/repair. After accepted revised build and
+  checks, fresh all-nine acceptance, actual row/horizon/category/identity/mapping review;
+  exact config apply/disabled deployment/production import/nine-row enable stay separate.
+  No AB6 close-out/AB7 before accepted AB6.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

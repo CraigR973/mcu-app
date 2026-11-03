@@ -1,5 +1,13 @@
 # AB6 metadata amendment — 2 Nov
 
+## Latest research — ordinary Vue session succeeds once, new build awaits go
+
+Separately approved #333 uses two GETs at 13:14 UTC on 3 Nov: public page then same-session
+4 Nov JSON both 200/48 sessions. Cause/recurrence remain unproved; historical failed all-nine
+artifact below is unchanged. Full report/audit/facts: ab6-vue-session-investigation-2026-11-03.*.
+Concrete public-page-first build amendment is UNAPPROVED/unimplemented; no new live pass,
+source-key metadata transfer/mapping, production action or other sitting follows.
+
 ## Latest live status — 3 Nov acceptance unmet
 
 The owner-approved fresh read (#332) on all-seven-CI-green a038709 yields eight venues/

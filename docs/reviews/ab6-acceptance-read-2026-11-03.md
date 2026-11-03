@@ -5,6 +5,15 @@ production action. It ran once on clean a038709ce65c62d219354005a8e975500b630154
 exact-head CI 41550182406 passed all seven jobs. The source/build/strict categories remain
 accepted (#330); this new feasibility result is not acceptance of a changed build.
 
+## Subsequent evidence — does not alter this failed artifact
+
+A separately approved two-request Vue public-page/session experiment (#333) succeeds at
+13:14 UTC on 3 Nov: page 200, same-session 4 Nov JSON 200/48 sessions. Session causality
+and recurrence remain unproved; no contemporaneous no-session control. See
+ab6-vue-session-investigation-2026-11-03.md/JSON. The later diagnostic rows are not spliced
+into this artifact; its failed status/hash/loader refusal and all-nine gate stay unchanged.
+A concrete public-page-first build amendment is prepared UNAPPROVED, not implemented.
+
 ## Result and limits
 
 The pass completed at 09:08 UTC in **60.197 seconds**: 62 GETs, including 12 existing-token

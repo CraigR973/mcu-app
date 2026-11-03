@@ -7014,3 +7014,35 @@ contemporaneous.
      source/TMDB request. Any changed build needs a revised accepted contract; all-nine
      acceptance, actual row/category/identity review and exact production steps stay
      separate owner checkpoints. No AB6 close-out, AB7, AA10c or other sitting.
+
+333. **Approve and complete the ordinary Vue session experiment; propose narrow build amendment (3 Nov).**
+     Craig says “approved” to docs/reviews/ab6-vue-session-plan-2026-11-03.md: at most
+     two Vue GETs/45s, known public St Enoch page then conditionally the observed 4 Nov
+     JSON URL in the same ordinary anonymous session, 15s/2 MiB each/4 MiB total/one
+     slot/at least one second between starts, no retries/redirects/alternates/TMDB/DB/
+     implementation/production action. Clean a1604e8/all-seven exact PR CI 41611271232
+     verified before execution; London execution date remains 3 Nov. At 13:14 UTC both
+     GETs return 200, 481,312 decoded bytes/1.454s, 1.011637s start gap. Page sets an
+     ordinary cookie, second request sends session cookie; no values/headers/raw bodies
+     saved. API parser yields 48 screenings/15 films for 4 Nov, 47 source booking links,
+     48 rows with director/original-title/runtime facts. Parser's single-date completion
+     marker is not independent full-horizon/cancellation/availability proof. Session
+     causality and recurring feasibility remain unproved: prior refusal four hours
+     earlier, no contemporaneous no-session control. No extra request after this pass.
+     Locally compare three previously saved TMDB candidates with new Vue facts: existing
+     corroboration returns director for Clayface, Ghosts and Kiri and Lou; runtime deltas
+     -1/0/+1 minute retained. Existing candidate records are CinemaTimes keys, so real
+     read-only mapping validator refuses Vue picks; no source-key transfer/fabricated
+     metadata/mapping approval. All 48 diagnostic rows Unclassified; current first UK run
+     unproved. Old failed all-nine artifact/hash unchanged, no splicing/reduced coverage.
+     Report/sanitised audit/normalised facts:
+     docs/reviews/ab6-vue-session-investigation-2026-11-03.md/JSON.
+     Recommend only the concrete public-page-first Vue build amendment in
+     docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md, UNAPPROVED/unimplemented:
+     once per active Vue pass, ordinary public-page GET before selected today/tomorrow
+     date GETs in same client; at most one extra GET inside unchanged caps/refusal rules.
+     No new schema/provider/service/credential/fee/configuration or weaker identity/run
+     rules. Source subscriptions £0; resource costs unpriced plus full verification time.
+     Approval of this completed report-only experiment is not approval of that build or
+     any fresh live pass/config apply/deployment/import/mapping/nine-row enable. These
+     remain separate owner checkpoints. No AB6 close-out, AB7, AA10c or other sitting.
