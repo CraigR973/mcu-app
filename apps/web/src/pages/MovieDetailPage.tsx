@@ -723,8 +723,8 @@ export default function MovieDetailPage() {
 
       <div className="relative mx-auto -mt-16 w-full max-w-[96rem] px-4 sm:px-6 lg:px-8">
         <header className="flex items-end gap-4 sm:gap-6">
-          <div className="w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted shadow-lift sm:w-28 md:w-36">
-            <Poster path={movie.posterPath} title={movie.title} className="w-full" eager />
+          <div className="aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted shadow-lift sm:w-28 md:w-36">
+            <Poster path={movie.posterPath} title={movie.title} className="h-full w-full" eager />
           </div>
           <div className="min-w-0 flex-1 pb-1">
             {movie.tagline ? (

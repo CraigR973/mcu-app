@@ -7063,3 +7063,54 @@ contemporaneous.
      documentation CI pass cannot resolve this observed failure. #333 remains spent
      research permission only; no source build, new live pass, production cinema action
      or other sitting follows.
+
+
+334. **Approve the movie-night prerequisite and remaining cinema feature through completion (3 Nov).**
+     Craig says “approve, i approve everything until this feature is complete”. This
+     accepts the cause-first separate movie-night investigation/minimal repair proposed
+     after WebKit failure 41643751573, and grants standing approval for the remaining
+     Group AB sitting 5 feature under the prepared contracts: normal code-only repair
+     close-out, preserved AB6 integration, public-page-first Vue amendment, bounded fresh
+     all-nine reads/metadata investigations, evidence-based source-specific mapping
+     selections, exact prepared existing-job token-reference configuration, disabled
+     deployment, validated programme-only import and nine-venue enable, then AB7's
+     Film-first discovery/filter screen and normal verification/close-out. Record exact
+     scopes/artifact counts/digests/config plans before actions; no repeated permission
+     for these known stages. One branch/PR per batch, separate prerequisite fix PR, no
+     AB7 before accepted AB6. No AA10c or other sitting.
+     Preserve all nine, £0 source fees/no new paid service, existing request/body/time/
+     rate caps and refusal stops, strict independently corroborated mappings and New
+     current first UK run/Older returning or reissue/Unclassified rules. Re-plan before
+     implementing changed feasibility within this feature; do not disguise missing
+     evidence, reduce coverage or waive failed tests. This approval cannot create
+     real-device/source evidence. No new credential/account/fee, destructive catalogue/
+     diary write or unrelated hosting change is authorised. Material requirements
+     outside this approved scope still need a decision. Existing resource/verification
+     costs remain unpriced; the owner explicitly prefers completion without repeated
+     checkpoints for the known remaining work. Decisions 332–333 and full cinema
+     implementation remain on preserved AB6 branch; this repair does not merge that
+     unaccepted implementation into main.
+
+     Movie-night diagnosis: controlled pre-fix WebKit CI 41662029373 proves the poster
+     collapses 141→94px (47px) while fallback waits, matching the recorded lost click.
+     Reserve the film-page poster parent at 2:3 and fit its image, without changing
+     click/selection/votes/promotion/navigation. Regression measures untransformed layout
+     (exact offsetTop) to exclude intended 1px active feedback; two setup measurements
+     and a type-narrowing correction are preserved, not used as app-cause evidence.
+     No assertion/timeout/skip/random-seed waiver. Full local/after-fix WebKit proof
+     required before code-only close-out; no production change yet.
+
+     Repair completed as PR #127/3d71b71: all ten clean local gates/API2549/no skips/
+     shared159/web737, full local C63/F62+1/jobs6, all seven exact PR CI 41665030709
+     jobs including W61+2. Controlled height regression and original flow pass after
+     causal geometry repair. Normal fast-forward main push; production API/web exact
+     3d71b71/db ok/five integrations verified. Main code CI 41668022890/final docs proof
+     still mandatory before resuming AB6. No cinema/model/data/config action. Report
+     and sanitised before/after evidence: docs/reviews/movie-night-poster-layout-2026-11-03.*.
+
+     Final repair proof complete before AB6 resumes: main code CI 41668022890 and
+     final-doc main 62467f4 CI 41668679117 pass all seven jobs, API2549/no skips/
+     C63/F62+1/W61+2/jobs6; exact production API/web 62467f4/full readiness freshly
+     verified. Normal integration into preserved AB6 follows, retaining both histories.
+     Old known-stage UNAPPROVED stops below reports are superseded by standing #334,
+     not by invented evidence. Source build/read/write facts still need actual proof.

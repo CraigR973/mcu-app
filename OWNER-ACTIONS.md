@@ -11,6 +11,17 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Standing cinema completion approval (#334, 3 Nov).** Craig approves the separate
+  cause-first movie-night repair and the known remaining AB6/AB7 sitting 5 feature work,
+  including bounded live evidence, source-specific mappings, prepared existing-job token
+  reference, programme-only import/nine-row enable and normal verification/deployment.
+  Preserve every evidence/gate/cost/identity/category limit; no repeated known-stage go.
+  No new fees/credentials/destructive catalogue writes or other sitting. AB6 branch/PR
+  stays preserved. Prerequisite repair PR #127/3d71b71 is now code-deployed: controlled
+  WebKit 47px poster collapse repaired, all ten local/full browser/PR gates and exact
+  API/web readiness pass. Final main/docs verification remains before AB6 integration;
+  no new owner approval needed for that or the known remaining feature stages.
+
 - **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night
   seeding race was stopped and repaired separately with Craig's approval (#304): PR #120
@@ -201,26 +212,18 @@ conversation still maps onto this file.*
   against time/cache changes. New Vue director facts support three comparisons, but prior
   metadata is CinemaTimes-scoped: real mapping validator still refuses Vue picks. All 48
   Unclassified; old failed artifact unchanged. Report: ab6-vue-session-investigation-2026-11-03.*.
-  **New absolute CI stop (3 Nov):** report-only 282eb9e/PR CI 41643751573 fails WebKit's
-  film-page random-pick promotion case: no Added title in Suggested, saved page remains
-  film detail; trace records click but no suggestion POST. C62/F61+1/W59+one failure+2/
-  jobs6; six other jobs pass. App code unchanged from prior green; cause unconfirmed.
-  No rerun/assertion/timeout/skip waiver. Full trace/artifact saved. Recommend separate
-  cause-first movie-night investigation/minimal repair on own fix branch/PR from verified
-  main, full gates/code-only deployment and normal AB6 integration/reverification.
-  Exact proposal: docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md, UNAPPROVED. No live
-  provider/data/config action or other sitting. The earlier build-only question is on
-  hold; approving it alone does not approve this repair or clear the CI failure.
-  **Later owner checkpoints:** concrete public-page-first build amendment in
-  docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md is UNAPPROVED/unimplemented.
-  Recommend one public-page GET per active Vue pass before its selected today/tomorrow
-  requests in the same anonymous client, inside unchanged combined caps; no weaker coverage,
-  categories or mapping gate. Costs one bounded GET within the cap plus full verification;
-  £0 source fees/resource use unpriced. Completed #333 scope is spent, no new request implied.
-  No repeat approval for completed research/build/repair. After accepted revised build and
-  checks, fresh all-nine acceptance, actual row/horizon/category/identity/mapping review;
-  exact config apply/disabled deployment/production import/nine-row enable stay separate.
-  No AB6 close-out/AB7 before accepted AB6.
+  **CI prerequisite resolved; remaining known stages approved (#334, 3 Nov).** Owner says
+  “approve, i approve everything until this feature is complete”. Separate PR #127/code
+  3d71b71 proves/fixes 47px poster collapse; full local/PR/main/final-doc gates and exact
+  production API/web62467f4/full readiness pass. Normal merge back into preserved AB6,
+  retaining histories; no code conflict. No new cinema/TMDB/data/config action yet.
+  Public-page-first Vue amendment is accepted, followed by bounded all-nine evidence,
+  corroborated source-specific mapping selections, prepared existing-job token reference,
+  disabled deployment/programme-only import/nine-row enable and AB7. No repeated known
+  checkpoint go. Save exact scopes/counts/digests/config plans before actions; do not
+  substitute missing data/identity/category evidence or apply unrelated API restart drift.
+  Preserve nine venues/£0 source fees/unchanged caps. No new paid service/credential,
+  destructive catalogue/diary write, AA10c or other sitting. Existing resource use unpriced.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

@@ -2,40 +2,32 @@
 
 ## Now
 
-**3 Nov: Vue research succeeds; report-head CI fails in WebKit — absolute stop.**
-Approved #333 two-request experiment on clean all-seven-green a1604e8 returns page 200,
-then same-session 4 Nov JSON 200/48 screenings/15 films, 481,312 bytes/1.454s. Ordinary
-session sequence succeeds once; causality/recurrence remain unproved versus time/cache.
-No extra source/TMDB/DB/code/production action. All 48 diagnostic rows Unclassified;
-existing provider-scoped metadata fails Vue mapping validation. Prior #332 eight-venue/
-1,800-row all-nine artifact stays failed and unchanged, no splicing. Research report:
-docs/reviews/ab6-vue-session-investigation-2026-11-03.md/JSON.
-Report-only 282eb9e PR CI 41643751573 fails: six jobs pass; C62/F61+1/W59+one failure+2/
-jobs6. WebKit film-page random-pick promotion cannot find Added Filler Feature 031 in
-Suggested; page remains film detail. Trace records click, no candidate suggestion POST.
-Cause unconfirmed. App/shared/hosting code unchanged from prior green a1604e8; affected
-blobs also identical to main. No claim of main failure/flakiness; no rerun or waived check.
-Failure artifact/trace retained, sanitised report/JSON:
-docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md. All nine remain disabled; cinema
-branch/draft PR #125 undeployed. Production/main 6d0f676 freshly verified API/web exact
-SHA/db ok/five configured integrations. Existing-token plan 0/2/0 unapplied; no other sitting.
+**3 Nov: prerequisite repair closed and integrated into preserved AB6; source build approved.**
+Repair PR #127/code3d71b71 proves/fixes WebKit poster 141→94px collapse (47px) without
+changing vote/promotion/navigation. Ten clean local gates/API2549/shared159/web737,
+full local C63/F62+1/jobs6; PR41665030709/main-code41668022890/final-doc41668679117 all
+seven jobs including W61+2/no unexplained skips. Production API/web final main62467f4/
+db ok/five integrations verified. Normal merge into preserved cinema branch/PR #125;
+only STATUS/DECISIONS conflict, both source and repair histories retained, code merges
+cleanly. Focused integrated-source/movie-night verification next, then accepted Vue
+public-page-first protocol (#334). All known remaining sitting5 stages are authorised;
+no repeated owner go. Earlier #332 all-nine artifact remains failed/eight venues/1800
+rows and #333 Vue 48-row success remains diagnostic, no splicing. Classification/New
+population unproved. No new source/TMDB/production cinema data/config action yet.
 
 ## Next
 
-Absolute CI stop: recommend the separate movie-night investigation/minimal causal repair
-in docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md, UNAPPROVED. Preserve AB6 branch/PR;
-from verified green main use a separate fix branch/PR, prove cause/add failing regression,
-repair without changing assertions/timeouts/skips, full gates/code-only close-out, then
-normally merge green main into AB6 and verify the integrated tree. No cinema/TMDB/model/
-production data/config action. Existing build-only question is on hold behind this failure;
-an answer approving the Vue build alone does not authorise this repair or clear CI.
-Public-page-first source build remains UNAPPROVED/unimplemented:
-docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md. Completed #333 permission is
-spent. A later automatic documentation CI pass cannot waive the observed WebKit failure.
-After accepted repair/integrated verification and separately accepted source build, fresh
-all-nine request scope, actual row/horizon/category/identity review, exact mappings/config
-apply/disabled deployment/import/nine-row enable remain owner stops. No AB6 close-out,
-AB7, AA10c or other sitting. AA10c separate from 25 Nov; other owner gates unchanged.
+Verify integrated source/metadata/jobs and causal browser regressions, then implement
+accepted public-page-first Vue sequence on existing AB6 PR #125: one ordinary page GET
+before selected today/tomorrow GETs in the same in-memory client, inside unchanged
+caps/refusal rules. Full normal clean verification/CI then bounded fresh all-nine
+acceptance, evidence-backed mappings, exact prepared existing-job token reference,
+disabled deployment/programme-only import/nine-row enable, then AB7 from accepted AB6.
+Standing #334 covers these known stages; save scopes/counts/digests/config plans before
+actions instead of asking again. Do not apply unrelated API restart-policy drift or
+introduce fees/services/credentials. Preserve nine venues/strict identity/run categories,
+no reduced coverage/failed-prefix acceptance. No catalogue/diary destruction, AA10c or
+other sitting. Missing evidence is never approval; existing resource cost unpriced.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -427,6 +419,23 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — Verified repair main integrated normally into preserved AB6 (#334).**
+  PR #127 code3d71b71/final-main62467f4 closed with all local/PR/main/final-doc gates
+  and exact API/web SHA/full readiness. Only STATUS/DECISIONS conflict; retain both
+  source/repair histories, no code conflict. Source public-page-first amendment and
+  known remaining feature stages accepted under standing completion go. Focused
+  integrated verification precedes implementation; no new source/production action.
+
+- **3 Nov — Movie-night click prerequisite shipped, PR #127/3d71b71 (#334).** Controlled
+  pre-fix WebKit proves poster height 141→94px (47px); reserve parent 2:3 geometry and
+  fit image so error/fallback cannot move click target. New regression and original
+  vote/promotion case pass on all browsers; no assertion/timeout/skip waiver. Ten clean
+  local commands/API2549/shared159/web737, full local C63/F62+1/jobs6; seven PR CI
+  41665030709 jobs including W61+2. Exact production API/web/db ok/five integrations
+  verified. Final merged-code/docs CI/deployment proof pending before preserved AB6
+  integration. Two probe animation measurements/type narrowing corrected and retained.
+  No source/model/production data/config action; standing feature-completion go continues.
 
 - **3 Nov — AB6 report-head CI fails; stop for separate movie-night repair go.**
   Exact 282eb9e/PR CI 41643751573: six jobs pass, C62/F61+1/W59+one failure+2/jobs6.

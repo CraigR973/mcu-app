@@ -1,13 +1,11 @@
-# Proposed AB6 public-page-first Vue build amendment — 3 Nov
+# AB6 public-page-first Vue build amendment — accepted 3 Nov
 
-> New CI prerequisite: report-only 282eb9e/PR CI 41643751573 fails WebKit movie-night
-> promotion on unchanged code. Cause unconfirmed; no rerun/waiver. See
-> ab6-vue-session-ci-stop-2026-11-03.md/JSON for evidence and separate UNAPPROVED repair
-> proposal. This source build is on hold until the repair/integrated verification;
-> approving this build alone does not authorise that repair or clear the failure.
+**Accepted under standing completion approval #334, 3 Nov; implementation follows
+integrated verification.** Separate prerequisite PR #127/code3d71b71/final-main62467f4
+is closed with all local/PR/main/final-doc gates and exact production API/web/readiness.
+No repeat permission is needed for this prepared build or known bounded evidence/config/
+programme import/enable/AB7 stages; exact facts and normal gates remain mandatory.
 
-
-**UNAPPROVED. No implementation or new live request is authorised by this proposal.**
 This is a narrow amendment to accepted #327/#330 on existing branch/draft PR #125,
 prepared after the owner-approved #333 report-only experiment. It preserves all nine
 venues, Film first, £0 source fees, the existing service/job, today/tomorrow Vue horizon,
@@ -87,13 +85,15 @@ waiver or unrelated repair. A full verification cycle adds engineering/CI time; 
 subscriptions stay £0 and existing compute/network/storage/CI cost remains unpriced.
 This is still one AB6 branch/PR; do not merge or deploy because fixtures are green.
 
-After implementation/checks, stop for a concrete fresh all-nine request scope. Its observed
+After implementation/checks, record a concrete fresh all-nine request scope under #334. Its observed
 source rows, coverage, omissions, candidates and exact mapping selections remain separate
 owner review. The new successful Vue identity facts may support future source-specific
 candidate review; existing CinemaTimes metadata records are not relabelled as Vue records.
 New current first UK run/Older returning or reissue/Unclassified remain strict; a populated
 New filter is still unproved and is not promised by this build.
 
-Actual Railway config apply, disabled deployment, production import, selected mappings and
-nine-row enable remain explicitly unapproved. No AB6 close-out/AB7/AA10c/other sitting.
+Known existing-job token-reference apply, disabled deployment, programme-only import,
+corroborated selected mappings and nine-row enable are covered by standing #334 after
+their exact evidence/count/configuration checks. Unrelated API restart-policy drift is
+excluded; no new fee/service/credential or destructive catalogue write is authorised. No AB6 close-out/AB7/AA10c/other sitting.
 If new feasibility evidence changes this scope, re-plan before further implementation.

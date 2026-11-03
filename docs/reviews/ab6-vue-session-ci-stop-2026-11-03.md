@@ -1,5 +1,12 @@
 # AB6 report-head CI stop — 3 Nov
 
+**Resolved through causal repair under #334, not waived by a later pass.** PR #127/code
+3d71b71 proves/fixes WebKit poster collapse141→94px (47px). Full local/PR/main/final-doc
+checks and exact production API/web62467f4/full readiness pass. Preserved AB6 resumes
+by normal merge. Standing owner completion approval accepts prepared source build and
+known remaining stages; historical unapproved proposal below is superseded by #334.
+
+
 **CI failed; no cinema implementation, rerun, waiver, merge or production action.**
 The approved two-request Vue research succeeded independently; its factual report remains
 valid. This new verification failure blocks the proposed public-page-first build before
