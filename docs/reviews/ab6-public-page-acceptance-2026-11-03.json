@@ -1,0 +1,2063 @@
+{
+  "scope": {
+    "approval": "Craig: approve everything until this feature is complete; standing decision 334",
+    "decision": 334,
+    "head": "87af261d39baf2f64f6ba11cfdad4ea51568bfbd",
+    "ci": 41674616749,
+    "startedUtc": "2026-11-03T16:43:21.787572+00:00",
+    "dateFrom": "2026-11-03",
+    "dateTo": "2026-11-16",
+    "vueDates": [
+      "2026-11-03",
+      "2026-11-04"
+    ],
+    "maxGets": 120,
+    "maxMetadataGets": 12,
+    "maxSeconds": 300,
+    "maxResponseBytes": 2097152,
+    "maxDecodedBytes": 67108864,
+    "maxConcurrency": 2,
+    "maxStartsPerHostPerSecond": 1,
+    "noRetriesOrAlternates": true,
+    "metadataCandidatesOnly": true,
+    "metadataResume": false,
+    "database": "new owned disposable localhost database",
+    "productionDatabaseConnected": false,
+    "productionWrites": false,
+    "sourceFeesGbp": 0,
+    "existingResourceCost": "unpriced",
+    "tokenPresent": true
+  },
+  "result": {
+    "head": "87af261d39baf2f64f6ba11cfdad4ea51568bfbd",
+    "exitCode": 0,
+    "elapsedSeconds": 59.014,
+    "requests": 63,
+    "metadataRequests": 12,
+    "databaseCountsAndEnableFlagsUnchanged": true,
+    "artifactDirectory": "scratchpad/ab6/public-page-acceptance-2026-11-03T164321Z",
+    "finishedUtc": "2026-11-03T16:44:25.352235+00:00",
+    "productionActions": [],
+    "snapshotSha256": "42b7b51c57670722578391c42a65e9cf55c14c74ab048db5257af12972d360ce"
+  },
+  "review": {
+    "rows": 1843,
+    "requests": 63,
+    "decodedBodyBytes": 6582659,
+    "categoryCountsFromSourceEvidence": {
+      "newRelease": 0,
+      "olderFilm": 0,
+      "unclassified": 1843
+    },
+    "dateFrom": "2026-11-03",
+    "dateTo": "2026-11-16",
+    "metadata": {
+      "requests": 12,
+      "cached": 0,
+      "pending": 159,
+      "errors": [
+        "SourceError"
+      ],
+      "successfulRequests": 12,
+      "status": "partial",
+      "records": 5,
+      "candidates": [
+        {
+          "source": "vue",
+          "filmKey": "HO00021545",
+          "sourceTitle": "Pan's Labyrinth (20th Anniversary)",
+          "sourceFacts": {
+            "director": "Guillermo del Toro",
+            "originalTitle": "El Laberinto del Fauno",
+            "runtimeMinutes": 119
+          },
+          "candidate": {
+            "tmdb_id": 1417,
+            "title": "Pan's Labyrinth",
+            "original_title": "El laberinto del fauno",
+            "directors": [
+              "Guillermo del Toro"
+            ],
+            "runtime": 118,
+            "imdb_id": "tt0457430",
+            "primary_release_date": "2006-10-11",
+            "gb_theatrical": [
+              {
+                "date": "2006-11-24",
+                "type": 3,
+                "note": ""
+              }
+            ]
+          },
+          "corroboration": [
+            "director",
+            "distinct original title"
+          ],
+          "mappingReview": "candidate data is not an approval"
+        },
+        {
+          "source": "vue",
+          "filmKey": "HO00021404",
+          "sourceTitle": "Wicker",
+          "sourceFacts": {
+            "director": "Alex Huston Fischer, Eleanor Wilson",
+            "originalTitle": "Wicker",
+            "runtimeMinutes": 105
+          },
+          "candidate": {
+            "tmdb_id": 1195803,
+            "title": "Wicker",
+            "original_title": "Wicker",
+            "directors": [
+              "Eleanor Wilson",
+              "Alex Huston Fischer"
+            ],
+            "runtime": 105,
+            "imdb_id": "tt29611136",
+            "primary_release_date": "2026-10-21",
+            "gb_theatrical": [
+              {
+                "date": "2026-10-30",
+                "type": 3,
+                "note": ""
+              }
+            ]
+          },
+          "corroboration": [
+            "director"
+          ],
+          "mappingReview": "candidate data is not an approval"
+        },
+        {
+          "source": "vue",
+          "filmKey": "HO00021244",
+          "sourceTitle": "Ghosts: The Possession of Button House",
+          "sourceFacts": {
+            "director": "Simon Hynd",
+            "originalTitle": "Ghosts: The Possession of Button House",
+            "runtimeMinutes": 97
+          },
+          "candidate": {
+            "tmdb_id": 1643567,
+            "title": "Ghosts: The Possession of Button House",
+            "original_title": "Ghosts: The Possession of Button House",
+            "directors": [
+              "Simon Hynd"
+            ],
+            "runtime": 97,
+            "imdb_id": "tt40311603",
+            "primary_release_date": "2026-10-23",
+            "gb_theatrical": [
+              {
+                "date": "2026-10-23",
+                "type": 3,
+                "note": ""
+              }
+            ]
+          },
+          "corroboration": [
+            "director"
+          ],
+          "mappingReview": "candidate data is not an approval"
+        }
+      ]
+    },
+    "venues": {
+      "odeon-kilmarnock": {
+        "rows": 167,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 154,
+        "filmKeys": 20,
+        "showingLinks": 167
+      },
+      "odeon-glasgow-quay": {
+        "rows": 335,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 310,
+        "filmKeys": 37,
+        "showingLinks": 335
+      },
+      "odeon-braehead": {
+        "rows": 323,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 298,
+        "filmKeys": 35,
+        "showingLinks": 323
+      },
+      "odeon-east-kilbride": {
+        "rows": 253,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 234,
+        "filmKeys": 27,
+        "showingLinks": 253
+      },
+      "cineworld-silverburn": {
+        "rows": 529,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09",
+          "2026-11-10",
+          "2026-11-11",
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15",
+          "2026-11-16"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 526,
+        "filmKeys": 48,
+        "showingLinks": 529
+      },
+      "vue-st-enoch": {
+        "rows": 72,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04"
+        ],
+        "completeDates": [
+          "2026-11-03",
+          "2026-11-04"
+        ],
+        "errors": [],
+        "futureRows": 71,
+        "filmKeys": 17,
+        "showingLinks": 71
+      },
+      "everyman-glasgow": {
+        "rows": 130,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-09",
+          "2026-11-10",
+          "2026-11-11",
+          "2026-11-12",
+          "2026-11-14",
+          "2026-11-15",
+          "2026-11-16"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 128,
+        "filmKeys": 22,
+        "showingLinks": 130
+      },
+      "gft": {
+        "rows": 20,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-04"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 15,
+        "filmKeys": 20,
+        "showingLinks": 20
+      },
+      "science-centre-imax": {
+        "rows": 14,
+        "failed": false,
+        "observedDates": [
+          "2026-11-03",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07",
+          "2026-11-08",
+          "2026-11-12",
+          "2026-11-13",
+          "2026-11-14",
+          "2026-11-15"
+        ],
+        "completeDates": [],
+        "errors": [],
+        "futureRows": 14,
+        "filmKeys": 2,
+        "showingLinks": 14
+      }
+    },
+    "reviewedUtc": "2026-11-03T16:44:38.658466+00:00",
+    "snapshotBytes": 1237239,
+    "snapshotSha256": "42b7b51c57670722578391c42a65e9cf55c14c74ab048db5257af12972d360ce",
+    "adapterVersion": "ab6-3",
+    "initialAcceptance": true,
+    "futureRows": 1750,
+    "corroboratedPickCandidates": [
+      {
+        "source": "vue",
+        "film_key": "HO00021545",
+        "tmdb_id": 1417
+      },
+      {
+        "source": "vue",
+        "film_key": "HO00021404",
+        "tmdb_id": 1195803
+      },
+      {
+        "source": "vue",
+        "film_key": "HO00021244",
+        "tmdb_id": 1643567
+      }
+    ]
+  },
+  "requestAudit": [
+    {
+      "number": 1,
+      "method": "GET",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-kilmarnock/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:27.972236+00:00",
+      "elapsedStart": 0.353984,
+      "status": 200,
+      "decodedBytes": 256962,
+      "sha256": "f275d6aad285a0cd5f78a8105e40ebd5eff7945c3f2a86ba6864a0644dee488c",
+      "elapsedEnd": 1.755252
+    },
+    {
+      "number": 2,
+      "method": "GET",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-glasgow-springfield-quay/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:29.562696+00:00",
+      "elapsedStart": 1.944426,
+      "status": 200,
+      "decodedBytes": 345049,
+      "sha256": "b97dccaa89851298c3356761284af0656f90b3d1d698acce492adfc4e4402486",
+      "elapsedEnd": 2.242909
+    },
+    {
+      "number": 3,
+      "method": "GET",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-braehead-renfrew/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:30.563307+00:00",
+      "elapsedStart": 2.94504,
+      "status": 200,
+      "decodedBytes": 346138,
+      "sha256": "18e4d7a7a54849fd95e9ed9dc4d968b156ca3390b8f8138cd89762107ffef538",
+      "elapsedEnd": 3.210169
+    },
+    {
+      "number": 4,
+      "method": "GET",
+      "url": "https://cinematimes.com/uk/glasgow/cinemas/odeon-east-kilbride-glasgow/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:31.564829+00:00",
+      "elapsedStart": 3.946555,
+      "status": 200,
+      "decodedBytes": 303266,
+      "sha256": "fce70a76f1c49876f366100626b8eca1d7c330026bca9d3d0dde9f5b9a85af07",
+      "elapsedEnd": 4.329551
+    },
+    {
+      "number": 5,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/cinemas/x0vq1-cineworld-cinema-glasgow-silverburn/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:32.210569+00:00",
+      "elapsedStart": 4.592279,
+      "status": 200,
+      "decodedBytes": 269689,
+      "sha256": "0157c4283c8dc4b874ed226b04e68f09581bb980e942e26ecf4d492cac428af8",
+      "elapsedEnd": 5.340259
+    },
+    {
+      "number": 6,
+      "method": "GET",
+      "url": "https://cms-assets.webediamovies.pro/prod/cineworld-cinemas/2026-11-03/public/page-data/sq/d/3836549025.json",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:32.959965+00:00",
+      "elapsedStart": 5.341674,
+      "status": 200,
+      "decodedBytes": 1663442,
+      "sha256": "6145a699e9056aa87d278966d0e8d4bb27c72ef673c4d946e8c4d69a1198031d",
+      "elapsedEnd": 5.70139
+    },
+    {
+      "number": 7,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-02T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-03T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:33.345408+00:00",
+      "elapsedStart": 5.72711,
+      "status": 200,
+      "decodedBytes": 61,
+      "sha256": "1db6ace6a394ca1ede1956c8d98d021dd5544f77ad6ce0faa2e8b04dfc576157",
+      "elapsedEnd": 5.930718
+    },
+    {
+      "number": 8,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-03T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-04T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:34.347638+00:00",
+      "elapsedStart": 6.729339,
+      "status": 200,
+      "decodedBytes": 21759,
+      "sha256": "441596eb8833e42ec405f8ffcc503aa23742ec45061fb12eb6b17147d007eac0",
+      "elapsedEnd": 6.955463
+    },
+    {
+      "number": 9,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-04T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-05T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:35.349877+00:00",
+      "elapsedStart": 7.731567,
+      "status": 200,
+      "decodedBytes": 41647,
+      "sha256": "6341928428e4d0a71457373e4beebb8991dd9dfe79cc08e30aace841c3ea141b",
+      "elapsedEnd": 8.041013
+    },
+    {
+      "number": 10,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-05T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-06T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:36.350001+00:00",
+      "elapsedStart": 8.731684,
+      "status": 200,
+      "decodedBytes": 39190,
+      "sha256": "472316170ec6446890d428c0927b94f079d356f77b5d26144571b6775e672b2f",
+      "elapsedEnd": 8.990618
+    },
+    {
+      "number": 11,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-06T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-07T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:37.350941+00:00",
+      "elapsedStart": 9.73262,
+      "status": 200,
+      "decodedBytes": 41889,
+      "sha256": "02d383fdf2d15b69bf2ff3796f805c1d6375d7151d779dfb49eeeb4bca4fae38",
+      "elapsedEnd": 10.215247
+    },
+    {
+      "number": 12,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-07T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-08T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:38.351101+00:00",
+      "elapsedStart": 10.732769,
+      "status": 200,
+      "decodedBytes": 39616,
+      "sha256": "7a4d869cef95eb521f09fb972d089f127fc71a160f2e0e3ef39bff8e136c0242",
+      "elapsedEnd": 11.07175
+    },
+    {
+      "number": 13,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-08T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-09T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:39.385442+00:00",
+      "elapsedStart": 11.7671,
+      "status": 200,
+      "decodedBytes": 41582,
+      "sha256": "2b971a7627428d0162a99f1453061716ab98ffb9ae663cb57511da6da0ae905f",
+      "elapsedEnd": 12.114147
+    },
+    {
+      "number": 14,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-09T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-10T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:40.387480+00:00",
+      "elapsedStart": 12.769131,
+      "status": 200,
+      "decodedBytes": 36614,
+      "sha256": "29accd65fe647edd84bce4e09ca5eece930b92e080387c8a62fb44c8b0f4ef89",
+      "elapsedEnd": 13.040284
+    },
+    {
+      "number": 15,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-10T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-11T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:41.389436+00:00",
+      "elapsedStart": 13.77108,
+      "status": 200,
+      "decodedBytes": 37026,
+      "sha256": "0e674cc4e56e6a9deb4bcde8d327d131f5a29e9c6107a363c9df30e417bf7e51",
+      "elapsedEnd": 13.989293
+    },
+    {
+      "number": 16,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-11T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-12T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:42.389766+00:00",
+      "elapsedStart": 14.771403,
+      "status": 200,
+      "decodedBytes": 37877,
+      "sha256": "009a891eb46e138606e0397c3f911892076d8c63282613432cd1b003bc0cdc34",
+      "elapsedEnd": 14.965326
+    },
+    {
+      "number": 17,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-12T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-13T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:43.405891+00:00",
+      "elapsedStart": 15.787656,
+      "status": 200,
+      "decodedBytes": 38080,
+      "sha256": "8923131a492a3479cb9fe2a06fa5b0fd19ce7f8dc8c2d81ce605c64cc0817cd6",
+      "elapsedEnd": 16.013861
+    },
+    {
+      "number": 18,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-13T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-14T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:44.406153+00:00",
+      "elapsedStart": 16.78777,
+      "status": 200,
+      "decodedBytes": 13499,
+      "sha256": "6f26bd187cd163c5ae7a3b3ac163a1edabdbb3d7c63fc6ad2a6e769e4a7866cc",
+      "elapsedEnd": 17.060922
+    },
+    {
+      "number": 19,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-14T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-15T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:45.408809+00:00",
+      "elapsedStart": 17.790423,
+      "status": 200,
+      "decodedBytes": 17168,
+      "sha256": "697b5d19e9e0488a5e6bc08e7b2b4551d94c2e1a84fe24c824eff766b003549e",
+      "elapsedEnd": 18.095917
+    },
+    {
+      "number": 20,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-15T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-16T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:46.409157+00:00",
+      "elapsedStart": 18.790759,
+      "status": 200,
+      "decodedBytes": 13236,
+      "sha256": "e61ef9817a2a13f88c5a7ba43c8374e93aef7179b933651efcda5a5e04c76a11",
+      "elapsedEnd": 19.457443
+    },
+    {
+      "number": 21,
+      "method": "GET",
+      "url": "https://www.cineworld.co.uk/api/gatsby-source-boxofficeapi/schedule?from=2026-11-16T03%3A00%3A00&theaters=%7B%22id%22%3A%22X0VQ1%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-17T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:47.410115+00:00",
+      "elapsedStart": 19.791712,
+      "status": 200,
+      "decodedBytes": 8911,
+      "sha256": "ae578bdfcf6293aba52aacc1f836d4460c35cd395a9ff33ae14e0f3f8423fa2c",
+      "elapsedEnd": 20.230705
+    },
+    {
+      "number": 22,
+      "method": "GET",
+      "url": "https://www.myvue.com/cinema/glasgow-st-enoch/whats-on",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:47.861787+00:00",
+      "elapsedStart": 20.243377,
+      "status": 200,
+      "decodedBytes": 350229,
+      "sha256": "b9e88d8cb00716426ceb54eaee53e11036cb499d324b6d80b73938179cf99e50",
+      "elapsedEnd": 21.150315
+    },
+    {
+      "number": 23,
+      "method": "GET",
+      "url": "https://www.myvue.com/api/microservice/showings/cinemas/10097/films?showingDate=2026-11-03T00:00:00&minEmbargoLevel=3&includesSession=true&includeSessionAttributes=true",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:48.864596+00:00",
+      "elapsedStart": 21.246181,
+      "status": 200,
+      "decodedBytes": 80189,
+      "sha256": "8d93e03c547963ca1946ad7b17e1e6c504a3e3eb50b9bc2f7499a4da6a80a438",
+      "elapsedEnd": 21.311831
+    },
+    {
+      "number": 24,
+      "method": "GET",
+      "url": "https://www.myvue.com/api/microservice/showings/cinemas/10097/films?showingDate=2026-11-04T00:00:00&minEmbargoLevel=3&includesSession=true&includeSessionAttributes=true",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:49.927822+00:00",
+      "elapsedStart": 22.309397,
+      "status": 200,
+      "decodedBytes": 134194,
+      "sha256": "ac9a5789701a94fa119afc4d513ae477b0636e52980de615755ea916fb542106",
+      "elapsedEnd": 22.372307
+    },
+    {
+      "number": 25,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/venues-list/x11dq-everyman-glasgow/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:50.001210+00:00",
+      "elapsedStart": 22.382782,
+      "status": 200,
+      "decodedBytes": 215777,
+      "sha256": "12dc6bafed6e2ef83af699b446c0f35375fa3d71072d15717731ac3554545a6d",
+      "elapsedEnd": 22.846391
+    },
+    {
+      "number": 26,
+      "method": "GET",
+      "url": "https://cms-assets.webediamovies.pro/prod/everyman/2026-11-03/public/page-data/sq/d/3836549025.json",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:50.466083+00:00",
+      "elapsedStart": 22.847653,
+      "status": 200,
+      "decodedBytes": 1214041,
+      "sha256": "ffcffb5e0e34cf4dab6e31ea75f6c786b7b92120e0af23362c6254470008a214",
+      "elapsedEnd": 23.322716
+    },
+    {
+      "number": 27,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-02T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-03T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:51.002772+00:00",
+      "elapsedStart": 23.38434,
+      "status": 200,
+      "decodedBytes": 61,
+      "sha256": "ed1ffbf0c4cd2af207671f3e2c5dcacb440c6deb96ec4be7e00788ebd1485e9e",
+      "elapsedEnd": 23.716642
+    },
+    {
+      "number": 28,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-03T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-04T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:52.002651+00:00",
+      "elapsedStart": 24.384209,
+      "status": 200,
+      "decodedBytes": 5670,
+      "sha256": "b5c7eb7a071ab3feabc2f9db7b1d6cc273b53b28557c549f2d4ac12dc4c2174e",
+      "elapsedEnd": 24.566946
+    },
+    {
+      "number": 29,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-04T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-05T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:53.003162+00:00",
+      "elapsedStart": 25.384712,
+      "status": 200,
+      "decodedBytes": 10436,
+      "sha256": "2949cc90c9248625c5c488d2bb84e84ca2dbca27c12c709f8792119a9224e516",
+      "elapsedEnd": 25.623194
+    },
+    {
+      "number": 30,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-05T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-06T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:54.003527+00:00",
+      "elapsedStart": 26.38507,
+      "status": 200,
+      "decodedBytes": 11390,
+      "sha256": "fa1f5dc682d17de72a45fea699e413db24a6d5637a69d2c66b728482b94ae234",
+      "elapsedEnd": 26.685576
+    },
+    {
+      "number": 31,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-06T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-07T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:55.003775+00:00",
+      "elapsedStart": 27.385313,
+      "status": 200,
+      "decodedBytes": 11890,
+      "sha256": "edea7e77b05489c90c74ed0b7e32d78a978132157825d6a9cb2c9c5dfc3fc995",
+      "elapsedEnd": 27.490017
+    },
+    {
+      "number": 32,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-07T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-08T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:56.006661+00:00",
+      "elapsedStart": 28.388191,
+      "status": 200,
+      "decodedBytes": 10855,
+      "sha256": "2d8759d8042900026936383c2f28b62cb079e4e9337d0d8fbede4dde7094fbcd",
+      "elapsedEnd": 28.62194
+    },
+    {
+      "number": 33,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-08T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-09T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:57.043229+00:00",
+      "elapsedStart": 29.424749,
+      "status": 200,
+      "decodedBytes": 11307,
+      "sha256": "98fb8f40a30ffafbb53f97a916b52514f71f2e8e483b83fd4677685e894693c4",
+      "elapsedEnd": 29.559748
+    },
+    {
+      "number": 34,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-09T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-10T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:58.045305+00:00",
+      "elapsedStart": 30.426816,
+      "status": 200,
+      "decodedBytes": 10368,
+      "sha256": "cb038626e861a2043c8f28046ad5401af0392053d6be489ab4799ddda74e8770",
+      "elapsedEnd": 30.598028
+    },
+    {
+      "number": 35,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-10T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-11T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:43:59.045980+00:00",
+      "elapsedStart": 31.427484,
+      "status": 200,
+      "decodedBytes": 10110,
+      "sha256": "1021fc677edea29e8773d688ef89494c0fdff98fe3c497d3d6b37d53efc1dbf2",
+      "elapsedEnd": 31.757621
+    },
+    {
+      "number": 36,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-11T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-12T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:00.048127+00:00",
+      "elapsedStart": 32.429625,
+      "status": 200,
+      "decodedBytes": 9673,
+      "sha256": "786438ded432149fafaaf83830059f8f5d048660d9aa23be92a20463b2f813e7",
+      "elapsedEnd": 32.77379
+    },
+    {
+      "number": 37,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-12T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-13T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:01.058834+00:00",
+      "elapsedStart": 33.440325,
+      "status": 200,
+      "decodedBytes": 9602,
+      "sha256": "037b366e6367f361c983836c55c79acb86eee66769ac3b4e44d46a282c06a3e2",
+      "elapsedEnd": 33.715495
+    },
+    {
+      "number": 38,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-13T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-14T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:02.059096+00:00",
+      "elapsedStart": 34.440578,
+      "status": 200,
+      "decodedBytes": 61,
+      "sha256": "ed1ffbf0c4cd2af207671f3e2c5dcacb440c6deb96ec4be7e00788ebd1485e9e",
+      "elapsedEnd": 34.893837
+    },
+    {
+      "number": 39,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-14T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-15T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:03.059008+00:00",
+      "elapsedStart": 35.440478,
+      "status": 200,
+      "decodedBytes": 1048,
+      "sha256": "a78f5ddc4c3d9fb8c2f3f83ac3411a4130bf26c64ce196d89906981f2a99e071",
+      "elapsedEnd": 35.708617
+    },
+    {
+      "number": 40,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-15T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-16T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:04.061548+00:00",
+      "elapsedStart": 36.443019,
+      "status": 200,
+      "decodedBytes": 1813,
+      "sha256": "0e02084c5308a80be0f377bac01e295c44851973cce21ae976a133e9e8e562f3",
+      "elapsedEnd": 36.963442
+    },
+    {
+      "number": 41,
+      "method": "GET",
+      "url": "https://www.everymancinema.com/api/gatsby-source-boxofficeapi/schedule?from=2026-11-16T03%3A00%3A00&theaters=%7B%22id%22%3A%22X11DQ%22%2C%22timeZone%22%3A%22Europe%2FLondon%22%7D&to=2026-11-17T03%3A00%3A00",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:05.062315+00:00",
+      "elapsedStart": 37.443773,
+      "status": 200,
+      "decodedBytes": 907,
+      "sha256": "1fab04ff74c0b3d4480f3f03778b9aae0b23e8ab43f5084cd21576282de73c36",
+      "elapsedEnd": 37.80515
+    },
+    {
+      "number": 42,
+      "method": "GET",
+      "url": "https://www.glasgowfilm.org/all-listings/",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:05.427198+00:00",
+      "elapsedStart": 37.808649,
+      "status": 200,
+      "decodedBytes": 69840,
+      "sha256": "cdb06b506cf80c4b8e49f690dc1cd4acfbc02001d0b7f6c2eaa5a0238fafc680",
+      "elapsedEnd": 37.952243
+    },
+    {
+      "number": 43,
+      "method": "GET",
+      "url": "https://www.glasgowsciencecentre.org/imax",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:05.605127+00:00",
+      "elapsedStart": 37.986575,
+      "status": 200,
+      "decodedBytes": 95339,
+      "sha256": "798e59beaf8337302b9cd262c3d8eff836390758a694c6a77536ad46ac825cde",
+      "elapsedEnd": 38.217229
+    },
+    {
+      "number": 44,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:05.897691+00:00",
+      "elapsedStart": 38.279141,
+      "status": 200,
+      "decodedBytes": 58130,
+      "sha256": "6476ccc9fbaa25cb7a3c16a04c1569b6c673e04a08e79c95ed4a3889884c48e8",
+      "elapsedEnd": 38.877048
+    },
+    {
+      "number": 45,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2456480",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:06.896089+00:00",
+      "elapsedStart": 39.27754,
+      "status": 200,
+      "decodedBytes": 69569,
+      "sha256": "cec94738857ab5902103116fbd48722903deaeea908965380e9a80b547f8f33e",
+      "elapsedEnd": 39.563577
+    },
+    {
+      "number": 46,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2470370",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:07.898822+00:00",
+      "elapsedStart": 40.280263,
+      "status": 200,
+      "decodedBytes": 62770,
+      "sha256": "48f800a2994d58e3397c02de4b8b274b01a23442731cd4162d919d67d526c24b",
+      "elapsedEnd": 40.567217
+    },
+    {
+      "number": 47,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2504281",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:08.900944+00:00",
+      "elapsedStart": 41.282377,
+      "status": 200,
+      "decodedBytes": 61336,
+      "sha256": "1e68f5d8d0e16959f1f27d0786317e4d30a3176658c37769d8a98dc1a59d7536",
+      "elapsedEnd": 41.560462
+    },
+    {
+      "number": 48,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2504291",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:09.901254+00:00",
+      "elapsedStart": 42.282678,
+      "status": 200,
+      "decodedBytes": 75913,
+      "sha256": "bb45fc8d0ed6d39261e224bd946978a912338416145b60875c77b3dc31c15b34",
+      "elapsedEnd": 42.672886
+    },
+    {
+      "number": 49,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2409291",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:10.903652+00:00",
+      "elapsedStart": 43.285071,
+      "status": 200,
+      "decodedBytes": 54069,
+      "sha256": "74b60f0b325894827fe48ec6225be130a055f8401cff441f75d4228da231d642",
+      "elapsedEnd": 43.585016
+    },
+    {
+      "number": 50,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2456601",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:11.906124+00:00",
+      "elapsedStart": 44.287537,
+      "status": 200,
+      "decodedBytes": 64269,
+      "sha256": "18a4c49e4ee18e73fa72c38312d237c40b4a041f7eb1377b8a45359c018f6667",
+      "elapsedEnd": 44.625805
+    },
+    {
+      "number": 51,
+      "method": "GET",
+      "url": "https://www.tickettailor.com/events/gscimax/2482702",
+      "phase": "programme",
+      "startedUtc": "2026-11-03T16:44:12.906023+00:00",
+      "elapsedStart": 45.287415,
+      "status": 200,
+      "decodedBytes": 101225,
+      "sha256": "de0209a76cf11e59a09b654ad155cc146411f2257e298081c32f7022036feaed",
+      "elapsedEnd": 45.869256
+    },
+    {
+      "number": 52,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/search/movie?query=Pan%27s+Labyrinth&language=en-GB&include_adult=false&page=1",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:13.540637+00:00",
+      "elapsedStart": 45.922024,
+      "status": 200,
+      "decodedBytes": 822,
+      "sha256": "dd2fc0bbb70fe7987ec954d43b4d18785785ed8e951a6929cd1de9bb17dafbfa",
+      "elapsedEnd": 46.591414
+    },
+    {
+      "number": 53,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/movie/1417?language=en-GB&append_to_response=credits",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:14.543423+00:00",
+      "elapsedStart": 46.924814,
+      "status": 200,
+      "decodedBytes": 44981,
+      "sha256": "ed52b70109c93db1c1a275b419b2edc7c1886ce0ebb0718334bc3634c941f5a2",
+      "elapsedEnd": 47.249197
+    },
+    {
+      "number": 54,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/movie/1417/release_dates",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:15.543619+00:00",
+      "elapsedStart": 47.924997,
+      "status": 200,
+      "decodedBytes": 13265,
+      "sha256": "ca6c985aa6b019f9ea98af10d74d162b236dcf4aee7f310c31ac686cf958337a",
+      "elapsedEnd": 48.351893
+    },
+    {
+      "number": 55,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/search/movie?query=Wicker&language=en-GB&include_adult=false&page=1",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:16.545095+00:00",
+      "elapsedStart": 48.926462,
+      "status": 200,
+      "decodedBytes": 11013,
+      "sha256": "49dfbd3d1b7469493de33b7de964c91efa8b328f9841e5a91772b5b303ff6af6",
+      "elapsedEnd": 49.069682
+    },
+    {
+      "number": 56,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/movie/1195803?language=en-GB&append_to_response=credits",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:17.548106+00:00",
+      "elapsedStart": 49.929474,
+      "status": 200,
+      "decodedBytes": 41220,
+      "sha256": "6fbd210fa332f4a7e99213a8afd39cf8654ff28e4d3b17fe6c06bb0e32165de5",
+      "elapsedEnd": 50.082753
+    },
+    {
+      "number": 57,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/movie/1195803/release_dates",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:18.549111+00:00",
+      "elapsedStart": 50.930464,
+      "status": 200,
+      "decodedBytes": 7116,
+      "sha256": "2b56228885f23629466acbf31a57f24d2df97ab4fcb6af12bd31f8eeef1f97a3",
+      "elapsedEnd": 51.036745
+    },
+    {
+      "number": 58,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/search/movie?query=Primetime&language=en-GB&include_adult=false&page=1",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:19.550121+00:00",
+      "elapsedStart": 51.931475,
+      "status": 200,
+      "decodedBytes": 11936,
+      "sha256": "0641805a72bfd3c45dfd71d1da9a20174f46552db51c8e05b2a67c3ddc8a25bc",
+      "elapsedEnd": 52.065096
+    },
+    {
+      "number": 59,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/search/movie?query=Ghosts%3A+The+Possession+of+Button+House&language=en-GB&include_adult=false&page=1",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:20.550232+00:00",
+      "elapsedStart": 52.931569,
+      "status": 200,
+      "decodedBytes": 536,
+      "sha256": "551b09dd98d998d1c285235e62a6714ebb464de06300f1b4d301d0fb0341f73c",
+      "elapsedEnd": 53.115961
+    },
+    {
+      "number": 60,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/movie/1643567?language=en-GB&append_to_response=credits",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:21.550811+00:00",
+      "elapsedStart": 53.932216,
+      "status": 200,
+      "decodedBytes": 19529,
+      "sha256": "902890a0332d048c6fd2aa73bb58f2dbd4b0c399049526f34dde6e88692a78a8",
+      "elapsedEnd": 54.061047
+    },
+    {
+      "number": 61,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/movie/1643567/release_dates",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:22.550997+00:00",
+      "elapsedStart": 54.932322,
+      "status": 200,
+      "decodedBytes": 335,
+      "sha256": "4a013c4636e3ae8d13d9d09667aa51d930bd6d6ebdce2f95544d9eec52e29440",
+      "elapsedEnd": 55.405957
+    },
+    {
+      "number": 62,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/search/movie?query=Forgotten+Island&language=en-GB&include_adult=false&page=1",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:23.553459+00:00",
+      "elapsedStart": 55.934771,
+      "status": 200,
+      "decodedBytes": 6295,
+      "sha256": "e4d9496319c2758232d1da2e277365b09540b84ca0dade12467be6cd59e66e21",
+      "elapsedEnd": 56.203418
+    },
+    {
+      "number": 63,
+      "method": "GET",
+      "url": "https://api.themoviedb.org/3/search/movie?query=Clayface&language=en-GB&include_adult=false&page=1",
+      "phase": "metadata",
+      "startedUtc": "2026-11-03T16:44:24.552758+00:00",
+      "elapsedStart": 56.934065,
+      "status": 200,
+      "decodedBytes": 829,
+      "sha256": "2d158345b30aef04bdfb67cd0e80c0a0f42ec0e66e3e90b6e8e3447b4e8f0755",
+      "elapsedEnd": 57.078217
+    }
+  ],
+  "databaseBefore": {
+    "tableCounts": {
+      "admin_actions": 0,
+      "ai_conversations": 0,
+      "ai_messages": 0,
+      "ai_settings": 0,
+      "ai_tool_calls": 0,
+      "ai_usage_log": 0,
+      "alembic_version": 1,
+      "barcode_lookups": 0,
+      "box_set_items": 0,
+      "box_sets": 0,
+      "calendar_feed_tokens": 0,
+      "calendar_refresh_state": 1,
+      "cinema_coverage": 0,
+      "cinema_films": 0,
+      "cinema_refresh_runs": 0,
+      "cinema_screenings": 0,
+      "cinema_venues": 9,
+      "collection_add_requests": 0,
+      "collection_items": 0,
+      "completion_sets": 0,
+      "craig_notes": 0,
+      "deals": 0,
+      "disc_valuations": 0,
+      "ebay_accounts": 0,
+      "ebay_connect_states": 0,
+      "ebay_price_refs": 0,
+      "ebay_targets": 0,
+      "ebay_used_listings": 0,
+      "ebay_used_runs": 0,
+      "ebay_used_scans": 0,
+      "ebay_watch_runs": 0,
+      "film_reviews": 0,
+      "health_checks": 0,
+      "identify_doubts": 0,
+      "identify_lookups": 0,
+      "identify_runs": 0,
+      "item_photos": 0,
+      "job_heartbeats": 0,
+      "letterboxd_syncs": 0,
+      "loans": 0,
+      "movie_credits": 0,
+      "movie_night_participants": 0,
+      "movie_night_sessions": 0,
+      "movie_night_suggestions": 0,
+      "movie_night_votes": 0,
+      "movie_title_aliases": 0,
+      "movies": 0,
+      "notification_preferences": 0,
+      "notifications": 0,
+      "price_checks": 0,
+      "price_history_daily": 0,
+      "profile_photos": 0,
+      "profiles": 2,
+      "push_subscriptions": 0,
+      "rate_limit_counters": 0,
+      "refresh_tokens": 0,
+      "release_calendar": 0,
+      "retailers": 0,
+      "review_runs": 0,
+      "scrape_runs": 0,
+      "smart_collections": 0,
+      "spec_candidates": 0,
+      "spec_lookups": 0,
+      "spec_runs": 0,
+      "specs_integration_state": 1,
+      "valuation_runs": 0,
+      "wanted_list": 0,
+      "watch_log": 0
+    },
+    "venues": [
+      [
+        "cineworld-silverburn",
+        false
+      ],
+      [
+        "everyman-glasgow",
+        false
+      ],
+      [
+        "gft",
+        false
+      ],
+      [
+        "odeon-braehead",
+        false
+      ],
+      [
+        "odeon-east-kilbride",
+        false
+      ],
+      [
+        "odeon-glasgow-quay",
+        false
+      ],
+      [
+        "odeon-kilmarnock",
+        false
+      ],
+      [
+        "science-centre-imax",
+        false
+      ],
+      [
+        "vue-st-enoch",
+        false
+      ]
+    ]
+  },
+  "databaseAfter": {
+    "tableCounts": {
+      "admin_actions": 0,
+      "ai_conversations": 0,
+      "ai_messages": 0,
+      "ai_settings": 0,
+      "ai_tool_calls": 0,
+      "ai_usage_log": 0,
+      "alembic_version": 1,
+      "barcode_lookups": 0,
+      "box_set_items": 0,
+      "box_sets": 0,
+      "calendar_feed_tokens": 0,
+      "calendar_refresh_state": 1,
+      "cinema_coverage": 0,
+      "cinema_films": 0,
+      "cinema_refresh_runs": 0,
+      "cinema_screenings": 0,
+      "cinema_venues": 9,
+      "collection_add_requests": 0,
+      "collection_items": 0,
+      "completion_sets": 0,
+      "craig_notes": 0,
+      "deals": 0,
+      "disc_valuations": 0,
+      "ebay_accounts": 0,
+      "ebay_connect_states": 0,
+      "ebay_price_refs": 0,
+      "ebay_targets": 0,
+      "ebay_used_listings": 0,
+      "ebay_used_runs": 0,
+      "ebay_used_scans": 0,
+      "ebay_watch_runs": 0,
+      "film_reviews": 0,
+      "health_checks": 0,
+      "identify_doubts": 0,
+      "identify_lookups": 0,
+      "identify_runs": 0,
+      "item_photos": 0,
+      "job_heartbeats": 0,
+      "letterboxd_syncs": 0,
+      "loans": 0,
+      "movie_credits": 0,
+      "movie_night_participants": 0,
+      "movie_night_sessions": 0,
+      "movie_night_suggestions": 0,
+      "movie_night_votes": 0,
+      "movie_title_aliases": 0,
+      "movies": 0,
+      "notification_preferences": 0,
+      "notifications": 0,
+      "price_checks": 0,
+      "price_history_daily": 0,
+      "profile_photos": 0,
+      "profiles": 2,
+      "push_subscriptions": 0,
+      "rate_limit_counters": 0,
+      "refresh_tokens": 0,
+      "release_calendar": 0,
+      "retailers": 0,
+      "review_runs": 0,
+      "scrape_runs": 0,
+      "smart_collections": 0,
+      "spec_candidates": 0,
+      "spec_lookups": 0,
+      "spec_runs": 0,
+      "specs_integration_state": 1,
+      "valuation_runs": 0,
+      "wanted_list": 0,
+      "watch_log": 0
+    },
+    "venues": [
+      [
+        "cineworld-silverburn",
+        false
+      ],
+      [
+        "everyman-glasgow",
+        false
+      ],
+      [
+        "gft",
+        false
+      ],
+      [
+        "odeon-braehead",
+        false
+      ],
+      [
+        "odeon-east-kilbride",
+        false
+      ],
+      [
+        "odeon-glasgow-quay",
+        false
+      ],
+      [
+        "odeon-kilmarnock",
+        false
+      ],
+      [
+        "science-centre-imax",
+        false
+      ],
+      [
+        "vue-st-enoch",
+        false
+      ]
+    ]
+  },
+  "reviewedMappings": {
+    "approval": 334,
+    "count": 3,
+    "sha256": "de1744b74c5008eb8e3c5eebdb87b668afe92d2351a1fa49f87fd4895a230f37",
+    "path": "docs/reviews/ab6-reviewed-mappings-2026-11-03.json",
+    "validated": true,
+    "categoryShowingCountsAfterReviewedPicks": {
+      "unclassified": 1842,
+      "olderFilm": 1
+    }
+  },
+  "compressedSnapshot": {
+    "path": "docs/reviews/ab6-public-page-acceptance-2026-11-03.snapshot.json.gz",
+    "bytes": 44700,
+    "sha256": "4eb47c55d40e29f7722470e031f1ea18578b0d2878d7088f4fbb2b637d8470ab"
+  },
+  "noProductionAction": true,
+  "recurringAvailabilityProved": false,
+  "localRehearsal": {
+    "testedUtc": "2026-11-03T16:46:34.197912+00:00",
+    "database": "owned disposable localhost only",
+    "snapshotSha256": "42b7b51c57670722578391c42a65e9cf55c14c74ab048db5257af12972d360ce",
+    "mappingSha256": "de1744b74c5008eb8e3c5eebdb87b668afe92d2351a1fa49f87fd4895a230f37",
+    "before": {
+      "admin_actions": 0,
+      "ai_conversations": 0,
+      "ai_messages": 0,
+      "ai_settings": 0,
+      "ai_tool_calls": 0,
+      "ai_usage_log": 0,
+      "alembic_version": 1,
+      "barcode_lookups": 0,
+      "box_set_items": 0,
+      "box_sets": 0,
+      "calendar_feed_tokens": 0,
+      "calendar_refresh_state": 1,
+      "cinema_coverage": 0,
+      "cinema_films": 0,
+      "cinema_refresh_runs": 0,
+      "cinema_screenings": 0,
+      "cinema_venues": 9,
+      "collection_add_requests": 0,
+      "collection_items": 0,
+      "completion_sets": 0,
+      "craig_notes": 0,
+      "deals": 0,
+      "disc_valuations": 0,
+      "ebay_accounts": 0,
+      "ebay_connect_states": 0,
+      "ebay_price_refs": 0,
+      "ebay_targets": 0,
+      "ebay_used_listings": 0,
+      "ebay_used_runs": 0,
+      "ebay_used_scans": 0,
+      "ebay_watch_runs": 0,
+      "film_reviews": 0,
+      "health_checks": 0,
+      "identify_doubts": 0,
+      "identify_lookups": 0,
+      "identify_runs": 0,
+      "item_photos": 0,
+      "job_heartbeats": 0,
+      "letterboxd_syncs": 0,
+      "loans": 0,
+      "movie_credits": 0,
+      "movie_night_participants": 0,
+      "movie_night_sessions": 0,
+      "movie_night_suggestions": 0,
+      "movie_night_votes": 0,
+      "movie_title_aliases": 0,
+      "movies": 0,
+      "notification_preferences": 0,
+      "notifications": 0,
+      "price_checks": 0,
+      "price_history_daily": 0,
+      "profile_photos": 0,
+      "profiles": 2,
+      "push_subscriptions": 0,
+      "rate_limit_counters": 0,
+      "refresh_tokens": 0,
+      "release_calendar": 0,
+      "retailers": 0,
+      "review_runs": 0,
+      "scrape_runs": 0,
+      "smart_collections": 0,
+      "spec_candidates": 0,
+      "spec_lookups": 0,
+      "spec_runs": 0,
+      "specs_integration_state": 1,
+      "valuation_runs": 0,
+      "wanted_list": 0,
+      "watch_log": 0
+    },
+    "after": {
+      "admin_actions": 10,
+      "ai_conversations": 0,
+      "ai_messages": 0,
+      "ai_settings": 0,
+      "ai_tool_calls": 0,
+      "ai_usage_log": 0,
+      "alembic_version": 1,
+      "barcode_lookups": 0,
+      "box_set_items": 0,
+      "box_sets": 0,
+      "calendar_feed_tokens": 0,
+      "calendar_refresh_state": 1,
+      "cinema_coverage": 126,
+      "cinema_films": 164,
+      "cinema_refresh_runs": 1,
+      "cinema_screenings": 1843,
+      "cinema_venues": 9,
+      "collection_add_requests": 0,
+      "collection_items": 0,
+      "completion_sets": 0,
+      "craig_notes": 0,
+      "deals": 0,
+      "disc_valuations": 0,
+      "ebay_accounts": 0,
+      "ebay_connect_states": 0,
+      "ebay_price_refs": 0,
+      "ebay_targets": 0,
+      "ebay_used_listings": 0,
+      "ebay_used_runs": 0,
+      "ebay_used_scans": 0,
+      "ebay_watch_runs": 0,
+      "film_reviews": 0,
+      "health_checks": 0,
+      "identify_doubts": 0,
+      "identify_lookups": 0,
+      "identify_runs": 0,
+      "item_photos": 0,
+      "job_heartbeats": 1,
+      "letterboxd_syncs": 0,
+      "loans": 0,
+      "movie_credits": 0,
+      "movie_night_participants": 0,
+      "movie_night_sessions": 0,
+      "movie_night_suggestions": 0,
+      "movie_night_votes": 0,
+      "movie_title_aliases": 0,
+      "movies": 0,
+      "notification_preferences": 0,
+      "notifications": 0,
+      "price_checks": 0,
+      "price_history_daily": 0,
+      "profile_photos": 0,
+      "profiles": 2,
+      "push_subscriptions": 0,
+      "rate_limit_counters": 0,
+      "refresh_tokens": 0,
+      "release_calendar": 0,
+      "retailers": 0,
+      "review_runs": 0,
+      "scrape_runs": 0,
+      "smart_collections": 0,
+      "spec_candidates": 0,
+      "spec_lookups": 0,
+      "spec_runs": 0,
+      "specs_integration_state": 1,
+      "valuation_runs": 0,
+      "wanted_list": 0,
+      "watch_log": 0
+    },
+    "enabled": 9,
+    "unexpectedTableCountChanges": {},
+    "steps": [
+      {
+        "step": "import",
+        "exitCode": 0,
+        "report": {
+          "categoryCountsFromSourceEvidence": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1843
+          },
+          "changes": {
+            "cineworld-silverburn": {
+              "added": 529,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "rows": 529,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "everyman-glasgow": {
+              "added": 130,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "rows": 130,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "gft": {
+              "added": 20,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "rows": 20,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "odeon-braehead": {
+              "added": 323,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 323,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "odeon-east-kilbride": {
+              "added": 253,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 253,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "odeon-glasgow-quay": {
+              "added": 335,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 335,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "odeon-kilmarnock": {
+              "added": 167,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 167,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "science-centre-imax": {
+              "added": 14,
+              "cancelled": 0,
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "rows": 14,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            },
+            "vue-st-enoch": {
+              "added": 72,
+              "cancelled": 0,
+              "completeDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "rows": 72,
+              "unconfirmed": 0,
+              "updated": 0,
+              "withdrawn": 0
+            }
+          },
+          "dateFrom": "2026-11-03",
+          "dateTo": "2026-11-16",
+          "decodedBodyBytes": 6582659,
+          "metadata": {
+            "cached": 0,
+            "candidates": [
+              {
+                "candidate": {
+                  "directors": [
+                    "Guillermo del Toro"
+                  ],
+                  "gb_theatrical": [
+                    {
+                      "date": "2006-11-24",
+                      "note": "",
+                      "type": 3
+                    }
+                  ],
+                  "imdb_id": "tt0457430",
+                  "original_title": "El laberinto del fauno",
+                  "primary_release_date": "2006-10-11",
+                  "runtime": 118,
+                  "title": "Pan's Labyrinth",
+                  "tmdb_id": 1417
+                },
+                "corroboration": [
+                  "director",
+                  "distinct original title"
+                ],
+                "filmKey": "HO00021545",
+                "mappingReview": "candidate data is not an approval",
+                "source": "vue",
+                "sourceFacts": {
+                  "director": "Guillermo del Toro",
+                  "originalTitle": "El Laberinto del Fauno",
+                  "runtimeMinutes": 119
+                },
+                "sourceTitle": "Pan's Labyrinth (20th Anniversary)"
+              },
+              {
+                "candidate": {
+                  "directors": [
+                    "Eleanor Wilson",
+                    "Alex Huston Fischer"
+                  ],
+                  "gb_theatrical": [
+                    {
+                      "date": "2026-10-30",
+                      "note": "",
+                      "type": 3
+                    }
+                  ],
+                  "imdb_id": "tt29611136",
+                  "original_title": "Wicker",
+                  "primary_release_date": "2026-10-21",
+                  "runtime": 105,
+                  "title": "Wicker",
+                  "tmdb_id": 1195803
+                },
+                "corroboration": [
+                  "director"
+                ],
+                "filmKey": "HO00021404",
+                "mappingReview": "candidate data is not an approval",
+                "source": "vue",
+                "sourceFacts": {
+                  "director": "Alex Huston Fischer, Eleanor Wilson",
+                  "originalTitle": "Wicker",
+                  "runtimeMinutes": 105
+                },
+                "sourceTitle": "Wicker"
+              },
+              {
+                "candidate": {
+                  "directors": [
+                    "Simon Hynd"
+                  ],
+                  "gb_theatrical": [
+                    {
+                      "date": "2026-10-23",
+                      "note": "",
+                      "type": 3
+                    }
+                  ],
+                  "imdb_id": "tt40311603",
+                  "original_title": "Ghosts: The Possession of Button House",
+                  "primary_release_date": "2026-10-23",
+                  "runtime": 97,
+                  "title": "Ghosts: The Possession of Button House",
+                  "tmdb_id": 1643567
+                },
+                "corroboration": [
+                  "director"
+                ],
+                "filmKey": "HO00021244",
+                "mappingReview": "candidate data is not an approval",
+                "source": "vue",
+                "sourceFacts": {
+                  "director": "Simon Hynd",
+                  "originalTitle": "Ghosts: The Possession of Button House",
+                  "runtimeMinutes": 97
+                },
+                "sourceTitle": "Ghosts: The Possession of Button House"
+              }
+            ],
+            "errors": [
+              "SourceError"
+            ],
+            "pending": 159,
+            "records": 5,
+            "requests": 12,
+            "status": "partial",
+            "successfulRequests": 12
+          },
+          "requests": 63,
+          "rows": 1843,
+          "status": "partial",
+          "venues": {
+            "cineworld-silverburn": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "rows": 529
+            },
+            "everyman-glasgow": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "rows": 130
+            },
+            "gft": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "rows": 20
+            },
+            "odeon-braehead": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 323
+            },
+            "odeon-east-kilbride": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 253
+            },
+            "odeon-glasgow-quay": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 335
+            },
+            "odeon-kilmarnock": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "rows": 167
+            },
+            "science-centre-imax": {
+              "completeDates": [],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "rows": 14
+            },
+            "vue-st-enoch": {
+              "completeDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "errors": [],
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "rows": 72
+            }
+          }
+        }
+      },
+      {
+        "step": "enable",
+        "exitCode": 0,
+        "report": {
+          "changed": 9,
+          "mode": "enable"
+        }
+      }
+    ],
+    "productionActions": []
+  },
+  "verification": {
+    "head": "87af261d39baf2f64f6ba11cfdad4ea51568bfbd",
+    "cleanLocalGate": {
+      "head": "87af261d39baf2f64f6ba11cfdad4ea51568bfbd",
+      "cleanAfter": true,
+      "checks": [
+        {
+          "name": "ruff-check",
+          "exitCode": 0,
+          "seconds": 0.7
+        },
+        {
+          "name": "ruff-format",
+          "exitCode": 0,
+          "seconds": 0.1
+        },
+        {
+          "name": "mypy",
+          "exitCode": 0,
+          "seconds": 17.2
+        },
+        {
+          "name": "pytest",
+          "exitCode": 0,
+          "seconds": 236.3
+        },
+        {
+          "name": "pnpm-tests",
+          "exitCode": 0,
+          "seconds": 127.3
+        },
+        {
+          "name": "shared-typecheck",
+          "exitCode": 0,
+          "seconds": 9.8
+        },
+        {
+          "name": "shared-build",
+          "exitCode": 0,
+          "seconds": 8.5
+        },
+        {
+          "name": "web-lint",
+          "exitCode": 0,
+          "seconds": 7.9
+        },
+        {
+          "name": "web-typecheck",
+          "exitCode": 0,
+          "seconds": 19.4
+        },
+        {
+          "name": "web-build",
+          "exitCode": 0,
+          "seconds": 37.7
+        }
+      ]
+    },
+    "ci": 41674616749,
+    "ciJobs": 7,
+    "apiPassed": 2621,
+    "sharedPassed": 167,
+    "webPassed": 738,
+    "browserPassed": [
+      63,
+      62,
+      61
+    ],
+    "documentedBrowserSkips": [
+      1,
+      2
+    ],
+    "jobsPassed": 6,
+    "localBrowserAndJobs": {
+      "head": "87af261d39baf2f64f6ba11cfdad4ea51568bfbd",
+      "endHead": "87af261d39baf2f64f6ba11cfdad4ea51568bfbd",
+      "exit": 0,
+      "seconds": 396.2,
+      "args": [
+        "chromium",
+        "jobs"
+      ]
+    }
+  }
+}

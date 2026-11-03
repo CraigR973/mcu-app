@@ -49,7 +49,10 @@ challenge/wrong venue, request/byte/deadline/response caps, artifact privacy and
 One initial fixture line-length/format check was corrected without suppressions. No
 existing acceptance/assertion, timeout, skip or cap was weakened.
 
-Full normal clean gate/exact-head seven-job CI and fresh all-nine evidence are pending.
+Full normal clean gate/exact-head seven-job CI and fresh all-nine evidence now pass.
+Current outcome/counts/mappings/configuration: ab6-public-page-acceptance-2026-11-03.md.
+The following pending-state paragraph records the implementation checkpoint before that
+subsequent evidence; production cinema deployment/import/enable still remain.
 The known existing-job token reference remains unapplied; no production cinema deployment,
 DB connection/write, import/mapping/enable, AA10c or other sitting. Source subscriptions
 £0; existing resource use unpriced. Exact source scopes/counts/digests/config plans will

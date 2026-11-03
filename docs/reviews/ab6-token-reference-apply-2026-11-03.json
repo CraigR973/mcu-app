@@ -1,0 +1,29 @@
+{
+  "approval": 334,
+  "preparedUtc": "2026-11-03T16:45:34.872419+00:00",
+  "prePlan": {
+    "add": 0,
+    "change": 2,
+    "destroy": 0
+  },
+  "onlyAuthorisedMutation": {
+    "service": "cron-reminders",
+    "environment": "production",
+    "variable": "TMDB_READ_TOKEN",
+    "value": "reference api.TMDB_READ_TOKEN",
+    "newSecret": false,
+    "skipDeploys": true
+  },
+  "rejectedWholePlanReason": "Would apply unrelated API restart-policy drift",
+  "documentation": "https://docs.railway.com/variables/reference",
+  "applied": true,
+  "appliedUtc": "2026-11-03T16:48:19.860082+00:00",
+  "commandExitCode": 0,
+  "postPlan": {
+    "add": 0,
+    "change": 1,
+    "destroy": 0,
+    "remaining": "Unrelated api deploy.restartPolicyType drift; unapplied"
+  },
+  "sourceOrProgrammeRunTriggered": false
+}

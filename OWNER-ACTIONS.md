@@ -19,8 +19,11 @@ conversation still maps onto this file.*
   No new fees/credentials/destructive catalogue writes or other sitting. AB6 branch/PR
   stays preserved. Prerequisite repair PR #127/3d71b71 is now code-deployed: controlled
   WebKit 47px poster collapse repaired, all ten local/full browser/PR gates and exact
-  API/web readiness pass. Final main/docs verification remains before AB6 integration;
-  no new owner approval needed for that or the known remaining feature stages.
+  API/web/final-main checks pass; integrated into preserved AB6. Fresh63GET/all200/
+  all-nine1843-row acceptance and3corroborated mappings now validate, full gates pass.
+  Existing-job token reference applied alone with skip-deploys; unrelated API drift
+  untouched. Disabled deployment/runtime/capacity/programme import/enable/read proof
+  remains, then AB7; no new owner approval for these known stages.
 
 - **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night

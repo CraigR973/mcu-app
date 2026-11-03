@@ -2,29 +2,26 @@
 
 ## Now
 
-**3 Nov: repaired main integrated; accepted public-page-first Vue protocol implemented.**
-PR #127 fully closed at final-main62467f4 with all local/PR/main/final-doc gates and
-production proof. Normal integration6ed37b4 preserves source/repair histories; clean
-focused integration passes 60 cinema tests plus original/new movie-night cases in local
-Chromium/Firefox. Source amendment #334 now adds one ordinary Vue page before selected
-today/tomorrow GETs in the same in-memory client/budget; title/refusal checks, whole-Vue
-failure, caps and strict categories remain. Artifact version ab6-3 rejects older files.
-15 focused Vue tests pass; full clean gate/CI and fresh all-nine evidence next. Current
-production remains repaired main62467f4, cinema PR #125 undeployed/nine disabled. No new
-source/TMDB/production cinema data/config action. Known remaining stages approved under
-standing #334; no repeat go. Report: docs/reviews/ab6-public-page-first-implementation-2026-11-03.md.
+**3 Nov: fresh all-nine AB6 source acceptance passes; production deployment pending.**
+Public-page-first code87af261 passes all ten clean local gates/API2621/no skips/shared167/
+web738 and all seven exact PR CI41674616749 jobs (C63/F62+1/W61+2/jobs6). Local full
+C63/jobs6 pass. Fresh bounded pass16:43:63GET/all200/59.014s/6,582,659bytes, all nine/
+1,843 raw rows/1,750 future at review. Vue page+both dates200; real loader accepts ab6-3.
+Three independently corroborated Vue mappings reviewed/validated; Older1/Unclassified1842/
+New0, metadata backlog159 remains. No manufactured identity/run categories. Exact local
+CLI import/enable rehearsal passes1843 screenings/164 source films/9enabled, unrelated
+counts unchanged. Existing-job token reference applied alone with skip-deploys; remaining
+API restart-policy drift unapplied. Production still repaired main62467f4, cinema not
+schema-deployed/imported/enabled. Report: docs/reviews/ab6-public-page-acceptance-2026-11-03.md.
 
 ## Next
 
-Run the full normal clean gate and exact-head seven-job PR CI on existing AB6 branch,
-then record/execute a bounded fresh all-nine acceptance scope under #334. Review actual
-coverage/rows/candidates/year/run categories and exact digest/counts; preserve unknowns.
-Known next stages: corroborated source-specific mappings, prepared existing-job token
-reference only, disabled deployment/programme-only import/nine-row enable, then AB7
-from accepted AB6. No extra known-stage approval ask. No unrelated API restart drift,
-new fee/service/credential, destructive catalogue/diary write, AA10c or other sitting.
-Old failed v2 artifact and diagnostic 48-row Vue experiment remain historical evidence,
-not a fresh acceptance. Source fees £0; resource cost unpriced; New population unproved.
+Under standing #334: record capacity/core baseline, finish exact evidence-head CI, disabled
+schema deployment/exact API+web readiness/role/runtime proof, then exact reviewed1843-row
+programme-only import/3mappings/enable9 and read-only smoke. Accept/close AB6 before AB7
+on its own branch. No repeated known-stage permission request. Recurring source access and
+New category population remain unproved; honest partial horizons retained. No unrelated
+API drift/new fees/credentials/destructive catalogue/diary write/AA10c/other sitting.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -416,6 +413,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — AB6 fresh all-nine acceptance:** code87af261/full local and seven PR gates; one63GET/all200 pass accepts1843 rows, three corroborated mappings, honest Older1/New0/Unclassified1842. Exact local import/enable rehearsal passes. Existing-job token reference only applied; unrelated API drift remains. Production baseline revision070/112,304,128bytes; no cinema tables yet. Standing #334 continues through disabled deployment/import/enable/read proof then AB7.
 
 - **3 Nov — Verified repair main integrated normally into preserved AB6 (#334).**
   PR #127 code3d71b71/final-main62467f4 closed with all local/PR/main/final-doc gates

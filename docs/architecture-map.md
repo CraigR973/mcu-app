@@ -23,7 +23,8 @@ flowchart TB
     Reminder[Existing morning job<br/>reminders committed first] --> Disabled{Cinema collection enabled?}
     Disabled -- no: zero HTTP --> Stop[Return cinema disabled]
     Disabled -- yes --> Public[Six public source families<br/>nine approved venues]
-    Public --> PageFirst[Vue: ordinary public page then selected dates<br/>same bounded anonymous client]
+    Public -- Vue --> PageFirst[Vue: ordinary public page then selected dates<br/>same bounded anonymous client]
+    Public -- other five families --> Metadata
     PageFirst --> Metadata[Optional cached TMDB candidates<br/>12 GETs inside the same run budget]
     Metadata --> Fence[Bounded fetch and fenced atomic venue promotion]
     Review[Owner-reviewed artifact and mappings<br/>exact hash and counts] --> Fence
@@ -40,11 +41,13 @@ Original year, source release date and evidenced release run are independent. Un
 identities/categories stay unknown. The cinema child uses independent sessions/heartbeat
 after reminder delivery. The #330 amendment limits Vue to today/tomorrow and adds free
 TMDB metadata after source collection, with candidate review, 30-day positive/seven-day
-negative cache, source fingerprints and refusal pause. An existing API-token reference
-into the existing morning job is prepared, with a read-only plan; it has not been applied.
+negative cache, source fingerprints and refusal pause. The existing API-token reference
+into the existing morning job was applied alone with skip-deploys after a fresh plan.
+Unrelated API restart-policy drift remains unapplied.
 No new service/schedule/table/browser API is added by the amendment. New run status remains
-unclassified without proof. Fresh all-nine acceptance, exact configuration apply,
-production deployment/import/mapping/enable evidence and AB6 acceptance remain outstanding.
+unclassified without proof. Fresh all-nine source acceptance now passes63GET/all200/1843 rows; three Vue mappings
+validate. Local exact import/enable rehearsal passes. Production deployment/import/
+mapping/enable/runtime evidence and final AB6 acceptance remain outstanding.
 Standing #334 authorises those known stages after evidence review. The accepted 3 Nov
 Vue amendment visits its known ordinary public page once before today/tomorrow date GETs,
 inside the same caps; other adapters are unchanged. Cookies remain memory-only/host-scoped,

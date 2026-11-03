@@ -7123,3 +7123,14 @@ contemporaneous.
      original literal dates/horizon/zero-later requests retained and prefix case
      strengthened. 15 focused tests pass; full gate/live evidence pending. No schema,
      hosting/service/credential/category concession or production/source action.
+
+     Fresh public-page-first acceptance16:43/code87af261/CI41674616749 passes all nine:
+     63GET/all200/59.014sec/1843 raw rows; real ab6-3 loader accepts. Three Vue source-key
+     mappings validated with independent directors (Pan's Labyrinth also distinct original
+     title), exact mapping count/hash retained. Only one Older screening proved; New0/
+     Unclassified1842. Local actual CLI import/enable rehearsal passes1843 screenings/
+     164 source films/nine enabled, unrelated counts unchanged. Token reference applied
+     alone with skip-deploys; fresh plan0/1/0 leaves only unrelated API restart drift
+     unapplied. No production cinema schema/import/enable yet. Capacity/runtime/disabled
+     deploy/exact write and production read evidence remain before accepted AB6/AB7.
+     Evidence: docs/reviews/ab6-public-page-acceptance-2026-11-03.* and token-reference JSON.
