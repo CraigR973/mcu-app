@@ -851,5 +851,15 @@
   "rawResponseBodiesSaved": false,
   "rawLogDirectory": "scratchpad/ab6/vue-session-2026-11-03T131414Z",
   "approvedScopeFile": "docs/reviews/ab6-vue-session-plan-2026-11-03.md",
-  "nextBuildAmendmentApproved": false
+  "nextBuildAmendmentApproved": false,
+  "postReportCi": {
+    "head": "282eb9e0e17758b2952d4385133864ea361e7749",
+    "run": 41643751573,
+    "conclusion": "failure",
+    "blockingFile": "ab6-vue-session-ci-stop-2026-11-03.md",
+    "causeEstablished": false,
+    "reruns": 0,
+    "repairApproved": false,
+    "buildQuestionOnHold": true
+  }
 }

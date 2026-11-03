@@ -2,39 +2,40 @@
 
 ## Now
 
-**3 Nov: approved Vue anonymous-session experiment succeeds; all-nine gate still unmet (#333).**
-One report-only pass on clean a1604e8/all-seven PR CI 41611271232: public St Enoch page
-200 sets an ordinary anonymous cookie, then same-session 4 Nov JSON 200/48 screenings
-for 15 films. Two GETs/481,312 bytes/1.454s; starts 1.011637s apart. No further request,
-TMDB/DB connection, raw-body/cookie/header-value storage, code or production action.
-This observes a successful sequence, not session causality/recurring access: the previous
-401 was four hours earlier. All 48 diagnostic rows Unclassified; no mappings approved.
-Three director comparisons now have independent Vue facts, but existing metadata records
-are CinemaTimes keys; the real read-only mapping validator still refuses Vue picks.
-The earlier #332 1,800-row/eight-venue all-nine artifact stays failed and unchanged;
-new rows are not spliced into it. Full report/audit/facts:
+**3 Nov: Vue research succeeds; report-head CI fails in WebKit — absolute stop.**
+Approved #333 two-request experiment on clean all-seven-green a1604e8 returns page 200,
+then same-session 4 Nov JSON 200/48 screenings/15 films, 481,312 bytes/1.454s. Ordinary
+session sequence succeeds once; causality/recurrence remain unproved versus time/cache.
+No extra source/TMDB/DB/code/production action. All 48 diagnostic rows Unclassified;
+existing provider-scoped metadata fails Vue mapping validation. Prior #332 eight-venue/
+1,800-row all-nine artifact stays failed and unchanged, no splicing. Research report:
 docs/reviews/ab6-vue-session-investigation-2026-11-03.md/JSON.
-Cinema implementation remains unchanged/undeployed on draft PR #125, nine disabled.
-Main/production was last verified at 6d0f676/db ok/five configured integrations; no deploy
-by this experiment. Existing-token Railway plan 0 add/2 change/0 destroy stays unapplied.
-No AB7, AA10c or other sitting.
+Report-only 282eb9e PR CI 41643751573 fails: six jobs pass; C62/F61+1/W59+one failure+2/
+jobs6. WebKit film-page random-pick promotion cannot find Added Filler Feature 031 in
+Suggested; page remains film detail. Trace records click, no candidate suggestion POST.
+Cause unconfirmed. App/shared/hosting code unchanged from prior green a1604e8; affected
+blobs also identical to main. No claim of main failure/flakiness; no rerun or waived check.
+Failure artifact/trace retained, sanitised report/JSON:
+docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md. All nine remain disabled; cinema
+branch/draft PR #125 undeployed. Production/main 6d0f676 freshly verified API/web exact
+SHA/db ok/five configured integrations. Existing-token plan 0/2/0 unapplied; no other sitting.
 
 ## Next
 
-Stop for the concrete source/build amendment in
-docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md, UNAPPROVED/unimplemented.
-Recommend one ordinary Vue public-page GET before its selected today/tomorrow date GETs,
-same in-memory client/session, counted inside unchanged 120 GET/12 metadata/five-minute/
-body/rate/refusal limits. Any page/date failure fails Vue; no fallback/prefix acceptance.
-No new data shape, fee, service, credential, configuration or category/identity rule.
-The new protocol costs at most one GET per Vue pass within existing totals plus a full
-verification cycle; existing resource use unpriced. No new live request is covered by
-build approval; completed #333 two-request permission is spent. No repeat acceptance of
-completed research, #330 build or #331 repair. Changed build needs this concrete owner go,
-then full verification and separately approved fresh all-nine acceptance/actual row/horizon/
-category/identity review. Exact mappings, config apply/disabled deployment/production import/
-nine-row enable remain owner stops. New population remains unproved. No AB6 merge/close-out
-or AB7 from tests. AA10c separate from 25 Nov; other device/live-assistant gates unchanged.
+Absolute CI stop: recommend the separate movie-night investigation/minimal causal repair
+in docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md, UNAPPROVED. Preserve AB6 branch/PR;
+from verified green main use a separate fix branch/PR, prove cause/add failing regression,
+repair without changing assertions/timeouts/skips, full gates/code-only close-out, then
+normally merge green main into AB6 and verify the integrated tree. No cinema/TMDB/model/
+production data/config action. Existing build-only question is on hold behind this failure;
+an answer approving the Vue build alone does not authorise this repair or clear CI.
+Public-page-first source build remains UNAPPROVED/unimplemented:
+docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md. Completed #333 permission is
+spent. A later automatic documentation CI pass cannot waive the observed WebKit failure.
+After accepted repair/integrated verification and separately accepted source build, fresh
+all-nine request scope, actual row/horizon/category/identity review, exact mappings/config
+apply/disabled deployment/import/nine-row enable remain owner stops. No AB6 close-out,
+AB7, AA10c or other sitting. AA10c separate from 25 Nov; other owner gates unchanged.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -426,6 +427,17 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — AB6 report-head CI fails; stop for separate movie-night repair go.**
+  Exact 282eb9e/PR CI 41643751573: six jobs pass, C62/F61+1/W59+one failure+2/jobs6.
+  WebKit film-page random-pick promotion remains on film page after add click; voted
+  title absent from Suggested. Trace records click/no suggestion POST, cause unconfirmed.
+  App/shared/hosting code unchanged from prior green a1604e8; affected blobs identical
+  to main. No rerun, test waiver or code repair. Full failure artifact and sanitised
+  evidence saved. Propose separate fix branch/PR from verified green main, cause/regression
+  before minimal repair/full gates/code-only deployment, then normal AB6 integration.
+  UNAPPROVED; source build question held. Vue's successful #333 two-GET research remains
+  factual evidence, not all-nine acceptance/production permission or a new build go.
 
 - **3 Nov — Vue ordinary anonymous session experiment complete (#333), no implementation.**
   On clean a1604e8/all-seven CI 41611271232, approved two GETs both return 200: public page

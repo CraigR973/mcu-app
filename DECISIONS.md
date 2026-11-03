@@ -7046,3 +7046,20 @@ contemporaneous.
      Approval of this completed report-only experiment is not approval of that build or
      any fresh live pass/config apply/deployment/import/mapping/nine-row enable. These
      remain separate owner checkpoints. No AB6 close-out, AB7, AA10c or other sitting.
+
+     Verification aftermath: report-only 282eb9e exact PR CI 41643751573 fails WebKit's
+     film-page random-pick promotion (C62/F61+1/W59+one failure+2/jobs6; six other jobs
+     pass). Saved page remains film detail after click, expected voted title absent in
+     Suggested. Preserved trace records click/no candidate POST; cause unconfirmed.
+     Application/shared/hosting code identical to prior green a1604e8, affected blobs
+     also identical to main; no contemporaneous main failure/flakiness claim. No rerun,
+     assertion/timeout/skip waiver or code change. Required CI stop precedes source build.
+     Concrete separate cause-first movie-night investigation/minimal repair proposal and
+     sanitised evidence: docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md/JSON,
+     UNAPPROVED. Preserve AB6/PR #125; separate fix branch/PR from verified green main,
+     meaningful failing regression/causal repair/full normal code-only close-out, then
+     normal green-main integration and AB6 verification. Earlier build-only question on
+     hold; its approval alone is not repair permission or a CI waiver. A later automatic
+     documentation CI pass cannot resolve this observed failure. #333 remains spent
+     research permission only; no source build, new live pass, production cinema action
+     or other sitting follows.

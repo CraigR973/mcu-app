@@ -1,5 +1,12 @@
 # Vue ordinary anonymous session investigation — 3 Nov
 
+> New CI prerequisite: report-only 282eb9e/PR CI 41643751573 fails WebKit movie-night
+> promotion on unchanged code. Cause unconfirmed; no rerun/waiver. See
+> ab6-vue-session-ci-stop-2026-11-03.md/JSON for evidence and separate UNAPPROVED repair
+> proposal. This source build is on hold until the repair/integrated verification;
+> approving this build alone does not authorise that repair or clear the failure.
+
+
 Craig's “approved” accepted only the two-GET/45-second report-only plan (#333).
 It ran once on clean a1604e86e9a1aac9a07904bba099d907789a77e7 after its exact PR
 CI 41611271232 passed all seven jobs. No implementation or production action follows.

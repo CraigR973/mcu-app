@@ -201,7 +201,17 @@ conversation still maps onto this file.*
   against time/cache changes. New Vue director facts support three comparisons, but prior
   metadata is CinemaTimes-scoped: real mapping validator still refuses Vue picks. All 48
   Unclassified; old failed artifact unchanged. Report: ab6-vue-session-investigation-2026-11-03.*.
-  **Remaining owner checkpoints:** concrete public-page-first build amendment in
+  **New absolute CI stop (3 Nov):** report-only 282eb9e/PR CI 41643751573 fails WebKit's
+  film-page random-pick promotion case: no Added title in Suggested, saved page remains
+  film detail; trace records click but no suggestion POST. C62/F61+1/W59+one failure+2/
+  jobs6; six other jobs pass. App code unchanged from prior green; cause unconfirmed.
+  No rerun/assertion/timeout/skip waiver. Full trace/artifact saved. Recommend separate
+  cause-first movie-night investigation/minimal repair on own fix branch/PR from verified
+  main, full gates/code-only deployment and normal AB6 integration/reverification.
+  Exact proposal: docs/reviews/ab6-vue-session-ci-stop-2026-11-03.md, UNAPPROVED. No live
+  provider/data/config action or other sitting. The earlier build-only question is on
+  hold; approving it alone does not approve this repair or clear the CI failure.
+  **Later owner checkpoints:** concrete public-page-first build amendment in
   docs/reviews/ab6-vue-session-build-amendment-2026-11-03.md is UNAPPROVED/unimplemented.
   Recommend one public-page GET per active Vue pass before its selected today/tomorrow
   requests in the same anonymous client, inside unchanged combined caps; no weaker coverage,

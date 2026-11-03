@@ -1,0 +1,143 @@
+{
+  "run": 41643751573,
+  "url": "https://github.com/CraigR973/mcu-app/actions/runs/41643751573",
+  "head": "282eb9e0e17758b2952d4385133864ea361e7749",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "E2E \u2014 Chromium \u00b7 Firefox \u00b7 WebKit \u00b7 jobs",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Dependencies \u2014 Python \u00b7 pnpm",
+      "conclusion": "success"
+    },
+    {
+      "name": "Image \u2014 build \u00b7 migrate \u00b7 boot",
+      "conclusion": "success"
+    },
+    {
+      "name": "API \u2014 lint \u00b7 typecheck",
+      "conclusion": "success"
+    },
+    {
+      "name": "API \u2014 pytest + Postgres 17",
+      "conclusion": "success"
+    },
+    {
+      "name": "Database \u2014 upgrade head \u00b7 downgrade base",
+      "conclusion": "success"
+    },
+    {
+      "name": "Web \u2014 lint \u00b7 typecheck \u00b7 test \u00b7 build",
+      "conclusion": "success"
+    }
+  ],
+  "browserCounts": {
+    "chromium": {
+      "passed": 62
+    },
+    "firefox": {
+      "passed": 61,
+      "documentedSkips": 1
+    },
+    "webkit": {
+      "passed": 59,
+      "failed": 1,
+      "documentedSkips": 2
+    },
+    "jobs": {
+      "passed": 6
+    }
+  },
+  "failure": {
+    "test": "a film page adds a random pick to Suggested without losing its vote",
+    "file": "apps/e2e/specs/movie-night.spec.ts",
+    "line": 99,
+    "browser": "webkit",
+    "viewport": {
+      "width": 375,
+      "height": 812
+    },
+    "expected": "Suggested region contains visible Added Filler Feature 031",
+    "observed": "Element absent after existing 10000ms timeout; saved page remains film detail with Add to movie night visible",
+    "causeEstablished": false,
+    "sameTimeMainReproduction": false,
+    "candidateSuggestionPostObservedInTrace": false,
+    "click": {
+      "callId": "call@4169",
+      "startTimeMs": 141181.11,
+      "selector": "button: Add to movie night"
+    }
+  },
+  "movieNightNetwork": [
+    {
+      "timeMs": 139929.746,
+      "method": "GET",
+      "path": "/api/v1/movie-night",
+      "status": 200
+    },
+    {
+      "timeMs": 140403.684,
+      "method": "POST",
+      "path": "/api/v1/movie-night",
+      "status": 201
+    },
+    {
+      "timeMs": 140442.274,
+      "method": "GET",
+      "path": "/api/v1/movie-night",
+      "status": 200
+    },
+    {
+      "timeMs": 140515.014,
+      "method": "GET",
+      "path": "/api/v1/movie-night/c8a57557-8660-4a8d-a360-d25c10a052c8",
+      "status": 200
+    },
+    {
+      "timeMs": 140525.451,
+      "method": "GET",
+      "path": "/api/v1/movie-night/c8a57557-8660-4a8d-a360-d25c10a052c8/candidates",
+      "status": 200
+    },
+    {
+      "timeMs": 140819.564,
+      "method": "POST",
+      "path": "/api/v1/movie-night/c8a57557-8660-4a8d-a360-d25c10a052c8/votes",
+      "status": 200
+    },
+    {
+      "timeMs": 140525.57,
+      "method": "GET",
+      "path": "/api/v1/movie-night/c8a57557-8660-4a8d-a360-d25c10a052c8/events",
+      "status": 200
+    }
+  ],
+  "unchangedBlobs": {
+    "apps/e2e/specs/movie-night.spec.ts": {
+      "6d0f67660995a88226c1a10fdaa60597dba74177": "d8fe28d0c1edb0b9412d5570f0f942beb9d59b39",
+      "a1604e86e9a1aac9a07904bba099d907789a77e7": "d8fe28d0c1edb0b9412d5570f0f942beb9d59b39",
+      "282eb9e0e17758b2952d4385133864ea361e7749": "d8fe28d0c1edb0b9412d5570f0f942beb9d59b39"
+    },
+    "apps/web/src/components/movies/AddToMovieNight.tsx": {
+      "6d0f67660995a88226c1a10fdaa60597dba74177": "19d0a506d277e1296af28004fe2d89f591bc328a",
+      "a1604e86e9a1aac9a07904bba099d907789a77e7": "19d0a506d277e1296af28004fe2d89f591bc328a",
+      "282eb9e0e17758b2952d4385133864ea361e7749": "19d0a506d277e1296af28004fe2d89f591bc328a"
+    }
+  },
+  "applicationChangesSincePreviousGreen": [],
+  "artifact": {
+    "id": 13234023092,
+    "name": "e2e-failure",
+    "sizeBytes": 41967067,
+    "localDirectory": "scratchpad/ab6/vue-session-ci-artifact",
+    "failedTraceSha256": "631d29d35af42b81d0c15458994c2c35485a77ec161e20fc2052674110e07551",
+    "failedTraceBytes": 1056772
+  },
+  "failedLogSha256": "6feed663316c79694499a27ac68580f1cf91a18b323e1307eb185ed0dbd08406",
+  "manualReruns": 0,
+  "testOrCodeChanges": false,
+  "failureWaived": false,
+  "laterDocumentationCiCannotResolveThisFailure": true
+}

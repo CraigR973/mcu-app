@@ -1,5 +1,12 @@
 # Proposed AB6 public-page-first Vue build amendment — 3 Nov
 
+> New CI prerequisite: report-only 282eb9e/PR CI 41643751573 fails WebKit movie-night
+> promotion on unchanged code. Cause unconfirmed; no rerun/waiver. See
+> ab6-vue-session-ci-stop-2026-11-03.md/JSON for evidence and separate UNAPPROVED repair
+> proposal. This source build is on hold until the repair/integrated verification;
+> approving this build alone does not authorise that repair or clear the failure.
+
+
 **UNAPPROVED. No implementation or new live request is authorised by this proposal.**
 This is a narrow amendment to accepted #327/#330 on existing branch/draft PR #125,
 prepared after the owner-approved #333 report-only experiment. It preserves all nine
