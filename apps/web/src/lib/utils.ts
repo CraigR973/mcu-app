@@ -68,9 +68,12 @@ export function formatMonth(month: string): string {
   return `${MONTHS[number - 1]} ${String(year)}`
 }
 
+const LONDON_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' })
+const LONDON_TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+
 /** UK programme civil date, independent of the viewer's time zone and locale ordering. */
 export function londonDate(value = Date.now()): string {
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value)
+  const parts = LONDON_DATE_FORMATTER.formatToParts(value)
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value
   return `${part('year')}-${part('month')}-${part('day')}`
 }
@@ -81,6 +84,6 @@ export function formatLondonDateTime(value: string): string {
   if (Number.isNaN(date.getTime())) return value
   const day = londonDate(date.getTime())
   const label = day.slice(0, 4) === londonDate().slice(0, 4) ? formatDayMonth(day) : formatShortDate(day)
-  const time = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)
+  const time = LONDON_TIME_FORMATTER.format(date)
   return `${label}, ${time}`
 }

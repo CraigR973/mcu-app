@@ -74,6 +74,10 @@ links. This proves simulated browser layout, not an affected iPhone's acceptance
   utility. Both London helpers moved into `lib/utils.ts`, preserving its shared UK date
   spelling; the date-forms guard and all existing assertions remain unchanged.
 
+- A direct2,000-row formatting probe measured2,177ms creating formatters for each call.
+  The same probe now takes74ms on this Mac (not a phone/browser benchmark). The two immutable Intl formatters are reused; date values and current-clock checks
+  remain calculated per call. This removes allocation work without freezing dates/age.
+
 ## Retained live-data limits
 
 The accepted3Nov17:13 snapshot stored1,838 rows/163 source-film identities/9 enabled venues,
