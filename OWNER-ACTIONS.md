@@ -11,6 +11,14 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Standing cinema completion approval (#334, 3 Nov).** Craig approves the separate
+  cause-first movie-night repair and the known remaining AB6/AB7 sitting 5 feature work,
+  including bounded live evidence, source-specific mappings, prepared existing-job token
+  reference, programme-only import/nine-row enable and normal verification/deployment.
+  Preserve every evidence/gate/cost/identity/category limit; no repeated known-stage go.
+  No new fees/credentials/destructive catalogue writes or other sitting. AB6 branch/PR
+  stays preserved while the prerequisite fix runs on its own branch/PR from green main.
+
 - **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night
   seeding race was stopped and repaired separately with Craig's approval (#304): PR #120

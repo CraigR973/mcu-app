@@ -1,5 +1,6 @@
 import { runJob } from '../support/cli.ts'
 import { pushesTo, registerDevice } from '../support/push.ts'
+import { filmId } from '../support/films.ts'
 import { expect, test } from '../support/test.ts'
 
 test.describe('movie night', () => {
@@ -104,6 +105,58 @@ test('a film page adds a random pick to Suggested without losing its vote', asyn
   await expect(headings.nth(1)).toContainText('Suggested')
   await expect(headings.nth(2)).toContainText('Stuck for ideas? A random shortlist')
   await craig.page.screenshot({ path: testInfo.outputPath('aa4-night-375.png'), fullPage: false })
+})
+
+test('a poster failure cannot move the movie-night action during a click', async ({ signedIn, api }) => {
+  const craig = await signedIn('Craig')
+  await craig.page.setViewportSize({ width: 375, height: 812 })
+  await craig.page.goto('/movie-night')
+  await craig.page.getByRole('button', { name: 'Start movie night' }).click()
+  await expect(craig.page).toHaveURL(/\/movie-night\/[0-9a-f-]{36}$/)
+  const nightUrl = new URL(craig.page.url()).pathname
+  const title = 'Filler Feature 031'
+  const id = await filmId(await api('Craig'), title)
+  let failPoster!: () => void
+  let loadFallback!: () => void
+  let requestedPoster!: () => void
+  const posterRequested = new Promise<void>((resolve) => { requestedPoster = resolve })
+  const posterFailure = new Promise<void>((resolve) => { failPoster = resolve })
+  const fallbackReady = new Promise<void>((resolve) => { loadFallback = resolve })
+  await craig.page.route('https://image.tmdb.org/t/p/w342/**', async (route) => {
+    requestedPoster()
+    await posterFailure
+    await route.fulfill({ status: 404, contentType: 'text/html', body: 'Poster unavailable' })
+  })
+  await craig.page.route('**/placeholder-poster.svg', async (route) => {
+    await fallbackReady
+    await route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300"></svg>' })
+  })
+  try {
+    await craig.page.goto(`/movies/${id}`)
+    await posterRequested
+    const poster = craig.page.getByRole('img', { name: `${title} poster` })
+    const add = craig.page.getByRole('button', { name: 'Add to movie night' })
+    await expect(add).toBeVisible()
+    const before = await poster.boundingBox()
+    const actionBefore = await add.boundingBox()
+    expect(before).not.toBeNull()
+    expect(actionBefore).not.toBeNull()
+    await craig.page.mouse.move(actionBefore!.x + actionBefore!.width / 2, actionBefore!.y + actionBefore!.height / 2)
+    await craig.page.mouse.down()
+    failPoster()
+    await expect(poster).toHaveAttribute('src', '/placeholder-poster.svg')
+    // Observe the failed-image interval, before the local fallback finishes loading.
+    await craig.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    const failed = await poster.boundingBox()
+    const actionFailed = await add.boundingBox()
+    expect(failed?.height).toBeCloseTo(before!.height, 0)
+    expect(actionFailed?.y).toBeCloseTo(actionBefore!.y, 0)
+    await craig.page.mouse.up()
+    await expect(craig.page).toHaveURL(nightUrl)
+  } finally {
+    failPoster()
+    loadFallback()
+  }
 })
 
 

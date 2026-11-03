@@ -2,28 +2,29 @@
 
 ## Now
 
-**2 Nov: separately approved assistant repair shipped in PR #126 (`7b67375`, #331).**
-Empty-chat scrolling inserted Latest answer, shrinking and clipping the starter's click
-point by 48px. Following/latest now require messages; drafts and explicit Send stay.
-Both regressions fail before/pass after. Clean 7b67375: all ten checks, API 2,549/no skips,
-shared 159/web 737; local Chromium 62, Firefox 61 plus its documented skip, jobs six.
-Seven-job PR CI 41512031733 passes, including WebKit 60 plus its two documented skips.
-Production API/web both serve exact 7b67375, db ok/all five integrations configured.
-Main code CI 41545752108/final documentation head still need their own verification before
-handoff/AB6 resumption; final proof belongs in PR #126's description. No source/model call,
-production data/configuration/credential change or other sitting. Report/portable evidence:
-docs/reviews/assistant-starter-repair-2026-11-02.md and assistant-starter-verification JSON.
-Cinema branch feat/ab6-cinema-ingestion / draft PR #125 remains preserved at 0285b72.
+**3 Nov: standing cinema completion approval (#334); separate movie-night repair in progress.**
+Craig approves the cause-first repair and all known remaining sitting 5 stages through
+feature completion. Preserve cinema branch/draft PR #125 at cf2cdf5. On a separate fix
+branch from seven-job-green main 6d0f676, investigate WebKit 41643751573: final click records
+no suggestion POST and stays on film detail. Saved frames show a poster-size transition
+moving the button by about 48px at the click; controlled causal regression pending.
+No code repair/production change yet. Accepted next source amendment: ordinary public
+Vue page before its today/tomorrow date requests, unchanged caps. No repeat owner go for
+prepared source/build/metadata/mapping/config/deploy/import/enable/AB7 steps; evidence
+and normal gates remain mandatory. No AA10c/other sitting/new fees/destructive writes.
 
 ## Next
 
-Verify final repair main/docs CI and matching production API/web/readiness, then return to
-preserved AB6 and merge the repair normally. Run AB6's complete gate on the resulting clean
-tree; only then propose the exact fresh all-nine bounded source acceptance read. The cinema
-build/amendment is already accepted; the fresh read, actual evidence/mappings/count review,
-production configuration/import/mapping/enable remain separate owner stops. No AB7 before
-AB6 acceptance/close-out; no AA10c/other sitting. AA10c remains separate from 25 Nov.
-AA10b's 1–2 Nov final-total comparison and real-phone/live-assistant observations stay open.
+Establish the movie-night cause and failing regression, minimally repair on its own PR,
+run full gates/code-only close-out, then normally merge green main into preserved AB6
+and verify. Complete approved public-page-first source build, bounded all-nine acceptance,
+evidence-backed identities/categories/config/import/enable and AB7 sequentially, one PR
+per batch. Keep exact live scopes/counts/digests and config diffs reviewable before writes.
+Approval covers the prepared existing-job token reference and programme-only operations;
+no new fees/credentials/destructive catalogue writes or other sitting. Stop only for
+unresolved facts/requirements outside this standing approval, not the already approved
+routine checkpoints. Strict categories/failed-prefix/all-nine rules and real-device
+limits remain; no fixture/CI claim can substitute missing live evidence.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
