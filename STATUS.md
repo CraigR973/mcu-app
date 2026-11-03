@@ -2,29 +2,23 @@
 
 ## Now
 
-**3 Nov: AB6 ingestion shipped/production accepted, PR125/merge72ff0bd.**
-All ten clean local gates/API2621/no skips/shared167/web738, exact PR41678065707 and
-main41681152577 seven jobs/C63/F62+1/W61+2/jobs6 pass. API/web exact72ff0bd/full readiness
-verified. Disabled migration071/nine seeds and actual two-role credential-withholding
-checks pass. One bounded read inside existing Railway API container:63GET/all200/57.076s/
-all nine/1838 rows, fresh ab6-3 artifact accepted. Exact reviewed1838-row/3mapping import
-and enable9 complete;163 source films,3verified/160unverified. Core catalogue/diary/auth
-counts unchanged. Both people's eight enabled-filter GETs return1739 future showings/
-152 groups at check, no truncation; New0/Older1/Unclassified1738. Source horizons, unknown
-identity/year/upstream age remain explicit. Existing-job token reference only applied;
-unrelated API drift untouched. Source fees£0/resources unpriced; DBsize+1,433,600bytes.
-Final handoff CI/readiness being verified before AB7 starts. Production/source/import/read
-proof: docs/reviews/ab6-railway-acceptance-2026-11-03.md and exact JSON/gzip artifacts.
+**3 Nov23:20: AB6 fully closed; AB7 discovery implementation starts alone.**
+Clean main354f34c final CI41683888744 passes all seven jobs/API2621/no skips/C63/F62+1/
+W61+2/jobs6; exact production API/web/full readiness freshly rechecked. PR125 ingestion
+fully accepted/all-nine1838-row exact import/enable9/role/both-profile read proof retained.
+No new source request or data/hosting action. New branch feat/ab7-cinema-discovery under
+accepted327/330/334/latest continue. Verbatim criteria/concrete scope recorded before
+code: docs/reviews/ab7-implementation-contract-2026-11-03.md. Data limitations unchanged:
+partial horizons, unclassified releases/unknown years, future access/scheduled run unproved.
 
 ## Next
 
-Verify this final handoff's exact seven-job main CI and API/web SHA/full readiness, return
-clean main, then run authorised AB7 alone on its own branch/PR: Film-first `/cinemas`,
-approved navigation/venue/date/category filters, honest coverage/identity/year/offline
-states, personal watch isolation and safe Check tickets links. Standing #327/#330/#334
-accepts the concrete build and known deployment/verification; no repeated permission ask.
-New population/recurring source access/next08:00UTC job remain unproved, not fabricated.
-No new paid service/credential/destructive catalogue/diary write/API drift/AA10c/other sitting.
+Build only AB7: Film-first `/cinemas`, Home/Plan a screening/command palette/mobile You
+entries, date/venue/category controls with honest coverage/counts, personal watch isolation
+and safe Check tickets/official fallbacks. Tests/real browser screenshots/full clean local/
+seven-job CI and actual production programme/render comparison, then normal close-out.
+Standing327/330/334 already authorises these known steps. No source/fee/credential/data
+contract extension, catalogue/diary write, API drift, AA10c or other sitting.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
