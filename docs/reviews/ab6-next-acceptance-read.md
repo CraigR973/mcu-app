@@ -1,8 +1,10 @@
 # Next owner checkpoint: fresh AB6 acceptance read
 
 Status: proposal only; no source request is authorised or made by preparing this note.
-Prerequisite: the separate assistant repair and the integrated AB6 tree pass all normal
-checks. Existing historical programme/metadata specimens do not certify this new pass.
+Prerequisite met on 3 Nov: the separate assistant repair and integrated AB6 code 5b02ab8
+pass all normal checks (full report: ab6-post-assistant-verification-2026-11-03.md/JSON).
+Confirm the final documentation-head seven-job CI in PR #125 before running. Historical
+programme/metadata specimens do not certify this new pass. This is not read permission.
 
 Recommend one fresh, anonymous programme pass across the existing nine selected venues,
 using the accepted six HTTP source families and £0 source subscriptions. London civil

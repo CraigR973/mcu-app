@@ -11,10 +11,15 @@ merged-code and final-doc CI pass; exact production API/web 6d0f676/full readine
 The repair report/JSON and PR #126 preserve complete evidence. The historical red record
 below is retained, not waived by a rerun or erased by later green CI.
 
-Green main is merging normally into preserved AB6 draft PR #125. App/tests merge cleanly;
-STATUS/DECISIONS conflicts retain both histories. Complete combined-tree verification is
-next. No new source request, metadata candidate, production data/config/deploy/import/
-mapping/enable or AB7 follows from this integration. Remaining source/production stops stay.
+Green main merged normally into preserved AB6 draft PR #125 as 5b02ab8. App/tests merge
+cleanly; STATUS/DECISIONS conflicts retain both histories. On 3 Nov the combined tree passes
+all ten clean checks/API 2,609/no skips/shared 167/web 738, exact local C62/F61+1/jobs6,
+and all seven PR CI 41547976591 jobs (W60+2). Cinema API/shared/hosting/job code and migration
+proof are unchanged. Complete current report/portable evidence:
+ab6-post-assistant-verification-2026-11-03.md and JSON. Final docs-head proof is recorded
+in PR #125. No new source request, metadata candidate, production data/config/deploy/import/
+mapping/enable or AB7 follows. Exact fresh-read proposal is ab6-next-acceptance-read.md;
+remaining source/production owner stops stay unapproved.
 
 ## Accepted scope and implementation
 
@@ -178,8 +183,8 @@ skip policy remain unchanged.
 ## Remaining owner checkpoints
 
 The separate assistant repair checkpoint is complete (#331, PR #126); see current status
-above. No new repair decision is needed. Complete combined-tree AB6 verification before
-proposing the fresh all-nine acceptance read below. This remains a proposal, not permission
+above. No new repair decision is needed. Combined-tree AB6 verification is green;
+stop for exact approval of the fresh all-nine acceptance read below. This remains a proposal, not permission
 to repeat a refused source or apply mappings/configuration/imports/enables.
 
 After the failure is resolved and AB6's complete verification gate is green, propose one

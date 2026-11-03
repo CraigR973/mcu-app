@@ -180,7 +180,11 @@ conversation still maps onto this file.*
   and repairs the 48px empty-log clipping cause. All local/PR/main/final-doc checks pass;
   final production API/web 6d0f676/db ok/five integrations configured. Original failed
   assertions stay. Green main merges into preserved AB6 draft PR #125; its combined-tree
-  verification is next. No repeat repair approval; fresh source acceptance stays stopped.
+  verification passes at 5b02ab8: all ten local checks/API 2,609/no skips/shared 167/web 738,
+  exact local C62/F61+1/jobs6 and all seven PR CI 41547976591 jobs (W60+2). Final docs CI
+  evidence is in PR #125. No repeat repair/build approval; fresh source acceptance stays
+  stopped. Exact proposal: docs/reviews/ab6-next-acceptance-read.md; portable verification:
+  docs/reviews/ab6-post-assistant-verification-2026-11-03.md and JSON.
   **Remaining owner checkpoints:** fresh exact all-nine acceptance read, actual row/horizon/
   category/mapping review; exact config apply/disabled deployment/production import/nine-row
   enable. No new source pass is covered by the build go. No AB7 before accepted AB6.

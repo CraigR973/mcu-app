@@ -2,29 +2,33 @@
 
 ## Now
 
-**2 Nov: assistant repair complete; AB6 integrating green main for renewed verification.**
-PR #126/7b67375 repairs the 48px empty-log clipping mechanism; both regressions fail
-before/pass after, original assertions unchanged. All ten repair checks, local browsers/
-jobs and seven PR/merged-code/final-doc jobs pass. Final main/production API/web 6d0f676,
-db ok/all five integrations configured. Served assistant bundle contains the guard.
-Preserved cinema draft PR #125 now merges that green main; only STATUS/DECISIONS conflicted,
-resolved preserving both histories. No cinema source/metadata, API contract or hosting
-scope change. The resulting AB6 tree needs its own full clean gate/local E2E/exact-head CI.
-Prior amended AB6 code 5800f5d passes all ten checks/API 2,609/no skips/shared 167/web 737,
-17 new regressions and migration/privilege proof; this is historical, not combined-tree proof.
-All nine venues remain disabled. Read-only Railway plan 0 add/2 change/0 destroy is never
-applied. No fresh source acceptance, production DB/config/deploy/import/mapping/enable
-or AB7/AA10c/other sitting. Reports: assistant-starter repair and AB6 metadata amendment.
+**3 Nov: separate assistant repair shipped; integrated AB6 verification green, fresh live gate open.**
+Assistant PR #126/7b67375 proves and repairs the 48px empty-log clipping cause without
+weakening assertions. Final main 6d0f676 has seven-job PR/merged-code/final-doc CI and exact
+production API/web/db ok/five integrations configured. Green main merges normally into
+preserved cinema branch/draft PR #125 as 5b02ab8; STATUS/DECISIONS conflicts retain both
+histories, app/tests merge cleanly. Cinema API/shared/hosting/job code stays identical to
+5800f5d. Clean 5b02ab8: all ten local checks, API 2,609/no skips/shared 167/web 738; exact
+local Chromium 62/Firefox 61+documented skip/jobs six, no retries. Exact PR CI 41547976591
+passes all seven jobs, including WebKit 60+two documented skips. Migration proof unchanged.
+Final documentation-head CI evidence belongs in PR #125 before handoff. All nine venues
+remain disabled; plan 0 add/2 change/0 destroy never applied. No new cinema/TMDB request,
+production DB/config/deploy/import/mapping/enable or AB7/AA10c/other sitting. Report:
+docs/reviews/ab6-post-assistant-verification-2026-11-03.md and JSON; exact fresh-read proposal:
+docs/reviews/ab6-next-acceptance-read.md. Current first-run/New population remains unproved.
 
 ## Next
 
-Run all ten AB6 checks and full available local browsers/jobs on the resulting clean
-commit; verify all seven exact-head PR jobs. Then stop for the exact fresh all-nine bounded
-acceptance-read approval. The #329 investigation/#330 build and #331 repair are accepted;
-do not ask to approve them again. Actual source/horizon/category/identity/backlog review,
-exact config apply/disabled deployment/production import/reviewed mappings/nine-row enable
-remain later owner stops. Re-plan if fresh feasibility changes scope; no reduced venue
-coverage or category guesses. No AB7 until accepted AB6; no AA10c/other sitting.
+Stop for exact fresh all-nine acceptance-read approval under the prepared scope: execution
+day through +13 London dates, Vue execution day/tomorrow only, at most 120 GETs including
+12 existing-token TMDB metadata GETs/five minutes, unchanged body/rate/refusal limits,
+owned disposable localhost DB/artifact/hash/counts only, £0 source fees/no production
+writes. Confirm PR #125 final-head seven-job CI before any approved run. The #328/#329
+historical reads, #330 build and #331 separate repair are accepted; no repeat decisions.
+Review real rows/horizons/categories/identities/mapping evidence/backlog after that pass;
+re-plan before implementation if feasibility changes scope. Exact config apply/disabled
+deployment/production import/selected mappings/nine-row enable remain separate owner stops.
+No AB6 merge/close-out or AB7 from fixture/CI success alone; no AA10c/other sitting.
 AA10c remains separate from 25 Nov; AA10b/real-phone/live-assistant observations stay open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -417,6 +421,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — AB6 repair integration verified; stop for fresh source acceptance.** Separate
+  assistant PR #126 is complete at green production/main 6d0f676. Normal merge 5b02ab8
+  preserves both documentation histories; cinema API/shared/hosting/job code unchanged.
+  All ten clean checks (API 2,609/no skips/shared 167/web 738), exact local C62/F61+1/jobs6
+  and seven-job PR CI 41547976591 (W60+2) pass. Full portable report/evidence saved; final
+  documentation-head CI checked in PR #125 before handoff. Draft/all-nine disabled;
+  no new source/TMDB request, production action, AB7/AA10c/other sitting. Exact next read
+  scope prepared, still unapproved; classification/current-first-run evidence stays open.
 
 - **2 Nov — AB6 resumes after separately approved assistant repair (#331):** PR #126
   merged 7b67375; PR/merged-code 41545752108/final-doc 41545982931 all seven jobs pass,

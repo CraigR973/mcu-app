@@ -1,0 +1,144 @@
+{
+  "codeHead": "5b02ab8a3dbeeb37ad65ee85f961fff276d1a1e6",
+  "pullRequest": 125,
+  "repair": {
+    "pr": 126,
+    "codeHead": "7b67375f2966afd34c16aa440c0fa4019ada2a49",
+    "finalMain": "6d0f67660995a88226c1a10fdaa60597dba74177",
+    "prCi": 41512031733,
+    "mergedCodeCi": 41545752108,
+    "finalDocsCi": 41545982931,
+    "allSevenJobsPassed": true,
+    "exactApiWebAndFullReadinessVerified": true
+  },
+  "localGate": {
+    "head": "5b02ab8a3dbeeb37ad65ee85f961fff276d1a1e6",
+    "cleanAfter": true,
+    "checks": [
+      {
+        "name": "ruff-check",
+        "exitCode": 0,
+        "seconds": 0.7
+      },
+      {
+        "name": "ruff-format",
+        "exitCode": 0,
+        "seconds": 0.1
+      },
+      {
+        "name": "mypy",
+        "exitCode": 0,
+        "seconds": 18.0
+      },
+      {
+        "name": "pytest",
+        "exitCode": 0,
+        "seconds": 409.9
+      },
+      {
+        "name": "pnpm-tests",
+        "exitCode": 0,
+        "seconds": 191.2
+      },
+      {
+        "name": "shared-typecheck",
+        "exitCode": 0,
+        "seconds": 24.8
+      },
+      {
+        "name": "shared-build",
+        "exitCode": 0,
+        "seconds": 23.1
+      },
+      {
+        "name": "web-lint",
+        "exitCode": 0,
+        "seconds": 26.5
+      },
+      {
+        "name": "web-typecheck",
+        "exitCode": 0,
+        "seconds": 61.7
+      },
+      {
+        "name": "web-build",
+        "exitCode": 0,
+        "seconds": 73.0
+      }
+    ]
+  },
+  "localApi": {
+    "passed": 2609,
+    "skipped": 0
+  },
+  "shared": {
+    "passed": 167
+  },
+  "web": {
+    "passed": 738
+  },
+  "localE2E": {
+    "head": "5b02ab8a3dbeeb37ad65ee85f961fff276d1a1e6",
+    "endHead": "5b02ab8a3dbeeb37ad65ee85f961fff276d1a1e6",
+    "exit": 0,
+    "seconds": 967.5,
+    "args": [
+      "chromium",
+      "firefox",
+      "jobs"
+    ],
+    "chromium": {
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "firefox": {
+      "passed": 61,
+      "failed": 0,
+      "skipped": 1,
+      "reason": "documented unsupported dictation"
+    },
+    "jobs": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "prCi": {
+    "id": 41547976591,
+    "head": "5b02ab8a3dbeeb37ad65ee85f961fff276d1a1e6",
+    "jobs": {
+      "passed": 6,
+      "skipped": 0
+    },
+    "chromium": {
+      "passed": 62,
+      "skipped": 0
+    },
+    "firefox": {
+      "passed": 61,
+      "skipped": 1
+    },
+    "webkit": {
+      "passed": 60,
+      "skipped": 2
+    }
+  },
+  "cinemaApiSharedHostingAndJobCodeUnchangedFrom": "5800f5d9b68a7ae9bb10fa4d39ab8d6816673b6d",
+  "assistantPageAndTestBlobsMatchGreenMain": true,
+  "migrationPrivilegeEvidence": "ab6-metadata-verification-2026-11-02.json",
+  "captures": {
+    "stable-starter-Craig-light-375x500.png": "83ab2fddae291b1cc6f0b1f706c2e9ccdd4155d07826172c12cb2fe46965d88a",
+    "stable-starter-Mark-dark-375x500.png": "daf64ecef7e0e289f7f374199e13d187664eea58fad0beb047191b0bc61ac86f",
+    "stable-starter-Mark-light-375x500.png": "7a95c0a5a91fb84f0396bc539f5eb45a2e39fc82052fb33249e960aac38cc73c",
+    "stable-starter-Craig-dark-375x500.png": "476dea48068d81d87939fd018e2f65afd6c4ec56e97759dbd03f6196c812924a"
+  },
+  "liveSourceReadAuthorised": false,
+  "newSourceOrMetadataRequests": 0,
+  "productionCinemaActions": [],
+  "venuesEnabled": 0,
+  "ab7Started": false,
+  "otherSittingStarted": false,
+  "railwayPlanApplied": false,
+  "finalDocsCiEvidence": "Recorded in PR 125 description before handoff"
+}
