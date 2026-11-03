@@ -19,10 +19,11 @@ from src.services.cinemas.parsers import (
     parse_science,
     parse_vue,
     science_links,
+    validate_vue_page,
 )
 from src.services.cinemas.venues import Venue
 
-ADAPTER_VERSION = "ab6-2"
+ADAPTER_VERSION = "ab6-3"
 
 
 def _merge(into: Snapshot, other: Snapshot) -> None:
@@ -59,7 +60,12 @@ async def collect_venue(venue: Venue, start: date, end: date, fetch: Budget) -> 
             # This approved adapter observes only today/tomorrow, even when the
             # caller selects later dates. Later coverage remains explicitly unchecked.
             today = checked_utc.replace(tzinfo=UTC).astimezone(LONDON).date()
-            for day in (d for d in days if today <= d <= today + timedelta(days=1)):
+            selected = [d for d in days if today <= d <= today + timedelta(days=1)]
+            if selected:
+                # Ordinary anonymous page cookies remain in the existing HTTP client,
+                # never in programme evidence. This GET consumes the same run budget.
+                validate_vue_page(await fetch.get(venue.programme_url), venue)
+            for day in selected:
                 query = urlencode(
                     {
                         "showingDate": day.isoformat() + "T00:00:00",

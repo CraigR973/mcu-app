@@ -2,32 +2,29 @@
 
 ## Now
 
-**3 Nov: prerequisite repair closed and integrated into preserved AB6; source build approved.**
-Repair PR #127/code3d71b71 proves/fixes WebKit poster 141→94px collapse (47px) without
-changing vote/promotion/navigation. Ten clean local gates/API2549/shared159/web737,
-full local C63/F62+1/jobs6; PR41665030709/main-code41668022890/final-doc41668679117 all
-seven jobs including W61+2/no unexplained skips. Production API/web final main62467f4/
-db ok/five integrations verified. Normal merge into preserved cinema branch/PR #125;
-only STATUS/DECISIONS conflict, both source and repair histories retained, code merges
-cleanly. Focused integrated-source/movie-night verification next, then accepted Vue
-public-page-first protocol (#334). All known remaining sitting5 stages are authorised;
-no repeated owner go. Earlier #332 all-nine artifact remains failed/eight venues/1800
-rows and #333 Vue 48-row success remains diagnostic, no splicing. Classification/New
-population unproved. No new source/TMDB/production cinema data/config action yet.
+**3 Nov: repaired main integrated; accepted public-page-first Vue protocol implemented.**
+PR #127 fully closed at final-main62467f4 with all local/PR/main/final-doc gates and
+production proof. Normal integration6ed37b4 preserves source/repair histories; clean
+focused integration passes 60 cinema tests plus original/new movie-night cases in local
+Chromium/Firefox. Source amendment #334 now adds one ordinary Vue page before selected
+today/tomorrow GETs in the same in-memory client/budget; title/refusal checks, whole-Vue
+failure, caps and strict categories remain. Artifact version ab6-3 rejects older files.
+15 focused Vue tests pass; full clean gate/CI and fresh all-nine evidence next. Current
+production remains repaired main62467f4, cinema PR #125 undeployed/nine disabled. No new
+source/TMDB/production cinema data/config action. Known remaining stages approved under
+standing #334; no repeat go. Report: docs/reviews/ab6-public-page-first-implementation-2026-11-03.md.
 
 ## Next
 
-Verify integrated source/metadata/jobs and causal browser regressions, then implement
-accepted public-page-first Vue sequence on existing AB6 PR #125: one ordinary page GET
-before selected today/tomorrow GETs in the same in-memory client, inside unchanged
-caps/refusal rules. Full normal clean verification/CI then bounded fresh all-nine
-acceptance, evidence-backed mappings, exact prepared existing-job token reference,
-disabled deployment/programme-only import/nine-row enable, then AB7 from accepted AB6.
-Standing #334 covers these known stages; save scopes/counts/digests/config plans before
-actions instead of asking again. Do not apply unrelated API restart-policy drift or
-introduce fees/services/credentials. Preserve nine venues/strict identity/run categories,
-no reduced coverage/failed-prefix acceptance. No catalogue/diary destruction, AA10c or
-other sitting. Missing evidence is never approval; existing resource cost unpriced.
+Run the full normal clean gate and exact-head seven-job PR CI on existing AB6 branch,
+then record/execute a bounded fresh all-nine acceptance scope under #334. Review actual
+coverage/rows/candidates/year/run categories and exact digest/counts; preserve unknowns.
+Known next stages: corroborated source-specific mappings, prepared existing-job token
+reference only, disabled deployment/programme-only import/nine-row enable, then AB7
+from accepted AB6. No extra known-stage approval ask. No unrelated API restart drift,
+new fee/service/credential, destructive catalogue/diary write, AA10c or other sitting.
+Old failed v2 artifact and diagnostic 48-row Vue experiment remain historical evidence,
+not a fresh acceptance. Source fees £0; resource cost unpriced; New population unproved.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);

@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import time
 from dataclasses import replace
 from datetime import date, datetime, timedelta
 
@@ -25,6 +26,9 @@ from tests.test_cinemas import run as run
 NOW = datetime(2026, 11, 2, 8)
 DAY = date(2026, 11, 2)
 VENUE = BY_SLUG["vue-st-enoch"]
+VUE_PAGE = (
+    "<html><title>Vue Glasgow St Enoch Lux Cinema Film Listings &amp; Times | Vue</title></html>"
+)
 SAMPLES = json.loads(body("tmdb-gap-samples.json"))
 
 
@@ -130,19 +134,32 @@ async def test_vue_only_today_tomorrow_literal_format_and_later_selection_no_req
 
     def handler(request):
         seen.append(request)
+        if str(request.url) == VENUE.programme_url:
+            return httpx.Response(
+                200, text=VUE_PAGE, headers={"Set-Cookie": "vue-anonymous=fixture-cookie; Path=/"}
+            )
         return httpx.Response(200, json={"responseCode": 0, "result": []})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         fetch = Budget(client)
         result = await collect.collect_venue(VENUE, DAY, DAY + timedelta(days=13), fetch)
         assert result.complete_dates == {DAY, DAY + timedelta(days=1)}
-        assert len(seen) == 2
-        assert "T00:00:00" in str(seen[0].url) and "%3A" not in str(seen[0].url)
+        assert fetch.requests == len(seen) == 3
+        assert str(seen[0].url) == VENUE.programme_url
+        assert "T00:00:00" in str(seen[1].url) and "%3A" not in str(seen[1].url)
         assert seen[0].headers["Accept"] == "text/html,application/xhtml+xml"
+        assert all(r.method == "GET" and "authorization" not in r.headers for r in seen)
+        assert all(r.headers["cookie"] == "vue-anonymous=fixture-cookie" for r in seen[1:])
+        assert [r.url.params["showingDate"] for r in seen[1:]] == [
+            f"{DAY}T00:00:00",
+            f"{DAY + timedelta(days=1)}T00:00:00",
+        ]
         result = await collect.collect_venue(
             VENUE, DAY + timedelta(days=2), DAY + timedelta(days=3), fetch
         )
-        assert result.rows == [] and result.observed_dates == set() and len(seen) == 2
+        assert result.rows == [] and result.observed_dates == set() and len(seen) == 3
+        await fetch.get("https://www.glasgowfilm.org/")
+        assert "cookie" not in seen[-1].headers
 
 
 async def test_vue_refusal_does_not_publish_successful_prefix():
@@ -150,16 +167,122 @@ async def test_vue_refusal_does_not_publish_successful_prefix():
 
     def handler(request):
         seen.append(request)
-        return (
-            httpx.Response(200, json={"responseCode": 0, "result": []})
-            if len(seen) == 1
-            else httpx.Response(401)
-        )
+        if str(request.url) == VENUE.programme_url:
+            return httpx.Response(200, text=VUE_PAGE)
+        if request.url.params["showingDate"] == f"{DAY}T00:00:00":
+            return httpx.Response(
+                200,
+                json={
+                    "responseCode": 0,
+                    "result": [
+                        {
+                            "filmId": "film-one",
+                            "filmTitle": "Film",
+                            "showingGroups": [
+                                {
+                                    "date": str(DAY),
+                                    "sessions": [
+                                        {
+                                            "sessionId": "show-one",
+                                            "showTimeWithTimeZone": f"{DAY}T20:00:00+00:00",
+                                            "bookingUrl": (
+                                                "/book-tickets/summary/10097/film-one/show-one"
+                                            ),
+                                            "isBookingAvailable": True,
+                                        }
+                                    ],
+                                }
+                            ],
+                        }
+                    ],
+                },
+            )
+        return httpx.Response(401)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         result = await collect.collect_venue(VENUE, DAY, DAY + timedelta(days=13), Budget(client))
     assert result.failed and result.refused_host == "www.myvue.com"
-    assert result.complete_dates == set() and len(seen) == 2
+    assert result.complete_dates == set() and len(seen) == 3
+    assert len(result.rows) == 1  # Diagnostic only: failed prefixes cannot enrich or replace data.
+    assert metadata.selected_rows({VENUE.slug: result}) == {}
+
+
+@pytest.mark.parametrize("status", [401, 403, 429, 302, 500])
+async def test_vue_public_page_failure_never_requests_a_date(status):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(status, headers={"Location": "https://elsewhere.example/"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        fetch = Budget(client)
+        result = await collect.collect_venue(VENUE, DAY, DAY + timedelta(days=1), fetch)
+    assert result.failed and not result.rows and not result.complete_dates
+    assert fetch.requests == len(seen) == 1 and str(seen[0].url) == VENUE.programme_url
+
+
+@pytest.mark.parametrize(
+    "page", ["<title>Just a moment</title>", "<title>Vue Another Cinema</title>"]
+)
+async def test_vue_challenge_or_wrong_public_page_never_requests_a_date(page):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, text=page)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await collect.collect_venue(VENUE, DAY, DAY, Budget(client))
+    assert result.failed and not result.rows and not result.complete_dates and len(seen) == 1
+
+
+@pytest.mark.parametrize("limit", ["requests", "bytes", "deadline", "response"])
+async def test_vue_public_page_consumes_existing_limits_before_dates(limit):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if limit == "deadline":
+            fetch.started = time.monotonic() - 301
+        return httpx.Response(
+            200, text="x" * (2 * 1024 * 1024 + 1) if limit == "response" else VUE_PAGE
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        fetch = Budget(client)
+        if limit == "requests":
+            fetch.requests = 119
+        if limit == "bytes":
+            fetch.bytes_read = 64 * 1024 * 1024 - (2 * 1024 * 1024 + 65536) - 1
+        result = await collect.collect_venue(VENUE, DAY, DAY, fetch)
+    assert result.failed and not result.rows and not result.complete_dates
+    assert len(seen) == 1 and str(seen[0].url) == VENUE.programme_url
+    if limit == "requests":
+        assert fetch.requests == 120
+
+
+async def test_vue_session_values_never_enter_the_prepared_artifact():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if str(request.url) == VENUE.programme_url:
+            return httpx.Response(
+                200, text=VUE_PAGE, headers={"Set-Cookie": "vue-anonymous=fixture-cookie; Path=/"}
+            )
+        return httpx.Response(200, json={"responseCode": 0, "result": []})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        prepared = await refresh.prepare([VENUE], DAY, DAY, client)
+    assert prepared.requests == len(seen) == 2
+    assert seen[1].headers["cookie"] == "vue-anonymous=fixture-cookie"
+    assert "fixture-cookie" not in prepared.model_dump_json()
+    assert "vue-anonymous" not in prepared.model_dump_json()
+    old_protocol = json.loads(prepared.model_dump_json())
+    old_protocol["adapter_version"] = "ab6-2"
+    with pytest.raises(ValueError, match="adapter_version"):
+        refresh.PreparedRun.model_validate(old_protocol)
 
 
 async def test_search_is_candidate_only_and_metadata_is_separately_corroborated():

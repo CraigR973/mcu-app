@@ -2,7 +2,8 @@
 
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
 AB3 and the separate movie-night repair on 29 Oct, plus AB4 shipped/phone-accepted
-31 Oct; the April design intent remains in `ARCHITECTURE.md`.
+31 Oct and the causal movie-night poster repair on 3 Nov (PR #127); the April design intent
+remains in `ARCHITECTURE.md`.
 
 ```mermaid
 flowchart TB
@@ -15,14 +16,15 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
-## AB6, implementation under review, 2 Nov (not deployed or enabled)
+## AB6, implementation under review, 3 Nov (not deployed or enabled)
 
 ```mermaid
 flowchart TB
     Reminder[Existing morning job<br/>reminders committed first] --> Disabled{Cinema collection enabled?}
     Disabled -- no: zero HTTP --> Stop[Return cinema disabled]
     Disabled -- yes --> Public[Six public source families<br/>nine approved venues]
-    Public --> Metadata[Optional cached TMDB candidates<br/>12 GETs inside the same run budget]
+    Public --> PageFirst[Vue: ordinary public page then selected dates<br/>same bounded anonymous client]
+    PageFirst --> Metadata[Optional cached TMDB candidates<br/>12 GETs inside the same run budget]
     Metadata --> Fence[Bounded fetch and fenced atomic venue promotion]
     Review[Owner-reviewed artifact and mappings<br/>exact hash and counts] --> Fence
     Fence --> Cinema[(Five isolated cinema tables)]
@@ -42,7 +44,12 @@ negative cache, source fingerprints and refusal pause. An existing API-token ref
 into the existing morning job is prepared, with a read-only plan; it has not been applied.
 No new service/schedule/table/browser API is added by the amendment. New run status remains
 unclassified without proof. Fresh all-nine acceptance, exact configuration apply,
-production deployment/import/mapping/enable approvals and AB6 acceptance remain outstanding.
+production deployment/import/mapping/enable evidence and AB6 acceptance remain outstanding.
+Standing #334 authorises those known stages after evidence review. The accepted 3 Nov
+Vue amendment visits its known ordinary public page once before today/tomorrow date GETs,
+inside the same caps; other adapters are unchanged. Cookies remain memory-only/host-scoped,
+page/date failures fail Vue, failed prefixes stay excluded. Artifact protocol ab6-3 requires
+fresh reviewed evidence; the earlier failed artifact is not patched into acceptance.
 
 ## AA8, shipped 23 Oct
 

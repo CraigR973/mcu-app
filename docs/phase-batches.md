@@ -4925,7 +4925,7 @@ Cinema fees, request load and ongoing maintenance cost remain unknown until AB5.
 | ~~AB3~~ | ~~Mark's new-title notifications (snag 4), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped** | PR #121, merge `5cfa467`; approved Mark-only first-owned-title trigger, default-on preference, atomic outbox/receipt and retry/concurrency safety. Full local/PR/main gates and exact API/web SHA/full readiness; live credential-safe grants/category/preferences verified. Genuine later add/real-phone receipt remains owner acceptance. |
 | ~~AB4~~ | ~~iPhone launch and top bar (snags 1, 6), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **shipped 31 Oct** | PR #122, merge df6824a: owner-approved measured 32px header/Search gap, native original production Archive/Search sharp in both themes and keyboard normal. Approved re-add restores cold launch Home and preserves Home resume without problems; no navigation repair. Full local/seven-job PR/main CI, exact API/web SHA/full readiness and read-only bootstrap smoke pass. All AB4 owner checks met; old bundle/internal launcher mechanism uninspected. |
 | ~~AB5~~ | ~~Nine-cinema source feasibility (snag 8, report), 🟡~~ | ~~Opus 5 `high` / GPT-5.6 Sol High~~ | **report complete** | PR #123, merge `b9f7dd714ed44d55d9a445195bd51ff02159dc20`; nine-venue report, official programme targets, source/cost/maintenance findings and concepts. Free links / Film first selected, all nine retained. Craig accepted report complete with programme feasibility unproven (#313): real programme/older-film/booking/horizon/cancellation evidence remains unmet after one approved historical GET returned 403, no retry. Seven-job PR CI 41205867259 and exact API/web/readiness pass; final handoff proof in PR #123. No app build; next build needs revised scope/separate go. |
-| AB6 | Cinema programme ingestion, 🔴 | Opus 5 `xhigh` / GPT-5.6 Sol Extra High | repair integrated; source protocol build approved | Draft PR #125 preserved. Standing completion go #334 accepts known remaining stages. Separate causal repair PR #127/code3d71b71/final-main62467f4 closed with full local/PR/main/final-doc gates and exact production proof; normal merge, docs histories retained/no code conflict. Focused integrated verification then accepted public-page-first Vue amendment. Old #332 failed all-nine artifact and #333 diagnostic Vue success unchanged; actual fresh all-nine/identity/category/count/config/import/enable evidence still required. No reduced coverage/new fees/credentials or other sitting; no AB7 before accepted AB6. |
+| AB6 | Cinema programme ingestion, 🔴 | Opus 5 `xhigh` / GPT-5.6 Sol Extra High | source protocol implemented; full verification | Draft PR #125 preserved. Standing completion go #334 accepts known remaining stages. Separate causal repair PR #127/code3d71b71/final-main62467f4 closed with full local/PR/main/final-doc gates and exact production proof; normal merge, docs histories retained/no code conflict. Focused integrated verification then accepted public-page-first Vue amendment. Old #332 failed all-nine artifact and #333 diagnostic Vue success unchanged; actual fresh all-nine/identity/category/count/config/import/enable evidence still required. No reduced coverage/new fees/credentials or other sitting; no AB7 before accepted AB6. |
 | AB7 | Local-cinema discovery screen (conditional), 🟡 provisional | Sonnet 5 `high` / GPT-5.6 Terra High | planned | — |
 
 Deep/high: AB1 has silent wrong actions despite passing tests; AB2 needs meaning/design
@@ -5047,6 +5047,15 @@ this exception closes only the report, never asserts source feasibility or waive
   deploy. No schema/API/job/hosting choice is approved by discovery alone.
 
 ### AB6 — Cinema programme ingestion (conditional)
+
+**3 Nov implementation update under #334:** clean merged6ed37b4 passes 60 cinema tests
+and both causal/original movie-night cases in Chromium/Firefox. Public-page-first Vue
+protocol implemented on PR #125; same client/budget, observed venue-title guard, today/
+tomorrow only, whole-Vue failure/failed-prefix exclusion and ab6-3 artifacts. 15 focused
+Vue tests pass; full clean verification/CI and fresh all-nine evidence remain required.
+No new live request/configuration/production data action yet. Full report:
+docs/reviews/ab6-public-page-first-implementation-2026-11-03.md.
+
 
 **Standing completion approval #334, 3 Nov, supersedes the known authorisation stops below.**
 Craig approves the cause-first repair and all known remaining cinema feature stages.

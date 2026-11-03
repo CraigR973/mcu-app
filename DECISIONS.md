@@ -7114,3 +7114,12 @@ contemporaneous.
      verified. Normal integration into preserved AB6 follows, retaining both histories.
      Old known-stage UNAPPROVED stops below reports are superseded by standing #334,
      not by invented evidence. Source build/read/write facts still need actual proof.
+
+     Accepted source amendment implementation: one ordinary Vue page before selected
+     today/tomorrow date GETs in the same client/budget; observed venue-title guard,
+     no later-only requests, whole-Vue failure/prefix exclusion and unchanged global/
+     metadata/body/time/rate caps. Artifact ab6-3 rejects earlier protocol files.
+     Existing test GET sequence gains only the declared page (3 instead of 2), with
+     original literal dates/horizon/zero-later requests retained and prefix case
+     strengthened. 15 focused tests pass; full gate/live evidence pending. No schema,
+     hosting/service/credential/category concession or production/source action.

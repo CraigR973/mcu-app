@@ -57,7 +57,7 @@ HEARTBEAT = "cinema-programme"
 
 class PreparedRun(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    adapter_version: Literal["ab6-2"] = "ab6-2"
+    adapter_version: Literal["ab6-3"] = "ab6-3"
     prepared_utc: NaiveDatetime
     date_from: date
     date_to: date

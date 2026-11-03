@@ -113,6 +113,13 @@ def parse_cinematimes(body: str, venue: Venue) -> Snapshot:
     return result
 
 
+def validate_vue_page(body: str, venue: Venue) -> None:
+    page = BeautifulSoup(body, "html.parser")
+    title = " ".join(page.title.get_text(" ", strip=True).split()) if page.title else ""
+    if venue.name.casefold() not in title.casefold():
+        raise SourceError("Vue public programme page identity unavailable; no date requests")
+
+
 def parse_vue(data: dict[str, Any], day: date, venue: Venue) -> Snapshot:
     if (
         data.get("responseCode") != 0
