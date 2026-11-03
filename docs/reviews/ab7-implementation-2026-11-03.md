@@ -46,10 +46,13 @@ pre-filter counts, category changes, source failure/unconfirmed and offline supp
 Home/You/sidebar/keyboard/palette navigation, five bottom slots and signed-out protection.
 The fixture compares catalogue/diary/programme counts before and after browsing.
 
-Chromium first five functional groups and Firefox all6 cases have passed; the last Chromium
-navigation run exposed a test readiness error before its new palette shortcut. It now waits
-for the signed-in shell. Exact clean full local gate, complete browser suites, seven-job CI,
-production deployment and actual programme/render comparison remain pending. No shipped claim.
+All ten clean local checks pass on frozen runtime5ba8a34: API2,621/no skips/shared167/
+web755, lint/typecheck/build. Subsequent changes strengthen E2E assertions only: every
+source-failure/unconfirmed and offline scenario now runs at375px in both themes, with actual
+HTML theme assertions and independently guarded failure/unconfirmed actions. The product,
+API/shared code, locks and gate configuration remain identical. Full browser suites on that
+stronger test commit, exact-head seven-job CI, production deployment and actual programme/
+render comparison remain pending. No shipped claim.
 
 Screenshots inspected from actual375px Chromium: both profile/theme filter views and the
 scrolled film card; no horizontal overflow, wrapped venue rows and separate ticket/official

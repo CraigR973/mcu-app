@@ -58,12 +58,13 @@ async function selectDay(page: Page, day: string) {
 
 for (const person of ['Craig', 'Mark'] as const) {
   test(`cinemas keeps ${person}'s watched status and returning films in both phone themes`, async ({ signedIn, programme }, testInfo) => {
-    const { context, page } = await signedIn(person)
-    await page.setViewportSize({ width: 375, height: 844 })
     for (const theme of ['light', 'dark']) {
+      const { context, page } = await signedIn(person)
+      await page.setViewportSize({ width: 375, height: 844 })
       await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
       await page.goto('/cinemas')
       await selectDay(page, programme.day)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       const favourite = page.getByRole('article', { name: programme.title, exact: true })
       await expect(favourite).toContainText(person === 'Craig' ? 'You have watched this' : 'You have not watched this')
       await expect(favourite.getByRole('link', { name: 'Check tickets' })).toHaveCount(2)
@@ -89,27 +90,46 @@ for (const person of ['Craig', 'Mark'] as const) {
   })
 }
 
-test('cinemas retains failed and unconfirmed showings without advertising ticket checks', async ({ signedIn, db, programme }) => {
-  db.sql(`UPDATE cinema_coverage SET status='failed',error='Fixture source refused the latest check' WHERE local_date=${sql(programme.day)} AND venue_id IN (SELECT id FROM cinema_venues WHERE slug='vue-st-enoch'); UPDATE cinema_screenings SET confirmation='unconfirmed' WHERE source_key LIKE ${sql(`${programme.prefix}:%`)}`)
-  const { page } = await signedIn('Craig')
-  await page.goto('/cinemas'); await selectDay(page, programme.day)
-  await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(0)
-  await expect(page.getByText('Showing unconfirmed', { exact: false })).toHaveCount(5)
-  await page.getByText('Coverage and sources', { exact: true }).click()
-  await expect(page.getByRole('region', { name: 'Vue Glasgow St Enoch coverage' }).getByText(`${programme.day} · Latest check failed`, { exact: true })).toBeVisible()
-  await expect(page.getByText('Fixture source refused the latest check')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(14)
+test('cinemas retains failed and unconfirmed showings without advertising ticket checks', async ({ signedIn, db, programme }, testInfo) => {
+  db.sql(`UPDATE cinema_coverage SET status='failed',error='Fixture source refused the latest check' WHERE local_date=${sql(programme.day)} AND venue_id IN (SELECT id FROM cinema_venues WHERE slug='vue-st-enoch')`)
+  for (const theme of ['light', 'dark']) {
+    db.sql(`UPDATE cinema_screenings SET confirmation='confirmed' WHERE source_key LIKE ${sql(`${programme.prefix}:%`)}`)
+    const { context, page } = await signedIn('Craig')
+    await page.setViewportSize({ width: 375, height: 844 })
+    await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
+    await page.goto('/cinemas'); await selectDay(page, programme.day)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+    // A failed Vue check alone suppresses its four actions, while the other venue's
+    // confirmed observation keeps its own action. Unconfirmed is a separate guard.
+    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(1)
+    db.sql(`UPDATE cinema_screenings SET confirmation='unconfirmed' WHERE source_key LIKE ${sql(`${programme.prefix}:%`)}`)
+    await page.getByRole('button', { name: 'Reload view', exact: true }).click()
+    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(0)
+    await expect(page.getByText('Showing unconfirmed', { exact: false })).toHaveCount(5)
+    await page.getByText('Coverage and sources', { exact: true }).click()
+    const coverage = page.getByRole('region', { name: 'Vue Glasgow St Enoch coverage' })
+    await expect(coverage.getByText(`${programme.day} · Latest check failed`, { exact: true })).toBeVisible()
+    await expect(coverage.getByText('Fixture source refused the latest check')).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(14)
+    await coverage.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: testInfo.outputPath(`cinemas-failed-${theme}-375.png`) })
+  }
 })
 
 test('cinemas pauses cached ticket checks immediately offline and retains official fallbacks', async ({ signedIn, programme }) => {
-  const { context, page } = await signedIn('Mark')
-  await page.goto('/cinemas'); await selectDay(page, programme.day)
-  await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(5)
-  await context.setOffline(true)
-  await expect(page.getByText('Offline · saved programme only.', { exact: false })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(5)
-  await context.setOffline(false)
+  for (const theme of ['light', 'dark']) {
+    const { context, page } = await signedIn('Mark')
+    await page.setViewportSize({ width: 375, height: 844 })
+    await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
+    await page.goto('/cinemas'); await selectDay(page, programme.day)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(5)
+    await context.setOffline(true)
+    await expect(page.getByText('Offline · saved programme only.', { exact: false })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(5)
+    await context.setOffline(false)
+  }
 })
 
 test('cinemas is reachable from Home and mobile You while retaining five bottom tabs', async ({ signedIn, programme }) => {
