@@ -1,12 +1,15 @@
 # Next owner checkpoint: fresh AB6 acceptance read
 
-Status: proposal only; no source request is authorised or made by preparing this note.
-Prerequisite met on 3 Nov: the separate assistant repair and integrated AB6 code 5b02ab8
-pass all normal checks (full report: ab6-post-assistant-verification-2026-11-03.md/JSON).
-Confirm the final documentation-head seven-job CI in PR #125 before running. Historical
-programme/metadata specimens do not certify this new pass. This is not read permission.
+Status: **approved and completed once on 3 Nov (#332); permission spent.**
+Craig said “approve”. Clean a038709 exact-head PR CI 41550182406 passed all seven jobs
+before execution. Result: 62 GETs/12 metadata/60.197s, eight venues/1,800 rows; Vue's
+4 Nov 401 fails the all-nine gate and quarantines its 49-row prefix. No retry/alternate
+or production action. Complete report/audit/snapshot: ab6-acceptance-read-2026-11-03.md/JSON.
+The separate repair and integrated build remain verified; live acceptance is unmet.
+The following is the approved historical scope, not permission for another pass.
+New report-only proposal ab6-vue-session-plan-2026-11-03.md is UNAPPROVED and unrun.
 
-Recommend one fresh, anonymous programme pass across the existing nine selected venues,
+The approved proposal was one fresh, anonymous programme pass across the existing nine selected venues,
 using the accepted six HTTP source families and £0 source subscriptions. London civil
 window: execution day through +13 days; Vue execution day/tomorrow only. Later Vue dates
 remain explicitly unchecked. No alternate provider, browser or access-control bypass.
@@ -22,7 +25,7 @@ SHA-256, exact counts, venue/date horizons, omissions/refusals, category/year/ma
 confidence and metadata backlog for owner review. New/Older retain the strict accepted
 run-based rules; Unclassified and any zero New count remain explicit, not guessed away.
 
-This approval would authorise only this read experiment, with zero production writes,
+This approval authorised only this completed read experiment, with zero production writes,
 configuration apply, deployment, imports, mapping selections or enables. Source fees £0;
 existing compute/network/quota use is unpriced. The saved rows/hashes/counts and exact
 mapping/config/import/nine-row enable remain separate owner decisions. Re-plan before

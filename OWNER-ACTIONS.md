@@ -185,9 +185,23 @@ conversation still maps onto this file.*
   evidence is in PR #125. No repeat repair/build approval; fresh source acceptance stays
   stopped. Exact proposal: docs/reviews/ab6-next-acceptance-read.md; portable verification:
   docs/reviews/ab6-post-assistant-verification-2026-11-03.md and JSON.
-  **Remaining owner checkpoints:** fresh exact all-nine acceptance read, actual row/horizon/
-  category/mapping review; exact config apply/disabled deployment/production import/nine-row
-  enable. No new source pass is covered by the build go. No AB7 before accepted AB6.
+  **Fresh acceptance approved/completed (#332, 3 Nov):** Craig's “approve” accepted the exact
+  one-pass scope after all seven a038709 PR CI 41550182406 jobs passed. Actual 62 GETs,
+  12 metadata/6,135,897 bytes/60.197s: eight venues/1,800 screenings. Vue 3 Nov returns
+  49 rows, then 4 Nov 401; host stopped/no retry, prefix quarantined. All 1,800 Unclassified,
+  no verified identities/complete dates; three unapproved candidates lack corroboration,
+  one ambiguous record/backlog 143. Exact artifact loader refuses all-nine import; every
+  disposable table count/nine disabled flags unchanged. Full report/audit/complete snapshot:
+  docs/reviews/ab6-acceptance-read-2026-11-03.*. No implementation/production action.
+  **Remaining owner checkpoints:** the accepted two-date Vue assumption is unmet: stop and
+  re-plan before implementation. Concrete recommendation is the UNAPPROVED report-only
+  two-GET/45-second ordinary public-page/session experiment in
+  docs/reviews/ab6-vue-session-plan-2026-11-03.md; no TMDB, writes or changed implementation.
+  Session state is only a hypothesis. Completed #332 permission is spent; no further source
+  request/retry/alternate follows. No repeat approval for completed research/build/repair.
+  Changed scope needs a concrete accepted build contract, then fresh all-nine acceptance,
+  actual row/horizon/category/identity/mapping review; exact config apply/disabled deployment/
+  production import/nine-row enable. No AB6 close-out/AB7 before accepted AB6.
   Approving the grouping is not a go for every sitting or a hosting/credential/live-write
   approval. Mark’s remaining AA1 phone and AA10b/AA10c boundaries below remain in force.
 

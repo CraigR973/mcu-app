@@ -2,34 +2,36 @@
 
 ## Now
 
-**3 Nov: separate assistant repair shipped; integrated AB6 verification green, fresh live gate open.**
-Assistant PR #126/7b67375 proves and repairs the 48px empty-log clipping cause without
-weakening assertions. Final main 6d0f676 has seven-job PR/merged-code/final-doc CI and exact
-production API/web/db ok/five integrations configured. Green main merges normally into
-preserved cinema branch/draft PR #125 as 5b02ab8; STATUS/DECISIONS conflicts retain both
-histories, app/tests merge cleanly. Cinema API/shared/hosting/job code stays identical to
-5800f5d. Clean 5b02ab8: all ten local checks, API 2,609/no skips/shared 167/web 738; exact
-local Chromium 62/Firefox 61+documented skip/jobs six, no retries. Exact PR CI 41547976591
-passes all seven jobs, including WebKit 60+two documented skips. Migration proof unchanged.
-Final documentation-head CI evidence belongs in PR #125 before handoff. All nine venues
-remain disabled; plan 0 add/2 change/0 destroy never applied. No new cinema/TMDB request,
-production DB/config/deploy/import/mapping/enable or AB7/AA10c/other sitting. Report:
-docs/reviews/ab6-post-assistant-verification-2026-11-03.md and JSON; exact fresh-read proposal:
-docs/reviews/ab6-next-acceptance-read.md. Current first-run/New population remains unproved.
+**3 Nov: approved fresh cinema read complete; all-nine live acceptance unmet (#332).**
+One pass on clean a038709 after all seven exact-head PR CI 41550182406 jobs passed:
+62 GETs/12 metadata GETs, 6,135,897 bytes/60.197 seconds. Eight venues yield 1,800 future
+screenings at preparation. Vue returns 49 rows for 3 Nov, then 4 Nov 401; host stops,
+49 prefix rows quarantined. No retry or alternative. Real artifact loader refuses the
+exact digest/count under the unchanged all-nine gate. Every disposable DB table count
+and nine disabled flags are unchanged. All 1,800 rows Unclassified; three unapproved
+metadata candidates lack independent corroboration, one ambiguous record/backlog 143.
+No complete dates/current first UK run/verified global identities established.
+Cinema implementation is unchanged and undeployed on draft PR #125. Separate assistant
+repair remains main/production 6d0f676; API/web exact SHA/db ok/five integrations freshly
+verified. Existing-token plan 0 add/2 change/0 destroy is unapplied. No production DB,
+config/deploy/import/mapping/enable, AB7, AA10c or other sitting. Full report/audit/artifact:
+docs/reviews/ab6-acceptance-read-2026-11-03.md/JSON and compressed snapshot alongside.
 
 ## Next
 
-Stop for exact fresh all-nine acceptance-read approval under the prepared scope: execution
-day through +13 London dates, Vue execution day/tomorrow only, at most 120 GETs including
-12 existing-token TMDB metadata GETs/five minutes, unchanged body/rate/refusal limits,
-owned disposable localhost DB/artifact/hash/counts only, £0 source fees/no production
-writes. Confirm PR #125 final-head seven-job CI before any approved run. The #328/#329
-historical reads, #330 build and #331 separate repair are accepted; no repeat decisions.
-Review real rows/horizons/categories/identities/mapping evidence/backlog after that pass;
-re-plan before implementation if feasibility changes scope. Exact config apply/disabled
-deployment/production import/selected mappings/nine-row enable remain separate owner stops.
-No AB6 merge/close-out or AB7 from fixture/CI success alone; no AA10c/other sitting.
-AA10c remains separate from 25 Nov; AA10b/real-phone/live-assistant observations stay open.
+Stop and re-plan before implementation: accepted Vue today/tomorrow feasibility is unmet.
+Recommend the concrete report-only ordinary anonymous Vue public-page/session experiment
+in docs/reviews/ab6-vue-session-plan-2026-11-03.md: at most two GETs/45 seconds, £0 source
+fees, no TMDB/database/application/production writes. It is UNAPPROVED and unrun; ordinary
+session state is a hypothesis, not a proved cause. Today's completed one-pass approval
+is spent; no retry/alternate is implied. Do not silently reduce coverage to eight/today-only,
+admit the failed prefix, or relax identities/categories. No repeat approval of completed
+#328/#329 research, #330 build or #331 repair. Any changed source/build scope needs a
+concrete revised contract accepted before implementation. Further fresh all-nine acceptance,
+actual row/horizon/category/identity review, selected mappings, exact configuration apply,
+disabled deployment, production import and nine-row enable remain separate owner stops.
+No AB6 merge/close-out or AB7 from fixture/CI success. AA10c remains separate from 25 Nov;
+AA10b/real-phone/live-assistant observations stay open.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -421,6 +423,16 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **2026-11-03** — **AB6 approved fresh acceptance read completed; live gate unmet (#332).**
+  Clean a038709/all-seven exact PR CI 41550182406 before one bounded pass: 62 GETs,
+  12 metadata, 6,135,897 bytes/60.197s. Eight venues/1,800 rows; Vue 3 Nov 49 rows then
+  4 Nov 401/host stopped, prefix quarantined. All rows Unclassified, no verified identity;
+  three unapproved candidates/one ambiguous/backlog 143. Exact artifact loader refuses
+  all-nine import; localhost counts/nine disabled flags unchanged. Complete normalised
+  artifact/hash/audit saved. No implementation, production config/data/deploy/import/enable
+  or other sitting. Main/production 6d0f676 freshly verified. Two-GET/45-second report-only
+  ordinary Vue session proposal saved, UNAPPROVED; stop/re-plan before implementation.
 
 - **3 Nov — AB6 repair integration verified; stop for fresh source acceptance.** Separate
   assistant PR #126 is complete at green production/main 6d0f676. Normal merge 5b02ab8

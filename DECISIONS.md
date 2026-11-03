@@ -6985,3 +6985,32 @@ contemporaneous.
      pass all seven jobs, including all browser suites; exact production API/web 6d0f676,
      db ok/five integrations configured. Repair accepted; resume the preserved AB6 branch
      by normal merge and full verification, with fresh source/production stops unchanged.
+
+332. **Approve and complete one fresh AB6 acceptance read; stop at failed live gate (3 Nov).**
+     Craig says “approve” to docs/reviews/ab6-next-acceptance-read.md: one all-nine pass,
+     London 3–16 Nov/Vue 3–4 Nov, at most 120 GETs including 12 existing-token metadata
+     GETs/five minutes, unchanged timeout/body/concurrency/refusal limits, £0 source fees,
+     owned disposable localhost DB/artifact/counts only. Clean a038709 exact-head PR CI
+     41550182406 has all seven jobs green before the run. Actual 62 GETs/12 metadata,
+     6,135,897 decoded bytes/60.197s: 61 HTTP 200 and one Vue 401 on 4 Nov after 49 rows
+     on 3 Nov. Host stops, no retry/alternate; failed Vue prefix quarantined/excluded.
+     Eight non-failed venues yield 1,800 future rows at preparation, all Unclassified;
+     no complete-date sets or verified global identities. Three unapproved TMDB candidates
+     lack independent source corroboration, one ambiguous record/backlog 143. Returned
+     UK dates do not prove current first UK run. Exact artifact SHA-256
+     fcc8e42c6031357901359d8e83a3a3eae72870650de2b04f5e6434767d595d3f/count 1,800
+     is refused by the real read-only loader: source acceptance unresolved/no reduced
+     coverage write. Every disposable table count/nine disabled flags unchanged. Request
+     reservations retain the one-second throttle; later audit-hook minimum 0.998727s is
+     recorded, not claimed as proof of exact wire cadence. Full report/audit/complete
+     compressed snapshot: docs/reviews/ab6-acceptance-read-2026-11-03.* and snapshot alongside.
+     No production DB/configuration/apply/deploy/import/mapping/enable or other sitting.
+     Main/API/web remain 6d0f676 with db ok/five integrations freshly verified.
+     The two-date Vue assumption is unmet: stop/re-plan before implementation, not a go
+     for eight venues/today-only/failed prefixes or weaker categories. Recommend only
+     the concrete two-GET/45-second report-only ordinary anonymous page/session plan in
+     docs/reviews/ab6-vue-session-plan-2026-11-03.md, UNAPPROVED and unrun. Session state
+     is a hypothesis, not the cause proved. Spent one-pass approval covers no further
+     source/TMDB request. Any changed build needs a revised accepted contract; all-nine
+     acceptance, actual row/category/identity review and exact production steps stay
+     separate owner checkpoints. No AB6 close-out, AB7, AA10c or other sitting.

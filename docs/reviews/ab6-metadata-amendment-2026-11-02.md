@@ -1,5 +1,16 @@
 # AB6 metadata amendment — 2 Nov
 
+## Latest live status — 3 Nov acceptance unmet
+
+The owner-approved fresh read (#332) on all-seven-CI-green a038709 yields eight venues/
+1,800 rows, then Vue's 4 Nov 401 fails the all-nine gate (49 prefix rows quarantined).
+All rows Unclassified; no independently corroborated candidate/global identity. Real
+artifact loader refuses; disposable counts/nine disabled flags unchanged. No implementation
+or production action followed. Complete report/audit/snapshot is
+ab6-acceptance-read-2026-11-03.md/JSON. Stop/re-plan before changed implementation; proposed
+report-only two-GET Vue session investigation is UNAPPROVED. Historical build/repair
+records below describe what was verified before that read, not a live acceptance waiver.
+
 ## Current prerequisite status — separate repair completed
 
 Owner-approved #331 repair shipped in separate PR #126/7b67375, final green main 6d0f676.
