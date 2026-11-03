@@ -7,8 +7,9 @@ Craig approves the cause-first repair and all known remaining sitting 5 stages t
 feature completion. Preserve cinema branch/draft PR #125 at cf2cdf5. On a separate fix
 branch from seven-job-green main 6d0f676, investigate WebKit 41643751573: final click records
 no suggestion POST and stays on film detail. Saved frames show a poster-size transition
-moving the button by about 48px at the click; controlled causal regression pending.
-No code repair/production change yet. Accepted next source amendment: ordinary public
+moving the button at the click. Controlled pre-fix WebKit CI 41662029373 proves
+141→94px collapse (47px). Minimal film-page parent aspect reservation/image fit applied;
+no click/vote/navigation change. Full local/after-fix CI pending, no production change. Accepted next source amendment: ordinary public
 Vue page before its today/tomorrow date requests, unchanged caps. No repeat owner go for
 prepared source/build/metadata/mapping/config/deploy/import/enable/AB7 steps; evidence
 and normal gates remain mandatory. No AA10c/other sitting/new fees/destructive writes.

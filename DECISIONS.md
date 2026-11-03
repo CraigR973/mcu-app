@@ -6946,3 +6946,12 @@ contemporaneous.
      checkpoints for the known remaining work. Decisions 332–333 and full cinema
      implementation remain on preserved AB6 branch; this repair does not merge that
      unaccepted implementation into main.
+
+     Movie-night diagnosis: controlled pre-fix WebKit CI 41662029373 proves the poster
+     collapses 141→94px (47px) while fallback waits, matching the recorded lost click.
+     Reserve the film-page poster parent at 2:3 and fit its image, without changing
+     click/selection/votes/promotion/navigation. Regression measures untransformed layout
+     (exact offsetTop) to exclude intended 1px active feedback; two setup measurements
+     and a type-narrowing correction are preserved, not used as app-cause evidence.
+     No assertion/timeout/skip/random-seed waiver. Full local/after-fix WebKit proof
+     required before code-only close-out; no production change yet.

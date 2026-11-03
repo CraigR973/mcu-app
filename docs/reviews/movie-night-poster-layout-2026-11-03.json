@@ -1,0 +1,25 @@
+{
+  "originalFailureRun": 41643751573,
+  "beforeRegressionRun": 41662029373,
+  "beforeRegressionHead": "41708be6654312421cd99dc102bdd59763a659a4",
+  "runtimeParent": "6d0f67660995a88226c1a10fdaa60597dba74177",
+  "browser": "webkit",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "posterHeightBefore": 141,
+  "posterHeightFailed": 94,
+  "layoutCollapsePx": 47,
+  "beforeLogSha256": "e236766dc01714aa08b6f29346c88fa77b2fb0960ba863f05d8c7b48c87a3cfd",
+  "causalRegression": "Synthetic 404 while holding fallback response; unchanged poster-height assertion fails 141 versus 94 before runtime repair. Independent button press-animation setup failures were not used as causal proof.",
+  "repair": "Reserve film-page poster container at 2:3 and fit its image to that reserved box",
+  "originalAssertionsUnchanged": true,
+  "initialProbeSetupErrors": [
+    "Unpressed/pressed viewport geometry compared intentional 1px transform",
+    "Two animation frames still sampled the intentional press transform mid-transition",
+    "Layout offset measurement initially needed HTMLButtonElement type narrowing; fixed without ignore/cast"
+  ],
+  "finalRegressionLayoutInvariant": "Exact offsetTop equality, independent of intentional press transform; height tolerance and physical pointer-release/navigation check retained",
+  "afterProof": "pending"
+}

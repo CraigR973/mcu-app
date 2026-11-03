@@ -44,3 +44,30 @@ proof. Baseline measurement is corrected to occur after pointer-down/before imag
 the geometry invariant, tolerance and original case are unchanged. The initial trace and
 log remain preserved; no runtime repair has been made. Standing #334 covers this corrected
 controlled reproduction; no green rerun of the uncorrected setup is used as evidence.
+
+The second probe caught the same intentional press animation still mid-transition
+(412.457→413), not a poster shift. Final regression measures exact untransformed layout
+position (`offsetTop`) rather than a transform-dependent viewport coordinate; the action
+must remain at exactly the same layout position, poster-height tolerance stays unchanged,
+and the original physical press/release/navigation check remains. This is a stricter
+layout invariant without an artificial animation delay or timeout. Both initial probe
+traces are retained and neither is represented as causal evidence or a fixed app bug.
+
+## Cause proved and minimal repair applied
+
+Before-runtime-change PR CI 41662029373 (41708be) deterministically fails the unchanged
+WebKit poster-height invariant: 141px before failure, 94px while the fallback is held
+(47px collapse). The original intermittent case passing in that run does not waive its
+saved failure; the controlled case establishes the missing geometric condition.
+The independent press-animation setup issues in Chromium/Firefox are not causal evidence.
+A TypeScript check also required explicit HTMLButtonElement narrowing for offsetTop;
+no ignore/cast/loosened type was added. The final regression uses exact untransformed
+layout equality, unchanged poster-height tolerance and physical click/navigation.
+
+The film page now reserves a 2:3 poster box independently of image decode/error state;
+its image fills that box. No click, night selection, vote/promotion/navigation, data,
+auth/API contract or global poster behavior changes. Design choice: reserve the detail
+page's poster geometry only, rather than change every poster component or wait for images.
+The parent border contributes at most a one-pixel artwork-size difference at the phone
+width; no uncertainty is hidden and the action remains in stable flow. Full local/CI
+verification pending; WebKit after-fix proof remains mandatory.

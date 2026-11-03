@@ -142,20 +142,23 @@ test('a poster failure cannot move the movie-night action during a click', async
     expect(before).not.toBeNull()
     expect(actionBefore).not.toBeNull()
     await craig.page.mouse.move(actionBefore!.x + actionBefore!.width / 2, actionBefore!.y + actionBefore!.height / 2)
+    // Layout position excludes the button's intentional animated 1px press transform.
+    const actionLayoutBefore = await add.evaluate((element) => {
+      if (!(element instanceof HTMLButtonElement)) throw new Error('Movie-night action is not a button')
+      return element.offsetTop
+    })
     await craig.page.mouse.down()
-    // Compare the image transition within the pressed state; the normal button
-    // feedback intentionally translates by 1px when the pointer goes down.
-    await craig.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
-    const actionPressed = await add.boundingBox()
-    expect(actionPressed).not.toBeNull()
     failPoster()
     await expect(poster).toHaveAttribute('src', '/placeholder-poster.svg')
     // Observe the failed-image interval, before the local fallback finishes loading.
     await craig.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
     const failed = await poster.boundingBox()
-    const actionFailed = await add.boundingBox()
+    const actionLayoutFailed = await add.evaluate((element) => {
+      if (!(element instanceof HTMLButtonElement)) throw new Error('Movie-night action is not a button')
+      return element.offsetTop
+    })
     expect(failed?.height).toBeCloseTo(before!.height, 0)
-    expect(actionFailed?.y).toBeCloseTo(actionPressed!.y, 0)
+    expect(actionLayoutFailed).toBe(actionLayoutBefore)
     await craig.page.mouse.up()
     await expect(craig.page).toHaveURL(nightUrl)
   } finally {
