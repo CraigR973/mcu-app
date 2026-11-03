@@ -37,3 +37,10 @@ repair/full normal gates, normal separate code-only close-out and exact producti
 then normal preserved AB6 integration. User's standing approval covers the known remaining
 source build/reads/evidence-based mappings/prepared config/import/enable and AB7; missing
 facts are never treated as accepted evidence. No AA10c or other sitting.
+
+Initial local probe: test setup compared unpressed and pressed button coordinates and
+failed on its intentional 1px active translation (412→413). This is not causal poster
+proof. Baseline measurement is corrected to occur after pointer-down/before image failure;
+the geometry invariant, tolerance and original case are unchanged. The initial trace and
+log remain preserved; no runtime repair has been made. Standing #334 covers this corrected
+controlled reproduction; no green rerun of the uncorrected setup is used as evidence.

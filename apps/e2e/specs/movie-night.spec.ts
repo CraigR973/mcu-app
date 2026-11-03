@@ -143,6 +143,11 @@ test('a poster failure cannot move the movie-night action during a click', async
     expect(actionBefore).not.toBeNull()
     await craig.page.mouse.move(actionBefore!.x + actionBefore!.width / 2, actionBefore!.y + actionBefore!.height / 2)
     await craig.page.mouse.down()
+    // Compare the image transition within the pressed state; the normal button
+    // feedback intentionally translates by 1px when the pointer goes down.
+    await craig.page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    const actionPressed = await add.boundingBox()
+    expect(actionPressed).not.toBeNull()
     failPoster()
     await expect(poster).toHaveAttribute('src', '/placeholder-poster.svg')
     // Observe the failed-image interval, before the local fallback finishes loading.
@@ -150,7 +155,7 @@ test('a poster failure cannot move the movie-night action during a click', async
     const failed = await poster.boundingBox()
     const actionFailed = await add.boundingBox()
     expect(failed?.height).toBeCloseTo(before!.height, 0)
-    expect(actionFailed?.y).toBeCloseTo(actionBefore!.y, 0)
+    expect(actionFailed?.y).toBeCloseTo(actionPressed!.y, 0)
     await craig.page.mouse.up()
     await expect(craig.page).toHaveURL(nightUrl)
   } finally {
