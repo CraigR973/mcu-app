@@ -67,3 +67,20 @@ export function formatMonth(month: string): string {
   if (!year || !number || number > 12) return month
   return `${MONTHS[number - 1]} ${String(year)}`
 }
+
+/** UK programme civil date, independent of the viewer's time zone and locale ordering. */
+export function londonDate(value = Date.now()): string {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+/** A cinema moment uses London time, and the same Sep/day/month spelling as other screens. */
+export function formatLondonDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const day = londonDate(date.getTime())
+  const label = day.slice(0, 4) === londonDate().slice(0, 4) ? formatDayMonth(day) : formatShortDate(day)
+  const time = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)
+  return `${label}, ${time}`
+}

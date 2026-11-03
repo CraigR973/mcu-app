@@ -6,6 +6,8 @@ describe('cinema booking safety before another fetch', () => {
   it('uses UK civil dates and times across summer time regardless of the browser zone', () => {
     expect(londonDate(Date.parse('2026-06-01T23:30:00Z'))).toBe('2026-06-02')
     expect(londonTime('2026-06-01T23:30:00Z')).toContain('00:30')
+    expect(londonTime('2026-09-23T12:00:00Z')).toContain('23 Sep')
+    expect(londonTime('invalid')).toBe('invalid')
   })
   it.each(['javascript:alert(1)', 'http://www.myvue.com/cinema/x', 'https://user:pass@www.myvue.com/cinema/x', 'https://127.0.0.1/cinema/x', 'https://www.myvue.com:444/cinema/x', 'https://www.myvue.com/other/path'])('refuses unsafe or unexpected booking %s', (bookingUrl) => {
     const p = cinemaFixture(), showing = { ...p.films[0].showings[0], bookingUrl }

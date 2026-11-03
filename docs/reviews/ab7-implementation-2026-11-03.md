@@ -70,6 +70,10 @@ links. This proves simulated browser layout, not an affected iPhone's acceptance
 - The new Chromium palette shortcut fired immediately after navigation before auth/layout
   mounted; the test now waits for its signed-in shell destination before pressing the key.
 
+- The full local web gate caught the new London formatter outside the canonical date
+  utility. Both London helpers moved into `lib/utils.ts`, preserving its shared UK date
+  spelling; the date-forms guard and all existing assertions remain unchanged.
+
 ## Retained live-data limits
 
 The accepted3Nov17:13 snapshot stored1,838 rows/163 source-film identities/9 enabled venues,

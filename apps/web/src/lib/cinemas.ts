@@ -1,4 +1,6 @@
 import type { CinemaProgrammeResponse } from '@mcu/shared'
+import { londonDate } from './utils'
+export { londonDate, formatLondonDateTime as londonTime } from './utils'
 
 export type ProgrammeVenue = CinemaProgrammeResponse['venues'][number]
 export type ProgrammeShowing = CinemaProgrammeResponse['films'][number]['showings'][number]
@@ -49,20 +51,10 @@ export function programmeUrl(value: string): string | null {
   return url && PROGRAMME_HOSTS.has(url.hostname) ? value : null
 }
 
-export function londonDate(value = Date.now()): string {
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value)
-  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value
-  return `${part('year')}-${part('month')}-${part('day')}`
-}
-
 export function shiftDate(day: string, by: number): string {
   const value = new Date(`${day}T12:00:00Z`)
   value.setUTCDate(value.getUTCDate() + by)
   return value.toISOString().slice(0, 10)
-}
-
-export function londonTime(value: string): string {
-  return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value))
 }
 
 export function showingBooking(showing: ProgrammeShowing, venue: ProgrammeVenue, now: number, connected: boolean): string | null {
