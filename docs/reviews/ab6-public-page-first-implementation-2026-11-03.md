@@ -1,5 +1,10 @@
 # AB6 public-page-first implementation — 3 Nov
 
+> Current outcome3Nov: AB6 shipped/production accepted PR125/72ff0bd under standing334.
+> All-nine Railway acceptance/exact programme import/enable/role/read proof is in
+> [production report](ab6-railway-acceptance-2026-11-03.md). Older known-stage stops below
+> are historical; data uncertainties remain. Separate AB7 follows final handoff checks.
+
 Standing completion approval #334 accepts this prepared source amendment and the known
 remaining cinema feature stages. No repeated permission ask; actual evidence and all
 normal gates remain required. Existing AB6 branch/draft PR #125 only, no AB7 yet.

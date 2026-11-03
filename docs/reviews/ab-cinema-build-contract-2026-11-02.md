@@ -1,5 +1,10 @@
 # Nine-venue cinema discovery — revised build contract
 
+> Current outcome3Nov: AB6 shipped/production accepted PR125/72ff0bd under standing334.
+> All-nine Railway acceptance/exact programme import/enable/role/read proof is in
+> [production report](ab6-railway-acceptance-2026-11-03.md). Older known-stage stops below
+> are historical; data uncertainties remain. Separate AB7 follows final handoff checks.
+
 > Accepted amendment (#330): Vue today/tomorrow, bounded cached free TMDB candidates,
 > exact reviewed corroborated mappings, strict run definitions retained, and preparation
 > of one existing-job token reference. This supersedes this original contract's exclusion

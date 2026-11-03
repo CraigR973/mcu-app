@@ -93,7 +93,12 @@
     "cinema_venues": 65536
   },
   "localProgrammeTotalBytes": 1343488,
-  "productionIncrementNotYetMeasured": true,
+  "productionIncrementNotYetMeasured": false,
   "existingResourceCost": "unpriced; no tier or spending change",
-  "sourceFeesGbp": 0
+  "sourceFeesGbp": 0,
+  "productionAfterSchemaBytes": 112582656,
+  "productionAfterImportBytes": 113737728,
+  "databaseBytesIncreaseSinceBaseline": 1433600,
+  "collectorProcessMaxRssBytes": 122535936,
+  "measurementLimit": "pg_database_size logical allocation is not the hosting invoice, account allowance or whole-container peak"
 }

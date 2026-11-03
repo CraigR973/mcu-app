@@ -1,5 +1,10 @@
 # AB6 metadata amendment — 2 Nov
 
+> Current outcome3Nov: AB6 shipped/production accepted PR125/72ff0bd under standing334.
+> All-nine Railway acceptance/exact programme import/enable/role/read proof is in
+> [production report](ab6-railway-acceptance-2026-11-03.md). Older known-stage stops below
+> are historical; data uncertainties remain. Separate AB7 follows final handoff checks.
+
 ## Latest research — ordinary Vue session succeeds once, new build awaits go
 
 Separately approved #333 uses two GETs at 13:14 UTC on 3 Nov: public page then same-session

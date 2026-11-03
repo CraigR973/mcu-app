@@ -7134,3 +7134,17 @@ contemporaneous.
      unapplied. No production cinema schema/import/enable yet. Capacity/runtime/disabled
      deploy/exact write and production read evidence remain before accepted AB6/AB7.
      Evidence: docs/reviews/ab6-public-page-acceptance-2026-11-03.* and token-reference JSON.
+
+     AB6 production accepted/shipped PR125/merge72ff0bd: all local/API2621/no skips/
+     shared167/web738 and exact PR41678065707/main41681152577 seven jobs C63/F62+1/
+     W61+2/jobs6; exact API/web/full readiness. Actual071/nine disabled seeds/role guards,
+     independent existing-Railway63GET/all200/57.076sec/all-nine1838 artifact passes.
+     Fresher exact hash5c1c313...8ed71d and same three corroborated Vue mappings reviewed
+     before one guarded programme-only import/enable9, complete17:13.163 source films/
+     1838 screenings; core catalogue/diary/auth counts unchanged. Both profiles/eight
+     enabled-filter GETs pass1739 future/152 groups at check, New0/Older1/unclassified1738;
+     original-year/watch/ownership unknown without catalogue matches. No invented evidence.
+     Production DBsize+1,433,600bytes since baseline; source fees0/resources unpriced, no
+     paid service/tier/credential or unrelated API drift. Final handoff CI/readiness before
+     separate authorised AB7; next08:00UTC scheduled run/future access remain unproved.
+     Full raw hash/count/scope/write/role/read proof: ab6-railway-acceptance-2026-11-03.*.

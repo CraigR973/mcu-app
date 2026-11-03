@@ -11,19 +11,17 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Standing cinema completion approval (#334, 3 Nov).** Craig approves the separate
-  cause-first movie-night repair and the known remaining AB6/AB7 sitting 5 feature work,
-  including bounded live evidence, source-specific mappings, prepared existing-job token
-  reference, programme-only import/nine-row enable and normal verification/deployment.
-  Preserve every evidence/gate/cost/identity/category limit; no repeated known-stage go.
-  No new fees/credentials/destructive catalogue writes or other sitting. AB6 branch/PR
-  stays preserved. Prerequisite repair PR #127/3d71b71 is now code-deployed: controlled
-  WebKit 47px poster collapse repaired, all ten local/full browser/PR gates and exact
-  API/web/final-main checks pass; integrated into preserved AB6. Fresh63GET/all200/
-  all-nine1843-row acceptance and3corroborated mappings now validate, full gates pass.
-  Existing-job token reference applied alone with skip-deploys; unrelated API drift
-  untouched. Disabled deployment/runtime/capacity/programme import/enable/read proof
-  remains, then AB7; no new owner approval for these known stages.
+- **Standing cinema completion approval (#334, 3 Nov): AB6 shipped/production accepted.**
+  PR125/72ff0bd passes all local/exact PR/main gates and exact API/web/full readiness.
+  Actual071/grants/credential withholding, fresh Railway all-nine1838-row/63GET/all200
+  read, exact3mapping programme import/enable9 and both-profile filtered reads pass;
+  core catalogue/diary/auth counts unchanged. Partial horizons, New0/Older1/unclassified
+  remainder/unknown years remain accepted explicit data limits; next scheduled08:00UTC
+  refresh/recurring access is not fabricated. Only existing-job token reference applied,
+  API drift untouched. Final handoff CI/readiness then authorised separate AB7 under
+  the accepted contract; no repeated known-stage owner decision. No new paid service/
+  credential/destructive catalogue/diary write/other sitting. Production proof:
+  docs/reviews/ab6-railway-acceptance-2026-11-03.md.
 
 - **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night

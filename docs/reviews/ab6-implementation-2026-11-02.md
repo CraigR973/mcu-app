@@ -1,5 +1,10 @@
 # AB6 — Cinema programme ingestion
 
+> Current outcome3Nov: AB6 shipped/production accepted PR125/72ff0bd under standing334.
+> All-nine Railway acceptance/exact programme import/enable/role/read proof is in
+> [production report](ab6-railway-acceptance-2026-11-03.md). Older known-stage stops below
+> are historical; data uncertainties remain. Separate AB7 follows final handoff checks.
+
 > Current checkpoint (#330): revised build accepted and implemented. Ten local checks pass,
 > but an unresolved local Chromium assistant failure stops the complete gate. See the
 > [amended implementation and verification](ab6-metadata-amendment-2026-11-02.md).

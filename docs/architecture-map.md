@@ -3,7 +3,7 @@
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
 AB3 and the separate movie-night repair on 29 Oct, plus AB4 shipped/phone-accepted
 31 Oct and the causal movie-night poster repair on 3 Nov (PR #127); the April design intent
-remains in `ARCHITECTURE.md`.
+remains in `ARCHITECTURE.md`. AB6 programme ingestion shipped3Nov(PR125/72ff0bd).
 
 ```mermaid
 flowchart TB
@@ -16,7 +16,7 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
-## AB6, implementation under review, 3 Nov (not deployed or enabled)
+## AB6, shipped 3 Nov (PR125/72ff0bd); AB7 screen not built yet
 
 ```mermaid
 flowchart TB
@@ -27,14 +27,15 @@ flowchart TB
     Public -- other five families --> Metadata
     PageFirst --> Metadata[Optional cached TMDB candidates<br/>12 GETs inside the same run budget]
     Metadata --> Fence[Bounded fetch and fenced atomic venue promotion]
-    Review[Owner-reviewed artifact and mappings<br/>exact hash and counts] --> Fence
+    Review[Reviewed artifact and mappings<br/>exact hash and counts] --> Fence
     Fence --> Cinema[(Five isolated cinema tables)]
     Cinema --> Read[Authenticated stored programme API<br/>shared zod contract]
     Catalogue[(Existing catalogue and personal diary)] -- read only --> Read
-    Read -. AB7 remains gated .-> Discovery[Future cinema screen]
+    Read -. AB7 after clean final close-out .-> Discovery[Authorised future cinema screen]
 ```
 
-All nine venue seeds default to disabled. No source fetch happens on programme reads.
+Migration071 seeds all nine disabled. The reviewed1838-row/3mapping import and enable9
+completed17:13UTC after real Railway source acceptance. No source fetch happens on reads.
 Observed partial dates, missing/failing coverage, upstream age and unconfirmed showings
 remain explicit; stale or unconfirmed observations never expose showing booking actions.
 Original year, source release date and evidenced release run are independent. Unknown
@@ -45,9 +46,11 @@ negative cache, source fingerprints and refusal pause. The existing API-token re
 into the existing morning job was applied alone with skip-deploys after a fresh plan.
 Unrelated API restart-policy drift remains unapplied.
 No new service/schedule/table/browser API is added by the amendment. New run status remains
-unclassified without proof. Fresh all-nine source acceptance now passes63GET/all200/1843 rows; three Vue mappings
-validate. Local exact import/enable rehearsal passes. Production deployment/import/
-mapping/enable/runtime evidence and final AB6 acceptance remain outstanding.
+unclassified without proof. Fresh local all-nine acceptance passes63GET/all200/1843 rows; the independent Railway
+pass also63GET/all200 with1838 rows after five past showings disappear. Exact fresh
+loader/mappings/import/enable and both-profile API/role/credential checks pass; actual
+programme1739 future at check/New0/Older1/unclassified1738. Variable horizons and unknown
+years/identities remain explicit. Next scheduled run/future access is not guaranteed.
 Standing #334 authorises those known stages after evidence review. The accepted 3 Nov
 Vue amendment visits its known ordinary public page once before today/tomorrow date GETs,
 inside the same caps; other adapters are unchanged. Cookies remain memory-only/host-scoped,

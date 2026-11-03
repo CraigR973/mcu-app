@@ -2,26 +2,29 @@
 
 ## Now
 
-**3 Nov: fresh all-nine AB6 source acceptance passes; production deployment pending.**
-Public-page-first code87af261 passes all ten clean local gates/API2621/no skips/shared167/
-web738 and all seven exact PR CI41674616749 jobs (C63/F62+1/W61+2/jobs6). Local full
-C63/jobs6 pass. Fresh bounded pass16:43:63GET/all200/59.014s/6,582,659bytes, all nine/
-1,843 raw rows/1,750 future at review. Vue page+both dates200; real loader accepts ab6-3.
-Three independently corroborated Vue mappings reviewed/validated; Older1/Unclassified1842/
-New0, metadata backlog159 remains. No manufactured identity/run categories. Exact local
-CLI import/enable rehearsal passes1843 screenings/164 source films/9enabled, unrelated
-counts unchanged. Existing-job token reference applied alone with skip-deploys; remaining
-API restart-policy drift unapplied. Production still repaired main62467f4, cinema not
-schema-deployed/imported/enabled. Report: docs/reviews/ab6-public-page-acceptance-2026-11-03.md.
+**3 Nov: AB6 ingestion shipped/production accepted, PR125/merge72ff0bd.**
+All ten clean local gates/API2621/no skips/shared167/web738, exact PR41678065707 and
+main41681152577 seven jobs/C63/F62+1/W61+2/jobs6 pass. API/web exact72ff0bd/full readiness
+verified. Disabled migration071/nine seeds and actual two-role credential-withholding
+checks pass. One bounded read inside existing Railway API container:63GET/all200/57.076s/
+all nine/1838 rows, fresh ab6-3 artifact accepted. Exact reviewed1838-row/3mapping import
+and enable9 complete;163 source films,3verified/160unverified. Core catalogue/diary/auth
+counts unchanged. Both people's eight enabled-filter GETs return1739 future showings/
+152 groups at check, no truncation; New0/Older1/Unclassified1738. Source horizons, unknown
+identity/year/upstream age remain explicit. Existing-job token reference only applied;
+unrelated API drift untouched. Source fees£0/resources unpriced; DBsize+1,433,600bytes.
+Final handoff CI/readiness being verified before AB7 starts. Production/source/import/read
+proof: docs/reviews/ab6-railway-acceptance-2026-11-03.md and exact JSON/gzip artifacts.
 
 ## Next
 
-Under standing #334: record capacity/core baseline, finish exact evidence-head CI, disabled
-schema deployment/exact API+web readiness/role/runtime proof, then exact reviewed1843-row
-programme-only import/3mappings/enable9 and read-only smoke. Accept/close AB6 before AB7
-on its own branch. No repeated known-stage permission request. Recurring source access and
-New category population remain unproved; honest partial horizons retained. No unrelated
-API drift/new fees/credentials/destructive catalogue/diary write/AA10c/other sitting.
+Verify this final handoff's exact seven-job main CI and API/web SHA/full readiness, return
+clean main, then run authorised AB7 alone on its own branch/PR: Film-first `/cinemas`,
+approved navigation/venue/date/category filters, honest coverage/identity/year/offline
+states, personal watch isolation and safe Check tickets links. Standing #327/#330/#334
+accepts the concrete build and known deployment/verification; no repeated permission ask.
+New population/recurring source access/next08:00UTC job remain unproved, not fabricated.
+No new paid service/credential/destructive catalogue/diary write/API drift/AA10c/other sitting.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -413,6 +416,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **3 Nov — AB6 production accepted/shipped PR125,72ff0bd:** all local/exact PR/main seven-job gates; exact API/web/full readiness. Railway63GET/all200/all-nine1838 artifact, exact3mapping import/enable9; core catalogue/diary/auth counts unchanged. Real both-profile/all-filter reads and read/backup credential guards pass. New0/Older1/unclassified remainder and partial horizons retained. Final handoff verification then AB7, no new owner go under334.
 
 - **3 Nov — AB6 fresh all-nine acceptance:** code87af261/full local and seven PR gates; one63GET/all200 pass accepts1843 rows, three corroborated mappings, honest Older1/New0/Unclassified1842. Exact local import/enable rehearsal passes. Existing-job token reference only applied; unrelated API drift remains. Production baseline revision070/112,304,128bytes; no cinema tables yet. Standing #334 continues through disabled deployment/import/enable/read proof then AB7.
 

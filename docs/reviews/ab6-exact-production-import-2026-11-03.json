@@ -1,0 +1,551 @@
+{
+  "approval": 334,
+  "preparedUtc": "2026-11-03T17:12:20.941471+00:00",
+  "head": "72ff0bda0cf807c41d5dac0d0ead152f6f5f0a47",
+  "runtimeArtifactSha256": "5c1c31317fdfbf70683f0eea50ec54f64409a23acbf5e777450842fb6b8ed71d",
+  "rawRows": 1838,
+  "futureAtReview": 1739,
+  "mappingFile": "docs/reviews/ab6-reviewed-mappings-2026-11-03.json",
+  "mappingCount": 3,
+  "mappingSha256": "de1744b74c5008eb8e3c5eebdb87b668afe92d2351a1fa49f87fd4895a230f37",
+  "mappingValidation": "all exact fresh source keys/fingerprints and independent source directors validated",
+  "expectedCategories": {
+    "unclassified": 1837,
+    "olderFilm": 1
+  },
+  "actor": "existing active Craig admin, UUID checked against read-only baseline",
+  "enableCount": 9,
+  "writes": "cinema tables, audited programme import/nine flags and heartbeat only",
+  "sourceRequestsDuringWrite": 0,
+  "catalogueDiaryAuthWrites": false,
+  "status": "complete",
+  "executionStartedUtc": "2026-11-03T17:13:09.157177+00:00",
+  "scriptSha256": "56cc631904f63accd99098322449db342affcacabd7305573d6cdb276f54ec48",
+  "result": {
+    "approval": 334,
+    "head": "72ff0bda0cf807c41d5dac0d0ead152f6f5f0a47",
+    "observedUtc": "2026-11-03T17:13:26.105373+00:00",
+    "artifactSha256": "5c1c31317fdfbf70683f0eea50ec54f64409a23acbf5e777450842fb6b8ed71d",
+    "exactRowCount": 1838,
+    "mappingSha256": "de1744b74c5008eb8e3c5eebdb87b668afe92d2351a1fa49f87fd4895a230f37",
+    "mappingCount": 3,
+    "before": {
+      "counts": {
+        "movies": 1945,
+        "collection_items": 3798,
+        "watch_log": 1594,
+        "profiles": 2,
+        "refresh_tokens": 81,
+        "cinema_screenings": 0,
+        "cinema_films": 0,
+        "cinema_refresh_runs": 0
+      },
+      "enabled": 0,
+      "actor": "1a090c0b-9fed-45e4-84a8-03dd7918c54d",
+      "categories": {},
+      "identities": {},
+      "databaseBytes": 112582656
+    },
+    "after": {
+      "counts": {
+        "movies": 1945,
+        "collection_items": 3798,
+        "watch_log": 1594,
+        "profiles": 2,
+        "refresh_tokens": 81,
+        "cinema_screenings": 1838,
+        "cinema_films": 163,
+        "cinema_refresh_runs": 1
+      },
+      "enabled": 9,
+      "actor": "1a090c0b-9fed-45e4-84a8-03dd7918c54d",
+      "categories": {
+        "olderFilm": 1,
+        "unclassified": 1837
+      },
+      "identities": {
+        "verified": 3,
+        "unverified": 160
+      },
+      "databaseBytes": 113737728
+    },
+    "steps": [
+      {
+        "step": "import",
+        "report": {
+          "status": "partial",
+          "rows": 1838,
+          "requests": 63,
+          "decodedBodyBytes": 6573527,
+          "categoryCountsFromSourceEvidence": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1838
+          },
+          "dateFrom": "2026-11-03",
+          "dateTo": "2026-11-16",
+          "metadata": {
+            "requests": 12,
+            "cached": 0,
+            "pending": 158,
+            "errors": [
+              "SourceError"
+            ],
+            "successfulRequests": 12,
+            "status": "partial",
+            "records": 5,
+            "candidates": [
+              {
+                "source": "vue",
+                "filmKey": "HO00021545",
+                "sourceTitle": "Pan's Labyrinth (20th Anniversary)",
+                "sourceFacts": {
+                  "director": "Guillermo del Toro",
+                  "originalTitle": "El Laberinto del Fauno",
+                  "runtimeMinutes": 119
+                },
+                "candidate": {
+                  "tmdb_id": 1417,
+                  "title": "Pan's Labyrinth",
+                  "original_title": "El laberinto del fauno",
+                  "directors": [
+                    "Guillermo del Toro"
+                  ],
+                  "runtime": 118,
+                  "imdb_id": "tt0457430",
+                  "primary_release_date": "2006-10-11",
+                  "gb_theatrical": [
+                    {
+                      "date": "2006-11-24",
+                      "type": 3,
+                      "note": ""
+                    }
+                  ]
+                },
+                "corroboration": [
+                  "director",
+                  "distinct original title"
+                ],
+                "mappingReview": "candidate data is not an approval"
+              },
+              {
+                "source": "vue",
+                "filmKey": "HO00021404",
+                "sourceTitle": "Wicker",
+                "sourceFacts": {
+                  "director": "Alex Huston Fischer, Eleanor Wilson",
+                  "originalTitle": "Wicker",
+                  "runtimeMinutes": 105
+                },
+                "candidate": {
+                  "tmdb_id": 1195803,
+                  "title": "Wicker",
+                  "original_title": "Wicker",
+                  "directors": [
+                    "Eleanor Wilson",
+                    "Alex Huston Fischer"
+                  ],
+                  "runtime": 105,
+                  "imdb_id": "tt29611136",
+                  "primary_release_date": "2026-10-21",
+                  "gb_theatrical": [
+                    {
+                      "date": "2026-10-30",
+                      "type": 3,
+                      "note": ""
+                    }
+                  ]
+                },
+                "corroboration": [
+                  "director"
+                ],
+                "mappingReview": "candidate data is not an approval"
+              },
+              {
+                "source": "vue",
+                "filmKey": "HO00021244",
+                "sourceTitle": "Ghosts: The Possession of Button House",
+                "sourceFacts": {
+                  "director": "Simon Hynd",
+                  "originalTitle": "Ghosts: The Possession of Button House",
+                  "runtimeMinutes": 97
+                },
+                "candidate": {
+                  "tmdb_id": 1643567,
+                  "title": "Ghosts: The Possession of Button House",
+                  "original_title": "Ghosts: The Possession of Button House",
+                  "directors": [
+                    "Simon Hynd"
+                  ],
+                  "runtime": 97,
+                  "imdb_id": "tt40311603",
+                  "primary_release_date": "2026-10-23",
+                  "gb_theatrical": [
+                    {
+                      "date": "2026-10-23",
+                      "type": 3,
+                      "note": ""
+                    }
+                  ]
+                },
+                "corroboration": [
+                  "director"
+                ],
+                "mappingReview": "candidate data is not an approval"
+              }
+            ]
+          },
+          "venues": {
+            "odeon-kilmarnock": {
+              "rows": 167,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "odeon-glasgow-quay": {
+              "rows": 335,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "odeon-braehead": {
+              "rows": 323,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "odeon-east-kilbride": {
+              "rows": 253,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "cineworld-silverburn": {
+              "rows": 526,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "vue-st-enoch": {
+              "rows": 70,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "completeDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "errors": []
+            },
+            "everyman-glasgow": {
+              "rows": 130,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "gft": {
+              "rows": 20,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "completeDates": [],
+              "errors": []
+            },
+            "science-centre-imax": {
+              "rows": 14,
+              "failed": false,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "completeDates": [],
+              "errors": []
+            }
+          },
+          "changes": {
+            "odeon-kilmarnock": {
+              "added": 167,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 167,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "odeon-glasgow-quay": {
+              "added": 335,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 335,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "odeon-braehead": {
+              "added": 323,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 323,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "odeon-east-kilbride": {
+              "added": 253,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 253,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "cineworld-silverburn": {
+              "added": 526,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 526,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "vue-st-enoch": {
+              "added": 70,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 70,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "completeDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "errors": [],
+              "failed": false
+            },
+            "everyman-glasgow": {
+              "added": 130,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 130,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "gft": {
+              "added": 20,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 20,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-04"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            },
+            "science-centre-imax": {
+              "added": 14,
+              "updated": 0,
+              "unconfirmed": 0,
+              "withdrawn": 0,
+              "cancelled": 0,
+              "rows": 14,
+              "observedDates": [
+                "2026-11-03",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "completeDates": [],
+              "errors": [],
+              "failed": false
+            }
+          }
+        }
+      },
+      {
+        "step": "enable",
+        "report": {
+          "mode": "enable",
+          "changed": 9
+        }
+      }
+    ],
+    "errorType": null,
+    "coreCountsUnchanged": true,
+    "complete": true,
+    "sourceRequests": 0,
+    "writeScope": "isolated cinema tables, audited programme import and nine enable flags, heartbeat only",
+    "sshExitCode": 0,
+    "scriptSha256": "56cc631904f63accd99098322449db342affcacabd7305573d6cdb276f54ec48"
+  }
+}
