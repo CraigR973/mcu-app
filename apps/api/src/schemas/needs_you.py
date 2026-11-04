@@ -8,6 +8,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from src.schemas.wire import UtcDatetime
+
 #: A count of whole days, never negative.
 Days = Annotated[int, Field(ge=0)]
 
@@ -38,6 +40,20 @@ class NeedsYouLoanItem(BaseModel):
     daysOut: Days | None
 
 
+class NextScreening(BaseModel):
+    """The reader's next planned movie night, for the top of Home (AC2)."""
+
+    sessionId: uuid.UUID
+    plannedStart: UtcDatetime
+    #: Everyone else in it, by name, in the order they joined.
+    withNames: list[str]
+    #: The film two people both liked, once they have.
+    matchTitle: str | None = None
+
+
 class NeedsYouResponse(BaseModel):
     #: Most pressing first. Empty when there is nothing to do.
     items: list[NeedsYouLoanItem]
+    #: AC2: the next screening the reader is in, planned and not ended; null when none. Home
+    #: shows it beside "Needs you" from this one read, so it adds no request.
+    nextScreening: NextScreening | None = None

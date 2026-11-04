@@ -160,3 +160,32 @@ describe('NeedsYouRow', () => {
     expect(api.fetchNeedsYou).not.toHaveBeenCalled()
   })
 })
+
+describe('Next screening beside Needs you — AC2 (#337)', () => {
+  const SCREENING = {
+    sessionId: '3f2504e0-4f89-41d3-9a0c-0305e82c3901',
+    plannedStart: '2026-11-07T20:00:00Z',
+    withNames: ['Craig'],
+    matchTitle: 'The Thing',
+  }
+
+  it('shows the next screening from the same read, with nothing else to do', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [], nextScreening: SCREENING })
+    renderRow()
+    const link = await screen.findByRole('link', { name: /Next screening/ })
+    expect(link.getAttribute('href')).toBe(`/movie-night/${SCREENING.sessionId}`)
+    expect(link.textContent).toContain('7 Nov, 20:00')
+    expect(link.textContent).toContain("with Craig · it's a match: The Thing")
+    expect(screen.queryByRole('region', { name: /Needs you/ })).toBeNull()
+    expect(api.fetchNeedsYou).toHaveBeenCalledTimes(1)
+  })
+
+  it('sits under the jobs when there are both', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [BASE], nextScreening: { ...SCREENING, withNames: [], matchTitle: null } })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    const screening = screen.getByRole('link', { name: /Next screening/ })
+    expect(row.compareDocumentPosition(screening)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(screening.textContent).toContain('just you so far')
+  })
+})

@@ -55,13 +55,14 @@ function DiscRow({ entry }: { entry: CalendarEntry }) {
  * so it was empty unless a disc came out that month. `limit` makes it Home's short version,
  * which hides itself when there is nothing to show, and since W2 is a row of posters.
  */
-export function ComingToDisc({ limit }: { limit?: number }) {
+export function ComingToDisc({ limit, entries }: { limit?: number; entries?: CalendarEntry[] }) {
   const query = useQuery({
     queryKey: ['calendar', DISC_WINDOW_DAYS],
     queryFn: () => fetchCalendar(DISC_WINDOW_DAYS),
     staleTime: 10 * 60 * 1000,
   })
-  const discs = (query.data?.items ?? []).filter(isPhysical)
+  // AC2: Home passes its own films, already free of any shown higher up the page.
+  const discs = entries ?? (query.data?.items ?? []).filter(isPhysical)
   const shown = limit ? discs.slice(0, limit) : discs
   const state = listState(query, discs.length === 0)
 
@@ -74,6 +75,7 @@ export function ComingToDisc({ limit }: { limit?: number }) {
         id="home-coming-to-disc"
         title="Coming to disc"
         icon={Disc3}
+        caption="New 4K and Blu-ray releases."
         action={<ShelfLink to="/calendar">All releases</ShelfLink>}
       >
         {shown.map((entry) => (

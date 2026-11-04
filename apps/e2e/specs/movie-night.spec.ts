@@ -210,30 +210,30 @@ test('Home deals unwatched films without repeats and choosing does not log a wat
   const user = await signedIn('Craig')
   await user.page.setViewportSize({ width: 375, height: 812 })
   await user.page.goto('/dashboard')
+  // AC2 (#337): Feeling lucky is inside Home's featured film, and opening the film is the choice.
   const lucky = user.page.getByRole('group', { name: 'Feeling lucky' })
+  const featured = user.page.locator('section').filter({ has: lucky })
   await lucky.getByRole('checkbox').check()
   const before = db.scalar('SELECT count(*) FROM watch_log')
   const suggestionsBefore = db.scalar('SELECT count(*) FROM movie_night_suggestions')
   const dealt: string[] = []
   for (let i = 0; i < 3; i += 1) {
     const response = user.page.waitForResponse((r) => r.url().endsWith('/api/v1/feeling-lucky') && r.request().method() === 'POST')
-    await lucky.getByRole('button', { name: i === 0 ? 'Deal a film' : 'Skip this film' }).click()
+    await lucky.getByRole('button', { name: /^Deal (a film|another)$/ }).click()
     const answer = await response
     expect(answer.status()).toBe(200)
     const body = await answer.json() as { film: { id: string; title: string; watched: boolean } }
     expect(body.film.watched).toBe(false)
     expect(dealt).not.toContain(body.film.id)
     dealt.push(body.film.id)
-    await expect(lucky.getByRole('heading', { name: body.film.title })).toBeVisible()
+    await expect(featured.getByRole('heading', { name: body.film.title })).toBeVisible()
   }
-  await lucky.scrollIntoViewIfNeeded()
+  await featured.scrollIntoViewIfNeeded()
   await user.page.screenshot({ path: testInfo.outputPath('aa6-home-375.png') })
-  await lucky.getByRole('button', { name: 'Choose this film' }).click()
-  await expect(lucky.getByText(/Your pick:/)).toBeVisible()
-  await expect(lucky.getByRole('link', { name: 'Open film' })).toHaveAttribute('href', `/movies/${dealt[2]}`)
+  await expect(featured.getByRole('link', { name: 'Open the film' })).toHaveAttribute('href', `/movies/${dealt[2]}`)
   expect(db.scalar('SELECT count(*) FROM watch_log')).toBe(before)
   expect(db.scalar('SELECT count(*) FROM movie_night_suggestions')).toBe(suggestionsBefore)
-  // Choosing a solo film has not created a movie-night suggestion.
+  // Dealing on Home has not created a movie-night suggestion.
   const caller = await api('Craig')
   const allSeen = await caller.post<{ film: unknown }>('/feeling-lucky', { excludedIds: dealt, unwatchedOnly: true })
   expect(allSeen.film).toBeTruthy() // The remaining Archive is still available.

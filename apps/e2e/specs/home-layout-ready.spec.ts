@@ -25,7 +25,8 @@ test('Home waits for the collection layout before accepting a pick or cinema nav
       const checkbox = lucky.getByRole('checkbox', { name: 'Only films I haven’t watched' })
       const cinemas = page.getByRole('link', { name: 'At the cinema', exact: true })
       await expect(checkbox).toBeDisabled()
-      await expect(lucky.getByRole('button', { name: 'Deal a film', exact: true })).toBeDisabled()
+      // AC2: Feeling lucky lives in the featured film; its deal reads "Deal another" when a film is shown.
+      await expect(lucky.getByRole('button', { name: /^Deal (a film|another)$/ })).toBeDisabled()
       await expect(cinemas).toHaveAttribute('aria-disabled', 'true')
       release()
       await expect(page.getByRole('list', { name: 'The collection in numbers' })).toBeVisible()

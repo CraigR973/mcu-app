@@ -31,7 +31,12 @@ describe('brand integration hierarchy', () => {
   it('keeps photographic heroes out of Vercel public assets and puts the banner only on Home', () => {
     expect(existsSync(join(repoRoot, 'apps/web/public/brand/hero-photo-five-v3.png'))).toBe(false)
     expect(existsSync(join(repoRoot, 'apps/web/public/brand/hero-photo-v3.png'))).toBe(false)
-    expect(sources.filter(({ source }) => source.includes('<PrivateHero')).map(({ path }) => path)).toEqual([
+    // AC2 (#337): banner T1's photo letters are private artwork too, served after sign-in.
+    for (const width of [1125, 1800]) {
+      expect(existsSync(join(repoRoot, `apps/web/public/brand/hero-letters-v1-${String(width)}.webp`))).toBe(false)
+    }
+    // App code only: the banner's own test renders it too.
+    expect(sources.filter(({ path, source }) => !path.endsWith('.test.tsx') && source.includes('<HomeBanner')).map(({ path }) => path)).toEqual([
       'pages/DashboardPage.tsx',
     ])
   })

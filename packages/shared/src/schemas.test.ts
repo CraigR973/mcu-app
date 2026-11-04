@@ -2614,6 +2614,17 @@ describe('needsYouSchema — AC1 (#335)', () => {
     expect(needsYouSchema.parse({ items: [] }).items).toEqual([])
   })
 
+  it('carries the next screening, and reads an API from before AC2 as none', () => {
+    expect(needsYouSchema.parse({ items: [] }).nextScreening).toBeNull()
+    const next = needsYouSchema.parse({
+      items: [],
+      nextScreening: { sessionId: UUID_A, plannedStart: '2026-11-07T20:00:00Z', withNames: ['Craig'] },
+    }).nextScreening
+    expect(next?.withNames).toEqual(['Craig'])
+    expect(next?.matchTitle).toBeNull()
+    expect(needsYouSchema.safeParse({ items: [], nextScreening: { sessionId: UUID_A, plannedStart: '7 Nov', withNames: [] } }).success).toBe(false)
+  })
+
   it('refuses a kind or a date it cannot honestly show', () => {
     expect(needsYouSchema.safeParse({ items: [{ ...putBack, kind: 'tripReply' }] }).success).toBe(false)
     expect(needsYouSchema.safeParse({ items: [{ ...putBack, returnedDate: '28 Oct' }] }).success).toBe(false)

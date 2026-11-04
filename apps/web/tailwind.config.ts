@@ -133,6 +133,8 @@ const config: Config = {
           'serif',
         ],
         mono: ['ui-monospace', '"SFMono-Regular"', 'Menlo', 'Consolas', 'monospace'],
+        // AC2: the banner's live "Cinematic Universe", in the v3 hero's own subtitle face.
+        marquee: ['"Avenir Next Condensed"', 'Futura', '"Arial Narrow"', 'sans-serif'],
       },
       borderRadius: {
         xl: 'var(--radius-xl)',

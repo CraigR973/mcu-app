@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -75,63 +75,77 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('Highlights on Home — Batch V5', () => {
-  it('shows the remaining short poster rows, each film opening its page', async () => {
+/** The row's tabs, in order. */
+function tabs(): string[] {
+  return screen.queryAllByRole('tab').map((tab) => tab.textContent ?? '')
+}
+
+/** The films the selected tab shows, by their links. */
+function panelLinks(): string[] {
+  return within(screen.getByRole('tabpanel')).getAllByRole('link').map((link) => link.getAttribute('href') ?? '')
+}
+
+describe('Highlights on Home — Batch V5, one row with tabs since AC2', () => {
+  it('offers each row with films as a tab, each film opening its page', async () => {
     renderPanel(FULL)
 
-    // Since W2 each row is a section of Home in its own right, and the "Highlights" heading
-    // over them has gone (#249: "make all the sections look like highlights").
-    expect(await screen.findByRole('region', { name: 'Most rewatched' })).not.toBeNull()
-    expect(screen.queryByRole('region', { name: 'Top rated' })).toBeNull()
-    expect(screen.queryByRole('heading', { name: 'Highlights' })).toBeNull()
-    for (const [row, films] of [
-      ['Most rewatched', ['Alien']],
-      ['Most valuable discs', ['Heat']],
-    ] as const) {
-      const region = within(screen.getByRole('region', { name: row }))
-      expect(region.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(
-        films.map((title) => `/movies/${title === 'Heat' ? HEAT.movieId : ALIEN.movieId}`),
-      )
-    }
+    // AC2 (#337): one "Highlights" row; before it, each was a section of its own (W2, #249).
+    expect(await screen.findByRole('region', { name: 'Highlights' })).not.toBeNull()
+    expect(tabs()).toEqual(['Most rewatched', 'Most valuable'])
+    expect(panelLinks()).toEqual([`/movies/${ALIEN.movieId}`])
+    fireEvent.click(screen.getByRole('tab', { name: 'Most valuable' }))
+    expect(screen.getByRole('tab', { name: 'Most valuable' }).getAttribute('aria-selected')).toBe('true')
+    expect(panelLinks()).toEqual([`/movies/${HEAT.movieId}`])
     expect(fetchHighlightsMock).toHaveBeenCalledTimes(1)
   })
 
   it('leaves Top rated and the ratings detail off Home — AA1', async () => {
     renderPanel(FULL)
-    await screen.findByRole('region', { name: 'Most rewatched' })
+    await screen.findByRole('region', { name: 'Highlights' })
 
-    expect(screen.queryByRole('region', { name: 'Top rated' })).toBeNull()
+    expect(screen.queryByRole('tab', { name: 'Top rated' })).toBeNull()
     expect(screen.queryByText('Rated 4½ or 5 stars by Craig. Mark has not rated any films.')).toBeNull()
   })
 
   it('counts rewatches across both diaries, saying whose', async () => {
     renderPanel(FULL)
-    const row = within(await screen.findByRole('region', { name: 'Most rewatched' }))
+    await screen.findByRole('region', { name: 'Highlights' })
+    const panel = within(screen.getByRole('tabpanel'))
 
-    expect(row.getByText(/3 viewings/)).not.toBeNull()
-    expect(row.getByText('Craig 2 · Mark 1')).not.toBeNull()
+    expect(screen.getByText('Watched two or more times, across both diaries.')).not.toBeNull()
+    expect(panel.getByText(/3 viewings/)).not.toBeNull()
+    expect(panel.getByText('Craig 2 · Mark 1')).not.toBeNull()
   })
 
   it('shows each disc at its stored value, with its basis and listings', async () => {
     renderPanel(FULL)
-    const row = within(await screen.findByRole('region', { name: 'Most valuable discs' }))
+    fireEvent.click(await screen.findByRole('tab', { name: 'Most valuable' }))
+    const panel = within(screen.getByRole('tabpanel'))
 
-    expect(row.getByText('At their stored value as used copies: eBay current asking prices, checked 26 Sep 2026.')).not.toBeNull()
-    expect(row.getByText(/£34\.99 · 4K UHD/)).not.toBeNull()
+    expect(screen.getByText('At their stored value as used copies: eBay current asking prices, checked 26 Sep 2026.')).not.toBeNull()
+    expect(panel.getByText(/£34\.99 · 4K UHD/)).not.toBeNull()
     // Batch X6: what stands behind the value, its listings and their range.
-    expect(row.getByText('7 used listings, £29.99–£44.00 · 2 copies')).not.toBeNull()
+    expect(panel.getByText('7 used listings, £29.99–£44.00 · 2 copies')).not.toBeNull()
   })
 
-  it('leaves out a row with nothing in it', async () => {
+  it('offers no tab for a row with nothing in it', async () => {
     renderPanel({ ...FULL, mostRewatched: [] })
 
-    expect(await screen.findByRole('region', { name: 'Most valuable discs' })).not.toBeNull()
-    expect(screen.queryByRole('region', { name: 'Most rewatched' })).toBeNull()
+    expect(await screen.findByRole('tab', { name: 'Most valuable' })).not.toBeNull()
+    expect(tabs()).toEqual(['Most valuable'])
     expect(screen.queryByText('Most rewatched')).toBeNull()
-    expect(screen.getByRole('region', { name: 'Most valuable discs' })).not.toBeNull()
   })
 
-  it('leaves out the whole panel when every row is empty', async () => {
+  it('moves between tabs with the arrow keys', async () => {
+    renderPanel(FULL)
+    const first = await screen.findByRole('tab', { name: 'Most rewatched' })
+    fireEvent.keyDown(first, { key: 'ArrowRight' })
+    expect(screen.getByRole('tab', { name: 'Most valuable' }).getAttribute('aria-selected')).toBe('true')
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Most valuable' }), { key: 'ArrowRight' })
+    expect(screen.getByRole('tab', { name: 'Most rewatched' }).getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('leaves out the whole row when every tab is empty', async () => {
     renderPanel(EMPTY)
     await vi.waitFor(() => expect(fetchHighlightsMock).toHaveBeenCalled())
     await new Promise((resolve) => setTimeout(resolve, 20))
@@ -159,35 +173,30 @@ describe('Highlights on Home — Batch V9, the best reviewed', () => {
 
   it('ranks owned films by Blu-ray.com\'s overall score, each opening its page', async () => {
     renderPanel(REVIEWED)
-    const row = within(await screen.findByRole('region', { name: 'Best discs' }))
+    fireEvent.click(await screen.findByRole('tab', { name: 'Best discs' }))
+    const panel = within(screen.getByRole('tabpanel'))
 
-    expect(row.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
-      `/movies/${ALIEN.movieId}`,
-      `/movies/${HEAT.movieId}`,
-    ])
-    expect(row.getByText("Blu-ray.com scores the disc's picture, sound and extras, not the film.")).not.toBeNull()
-    expect(row.getByText('Strongest for picture')).not.toBeNull()
-    expect(row.getByText('Strongest for sound')).not.toBeNull()
-    expect(row.getByText('4.5/5 · 4K UHD')).not.toBeNull()
-    expect(row.getByText('4.0/5 · Blu-ray')).not.toBeNull()
-    expect(row.getAllByText('Scores')).toHaveLength(2)
-    expect(row.getByText('Video 4K 5.0 · Audio 4.0')).not.toBeNull()
+    expect(panelLinks()).toEqual([`/movies/${ALIEN.movieId}`, `/movies/${HEAT.movieId}`])
+    expect(screen.getByText("Blu-ray.com scores the disc's picture, sound and extras, not the film.")).not.toBeNull()
+    expect(panel.getByText('Strongest for picture')).not.toBeNull()
+    expect(panel.getByText('Strongest for sound')).not.toBeNull()
+    expect(panel.getByText('4.5/5 · 4K UHD')).not.toBeNull()
+    expect(panel.getByText('4.0/5 · Blu-ray')).not.toBeNull()
+    expect(panel.getAllByText('Scores')).toHaveLength(2)
+    expect(panel.getByText('Video 4K 5.0 · Audio 4.0')).not.toBeNull()
   })
 
   it('follows the most valuable discs', async () => {
     renderPanel(REVIEWED)
-    await screen.findByRole('region', { name: 'Best discs' })
+    await screen.findByRole('tab', { name: 'Best discs' })
 
-    // Level 2 since W2, when the rows became peers of Home's other sections.
-    const titles = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
-    expect(titles).toEqual(['Most rewatched', 'Most valuable discs', 'Best discs'])
+    expect(tabs()).toEqual(['Most rewatched', 'Most valuable', 'Best discs'])
   })
 
   it('is left out until a review has been read', async () => {
     renderPanel(FULL)
-    await screen.findByRole('region', { name: 'Most rewatched' })
+    await screen.findByRole('region', { name: 'Highlights' })
 
-    expect(screen.queryByRole('region', { name: 'Best discs' })).toBeNull()
+    expect(screen.queryByRole('tab', { name: 'Best discs' })).toBeNull()
   })
 })
-

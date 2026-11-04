@@ -3,7 +3,8 @@ import { expect, PINS, test } from '../support/test.ts'
 type Stats = { totalMovies: number; watchedMovies: number; ownedWatchedMovies: number }
 type Copy = { id: string; movieId: string }
 const counts = ({ totalMovies, watchedMovies, ownedWatchedMovies }: Stats): Stats => ({ totalMovies, watchedMovies, ownedWatchedMovies })
-const coverage = (stats: Stats) => `${stats.ownedWatchedMovies.toLocaleString('en-GB')} / ${stats.totalMovies.toLocaleString('en-GB')}`
+// AC2 (#337): the ledger says it as a share of the titles owned.
+const coverage = (stats: Stats) => `${stats.ownedWatchedMovies.toLocaleString('en-GB')} of ${stats.totalMovies.toLocaleString('en-GB')} titles you own`
 
 for (const person of ['Craig', 'Mark'] as const) {
   test(`AB2 refreshes ${person}'s cached coverage after a watch and preserves diary through copy departure`, async ({ signedIn, api }) => {
@@ -72,7 +73,7 @@ test('AB2 shows unavailable for an older stats answer, never its diary count', a
   const card = page.getByRole('list', { name: 'The collection in numbers' }).locator('li').filter({ hasText: "You've watched" })
   await expect(card).toContainText('Unavailable')
   await expect(card).toContainText('Watched coverage is unavailable in this saved response.')
-  await expect(card).not.toContainText(' / ')
+  await expect(card).not.toContainText('titles you own')
 })
 
 test('AB2 isolates the personal numerator when two people use the same browser', async ({ signedIn, api }) => {
@@ -118,7 +119,8 @@ test('AB2 renders four-digit coverage and a stored estimate at 375 px in both th
     await page.setViewportSize({ width: 375, height: 844 })
     await page.goto('/dashboard')
     const section = page.getByRole('region', { name: 'The collection', exact: true })
-    await expect(section.getByText('1,234 / 5,678', { exact: true })).toBeVisible()
+    await expect(section.getByText('1,234 of 5,678 titles you own', { exact: true })).toBeVisible()
+    await expect(section.getByText('22%', { exact: true })).toBeVisible()
     await expect(section.getByText('≈ £12,346', { exact: true })).toBeVisible()
     await expect(section.getByText('12 based on observed sales', { exact: true })).toBeVisible()
     expect(await section.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)

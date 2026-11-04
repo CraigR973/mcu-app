@@ -17,21 +17,30 @@ from src.auth import CurrentUser
 router = APIRouter(prefix="/api/v1", tags=["brand"])
 
 _ASSET_DIRECTORY = Path(__file__).resolve().parents[1] / "assets" / "brand"
+#: The name, the file and its type. ``five`` and ``single`` stay for any web build still
+#: installed from before AC2.
 _HEROES = {
-    "five": "hero-photo-five-v3.png",
-    "single": "hero-photo-v3.png",
+    "five": ("hero-photo-five-v3.png", "image/png"),
+    "single": ("hero-photo-v3.png", "image/png"),
+    # AC2 (#337): Home's banner T1, the photo letters alone, at a phone's 3x and a desktop's
+    # 2x width. Built by `docs/brand/logo-system/build_letters_hero.py`.
+    "letters-v1-1125": ("hero-letters-v1-1125.webp", "image/webp"),
+    "letters-v1-1800": ("hero-letters-v1-1800.webp", "image/webp"),
 }
+#: A versioned name never changes its bytes, so a device may keep it; a new banner is a new
+#: name. Still ``private``: shared caches never hold it (AA8).
+_VERSIONED = "private, max-age=31536000, immutable"
 
 
 @router.get("/brand/heroes/{hero}")
 async def serve_hero(hero: str, _user: CurrentUser) -> FileResponse:
     """Serve one private photo hero to a signed-in person only."""
-    filename = _HEROES.get(hero)
-    if filename is None:
+    found = _HEROES.get(hero)
+    if found is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Brand artwork not found")
-
+    filename, media_type = found
     return FileResponse(
         _ASSET_DIRECTORY / filename,
-        media_type="image/png",
-        headers={"Cache-Control": "private, max-age=3600"},
+        media_type=media_type,
+        headers={"Cache-Control": _VERSIONED if "-v1-" in hero else "private, max-age=3600"},
     )

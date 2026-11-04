@@ -16,6 +16,9 @@ replies to the same row.
 
 Only each copy's current loan counts, as on Loans: returned history never makes a task. The
 row only reads; every action is Loans' own, so there is no second write path.
+
+Since AC2 the same read carries the reader's next planned screening, so Home's top slot is one
+request.
 """
 
 from __future__ import annotations
@@ -28,14 +31,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import CurrentUser
-from src.clock import utc_today
+from src.clock import utc_today, utcnow
 from src.models.collection_item import CollectionItem, owned_copy
 from src.models.loan import Loan, loan_state
 from src.models.movie import Movie
+from src.models.movie_night import MovieNightParticipant, MovieNightSession, MovieNightSuggestion
 from src.models.profile import Profile, UserRole
 from src.routers.movies import Database, location_label
-from src.schemas.needs_you import NeedsYouLoanItem, NeedsYouResponse
+from src.schemas.needs_you import NeedsYouLoanItem, NeedsYouResponse, NextScreening
 from src.services.collection_additions import MARK_PROFILE_ID
+from src.services.movie_night.sessions import film_face
 
 router = APIRouter(prefix="/api/v1", tags=["needs-you"])
 
@@ -144,7 +149,46 @@ async def needs_you_items(
     return [entry for _, entry in sorted(found, key=lambda pair: pair[0])]
 
 
+async def next_screening(db: AsyncSession, person: Profile) -> NextScreening | None:
+    """The soonest open screening ``person`` is in with a planned start still ahead (AC2)."""
+    session = await db.scalar(
+        select(MovieNightSession)
+        .join(MovieNightParticipant, MovieNightParticipant.session_id == MovieNightSession.id)
+        .where(
+            MovieNightParticipant.user_id == person.id,
+            MovieNightSession.status == "open",
+            MovieNightSession.planned_start_utc > utcnow(),
+        )
+        .order_by(MovieNightSession.planned_start_utc, MovieNightSession.id)
+        .limit(1)
+    )
+    if session is None or session.planned_start_utc is None:
+        return None
+    names = (
+        await db.scalars(
+            select(Profile.display_name)
+            .join(MovieNightParticipant, MovieNightParticipant.user_id == Profile.id)
+            .where(MovieNightParticipant.session_id == session.id, Profile.id != person.id)
+            .order_by(MovieNightParticipant.joined_at_utc)
+        )
+    ).all()
+    match = None
+    if session.matched_suggestion_id is not None:
+        suggestion = await db.get(MovieNightSuggestion, session.matched_suggestion_id)
+        if suggestion is not None:
+            match, _, _ = await film_face(db, suggestion)
+    return NextScreening(
+        sessionId=session.id,
+        plannedStart=session.planned_start_utc,
+        withNames=list(names),
+        matchTitle=match,
+    )
+
+
 @router.get("/needs-you", response_model=NeedsYouResponse)
 async def needs_you(user: CurrentUser, db: Database) -> NeedsYouResponse:
-    """What the person signed in can act on now; empty when there is nothing."""
-    return NeedsYouResponse(items=await needs_you_items(db, user, today=utc_today()))
+    """What the person signed in can act on now, and their next screening."""
+    return NeedsYouResponse(
+        items=await needs_you_items(db, user, today=utc_today()),
+        nextScreening=await next_screening(db, user),
+    )

@@ -17,6 +17,7 @@ import {
 import { clearQueue } from '../lib/offline-queue'
 import { shouldEndSession } from '../lib/session'
 import { clearCachedApiReads } from '@/lib/api-cache-route'
+import { forgetBanners } from '@/lib/banner-cache'
 
 interface AuthContextValue {
   profile: ProfileResponse | null
@@ -181,6 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Batch X8: the API answers kept for offline reading go too, so whoever signs in next
     // on this phone finds none of them.
     await clearCachedApiReads()
+    // AC2: and the Home banner kept on the device, which is private artwork (AA8).
+    forgetBanners()
     setProfile(null)
     setIsSessionUnavailable(false)
   }, [])

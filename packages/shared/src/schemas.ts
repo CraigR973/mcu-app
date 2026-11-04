@@ -2760,13 +2760,25 @@ export const needsYouItemSchema = z.object({
   /** Days since it went out, on an overdue item. */
   daysOut: z.number().int().nonnegative().nullable(),
 })
+/** AC2: the reader's next planned movie night, for the top of Home. */
+export const nextScreeningSchema = z.object({
+  sessionId: z.string().uuid(),
+  plannedStart: z.string().datetime({ offset: true }),
+  /** Everyone else in it, by name. */
+  withNames: z.array(z.string().min(1)),
+  /** The film two people both liked, once they have. */
+  matchTitle: z.string().min(1).nullable().default(null),
+})
 export const needsYouSchema = z.object({
   /** Most pressing first; empty when there is nothing to do. */
   items: z.array(needsYouItemSchema),
+  /** AC2. Defaulted, so this build still reads an API from before it. */
+  nextScreening: nextScreeningSchema.nullable().default(null),
 })
 
 export type NeedsYouItem = z.infer<typeof needsYouItemSchema>
 export type NeedsYou = z.infer<typeof needsYouSchema>
+export type NextScreening = z.infer<typeof nextScreeningSchema>
 
 // AA6: one ephemeral Archive draw; null means that this run has exhausted its pool.
 export const luckyFilmSchema = z.object({ film: movieListItemSchema.nullable() })

@@ -8298,6 +8298,16 @@
       },
       "title": "Items",
       "type": "array"
+     },
+     "nextScreening": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NextScreening"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "required": [
@@ -8407,6 +8417,45 @@
      "movieId"
     ],
     "title": "NewReleaseResponse",
+    "type": "object"
+   },
+   "NextScreening": {
+    "description": "The reader's next planned movie night, for the top of Home (AC2).",
+    "properties": {
+     "matchTitle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Matchtitle"
+     },
+     "plannedStart": {
+      "title": "Plannedstart",
+      "type": "string"
+     },
+     "sessionId": {
+      "format": "uuid",
+      "title": "Sessionid",
+      "type": "string"
+     },
+     "withNames": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Withnames",
+      "type": "array"
+     }
+    },
+    "required": [
+     "sessionId",
+     "plannedStart",
+     "withNames"
+    ],
+    "title": "NextScreening",
     "type": "object"
    },
    "NoteRequest": {
@@ -22121,7 +22170,7 @@
   },
   "/api/v1/needs-you": {
    "get": {
-    "description": "What the person signed in can act on now; empty when there is nothing.",
+    "description": "What the person signed in can act on now, and their next screening.",
     "operationId": "needs_you_api_v1_needs_you_get",
     "responses": {
      "200": {

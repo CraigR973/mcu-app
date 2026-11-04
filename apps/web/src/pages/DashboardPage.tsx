@@ -1,86 +1,96 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarHeart, Pin, RotateCcw } from 'lucide-react'
+import { CalendarHeart, ChevronRight, Pin, Popcorn } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { useAuth } from '@/context/auth'
 
-import { FeelingLucky } from '@/components/movies/FeelingLucky'
+import { HomeBanner } from '@/components/brand/HomeBanner'
 import { AttentionRow } from '@/components/dashboard/AttentionRow'
-import { NeedsYouRow } from '@/components/dashboard/NeedsYouRow'
-import { COLLECTION_ICONS } from '@/components/collections/icons'
-import { CollectionShelf } from '@/components/dashboard/CollectionShelf'
+import { CollectionLedger } from '@/components/dashboard/CollectionLedger'
 import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
-import { Highlights } from '@/components/dashboard/Highlights'
-import { PosterCard, Shelf } from '@/components/dashboard/Shelf'
+import { FeaturedFilm } from '@/components/dashboard/FeaturedFilm'
+import { HighlightsRow } from '@/components/dashboard/Highlights'
+import { NeedsYouRow } from '@/components/dashboard/NeedsYouRow'
+import { PosterCard, Shelf, ShelfHeading } from '@/components/dashboard/Shelf'
+import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { CompletionSetPanel } from '@/components/insights/CompletionSetPanel'
-import { PrivateHero } from '@/components/brand/PrivateHero'
 import { PageHeader } from '@/components/ui/page-header'
 import { ComingToDisc } from '@/components/releases/ComingToDisc'
 import { StatePanel } from '@/components/ui/state-panel'
 import {
   describeFilters,
   fetchAttention,
+  fetchCalendar,
   fetchCollectionValue,
+  fetchHighlights,
   fetchNeedsYou,
   fetchStats,
   fetchOnThisDayMemories,
   fetchRewatchSuggestions,
   fetchSmartCollections,
 } from '@/lib/api'
-import { stars } from '@/lib/highlights'
-import { yearsAgo } from '@/lib/home'
+import { homeLineup } from '@/lib/home-films'
 import { queryErrorMessage } from '@/lib/query-state'
-import { formatShortDate } from '@/lib/utils'
+import { DISC_WINDOW_DAYS } from '@/lib/releases'
 
 /**
- * Home — Batch S3's merge of the old Home, Stats and Insights (snag 5, `DECISIONS.md` #154),
- * made a page of rows by Batch W2 (#249).
+ * Home — AC2's one ledger and varied modules, Craig's pick A (#337).
  *
- * **Every section but Recent activity is a row that scrolls sideways**, as V5's Highlights
- * rows did: Craig's "make all the sections look like highlights so it is a carousel". **The
- * collection comes first** ("maybe also have the collection section at the top"), which
- * replaces T5's "Home opens with the next few disc releases"; they come second.
+ * In page order: the banner (T1, the photo letters with live type); what needs the person and
+ * their next screening (AC1); Craig's "Needs attention"; the collection as one ledger; one
+ * featured film with Feeling lucky inside it; then three poster rows (Coming to disc,
+ * Highlights' tabs, For you), the sets closest to complete as a short list, and the cinemas.
+ * At most four sideways rows, with AC4's cinema strip; one short caption each.
  *
- * **Every row still hides when it has nothing in it** (#154), and a failed request still
- * shows its own panel. What W2 took away: Home's "Add a disc" (the bottom bar has Add below
- * 1,024 px and the top bar its button above it), Most watched (8 of its 10 films repeated
- * Most rewatched on 5 Oct), and the bid trial with "Update values", which are Admin's
- * "Collection value" now, so Home only reads.
+ * **No film twice in one load** (`home-films.ts`): the featured film and the rows take their
+ * films in page order, each where it comes first. Every module still hides when it has nothing
+ * in it (#154), and a failed read still says so. Home makes no more requests than before AC2:
+ * the featured film and the rows read what Home already read, and the banner comes from the
+ * device after its first load.
  *
- * `/stats` still redirects here; `/insights` is the full Completion view again.
+ * `/stats` still redirects here; `/insights` is the full Completion view.
  */
 export default function DashboardPage() {
   const { profile } = useAuth()
   // Observe the existing cache keys: the children share these requests. Home targets
-  // must not accept a tap while the first archive/attention layout is still arriving.
+  // must not accept a tap while the first archive/attention layout is still arriving (AB7).
   const homeStats = useQuery({ queryKey: ['stats', profile?.id], queryFn: fetchStats })
   const homeValue = useQuery({ queryKey: ['collection-value'], queryFn: fetchCollectionValue })
   const homeAttention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: profile?.role === 'admin' })
   // AC1: "Needs you" arrives above everything, so it is part of the first layout too.
   const homeNeedsYou = useQuery({ queryKey: ['needs-you', profile?.id], queryFn: fetchNeedsYou, enabled: Boolean(profile) })
   const homeLayoutPending = homeStats.isLoading || homeValue.isLoading || homeAttention.isLoading || homeNeedsYou.isLoading
+  // AC2: the two rows above the ledger arrive before anything under them is drawn, so nothing
+  // is pushed down when they do. On 4 Nov, Craig's "Needs attention" moved the ledger 142 px.
+  const topSettled = !homeNeedsYou.isLoading && !homeAttention.isLoading
   // A completion set opens in place of Home, because the panel *is* the page while it is
-  // open; otherwise the reader loses their place in a long page on the way back. Home owns
-  // which set is open (W2): when the list owned it, Home's swap to a second copy of the list
-  // lost it, and the first tap showed every set instead of the one tapped.
+  // open; otherwise the reader loses their place in a long page on the way back (W2).
   const [openSetId, setOpenSetId] = useState<string | null>(null)
 
-  const memoriesQuery = useQuery({
-    queryKey: ['memories', 'on-this-day'],
-    queryFn: fetchOnThisDayMemories,
+  const memoriesQuery = useQuery({ queryKey: ['memories', 'on-this-day'], queryFn: fetchOnThisDayMemories })
+  const rewatchQuery = useQuery({ queryKey: ['memories', 'rewatch-suggestions'], queryFn: fetchRewatchSuggestions })
+  const highlightsQuery = useQuery({ queryKey: ['highlights'], queryFn: fetchHighlights })
+  // The same key and freshness as the Releases page, so the two share one request.
+  const calendarQuery = useQuery({
+    queryKey: ['calendar', DISC_WINDOW_DAYS],
+    queryFn: () => fetchCalendar(DISC_WINDOW_DAYS),
+    staleTime: 10 * 60 * 1000,
   })
-  const rewatchQuery = useQuery({
-    queryKey: ['memories', 'rewatch-suggestions'],
-    queryFn: fetchRewatchSuggestions,
-  })
-  const pinnedQuery = useQuery({
-    queryKey: ['smart-collections', 'pinned'],
-    queryFn: () => fetchSmartCollections(true),
-  })
+  const pinnedQuery = useQuery({ queryKey: ['smart-collections', 'pinned'], queryFn: () => fetchSmartCollections(true) })
 
-  const memories = memoriesQuery.data ?? []
-  const rewatchSuggestions = rewatchQuery.data ?? []
+  // The line-up waits for every read it draws on, so a film never jumps from one module to
+  // another as the answers arrive. A failed read passes nothing and its module says so.
+  const lineupSettled = !memoriesQuery.isPending && !rewatchQuery.isPending && !highlightsQuery.isPending && !calendarQuery.isPending
+  const lineup = useMemo(
+    () => homeLineup({
+      rewatch: rewatchQuery.data,
+      highlights: highlightsQuery.data,
+      calendar: calendarQuery.data?.items,
+      onThisDay: memoriesQuery.data,
+    }),
+    [rewatchQuery.data, highlightsQuery.data, calendarQuery.data, memoriesQuery.data],
+  )
   const pinned = pinnedQuery.data?.items ?? []
 
   if (openSetId !== null) {
@@ -98,39 +108,42 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow="Your archive"
         title="Home"
-        description="The collection at a glance, what is coming to disc, the highlights, and how close each set is to complete."
+        description="What needs you, the collection at a glance, a film for tonight, and what is coming."
       />
 
-      <PrivateHero
-        hero="five"
-        alt="MARKS — five moments from the collection"
-        className="mb-9 aspect-[40/19] w-full rounded-xl border border-border object-cover shadow-soft"
-      />
+      <HomeBanner className="mb-9" />
 
-      <div className="space-y-9">
-        {/* AC1 (#335): what the person signed in can act on now, for everyone. Hidden when
-            there is nothing to do. */}
+      {!topSettled ? <div aria-hidden className="h-[32rem] animate-pulse rounded-lg bg-muted/40" /> : null}
+      <div className={topSettled ? 'space-y-9' : 'hidden'}>
+        {/* AC1 (#335): what the person signed in can act on now, and since AC2 their next
+            screening. Hidden when there is nothing. */}
         <NeedsYouRow />
 
         {/* Batch X2: what has stopped, for Craig. Hidden when all is well and for Mark. */}
         <AttentionRow />
 
-        <CollectionShelf />
+        <CollectionLedger />
 
-        <FeelingLucky homeLayoutPending={homeLayoutPending} />
+        {lineupSettled ? (
+          <FeaturedFilm pick={lineup.featured} homeLayoutPending={homeLayoutPending} />
+        ) : (
+          // The featured card's own height while its films arrive.
+          <div aria-hidden className="h-52 animate-pulse rounded-lg bg-muted/50" />
+        )}
 
-        <Link to="/cinemas" aria-disabled={homeLayoutPending || undefined} onClick={(event) => { if (homeLayoutPending) event.preventDefault() }} className={`archive-panel block p-5 transition-colors ${homeLayoutPending ? 'opacity-60' : 'hover:bg-muted'}`} aria-label="At the cinema">
-          <span className="font-display text-xl font-semibold">At the cinema</span>
-          <span className="mt-1 block text-sm text-muted-foreground">Find films and events at your cinemas. Choose dates, venues and release categories.</span>
-        </Link>
+        {lineupSettled ? <ComingToDisc limit={12} entries={lineup.discs} /> : null}
 
-        {/* Batch T5's disc releases, second since W2. Hidden when there are none. */}
-        <ComingToDisc limit={12} />
+        {highlightsQuery.isError ? (
+          <StatePanel
+            compact
+            tone="error"
+            title="Highlights are unavailable"
+            description={queryErrorMessage(highlightsQuery.error, 'Could not load the highlights.')}
+          />
+        ) : lineupSettled && lineup.highlights ? (
+          <HighlightsRow data={lineup.highlights} />
+        ) : null}
 
-        {/* Batch V5 and V9's rows: top rated, most rewatched, most valuable, best reviewed. */}
-        <Highlights />
-
-        {/* On this day: the caller's own viewings from this date in earlier years. */}
         {memoriesQuery.isError ? (
           <StatePanel
             compact
@@ -138,26 +151,7 @@ export default function DashboardPage() {
             title="Watch memories are unavailable"
             description={queryErrorMessage(memoriesQuery.error, 'Could not load your watch memories.')}
           />
-        ) : memories.length > 0 ? (
-          <Shelf
-            id="home-on-this-day"
-            title="On this day"
-            icon={CalendarHeart}
-            caption="Films you watched on this date in earlier years."
-          >
-            {memories.map((memory) => (
-              <PosterCard
-                key={memory.id}
-                to={`/movies/${memory.movieId}`}
-                title={memory.movieTitle}
-                posterPath={memory.posterPath}
-                detail={yearsAgo(memory.yearsAgo)}
-              />
-            ))}
-          </Shelf>
         ) : null}
-
-        {/* Worth a rewatch: rated highly and not seen for six months. */}
         {rewatchQuery.isError ? (
           <StatePanel
             compact
@@ -165,33 +159,42 @@ export default function DashboardPage() {
             title="Rewatch suggestions are unavailable"
             description={queryErrorMessage(rewatchQuery.error, 'Could not load rewatch suggestions.')}
           />
-        ) : rewatchSuggestions.length > 0 ? (
+        ) : null}
+        {lineupSettled && lineup.forYou.length > 0 ? (
           <Shelf
-            id="home-rewatch"
-            title="Worth a rewatch"
-            icon={RotateCcw}
-            caption="Films you rated highly and have not seen for a while."
+            id="home-for-you"
+            title="For you"
+            icon={CalendarHeart}
+            caption="On this day, and favourites you have not seen for a while."
           >
-            {rewatchSuggestions.map((suggestion) => (
-              <PosterCard
-                key={suggestion.movieId}
-                to={`/movies/${suggestion.movieId}`}
-                title={suggestion.movieTitle}
-                posterPath={suggestion.posterPath}
-                detail={
-                  <>
-                    ★ {stars(suggestion.personalRating)}
-                    <span className="block">Last seen {formatShortDate(suggestion.lastWatchedAt)}</span>
-                  </>
-                }
-              />
+            {lineup.forYou.map((film) => (
+              <PosterCard key={film.movieId} to={`/movies/${film.movieId}`} title={film.title} posterPath={film.posterPath} detail={film.detail} />
             ))}
           </Shelf>
         ) : null}
 
         <CompletionShelf onOpen={setOpenSetId} />
 
-        {/* Pinned collections: hidden until something is pinned. */}
+        <Link
+          to="/cinemas"
+          aria-disabled={homeLayoutPending || undefined}
+          onClick={(event) => {
+            if (homeLayoutPending) event.preventDefault()
+          }}
+          className={`archive-panel flex items-center gap-3 p-4 transition-colors ${homeLayoutPending ? 'opacity-60' : 'hover:bg-muted'}`}
+          aria-label="At the cinema"
+        >
+          <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Popcorn className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-base font-semibold">At the cinema</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">What&apos;s showing this week at your nine cinemas.</span>
+          </span>
+          <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+
+        {/* Pinned collections: hidden until something is pinned; links, not a sideways row. */}
         {pinnedQuery.isError ? (
           <StatePanel
             compact
@@ -200,31 +203,27 @@ export default function DashboardPage() {
             description={queryErrorMessage(pinnedQuery.error, 'Could not load your pinned collections.')}
           />
         ) : pinned.length > 0 ? (
-          <Shelf id="home-pinned" title="Pinned collections" icon={Pin}>
-            {pinned.map((collection) => {
-              const Icon = COLLECTION_ICONS[collection.icon]
-              return (
-                <li key={collection.id} className="w-56 shrink-0 snap-start">
-                  <Link
-                    to={`/collections/${collection.id}`}
-                    className="flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-3 hover:border-primary/40"
-                  >
-                    <span className="flex items-center gap-2 font-semibold text-foreground">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Icon className="h-4 w-4" aria-hidden />
-                      </span>
-                      <span className="min-w-0 truncate">{collection.name}</span>
-                    </span>
-                    <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">
-                      {describeFilters(collection.filters)}
-                    </span>
-                  </Link>
-                </li>
-              )
-            })}
-          </Shelf>
+          <section aria-labelledby="home-pinned" className="space-y-3">
+            <ShelfHeading id="home-pinned" title="Pinned collections" icon={Pin} />
+            <ul className="flex flex-wrap gap-2">
+              {pinned.map((collection) => {
+                const Icon = COLLECTION_ICONS[collection.icon]
+                return (
+                  <li key={collection.id}>
+                    <Link
+                      to={`/collections/${collection.id}`}
+                      title={describeFilters(collection.filters)}
+                      className="touch-target inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-3 text-sm font-semibold text-foreground hover:border-primary/40"
+                    >
+                      <Icon className="h-4 w-4 text-primary" aria-hidden />
+                      {collection.name}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
         ) : null}
-
       </div>
     </div>
   )

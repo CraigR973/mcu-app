@@ -25,6 +25,7 @@ from src.main import app
 from src.models.collection_item import CollectionItem
 from src.models.loan import Loan
 from src.models.movie import Movie
+from src.models.movie_night import MovieNightParticipant, MovieNightSession
 from src.models.profile import Profile, UserRole
 from src.routers import needs_you as needs_you_router
 
@@ -458,4 +459,57 @@ async def test_nothing_to_do_is_an_empty_row_for_anyone(
 ) -> None:
     response = await client_as("third").get("/api/v1/needs-you")
     assert response.status_code == 200
-    assert response.json() == {"items": []}
+    assert response.json() == {"items": [], "nextScreening": None}
+
+
+async def _night(
+    session: AsyncSession, people: list[Profile], *, in_hours: float | None, status: str = "open"
+) -> MovieNightSession:
+    night = MovieNightSession(
+        id=uuid.uuid4(),
+        created_by=people[0].id,
+        filters={},
+        status=status,
+        planned_start_utc=None if in_hours is None else utcnow() + timedelta(hours=in_hours),
+    )
+    session.add(night)
+    await session.flush()
+    for offset, person in enumerate(people):
+        session.add(
+            MovieNightParticipant(
+                session_id=night.id,
+                user_id=person.id,
+                joined_at_utc=utcnow() + timedelta(seconds=offset),
+            )
+        )
+    await session.flush()
+    return night
+
+
+async def test_the_next_planned_screening_rides_on_the_same_read_ac2(
+    api_session: AsyncSession,
+    people: dict[str, Profile],
+    client_as: Callable[[str], AsyncClient],
+) -> None:
+    craig, mark, third = people["craig"], people["mark"], people["third"]
+    later = await _night(api_session, [craig, mark, third], in_hours=72)
+    sooner = await _night(api_session, [mark, craig], in_hours=26)
+    await _night(api_session, [craig, mark], in_hours=2, status="ended")
+    await _night(api_session, [craig, mark], in_hours=-3)
+    await _night(api_session, [craig, mark], in_hours=None)
+
+    craig_next = (await client_as("craig").get("/api/v1/needs-you")).json()["nextScreening"]
+    assert craig_next["sessionId"] == str(sooner.id)
+    assert craig_next["withNames"] == [mark.display_name]
+    assert craig_next["matchTitle"] is None
+    # Only screenings the reader is in: the third person's soonest is the later one.
+    third_next = (await client_as("third").get("/api/v1/needs-you")).json()["nextScreening"]
+    assert third_next["sessionId"] == str(later.id)
+    assert third_next["withNames"] == [craig.display_name, mark.display_name]
+
+
+async def test_no_planned_screening_reads_as_null_not_a_guess_ac2(
+    client_as: Callable[[str], AsyncClient],
+) -> None:
+    body = (await client_as("third").get("/api/v1/needs-you")).json()
+    assert body == {"items": [], "nextScreening": None}

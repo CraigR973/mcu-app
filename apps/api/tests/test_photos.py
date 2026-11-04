@@ -216,6 +216,36 @@ class TestPrivateBrandArtwork:
 
         assert response.status_code == 401
 
+    async def test_ac2_banner_letters_are_small_private_webp_a_device_may_keep(self) -> None:
+        """AC2 (#337): T1's letters at 3x a phone and 2x a desktop, each under 200 KB."""
+
+        async def signed_in() -> object:
+            return object()
+
+        app.dependency_overrides[get_current_user] = signed_in
+        try:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                answers = [
+                    await client.get(f"/api/v1/brand/heroes/letters-v1-{width}")
+                    for width in (1125, 1800)
+                ]
+        finally:
+            app.dependency_overrides.clear()
+
+        for response in answers:
+            assert response.status_code == 200
+            assert response.headers["content-type"] == "image/webp"
+            assert response.content[:4] == b"RIFF" and response.content[8:12] == b"WEBP"
+            assert len(response.content) <= 200 * 1024
+            cache = response.headers["cache-control"]
+            assert "private" in cache and "immutable" in cache and "public" not in cache
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as anonymous:
+            assert (await anonymous.get("/api/v1/brand/heroes/letters-v1-1125")).status_code == 401
+
 
 class TestGallery:
     """§3.10's acceptance — *"upload succeeds; photos appear in gallery; deletion works"*."""

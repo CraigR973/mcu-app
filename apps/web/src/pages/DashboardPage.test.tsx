@@ -34,14 +34,20 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
   ...api,
 }))
-vi.mock('@/components/brand/PrivateHero', () => ({
-  PrivateHero: ({ hero, alt }: { hero: string; alt: string }) => <img data-testid="private-hero" data-hero={hero} alt={alt} />,
+vi.mock('@/components/brand/HomeBanner', () => ({
+  HomeBanner: () => <div data-testid="home-banner" role="img" aria-label="MARK'S Cinematic Universe" />,
 }))
 
 import DashboardPage from './DashboardPage'
 
 const HEAT = '3f2504e0-4f89-41d3-9a0c-0305e82c3401'
 const ALIEN = '3f2504e0-4f89-41d3-9a0c-0305e82c3402'
+// AC2: a film per module, so each shows; the no-repeat test overlaps them on purpose.
+const BLOOD = '3f2504e0-4f89-41d3-9a0c-0305e82c3403'
+const JAWS = '3f2504e0-4f89-41d3-9a0c-0305e82c3404'
+const CHINATOWN = '3f2504e0-4f89-41d3-9a0c-0305e82c3405'
+const ZODIAC = '3f2504e0-4f89-41d3-9a0c-0305e82c3406'
+const THIEF = '3f2504e0-4f89-41d3-9a0c-0305e82c3407'
 
 const STATS: Stats = {
   totalMovies: 1888,
@@ -93,16 +99,16 @@ const RELEASE: CalendarEntry = {
   url: null,
   posterPath: null,
   overview: null,
-  movieId: HEAT,
+  movieId: BLOOD,
 }
 
 const HIGHLIGHTS: Highlights = {
   topRated: { items: [{ movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, ratings: [{ personName: 'Craig', rating: 5 }] }], ratedBy: ['Craig'], notRatedBy: ['Mark'] },
-  mostRewatched: [{ movieId: ALIEN, title: 'Alien', year: 1979, posterPath: null, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 3 }] }],
+  mostRewatched: [{ movieId: JAWS, title: 'Jaws', year: 1975, posterPath: null, viewings: 3, byPerson: [{ personName: 'Craig', viewings: 3 }] }],
   mostValuable: [
     { movieId: HEAT, title: 'Heat', year: 1995, posterPath: null, formatCode: '4k_uhd', price: '34.99', currency: 'GBP', basis: 'current asking prices', sampleSize: 7, valueBasis: 'used', factor: null, low: '30.00', high: '40.00', valuedAs: 'as used copies', checkedAt: '2026-09-26T03:00:00Z', copies: 1 },
   ],
-  bestReviewed: [{ movieId: ALIEN, title: 'Alien', year: 1979, posterPath: null, overall: 4.5, outOf: 5, formatCode: '4k_uhd', strength: 'picture', scores: [{ heading: 'Video 4K', score: 5 }] }],
+  bestReviewed: [{ movieId: CHINATOWN, title: 'Chinatown', year: 1974, posterPath: null, overall: 4.5, outOf: 5, formatCode: '4k_uhd', strength: 'picture', scores: [{ heading: 'Video 4K', score: 5 }] }],
 }
 
 function set(id: string, name: string, owned: number, total: number): CompletionSet {
@@ -133,10 +139,11 @@ function fill() {
   api.fetchCalendar.mockResolvedValue({ items: [RELEASE], total: 1, refreshedAt: null })
   api.fetchHighlights.mockResolvedValue(HIGHLIGHTS)
   api.fetchOnThisDayMemories.mockResolvedValue([
-    { id: '3f2504e0-4f89-41d3-9a0c-0305e82c3701', movieId: HEAT, movieTitle: 'Heat', posterPath: null, watchedAt: '2024-10-05', yearsAgo: 2, personalRating: null },
+    { id: '3f2504e0-4f89-41d3-9a0c-0305e82c3701', movieId: ZODIAC, movieTitle: 'Zodiac', posterPath: null, watchedAt: '2024-10-05', yearsAgo: 2, personalRating: null },
   ])
   api.fetchRewatchSuggestions.mockResolvedValue([
     { movieId: ALIEN, movieTitle: 'Alien', posterPath: null, lastWatchedAt: '2025-01-12', personalRating: 4.5 },
+    { movieId: THIEF, movieTitle: 'Thief', posterPath: null, lastWatchedAt: '2024-03-19', personalRating: 5 },
   ])
   api.fetchCompletionInsights.mockResolvedValue({ items: SETS, total: SETS.length, oldestRefresh: null })
   api.fetchSmartCollections.mockResolvedValue({ items: [], total: 0 })
@@ -169,67 +176,96 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('Home as rows, the collection first — Batch W2', () => {
-  it('shows AA8’s private five-image MARKS banner above the Home rows', async () => {
+describe('Home as one ledger and varied modules — AC2, Craig\'s pick A (#337)', () => {
+  it('shows banner T1 above Home\'s modules', async () => {
     renderHome()
-    const hero = await screen.findByTestId('private-hero')
-    expect(hero.getAttribute('data-hero')).toBe('five')
-    expect(hero.getAttribute('alt')).toContain('MARKS')
-    expect(hero.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'The collection' }))).toBe(
+    const banner = await screen.findByTestId('home-banner')
+    expect(banner.getAttribute('aria-label')).toBe("MARK'S Cinematic Universe")
+    expect(banner.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'The collection' }))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     )
   })
 
-  it('runs the collection first, then disc releases, the highlights, memories and completion', async () => {
+  it('runs the ledger, the featured film, three rows, the closest sets and the cinemas', async () => {
     renderHome()
-    await screen.findByRole('heading', { level: 2, name: 'Completion' })
+    await screen.findByRole('heading', { level: 2, name: 'Closest to complete' })
     await screen.findByRole('heading', { level: 2, name: 'Coming to disc' })
     expect(headings()).toEqual([
       'The collection',
+      'Alien',
       'Coming to disc',
-      'Most rewatched',
-      'Most valuable discs',
-      'Best discs',
-      'On this day',
-      'Worth a rewatch',
-      'Completion',
+      'Highlights',
+      'For you',
+      'Closest to complete',
     ])
+    expect(screen.getByRole('link', { name: 'At the cinema' })).not.toBeNull()
   })
 
-  it('says what each count is: films owned, and copies split into discs and downloads — Batch X12a', async () => {
+  it('features a film Home already read, with Feeling lucky inside it', async () => {
     renderHome()
-    expect(await screen.findByText('Titles owned')).not.toBeNull()
-    expect(screen.getByText('Copies owned')).not.toBeNull()
-    expect(screen.getByText('1,880 physical · 422 download')).not.toBeNull()
-    expect(screen.getByText('422 include both')).not.toBeNull()
+    const title = await screen.findByRole('heading', { level: 2, name: 'Alien' })
+    const card = within(title.closest('section') as HTMLElement)
+    expect(card.getByText('Worth a rewatch')).not.toBeNull()
+    expect(card.getByText('You gave it ★ 4½ and last saw it on 12 Jan 2025.')).not.toBeNull()
+    expect(card.getByRole('link', { name: 'Open the film' }).getAttribute('href')).toBe(`/movies/${ALIEN}`)
+    const lucky = within(card.getByRole('group', { name: 'Feeling lucky' }))
+    expect(lucky.getByRole('button', { name: 'Deal another' })).not.toBeNull()
+    expect(lucky.getByRole('checkbox', { name: 'Only films I haven’t watched' })).not.toBeNull()
+  })
+
+  it('shows no film twice in one load', async () => {
+    // The 4 Nov overlap: one favourite in the rewatch list, Most rewatched, Best discs and On this day.
+    api.fetchRewatchSuggestions.mockResolvedValue([
+      { movieId: ALIEN, movieTitle: 'Alien', posterPath: null, lastWatchedAt: '2025-01-12', personalRating: 4.5 },
+      { movieId: JAWS, movieTitle: 'Jaws', posterPath: null, lastWatchedAt: '2024-03-19', personalRating: 5 },
+    ])
+    api.fetchHighlights.mockResolvedValue({
+      ...HIGHLIGHTS,
+      mostRewatched: [{ ...HIGHLIGHTS.mostRewatched[0], movieId: ALIEN, title: 'Alien' }, HIGHLIGHTS.mostRewatched[0]],
+      bestReviewed: [{ ...HIGHLIGHTS.bestReviewed[0], movieId: ALIEN, title: 'Alien' }],
+    })
+    api.fetchOnThisDayMemories.mockResolvedValue([
+      { id: '3f2504e0-4f89-41d3-9a0c-0305e82c3702', movieId: JAWS, movieTitle: 'Jaws', posterPath: null, watchedAt: '2024-10-05', yearsAgo: 2, personalRating: null },
+    ])
+    renderHome()
+    await screen.findByRole('heading', { level: 2, name: 'Highlights' })
+    const filmLinks = screen.getAllByRole('link').map((link) => link.getAttribute('href')).filter((href) => href?.startsWith('/movies/'))
+    expect(filmLinks.filter((href) => href === `/movies/${ALIEN}`)).toHaveLength(1)
+    expect(filmLinks.filter((href) => href === `/movies/${JAWS}`)).toHaveLength(1)
+    // Best discs had only Alien, already featured, so its tab is not offered.
+    expect(screen.queryByRole('tab', { name: 'Best discs' })).toBeNull()
+  })
+
+  it('says what each count is, once: titles, then copies on disc and digital in one line', async () => {
+    renderHome()
+    const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
+    expect(numbers.getByText('titles')).not.toBeNull()
+    expect(numbers.getByText('1,888')).not.toBeNull()
+    expect(numbers.getByText(/copies · 1,880 on disc · 422 digital · 422 both/)).not.toBeNull()
     fireEvent.click(screen.getByText('Collection breakdown'))
-    expect(screen.getByText('Formats (copies)')).not.toBeNull()
     expect(screen.getByText('Where they live (copies)')).not.toBeNull()
+    // The formats are the ledger's stacked bar; the breakdown does not draw them again.
+    expect(screen.queryByText('Formats (copies)')).toBeNull()
   })
 
-  it('keeps other Home shelves sideways and makes the collection summary fixed — owner pick AA3', async () => {
+  it('keeps at most four sideways rows; the ledger, the featured film and the sets are fixed', async () => {
     renderHome()
-    await screen.findByRole('heading', { level: 2, name: 'Completion' })
-    for (const heading of screen.getAllByRole('heading', { level: 2 })) {
-      const section = heading.closest('section')
-      expect(section, heading.textContent ?? '').not.toBeNull()
-      const rows = [...(section as HTMLElement).querySelectorAll('ul')].filter((list) =>
-        list.className.split(/\s+/).includes('overflow-x-auto'),
-      )
-      if (heading.textContent === 'The collection') {
-        expect(rows.length).toBe(0)
-        expect(within(section as HTMLElement).getByRole('list', { name: 'The collection in numbers' }).className).toContain('grid-cols-2')
-      } else {
-        expect(rows.length, heading.textContent ?? '').toBeGreaterThan(0)
-      }
+    await screen.findByRole('heading', { level: 2, name: 'Closest to complete' })
+    await screen.findByRole('heading', { level: 2, name: 'For you' })
+    const sideways = [...document.querySelectorAll('ul')].filter((list) => list.className.split(/\s+/).includes('overflow-x-auto'))
+    expect(sideways.length).toBeLessThanOrEqual(4)
+    for (const name of ['The collection', 'Alien', 'Closest to complete']) {
+      const section = screen.getByRole('heading', { level: 2, name }).closest('section') as HTMLElement
+      expect([...section.querySelectorAll('ul')].some((list) => list.className.includes('overflow-x-auto')), name).toBe(false)
     }
   })
 
-  it('has no Add a disc, no Most watched, and no valuation or bid-trial controls, even for an admin', async () => {
+  it('has no Add a disc, no Most watched, no Top rated and no valuation or bid-trial controls, even for an admin', async () => {
     renderHome()
-    await screen.findByRole('heading', { level: 2, name: 'Completion' })
+    await screen.findByRole('heading', { level: 2, name: 'Closest to complete' })
     expect(screen.queryByRole('link', { name: /Add a disc/ })).toBeNull()
     expect(screen.queryByText('Most watched')).toBeNull()
+    expect(screen.queryByRole('tab', { name: 'Top rated' })).toBeNull()
     expect(screen.queryByRole('button', { name: /Update values|Value the collection|Try bid prices/ })).toBeNull()
     expect(screen.queryByRole('heading', { name: /Bid prices/ })).toBeNull()
   })
@@ -250,7 +286,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
     expect(within(section).getByRole('link', { name: 'Browse the archive' }).getAttribute('href')).toBe('/movies')
   })
 
-  it('counts sales-backed discs beside the worth on Home', async () => {
+  it('counts sales-backed discs beside the worth, its method behind a tap', async () => {
     api.fetchCollectionValue.mockResolvedValue({ ...VALUE, salesBackedDiscs: 3 })
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
@@ -277,8 +313,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
     api.fetchCollectionValue.mockRejectedValue(new Error('Value service unavailable'))
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
-    expect(numbers.getByText('1,472 physical · 589 download')).not.toBeNull()
-    expect(numbers.getByText('134 include both')).not.toBeNull()
+    expect(numbers.getByText(/copies · 1,472 on disc · 589 digital · 134 both/)).not.toBeNull()
     expect(numbers.queryByText(/1,338/)).toBeNull()
     await waitFor(() => expect(numbers.getByText('Unavailable')).not.toBeNull())
   })
@@ -297,7 +332,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
     onlineManager.setOnline(false)
     renderHome(client)
     expect(await screen.findByText('Reconnect to load the stored estimate. Collection counts are still available.')).not.toBeNull()
-    expect(screen.getByText('1,880 physical · 422 download')).not.toBeNull()
+    expect(screen.getByText(/copies · 1,880 on disc · 422 digital/)).not.toBeNull()
     expect(screen.queryByText('Loading the stored estimate')).toBeNull()
   })
 
@@ -316,21 +351,21 @@ describe('Home as rows, the collection first — Batch W2', () => {
     delete oldStats.physicalAndDownloadCopies
     api.fetchStats.mockResolvedValue(oldStats)
     renderHome()
-    expect(await screen.findByText('Physical/download split is temporarily unavailable.')).not.toBeNull()
-    expect(screen.queryByText(/1,458 physical/)).toBeNull()
-    expect(screen.getByText('Copies owned')).not.toBeNull()
+    expect(await screen.findByText(/Physical\/download split is temporarily unavailable\./)).not.toBeNull()
+    expect(screen.queryByText(/1,458 on disc/)).toBeNull()
+    expect(screen.getByText(/copies owned/)).not.toBeNull()
   })
 
-  it.each(['admin', 'viewer'] as const)('shows approved owned-watch coverage and unchanged TMDB meaning for %s', async (role) => {
+  it.each(['admin', 'viewer'] as const)('shows owned-watch coverage as a share of the titles owned, and no TMDB match count, for %s', async (role) => {
     auth.role = role
     renderHome()
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
     expect(numbers.getByText("You've watched")).not.toBeNull()
-    expect(numbers.getByText('482 / 1,888')).not.toBeNull()
-    expect(numbers.getByText("Your watched titles still in the collection, including downloads.")).not.toBeNull()
-    expect(numbers.getByText('Matched on TMDB')).not.toBeNull()
-    expect(numbers.getByText('1,678')).not.toBeNull()
-    expect(numbers.getByText('Of 1,888 owned titles linked to a film or series record. A match can still need checking.')).not.toBeNull()
+    expect(numbers.getByText('26%')).not.toBeNull()
+    expect(numbers.getByText('482 of 1,888 titles you own')).not.toBeNull()
+    expect(numbers.getByRole('progressbar', { name: 'Share of the collection you have watched' }).getAttribute('aria-valuenow')).toBe('26')
+    // AC2: "Matched on TMDB" left Home; Identify films and its attention checks keep it.
+    expect(screen.queryByText('Matched on TMDB')).toBeNull()
   })
 
   it('does not replace absent owned-watch coverage with the diary count or an invented zero', async () => {
@@ -341,18 +376,19 @@ describe('Home as rows, the collection first — Batch W2', () => {
     const numbers = within(await screen.findByRole('list', { name: 'The collection in numbers' }))
     expect(numbers.getByText('Unavailable')).not.toBeNull()
     expect(numbers.getByText('Watched coverage is unavailable in this saved response.')).not.toBeNull()
-    expect(numbers.queryByText('594')).toBeNull()
-    expect(numbers.queryByText('0 / 1,888')).toBeNull()
+    expect(numbers.queryByText(/594/)).toBeNull()
+    expect(numbers.queryByText(/^0 of 1,888/)).toBeNull()
   })
 
   it('shows genuine zero and an empty collection without percentage arithmetic', async () => {
     api.fetchStats.mockResolvedValue({ ...STATS, totalMovies: 0, ownedWatchedMovies: 0 })
     renderHome()
-    expect(await screen.findByText('0 / 0')).not.toBeNull()
+    expect(await screen.findByText('0 of 0 titles you own')).not.toBeNull()
     expect(screen.queryByText('Watched coverage is unavailable in this saved response.')).toBeNull()
+    expect(screen.queryByRole('progressbar', { name: 'Share of the collection you have watched' })).toBeNull()
   })
 
-  it('shows format bars before the full breakdown is opened', async () => {
+  it('shows the formats as one stacked bar before the full breakdown is opened', async () => {
     renderHome()
     const preview = await screen.findByRole('region', { name: 'Formats at a glance' })
     expect(within(preview).getByText('Blu-ray')).not.toBeNull()
@@ -373,18 +409,21 @@ describe('Home as rows, the collection first — Batch W2', () => {
 
   it('hides a row with nothing in it', async () => {
     api.fetchOnThisDayMemories.mockResolvedValue([])
+    api.fetchRewatchSuggestions.mockResolvedValue([{ movieId: ALIEN, movieTitle: 'Alien', posterPath: null, lastWatchedAt: '2025-01-12', personalRating: 4.5 }])
     api.fetchCalendar.mockResolvedValue({ items: [], total: 0, refreshedAt: null })
     renderHome()
-    await screen.findByRole('heading', { level: 2, name: 'Completion' })
-    expect(headings()).not.toContain('On this day')
+    await screen.findByRole('heading', { level: 2, name: 'Closest to complete' })
+    await screen.findByRole('heading', { level: 2, name: 'Highlights' })
+    // Alien is featured, so For you has nothing left in it.
+    expect(headings()).not.toContain('For you')
     expect(headings()).not.toContain('Coming to disc')
   })
 
-  it('puts the sets closest to complete first, and links to all of them', async () => {
+  it('puts the sets closest to complete first, as a short list, and links to all of them', async () => {
     renderHome()
-    const heading = await screen.findByRole('heading', { level: 2, name: 'Completion' })
+    const heading = await screen.findByRole('heading', { level: 2, name: 'Closest to complete' })
     const section = within(heading.closest('section') as HTMLElement)
-    const names = section.getAllByRole('button').map((button) => button.querySelector('span')?.textContent)
+    const names = section.getAllByRole('button').map((button) => button.querySelector('span span')?.textContent)
     expect(names).toEqual(['Michael Mann', 'John Carpenter', 'Bess Flowers'])
     expect(section.getByRole('link', { name: 'All 3' }).getAttribute('href')).toBe('/insights')
   })
@@ -392,7 +431,7 @@ describe('Home as rows, the collection first — Batch W2', () => {
   it('opens the set tapped, not the list — the bug W2 found', async () => {
     api.fetchCompletionSet.mockResolvedValue({ ...SETS[1], films: [] })
     renderHome()
-    const heading = await screen.findByRole('heading', { level: 2, name: 'Completion' })
+    const heading = await screen.findByRole('heading', { level: 2, name: 'Closest to complete' })
     fireEvent.click(within(heading.closest('section') as HTMLElement).getByText('Michael Mann'))
 
     await waitFor(() => expect(api.fetchCompletionSet).toHaveBeenCalledWith(SETS[1].id))
@@ -401,6 +440,14 @@ describe('Home as rows, the collection first — Batch W2', () => {
     // Its back control names where it goes, and goes there.
     fireEvent.click(screen.getByRole('button', { name: 'Home' }))
     expect(await screen.findByRole('heading', { level: 2, name: 'The collection' })).not.toBeNull()
+  })
+
+  it('makes no more requests than before AC2: one read per module, the featured film reusing them', async () => {
+    renderHome()
+    await screen.findByRole('heading', { level: 2, name: 'For you' })
+    for (const read of [api.fetchStats, api.fetchCollectionValue, api.fetchCalendar, api.fetchHighlights, api.fetchOnThisDayMemories, api.fetchRewatchSuggestions, api.fetchNeedsYou, api.fetchAttention]) {
+      expect(read).toHaveBeenCalledTimes(1)
+    }
   })
 })
 

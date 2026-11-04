@@ -157,6 +157,15 @@
     @apply mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[0.9375rem];
   }
 
+  /* AC2 (#337): banner T1's field. The photo letters are transparent, so the page supplies the
+     ground: warm paper in light, the v3 hero's crimson in dark. */
+  .home-banner-field {
+    background: radial-gradient(120% 140% at 50% 30%, hsl(40 40% 99%) 0%, hsl(38 30% 92%) 100%);
+  }
+  .dark .home-banner-field {
+    background: radial-gradient(120% 140% at 50% 35%, hsl(344 42% 33%) 0%, hsl(344 55% 16%) 70%, hsl(344 60% 11%) 100%);
+  }
+
   .archive-panel {
     @apply rounded-lg border border-border bg-card text-card-foreground shadow-soft;
   }

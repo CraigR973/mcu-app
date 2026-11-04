@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/auth'
 import { Button } from '@/components/ui/button'
 import { Poster } from '@/components/movies/Poster'
-import { dealLuckyFilm, suggestMovieNightFilm, type MovieListItem } from '@/lib/api'
+import { suggestMovieNightFilm, type MovieListItem } from '@/lib/api'
+import { useLuckyDeck } from '@/lib/lucky-deck'
 import { queryErrorMessage } from '@/lib/query-state'
 import { formatShortDate } from '@/lib/utils'
 
@@ -19,21 +20,8 @@ export function FeelingLucky({ sessionId, homeLayoutPending = false }: { session
 
 function LuckyRun({ sessionId, homeLayoutPending }: { sessionId?: string; homeLayoutPending: boolean }) {
   const queryClient = useQueryClient()
-  const [unwatchedOnly, setUnwatchedOnly] = useState(false)
-  const [started, setStarted] = useState(false)
-  const [seen, setSeen] = useState<string[]>([])
-  const [film, setFilm] = useState<MovieListItem | null>(null)
-  const [exhausted, setExhausted] = useState(false)
+  const { unwatchedOnly, setUnwatchedOnly, started, film, exhausted, draw, deal: dealNext, reset: resetDeck } = useLuckyDeck({ sessionId })
   const [chosen, setChosen] = useState<MovieListItem | null>(null)
-
-  const draw = useMutation({
-    mutationFn: (excludedIds: string[]) => dealLuckyFilm({ excludedIds, unwatchedOnly, sessionId }),
-    onSuccess: ({ film: next }) => {
-      setFilm(next)
-      setExhausted(next === null)
-      if (next) setSeen((ids) => [...ids, next.id])
-    },
-  })
   const take = useMutation({
     mutationFn: async (pick: MovieListItem) => {
       if (sessionId) await suggestMovieNightFilm(sessionId, { movieId: pick.id })
@@ -46,17 +34,12 @@ function LuckyRun({ sessionId, homeLayoutPending }: { sessionId?: string; homeLa
   })
   const busy = draw.isPending || take.isPending
   const deal = () => {
-    setStarted(true)
     take.reset()
-    draw.mutate(seen)
+    dealNext()
   }
   const reset = () => {
-    setStarted(false)
-    setSeen([])
-    setFilm(null)
-    setExhausted(false)
+    resetDeck()
     setChosen(null)
-    draw.reset()
     take.reset()
   }
 
