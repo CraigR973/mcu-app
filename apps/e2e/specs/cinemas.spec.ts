@@ -17,7 +17,7 @@ const test = base.extend<{ programme: Programme }>({
     const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value
     const day = new Date(Date.parse(`${part('year')}-${part('month')}-${part('day')}T12:00:00Z`) + 86400000).toISOString().slice(0, 10)
     const movie = JSON.parse(db.scalar(`SELECT json_build_object('id',m.id,'title',m.title,'year',m.year,'tmdb_id',m.tmdb_id)::text FROM movies m WHERE m.deleted_at IS NULL AND NOT m.is_tv AND EXISTS (SELECT FROM collection_items c WHERE c.movie_id=m.id AND c.deleted_at IS NULL AND c.listing_status IN ('in_collection','listed_for_sale')) AND NOT EXISTS (SELECT FROM watch_log w WHERE w.movie_id=m.id AND w.deleted_at IS NULL) ORDER BY m.title LIMIT 1`)) as { id: string; title: string; year: number | null; tmdb_id: number | null }
-    const venues = JSON.parse(db.scalar(`SELECT json_agg(v)::text FROM cinema_venues v WHERE slug IN ('vue-st-enoch','odeon-kilmarnock')`)) as Venue[]
+    const venues = JSON.parse(db.scalar(`SELECT json_agg(v ORDER BY (v.slug='vue-st-enoch') DESC)::text FROM cinema_venues v WHERE slug IN ('vue-st-enoch','odeon-kilmarnock')`)) as Venue[]
     expect(venues).toHaveLength(2)
     const watch = randomUUID()
     const coverageIds = venues.map(() => randomUUID())

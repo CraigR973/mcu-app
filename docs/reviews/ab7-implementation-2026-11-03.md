@@ -81,6 +81,15 @@ links. This proves simulated browser layout, not an affected iPhone's acceptance
   The same probe now takes74ms on this Mac (not a phone/browser benchmark). The two immutable Intl formatters are reused; date values and current-clock checks
   remain calculated per call. This removes allocation work without freezing dates/age.
 
+- The independently strengthened provider-failure assertion exposed unordered fixture
+  venues: Vue had one row instead of its intended four, and the correct four other-venue
+  links remained. The fixture now orders Vue explicitly before ODEON; the exact one-link
+  assertion is preserved. The known failing local run was stopped before repeating it in
+  Firefox. No programme response, action guard or expected result was weakened.
+- The interruption-note helper briefly used the old system Python's unsupported UTC
+  constant; the note was written with the required Python3.12. No application/source or
+  production change occurred in that failed helper.
+
 ## Retained live-data limits
 
 The accepted3Nov17:13 snapshot stored1,838 rows/163 source-film identities/9 enabled venues,
