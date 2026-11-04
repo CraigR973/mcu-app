@@ -7185,3 +7185,33 @@ contemporaneous.
      pass1,617 future/141groups/New0/Older0/all Unclassified, partial coverage explicit.
      No domain write/source request/count change. Final main CI/deployment stamp in PR128;
      source/recurring/device gaps retained, no AA10c/other sitting. Known scope complete.
+
+335. **The 4 Nov snags: Craig's answers, and Group AC drafted (4 Nov).**
+     Craig raised eight points and asked for them to be reconciled against the code
+     (`docs/owner-snags-2026-11-04.md`). He accepted every recommendation with one change:
+     more people may be onboarded later, as full accounts, never as guests.
+     - **First run versus rerun (supersedes the run rule in #326, #327 and #330).** Programme
+       films are identified against TMDB automatically: by a source's own id where given,
+       otherwise by title plus a corroborating year, runtime or director with one clear
+       winner. Ambiguous matches go to a review list and stay unlinked; live events never
+       link to a film. Once identified, a showing is a first run when the film's first UK
+       cinema release is within 16 weeks before it, or after it; a rerun when that release is
+       12 months or more before it, or the cinema labels it a reissue, anniversary or
+       restoration; anything else stays Unclassified. The 12-lookup metadata cap rises enough
+       to clear the backlog and keep pace; the cache periods stay. Why: under the strict rule
+       all 1,850 future showings were Unclassified on 4 Nov and 0 of 174 films were linked.
+     - **Cinema trips invite any active profile, in any number.** No guests and no reply link
+       that works without sign-in. Trips get their own tables rather than extending
+       movie-night sessions. Accepting a suggested time moves the trip and resets the other
+       replies to Invited.
+     - **New cinema films notify as one daily digest per person**, behind a new Cinemas
+       switch (default on) with an older-films-only option; quiet hours and digest mode
+       apply. A film is new on its first appearance anywhere among the nine venues.
+     - **Discs to put back show on Home to the people who keep the shelves** (admins and
+       Mark's stable profile, defined in one place) until one of them confirms; loans out 14
+       days with no due date surface too. A later onboarded person sees no shelf jobs.
+     - **Nothing in Group AC assumes exactly two people.** Onboarding itself (accounts, roles,
+       what a new person sees) needs its own plan and is not part of this group.
+     Group AC's seven batches in four sittings are drafted in `docs/phase-batches.md` at
+     Craig's word. This records the answers and the draft, not a sitting's go. AC2's
+     mock-ups, AC3's dry run, and AC5's and AC6's schema and wording remain checkpoints.

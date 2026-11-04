@@ -2,27 +2,28 @@
 
 ## Now
 
-**4 Nov: Group AB sitting5 complete — cinema ingestion and discovery are live.**
-AB6 PR125/72ff0bd/final354f34c closed before AB7 PR128/bf70319, same-branch display fix
-67d22ec and causal Home loading repair190906ac. Ten clean local commands/API2621/no skips/
-shared167/web757 and exact seven-job candidate CI41753476409 pass: C70/F69+1/W68+2/jobs6.
-Exact deployed API/web190906ac/full readiness; actual Craig/Mark × both375px themes prove
-Home's native actions wait for initial layout, enable/check/navigate afterwards, and reuse
-one stats GET. All16 real cinema filters match1,617 future showings/141 groups in4–17Nov,
-all Unclassified/New0/Older0, nine enabled/partial coverage explicit. Source requests/domain
-mutations/page errors0; core/programme counts unchanged. Source fees0/resources unpriced;
-next08:00UTC recurring source access remains unproved. Public evidence excludes private
-profile photos. Code-main/final-docs exact CI and deployed stamp recorded in PR128 before
-completion. Reports: ab7-implementation-2026-11-03.md and ab7-home-loading-race-2026-11-04.md.
-Standing #334 known completion authority is fulfilled. No AA10c or other sitting.
+**4 Nov: the 4 Nov snags are reconciled and Group AC is drafted (#335); no sitting is
+authorised.** Craig raised eight points (Home repetition and polish, a "Needs you" row,
+Movie night's cinema view and film pages, cinema trips with replies, separate calendars,
+first runs versus reruns, new-film notifications, the banner). The reconciliation is
+`docs/owner-snags-2026-11-04.md`; seven batches in four sittings are in `docs/phase-batches.md`.
+Group AB is complete (sitting 5 closed 4 Nov at `190906ac`; its record is in the Log).
+
+**Live facts found on 4 Nov, read-only.** The first scheduled cinema refresh ran at 08:05
+UTC: all nine venues succeeded, 63 requests, 1,840 rows, 233 new showings, status `partial`
+as on 3 Nov. Horizons: Cineworld 14 days, Everyman 13, Science Centre 8, ODEON 7, GFT 2,
+Vue 2. 0 of 174 programme films are linked to TMDB and all 1,850 future showings are
+Unclassified; 164 films wait for a metadata lookup at 12 per run. Two loans have been back
+but not shelved since 28 Oct and show on nobody's Home.
 
 ## Next
 
-No further sitting is started by this completed run. Use Home → At the cinema, desktop
-Plan a screening/command palette, or You → Cinemas. New/Older may be empty while source
-runs remain unclassified; missing dates remain unchecked, never proof of no programme.
-The existing next08:00UTC job/future source access is not yet observed. Any later work
-must be chosen from the ledger under its own scope; existing owner actions remain separate.
+**Group AC waits for Craig's go per sitting.** Sittings 1 (AC1 → AC2, Home) and 2 (AC3,
+cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2; 4 (AC5 → AC6) needs 3.
+The planning commit is on `chore/owner-snags-2026-11-04` and reaches `main` through a
+reviewed planning PR before the first sitting, as Group AB's did. AC2, AC3, AC5 and AC6
+stop at owner checkpoints. Onboarding more people needs its own plan; nothing in Group AC
+assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -415,6 +416,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **4 Nov — the 4 Nov snags reconciled; Group AC drafted (#335):** eight owner points
+  checked against the code at production `b6940227` with read-only live reads. Craig
+  accepted every recommendation, widening cinema trip invitees to any active profile
+  because more people may be onboarded (never guests). #335 supersedes the strict run rule
+  of #326/#327/#330. Report `docs/owner-snags-2026-11-04.md`; ledger "Group AC". Docs only;
+  no code, data, hosting or credential change; no sitting authorised.
 - **4 Nov — final sitting5 Home integration repair accepted:** actual failed main41748981329
   trace plus controlled555px contrast establishes initial stats-layout movement losing the
   native checkbox click; identical-runtime passing af run does not dismiss it. Same branch/

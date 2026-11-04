@@ -5197,6 +5197,190 @@ green main with actual source/coverage acceptance and exact live checkpoints met
   head seven-job CI/production SHA/readiness. Actual programme reads need separate live
   acceptance authorisation; show the delivered coverage, including any approved gaps.
 
+## Group AC — the 4 Nov snags, drafted 4 Nov
+
+**Drafted 4 Nov at Craig's word (#335); no sitting is authorised.** The eight points and
+their reconciliation against the code are in `docs/owner-snags-2026-11-04.md`. Seven batches
+in four sittings: one branch and PR per batch with normal verification and automatic
+close-out, clean `main` between batches, sequential, no stacked branches. A sitting's go
+does not approve the next. AA10c and existing owner actions stay outside the group.
+
+Settings: Deep = Opus 5.5 / GPT-5.6 Sol; Standard = Sonnet 5.5 / GPT-5.6 Terra. Claude
+Code's tiers move from the 5 to the 5.5 models; Codex names are unchanged. The strictest
+batch sets its sitting's effort. Resolve an unavailable model with Craig.
+
+| Sitting | Ordered work and checkpoints | Claude Code / Codex |
+|---|---|---|
+| 1 | AC1 → **checkpoint: Craig picks AC2's mock-ups** → AC2 | Opus 5.5 `high` / GPT-5.6 Sol High |
+| 2 | AC3, stopping after its dry run for **Craig's review before the live write** | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
+| 3 | AC4 → AC7 | Opus 5.5 `high` / GPT-5.6 Sol High |
+| 4 | **checkpoint: AC5's tables, states and wording** → AC5 → **checkpoint: AC6's switch and wording** → AC6 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High |
+
+Sittings 1 and 2 are independent and can run in either order. Sitting 3 needs 2: posters,
+badges and one entry per film come from AC3's identities. Sitting 4 needs 3: trips start
+from AC4's film page and the digest opens AC4's view. Cost: seven PRs, each with the full
+local gate, seven-job CI and a production deploy, and four owner stops.
+
+| Batch | Scope and size | Claude Code / Codex | Status |
+|---|---|---|---|
+| AC1 | "Needs you" on Home for each person (point 2), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AC2 | Home redesign: one ledger, varied modules, sharper banner (points 1, 8), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AC3 | Cinema film identities and first run versus rerun (point 6), 🔴 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
+| AC4 | Movie night's At the cinema view and a page per film (point 3), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AC5 | Cinema trips: invite, reply, suggest another time (point 4), 🔴 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
+| AC6 | Daily digest of new cinema films (point 7), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| AC7 | Separate disc and cinema release calendars (point 5), 🟢 | Sonnet 5.5 `high` / GPT-5.6 Terra High | planned |
+
+*Why those settings.* AC3 is Extra High because it writes identity links and run labels
+across the live programme; a wrong link mislabels showings silently and feeds AC6's pushes.
+AC5 is Extra High for two new tables, several people's replies changing one record, and
+pushes. AC1 decides who sees what; AC6 adds a preference column and must never push twice.
+AC2 and AC4 are Deep for design judgement: the bar is premium, not merely working. AC7
+alone needs only Standard; its sitting runs at AC4's setting.
+
+*Choices made while drafting, open to Craig's overrule.* Trip pushes reuse the existing Movie
+night switch, so AC6 adds the only new switch. The phone tab stays "Movie night"; the
+Cinemas page becomes its At the cinema view and `/cinemas` redirects there. "The people who
+keep the shelves" are admins plus Mark's stable profile id (`MARK_PROFILE_ID`, AB3) until
+an onboarding plan defines something better.
+
+### AC1 — "Needs you" on Home, for each person 🟡
+
+- A "Needs you" row at the top of Home for every signed-in person, hidden when empty,
+  listing only what that person can act on now: discs back but not shelved, and discs asked
+  for awaiting handover, for the people who keep the shelves (#335); loans past their due
+  date, or out 14 days or more with no due date, for the borrower and the people who keep
+  the shelves; and, once AC5 ships, cinema trip invitations awaiting this person's reply.
+- Each item names the film and the action and opens the exact place. "Put back" uses the
+  existing confirm flow, including choosing another shelf; no second write path.
+- Craig's operational "Needs attention" row is unchanged and stays admin-only.
+- Derived from existing loan rows: no migration. A profile-scoped read (a new endpoint or
+  an additive field) with its zod schema in `packages/shared`, in the same PR. Legacy loans
+  with no state keep reading as Out.
+- Regress: each item type; each audience (a shelf keeper, a borrower, a third active
+  profile who sees no shelf jobs); confirming clears the item for everyone; empty, offline
+  and failed states; 375px in both themes.
+- Full gate and E2E; after deploy, a read-only production comparison against the loans for
+  both people. On 4 Nov that shows Pulp Fiction and Rosemary's Baby to put back, and
+  Halloween and The Silence of the Lambs out since 18 Oct.
+
+### AC2 — Home that feels premium: one ledger, varied modules, a sharper banner 🟡
+
+- **Checkpoint before build:** 375px mock-ups in both themes with real production figures
+  and real posters — two or three Home directions and two banner treatments — then stop for
+  Craig's picks. No production change before them.
+- The collection becomes one ledger: titles as the single headline figure; copies with
+  on-disc and digital in one line; estimated value as the second figure, its method behind
+  a tap; watched as a progress bar against owned titles; formats as one stacked bar that
+  opens the full breakdown. Each fact appears once. "Matched on TMDB" leaves Home; it stays
+  in Identify films and its existing attention checks.
+- The page follows the picked direction: AC1's row and the next planned screening at the
+  top (AC4 and AC5 add cinema items to the same slot); one featured film; at most four
+  sideways rows; one short caption per row or an info tap; no film repeated across Home's
+  rows in one load.
+- The banner follows the picked treatment, exported as responsive WebP or AVIF of at most
+  200 KB at 3×, theme-aware if picked, still served only after sign-in, cached on the device
+  so Home shows no grey flash after the first load, with its aspect ratio reserved.
+- No more requests than today; AB7's guard on early taps stays. Measure banner weight and
+  layout shift before and after.
+- Existing Home tests keep their meaning; an expectation that must change is reported, not
+  quietly rewritten. Full gate and E2E at 375px and 320px, both themes, both people.
+
+### AC3 — Cinema films identified, and first runs told from reruns 🔴
+
+- Implements #335's rule, superseding the run rule in #326, #327 and #330.
+- Each programme film is matched to TMDB automatically: by the source's own TMDB or IMDb
+  id where given; otherwise by title plus at least one corroborating fact (year, runtime or
+  director) with one clear winner. Ambiguous or conflicting candidates go to a short admin
+  review list and stay unlinked until resolved. Live events (theatre, opera, concerts,
+  quizzes) and double bills are recognised and never linked to a film.
+- The metadata budget rises enough to clear the backlog (164 films waiting on 4 Nov) within
+  days and keep pace with new films, within TMDB's limits and the existing per-run request
+  caps; the plan states the numbers. The 30-day positive and 7-day negative caches stay. No
+  new service, fee or credential.
+- Each linked showing is labelled from TMDB's UK cinema release date: first run within 16
+  weeks before the showing, or after it; rerun at 12 months or more before, or when the
+  cinema labels it a reissue, anniversary or restoration; anything else Unclassified. The
+  stored reason is shown ("UK release 1975 · rerun").
+- Existing columns hold links, categories and evidence; no migration is expected. If one
+  proves necessary, stop and ask.
+- **Checkpoint before the live write:** a read-only dry run over the live programme
+  reporting films linked, sent to review and left unlinked, and the category counts, with
+  twenty sample links and twenty sample labels for Craig to check. Then the live backfill
+  and the daily run.
+- Regress: remakes sharing a title, foreign and alternative titles, anniversary labels,
+  previews before UK release, films 4–12 months after release, events, a wrong year from a
+  source, a source id that disagrees with the title.
+- Full gate and E2E; after deploy, read back identity and category counts live and confirm
+  the run filters return first runs and reruns where the programme has them.
+
+### AC4 — Movie night with an At the cinema view, and a page per film 🟡
+
+- Movie night collapses ended and past screenings under "Past screenings (n)", closed by
+  default; open and planned ones stay on top. "Plan a cinema trip" sits beside "Start a
+  screening".
+- Movie night gains two views, At home and At the cinema. The Cinemas page becomes the At
+  the cinema view; `/cinemas` redirects there and the navigation entries follow.
+- At the cinema is film-first: "This week" and "Coming up" (later dates, as far as sources
+  list), each film with poster, run badge, number of cinemas and next showing; filters for
+  run type, cinema and date. It says which cinemas are listed only to a date (GFT and Vue,
+  two days, on 4 Nov) and keeps the existing coverage, staleness and ticket-link rules.
+- A film page lists every showing across the nine, grouped by day then cinema, times as
+  chips with format (IMAX, 3D and so on), each with "Check tickets". AC5 adds "Propose a
+  trip" here.
+- Home's "At the cinema" card becomes a poster strip of this week's films.
+- A new film-first read endpoint with its zod schema in the same PR; no migration.
+- Full gate and E2E at 375px, both themes, both people, with partial and stale coverage.
+
+### AC5 — Cinema trips: invite, reply, suggest another time 🔴
+
+- **Checkpoint before build:** Craig approves the exact tables, states and push wording.
+- A trip holds its proposer, the chosen showing (film, cinema, time and booking link, kept
+  as a snapshot), invitees picked from any active profile in any number, and one reply per
+  invitee: Invited, Going, Not going, or Another time (another showing of the same film).
+  No guests and no reply link that works without sign-in (#335).
+- Everyone on a trip sees everyone's reply. The proposer can accept a suggested time: the
+  trip moves, other replies reset to Invited and everyone is told. The proposer can cancel.
+  A showing the source withdraws or cancels is flagged on the trip.
+- Pushes for invitation, reply, change, cancellation and a reminder before the showing,
+  under the existing Movie night switch, through the outbox with retry-safe
+  de-duplication.
+- Trips appear on Movie night (past ones collapsed), on the film page, and in AC1's "Needs
+  you" while awaiting this person's reply. "Propose a trip" appears on AC4's film page and
+  behind Movie night's "Plan a cinema trip".
+- Two new tables, a reversible migration, and guarded `mcu_readonly` and `mcu_backup` grants
+  in the same block; no credential columns.
+- Regress: simultaneous replies, a reply after cancellation, two suggested times at once,
+  an accepted suggestion, a withdrawn showing, three profiles on one trip.
+- Full gate and E2E with two signed-in people; push receipt on a phone stays Craig's
+  observation.
+
+### AC6 — A daily digest of new films at your cinemas 🟡
+
+- **Checkpoint before build:** Craig approves the wording and the new preference.
+- After the daily refresh, each person with the switch on gets at most one push naming
+  films seen for the first time anywhere among the nine, de-duplicated by AC3's identities,
+  with run labels, opening "New this week" in At the cinema. Nothing new means no push. A
+  film that returns after 30 days or more out of the programme counts as new again;
+  otherwise never twice.
+- A new Cinemas switch in Notification settings, default on, with "Older films only". Quiet
+  hours and digest mode apply.
+- New preference column or columns, a reversible migration and guarded grants.
+- Safe under a retried, partial or failed refresh: at most one push per person per day, and
+  a venue whose collection failed adds nothing.
+- Full gate and E2E; after deploy, the first scheduled digest is read back in the outbox,
+  never sent by hand. Phone receipt is Craig's observation.
+
+### AC7 — Separate disc and cinema release calendars 🟢
+
+- Releases becomes two calendars: Disc releases (4K and Blu-ray, with sale events as a
+  filter) and Cinema releases (UK opening dates), each with its own month view. Home's
+  "Coming to disc" stays disc-only.
+- A cinema release showing at one of the nine links to its AC4 film page.
+- The month endpoint gains an additive type filter with its zod schema. The subscription
+  feed can be per calendar; the existing all-types feed keeps working.
+- Admin "Refresh from TMDB" is unchanged. Full gate and E2E at 375px, both themes.
+
 ## Batch groups
 
 **Grouping rule:** batches share a group when they touch the same files, share a
@@ -5252,6 +5436,7 @@ Run with `/group-start <id>`. A **checkpoint** is an owner action the agent stop
 | **Z** | Z1 | top tier · high | top tier · High | **Planned 19 Oct from Batch 38's findings (#286); not started, at Craig's go.** Four small faults in one batch: a chat card race, a TMDB-id add whose lost answer never settles, a raw format code on the barcode screen, two simultaneous likes missing the match |
 | **AA** | 1: ~~AA10a~~ (`eb315c2`) → AA10b (code `deccd87`; after-total open) · 2: ~~AA1~~ (`4cc207d`) → ~~AA8~~ (`6b039bf`) → ~~AA2~~ (`836df95`, portrait fix `98a04ed`) · 3: ~~AA4~~ (`6e9629d`) → ~~AA5~~ (`8f47f39`) → ~~AA6~~ (`54dbc07`) · 4: ~~AA7~~ (`e6e5e16`) → ~~AA11~~ (`b1075ec`; navigation repair `0b4a416`) · 5: ~~AA3~~ (`1c73d90`) → ~~AA9~~ (`aecdf8d`) · 6: AA10c from 25 Nov | **by sitting** (Group AA's table) | **Sitting 5 complete, 28 Oct: AA3 PR #115 (`1c73d90`) and AA9 PR #116 (`aecdf8d`), each with its own review stop, owner picks, build plan and full close-out. Final PR/merge seven-job CI and exact production API/web SHA/full readiness passed. AA9's complete repair record is in its verification report; real-phone/live-AI observations remain open. No sitting 6.** AA10b's live re-price remains open: its before total was £16,867.11 and 719 pairs remained after Craig's first run. The 1–2 Nov scheduled runs continue it; read back the final Home total when none are due. AA2's owner-authorised follow-up refresh completed 25 Oct: 39 metadata updates, 1 unchanged, no creates, removals or errors; all 40 sets now have stored TMDB portraits. Run one batch at a time, `/group-start AA · <sitting>`: the sittings differ in model, so the group is not one setting |
 | **AB** | 1: ~~AB1~~ (`ad2c992`) → ~~AB2~~ (`c187ed7`) · 2: ~~AB3~~ (`5cfa467`) · 3: ~~AB4~~ (`df6824a`) · 4: ~~AB5~~ (`b9f7dd7`, report) · 5: ~~AB6~~ (`72ff0bd`) → ~~AB7~~ (`190906ac`) | By sitting: Group AB table | By sitting: Group AB table | **All five sittings complete; sitting5 complete4Nov under327/330/334.** Sittings1–4 retain AB1/ad2c992, AB2/c187ed7 and separate seeding repair PR120/bf0eb36; AB3/5cfa467 with genuine push receipt still owner acceptance; AB4/df6824a with native production iPhone/header/Search/themes/keyboard and approved cold-launch/re-add accepted; AB5 report PR123/b9f7dd7 accepted313 with feasibility then unproved. Standing334 covers separate prerequisite repairs PR126/127, accepted public-page-first amendment and real all-nine source gates. AB6 PR125/72ff0bd/final354f34c: exact all7 gates/deploy, fresh63GET/all200/1838-row source artifact/three corroborated mappings/import/enable9/roles/core counts/both-profile reads; failed prefixes not spliced. AB7 PR128/bf70319 plus same-branch observed-format fix67d22ec and causal Home readiness190906ac: all ten local/exact manual41753476409 all7/C70/F69+1/W68+2/jobs6/all18 cinema cases, actual both-profile/theme/16-filter production reads and exact API/web/full readiness. Current4–17Nov1,617 future showings/141 groups, New0/Older0/all Unclassified, partial horizons/unknown identity/year/source age explicit. Source fees0/resources unpriced; next scheduled/future access unproved. No new PR, source pass, destructive catalogue/diary write, unrelated hosting change, AA10c or other sitting. Exact final main stamp in PR128. |
+| **AC** | 1: AC1 → **checkpoint: AC2 mock-ups** → AC2 · 2: AC3 (**checkpoint: dry run**) · 3: AC4 → AC7 · 4: **checkpoint: AC5 schema** → AC5 → **checkpoint: AC6 switch** → AC6 | By sitting: Group AC table | By sitting: Group AC table | **Drafted 4 Nov at Craig's word (#335); no sitting authorised.** The 4 Nov snags: Home's "Needs you" and redesign, cinema identities and first run versus rerun, Movie night's At the cinema view, cinema trips, the new-film digest and separate calendars. Sittings 1 and 2 are independent; 3 needs 2; 4 needs 3 |
 
 **Group S is defined in "Owner snag batches — from the 2026-09-14 triage" above, not in the
 April spec.** Its criteria were authored 2026-09-15; there is no `**Phase X.Y:` heading to
