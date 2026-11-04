@@ -7215,3 +7215,5 @@ contemporaneous.
      Group AC's seven batches in four sittings are drafted in `docs/phase-batches.md` at
      Craig's word. This records the answers and the draft, not a sitting's go. AC2's
      mock-ups, AC3's dry run, and AC5's and AC6's schema and wording remain checkpoints.
+     **Go, later on 4 Nov:** "work on all these sittings sequentially" authorises all four
+     sittings in order. It does not answer any checkpoint; each still stops the run.

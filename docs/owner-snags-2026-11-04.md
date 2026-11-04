@@ -1,7 +1,7 @@
 # Owner snags — 4 Nov 2026, reconciled against the code
 
 **Status: reconciled; Craig's answers recorded (#335); Group AC drafted in
-`docs/phase-batches.md`; no sitting authorised.** Craig accepted every recommendation except
+`docs/phase-batches.md`; all four sittings authorised 4 Nov, to run in order.** Craig accepted every recommendation except
 point 4's invitees: more people may be onboarded later, as full accounts, never as guests.
 Craig raised eight points, then asked for them to be reconciled against the code.
 Reviewed source and production were both `b6940227d9d7a712fcc4bfbca0330cbaf1afc51a` (API

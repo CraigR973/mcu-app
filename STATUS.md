@@ -2,8 +2,8 @@
 
 ## Now
 
-**4 Nov: the 4 Nov snags are reconciled and Group AC is drafted (#335); no sitting is
-authorised.** Craig raised eight points (Home repetition and polish, a "Needs you" row,
+**4 Nov: the 4 Nov snags are reconciled and Group AC is drafted (#335); Craig authorised
+all four sittings, to run in order.** Craig raised eight points (Home repetition and polish, a "Needs you" row,
 Movie night's cinema view and film pages, cinema trips with replies, separate calendars,
 first runs versus reruns, new-film notifications, the banner). The reconciliation is
 `docs/owner-snags-2026-11-04.md`; seven batches in four sittings are in `docs/phase-batches.md`.
@@ -18,11 +18,11 @@ but not shelved since 28 Oct and show on nobody's Home.
 
 ## Next
 
-**Group AC waits for Craig's go per sitting.** Sittings 1 (AC1 → AC2, Home) and 2 (AC3,
-cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2; 4 (AC5 → AC6) needs 3.
-The planning commit is on `chore/owner-snags-2026-11-04` and reaches `main` through a
-reviewed planning PR before the first sitting, as Group AB's did. AC2, AC3, AC5 and AC6
-stop at owner checkpoints. Onboarding more people needs its own plan; nothing in Group AC
+**Group AC runs sitting by sitting, at Craig's 4 Nov go for all four.** Sittings 1 (AC1 →
+AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
+4 (AC5 → AC6) needs 3. The planning commit reaches `main` through a reviewed planning PR
+before the first sitting, as Group AB's did. AC2, AC3, AC5 and AC6 stop at owner
+checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
