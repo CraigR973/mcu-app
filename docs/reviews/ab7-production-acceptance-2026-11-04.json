@@ -1,6 +1,6 @@
 {
-  "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
-  "observedUtc": "2026-11-04T00:46:58.264052+00:00",
+  "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+  "observedUtc": "2026-11-04T01:52:30.656376+00:00",
   "countsBefore": {
     "movies": 1945,
     "collection_items": 3798,
@@ -27,10 +27,18 @@
   "authentication": "60-second existing-configuration access token per scenario; only captured memory pipes; no PIN/login/refresh record, credential output, trace or HAR",
   "scenarios": [
     {
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      },
       "person": "Craig",
       "theme": "light",
-      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
-      "observedUtc": "2026-11-04T00:46:07.943Z",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "observedUtc": "2026-11-04T01:51:31.940Z",
       "viewport": "375x844 simulated browser",
       "programmeResponses": [
         {
@@ -701,10 +709,18 @@
       "screenshots": []
     },
     {
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      },
       "person": "Craig",
       "theme": "dark",
-      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
-      "observedUtc": "2026-11-04T00:46:23.888Z",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "observedUtc": "2026-11-04T01:51:49.648Z",
       "viewport": "375x844 simulated browser",
       "programmeResponses": [
         {
@@ -1375,10 +1391,18 @@
       "screenshots": []
     },
     {
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      },
       "person": "Mark",
       "theme": "light",
-      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
-      "observedUtc": "2026-11-04T00:46:39.222Z",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "observedUtc": "2026-11-04T01:52:08.077Z",
       "viewport": "375x844 simulated browser",
       "programmeResponses": [
         {
@@ -2053,10 +2077,18 @@
       ]
     },
     {
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      },
       "person": "Mark",
       "theme": "dark",
-      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
-      "observedUtc": "2026-11-04T00:46:54.019Z",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "observedUtc": "2026-11-04T01:52:25.867Z",
       "viewport": "375x844 simulated browser",
       "programmeResponses": [
         {

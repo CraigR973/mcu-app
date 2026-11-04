@@ -1,5 +1,5 @@
 {
-  "runtimeHead": "67d22ec2db315de74de118f93e0261b568ed3e44",
+  "runtimeHead": "190906ac45be73bb1228eb8dcef980de47e378ce",
   "approval": [
     327,
     330,
@@ -11,13 +11,13 @@
   "originalPrCi": 41743577248,
   "postMergeDisplayManualCi": 41746792947,
   "localGate": {
-    "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+    "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
     "cleanAfter": true,
     "checks": [
       {
         "name": "ruff-check",
         "exitCode": 0,
-        "seconds": 0.9
+        "seconds": 1.0
       },
       {
         "name": "ruff-format",
@@ -27,56 +27,56 @@
       {
         "name": "mypy",
         "exitCode": 0,
-        "seconds": 7.3
+        "seconds": 6.4
       },
       {
         "name": "pytest",
         "exitCode": 0,
-        "seconds": 230.6
+        "seconds": 219.7
       },
       {
         "name": "pnpm-tests",
         "exitCode": 0,
-        "seconds": 127.9
+        "seconds": 115.4
       },
       {
         "name": "shared-typecheck",
         "exitCode": 0,
-        "seconds": 8.6
+        "seconds": 9.1
       },
       {
         "name": "shared-build",
         "exitCode": 0,
-        "seconds": 7.0
+        "seconds": 7.6
       },
       {
         "name": "web-lint",
         "exitCode": 0,
-        "seconds": 7.0
+        "seconds": 7.1
       },
       {
         "name": "web-typecheck",
         "exitCode": 0,
-        "seconds": 17.2
+        "seconds": 16.6
       },
       {
         "name": "web-build",
         "exitCode": 0,
-        "seconds": 37.3
+        "seconds": 47.6
       }
     ]
   },
   "localUpdatedCinemaBrowsers": {
-    "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
-    "endHead": "67d22ec2db315de74de118f93e0261b568ed3e44",
+    "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+    "endHead": "190906ac45be73bb1228eb8dcef980de47e378ce",
     "exit": 0,
-    "seconds": 114.0,
+    "seconds": 115.7,
     "args": [
       "chromium",
       "firefox",
       "--",
       "--grep",
-      "cinemas"
+      "Home waits for the collection layout|Home deals unwatched|cinemas"
     ]
   },
   "earlierFullBrowsers": {
@@ -91,818 +91,49 @@
     ]
   },
   "exactManualCi": {
+    "run": 41753476409,
+    "headSha": "190906ac45be73bb1228eb8dcef980de47e378ce",
     "conclusion": "success",
-    "headSha": "67d22ec2db315de74de118f93e0261b568ed3e44",
     "jobs": [
       {
-        "completedAt": "2026-11-04T00:27:09Z",
-        "conclusion": "success",
-        "databaseId": 126301713058,
-        "name": "Image \u2014 build \u00b7 migrate \u00b7 boot",
-        "startedAt": "2026-11-04T00:26:12Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:13Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:12Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:34Z",
-            "conclusion": "success",
-            "name": "Initialize containers",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:36Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:34Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:53Z",
-            "conclusion": "success",
-            "name": "Build the image",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:36Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:01Z",
-            "conclusion": "success",
-            "name": "Import every cron job's module, as named in .railway/railway.ts",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:53Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:07Z",
-            "conclusion": "success",
-            "name": "Boot it as production does, migrating first, until it is ready",
-            "number": 6,
-            "startedAt": "2026-11-04T00:27:01Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:08Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 11,
-            "startedAt": "2026-11-04T00:27:07Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:08Z",
-            "conclusion": "success",
-            "name": "Stop containers",
-            "number": 12,
-            "startedAt": "2026-11-04T00:27:08Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:08Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 13,
-            "startedAt": "2026-11-04T00:27:08Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713058"
-      },
-      {
-        "completedAt": "2026-11-04T00:26:40Z",
-        "conclusion": "success",
-        "databaseId": 126301713283,
-        "name": "Dependencies \u2014 Python \u00b7 pnpm",
-        "startedAt": "2026-11-04T00:26:12Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:14Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:16Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:15Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:17Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-python@v5",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:16Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:23Z",
-            "conclusion": "success",
-            "name": "Install Python audit tool",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:17Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:25Z",
-            "conclusion": "success",
-            "name": "Audit locked Python runtime dependencies",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:23Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:26Z",
-            "conclusion": "success",
-            "name": "Run pnpm/action-setup@v4",
-            "number": 6,
-            "startedAt": "2026-11-04T00:26:25Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:34Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-node@v4",
-            "number": 7,
-            "startedAt": "2026-11-04T00:26:26Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:36Z",
-            "conclusion": "success",
-            "name": "Install JavaScript dependencies",
-            "number": 8,
-            "startedAt": "2026-11-04T00:26:34Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:37Z",
-            "conclusion": "success",
-            "name": "Audit production JavaScript dependencies",
-            "number": 9,
-            "startedAt": "2026-11-04T00:26:36Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:37Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-node@v4",
-            "number": 15,
-            "startedAt": "2026-11-04T00:26:37Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:37Z",
-            "conclusion": "success",
-            "name": "Post Run pnpm/action-setup@v4",
-            "number": 16,
-            "startedAt": "2026-11-04T00:26:37Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:37Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-python@v5",
-            "number": 17,
-            "startedAt": "2026-11-04T00:26:37Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:38Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 18,
-            "startedAt": "2026-11-04T00:26:37Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:38Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 19,
-            "startedAt": "2026-11-04T00:26:38Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713283"
-      },
-      {
-        "completedAt": "2026-11-04T00:28:16Z",
-        "conclusion": "success",
-        "databaseId": 126301713357,
-        "name": "Web \u2014 lint \u00b7 typecheck \u00b7 test \u00b7 build",
-        "startedAt": "2026-11-04T00:26:12Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:13Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:12Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:15Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:17Z",
-            "conclusion": "success",
-            "name": "Run pnpm/action-setup@v4",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:15Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:23Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-node@v4",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:17Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:25Z",
-            "conclusion": "success",
-            "name": "Install dependencies",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:23Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:30Z",
-            "conclusion": "success",
-            "name": "Lint (eslint)",
-            "number": 6,
-            "startedAt": "2026-11-04T00:26:25Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:36Z",
-            "conclusion": "success",
-            "name": "Typecheck (shared)",
-            "number": 7,
-            "startedAt": "2026-11-04T00:26:30Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:49Z",
-            "conclusion": "success",
-            "name": "Typecheck (web)",
-            "number": 8,
-            "startedAt": "2026-11-04T00:26:36Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:44Z",
-            "conclusion": "success",
-            "name": "Test (web + shared)",
-            "number": 9,
-            "startedAt": "2026-11-04T00:26:49Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:50Z",
-            "conclusion": "success",
-            "name": "Build (shared)",
-            "number": 10,
-            "startedAt": "2026-11-04T00:27:44Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:28:14Z",
-            "conclusion": "success",
-            "name": "Build (web)",
-            "number": 11,
-            "startedAt": "2026-11-04T00:27:50Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:28:14Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-node@v4",
-            "number": 20,
-            "startedAt": "2026-11-04T00:28:14Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:28:14Z",
-            "conclusion": "success",
-            "name": "Post Run pnpm/action-setup@v4",
-            "number": 21,
-            "startedAt": "2026-11-04T00:28:14Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:28:15Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 22,
-            "startedAt": "2026-11-04T00:28:14Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:28:15Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 23,
-            "startedAt": "2026-11-04T00:28:15Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713357"
-      },
-      {
-        "completedAt": "2026-11-04T00:42:08Z",
-        "conclusion": "success",
-        "databaseId": 126301713379,
-        "name": "E2E \u2014 Chromium \u00b7 Firefox \u00b7 WebKit \u00b7 jobs",
-        "startedAt": "2026-11-04T00:26:12Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:14Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:35Z",
-            "conclusion": "success",
-            "name": "Initialize containers",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:14Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:37Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:35Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:38Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-python@v5",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:37Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:54Z",
-            "conclusion": "success",
-            "name": "Install the API's dependencies",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:38Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:55Z",
-            "conclusion": "success",
-            "name": "Run pnpm/action-setup@v4",
-            "number": 6,
-            "startedAt": "2026-11-04T00:26:54Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:01Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-node@v4",
-            "number": 7,
-            "startedAt": "2026-11-04T00:26:55Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:04Z",
-            "conclusion": "success",
-            "name": "Install dependencies",
-            "number": 8,
-            "startedAt": "2026-11-04T00:27:01Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:06Z",
-            "conclusion": "success",
-            "name": "Typecheck (e2e)",
-            "number": 9,
-            "startedAt": "2026-11-04T00:27:04Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:13Z",
-            "conclusion": "success",
-            "name": "Build (shared)",
-            "number": 10,
-            "startedAt": "2026-11-04T00:27:06Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:18Z",
-            "conclusion": "success",
-            "name": "Cache the browsers",
-            "number": 11,
-            "startedAt": "2026-11-04T00:27:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:44Z",
-            "conclusion": "success",
-            "name": "Install the browsers",
-            "number": 12,
-            "startedAt": "2026-11-04T00:27:18Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:05Z",
-            "conclusion": "success",
-            "name": "Run the suite (builds the bundle once, then each browser, then the jobs)",
-            "number": 13,
-            "startedAt": "2026-11-04T00:27:44Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:05Z",
-            "conclusion": "skipped",
-            "name": "Keep the reports and logs of a failed run",
-            "number": 14,
-            "startedAt": "2026-11-04T00:42:05Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:05Z",
-            "conclusion": "success",
-            "name": "Post Cache the browsers",
-            "number": 23,
-            "startedAt": "2026-11-04T00:42:05Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:05Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-node@v4",
-            "number": 24,
-            "startedAt": "2026-11-04T00:42:05Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:05Z",
-            "conclusion": "success",
-            "name": "Post Run pnpm/action-setup@v4",
-            "number": 25,
-            "startedAt": "2026-11-04T00:42:05Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:06Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-python@v5",
-            "number": 26,
-            "startedAt": "2026-11-04T00:42:05Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:06Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 27,
-            "startedAt": "2026-11-04T00:42:06Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:06Z",
-            "conclusion": "success",
-            "name": "Stop containers",
-            "number": 28,
-            "startedAt": "2026-11-04T00:42:06Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:42:06Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 29,
-            "startedAt": "2026-11-04T00:42:06Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713379"
-      },
-      {
-        "completedAt": "2026-11-04T00:29:06Z",
-        "conclusion": "success",
-        "databaseId": 126301713473,
         "name": "API \u2014 pytest + Postgres 17",
-        "startedAt": "2026-11-04T00:26:15Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:17Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:16Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:38Z",
-            "conclusion": "success",
-            "name": "Initialize containers",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:17Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:40Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:38Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:45Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-python@v5",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:40Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:58Z",
-            "conclusion": "success",
-            "name": "Install dependencies",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:45Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:27:00Z",
-            "conclusion": "success",
-            "name": "Apply migrations",
-            "number": 6,
-            "startedAt": "2026-11-04T00:26:58Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:29:03Z",
-            "conclusion": "success",
-            "name": "Test (pytest)",
-            "number": 7,
-            "startedAt": "2026-11-04T00:27:00Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:29:03Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-python@v5",
-            "number": 12,
-            "startedAt": "2026-11-04T00:29:03Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:29:03Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 13,
-            "startedAt": "2026-11-04T00:29:03Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:29:03Z",
-            "conclusion": "success",
-            "name": "Stop containers",
-            "number": 14,
-            "startedAt": "2026-11-04T00:29:03Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:29:03Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 15,
-            "startedAt": "2026-11-04T00:29:03Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713473"
+        "conclusion": "success",
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323921726"
       },
       {
-        "completedAt": "2026-11-04T00:26:58Z",
+        "name": "E2E \u2014 Chromium \u00b7 Firefox \u00b7 WebKit \u00b7 jobs",
         "conclusion": "success",
-        "databaseId": 126301713499,
-        "name": "API \u2014 lint \u00b7 typecheck",
-        "startedAt": "2026-11-04T00:26:12Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:14Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:15Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:14Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:18Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-python@v5",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:15Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:33Z",
-            "conclusion": "success",
-            "name": "Install dependencies",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:18Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:33Z",
-            "conclusion": "success",
-            "name": "Lint (ruff check)",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:33Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:33Z",
-            "conclusion": "success",
-            "name": "Lint (ruff format)",
-            "number": 6,
-            "startedAt": "2026-11-04T00:26:33Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Typecheck (mypy)",
-            "number": 7,
-            "startedAt": "2026-11-04T00:26:33Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-python@v5",
-            "number": 13,
-            "startedAt": "2026-11-04T00:26:56Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 14,
-            "startedAt": "2026-11-04T00:26:56Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 15,
-            "startedAt": "2026-11-04T00:26:56Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713499"
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323921899"
       },
       {
-        "completedAt": "2026-11-04T00:26:58Z",
+        "name": "Image \u2014 build \u00b7 migrate \u00b7 boot",
         "conclusion": "success",
-        "databaseId": 126301713699,
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323921948"
+      },
+      {
+        "name": "Web \u2014 lint \u00b7 typecheck \u00b7 test \u00b7 build",
+        "conclusion": "success",
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323922033"
+      },
+      {
         "name": "Database \u2014 upgrade head \u00b7 downgrade base",
-        "startedAt": "2026-11-04T00:26:12Z",
-        "status": "completed",
-        "steps": [
-          {
-            "completedAt": "2026-11-04T00:26:13Z",
-            "conclusion": "success",
-            "name": "Set up job",
-            "number": 1,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:34Z",
-            "conclusion": "success",
-            "name": "Initialize containers",
-            "number": 2,
-            "startedAt": "2026-11-04T00:26:13Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:36Z",
-            "conclusion": "success",
-            "name": "Run actions/checkout@v4",
-            "number": 3,
-            "startedAt": "2026-11-04T00:26:34Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:37Z",
-            "conclusion": "success",
-            "name": "Run actions/setup-python@v5",
-            "number": 4,
-            "startedAt": "2026-11-04T00:26:36Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:52Z",
-            "conclusion": "success",
-            "name": "Install dependencies",
-            "number": 5,
-            "startedAt": "2026-11-04T00:26:37Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:54Z",
-            "conclusion": "success",
-            "name": "Upgrade to head",
-            "number": 6,
-            "startedAt": "2026-11-04T00:26:52Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Downgrade to base",
-            "number": 7,
-            "startedAt": "2026-11-04T00:26:54Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Post Run actions/setup-python@v5",
-            "number": 12,
-            "startedAt": "2026-11-04T00:26:56Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:56Z",
-            "conclusion": "success",
-            "name": "Post Run actions/checkout@v4",
-            "number": 13,
-            "startedAt": "2026-11-04T00:26:56Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:57Z",
-            "conclusion": "success",
-            "name": "Stop containers",
-            "number": 14,
-            "startedAt": "2026-11-04T00:26:56Z",
-            "status": "completed"
-          },
-          {
-            "completedAt": "2026-11-04T00:26:57Z",
-            "conclusion": "success",
-            "name": "Complete job",
-            "number": 15,
-            "startedAt": "2026-11-04T00:26:57Z",
-            "status": "completed"
-          }
-        ],
-        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41746792947/job/126301713699"
+        "conclusion": "success",
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323922244"
+      },
+      {
+        "name": "API \u2014 lint \u00b7 typecheck",
+        "conclusion": "success",
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323922299"
+      },
+      {
+        "name": "Dependencies \u2014 Python \u00b7 pnpm",
+        "conclusion": "success",
+        "url": "https://github.com/CraigR973/mcu-app/actions/runs/41753476409/job/126323922387"
       }
     ]
   },
-  "mergedCodeMainCi": 41748981329,
-  "mainCiStateAtDocumentation": "running; code and final docs runs checked before task completion, exact final stamp in PR128",
+  "mergedCodeMainCi": 41756486514,
+  "mainCiStateAtDocumentation": "code-main and final docs CI checked before completion; exact final head and runs stamped in PR128",
   "localCounts": {
     "api": 2621,
     "apiSkipped": 0,
@@ -910,9 +141,9 @@
     "web": 757
   },
   "ciBrowserPasses": {
-    "chromium": 69,
-    "firefox": 68,
-    "webkit": 67,
+    "chromium": 70,
+    "firefox": 69,
+    "webkit": 68,
     "jobs": 6
   },
   "unchangedDocumentedBrowserSkips": {
@@ -922,5 +153,13 @@
   "sourceFeesGbp": 0,
   "existingResources": "unpriced",
   "productionEvidence": "ab7-production-acceptance-2026-11-04.json",
-  "observedUtc": "2026-11-04T00:48:13.484498+00:00"
+  "observedUtc": "2026-11-04T01:53:47.202362+00:00",
+  "postMergeHomeManualCi": 41753476409,
+  "homeLayoutProof": "Held real stats response; disabled native controls/navigation then native check and cinema navigation pass; one shared stats request, both people and both themes; no mutation",
+  "failures": {
+    "observedMainHomeRace": 41748981329,
+    "sameRuntimePassingDocsRunNotARepair": 41749759834,
+    "controlledLocalContrastPixels": 555.0000305175781,
+    "localLoginTransportInterruption": "ECONNRESET before browser; precise transport cause unproved; separate Mark confirmation and committed C8/F8 checks pass"
+  }
 }

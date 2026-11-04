@@ -181,3 +181,33 @@ existing cached upper-section readiness before enabling Home pick/navigation con
 original assertion and all data/source contracts remain. Controlled regression, traces,
 local login-transport interruption and full follow-up evidence:
 [Home loading race](ab7-home-loading-race-2026-11-04.md).
+
+## Final repair acceptance — 4 Nov
+
+The independent controlled Firefox contrast holds the real stats response until native
+mouse-down. Removing only the new guard in the local throwaway browser lets the layout
+move the checkbox555.00003px (y426.93332→981.93335) before stationary mouse-up: unchecked.
+Once layout settles, the original native check succeeds. This establishes the lost-click
+mechanism without altering the stats body or weakening the original Home assertion.
+
+Same-branch190906ac (single PR128) passes all ten clean local commands: API2,621/no skips,
+shared167/web757. Committed focused Chromium8/Firefox8 pass. Exact full manual
+CI41753476409 passes all seven jobs: Chromium70/Firefox69+1/WebKit68+2/jobs6, including
+all18 cinema cases, all3 new Home readiness cases and all3 original poster cases.
+The three existing browser exclusions remain unchanged. Code-main CI41756486514 and
+final documentation CI are checked separately before completion; exact final stamp in PR128.
+
+Actual deployed API/web190906ac and full readiness pass. Craig/Mark × light/dark375px
+production browsers hold each real stats read, prove native checkbox/Deal/cinema entry
+unavailable, block keyboard navigation while loading, then prove native check and cinema
+navigation work. Exactly one stats GET/person/theme, no extra stats call or mutating Deal.
+All16 actual programme filters still match1,617 future showings/141 groups; New0/Older0/
+Unclassified1,617. Partial coverage/unknowns remain explicit, raw format syntax renders0.
+Core/programme counts unchanged; third-party source requests/domain mutations/page errors0.
+This is browser proof, not new genuine iPhone/push/camera/speech/two-device acceptance.
+Next08:00UTC scheduled source run/future access remains unobserved; source fees£0 and
+existing resource/verification usage unpriced. No other sitting or new branch/PR.
+
+The earlier local Chromium login ECONNRESET remains recorded with precise cause unproved;
+separate confirmation and the committed focused/full gates pass. The failed main run and
+same-runtime passing run remain evidence; neither was silently retried or called repaired.

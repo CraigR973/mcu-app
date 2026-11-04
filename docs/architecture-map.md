@@ -4,7 +4,7 @@
 AB3 and the separate movie-night repair on 29 Oct, plus AB4 shipped/phone-accepted
 31 Oct and the causal movie-night poster repair on 3 Nov (PR #127); the April design intent
 remains in `ARCHITECTURE.md`. AB6 programme ingestion shipped3Nov(PR125/72ff0bd); AB7 discovery shipped4Nov
-(PR128/bf70319 plus same-branch67d22ec).
+(PR128/bf70319 plus same-branch67d22ec and Home readiness190906ac).
 
 ```mermaid
 flowchart TB

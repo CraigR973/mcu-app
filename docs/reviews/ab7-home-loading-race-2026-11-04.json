@@ -24,6 +24,159 @@
   "sameRuntimeOtherMainRun": 41749759834,
   "sameRuntimeOtherMainResult": "all seven pass; timing-dependent defect still repaired",
   "traceHandling": "Original CI trace and synthetic authentication data stay in ignored scratchpad; only this sanitised causal summary is tracked",
-  "productionRequests": 0,
-  "productionWrites": 0
+  "productionRequests": "Own first-party read-only API only; no third-party source requests",
+  "productionWrites": 0,
+  "controlledContrast": {
+    "contrast": "new guard removed in local browser only; real stats response held until native mouse down",
+    "before": {
+      "x": 33,
+      "y": 426.9333190917969,
+      "width": 16,
+      "height": 16
+    },
+    "after": {
+      "x": 33,
+      "y": 981.933349609375,
+      "width": 16,
+      "height": 16
+    },
+    "point": {
+      "x": 41,
+      "y": 434.9333190917969
+    },
+    "displacement": 555.0000305175781,
+    "checkedAfterStationaryMouseUp": false
+  },
+  "repairHead": "190906ac45be73bb1228eb8dcef980de47e378ce",
+  "exactManualCi": 41753476409,
+  "mergedCodeMainCi": 41756486514,
+  "cleanLocalGate": {
+    "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+    "cleanAfter": true,
+    "checks": [
+      {
+        "name": "ruff-check",
+        "exitCode": 0,
+        "seconds": 1.0
+      },
+      {
+        "name": "ruff-format",
+        "exitCode": 0,
+        "seconds": 0.0
+      },
+      {
+        "name": "mypy",
+        "exitCode": 0,
+        "seconds": 6.4
+      },
+      {
+        "name": "pytest",
+        "exitCode": 0,
+        "seconds": 219.7
+      },
+      {
+        "name": "pnpm-tests",
+        "exitCode": 0,
+        "seconds": 115.4
+      },
+      {
+        "name": "shared-typecheck",
+        "exitCode": 0,
+        "seconds": 9.1
+      },
+      {
+        "name": "shared-build",
+        "exitCode": 0,
+        "seconds": 7.6
+      },
+      {
+        "name": "web-lint",
+        "exitCode": 0,
+        "seconds": 7.1
+      },
+      {
+        "name": "web-typecheck",
+        "exitCode": 0,
+        "seconds": 16.6
+      },
+      {
+        "name": "web-build",
+        "exitCode": 0,
+        "seconds": 47.6
+      }
+    ]
+  },
+  "localFocusedBrowsers": {
+    "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+    "endHead": "190906ac45be73bb1228eb8dcef980de47e378ce",
+    "exit": 0,
+    "seconds": 115.7,
+    "args": [
+      "chromium",
+      "firefox",
+      "--",
+      "--grep",
+      "Home waits for the collection layout|Home deals unwatched|cinemas"
+    ]
+  },
+  "fullCiBrowserPasses": {
+    "chromium": 70,
+    "firefox": 69,
+    "webkit": 68,
+    "jobs": 6
+  },
+  "productionHomeScenarios": [
+    {
+      "person": "Craig",
+      "theme": "light",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      }
+    },
+    {
+      "person": "Craig",
+      "theme": "dark",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      }
+    },
+    {
+      "person": "Mark",
+      "theme": "light",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      }
+    },
+    {
+      "person": "Mark",
+      "theme": "dark",
+      "head": "190906ac45be73bb1228eb8dcef980de47e378ce",
+      "homeLayoutProof": {
+        "initialReadHeld": true,
+        "noExtraStatsRequest": true,
+        "disabledBefore": true,
+        "readyAfter": true,
+        "nativeCheckSucceeded": true,
+        "pendingNavigationPrevented": true
+      }
+    }
+  ]
 }

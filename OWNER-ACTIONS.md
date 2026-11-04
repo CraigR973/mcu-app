@@ -13,10 +13,13 @@ conversation still maps onto this file.*
 
 - **Cinema feature complete4Nov under327/330/334; no remaining AB6/AB7 owner checkpoint.**
   AB6 PR125/72ff0bd/final354f34c closed before AB7 PR128/bf70319 plus same-branch display
-  correction67d22ec. All clean local/exact seven-job gates and actual API/web/full readiness
+  correction67d22ec and causal Home readiness repair190906ac. All clean local/exact
+  seven-job gates and actual API/web/full readiness
   pass; real Craig/Mark × both375px themes × four-filter API/render proof matches1,617
   future showings/141 groups in4–17Nov, all Unclassified/New0/Older0, nine enabled,
   partial/unknown dates/identity/year/source age explicit. No domain mutation/source request.
+  Native Home controls/navigation wait for initial layout and reuse one stats GET; real
+  both-profile/theme hold/release/check/navigation proof passes without mutation.
   Source fees0/resources unpriced; next08:00UTC/recurring access/category population remains
   unproved accepted data limits, not fabricated owner evidence. No new service/credential,
   destructive catalogue/diary write or unrelated API drift; no AA10c/other sitting.

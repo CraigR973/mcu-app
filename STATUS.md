@@ -2,18 +2,19 @@
 
 ## Now
 
-**4 Nov01:18: Cinemas live; final close-out reopened for a proven Home loading race.**
-PR128/same-branch67d22ec plus docsaf8c478 serve exact API/web/full readiness; real both-
-profile/theme16-filter reads match1617 future showings/141 groups, all Unclassified,
-New0/Older0, nine enabled and partial data explicit, human formats verified/no mutation.
-Main67 CI41748981329 exposes Firefox's existing Home checkbox moving when archive stats
-replace the loading panel during its click; actual trace proves cause. Identical-runtime
-af main CI41749759834 passes all7 but does not dismiss that defect. Same AB7 branch now
-uses existing query readiness to guard Home pick/cinema-entry controls; no new request/
-data/source/hosting contract or test weakening. Unit29 and controlled/original Home browser
-checks pass; full clean/exact-head gates and production proof remain before closure.
-Report: docs/reviews/ab7-home-loading-race-2026-11-04.md. Standing #334 continues to cover
-this required integration repair; no owner decision/new branch/PR/AA10c/other sitting.
+**4 Nov: Group AB sitting5 complete — cinema ingestion and discovery are live.**
+AB6 PR125/72ff0bd/final354f34c closed before AB7 PR128/bf70319, same-branch display fix
+67d22ec and causal Home loading repair190906ac. Ten clean local commands/API2621/no skips/
+shared167/web757 and exact seven-job candidate CI41753476409 pass: C70/F69+1/W68+2/jobs6.
+Exact deployed API/web190906ac/full readiness; actual Craig/Mark × both375px themes prove
+Home's native actions wait for initial layout, enable/check/navigate afterwards, and reuse
+one stats GET. All16 real cinema filters match1,617 future showings/141 groups in4–17Nov,
+all Unclassified/New0/Older0, nine enabled/partial coverage explicit. Source requests/domain
+mutations/page errors0; core/programme counts unchanged. Source fees0/resources unpriced;
+next08:00UTC recurring source access remains unproved. Public evidence excludes private
+profile photos. Code-main/final-docs exact CI and deployed stamp recorded in PR128 before
+completion. Reports: ab7-implementation-2026-11-03.md and ab7-home-loading-race-2026-11-04.md.
+Standing #334 known completion authority is fulfilled. No AA10c or other sitting.
 
 ## Next
 
@@ -413,6 +414,18 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **4 Nov — final sitting5 Home integration repair accepted:** actual failed main41748981329
+  trace plus controlled555px contrast establishes initial stats-layout movement losing the
+  native checkbox click; identical-runtime passing af run does not dismiss it. Same branch/
+  PR128 repair190906ac guards Home pick/cinema entry using existing cached readiness, no
+  extra request/reorder/timer/forced click/changed assertion. Ten clean local/all seven
+  manual41753476409 gates pass/API2621/shared167/web757/C70/F69+1/W68+2/jobs6, committed C8/F8.
+  Exact API/web/full readiness; both people/themes actual Home hold/release/native-check/
+  navigation and16 cinema filters pass,1,617 future/141 groups all Unclassified/New0/Older0.
+  No source request/domain write/count change. Final code/docs main CI/deploy stamp PR128.
+  Known failures/unproved transport cause and accepted coverage/recurring/device gaps stay
+  in reports; standing334 fulfilled, AA10c/other sittings untouched.
 
 - **4 Nov — Group AB sitting5 complete (#327/#330/#334):** AB6 PR125/final354f34c closed
   before separate AB7 PR128/bf70319; production format-code finding corrected on the same

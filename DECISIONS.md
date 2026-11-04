@@ -7173,3 +7173,15 @@ contemporaneous.
      assertion; original test retained plus held-response two-person native-control proof.
      Full candidate/main gates and actual production Home proof remain before completion.
      Evidence: ab7-home-loading-race-2026-11-04.*. No AA10c or other sitting.
+
+     #334 final integration repair fulfilled4Nov on same AB7 branch/PR128/190906ac.
+     Failed main41748981329 trace plus controlled555px contrast proves lost native click
+     during upper stats expansion; passing identical-runtime af run is not the repair.
+     Existing shared readiness guards Home native picks/cinema entry with one stats GET,
+     no new query/source/data/hosting/fee/reorder/timer/forced click or weakened assertion.
+     Ten clean local/API2621/no skips/shared167/web757, exact manual41753476409 all7/
+     C70/F69+1/W68+2/jobs6 and committed C8/F8 pass. Exact API/web/full readiness and actual
+     Craig/Mark/both themes held-read/native-check/navigation plus16 programme filters
+     pass1,617 future/141groups/New0/Older0/all Unclassified, partial coverage explicit.
+     No domain write/source request/count change. Final main CI/deployment stamp in PR128;
+     source/recurring/device gaps retained, no AA10c/other sitting. Known scope complete.
