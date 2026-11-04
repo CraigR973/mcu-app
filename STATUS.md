@@ -2,27 +2,28 @@
 
 ## Now
 
-**4 Nov: the 4 Nov snags are reconciled and Group AC is drafted (#335); Craig authorised
-all four sittings, to run in order.** Craig raised eight points (Home repetition and polish, a "Needs you" row,
-Movie night's cinema view and film pages, cinema trips with replies, separate calendars,
-first runs versus reruns, new-film notifications, the banner). The reconciliation is
-`docs/owner-snags-2026-11-04.md`; seven batches in four sittings are in `docs/phase-batches.md`.
-Group AB is complete (sitting 5 closed 4 Nov at `190906ac`; its record is in the Log).
+**4 Nov: Group AC is running, sitting 1 (Home).** AC1 shipped (PR #130, merge `57afee17`,
+#336): Home's "Needs you" row shows each person what they can act on now, from the loan rows
+on every read. AC2's checkpoint is answered (#337): direction A (ledger first), banner T1
+(photo letters, live type) and Feeling lucky inside the featured film; AC2 is being built.
+Craig authorised all four sittings to run in order; AC3, AC5 and AC6 still stop at their
+checkpoints. Group AB is complete (its record is in the Log).
 
-**Live facts found on 4 Nov, read-only.** The first scheduled cinema refresh ran at 08:05
-UTC: all nine venues succeeded, 63 requests, 1,840 rows, 233 new showings, status `partial`
-as on 3 Nov. Horizons: Cineworld 14 days, Everyman 13, Science Centre 8, ODEON 7, GFT 2,
-Vue 2. 0 of 174 programme films are linked to TMDB and all 1,850 future showings are
-Unclassified; 164 films wait for a metadata lookup at 12 per run. Two loans have been back
-but not shelved since 28 Oct and show on nobody's Home.
+**Live facts, read-only, 4 Nov.** After AC1's deploy the live read gives Craig 2 discs to give
+back (Halloween and The Silence of the Lambs, out 17 days with no due date) and 2 to put back
+(Pulp Fiction and Rosemary's Baby); Mark sees the same two to put back and 2 to ask Craig for.
+The first scheduled cinema refresh ran at 08:05 UTC: all nine venues succeeded, 63 requests,
+1,840 rows, 233 new showings. Horizons: Cineworld 14 days, Everyman 13, Science Centre 8,
+ODEON 7, GFT 2, Vue 2. 0 of 174 programme films are linked to TMDB and all 1,850 future
+showings are Unclassified; 164 films wait for a metadata lookup at 12 per run.
 
 ## Next
 
 **Group AC runs sitting by sitting, at Craig's 4 Nov go for all four.** Sittings 1 (AC1 →
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
-4 (AC5 → AC6) needs 3. The planning commit reaches `main` through a reviewed planning PR
-before the first sitting, as Group AB's did. AC2, AC3, AC5 and AC6 stop at owner
-checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
+4 (AC5 → AC6) needs 3. The planning PR (#129) and AC1 (#130) have shipped; AC2 is next, its
+checkpoint answered (#337). AC3, AC5 and AC6 still stop at owner checkpoints until Craig
+answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -416,6 +417,14 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **4 Nov — AC1 shipped; AC2's picks made (#336, #337):** `GET /api/v1/needs-you` and Home's
+  "Needs you" row for everyone (shelf keepers: admins and `MARK_PROFILE_ID`); each item opens
+  Loans on that disc's own confirm flow. No migration. Local: API 2,632 on a throwaway
+  Postgres, shared 169, web 772, e2e Chromium 71 and Firefox 70 + 1 allowed skip. PR #130 CI
+  41858935671 all seven (C71/F70+1/W69+2/jobs6); production API and web at `57afee17`,
+  readiness all configured; live read-only re-read matches both people's loans. Craig then
+  picked AC2's direction A, banner T1 and Feeling lucky in the featured film from
+  side-by-side mock-ups. Phone rendering of the row is an owner observation.
 - **4 Nov — the 4 Nov snags reconciled; Group AC drafted (#335):** eight owner points
   checked against the code at production `b6940227` with read-only live reads. Craig
   accepted every recommendation, widening cinema trip invitees to any active profile

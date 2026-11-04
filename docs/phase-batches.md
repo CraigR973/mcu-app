@@ -5225,7 +5225,7 @@ local gate, seven-job CI and a production deploy, and four owner stops.
 
 | Batch | Scope and size | Claude Code / Codex | Status |
 |---|---|---|---|
-| AC1 | "Needs you" on Home for each person (point 2), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
+| ~~AC1~~ | ~~"Needs you" on Home for each person (point 2), 🟡~~ | ~~Opus 5.5 `high` / GPT-5.6 Sol High~~ | **shipped** 4 Nov: PR #130, merge `57afee172aae2b0c62298f37c023c775641406ad`. `GET /api/v1/needs-you` (no migration) and Home's row for everyone; shelf keepers = admins + `MARK_PROFILE_ID`. Local API 2,632 on Postgres, shared 169, web 772, C71/F70+1 local; PR CI 41858935671 all seven, C71/F70+1/W69+2/jobs6. Live read-only check after deploy: Craig sees 2 to give back and 2 to put back, Mark 2 to ask Craig for and the same 2 to put back. Push and phone rendering not observed. |
 | AC2 | Home redesign: one ledger, varied modules, sharper banner (points 1, 8), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |
 | AC3 | Cinema film identities and first run versus rerun (point 6), 🔴 | Opus 5.5 `xhigh` / GPT-5.6 Sol Extra High | planned |
 | AC4 | Movie night's At the cinema view and a page per film (point 3), 🟡 | Opus 5.5 `high` / GPT-5.6 Sol High | planned |

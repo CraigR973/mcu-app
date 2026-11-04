@@ -7217,3 +7217,34 @@ contemporaneous.
      mock-ups, AC3's dry run, and AC5's and AC6's schema and wording remain checkpoints.
      **Go, later on 4 Nov:** "work on all these sittings sequentially" authorises all four
      sittings in order. It does not answer any checkpoint; each still stops the run.
+
+336. **AC1 shipped: "Needs you" on Home, for each person (4 Nov).**
+     Group AC sitting 1's first batch (#335), PR #130, merge `57afee172aae2b0c62298f37c023c775641406ad`.
+     - **A read, not a store.** `GET /api/v1/needs-you` derives each person's jobs from the
+       loan rows on every read; no table, column or job. Confirming a disc shelved clears it
+       for everyone on their next read, and every successful change re-reads it centrally,
+       as attention and stats already were.
+     - **Who keeps the shelves is one function**, `keeps_the_shelves()` in
+       `routers/needs_you.py`: admins, and Mark by `MARK_PROFILE_ID`, never by role (#306).
+       A later onboarded viewer gets no shelf jobs until an onboarding plan changes it.
+     - **Whoever asked for a disc is not asked to hand it over.** A request is a wait for its
+       asker and a job for the other shelf keepers.
+     - **The 14-day rule counts from the lent date.** A loan with no due date joins on its
+       fourteenth day out; one with a due date joins the day after it. Only each copy's
+       current loan counts, only owned copies (`owned_copy()`), and legacy rows with no
+       state still read as Out.
+     - **Home shows it first, for everyone, at most five items**, then "See all n on Loans";
+       Craig's "Needs attention" stays below it, unchanged and admin-only. Unlike that row, a
+       failed or offline read says so, because a hidden row would read as "nothing needs you".
+       The row is part of AB7's first-layout guard.
+     - **Each item opens the exact place**: `/loans?view=…&loan=<id>` opens that view with the
+       disc picked out and, for Put back, its existing confirm form open. No second write path.
+
+337. **AC2's checkpoint answered: direction A, banner T1, Feeling lucky in the featured film (4 Nov).**
+     Craig compared the mock-ups side by side (375 px, both themes, real figures and posters)
+     and picked: **direction A**, the ledger first (banner, Needs you, the collection card,
+     then the featured film, three poster rows and a "Closest to complete" list); **banner T1**,
+     the five photo letters alone with the page drawing the field in each theme and "Cinematic
+     Universe" as live text; and **Feeling lucky inside the featured film**, as "Deal another"
+     with the unwatched-only switch, so Home has one featured module instead of two. Top rated
+     stays off Home (AA1); Highlights' tabs are Most rewatched, Most valuable and Best discs.
