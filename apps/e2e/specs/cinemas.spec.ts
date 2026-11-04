@@ -35,7 +35,7 @@ const test = base.extend<{ programme: Programme }>({
       const title = older ? movie.title : index === 2 ? 'A current first run' : 'Programme identity pending'
       const booking = venue.source === 'vue' ? 'https://www.myvue.com/book-tickets/fixture' : 'https://www.odeon.co.uk/ticketing/seat-picker/fixture'
       db.sql(`INSERT INTO cinema_films (id,source,source_key,title,movie_id,original_year,identity_status,evidence) VALUES (${sql(film)},${sql(venue.source)},${sql(`${prefix}:${index}`)},${sql(title)},${older ? sql(movie.id) : 'NULL'},${older && movie.year !== null ? movie.year : 'NULL'},${sql(index < 3 ? 'verified' : 'unverified')},${json(older && movie.tmdb_id ? { tmdbId: movie.tmdb_id } : {})});
-        INSERT INTO cinema_screenings (id,venue_id,film_id,source_key,identity_strength,local_date,source_local_start,starts_utc,formats,booking_url,release_category,category_evidence,confirmation) VALUES (${sql(randomUUID())},${sql(venue.id)},${sql(film)},${sql(`${prefix}:${index}`)},'opaque',${sql(day)},${sql(`${day}T${18 + index}:00:00Z`)},${sql(`${day}T${18 + index}:00:00`)},'["2D"]'::jsonb,${sql(booking)},${sql(category)},${json(evidence)},'confirmed')`)
+        INSERT INTO cinema_screenings (id,venue_id,film_id,source_key,identity_strength,local_date,source_local_start,starts_utc,formats,booking_url,release_category,category_evidence,confirmation) VALUES (${sql(randomUUID())},${sql(venue.id)},${sql(film)},${sql(`${prefix}:${index}`)},'opaque',${sql(day)},${sql(`${day}T${18 + index}:00:00Z`)},${sql(`${day}T${18 + index}:00:00`)},'["Format.Projection.Digital"]'::jsonb,${sql(booking)},${sql(category)},${json(evidence)},'confirmed')`)
     }
     const countQuery = `SELECT json_build_array((SELECT count(*) FROM movies),(SELECT count(*) FROM collection_items),(SELECT count(*) FROM watch_log),(SELECT count(*) FROM cinema_screenings),(SELECT count(*) FROM cinema_refresh_runs))`
     const domainCounts = db.scalar(countQuery)
@@ -70,6 +70,8 @@ for (const person of ['Craig', 'Mark'] as const) {
       await expect(favourite.getByRole('link', { name: 'Check tickets' })).toHaveCount(2)
       await expect(favourite).toContainText('Vue Glasgow St Enoch')
       await expect(favourite).toContainText('ODEON Kilmarnock')
+      await expect(favourite.getByText('Digital projection', { exact: false })).toHaveCount(2)
+      await expect(page.getByText('Format.Projection.', { exact: false })).toHaveCount(0)
       await expect(page.getByRole('article', { name: 'Programme identity pending', exact: true })).toHaveCount(2)
       await expect(page.getByRole('option', { name: 'New releases (1 screening)' })).toBeAttached()
       await page.getByLabel('Release category').selectOption('olderFilm')

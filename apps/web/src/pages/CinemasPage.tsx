@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/auth'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { fetchCinemaProgramme } from '@/lib/api'
-import { londonDate, londonTime, OFFICIAL_PROGRAMMES, RELEASE_LABELS, shiftDate, showingBooking, type ProgrammeVenue, type ReleaseFilter } from '@/lib/cinemas'
+import { londonDate, londonTime, OFFICIAL_PROGRAMMES, RELEASE_LABELS, shiftDate, showingBooking, showingFormats, showingScreen, type ProgrammeVenue, type ReleaseFilter } from '@/lib/cinemas'
 import { queryErrorMessage } from '@/lib/query-state'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -92,7 +92,7 @@ export default function CinemasPage() {
                 return <li key={showing.id} className="space-y-1 py-3">
                   <p className="font-semibold">{venue.name} · {londonTime(showing.startsAtUtc)}</p>
                   {showing.sourceTitle !== film.title ? <p className="text-sm text-muted-foreground">Programme title: {showing.sourceTitle}</p> : null}
-                  <p className="text-sm">{RELEASE_LABELS[showing.releaseCategory]}{showing.reissue ? ' · Reissue' : ''}{showing.screen ? ` · ${showing.screen}` : ''}{showing.formats.length ? ` · ${showing.formats.join(', ')}` : ''}</p>
+                  <p className="text-sm">{RELEASE_LABELS[showing.releaseCategory]}{showing.reissue ? ' · Reissue' : ''}{showing.screen ? ` · ${showingScreen(showing.screen)}` : ''}{showing.formats.length ? ` · ${showingFormats(showing.formats).join(', ')}` : ''}</p>
                   {showing.sourceReleaseDate ? <p className="text-xs text-muted-foreground">Source release date: {showing.sourceReleaseDate} · original year shown separately above</p> : null}
                   <p className="text-xs text-muted-foreground">Seen {londonTime(showing.lastSeenUtc)} · {showing.upstreamAge === 'unknown' ? 'Source update time unverified' : `Source age ${showing.upstreamAge}`}{showing.confirmation === 'unconfirmed' ? ' · Showing unconfirmed' : ''}</p>
                   {showing.observationStale || now - Date.parse(showing.lastSeenUtc) >= 30 * 60 * 60 * 1000 ? <p className="text-sm text-muted-foreground">Saved showing is stale</p> : null}

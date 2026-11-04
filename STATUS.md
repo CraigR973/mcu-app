@@ -2,14 +2,15 @@
 
 ## Now
 
-**3 Nov23:44: AB7 discovery implemented on its own branch; verification in progress.**
-AB6 is fully closed at354f34c/exact seven-job CI41683888744/API+web/full readiness;
-all-nine production programme/import proof retained. `/cinemas` now reads stored programmes,
-with Home/You/sidebar/palette navigation, date/venue/category controls, personal watch
-isolation and current-clock/offline booking guards. Focused38 pass; six new real-DB/API
-browser journeys are being checked. Clean full gates/CI/production UI acceptance remain
-before shipment. Report: docs/reviews/ab7-implementation-2026-11-03.md. No new source pass,
-data/config/fee change, AA10c or other sitting. Standing #334 covers the remaining work.
+**4 Nov00:24: Cinemas deployed; actual-data display correction remains before AB7 closes.**
+PR128/bf70319 passed exact seven-job CI41743577248/local gates and deployed with exact
+API/web/full readiness. Both profiles/both themes16 real filter reads match1,617 future
+showings/141 groups, all Unclassified/New0/Older0, with no domain mutation/source request.
+Actual screenshots reveal provider format enums/bare screen numbers; the existing AB7
+branch now translates labels without changing source data or categorisation. Captured
+source-shaped assertions/full local gate/manual all-seven CI then normal main follow-up
+and final production proof remain. No new branch/PR, source pass, data/config/fee change,
+AA10c or other sitting. Standing #334 covers this required completion correction.
 
 ## Next
 

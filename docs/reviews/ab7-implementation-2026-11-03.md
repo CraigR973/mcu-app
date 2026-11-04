@@ -99,3 +99,27 @@ remain unknown where unverified. Vue covers execution-day/tomorrow only; all oth
 partial horizons and unchecked dates are shown. New release population and recurring source
 access/next08:00UTC scheduled refresh have not been proved. These limits are not waived,
 invented or hidden by fixture success. Full source/write evidence remains in AB6's report.
+
+## Production label correction — 4 Nov
+
+PR128/bf70319 passed all local/PR gates and deployed with exact API/web/full readiness.
+Actual both-profile/both-theme16-filter reads return1,617 future showings/141 groups,
+all Unclassified, New0/Older0; counts unchanged/no mutations/source requests. Visual
+inspection found a real UI issue not present in the original IMAX-only fixture: Everyman
+format tokens such as `Format.Projection.Digital` appeared verbatim, beside bare screen
+numbers. One bounded stored-API read confirms the eight actual tokens; no source request.
+
+The existing AB7 branch/PR is retained. A display-only correction translates those known
+labels, preserves source data, calls numbered screens Screen2, and shows Format unverified
+for unknown provider enums without guessing. The fixture now includes the captured enum
+shape; exact assertions require Digital projection and absence of raw provider syntax.
+No category/identity/time/booking rule, schema, source protocol, data, fee or hosting change.
+The same branch gets a complete manual seven-job CI (including all browsers), because its
+single PR is already merged; only then a normal fast-forward follow-up to main. No second
+branch or PR, and no bypass of the exact-head gate. Full verification remains before closure.
+
+The first production film screenshot remained on the focused filters. The verifier now
+asserts the requested heading is in the viewport before capture, after an immediate scroll;
+real film and source-coverage views were inspected. No product state was fabricated.
+The repository is public, so Craig's private profile-photo screenshots remain untracked;
+public programme evidence uses Mark's initial-only header. No key/token/trace/HAR is stored.

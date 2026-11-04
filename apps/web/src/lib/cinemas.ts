@@ -73,3 +73,18 @@ export const COVERAGE_LABELS: Record<ProgrammeVenue['coverage'][number]['status'
   notEnabled: 'Collection paused', unavailable: 'Programme not checked', failed: 'Latest check failed',
   empty: 'Checked: no showings', partial: 'Partial programme', healthy: 'Checked programme', stale: 'Saved programme is stale',
 }
+
+const FORMAT_LABELS: Record<string, string> = {
+  '2d': '2D', '3d': '3D', '4k': '4K', imax: 'IMAX', isense: 'iSense',
+  'format.projection.3d': '3D', 'format.projection.4k': '4K',
+  'format.projection.digital': 'Digital projection', 'format.projection.imax': 'IMAX',
+}
+
+/** Preserve source facts while keeping provider enum syntax out of the programme. */
+export function showingFormats(values: string[]): string[] {
+  return [...new Set(values.map((value) => FORMAT_LABELS[value.toLowerCase()] ?? (/^format\./i.test(value) ? 'Format unverified' : value)))]
+}
+
+export function showingScreen(value: string): string {
+  return /^\d+$/.test(value) ? `Screen ${value}` : value
+}

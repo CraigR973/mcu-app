@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cinemaFixture, CINEMA_NOW } from '@/pages/cinema-test-fixture'
-import { londonDate, londonTime, OFFICIAL_PROGRAMMES, programmeUrl, showingBooking } from './cinemas'
+import { londonDate, londonTime, OFFICIAL_PROGRAMMES, programmeUrl, showingBooking, showingFormats, showingScreen } from './cinemas'
 
 describe('cinema booking safety before another fetch', () => {
   it('uses UK civil dates and times across summer time regardless of the browser zone', () => {
@@ -28,5 +28,14 @@ describe('cinema booking safety before another fetch', () => {
     expect(showingBooking(s, { ...v, coverage: [{ ...v.coverage[0], status: 'failed' }] }, CINEMA_NOW, true)).toBeNull()
     expect(showingBooking(s, { ...v, coverage: [{ ...v.coverage[0], upstreamUtc: '2026-11-01T00:00:00Z' }] }, CINEMA_NOW, true)).toBeNull()
     expect(showingBooking(s, { ...v, coverage: [{ ...v.coverage[0], lastSuccessUtc: '2026-11-01T00:00:00Z' }] }, CINEMA_NOW, true)).toBeNull()
+  })
+})
+
+describe('human programme labels from observed source fields', () => {
+  it('decodes the observed projection enums and labels an unknown enum without guessing', () => {
+    expect(showingFormats(['3d', 'Format.Projection.3d', 'Format.Projection.4k', 'Format.Projection.Digital', 'Format.Projection.Imax', 'IMAX', 'imax', 'isense', 'Format.Future.Unknown'])).toEqual(['3D', '4K', 'Digital projection', 'IMAX', 'iSense', 'Format unverified'])
+  })
+  it('names numeric screens without repeating an existing label or changing a named auditorium', () => {
+    expect(['2', 'Screen 2', 'Studio'].map(showingScreen)).toEqual(['Screen 2', 'Screen 2', 'Studio'])
   })
 })

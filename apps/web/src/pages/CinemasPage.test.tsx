@@ -20,10 +20,12 @@ beforeEach(() => { state.id = 'craig'; state.online = true; vi.spyOn(Date, 'now'
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 describe('stored cinema discovery', () => {
   it('keeps watched older favourites, multiple venues, unknowns and category counts distinct', async () => {
+    const p = cinemaFixture(); p.films[0].showings[0].screen = '2'; p.films[0].showings[0].formats = ['Format.Projection.Digital']; state.fetch.mockResolvedValue(p)
     setup()
     const card = await screen.findByRole('article', { name: 'A returning favourite' })
     expect(within(card).getByText('You have watched this', { exact: false })).toBeTruthy()
     expect(within(card).getAllByRole('link', { name: 'Check tickets' })).toHaveLength(2)
+    expect(within(card).getByText('Older films · Reissue · Screen 2 · Digital projection')).toBeTruthy()
     expect(screen.getByRole('option', { name: 'Older films (2 screenings)' })).toBeTruthy()
     expect(screen.getAllByText('Year unverified', { exact: false })).toHaveLength(2)
     for (const link of within(card).getAllByRole('link', { name: 'Check tickets' })) {
