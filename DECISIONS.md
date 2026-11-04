@@ -7148,3 +7148,18 @@ contemporaneous.
      paid service/tier/credential or unrelated API drift. Final handoff CI/readiness before
      separate authorised AB7; next08:00UTC scheduled run/future access remain unproved.
      Full raw hash/count/scope/write/role/read proof: ab6-railway-acceptance-2026-11-03.*.
+
+     AB7 completes #334 on4Nov: PR128/bf70319, followed by production-observed source-format
+     display correction67d22ec on the same branch and single PR. Exact full manual
+     CI41746792947 runs all seven jobs including all browsers, after all ten clean local
+     checks/API2621/no skips/shared167/web757. Same-source enum-shaped browser assertions
+     require human labels; no API/data/category rule changes. Normal main fast-forward and
+     exact API/web/full readiness; Craig/Mark/both375px themes/all16 real filters match
+     1,617 future showings/141 groups, all Unclassified/New0/Older0, nine enabled,
+     partial/unknown evidence visible, no source request/domain mutation/page error. The
+     source dataset remains unchanged; first Older screening has started. No recurring
+     access/New population guarantee. Fees0/resources unpriced, no new service/credential/
+     unrelated hosting action, AA10c or other sitting. Source-shaped fixture/scroll-verifier
+     and all earlier failures remain documented; no private profile-photo capture enters
+     the public repo. Final exact main/deployment stamp is recorded in PR128 before task
+     completion. Accepted feature scope is fulfilled; later work needs its own scope.

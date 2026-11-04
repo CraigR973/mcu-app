@@ -3,7 +3,8 @@
 `STATUS.md` says which commit is deployed. This map records the shipped structure through
 AB3 and the separate movie-night repair on 29 Oct, plus AB4 shipped/phone-accepted
 31 Oct and the causal movie-night poster repair on 3 Nov (PR #127); the April design intent
-remains in `ARCHITECTURE.md`. AB6 programme ingestion shipped3Nov(PR125/72ff0bd).
+remains in `ARCHITECTURE.md`. AB6 programme ingestion shipped3Nov(PR125/72ff0bd); AB7 discovery shipped4Nov
+(PR128/bf70319 plus same-branch67d22ec).
 
 ```mermaid
 flowchart TB
@@ -16,7 +17,7 @@ flowchart TB
     Backup[GitHub weekly backup] --> DB
 ```
 
-## AB6, shipped 3 Nov (PR125/72ff0bd); AB7 implemented on its branch; deployment pending
+## Cinema ingestion and discovery, shipped 3–4 Nov (PR125 and PR128)
 
 ```mermaid
 flowchart TB
@@ -31,7 +32,7 @@ flowchart TB
     Fence --> Cinema[(Five isolated cinema tables)]
     Cinema --> Read[Authenticated stored programme API<br/>shared zod contract]
     Catalogue[(Existing catalogue and personal diary)] -- read only --> Read
-    Read --> Discovery[AB7 branch: authenticated Cinemas screen<br/>profile/date/venue/category query keys]
+    Read --> Discovery[Authenticated Cinemas screen<br/>profile/date/venue/category query keys<br/>human source format/screen labels]
     Entries[Home · You · sidebar · command palette] --> Discovery
     Discovery --> Safety[Current clock + online + source coverage guards]
     Safety --> Tickets[Check tickets opens cinema<br/>official programme fallback]
@@ -59,6 +60,17 @@ Vue amendment visits its known ordinary public page once before today/tomorrow d
 inside the same caps; other adapters are unchanged. Cookies remain memory-only/host-scoped,
 page/date failures fail Vue, failed prefixes stay excluded. Artifact protocol ab6-3 requires
 fresh reviewed evidence; the earlier failed artifact is not patched into acceptance.
+
+
+AB7's screen is now deployed. Home/You/sidebar/palette enter the same stored-programme
+view; selection changes hide old actions, and current clock/online/source guards precede
+showing ticket links. The source payload stays raw while known projection enum/screen
+labels become human text. No source request, catalogue/diary mutation or new provider runs
+in the screen. Verified global IDs group; uncertain source identities stay separate.
+Current4–17Nov programme has1,617 future showings, all run-unclassified; partial dates and
+unknown years stay visible. Strict New/Older filters may be empty. Next08:00UTC source
+refresh/future access is unproved; source fees0/existing resources unpriced. Final exact
+main/production stamp is in PR128; no next sitting is authorised by this completion.
 
 ## AA8, shipped 23 Oct
 

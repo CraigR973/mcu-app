@@ -1,4 +1,4 @@
-# Cinema discovery implementation and acceptance — 3 Nov
+# Cinema discovery implementation and acceptance — 3–4 Nov
 
 Authorisation: #327/#330/#334 and the owner's latest continue. AB6 fully closed first:
 PR125/merge72ff0bd/final354f34c, exact seven-job main CI41683888744, fresh23:20UTC
@@ -37,7 +37,7 @@ compute/storage/network usage remains unpriced.
 
 ## Verification record
 
-Focused38 tests pass:9 URL/clock/official-fallback checks,8 page checks and21 exact navigation
+Focused40 tests pass:11 URL/clock/format/official-fallback checks,8 page checks and21 exact navigation
 inventory checks. Web/E2E typechecks and web lint pass (11 existing refresh warnings).
 Browser cases use actual guarded disposable Postgres rows and the authenticated API, with no
 programme response interception. They cover Craig/Mark in both375px themes, two sources for
@@ -123,3 +123,51 @@ asserts the requested heading is in the viewport before capture, after an immedi
 real film and source-coverage views were inspected. No product state was fabricated.
 The repository is public, so Craig's private profile-photo screenshots remain untracked;
 public programme evidence uses Mark's initial-only header. No key/token/trace/HAR is stored.
+
+## Delivered acceptance — 4 Nov
+
+AB6 and AB7 are complete under the accepted contract and its stated data limits. AB6
+closed before AB7 on354f34c. AB7's single PR128 initially mergedbf70319; real production
+inspection then caused the minimal display correction67d22ec on the same feature branch.
+No second branch/PR or other sitting. Its exact complete manual CI41746792947 passes all
+seven jobs, including API2,621/no skips/shared167/web757/C69/F68+1/W67+2/jobs6 and all18
+cinema cases. The three existing browser exclusions are unchanged; no new skip or waiver.
+The clean ten-command local gate on67d22ec passes all commands; updated real-DB/API cinema
+cases pass both local browsers. The earlier full local C69/F68+1/jobs6 proof remains too.
+
+Production API and web serve67d22ec with db ok and push/ai/ebay/tmdb/brave configured.
+Both profiles × both375px themes × four filters match actual stored API/render counts:
+1,617 future showings/141 groups across4–17 Nov, New0/Older0/Unclassified1,617.
+The earlier evidenced Older screening has started; its removal from a future-only view
+is expected. All nine remain enabled. Partial/unverified dates, identities and years are
+visible; no complete14-day or New/Older population claim. 596 raw Digital projection
+records render with human labels, while raw provider syntax renders zero times. Numeric
+screens are labelled ScreenN without changing stored facts. Ticket actions validate links
+and only open the cinema; availability/purchase remains with it.
+
+All16 real filter reads return200; source requests/domain mutations/page errors are zero.
+Catalogue/copy/diary/profile/refresh-token/programme counts are unchanged before/after.
+Verification tokens expire after60seconds and exist only in captured machine-memory pipes;
+no PIN/login/refresh record, credential output, trace or HAR. The public repo receives only
+inspected Mark-initial screenshots; private profile-photo captures remain local.
+
+| Criterion | Evidence | Limit |
+|---|---|---|
+| Film first, multiple venues, dates and safe ticket links | Real DB/API/browser grouping plus actual nine-venue UI reads; exact nav/access inventory | Source coverage varies; Check tickets does not promise availability |
+| New/Older/Unclassified, watched favourites, uncertainty | Strict server run evidence; returning2025 API case; personal Craig/Mark fixture/status isolation | Current New/Older0; all future runs unverified, never guessed |
+| Loading/empty/failed/stale/partial/offline/navigation | Page/clock/URL checks, both375px themes, independently failed/unconfirmed and offline browser cases, existing five bottom slots | Simulated browser proof, not new iPhone/camera/push/speech acceptance |
+| Full gates and real delivery | Ten clean local commands, exact seven-job manual CI, production SHA/full readiness and16 actual API/render checks | Main code CI41748981329 and final docs CI separately checked before completion; final stamp in PR128 |
+
+Morning refresh is scheduled08:00UTC; the next recurring source run/future access has not
+been observed. Source fees£0; existing hosting/compute/storage/network/CI usage remains
+unpriced. No new service/tier/credential, unrelated API restart drift, source pass, catalogue/
+diary write, paid/model ranking, AA10c or another sitting. Existing owner device/push/speech
+and two-device checks remain separate. Known #334 completion authority is now fulfilled.
+
+[Actual programme and read-only verification](ab7-production-acceptance-2026-11-04.json)
+· [Gate and exact-head evidence](ab7-verification-2026-11-04.json)
+· [PR128 and final close-out stamp](https://github.com/CraigR973/mcu-app/pull/128)
+
+![Actual programme, dark375px](assets/ab7-2026-11-04/mark-dark-film-375.png)
+
+![Actual programme, light375px](assets/ab7-2026-11-04/mark-light-film-375.png)

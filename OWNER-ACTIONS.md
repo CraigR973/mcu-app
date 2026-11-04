@@ -11,17 +11,19 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
-- **Standing cinema completion approval (#334, 3 Nov): AB6 shipped/production accepted.**
-  PR125/72ff0bd passes all local/exact PR/main gates and exact API/web/full readiness.
-  Actual071/grants/credential withholding, fresh Railway all-nine1838-row/63GET/all200
-  read, exact3mapping programme import/enable9 and both-profile filtered reads pass;
-  core catalogue/diary/auth counts unchanged. Partial horizons, New0/Older1/unclassified
-  remainder/unknown years remain accepted explicit data limits; next scheduled08:00UTC
-  refresh/recurring access is not fabricated. Only existing-job token reference applied,
-  API drift untouched. Final handoff CI/readiness then authorised separate AB7 under
-  the accepted contract; no repeated known-stage owner decision. No new paid service/
-  credential/destructive catalogue/diary write/other sitting. Production proof:
-  docs/reviews/ab6-railway-acceptance-2026-11-03.md.
+- **Cinema feature complete4Nov under327/330/334; no remaining AB6/AB7 owner checkpoint.**
+  AB6 PR125/72ff0bd/final354f34c closed before AB7 PR128/bf70319 plus same-branch display
+  correction67d22ec. All clean local/exact seven-job gates and actual API/web/full readiness
+  pass; real Craig/Mark × both375px themes × four-filter API/render proof matches1,617
+  future showings/141 groups in4–17Nov, all Unclassified/New0/Older0, nine enabled,
+  partial/unknown dates/identity/year/source age explicit. No domain mutation/source request.
+  Source fees0/resources unpriced; next08:00UTC/recurring access/category population remains
+  unproved accepted data limits, not fabricated owner evidence. No new service/credential,
+  destructive catalogue/diary write or unrelated API drift; no AA10c/other sitting.
+  Public screenshots exclude private profile photos. Final exact code/docs main and deployed
+  stamp is in PR128; report docs/reviews/ab7-implementation-2026-11-03.md. Standing known
+  completion authority is fulfilled. Historical checkpoints below remain as evidence;
+  later superseding approvals/results apply. Other genuine device/push owner checks stay.
 
 - **Group AB — sittings 1–4 complete, 31 Oct (sitting 4 is report only).** AB1 PR #118 (`ad2c992`) and AB2 PR #119 (`c187ed7`)
   are live after both collection owner picks (#303). Final docs CI's real movie-night

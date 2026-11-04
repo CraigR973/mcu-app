@@ -2,24 +2,25 @@
 
 ## Now
 
-**4 Nov00:24: Cinemas deployed; actual-data display correction remains before AB7 closes.**
-PR128/bf70319 passed exact seven-job CI41743577248/local gates and deployed with exact
-API/web/full readiness. Both profiles/both themes16 real filter reads match1,617 future
-showings/141 groups, all Unclassified/New0/Older0, with no domain mutation/source request.
-Actual screenshots reveal provider format enums/bare screen numbers; the existing AB7
-branch now translates labels without changing source data or categorisation. Captured
-source-shaped assertions/full local gate/manual all-seven CI then normal main follow-up
-and final production proof remain. No new branch/PR, source pass, data/config/fee change,
-AA10c or other sitting. Standing #334 covers this required completion correction.
+**4 Nov: Group AB sitting5 complete — programme ingestion and Cinemas are live.**
+AB6 PR125/72ff0bd/final354f34c closed first. AB7 PR128/bf70319 plus the same-branch
+observed-format correction67d22ec pass all local/exact seven-job gates (API2621/no skips/
+shared167/web757/C69/F68+1/W67+2/jobs6). Exact API/web67d22ec/full readiness and actual
+Craig/Mark × both375px themes × four-filter API/render comparisons pass: 1,617 future
+showings/141 groups in4–17 Nov, all Unclassified/New0/Older0, nine enabled, partial
+coverage explicit. No source request/domain mutation/page error. Source fees0/resources
+unpriced; recurring08:00UTC access remains unproved. Public evidence excludes private
+profile-photo captures. Final docs/merged-code CI and exact latest deployed stamp are
+recorded in PR128 before task completion. Report: docs/reviews/ab7-implementation-2026-11-03.md.
+No AA10c or other sitting. Standing #334 completion scope is fulfilled.
 
 ## Next
 
-Build only AB7: Film-first `/cinemas`, Home/Plan a screening/command palette/mobile You
-entries, date/venue/category controls with honest coverage/counts, personal watch isolation
-and safe Check tickets/official fallbacks. Tests/real browser screenshots/full clean local/
-seven-job CI and actual production programme/render comparison, then normal close-out.
-Standing327/330/334 already authorises these known steps. No source/fee/credential/data
-contract extension, catalogue/diary write, API drift, AA10c or other sitting.
+No further sitting is started by this completed run. Use Home → At the cinema, desktop
+Plan a screening/command palette, or You → Cinemas. New/Older may be empty while source
+runs remain unclassified; missing dates remain unchecked, never proof of no programme.
+The existing next08:00UTC job/future source access is not yet observed. Any later work
+must be chosen from the ledger under its own scope; existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
 remediation, #253, in five sittings since #255), then 38. **Sitting 1 is done** (X1–X3, 12 Oct);
@@ -411,6 +412,17 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **4 Nov — Group AB sitting5 complete (#327/#330/#334):** AB6 PR125/final354f34c closed
+  before separate AB7 PR128/bf70319; production format-code finding corrected on the same
+  branch67d22ec after exact full manual CI41746792947, no extra PR or sitting. All ten local
+  checks/API2621/no skips/shared167/web757, C69/F68+1/W67+2/jobs6 and18 cinema cases pass.
+  Exact API/web/full readiness; both profiles/themes/all16 live filter reads match1,617
+  future showings/141 groups, all Unclassified/New0/Older0, partial horizons and nine
+  enabled. Human format/screen labels; source data/categories/bookings unchanged, no source
+  request/domain mutation/page error. Private profile photos excluded from public evidence.
+  Fees0/resources unpriced/next recurring run unproved. Final exact main stamp in PR128.
+  All failures and accepted gaps retained in the AB7 report. AA10c/other sittings untouched.
 
 - **3 Nov — AB6 production accepted/shipped PR125,72ff0bd:** all local/exact PR/main seven-job gates; exact API/web/full readiness. Railway63GET/all200/all-nine1838 artifact, exact3mapping import/enable9; core catalogue/diary/auth counts unchanged. Real both-profile/all-filter reads and read/backup credential guards pass. New0/Older1/unclassified remainder and partial horizons retained. Final handoff verification then AB7, no new owner go under334.
 

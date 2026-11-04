@@ -1,0 +1,2735 @@
+{
+  "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+  "observedUtc": "2026-11-04T00:46:58.264052+00:00",
+  "countsBefore": {
+    "movies": 1945,
+    "collection_items": 3798,
+    "watch_log": 1594,
+    "profiles": 2,
+    "refresh_tokens": 81,
+    "cinema_screenings": 1838,
+    "cinema_films": 163,
+    "cinema_refresh_runs": 1
+  },
+  "countsAfter": {
+    "movies": 1945,
+    "collection_items": 3798,
+    "watch_log": 1594,
+    "profiles": 2,
+    "refresh_tokens": 81,
+    "cinema_screenings": 1838,
+    "cinema_films": 163,
+    "cinema_refresh_runs": 1
+  },
+  "countsUnchanged": true,
+  "sourceRequests": 0,
+  "productionWrites": 0,
+  "authentication": "60-second existing-configuration access token per scenario; only captured memory pipes; no PIN/login/refresh record, credential output, trace or HAR",
+  "scenarios": [
+    {
+      "person": "Craig",
+      "theme": "light",
+      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+      "observedUtc": "2026-11-04T00:46:07.943Z",
+      "viewport": "375x844 simulated browser",
+      "programmeResponses": [
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "all",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "newRelease",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "olderFilm",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "unclassified",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        }
+      ],
+      "mutations": [],
+      "pageErrors": [],
+      "screenshots": []
+    },
+    {
+      "person": "Craig",
+      "theme": "dark",
+      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+      "observedUtc": "2026-11-04T00:46:23.888Z",
+      "viewport": "375x844 simulated browser",
+      "programmeResponses": [
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "all",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "newRelease",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "olderFilm",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "unclassified",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        }
+      ],
+      "mutations": [],
+      "pageErrors": [],
+      "screenshots": []
+    },
+    {
+      "person": "Mark",
+      "theme": "light",
+      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+      "observedUtc": "2026-11-04T00:46:39.222Z",
+      "viewport": "375x844 simulated browser",
+      "programmeResponses": [
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "all",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "newRelease",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "olderFilm",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "unclassified",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        }
+      ],
+      "mutations": [],
+      "pageErrors": [],
+      "screenshots": [
+        "docs/reviews/assets/ab7-2026-11-04/mark-light-filters-375.png",
+        "docs/reviews/assets/ab7-2026-11-04/mark-light-film-375.png",
+        "docs/reviews/assets/ab7-2026-11-04/mark-light-coverage-375.png"
+      ]
+    },
+    {
+      "person": "Mark",
+      "theme": "dark",
+      "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+      "observedUtc": "2026-11-04T00:46:54.019Z",
+      "viewport": "375x844 simulated browser",
+      "programmeResponses": [
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "all",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "newRelease",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 0,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [],
+          "category": "olderFilm",
+          "httpStatus": 200,
+          "programmeGroups": 0,
+          "renderedGroups": 0,
+          "returnedShowings": 0,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 0,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        },
+        {
+          "rawDigitalShowings": 596,
+          "rawProviderSyntaxRendered": 0,
+          "formatsSeenInWire": [
+            "3d",
+            "Format.Projection.3d",
+            "Format.Projection.4k",
+            "Format.Projection.Digital",
+            "Format.Projection.Imax",
+            "IMAX",
+            "imax",
+            "isense"
+          ],
+          "category": "unclassified",
+          "httpStatus": 200,
+          "programmeGroups": 141,
+          "renderedGroups": 141,
+          "returnedShowings": 1617,
+          "categoryCounts": {
+            "newRelease": 0,
+            "olderFilm": 0,
+            "unclassified": 1617
+          },
+          "partial": true,
+          "truncated": false,
+          "ticketLinks": 1616,
+          "horizons": [
+            {
+              "slug": "cineworld-silverburn",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "everyman-glasgow",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-14",
+                "2026-11-15",
+                "2026-11-16"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "gft",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "science-centre-imax",
+              "observedDates": [
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+                "2026-11-15"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-braehead",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-east-kilbride",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-glasgow-quay",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "odeon-kilmarnock",
+              "observedDates": [
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+              ],
+              "statuses": [
+                "partial",
+                "unavailable"
+              ]
+            },
+            {
+              "slug": "vue-st-enoch",
+              "observedDates": [
+                "2026-11-04"
+              ],
+              "statuses": [
+                "healthy",
+                "partial",
+                "unavailable"
+              ]
+            }
+          ]
+        }
+      ],
+      "mutations": [],
+      "pageErrors": [],
+      "screenshots": [
+        "docs/reviews/assets/ab7-2026-11-04/mark-dark-filters-375.png",
+        "docs/reviews/assets/ab7-2026-11-04/mark-dark-film-375.png",
+        "docs/reviews/assets/ab7-2026-11-04/mark-dark-coverage-375.png"
+      ]
+    }
+  ],
+  "screenshotHandling": "Public repo: only inspected initial-only headers included; private profile-photo captures excluded. No token/key/trace/HAR."
+}
