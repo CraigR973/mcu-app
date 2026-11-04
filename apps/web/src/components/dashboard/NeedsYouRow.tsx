@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, ListChecks } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { Poster } from '@/components/movies/Poster'
 import { StatePanel } from '@/components/ui/state-panel'
 import { useAuth } from '@/context/auth'
-import { fetchNeedsYou, posterUrl } from '@/lib/api'
+import { fetchNeedsYou } from '@/lib/api'
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { needsYouCopy } from '@/lib/needs-you'
 
@@ -61,11 +62,12 @@ export function NeedsYouRow() {
                 to={copy.to}
                 className="touch-target flex min-h-14 items-center gap-3 py-2.5 text-foreground hover:text-primary"
               >
-                <img
-                  src={posterUrl(item.posterPath, 'w92')}
-                  alt=""
-                  loading="lazy"
-                  className="h-12 w-8 shrink-0 rounded-sm border border-border object-cover"
+                <Poster
+                  path={item.posterPath}
+                  title={item.movieTitle}
+                  size="w92"
+                  decorative
+                  className="h-12 w-8 shrink-0 rounded-sm border border-border"
                 />
                 <span className="min-w-0 flex-1">
                   <span className="line-clamp-2 text-sm font-semibold">{copy.title}</span>
