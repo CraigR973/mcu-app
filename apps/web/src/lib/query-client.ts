@@ -22,6 +22,8 @@ export function createQueryClient(): QueryClient {
         void client.invalidateQueries({ queryKey: ['attention'] })
         // AB2: watches and copy ownership change both collection and diary counts.
         void client.invalidateQueries({ queryKey: ['stats'] })
+        // AC1: a handover, return or shelf confirmation changes what Home asks of each person.
+        void client.invalidateQueries({ queryKey: ['needs-you'] })
       },
     }),
     defaultOptions: {

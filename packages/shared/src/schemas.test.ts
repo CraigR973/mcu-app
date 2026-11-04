@@ -5,6 +5,7 @@ import {
   identifyDoubtsSchema,
   activitySchema,
   attentionSchema,
+  needsYouSchema,
   dealListSchema,
   dealSchema,
   pushDeviceStatusSchema,
@@ -2580,5 +2581,42 @@ describe('AB3 addition preference compatibility', () => {
       expect(notificationPreferenceSchema.parse({ ...old, collectionAdditionsEnabled: enabled }).collectionAdditionsEnabled).toBe(enabled)
     }
     expect(notificationPreferenceSchema.safeParse({ ...old, collectionAdditionsEnabled: 'true' }).success).toBe(false)
+  })
+})
+
+describe('needsYouSchema — AC1 (#335)', () => {
+  const putBack = {
+    kind: 'putBack',
+    loanId: UUID_A,
+    movieId: UUID_B,
+    movieTitle: 'Pulp Fiction',
+    posterPath: null,
+    locationLabel: 'Front 2nd',
+    borrowerName: 'Craig',
+    borrowerIsYou: false,
+    lentDate: '2026-10-21',
+    returnedDate: '2026-10-28',
+    neededBy: null,
+    dueDate: null,
+    daysOverdue: null,
+    daysOut: null,
+  }
+
+  it('parses each kind the row knows', () => {
+    const parsed = needsYouSchema.parse({
+      items: [
+        putBack,
+        { ...putBack, kind: 'handOver', lentDate: null, returnedDate: null, neededBy: '2026-11-06' },
+        { ...putBack, kind: 'overdue', borrowerIsYou: true, returnedDate: null, daysOut: 17 },
+      ],
+    })
+    expect(parsed.items.map((item) => item.kind)).toEqual(['putBack', 'handOver', 'overdue'])
+    expect(needsYouSchema.parse({ items: [] }).items).toEqual([])
+  })
+
+  it('refuses a kind or a date it cannot honestly show', () => {
+    expect(needsYouSchema.safeParse({ items: [{ ...putBack, kind: 'tripReply' }] }).success).toBe(false)
+    expect(needsYouSchema.safeParse({ items: [{ ...putBack, returnedDate: '28 Oct' }] }).success).toBe(false)
+    expect(needsYouSchema.safeParse({ items: [{ ...putBack, daysOverdue: -1 }] }).success).toBe(false)
   })
 })

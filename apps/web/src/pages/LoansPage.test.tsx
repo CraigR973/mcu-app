@@ -55,11 +55,11 @@ function list(items: Loan[]) {
   return { items, total: items.length, openCount: items.length, overdueCount: 0 }
 }
 
-function renderLoans() {
+function renderLoans(entry = '/loans') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={['/loans']}>
+      <MemoryRouter initialEntries={[entry]}>
         <LoansPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -161,4 +161,29 @@ it('keeps only the current returned copy on To put back, preserving history in A
   expect(screen.getByText('Home position: Front · 3')).not.toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'All' }))
   expect(screen.getAllByRole('link', { name: 'Heat' })).toHaveLength(2)
+})
+
+it('opens on the disc Home sent you to, with its own confirm flow ready — AC1', async () => {
+  const other = { ...LOAN, id: '3f2504e0-4f89-41d3-9a0c-0305e82c3203', movieTitle: 'Alien', state: 'back' as const, isCurrent: true, returnedDate: '2026-10-28' }
+  const wanted = { ...LOAN, state: 'back' as const, isCurrent: true, returnedDate: '2026-10-28' }
+  api.fetchLoans.mockResolvedValue(list([other, wanted]))
+  renderLoans(`/loans?view=back&loan=${LOAN.id}`)
+
+  expect((await screen.findByRole('button', { name: 'To put back' })).getAttribute('aria-pressed')).toBe('true')
+  const form = await screen.findByRole('form', { name: 'Put back Heat' })
+  expect(within(form).getByText('Home position: Front · 3')).not.toBeNull()
+  expect(form.closest('li')?.getAttribute('aria-current')).toBe('true')
+  // Only the disc Home named is opened; the others wait for their own tap.
+  expect(screen.queryByRole('form', { name: 'Put back Alien' })).toBeNull()
+  expect(screen.getByRole('button', { name: 'Put back' })).not.toBeNull()
+})
+
+it('opens Asked / out for any other job Home sends you to — AC1', async () => {
+  api.fetchLoans.mockResolvedValue(list([{ ...LOAN, state: 'out', isCurrent: true }]))
+  renderLoans(`/loans?view=open&loan=${LOAN.id}`)
+
+  expect((await screen.findByRole('button', { name: 'Asked / out' })).getAttribute('aria-pressed')).toBe('true')
+  const row = (await screen.findByRole('link', { name: 'Heat' })).closest('li') as HTMLElement
+  expect(row.getAttribute('aria-current')).toBe('true')
+  expect(within(row).getByRole('button', { name: 'Returned' })).not.toBeNull()
 })

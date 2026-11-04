@@ -167,6 +167,8 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/attention",
         "/api/v1/attention/notes",
         "/api/v1/attention/notes/{note_id}",
+        # AC1 (#335): Home's "Needs you", a read scoped to whoever is signed in.
+        "/api/v1/needs-you",
         "/api/v1/export/collection.csv",
         "/api/v1/export/collection.json",
         "/api/v1/export/collection.html",

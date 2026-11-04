@@ -7,13 +7,18 @@ import { Input } from '@/components/ui/input'
 import { fetchFacets, loanState, returnLoan, transitionLoan } from '@/lib/api'
 import { queryErrorMessage } from '@/lib/query-state'
 
-/** The physical actions are shared by Loans and each film's copy card. */
-export function LoanActions({ loan }: { loan: Loan }) {
+/**
+ * The physical actions are shared by Loans and each film's copy card.
+ *
+ * `startPuttingBack` opens a returned disc's confirm form straight away, for Home's "Needs
+ * you" (AC1), which links to the disc rather than acting on it.
+ */
+export function LoanActions({ loan, startPuttingBack = false }: { loan: Loan; startPuttingBack?: boolean }) {
   const client = useQueryClient()
   const sectionId = useId()
   const shelfId = useId()
   const state = loanState(loan)
-  const [puttingBack, setPuttingBack] = useState(false)
+  const [puttingBack, setPuttingBack] = useState(() => startPuttingBack && state === 'back')
   const [changing, setChanging] = useState(false)
   const [section, setSection] = useState(loan.section ?? '')
   const [shelf, setShelf] = useState(loan.shelf ?? '')

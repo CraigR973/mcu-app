@@ -32,6 +32,7 @@ import {
   duplicateCheckSchema,
   barcodeLookupSchema,
   attentionSchema,
+  needsYouSchema,
   dealListSchema,
   dealSchema,
   dealsRunSchema,
@@ -113,6 +114,7 @@ import {
   watchLogPageSchema,
   type Activity,
   type Attention,
+  type NeedsYou,
   type BarcodeCandidate,
   type BarcodeLookup,
   type Deal,
@@ -2704,6 +2706,11 @@ export async function fetchDeals(filters: DealFilters = {}): Promise<DealList> {
 /** Batch X2: what the daily check found, for Home's "Needs attention" row. Admin only. */
 export async function fetchAttention(): Promise<Attention> {
   return parseResponse(await authFetch('/attention'), attentionSchema)
+}
+
+/** AC1 (#335): what the person signed in can act on now, for Home's "Needs you" row. */
+export async function fetchNeedsYou(): Promise<NeedsYou> {
+  return parseResponse(await authFetch('/needs-you'), needsYouSchema)
 }
 
 /** Batch X12a: a line from the person signed in to Craig's "Needs attention" row. */

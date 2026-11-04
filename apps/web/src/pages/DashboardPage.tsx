@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth'
 
 import { FeelingLucky } from '@/components/movies/FeelingLucky'
 import { AttentionRow } from '@/components/dashboard/AttentionRow'
+import { NeedsYouRow } from '@/components/dashboard/NeedsYouRow'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
 import { CollectionShelf } from '@/components/dashboard/CollectionShelf'
 import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
@@ -21,6 +22,7 @@ import {
   describeFilters,
   fetchAttention,
   fetchCollectionValue,
+  fetchNeedsYou,
   fetchStats,
   fetchOnThisDayMemories,
   fetchRewatchSuggestions,
@@ -55,7 +57,9 @@ export default function DashboardPage() {
   const homeStats = useQuery({ queryKey: ['stats', profile?.id], queryFn: fetchStats })
   const homeValue = useQuery({ queryKey: ['collection-value'], queryFn: fetchCollectionValue })
   const homeAttention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: profile?.role === 'admin' })
-  const homeLayoutPending = homeStats.isLoading || homeValue.isLoading || homeAttention.isLoading
+  // AC1: "Needs you" arrives above everything, so it is part of the first layout too.
+  const homeNeedsYou = useQuery({ queryKey: ['needs-you', profile?.id], queryFn: fetchNeedsYou, enabled: Boolean(profile) })
+  const homeLayoutPending = homeStats.isLoading || homeValue.isLoading || homeAttention.isLoading || homeNeedsYou.isLoading
   // A completion set opens in place of Home, because the panel *is* the page while it is
   // open; otherwise the reader loses their place in a long page on the way back. Home owns
   // which set is open (W2): when the list owned it, Home's swap to a second copy of the list
@@ -104,8 +108,11 @@ export default function DashboardPage() {
       />
 
       <div className="space-y-9">
-        {/* Batch X2: what has stopped, for Craig, above everything else. Hidden when all is
-            well and for Mark. */}
+        {/* AC1 (#335): what the person signed in can act on now, for everyone. Hidden when
+            there is nothing to do. */}
+        <NeedsYouRow />
+
+        {/* Batch X2: what has stopped, for Craig. Hidden when all is well and for Mark. */}
         <AttentionRow />
 
         <CollectionShelf />

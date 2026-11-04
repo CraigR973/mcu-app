@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRightLeft, HandHeart } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import type { Loan } from '@mcu/shared'
 
 import { LoanActions } from '@/components/collection/LoanActions'
@@ -14,13 +14,21 @@ import { fetchLoans, formatLabel, loanDueLabel, loanState, loanStateLabel, poste
 import { listState, queryErrorMessage } from '@/lib/query-state'
 import { cn, formatShortDate } from '@/lib/utils'
 
-function Row({ loan }: { loan: Loan }) {
+function Row({ loan, focused }: { loan: Loan; focused: boolean }) {
   const { profile } = useAuth()
+  const ref = useRef<HTMLLIElement>(null)
+  // AC1: opened from Home's "Needs you", the disc is brought into view and picked out.
+  useEffect(() => {
+    if (focused) ref.current?.scrollIntoView?.({ block: 'center' })
+  }, [focused])
   return (
     <li
+      ref={ref}
+      aria-current={focused ? 'true' : undefined}
       className={cn(
         'archive-panel grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:p-4',
         loan.isOverdue ? 'border-destructive/50' : 'border-border',
+        focused && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
       )}
     >
       <img
@@ -54,14 +62,24 @@ function Row({ loan }: { loan: Loan }) {
           {loanState(loan) === 'asked_for' ? 'Waiting for handover' : loanDueLabel(loan)}
         </p>
       </div>
-      <div className="col-span-2 sm:col-span-1"><LoanActions loan={loan} /></div>
+      <div className="col-span-2 sm:col-span-1"><LoanActions loan={loan} startPuttingBack={focused} /></div>
     </li>
   )
 }
 
-/** One register of requested copies, physical handovers, returns and shelf confirmations. */
+/**
+ * One register of requested copies, physical handovers, returns and shelf confirmations.
+ *
+ * `?view=back&loan=<id>` (AC1) opens a view with one disc picked out: Home's "Needs you" links
+ * here, so this page's own actions stay the only way a loan changes.
+ */
 export default function LoansPage() {
-  const [view, setView] = useState('open')
+  const [params] = useSearchParams()
+  const focusId = params.get('loan')
+  const [view, setView] = useState(() => {
+    const asked = params.get('view')
+    return asked === 'back' || asked === 'all' ? asked : 'open'
+  })
   const [starting, setStarting] = useState(false)
 
   const loansQuery = useQuery({
@@ -139,7 +157,7 @@ export default function LoansPage() {
       ) : (
         <ul className="space-y-3">
           {loans.map((loan) => (
-            <Row key={loan.id} loan={loan} />
+            <Row key={loan.id} loan={loan} focused={loan.id === focusId} />
           ))}
         </ul>
       )}

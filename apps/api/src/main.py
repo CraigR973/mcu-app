@@ -48,6 +48,7 @@ from src.routers import (
     movie_night,
     movies,
     navigation,
+    needs_you,
     notifications,
     photos,
     profile_photos,
@@ -193,6 +194,7 @@ app.include_router(export.router)
 app.include_router(trash.router)
 app.include_router(navigation.router)
 app.include_router(attention.router)
+app.include_router(needs_you.router)
 app.include_router(watch_history.router)
 app.include_router(discovery.router)
 app.include_router(calendar.router)

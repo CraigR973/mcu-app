@@ -2734,6 +2734,40 @@ export const attentionSchema = z.object({
 export type AttentionItem = z.infer<typeof attentionItemSchema>
 export type Attention = z.infer<typeof attentionSchema>
 
+// AC1 (#335): Home's "Needs you", what the person signed in can act on now. The API decides
+// who sees what from the loan rows; the web words each item and links to the exact place.
+const needsYouDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+export const needsYouItemSchema = z.object({
+  /** `putBack`: back but not shelved. `handOver`: asked for and waiting. `overdue`: past its
+   *  due date, or out 14 days or more with none. AC5 adds cinema trip replies. */
+  kind: z.enum(['putBack', 'handOver', 'overdue']),
+  loanId: z.string().uuid(),
+  movieId: z.string().uuid(),
+  movieTitle: z.string().min(1),
+  posterPath: z.string().nullable(),
+  /** The copy's home position, where "Put back" shelves it unless changed. */
+  locationLabel: z.string().min(1),
+  /** Who has it, or who asked for it. */
+  borrowerName: z.string().min(1),
+  /** The reader is the borrower: "Give back" rather than "Ask them for it". */
+  borrowerIsYou: z.boolean(),
+  lentDate: needsYouDateSchema.nullable(),
+  returnedDate: needsYouDateSchema.nullable(),
+  neededBy: needsYouDateSchema.nullable(),
+  dueDate: needsYouDateSchema.nullable(),
+  /** Days past the due date, on an overdue item that has one. */
+  daysOverdue: z.number().int().nonnegative().nullable(),
+  /** Days since it went out, on an overdue item. */
+  daysOut: z.number().int().nonnegative().nullable(),
+})
+export const needsYouSchema = z.object({
+  /** Most pressing first; empty when there is nothing to do. */
+  items: z.array(needsYouItemSchema),
+})
+
+export type NeedsYouItem = z.infer<typeof needsYouItemSchema>
+export type NeedsYou = z.infer<typeof needsYouSchema>
+
 // AA6: one ephemeral Archive draw; null means that this run has exhausted its pool.
 export const luckyFilmSchema = z.object({ film: movieListItemSchema.nullable() })
 export type LuckyFilm = z.infer<typeof luckyFilmSchema>

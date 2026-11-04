@@ -8149,6 +8149,163 @@
     "title": "NavSectionsResponse",
     "type": "object"
    },
+   "NeedsYouLoanItem": {
+    "description": "One disc the reader can act on. The web words it; the API decides who sees it.",
+    "properties": {
+     "borrowerIsYou": {
+      "title": "Borrowerisyou",
+      "type": "boolean"
+     },
+     "borrowerName": {
+      "title": "Borrowername",
+      "type": "string"
+     },
+     "daysOut": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daysout"
+     },
+     "daysOverdue": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daysoverdue"
+     },
+     "dueDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duedate"
+     },
+     "kind": {
+      "enum": [
+       "putBack",
+       "handOver",
+       "overdue"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "lentDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lentdate"
+     },
+     "loanId": {
+      "format": "uuid",
+      "title": "Loanid",
+      "type": "string"
+     },
+     "locationLabel": {
+      "title": "Locationlabel",
+      "type": "string"
+     },
+     "movieId": {
+      "format": "uuid",
+      "title": "Movieid",
+      "type": "string"
+     },
+     "movieTitle": {
+      "title": "Movietitle",
+      "type": "string"
+     },
+     "neededBy": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Neededby"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "returnedDate": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Returneddate"
+     }
+    },
+    "required": [
+     "kind",
+     "loanId",
+     "movieId",
+     "movieTitle",
+     "posterPath",
+     "locationLabel",
+     "borrowerName",
+     "borrowerIsYou",
+     "lentDate",
+     "returnedDate",
+     "neededBy",
+     "dueDate",
+     "daysOverdue",
+     "daysOut"
+    ],
+    "title": "NeedsYouLoanItem",
+    "type": "object"
+   },
+   "NeedsYouResponse": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/NeedsYouLoanItem"
+      },
+      "title": "Items",
+      "type": "array"
+     }
+    },
+    "required": [
+     "items"
+    ],
+    "title": "NeedsYouResponse",
+    "type": "object"
+   },
    "NewReleaseListResponse": {
     "properties": {
      "basedOnGenres": {
@@ -21959,6 +22116,33 @@
     "summary": "Nav Sections",
     "tags": [
      "navigation"
+    ]
+   }
+  },
+  "/api/v1/needs-you": {
+   "get": {
+    "description": "What the person signed in can act on now; empty when there is nothing.",
+    "operationId": "needs_you_api_v1_needs_you_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/NeedsYouResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Needs You",
+    "tags": [
+     "needs-you"
     ]
    }
   },

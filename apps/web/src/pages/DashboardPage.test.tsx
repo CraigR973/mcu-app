@@ -27,6 +27,8 @@ const api = vi.hoisted(() => ({
   fetchActivity: vi.fn(),
   // Batch X2: Home's "Needs attention" row, for the admin. Nothing wrong here.
   fetchAttention: vi.fn().mockResolvedValue({ items: [], checkedAt: null }),
+  // AC1: Home's "Needs you" row, for everyone. Nothing to do here unless a test says so.
+  fetchNeedsYou: vi.fn().mockResolvedValue({ items: [] }),
 }))
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
@@ -125,6 +127,7 @@ const SETS = [
 
 /** Everything with something in it, for both people unless a test says otherwise. */
 function fill() {
+  api.fetchNeedsYou.mockResolvedValue({ items: [] })
   api.fetchStats.mockResolvedValue(STATS)
   api.fetchCollectionValue.mockResolvedValue(VALUE)
   api.fetchCalendar.mockResolvedValue({ items: [RELEASE], total: 1, refreshedAt: null })
@@ -398,5 +401,60 @@ describe('Home as rows, the collection first — Batch W2', () => {
     // Its back control names where it goes, and goes there.
     fireEvent.click(screen.getByRole('button', { name: 'Home' }))
     expect(await screen.findByRole('heading', { level: 2, name: 'The collection' })).not.toBeNull()
+  })
+})
+
+describe('Needs you, at the top for everyone — AC1 (#335)', () => {
+  const PUT_BACK = {
+    kind: 'putBack' as const,
+    loanId: '3f2504e0-4f89-41d3-9a0c-0305e82c3801',
+    movieId: HEAT,
+    movieTitle: 'Heat',
+    posterPath: null,
+    locationLabel: 'Front 2nd',
+    borrowerName: 'Craig',
+    borrowerIsYou: false,
+    lentDate: '2026-10-21',
+    returnedDate: '2026-10-28',
+    neededBy: null,
+    dueDate: null,
+    daysOverdue: null,
+    daysOut: null,
+  }
+
+  it('shows a viewer what is theirs to do, above the collection, with no admin row', async () => {
+    auth.role = 'viewer'
+    api.fetchNeedsYou.mockResolvedValue({ items: [PUT_BACK] })
+    renderHome()
+    const row = await screen.findByRole('region', { name: 'Needs you' })
+    const link = within(row).getByRole('link', { name: /Put back Heat/ })
+    expect(link.getAttribute('href')).toBe(`/loans?view=back&loan=${PUT_BACK.loanId}`)
+    expect(row.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'The collection' }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    expect(api.fetchAttention).not.toHaveBeenCalled()
+  })
+
+  it('sits above Craig’s own Needs attention, which is unchanged', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [PUT_BACK] })
+    api.fetchAttention.mockResolvedValue({
+      checkedAt: '2026-11-04T08:00:00Z',
+      items: [{ key: 'check:stale', message: 'The daily check has not run.', since: null, noteId: null }],
+    })
+    renderHome()
+    const needsYou = await screen.findByRole('region', { name: 'Needs you' })
+    const attention = await screen.findByRole('heading', { level: 2, name: 'Needs attention' })
+    expect(needsYou.compareDocumentPosition(attention)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it('holds Feeling lucky until Needs you has arrived, so a tap cannot land on a moving row', async () => {
+    let arrive!: (value: { items: typeof PUT_BACK[] }) => void
+    api.fetchNeedsYou.mockReturnValue(new Promise((resolve) => { arrive = resolve }))
+    renderHome()
+    await screen.findByRole('heading', { level: 2, name: 'The collection' })
+    expect(screen.getByRole('link', { name: 'At the cinema' }).getAttribute('aria-disabled')).toBe('true')
+    arrive({ items: [PUT_BACK] })
+    await screen.findByRole('region', { name: 'Needs you' })
+    await waitFor(() => expect(screen.getByRole('link', { name: 'At the cinema' }).getAttribute('aria-disabled')).toBeNull())
   })
 })

@@ -82,3 +82,19 @@ it('refreshes attention after a successful resolution, but never treats a refuse
   expect(client.getQueryState(['stats'])?.isInvalidated).toBe(true)
   client.clear()
 })
+
+it('re-reads Home’s "Needs you" for every person after a successful change, never after a refused one — AC1', async () => {
+  const client = createQueryClient()
+  client.setQueryData(['needs-you', 'craig'], { items: [] })
+  client.setQueryData(['needs-you', 'mark'], { items: [] })
+  const refused = client.getMutationCache().build(client, {
+    mutationFn: async () => { throw new Error('refused') },
+  })
+  await expect(refused.execute(undefined)).rejects.toThrow('refused')
+  expect(client.getQueryState(['needs-you', 'mark'])?.isInvalidated).toBe(false)
+  const shelved = client.getMutationCache().build(client, { mutationFn: async () => 'shelved' })
+  await shelved.execute(undefined)
+  expect(client.getQueryState(['needs-you', 'craig'])?.isInvalidated).toBe(true)
+  expect(client.getQueryState(['needs-you', 'mark'])?.isInvalidated).toBe(true)
+  client.clear()
+})
