@@ -11,13 +11,13 @@ import { queryErrorMessage } from '@/lib/query-state'
 import { formatShortDate } from '@/lib/utils'
 
 /** An account or night change ends the old browser run, including outstanding results. */
-export function FeelingLucky({ sessionId }: { sessionId?: string }) {
+export function FeelingLucky({ sessionId, homeLayoutPending = false }: { sessionId?: string; homeLayoutPending?: boolean }) {
   const { profile } = useAuth()
   if (!profile) return null
-  return <LuckyRun key={`${profile.id}:${sessionId ?? 'home'}`} sessionId={sessionId} />
+  return <LuckyRun key={`${profile.id}:${sessionId ?? 'home'}`} sessionId={sessionId} homeLayoutPending={homeLayoutPending} />
 }
 
-function LuckyRun({ sessionId }: { sessionId?: string }) {
+function LuckyRun({ sessionId, homeLayoutPending }: { sessionId?: string; homeLayoutPending: boolean }) {
   const queryClient = useQueryClient()
   const [unwatchedOnly, setUnwatchedOnly] = useState(false)
   const [started, setStarted] = useState(false)
@@ -61,7 +61,7 @@ function LuckyRun({ sessionId }: { sessionId?: string }) {
   }
 
   return (
-    <fieldset className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-4">
+    <fieldset disabled={homeLayoutPending} aria-busy={homeLayoutPending} className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-4">
       <legend className="section-heading inline-flex items-center gap-2 px-1 text-base">
         <Shuffle className="h-4 w-4" aria-hidden /> Feeling lucky
       </legend>
@@ -122,6 +122,7 @@ function LuckyRun({ sessionId }: { sessionId?: string }) {
         </>
       )}
 
+      {homeLayoutPending ? <p role="status" className="text-xs text-muted-foreground">Loading Home…</p> : null}
       {draw.isError && !chosen ? <p role="alert" className="text-sm text-destructive">{queryErrorMessage(draw.error, 'Could not deal a film. Try again.')}</p> : null}
       {take.isError ? <p role="alert" className="text-sm text-destructive">{queryErrorMessage(take.error, 'That film could not be chosen. Try again or skip it.')}</p> : null}
       {started ? <Button type="button" variant="ghost" disabled={busy} onClick={reset}>Start again</Button> : null}

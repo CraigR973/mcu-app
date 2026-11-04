@@ -1,0 +1,29 @@
+{
+  "failedMainRun": 41748981329,
+  "head": "67d22ec2db315de74de118f93e0261b568ed3e44",
+  "browser": "firefox",
+  "case": "Home deals unwatched films without repeats and choosing does not log a watch",
+  "failure": "Native check click did not change state",
+  "pointer": {
+    "x": 41,
+    "y": 663
+  },
+  "traceMilliseconds": {
+    "stableCheck": 198433.607,
+    "inputSnapshot": 198445.998,
+    "clickBegins": 198453.239,
+    "clickEnds": 198535.117,
+    "uncheckedAfterSnapshot": 198592.441
+  },
+  "statsRequest": {
+    "httpStatus": 200,
+    "startedUtc": "2026-11-04T00:52:35.499Z",
+    "durationMilliseconds": 118.831
+  },
+  "observedFrames": "Loading archive panel visible at input point; loaded number cards expand above the checkbox during the same click; checkbox remains false. No invented timeout/provider cause.",
+  "sameRuntimeOtherMainRun": 41749759834,
+  "sameRuntimeOtherMainResult": "all seven pass; timing-dependent defect still repaired",
+  "traceHandling": "Original CI trace and synthetic authentication data stay in ignored scratchpad; only this sanitised causal summary is tracked",
+  "productionRequests": 0,
+  "productionWrites": 0
+}

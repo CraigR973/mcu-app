@@ -72,6 +72,12 @@ unknown years stay visible. Strict New/Older filters may be empty. Next08:00UTC 
 refresh/future access is unproved; source fees0/existing resources unpriced. Final exact
 main/production stamp is in PR128; no next sitting is authorised by this completion.
 
+Home's integration guard (4 Nov follow-up) observes the same cached stats/value/admin
+attention reads as the upper rows. While those initial reads are loading, native Home
+pick controls and the cinema entry cannot accept a tap; enabling follows the committed
+layout. It adds no source request, timer, data write or Home reorder. The held-response
+regression preserves the original native checkbox assertion and verifies one stats GET.
+
 ## AA8, shipped 23 Oct
 
 ```mermaid

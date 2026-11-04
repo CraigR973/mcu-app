@@ -171,3 +171,13 @@ and two-device checks remain separate. Known #334 completion authority is now fu
 ![Actual programme, dark375px](assets/ab7-2026-11-04/mark-dark-film-375.png)
 
 ![Actual programme, light375px](assets/ab7-2026-11-04/mark-light-film-375.png)
+
+## Final Home integration gate reopened — 4 Nov
+
+Main67 CI41748981329 failed the original Firefox Home unwatched checkbox check, while all
+18 cinema cases passed. Same-runtime final docs CI41749759834 passes all7, but trace-based
+cause analysis still identifies a real async-layout lost tap. Same-branch repair observes
+existing cached upper-section readiness before enabling Home pick/navigation controls;
+original assertion and all data/source contracts remain. Controlled regression, traces,
+local login-transport interruption and full follow-up evidence:
+[Home loading race](ab7-home-loading-race-2026-11-04.md).

@@ -7163,3 +7163,13 @@ contemporaneous.
      and all earlier failures remain documented; no private profile-photo capture enters
      the public repo. Final exact main/deployment stamp is recorded in PR128 before task
      completion. Accepted feature scope is fulfilled; later work needs its own scope.
+
+     Close-out is reopened by main67 CI41748981329: the actual failed Firefox trace shows
+     the archive loading panel expanding to metrics during Home's checkbox click, leaving
+     it unchecked. Same-runtime af CI41749759834 passes but is not treated as a repair.
+     Under the remaining #334 integration scope, keep the same AB7 branch/PR128 and guard
+     Home pick/cinema-entry actions with the existing upper-query loading state. No new
+     source/API/data/hosting/fee contract, fixed-height guess, delay/retry or weakened
+     assertion; original test retained plus held-response two-person native-control proof.
+     Full candidate/main gates and actual production Home proof remain before completion.
+     Evidence: ab7-home-loading-race-2026-11-04.*. No AA10c or other sitting.

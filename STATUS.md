@@ -2,17 +2,18 @@
 
 ## Now
 
-**4 Nov: Group AB sitting5 complete — programme ingestion and Cinemas are live.**
-AB6 PR125/72ff0bd/final354f34c closed first. AB7 PR128/bf70319 plus the same-branch
-observed-format correction67d22ec pass all local/exact seven-job gates (API2621/no skips/
-shared167/web757/C69/F68+1/W67+2/jobs6). Exact API/web67d22ec/full readiness and actual
-Craig/Mark × both375px themes × four-filter API/render comparisons pass: 1,617 future
-showings/141 groups in4–17 Nov, all Unclassified/New0/Older0, nine enabled, partial
-coverage explicit. No source request/domain mutation/page error. Source fees0/resources
-unpriced; recurring08:00UTC access remains unproved. Public evidence excludes private
-profile-photo captures. Final docs/merged-code CI and exact latest deployed stamp are
-recorded in PR128 before task completion. Report: docs/reviews/ab7-implementation-2026-11-03.md.
-No AA10c or other sitting. Standing #334 completion scope is fulfilled.
+**4 Nov01:18: Cinemas live; final close-out reopened for a proven Home loading race.**
+PR128/same-branch67d22ec plus docsaf8c478 serve exact API/web/full readiness; real both-
+profile/theme16-filter reads match1617 future showings/141 groups, all Unclassified,
+New0/Older0, nine enabled and partial data explicit, human formats verified/no mutation.
+Main67 CI41748981329 exposes Firefox's existing Home checkbox moving when archive stats
+replace the loading panel during its click; actual trace proves cause. Identical-runtime
+af main CI41749759834 passes all7 but does not dismiss that defect. Same AB7 branch now
+uses existing query readiness to guard Home pick/cinema-entry controls; no new request/
+data/source/hosting contract or test weakening. Unit29 and controlled/original Home browser
+checks pass; full clean/exact-head gates and production proof remain before closure.
+Report: docs/reviews/ab7-home-loading-race-2026-11-04.md. Standing #334 continues to cover
+this required integration repair; no owner decision/new branch/PR/AA10c/other sitting.
 
 ## Next
 

@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { CalendarHeart, Pin, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { useAuth } from '@/context/auth'
+
 import { FeelingLucky } from '@/components/movies/FeelingLucky'
 import { AttentionRow } from '@/components/dashboard/AttentionRow'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
@@ -17,6 +19,9 @@ import { ComingToDisc } from '@/components/releases/ComingToDisc'
 import { StatePanel } from '@/components/ui/state-panel'
 import {
   describeFilters,
+  fetchAttention,
+  fetchCollectionValue,
+  fetchStats,
   fetchOnThisDayMemories,
   fetchRewatchSuggestions,
   fetchSmartCollections,
@@ -44,6 +49,13 @@ import { formatShortDate } from '@/lib/utils'
  * `/stats` still redirects here; `/insights` is the full Completion view again.
  */
 export default function DashboardPage() {
+  const { profile } = useAuth()
+  // Observe the existing cache keys: the children share these requests. Home targets
+  // must not accept a tap while the first archive/attention layout is still arriving.
+  const homeStats = useQuery({ queryKey: ['stats', profile?.id], queryFn: fetchStats })
+  const homeValue = useQuery({ queryKey: ['collection-value'], queryFn: fetchCollectionValue })
+  const homeAttention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention, enabled: profile?.role === 'admin' })
+  const homeLayoutPending = homeStats.isLoading || homeValue.isLoading || homeAttention.isLoading
   // A completion set opens in place of Home, because the panel *is* the page while it is
   // open; otherwise the reader loses their place in a long page on the way back. Home owns
   // which set is open (W2): when the list owned it, Home's swap to a second copy of the list
@@ -98,9 +110,9 @@ export default function DashboardPage() {
 
         <CollectionShelf />
 
-        <FeelingLucky />
+        <FeelingLucky homeLayoutPending={homeLayoutPending} />
 
-        <Link to="/cinemas" className="archive-panel block p-5 transition-colors hover:bg-muted" aria-label="At the cinema">
+        <Link to="/cinemas" aria-disabled={homeLayoutPending || undefined} onClick={(event) => { if (homeLayoutPending) event.preventDefault() }} className={`archive-panel block p-5 transition-colors ${homeLayoutPending ? 'opacity-60' : 'hover:bg-muted'}`} aria-label="At the cinema">
           <span className="font-display text-xl font-semibold">At the cinema</span>
           <span className="mt-1 block text-sm text-muted-foreground">Find films and events at your cinemas. Choose dates, venues and release categories.</span>
         </Link>
