@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -140,6 +140,17 @@ describe('NeedsYouRow', () => {
     api.fetchNeedsYou.mockRejectedValue(new Error('Server error'))
     renderRow()
     expect(await screen.findByText('Could not check what needs you')).toBeTruthy()
+  })
+
+  it('says so offline with nothing kept, rather than looking like nothing to do', async () => {
+    onlineManager.setOnline(false)
+    try {
+      renderRow()
+      expect(await screen.findByText('What needs you is not cached here')).toBeTruthy()
+      expect(api.fetchNeedsYou).not.toHaveBeenCalled()
+    } finally {
+      onlineManager.setOnline(true)
+    }
   })
 
   it('asks nothing of the API for nobody signed in', async () => {
