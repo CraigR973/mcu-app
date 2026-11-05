@@ -7248,3 +7248,28 @@ contemporaneous.
      Universe" as live text; and **Feeling lucky inside the featured film**, as "Deal another"
      with the unwatched-only switch, so Home has one featured module instead of two. Top rated
      stays off Home (AA1); Highlights' tabs are Most rewatched, Most valuable and Best discs.
+
+338. **AC2 shipped: Home as one ledger, one featured film and banner T1 (5 Nov).**
+     Group AC sitting 1's second batch, to Craig's picks (#337). PR #131, merge `f7968a719b893b403b25aaceeac5f59ddf76a6ca`.
+     - **The ledger says each fact once**: titles, then copies on disc and digital in one line
+       (with the overlap), the estimated used value with its method behind a tap, watched as a
+       share of the titles owned with a bar, and the formats as one stacked bar. The breakdown
+       no longer draws the formats a second time. "Matched on TMDB" left Home.
+     - **The featured film costs no request**: the first "Worth a rewatch", else the most
+       rewatched, else an invitation to deal. Feeling lucky's deal moved into a shared hook
+       (`lib/lucky-deck.ts`); Movie night's Feeling lucky is unchanged. On Home, opening the film
+       is the choice, so "Choose this film" is gone there.
+     - **No film twice in one load** (`lib/home-films.ts`): the featured film, Coming to disc,
+       Highlights' tabs and For you take films in page order. A film may sit in two Highlights
+       tabs, since only one shows at a time.
+     - **Highlights is one row with tabs** (Most rewatched, Most valuable, Best discs); Completion
+       is a three-set list; pinned collections are links. Three sideways rows, four with AC4's
+       cinema strip.
+     - **Banner T1 is kept on the device as a data URL** in localStorage, read on the first render
+       so Home never shows a grey box after the first load, and removed at sign-out. The API
+       serves `letters-v1-1125` and `letters-v1-1800` behind sign-in as `private, immutable`; it
+       still serves `five` and `single` for installed builds from before AC2. `PrivateHero` is gone.
+     - **The top slot's two reads settle before anything under them is drawn**, which took
+       Craig's layout shift from 0.234 to 0.000 (his "Needs attention" had pushed the ledger down
+       142 px). AB7's tap guard is unchanged. The next planned screening rides on the Needs you
+       read as an additive `nextScreening`.

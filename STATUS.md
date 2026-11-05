@@ -2,28 +2,26 @@
 
 ## Now
 
-**4 Nov: Group AC is running, sitting 1 (Home).** AC1 shipped (PR #130, merge `57afee17`,
-#336): Home's "Needs you" row shows each person what they can act on now, from the loan rows
-on every read. AC2's checkpoint is answered (#337): direction A (ledger first), banner T1
-(photo letters, live type) and Feeling lucky inside the featured film; AC2 is being built.
-Craig authorised all four sittings to run in order; AC3, AC5 and AC6 still stop at their
-checkpoints. Group AB is complete (its record is in the Log).
+**5 Nov: Group AC sitting 1 (Home) is complete.** AC1 (Needs you, #336) and AC2 (#337, #338)
+have shipped; AC2 merged at `f7968a71`. Home is one collection ledger, one featured film with
+Feeling lucky inside it, three poster rows (Highlights as tabs), a short Closest to complete
+list, no film twice in one load, and banner T1 (photo letters with live type, kept on the
+device). Measured at 375 px: banner 2,057,722 → 60,092 bytes; layout shift Craig 0.234 → 0.000,
+Mark 0.219 → 0.012. **Sitting 2 (AC3, cinema identities and runs) is next**; it stops after its
+dry run for Craig's review before any live write. A preliminary dry run on 5 Nov (read-only,
+254 TMDB requests) linked 79 of 97 programme films, sent 16 to review and set 17 events aside.
 
-**Live facts, read-only, 4 Nov.** After AC1's deploy the live read gives Craig 2 discs to give
-back (Halloween and The Silence of the Lambs, out 17 days with no due date) and 2 to put back
-(Pulp Fiction and Rosemary's Baby); Mark sees the same two to put back and 2 to ask Craig for.
-The first scheduled cinema refresh ran at 08:05 UTC: all nine venues succeeded, 63 requests,
-1,840 rows, 233 new showings. Horizons: Cineworld 14 days, Everyman 13, Science Centre 8,
-ODEON 7, GFT 2, Vue 2. 0 of 174 programme films are linked to TMDB and all 1,850 future
-showings are Unclassified; 164 films wait for a metadata lookup at 12 per run.
+**Live facts, read-only.** Craig has 2 discs to give back and 2 to put back; Mark sees the same
+two to put back and 2 to ask Craig for (4 Nov). The cinema programme held 220 film rows and
+1,798 future showings on 5 Nov, all still Unclassified until AC3.
 
 ## Next
 
 **Group AC runs sitting by sitting, at Craig's 4 Nov go for all four.** Sittings 1 (AC1 →
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
-4 (AC5 → AC6) needs 3. The planning PR (#129) and AC1 (#130) have shipped; AC2 is next, its
-checkpoint answered (#337). AC3, AC5 and AC6 still stop at owner checkpoints until Craig
-answers. Onboarding more people needs its own plan; nothing in Group AC
+4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
+have shipped. Sitting 2 (AC3) is next. AC3, AC5 and AC6 still stop at owner checkpoints until
+Craig answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -417,6 +415,12 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **5 Nov — AC2 shipped (#338): Home as one ledger, a featured film and banner T1.** Craig
+  picked A, T1 and Feeling lucky in the featured film from side-by-side mock-ups (#337). PR #131
+  merge `f7968a71`; CI 42001355662 all seven (the first run failed AA8's private-hero case, which still
+  pinned the old image; it now holds T1 at both widths). Local: API 2,635, shared 170, web 796,
+  e2e Chromium 75 and Firefox 74 + 1 allowed skip. Changed test expectations are listed in the
+  PR. Phone rendering is Craig's observation.
 - **4 Nov — AC1 shipped; AC2's picks made (#336, #337):** `GET /api/v1/needs-you` and Home's
   "Needs you" row for everyone (shelf keepers: admins and `MARK_PROFILE_ID`); each item opens
   Loans on that disc's own confirm flow. No migration. Local: API 2,632 on a throwaway
