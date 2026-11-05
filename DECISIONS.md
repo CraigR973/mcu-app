@@ -7273,3 +7273,23 @@ contemporaneous.
        Craig's layout shift from 0.234 to 0.000 (his "Needs attention" had pushed the ledger down
        142 px). AB7's tap guard is unchanged. The next planned screening rides on the Needs you
        read as an additive `nextScreening`.
+
+339. **AC3's checkpoint answered: go for the live write, with the famous-classic rule (5 Nov).**
+     Craig checked the read-only dry run (`docs/reviews/ac3-dry-run-2026-11-05.md`) and answered
+     "Go, rule on".
+     - **The famous-classic rule amends #335's identity rule.** A title matching one film with
+       1,000 or more TMDB votes, when every other film of that title has fewer than 100, counts as
+       an agreeing fact ("the only famous film of this title"). "Every other" includes films the
+       lookup found but did not read in detail, by their search votes (`Metadata.unread_votes`).
+       Exactly one passing film still links, so a namesake in UK cinemas now still sends the
+       title to the review list.
+     - **The risk Craig took:** a new namesake that TMDB has no UK cinema date for cannot pass beside
+       a famous film of its title, so the famous film links and is called a rerun. The agent
+       recommended leaving the rule off; a test pins the behaviour so that changing it is a
+       deliberate act.
+     - **The live write rides the 08:00 runs** (48 TMDB requests each, about five mornings), not
+       extra manual job runs.
+     - **On the live programme (dry run, 5 Nov) it links exactly the six films Craig saw**, all
+       reruns: Rocky, The Fugitive, Hunger Games: The Ballad of Songbirds and Snakes, Prisoners,
+       Cliffhanger and Elf. The review list falls from 13 titles to 7, and reruns from 4 showings
+       to 18.

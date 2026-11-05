@@ -2,16 +2,13 @@
 
 ## Now
 
-**5 Nov: AC3 (cinema identities and runs) is built and waits at its checkpoint for Craig.**
-PR #132 is open and must not merge before Craig has checked the dry run: merging deploys, and
-the next 08:00 run then writes identity links and run labels. The final dry run (read-only, the
-PR's own lookup and identity code, 217 TMDB requests, 0 errors, `docs/reviews/ac3-dry-run-2026-11-05.md`)
-linked 66 of 96 programme films, sent 13 to Craig's review list, left 1 unlinked and set 16
-events aside; of 1,728 future showings, 1,508 would be first runs, 4 reruns and 216
-Unclassified (all are Unclassified today). Craig's open choice: the optional famous-classic
-rule, which would link 6 of the review list (Rocky, The Fugitive, Prisoners, Cliffhanger, Elf,
-Hunger Games: Ballad). After his go: merge, read back live counts after the backfill (about
-five mornings at 48 requests each), close out. Sitting 1 (AC1, AC2) shipped on 5 Nov.
+**5 Nov: Craig answered AC3's checkpoint: go, with his famous-classic rule on (#339).** PR #132
+carries the rule; a read-only dry run with it links 72 of 96 programme films, leaves 7 on Craig's
+review list, 1 unlinked and 16 events; of 1,721 future showings, 1,502 would be first runs, 18
+reruns and 201 Unclassified (`docs/reviews/ac3-dry-run-2026-11-05.md`). Once merged, the live write
+rides the 08:00 runs, about five mornings at 48 TMDB requests each. **AC3's close-out waits for the
+first run's live read-back** (identity and category counts, and the run filters returning first runs
+and reruns). Sitting 1 (AC1, AC2) shipped on 5 Nov.
 
 **Live facts, read-only.** Craig has 2 discs to give back and 2 to put back; Mark sees the same
 two to put back and 2 to ask Craig for (4 Nov). The cinema programme held 220 film rows and
@@ -416,6 +413,11 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **5 Nov — Craig: "Go, rule on" for AC3 (#339).** The famous-classic rule is in: a title matching one
+  film with 1,000+ TMDB votes, when every other film of the title (read or not) has fewer than 100,
+  counts as agreeing. With it the dry run links exactly the six films Craig saw. Local: API 2,657,
+  shared 175, web 804; full e2e Chromium 77 and Firefox 76 + the allowed dictation skip.
 
 - **5 Nov — AC3 built, PR #132 open, stopped at its checkpoint.** #335's identity rule, run
   labels with their reasons, 48 TMDB requests a run, and Craig's review list on Identify films.

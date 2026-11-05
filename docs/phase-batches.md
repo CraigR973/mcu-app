@@ -5310,6 +5310,9 @@ an onboarding plan defines something better.
   reporting films linked, sent to review and left unlinked, and the category counts, with
   twenty sample links and twenty sample labels for Craig to check. Then the live backfill
   and the daily run.
+- **Checkpoint answered (5 Nov, #339):** go, with Craig's famous-classic rule on: a title
+  matching one film with 1,000+ TMDB votes, when every other film of that title has fewer
+  than 100, counts as agreeing. The backfill rides the 08:00 runs.
 - Regress: remakes sharing a title, foreign and alternative titles, anniversary labels,
   previews before UK release, films 4–12 months after release, events, a wrong year from a
   source, a source id that disagrees with the title.
