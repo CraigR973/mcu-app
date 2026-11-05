@@ -93,6 +93,7 @@ export function PosterCard({
   posterPath,
   detail,
   after,
+  disabled = false,
 }: {
   to: string | null
   title: string
@@ -100,6 +101,8 @@ export function PosterCard({
   detail?: ReactNode
   /** An interactive control that must sit beside, not inside, the film-page link. */
   after?: ReactNode
+  /** AB7's guard: no navigation while Home's first layout is still arriving. */
+  disabled?: boolean
 }) {
   const body = (
     <>
@@ -119,7 +122,14 @@ export function PosterCard({
   return (
     <li className="w-24 shrink-0 snap-start sm:w-28">
       {to ? (
-        <Link to={to} className="group block rounded-md">
+        <Link
+          to={to}
+          aria-disabled={disabled || undefined}
+          onClick={(event) => {
+            if (disabled) event.preventDefault()
+          }}
+          className="group block rounded-md"
+        >
           {body}
         </Link>
       ) : (

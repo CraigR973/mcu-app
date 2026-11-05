@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CalendarEntry, Highlights, OnThisDayMemory, RewatchSuggestion } from './api'
-import { HomeFilms, homeLineup } from './home-films'
+import { filmsFixture } from '@/pages/cinema-films-fixture'
+import { cinemaStrip, HomeFilms, homeLineup } from './home-films'
 
 const id = (n: number) => `3f2504e0-4f89-41d3-9a0c-0305e82c${String(3400 + n)}`
 
@@ -104,5 +105,23 @@ describe('homeLineup — AC2 (#337)', () => {
     expect(lineup.highlights?.mostRewatched.map((f) => f.title)).toEqual(['Alien'])
     expect(lineup.highlights?.bestReviewed).toEqual([])
     expect(lineup.forYou).toEqual([])
+  })
+})
+
+describe('cinemaStrip — AC4, last on Home', () => {
+  const now = Date.parse('2026-11-03T17:00:00Z')
+  it('shows this week’s films with posters, widest first, never listings, events or later films', () => {
+    const strip = cinemaStrip(homeLineup({}), filmsFixture(), now)
+    expect(strip.map((line) => line.card.title)).toEqual(['A returning favourite', 'A current first run'])
+    const unposted = filmsFixture(); unposted.films[0].posterPath = null
+    expect(cinemaStrip(homeLineup({}), unposted, now).map((line) => line.card.title)).toEqual(['A current first run'])
+    expect(cinemaStrip(homeLineup({}), undefined, now)).toEqual([])
+  })
+  it('takes what the rows above it left: by catalogue film, and by title for a film not held', () => {
+    const cinema = filmsFixture()
+    cinema.films[0].movieId = id(1)
+    // The favourite is already Home's featured film; the first run is coming to disc unowned.
+    const lineup = homeLineup({ rewatch: [rewatch(1, 'Retitled in the archive')], calendar: [release(2, 'A Current First Run', null)] })
+    expect(cinemaStrip(lineup, cinema, now)).toEqual([])
   })
 })

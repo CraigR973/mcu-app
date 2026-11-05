@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CompletionSet, Stats } from '@mcu/shared'
 
 import type { CalendarEntry, CollectionValue, Highlights } from '@/lib/api'
+import { CINEMA_NOW, filmsFixture } from './cinema-films-fixture'
 
 const auth = vi.hoisted(() => ({ role: 'admin' as 'admin' | 'viewer' }))
 vi.mock('@/context/auth', () => ({
@@ -29,6 +30,8 @@ const api = vi.hoisted(() => ({
   fetchAttention: vi.fn().mockResolvedValue({ items: [], checkedAt: null }),
   // AC1: Home's "Needs you" row, for everyone. Nothing to do here unless a test says so.
   fetchNeedsYou: vi.fn().mockResolvedValue({ items: [] }),
+  // AC4: the cinema strip's read. Refused unless a test says otherwise, so Home keeps its card.
+  fetchCinemaFilms: vi.fn(),
 }))
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
@@ -148,6 +151,7 @@ function fill() {
   api.fetchCompletionInsights.mockResolvedValue({ items: SETS, total: SETS.length, oldestRefresh: null })
   api.fetchSmartCollections.mockResolvedValue({ items: [], total: 0 })
   api.fetchActivity.mockResolvedValue({ items: [] })
+  api.fetchCinemaFilms.mockRejectedValue(new Error('No cinema read in this test'))
 }
 
 function renderHome(client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
@@ -503,5 +507,34 @@ describe('Needs you, at the top for everyone — AC1 (#335)', () => {
     arrive({ items: [PUT_BACK] })
     await screen.findByRole('region', { name: 'Needs you' })
     await waitFor(() => expect(screen.getByRole('link', { name: 'At the cinema' }).getAttribute('aria-disabled')).toBeNull())
+  })
+})
+
+describe('At the cinema on Home — AC4', () => {
+  it('becomes a poster strip of this week’s films, last on Home, opening each film’s page', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(CINEMA_NOW)
+    api.fetchCinemaFilms.mockResolvedValue(filmsFixture())
+    renderHome()
+    const strip = await screen.findByRole('region', { name: 'At the cinema' })
+    expect(within(strip).getByRole('link', { name: 'At the cinema' }).getAttribute('href')).toBe('/movie-night/cinema')
+    const cards = within(within(strip).getByRole('list', { name: 'This week at the cinema' })).getAllByRole('listitem')
+    expect(cards.map((card) => card.textContent)).toEqual(['A returning favouriteRerun2 cinemas', 'A current first runFirst runODEON Kilmarnock'])
+    expect(within(cards[0]).getByRole('link').getAttribute('href')).toBe('/movie-night/cinema/tmdb-1417')
+    expect(headings().at(-1)).toBe('At the cinema')
+    vi.restoreAllMocks()
+  })
+
+  it('keeps its card while the cinemas have no film with a poster, and guards every way in', async () => {
+    const bare = filmsFixture()
+    for (const film of bare.films) film.posterPath = null
+    api.fetchCinemaFilms.mockResolvedValue(bare)
+    let arrive!: (value: { items: [] }) => void
+    api.fetchNeedsYou.mockReturnValue(new Promise((resolve) => { arrive = resolve }))
+    renderHome()
+    await screen.findByRole('heading', { level: 2, name: 'The collection' })
+    expect(screen.getByRole('link', { name: 'At the cinema' }).getAttribute('aria-disabled')).toBe('true')
+    arrive({ items: [] })
+    await waitFor(() => expect(screen.getByRole('link', { name: 'At the cinema' }).getAttribute('aria-disabled')).toBeNull())
+    expect(screen.queryByRole('list', { name: 'This week at the cinema' })).toBeNull()
   })
 })

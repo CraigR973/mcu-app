@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarHeart, ChevronRight, Pin, Popcorn } from 'lucide-react'
+import { CalendarHeart, Pin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { useAuth } from '@/context/auth'
 
 import { HomeBanner } from '@/components/brand/HomeBanner'
 import { AttentionRow } from '@/components/dashboard/AttentionRow'
+import { CinemaStrip } from '@/components/dashboard/CinemaStrip'
 import { CollectionLedger } from '@/components/dashboard/CollectionLedger'
 import { CompletionShelf } from '@/components/dashboard/CompletionShelf'
 import { FeaturedFilm } from '@/components/dashboard/FeaturedFilm'
@@ -45,9 +46,9 @@ import { DISC_WINDOW_DAYS } from '@/lib/releases'
  *
  * **No film twice in one load** (`home-films.ts`): the featured film and the rows take their
  * films in page order, each where it comes first. Every module still hides when it has nothing
- * in it (#154), and a failed read still says so. Home makes no more requests than before AC2:
- * the featured film and the rows read what Home already read, and the banner comes from the
- * device after its first load.
+ * in it (#154), and a failed read still says so. The featured film and the rows read what Home
+ * already read, and the banner comes from the device after its first load; AC4's cinema strip
+ * adds one read, shared with At the cinema.
  *
  * `/stats` still redirects here; `/insights` is the full Completion view.
  */
@@ -175,24 +176,8 @@ export default function DashboardPage() {
 
         <CompletionShelf onOpen={setOpenSetId} />
 
-        <Link
-          to="/cinemas"
-          aria-disabled={homeLayoutPending || undefined}
-          onClick={(event) => {
-            if (homeLayoutPending) event.preventDefault()
-          }}
-          className={`archive-panel flex items-center gap-3 p-4 transition-colors ${homeLayoutPending ? 'opacity-60' : 'hover:bg-muted'}`}
-          aria-label="At the cinema"
-        >
-          <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Popcorn className="size-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-display text-base font-semibold">At the cinema</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">What&apos;s showing this week at your nine cinemas.</span>
-          </span>
-          <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-        </Link>
+        {/* AC4: this week's films at the cinema, after everything above has taken its own. */}
+        <CinemaStrip lineup={lineup} settled={lineupSettled} homeLayoutPending={homeLayoutPending} />
 
         {/* Pinned collections: hidden until something is pinned; links, not a sideways row. */}
         {pinnedQuery.isError ? (

@@ -1,4 +1,5 @@
 import type { CalendarEntry, Highlights, OnThisDayMemory, RewatchSuggestion } from './api'
+import { cinemaSections, type CinemaFilms, type CinemaLine } from './cinemas'
 import { stars } from './highlights'
 import { isPhysical } from './releases'
 import { formatShortDate } from './utils'
@@ -139,4 +140,36 @@ export function homeLineup(input: {
     })),
   ].slice(0, ROW)
   return { featured, discs, highlights, forYou }
+}
+
+function sameTitle(title: string): string {
+  return title.normalize('NFKD').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * AC4's strip: this week's films at the cinema, each with a poster, in At the cinema's own order.
+ *
+ * **It comes last on Home, so it takes what the rows above have left** (AC2's rule, #338): a film
+ * already on Home is left out of the strip, matched by its catalogue film or, for a film the
+ * collection does not hold, by its title, since Coming to disc may name it with no catalogue film.
+ * It is still in At the cinema. Listings not matched to a film yet, and events, are left to the
+ * view: a strip is posters.
+ */
+export function cinemaStrip(lineup: HomeLineup, films: CinemaFilms | undefined, now: number): CinemaLine[] {
+  if (!films) return []
+  const movies = new Set<string>()
+  const titles = new Set<string>()
+  const shown = [
+    ...(lineup.featured ? [lineup.featured] : []),
+    ...lineup.discs,
+    ...(lineup.highlights ? [...lineup.highlights.mostRewatched, ...lineup.highlights.mostValuable, ...lineup.highlights.bestReviewed] : []),
+    ...lineup.forYou,
+  ]
+  for (const film of shown) {
+    if (film.movieId) movies.add(film.movieId)
+    titles.add(sameTitle(film.title))
+  }
+  return cinemaSections(films, { run: 'all', day: null, venueIds: null }, now).thisWeek
+    .filter(({ card }) => card.posterPath && !(card.movieId && movies.has(card.movieId)) && !titles.has(sameTitle(card.title)))
+    .slice(0, ROW)
 }
