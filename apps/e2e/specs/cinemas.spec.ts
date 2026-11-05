@@ -49,11 +49,18 @@ const test = base.extend<{ programme: Programme }>({
   },
 })
 
-async function selectDay(page: Page, day: string) {
-  // Set the upper bound first so a tomorrow selection never passes through an inverted range.
-  await page.getByLabel('To date').fill(day)
-  await page.getByLabel('From date').fill(day)
-  await expect(page.getByRole('option', { name: 'All films (5 screenings)' })).toBeAttached()
+// AC4: the Cinemas page is Movie night's At the cinema view. Each case below keeps AB7's meaning
+// through the move: the film list says what is on, and a film's page carries its showings and
+// their ticket checks. The expectations that changed with the move are listed in AC4's PR.
+async function openView(page: Page, day: string) {
+  await page.goto(`/movie-night/cinema?day=${day}`)
+  await expect(page.getByRole('region', { name: 'At the cinema' })).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Run' }).getByRole('button', { name: /^All films/ })).toHaveText(/All films\s*3/)
+}
+
+async function openFilm(page: Page, title: string) {
+  await page.getByRole('region', { name: /^(This week|Coming up|\w{3} \d+ \w{3})$/ }).getByRole('article', { name: title, exact: true }).getByRole('link').click()
+  await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
 }
 
 for (const person of ['Craig', 'Mark'] as const) {
@@ -62,31 +69,37 @@ for (const person of ['Craig', 'Mark'] as const) {
       const { context, page } = await signedIn(person)
       await page.setViewportSize({ width: 375, height: 844 })
       await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
-      await page.goto('/cinemas')
-      await selectDay(page, programme.day)
+      await openView(page, programme.day)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
-      const favourite = page.getByRole('article', { name: programme.title, exact: true })
-      await expect(favourite).toContainText(person === 'Craig' ? 'You have watched this' : 'You have not watched this')
-      await expect(favourite.getByRole('link', { name: 'Check tickets' })).toHaveCount(2)
-      await expect(favourite).toContainText('Vue Glasgow St Enoch')
-      await expect(favourite).toContainText('ODEON Kilmarnock')
-      await expect(favourite.getByText('Digital projection', { exact: false })).toHaveCount(2)
-      await expect(page.getByText('Format.Projection.', { exact: false })).toHaveCount(0)
-      await expect(page.getByRole('article', { name: 'Programme identity pending', exact: true })).toHaveCount(2)
-      await expect(page.getByRole('option', { name: 'New releases (1 screening)' })).toBeAttached()
-      await page.getByLabel('Release category').selectOption('olderFilm')
+      const day = page.getByRole('region', { name: /^\w{3} \d+ \w{3}$/ })
+      const favourite = day.getByRole('article', { name: programme.title, exact: true })
+      await expect(favourite).toContainText('2 cinemas')
+      await expect(favourite.getByText('Seen', { exact: true })).toHaveCount(person === 'Craig' ? 1 : 0)
+      // One source's two unverified rows of one title read as one listing (#342); AB7 kept two.
+      await expect(page.getByRole('article', { name: 'Programme identity pending', exact: true })).toHaveCount(1)
+      const runs = page.getByRole('group', { name: 'Run' })
+      await expect(runs.getByRole('button', { name: /^New releases/ })).toHaveText(/New releases\s*1/)
+      await expect(runs.getByRole('button', { name: /^Unclassified/ })).toHaveText(/Unclassified\s*1/)
+      await runs.getByRole('button', { name: /^Older films/ }).click()
       await expect(page.getByRole('article')).toHaveCount(1)
       await expect(favourite).toBeVisible()
-      await expect(page.getByRole('option', { name: 'Unclassified (2 screenings)' })).toBeAttached()
       await expect(page.getByText('Partial coverage:', { exact: false })).toBeVisible()
-      for (const link of await favourite.getByRole('link', { name: 'Check tickets' }).all()) {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      await page.screenshot({ path: testInfo.outputPath(`cinemas-${person.toLowerCase()}-${theme}-375.png`) })
+      await openFilm(page, programme.title)
+      await expect(page.getByText(person === 'Craig' ? 'You have watched this' : 'You have not watched this', { exact: false })).toBeVisible()
+      const tickets = page.getByRole('link', { name: /check tickets/ })
+      await expect(tickets).toHaveCount(2)
+      await expect(page.getByRole('listitem', { name: 'Vue Glasgow St Enoch' })).toBeVisible()
+      await expect(page.getByRole('listitem', { name: 'ODEON Kilmarnock' })).toBeVisible()
+      await expect(page.getByText('Digital projection', { exact: true })).toHaveCount(2)
+      await expect(page.getByText('Format.Projection.', { exact: false })).toHaveCount(0)
+      for (const link of await tickets.all()) {
         await expect(link).toHaveAttribute('target', '_blank')
         await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
         await expect(link).toHaveAttribute('referrerpolicy', 'no-referrer')
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-      await page.screenshot({ path: testInfo.outputPath(`cinemas-${person.toLowerCase()}-${theme}-375.png`) })
-      await favourite.scrollIntoViewIfNeeded()
       await page.screenshot({ path: testInfo.outputPath(`cinemas-${person.toLowerCase()}-${theme}-film-375.png`) })
     }
   })
@@ -99,20 +112,24 @@ test('cinemas retains failed and unconfirmed showings without advertising ticket
     const { context, page } = await signedIn('Craig')
     await page.setViewportSize({ width: 375, height: 844 })
     await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
-    await page.goto('/cinemas'); await selectDay(page, programme.day)
+    await openView(page, programme.day)
+    await openFilm(page, programme.title)
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
-    // A failed Vue check alone suppresses its four actions, while the other venue's
-    // confirmed observation keeps its own action. Unconfirmed is a separate guard.
-    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(1)
+    // A failed Vue check alone suppresses its action, while the other venue's confirmed
+    // observation keeps its own action. Unconfirmed is a separate guard.
+    await expect(page.getByRole('link', { name: /check tickets/ })).toHaveCount(1)
+    await expect(page.getByRole('listitem', { name: 'Vue Glasgow St Enoch' })).toContainText('Latest check failed · ticket links paused')
     db.sql(`UPDATE cinema_screenings SET confirmation='unconfirmed' WHERE source_key LIKE ${sql(`${programme.prefix}:%`)}`)
-    await page.getByRole('button', { name: 'Reload view', exact: true }).click()
-    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(0)
-    await expect(page.getByText('Showing unconfirmed', { exact: false })).toHaveCount(5)
+    await page.reload()
+    await expect(page.getByRole('heading', { name: programme.title, level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: /check tickets/ })).toHaveCount(0)
+    await expect(page.getByText('Unconfirmed', { exact: true })).toHaveCount(2)
     await page.getByText('Coverage and sources', { exact: true }).click()
     const coverage = page.getByRole('region', { name: 'Vue Glasgow St Enoch coverage' })
     await expect(coverage.getByText(`${programme.day} · Latest check failed`, { exact: true })).toBeVisible()
     await expect(coverage.getByText('Fixture source refused the latest check')).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(14)
+    // Each cinema's own programme, by its times and again under its coverage.
+    await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(4)
     await coverage.scrollIntoViewIfNeeded()
     await page.screenshot({ path: testInfo.outputPath(`cinemas-failed-${theme}-375.png`) })
   }
@@ -123,13 +140,19 @@ test('cinemas pauses cached ticket checks immediately offline and retains offici
     const { context, page } = await signedIn('Mark')
     await page.setViewportSize({ width: 375, height: 844 })
     await context.addInitScript(value => localStorage.setItem('mcu-theme', value), theme)
-    await page.goto('/cinemas'); await selectDay(page, programme.day)
+    await openView(page, programme.day)
+    await openFilm(page, programme.title)
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
-    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(5)
+    await expect(page.getByRole('link', { name: /check tickets/ })).toHaveCount(2)
     await context.setOffline(true)
     await expect(page.getByText('Offline · saved programme only.', { exact: false })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Check tickets' })).toHaveCount(0)
-    await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(5)
+    await expect(page.getByRole('link', { name: /check tickets/ })).toHaveCount(0)
+    // Each cinema's own programme stays by its times.
+    await expect(page.getByRole('link', { name: 'Official programme', exact: true })).toHaveCount(2)
+    // The saved list still reads offline, with the same notice.
+    await page.goBack()
+    await expect(page.getByRole('article', { name: programme.title, exact: true })).toBeVisible()
+    await expect(page.getByText('Offline · saved programme only.', { exact: false })).toBeVisible()
     await context.setOffline(false)
   }
 })
@@ -139,30 +162,41 @@ test('cinemas is reachable from Home and mobile You while retaining five bottom 
   await page.setViewportSize({ width: 375, height: 844 })
   await page.goto('/dashboard')
   await page.getByRole('link', { name: 'At the cinema', exact: true }).click()
-  await expect(page).toHaveURL(/\/cinemas$/)
-  await selectDay(page, programme.day)
+  await expect(page).toHaveURL(/\/movie-night\/cinema$/)
+  await openView(page, programme.day)
   const tabs = page.getByRole('navigation', { name: 'Primary mobile navigation' })
   await expect(tabs.getByRole('link')).toHaveCount(4)
   await expect(tabs.getByRole('button', { name: 'Search the archive' })).toHaveCount(1)
+  // At the cinema is Movie night's second view, so its tab is the one marked.
+  await expect(tabs.getByRole('link', { name: 'Movie night' })).toHaveAttribute('aria-current', 'page')
   await page.getByRole('link', { name: 'You: every other page, and your account' }).click()
-  await page.getByRole('link', { name: 'Cinemas', exact: true }).click()
-  await expect(page).toHaveURL(/\/cinemas$/)
+  await page.getByRole('link', { name: 'At the cinema', exact: true }).click()
+  await expect(page).toHaveURL(/\/movie-night\/cinema$/)
+  // The old address still arrives.
+  await page.goto('/cinemas')
+  await expect(page).toHaveURL(/\/movie-night\/cinema$/)
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/dashboard')
-  await page.getByRole('navigation', { name: 'Application destinations' }).getByRole('link', { name: 'Cinemas', exact: true }).focus()
+  const sidebar = page.getByRole('navigation', { name: 'Application destinations' })
+  await sidebar.getByRole('link', { name: 'At the cinema', exact: true }).focus()
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/cinemas$/)
+  await expect(page).toHaveURL(/\/movie-night\/cinema$/)
+  await expect(sidebar.getByRole('link', { name: 'At the cinema', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(sidebar.getByRole('link', { name: 'Movie night', exact: true })).not.toHaveAttribute('aria-current', 'page')
   await page.goto('/dashboard')
-  await expect(page.getByRole('navigation', { name: 'Application destinations' }).getByRole('link', { name: 'Cinemas', exact: true })).toBeVisible()
+  await expect(sidebar.getByRole('link', { name: 'At the cinema', exact: true })).toBeVisible()
   await page.keyboard.press('Control+k')
   const palette = page.getByRole('textbox', { name: 'Command palette', exact: true })
+  // Still found by its old name.
   await palette.fill('Cinemas')
-  await expect(page.getByRole('option', { name: 'Cinemas', exact: true })).toBeVisible()
+  await expect(page.getByRole('option', { name: 'At the cinema', exact: true })).toBeVisible()
   await palette.press('Enter')
-  await expect(page).toHaveURL(/\/cinemas$/)
+  await expect(page).toHaveURL(/\/movie-night\/cinema$/)
 })
 
 test('cinemas requires an authenticated profile', async ({ page }) => {
   await page.goto('/cinemas')
+  await expect(page).toHaveURL(/\/login$/)
+  await page.goto('/movie-night/cinema/tmdb-603')
   await expect(page).toHaveURL(/\/login$/)
 })

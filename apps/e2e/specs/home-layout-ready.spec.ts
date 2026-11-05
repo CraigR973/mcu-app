@@ -35,7 +35,8 @@ test('Home waits for the collection layout before accepting a pick or cinema nav
       await expect(checkbox).toBeChecked()
       await expect(cinemas).not.toHaveAttribute('aria-disabled', 'true')
       await cinemas.click()
-      await expect(page).toHaveURL(/\/cinemas$/)
+      // AC4: Home's way in opens Movie night's At the cinema view.
+      await expect(page).toHaveURL(/\/movie-night\/cinema$/)
       expect(statsRequests, 'both observers must share the existing stats request').toBe(1)
     } finally { release() }
   }
