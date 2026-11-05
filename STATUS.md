@@ -2,14 +2,16 @@
 
 ## Now
 
-**5 Nov: Group AC sitting 1 (Home) is complete.** AC1 (Needs you, #336) and AC2 (#337, #338)
-have shipped; AC2 merged at `f7968a71`. Home is one collection ledger, one featured film with
-Feeling lucky inside it, three poster rows (Highlights as tabs), a short Closest to complete
-list, no film twice in one load, and banner T1 (photo letters with live type, kept on the
-device). Measured at 375 px: banner 2,057,722 → 60,092 bytes; layout shift Craig 0.234 → 0.000,
-Mark 0.219 → 0.012. **Sitting 2 (AC3, cinema identities and runs) is next**; it stops after its
-dry run for Craig's review before any live write. A preliminary dry run on 5 Nov (read-only,
-254 TMDB requests) linked 79 of 97 programme films, sent 16 to review and set 17 events aside.
+**5 Nov: AC3 (cinema identities and runs) is built and waits at its checkpoint for Craig.**
+PR #132 is open and must not merge before Craig has checked the dry run: merging deploys, and
+the next 08:00 run then writes identity links and run labels. The final dry run (read-only, the
+PR's own lookup and identity code, 217 TMDB requests, 0 errors, `docs/reviews/ac3-dry-run-2026-11-05.md`)
+linked 66 of 96 programme films, sent 13 to Craig's review list, left 1 unlinked and set 16
+events aside; of 1,728 future showings, 1,508 would be first runs, 4 reruns and 216
+Unclassified (all are Unclassified today). Craig's open choice: the optional famous-classic
+rule, which would link 6 of the review list (Rocky, The Fugitive, Prisoners, Cliffhanger, Elf,
+Hunger Games: Ballad). After his go: merge, read back live counts after the backfill (about
+five mornings at 48 requests each), close out. Sitting 1 (AC1, AC2) shipped on 5 Nov.
 
 **Live facts, read-only.** Craig has 2 discs to give back and 2 to put back; Mark sees the same
 two to put back and 2 to ask Craig for (4 Nov). The cinema programme held 220 film rows and
@@ -20,8 +22,8 @@ two to put back and 2 to ask Craig for (4 Nov). The cinema programme held 220 fi
 **Group AC runs sitting by sitting, at Craig's 4 Nov go for all four.** Sittings 1 (AC1 →
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
-have shipped. Sitting 2 (AC3) is next. AC3, AC5 and AC6 still stop at owner checkpoints until
-Craig answers. Onboarding more people needs its own plan; nothing in Group AC
+have shipped. Sitting 2 (AC3) waits at its dry-run checkpoint (PR #132). AC3, AC5 and AC6 stop
+at owner checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -414,6 +416,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **5 Nov — AC3 built, PR #132 open, stopped at its checkpoint.** #335's identity rule, run
+  labels with their reasons, 48 TMDB requests a run, and Craig's review list on Identify films.
+  Found while checking the diff: 15 live films held lookups from AB6's narrower rule (5
+  ambiguous, 9 single matches, 1 not found), which would have been reused for up to 30 days and
+  the ambiguous ones called "no film with this title"; AC3 now looks them up again. Also kept
+  unlinked: a double bill or conflict the source flags, and a film not yet looked up. Local: API
+  2,653, shared 175, web 804; e2e for the cinema and AC3 specs in Chromium and Firefox. The first
+  dry run read AB6's stored links back as cinema ids (3 films); the final one does not.
 
 - **5 Nov — AC2 shipped (#338): Home as one ledger, a featured film and banner T1.** Craig
   picked A, T1 and Feeling lucky in the featured film from side-by-side mock-ups (#337). PR #131
