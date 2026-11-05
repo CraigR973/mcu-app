@@ -275,6 +275,7 @@ def _decision(row: Any, record: Metadata) -> dict[str, Any]:
         facts_of(row),
         record.identities(),
         row.start.date(),
+        unread_votes=record.unread_votes,
     )
     return {
         "outcome": decision.outcome,

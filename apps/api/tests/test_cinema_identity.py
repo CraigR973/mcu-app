@@ -16,6 +16,7 @@ def film(
     runtime=None,
     original=None,
     imdb=None,
+    votes=0,
 ):
     return Candidate(
         tmdb_id=tmdb_id,
@@ -26,6 +27,7 @@ def film(
         directors=tuple(directors),
         runtime=runtime,
         imdb_id=imdb,
+        vote_count=votes,
     )
 
 
@@ -194,3 +196,43 @@ def test_a_film_named_like_a_label_is_not_a_reissue():
     assert labelled.query == "Reissued Film" and labelled.rerun_label == "4k"
     assert read_title("Members' Preview: Fjord", SHOWN).preview
     assert not read_title("The Preview Night", SHOWN).preview
+
+
+def test_craigs_famous_classic_rule_links_a_lone_famous_film_of_its_title():
+    """#339: one film of the title with 1,000+ TMDB votes, and every other under 100, agrees, so
+    an unlabelled Elf in November is the 2003 film, and a rerun."""
+    elf = film(10719, "Elf", "2003-10-09", "2003-12-05", votes=4757)
+    namesake = film(99, "Elf", "2019-01-01", votes=12)
+    title = read_title("Elf", SHOWN)
+    decision = identify(title, Facts(), [elf, namesake], SHOWN)
+    assert decision.outcome == "linked" and decision.candidate == elf
+    assert decision.corroboration == ("the only famous film of this title (4,757 TMDB votes)",)
+    assert classify(elf.first_uk_release, SHOWN, title) == ("olderFilm", "UK release 2003 · rerun")
+    assert identify(title, Facts(), [elf], SHOWN).outcome == "linked"
+
+
+def test_the_famous_rule_never_outvotes_a_known_namesake_or_one_in_cinemas_now():
+    elf = film(10719, "Elf", "2003-10-09", "2003-12-05", votes=4757)
+    title = read_title("Elf", SHOWN)
+    obscure = film(99, "Elf", "2019-01-01", votes=12)
+    for others, unread in [
+        ([film(99, "Elf", "2019-01-01", votes=100)], 0),  # another film of the title is known
+        ([obscure, film(98, "Elf", "1950-01-01", votes=1200)], 0),  # two famous films
+        ([obscure], 100),  # an exact match the lookup found but did not read is known
+    ]:
+        decision = identify(title, Facts(), [elf, *others], SHOWN, unread_votes=unread)
+        assert decision.outcome == "review"
+    not_famous = film(10719, "Elf", "2003-10-09", "2003-12-05", votes=999)
+    assert identify(title, Facts(), [not_famous, obscure], SHOWN).outcome == "review"
+    # A namesake in UK cinemas now passes on its own: two pass, so Craig decides.
+    current = film(99, "Elf", "2026-10-30", "2026-10-30", votes=12)
+    assert identify(title, Facts(), [elf, current], SHOWN).reason == "more than one film matches"
+
+
+def test_the_risk_craig_accepted_with_the_famous_rule():
+    """#339: a new namesake TMDB has no UK cinema date for cannot pass beside a famous film of
+    its title, so the famous film links, and is called a rerun. Craig took this on 5 Nov."""
+    elf = film(10719, "Elf", "2003-10-09", "2003-12-05", votes=4757)
+    new = film(99, "Elf", "2026-10-20", votes=3)
+    decision = identify(read_title("Elf", SHOWN), Facts(), [elf, new], SHOWN)
+    assert decision.outcome == "linked" and decision.candidate == elf

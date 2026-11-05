@@ -401,6 +401,52 @@ async def test_one_lookup_per_film_a_48_request_subcap_and_token_host_isolation(
             await fetch.get("https://www.glasgowfilm.org/")
 
 
+async def test_a_lookup_keeps_the_votes_of_exact_matches_it_did_not_read():
+    """#339: the lookup reads three exact-title films; a fourth it found still counts against
+    the famous-classic rule, by its votes from the search."""
+    row = replace(film("Clayface"), title="Hamlet")
+    found = [
+        {"id": 900 + n, "title": "Hamlet", "original_title": "Hamlet", "vote_count": votes}
+        for n, votes in enumerate([50, 3000, 20, 150])
+    ]
+
+    def handler(request):
+        if request.url.path.endswith("/search/movie"):
+            return httpx.Response(200, json={"results": found})
+        movie_id = int(request.url.path.rsplit("/", 1)[1])
+        votes = next(m["vote_count"] for m in found if m["id"] == movie_id)
+        return httpx.Response(
+            200,
+            json={
+                "id": movie_id,
+                "title": "Hamlet",
+                "original_title": "Hamlet",
+                "vote_count": votes,
+                "credits": {"crew": []},
+                "release_dates": {"results": []},
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        records, _ = await metadata.enrich(
+            {VENUE.slug: snapshot(row)}, Budget(client), "fixture-token", {}
+        )
+    [record] = records
+    assert [c.tmdb_id for c in record.candidates] == [900, 901, 902]
+    assert [c.vote_count for c in record.identities()] == [50, 3000, 20]
+    assert record.unread_votes == 150
+    shown = row.start.date()
+    title = identity.read_title(row.title, shown)
+    facts = metadata.facts_of(replace(row, identity_facts={}, source_release=None))
+    unread = identity.identify(
+        title, facts, record.identities(), shown, unread_votes=record.unread_votes
+    )
+    assert unread.outcome == "review"
+    # Without the unread film, the 3,000-vote Hamlet is the only famous one, and links.
+    alone = identity.identify(title, facts, record.identities(), shown)
+    assert alone.outcome == "linked" and alone.candidate.tmdb_id == 901
+
+
 async def test_two_matching_films_refusals_and_a_spent_budget_never_guess_or_negative_cache():
     row = film("Clayface")
     seen = []

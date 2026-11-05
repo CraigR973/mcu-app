@@ -7,7 +7,9 @@ equal a TMDB candidate's title or original title, and at least one independent f
 the source's year or release date, an anniversary label's year, the source's director or
 runtime, or a UK cinema release that matches the programme (in cinemas now). Exactly one
 candidate may pass; two, or a candidate with no agreeing fact, go to Craig's review list and stay
-unlinked. Live events, double bills and programmes of shorts never link to a film.
+unlinked. Live events, double bills and programmes of shorts never link to a film. Craig's
+famous-classic rule (#339): a title matching one film with 1,000 or more TMDB votes, when no other
+film of that title has 100 or more, agrees too, so an unlabelled Elf in November is the 2003 film.
 
 **Run.** From the film's first UK cinema release (TMDB, GB, theatrical): a first run when it is
 within 16 weeks before the showing, or after it (a preview); a rerun when it is 12 months or
@@ -128,6 +130,8 @@ class Candidate:
     runtime: int | None = None
     imdb_id: str | None = None
     poster_path: str | None = None
+    #: TMDB's vote count, for the famous-classic rule (#339).
+    vote_count: int = 0
 
     @property
     def first_uk_release(self) -> date | None:
@@ -158,12 +162,24 @@ class Decision:
 
 #: A film with no UK cinema date on TMDB still matches the programme if it is this recent.
 RECENT = timedelta(days=365)
+#: Craig's famous-classic rule (#339): this many TMDB votes is a famous film, and every other film
+#: of the title must have fewer than OBSCURE_VOTES, read or not.
+FAMOUS_VOTES = 1000
+OBSCURE_VOTES = 100
 
 
 def _agreeing(
-    candidate: Candidate, title: Title, facts: Facts, shown: date, *, sole: bool = False
+    candidate: Candidate,
+    title: Title,
+    facts: Facts,
+    shown: date,
+    *,
+    sole: bool = False,
+    famous: bool = False,
 ) -> list[str]:
     proof: list[str] = []
+    if famous:
+        proof.append(f"the only famous film of this title ({candidate.vote_count:,} TMDB votes)")
     years = {d.year for d in (candidate.release_date, candidate.first_uk_release) if d}
     source_year = facts.year or (facts.release.year if facts.release else None)
     if source_year is not None and source_year in years:
@@ -203,8 +219,19 @@ def _agreeing(
     return proof
 
 
-def identify(title: Title, facts: Facts, candidates: list[Candidate], shown: date) -> Decision:
-    """One clear, corroborated winner, or the review list, or nothing to link."""
+def identify(
+    title: Title,
+    facts: Facts,
+    candidates: list[Candidate],
+    shown: date,
+    *,
+    unread_votes: int = 0,
+) -> Decision:
+    """One clear, corroborated winner, or the review list, or nothing to link.
+
+    ``unread_votes`` is the most TMDB votes any exact-title film the lookup found but did not
+    read has: the famous-classic rule needs every other film of the title to be obscure.
+    """
     if title.event:
         return Decision("event", reason=title.event)
     if facts.tmdb_id or facts.imdb_id:
@@ -235,7 +262,18 @@ def identify(title: Title, facts: Facts, candidates: list[Candidate], shown: dat
             reason="no film with this title",
             others=tuple(c.tmdb_id for c in candidates),
         )
-    passing = [(c, _agreeing(c, title, facts, shown, sole=len(exact) == 1)) for c in exact]
+    famous = [c for c in exact if c.vote_count >= FAMOUS_VOTES]
+    classic = (
+        famous[0]
+        if len(famous) == 1
+        and unread_votes < OBSCURE_VOTES
+        and all(c.vote_count < OBSCURE_VOTES for c in exact if c is not famous[0])
+        else None
+    )
+    passing = [
+        (c, _agreeing(c, title, facts, shown, sole=len(exact) == 1, famous=c is classic))
+        for c in exact
+    ]
     passing = [(c, proof) for c, proof in passing if proof]
     if len(passing) == 1:
         candidate, proof = passing[0]

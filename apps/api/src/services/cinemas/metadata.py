@@ -73,6 +73,7 @@ class Candidate(EvidenceModel):
             runtime=self.runtime,
             imdb_id=self.imdb_id,
             poster_path=self.poster_path,
+            vote_count=self.vote_count,
         )
 
 
@@ -88,6 +89,9 @@ class Metadata(EvidenceModel):
     search_candidates: list[MovieId] = Field(default_factory=list, max_length=20)
     #: AC3: every exact-title film read in detail; `identity.identify` decides among them.
     candidates: list[Candidate] = Field(default_factory=list, max_length=DETAILED)
+    #: The most TMDB votes any exact-title film the search found beyond the DETAILED read has,
+    #: for the famous-classic rule (#339); 0 when every exact-title film was read.
+    unread_votes: int = Field(default=0, ge=0)
     #: Which rule's lookup made it. AB6's read at most one film, by a narrower title match, so
     #: it cannot answer #335's rule: an AB6 record still reads, but is looked up again.
     rule: Literal["ab6", "ac3"] = "ab6"
@@ -218,10 +222,15 @@ async def _details(fetch: Budget, token: str, movie_id: int, votes: int) -> Cand
     )
 
 
-async def _look_up(fetch: Budget, token: str, row: Showing) -> tuple[list[Candidate], list[int]]:
-    """One search, then each exact-title candidate's details: two requests for most films."""
+async def _look_up(
+    fetch: Budget, token: str, row: Showing
+) -> tuple[list[Candidate], list[int], int]:
+    """One search, then each exact-title candidate's details: two requests for most films.
+
+    Returns the films read, the search's ids, and the most votes an exact-title film beyond the
+    first DETAILED has (unread, but known to the famous-classic rule)."""
     if row.tmdb_id is not None:
-        return [await _details(fetch, token, row.tmdb_id, 0)], []
+        return [await _details(fetch, token, row.tmdb_id, 0)], [], 0
     query = identity.read_title(row.title, row.start.date()).query
     url = "https://api.themoviedb.org/3/search/movie?" + urlencode(
         {"query": query, "language": "en-GB", "include_adult": "false", "page": 1}
@@ -229,11 +238,13 @@ async def _look_up(fetch: Budget, token: str, row: Showing) -> tuple[list[Candid
     results = json.loads(await fetch.metadata(url, token))["results"]
     if not isinstance(results, list) or len(results) > 20:
         raise SourceError("Unexpected metadata search shape")
-    exact = [
+    matches = [
         m
         for m in results
         if identity.same_title(query, m["title"]) or identity.same_title(query, m["original_title"])
-    ][:DETAILED]
+    ]
+    exact = matches[:DETAILED]
+    unread = max((int(m.get("vote_count") or 0) for m in matches[DETAILED:]), default=0)
     candidates = []
     for found in exact:
         if metadata_room(fetch) <= 0:
@@ -241,7 +252,7 @@ async def _look_up(fetch: Budget, token: str, row: Showing) -> tuple[list[Candid
         candidates.append(
             await _details(fetch, token, int(found["id"]), int(found.get("vote_count") or 0))
         )
-    return candidates, [m["id"] for m in results]
+    return candidates, [m["id"] for m in results], unread
 
 
 async def enrich(
@@ -285,7 +296,7 @@ async def enrich(
                 report["pending"] += len(members)
                 continue
             try:
-                candidates, searched = await _look_up(fetch, token, row)
+                candidates, searched, unread = await _look_up(fetch, token, row)
                 report["lookups"] += 1
             except (
                 SourceError,
@@ -311,6 +322,7 @@ async def enrich(
                 state="candidate" if candidates else "missing",
                 candidates=candidates,
                 search_candidates=searched[:20],
+                unread_votes=max(0, unread),
                 rule="ac3",
             )
         else:

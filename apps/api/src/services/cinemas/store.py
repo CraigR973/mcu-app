@@ -103,7 +103,9 @@ async def _film(
         # "not found" or a review, which only a lookup can say.
         decision = identity.Decision("unlinked", reason="not yet looked up on TMDB")
     else:
-        decision = identity.identify(title, facts_of(row), candidates, row.start.date())
+        decision = identity.identify(
+            title, facts_of(row), candidates, row.start.date(), unread_votes=metadata.unread_votes
+        )
     linked = decision.candidate if decision.outcome == "linked" else None
     movie = None
     if linked is not None:
