@@ -76,6 +76,21 @@ describe('homeLineup — AC2 (#337)', () => {
     expect(homeLineup({}).highlights).toBeNull()
   })
 
+  it('shows a film coming on 4K and Blu-ray as one card', () => {
+    const lineup = homeLineup({
+      calendar: [
+        release(1, 'Coyote vs. Acme', null),
+        { ...release(2, 'Coyote vs. Acme', null), releaseType: 'blu_ray_release', typeLabel: 'Blu-ray' },
+        release(3, 'Fargo', id(5)),
+        { ...release(4, 'Fargo', id(5)), releaseType: 'blu_ray_release', typeLabel: 'Blu-ray' },
+      ],
+    })
+    expect(lineup.discs.map((entry) => `${entry.title} · ${entry.typeLabel}`)).toEqual([
+      'Coyote vs. Acme · 4K UHD + Blu-ray',
+      'Fargo · 4K UHD + Blu-ray',
+    ])
+  })
+
   it('lets one film sit in two Highlights tabs, only one of which shows at a time', () => {
     const lineup = homeLineup({
       highlights: highlights({

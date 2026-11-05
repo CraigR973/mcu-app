@@ -65,6 +65,21 @@ function lastSeen(iso: string): string {
 }
 
 /**
+ * A film coming on 4K and Blu-ray is one card, not two: "4K UHD + Blu-ray". Most upcoming
+ * releases are films the collection does not hold, so they are matched by title and date.
+ */
+function oneCardPerFilm(entries: CalendarEntry[]): CalendarEntry[] {
+  const cards = new Map<string, CalendarEntry>()
+  for (const entry of entries) {
+    const key = entry.movieId ?? `${entry.title.trim().toLowerCase()}:${entry.releaseDate}`
+    const card = cards.get(key)
+    if (!card) cards.set(key, entry)
+    else if (!card.typeLabel.split(' + ').includes(entry.typeLabel)) cards.set(key, { ...card, typeLabel: `${card.typeLabel} + ${entry.typeLabel}` })
+  }
+  return [...cards.values()]
+}
+
+/**
  * Home's line-up in page order — AC2 (#337): the featured film, Coming to disc, Highlights'
  * tabs, then For you. A module whose read failed or has not come back passes nothing.
  */
@@ -99,7 +114,7 @@ export function homeLineup(input: {
       }
     }
   }
-  const discs = films.take((input.calendar ?? []).filter(isPhysical), (entry) => entry.movieId, ROW)
+  const discs = films.take(oneCardPerFilm((input.calendar ?? []).filter(isPhysical)), (entry) => entry.movieId, ROW)
   let highlights: HomeLineup['highlights'] = null
   if (input.highlights) {
     highlights = {
