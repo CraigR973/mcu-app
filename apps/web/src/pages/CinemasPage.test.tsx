@@ -5,8 +5,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CinemaProgrammeResponse } from '@mcu/shared'
 import { cinemaFixture, CINEMA_NOW } from './cinema-test-fixture'
-const state = vi.hoisted(() => ({ id: 'craig', online: true, fetch: vi.fn() }))
-vi.mock('@/context/auth', () => ({ useAuth: () => ({ profile: { id: state.id } }) }))
+const state = vi.hoisted(() => ({ id: 'craig', role: 'admin', online: true, fetch: vi.fn() }))
+vi.mock('@/context/auth', () => ({ useAuth: () => ({ profile: { id: state.id, role: state.role } }) }))
 vi.mock('@/hooks/useOnlineStatus', () => ({ useOnlineStatus: () => state.online }))
 vi.mock('@/lib/api', () => ({ fetchCinemaProgramme: state.fetch }))
 import CinemasPage from './CinemasPage'
@@ -16,7 +16,7 @@ function setup() {
   const result = render(tree())
   return { ...result, tree, client }
 }
-beforeEach(() => { state.id = 'craig'; state.online = true; vi.spyOn(Date, 'now').mockReturnValue(CINEMA_NOW); state.fetch.mockReset().mockResolvedValue(cinemaFixture()) })
+beforeEach(() => { state.id = 'craig'; state.role = 'admin'; state.online = true; vi.spyOn(Date, 'now').mockReturnValue(CINEMA_NOW); state.fetch.mockReset().mockResolvedValue(cinemaFixture()) })
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 describe('stored cinema discovery', () => {
   it('keeps watched older favourites, multiple venues, unknowns and category counts distinct', async () => {
@@ -90,5 +90,42 @@ describe('stored cinema discovery', () => {
     fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-11-05' } })
     expect(screen.getByText(/Select one to fourteen dates/)).toBeTruthy()
     expect(state.fetch).toHaveBeenCalledTimes(2)
+  })
+})
+describe('film identities and runs (AC3, #335)', () => {
+  function programme() {
+    const p = cinemaFixture()
+    p.films[0].showings[0].categoryReason = 'UK release 1990 · the cinema calls it an anniversary showing · rerun'
+    p.films[1].showings[0] = { ...p.films[1].showings[0], releaseCategory: 'unclassified', categoryConfidence: 'unverified', categoryReason: 'no UK cinema release on record' }
+    p.films[2] = { ...p.films[2], identityStatus: 'review' }
+    p.films.push({ ...p.films[2], id: 'source:event', title: 'NT Live: Hamlet', identityStatus: 'event' })
+    return p
+  }
+  it('shows each showing’s stored reason, also when a linked film’s run is Unclassified', async () => {
+    state.fetch.mockResolvedValue(programme()); setup()
+    const favourite = await screen.findByRole('article', { name: 'A returning favourite' })
+    expect(within(favourite).getByText('UK release 1990 · the cinema calls it an anniversary showing · rerun')).toBeTruthy()
+    // A row AB6 labelled from a source's quote still shows the quote.
+    expect(within(favourite).getByText('Anniversary programme, corroborated earlier release')).toBeTruthy()
+    const current = screen.getByRole('article', { name: 'A current first run' })
+    expect(within(current).getByText('No UK cinema release on record')).toBeTruthy()
+    // An unlinked film has no reason to show.
+    expect(within(screen.getByRole('article', { name: 'An uncertain programme' })).queryByText('Release run unverified')).toBeNull()
+  })
+  it('says a film waits for a check, links Craig to it, and never gives an event a year', async () => {
+    state.fetch.mockResolvedValue(programme()); setup()
+    const waiting = await screen.findByRole('article', { name: 'An uncertain programme' })
+    expect(within(waiting).getByText('Year unverified · Identity waiting for a check · possible duplicate programme')).toBeTruthy()
+    expect(within(waiting).getByRole('link', { name: 'Check which film this is' }).getAttribute('href')).toBe('/identify')
+    const event = screen.getByRole('article', { name: 'NT Live: Hamlet' })
+    expect(within(event).getByText('An event or double bill, not one film')).toBeTruthy()
+    expect(within(event).queryByText(/Year unverified/)).toBeNull()
+    expect(within(event).queryByRole('link', { name: 'NT Live: Hamlet' })).toBeNull()
+  })
+  it('gives Mark the state but not Craig’s check', async () => {
+    state.id = 'mark'; state.role = 'viewer'; state.fetch.mockResolvedValue(programme()); setup()
+    const waiting = await screen.findByRole('article', { name: 'An uncertain programme' })
+    expect(within(waiting).getByText(/Identity waiting for a check/)).toBeTruthy()
+    expect(within(waiting).queryByRole('link', { name: 'Check which film this is' })).toBeNull()
   })
 })

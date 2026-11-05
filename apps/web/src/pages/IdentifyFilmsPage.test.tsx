@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { IdentifyDoubts, IdentifyOverview, IdentifyQueue, RecentIdentifications } from '@/lib/api'
+import type { CinemaReviewItem, IdentifyDoubts, IdentifyOverview, IdentifyQueue, RecentIdentifications } from '@/lib/api'
 
 const {
   overviewMock,
@@ -19,7 +19,11 @@ const {
   moveMock,
   keepMock,
   correctMock,
+  reviewMock,
+  decideMock,
 } = vi.hoisted(() => ({
+  reviewMock: vi.fn(),
+  decideMock: vi.fn(),
   doubtsMock: vi.fn(),
   moveMock: vi.fn(),
   keepMock: vi.fn(),
@@ -47,6 +51,8 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   keepIdentification: keepMock,
   correctIdentification: correctMock,
   moveCopy: moveMock,
+  fetchCinemaReview: reviewMock,
+  decideCinemaReview: decideMock,
 }))
 
 import IdentifyFilmsPage from './IdentifyFilmsPage'
@@ -171,6 +177,8 @@ describe('IdentifyFilmsPage', () => {
     doubtsMock.mockResolvedValue({ items: [], total: 0 })
     keepMock.mockResolvedValue({ movieId: DOUBTED, outcome: 'kept', title: '' })
     correctMock.mockResolvedValue({ movieId: DOUBTED, outcome: 'identified', title: 'The Bridge on the River Kwai' })
+    reviewMock.mockResolvedValue({ items: [] })
+    decideMock.mockResolvedValue({ items: [] })
   })
 
   afterEach(() => {
@@ -376,6 +384,73 @@ describe('IdentifyFilmsPage', () => {
       fireEvent.click(screen.getByRole('button', { name: /Undo/ }))
 
       await vi.waitFor(() => expect(undoMock).toHaveBeenCalledWith(KEPT))
+    })
+  })
+
+  describe('cinema films to check (AC3, #335)', () => {
+    const ROCKY: CinemaReviewItem = {
+      key: 'a1b2c3d4e5f60718',
+      title: 'Rocky',
+      sourceTitles: ['Rocky', 'Rocky (4K Restoration)'],
+      venues: ['Glasgow Film Theatre', 'Vue Glasgow St Enoch'],
+      futureShowings: 3,
+      reason: 'the title matches, but nothing else agrees',
+      candidates: [
+        { tmdbId: 1366, title: 'Rocky', year: 1976, posterPath: null, voteCount: 7000 },
+        { tmdbId: 9, title: 'Rocky', year: 2025, posterPath: null, voteCount: 1 },
+      ],
+    }
+
+    beforeEach(() => {
+      reviewMock.mockResolvedValue({ items: [ROCKY] })
+    })
+
+    it('shows why a cinema film waits, where it shows and the films it may be', async () => {
+      renderPage()
+      expect(await screen.findByRole('heading', { name: 'Cinema films to check (1)' })).toBeTruthy()
+      const card = screen.getByRole('article', { name: 'Rocky' })
+
+      expect(within(card).getByText(/the title matches, but nothing else agrees/)).toBeTruthy()
+      expect(within(card).getByText('3 showings to come · Glasgow Film Theatre · Vue Glasgow St Enoch')).toBeTruthy()
+      expect(within(card).getByText('Listed as “Rocky (4K Restoration)”')).toBeTruthy()
+      const films = within(card).getByRole('list', { name: 'Films offered for Rocky' })
+      expect(within(films).getByText('7,000 TMDB votes')).toBeTruthy()
+      expect(within(films).getByText('1 TMDB vote')).toBeTruthy()
+      // A cinema link joins nothing in the collection.
+      expect(within(card).queryByRole('button', { name: /Merge into this film/ })).toBeNull()
+    })
+
+    it('links the film in one tap, and the card leaves with the answer', async () => {
+      renderPage()
+      const card = await screen.findByRole('article', { name: 'Rocky' })
+
+      fireEvent.click(within(card).getAllByRole('button', { name: /This is it/ })[0])
+
+      await vi.waitFor(() => expect(decideMock).toHaveBeenCalledWith(ROCKY.key, { tmdbId: 1366 }))
+      await vi.waitFor(() => expect(screen.queryByRole('article', { name: 'Rocky' })).toBeNull())
+      expect(screen.queryByRole('heading', { name: /Cinema films to check/ })).toBeNull()
+    })
+
+    it('says it is not a film', async () => {
+      renderPage()
+      const card = await screen.findByRole('article', { name: 'Rocky' })
+
+      fireEvent.click(within(card).getByRole('button', { name: /Not a film/ }))
+
+      await vi.waitFor(() => expect(decideMock).toHaveBeenCalledWith(ROCKY.key, { notAFilm: true }))
+    })
+
+    it('says when TMDB offered no film, and keeps the card when a choice fails', async () => {
+      reviewMock.mockResolvedValue({ items: [{ ...ROCKY, candidates: [], reason: 'the cinema’s own id was not found' }] })
+      decideMock.mockRejectedValue(new Error('That film is no longer waiting for review'))
+      renderPage()
+      const card = await screen.findByRole('article', { name: 'Rocky' })
+
+      expect(within(card).getByText('TMDB offered no film for it.')).toBeTruthy()
+      fireEvent.click(within(card).getByRole('button', { name: /Not a film/ }))
+
+      expect(await within(card).findByRole('alert')).toBeTruthy()
+      expect(screen.getByRole('article', { name: 'Rocky' })).toBeTruthy()
     })
   })
 })

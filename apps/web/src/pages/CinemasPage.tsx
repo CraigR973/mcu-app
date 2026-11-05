@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/auth'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { fetchCinemaProgramme } from '@/lib/api'
-import { londonDate, londonTime, OFFICIAL_PROGRAMMES, RELEASE_LABELS, shiftDate, showingBooking, showingFormats, showingScreen, type ProgrammeVenue, type ReleaseFilter } from '@/lib/cinemas'
+import { filmIdentity, londonDate, londonTime, OFFICIAL_PROGRAMMES, RELEASE_LABELS, runReason, shiftDate, showingBooking, showingFormats, showingScreen, type ProgrammeVenue, type ReleaseFilter } from '@/lib/cinemas'
 import { queryErrorMessage } from '@/lib/query-state'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -82,7 +82,8 @@ export default function CinemasPage() {
         <div className="space-y-4">
           {data.films.map((film) => <article key={film.id} aria-label={film.title} className="archive-panel p-4">
             <h2 className="font-display text-xl font-semibold">{film.movieId && film.identityStatus === 'verified' ? <Link to={`/movies/${film.movieId}`} className="hover:underline">{film.title}</Link> : film.title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{film.yearConfidence === 'verified' && film.originalYear !== null ? `Original year ${film.originalYear}` : 'Year unverified'} · {film.identityStatus === 'verified' ? 'Identity verified' : film.identityStatus === 'conflict' ? 'Programme title differs — check cinema' : 'Identity unverified · possible duplicate programme'}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{filmIdentity(film)}</p>
+            {film.identityStatus === 'review' && profile?.role === 'admin' ? <Link to="/identify" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">Check which film this is</Link> : null}
             {film.owned !== null || film.watched !== null ? <p className="mt-1 text-sm">{film.owned === true ? 'In the collection' : film.owned === false ? 'Not in the collection' : 'Collection match unverified'} · {film.watched === true ? 'You have watched this' : film.watched === false ? 'You have not watched this' : 'Your watch status unverified'}</p> : null}
             <ul className="mt-3 divide-y divide-border">
               {film.showings.map((showing) => {
@@ -96,7 +97,7 @@ export default function CinemasPage() {
                   {showing.sourceReleaseDate ? <p className="text-xs text-muted-foreground">Source release date: {showing.sourceReleaseDate} · original year shown separately above</p> : null}
                   <p className="text-xs text-muted-foreground">Seen {londonTime(showing.lastSeenUtc)} · {showing.upstreamAge === 'unknown' ? 'Source update time unverified' : `Source age ${showing.upstreamAge}`}{showing.confirmation === 'unconfirmed' ? ' · Showing unconfirmed' : ''}</p>
                   {showing.observationStale || now - Date.parse(showing.lastSeenUtc) >= 30 * 60 * 60 * 1000 ? <p className="text-sm text-muted-foreground">Saved showing is stale</p> : null}
-                  {showing.releaseCategory !== 'unclassified' ? <p className="text-xs text-muted-foreground">{showing.categoryEvidence.description}</p> : null}
+                  {runReason(showing) ? <p className="text-xs text-muted-foreground">{runReason(showing)}</p> : null}
                   <div className="flex flex-wrap items-center gap-x-5">{booking ? <a href={booking} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" className="inline-flex min-h-11 items-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground" onClick={(event) => { if (!showingBooking(showing, venue, Date.now(), online && !query.isError)) { event.preventDefault(); setNow(Date.now()) } }}>Check tickets</a> : <span className="text-sm text-muted-foreground">Showing booking unconfirmed or unavailable</span>}<ProgrammeLink href={venue.officialUrl}>Official programme</ProgrammeLink></div>
                 </li>
               })}

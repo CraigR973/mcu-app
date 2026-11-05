@@ -9,6 +9,8 @@ import { PageHeader } from '@/components/ui/page-header'
 import { StatePanel } from '@/components/ui/state-panel'
 import {
   correctIdentification,
+  decideCinemaReview,
+  fetchCinemaReview,
   fetchIdentifyDoubts,
   fetchIdentifyOverview,
   fetchIdentifyQueue,
@@ -21,6 +23,7 @@ import {
   setFilmAside,
   skipFilm,
   undoIdentification,
+  type CinemaReviewItem,
   type IdentifyCandidate,
   type IdentifyDoubt,
   type IdentifyOverview,
@@ -422,6 +425,85 @@ function DoubtCard({ doubt }: { doubt: IdentifyDoubt }) {
   )
 }
 
+/** A film offered for a cinema programme row, in the shape the rows above draw. */
+function offered(candidate: CinemaReviewItem['candidates'][number]): IdentifyCandidate {
+  return {
+    tmdbId: candidate.tmdbId,
+    title: candidate.title,
+    year: candidate.year,
+    posterPath: candidate.posterPath,
+    overview: '',
+    votes: candidate.voteCount,
+    notes: [`${COUNT.format(candidate.voteCount)} TMDB ${candidate.voteCount === 1 ? 'vote' : 'votes'}`],
+    // A cinema link joins nothing in the collection, so no merge is offered.
+    inCollection: null,
+  }
+}
+
+/**
+ * A cinema programme film AC3 could not settle alone (#335): its title fits more than one
+ * film, or nothing else agrees. It stays unlinked, and its showings Unclassified, until Craig
+ * picks the film or says it is not one; the decision holds until the listing changes.
+ */
+function CinemaReviewCard({ item }: { item: CinemaReviewItem }) {
+  const queryClient = useQueryClient()
+  const decide = useMutation({
+    mutationFn: (decision: { tmdbId: number } | { notAFilm: true }) => decideCinemaReview(item.key, decision),
+    onSuccess: (left) => {
+      queryClient.setQueryData(['cinema-review'], left)
+      void queryClient.invalidateQueries({ queryKey: ['cinema-programme'] })
+    },
+  })
+  const listed = item.sourceTitles.filter((title) => title !== item.title)
+
+  return (
+    <article className="archive-panel space-y-3 p-4" aria-labelledby={`cinema-review-${item.key}`}>
+      <div>
+        <h3 id={`cinema-review-${item.key}`} className="font-display text-lg font-semibold text-foreground">
+          {item.title}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          {[`${COUNT.format(item.futureShowings)} ${item.futureShowings === 1 ? 'showing' : 'showings'} to come`, ...item.venues].join(' · ')}
+        </p>
+        {listed.length > 0 ? (
+          <p className="text-xs text-muted-foreground">Listed as {listed.map((title) => `“${title}”`).join(', ')}</p>
+        ) : null}
+      </div>
+      <p className="text-sm leading-6 text-foreground">
+        <span className="text-muted-foreground">Why it waits: </span>
+        {item.reason}
+      </p>
+
+      {item.candidates.length > 0 ? (
+        <ul className="divide-y divide-border" aria-label={`Films offered for ${item.title}`}>
+          {item.candidates.map((candidate) => (
+            <CandidateRow
+              key={candidate.tmdbId}
+              candidate={offered(candidate)}
+              busy={decide.isPending}
+              onPick={(chosen) => decide.mutate({ tmdbId: chosen.tmdbId })}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">TMDB offered no film for it.</p>
+      )}
+
+      <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+        <Button type="button" size="sm" variant="ghost" disabled={decide.isPending} onClick={() => decide.mutate({ notAFilm: true })}>
+          <X aria-hidden /> Not a film
+        </Button>
+      </div>
+
+      {decide.error ? (
+        <p role="alert" className="text-sm text-destructive-text">
+          {queryErrorMessage(decide.error, 'That choice could not be saved.')}
+        </p>
+      ) : null}
+    </article>
+  )
+}
+
 function RecentRow({ entry }: { entry: RecentIdentification }) {
   const queryClient = useQueryClient()
   const undo = useMutation({
@@ -485,18 +567,21 @@ export default function IdentifyFilmsPage() {
   const queueQuery = useQuery({ queryKey: ['identify-queue'], queryFn: () => fetchIdentifyQueue(20) })
   const recentQuery = useQuery({ queryKey: ['identify-recent'], queryFn: () => fetchRecentIdentifications(20) })
   const doubtsQuery = useQuery({ queryKey: ['identify-doubts'], queryFn: () => fetchIdentifyDoubts(20) })
+  // AC3 (#335): cinema programme films the rule sent to Craig, most showings first.
+  const reviewQuery = useQuery({ queryKey: ['cinema-review'], queryFn: fetchCinemaReview })
 
   const items = queueQuery.data?.items ?? []
   const queueState = listState(queueQuery, items.length === 0)
   const recent = recentQuery.data?.items ?? []
   const doubts = doubtsQuery.data?.items ?? []
+  const reviews = reviewQuery.data?.items ?? []
 
   return (
     <div className="page-shell-narrow space-y-6">
       <PageHeader
         eyebrow="Craig’s tools"
         title="Identify films"
-        description="Films on the shelf that TMDB never matched, and matched films that may be the wrong one. Pick the right film, search again, or set it aside."
+        description="Films on the shelf that TMDB never matched, matched films that may be the wrong one, and cinema films to check. Pick the right film, search again, or set it aside."
       />
 
       {overviewQuery.isError ? (
@@ -508,6 +593,27 @@ export default function IdentifyFilmsPage() {
         />
       ) : null}
       {overviewQuery.data ? <Overview overview={overviewQuery.data} /> : null}
+
+      {reviewQuery.isError ? (
+        <StatePanel
+          compact
+          tone="error"
+          title="The cinema films to check are unavailable"
+          description={queryErrorMessage(reviewQuery.error, 'Could not load the cinema films to check.')}
+        />
+      ) : null}
+      {reviews.length > 0 ? (
+        <section className="space-y-3" aria-labelledby="cinema-review-heading">
+          <h2 id="cinema-review-heading" className="section-heading">
+            Cinema films to check ({COUNT.format(reviews.length)})
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Films on the cinema programmes whose title fits more than one film, or that nothing else confirms. Each
+            stays unlinked, with its showings Unclassified, until you pick the film or say it is not one.
+          </p>
+          {reviews.map((item) => <CinemaReviewCard key={item.key} item={item} />)}
+        </section>
+      ) : null}
 
       {doubtsQuery.isError ? (
         <StatePanel

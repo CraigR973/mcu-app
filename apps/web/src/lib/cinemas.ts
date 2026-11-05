@@ -88,3 +88,27 @@ export function showingFormats(values: string[]): string[] {
 export function showingScreen(value: string): string {
   return /^\d+$/.test(value) ? `Screen ${value}` : value
 }
+
+export type ProgrammeFilm = CinemaProgrammeResponse['films'][number]
+
+/** AC3 (#335): `review` waits for Craig's check on Identify films; `event` is never one film. */
+export const IDENTITY_LABELS: Record<ProgrammeFilm['identityStatus'], string> = {
+  verified: 'Identity verified',
+  conflict: 'Programme title differs — check cinema',
+  unverified: 'Identity unverified · possible duplicate programme',
+  review: 'Identity waiting for a check · possible duplicate programme',
+  event: 'An event or double bill, not one film',
+}
+
+export function filmIdentity(film: ProgrammeFilm): string {
+  if (film.identityStatus === 'event') return IDENTITY_LABELS.event
+  const year = film.yearConfidence === 'verified' && film.originalYear !== null ? `Original year ${film.originalYear}` : 'Year unverified'
+  return `${year} · ${IDENTITY_LABELS[film.identityStatus]}`
+}
+
+/** Why a showing is in its run, in words: AC3's stored reason ("UK release 1975 · rerun"),
+ *  also for a linked film left Unclassified, or AB6's quote from the source. */
+export function runReason(showing: ProgrammeShowing): string | null {
+  const reason = showing.categoryReason ?? (showing.releaseCategory !== 'unclassified' ? showing.categoryEvidence.description : null)
+  return reason ? reason.charAt(0).toUpperCase() + reason.slice(1) : null
+}
