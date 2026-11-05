@@ -72,7 +72,8 @@ export default function CommandPalette({ open, onClose, isAdmin }: Props) {
     trimmed.length === 0
       ? pages.map(toPageResult)
       : pages
-          .map((page) => ({ page, score: fuzzyScore(trimmed, page.label) }))
+          // AC4: a page that moved is still found by its old name ("Cinemas").
+          .map((page) => ({ page, score: [page.label, ...(page.aliases ?? [])].map((name) => fuzzyScore(trimmed, name)).reduce<number | null>((best, score) => (score !== null && (best === null || score > best) ? score : best), null) }))
           .filter((entry): entry is { page: NavItem; score: number } => entry.score !== null)
           .sort((a, b) => b.score - a.score)
           .map((entry) => toPageResult(entry.page))

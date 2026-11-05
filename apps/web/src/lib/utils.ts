@@ -87,3 +87,18 @@ export function formatLondonDateTime(value: string): string {
   const time = LONDON_TIME_FORMATTER.format(date)
   return `${label}, ${time}`
 }
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/** A cinema time, UK time: "19:30" (AC4). */
+export function formatLondonClock(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : LONDON_TIME_FORMATTER.format(date)
+}
+
+/** A day with its weekday, "Sat 8 Nov", read off the string as `formatShortDate` reads it (AC4). */
+export function formatWeekdayDate(isoDate: string): string {
+  const [year, month, day] = isoDate.slice(0, 10).split('-').map(Number)
+  if (!year || !month || !day || month > 12) return isoDate
+  return `${WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]} ${String(day)} ${MONTHS[month - 1]}`
+}

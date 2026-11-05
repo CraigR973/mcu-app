@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { NavSections } from '@mcu/shared'
 
 import {
+  activePath,
   adminNavItems,
   BOTTOM_BAR_PATHS,
   isTopLevel,
@@ -42,7 +43,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
       'Move discs',
       'Wanted',
       'Movie night',
-      'Cinemas',
+      'At the cinema',
       'Releases',
       'Deals',
       'Price alerts',
@@ -63,7 +64,7 @@ describe('the sidebar a signed-in non-admin sees', () => {
       'Box sets',
       'Collections',
       'Movie night',
-      'Cinemas',
+      'At the cinema',
       'Releases',
       'Deals',
       'Price alerts',
@@ -195,7 +196,8 @@ describe('Batch T3 — the phone top bar', () => {
   it('gives a back arrow to every page but the four bottom tabs and You — Batch V1', () => {
     // Until V1 every menu destination counted as top-level, so Wanted, Deals, Settings and
     // the rest had no arrow on a phone though the only way to them was through You (snag 5).
-    const topLevel = new Set<string>([...BOTTOM_BAR_PATHS, YOU_ITEM.path])
+    // AC4: Movie night's At the cinema view is one of its tab's two views, so it has no arrow.
+    const topLevel = new Set<string>([...BOTTOM_BAR_PATHS, YOU_ITEM.path, '/movie-night/cinema'])
     for (const path of topLevel) expect(isTopLevel(path), path).toBe(true)
     for (const path of [...navItems, ...adminNavItems].map((item) => item.path)) {
       expect(isTopLevel(path), path).toBe(topLevel.has(path))
@@ -206,6 +208,23 @@ describe('Batch T3 — the phone top bar', () => {
     expect(isTopLevel('/movies/abc')).toBe(false)
     expect(isTopLevel('/films/tmdb/1')).toBe(false)
     expect(isTopLevel('/settings/ai')).toBe(false)
+  })
+
+  it('names a cinema film page and sends its back arrow to At the cinema — AC4', () => {
+    expect(isTopLevel('/movie-night/cinema')).toBe(true)
+    expect(titleForPath('/movie-night/cinema')).toBe('At the cinema')
+    expect(titleForPath('/movie-night/cinema/tmdb-603')).toBe('At the cinema')
+    expect(isTopLevel('/movie-night/cinema/tmdb-603')).toBe(false)
+    expect(parentPath('/movie-night/cinema/tmdb-603')).toBe('/movie-night/cinema')
+    expect(parentPath('/movie-night/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('/movie-night')
+  })
+
+  it('marks one destination: the most specific that holds the page — AC4', () => {
+    expect(activePath('/movie-night/cinema/tmdb-603', navItems)).toBe('/movie-night/cinema')
+    expect(activePath('/movie-night/cinema', navItems)).toBe('/movie-night/cinema')
+    expect(activePath('/movie-night', navItems)).toBe('/movie-night')
+    expect(activePath('/movie-night/3f2504e0-4f89-11d3-9a0c-0305e82c3301', navItems)).toBe('/movie-night')
+    expect(activePath('/movies-but-not', navItems)).toBeNull()
   })
 
   it('sends a page with no history to You when You lists it, and to its parent otherwise', () => {

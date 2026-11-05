@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cinemaFixture, CINEMA_NOW } from '@/pages/cinema-test-fixture'
-import { londonDate, londonTime, OFFICIAL_PROGRAMMES, programmeUrl, showingBooking, showingFormats, showingScreen } from './cinemas'
+import { filmsFixture, ODEON } from '@/pages/cinema-films-fixture'
+import { cinemaLine, cinemaSections, clock, dayHeading, listingState, londonDate, londonTime, OFFICIAL_PROGRAMMES, programmeDays, programmeUrl, runBadge, shortDay, shortHorizons, shortVenueName, showingBooking, showingFormats, showingScreen } from './cinemas'
 
 describe('cinema booking safety before another fetch', () => {
   it('uses UK civil dates and times across summer time regardless of the browser zone', () => {
@@ -37,5 +38,59 @@ describe('human programme labels from observed source fields', () => {
   })
   it('names numeric screens without repeating an existing label or changing a named auditorium', () => {
     expect(['2', 'Screen 2', 'Studio'].map(showingScreen)).toEqual(['Screen 2', 'Screen 2', 'Studio'])
+  })
+})
+
+describe('At the cinema’s film-first reading (AC4)', () => {
+  const all = { run: 'all' as const, day: null, venueIds: null }
+  it('labels days, times and runs the way a phone has room for', () => {
+    expect(shortDay('2026-11-03', '2026-11-03')).toBe('Today')
+    expect(shortDay('2026-11-04', '2026-11-03')).toBe('Tomorrow')
+    expect(shortDay('2026-11-08', '2026-11-03')).toBe('Sun 8')
+    expect(dayHeading('2026-11-03', '2026-11-03')).toBe('Today · Tue 3 Nov')
+    expect(dayHeading('2026-11-29', '2026-11-03')).toBe('Sun 29 Nov')
+    expect(clock('2026-06-01T18:30:00Z')).toBe('19:30')
+    expect(runBadge('newRelease', 'UK release 23 Oct 2026 · first run')).toBe('First run')
+    expect(runBadge('newRelease', 'UK release 7 Nov 2026 · preview')).toBe('Preview')
+    expect(runBadge('olderFilm', 'UK release 1977 · rerun')).toBe('Rerun')
+    expect(runBadge('olderFilm', null)).toBe('Rerun')
+    expect(runBadge('unclassified', 'UK release 1 Jun 2026 · between first run and rerun')).toBeNull()
+  })
+  it('sorts this week widest first, coming up soonest first, and listings by title', () => {
+    const sections = cinemaSections(filmsFixture(), all, CINEMA_NOW)
+    expect(sections.thisWeek.map((line) => line.card.title)).toEqual(['A returning favourite', 'A current first run'])
+    expect(sections.comingUp.map((line) => line.card.title)).toEqual(['Opening later'])
+    expect(sections.listings.map((line) => line.card.title)).toEqual(['An uncertain programme', 'Waiting film'])
+    expect(sections.events.map((line) => line.card.title)).toEqual(['NT Live: Hamlet'])
+    expect(sections.counts).toEqual({ all: 6, newRelease: 2, olderFilm: 1, unclassified: 3 })
+  })
+  it('counts runs after the day and cinema, and reads a card’s next showing from what is left', () => {
+    const odeonOnly = cinemaSections(filmsFixture(), { ...all, venueIds: [ODEON] }, CINEMA_NOW)
+    expect(odeonOnly.counts).toEqual({ all: 5, newRelease: 2, olderFilm: 1, unclassified: 2 })
+    // One cinema and one showing each now, so the title decides the order.
+    expect(odeonOnly.thisWeek.map((line) => line.card.title)).toEqual(['A current first run', 'A returning favourite'])
+    const favourite = odeonOnly.thisWeek[1]
+    expect([favourite.card.title, favourite.venueIds, favourite.next.at]).toEqual(['A returning favourite', [ODEON], '2026-11-03T21:00:00Z'])
+    const later = cinemaLine(filmsFixture().films[0], all, Date.parse('2026-11-03T20:30:00Z'))
+    expect(later?.showings).toBe(1)
+    expect(cinemaLine(filmsFixture().films[0], all, Date.parse('2026-11-03T21:30:00Z'))).toBeNull()
+  })
+  it('names the cinemas that list less than the fortnight, and the days showings fall on', () => {
+    const data = filmsFixture()
+    expect(shortHorizons(data).to.map(({ day, venues }) => [day, venues.map((venue) => venue.slug)])).toEqual([
+      ['2026-11-04', ['vue-st-enoch']],
+      ['2026-11-09', ['odeon-kilmarnock']],
+    ])
+    data.venues[0].coverage = data.venues[0].coverage.map((day) => ({ ...day, observed: false, status: 'failed' }))
+    expect(shortHorizons(data).none.map((venue) => venue.slug)).toEqual(['vue-st-enoch'])
+    expect(programmeDays(filmsFixture(), CINEMA_NOW)).toEqual(['2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-12'])
+  })
+  it('says what a listing is where a film would say its run', () => {
+    expect(listingState({ kind: 'event', identityStatus: 'event' })).toBe('Event or double bill')
+    expect(listingState({ kind: 'listing', identityStatus: 'review' })).toBe('Waiting for a check')
+    expect(listingState({ kind: 'listing', identityStatus: 'conflict' })).toBe('Title differs — check cinema')
+    expect(listingState({ kind: 'listing', identityStatus: 'unverified' })).toBe('Not matched yet')
+    expect(shortVenueName({ slug: 'gft', name: 'Glasgow Film Theatre' })).toBe('GFT')
+    expect(shortVenueName({ slug: 'new-venue', name: 'A New Venue' })).toBe('A New Venue')
   })
 })

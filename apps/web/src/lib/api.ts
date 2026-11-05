@@ -1,7 +1,11 @@
 import {
   activitySchema,
+  cinemaFilmDetailSchema,
+  cinemaFilmsResponseSchema,
   cinemaProgrammeResponseSchema,
   cinemaReviewListSchema,
+  type CinemaFilmDetail,
+  type CinemaFilms,
   type CinemaProgrammeResponse,
   type CinemaReviewList,
   aiAnswerSchema,
@@ -289,6 +293,10 @@ export type {
   RecentIdentifications,
   CinemaReviewItem,
   CinemaReviewList,
+  CinemaFilms,
+  CinemaFilmCard,
+  CinemaFilmDetail,
+  CinemaFilmSlot,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -2793,6 +2801,16 @@ export async function fetchCinemaProgramme(filters: {
   const params = new URLSearchParams({ dateFrom: filters.dateFrom, dateTo: filters.dateTo, releaseCategory: filters.releaseCategory })
   for (const id of filters.venueIds ?? []) params.append('venueIds', id)
   return parseResponse(await authFetch(`/cinemas/programme?${params.toString()}`), cinemaProgrammeResponseSchema)
+}
+
+/** AC4: every film and listing still to show in the stored fortnight, film first. */
+export async function fetchCinemaFilms(): Promise<CinemaFilms> {
+  return parseResponse(await authFetch('/cinemas/films'), cinemaFilmsResponseSchema)
+}
+
+/** AC4: one film's every showing across the nine, by the film page's address. */
+export async function fetchCinemaFilm(key: string): Promise<CinemaFilmDetail> {
+  return parseResponse(await authFetch(`/cinemas/films/${encodeURIComponent(key)}`), cinemaFilmDetailSchema)
 }
 
 /** AC3 (#335): programme films waiting for Craig, most showings first. Admin only. */

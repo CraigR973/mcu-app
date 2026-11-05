@@ -1,5 +1,5 @@
 import { ProfileAvatar } from '@/components/ProfileAvatar'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { LogOut } from 'lucide-react'
 import { COLLECTION_ICONS } from '@/components/collections/icons'
@@ -8,7 +8,7 @@ import { useAuth } from '@/context/auth'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { Button } from '@/components/ui/button'
-import { adminNavGroup, navGroups, visibleGroups } from '@/lib/nav-items'
+import { activePath, adminNavGroup, navGroups, visibleGroups } from '@/lib/nav-items'
 import { cn } from '@/lib/utils'
 
 const LINK_CLS =
@@ -50,6 +50,9 @@ export default function Sidebar() {
     staleTime: 5 * 60 * 1000,
   })
   const groups = visibleGroups(navGroups, sections)
+  // AC4: one destination marked, the most specific, since At the cinema sits below Movie night.
+  const { pathname } = useLocation()
+  const current = activePath(pathname, groups.flatMap((group) => group.items))
 
   return (
     <>
@@ -78,21 +81,20 @@ export default function Sidebar() {
               </p>
               <div className="space-y-0.5">
                 {group.items.map(({ label, path, icon: Icon }) => (
-                  <NavLink
+                  <Link
                     key={path}
                     to={path}
-                    className={({ isActive }) =>
-                      cn(
-                        LINK_CLS,
-                        isActive
-                          ? 'border-primary/15 bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                      )
-                    }
+                    aria-current={current === path ? 'page' : undefined}
+                    className={cn(
+                      LINK_CLS,
+                      current === path
+                        ? 'border-primary/15 bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
                   >
                     <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-80 group-hover:opacity-100" aria-hidden />
                     <span className="truncate">{label}</span>
-                  </NavLink>
+                  </Link>
                 ))}
               </div>
             </div>

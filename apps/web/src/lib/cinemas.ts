@@ -1,5 +1,5 @@
-import type { CinemaProgrammeResponse } from '@mcu/shared'
-import { londonDate } from './utils'
+import type { CinemaFilms, CinemaProgrammeResponse } from '@mcu/shared'
+import { formatLondonClock, formatWeekdayDate, londonDate } from './utils'
 export { londonDate, formatLondonDateTime as londonTime } from './utils'
 
 export type ProgrammeVenue = CinemaProgrammeResponse['venues'][number]
@@ -111,4 +111,174 @@ export function filmIdentity(film: ProgrammeFilm): string {
 export function runReason(showing: ProgrammeShowing): string | null {
   const reason = showing.categoryReason ?? (showing.releaseCategory !== 'unclassified' ? showing.categoryEvidence.description : null)
   return reason ? reason.charAt(0).toUpperCase() + reason.slice(1) : null
+}
+
+// ---------------------------------------------------------------------------
+// AC4 — At the cinema, film first
+// ---------------------------------------------------------------------------
+
+export type { CinemaFilms }
+export type CinemaCard = CinemaFilms['films'][number]
+export type CinemaSlot = CinemaCard['slots'][number]
+
+/** A word or two where a card has room for little more: the film page uses the full name. */
+const SHORT_NAMES: Record<string, string> = {
+  'odeon-kilmarnock': 'ODEON Kilmarnock',
+  'odeon-glasgow-quay': 'ODEON Quay',
+  'odeon-braehead': 'ODEON Braehead',
+  'odeon-east-kilbride': 'ODEON East Kilbride',
+  'cineworld-silverburn': 'Cineworld Silverburn',
+  'vue-st-enoch': 'Vue St Enoch',
+  'everyman-glasgow': 'Everyman',
+  gft: 'GFT',
+  'science-centre-imax': 'Science Centre IMAX',
+}
+
+export function shortVenueName(venue: { slug: string; name: string }): string {
+  return SHORT_NAMES[venue.slug] ?? venue.name
+}
+
+/** What the view is narrowed to; `venueIds` null is every cinema. Kept in the address, so the
+ *  view comes back as it was from a film page. */
+export interface CinemaFilters { run: ReleaseFilter; day: string | null; venueIds: string[] | null }
+
+/** "19:30", UK time. */
+export const clock = formatLondonClock
+
+/** "Sat 8 Nov". */
+export const dayAndDate = formatWeekdayDate
+
+/** "Today", "Tomorrow", else "Sat 8": short enough for a card. */
+export function shortDay(day: string, today: string): string {
+  if (day === today) return 'Today'
+  if (day === shiftDate(today, 1)) return 'Tomorrow'
+  return formatWeekdayDate(day).replace(/ \w+$/, '')
+}
+
+/** "Today · Thu 5 Nov", "Sat 8 Nov": a day's heading on the film page. */
+export function dayHeading(day: string, today: string): string {
+  const near = day === today ? 'Today' : day === shiftDate(today, 1) ? 'Tomorrow' : null
+  return near ? `${near} · ${dayAndDate(day)}` : dayAndDate(day)
+}
+
+/** AC3's run in a word: a first run (a preview before the UK release), or a rerun. */
+export function runBadge(category: ProgrammeShowing['releaseCategory'], reason: string | null): 'First run' | 'Preview' | 'Rerun' | null {
+  if (category === 'newRelease') return reason && /\bpreview\b/i.test(reason) ? 'Preview' : 'First run'
+  if (category === 'olderFilm') return 'Rerun'
+  return null
+}
+
+/** What a card shows under the filters: its showings still to start, where and when next. */
+export interface CinemaLine {
+  card: CinemaCard
+  showings: number
+  venueIds: string[]
+  firstDay: string
+  next: { at: string; venueId: string; day: string }
+  run: ProgrammeShowing['releaseCategory']
+  runReason: string | null
+}
+
+export function cinemaLine(card: CinemaCard, filters: CinemaFilters, now: number, category = filters.run): CinemaLine | null {
+  const starts: { at: string; slot: CinemaSlot }[] = []
+  for (const slot of card.slots) {
+    if (filters.day !== null && slot.localDate !== filters.day) continue
+    if (filters.venueIds !== null && !filters.venueIds.includes(slot.venueId)) continue
+    if (category !== 'all' && slot.releaseCategory !== category) continue
+    for (const at of slot.startsAtUtc) if (Date.parse(at) > now) starts.push({ at, slot })
+  }
+  if (starts.length === 0) return null
+  starts.sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+  const [first] = starts
+  return {
+    card,
+    showings: starts.length,
+    venueIds: [...new Set(starts.map(({ slot }) => slot.venueId))],
+    firstDay: starts.reduce((day, { slot }) => (slot.localDate < day ? slot.localDate : day), first.slot.localDate),
+    next: { at: first.at, venueId: first.slot.venueId, day: first.slot.localDate },
+    run: first.slot.releaseCategory,
+    runReason: first.slot.runReason,
+  }
+}
+
+export interface CinemaSections {
+  /** Films showing today or in the six days after it. */
+  thisWeek: CinemaLine[]
+  /** Films whose first showing comes later, as far as the cinemas list. */
+  comingUp: CinemaLine[]
+  /** Cinemas' own listings not matched to one film yet, title by title. */
+  listings: CinemaLine[]
+  /** Live and staged events and double bills: never one film. */
+  events: CinemaLine[]
+  /** Films and listings per run, for the run filter: counted before it, after day and cinema. */
+  counts: Record<ReleaseFilter, number>
+}
+
+const byTitle = (a: CinemaLine, b: CinemaLine) => a.card.title.localeCompare(b.card.title, 'en-GB') || Date.parse(a.next.at) - Date.parse(b.next.at)
+
+export function cinemaSections(data: CinemaFilms, filters: CinemaFilters, now: number): CinemaSections {
+  const counts: Record<ReleaseFilter, number> = { all: 0, newRelease: 0, olderFilm: 0, unclassified: 0 }
+  const sections: CinemaSections = { thisWeek: [], comingUp: [], listings: [], events: [], counts }
+  for (const card of data.films) {
+    for (const run of Object.keys(counts) as ReleaseFilter[]) if (cinemaLine(card, filters, now, run)) counts[run] += 1
+    const line = cinemaLine(card, filters, now)
+    if (!line) continue
+    if (card.kind === 'event') sections.events.push(line)
+    else if (card.kind === 'listing') sections.listings.push(line)
+    else if (line.firstDay <= data.thisWeekTo) sections.thisWeek.push(line)
+    else sections.comingUp.push(line)
+  }
+  // The widest first this week; what opens soonest first after it.
+  sections.thisWeek.sort((a, b) => b.venueIds.length - a.venueIds.length || b.showings - a.showings || byTitle(a, b))
+  sections.comingUp.sort((a, b) => a.firstDay.localeCompare(b.firstDay) || b.venueIds.length - a.venueIds.length || byTitle(a, b))
+  // Title by title, so one film listed by several chains reads together until it is matched.
+  sections.listings.sort(byTitle)
+  sections.events.sort(byTitle)
+  return sections
+}
+
+/** The days a showing still to start falls on, today first. */
+export function programmeDays(data: CinemaFilms, now: number): string[] {
+  const days = new Set<string>()
+  for (const card of data.films) for (const slot of card.slots) if (slot.startsAtUtc.some((at) => Date.parse(at) > now)) days.add(slot.localDate)
+  return [...days].sort()
+}
+
+/** The last day a cinema lists, or null when it lists none now. */
+export function listedTo(venue: ProgrammeVenue): string | null {
+  return venue.coverage.reduce<string | null>((last, day) => (day.observed && (last === null || day.localDate > last) ? day.localDate : last), null)
+}
+
+/** Cinemas that list less than the fortnight, grouped by their last listed day, and those
+ *  with no current listing at all, with why. GFT and Vue listed two days on 4 Nov. */
+export function shortHorizons(data: Pick<CinemaFilms, 'venues' | 'window'>): { to: { day: string; venues: ProgrammeVenue[] }[]; none: ProgrammeVenue[] } {
+  const to = new Map<string, ProgrammeVenue[]>()
+  const none: ProgrammeVenue[] = []
+  for (const venue of data.venues) {
+    const last = listedTo(venue)
+    if (last === null) none.push(venue)
+    else if (last < data.window.dateTo) to.set(last, [...(to.get(last) ?? []), venue])
+  }
+  return { to: [...to.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([day, venues]) => ({ day, venues })), none }
+}
+
+/** Whether a saved check behind these venues is failed or past its freshness limits. */
+export function staleCoverage(venues: ProgrammeVenue[], now: number): boolean {
+  return venues.some((venue) => venue.coverage.some((day) => day.status === 'failed' || day.status === 'stale'
+    || Boolean(day.lastSuccessUtc && now - Date.parse(day.lastSuccessUtc) >= 30 * 3600000)
+    || Boolean(day.upstreamUtc && now - Date.parse(day.upstreamUtc) >= 36 * 3600000)))
+}
+
+/** What a listing is, in a word or two, where a film would show its run. */
+export function listingState(card: Pick<CinemaCard, 'kind' | 'identityStatus'>): string {
+  if (card.kind === 'event') return 'Event or double bill'
+  if (card.identityStatus === 'review') return 'Waiting for a check'
+  if (card.identityStatus === 'conflict') return 'Title differs — check cinema'
+  return 'Not matched yet'
+}
+
+/** Movie night's At the cinema view, and a film's page under it (AC4). */
+export const CINEMA_VIEW_PATH = '/movie-night/cinema'
+export function cinemaFilmPath(key: string): string {
+  return `${CINEMA_VIEW_PATH}/${key}`
 }

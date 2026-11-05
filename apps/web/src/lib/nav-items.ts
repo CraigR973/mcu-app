@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BellRing, Bot, Boxes, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, MoveRight, Plus, PoundSterling, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
+import { BellRing, Bot, Boxes, Clapperboard, Disc3, FileQuestion, Download, Popcorn, CalendarDays, Film, Bookmark, Home, Store, LayoutDashboard, MoveRight, Plus, PoundSterling, Settings2, ShieldCheck, HandHeart, ScrollText, Sparkles, Tag, Trash2, UserRound } from 'lucide-react'
 
 import type { NavSections } from '@mcu/shared'
 
@@ -16,6 +16,8 @@ export interface NavItem {
    * nothing on it. Since Batch V1 Loans is always shown (#228), so three items carry it.
    */
   showWhen?: keyof NavSections
+  /** Other names the command palette finds it by: a page's old name, once it moves (AC4). */
+  aliases?: string[]
 }
 
 export interface NavGroup {
@@ -53,9 +55,9 @@ export const navItems: NavItem[] = [
   { label: 'Move discs', path: '/collection/move', icon: MoveRight },
   { label: 'Box sets', path: '/box-sets', icon: Boxes, showWhen: 'boxSets' },
   { label: 'Collections', path: '/collections', icon: Sparkles, showWhen: 'collections' },
-  // Batch S6: one destination, because the two pages answered the same question from two
-  // sources. `/discover` redirects here.
-  { label: 'Cinemas', path: '/cinemas', icon: Popcorn },
+  // AC4: the Cinemas page (AB7) is Movie night's At the cinema view; `/cinemas` redirects there,
+  // and the palette still finds it as Cinemas.
+  { label: 'At the cinema', path: '/movie-night/cinema', icon: Clapperboard, aliases: ['Cinemas'] },
   { label: 'Releases', path: '/calendar', icon: CalendarDays },
   { label: 'Wanted', path: '/wanted', icon: Bookmark },
   // Batch X2 (#154, #165 amended for Deals alone): always shown. When it hid on empty, a
@@ -122,7 +124,7 @@ export const navGroups: NavGroup[] = [
   },
   {
     label: 'Plan a screening',
-    items: [byPath('/movie-night'), byPath('/cinemas'), byPath('/calendar')],
+    items: [byPath('/movie-night'), byPath('/movie-night/cinema'), byPath('/calendar')],
   },
   {
     label: 'Explore',
@@ -184,7 +186,7 @@ const IN_THE_BAR = new Set<string>(BOTTOM_BAR_PATHS)
  * back arrow on a phone though the only way to them was through You. Now a page is
  * top-level only when the bottom bar or the person's initial reaches it directly.
  */
-const TOP_LEVEL_PATHS = new Set<string>(['/', YOU_ITEM.path, ...BOTTOM_BAR_PATHS])
+const TOP_LEVEL_PATHS = new Set<string>(['/', YOU_ITEM.path, ...BOTTOM_BAR_PATHS, '/movie-night/cinema'])
 
 /** The destinations the You page lists: every one the bottom bar does not carry. */
 const LISTED_ON_YOU = new Set<string>(
@@ -195,6 +197,8 @@ const LISTED_ON_YOU = new Set<string>(
 const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
   ['/movies/', 'Film'],
   ['/films/tmdb/', 'Film'],
+  // AC4: a film's showings, under Movie night's At the cinema view.
+  ['/movie-night/cinema/', 'At the cinema'],
   ['/movie-night/', 'Movie night'],
   ['/box-sets/', 'Box set'],
   ['/collections/', 'Collection'],
@@ -212,8 +216,20 @@ const OFF_MENU_PAGES: Record<string, { title: string; parent: string }> = {
   '/insights': { title: 'Completion', parent: '/dashboard' },
 }
 
+/**
+ * Which destination the menu marks for a page: the one whose path is the longest that holds it
+ * — AC4. At the cinema sits below Movie night, so a cinema page marks At the cinema alone, while
+ * a movie night's own page still marks Movie night.
+ */
+export function activePath(pathname: string, items: NavItem[]): string | null {
+  return items
+    .map(({ path }) => path)
+    .filter((path) => pathname === path || pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.length - a.length)[0] ?? null
+}
+
 /** A bottom tab or You, as opposed to anything reached from one. Everything else gets a back
- *  arrow in the phone's top bar. */
+ *  arrow in the phone's top bar. Movie night's At the cinema view is one of its tab's two views. */
 export function isTopLevel(pathname: string): boolean {
   return TOP_LEVEL_PATHS.has(pathname)
 }

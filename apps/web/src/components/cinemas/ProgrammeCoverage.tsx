@@ -1,9 +1,10 @@
 import type { ProgrammeVenue } from '@/lib/cinemas'
 import { COVERAGE_LABELS, londonTime, programmeUrl } from '@/lib/cinemas'
+import { cn } from '@/lib/utils'
 
-export function ProgrammeLink({ href, children }: { href: string; children: React.ReactNode }) {
+export function ProgrammeLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
   const safe = programmeUrl(href)
-  return safe ? <a href={safe} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline underline-offset-4">{children}</a> : null
+  return safe ? <a href={safe} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" className={cn('inline-flex min-h-11 items-center text-sm font-semibold text-primary underline underline-offset-4', className)}>{children}</a> : null
 }
 
 export function ProgrammeCoverage({ venues, now }: { venues: ProgrammeVenue[]; now: number }) {

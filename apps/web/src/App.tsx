@@ -16,7 +16,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const ExternalFilmPage = lazy(() => import('./pages/ExternalFilmPage'))
-const CinemasPage = lazy(() => import('./pages/CinemasPage'))
+const CinemaFilmPage = lazy(() => import('./pages/CinemaFilmPage'))
 const YouPage = lazy(() => import('./pages/YouPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
@@ -181,7 +181,9 @@ export default function App() {
               path="/movies/:id"
               element={<AppShell><MovieDetailPage /></AppShell>}
             />
-            <Route path="/cinemas" element={<AppShell><CinemasPage /></AppShell>} />
+            {/* AC4: the Cinemas page is Movie night's At the cinema view now. The old address
+                redirects rather than 404s, for the reason `/stats` does. */}
+            <Route path="/cinemas" element={<Navigate to="/movie-night/cinema" replace />} />
             {/* Batch T3. Everything the phone's five bottom tabs do not carry. */}
             <Route
               path="/you"
@@ -340,6 +342,15 @@ export default function App() {
             <Route
               path="/movie-night"
               element={<AppShell><MovieNightPage /></AppShell>}
+            />
+            {/* AC4: Movie night's second view, and a page per film under it. */}
+            <Route
+              path="/movie-night/cinema"
+              element={<AppShell><MovieNightPage view="cinema" /></AppShell>}
+            />
+            <Route
+              path="/movie-night/cinema/:key"
+              element={<AppShell><CinemaFilmPage /></AppShell>}
             />
             <Route
               path="/movie-night/join/:token"
