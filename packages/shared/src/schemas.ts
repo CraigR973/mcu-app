@@ -2879,3 +2879,69 @@ export const cinemaReviewListSchema = z.object({
 })
 export type CinemaReviewList = z.infer<typeof cinemaReviewListSchema>
 export type CinemaReviewItem = CinemaReviewList['items'][number]
+
+// AC4: At the cinema, film first. A film is one TMDB film across every cinema and listing title
+// (AC3); anything not linked to one stays its cinema's own listing, never merged on the title.
+const cinemaVenueSchema = cinemaProgrammeResponseSchema.shape.venues.element
+/** The film page's stable address: `tmdb-603`, or `listing-<uuid>` for a cinema's listing that
+ *  is not one film yet, which opens the film once it is linked. */
+export const cinemaFilmKeySchema = z.string().regex(/^(tmdb-\d+|movie-[0-9a-f-]{36}|imdb-tt\d{7,10}|listing-[0-9a-f-]{36})$/)
+export const cinemaFilmKindSchema = z.enum(['film', 'listing', 'event'])
+const cinemaFilmFactsSchema = z.object({
+  key: cinemaFilmKeySchema,
+  /** `film`: linked to one film. `listing`: not matched to a film yet. `event`: never one film. */
+  kind: cinemaFilmKindSchema,
+  title: z.string().min(1),
+  /** Every title the cinemas list it under. */
+  sourceTitles: z.array(z.string().min(1)),
+  posterPath: z.string().nullable(),
+  tmdbId: z.number().int().positive().nullable(),
+  movieId: z.string().uuid().nullable(),
+  originalYear: z.number().int().nullable(),
+  yearConfidence: z.enum(['verified', 'unverified']),
+  directors: z.array(z.string().min(1)),
+  runtimeMinutes: z.number().int().positive().nullable(),
+  identityStatus: z.enum(['verified', 'unverified', 'conflict', 'review', 'event']),
+  /** Why a listing is not one film: "not yet looked up on TMDB". */
+  identityReason: z.string().nullable(),
+  owned: z.boolean().nullable(),
+  watched: z.boolean().nullable(),
+})
+/** One cinema's showings of a film on one day, in one run, still to start. */
+export const cinemaFilmSlotSchema = z.object({
+  venueId: z.string().uuid(),
+  localDate: cinemaDateSchema,
+  releaseCategory: cinemaReleaseCategorySchema,
+  runReason: z.string().nullable(),
+  startsAtUtc: z.array(cinemaUtcSchema).min(1),
+})
+export const cinemaFilmsResponseSchema = z.object({
+  generatedAtUtc: cinemaUtcSchema,
+  window: z.object({ dateFrom: cinemaDateSchema, dateTo: cinemaDateSchema }),
+  /** The last day of "This week": today and the six days after it. */
+  thisWeekTo: cinemaDateSchema,
+  venues: z.array(cinemaVenueSchema),
+  films: z.array(cinemaFilmFactsSchema.extend({ slots: z.array(cinemaFilmSlotSchema) })),
+  complete: z.boolean(),
+})
+export const cinemaFilmDetailSchema = z.object({
+  generatedAtUtc: cinemaUtcSchema,
+  window: z.object({ dateFrom: cinemaDateSchema, dateTo: cinemaDateSchema }),
+  thisWeekTo: cinemaDateSchema,
+  film: cinemaFilmFactsSchema,
+  venues: z.array(cinemaVenueSchema),
+  /** Every showing across the nine, earliest first, with the programme's ticket-link rule. */
+  showings: z.array(cinemaShowingSchema),
+  /** Other films and listings of the same title: maybe the same film, maybe not. */
+  alsoListed: z.array(z.object({
+    key: cinemaFilmKeySchema,
+    kind: cinemaFilmKindSchema,
+    title: z.string().min(1),
+    venueIds: z.array(z.string().uuid()),
+    showingCount: z.number().int().nonnegative(),
+  })),
+})
+export type CinemaFilms = z.infer<typeof cinemaFilmsResponseSchema>
+export type CinemaFilmCard = CinemaFilms['films'][number]
+export type CinemaFilmSlot = z.infer<typeof cinemaFilmSlotSchema>
+export type CinemaFilmDetail = z.infer<typeof cinemaFilmDetailSchema>

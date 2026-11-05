@@ -1,7 +1,10 @@
 """Stored programme reads: no network, refresh, model or catalogue side effects."""
 
 import uuid
+from collections.abc import Collection, Iterable
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from functools import cached_property
 from typing import Literal, cast
 
 from sqlalchemy import and_, or_, select
@@ -82,16 +85,99 @@ def date_coverage(
     )
 
 
-async def programme(
-    db: AsyncSession,
-    user_id: uuid.UUID,
-    start: date,
-    end: date,
-    venue_ids: list[uuid.UUID] | None = None,
-    category: ReleaseFilter = "all",
-) -> CinemaProgrammeResponse:
-    dates = days_between(start, end)
-    now = utcnow()
+@dataclass
+class Window:
+    """One read's dates and venues, their coverage, and the unfinished runs that override it.
+
+    Shared by the programme and AC4's film-first reads, so a showing's ticket link follows one
+    rule wherever it is drawn.
+    """
+
+    now: datetime
+    dates: list[date]
+    venues: list[CinemaVenue]
+    coverage: dict[tuple[uuid.UUID, date], CinemaCoverage]
+    failures: dict[tuple[uuid.UUID, date], datetime]
+
+    @cached_property
+    def known(self) -> dict[uuid.UUID, CinemaVenue]:
+        return {v.id: v for v in self.venues}
+
+    def venue_responses(self) -> list[ProgrammeVenue]:
+        return [
+            ProgrammeVenue(
+                id=v.id,
+                slug=v.slug,
+                name=v.name,
+                source=v.source,
+                sourceUrl=v.programme_url,
+                officialUrl=v.official_url,
+                collectionEnabled=v.collection_enabled,
+                coverage=[
+                    date_coverage(
+                        v,
+                        self.coverage.get((v.id, day)),
+                        day,
+                        self.now,
+                        self.failures.get((v.id, day)),
+                    )
+                    for day in self.dates
+                ],
+            )
+            for v in self.venues
+        ]
+
+    def showing(
+        self, showing: CinemaScreening, film: CinemaFilm, *, verified: bool
+    ) -> ProgrammeShowing:
+        """One showing on the wire, with its ticket link only while its listing is current."""
+        record = self.coverage.get((showing.venue_id, showing.local_date))
+        stale = self.now - showing.last_seen_utc > timedelta(hours=30)
+        age = upstream_age(record, self.now)
+        allowed = (
+            showing.confirmation == "confirmed"
+            and not stale
+            and age != "stale"
+            and self.known[showing.venue_id].collection_enabled
+            and record is not None
+            and record.status != "failed"
+            and (showing.venue_id, showing.local_date) not in self.failures
+        )
+        effective = release_category(showing.category_evidence, identity_verified=verified)
+        reason = showing.category_evidence.get("runReason") if verified else None
+        return ProgrammeShowing(
+            id=showing.id,
+            venueId=showing.venue_id,
+            sourceTitle=film.title,
+            startsAtUtc=showing.starts_utc,
+            endsAtUtc=showing.ends_utc,
+            screen=showing.screen,
+            formats=showing.formats,
+            releaseCategory=effective,
+            sourceReleaseDate=film.source_release_date,
+            reissue=True
+            if effective == "olderFilm" and showing.category_evidence.get("reissue") is True
+            else None,
+            categoryConfidence="verified" if effective != "unclassified" else "unverified",
+            categoryEvidence=ProgrammeCategoryEvidence(
+                # AC3's runs rest on TMDB's UK dates, not a source page; AB6's on a quote.
+                sourceUrl=showing.category_evidence.get("sourceUrl")
+                if effective != "unclassified" and not reason
+                else None,
+                description=(reason or showing.category_evidence.get("quote") or "")
+                if effective != "unclassified"
+                else "Release run unverified",
+            ),
+            categoryReason=reason,
+            confirmation=cast(Literal["confirmed", "unconfirmed"], showing.confirmation),
+            lastSeenUtc=showing.last_seen_utc,
+            observationStale=stale,
+            upstreamAge=age,
+            bookingUrl=booking_url(showing.booking_url) if allowed else None,
+        )
+
+
+async def load_window(db: AsyncSession, dates: list[date], now: datetime) -> Window:
     venues = list(
         (
             await db.scalars(
@@ -101,10 +187,7 @@ async def programme(
             )
         ).all()
     )
-    known = {v.id: v for v in venues}
-    if venue_ids is not None and (not venue_ids or not set(venue_ids) <= set(known)):
-        raise ValueError("Select known cinema venues")
-    selected = set(venue_ids) if venue_ids is not None else set(known)
+    known = {v.id for v in venues}
     coverage = {
         (r.venue_id, r.local_date): r
         for r in (
@@ -145,30 +228,21 @@ async def programme(
                     and run.started_utc > (previous.last_attempt_utc if previous else datetime.min)
                 ):
                     failures[date_key] = max(failures.get(date_key, datetime.min), run.started_utc)
-    venue_responses = [
-        ProgrammeVenue(
-            id=v.id,
-            slug=v.slug,
-            name=v.name,
-            source=v.source,
-            sourceUrl=v.programme_url,
-            officialUrl=v.official_url,
-            collectionEnabled=v.collection_enabled,
-            coverage=[
-                date_coverage(v, coverage.get((v.id, day)), day, now, failures.get((v.id, day)))
-                for day in dates
-            ],
-        )
-        for v in venues
-    ]
+    return Window(now, dates, venues, coverage, failures)
+
+
+async def window_rows(
+    db: AsyncSession, window: Window, venue_ids: Collection[uuid.UUID]
+) -> list[tuple[CinemaScreening, CinemaFilm]]:
+    """Every listed showing still to start in the window, earliest first."""
     rows = (
         await db.execute(
             select(CinemaScreening, CinemaFilm)
             .join(CinemaFilm, CinemaScreening.film_id == CinemaFilm.id)
             .where(
-                CinemaScreening.venue_id.in_(selected),
-                CinemaScreening.local_date.in_(dates),
-                CinemaScreening.starts_utc > now,
+                CinemaScreening.venue_id.in_(venue_ids),
+                CinemaScreening.local_date.in_(window.dates),
+                CinemaScreening.starts_utc > window.now,
                 CinemaScreening.deleted_at.is_(None),
                 CinemaScreening.source_expired.is_(False),
                 CinemaScreening.confirmation.in_(("confirmed", "unconfirmed")),
@@ -177,49 +251,77 @@ async def programme(
             .order_by(CinemaScreening.starts_utc, CinemaScreening.venue_id, CinemaScreening.id)
         )
     ).all()
-    movie_ids = {f.movie_id for _, f in rows if f.movie_id}
-    movies = (
-        {
-            m.id: m
-            for m in (
-                await db.scalars(
-                    select(Movie).where(
-                        Movie.id.in_(movie_ids), Movie.deleted_at.is_(None), Movie.is_tv.is_(False)
-                    )
+    return [(showing, film) for showing, film in rows]
+
+
+@dataclass
+class Personal:
+    """The catalogue films a programme names, and which the reader owns or has watched."""
+
+    movies: dict[uuid.UUID, Movie]
+    owned: set[uuid.UUID]
+    watched: set[uuid.UUID]
+
+
+async def personal(
+    db: AsyncSession, user_id: uuid.UUID, movie_ids: Iterable[uuid.UUID | None]
+) -> Personal:
+    wanted = {movie_id for movie_id in movie_ids if movie_id}
+    if not wanted:
+        return Personal({}, set(), set())
+    movies = {
+        m.id: m
+        for m in (
+            await db.scalars(
+                select(Movie).where(
+                    Movie.id.in_(wanted), Movie.deleted_at.is_(None), Movie.is_tv.is_(False)
                 )
-            ).all()
-        }
-        if movie_ids
-        else {}
-    )
-    owned = (
-        set(
-            (
-                await db.scalars(
-                    select(CollectionItem.movie_id).where(
-                        CollectionItem.movie_id.in_(movies), owned_copy()
-                    )
+            )
+        ).all()
+    }
+    if not movies:
+        return Personal({}, set(), set())
+    owned = set(
+        (
+            await db.scalars(
+                select(CollectionItem.movie_id).where(
+                    CollectionItem.movie_id.in_(movies), owned_copy()
                 )
-            ).all()
-        )
-        if movies
-        else set()
+            )
+        ).all()
     )
-    watched = (
-        set(
-            (
-                await db.scalars(
-                    select(WatchLog.movie_id).where(
-                        WatchLog.movie_id.in_(movies),
-                        WatchLog.user_id == user_id,
-                        WatchLog.deleted_at.is_(None),
-                    )
+    watched = set(
+        (
+            await db.scalars(
+                select(WatchLog.movie_id).where(
+                    WatchLog.movie_id.in_(movies),
+                    WatchLog.user_id == user_id,
+                    WatchLog.deleted_at.is_(None),
                 )
-            ).all()
-        )
-        if movies
-        else set()
+            )
+        ).all()
     )
+    return Personal(movies, owned, watched)
+
+
+async def programme(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    start: date,
+    end: date,
+    venue_ids: list[uuid.UUID] | None = None,
+    category: ReleaseFilter = "all",
+) -> CinemaProgrammeResponse:
+    dates = days_between(start, end)
+    window = await load_window(db, dates, utcnow())
+    known = window.known
+    if venue_ids is not None and (not venue_ids or not set(venue_ids) <= set(known)):
+        raise ValueError("Select known cinema venues")
+    selected = set(venue_ids) if venue_ids is not None else set(known)
+    venue_responses = window.venue_responses()
+    rows = await window_rows(db, window, selected)
+    mine = await personal(db, user_id, (f.movie_id for _, f in rows))
+    movies, owned, watched = mine.movies, mine.owned, mine.watched
     counts = {"newRelease": 0, "olderFilm": 0, "unclassified": 0}
     matched = []
     for showing, film in rows:
@@ -273,52 +375,7 @@ async def programme(
             group.yearConfidence = "verified" if movie.year is not None else "unverified"
             group.owned = movie.id in owned
             group.watched = movie.id in watched
-        record = coverage.get((showing.venue_id, showing.local_date))
-        stale = now - showing.last_seen_utc > timedelta(hours=30)
-        age = upstream_age(record, now)
-        allowed = (
-            showing.confirmation == "confirmed"
-            and not stale
-            and age != "stale"
-            and known[showing.venue_id].collection_enabled
-            and record is not None
-            and record.status != "failed"
-            and (showing.venue_id, showing.local_date) not in failures
-        )
-        effective = release_category(showing.category_evidence, identity_verified=verified)
-        reason = showing.category_evidence.get("runReason") if verified else None
-        groups[key].showings.append(
-            ProgrammeShowing(
-                id=showing.id,
-                venueId=showing.venue_id,
-                sourceTitle=film.title,
-                startsAtUtc=showing.starts_utc,
-                endsAtUtc=showing.ends_utc,
-                screen=showing.screen,
-                formats=showing.formats,
-                releaseCategory=effective,
-                sourceReleaseDate=film.source_release_date,
-                reissue=True
-                if effective == "olderFilm" and showing.category_evidence.get("reissue") is True
-                else None,
-                categoryConfidence="verified" if effective != "unclassified" else "unverified",
-                categoryEvidence=ProgrammeCategoryEvidence(
-                    # AC3's runs rest on TMDB's UK dates, not a source page; AB6's on a quote.
-                    sourceUrl=showing.category_evidence.get("sourceUrl")
-                    if effective != "unclassified" and not reason
-                    else None,
-                    description=(reason or showing.category_evidence.get("quote") or "")
-                    if effective != "unclassified"
-                    else "Release run unverified",
-                ),
-                categoryReason=reason,
-                confirmation=cast(Literal["confirmed", "unconfirmed"], showing.confirmation),
-                lastSeenUtc=showing.last_seen_utc,
-                observationStale=stale,
-                upstreamAge=age,
-                bookingUrl=booking_url(showing.booking_url) if allowed else None,
-            )
-        )
+        groups[key].showings.append(window.showing(showing, film, verified=verified))
     complete = not truncated and all(
         c.status in ("healthy", "empty")
         for v in venue_responses
@@ -326,7 +383,7 @@ async def programme(
         for c in v.coverage
     )
     return CinemaProgrammeResponse(
-        generatedAtUtc=now,
+        generatedAtUtc=window.now,
         window=ProgrammeWindow(dateFrom=start, dateTo=end),
         venues=venue_responses,
         films=list(groups.values()),

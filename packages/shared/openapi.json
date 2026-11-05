@@ -235,6 +235,50 @@
     "title": "AiStatusResponse",
     "type": "object"
    },
+   "AlsoListed": {
+    "description": "Another film or listing with the same title: maybe the same film, maybe not.",
+    "properties": {
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "film",
+       "listing",
+       "event"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "showingCount": {
+      "minimum": 0.0,
+      "title": "Showingcount",
+      "type": "integer"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "venueIds": {
+      "items": {
+       "format": "uuid",
+       "type": "string"
+      },
+      "title": "Venueids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "key",
+     "kind",
+     "title",
+     "venueIds",
+     "showingCount"
+    ],
+    "title": "AlsoListed",
+    "type": "object"
+   },
    "AskRequest": {
     "description": "One question.",
     "properties": {
@@ -2196,6 +2240,494 @@
      "createdAt"
     ],
     "title": "ChatMessageResponse",
+    "type": "object"
+   },
+   "CinemaFilmCard": {
+    "properties": {
+     "directors": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Directors",
+      "type": "array"
+     },
+     "identityReason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Identityreason"
+     },
+     "identityStatus": {
+      "enum": [
+       "verified",
+       "unverified",
+       "conflict",
+       "review",
+       "event"
+      ],
+      "title": "Identitystatus",
+      "type": "string"
+     },
+     "key": {
+      "pattern": "^(tmdb-\\d+|movie-[0-9a-f-]{36}|imdb-tt\\d{7,10}|listing-[0-9a-f-]{36})$",
+      "title": "Key",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "film",
+       "listing",
+       "event"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "movieId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Movieid"
+     },
+     "originalYear": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Originalyear"
+     },
+     "owned": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owned"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "runtimeMinutes": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Runtimeminutes"
+     },
+     "slots": {
+      "items": {
+       "$ref": "#/components/schemas/CinemaFilmSlot"
+      },
+      "title": "Slots",
+      "type": "array"
+     },
+     "sourceTitles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Sourcetitles",
+      "type": "array"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "tmdbId": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tmdbid"
+     },
+     "watched": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Watched"
+     },
+     "yearConfidence": {
+      "enum": [
+       "verified",
+       "unverified"
+      ],
+      "title": "Yearconfidence",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "kind",
+     "title",
+     "sourceTitles",
+     "posterPath",
+     "tmdbId",
+     "movieId",
+     "originalYear",
+     "yearConfidence",
+     "directors",
+     "runtimeMinutes",
+     "identityStatus",
+     "identityReason",
+     "owned",
+     "watched",
+     "slots"
+    ],
+    "title": "CinemaFilmCard",
+    "type": "object"
+   },
+   "CinemaFilmDetail": {
+    "description": "One film's every showing across the nine, earliest first.",
+    "properties": {
+     "alsoListed": {
+      "items": {
+       "$ref": "#/components/schemas/AlsoListed"
+      },
+      "title": "Alsolisted",
+      "type": "array"
+     },
+     "film": {
+      "$ref": "#/components/schemas/CinemaFilmFacts"
+     },
+     "generatedAtUtc": {
+      "title": "Generatedatutc",
+      "type": "string"
+     },
+     "showings": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeShowing"
+      },
+      "title": "Showings",
+      "type": "array"
+     },
+     "thisWeekTo": {
+      "format": "date",
+      "title": "Thisweekto",
+      "type": "string"
+     },
+     "venues": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeVenue"
+      },
+      "title": "Venues",
+      "type": "array"
+     },
+     "window": {
+      "$ref": "#/components/schemas/ProgrammeWindow"
+     }
+    },
+    "required": [
+     "generatedAtUtc",
+     "window",
+     "thisWeekTo",
+     "film",
+     "venues",
+     "showings",
+     "alsoListed"
+    ],
+    "title": "CinemaFilmDetail",
+    "type": "object"
+   },
+   "CinemaFilmFacts": {
+    "description": "What the film-first views say about a film or listing, above its showings.",
+    "properties": {
+     "directors": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Directors",
+      "type": "array"
+     },
+     "identityReason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Identityreason"
+     },
+     "identityStatus": {
+      "enum": [
+       "verified",
+       "unverified",
+       "conflict",
+       "review",
+       "event"
+      ],
+      "title": "Identitystatus",
+      "type": "string"
+     },
+     "key": {
+      "pattern": "^(tmdb-\\d+|movie-[0-9a-f-]{36}|imdb-tt\\d{7,10}|listing-[0-9a-f-]{36})$",
+      "title": "Key",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "film",
+       "listing",
+       "event"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "movieId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Movieid"
+     },
+     "originalYear": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Originalyear"
+     },
+     "owned": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owned"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "runtimeMinutes": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Runtimeminutes"
+     },
+     "sourceTitles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Sourcetitles",
+      "type": "array"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "tmdbId": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tmdbid"
+     },
+     "watched": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Watched"
+     },
+     "yearConfidence": {
+      "enum": [
+       "verified",
+       "unverified"
+      ],
+      "title": "Yearconfidence",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "kind",
+     "title",
+     "sourceTitles",
+     "posterPath",
+     "tmdbId",
+     "movieId",
+     "originalYear",
+     "yearConfidence",
+     "directors",
+     "runtimeMinutes",
+     "identityStatus",
+     "identityReason",
+     "owned",
+     "watched"
+    ],
+    "title": "CinemaFilmFacts",
+    "type": "object"
+   },
+   "CinemaFilmSlot": {
+    "description": "One cinema's showings of a film on one day, in one run, still to start.",
+    "properties": {
+     "localDate": {
+      "format": "date",
+      "title": "Localdate",
+      "type": "string"
+     },
+     "releaseCategory": {
+      "enum": [
+       "newRelease",
+       "olderFilm",
+       "unclassified"
+      ],
+      "title": "Releasecategory",
+      "type": "string"
+     },
+     "runReason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Runreason"
+     },
+     "startsAtUtc": {
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1,
+      "title": "Startsatutc",
+      "type": "array"
+     },
+     "venueId": {
+      "format": "uuid",
+      "title": "Venueid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "venueId",
+     "localDate",
+     "releaseCategory",
+     "runReason",
+     "startsAtUtc"
+    ],
+    "title": "CinemaFilmSlot",
+    "type": "object"
+   },
+   "CinemaFilmsResponse": {
+    "description": "Every film and listing still to show in the stored programme's fortnight.",
+    "properties": {
+     "complete": {
+      "title": "Complete",
+      "type": "boolean"
+     },
+     "films": {
+      "items": {
+       "$ref": "#/components/schemas/CinemaFilmCard"
+      },
+      "title": "Films",
+      "type": "array"
+     },
+     "generatedAtUtc": {
+      "title": "Generatedatutc",
+      "type": "string"
+     },
+     "thisWeekTo": {
+      "format": "date",
+      "title": "Thisweekto",
+      "type": "string"
+     },
+     "venues": {
+      "items": {
+       "$ref": "#/components/schemas/ProgrammeVenue"
+      },
+      "title": "Venues",
+      "type": "array"
+     },
+     "window": {
+      "$ref": "#/components/schemas/ProgrammeWindow"
+     }
+    },
+    "required": [
+     "generatedAtUtc",
+     "window",
+     "thisWeekTo",
+     "venues",
+     "films",
+     "complete"
+    ],
+    "title": "CinemaFilmsResponse",
     "type": "object"
    },
    "CinemaProgrammeResponse": {
@@ -17812,6 +18344,81 @@
     "summary": "Subscribe To Calendar",
     "tags": [
      "calendar"
+    ]
+   }
+  },
+  "/api/v1/cinemas/films": {
+   "get": {
+    "description": "AC4: every film and listing still to show in the stored fortnight, film first.",
+    "operationId": "get_films_api_v1_cinemas_films_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaFilmsResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Films",
+    "tags": [
+     "cinemas"
+    ]
+   }
+  },
+  "/api/v1/cinemas/films/{key}": {
+   "get": {
+    "description": "AC4: one film's every showing across the nine. ``key`` is the film page's address:\n``tmdb-<id>``, or ``listing-<id>``, which opens the film once the listing is linked.",
+    "operationId": "get_film_api_v1_cinemas_films__key__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "key",
+      "required": true,
+      "schema": {
+       "title": "Key",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaFilmDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Film",
+    "tags": [
+     "cinemas"
     ]
    }
   },
