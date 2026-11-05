@@ -96,6 +96,7 @@ def looked_up(row, venue=VENUE, *, tmdb_id, title=None, released, uk=(), directo
             fingerprint=fingerprint(row),
             fetched_utc=NOW,
             state="candidate",
+            rule="ac3",
             candidates=[
                 Candidate(
                     tmdb_id=tmdb_id,

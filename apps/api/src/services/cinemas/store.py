@@ -66,13 +66,17 @@ async def _film(
     source_fingerprint = fingerprint(row)
     unchanged = prior.get("sourceFingerprint") == source_fingerprint
     title = identity.read_title(row.title, row.start.date())
-    if metadata is not None and metadata.fingerprint != source_fingerprint:
+    # Only an AC3 lookup of this very listing answers #335's rule; AB6's are asked again.
+    if metadata is not None and (
+        metadata.fingerprint != source_fingerprint or metadata.rule != "ac3"
+    ):
         metadata = None
     if metadata is None and unchanged and prior.get("metadata"):
         try:
-            metadata = Metadata.model_validate(prior["metadata"])
+            stored = Metadata.model_validate(prior["metadata"])
         except ValueError:
-            metadata = None
+            stored = None
+        metadata = stored if stored is not None and stored.rule == "ac3" else None
     candidates = metadata.identities() if metadata else []
     reviewed = prior.get("reviewed") if unchanged else None
     if picked is not None:

@@ -88,6 +88,9 @@ class Metadata(EvidenceModel):
     search_candidates: list[MovieId] = Field(default_factory=list, max_length=20)
     #: AC3: every exact-title film read in detail; `identity.identify` decides among them.
     candidates: list[Candidate] = Field(default_factory=list, max_length=DETAILED)
+    #: Which rule's lookup made it. AB6's read at most one film, by a narrower title match, so
+    #: it cannot answer #335's rule: an AB6 record still reads, but is looked up again.
+    rule: Literal["ab6", "ac3"] = "ab6"
 
     @model_validator(mode="after")
     def consistent(self) -> "Metadata":
@@ -273,7 +276,7 @@ async def enrich(
             (
                 m
                 for m, (k, r) in zip(fresh, members, strict=True)
-                if m and m.fingerprint == fingerprint(r) and m.fresh()
+                if m and m.rule == "ac3" and m.fingerprint == fingerprint(r) and m.fresh()
             ),
             None,
         )
@@ -308,6 +311,7 @@ async def enrich(
                 state="candidate" if candidates else "missing",
                 candidates=candidates,
                 search_candidates=searched[:20],
+                rule="ac3",
             )
         else:
             report["cached"] += len(members)

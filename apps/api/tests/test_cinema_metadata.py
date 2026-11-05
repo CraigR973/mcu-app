@@ -61,6 +61,7 @@ def snapshot(row):
 
 
 def saved_record(row, index=0):
+    """The record AC3's lookup stores for ``row``: one exact-title film, read in detail."""
     sample = SAMPLES[index]
     d = sample["details"]
     return Metadata(
@@ -69,22 +70,27 @@ def saved_record(row, index=0):
         fingerprint=metadata.fingerprint(row),
         fetched_utc=NOW,
         state="candidate",
-        candidate=Candidate(
-            tmdb_id=d["id"],
-            title=d["title"],
-            original_title=d["original_title"],
-            directors=[p["name"] for p in d["directors"]],
-            runtime=d["runtime"],
-            imdb_id=d["imdb_id"],
-            primary_release_date=date.fromisoformat(d["release_date"]),
-            gb_theatrical=[
-                ReleaseEvent(
-                    date=date.fromisoformat(e["release_date"][:10]), type=e["type"], note=e["note"]
-                )
-                for e in sample["gbReleaseEvents"]
-                if e["type"] in (2, 3)
-            ],
-        ),
+        rule="ac3",
+        candidates=[
+            Candidate(
+                tmdb_id=d["id"],
+                title=d["title"],
+                original_title=d["original_title"],
+                directors=[p["name"] for p in d["directors"]],
+                runtime=d["runtime"],
+                imdb_id=d["imdb_id"],
+                primary_release_date=date.fromisoformat(d["release_date"]),
+                gb_theatrical=[
+                    ReleaseEvent(
+                        date=date.fromisoformat(e["release_date"][:10]),
+                        type=e["type"],
+                        note=e["note"],
+                    )
+                    for e in sample["gbReleaseEvents"]
+                    if e["type"] in (2, 3)
+                ],
+            ),
+        ],
     )
 
 
@@ -338,7 +344,7 @@ async def test_positive_negative_cache_expiry_fingerprint_and_no_token():
         assert records == [positive] and report["cached"] == 1 and not seen
         for record, age in [
             (positive, 30),
-            (positive.model_copy(update={"state": "missing", "candidate": None}), 7),
+            (positive.model_copy(update={"state": "missing", "candidates": []}), 7),
         ]:
             expired = record.model_copy(update={"fetched_utc": NOW - timedelta(days=age)})
             assert not expired.fresh()
@@ -527,6 +533,46 @@ async def test_identity_is_linked_kept_through_a_missing_lookup_and_dropped_on_a
     failed.refused_host = "www.myvue.com"
     await store.promote(api_session, VENUE, failed, DAY, DAY, run.id, {key: record}, {key: 1417})
     assert stored.identity_status == "unverified" and showing.release_category == "unclassified"
+
+
+async def test_an_ab6_lookup_is_asked_again_and_never_read_back_as_an_answer(api_session, run):
+    """AB6 read at most one film, by a narrower title match, so its records cannot answer #335's
+    rule: a run looks the film up again, and a run that cannot leaves it unlinked, never "not
+    found" (5 Nov: 15 live films held one, 10 still showing)."""
+    row = film("Clayface")
+    ac3 = saved_record(row)
+    ab6 = Metadata.model_validate(
+        {
+            **ac3.model_dump(mode="json", exclude={"candidates", "rule"}),
+            "candidate": ac3.candidates[0],
+        }
+    )
+    assert ab6.rule == "ab6" and ab6.identities() == ac3.identities()
+    key = ("vue", row.film_key)
+    seen = []
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler_for(SAMPLES[0], seen))
+    ) as client:
+        records, report = await metadata.enrich(
+            {VENUE.slug: snapshot(row)}, Budget(client), "fixture-token", {key: ab6}
+        )
+    assert report["cached"] == 0 and report["lookups"] == 1 and len(seen) == 2
+    assert [r.rule for r in records] == ["ac3"]
+    # A film stored with AB6's record, on a run with no lookup for it: unlinked, record dropped.
+    stored = CinemaFilm(
+        source="vue",
+        source_key=row.film_key,
+        title=row.title,
+        identity_status="verified",
+        evidence={"metadata": ab6.model_dump(mode="json"), "sourceFingerprint": ab6.fingerprint},
+    )
+    api_session.add(stored)
+    await api_session.flush()
+    await store.promote(api_session, VENUE, snapshot(row), DAY, DAY, run.id)
+    assert stored.identity_status == "unverified" and stored.movie_id is None
+    assert stored.evidence["identity"]["reason"] == "not yet looked up on TMDB"
+    assert "metadata" not in stored.evidence
+    assert key not in await refresh.metadata_cache(api_session)
 
 
 async def test_persisted_metadata_refusal_pauses_until_owner_reviewed_new_artifact(
