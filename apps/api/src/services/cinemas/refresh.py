@@ -28,6 +28,7 @@ from src.models.cinema import (
 )
 from src.models.profile import Profile, UserRole
 from src.services import heartbeat
+from src.services.cinemas import identity
 from src.services.cinemas.collect import ADAPTER_VERSION, collect_venue
 from src.services.cinemas.domain import (
     LONDON,
@@ -40,8 +41,8 @@ from src.services.cinemas.fetch import Budget
 from src.services.cinemas.metadata import (
     MappingPick,
     Metadata,
-    corroboration,
     enrich,
+    facts_of,
     fingerprint,
     selected_rows,
     validate_picks,
@@ -268,6 +269,21 @@ async def prepare(
     )
 
 
+def _decision(row: Any, record: Metadata) -> dict[str, Any]:
+    decision = identity.identify(
+        identity.read_title(row.title, row.start.date()),
+        facts_of(row),
+        record.identities(),
+        row.start.date(),
+    )
+    return {
+        "outcome": decision.outcome,
+        "tmdbId": decision.candidate.tmdb_id if decision.candidate else None,
+        "corroboration": list(decision.corroboration),
+        "reason": decision.reason,
+    }
+
+
 def summary(prepared: PreparedRun) -> dict[str, Any]:
     categories = {"newRelease": 0, "olderFilm": 0, "unclassified": 0}
     for snapshot in prepared.snapshots.values():
@@ -288,20 +304,18 @@ def summary(prepared: PreparedRun) -> dict[str, Any]:
         "dateTo": prepared.date_to.isoformat(),
         "metadata": {
             **prepared.metadata_report,
+            # What #335's rule would decide for each looked-up film, for the owner's review.
             "candidates": [
                 {
                     "source": m.source,
                     "filmKey": m.film_key,
-                    "sourceTitle": source_rows[(m.source, m.film_key)].title,
-                    "sourceFacts": source_rows[(m.source, m.film_key)].identity_facts,
-                    "candidate": m.candidate.model_dump(mode="json"),
-                    "corroboration": corroboration(
-                        source_rows[(m.source, m.film_key)], m.candidate
-                    ),
-                    "mappingReview": "candidate data is not an approval",
+                    "sourceTitle": (row := source_rows[(m.source, m.film_key)]).title,
+                    "sourceFacts": row.identity_facts,
+                    "candidates": [c.model_dump(mode="json") for c in m.candidates],
+                    "decision": _decision(row, m),
                 }
                 for m in prepared.metadata
-                if m.candidate is not None
+                if m.candidates
             ],
         },
         "venues": {
@@ -370,7 +384,7 @@ async def apply_prepared(
             await _admin(db, actor)
         async with exclusive(engine, "manual", _scope(prepared)) as run_id:
             assert run_id is not None
-            return await _promote_all(engine, prepared, run_id, actor, set(approved))
+            return await _promote_all(engine, prepared, run_id, actor, approved)
 
 
 def _scope(prepared: PreparedRun) -> dict[str, Any]:
@@ -394,7 +408,7 @@ async def _promote_all(
     prepared: PreparedRun,
     run_id: uuid.UUID,
     actor: uuid.UUID | None = None,
-    picks: set[tuple[str, str]] | None = None,
+    picks: dict[tuple[str, str], int] | None = None,
 ) -> dict[str, Any]:
     factory = async_sessionmaker(engine, expire_on_commit=False)
     report: dict[str, Any] = {
@@ -473,13 +487,8 @@ async def _promote_all(
                         "rows": prepared.row_count,
                         "venues": len(prepared.snapshots),
                         "reviewedMappings": [
-                            {
-                                "source": source,
-                                "filmKey": key,
-                                "tmdbId": candidate.tmdb_id,
-                            }
-                            for source, key in sorted(picks or set())
-                            if (candidate := metadata[(source, key)].candidate) is not None
+                            {"source": source, "filmKey": key, "tmdbId": tmdb_id}
+                            for (source, key), tmdb_id in sorted((picks or {}).items())
                         ],
                     },
                 )

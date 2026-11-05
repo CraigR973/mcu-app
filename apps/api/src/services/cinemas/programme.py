@@ -258,7 +258,8 @@ async def programme(
                 if verified and film.original_year is not None
                 else "unverified",
                 identityStatus=cast(
-                    Literal["verified", "unverified", "conflict"], film.identity_status
+                    Literal["verified", "unverified", "conflict", "review", "event"],
+                    film.identity_status,
                 ),
                 owned=movie.id in owned if movie else None,
                 watched=movie.id in watched if movie else None,
@@ -285,6 +286,7 @@ async def programme(
             and (showing.venue_id, showing.local_date) not in failures
         )
         effective = release_category(showing.category_evidence, identity_verified=verified)
+        reason = showing.category_evidence.get("runReason") if verified else None
         groups[key].showings.append(
             ProgrammeShowing(
                 id=showing.id,
@@ -301,13 +303,15 @@ async def programme(
                 else None,
                 categoryConfidence="verified" if effective != "unclassified" else "unverified",
                 categoryEvidence=ProgrammeCategoryEvidence(
+                    # AC3's runs rest on TMDB's UK dates, not a source page; AB6's on a quote.
                     sourceUrl=showing.category_evidence.get("sourceUrl")
-                    if effective != "unclassified"
+                    if effective != "unclassified" and not reason
                     else None,
-                    description=showing.category_evidence["quote"]
+                    description=(reason or showing.category_evidence.get("quote") or "")
                     if effective != "unclassified"
                     else "Release run unverified",
                 ),
+                categoryReason=reason,
                 confirmation=cast(Literal["confirmed", "unconfirmed"], showing.confirmation),
                 lastSeenUtc=showing.last_seen_utc,
                 observationStale=stale,

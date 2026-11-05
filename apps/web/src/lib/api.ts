@@ -1,7 +1,9 @@
 import {
   activitySchema,
   cinemaProgrammeResponseSchema,
+  cinemaReviewListSchema,
   type CinemaProgrammeResponse,
+  type CinemaReviewList,
   aiAnswerSchema,
   aiConversationDetailSchema,
   aiConversationListSchema,
@@ -285,6 +287,8 @@ export type {
   IdentifySearch,
   RecentIdentification,
   RecentIdentifications,
+  CinemaReviewItem,
+  CinemaReviewList,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -2789,4 +2793,17 @@ export async function fetchCinemaProgramme(filters: {
   const params = new URLSearchParams({ dateFrom: filters.dateFrom, dateTo: filters.dateTo, releaseCategory: filters.releaseCategory })
   for (const id of filters.venueIds ?? []) params.append('venueIds', id)
   return parseResponse(await authFetch(`/cinemas/programme?${params.toString()}`), cinemaProgrammeResponseSchema)
+}
+
+/** AC3 (#335): programme films waiting for Craig, most showings first. Admin only. */
+export async function fetchCinemaReview(): Promise<CinemaReviewList> {
+  return parseResponse(await authFetch('/cinemas/review'), cinemaReviewListSchema)
+}
+
+/** Link a review item to one of its films, or mark it not a film; returns the list left. */
+export async function decideCinemaReview(key: string, decision: { tmdbId: number } | { notAFilm: true }): Promise<CinemaReviewList> {
+  return parseOrThrowApiError(
+    await authFetch(`/cinemas/review/${encodeURIComponent(key)}`, { method: 'POST', body: JSON.stringify(decision) }),
+    cinemaReviewListSchema,
+  )
 }

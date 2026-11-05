@@ -11,7 +11,7 @@ export function cinemaFixture(): CinemaProgrammeResponse {
   const showing = (n: number, releaseCategory: 'newRelease' | 'olderFilm' | 'unclassified', venue = 1) => ({
     id: uid(10 + n), venueId: uid(venue), sourceTitle: 'A returning favourite', startsAtUtc: `2026-11-03T${19 + n}:00:00Z`, endsAtUtc: null, screen: null, formats: ['IMAX'], releaseCategory,
     sourceReleaseDate: null, reissue: releaseCategory === 'olderFilm' ? true : null, categoryConfidence: releaseCategory === 'unclassified' ? 'unverified' as const : 'verified' as const,
-    categoryEvidence: { sourceUrl: null, description: releaseCategory === 'olderFilm' ? 'Anniversary programme, corroborated earlier release' : 'Release run unverified' }, confirmation: 'confirmed' as const,
+    categoryEvidence: { sourceUrl: null, description: releaseCategory === 'olderFilm' ? 'Anniversary programme, corroborated earlier release' : 'Release run unverified' }, categoryReason: null as string | null, confirmation: 'confirmed' as const,
     lastSeenUtc: '2026-11-03T16:00:00Z', observationStale: false, upstreamAge: 'unknown' as const, bookingUrl: venue === 1 ? 'https://www.myvue.com/book-tickets/summary/10097/123' : 'https://www.odeon.co.uk/ticketing/seat-picker/?showtimeId=615-123',
   })
   const base = { movieId: null, originalYear: null, yearConfidence: 'unverified' as const, identityStatus: 'unverified' as const, owned: null, watched: null }

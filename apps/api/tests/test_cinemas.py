@@ -25,6 +25,7 @@ from src.models.watch_log import WatchLog
 from src.services.cinemas import programme as reads
 from src.services.cinemas import refresh, store
 from src.services.cinemas.domain import Showing, Snapshot, SourceError, local_start
+from src.services.cinemas.metadata import Candidate, Metadata, ReleaseEvent, fingerprint
 from src.services.cinemas.parsers import parse_cinematimes
 from src.services.cinemas.venues import BY_SLUG, VENUES
 from tests.test_cinema_sources import body
@@ -84,6 +85,29 @@ async def enable(db):
     row = await db.get(CinemaVenue, VENUE.id)
     row.collection_enabled = True
     await db.flush()
+
+
+def looked_up(row, venue=VENUE, *, tmdb_id, title=None, released, uk=(), directors=()):
+    """The TMDB record AC3's lookup would store for ``row``: one exact-title candidate."""
+    return {
+        (venue.source, row.film_key): Metadata(
+            source=venue.source,
+            film_key=row.film_key,
+            fingerprint=fingerprint(row),
+            fetched_utc=NOW,
+            state="candidate",
+            candidates=[
+                Candidate(
+                    tmdb_id=tmdb_id,
+                    title=title or row.title,
+                    original_title=title or row.title,
+                    primary_release_date=date.fromisoformat(released),
+                    gb_theatrical=[ReleaseEvent(date=date.fromisoformat(d), type=3) for d in uk],
+                    directors=list(directors),
+                )
+            ],
+        )
+    }
 
 
 async def read(db, user):
@@ -240,12 +264,13 @@ async def test_expired_writer_cannot_publish_and_bad_snapshot_is_atomic(api_sess
     assert await api_session.scalar(select(func.count()).select_from(CinemaFilm)) == 0
 
 
-async def test_categories_without_year_cutoff_personal_watches_and_unknown_remakes(
+async def test_runs_come_from_the_uk_cinema_release_with_personal_watches_and_unknown_remakes(
     api_session: AsyncSession,
     run: CinemaRefreshRun,
     admin: Profile,
     viewer: Profile,
 ):
+    """AC3 (#335): first run within 16 weeks of the UK release, rerun 12 months after."""
     db = api_session
     movie = Movie(
         id=uuid.uuid4(), tmdb_id=991234, title="A Film", original_title="A Film", year=2025
@@ -255,17 +280,15 @@ async def test_categories_without_year_cutoff_personal_watches_and_unknown_remak
     db.add(WatchLog(movie_id=movie.id, user_id=admin.id, watched_at=DAY))
     db.add(CollectionItem(movie_id=movie.id, formats=["blu_ray"], added_by=admin.id))
     await db.flush()
-    evidence = {"run": "returning", "sourceUrl": VENUE.programme_url, "quote": "Returning run"}
-    older = showing(tmdb_id=movie.tmdb_id, evidence=evidence)
-    new = showing(
-        "two",
-        film_key="film-two",
-        title="New Film",
-        tmdb_id=991235,
-        evidence={**evidence, "run": "firstUkTheatrical", "quote": "First UK cinema run"},
-    )
+    # The cinema's own date corroborates a film first in UK cinemas in January 2025: a rerun.
+    older = showing(source_release=date(2025, 1, 10))
+    new = showing("two", film_key="film-two", title="New Film")
     unknown = showing("three", film_key="remake", title="A Film")
-    await store.promote(db, VENUE, snapshot(older, new, unknown), DAY, DAY, run.id)
+    lookups = {
+        **looked_up(older, tmdb_id=991234, released="2025-01-08", uk=("2025-01-10",)),
+        **looked_up(new, tmdb_id=991235, released="2026-10-20", uk=("2026-10-23",)),
+    }
+    await store.promote(db, VENUE, snapshot(older, new, unknown), DAY, DAY, run.id, lookups)
     await enable(db)
     for user, watched in [(admin, True), (viewer, False)]:
         result = await read(db, user)
@@ -277,6 +300,9 @@ async def test_categories_without_year_cutoff_personal_watches_and_unknown_remak
         known = next(f for f in result.films if f.movieId == movie.id)
         assert known.originalYear == 2025 and known.owned and known.watched is watched
         assert known.showings[0].releaseCategory == "olderFilm"
+        assert known.showings[0].categoryReason == "UK release 2025 · rerun"
+        fresh = next(f for f in result.films if f.title == "New Film")
+        assert fresh.showings[0].categoryReason == "UK release 23 Oct 2026 · first run"
         unidentified = next(f for f in result.films if f.identityStatus == "unverified")
         assert unidentified.movieId is unidentified.owned is unidentified.watched is None
     for category in ("newRelease", "olderFilm", "unclassified"):
@@ -284,11 +310,20 @@ async def test_categories_without_year_cutoff_personal_watches_and_unknown_remak
         assert result.returnedShowingCount == 1
         assert sum(result.categoryCounts.model_dump().values()) == 3
         assert result.films[0].showings[0].releaseCategory == category
-    # A different explicit identity on the same opaque film key invalidates old evidence.
-    await store.promote(db, VENUE, snapshot(replace(older, tmdb_id=991236)), DAY, DAY, run.id)
+    # A source id that names another film than the title goes to Craig's review, unlinked.
+    other = replace(older, tmdb_id=991236)
+    await store.promote(
+        db,
+        VENUE,
+        snapshot(other),
+        DAY,
+        DAY,
+        run.id,
+        looked_up(other, tmdb_id=991236, title="Another Film", released="2024-01-01"),
+    )
     result = await read(db, admin)
-    conflict = next(f for f in result.films if f.identityStatus == "conflict")
-    assert conflict.movieId is None and conflict.showings[0].releaseCategory == "unclassified"
+    review = next(f for f in result.films if f.identityStatus == "review")
+    assert review.movieId is None and review.showings[0].releaseCategory == "unclassified"
 
 
 async def test_unfinished_run_disables_old_booking_even_before_coverage_write(
@@ -309,7 +344,9 @@ async def test_unfinished_run_disables_old_booking_even_before_coverage_write(
     assert next(v for v in result.venues if v.id == VENUE.id).coverage[0].status == "failed"
 
 
-async def test_old_original_first_uk_run_reissue_and_combined_programme(api_session, run, admin):
+async def test_an_old_film_first_in_uk_cinemas_now_a_labelled_reissue_and_a_combined_programme(
+    api_session, run, admin
+):
     movie = Movie(
         id=uuid.uuid4(),
         tmdb_id=991250,
@@ -319,26 +356,33 @@ async def test_old_original_first_uk_run_reissue_and_combined_programme(api_sess
     )
     api_session.add(movie)
     await api_session.flush()
-    evidence = {
-        "run": "firstUkTheatrical",
-        "sourceUrl": VENUE.programme_url,
-        "quote": "First UK theatrical release",
-    }
-    first = showing(tmdb_id=movie.tmdb_id, title=movie.title, evidence=evidence, source_release=DAY)
+    # Made in 1973, first shown in UK cinemas this autumn: a first run, whatever its age.
+    first = showing(title=movie.title, source_release=DAY)
     reissue = showing(
         "reissue",
         film_key="reissue",
-        tmdb_id=991251,
-        evidence={**evidence, "run": "returning", "reissue": True, "quote": "Restored reissue"},
-        source_release=DAY,
+        title="Reissued Film (40th Anniversary 4K Restoration)",
+        evidence={"returningLabel": True, "sourceUrl": VENUE.programme_url, "quote": "4K"},
     )
     combined = showing(
         "double",
         film_key="combined",
-        tmdb_id=991252,
-        evidence={**evidence, "combinedProgramme": True},
+        title="One + Two",
+        evidence={"combinedProgramme": True},
     )
-    await store.promote(api_session, VENUE, snapshot(first, reissue, combined), DAY, DAY, run.id)
+    lookups = {
+        **looked_up(first, tmdb_id=991250, released="1973-05-01", uk=("2026-10-30",)),
+        **looked_up(
+            reissue,
+            tmdb_id=991251,
+            title="Reissued Film",
+            released="1986-01-01",
+            uk=("1986-03-01",),
+        ),
+    }
+    await store.promote(
+        api_session, VENUE, snapshot(first, reissue, combined), DAY, DAY, run.id, lookups
+    )
     result = await read(api_session, admin)
     original = next(f for f in result.films if f.movieId == movie.id)
     assert original.originalYear == 1973
@@ -346,18 +390,81 @@ async def test_old_original_first_uk_run_reissue_and_combined_programme(api_sess
     assert original.showings[0].sourceReleaseDate == DAY
     assert original.showings[0].reissue is None
     returning = next(s for f in result.films for s in f.showings if s.reissue)
-    assert returning.releaseCategory == "olderFilm" and returning.sourceReleaseDate == DAY
-    assert result.categoryCounts.unclassified == 1
+    assert returning.releaseCategory == "olderFilm"
+    assert (
+        returning.categoryReason
+        == "UK release 1986 · the cinema calls it an anniversary showing · rerun"
+    )
+    # A double bill is never one film.
+    double = next(f for f in result.films if f.title == "One + Two")
+    assert double.identityStatus == "event" and result.categoryCounts.unclassified == 1
 
 
-async def test_cross_source_identity_overlap_groups_film_but_preserves_showings(
+async def test_a_source_flag_or_a_film_not_looked_up_never_links(api_session, run):
+    """#335: a double bill the source flags, a listing the source says conflicts, and a film
+    not yet looked up all stay unlinked, whatever the title alone would allow. Only a lookup
+    can say a film was not found, or send it to Craig."""
+    flagged = showing(
+        "flagged", film_key="flagged", title="Flagged Pair", evidence={"combinedProgramme": True}
+    )
+    conflicting = showing(
+        "conflicting", film_key="conflicting", title="Conflicting Film", evidence={"conflict": True}
+    )
+    waiting = showing("waiting", film_key="waiting", title="Waiting Film")
+    named = showing("named", film_key="named", title="Named Film", tmdb_id=991270)
+    lookups = {
+        **looked_up(flagged, tmdb_id=991271, released="2026-10-20", uk=("2026-10-23",)),
+        **looked_up(conflicting, tmdb_id=991272, released="2026-10-20", uk=("2026-10-23",)),
+    }
+    rows = (flagged, conflicting, waiting, named)
+    await store.promote(api_session, VENUE, snapshot(*rows), DAY, DAY, run.id, lookups)
+    films = {
+        f.source_key: f
+        for f in (
+            await api_session.scalars(
+                select(CinemaFilm).where(CinemaFilm.source_key.in_([r.film_key for r in rows]))
+            )
+        ).all()
+    }
+    assert films["flagged"].identity_status == "event"
+    assert films["conflicting"].identity_status == "conflict"
+    for key in ("waiting", "named"):
+        assert films[key].identity_status == "unverified"
+        assert films[key].evidence["identity"]["reason"] == "not yet looked up on TMDB"
+    assert all(f.movie_id is None and f.evidence["tmdbId"] is None for f in films.values())
+    showings = (
+        await api_session.scalars(
+            select(CinemaScreening).where(
+                CinemaScreening.film_id.in_([f.id for f in films.values()])
+            )
+        )
+    ).all()
+    assert len(showings) == 4 and {s.release_category for s in showings} == {"unclassified"}
+
+
+async def test_one_film_at_two_cinemas_groups_as_one_film_and_keeps_both_showings(
     api_session, run, admin
 ):
-    row = showing(tmdb_id=991260)
-    await store.promote(api_session, VENUE, snapshot(row), DAY, DAY, run.id)
-    second = BY_SLUG["vue-st-enoch"]
+    row = showing(title="Shared Film")
     await store.promote(
-        api_session, second, snapshot(replace(row, key="vue-one")), DAY, DAY, run.id
+        api_session,
+        VENUE,
+        snapshot(row),
+        DAY,
+        DAY,
+        run.id,
+        looked_up(row, tmdb_id=991260, released="2026-10-20", uk=("2026-10-23",)),
+    )
+    second = BY_SLUG["vue-st-enoch"]
+    other = replace(row, key="vue-one")
+    await store.promote(
+        api_session,
+        second,
+        snapshot(other),
+        DAY,
+        DAY,
+        run.id,
+        looked_up(other, second, tmdb_id=991260, released="2026-10-20", uk=("2026-10-23",)),
     )
     result = await reads.programme(api_session, admin.id, DAY, DAY)
     assert len(result.films) == 1

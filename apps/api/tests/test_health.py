@@ -101,6 +101,9 @@ def test_application_route_surface_is_exactly_as_intended() -> None:
         "/api/v1/health",
         # AB6's single read route, explicitly approved in the #327 contract.
         "/api/v1/cinemas/programme",
+        # AC3 (#335): Craig's review list for programme films the rule could not settle.
+        "/api/v1/cinemas/review",
+        "/api/v1/cinemas/review/{key}",
         "/api/v1/health/ready",
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",

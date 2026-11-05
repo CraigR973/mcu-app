@@ -12,9 +12,9 @@ import pytest
 from sqlalchemy import select
 
 from src.models.cinema import CinemaFilm, CinemaRefreshRun, CinemaScreening
-from src.services.cinemas import collect, metadata, refresh, store
+from src.services.cinemas import collect, identity, metadata, refresh, store
 from src.services.cinemas.domain import Snapshot, SourceError, release_category
-from src.services.cinemas.fetch import Budget, Refused
+from src.services.cinemas.fetch import METADATA_CAP, Budget, Refused
 from src.services.cinemas.metadata import Candidate, MappingPick, Metadata, ReleaseEvent
 from src.services.cinemas.parsers import parse_vue
 from src.services.cinemas.venues import BY_SLUG
@@ -107,6 +107,10 @@ def handler_for(sample, seen):
         d["credits"] = {
             "crew": [{"name": p["name"], "job": "Director"} for p in d.pop("directors")]
         }
+        if "release_dates" in request.url.params.get("append_to_response", ""):
+            d["release_dates"] = {
+                "results": [{"iso_3166_1": "GB", "release_dates": sample["gbReleaseEvents"]}]
+            }
         return httpx.Response(200, json=d)
 
     return handler
@@ -285,7 +289,8 @@ async def test_vue_session_values_never_enter_the_prepared_artifact():
         refresh.PreparedRun.model_validate(old_protocol)
 
 
-async def test_search_is_candidate_only_and_metadata_is_separately_corroborated():
+async def test_a_search_and_one_details_call_and_an_agreeing_fact_identify_a_film():
+    """AC3 (#335): two requests per film, and a fact must agree before a film is linked."""
     row = film("Clayface")
     seen = []
     async with httpx.AsyncClient(
@@ -295,15 +300,27 @@ async def test_search_is_candidate_only_and_metadata_is_separately_corroborated(
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
-    assert fetch.requests == fetch.metadata_requests == 3 and report["pending"] == 0
+    assert fetch.requests == fetch.metadata_requests == 2 and report["pending"] == 0
+    assert seen[1].url.params["append_to_response"] == "credits,release_dates"
     record = records[0]
-    assert record.state == "candidate" and record.candidate.tmdb_id == 1400940
-    assert row.tmdb_id is None
-    assert metadata.corroboration(row, record.candidate) == ["director"]
-    assert metadata.corroboration(replace(row, identity_facts={}), record.candidate) == []
+    assert record.state == "candidate" and [c.tmdb_id for c in record.candidates] == [1400940]
+    assert row.tmdb_id is None  # Looking a film up is not linking it.
+    shown = row.start.date()
+    decision = identity.identify(
+        identity.read_title(row.title, shown), metadata.facts_of(row), record.identities(), shown
+    )
+    assert decision.outcome == "linked" and "the director" in decision.corroboration
+    # Title only: no director, running time or release date from the listing.
+    bare = replace(row, identity_facts={}, source_release=None)
+    alone = identity.identify(
+        identity.read_title(bare.title, shown), metadata.facts_of(bare), record.identities(), shown
+    )
+    # With nothing but the title, the UK release in the programme's weeks still agrees.
+    assert alone.outcome == "linked" and alone.corroboration == (
+        "a UK cinema release on 2026-10-19, matching the programme",
+    )
     assert all(r.headers["authorization"] == "Bearer fixture-token" for r in seen)
     assert all(r.url.host == "api.themoviedb.org" for r in seen)
-    assert metadata.category_evidence(row, record) == {}
     assert release_category({"run": "2026"}, identity_verified=True) == "unclassified"
 
 
@@ -342,19 +359,33 @@ async def test_positive_negative_cache_expiry_fingerprint_and_no_token():
         assert not records and report["pending"] == 1 and not seen
 
 
-async def test_metadata_subcap_shared_cap_and_token_host_isolation():
+async def test_one_lookup_per_film_a_48_request_subcap_and_token_host_isolation():
     seen = []
 
     def handler(request):
         seen.append(request)
         return httpx.Response(200, json={"results": []})
 
-    rows = [replace(film("Clayface"), key=f"show-{i}", film_key=f"film-{i}") for i in range(13)]
-    snaps = {VENUE.slug: Snapshot(rows=rows, observed_utc=NOW)}
+    # One film listed per showing, as cinematimes and GFT key it, is still one search.
+    same = [replace(film("Clayface"), key=f"show-{i}", film_key=f"film-{i}") for i in range(13)]
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         fetch = Budget(client)
-        records, report = await metadata.enrich(snaps, fetch, "fixture-token", {})
-        assert len(records) == 12 and report["pending"] == 1 and fetch.requests == 12
+        records, report = await metadata.enrich(
+            {VENUE.slug: Snapshot(rows=same, observed_utc=NOW)}, fetch, "fixture-token", {}
+        )
+        assert len(records) == 13 and fetch.requests == 1 and report["lookups"] == 1
+        assert {r.state for r in records} == {"missing"}
+        # Sixty different films: the sub-cap stops the run, and the rest wait for the next one.
+        many = [
+            replace(film("Clayface"), key=f"many-{i}", film_key=f"many-{i}", title=f"Film {i}")
+            for i in range(60)
+        ]
+        fetch = Budget(client)
+        records, report = await metadata.enrich(
+            {VENUE.slug: Snapshot(rows=many, observed_utc=NOW)}, fetch, "fixture-token", {}
+        )
+        assert METADATA_CAP == 48 and fetch.metadata_requests <= METADATA_CAP
+        assert len(records) + report["pending"] == 60 and report["pending"] > 0
         with pytest.raises(SourceError, match="credential sent"):
             await fetch.metadata("https://www.myvue.com/3/test", "fixture-token")
         await fetch.get("https://www.myvue.com/programme")
@@ -362,24 +393,37 @@ async def test_metadata_subcap_shared_cap_and_token_host_isolation():
         fetch.requests = 120
         with pytest.raises(SourceError, match="limit"):
             await fetch.get("https://www.glasgowfilm.org/")
-        assert len(seen) == 13
 
 
-async def test_ambiguous_titles_refusals_and_budget_failure_do_not_guess_or_negative_cache():
+async def test_two_matching_films_refusals_and_a_spent_budget_never_guess_or_negative_cache():
     row = film("Clayface")
     seen = []
+    detailed = handler_for(SAMPLES[0], [])
 
-    def ambiguous(request):
+    def two_films(request):
         seen.append(request)
-        candidate = SAMPLES[0]["candidates"][0]
-        return httpx.Response(200, json={"results": [candidate, {**candidate, "id": 123}]})
+        if request.url.path.endswith("/search/movie"):
+            candidate = SAMPLES[0]["candidates"][0]
+            return httpx.Response(200, json={"results": [candidate, {**candidate, "id": 123}]})
+        answer = detailed(request)
+        body = json.loads(answer.content)
+        body["id"] = int(request.url.path.rsplit("/", 1)[-1])
+        return httpx.Response(200, json=body)
 
-    async with httpx.AsyncClient(transport=httpx.MockTransport(ambiguous)) as client:
+    async with httpx.AsyncClient(transport=httpx.MockTransport(two_films)) as client:
         fetch = Budget(client)
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
-        assert records[0].state == "ambiguous" and records[0].candidate is None and len(seen) == 1
+    assert [c.tmdb_id for c in records[0].candidates] == [1400940, 123] and len(seen) == 3
+    shown = row.start.date()
+    decision = identity.identify(
+        identity.read_title(row.title, shown),
+        metadata.facts_of(replace(row, identity_facts={})),
+        records[0].identities(),
+        shown,
+    )
+    assert decision.outcome == "review" and decision.reason == "more than one film matches"
     seen = []
 
     def refused(request):
@@ -389,33 +433,32 @@ async def test_ambiguous_titles_refusals_and_budget_failure_do_not_guess_or_nega
     async with httpx.AsyncClient(transport=httpx.MockTransport(refused)) as client:
         fetch = Budget(client)
         snaps = {
-            VENUE.slug: Snapshot(rows=[row, replace(row, key="2", film_key="2")], observed_utc=NOW)
+            VENUE.slug: Snapshot(
+                rows=[row, replace(row, key="2", film_key="2", title="Another")],
+                observed_utc=NOW,
+            )
         }
         records, report = await metadata.enrich(snaps, fetch, "fixture-token", {})
         assert not records and report["refused"] and report["pending"] == 2 and len(seen) == 1
         with pytest.raises(Refused):
             await fetch.metadata("https://api.themoviedb.org/3/search/movie", "fixture-token")
         assert len(seen) == 1
-    async with httpx.AsyncClient(transport=httpx.MockTransport(ambiguous)) as client:
+    async with httpx.AsyncClient(transport=httpx.MockTransport(two_films)) as client:
         fetch = Budget(client)
         fetch.requests = 120
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
-        assert not records and report["pending"] == 1 and report["errors"] == ["SourceError"]
+        # Nothing left to spend: no request at all, and nothing cached as "missing".
+        assert not records and report["pending"] == 1 and fetch.metadata_requests == 0
 
 
-def test_mapping_review_requires_exact_fresh_correlated_identity_and_does_not_guess_run():
+def test_a_reviewed_pick_names_a_current_candidate_and_dates_label_the_run():
     row = film("Pan's Labyrinth")
     record = saved_record(row, 2)
     pick = MappingPick(source="vue", film_key=row.film_key, tmdb_id=1417)
     snaps = {VENUE.slug: snapshot(row)}
-    assert metadata.validate_picks(snaps, [record], [pick]) == {("vue", row.film_key): record}
-    assert metadata.corroboration(row, record.candidate) == ["director", "distinct original title"]
-    evidence = metadata.category_evidence(row, record)
-    assert release_category(evidence, identity_verified=True) == "olderFilm"
-    assert release_category(evidence, identity_verified=False) == "unclassified"
-    assert metadata.category_evidence(film("Clayface"), saved_record(film("Clayface"))) == {}
+    assert metadata.validate_picks(snaps, [record], [pick]) == {("vue", row.film_key): 1417}
     for picks, records in [
         ([pick, pick], [record]),
         ([pick.model_copy(update={"tmdb_id": 157336})], [record]),
@@ -423,24 +466,31 @@ def test_mapping_review_requires_exact_fresh_correlated_identity_and_does_not_gu
     ]:
         with pytest.raises(SourceError):
             metadata.validate_picks(snaps, records, picks)
+    # Craig's pick is the corroboration (#335): a listing with no facts can still be mapped.
     bare = replace(row, identity_facts={})
-    with pytest.raises(SourceError, match="corroboration"):
-        metadata.validate_picks(
-            {VENUE.slug: snapshot(bare)},
-            [record.model_copy(update={"fingerprint": metadata.fingerprint(bare)})],
-            [pick],
-        )
-    # A past TMDB reissue without a current source label cannot classify a showing.
-    interstellar = replace(row, title="Interstellar", identity_facts={})
-    assert (
-        metadata.category_evidence(
-            replace(interstellar, evidence={}), saved_record(interstellar, 1)
-        )
-        == {}
+    assert metadata.validate_picks(
+        {VENUE.slug: snapshot(bare)},
+        [record.model_copy(update={"fingerprint": metadata.fingerprint(bare)})],
+        [pick],
+    ) == {("vue", bare.film_key): 1417}
+    # The run comes from the UK cinema release, and the cinema's anniversary label.
+    shown = row.start.date()
+    category, reason = identity.classify(
+        record.identities()[0].first_uk_release, shown, identity.read_title(row.title, shown)
+    )
+    assert category == "olderFilm" and reason.startswith("UK release 2006 · the cinema calls it")
+    # #335 supersedes #326/#327/#330: a 2014 film shown in 2026 is a rerun on its date alone.
+    interstellar = saved_record(replace(row, title="Interstellar", identity_facts={}), 1)
+    first = interstellar.identities()[0].first_uk_release
+    assert identity.classify(first, shown, identity.read_title("Interstellar", shown)) == (
+        "olderFilm",
+        "UK release 2014 · rerun",
     )
 
 
-async def test_candidate_import_review_persistence_conflict_and_atomic_refusal(api_session, run):
+async def test_identity_is_linked_kept_through_a_missing_lookup_and_dropped_on_a_changed_listing(
+    api_session, run
+):
     row = film("Pan's Labyrinth")
     record = saved_record(row, 2)
     key = ("vue", row.film_key)
@@ -452,31 +502,31 @@ async def test_candidate_import_review_persistence_conflict_and_atomic_refusal(a
     showing = await api_session.scalar(
         select(CinemaScreening).where(CinemaScreening.film_id == stored.id)
     )
-    assert (
-        stored.identity_status == "unverified"
-        and stored.evidence["metadata"]["candidate"]["tmdb_id"] == 1417
-    )
-    assert showing.release_category == "unclassified" and stored.movie_id is None
-    await store.promote(api_session, VENUE, snap, DAY, DAY, run.id, {key: record}, {key})
-    assert stored.identity_status == "verified" and showing.release_category == "olderFilm"
-    assert stored.evidence["reviewedMapping"]["corroboration"] == [
-        "director",
-        "distinct original title",
-    ]
-    # Missing metadata/provider failure cannot erase a reviewed stable identity/cache.
+    # The Vue listing's director agrees with TMDB's: linked on its own (#335), and a rerun.
+    assert stored.identity_status == "verified" and stored.evidence["tmdbId"] == 1417
+    assert "the director" in stored.evidence["identity"]["corroboration"]
+    assert stored.original_year == 2006 and stored.first_uk_release_date == date(2006, 11, 24)
+    assert showing.release_category == "olderFilm"
+    assert showing.category_evidence["runReason"].startswith("UK release 2006")
+    # A reviewed pick from the refresh CLI is remembered with the listing.
+    await store.promote(api_session, VENUE, snap, DAY, DAY, run.id, {key: record}, {key: 1417})
+    assert stored.evidence["reviewed"]["tmdbId"] == 1417
+    # A run whose lookup is missing keeps the identity while the listing is unchanged.
     await store.promote(api_session, VENUE, snap, DAY, DAY, run.id)
     assert stored.identity_status == "verified" and stored.evidence["tmdbId"] == 1417
     assert showing.release_category == "olderFilm"
     assert (await refresh.metadata_cache(api_session))[key] == record
+    # A changed listing is a new question: the old answer and the old review do not carry over.
     changed = replace(row, identity_facts={**row.identity_facts, "director": "Another director"})
     await store.promote(api_session, VENUE, snapshot(changed), DAY, DAY, run.id)
-    assert stored.identity_status == "conflict" and stored.movie_id is None
+    assert stored.identity_status == "unverified" and stored.movie_id is None
     assert showing.release_category == "unclassified" and "metadata" not in stored.evidence
+    assert "reviewed" not in stored.evidence
     failed = snapshot(row)
     failed.failed = True
     failed.refused_host = "www.myvue.com"
-    await store.promote(api_session, VENUE, failed, DAY, DAY, run.id, {key: record}, {key})
-    assert stored.identity_status == "conflict" and showing.release_category == "unclassified"
+    await store.promote(api_session, VENUE, failed, DAY, DAY, run.id, {key: record}, {key: 1417})
+    assert stored.identity_status == "unverified" and showing.release_category == "unclassified"
 
 
 async def test_persisted_metadata_refusal_pauses_until_owner_reviewed_new_artifact(
@@ -526,8 +576,9 @@ async def test_programmes_precede_metadata_and_no_token_or_pause_never_sends_aut
         prepared = await refresh.prepare(
             [VENUE, BY_SLUG["gft"]], DAY, DAY, client, token="fixture-token"
         )
-        assert prepared.metadata_report["requests"] == 6
-        assert prepared.requests == 8
+        # One film at two venues is one lookup: a search and a details call.
+        assert prepared.metadata_report["requests"] == 2
+        assert prepared.requests == 4
         assert [r.url.host for r in seen[:2]] == ["www.myvue.com", "www.glasgowfilm.org"]
         assert all(r.url.host == "api.themoviedb.org" for r in seen[2:])
         for token, paused, state in [("", False, "noToken"), ("fixture-token", True, "paused")]:
@@ -541,19 +592,25 @@ async def test_programmes_precede_metadata_and_no_token_or_pause_never_sends_aut
             assert not prepared.metadata
 
 
-async def test_metadata_never_overruns_remaining_programme_budget():
+async def test_metadata_never_overruns_the_runs_120_request_ceiling():
     row = film("Clayface")
     seen = []
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(handler_for(SAMPLES[0], seen))
     ) as client:
         fetch = Budget(client)
-        fetch.requests = 118
+        fetch.requests = 116  # The programme has spent all but the margin of four.
         records, report = await metadata.enrich(
             {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
         )
-    assert fetch.requests == 120 and fetch.metadata_requests == len(seen) == 2
-    assert not records and report["pending"] == 1
+        assert fetch.requests == 116 and not seen and not records and report["pending"] == 1
+        fetch = Budget(client)
+        fetch.requests = 114  # Room for exactly one film's search and details.
+        records, report = await metadata.enrich(
+            {VENUE.slug: snapshot(row)}, fetch, "fixture-token", {}
+        )
+    assert fetch.requests == 116 and fetch.metadata_requests == len(seen) == 2
+    assert len(records) == 1 and report["pending"] == 0
 
 
 def test_metadata_artifact_scope_and_mapping_cli_controls():
@@ -628,7 +685,7 @@ def test_vue_wrong_day_response_cannot_become_a_complete_empty_day():
     assert not wrong_group.complete_dates
 
 
-async def test_cold_budget_reaches_corroborated_returning_film_before_bare_title_candidates():
+async def test_a_short_budget_goes_first_to_a_labelled_film_with_source_facts():
     returning = film("Pan's Labyrinth")
     bare = [
         replace(film("Clayface"), key=f"bare-{i}", film_key=f"bare-{i}", identity_facts={})
@@ -643,9 +700,10 @@ async def test_cold_budget_reaches_corroborated_returning_film_before_bare_title
         transport=httpx.MockTransport(handler_for(SAMPLES[2], seen))
     ) as client:
         fetch = Budget(client)
-        fetch.requests = fetch.metadata_requests = 9  # Three GETs left in the metadata sub-cap.
+        fetch.requests = fetch.metadata_requests = METADATA_CAP - 3  # Three left in the sub-cap.
         records, report = await metadata.enrich(snaps, fetch, "fixture-token", {})
-    assert len(seen) == 3 and len(records) == 1
-    assert records[0].film_key == returning.film_key and records[0].candidate.tmdb_id == 1417
+    # The labelled Vue film costs two; one left cannot start the next film's search.
+    assert len(seen) == 2 and len(records) == 1
+    assert records[0].film_key == returning.film_key and records[0].candidates[0].tmdb_id == 1417
     assert report["pending"] == 5
     assert returning.tmdb_id is None  # Prioritisation is not identity approval.

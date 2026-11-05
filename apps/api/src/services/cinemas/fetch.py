@@ -10,6 +10,9 @@ import httpx
 from src.services.cinemas.domain import SOURCE_HOSTS, SourceError
 
 ALLOWED_HOSTS = SOURCE_HOSTS
+#: TMDB requests a run may make — AC3 (#335) raised it from AB6's 12 so the backlog clears in
+#: days. Always inside the run's 120-request ceiling below, which the programme spends first.
+METADATA_CAP = 48
 
 
 class Refused(SourceError):
@@ -39,8 +42,8 @@ class Budget:
         parsed = urlsplit(url)
         if parsed.hostname != "api.themoviedb.org" or not parsed.path.startswith("/3/"):
             raise SourceError("Unexpected metadata URL; no credential sent")
-        if not token or self.metadata_requests >= 12:
-            raise SourceError("Metadata credential unavailable or 12-GET sub-cap reached")
+        if not token or self.metadata_requests >= METADATA_CAP:
+            raise SourceError("Metadata credential unavailable or metadata sub-cap reached")
         return await self._get(url, token=token)
 
     async def _get(self, url: str, *, token: str | None = None) -> str:
@@ -70,8 +73,8 @@ class Budget:
                 raise SourceError("Programme run request/byte/time limit reached")
             self.last_start[host] = time.monotonic()
             if token is not None:
-                if self.metadata_requests >= 12:
-                    raise SourceError("Metadata 12-GET sub-cap reached")
+                if self.metadata_requests >= METADATA_CAP:
+                    raise SourceError("Metadata sub-cap reached")
                 self.metadata_requests += 1
             self.requests += 1
             headers = {}

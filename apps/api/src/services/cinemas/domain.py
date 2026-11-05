@@ -85,8 +85,21 @@ def days_between(start: date, end: date) -> list[date]:
 
 
 def release_category(evidence: dict[str, Any], *, identity_verified: bool) -> Category:
-    """Explicit run evidence only: dates/years/titles are not a first-run classifier."""
+    """A linked film's run — AC3 (#335, superseding the run rule of #326, #327 and #330).
+
+    AC3 labels each showing from the film's first UK cinema release on TMDB, or the cinema's
+    own reissue, anniversary or restoration label (`identity.classify`), and stores the run
+    with its reason in words; this reads it back. Rows AB6 wrote from an explicit source quote
+    ("firstUkTheatrical", "returning") still read as they did.
+    """
     if not identity_verified or evidence.get("conflict") or evidence.get("combinedProgramme"):
+        return "unclassified"
+    reason = evidence.get("runReason")
+    if isinstance(reason, str) and reason.strip():
+        if evidence.get("run") == "firstRun":
+            return "newRelease"
+        if evidence.get("run") == "rerun":
+            return "olderFilm"
         return "unclassified"
     source = evidence.get("sourceUrl")
     quote = evidence.get("quote")

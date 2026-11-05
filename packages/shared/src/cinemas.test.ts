@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { cinemaProgrammeResponseSchema } from './schemas'
+import { cinemaProgrammeResponseSchema, cinemaReviewListSchema } from './schemas'
 
 const id = '0a3282b1-50db-4af9-8d94-513dc8dd4bc3'
 const showing = {
   id, venueId: id, sourceTitle: 'A film', startsAtUtc: '2026-11-02T20:00:00Z',
   endsAtUtc: null, screen: null, formats: [], releaseCategory: 'unclassified',
   categoryConfidence: 'unverified', categoryEvidence: { sourceUrl: null, description: 'Unverified run' },
+  categoryReason: null,
   sourceReleaseDate: null, reissue: null,
   confirmation: 'unconfirmed', lastSeenUtc: '2026-11-02T08:00:00Z', observationStale: false,
   upstreamAge: 'unknown', bookingUrl: null,
@@ -47,5 +48,33 @@ describe('stored cinema programme', () => {
     expect(cinemaProgrammeResponseSchema.safeParse(copy).success).toBe(false)
     const missing = { ...programme, venues: [{ ...programme.venues[0], coverage: [{}] }] }
     expect(cinemaProgrammeResponseSchema.safeParse(missing).success).toBe(false)
+  })
+  it('reads an API from before AC3, which gives no run reason, as having none', () => {
+    const { categoryReason, ...before } = showing
+    expect(categoryReason).toBeNull()
+    const old = { ...programme, films: [{ ...programme.films[0]!, showings: [before] }] }
+    expect(cinemaProgrammeResponseSchema.parse(old).films[0]!.showings[0]!.categoryReason).toBeNull()
+  })
+  it.each(['review', 'event'])('accepts AC3\'s %s identity (#335)', status => {
+    const copy = structuredClone(programme)
+    copy.films[0]!.identityStatus = status
+    expect(cinemaProgrammeResponseSchema.safeParse(copy).success).toBe(true)
+  })
+})
+
+describe('cinema films to check (AC3, #335)', () => {
+  const item = {
+    key: 'a1b2c3d4e5f60718', title: 'Rocky', sourceTitles: ['Rocky'], venues: ['Glasgow Film Theatre'],
+    futureShowings: 2, reason: 'the title matches, but nothing else agrees',
+    candidates: [{ tmdbId: 1366, title: 'Rocky', year: 1976, posterPath: null, voteCount: 7000 }],
+  }
+  it('parses an item with the films it may be', () => {
+    expect(cinemaReviewListSchema.parse({ items: [item] })).toEqual({ items: [item] })
+  })
+  it('rejects a film with no TMDB id, a negative count or no reason', () => {
+    const noId = { ...item, candidates: [{ ...item.candidates[0]!, tmdbId: 0 }] }
+    expect(cinemaReviewListSchema.safeParse({ items: [noId] }).success).toBe(false)
+    expect(cinemaReviewListSchema.safeParse({ items: [{ ...item, futureShowings: -1 }] }).success).toBe(false)
+    expect(cinemaReviewListSchema.safeParse({ items: [{ ...item, reason: '' }] }).success).toBe(false)
   })
 })

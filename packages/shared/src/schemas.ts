@@ -2813,6 +2813,9 @@ const cinemaShowingSchema = z.object({
   reissue: z.boolean().nullable(),
   categoryConfidence: z.enum(['verified', 'unverified']),
   categoryEvidence: z.object({ sourceUrl: z.string().url().nullable(), description: z.string() }),
+  /** AC3 (#335): the run's reason in words, "UK release 1975 · rerun". Defaulted for an API
+   *  from before AC3. */
+  categoryReason: z.string().nullable().default(null),
   confirmation: z.enum(['confirmed', 'unconfirmed']),
   lastSeenUtc: cinemaUtcSchema,
   observationStale: z.boolean(),
@@ -2838,7 +2841,8 @@ export const cinemaProgrammeResponseSchema = z.object({
     movieId: z.string().uuid().nullable(),
     originalYear: z.number().int().nullable(),
     yearConfidence: z.enum(['verified', 'unverified']),
-    identityStatus: z.enum(['verified', 'unverified', 'conflict']),
+    /** AC3 (#335): `review` waits for Craig's review list; `event` is never one film. */
+    identityStatus: z.enum(['verified', 'unverified', 'conflict', 'review', 'event']),
     owned: z.boolean().nullable(),
     watched: z.boolean().nullable(),
     showings: z.array(cinemaShowingSchema),
@@ -2854,3 +2858,24 @@ export const cinemaProgrammeResponseSchema = z.object({
   selectionComplete: z.boolean(),
 })
 export type CinemaProgrammeResponse = z.infer<typeof cinemaProgrammeResponseSchema>
+
+// AC3 (#335): programme films the rule could not settle alone, for Craig's review.
+export const cinemaReviewListSchema = z.object({
+  items: z.array(z.object({
+    key: z.string().min(1),
+    title: z.string().min(1),
+    sourceTitles: z.array(z.string().min(1)),
+    venues: z.array(z.string().min(1)),
+    futureShowings: z.number().int().nonnegative(),
+    reason: z.string().min(1),
+    candidates: z.array(z.object({
+      tmdbId: z.number().int().positive(),
+      title: z.string().min(1),
+      year: z.number().int().nullable(),
+      posterPath: z.string().nullable(),
+      voteCount: z.number().int().nonnegative(),
+    })),
+  })),
+})
+export type CinemaReviewList = z.infer<typeof cinemaReviewListSchema>
+export type CinemaReviewItem = CinemaReviewList['items'][number]

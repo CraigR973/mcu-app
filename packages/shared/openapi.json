@@ -9514,7 +9514,9 @@
       "enum": [
        "verified",
        "unverified",
-       "conflict"
+       "conflict",
+       "review",
+       "event"
       ],
       "title": "Identitystatus",
       "type": "string"
@@ -9621,6 +9623,17 @@
      },
      "categoryEvidence": {
       "$ref": "#/components/schemas/ProgrammeCategoryEvidence"
+     },
+     "categoryReason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Categoryreason"
      },
      "confirmation": {
       "enum": [
@@ -10905,6 +10918,151 @@
      "baseUrl"
     ],
     "title": "RetailerUpdateRequest",
+    "type": "object"
+   },
+   "ReviewCandidate": {
+    "description": "One film the lookup found with the programme's title, for Craig to choose.",
+    "properties": {
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "tmdbId": {
+      "exclusiveMinimum": 0.0,
+      "title": "Tmdbid",
+      "type": "integer"
+     },
+     "voteCount": {
+      "minimum": 0.0,
+      "title": "Votecount",
+      "type": "integer"
+     },
+     "year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Year"
+     }
+    },
+    "required": [
+     "tmdbId",
+     "title",
+     "year",
+     "posterPath",
+     "voteCount"
+    ],
+    "title": "ReviewCandidate",
+    "type": "object"
+   },
+   "ReviewDecision": {
+    "additionalProperties": false,
+    "description": "Exactly one: the TMDB film it is, from the item's own candidates, or not a film.",
+    "properties": {
+     "notAFilm": {
+      "default": false,
+      "title": "Notafilm",
+      "type": "boolean"
+     },
+     "tmdbId": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tmdbid"
+     }
+    },
+    "title": "ReviewDecision",
+    "type": "object"
+   },
+   "ReviewItem": {
+    "description": "One programme film AC3 could not settle alone (#335): its rows across the listings that\nshare a title and facts, so a film listed once per showing reads as one film.",
+    "properties": {
+     "candidates": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+     },
+     "futureShowings": {
+      "minimum": 0.0,
+      "title": "Futureshowings",
+      "type": "integer"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     },
+     "sourceTitles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Sourcetitles",
+      "type": "array"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "venues": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Venues",
+      "type": "array"
+     }
+    },
+    "required": [
+     "key",
+     "title",
+     "sourceTitles",
+     "venues",
+     "futureShowings",
+     "reason",
+     "candidates"
+    ],
+    "title": "ReviewItem",
+    "type": "object"
+   },
+   "ReviewList": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewItem"
+      },
+      "title": "Items",
+      "type": "array"
+     }
+    },
+    "required": [
+     "items"
+    ],
+    "title": "ReviewList",
     "type": "object"
    },
    "ReviewScoreResponse": {
@@ -17760,6 +17918,91 @@
      }
     ],
     "summary": "Get Programme",
+    "tags": [
+     "cinemas"
+    ]
+   }
+  },
+  "/api/v1/cinemas/review": {
+   "get": {
+    "description": "AC3 (#335): programme films waiting for Craig, most showings first. Admin only.",
+    "operationId": "get_review_list_api_v1_cinemas_review_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReviewList"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Review List",
+    "tags": [
+     "cinemas"
+    ]
+   }
+  },
+  "/api/v1/cinemas/review/{key}": {
+   "post": {
+    "description": "Link a review item to one of its films, or mark it not a film, and relabel its\nshowings now. The decision holds until the listing's title or facts change.",
+    "operationId": "decide_review_api_v1_cinemas_review__key__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "key",
+      "required": true,
+      "schema": {
+       "title": "Key",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReviewDecision"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReviewList"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Decide Review",
     "tags": [
      "cinemas"
     ]
