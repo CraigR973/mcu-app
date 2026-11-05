@@ -78,6 +78,31 @@ pick controls and the cinema entry cannot accept a tap; enabling follows the com
 layout. It adds no source request, timer, data write or Home reorder. The held-response
 regression preserves the original native checkbox assertion and verifies one stats GET.
 
+## At the cinema, film first — AC4
+
+AB7's filter-first Cinemas page became Movie night's second view (#341). One read of the
+stored fortnight feeds the view, its filters and Home's strip; a second read gives one film's
+every showing. Both draw a showing through AB7's own coverage and ticket rule (`Window.showing`),
+so nothing about tickets changed. `/cinemas` redirects to the view.
+
+```mermaid
+flowchart TB
+    Tables[(Cinema tables<br/>AC3 identities and runs)] --> Window[programme.Window<br/>coverage · failed runs · ticket rule]
+    Window --> List[GET /cinemas/films<br/>fortnight: films and listings<br/>showings by cinema · day · run]
+    Window --> One[GET /cinemas/films/key<br/>one film, every showing]
+    List --> View[Movie night · At the cinema<br/>This week · Coming up · listings · events<br/>run · day · cinema filters in the address]
+    List --> Strip[Home · At the cinema strip<br/>this week's films with posters, last on Home]
+    View --> Page[Film page /movie-night/cinema/key<br/>by day, then cinema · time chips = Check tickets]
+    Strip --> Page
+    One --> Page
+```
+
+A film is one TMDB film across cinemas and listing titles (AC3). A row that is not becomes its
+own chain's listing, gathered within that source by AC3's review key and never merged across
+chains or into a film on the title alone (#342). A listing's address (`listing-<row id>`) opens
+the film once a morning links it; a film's is `tmdb-<id>`. AC5 adds "Propose a trip" to the
+film page and behind Movie night's "Plan a cinema trip".
+
 ## AA8, shipped 23 Oct
 
 ```mermaid

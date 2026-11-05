@@ -7293,3 +7293,54 @@ contemporaneous.
        reruns: Rocky, The Fugitive, Hunger Games: The Ballad of Songbirds and Snakes, Prisoners,
        Cliffhanger and Elf. The review list falls from 13 titles to 7, and reruns from 4 showings
        to 18.
+
+341. **AC4: Movie night's At the cinema view, and a page per film (5 Nov).**
+     Group AC sitting 3's first batch (#335, point 3). No migration.
+     - **Two reads, one rule.** `GET /api/v1/cinemas/films` is the stored fortnight (the run
+       day and the thirteen after it), every film and listing with its showings summarised by
+       cinema, day and run, so the view's filters answer without another request and still
+       work offline. `GET /api/v1/cinemas/films/{key}` is one film's every showing. Both draw a
+       showing through the programme's own `Window.showing`, so coverage, staleness and ticket
+       links follow AB7's rule unchanged. `/cinemas/programme` stays for installed older builds.
+     - **Addresses.** The view is `/movie-night/cinema`, a top-level view of the Movie night tab
+       (no back arrow on a phone); `/cinemas` redirects there. A film's page is
+       `/movie-night/cinema/tmdb-<id>`; a listing's is `listing-<row id>`, and that address
+       opens the film once a morning links it, so AC5's trips and AC7's releases can link
+       before AC3's backfill ends. The run, day and cinemas chosen live in the address, so a
+       film page's back arrow returns to the same view.
+     - **The view.** This week (today and six days, widest first), Coming up (first showing
+       later, soonest first), then "Not matched to a film yet" and "Events and double bills"
+       as rows, title by title. Run counts are films, not AB7's screenings. Cinemas that list
+       fewer days are named with their last day, and a cinema with no current listing says why.
+     - **The film page.** Days, then cinemas in the order each first shows that day; each time
+       is a chip carrying its format, and a bookable chip *is* the Check tickets link
+       ("20:00 IMAX, check tickets at Vue Glasgow St Enoch"), under one line saying each time
+       opens the cinema's page. A time with no ticket link says why (unconfirmed, stale).
+       "Digital projection" is said once per cinema, not per time; a run reason or listing title
+       the showings share is said once for the film, and per cinema where they differ.
+     - **Words.** Runs read "First run", "Preview" or "Rerun" (AC3's), while the filters keep
+       #326's New releases, Older films and Unclassified. The menu entry is "At the cinema";
+       the command palette still finds it as Cinemas; the sidebar marks the most specific entry.
+     - **Home's strip** is this week's linked films that have posters, in the view's order. It
+       stays last on Home and takes what the rows above left (#338): a film already shown is
+       skipped by catalogue film, or by title for a film the collection does not hold. With no
+       such film (before AC3's backfill) Home keeps its "At the cinema" card. It adds one read,
+       shared with the view, and keeps AB7's tap guard.
+     - **Movie night** puts open and planned nights first (the soonest planned at the top) and
+       folds ended nights, and nights planned for a day already gone, under "Past screenings
+       (n)", closed. "Plan a cinema trip" sits beside "Start a screening" and opens the view.
+
+342. **A listing not matched to a film yet gathers its own source's rows of one title and
+     facts; it never joins another chain's listing or a film on the title (5 Nov).** Amends
+     AB7's "unresolved equal titles remain separate possible duplicates" (#327, #334) within one
+     source only. *Why:* GFT and CinemaTimes give some films no film id, so each showing is its
+     own row: on 5 Nov "Tabby McTat" was 7 rows at one source and GFT's "Primetime" 3, which
+     a film-first view would draw as 7 and 3 films. Rows of one source are gathered by AC3's
+     review key (cleaned title, labels, the source's release date, director and runtime), the
+     key Craig's review list already uses (#339), so two films one source tells apart by a fact
+     stay apart. Across chains, and against a linked film, the accepted contract holds: no
+     title-only merge (#327). Until AC3's backfill ends (about 10 Nov), one film can appear
+     once per chain under "Not matched to a film yet", sorted together, with the page naming
+     the other listings of its title. *Cost:* two different films one source lists under one
+     title with no facts would read as one listing until matched; the page never claims a
+     year, poster or run for a listing.
