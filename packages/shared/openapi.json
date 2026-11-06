@@ -1974,6 +1974,18 @@
       "title": "Title",
       "type": "string"
      },
+     "tmdbId": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tmdbid"
+     },
      "typeLabel": {
       "title": "Typelabel",
       "type": "string"
@@ -2111,12 +2123,28 @@
       "minimum": 0.0,
       "title": "Total",
       "type": "integer"
+     },
+     "types": {
+      "items": {
+       "enum": [
+        "4k_uhd_release",
+        "blu_ray_release",
+        "streaming_release",
+        "theatrical",
+        "award_ceremony",
+        "sale_event"
+       ],
+       "type": "string"
+      },
+      "title": "Types",
+      "type": "array"
      }
     },
     "required": [
      "month",
      "days",
-     "total"
+     "total",
+     "types"
     ],
     "title": "CalendarMonthResponse",
     "type": "object"
@@ -2124,8 +2152,16 @@
    "CalendarSubscriptionResponse": {
     "description": "The feed path, returned **once**.\n\nThe token is hashed at rest and never retrievable again — so this response is the only\ntime it exists in plaintext, and asking again rotates it. That is what makes an\naccidentally-pasted link recoverable.\n\n**A path, not an absolute URL.** The API does not know its own public origin: deriving\nit from the request's ``Host`` header would reflect an attacker-controlled value into a\nlink, and configuring it would mean a new Railway variable — a hosting change this\nproject keeps explicit. The web app already holds the origin in ``VITE_API_URL`` and\ncomposes the URL there, which is the one place it is known for certain.",
     "properties": {
+     "cinemaPath": {
+      "title": "Cinemapath",
+      "type": "string"
+     },
      "createdAt": {
       "title": "Createdat",
+      "type": "string"
+     },
+     "discPath": {
+      "title": "Discpath",
       "type": "string"
      },
      "path": {
@@ -2139,6 +2175,8 @@
     },
     "required": [
      "path",
+     "discPath",
+     "cinemaPath",
      "createdAt",
      "replacedPrevious"
     ],
@@ -18203,7 +18241,7 @@
   },
   "/api/v1/calendar.ics": {
    "get": {
-    "description": "The unauthenticated iCal feed — §7.4.\n\n``request`` is unused by the body and required by slowapi's decorator, which reads the\nclient address off it.\n\n**A wrong token and a revoked token get the same 404**, with the same body. A 401, or a\ndifferent message for \"this used to work\", would confirm to someone guessing that a\ntoken had once existed — and there is no user to tell apart from an attacker here,\nbecause the whole point is that nobody signs in.",
+    "description": "The unauthenticated iCal feed — §7.4.\n\n``request`` is unused by the body and required by slowapi's decorator, which reads the\nclient address off it.\n\n**A wrong token and a revoked token get the same 404**, with the same body. A 401, or a\ndifferent message for \"this used to work\", would confirm to someone guessing that a\ntoken had once existed — and there is no user to tell apart from an attacker here,\nbecause the whole point is that nobody signs in.\n\n**AC7: ``calendar`` picks one of Releases' two calendars**: ``disc`` (4K, Blu-ray and sale\ndates) or ``cinema`` (UK cinema dates). Absent, or ``all``, it is every type: the feed\ninstalled calendars already follow, unchanged. Still release dates and nothing personal.",
     "operationId": "calendar_feed_api_v1_calendar_ics_get",
     "parameters": [
      {
@@ -18214,6 +18252,21 @@
        "maxLength": 200,
        "minLength": 16,
        "title": "Token",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "calendar",
+      "required": false,
+      "schema": {
+       "default": "all",
+       "enum": [
+        "all",
+        "disc",
+        "cinema"
+       ],
+       "title": "Calendar",
        "type": "string"
       }
      }
@@ -18273,7 +18326,7 @@
   },
   "/api/v1/calendar/month": {
    "get": {
-    "description": "§7.4's monthly view, bucketed by day server-side.\n\nGrouping here rather than in the browser keeps the grid a rendering problem, and makes\nan empty month an explicit empty map rather than something the client infers.",
+    "description": "§7.4's monthly view, bucketed by day server-side.\n\nGrouping here rather than in the browser keeps the grid a rendering problem, and makes\nan empty month an explicit empty map rather than something the client infers.\n\n**AC7: ``types`` narrows the month to some release types** (``?types=theatrical``, or\n``types`` given more than once), so each of Releases' two calendars reads its own.\nWithout it the month holds every type, as it always has. The answer says which it holds.",
     "operationId": "calendar_month_api_v1_calendar_month_get",
     "parameters": [
      {
@@ -18284,6 +18337,33 @@
        "pattern": "^\\d{4}-\\d{2}$",
        "title": "Month",
        "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "types",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "items": {
+          "enum": [
+           "4k_uhd_release",
+           "blu_ray_release",
+           "streaming_release",
+           "theatrical",
+           "award_ceremony",
+           "sale_event"
+          ],
+          "type": "string"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Types"
       }
      }
     ],

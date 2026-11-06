@@ -27,6 +27,7 @@ with the same care as a refresh token:
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Sequence
 from datetime import date, timedelta
 from typing import Annotated, cast
 
@@ -37,7 +38,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth import AdminUser, CurrentUser
 from src.clock import utc_today, utcnow
 from src.models.release_calendar import (
+    CALENDAR_TYPES,
     RELEASE_TYPE_LABELS,
+    RELEASE_TYPES,
     ReleaseCalendarEntry,
 )
 from src.rate_limit import limiter
@@ -48,6 +51,7 @@ from src.schemas.discovery import (
     CalendarListResponse,
     CalendarMonthResponse,
     CalendarSubscriptionResponse,
+    FeedCalendar,
     ReleaseType,
 )
 from src.services.calendar import (
@@ -72,6 +76,26 @@ FEED_HORIZON = timedelta(days=365)
 #: script would want.
 ICS_LIMIT = "30/hour"
 
+#: AC7 (#344): each feed's name in a calendar app, its description and its file's name.
+#: ``all`` is the feed installed calendars already follow, word for word as before.
+FEEDS: dict[str, tuple[str, str, str]] = {
+    "all": (
+        "MCU — Release calendar",
+        "Upcoming releases from Mark's Cinematic Universe.",
+        "mcu-release-calendar.ics",
+    ),
+    "disc": (
+        "MCU — Disc releases",
+        "4K and Blu-ray releases, and sale dates, from Mark's Cinematic Universe.",
+        "mcu-disc-releases.ics",
+    ),
+    "cinema": (
+        "MCU — Cinema releases",
+        "UK cinema release dates from Mark's Cinematic Universe.",
+        "mcu-cinema-releases.ics",
+    ),
+}
+
 
 def _entry(entry: ReleaseCalendarEntry) -> CalendarEntryResponse:
     return CalendarEntryResponse(
@@ -86,19 +110,24 @@ def _entry(entry: ReleaseCalendarEntry) -> CalendarEntryResponse:
         posterPath=entry.poster_path,
         overview=entry.overview,
         movieId=entry.movie_id,
+        tmdbId=entry.tmdb_id,
     )
 
 
-async def _entries_between(db: AsyncSession, start: date, end: date) -> list[ReleaseCalendarEntry]:
+async def _entries_between(
+    db: AsyncSession, start: date, end: date, types: Sequence[str] | None = None
+) -> list[ReleaseCalendarEntry]:
+    """Entries dated between two days, soonest first; of these ``types`` only, when given."""
+    query = select(ReleaseCalendarEntry).where(
+        ReleaseCalendarEntry.release_date >= start,
+        ReleaseCalendarEntry.release_date <= end,
+    )
+    if types is not None:
+        query = query.where(ReleaseCalendarEntry.release_type.in_(types))
     return list(
         (
             await db.execute(
-                select(ReleaseCalendarEntry)
-                .where(
-                    ReleaseCalendarEntry.release_date >= start,
-                    ReleaseCalendarEntry.release_date <= end,
-                )
-                .order_by(ReleaseCalendarEntry.release_date, ReleaseCalendarEntry.title)
+                query.order_by(ReleaseCalendarEntry.release_date, ReleaseCalendarEntry.title)
             )
         )
         .scalars()
@@ -141,11 +170,16 @@ async def calendar_month(
     db: Database,
     background_tasks: BackgroundTasks,
     month: Annotated[str, Query(pattern=r"^\d{4}-\d{2}$")],
+    types: Annotated[list[ReleaseType] | None, Query()] = None,
 ) -> CalendarMonthResponse:
     """§7.4's monthly view, bucketed by day server-side.
 
     Grouping here rather than in the browser keeps the grid a rendering problem, and makes
     an empty month an explicit empty map rather than something the client infers.
+
+    **AC7: ``types`` narrows the month to some release types** (``?types=theatrical``, or
+    ``types`` given more than once), so each of Releases' two calendars reads its own.
+    Without it the month holds every type, as it always has. The answer says which it holds.
     """
     year, month_number = (int(part) for part in month.split("-"))
     # The year is bounded as well as the month. ``\d{4}`` matches "0000", and
@@ -158,13 +192,16 @@ async def calendar_month(
     start = date(year, month_number, 1)
     end = date(year + (month_number == 12), (month_number % 12) + 1, 1) - timedelta(days=1)
 
+    held = [kind for kind in RELEASE_TYPES if types is None or kind in types]
     grouped: dict[str, list[CalendarEntryResponse]] = defaultdict(list)
-    entries = await _entries_between(db, start, end)
+    entries = await _entries_between(db, start, end, held if types is not None else None)
     await _refresh_if_stale(db, background_tasks)
     for entry in entries:
         grouped[entry.release_date.isoformat()].append(_entry(entry))
 
-    return CalendarMonthResponse(month=month, days=dict(grouped), total=len(entries))
+    return CalendarMonthResponse(
+        month=month, days=dict(grouped), total=len(entries), types=cast(list[ReleaseType], held)
+    )
 
 
 @router.post("/calendar/subscribe", response_model=CalendarSubscriptionResponse)
@@ -191,8 +228,13 @@ async def subscribe_to_calendar(user: CurrentUser, db: Database) -> CalendarSubs
     # it would let someone induce a subscription link pointing at their own server; and
     # configuring an origin would mean a new Railway variable, which is a hosting change
     # this project keeps explicit. The web app holds `VITE_API_URL` and composes it there.
+    # AC7: one token, so one press gives the feed of every type and one per calendar, and the
+    # next press stops all three.
+    path = f"/api/v1/calendar.ics?token={token}"
     return CalendarSubscriptionResponse(
-        path=f"/api/v1/calendar.ics?token={token}",
+        path=path,
+        discPath=f"{path}&calendar=disc",
+        cinemaPath=f"{path}&calendar=cinema",
         createdAt=utcnow(),
         replacedPrevious=had_previous,
     )
@@ -205,6 +247,7 @@ async def calendar_feed(
     db: Database,
     background_tasks: BackgroundTasks,
     token: Annotated[str, Query(min_length=16, max_length=200)],
+    calendar: Annotated[FeedCalendar, Query()] = "all",
 ) -> Response:
     """The unauthenticated iCal feed — §7.4.
 
@@ -215,6 +258,10 @@ async def calendar_feed(
     different message for "this used to work", would confirm to someone guessing that a
     token had once existed — and there is no user to tell apart from an attacker here,
     because the whole point is that nobody signs in.
+
+    **AC7: ``calendar`` picks one of Releases' two calendars**: ``disc`` (4K, Blu-ray and sale
+    dates) or ``cinema`` (UK cinema dates). Absent, or ``all``, it is every type: the feed
+    installed calendars already follow, unchanged. Still release dates and nothing personal.
     """
     del request
     feed_token = await resolve_feed_token(db, token)
@@ -222,7 +269,9 @@ async def calendar_feed(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
     today = utc_today()
-    entries = await _entries_between(db, today - FEED_LOOKBACK, today + FEED_HORIZON)
+    entries = await _entries_between(
+        db, today - FEED_LOOKBACK, today + FEED_HORIZON, CALENDAR_TYPES.get(calendar)
+    )
     # A subscribed calendar app polls even when nobody opens the app, so its reads keep
     # the calendar fresh too (Batch T5).
     await _refresh_if_stale(db, background_tasks)
@@ -242,18 +291,14 @@ async def calendar_feed(
         for entry in entries
     ]
 
-    body = render_calendar(
-        events,
-        name="MCU — Release calendar",
-        description="Upcoming releases from Mark's Cinematic Universe.",
-        now=utcnow(),
-    )
+    name, description, filename = FEEDS[calendar]
+    body = render_calendar(events, name=name, description=description, now=utcnow())
     return Response(
         content=body,
         media_type="text/calendar; charset=utf-8",
         headers={
             # Named so a client that downloads rather than subscribes gets a sensible file.
-            "Content-Disposition": 'inline; filename="mcu-release-calendar.ics"',
+            "Content-Disposition": f'inline; filename="{filename}"',
             # A URL that is its own credential must never be indexed.
             "X-Robots-Tag": "noindex, nofollow",
             # Nor cached by anything between here and the subscriber.

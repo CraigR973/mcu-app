@@ -102,6 +102,11 @@ ReleaseType = Literal[
 ]
 
 
+#: AC7 (#344): which calendar a subscription feed holds. ``all`` is every type, the feed
+#: installed calendars already follow.
+FeedCalendar = Literal["all", "disc", "cinema"]
+
+
 class CalendarEntryResponse(BaseModel):
     id: uuid.UUID
     title: str
@@ -115,6 +120,9 @@ class CalendarEntryResponse(BaseModel):
     overview: str | None
     #: Set when the film is already in the collection, so a row can link to it.
     movieId: uuid.UUID | None
+    #: AC7: the film's TMDB id, so a cinema release showing at one of the nine can open its
+    #: film page (AC4's ``tmdb-<id>``). Null for a sale or any row not from TMDB.
+    tmdbId: int | None = Field(default=None, gt=0)
 
 
 class CalendarMonthResponse(BaseModel):
@@ -128,6 +136,9 @@ class CalendarMonthResponse(BaseModel):
     month: str
     days: dict[str, list[CalendarEntryResponse]]
     total: int = Field(ge=0)
+    #: AC7: the release types this month holds, in the vocabulary's order: those the
+    #: ``types`` filter asked for, or every type when it asked for none.
+    types: list[ReleaseType]
 
 
 class CalendarListResponse(BaseModel):
@@ -152,7 +163,12 @@ class CalendarSubscriptionResponse(BaseModel):
     composes the URL there, which is the one place it is known for certain.
     """
 
+    #: Every type, both calendars together: the feed installed calendars already follow.
     path: str
+    #: AC7: the same token's feed of one calendar each. One token per person still, so these
+    #: come together, and asking again stops all three.
+    discPath: str
+    cinemaPath: str
     createdAt: UtcDatetime
     #: True when this call revoked a previous link, so the UI can say the old one stopped
     #: working rather than leaving someone with two URLs they believe both work.

@@ -335,6 +335,106 @@ async def test_a_short_token_is_rejected_before_any_lookup(
     assert response.status_code == 422
 
 
+async def _feed(session: AsyncSession, path: str):  # type: ignore[no-untyped-def]
+    """Fetch a feed path the way a calendar app does: no Authorization header at all."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as anonymous:
+        app.dependency_overrides[get_db] = _db_override(session)
+        try:
+            return await anonymous.get(path)
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+
+
+async def _one_of_each(session: AsyncSession) -> None:
+    """A 4K, a Blu-ray, a sale and a cinema date next week, as Releases' two calendars hold."""
+    await _entry(session, "A Disc In 4K", kind="4k_uhd_release", tmdb_id=7001)
+    await _entry(session, "A Disc On Blu-ray", kind="blu_ray_release", tmdb_id=7002)
+    await _entry(session, "A Winter Sale", kind="sale_event")
+    await _entry(session, "A Film At The Pictures", kind="theatrical", tmdb_id=7003)
+
+
+async def test_one_press_gives_a_feed_per_calendar_with_the_same_token(
+    client: AsyncClient,
+) -> None:
+    """AC7 (#344): the token is still one per person, so the three links come together."""
+    body = (await client.post("/api/v1/calendar/subscribe")).json()
+    token = body["path"].split("token=", 1)[1]
+    assert body["path"] == f"/api/v1/calendar.ics?token={token}"
+    assert body["discPath"] == f"/api/v1/calendar.ics?token={token}&calendar=disc"
+    assert body["cinemaPath"] == f"/api/v1/calendar.ics?token={token}&calendar=cinema"
+
+
+async def test_a_calendar_feed_holds_that_calendar_alone(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Disc releases are 4K, Blu-ray and sale dates; cinema releases are UK cinema dates.
+    Each feed is named for its calendar, so a phone holding both can tell them apart."""
+    await _one_of_each(api_session)
+    body = (await client.post("/api/v1/calendar/subscribe")).json()
+
+    disc = await _feed(api_session, body["discPath"])
+    assert disc.status_code == 200, disc.text
+    assert "X-WR-CALNAME:MCU — Disc releases" in disc.text
+    assert disc.headers["content-disposition"] == 'inline; filename="mcu-disc-releases.ics"'
+    for summary in ("4K UHD: A Disc In 4K", "Blu-ray: A Disc On Blu-ray", "Sale: A Winter Sale"):
+        assert summary in disc.text
+    assert "A Film At The Pictures" not in disc.text
+
+    cinema = await _feed(api_session, body["cinemaPath"])
+    assert cinema.status_code == 200, cinema.text
+    assert "X-WR-CALNAME:MCU — Cinema releases" in cinema.text
+    assert cinema.headers["content-disposition"] == 'inline; filename="mcu-cinema-releases.ics"'
+    assert "In cinemas: A Film At The Pictures" in cinema.text
+    for title in ("A Disc In 4K", "A Disc On Blu-ray", "A Winter Sale"):
+        assert title not in cinema.text
+
+
+async def test_the_all_types_feed_installed_calendars_follow_is_unchanged(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """A link pasted into a calendar before AC7 has no ``calendar``: it still gets every
+    type under the old name and file name, and ``calendar=all`` is the same feed."""
+    await _one_of_each(api_session)
+    path = (await client.post("/api/v1/calendar/subscribe")).json()["path"]
+
+    served = await _feed(api_session, path)
+    assert served.status_code == 200, served.text
+    assert "X-WR-CALNAME:MCU — Release calendar" in served.text
+    assert served.headers["content-disposition"] == 'inline; filename="mcu-release-calendar.ics"'
+    for title in ("A Disc In 4K", "A Disc On Blu-ray", "A Winter Sale", "A Film At The Pictures"):
+        assert title in served.text
+
+    def events(text: str) -> list[str]:
+        return sorted(line for line in text.split("\r\n") if line.startswith(("UID:", "SUMMARY:")))
+
+    explicit = await _feed(api_session, f"{path}&calendar=all")
+    assert events(explicit.text) == events(served.text)
+
+
+async def test_asking_again_stops_every_calendar_feed(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """Rotating is still the whole recovery story: one press revokes all three links, and
+    each then answers exactly as a token that never existed."""
+    await _one_of_each(api_session)
+    first = (await client.post("/api/v1/calendar/subscribe")).json()
+    await client.post("/api/v1/calendar/subscribe")
+    unknown = await _feed(
+        api_session, f"/api/v1/calendar.ics?token={new_feed_token()}&calendar=disc"
+    )
+    for key in ("path", "discPath", "cinemaPath"):
+        revoked = await _feed(api_session, first[key])
+        assert revoked.status_code == unknown.status_code == 404
+        assert revoked.json() == unknown.json()
+
+
+async def test_a_calendar_the_feed_does_not_have_is_refused(api_session: AsyncSession) -> None:
+    response = await _feed(
+        api_session, f"/api/v1/calendar.ics?token={new_feed_token()}&calendar=dvd"
+    )
+    assert response.status_code == 422
+
+
 # ---------------------------------------------------------------------------
 # §7.4 — the monthly view
 # ---------------------------------------------------------------------------
@@ -353,6 +453,69 @@ async def test_the_month_view_buckets_entries_by_day(
     assert body["total"] == 2
     assert sorted(e["title"] for e in body["days"]["2087-03-04"]) == ["First", "Second"]
     assert "2087-04-01" not in body["days"]
+
+
+async def test_the_month_narrows_to_the_types_asked_for(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """AC7 (#344): each calendar reads its own month, and the answer says what it holds."""
+    when = date(2087, 5, 6)
+    await _entry(api_session, "Four K", when=when, kind="4k_uhd_release", tmdb_id=8001)
+    await _entry(api_session, "Blu", when=when, kind="blu_ray_release", tmdb_id=8002)
+    await _entry(api_session, "Sale", when=date(2087, 5, 9), kind="sale_event")
+    await _entry(api_session, "Pictures", when=when, kind="theatrical", tmdb_id=8003)
+
+    cinema = (await client.get("/api/v1/calendar/month?month=2087-05&types=theatrical")).json()
+    assert cinema["types"] == ["theatrical"]
+    assert cinema["total"] == 1
+    assert [e["title"] for e in cinema["days"]["2087-05-06"]] == ["Pictures"]
+    assert "2087-05-09" not in cinema["days"]
+
+    # Asked in any order, held in the vocabulary's.
+    disc = (
+        await client.get(
+            "/api/v1/calendar/month?month=2087-05"
+            "&types=sale_event&types=blu_ray_release&types=4k_uhd_release&types=sale_event"
+        )
+    ).json()
+    assert disc["types"] == ["4k_uhd_release", "blu_ray_release", "sale_event"]
+    assert disc["total"] == 3
+    assert sorted(e["title"] for e in disc["days"]["2087-05-06"]) == ["Blu", "Four K"]
+    assert [e["title"] for e in disc["days"]["2087-05-09"]] == ["Sale"]
+
+
+async def test_without_a_type_the_month_holds_every_type_as_before(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    await _entry(api_session, "Four K", when=date(2087, 6, 1), kind="4k_uhd_release")
+    await _entry(api_session, "Pictures", when=date(2087, 6, 2), kind="theatrical")
+    body = (await client.get("/api/v1/calendar/month?month=2087-06")).json()
+    assert body["total"] == 2
+    assert body["types"] == [
+        "4k_uhd_release",
+        "blu_ray_release",
+        "streaming_release",
+        "theatrical",
+        "award_ceremony",
+        "sale_event",
+    ]
+
+
+async def test_a_type_the_calendar_does_not_have_is_refused(client: AsyncClient) -> None:
+    response = await client.get("/api/v1/calendar/month?month=2087-06&types=dvd_release")
+    assert response.status_code == 422
+
+
+async def test_an_entry_carries_its_tmdb_id_so_a_showing_film_can_link(
+    client: AsyncClient, api_session: AsyncSession
+) -> None:
+    """AC7: a cinema release showing at one of the nine opens its film page, `tmdb-<id>`."""
+    await _entry(api_session, "Pictures", when=date(2087, 7, 3), kind="theatrical", tmdb_id=8004)
+    await _entry(api_session, "Sale", when=date(2087, 7, 3), kind="sale_event")
+    body = (await client.get("/api/v1/calendar/month?month=2087-07")).json()
+    by_title = {e["title"]: e for e in body["days"]["2087-07-03"]}
+    assert by_title["Pictures"]["tmdbId"] == 8004
+    assert by_title["Sale"]["tmdbId"] is None
 
 
 async def test_an_empty_month_is_an_explicit_empty_map(client: AsyncClient) -> None:

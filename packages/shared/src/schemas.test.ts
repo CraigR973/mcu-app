@@ -88,6 +88,9 @@ import {
   identifySearchSchema,
   recentIdentificationsSchema,
   dealsRunSchema,
+  calendarEntrySchema,
+  calendarMonthSchema,
+  calendarSubscriptionSchema,
 } from './schemas'
 
 describe('healthResponseSchema', () => {
@@ -2629,5 +2632,44 @@ describe('needsYouSchema — AC1 (#335)', () => {
     expect(needsYouSchema.safeParse({ items: [{ ...putBack, kind: 'tripReply' }] }).success).toBe(false)
     expect(needsYouSchema.safeParse({ items: [{ ...putBack, returnedDate: '28 Oct' }] }).success).toBe(false)
     expect(needsYouSchema.safeParse({ items: [{ ...putBack, daysOverdue: -1 }] }).success).toBe(false)
+  })
+})
+
+describe('AC7 release calendars', () => {
+  const entry = {
+    id: UUID_A,
+    title: 'Godzilla Minus Zero',
+    releaseType: 'theatrical',
+    typeLabel: 'In cinemas',
+    releaseDate: '2026-11-06',
+    label: null,
+    region: 'GB',
+    url: null,
+    posterPath: null,
+    overview: null,
+    movieId: null,
+  }
+
+  it("carries a film's TMDB id, and reads an entry cached before AC7 as having none", () => {
+    expect(calendarEntrySchema.parse({ ...entry, tmdbId: 1381071 }).tmdbId).toBe(1381071)
+    expect(calendarEntrySchema.parse(entry).tmdbId).toBeNull()
+    expect(calendarEntrySchema.safeParse({ ...entry, tmdbId: 0 }).success).toBe(false)
+  })
+
+  it('says which types a month holds, and reads a month from before AC7 as every type', () => {
+    const month = { month: '2026-11', days: { '2026-11-06': [entry] }, total: 1 }
+    expect(calendarMonthSchema.parse({ ...month, types: ['theatrical'] }).types).toEqual(['theatrical'])
+    expect(calendarMonthSchema.parse(month).types).toEqual([
+      '4k_uhd_release', 'blu_ray_release', 'streaming_release', 'theatrical', 'award_ceremony', 'sale_event',
+    ])
+    expect(calendarMonthSchema.safeParse({ ...month, types: ['dvd_release'] }).success).toBe(false)
+  })
+
+  it('carries a feed per calendar, and none from an API older than AC7', () => {
+    const answer = { path: '/api/v1/calendar.ics?token=t', createdAt: '2026-11-06T10:00:00Z', replacedPrevious: false }
+    const parsed = calendarSubscriptionSchema.parse({ ...answer, discPath: `${answer.path}&calendar=disc`, cinemaPath: `${answer.path}&calendar=cinema` })
+    expect(parsed.discPath).toBe('/api/v1/calendar.ics?token=t&calendar=disc')
+    expect(parsed.cinemaPath).toBe('/api/v1/calendar.ics?token=t&calendar=cinema')
+    expect(calendarSubscriptionSchema.parse(answer)).toMatchObject({ discPath: null, cinemaPath: null })
   })
 })

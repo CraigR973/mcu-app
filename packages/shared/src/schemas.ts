@@ -1212,6 +1212,9 @@ export const calendarEntrySchema = z.object({
   posterPath: z.string().nullable(),
   overview: z.string().nullable(),
   movieId: z.string().uuid().nullable(),
+  /** AC7: the film's TMDB id, so a cinema release showing at one of the nine opens its film
+   *  page. Defaulted, so an answer cached before AC7 still parses (#205). */
+  tmdbId: z.number().int().positive().nullable().default(null),
 })
 
 /** Bucketed by day server-side, so the grid is a rendering problem and an empty month is
@@ -1220,6 +1223,9 @@ export const calendarMonthSchema = z.object({
   month: z.string(),
   days: z.record(z.string(), z.array(calendarEntrySchema)),
   total: z.number().int().nonnegative(),
+  /** AC7: the release types this month holds, those its `types` filter asked for. A month
+   *  from before AC7 held every type, so that is the default. */
+  types: z.array(releaseTypeSchema).default(() => [...releaseTypeSchema.options]),
 })
 
 export const calendarListSchema = z.object({
@@ -1232,7 +1238,11 @@ export const calendarListSchema = z.object({
 /** A path, not a URL: the API cannot know its own public origin without trusting the
  *  `Host` header, so the web app composes the absolute URL from `VITE_API_URL`. */
 export const calendarSubscriptionSchema = z.object({
+  /** Every type: the feed installed calendars already follow. */
   path: z.string().min(1),
+  /** AC7: the same token's feed of one calendar each; null from an API older than AC7. */
+  discPath: z.string().min(1).nullable().default(null),
+  cinemaPath: z.string().min(1).nullable().default(null),
   createdAt: z.string(),
   replacedPrevious: z.boolean(),
 })

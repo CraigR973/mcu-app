@@ -31,6 +31,14 @@ RELEASE_TYPES = (
 #: The types that are a disc going on sale: what a release reminder is for.
 DISC_RELEASE_TYPES = ("4k_uhd_release", "blu_ray_release")
 
+#: AC7 (#343): the two calendars Releases shows, and what each one's feed holds. Streaming
+#: and award entries belong to neither: nothing writes them, and the all-types feed keeps
+#: them.
+CALENDAR_TYPES: dict[str, tuple[str, ...]] = {
+    "disc": (*DISC_RELEASE_TYPES, "sale_event"),
+    "cinema": ("theatrical",),
+}
+
 #: How each type reads in a calendar app, where the event title is all there is.
 RELEASE_TYPE_LABELS = {
     "4k_uhd_release": "4K UHD",
