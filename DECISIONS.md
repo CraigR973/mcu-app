@@ -7356,6 +7356,7 @@ contemporaneous.
      - **Movie night** puts open and planned nights first (the soonest planned at the top) and
        folds ended nights, and nights planned for a day already gone, under "Past screenings
        (n)", closed. "Plan a cinema trip" sits beside "Start a screening" and opens the view.
+     Shipped 6 Nov: PR #133, merge `5804a87b029dc75bad8a2ba2bc8e9b59a50acfb3`; PR CI 42190841726 all seven; production API and web at `5804a87b`.
 
 342. **A listing not matched to a film yet gathers its own source's rows of one title and
      facts; it never joins another chain's listing or a film on the title (5 Nov).** Amends

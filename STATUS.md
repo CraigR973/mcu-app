@@ -2,22 +2,22 @@
 
 ## Now
 
-**6 Nov: AC3 shipped (PR #132, merge `22cffef`). Craig closed it before reruns showed live
-(#340).** Programme films link to TMDB by #335's rule with Craig's famous-classic rule (#339),
-and each linked showing is labelled first run or rerun with its reason. The first live run (6
-Nov, 08:01 UTC, 48 TMDB requests) linked 16 films (24 listings) and labelled 246 showings first
-run; 1 title waits on Craig's review list (Tabby McTat) and 65 lookups are queued, about four
-more mornings, to 10 Nov. **No reruns yet:** the rerun films are single listings without source
-facts, so they are looked up last (anniversaries from 8 Nov, classics about 10 Nov). **Read
-back after the 8 Nov run** and record the reruns here. Sitting 3 (AC4 → AC7) runs in its own
-session; AC4's PR #133 is green and was waiting for this close-out.
+**6 Nov: AC4 shipped (PR #133, merge `5804a87b`): Movie night's At the cinema view and a page per
+film (#341, #342).** The Cinemas page is Movie night's second view (`/cinemas` redirects): This week
+and Coming up, film first, each film with poster, run badge, cinemas and next showing; listings not
+yet matched and events follow as rows; run, day and cinema filters live in the address. Each film
+has a page of every showing by day and cinema, its time chips checking tickets under AB7's rule.
+Movie night folds past screenings and offers Plan a cinema trip; Home's At the cinema is a poster
+strip of this week's films. Two read routes, zod, no migration.
 
-**Live facts, read-only (6 Nov).** Every film linked so far is linked at Vue St Enoch, the one
-source that gives director and running time (21 of its 21 films; the other five sources give
-none). The same film elsewhere is a separate lookup, so until the queue clears a film can be
-linked at one cinema and waiting at the rest (Primetime: 14 showings linked, 139 waiting). Of
-1,780 future showings: 246 first run, 0 rerun, 1,534 Unclassified (1,390 not yet looked up, 134
-events).
+**Live, read-only after the deploy:** both people get 16 linked films this week, all with posters,
+92 listings not yet matched (1 waiting for Craig's check) and 24 events; GFT and Vue list to 7 Nov,
+the ODEONs to 12 Nov, the rest the fortnight; Clayface's page has 9 showings, all with ticket links.
+Until AC3's queue clears (about 10 Nov) a film can be linked at one cinema and listed unmatched at
+the others; its page names those listings.
+
+**Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here. Next in
+sitting 3 is AC7, at Craig's word on which session takes it.
 
 ## Next
 
@@ -25,7 +25,7 @@ events).
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
 have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
-(AC4 → AC7) runs in its own session; AC4's PR #133 is green. AC5 and AC6 stop at owner
+(AC4 → AC7): AC4 shipped on 6 Nov (#341); AC7 is next. AC5 and AC6 stop at owner
 checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
@@ -420,6 +420,15 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **6 Nov — AC4 shipped (#341, #342): At the cinema, film first, and a page per film.** PR #133,
+  merge `5804a87b`; PR CI 42190841726 all seven (C82/F81+1/W80+2/jobs6), main CI 42192850416. Local,
+  from a clean tree: API 2,666 on Postgres, shared 183, web 828, lint 0 errors, C82/F81+1, jobs 6.
+  Merged after AC3's close-out (`be370cb`), docs only. Production API and web at `5804a87b`,
+  readiness all configured. Live read-back: both people get 16 linked films this week, all with
+  posters, 92 listings not yet matched (1 waiting for Craig's check) and 24 events; GFT and Vue list
+  to 7 Nov, the ODEONs to 12 Nov, the rest the fortnight; Clayface's page has 9 showings, all with
+  ticket links. Changed test expectations are listed in the PR; phone rendering is Craig's
+  observation.
 - **6 Nov — AC3 closed out at Craig's word ("Close AC3 now"), reruns not yet seen live
   (#340).** The first live run (08:01–08:03 UTC) read all nine cinemas and spent 48 TMDB
   requests, all answered, on 18 lookups; the 19th ran out of budget mid-film and retries the
