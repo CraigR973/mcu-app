@@ -7400,6 +7400,7 @@ contemporaneous.
        calendars, refreshing both.
      - **Home's Coming to disc is untouched**, still its own six-month read filtered to discs, so
        #338's no-repeat line-up is unchanged.
+     Shipped 6 Nov: PR #134, merge `5e570bca16f06f9d1c1044804173aef716842649`; PR CI 42275791028 all seven; production API and web at `5e570bca`.
 
 344. **AC7's API: a type filter on the month, a feed per calendar, one token (6 Nov).**
      Additive only; no migration, no new route.

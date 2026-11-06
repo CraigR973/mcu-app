@@ -1842,6 +1842,11 @@ only if Craig or Mark wants it.
 **The URL is a capability URL** — anyone holding it can read the feed. It's `noindex,
 nofollow` and the token is rotatable, but treat it like a password.
 
+**Since AC7 (6 Nov, #344) one press gives three links:** Disc releases (4K, Blu-ray and sale
+dates), Cinema releases (UK cinema dates) and Both calendars (every date, the one link there was
+before). Pick whichever you want. Pressing again stops all three, including one a calendar app
+already follows.
+
 ---
 
 ## Done since the last review

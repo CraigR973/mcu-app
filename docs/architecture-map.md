@@ -103,6 +103,27 @@ chains or into a film on the title alone (#342). A listing's address (`listing-<
 the film once a morning links it; a film's is `tmdb-<id>`. AC5 adds "Propose a trip" to the
 film page and behind Movie night's "Plan a cinema trip".
 
+## Releases, two calendars — AC7
+
+Releases split into Disc releases and Cinema releases, each its own address and month (#343).
+Each month asks the month endpoint for its own release types and keeps only those on the device
+too. The cinema month joins AC4's fortnight read by TMDB id, so a release showing at one of the
+nine opens its film page; a title alone never links. One subscribe press gives a feed per
+calendar and one for both, on the one token a person has (#344).
+
+```mermaid
+flowchart TB
+    Table[(release_calendar<br/>TMDB discs · cinema dates · sales)] --> Month[GET /calendar/month?types=…<br/>one month by day, says its types]
+    Table --> Feed[GET /calendar.ics?token&calendar=disc or cinema<br/>without calendar: every type, as before]
+    Table --> List[GET /calendar?days=183<br/>unchanged]
+    Month --> Disc[Disc releases /calendar<br/>Coming to disc, then the month<br/>All · 4K UHD · Blu-ray · Sale events]
+    Month --> Cinema[Cinema releases /calendar/cinema<br/>the month, then Coming soon]
+    Films[GET /cinemas/films<br/>AC4's fortnight] -->|TMDB id with a showing to start| Cinema
+    Cinema --> Page[Film page /movie-night/cinema/tmdb-id]
+    List --> Disc
+    List --> Home[Home · Coming to disc<br/>discs only, unchanged]
+```
+
 ## AA8, shipped 23 Oct
 
 ```mermaid

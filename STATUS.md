@@ -2,22 +2,23 @@
 
 ## Now
 
-**6 Nov: AC4 shipped (PR #133, merge `5804a87b`): Movie night's At the cinema view and a page per
-film (#341, #342).** The Cinemas page is Movie night's second view (`/cinemas` redirects): This week
-and Coming up, film first, each film with poster, run badge, cinemas and next showing; listings not
-yet matched and events follow as rows; run, day and cinema filters live in the address. Each film
-has a page of every showing by day and cinema, its time chips checking tickets under AB7's rule.
-Movie night folds past screenings and offers Plan a cinema trip; Home's At the cinema is a poster
-strip of this week's films. Two read routes, zod, no migration.
+**6 Nov: AC7 shipped (PR #134, merge `5e570bca`): Releases is two calendars, Disc releases and
+Cinema releases (#343, #344). Sitting 3 is done.** `/calendar` is Disc releases: Coming to disc,
+then the month's 4K, Blu-ray and sale dates, with All, 4K UHD, Blu-ray and Sale events chips.
+`/calendar/cinema` is Cinema releases: the month's UK cinema dates, a release showing at one of
+the nine opening its AC4 film page by TMDB id (never a title), then Coming soon. The month lives
+in the address. The month endpoint takes `types`; the feed takes `calendar=disc|cinema` and is
+unchanged without it; one subscribe press gives a link per calendar and one for both. Refresh
+from TMDB and Home's Coming to disc are unchanged. No migration.
 
-**Live, read-only after the deploy:** both people get 16 linked films this week, all with posters,
-92 listings not yet matched (1 waiting for Craig's check) and 24 events; GFT and Vue list to 7 Nov,
-the ODEONs to 12 Nov, the rest the fortnight; Clayface's page has 9 showings, all with ticket links.
-Until AC3's queue clears (about 10 Nov) a film can be linked at one cinema and listed unmatched at
-the others; its page names those listings.
+**Live, read-only after the deploy:** November's disc calendar holds 18 dates (6 4K, 9 Blu-ray,
+3 sales) and its cinema calendar 79; December 13 and 23. Both people get 6 November cinema
+releases linked to film pages (Wild Horse Nine at 8 cinemas, five at one); 87 cinema listings
+are not matched yet, and the page says so. Phone rendering is Craig's observation.
 
-**Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here. Next in
-sitting 3 is AC7, at Craig's word on which session takes it.
+**Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here. **Next
+is sitting 4, which starts at AC5's owner checkpoint:** Craig approves the exact tables, states
+and push wording before any build.
 
 ## Next
 
@@ -25,8 +26,8 @@ sitting 3 is AC7, at Craig's word on which session takes it.
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
 have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
-(AC4 → AC7): AC4 shipped on 6 Nov (#341); AC7 is next. AC5 and AC6 stop at owner
-checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
+(AC4 → AC7) is done: AC4 (#341) and AC7 (#343) shipped on 6 Nov. Sitting 4 starts at AC5's
+checkpoint; AC5 and AC6 stop at owner checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -420,6 +421,17 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **6 Nov — AC7 shipped (#343, #344): separate disc and cinema release calendars; sitting 3
+  done.** PR #134, merge `5e570bca`; PR CI 42275791028 all seven (C86/F85+1/W84+2/jobs6). Local,
+  from a clean tree: API 2,675 on Postgres (no skips), shared 186, web 843, lint 0 errors (the 11
+  warnings as before), C86/F85+1, jobs 6. Production API and web at `5e570bca`, readiness all
+  configured. Live read-back: November disc 18 and cinema 79; both people get 6 releases linked to
+  film pages; 87 listings not matched yet. No test expectation changed; two typed fixtures gained
+  `tmdbId: null`. **An agent slip:** one `cd` into `apps/api` (against AGENTS.md) let autoenv print
+  `apps/api/.env`, which holds the live Neon owner URL, into the session transcript; nothing was
+  committed or sent elsewhere, and rotating it is Craig's call. The Mac stalled once mid-run
+  (memory pressure); one local e2e run failed at start-up when the API was not ready in 60 s, and
+  the rerun passed.
 - **6 Nov — AC4 shipped (#341, #342): At the cinema, film first, and a page per film.** PR #133,
   merge `5804a87b`; PR CI 42190841726 all seven (C82/F81+1/W80+2/jobs6), main CI 42192850416. Local,
   from a clean tree: API 2,666 on Postgres, shared 183, web 828, lint 0 errors, C82/F81+1, jobs 6.
