@@ -7372,3 +7372,50 @@ contemporaneous.
      the other listings of its title. *Cost:* two different films one source lists under one
      title with no facts would read as one listing until matched; the page never claims a
      year, poster or run for a listing.
+
+343. **AC7: Releases is two calendars, Disc releases and Cinema releases (6 Nov).**
+     Group AC sitting 3's second batch (#335, the 4 Nov snags' point 5). On 4 Nov the one month
+     list held 134 cinema dates, 23 disc dates and 11 sales, so discs were outnumbered about six
+     to one. No migration.
+     - **Two views of Releases, each its own address**, as Movie night is two (#341):
+       `/calendar` is Disc releases, so the menu's Releases and Home's "All releases" land on
+       discs; `/calendar/cinema` is Cinema releases. The switch replaces the address rather than
+       adding to history, so the phone's back arrow leaves Releases (for both, to You). The month
+       (`?month=YYYY-MM`) lives in the address and goes with the switch, so a film page's back
+       arrow returns to the same month.
+     - **Disc releases** keeps Coming to disc (the next six months, unchanged) above its month
+       of 4K, Blu-ray and sale dates. Chips narrow the month to All, 4K UHD, Blu-ray or Sale
+       events, with each one's count, in the address as `show`. *Why chips, not a sales switch:*
+       they read as AC4's run chips do, and "this month's 4Ks" is the collector's question.
+     - **Cinema releases** is the month of UK cinema dates. A release showing at one of the nine
+       opens its AC4 film page (`tmdb-<id>`) and says at how many cinemas: showing means AC4's
+       fortnight read holds a film with that TMDB id and a showing still to start. It never
+       links on a title (#327, #342); until AC3's queue clears (about 10 Nov) the page says how
+       many cinema listings are not matched to a film yet. Otherwise a release in the collection
+       opens its archive page, as before. TMDB's Coming soon (films reaching cinemas) moved here
+       from the single page, with the same links.
+     - **Streaming and award entries belong to neither calendar.** Nothing writes them (0 rows
+       ever, 6 Nov); the all-types feed keeps them.
+     - **"Refresh from TMDB" is unchanged**: the admin's button in the page header, on both
+       calendars, refreshing both.
+     - **Home's Coming to disc is untouched**, still its own six-month read filtered to discs, so
+       #338's no-repeat line-up is unchanged.
+
+344. **AC7's API: a type filter on the month, a feed per calendar, one token (6 Nov).**
+     Additive only; no migration, no new route.
+     - **`GET /calendar/month` takes `types`** (a release type, repeatable). Without it the month
+       holds every type, as before. The answer gains `types`, what it holds in the vocabulary's
+       order, and every entry gains `tmdbId` (null for a sale). Zod defaults both (#205), so a
+       month cached before AC7 reads as every type and an entry as having no id. *The web also
+       keeps only its calendar's types on the device*, so a cached month or an API not yet
+       deployed (Vercel and Railway deploy apart) cannot put cinema dates among the discs.
+     - **`GET /calendar.ics` takes `calendar=disc|cinema`**: disc is 4K, Blu-ray and sale dates;
+       cinema is UK cinema dates; each feed is named for its calendar. Absent, or `all`, it is
+       the feed installed calendars already follow, its name, file name and events unchanged.
+       Still release dates and nothing personal.
+     - **One token per person still.** `POST /calendar/subscribe` returns the both-calendars
+       `path` as before, plus `discPath` and `cinemaPath` on the same token, and Releases shows
+       all three from one press. *Why not a token per calendar:* that is a migration, and asking
+       for one calendar's link would otherwise have rotated, and so broken, the other's. The cost:
+       getting links again stops all three, including a link a calendar app already follows,
+       which the panel says.
