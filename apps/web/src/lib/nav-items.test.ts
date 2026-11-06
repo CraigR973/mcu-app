@@ -219,6 +219,16 @@ describe('Batch T3 — the phone top bar', () => {
     expect(parentPath('/movie-night/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('/movie-night')
   })
 
+  it('treats the cinema calendar as Releases itself, back arrow and all — AC7', () => {
+    // Releases is two calendars, like Movie night's two views; the cinema one goes back where
+    // Releases does, to You, rather than to the disc calendar beside it.
+    expect(titleForPath('/calendar/cinema')).toBe('Releases')
+    expect(isTopLevel('/calendar/cinema')).toBe(false)
+    expect(parentPath('/calendar/cinema')).toBe('/you')
+    expect(parentPath('/calendar')).toBe('/you')
+    expect(activePath('/calendar/cinema', navItems)).toBe('/calendar')
+  })
+
   it('marks one destination: the most specific that holds the page — AC4', () => {
     expect(activePath('/movie-night/cinema/tmdb-603', navItems)).toBe('/movie-night/cinema')
     expect(activePath('/movie-night/cinema', navItems)).toBe('/movie-night/cinema')

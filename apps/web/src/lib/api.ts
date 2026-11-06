@@ -161,6 +161,7 @@ import {
   type CalendarListing,
   type CalendarMonth,
   type CalendarSubscription,
+  type ReleaseType,
   type CandidateList,
   type CollectionCopy,
   type CollectionFacets,
@@ -1795,11 +1796,11 @@ export async function fetchCalendar(days = 120): Promise<CalendarListing> {
   return parseResponse(await authFetch(`/calendar?days=${String(days)}`), calendarListSchema)
 }
 
-export async function fetchCalendarMonth(month: string): Promise<CalendarMonth> {
-  return parseResponse(
-    await authFetch(`/calendar/month?month=${encodeURIComponent(month)}`),
-    calendarMonthSchema,
-  )
+/** One month, bucketed by day; AC7: of these release types only, when given (#344). */
+export async function fetchCalendarMonth(month: string, types?: readonly ReleaseType[]): Promise<CalendarMonth> {
+  const params = new URLSearchParams({ month })
+  for (const type of types ?? []) params.append('types', type)
+  return parseResponse(await authFetch(`/calendar/month?${params.toString()}`), calendarMonthSchema)
 }
 
 export async function subscribeToCalendar(): Promise<CalendarSubscription> {

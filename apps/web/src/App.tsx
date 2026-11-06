@@ -239,6 +239,11 @@ export default function App() {
               path="/calendar"
               element={<AppShell><ReleasesPage /></AppShell>}
             />
+            {/* AC7: Releases is two calendars; this is the cinema one, the disc one above. */}
+            <Route
+              path="/calendar/cinema"
+              element={<AppShell><ReleasesPage view="cinema" /></AppShell>}
+            />
             <Route path="/discover" element={<Navigate to="/calendar" replace />} />
             {/* Batch S3. Home, Stats and Insights are one reading page. The two old
                 paths **redirect rather than 404**: both are in browser history, in the

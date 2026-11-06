@@ -15,7 +15,7 @@ function memory(n: number, title: string): OnThisDayMemory {
 }
 
 function release(n: number, title: string, movieId: string | null): CalendarEntry {
-  return { id: id(50 + n), title, releaseType: '4k_uhd_release', typeLabel: '4K UHD', releaseDate: '2026-11-09', label: null, region: 'GB', url: null, posterPath: null, overview: null, movieId }
+  return { id: id(50 + n), title, releaseType: '4k_uhd_release', typeLabel: '4K UHD', releaseDate: '2026-11-09', label: null, region: 'GB', url: null, posterPath: null, overview: null, movieId, tmdbId: null }
 }
 
 const film = (n: number, title: string) => ({ movieId: id(n), title, year: 1975, posterPath: null })

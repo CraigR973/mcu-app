@@ -103,6 +103,7 @@ const RELEASE: CalendarEntry = {
   posterPath: null,
   overview: null,
   movieId: BLOOD,
+  tmdbId: null,
 }
 
 const HIGHLIGHTS: Highlights = {

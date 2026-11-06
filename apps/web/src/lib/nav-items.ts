@@ -193,6 +193,10 @@ const LISTED_ON_YOU = new Set<string>(
   [...navItems, ...adminNavItems].map(({ path }) => path).filter((path) => !IN_THE_BAR.has(path)),
 )
 
+/** A destination's second view, which answers as the destination itself: Releases is two
+ *  calendars, and the cinema one is Releases to the top bar and the back arrow (AC7). */
+const VIEW_OF: Record<string, string> = { '/calendar/cinema': '/calendar' }
+
 /** Pages below a destination, named by what they show rather than where they sit. */
 const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
   ['/movies/', 'Film'],
@@ -235,7 +239,8 @@ export function isTopLevel(pathname: string): boolean {
 }
 
 /** What the phone's top bar calls this page when the page itself has not said. */
-export function titleForPath(pathname: string): string | null {
+export function titleForPath(requested: string): string | null {
+  const pathname = VIEW_OF[requested] ?? requested
   const exact = [...navItems, ...adminNavItems, YOU_ITEM].find(({ path }) => path === pathname)
   if (exact) return exact.label
   const offMenu = OFF_MENU_PAGES[pathname]
@@ -251,7 +256,8 @@ export function titleForPath(pathname: string): string | null {
 /** Where the back arrow goes when there is no history to go back through — a page opened
  *  from a notification or a shared link. A page the You page lists goes to You, where the
  *  person would have opened it from; anything below a destination goes to that destination. */
-export function parentPath(pathname: string): string {
+export function parentPath(requested: string): string {
+  const pathname = VIEW_OF[requested] ?? requested
   if (LISTED_ON_YOU.has(pathname)) return YOU_ITEM.path
   const offMenu = OFF_MENU_PAGES[pathname]
   if (offMenu) return offMenu.parent
