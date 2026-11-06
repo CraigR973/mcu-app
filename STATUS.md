@@ -2,25 +2,31 @@
 
 ## Now
 
-**5 Nov: Craig answered AC3's checkpoint: go, with his famous-classic rule on (#339).** PR #132
-carries the rule; a read-only dry run with it links 72 of 96 programme films, leaves 7 on Craig's
-review list, 1 unlinked and 16 events; of 1,721 future showings, 1,502 would be first runs, 18
-reruns and 201 Unclassified (`docs/reviews/ac3-dry-run-2026-11-05.md`). Once merged, the live write
-rides the 08:00 runs, about five mornings at 48 TMDB requests each. **AC3's close-out waits for the
-first run's live read-back** (identity and category counts, and the run filters returning first runs
-and reruns). Sitting 1 (AC1, AC2) shipped on 5 Nov.
+**6 Nov: AC3 shipped (PR #132, merge `22cffef`). Craig closed it before reruns showed live
+(#340).** Programme films link to TMDB by #335's rule with Craig's famous-classic rule (#339),
+and each linked showing is labelled first run or rerun with its reason. The first live run (6
+Nov, 08:01 UTC, 48 TMDB requests) linked 16 films (24 listings) and labelled 246 showings first
+run; 1 title waits on Craig's review list (Tabby McTat) and 65 lookups are queued, about four
+more mornings, to 10 Nov. **No reruns yet:** the rerun films are single listings without source
+facts, so they are looked up last (anniversaries from 8 Nov, classics about 10 Nov). **Read
+back after the 8 Nov run** and record the reruns here. Sitting 3 (AC4 → AC7) runs in its own
+session; AC4's PR #133 is green and was waiting for this close-out.
 
-**Live facts, read-only.** Craig has 2 discs to give back and 2 to put back; Mark sees the same
-two to put back and 2 to ask Craig for (4 Nov). The cinema programme held 220 film rows and
-1,798 future showings on 5 Nov, all still Unclassified until AC3.
+**Live facts, read-only (6 Nov).** Every film linked so far is linked at Vue St Enoch, the one
+source that gives director and running time (21 of its 21 films; the other five sources give
+none). The same film elsewhere is a separate lookup, so until the queue clears a film can be
+linked at one cinema and waiting at the rest (Primetime: 14 showings linked, 139 waiting). Of
+1,780 future showings: 246 first run, 0 rerun, 1,534 Unclassified (1,390 not yet looked up, 134
+events).
 
 ## Next
 
 **Group AC runs sitting by sitting, at Craig's 4 Nov go for all four.** Sittings 1 (AC1 →
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
-have shipped. Sitting 2 (AC3) waits at its dry-run checkpoint (PR #132). AC3, AC5 and AC6 stop
-at owner checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
+have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
+(AC4 → AC7) runs in its own session; AC4's PR #133 is green. AC5 and AC6 stop at owner
+checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -413,6 +419,15 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **6 Nov — AC3 closed out at Craig's word ("Close AC3 now"), reruns not yet seen live
+  (#340).** The first live run (08:01–08:03 UTC) read all nine cinemas and spent 48 TMDB
+  requests, all answered, on 18 lookups; the 19th ran out of budget mid-film and retries the
+  next run. 16 films linked, 246 showings first run, 1 title to review, 65 lookups queued. Every
+  rerun film is still queued, so the rerun filter returns none; the agent recommended holding
+  AC3 open until one shows. Two linked showings stay Unclassified, both rightly: Minions &
+  Monsters is between first run and rerun, and one Wild Horse Nine row is a stale duplicate
+  Everyman re-keyed on 4 Nov.
 
 - **5 Nov — Craig: "Go, rule on" for AC3 (#339).** The famous-classic rule is in: a title matching one
   film with 1,000+ TMDB votes, when every other film of the title (read or not) has fewer than 100,
