@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import httpx
 
@@ -139,9 +140,68 @@ def _search(query: str, year: int | None) -> dict[str, object]:
     return {"page": 1, "results": results, "total_pages": 1, "total_results": len(results)}
 
 
+def _releases(world: object) -> dict[int, dict[str, Any]]:
+    """AC7: the films a case says TMDB lists with GB release dates, by id (``tmdb.releases``).
+
+    Each is ``{"id", "title", "genreIds", "dates": [{"type", "date", "note"}]}``. Discover
+    lists a film for the release types it has, upcoming lists those with a cinema date, and
+    its release dates are its dates in GB. With no scenario TMDB lists nothing, as before.
+    """
+    scenario = world.scenario().get("tmdb", {})  # type: ignore[attr-defined]
+    return {int(film["id"]): film for film in scenario.get("releases", [])}
+
+
+def _listed(films: list[dict[str, Any]]) -> dict[str, object]:
+    results = [
+        {
+            "id": film["id"],
+            "title": film["title"],
+            "original_title": film["title"],
+            "overview": f"{film['title']} is a made-up release for the end-to-end suite.",
+            "release_date": min(d["date"] for d in film["dates"]),
+            "popularity": 10.0,
+            "vote_average": 6.5,
+            "vote_count": 40,
+            "poster_path": f"/release-{film['id']}.jpg",
+            "backdrop_path": None,
+            "adult": False,
+            "video": False,
+            "genre_ids": film.get("genreIds", []),
+            "original_language": "en",
+        }
+        for film in films
+    ]
+    return {"page": 1, "results": results, "total_pages": 1, "total_results": len(results)}
+
+
 def handle(request: httpx.Request, world: object) -> httpx.Response:
     path = request.url.path.removeprefix("/3")
     params = request.url.params
+    releases = _releases(world)
+
+    dated = re.fullmatch(r"/movie/(\d+)/release_dates", path)
+    if dated and int(dated.group(1)) in releases:
+        film = releases[int(dated.group(1))]
+        gb = [
+            {
+                "type": d["type"],
+                "release_date": f"{d['date']}T00:00:00.000Z",
+                "note": d.get("note", ""),
+                "certification": "",
+                "iso_639_1": "",
+            }
+            for d in film["dates"]
+        ]
+        return httpx.Response(
+            200, json={"id": film["id"], "results": [{"iso_3166_1": "GB", "release_dates": gb}]}
+        )
+    if path == "/discover/movie" and releases:
+        wanted = {int(t) for t in params.get("with_release_type", "").split("|") if t.isdigit()}
+        films = [f for f in releases.values() if any(d["type"] in wanted for d in f["dates"])]
+        return httpx.Response(200, json=_listed(films))
+    if path == "/movie/upcoming" and releases:
+        films = [f for f in releases.values() if any(d["type"] in (2, 3) for d in f["dates"])]
+        return httpx.Response(200, json=_listed(films))
 
     if path == "/search/movie":
         year_text = params.get("year")
