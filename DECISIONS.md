@@ -7293,3 +7293,30 @@ contemporaneous.
        reruns: Rocky, The Fugitive, Hunger Games: The Ballad of Songbirds and Snakes, Prisoners,
        Cliffhanger and Elf. The review list falls from 13 titles to 7, and reruns from 4 showings
        to 18.
+
+340. **AC3 shipped: cinema films identified, and first runs told from reruns (6 Nov).**
+     Group AC sitting 2, to #335's rule and Craig's famous-classic rule (#339). PR #132, merge
+     `22cffef1a91d9a342bc62ab9847635730dad8f0a`; PR CI 42046772647 all seven, main CI
+     42082987196. The web build reached production at 18:53 UTC on 5 Nov, 35 minutes after the
+     merge, because Vercel's builds were delayed by its own incident.
+     - **Craig closed it before reruns showed live (6 Nov, "Close AC3 now").** AC3's last
+       criterion asks that the run filters return first runs and reruns where the programme has
+       them. The first live run (6 Nov, 08:01 UTC) linked 16 films and labelled 246 showings
+       first run, but every rerun film was still queued, so the rerun filter returned none. The
+       reruns rest on the 5 Nov dry run over the live programme (18 showings, the same code); the
+       live read-back follows the 8 Nov run. The agent recommended holding AC3 open until then.
+     - **Rerun films are looked up last.** The morning order (AB6's) takes listings with source
+       facts first, then the films with the most listings. Only Vue St Enoch's listings carry
+       facts (director, running time), so its films went first; rerun films are single listings
+       without facts. On the estimate, two (The Fugitive and A Silent Voice, both 7 Nov) pass
+       before their lookup and are never labelled.
+     - **A film's listings with and without facts are separate lookups,** so until the queue
+       clears one film can be linked at Vue and waiting at the other cinemas (Primetime on 6 Nov:
+       14 showings linked, 139 waiting). Each lookup decides on its own; Wild Horse Nine, looked
+       up both ways on 6 Nov, linked the same film (TMDB 891621) twice. The cost is a second
+       lookup per such film, not a second identity.
+     - **The famous-classic rule weighs only exact title matches on TMDB's first page of search
+       results,** so a namesake with 100 or more votes further down is not counted and the famous
+       film can still link.
+     - **Main's CI flaked once,** on 5 Nov: Firefox `offline.spec.ts:61` timed out clicking the
+       "Search title" tab (run 42005877576); green on rerun.
