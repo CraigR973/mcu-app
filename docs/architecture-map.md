@@ -178,7 +178,7 @@ flowchart TB
     List --> Home[Home · Coming to disc<br/>discs only, unchanged]
 ```
 
-### Calendar control readiness — separate repair (#350), implementation in progress
+### Calendar control readiness — deployed 7 Nov (#350, PR #137, `7c536d9`)
 
 The page and its sections observe the same month/window/cinema query options and cache.
 Get my calendar links uses native disabled/busy semantics while the relevant layout queries

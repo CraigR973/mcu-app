@@ -167,7 +167,7 @@ To inspect the feature: **Settings → Notifications → Cinemas / Older films o
 existing programme films remain under All films. No test notification is needed or authorised.
 
 
-## Final handoff CI failure — verification remains red
+## Original final handoff CI failure — subsequently repaired separately
 
 Implementation main CI 42392858508 passed all seven jobs. Final documentation SHA
 `196f2d65df7403cb12bbdb0a84c0be7bd3c1bb68` is served from API/web with full readiness,
@@ -177,12 +177,16 @@ passed. Every AC6 case passed. The trace has zero calendar-subscription POSTs an
 programme content between pointer-down/up. A held-response local reproduction proves the
 button moves 541.5 px and loses that click. No blind rerun or gate weakening was used.
 
-The saved cause, evidence and concrete separately scoped repair are in
-`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`. Craig must authorise the calendar
-readiness repair because the request explicitly limits implementation to AC6. It has not
-been implemented. The feature branch carries this blocker handoff; production main remains
-196f2d6. Do not claim the final gate or AC6 acceptance complete. Natural scheduled digest
-and real-phone receipt/tap remain separate pending evidence.
+Craig authorised the separately scoped repair (#350), now deployed in PR #137 at
+`7c536d9c99ebd0102a875f099e4bbc29bbbefc06`. Native shared-query readiness prevents the
+lost enabled click and Coming soon has honest loading/offline states. The full local gate
+(API 2,741, shared 200, web 891, C94/F93+1/jobs8) and all seven exact-head PR CI jobs
+42400083769 (C94/F93+1/W92+2/jobs8) pass without relaxed feed assertions, skips or retries.
+Both production services serve `7c536d9` with full readiness at 18:43 UTC. The repair report
+preserves the original failure, host-contention failures and fixture correction:
+`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`. Final exact-SHA main/handoff CI and
+parity are stamped in PR #137 before completion. Natural scheduled digest and real-phone
+receipt/tap remain pending; no manual production digest/refresh/trip/feed action ran.
 
 Additional tooling failure: this gh version's PR editor queries retired Projects (classic)
 metadata and failed. GitHub REST updated the same PR description; no code/gate changed.
@@ -190,3 +194,5 @@ metadata and failed. GitHub REST updated the same PR description; no code/gate c
 Read-only recheck at **17:20 UTC**: production API/web still serve `196f2d6`, full readiness
 passes, migration/grants/defaults are unchanged, and appearances/days/claims/cinema outbox
 remain zero. No manual production refresh, digest, trip or calendar-subscription action ran.
+
+Read-only post-repair check at **18:43 UTC** confirms 073, unchanged grants/defaults, 278 silent baseline listings / 23 identities, and zero appearances/days/claims/cinema outbox rows. AC6 acceptance remains open.

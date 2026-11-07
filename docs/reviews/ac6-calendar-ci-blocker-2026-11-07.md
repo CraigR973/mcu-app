@@ -2,12 +2,15 @@
 
 ## Verdict
 
-AC6 is deployed in PR #136. Implementation PR CI 42391299778 and implementation main CI
-42392858508 passed all seven jobs at `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be`.
-The documentation handoff `196f2d65df7403cb12bbdb0a84c0be7bd3c1bb68` is served by both
-production API and web with full readiness, but its final main CI 42393261032 is **red**:
-6 jobs pass; Firefox's existing calendar subscription case fails. Do not report all checks
-green or full acceptance. AC6 passes in all three browsers and all eight jobs cases pass.
+The separately approved repair is deployed in PR #137 at
+`7c536d9c99ebd0102a875f099e4bbc29bbbefc06` (#350). At **18:43 UTC**, production API and
+web serve that exact SHA and every readiness field passes. The clean-tree local gate and
+all seven exact-head PR CI jobs (42400083769) pass. Final main/handoff CI and served-SHA
+verification are stamped in PR #137 before session completion.
+
+The original final AC6 documentation CI at `196f2d6` failed the pre-existing calendar click
+race described below; that failure is retained as history. AC6 itself remains deployed with
+acceptance open: no naturally scheduled qualifying digest or phone receipt/tap is proved.
 
 [Failed run](https://github.com/CraigR973/mcu-app/actions/runs/42393261032) and
 [AC6 PR / live verification record](https://github.com/CraigR973/mcu-app/pull/136).
@@ -76,7 +79,7 @@ render will now wait for the approved enabled state before their single click; t
 assertions remain unchanged. Full gates, exact seven-job PR/main CI and served-SHA/readiness
 are required. No manual live calendar, digest or refresh action is authorised.
 
-## Repair implementation and verification in progress
+## Approved repair implementation
 
 The approved repair is on `fix/calendar-subscribe-readiness`, independently of the AC6
 feature work. Four shared query hooks preserve the exact keys, enabled scopes and stale
@@ -99,8 +102,7 @@ Four focused Firefox real-pointer cases pass at 375 px, both themes and both cal
 Held programme responses arrive between down/up; native disabled state sends no POST, then
 one enabled click creates all three feed groups. The layouts move **393.5 px** for discs
 and **708.5 px** for cinema, and each programme endpoint is read exactly once. No production
-feed/token action runs. Complete local clean-tree gates, browser suites, PR/main CI and
-actual production SHA/readiness still need their final evidence.
+feed/token action runs. Complete local clean-tree gates and exact PR CI now pass; production SHA/readiness is verified below. Final main/handoff CI is stamped in PR #137.
 
 ## First complete local run: host contention and fixture cleanup failure
 
@@ -123,5 +125,52 @@ fields directly in disposable Postgres, just as the existing cinema digest fixtu
 It additionally verifies that the snapshot is restored. No business assertion, production
 code, retry, skip or timeout is changed. No production trip/preferences/feed/token is touched.
 
-Draft repair PR #137 / CI 42399647416 supplies independent exact-commit evidence. It must
-remain draft and unmerged until the complete local and exact-commit gates are green.
+Independent application-code PR CI 42399647416 passed all seven jobs at `7a85021`. The complete local and exact-head PR gates then passed before PR #137 was marked ready and fast-forwarded to main.
+
+
+## Completed local and release verification
+
+- Clean `7a85021`: API **2,741 passed, zero skips**; shared 200; web 891; Ruff, formatting,
+  mypy (278 files), lint, typechecks and builds pass. Existing warnings were not suppressed.
+  Chromium 94 passed; four 375 px screenshots were visually inspected in both themes/calendars.
+- Clean `7c536d9`: all eight real-command jobs pass, including the corrected reminder cleanup
+  and snapshot-equality check. Complete unchanged Firefox passes **93 + 1 permitted dictation
+  skip** in 17.8 minutes. Its photo case takes 14.1 seconds and box-set case 2.1 seconds.
+  The run began after load fell to 6.91 (from a peak of 196 on four logical CPUs), and load
+  fluctuated again during it. Retained failed traces plus independent Linux CI distinguish
+  this scheduling evidence from the calendar repair; no photo/box-set production fix is claimed.
+- Application/API/shared source, dependencies and CI configuration are byte-identical from
+  `7a85021` to `7c536d9`; the latter changes only reminder-fixture cleanup and this report.
+  E2E typecheck passes. No additional retry, delay, force click, skip or timeout was introduced.
+- Exact-head PR CI **42400083769** passes all seven jobs at `7c536d9`: C94 / F93+1 / W92+2 /
+  jobs8. Independent **42399647416** has identical counts. The three skips are the documented
+  Firefox dictation and WebKit live-match/lost-replay-answer limitations. WebKit cannot run on
+  this Mac; CI supplies its browser evidence.
+- PR #137 fast-forwarded to main only after these gates passed. Main code CI **42402584704**
+  and final documentation CI are checked to completion, with exact-SHA/parity results recorded
+  in PR #137. A feature-branch run with E2E skipped is never counted as browser evidence.
+
+| Approved repair criterion | Evidence | Result |
+|---|---|---|
+| Separate fix/PR and scope | PR #137; #350 recorded before code | Met |
+| Native readiness, shared cache | 19 unit cases; all relevant GETs exactly once in pointer cases | Met |
+| Honest loading, cache/error/offline/reconnect | Independent held-source, settled error, remount and reconnect cases | Met |
+| Same one press, three feeds, token rotation | Original browser assertions unchanged; four held-response pointer cases in every browser | Met |
+| Full gates and actual deploy | Local/PR gates above; 18:43 API/web parity and full readiness; final CI stamp in PR #137 | Release verified; final stamp required before completion |
+
+Read-only production check at **18:43 UTC** confirms migration 073, all five tables and both
+preference columns readable by both guarded roles, credentials withheld, Cinemas on /
+Older films only off / Movie night on for both existing people. Silent baseline remains
+278 listings / 23 identities; appearances, days, claims and cinema outbox rows remain **zero**.
+No manual production source refresh, digest, trip, feed creation or token rotation ran.
+
+To inspect the repair: Releases → Disc releases or Cinema releases. Get my calendar links is
+busy/disabled while programme layout loads, then one press creates the existing three links.
+A real press rotates a calendar token; production testing did not press it. The approved
+implementation choices are shared query hooks, render-derived readiness, native controls and
+terminal-error/offline-pause settlement. No subscription contract or page order changed.
+
+AC6 stays **unstruck** until the first naturally scheduled qualifying day/appearance/outbox/
+claim read-back. An empty scheduled run does not prove positive delivery. Real-phone receipt
+and tap remain Craig's observation. AC3's 8 Nov rerun read-back and AC5's real trip/phone checks
+are separate. No next batch is started.

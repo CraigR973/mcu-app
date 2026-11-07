@@ -7565,3 +7565,14 @@ contemporaneous.
      token action, schema, hosting, credentials or live source/data change. No blind retry,
      force click, skip or relaxed feed assertion. AC6's natural scheduled digest/phone evidence
      remains open, and AC3/AC5 remain separate.
+
+     Implemented and deployed in PR #137, merge `7c536d9`, after the complete local and
+     exact-head seven-job PR gate (42400083769). Shared hooks retain existing cache keys,
+     scopes and stale windows; readiness is derived during render without effects/duplicate
+     requests. Terminal errors and offline pauses settle; reconnect/refetch holds again.
+     Production API/web and all readiness fields match at 18:43 UTC. Original feed assertions
+     are retained; the two unit clicks wait for the approved enabled state. Independent Linux
+     CI and the full unchanged local Firefox run pass; initial host-contention failures and
+     the disposable reminder-fixture idle-socket correction remain documented. Main/handoff
+     CI/parity is stamped in PR #137 before completion. AC6 is deployed, still unstruck and
+     awaiting natural qualifying digest/phone evidence; no manual production action ran.

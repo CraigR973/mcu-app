@@ -2,57 +2,39 @@
 
 ## Now
 
-**7 Nov: AC6 deployed, final CI blocked by a proven calendar click race; acceptance open (PR #136, `46aaba5309bca4d5b4b62ef4a9ec5786f594b5be`,
-#348, #349).** Cinemas defaults on; Older films only defaults off. Finished scheduled refreshes
-record one atomic London-day result and filtered outbox rows. A committed person/day claim
-precedes one transport attempt per active device; uncertain sends are never replayed. Pushes
-name films and run labels and open At the cinema → New this week. Quiet hours/digest mode
-apply through existing passes, so held messages can arrive the following day. Source
-incompleteness and possible lost sends are the approved limits.
+**7 Nov: AC6 is deployed; its separate calendar CI repair is deployed too. AC6 acceptance
+remains open.** PR #136 shipped the default-on Cinemas digest (#348, #349). PR #137 ships
+shared-query/native-button readiness and honest Coming soon loading (#350), fixing the
+proved lost click without changing three feeds, token rotation or page order.
 
-**Verified at 16:46 UTC:** API and web serve `46aaba5`; every readiness field is healthy.
-Migration 073 is live, with 278 silent baseline listings and 23 baseline identities; 0 appearances,
-0 evaluated days, 0 delivery claims and no cinema outbox rows. Both roles can read all five
-new tables and both preference columns; PIN hashes and push credentials remain withheld.
-Craig and Mark each have Cinemas on, Older films only off; Movie night stays on.
-All local gates and all seven exact-commit PR/main implementation CI jobs pass (42391299778 /
-42392858508). **Final documentation commit `196f2d6` serves from API/web with full readiness,
-but final CI 42393261032 is red: 6 jobs pass; Firefox loses the existing calendar subscription
-click while late programme content moves the button.** All AC6 browser/job cases pass. Trace
-and deterministic local reproduction prove a 541.5 px move between pointer-down/up and zero
-subscription POSTs. No retry, skip or assertion change was used. The separately scoped
-calendar readiness repair was approved by Craig on 7 Nov (#350) and is in progress on
-`fix/calendar-subscribe-readiness`. See
-`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md` and PR #136. Do not report verification
-complete. The AC6 feature branch carries this blocker handoff; production main remains `196f2d6`.
+**Verified 18:43 UTC:** API and web serve repair merge
+`7c536d9c99ebd0102a875f099e4bbc29bbbefc06`; every readiness field passes. Local API 2,741
+(zero skips), shared 200, web 891, all static/type/build checks, Chromium 94, Firefox 93+1
+permitted skip and jobs 8 pass. Exact-head PR CI 42400083769 is seven jobs green, including
+C94/F93+1/W92+2/jobs8. Main code CI 42402584704 and the final handoff exact-SHA CI/parity
+stamp are recorded in PR #137 before session completion; do not count a feature push's
+skipped E2E job. Saved repair/criterion/failure record:
+`docs/reviews/ac6-calendar-ci-blocker-2026-11-07.md`.
 
-**Still unverified:** the first naturally scheduled qualifying digest and real-phone receipt/tap.
-No scheduled AC6 run has happened since deployment. No manual production refresh, test digest
-or trip was created. AC6 stays unstruck and acceptance open; an empty later run cannot close
-positive delivery evidence. The full criterion record, failures and evidence are saved in
+Migration 073, both-role grants and withheld credentials are read back. Both existing people
+have Cinemas on, Older films only off and Movie night on. Silent baseline remains 278 listings /
+23 identities; appearances, days, delivery claims and cinema outbox rows are zero. Frozen
+London-day evaluation, quiet hours/digest holds and committed daily send claims are unchanged;
+partial source evidence and possible lost uncertain sends are the approved limits.
+
+**Still unverified:** first naturally scheduled qualifying digest day/appearance/outbox/claim
+read-back and real-phone receipt/tap. No scheduled AC6 run has happened since deployment.
+AC6 stays unstruck; an empty run cannot prove positive delivery. No manual live refresh,
+digest, trip, calendar feed creation or token rotation was performed. Full AC6 record:
 `docs/reviews/ac6-implementation-2026-11-07.md` and PR #136.
 
-**7 Nov: AC5 shipped (PR #135, merge `6384c61c`): cinema trips — invite, reply, suggest another
-time (#345, #346).** Migration 072 adds `cinema_trips` and `cinema_trip_invitees`, both granted to
-the read-only and backup roles. A trip is proposed from a time on AC4's film page to anyone
-active; each invitee replies Going, Not going or Another time; the organiser accepts or keeps a
-suggestion, moves the trip to a time of their own, invites more and cancels. Every write locks the
-trip and names the revision it was made against. Six pushes under the Movie night switch; the
-morning-of reminder rides the 08:00 UTC pass and is written `too_late` when quiet hours or digest
-mode would hold it past the reminder pass. Trips show on their own page (`/movie-night/trips/<id>`), the
-film page, Movie night (past ones folded), Needs you (first) and Home's top slot.
+AC5 shipped in PR #135; migration 072 and empty-trip/default/grant read-back passed before
+AC6. Its first real trip pushes Mark and remains Craig's to propose; both-phone rendering,
+receipt and tap remain owner observations. AC3's rerun read-back after the **8 Nov** run
+(#340) is separately owed. No next batch is authorised by this repair.
 
-**AC5 read-back before the AC6 deployment:** migration 072; both tables empty; both roles have SELECT.
-Both people have 0 upcoming/past trips, no Needs you trip items and no next trip. There are 137
-confirmed future Wild Horse Nine showings. **No trip was made in production:** a real one pushes
-Mark's phone, so the first is Craig's to propose (`OWNER-ACTIONS.md`); phone rendering and a trip
-push on a phone are his to observe.
-
-**Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
-
-**Next: implement and verify the separately approved calendar-readiness repair (#350). AC6 still needs its first naturally scheduled qualifying outbox/claim
-read-back without a manual refresh/push; phone receipt remains Craig's. AC3's rerun read-back
-and AC5's phone/trip observations remain separate.**
+**Next:** read back the first naturally scheduled qualifying digest, never create a test send.
+This session stops after the final exact-SHA CI/parity stamp in PR #137; no next batch.
 
 ## Next
 
@@ -456,6 +438,8 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **7 Nov — approved calendar-readiness repair deployed (#350, PR #137, `7c536d9`).** Complete clean-tree local and seven-job exact-head PR gates pass; API/web/full readiness match at 18:43 UTC. Retained original click-race evidence, Mac contention failures and reminder-fixture ECONNRESET correction; no relaxed assertions/retries/skips/timeouts. Final main/handoff exact-SHA CI/parity stamp is in PR #137 before session completion. 073/grants/defaults/silent baseline read back; zero appearances/days/claims/outbox. AC6 remains unstruck pending natural qualifying digest/phone evidence; no manual production action or next batch.
 
 - **7 Nov — separate calendar-readiness repair approved (#350).** Craig replied “approve”
   to the saved five-point proposal. Own fix branch/PR, native disabled readiness, honest
