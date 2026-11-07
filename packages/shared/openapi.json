@@ -2827,6 +2827,149 @@
     "title": "CinemaProgrammeResponse",
     "type": "object"
    },
+   "CinemaTripList": {
+    "properties": {
+     "past": {
+      "items": {
+       "$ref": "#/components/schemas/CinemaTripResponse"
+      },
+      "title": "Past",
+      "type": "array"
+     },
+     "upcoming": {
+      "items": {
+       "$ref": "#/components/schemas/CinemaTripResponse"
+      },
+      "title": "Upcoming",
+      "type": "array"
+     }
+    },
+    "required": [
+     "upcoming",
+     "past"
+    ],
+    "title": "CinemaTripList",
+    "type": "object"
+   },
+   "CinemaTripResponse": {
+    "properties": {
+     "cancelledAtUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cancelledatutc"
+     },
+     "counts": {
+      "$ref": "#/components/schemas/TripCounts"
+     },
+     "createdAtUtc": {
+      "title": "Createdatutc",
+      "type": "string"
+     },
+     "filmKey": {
+      "title": "Filmkey",
+      "type": "string"
+     },
+     "filmTitle": {
+      "title": "Filmtitle",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "invitees": {
+      "items": {
+       "$ref": "#/components/schemas/TripInvitee"
+      },
+      "title": "Invitees",
+      "type": "array"
+     },
+     "movedAtUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Movedatutc"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "proposer": {
+      "$ref": "#/components/schemas/TripPerson"
+     },
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     },
+     "showing": {
+      "$ref": "#/components/schemas/TripShowing"
+     },
+     "status": {
+      "enum": [
+       "upcoming",
+       "cancelled",
+       "past"
+      ],
+      "title": "Status",
+      "type": "string"
+     },
+     "yourReply": {
+      "anyOf": [
+       {
+        "enum": [
+         "invited",
+         "going",
+         "notGoing",
+         "anotherTime"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Yourreply"
+     }
+    },
+    "required": [
+     "id",
+     "filmKey",
+     "filmTitle",
+     "posterPath",
+     "proposer",
+     "status",
+     "revision",
+     "showing",
+     "invitees",
+     "counts",
+     "yourReply",
+     "createdAtUtc",
+     "movedAtUtc",
+     "cancelledAtUtc"
+    ],
+    "title": "CinemaTripResponse",
+    "type": "object"
+   },
    "CollectionCopyResponse": {
     "properties": {
      "audioSpecs": {
@@ -7149,6 +7292,60 @@
     "title": "IdentifySetAsideRequest",
     "type": "object"
    },
+   "InvitablePeople": {
+    "properties": {
+     "people": {
+      "items": {
+       "$ref": "#/components/schemas/TripPerson"
+      },
+      "title": "People",
+      "type": "array"
+     }
+    },
+    "required": [
+     "people"
+    ],
+    "title": "InvitablePeople",
+    "type": "object"
+   },
+   "InviteMore": {
+    "properties": {
+     "profileIds": {
+      "items": {
+       "format": "uuid",
+       "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Profileids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "profileIds"
+    ],
+    "title": "InviteMore",
+    "type": "object"
+   },
+   "KeepTime": {
+    "properties": {
+     "profileId": {
+      "format": "uuid",
+      "title": "Profileid",
+      "type": "string"
+     },
+     "replyRevision": {
+      "minimum": 0.0,
+      "title": "Replyrevision",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "profileId",
+     "replyRevision"
+    ],
+    "title": "KeepTime",
+    "type": "object"
+   },
    "ListingTargetRequest": {
     "properties": {
      "address": {
@@ -8031,6 +8228,50 @@
     "title": "MoveCopyResponse",
     "type": "object"
    },
+   "MoveTrip": {
+    "properties": {
+     "fromProfileId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fromprofileid"
+     },
+     "fromReplyRevision": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fromreplyrevision"
+     },
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     },
+     "showingId": {
+      "format": "uuid",
+      "title": "Showingid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "revision",
+     "showingId"
+    ],
+    "title": "MoveTrip",
+    "type": "object"
+   },
    "MovieDetailResponse": {
     "properties": {
      "backdropPath": {
@@ -8878,12 +9119,118 @@
         "type": "null"
        }
       ]
+     },
+     "nextTrip": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NextTrip"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "trips": {
+      "items": {
+       "$ref": "#/components/schemas/NeedsYouTripItem"
+      },
+      "title": "Trips",
+      "type": "array"
      }
     },
     "required": [
      "items"
     ],
     "title": "NeedsYouResponse",
+    "type": "object"
+   },
+   "NeedsYouTripItem": {
+    "description": "A cinema trip only the reader can act on (AC5, #345). The web words it.",
+    "properties": {
+     "filmTitle": {
+      "title": "Filmtitle",
+      "type": "string"
+     },
+     "flag": {
+      "anyOf": [
+       {
+        "enum": [
+         "unconfirmed",
+         "withdrawn",
+         "cancelled"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Flag"
+     },
+     "fromName": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fromname"
+     },
+     "kind": {
+      "enum": [
+       "tripInvite",
+       "tripSuggestion",
+       "tripWithdrawn"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "posterPath": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posterpath"
+     },
+     "proposerName": {
+      "title": "Proposername",
+      "type": "string"
+     },
+     "startsAtUtc": {
+      "title": "Startsatutc",
+      "type": "string"
+     },
+     "tripId": {
+      "format": "uuid",
+      "title": "Tripid",
+      "type": "string"
+     },
+     "venueName": {
+      "title": "Venuename",
+      "type": "string"
+     },
+     "venueTimezone": {
+      "title": "Venuetimezone",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "tripId",
+     "filmTitle",
+     "posterPath",
+     "venueName",
+     "venueTimezone",
+     "startsAtUtc",
+     "proposerName"
+    ],
+    "title": "NeedsYouTripItem",
     "type": "object"
    },
    "NewReleaseListResponse": {
@@ -9026,6 +9373,49 @@
      "withNames"
     ],
     "title": "NextScreening",
+    "type": "object"
+   },
+   "NextTrip": {
+    "description": "The reader's next cinema trip they proposed or are going on (AC5, #345).",
+    "properties": {
+     "filmTitle": {
+      "title": "Filmtitle",
+      "type": "string"
+     },
+     "startsAtUtc": {
+      "title": "Startsatutc",
+      "type": "string"
+     },
+     "tripId": {
+      "format": "uuid",
+      "title": "Tripid",
+      "type": "string"
+     },
+     "venueName": {
+      "title": "Venuename",
+      "type": "string"
+     },
+     "venueTimezone": {
+      "title": "Venuetimezone",
+      "type": "string"
+     },
+     "withNames": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Withnames",
+      "type": "array"
+     }
+    },
+    "required": [
+     "tripId",
+     "filmTitle",
+     "venueName",
+     "venueTimezone",
+     "startsAtUtc",
+     "withNames"
+    ],
+    "title": "NextTrip",
     "type": "object"
    },
    "NoteRequest": {
@@ -10404,6 +10794,42 @@
     "title": "ProgrammeWindow",
     "type": "object"
    },
+   "ProposeTrip": {
+    "properties": {
+     "clientRequestId": {
+      "format": "uuid",
+      "title": "Clientrequestid",
+      "type": "string"
+     },
+     "filmKey": {
+      "pattern": "^(tmdb-[0-9]{1,10}|imdb-tt[0-9]{7,10}|(movie|listing)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
+      "title": "Filmkey",
+      "type": "string"
+     },
+     "inviteeIds": {
+      "items": {
+       "format": "uuid",
+       "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Inviteeids",
+      "type": "array"
+     },
+     "showingId": {
+      "format": "uuid",
+      "title": "Showingid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "clientRequestId",
+     "filmKey",
+     "showingId",
+     "inviteeIds"
+    ],
+    "title": "ProposeTrip",
+    "type": "object"
+   },
    "PurgePreviewResponse": {
     "description": "What a 90-day purge would destroy. ``dryRun`` is the default, deliberately.",
     "properties": {
@@ -10940,6 +11366,12 @@
       "title": "Asof",
       "type": "string"
      },
+     "cinemaTrips": {
+      "default": 0,
+      "minimum": 0.0,
+      "title": "Cinematrips",
+      "type": "integer"
+     },
      "delivered": {
       "minimum": 0.0,
       "title": "Delivered",
@@ -10981,6 +11413,42 @@
      "delivered"
     ],
     "title": "ReminderRunResponse",
+    "type": "object"
+   },
+   "ReplyToTrip": {
+    "properties": {
+     "reply": {
+      "enum": [
+       "going",
+       "notGoing",
+       "anotherTime"
+      ],
+      "title": "Reply",
+      "type": "string"
+     },
+     "revision": {
+      "minimum": 1.0,
+      "title": "Revision",
+      "type": "integer"
+     },
+     "showingId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Showingid"
+     }
+    },
+    "required": [
+     "revision",
+     "reply"
+    ],
+    "title": "ReplyToTrip",
     "type": "object"
    },
    "RetailerCreateRequest": {
@@ -15025,6 +15493,302 @@
     "title": "TrialTotal",
     "type": "object"
    },
+   "TripCounts": {
+    "description": "The proposer counts as going.",
+    "properties": {
+     "anotherTime": {
+      "minimum": 0.0,
+      "title": "Anothertime",
+      "type": "integer"
+     },
+     "going": {
+      "minimum": 1.0,
+      "title": "Going",
+      "type": "integer"
+     },
+     "invited": {
+      "minimum": 0.0,
+      "title": "Invited",
+      "type": "integer"
+     },
+     "notGoing": {
+      "minimum": 0.0,
+      "title": "Notgoing",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "going",
+     "notGoing",
+     "anotherTime",
+     "invited"
+    ],
+    "title": "TripCounts",
+    "type": "object"
+   },
+   "TripInvitee": {
+    "properties": {
+     "displayName": {
+      "title": "Displayname",
+      "type": "string"
+     },
+     "isYou": {
+      "title": "Isyou",
+      "type": "boolean"
+     },
+     "profileId": {
+      "format": "uuid",
+      "title": "Profileid",
+      "type": "string"
+     },
+     "repliedAtUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Repliedatutc"
+     },
+     "reply": {
+      "enum": [
+       "invited",
+       "going",
+       "notGoing",
+       "anotherTime"
+      ],
+      "title": "Reply",
+      "type": "string"
+     },
+     "replyRevision": {
+      "minimum": 0.0,
+      "title": "Replyrevision",
+      "type": "integer"
+     },
+     "suggestion": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/TripSuggestion"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "profileId",
+     "displayName",
+     "isYou",
+     "reply",
+     "replyRevision",
+     "repliedAtUtc",
+     "suggestion"
+    ],
+    "title": "TripInvitee",
+    "type": "object"
+   },
+   "TripPerson": {
+    "properties": {
+     "displayName": {
+      "title": "Displayname",
+      "type": "string"
+     },
+     "isYou": {
+      "title": "Isyou",
+      "type": "boolean"
+     },
+     "profileId": {
+      "format": "uuid",
+      "title": "Profileid",
+      "type": "string"
+     }
+    },
+    "required": [
+     "profileId",
+     "displayName",
+     "isYou"
+    ],
+    "title": "TripPerson",
+    "type": "object"
+   },
+   "TripShowing": {
+    "description": "The showing as the trip keeps it, and what the programme says about it now.",
+    "properties": {
+     "endsAtUtc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Endsatutc"
+     },
+     "flag": {
+      "anyOf": [
+       {
+        "enum": [
+         "unconfirmed",
+         "withdrawn",
+         "cancelled"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Flag"
+     },
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     },
+     "live": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgrammeShowing"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "screen": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Screen"
+     },
+     "showingId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Showingid"
+     },
+     "startsAtUtc": {
+      "title": "Startsatutc",
+      "type": "string"
+     },
+     "venue": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgrammeVenue"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "venueId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Venueid"
+     },
+     "venueName": {
+      "title": "Venuename",
+      "type": "string"
+     },
+     "venueTimezone": {
+      "title": "Venuetimezone",
+      "type": "string"
+     }
+    },
+    "required": [
+     "showingId",
+     "venueId",
+     "venueName",
+     "venueTimezone",
+     "startsAtUtc",
+     "endsAtUtc",
+     "screen",
+     "formats",
+     "flag"
+    ],
+    "title": "TripShowing",
+    "type": "object"
+   },
+   "TripSuggestion": {
+    "properties": {
+     "flag": {
+      "anyOf": [
+       {
+        "enum": [
+         "unconfirmed",
+         "withdrawn",
+         "cancelled"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Flag"
+     },
+     "formats": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Formats",
+      "type": "array"
+     },
+     "showingId": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Showingid"
+     },
+     "startsAtUtc": {
+      "title": "Startsatutc",
+      "type": "string"
+     },
+     "venueName": {
+      "title": "Venuename",
+      "type": "string"
+     }
+    },
+    "required": [
+     "showingId",
+     "venueName",
+     "startsAtUtc",
+     "formats",
+     "flag"
+    ],
+    "title": "TripSuggestion",
+    "type": "object"
+   },
    "UsageResponse": {
     "description": "§9.7's counters, as the settings page and the chat header show them.",
     "properties": {
@@ -18424,6 +19188,438 @@
     "summary": "Subscribe To Calendar",
     "tags": [
      "calendar"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips": {
+   "get": {
+    "description": "The reader's trips: upcoming soonest first, then past and cancelled, latest first.",
+    "operationId": "list_trips_api_v1_cinema_trips_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripList"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List Trips",
+    "tags": [
+     "cinema-trips"
+    ]
+   },
+   "post": {
+    "description": "A time from the film's page, and the people to invite. A retried send returns the\nsame trip.",
+    "operationId": "propose_trip_api_v1_cinema_trips_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProposeTrip"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Propose Trip",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/people": {
+   "get": {
+    "description": "Everyone the reader can invite: active profiles with a PIN, not themselves.",
+    "operationId": "invitable_people_api_v1_cinema_trips_people_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvitablePeople"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Invitable People",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/{trip_id}": {
+   "get": {
+    "operationId": "get_trip_api_v1_cinema_trips__trip_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "trip_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Trip Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Trip",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/{trip_id}/cancel": {
+   "post": {
+    "description": "The proposer cancels. Cancelling again changes nothing.",
+    "operationId": "cancel_trip_api_v1_cinema_trips__trip_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "trip_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Trip Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Cancel Trip",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/{trip_id}/invitees": {
+   "post": {
+    "description": "The proposer invites more people; someone already invited is left as they are.",
+    "operationId": "invite_more_api_v1_cinema_trips__trip_id__invitees_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "trip_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Trip Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InviteMore"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Invite More",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/{trip_id}/keep": {
+   "post": {
+    "description": "The proposer turns a suggestion down and keeps the trip's time.",
+    "operationId": "keep_time_api_v1_cinema_trips__trip_id__keep_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "trip_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Trip Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KeepTime"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Keep Time",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/{trip_id}/move": {
+   "post": {
+    "description": "The proposer accepts a suggestion, or moves the trip to a time of their own.",
+    "operationId": "move_trip_api_v1_cinema_trips__trip_id__move_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "trip_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Trip Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MoveTrip"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Move Trip",
+    "tags": [
+     "cinema-trips"
+    ]
+   }
+  },
+  "/api/v1/cinema-trips/{trip_id}/reply": {
+   "put": {
+    "description": "An invitee's Going, Not going or Another time. The same reply again changes nothing.",
+    "operationId": "reply_to_trip_api_v1_cinema_trips__trip_id__reply_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "trip_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Trip Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReplyToTrip"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CinemaTripResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Reply To Trip",
+    "tags": [
+     "cinema-trips"
     ]
    }
   },

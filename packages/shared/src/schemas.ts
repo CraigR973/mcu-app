@@ -1552,6 +1552,9 @@ export const reminderRunSchema = z.object({
   saleEvents: z.number().int().nonnegative(),
   releases: z.number().int().nonnegative(),
   overdueLoans: z.number().int().nonnegative(),
+  /** AC5 (#345): cinema trips whose showing is today, reminded on its morning. Defaulted for an
+   *  API from before AC5. */
+  cinemaTrips: z.number().int().nonnegative().default(0),
   queued: z.number().int().nonnegative(),
   delivered: z.number().int().nonnegative(),
 })
@@ -2749,7 +2752,7 @@ export type Attention = z.infer<typeof attentionSchema>
 const needsYouDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 export const needsYouItemSchema = z.object({
   /** `putBack`: back but not shelved. `handOver`: asked for and waiting. `overdue`: past its
-   *  due date, or out 14 days or more with none. AC5 adds cinema trip replies. */
+   *  due date, or out 14 days or more with none. Cinema trips have their own list (AC5). */
   kind: z.enum(['putBack', 'handOver', 'overdue']),
   loanId: z.string().uuid(),
   movieId: z.string().uuid(),
@@ -2779,16 +2782,57 @@ export const nextScreeningSchema = z.object({
   /** The film two people both liked, once they have. */
   matchTitle: z.string().min(1).nullable().default(null),
 })
+/** AC5 (#345): what the live programme says about a trip's showing when it is not simply listed.
+ *  `withdrawn` also covers a showing gone from the programme or moved to another time. */
+export const tripShowingFlagSchema = z.enum(['unconfirmed', 'withdrawn', 'cancelled'])
+const tripUtcSchema = z.string().datetime({ offset: true })
+/** AC5 (#345): a cinema trip only the reader can act on. `tripInvite`: waiting for their reply.
+ *  To the proposer, `tripSuggestion`: an invitee suggests another time; `tripWithdrawn`: the
+ *  cinema no longer lists the trip's time. The web words each one. */
+export const needsYouTripItemSchema = z.object({
+  kind: z.enum(['tripInvite', 'tripSuggestion', 'tripWithdrawn']),
+  tripId: z.string().uuid(),
+  filmTitle: z.string(),
+  posterPath: z.string().nullable(),
+  venueName: z.string(),
+  venueTimezone: z.string(),
+  startsAtUtc: tripUtcSchema,
+  proposerName: z.string(),
+  /** Who suggests another time, on a `tripSuggestion`. */
+  fromName: z.string().nullable().default(null),
+  /** Why, on a `tripWithdrawn`. */
+  flag: tripShowingFlagSchema.nullable().default(null),
+})
+/** AC5 (#345): the reader's next trip they proposed or are going on, for Home's top slot when it
+ *  is sooner than their next planned screening. */
+export const nextTripSchema = z.object({
+  tripId: z.string().uuid(),
+  filmTitle: z.string(),
+  venueName: z.string(),
+  venueTimezone: z.string(),
+  startsAtUtc: tripUtcSchema,
+  /** Everyone else going, the proposer first. */
+  withNames: z.array(z.string()),
+})
 export const needsYouSchema = z.object({
   /** Most pressing first; empty when there is nothing to do. */
   items: z.array(needsYouItemSchema),
   /** AC2. Defaulted, so this build still reads an API from before it. */
   nextScreening: nextScreeningSchema.nullable().default(null),
+  /** AC5: trips the reader can act on, soonest showing first; shown before the disc items. A
+   *  field of its own, so a build from before AC5 still reads this answer. Defaulted, so this
+   *  build reads an answer cached before AC5. */
+  trips: z.array(needsYouTripItemSchema).default([]),
+  /** AC5: the next trip, for Home's top slot. Defaulted as `trips` is. */
+  nextTrip: nextTripSchema.nullable().default(null),
 })
 
 export type NeedsYouItem = z.infer<typeof needsYouItemSchema>
 export type NeedsYou = z.infer<typeof needsYouSchema>
 export type NextScreening = z.infer<typeof nextScreeningSchema>
+export type NeedsYouTripItem = z.infer<typeof needsYouTripItemSchema>
+export type NextTrip = z.infer<typeof nextTripSchema>
+export type TripShowingFlag = z.infer<typeof tripShowingFlagSchema>
 
 // AA6: one ephemeral Archive draw; null means that this run has exhausted its pool.
 export const luckyFilmSchema = z.object({ film: movieListItemSchema.nullable() })
@@ -2955,3 +2999,79 @@ export type CinemaFilms = z.infer<typeof cinemaFilmsResponseSchema>
 export type CinemaFilmCard = CinemaFilms['films'][number]
 export type CinemaFilmSlot = z.infer<typeof cinemaFilmSlotSchema>
 export type CinemaFilmDetail = z.infer<typeof cinemaFilmDetailSchema>
+
+// AC5 (#345): cinema trips, members only. A trip keeps its showing as a snapshot; the flag and
+// Check tickets come from the live programme row (`live`, `venue`) on every read, so the web
+// draws the ticket link by AB7's own rule (`showingBooking`).
+export const tripReplySchema = z.enum(['invited', 'going', 'notGoing', 'anotherTime'])
+const tripPersonSchema = z.object({
+  profileId: z.string().uuid(),
+  displayName: z.string(),
+  isYou: z.boolean(),
+})
+export const cinemaTripSchema = z.object({
+  id: z.string().uuid(),
+  /** The film page's address when proposed (a linked listing reads as its film). */
+  filmKey: cinemaFilmKeySchema,
+  filmTitle: z.string(),
+  posterPath: z.string().nullable(),
+  proposer: tripPersonSchema,
+  /** `past` once the showing has started; cancelled and past trips are frozen. */
+  status: z.enum(['upcoming', 'cancelled', 'past']),
+  /** Named back by every reply and move, so a reply made against an old time is refused. */
+  revision: z.number().int().min(1),
+  showing: z.object({
+    showingId: z.string().uuid().nullable(),
+    venueId: z.string().uuid().nullable(),
+    venueName: z.string(),
+    venueTimezone: z.string(),
+    startsAtUtc: tripUtcSchema,
+    endsAtUtc: tripUtcSchema.nullable(),
+    screen: z.string().nullable(),
+    formats: z.array(z.string()),
+    /** Null on a cancelled or past trip, and while the cinema lists the time as kept. */
+    flag: tripShowingFlagSchema.nullable(),
+    live: cinemaShowingSchema.nullable().default(null),
+    venue: cinemaVenueSchema.nullable().default(null),
+  }),
+  /** By name; the proposer is not one of them. */
+  invitees: z.array(tripPersonSchema.extend({
+    reply: tripReplySchema,
+    /** Named back when accepting or keeping this person's suggestion. */
+    replyRevision: z.number().int().nonnegative(),
+    repliedAtUtc: tripUtcSchema.nullable(),
+    suggestion: z.object({
+      showingId: z.string().uuid().nullable(),
+      venueName: z.string(),
+      startsAtUtc: tripUtcSchema,
+      formats: z.array(z.string()),
+      flag: tripShowingFlagSchema.nullable(),
+    }).nullable(),
+  })),
+  /** The proposer counts as going. */
+  counts: z.object({
+    going: z.number().int().min(1),
+    notGoing: z.number().int().nonnegative(),
+    anotherTime: z.number().int().nonnegative(),
+    invited: z.number().int().nonnegative(),
+  }),
+  /** The reader's own reply; null for the proposer. */
+  yourReply: tripReplySchema.nullable(),
+  createdAtUtc: tripUtcSchema,
+  movedAtUtc: tripUtcSchema.nullable(),
+  cancelledAtUtc: tripUtcSchema.nullable(),
+})
+export const cinemaTripListSchema = z.object({
+  /** Soonest first. */
+  upcoming: z.array(cinemaTripSchema),
+  /** Past and cancelled, most recent first. */
+  past: z.array(cinemaTripSchema),
+})
+export const invitablePeopleSchema = z.object({ people: z.array(tripPersonSchema) })
+
+export type CinemaTrip = z.infer<typeof cinemaTripSchema>
+export type CinemaTripList = z.infer<typeof cinemaTripListSchema>
+export type CinemaTripInvitee = CinemaTrip['invitees'][number]
+export type TripReply = z.infer<typeof tripReplySchema>
+export type TripPerson = z.infer<typeof tripPersonSchema>
+export type InvitablePeople = z.infer<typeof invitablePeopleSchema>
