@@ -4,10 +4,17 @@ import {
   cinemaFilmsResponseSchema,
   cinemaProgrammeResponseSchema,
   cinemaReviewListSchema,
+  cinemaTripListSchema,
+  cinemaTripSchema,
+  invitablePeopleSchema,
   type CinemaFilmDetail,
   type CinemaFilms,
   type CinemaProgrammeResponse,
   type CinemaReviewList,
+  type CinemaTrip,
+  type CinemaTripList,
+  type InvitablePeople,
+  type TripReply,
   aiAnswerSchema,
   aiConversationDetailSchema,
   aiConversationListSchema,
@@ -298,6 +305,15 @@ export type {
   CinemaFilmCard,
   CinemaFilmDetail,
   CinemaFilmSlot,
+  CinemaTrip,
+  CinemaTripInvitee,
+  CinemaTripList,
+  InvitablePeople,
+  NeedsYouTripItem,
+  NextTrip,
+  TripPerson,
+  TripReply,
+  TripShowingFlag,
   AuditEntry,
   AuditPage,
   BoxSet,
@@ -2147,9 +2163,11 @@ export function notificationStateLabel(notification: NotificationRecord): string
     return `Sent to ${devices} device${devices === 1 ? '' : 's'}`
   }
   if (notification.status === 'suppressed') {
-    return notification.suppressedReason === 'category_disabled'
-      ? 'Not sent — that category is switched off'
-      : 'Not sent — no devices are registered'
+    if (notification.suppressedReason === 'category_disabled') return 'Not sent — that category is switched off'
+    // AC5 (#345): a cinema trip's morning reminder that quiet hours or digest mode would have
+    // held until after the film.
+    if (notification.suppressedReason === 'too_late') return 'Not sent — it would have arrived after the showing'
+    return 'Not sent — no devices are registered'
   }
   if (notification.status === 'failed') return 'Could not be delivered'
   if (notification.deferredReason === 'quiet_hours') return 'Waiting — quiet hours'
@@ -2824,5 +2842,81 @@ export async function decideCinemaReview(key: string, decision: { tmdbId: number
   return parseOrThrowApiError(
     await authFetch(`/cinemas/review/${encodeURIComponent(key)}`, { method: 'POST', body: JSON.stringify(decision) }),
     cinemaReviewListSchema,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// AC5 — cinema trips (#345). Members only. Writes are online only: they go through `send`, so
+// "you are offline" is told apart from a write that may have landed, and they never join the
+// catalogue's offline queue. Each write answers with the trip as its reader now sees it.
+// ---------------------------------------------------------------------------
+
+/** The reader's trips: upcoming soonest first, then past and cancelled, latest first. */
+export async function fetchCinemaTrips(): Promise<CinemaTripList> {
+  return parseResponse(await authFetch('/cinema-trips'), cinemaTripListSchema)
+}
+
+export async function fetchCinemaTrip(id: string): Promise<CinemaTrip> {
+  return parseOrThrowApiError(await authFetch(`/cinema-trips/${encodeURIComponent(id)}`), cinemaTripSchema)
+}
+
+/** Everyone the reader can invite: active profiles who can sign in, not themselves. */
+export async function fetchInvitablePeople(): Promise<InvitablePeople> {
+  return parseResponse(await authFetch('/cinema-trips/people'), invitablePeopleSchema)
+}
+
+/** A time from the film's page and the people to invite. `clientRequestId` is made once per
+ *  sheet, so a send whose answer was lost, sent again, returns the same trip. */
+export async function proposeCinemaTrip(input: {
+  clientRequestId: string; filmKey: string; showingId: string; inviteeIds: string[]
+}): Promise<CinemaTrip> {
+  return parseOrThrowApiError(
+    await send('/cinema-trips', { method: 'POST', body: JSON.stringify(input) }),
+    cinemaTripSchema,
+  )
+}
+
+/** An invitee's reply, made against the trip's `revision` as the screen showed it. */
+export async function replyToCinemaTrip(
+  id: string,
+  input: { revision: number; reply: Exclude<TripReply, 'invited'>; showingId?: string },
+): Promise<CinemaTrip> {
+  return parseOrThrowApiError(
+    await send(`/cinema-trips/${encodeURIComponent(id)}/reply`, { method: 'PUT', body: JSON.stringify(input) }),
+    cinemaTripSchema,
+  )
+}
+
+/** The proposer accepts a suggestion (naming whose, at the reply revision shown) or moves the
+ *  trip to a time of their own. */
+export async function moveCinemaTrip(
+  id: string,
+  input: { revision: number; showingId: string; fromProfileId?: string; fromReplyRevision?: number },
+): Promise<CinemaTrip> {
+  return parseOrThrowApiError(
+    await send(`/cinema-trips/${encodeURIComponent(id)}/move`, { method: 'POST', body: JSON.stringify(input) }),
+    cinemaTripSchema,
+  )
+}
+
+/** "Keep this time": the proposer turns a suggestion down, and its suggester is told. */
+export async function keepCinemaTripTime(id: string, input: { profileId: string; replyRevision: number }): Promise<CinemaTrip> {
+  return parseOrThrowApiError(
+    await send(`/cinema-trips/${encodeURIComponent(id)}/keep`, { method: 'POST', body: JSON.stringify(input) }),
+    cinemaTripSchema,
+  )
+}
+
+export async function inviteToCinemaTrip(id: string, profileIds: string[]): Promise<CinemaTrip> {
+  return parseOrThrowApiError(
+    await send(`/cinema-trips/${encodeURIComponent(id)}/invitees`, { method: 'POST', body: JSON.stringify({ profileIds }) }),
+    cinemaTripSchema,
+  )
+}
+
+export async function cancelCinemaTrip(id: string): Promise<CinemaTrip> {
+  return parseOrThrowApiError(
+    await send(`/cinema-trips/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
+    cinemaTripSchema,
   )
 }

@@ -189,3 +189,38 @@ describe('Next screening beside Needs you — AC2 (#337)', () => {
     expect(screening.textContent).toContain('just you so far')
   })
 })
+
+describe('Cinema trips in Needs you and the top slot — AC5 (#345)', () => {
+  const TRIP = '3f2504e0-4f89-41d3-9a0c-0305e82c3501'
+  const invite = {
+    kind: 'tripInvite' as const, tripId: TRIP, filmTitle: 'Wild Horse Nine', posterPath: null, venueName: 'ODEON Glasgow Quay',
+    venueTimezone: 'Europe/London', startsAtUtc: '2026-11-09T20:10:00Z', proposerName: 'Craig', fromName: null, flag: null,
+  }
+  const nextTrip = { tripId: TRIP, filmTitle: 'Wild Horse Nine', venueName: 'ODEON Glasgow Quay', venueTimezone: 'Europe/London', startsAtUtc: '2026-11-09T20:10:00Z', withNames: ['Craig'] }
+  const screening = (plannedStart: string) => ({ sessionId: '3f2504e0-4f89-41d3-9a0c-0305e82c3401', plannedStart, withNames: ['Craig'], matchTitle: null })
+
+  it('puts a trip waiting for the reader’s reply before the discs, opening the trip', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [BASE], nextScreening: null, trips: [invite], nextTrip: null })
+    renderRow()
+    const row = await screen.findByRole('region', { name: /Needs you/ })
+    const links = within(row).getAllByRole('link')
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([`/movie-night/trips/${TRIP}`, `/loans?view=back&loan=${BASE.loanId}`])
+    expect(links[0].textContent).toContain('Craig invited you: Wild Horse Nine, Mon 9 Nov 20:10')
+    expect(within(row).getByText('2')).toBeTruthy()
+  })
+
+  it('gives the top slot to the next trip when it is sooner than the next screening', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [], nextScreening: screening('2026-11-12T19:00:00Z'), trips: [], nextTrip })
+    renderRow()
+    const card = await screen.findByRole('link', { name: 'Next: Wild Horse Nine, Mon 9 Nov 20:10 at ODEON Glasgow Quay, with Craig' })
+    expect(card.getAttribute('href')).toBe(`/movie-night/trips/${TRIP}`)
+    expect(screen.queryByText(/Next screening/)).toBeNull()
+  })
+
+  it('keeps the screening in the slot when the screening is sooner', async () => {
+    api.fetchNeedsYou.mockResolvedValue({ items: [], nextScreening: screening('2026-11-08T19:00:00Z'), trips: [], nextTrip })
+    renderRow()
+    expect(await screen.findByText('Next screening')).toBeTruthy()
+    expect(screen.queryByRole('link', { name: /^Next: Wild Horse Nine/ })).toBeNull()
+  })
+})

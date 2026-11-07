@@ -6,15 +6,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CinemaFilmDetail } from '@mcu/shared'
 
 import { CINEMA_NOW, detailFixture, ODEON, showingFixture, VUE } from './cinema-films-fixture'
+import { ALEX, MARK, TRIP, tripFixture } from './cinema-trip-fixture'
 
-const state = vi.hoisted(() => ({ id: 'craig', role: 'admin', online: true, fetch: vi.fn() }))
+const state = vi.hoisted(() => ({ id: 'craig', role: 'admin', online: true, fetch: vi.fn(), trips: vi.fn(), people: vi.fn(), propose: vi.fn() }))
 vi.mock('@/context/auth', () => ({ useAuth: () => ({ profile: { id: state.id, role: state.role } }) }))
 vi.mock('@/hooks/useOnlineStatus', () => ({ useOnlineStatus: () => state.online }))
 vi.mock('@/lib/api', () => {
   class ApiError extends Error {
     constructor(message: string, readonly status: number) { super(message) }
   }
-  return { ApiError, fetchCinemaFilm: state.fetch, posterUrl: (path: string | null) => path ?? '/placeholder-poster.svg' }
+  // AC5 reads the reader's trips beside the showings; none here unless a case says so.
+  return {
+    ApiError, fetchCinemaFilm: state.fetch, fetchCinemaTrips: state.trips, fetchInvitablePeople: state.people,
+    proposeCinemaTrip: state.propose, posterUrl: (path: string | null) => path ?? '/placeholder-poster.svg',
+  }
 })
 import { ApiError } from '@/lib/api'
 import CinemaFilmPage from './CinemaFilmPage'
@@ -42,6 +47,7 @@ beforeEach(() => {
   state.id = 'craig'; state.role = 'admin'; state.online = true
   vi.spyOn(Date, 'now').mockReturnValue(CINEMA_NOW)
   state.fetch.mockReset().mockResolvedValue(detailFixture())
+  state.trips.mockReset().mockResolvedValue({ upcoming: [], past: [] })
 })
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 
@@ -189,5 +195,66 @@ describe('a film’s every showing across the nine (AC4)', () => {
     const link = within(also).getByRole('link')
     expect(link.getAttribute('href')).toBe('/movie-night/cinema/listing-00000000-0000-4000-8000-000000000060')
     expect(link.textContent).toContain('Not matched yet · Vue St Enoch · 2 showings')
+  })
+})
+
+describe('a trip from a film’s page (AC5, #345)', () => {
+  beforeEach(() => {
+    state.people.mockReset().mockResolvedValue({ people: [
+      { profileId: ALEX, displayName: 'Alex', isYou: false },
+      { profileId: MARK, displayName: 'Mark', isYou: false },
+    ] })
+    state.propose.mockReset().mockResolvedValue(tripFixture({ asCraig: true }))
+  })
+
+  it('proposes one of the page’s confirmed times to the people picked, none ticked to begin with', async () => {
+    setup()
+    fireEvent.click(await screen.findByRole('button', { name: 'Propose a trip' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Propose a trip' })
+    const mark = await within(sheet).findByRole('checkbox', { name: 'Mark' })
+    expect(within(sheet).getAllByRole('checkbox').every((box) => !(box as HTMLInputElement).checked)).toBe(true)
+    const send = within(sheet).getByRole('button', { name: 'Send invitations' })
+    expect(send.hasAttribute('disabled')).toBe(true)
+    fireEvent.click(within(sheet).getByRole('button', { name: /^21:00 at ODEON Kilmarnock/ }))
+    expect(send.hasAttribute('disabled')).toBe(true)
+    fireEvent.click(mark)
+    fireEvent.click(send)
+    await waitFor(() => expect(state.propose).toHaveBeenCalledTimes(1))
+    const [sent] = state.propose.mock.calls[0] as [{ clientRequestId: string; filmKey: string; showingId: string; inviteeIds: string[] }]
+    expect(sent).toMatchObject({ filmKey: 'tmdb-1417', showingId: detailFixture().showings[1]?.id, inviteeIds: [MARK] })
+    expect(sent.clientRequestId).toMatch(/^[0-9a-f-]{36}$/)
+    expect((await screen.findByLabelText('Address')).textContent).toBe(`/movie-night/trips/${TRIP}`)
+  })
+
+  it('sends the same choice again under the same request, so a lost answer makes one trip', async () => {
+    state.propose.mockRejectedValueOnce(new Error('Could not reach the server.'))
+    setup()
+    fireEvent.click(await screen.findByRole('button', { name: 'Propose a trip' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Propose a trip' })
+    fireEvent.click(await within(sheet).findByRole('checkbox', { name: 'Alex' }))
+    fireEvent.click(within(sheet).getByRole('button', { name: /^20:00 IMAX at Vue Glasgow St Enoch/ }))
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Send invitations' }))
+    await within(sheet).findByRole('alert')
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Send invitations' }))
+    await waitFor(() => expect(state.propose).toHaveBeenCalledTimes(2))
+    const ids = state.propose.mock.calls.map(([input]) => (input as { clientRequestId: string }).clientRequestId)
+    expect(ids[0]).toBe(ids[1])
+  })
+
+  it('offers no trip when no confirmed time is still to start', async () => {
+    const detail = detailFixture()
+    detail.showings = detail.showings.map((showing) => ({ ...showing, confirmation: 'unconfirmed' as const }))
+    state.fetch.mockResolvedValue(detail)
+    setup()
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.queryByRole('button', { name: 'Propose a trip' })).toBeNull()
+  })
+
+  it('lists the reader’s trips to this film above the days', async () => {
+    state.trips.mockResolvedValue({ upcoming: [tripFixture()], past: [] })
+    setup()
+    const yours = await screen.findByRole('region', { name: 'Your trips' })
+    expect(within(yours).getByRole('link').getAttribute('href')).toBe(`/movie-night/trips/${TRIP}`)
+    expect(within(yours).getByText('You: No reply yet · 1 going · 2 no reply yet')).toBeTruthy()
   })
 })

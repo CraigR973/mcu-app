@@ -4,6 +4,8 @@ import { ArrowLeft, Clapperboard, Disc3, Eye, Info, Theater, Ticket } from 'luci
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { ProgrammeCoverage, ProgrammeLink } from '@/components/cinemas/ProgrammeCoverage'
+import { ProposeTrip } from '@/components/cinemas/ProposeTrip'
+import { TripCard } from '@/components/cinemas/TripCard'
 import { Poster } from '@/components/movies/Poster'
 import { Badge } from '@/components/ui/badge'
 import { StatePanel } from '@/components/ui/state-panel'
@@ -11,7 +13,8 @@ import { useAuth } from '@/context/auth'
 import { useGoBack } from '@/hooks/useGoBack'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useProgrammeClock } from '@/hooks/useProgrammeClock'
-import { ApiError, fetchCinemaFilm, type CinemaFilmDetail } from '@/lib/api'
+import { ApiError, fetchCinemaFilm, fetchCinemaTrips, type CinemaFilmDetail } from '@/lib/api'
+import { tripsForFilm } from '@/lib/cinema-trips'
 import {
   CINEMA_VIEW_PATH,
   cinemaFilmPath,
@@ -129,6 +132,21 @@ function coverageNote(venue: ProgrammeVenue, day: string, now: number): string |
 
 const KIND_ICON = { film: Clapperboard, listing: Clapperboard, event: Theater } as const
 
+/** AC5: the reader's upcoming trips whose address is this page's or whose showing is on it, so
+ *  a trip proposed on a listing still shows once a morning links the film. */
+function YourTrips({ detail }: { detail: Detail }) {
+  const { profile } = useAuth()
+  const trips = useQuery({ queryKey: ['cinema-trips', profile?.id], queryFn: fetchCinemaTrips, enabled: Boolean(profile) })
+  const mine = tripsForFilm(trips.data?.upcoming ?? [], detail.film.key, new Set(detail.showings.map((showing) => showing.id)))
+  if (mine.length === 0) return null
+  return (
+    <section aria-labelledby="your-trips" className="space-y-1">
+      <h2 id="your-trips" className="section-heading text-lg">Your trips</h2>
+      <ul className="divide-y divide-border">{mine.map((trip) => <li key={trip.id}><TripCard trip={trip} /></li>)}</ul>
+    </section>
+  )
+}
+
 /** "Vue St Enoch lists only to Fri 6 Nov; ODEON Braehead only to Wed 11 Nov". */
 function horizonPhrase(groups: { day: string; venues: ProgrammeVenue[] }[]): string {
   return groups.map(({ day, venues }, index) => {
@@ -141,7 +159,8 @@ function horizonPhrase(groups: { day: string; venues: ProgrammeVenue[] }[]): str
  * One film at the cinema — AC4 (#335, point 3). Every showing across the nine, by day and then
  * by cinema, each time a chip with its format that opens the cinema's own page to check
  * tickets. The address is stable: `tmdb-<id>` for a film, `listing-<id>` for a cinema's listing,
- * which opens the film once a morning's matching links it. AC5 adds "Propose a trip" here.
+ * which opens the film once a morning's matching links it. Since AC5 (#345) a trip is proposed
+ * from its times, and the reader's trips to it sit above them.
  */
 export default function CinemaFilmPage() {
   const { key = '' } = useParams()
@@ -280,7 +299,9 @@ function FilmShowings({ detail, now, today, online, connected, onLapsed, isAdmin
         ) : null}
       </div>
 
-      {/* AC5 adds "Propose a trip" here, from the times below. */}
+      {/* AC5 (#345): a trip from this page's times, and the reader's trips to this film. */}
+      <ProposeTrip detail={detail} now={now} today={today} online={online} />
+      <YourTrips detail={detail} />
 
       {!next ? (
         <StatePanel compact tone="empty" title="No showings listed now" description="Nothing is listed for this film at your cinemas in the next fortnight." action={<Link to={CINEMA_VIEW_PATH} className="font-semibold text-primary hover:underline">See what is on</Link>} />

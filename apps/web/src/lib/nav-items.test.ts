@@ -181,6 +181,8 @@ describe('Batch T3 — the phone top bar', () => {
     expect(titleForPath('/movies/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Film')
     expect(titleForPath('/films/tmdb/11050')).toBe('Film')
     expect(titleForPath('/movie-night/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Movie night')
+    // AC5: a cinema trip's top bar names the page, and the film is its own heading.
+    expect(titleForPath('/movie-night/trips/3f2504e0-4f89-11d3-9a0c-0305e82c3301')).toBe('Cinema trip')
     expect(titleForPath('/nowhere')).toBeNull()
   })
 

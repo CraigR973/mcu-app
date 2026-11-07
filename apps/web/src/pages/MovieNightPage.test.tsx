@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   endMovieNight: vi.fn(),
   fetchMovieNights: vi.fn(),
   joinMovieNight: vi.fn(),
+  // AC5: the Cinema trips section's read; no trips, so the section is not drawn.
+  fetchCinemaTrips: vi.fn().mockResolvedValue({ upcoming: [], past: [] }),
+  posterUrl: (path: string | null) => path ?? '/placeholder-poster.svg',
 }))
 
 vi.mock('@/lib/api', () => mocks)
@@ -114,5 +117,29 @@ describe('MovieNightPage — AC4', () => {
     expect(views.getByRole('link', { name: 'At home' }).getAttribute('aria-current')).toBe('page')
     expect(views.getByRole('link', { name: 'At the cinema' }).getAttribute('href')).toBe('/movie-night/cinema')
     expect(views.getByRole('link', { name: 'At the cinema' }).getAttribute('aria-current')).toBeNull()
+  })
+})
+
+describe('MovieNightPage — AC5 cinema trips (#345)', () => {
+  it('lists upcoming trips below the nights and folds the past ones, closed', async () => {
+    const { tripFixture } = await import('./cinema-trip-fixture')
+    mocks.fetchMovieNights.mockResolvedValue({ items: [], total: 0 })
+    const past = tripFixture({ id: '00000000-0000-4000-8000-000000000777', status: 'cancelled', cancelledAtUtc: '2026-11-02T10:00:00Z' })
+    mocks.fetchCinemaTrips.mockResolvedValueOnce({ upcoming: [tripFixture()], past: [past] })
+    renderPage()
+    const trips = await screen.findByRole('region', { name: 'Cinema trips' })
+    const upcoming = within(trips).getByRole('list', { name: 'Upcoming cinema trips' })
+    expect(within(upcoming).getByRole('link').getAttribute('href')).toBe('/movie-night/trips/00000000-0000-4000-8000-000000000700')
+    expect(within(upcoming).getByText('Tue 3 Nov · 21:00 · ODEON Kilmarnock')).toBeTruthy()
+    const fold = within(trips).getByText('Past trips (1)').closest('details')
+    expect(fold?.hasAttribute('open')).toBe(false)
+  })
+
+  it('draws no Cinema trips section with no trips', async () => {
+    mocks.fetchMovieNights.mockResolvedValue({ items: [], total: 0 })
+    renderPage()
+    await screen.findByRole('heading', { name: 'Your screenings' })
+    await waitFor(() => expect(mocks.fetchCinemaTrips).toHaveBeenCalled())
+    expect(screen.queryByRole('region', { name: 'Cinema trips' })).toBeNull()
   })
 })

@@ -71,7 +71,8 @@ const CATEGORIES: Array<{
   {
     key: 'movieNightEnabled',
     label: 'Movie night',
-    description: 'Votes and matches while a movie night is running.',
+    // AC5 (#345): cinema trips share the switch; its label stays "Movie night".
+    description: 'Movie nights and cinema trips: invitations, replies, changes and reminders.',
   },
 ]
 

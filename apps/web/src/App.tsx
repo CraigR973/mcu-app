@@ -17,6 +17,7 @@ const MoviesPage = lazy(() => import('./pages/MoviesPage'))
 const MovieDetailPage = lazy(() => import('./pages/MovieDetailPage'))
 const ExternalFilmPage = lazy(() => import('./pages/ExternalFilmPage'))
 const CinemaFilmPage = lazy(() => import('./pages/CinemaFilmPage'))
+const CinemaTripPage = lazy(() => import('./pages/CinemaTripPage'))
 const YouPage = lazy(() => import('./pages/YouPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const AddToCollectionPage = lazy(() => import('./pages/AddToCollectionPage'))
@@ -356,6 +357,11 @@ export default function App() {
             <Route
               path="/movie-night/cinema/:key"
               element={<AppShell><CinemaFilmPage /></AppShell>}
+            />
+            {/* AC5 (#345): one cinema trip, for the people on it. Every trip push opens it. */}
+            <Route
+              path="/movie-night/trips/:id"
+              element={<AppShell><CinemaTripPage /></AppShell>}
             />
             <Route
               path="/movie-night/join/:token"

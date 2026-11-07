@@ -203,6 +203,8 @@ const SUB_PAGE_TITLES: Array<[prefix: string, title: string]> = [
   ['/films/tmdb/', 'Film'],
   // AC4: a film's showings, under Movie night's At the cinema view.
   ['/movie-night/cinema/', 'At the cinema'],
+  // AC5: a cinema trip; the film's name is the page's own heading.
+  ['/movie-night/trips/', 'Cinema trip'],
   ['/movie-night/', 'Movie night'],
   ['/box-sets/', 'Box set'],
   ['/collections/', 'Collection'],

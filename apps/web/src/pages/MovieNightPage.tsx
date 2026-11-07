@@ -5,6 +5,7 @@ import { ChevronDown, Clapperboard, Link2, Loader2, Popcorn, Sofa, Square } from
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 
 import { AtTheCinema } from '@/components/cinemas/AtTheCinema'
+import { CinemaTrips } from '@/components/cinemas/CinemaTrips'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -204,7 +205,7 @@ function AtHome() {
           ) : null}
         </section>
 
-        {/* AC4: beside "Start a screening". AC5's "Propose a trip" follows from a film's times. */}
+        {/* AC4: beside "Start a screening". AC5's "Propose a trip" is on a film's page there. */}
         <section className="archive-panel flex flex-col p-4 sm:p-5" aria-labelledby="plan-cinema-trip">
           <h2 id="plan-cinema-trip" className="section-heading">Plan a cinema trip</h2>
           <p className="mt-1 flex-1 text-sm text-muted-foreground">What is on at your nine cinemas this week and coming up, with every showing of each film.</p>
@@ -272,6 +273,9 @@ function AtHome() {
           </>
         ) : null}
       </section>
+
+      {/* AC5 (#345): below the nights; not drawn with no trips. */}
+      <CinemaTrips />
     </>
   )
 }
