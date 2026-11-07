@@ -16,9 +16,13 @@ from TMDB and Home's Coming to disc are unchanged. No migration.
 releases linked to film pages (Wild Horse Nine at 8 cinemas, five at one); 87 cinema listings
 are not matched yet, and the page says so. Phone rendering is Craig's observation.
 
-**Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here. **Next
-is sitting 4, which starts at AC5's owner checkpoint:** Craig approves the exact tables, states
-and push wording before any build.
+**Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
+
+**7 Nov: sitting 4 is stopped at AC5's owner checkpoint** (`docs/reviews/ac5-owner-checkpoint-2026-11-06.md`,
+branch `feat/ac5-cinema-trips`): two tables (`cinema_trips`, `cinema_trip_invitees`, migration
+072), the four replies and every transition, six push wordings under the Movie night switch, where
+trips appear, and eight numbered decisions. **Nothing is built, migrated or deployed until Craig
+answers;** his answer becomes #345, the build's record #346. AC6's checkpoint follows AC5.
 
 ## Next
 
@@ -421,6 +425,11 @@ it renders — and report what was observed rather than what passed.
 
 ## Log
 
+- **7 Nov — AC5's owner checkpoint drafted; sitting 4 stops for Craig.** Exact tables, states,
+  transitions, push wording and placement in `docs/reviews/ac5-owner-checkpoint-2026-11-06.md`.
+  Read-only live facts: 2 active profiles, nine venues enabled, 2,518 confirmed and 15 unconfirmed
+  showings, none withdrawn or cancelled. Found in passing: a digest due at 09:00 local waits for
+  the next 08:00 UTC pass, so in GMT it can arrive a day late (existing behaviour, not AC5's).
 - **6 Nov — AC7 shipped (#343, #344): separate disc and cinema release calendars; sitting 3
   done.** PR #134, merge `5e570bca`; PR CI 42275791028 all seven (C86/F85+1/W84+2/jobs6). Local,
   from a clean tree: API 2,675 on Postgres (no skips), shared 186, web 843, lint 0 errors (the 11
