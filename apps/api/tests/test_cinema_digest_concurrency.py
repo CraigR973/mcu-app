@@ -404,3 +404,31 @@ async def test_one_refused_device_does_not_repeat_the_other_device(db_engine):
         assert result.pushes_delivered == 1 and result.subscriptions_removed == 1
         await delivery.deliver(db_engine, sender, now=NOW + timedelta(hours=1), user_id=owner)
         assert len(sender.payloads) == 2
+
+
+async def test_late_quiet_check_does_not_restart_an_already_due_digest_clock(db_engine):
+    async with world(db_engine) as (factory, owner, run_id):
+        async with factory() as db, db.begin():
+            prefs = await get_or_create_preferences(db, owner)
+            prefs.digest_mode, prefs.digest_hour_local = True, 10
+            prefs.quiet_hours_start, prefs.quiet_hours_end = time(22), time(7)
+        await evaluation(factory, run_id)
+        tomorrow = NOW + timedelta(days=1)
+        async with factory() as db, db.begin():
+            await db.execute(
+                update(CinemaScreening)
+                .where(CinemaScreening.film_id.in_(select(CinemaDigestListing.cinema_film_id)))
+                .values(starts_utc=tomorrow + timedelta(hours=12), local_date=tomorrow.date())
+            )
+        sender = Sender()
+        await delivery.deliver(db_engine, sender, now=tomorrow.replace(hour=3), user_id=owner)
+        assert sender.payloads == []
+        async with factory() as db:
+            row = await db.scalar(
+                select(Notification).where(
+                    Notification.user_id == owner, Notification.category == "cinemas"
+                )
+            )
+            assert row.deliver_after_utc == tomorrow.replace(hour=6)
+        await delivery.deliver(db_engine, sender, now=tomorrow, user_id=owner)
+        assert len(sender.payloads) == 1

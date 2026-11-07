@@ -1,5 +1,6 @@
 """AC6: real evaluator, durable history and preferences on disposable Postgres."""
 
+import hashlib
 import uuid
 from datetime import datetime, timedelta
 
@@ -86,7 +87,10 @@ async def showing(
         source_key=key,
         title=f"Digest film {identity}",
         identity_status=status,
-        evidence={"tmdbId": identity, "sourceFingerprint": "a" * 64},
+        evidence={
+            "tmdbId": identity,
+            "sourceFingerprint": hashlib.sha256(f"Digest film {identity}".encode()).hexdigest(),
+        },
         last_seen_utc=now,
     )
     db.add(film)
@@ -185,7 +189,7 @@ async def test_unmatched_baseline_late_matching_and_identity_correction_are_sile
         CinemaDigestListing(
             source=film.source,
             source_key=film.source_key,
-            source_fingerprint="a" * 64,
+            source_fingerprint=film.evidence["sourceFingerprint"],
             cinema_film_id=film.id,
             first_observed_utc=NOW,
             last_observed_utc=NOW,
@@ -243,7 +247,7 @@ async def test_preferences_additive_and_movie_night_untouched(client):
 async def test_real_thirty_day_return_and_failure_interruption(api_session, failed_day, expected):
     db = api_session
     run = await finished(db)
-    await showing(db, VENUES[0])
+    original_film, original_showing = await showing(db, VENUES[0])
     await digest.evaluate(db, run, now=NOW)
     for offset in range(1, 31):
         now = NOW + timedelta(days=offset)
@@ -251,7 +255,10 @@ async def test_real_thirty_day_return_and_failure_interruption(api_session, fail
         await digest.evaluate(db, run, now=now)
     now = NOW + timedelta(days=31)
     run = await finished(db, now)
-    await showing(db, VENUES[2], now=now)
+    original_film.last_seen_utc = original_showing.last_seen_utc = now
+    original_showing.local_date = now.date()
+    original_showing.starts_utc = now + timedelta(hours=12)
+    await db.flush()
     await digest.evaluate(db, run, now=now)
     rows = list(
         (
@@ -264,6 +271,7 @@ async def test_real_thirty_day_return_and_failure_interruption(api_session, fail
     assert rows[0].is_return is False
     if expected == 2:
         assert rows[1].is_return is True and rows[1].episode_number == 2
+        assert rows[1].first_listing_utc == now
 
 
 async def test_new_unmatched_listing_notifies_once_when_matched_and_preserves_first_listing(
@@ -356,3 +364,24 @@ async def test_all_failed_venues_do_not_freeze_out_a_later_scheduled_recovery(ap
     await showing(db, VENUES[0], now=later)
     result = await digest.evaluate(db, run, now=later)
     assert result["status"] == "evaluated" and len(result["appearanceIds"]) == 1
+
+
+async def test_baseline_unresolved_film_stays_silent_when_its_showing_key_rolls_over(api_session):
+    db = api_session
+    old, _ = await showing(db, VENUES[0], source_key="old-showing-key", status="unverified")
+    db.add(
+        CinemaDigestListing(
+            source=old.source,
+            source_key=old.source_key,
+            source_fingerprint=old.evidence["sourceFingerprint"],
+            cinema_film_id=old.id,
+            first_observed_utc=NOW - timedelta(days=1),
+            last_observed_utc=NOW,
+            baseline=True,
+        )
+    )
+    run = await finished(db)
+    await showing(db, VENUES[0], source_key="new-showing-key")
+    result = await digest.evaluate(db, run, now=NOW)
+    assert result["appearanceIds"] == []
+    assert (await db.scalar(select(CinemaDigestFilm))).baseline is True

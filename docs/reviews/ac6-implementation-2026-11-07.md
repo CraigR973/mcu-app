@@ -61,8 +61,22 @@ The current architecture map records the new flow and its approved limits.
   assertion that New this week's query survives Back. Its light/dark 375 px flow then passed.
   TypeScript also caught a Playwright-only `exact` option in a Testing Library call; removed
   that unsupported option (the literal accessible name still matches exactly).
+- The full jobs run passed the digest assertions but its post-job HTTP preference cleanup
+  hit ECONNRESET. Cleanup now restores the saved preferences directly in the disposable
+  database, so a blocking command's idle HTTP connection is not a cleanup dependency.
+  The two scheduled executions, decrypted push, exact counts and destination assertions
+  are unchanged. No retry or relaxed expectation was added.
 
 ## Verification in progress
+
+Review found two additional edge cases before shipment, both pinned by failing regressions
+before their repairs. A showing-key rollover could bypass an unresolved rollout baseline:
+baseline inheritance now uses the existing AC3 fingerprint within the same source, without
+linking identities across sources or guessing a film. A return reusing an old key records its
+fresh observation as first-listed time, rather than displaying the original episode as a
+delayed match. An already-due digest held by a late quiet-hours check could repeatedly restart
+its digest clock and starve the daily morning pass: it now waits only for quiet hours to end,
+preserving the original elapsed digest target. No assertion or expected outcome was relaxed.
 
 The intermediate API run passed 2,733 tests with zero skips, including all database tests.
 The intermediate shared/web run passed 200 shared and 881 web tests; focused shared-contract,

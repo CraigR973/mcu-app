@@ -25,12 +25,17 @@ export async function exerciseCinemaDigest(craig: Api, mark: Api, db: DB) {
       UPDATE cinema_venues SET collection_enabled=false WHERE id='${venue}'`)
     const current = (db.scalar("SELECT coalesce(string_agg(id::text,','),'') FROM cinema_refresh_runs") || '').split(',')
     for (const id of current.filter(id => id && !oldRuns.has(id))) db.sql(`DELETE FROM cinema_refresh_runs WHERE id='${id}'`)
-    for (const [i, who] of [craig, mark].entries()) {
-      await who.put('/notifications/preferences', {
-        cinemasEnabled: prefs[i].cinemasEnabled, cinemasOlderOnly: prefs[i].cinemasOlderOnly,
-        digestMode: prefs[i].digestMode,
-        ...(prefs[i].quietHoursStart ? { quietHoursStart: prefs[i].quietHoursStart, quietHoursEnd: prefs[i].quietHoursEnd } : { clearQuietHours: true }),
-      })
+    // Reset the fixture through SQL: the synchronous jobs can outlive the HTTP client's
+    // idle connection. No API assertion depends on this post-test cleanup transport.
+    for (const [i, name] of ['Craig', 'Mark'].entries()) {
+      const saved = "'" + JSON.stringify(prefs[i]).replaceAll("'", "''") + "'::jsonb"
+      db.sql(`UPDATE notification_preferences n SET
+        cinemas_enabled=(${saved}->>'cinemasEnabled')::boolean,
+        cinemas_older_only=(${saved}->>'cinemasOlderOnly')::boolean,
+        digest_mode=(${saved}->>'digestMode')::boolean,
+        quiet_hours_start=(${saved}->>'quietHoursStart')::time,
+        quiet_hours_end=(${saved}->>'quietHoursEnd')::time
+        FROM profiles p WHERE n.user_id=p.id AND p.display_name='${name}'`)
     }
   }
   try {

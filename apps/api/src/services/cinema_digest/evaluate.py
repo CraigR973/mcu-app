@@ -152,6 +152,13 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
         (a.source, a.source_key, a.source_fingerprint): a
         for a in (await db.scalars(select(CinemaDigestListing))).all()
     }
+    # Some sources use a showing key as their film key. Preserve the rollout baseline
+    # within that source across identical AC3 source fingerprints, never across chains.
+    baseline_fingerprints = {
+        (a.source, a.source_fingerprint)
+        for a in aliases.values()
+        if a.baseline and a.source_fingerprint
+    }
     by_source: dict[tuple[str, str], list[CinemaDigestListing]] = {}
     for known_alias in aliases.values():
         by_source.setdefault((known_alias.source, known_alias.source_key), []).append(known_alias)
@@ -178,7 +185,8 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
                 cinema_film_id=film.id,
                 first_observed_utc=showing.first_seen_utc,
                 last_observed_utc=showing.last_seen_utc,
-                baseline=any(a.baseline for a in prior),
+                baseline=any(a.baseline for a in prior)
+                or (key[0], key[2]) in baseline_fingerprints,
             )
             # A corrected listing is already known, even if the new fingerprint differs.
             if any(a.film_id is not None for a in prior):
@@ -219,7 +227,11 @@ async def evaluate(db: AsyncSession, run: CinemaRefreshRun, *, now: datetime) ->
                 id=uuid.uuid4(),
                 film_id=state.id,
                 episode_number=state.episode_number,
-                first_listing_utc=min(a.first_observed_utc for _, _, a in matches),
+                first_listing_utc=(
+                    min(s.last_seen_utc for s, _, _ in matches)
+                    if is_return
+                    else min(a.first_observed_utc for _, _, a in matches)
+                ),
                 recognised_utc=now,
                 run_id=run.id,
                 title=matches[0][1].title,

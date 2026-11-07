@@ -17,17 +17,17 @@ from src.models.cinema_digest import (
     CinemaDigestDelivery,
     CinemaDigestFilm,
 )
-from src.models.notification import Notification
+from src.models.notification import DEFERRED_QUIET_HOURS, Notification
 from src.models.profile import Profile
 from src.services.cinema_digest.evaluate import london_day, tmdb_id, words
 from src.services.notifications import (
     DeliverySummary,
     PushSender,
+    _quiet_hours_end_after,
     active_subscriptions,
     deliver_to_subscriptions,
     get_or_create_preferences,
     quiet_hours_cover,
-    scheduled_delivery,
 )
 
 log = structlog.get_logger(__name__)
@@ -104,9 +104,12 @@ async def _claim(
                 row.status, row.suppressed_reason = "suppressed", "category_disabled"
             return None
         if quiet_hours_cover(pref, now):
-            target, reason = scheduled_delivery(pref, now)
+            # These rows have already passed their original digest target. Restarting
+            # the digest clock at each late quiet check can starve daily 08:00 delivery.
+            target = _quiet_hours_end_after(pref, now)
             for row in rows:
-                row.deliver_after_utc, row.deferred_reason = target, reason
+                row.deliver_after_utc = target
+                row.deferred_reason = DEFERRED_QUIET_HOURS
             return None
         days = (
             await db.scalars(
