@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { runJob } from '../support/cli.ts'
 import { pushesTo, registerDevice } from '../support/push.ts'
 import { expect, test } from '../support/test.ts'
@@ -43,6 +44,60 @@ test.describe('the cron jobs, run as Railway runs them', () => {
       'www.cineworld.co.uk', 'www.glasgowfilm.org', 'www.glasgowsciencecentre.org',
       'www.tickettailor.com', 'cms-assets.webediamovies.pro']) {
       expect(world.calls(host)).toHaveLength(0)
+    }
+  })
+
+  test('the reminders pass reminds a cinema trip on its morning, once however often it runs', async ({ api, db }) => {
+    // AC5 (#345, decision 2): the proposer and everyone going are reminded on the showing's own
+    // day, in the cinema's zone, which the trip keeps as a snapshot. A fixed-offset zone whose day
+    // still has hours left keeps this case independent of the hour it runs.
+    const people = { Craig: await api('Craig'), Mark: await api('Mark') }
+    const kept: Record<string, Record<string, unknown>> = {}
+    for (const [name, who] of Object.entries(people)) {
+      kept[name] = await who.get<Record<string, unknown>>('/notifications/preferences')
+      await who.put('/notifications/preferences', { movieNightEnabled: true, digestMode: false, clearQuietHours: true })
+    }
+    await registerDevice(people.Craig, 'craig-trip-reminder')
+    const markPhone = await registerDevice(people.Mark, 'mark-trip-reminder')
+    const now = Date.now()
+    const offsets = [0, ...Array.from({ length: 14 }, (_, i) => [i + 1, -(i + 1)]).flat()].filter((h) => h >= -12 && h <= 14)
+    const offset = offsets.find((h) => new Date(now + h * 3600000).getUTCHours() <= 21) ?? 0
+    const zone = offset === 0 ? 'Etc/UTC' : `Etc/GMT${offset > 0 ? '-' : '+'}${Math.abs(offset)}`
+    const starts = new Date(Math.ceil((now + 3600000) / 60000) * 60000)
+    const startsUtc = starts.toISOString().slice(0, 19)
+    const clock = new Date(starts.getTime() + offset * 3600000).toISOString().slice(11, 16)
+    const [film, showing, trip] = [randomUUID(), randomUUID(), randomUUID()]
+    const venue = db.scalar("SELECT id FROM cinema_venues WHERE slug='odeon-glasgow-quay'")
+    db.sql(`INSERT INTO cinema_films (id,source,source_key,title,identity_status,evidence)
+        VALUES ('${film}','cinematimes','ac5-reminder:${film}','AC5 Reminder Film','verified','{"tmdbId":9300009}'::jsonb);
+      INSERT INTO cinema_screenings (id,venue_id,film_id,source_key,identity_strength,local_date,source_local_start,starts_utc,formats,release_category,category_evidence,confirmation)
+        VALUES ('${showing}','${venue}','${film}','ac5-reminder:${showing}','opaque','${startsUtc.slice(0, 10)}','${startsUtc}','${startsUtc}','[]'::jsonb,'newRelease','{}'::jsonb,'confirmed');
+      INSERT INTO cinema_trips (id,client_request_id,proposer_id,film_key,film_title,showing_id,venue_id,venue_name,venue_timezone,starts_utc)
+        VALUES ('${trip}',gen_random_uuid(),(SELECT id FROM profiles WHERE display_name='Craig'),'tmdb-9300009','AC5 Reminder Film','${showing}','${venue}','ODEON Glasgow Quay','${zone}','${startsUtc}');
+      INSERT INTO cinema_trip_invitees (id,trip_id,profile_id,reply,reply_revision,replied_at_utc)
+        VALUES (gen_random_uuid(),'${trip}',(SELECT id FROM profiles WHERE display_name='Mark'),'going',1,now() AT TIME ZONE 'utc')`)
+    try {
+      const first = runJob('src.scripts.run_reminders')
+      expect(first.status, first.output).toBe(0)
+      expect(first.output).toMatch(/cinema trips:\s+1/)
+      const second = runJob('src.scripts.run_reminders')
+      expect(second.status, second.output).toBe(0)
+      // One reminder each, sent; the second pass wrote nothing (the dedupe key carries the trip's
+      // revision and the person).
+      expect(db.scalar(`SELECT string_agg(p.display_name || '|' || n.status || '|' || n.body, ';' ORDER BY p.display_name)
+        FROM notifications n JOIN profiles p ON p.id = n.user_id WHERE n.dedupe_key LIKE 'cinema-trip-reminder:${trip}:%'`))
+        .toBe(`Craig|sent|${clock} at ODEON Glasgow Quay, with Mark.;Mark|sent|${clock} at ODEON Glasgow Quay, with Craig.`)
+      const reminders = pushesTo(markPhone).filter((p) => p.title === 'Cinema today: AC5 Reminder Film')
+      expect(reminders.map((p) => [p.body, p.url])).toEqual([[`${clock} at ODEON Glasgow Quay, with Craig.`, `/movie-night/trips/${trip}`]])
+    } finally {
+      db.sql(`DELETE FROM cinema_trips WHERE id='${trip}'; DELETE FROM cinema_films WHERE id='${film}'`)
+      for (const [name, who] of Object.entries(people)) {
+        const old = kept[name]
+        await who.put('/notifications/preferences', {
+          movieNightEnabled: old.movieNightEnabled, digestMode: old.digestMode,
+          ...(old.quietHoursStart ? { quietHoursStart: old.quietHoursStart, quietHoursEnd: old.quietHoursEnd } : { clearQuietHours: true }),
+        })
+      }
     }
   })
 
