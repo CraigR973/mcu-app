@@ -52,9 +52,15 @@ test.describe('the cron jobs, run as Railway runs them', () => {
     // day, in the cinema's zone, which the trip keeps as a snapshot. A fixed-offset zone whose day
     // still has hours left keeps this case independent of the hour it runs.
     const people = { Craig: await api('Craig'), Mark: await api('Mark') }
-    const kept: Record<string, Record<string, unknown>> = {}
+    const quote = (value: string) => `'${value.replaceAll("'", "''")}'`
+    const snapshot = (name: string) => db.scalar(`SELECT json_build_object(
+      'movie_night_enabled',n.movie_night_enabled,'digest_mode',n.digest_mode,
+      'quiet_hours_start',n.quiet_hours_start,'quiet_hours_end',n.quiet_hours_end)::text
+      FROM notification_preferences n JOIN profiles p ON p.id=n.user_id WHERE p.display_name=${quote(name)}`)
+    const kept: Record<string, string> = {}
     for (const [name, who] of Object.entries(people)) {
-      kept[name] = await who.get<Record<string, unknown>>('/notifications/preferences')
+      await who.get('/notifications/preferences')
+      kept[name] = snapshot(name)
       await who.put('/notifications/preferences', { movieNightEnabled: true, digestMode: false, clearQuietHours: true })
     }
     await registerDevice(people.Craig, 'craig-trip-reminder')
@@ -91,14 +97,18 @@ test.describe('the cron jobs, run as Railway runs them', () => {
       expect(reminders.map((p) => [p.body, p.url])).toEqual([[`${clock} at ODEON Glasgow Quay, with Craig.`, `/movie-night/trips/${trip}`]])
     } finally {
       db.sql(`DELETE FROM cinema_trips WHERE id='${trip}'; DELETE FROM cinema_films WHERE id='${film}'`)
-      for (const [name, who] of Object.entries(people)) {
-        const old = kept[name]
-        await who.put('/notifications/preferences', {
-          movieNightEnabled: old.movieNightEnabled, digestMode: old.digestMode,
-          ...(old.quietHoursStart ? { quietHoursStart: old.quietHoursStart, quietHoursEnd: old.quietHoursEnd } : { clearQuietHours: true }),
-        })
+      // runJob blocks Node while the real command runs. Its previously idle HTTP socket
+      // may have closed meanwhile; fixture cleanup must not depend on reusing that socket.
+      // Restore only the fields this test changed, in the harness's disposable database.
+      for (const [name, saved] of Object.entries(kept)) {
+        db.sql(`UPDATE notification_preferences n SET
+          movie_night_enabled=old.movie_night_enabled,digest_mode=old.digest_mode,
+          quiet_hours_start=old.quiet_hours_start,quiet_hours_end=old.quiet_hours_end
+          FROM json_populate_record(NULL::notification_preferences,${quote(saved)}::json) old,
+            profiles p WHERE p.id=n.user_id AND p.display_name=${quote(name)}`)
       }
     }
+    for (const [name, saved] of Object.entries(kept)) expect(snapshot(name)).toBe(saved)
   })
 
   test('the disc spec and review job searches for pages with Brave and finishes its batch', async ({ db }) => {

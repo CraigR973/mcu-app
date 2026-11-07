@@ -101,3 +101,27 @@ one enabled click creates all three feed groups. The layouts move **393.5 px** f
 and **708.5 px** for cinema, and each programme endpoint is read exactly once. No production
 feed/token action runs. Complete local clean-tree gates, browser suites, PR/main CI and
 actual production SHA/readiness still need their final evidence.
+
+## First complete local run: host contention and fixture cleanup failure
+
+The clean `7a85021` tree passed API 2,741 (zero skips), shared 200, web 891 and all static /
+type/build checks. Chromium passed 94. Firefox passed every calendar case, but ended 91
+passed, 2 failed, 1 permitted dictation skip during severe Mac host contention: load average
+159.69 on 4 logical CPUs, later 120.08. The photo case exhausted its whole 60-second budget
+after successful upload/blob checks; trace includes an 8-second blank-page creation and a
+10.6-second reload. The box-set POST and its following GET both returned ownedCount=1, but
+the renderer missed the existing 10-second assertion deadline. Their traces are preserved;
+no photo/box-set application code, assertion or timeout is changed. An unchanged full Firefox
+run after load recovery and independent Linux CI remain required; a passing retry alone is
+not described as a code repair.
+
+Jobs ended 7 passed / 1 failed. The AC5 reminder's two real commands, exact dedupe/status and
+decrypted push body/URL assertions all passed. Its finally block reused an HTTP connection
+that went idle while Node synchronously ran the commands and failed with ECONNRESET. As a
+necessary verification-fixture correction, cleanup now restores the four saved preference
+fields directly in disposable Postgres, just as the existing cinema digest fixture does.
+It additionally verifies that the snapshot is restored. No business assertion, production
+code, retry, skip or timeout is changed. No production trip/preferences/feed/token is touched.
+
+Draft repair PR #137 / CI 42399647416 supplies independent exact-commit evidence. It must
+remain draft and unmerged until the complete local and exact-commit gates are green.
