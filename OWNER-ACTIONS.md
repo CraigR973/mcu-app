@@ -11,6 +11,12 @@ conversation still maps onto this file.*
 
 ## What is left for you, by sitting *(30 Sep)*
 
+- **Cinema trips (AC5, shipped 7 Nov, #346) — on your phone, when there's a film you want to
+  see:** At the cinema → the film → **Propose a trip**, pick a time and Mark, **Send
+  invitations**. That first real trip is yours to send, because it pushes Mark; no test trip was
+  made in production. Then check, on both phones, that the invitation arrives and opens the
+  trip, and that the trip page, Movie night's Cinema trips and Home's Needs you read well.
+
 - **Cinema feature complete4Nov under327/330/334; no remaining AB6/AB7 owner checkpoint.**
   AB6 PR125/72ff0bd/final354f34c closed before AB7 PR128/bf70319 plus same-branch display
   correction67d22ec and causal Home readiness repair190906ac. All clean local/exact

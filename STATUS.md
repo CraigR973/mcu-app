@@ -2,27 +2,26 @@
 
 ## Now
 
-**6 Nov: AC7 shipped (PR #134, merge `5e570bca`): Releases is two calendars, Disc releases and
-Cinema releases (#343, #344). Sitting 3 is done.** `/calendar` is Disc releases: Coming to disc,
-then the month's 4K, Blu-ray and sale dates, with All, 4K UHD, Blu-ray and Sale events chips.
-`/calendar/cinema` is Cinema releases: the month's UK cinema dates, a release showing at one of
-the nine opening its AC4 film page by TMDB id (never a title), then Coming soon. The month lives
-in the address. The month endpoint takes `types`; the feed takes `calendar=disc|cinema` and is
-unchanged without it; one subscribe press gives a link per calendar and one for both. Refresh
-from TMDB and Home's Coming to disc are unchanged. No migration.
+**7 Nov: AC5 shipped (PR #135, merge `6384c61c`): cinema trips — invite, reply, suggest another
+time (#345, #346).** Migration 072 adds `cinema_trips` and `cinema_trip_invitees`, both granted to
+the read-only and backup roles. A trip is proposed from a time on AC4's film page to anyone
+active; each invitee replies Going, Not going or Another time; the organiser accepts or keeps a
+suggestion, moves the trip to a time of their own, invites more and cancels. Every write locks the
+trip and names the revision it was made against. Six pushes under the Movie night switch; the
+morning-of reminder rides the 08:00 UTC pass and is written `too_late` when quiet hours or digest
+mode would hold it past the reminder pass. Trips show on their own page (`/movie-night/trips/<id>`), the
+film page, Movie night (past ones folded), Needs you (first) and Home's top slot.
 
-**Live, read-only after the deploy:** November's disc calendar holds 18 dates (6 4K, 9 Blu-ray,
-3 sales) and its cinema calendar 79; December 13 and 23. Both people get 6 November cinema
-releases linked to film pages (Wild Horse Nine at 8 cinemas, five at one); 87 cinema listings
-are not matched yet, and the page says so. Phone rendering is Craig's observation.
+**Live, read-only after the deploy:** migration 072; both tables empty; both roles have SELECT.
+Both people have 0 upcoming/past trips, no Needs you trip items and no next trip. There are 137
+confirmed future Wild Horse Nine showings. **No trip was made in production:** a real one pushes
+Mark's phone, so the first is Craig's to propose (`OWNER-ACTIONS.md`); phone rendering and a trip
+push on a phone are his to observe.
 
 **Still owed:** AC3's rerun read-back after the 8 Nov run (#340): record the reruns here.
 
-**7 Nov: sitting 4 is stopped at AC5's owner checkpoint** (`docs/reviews/ac5-owner-checkpoint-2026-11-06.md`,
-branch `feat/ac5-cinema-trips`): two tables (`cinema_trips`, `cinema_trip_invitees`, migration
-072), the four replies and every transition, six push wordings under the Movie night switch, where
-trips appear, and eight numbered decisions. **Nothing is built, migrated or deployed until Craig
-answers;** his answer becomes #345, the build's record #346. AC6's checkpoint follows AC5.
+**Next: AC6 starts with its own owner checkpoint** — Craig approves the new Cinemas switch and its
+wording before anything is built.
 
 ## Next
 
@@ -30,8 +29,9 @@ answers;** his answer becomes #345, the build's record #346. AC6's checkpoint fo
 AC2, Home) and 2 (AC3, cinema identities and runs) are independent; 3 (AC4 → AC7) needs 2;
 4 (AC5 → AC6) needs 3. Sitting 1 is done: the planning PR (#129), AC1 (#130) and AC2 (#131)
 have shipped. Sitting 2 (AC3) shipped on 6 Nov (#340). Sitting 3
-(AC4 → AC7) is done: AC4 (#341) and AC7 (#343) shipped on 6 Nov. Sitting 4 starts at AC5's
-checkpoint; AC5 and AC6 stop at owner checkpoints until Craig answers. Onboarding more people needs its own plan; nothing in Group AC
+(AC4 → AC7) is done: AC4 (#341) and AC7 (#343) shipped on 6 Nov. Sitting 4: AC5 shipped on
+7 Nov at Craig's "Approve all 8" (#345, #346); AC6 stops at its owner checkpoint until he
+answers. Onboarding more people needs its own plan; nothing in Group AC
 assumes exactly two people. Existing owner actions remain separate.
 
 **The remaining sequence is Group X's table in `docs/phase-batches.md`** (the wave 1 review's
@@ -424,6 +424,24 @@ it renders — and report what was observed rather than what passed.
 
 
 ## Log
+
+- **7 Nov — AC5 shipped; close-out completed from the handoff (#345, #346).** PR #135,
+  merge `6384c61c`. Exact PR CI 42375136720 and main CI 42376631323: all seven jobs green,
+  including API 2,702 with no skips, shared 200, web 877; Chromium 89, Firefox 88 + 1 allowed
+  skip, WebKit 87 + 2 allowed skips, jobs 7. Verified the inherited local gate logs, including
+  the full API re-run after the invitation-ordering test fix. Production API/web served
+  `6384c61c`; database ready and all integrations configured. Read-only live read-back: migration
+  072, both tables empty, both role grants, both people's empty trip/Needs you/next-trip reads;
+  neither role can read `profiles.pin_hash` or the whole profiles table. Applied the prepared
+  close-out docs and architecture map. No production trip or notification created.
+  **Build failures, fixed before merge:** clearing a suggestion wrote JSON null where the
+  constraint requires SQL NULL; the model now uses `none_as_null`, covered by keep/move tests.
+  One new invitation test assumed write order for equal timestamps; corrected to compare sets,
+  then the full API suite passed. Two existing whole-answer assertions gained the new empty
+  fields; two web mocks gained the trip read. Existing 11 web lint warnings remain.
+  **Still unverified:** phone rendering and real trip push receipt, Craig's to observe when
+  proposing a real trip; AC6 remains at its separate owner checkpoint. Evidence and acceptance
+  checklist: `docs/reviews/ac5-closeout-2026-11-07.md`.
 
 - **7 Nov — AC5's owner checkpoint drafted; sitting 4 stops for Craig.** Exact tables, states,
   transitions, push wording and placement in `docs/reviews/ac5-owner-checkpoint-2026-11-06.md`.

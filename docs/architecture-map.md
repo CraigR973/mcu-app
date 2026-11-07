@@ -100,8 +100,33 @@ flowchart TB
 A film is one TMDB film across cinemas and listing titles (AC3). A row that is not becomes its
 own chain's listing, gathered within that source by AC3's review key and never merged across
 chains or into a film on the title alone (#342). A listing's address (`listing-<row id>`) opens
-the film once a morning links it; a film's is `tmdb-<id>`. AC5 adds "Propose a trip" to the
-film page and behind Movie night's "Plan a cinema trip".
+the film once a morning links it; a film's is `tmdb-<id>`. Since AC5 a trip is proposed from a
+film page's times (below).
+
+## Cinema trips — AC5
+
+A trip is two tables (#345, #346): the proposer and the chosen showing kept as a snapshot, and
+one reply per invitee. Every write locks the trip's row and names the revision it was made
+against, so replies at once all land and one made against an old time is refused. The flag and
+Check tickets come from the live programme row on each read. Pushes go through the outbox under
+the Movie night switch, deduplicated by revision; the morning-of reminder rides the 08:00 pass.
+
+```mermaid
+flowchart TB
+    Film[Film page /movie-night/cinema/key<br/>Propose a trip · Your trips] -->|POST /cinema-trips| Trips[(cinema_trips<br/>snapshot · revision · cancel time)]
+    Trips --- Invitees[(cinema_trip_invitees<br/>one reply each · its revision · a suggestion)]
+    Page[Trip page /movie-night/trips/id<br/>replies · accept or keep · move · invite more · cancel] -->|row lock + revision| Trips
+    Live[(cinema_screenings<br/>the live row)] -->|flag · Check tickets| Page
+    Trips --> Outbox[(notifications<br/>Movie night switch · deduped by revision)]
+    Pass[08:00 UTC run_reminders<br/>the showing's own day] --> Outbox
+    Trips --> Needs[GET /needs-you<br/>trips · nextTrip]
+    Needs --> Home[Home · trip items first<br/>top slot when sooner than a night]
+    Trips --> List[GET /cinema-trips]
+    List --> Night[Movie night · Cinema trips<br/>Past trips folded]
+```
+
+Who sees a trip: its proposer and invitees only; anyone else reads "Trip not found". Nothing
+assumes two people. No guests, and no reply link that works without sign-in (#335).
 
 ## Releases, two calendars — AC7
 

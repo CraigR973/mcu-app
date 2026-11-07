@@ -7508,3 +7508,4 @@ contemporaneous.
      **Tests whose expectations grew, none whose meaning changed:** two Needs you tests compare
      the whole answer, which now carries the two new empty fields; two web page tests' API mocks
      gained the trip read (and the poster helper).
+     Shipped 7 Nov: PR #135, merge `6384c61c4aa0528ca5c7152d8ba55d9ce9699d2e`; PR CI 42375136720 and main CI 42376631323, each all seven green; production API and web at `6384c61c`.
