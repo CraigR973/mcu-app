@@ -7521,3 +7521,14 @@ contemporaneous.
      delivery latency, a separate cinema payload in digest mode and the possible lost push
      required by strict at-most-once send attempts. Record Craig's explicit checkpoint answer
      before building. AC3's rerun read-back and AC5's real-phone observations remain separate.
+
+348. **AC6 checkpoint approved: all eight recommendations (7 Nov).**
+     Craig replied “approved” after the saved eight-recommendation proposal was presented.
+     `docs/reviews/ac6-owner-checkpoint-2026-11-07.md` is the implementation contract:
+     default-on Cinemas, older-only off; silent baseline; AC3 identities; 30 consecutive
+     successfully observed absent London dates (partial pages count, failed checks reset);
+     one frozen daily evaluation; existing schedules; a separately held cinema payload and
+     committed daily send claim before transport, accepting lost pushes after crashes;
+     New this week, exact wording and scheduled-only production evidence. Five new tables,
+     two preference columns and migration 073 are authorised. No manual live refresh/push,
+     new hosting, credential change or unrelated batch is authorised.

@@ -1,9 +1,10 @@
 # AC6 — Daily cinema digest: owner checkpoint
 
-7 Nov. **Proposal only; build approval is pending.** Scope: AC6 alone, the remaining batch
+7 Nov. **Approved: Craig replied “approved” to all eight recommendations.** Scope: AC6 alone, the remaining batch
 in Group AC sitting 4. Craig approved using this session's current model after the requested
 GPT-5.6 Sol High / Opus 5.5 high was unavailable (reply: “approve”). That answer approved
-the model substitution only. None of the recommendations below is approved yet.
+the model substitution only. His later “approved” approves the eight recommendations below
+as the AC6 implementation contract, including the stated costs and failure risks.
 
 ## What Craig needs to decide
 
